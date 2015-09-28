@@ -1,0 +1,16 @@
+{
+  "name": "gather2-core",
+  "version": "0.0.0",
+  "description": "Data collection and normalization tool",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "Apache2",
+  "dependencies": {
+    "bootstrap": "~3.3.5",
+    "jquery": "~2.1.4",
+    "underscore": "~1.8.3",
+    "json-editor": "git+https://github.com/jdorn/json-editor.git"
+  }
+}

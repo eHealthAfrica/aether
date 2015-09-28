@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block main %}
+
+<form id="survey" method=POST>
+  <div id='editor_holder'></div>
+  <input type="hidden" name="_method" value="PUT">
+  <input type="submit">
+</form>
+
+<script>
+
+  var survey_data = {{ data| safe }};
+
+  $("#survey").submit(function(event){
+    event.preventDefault();
+    var form_data = editor.getValue();
+    var new_data = {
+      survey: {{ survey }},
+    };
+    new_data.data = form_data;
+
+    $.ajax('', {
+      "data": JSON.stringify(new_data),
+      "contentType": 'application/json',
+      "method": "PUT",
+      "success": function(data, status, xhr){
+        window.location.href = data.url;
+      }
+    });
+  });
+
+  var editor;
+  $.getJSON("{{ survey_url }}", {}, function(data, status, xhr){
+    setupEditor(data.schema);
+
+  });
+  function setupEditor(schema){
+    editor = new JSONEditor(document.getElementById('editor_holder'), {
+      schema: schema,
+      theme: 'bootstrap3',
+      disable_collapse: true,
+      disable_edit_json: true,
+      disable_properties: true,
+      no_additional_properties: true,
+      startval: survey_data
+    });
+    editor.options.show_errors = "always";
+    // Fire a change event to force revalidation
+    editor.onChange();
+  };
+
+</script>
+{% endblock %}

@@ -3,6 +3,9 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# Usage MEDIA_ROOT = here('media')
+here = lambda x: os.path.join(os.path.abspath(os.path.dirname(__file__)), x)
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/dev/howto/deployment/checklist/
@@ -25,8 +28,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
+    'reversion',
     'core',
+    'rest_framework',
     'django_extensions',
 ]
 
@@ -68,6 +72,7 @@ WSGI_APPLICATION = 'gather2.wsgi.application'
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.TemplateHTMLRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     )
 }
@@ -112,7 +117,12 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 
+STATICFILES_DIRS = [
+    ('node_modules', here('../node_modules')),
+]
+
+
 try:
-    from local_settings import *  # noqa
-except ImportError:
-    pass
+    from .local_settings import *  # noqa
+except ImportError as e:
+    print(e)

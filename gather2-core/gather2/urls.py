@@ -14,17 +14,20 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
 from django.conf.urls import url, include
-from django.contrib import admin
-from rest_framework.routers import DefaultRouter
 
 from core import views
-
-router = DefaultRouter()
-router.register(r'surveys', views.SurveyViewSet)
-router.register(r'items', views.SurveyItemViewSet)
+from .routers import TemplateRouter
 
 
-urlpatterns = [
+router = TemplateRouter(template_name='index.html')
+(
+router.register('surveys', views.SurveyViewSet)
+    .register('items', views.SurveyItemViewSet,
+        base_name='results',
+        parents_query_lookups=['survey'])
+)
+router.register('items', views.SurveyItemViewSet)
+
+urlpatterns=[
     url(r'^', include(router.urls)),
-    url(r'^admin/', admin.site.urls),
 ]

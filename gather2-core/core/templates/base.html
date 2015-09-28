@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  {% load static from staticfiles %}
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Gather2 {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'node_modules/bootstrap/dist/css/bootstrap.css' %}">
+    <script src="{% static 'node_modules/jquery/dist/jquery.js' %}"></script>
+    <script src="{% static 'node_modules/bootstrap/dist/js/bootstrap.js' %}"></script>
+    <script src="{% static 'node_modules/json-editor/dist/jsoneditor.js' %}"></script>
+    <style>
+      body {
+        padding-top: 20px;
+        padding-bottom: 20px;
+      }
+      /* Everything but the jumbotron gets side spacing for mobile first views */
+      .header,
+      .marketing,
+      .footer {
+        padding-right: 15px;
+        padding-left: 15px;
+      }
+
+      /* Custom page header */
+      .header {
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e5e5e5;
+      }
+      /* Make the masthead heading the same height as the navigation */
+      .header h3 {
+        margin-top: 0;
+        margin-bottom: 0;
+        line-height: 40px;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <div class="container">
+      <div class="header clearfix">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+            <li role="presentation"><a href="/">Home</a></li>
+            <li role="presentation"><a href="/surveys/">Surveys</a></li>
+          </ul>
+        </nav>
+        <h3 class="text-muted">Gather2</h3>
+      </div>
+
+
+
+      {% block main %} {% endblock main %}
+
+    </div><!-- /.container -->
+
+
+  </body>
+
+</html>

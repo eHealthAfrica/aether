@@ -52,7 +52,7 @@ class JSONSpecValidator(object):
     """
 
     def __init__(self):
-        self.schema = None
+        self.schema = {}
 
     def __call__(self, value):
         v = jsonschema.Draft4Validator(self.schema)
@@ -62,26 +62,25 @@ class JSONSpecValidator(object):
         return True
 
     def set_context(self, serializer_field):
-
-        schema = None
-        if serializer_field.parent.instance:
-            # This is hard coded currently.
-            schema = serializer_field.parent.instance.survey.schema
-
-        try:
-            self.schema = schema
-        except Exception as e:
-            raise serializers.ValidationError(str(e))
+        survey_id = serializer_field.parent.initial_data['survey']
+        # First (only) or None
+        survey = (Survey.objects.filter(id=survey_id) or [None])[0]
+        if survey:
+            self.schema = survey.schema
 
 
-class SurveySerialzer(serializers.HyperlinkedModelSerializer):
+class SurveySerialzer(serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField('survey-detail')
+    surveyitems = serializers.HyperlinkedIdentityField('results-list', read_only=True, lookup_url_kwarg='parent_lookup_survey')
     schema = JSONSerializerField(validators=[is_json])
 
     class Meta:
         model = Survey
 
 
-class SurveyItemSerialzer(serializers.HyperlinkedModelSerializer):
+class SurveyItemSerialzer(serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField('surveyitem-detail')
+    survey_url = serializers.HyperlinkedRelatedField('survey-detail', source='survey', read_only=True)
     data = JSONSerializerField(validators=[JSONSpecValidator()])
 
     class Meta:

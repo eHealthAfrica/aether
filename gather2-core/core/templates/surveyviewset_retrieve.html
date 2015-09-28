@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block main %}
+
+  <div id='editor_holder'></div>
+
+  <script>
+
+    $(function(){
+
+      var editor = new JSONEditor(document.getElementById('editor_holder'), {
+        schema: {{ schema|safe }},
+        theme: 'bootstrap3',
+        disable_collapse: true,
+        disable_edit_json: true,
+        disable_properties: true,
+        no_additional_properties: true
+      });
+    });
+
+  </script>
+{% endblock %}

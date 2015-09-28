@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block main %}
+  {% for s in results %}
+    <div>
+      <a href="{{ s.url }}">{{ s.name }}</a>
+    </div>
+  {% endfor %}
+
+{% endblock %}
