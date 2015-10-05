@@ -130,8 +130,9 @@ STATICFILES_DIRS = [
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'mydatabase',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'travis_ci_test',
+        'USER': 'postgres',
     }
 }
 
