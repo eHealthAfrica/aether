@@ -1,1 +1,2 @@
+-r requirements.txt
 pytest_django==2.8.0
