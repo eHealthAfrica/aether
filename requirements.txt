@@ -1,5 +1,6 @@
 Django>=1.9a1
 djangorestframework==3.2
+drf-extensions==0.2.8
 psycopg2==2.6.1
 django-filter==0.11.0
 -e git+https://github.com/django-extensions/django-extensions.git@92008a391c6357d7896a65ea74ac103664e21ddc#egg=django_extensions-master
