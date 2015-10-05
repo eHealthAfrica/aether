@@ -5,6 +5,7 @@
   <div id='editor_holder'></div>
   <input type="hidden" name="_method" value="PUT">
   <input type="submit">
+  {% csrf_token %}
 </form>
 
 <script>
@@ -38,10 +39,10 @@
     editor = new JSONEditor(document.getElementById('editor_holder'), {
       schema: schema,
       theme: 'bootstrap3',
-      disable_collapse: true,
-      disable_edit_json: true,
-      disable_properties: true,
-      no_additional_properties: true,
+      //disable_collapse: true,
+      //disable_edit_json: true,
+      //disable_properties: true,
+      no_additional_properties: false,
       startval: survey_data
     });
     editor.options.show_errors = "always";

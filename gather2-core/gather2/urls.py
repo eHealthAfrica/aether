@@ -17,17 +17,23 @@ from django.conf.urls import url, include
 
 from core import views
 from .routers import TemplateRouter
+from django.contrib import admin
 
 
 router = TemplateRouter(template_name='index.html')
 (
-router.register('surveys', views.SurveyViewSet)
+    router.register('surveys', views.SurveyViewSet)
     .register('items', views.SurveyItemViewSet,
-        base_name='results',
-        parents_query_lookups=['survey'])
+              base_name='results',
+              parents_query_lookups=['survey'])
 )
 router.register('items', views.SurveyItemViewSet)
 
-urlpatterns=[
-    url(r'^', include(router.urls)),
+urlpatterns = [
+    url(r'^v1/', include(router.urls, namespace='v1')),
+    url(r'', include(router.urls, namespace='v1')),
+    url(r'^api-auth/', include('rest_framework.urls',
+                               namespace='rest_framework')),
+    url(r'^admin/', include(admin.site.urls)),
+
 ]

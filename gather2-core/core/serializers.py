@@ -22,7 +22,7 @@ class JSONSerializerField(serializers.Field):
 
     def to_representation(self, value):
 
-        class JSONy(type(value)):
+        class JSONish(type(value)):
 
             """
             Helper class to properly render JSON in the HTML form.
@@ -33,7 +33,7 @@ class JSONSerializerField(serializers.Field):
             def __str__(self):
                 return json.dumps(self, sort_keys=True)
 
-        return JSONy(value)
+        return JSONish(value)
 
 
 def is_json(value):
@@ -71,17 +71,31 @@ class JSONSpecValidator(object):
 
 class SurveySerialzer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField('survey-detail')
-    surveyitems = serializers.HyperlinkedIdentityField('results-list', read_only=True, lookup_url_kwarg='parent_lookup_survey')
+    surveyitems = serializers.HyperlinkedIdentityField(
+        'results-list', read_only=True, lookup_url_kwarg='parent_lookup_survey')
     schema = JSONSerializerField(validators=[is_json])
+    created_by = serializers.HiddenField(
+        default=serializers.CurrentUserDefault())
 
     class Meta:
         model = Survey
 
 
+def first_last(obj):
+    return "%s %s".format(obj.firstName, obj.lastName)
+
+
 class SurveyItemSerialzer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField('surveyitem-detail')
-    survey_url = serializers.HyperlinkedRelatedField('survey-detail', source='survey', read_only=True)
+    survey_url = serializers.HyperlinkedRelatedField(
+        'survey-detail', source='survey', read_only=True)
     data = JSONSerializerField(validators=[JSONSpecValidator()])
+    created_by = serializers.HiddenField(
+        default=serializers.CurrentUserDefault())
+
+    def to_representation(self, obj):
+        func_name = self.context['request'].GET.get("apply")
+        return super(SurveyItemSerialzer, self).to_representation(obj)
 
     class Meta:
         model = SurveyItem
