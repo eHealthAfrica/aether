@@ -1,8 +1,3 @@
-import fileinput
-for line in fileinput.input():
-    process(line)
-
-
 def walk(d):
     ret = {}
     if 'children' in d:
