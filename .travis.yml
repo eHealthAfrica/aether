@@ -16,4 +16,5 @@ install:
 script:
   - virtualenv .
   - flake8 --exclude migrations --ignore E501,C901 ./gather2-core
+  - cd gather2-core && py.test core/tests.py
 
