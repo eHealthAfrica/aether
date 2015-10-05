@@ -31,7 +31,6 @@ class SurveyItemPermissions(permissions.BasePermission):
         survey_id = view.kwargs.get('parent_lookup_survey', "-1")
         survey = Survey.objects.filter(id=int(survey_id), created_by=request.user).exists()
         return survey
-        import IPython; IPython.embed()
 
     def has_object_permission(self, request, view, obj):
         return True
