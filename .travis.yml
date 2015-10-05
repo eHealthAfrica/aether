@@ -1,0 +1,15 @@
+language: python
+
+python:
+  - "3.4"
+  - "3.5"
+  - "pypy3"
+  - "nightly"
+
+install:
+  - pip install flake8
+
+script:
+  - virtualenv .
+  - flake8 --exclude migrations --ignore E501,C901 ./gather2-core
+
