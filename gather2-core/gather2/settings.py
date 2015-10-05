@@ -128,6 +128,12 @@ STATICFILES_DIRS = [
     ('node_modules', here('../node_modules')),
 ]
 
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'mydatabase',
+    }
+}
 
 try:
     from .local_settings import *  # noqa
