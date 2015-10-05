@@ -13,6 +13,7 @@ class Survey(models.Model):
     def __str__(self):
         return '%s - %s' % (self.id, self.name)
 
+
 class SurveyItem(models.Model):
     uuid = models.UUIDField(blank=False, editable=False, default=uuid.uuid4)
     survey = models.ForeignKey(Survey)

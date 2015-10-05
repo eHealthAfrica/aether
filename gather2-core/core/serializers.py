@@ -94,7 +94,6 @@ class SurveyItemSerialzer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault())
 
     def to_representation(self, obj):
-        func_name = self.context['request'].GET.get("apply")
         return super(SurveyItemSerialzer, self).to_representation(obj)
 
     class Meta:
