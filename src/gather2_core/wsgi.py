@@ -11,6 +11,6 @@ import os
 
 from configurations.wsgi import get_wsgi_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "gather2.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "gather2_core.settings")
 
 application = get_wsgi_application()

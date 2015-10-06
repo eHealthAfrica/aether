@@ -7,20 +7,20 @@ os.environ['PATH'] += ":{}/bin/".format(
 
 @task
 def runserver(configuration="Dev"):
-    run("bin/python ./gather2-core/manage.py runserver --configuration {}".format(
+    run("bin/python ./src/gather2_core/manage.py runserver --configuration {}".format(
       configuration
     ))
 
 @task
 def test(configuration="Test"):
-    run("cd gather2-core && DJANGO_CONFIGURATION={} py.test core/tests.py".format(
+    run("cd src/ && DJANGO_CONFIGURATION={} py.test gather2_core/tests.py".format(
         configuration
     ))
 
 @task
 def check():
-    run("flake8 --exclude migrations --ignore E501,C901 ./gather2-core")
+    run("flake8 --exclude migrations --ignore E501,C901 ./src/gather2_core")
 
 @task
 def fix():
-    run("autopep8 -r --in-place --exclude migrations --max-line-length 120 ./gather2-core")
+    run("autopep8 -r --in-place --exclude migrations --max-line-length 120 ./src/gather2_core")

@@ -1,6 +1,6 @@
 import pytest
 
-from core.models import Survey
+from .models import Survey
 
 
 @pytest.mark.django_db

@@ -21,9 +21,9 @@ class Base(Configuration):
         'django.contrib.sessions',
         'django.contrib.messages',
         'django.contrib.staticfiles',
-        'core',
         'rest_framework',
         'django_extensions',
+        'gather2_core',
     ]
 
     MIDDLEWARE_CLASSES = [
@@ -37,7 +37,7 @@ class Base(Configuration):
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
     ]
 
-    ROOT_URLCONF = 'gather2.urls'
+    ROOT_URLCONF = 'gather2_core.urls'
 
     TEMPLATES = [
         {
@@ -55,7 +55,7 @@ class Base(Configuration):
         },
     ]
 
-    WSGI_APPLICATION = 'gather2.wsgi.application'
+    WSGI_APPLICATION = 'gather2_core.wsgi.application'
 
     AUTHENTICATION_BACKENDS = (
         'django.contrib.auth.backends.ModelBackend',  # this is default
