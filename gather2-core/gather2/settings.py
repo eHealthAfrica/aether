@@ -111,8 +111,10 @@ class Base(Configuration):
 class Dev(Base):
     DEBUG = True
 
+class Test(Dev):
+    pass
 
-class Travis(Dev):
+class Travis(Test):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',

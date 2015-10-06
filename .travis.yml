@@ -3,9 +3,6 @@ language: python
 addons:
   postgresql: "9.4"
 
-env:
-  - DJANGO_CONFIGURATION=Travis
-
 python:
   - "3.4"
   - "3.5"
@@ -22,7 +19,6 @@ before_script:
   - psql -c 'create database travis_ci_test;' -U postgres
 
 script:
-  - virtualenv .
-  - flake8 --exclude migrations --ignore E501,C901 ./gather2-core
-  - cd gather2-core && py.test core/tests.py
+  - invoke check
+  - invoke test -c Travis
 

@@ -11,6 +11,7 @@
 git clone git@github.com:eHealthAfrica/gather2.git
 cd gather2
 virtualenv-3.4 .
-./bin/pip install -r dev-requirements.txt
+bin/pip install -r dev-requirements.txt
+bin/invoke runserver
 ```
 
