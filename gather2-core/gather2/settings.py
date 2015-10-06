@@ -1,4 +1,4 @@
-from configurations import Configuration
+from configurations import Configuration, values
 
 import os
 
@@ -110,22 +110,12 @@ class Base(Configuration):
 
 class Dev(Base):
     DEBUG = True
+    DATABASES = values.DatabaseURLValue("postgres://postgres@localhost/gather2_dev")
 
 
 class Test(Dev):
-    pass
+    DATABASES = values.DatabaseURLValue("postgres://postgres@localhost/gather2_test")
 
 
 class Travis(Test):
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': 'travis_ci_test',
-            'USER': 'postgres',
-        }
-    }
-
-try:
-    from .local_settings import *  # noqa
-except ImportError as e:
-    print(e)
+    DATABASES = values.DatabaseURLValue("postgres://postgres@localhost/travis_ci_test")
