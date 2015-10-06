@@ -1,7 +1,12 @@
 from invoke import run, task
 
 import os
+
 os.environ['PATH'] += ":{}/bin/".format(
+    os.path.dirname(os.path.abspath(__file__))
+)
+
+os.environ['PYTHONPATH'] = "{}/src/".format(
     os.path.dirname(os.path.abspath(__file__))
 )
 
