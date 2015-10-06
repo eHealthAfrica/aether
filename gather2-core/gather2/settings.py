@@ -111,8 +111,10 @@ class Base(Configuration):
 class Dev(Base):
     DEBUG = True
 
+
 class Test(Dev):
     pass
+
 
 class Travis(Test):
     DATABASES = {
