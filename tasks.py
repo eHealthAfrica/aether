@@ -11,10 +11,15 @@ os.environ['PYTHONPATH'] = "{}/src/".format(
 )
 
 @task
-def runserver(configuration="Dev"):
-    run("bin/python ./src/gather2_core/manage.py runserver --configuration {}".format(
+def manage(cmd, configuration="Dev"):
+    run("bin/python ./src/gather2_core/manage.py {} --configuration {}".format(
+      cmd,
       configuration
     ))
+
+@task
+def runserver(configuration="Dev"):
+    manage("runserver", configuration)
 
 @task
 def test(configuration="Test"):
