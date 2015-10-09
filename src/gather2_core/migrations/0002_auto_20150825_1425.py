@@ -9,7 +9,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0001_initial'),
+        ('gather2_core', '0001_initial'),
     ]
 
     operations = [
@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('uuid', models.UUIDField(editable=False)),
                 ('data', django.contrib.postgres.fields.jsonb.JSONField()),
-                ('survey', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='core.Survey')),
+                ('survey', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='gather2_core.Survey')),
             ],
         ),
         migrations.DeleteModel(

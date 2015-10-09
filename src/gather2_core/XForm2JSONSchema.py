@@ -1,7 +1,3 @@
-import fileinput
-for line in fileinput.input():
-    process(line)
-
 def walk(d):
     ret = {}
     if 'children' in d:
@@ -13,4 +9,3 @@ def walk(d):
         ret['type'] = 'string'
         ret['description'] = d['label']
     return ret
-

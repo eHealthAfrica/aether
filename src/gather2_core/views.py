@@ -3,11 +3,10 @@ from rest_framework_extensions.mixins import NestedViewSetMixin
 from .serializers import SurveySerialzer, SurveyItemSerialzer
 from .models import Survey, SurveyItem
 from rest_framework import permissions
-from rest_pandas import PandasViewSet
-
 
 
 class SurveyPermissions(permissions.BasePermission):
+
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
@@ -31,7 +30,6 @@ class SurveyItemPermissions(permissions.BasePermission):
         survey_id = view.kwargs.get('parent_lookup_survey', "-1")
         survey = Survey.objects.filter(id=int(survey_id), created_by=request.user).exists()
         return survey
-        import IPython; IPython.embed()
 
     def has_object_permission(self, request, view, obj):
         return True
