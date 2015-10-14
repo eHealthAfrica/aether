@@ -30,7 +30,7 @@ def runserver(configuration="Dev"):
 
 @task
 def test(configuration="Test"):
-    _run("cd src/ && DJANGO_CONFIGURATION={} py.test gather2_core/tests.py".format(
+    _run("DJANGO_CONFIGURATION={} py.test src/gather2_core/tests.py".format(
         configuration
     ))
 
