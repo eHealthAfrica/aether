@@ -3,3 +3,4 @@ pytest_django==2.8.0
 invoke==0.11.1
 flake8==2.4.1
 autopep8==1.2.1
+ipdb==0.8.1
