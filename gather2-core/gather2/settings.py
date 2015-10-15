@@ -4,7 +4,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 here = lambda x: os.path.join(os.path.abspath(os.path.dirname(__file__)), x)

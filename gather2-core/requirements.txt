@@ -1,5 +1,4 @@
 Django>=1.9a1
-jsonschema
 djangorestframework==3.2
 drf-extensions==0.2.8
 psycopg2==2.6.1
