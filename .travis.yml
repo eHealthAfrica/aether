@@ -1,7 +1,7 @@
 language: python
 
 addons:
-  postgresql: "9.4"
+  postgresql: "9.5"
 
 python:
   - "3.4"
@@ -11,14 +11,20 @@ cache:
   directories:
     - $HOME/.cache/pip
 
+before_install:
+    - docker-compose build web
+
 install:
-  - pip install flake8
-  - pip install -r dev-requirements.txt
+    - pip install flake8 docker-compose
+    - pip install -r dev-requirements.txt
 
 before_script:
-  - psql -c 'create database travis_ci_test;' -U postgres
+    - docker-compose run init
 
 script:
-  - invoke check
-  - invoke test -c Travis
+    - docker-compose run core
 
+sudo: required
+
+services:
+    - docker
