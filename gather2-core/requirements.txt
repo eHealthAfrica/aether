@@ -1,9 +1,7 @@
 Django>=1.9a1
+jsonschema
 djangorestframework==3.2
 drf-extensions==0.2.8
 psycopg2==2.6.1
 django-filter==0.11.0
-dj_database_url==0.3.0
 -e git+https://github.com/django-extensions/django-extensions.git@92008a391c6357d7896a65ea74ac103664e21ddc#egg=django_extensions-master
--e git+https://github.com/jezdez/django-configurations.git@0ff4c7612d28036449edd4b2cf3b58ca1eded0f2#egg=django-configurations
-

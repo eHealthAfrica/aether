@@ -1,20 +1,22 @@
 FROM ubuntu:14.04
 
-
 RUN apt-get install -y wget
 RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc |  apt-key add -
-RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main 9.5" > /etc/apt/sources.list.d/pgdg.list
+
 
 RUN apt-get update && apt-get -y upgrade && apt-get install -y \
   git \
-  wget \
+  curl \
   python-psycopg2 \
   python-dev \
+  python3-dev \
   python-virtualenv \
+  postgresql-client-9.5 \
   postgresql-server-dev-all
 
-ADD ./requirements.txt /opt/tag/requirements.txt
-RUN pip install -r /opt/tag/requirements.txt
-ADD . /opt/tag
-RUN python /opt/tag/manage.py collectstatic --noinput
-CMD supervisord -c /opt/tag/config/supervisord.conf
+RUN pyvenv-3.4 --without-pip /opt/gather2-core-env/
+RUN curl https://bootstrap.pypa.io/get-pip.py | /opt/gather2-core-env/bin/python
+ADD ./gather2-core/requirements.txt /opt/gather2-core/requirements.txt
+RUN  /opt/gather2-core-env/bin/pip install -r  /opt/gather2-core/requirements.txt
+ADD ./gather2-core/ /opt/gather2-core/

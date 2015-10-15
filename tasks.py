@@ -18,7 +18,7 @@ def _run(cmd):
 
 @task
 def manage(cmd, configuration="Dev"):
-    _run("DJANGO_CONFIGURATION={} bin/python ./src/gather2_core/manage.py {}".format(
+    _run("DJANGO_CONFIGURATION={} bin/python ./gather2.core/manage.py {}".format(
         configuration, cmd,
     ))
 
@@ -30,16 +30,16 @@ def runserver(configuration="Dev"):
 
 @task
 def test(configuration="Test"):
-    _run("cd src/ && DJANGO_CONFIGURATION={} py.test gather2_core/tests.py".format(
+    _run("cd src/ && DJANGO_CONFIGURATION={} py.test gather2.core/tests.py".format(
         configuration
     ))
 
 
 @task
 def check():
-    _run("flake8 --exclude migrations --ignore E501,C901 ./src/gather2_core *.py")
+    _run("flake8 --exclude migrations --ignore E501,C901 ./gather2.core *.py")
 
 
 @task
 def fix():
-    _run("autopep8 -r --in-place --exclude migrations --max-line-length 120 ./src/gather2_core *.py")
+    _run("autopep8 -r --in-place --exclude migrations --max-line-length 120 ./gather2.core *.py")

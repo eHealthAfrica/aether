@@ -1,0 +1,18 @@
+init:
+  build: .
+  volumes:
+   - ./gather2-core:/opt/gather2-core/
+  net: "host"
+  command: bash -c "/opt/gather2-core-env/bin/python /opt/gather2-core/manage.py sqlcreate | psql -U postgres -h localhost && /opt/gather2-core-env/bin/python /opt/gather2-core/manage.py migrate"
+
+core:
+  build: .
+  volumes:
+   - ./gather2-core:/opt/gather2-core/
+  net: "host"
+  command:  /opt/gather2-core-env/bin/python /opt/gather2-core/manage.py runserver 0.0.0.0:8000
+
+db:
+  image: "postgres:9.5"
+  net: "host"
+
