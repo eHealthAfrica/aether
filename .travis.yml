@@ -21,7 +21,7 @@ before_script:
   - docker-compose run init
 
 script:
-  - flake8 --exclude migrations --ignore E501,C901 ./
+  - flake8
   - docker-compose run core /opt/gather2-core-env/bin/python /opt/gather2-core/manage.py test --noinput
 
 sudo: required
