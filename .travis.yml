@@ -1,30 +1,24 @@
 language: python
 
-python:
-  - "3.4"
-
-cache:
-  directories:
-  - $HOME/.cache/pip
-
 addons:
   postgresql: "9.4"
 
-before_install:
-  - docker-compose build init
-  - docker-compose build core
+python:
+  - "3.4"
+  - "3.5"
+
+cache:
+  directories:
+    - $HOME/.cache/pip
 
 install:
-  - pip install flake8 docker-compose
+  - pip install flake8
+  - pip install -r dev-requirements.txt
 
 before_script:
-  - docker-compose run init
+  - psql -c 'create database travis_ci_test;' -U postgres
 
 script:
-  - flake8
-  - docker-compose run core /opt/gather2-core-env/bin/python /opt/gather2-core/manage.py test --noinput
+  - invoke check
+  - invoke test -c Travis
 
-sudo: required
-
-services:
-  - docker

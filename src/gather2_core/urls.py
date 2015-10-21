@@ -15,8 +15,8 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 
-from core import views
-from gather2.routers import TemplateRouter
+from . import views
+from .routers import TemplateRouter
 from django.contrib import admin
 
 
