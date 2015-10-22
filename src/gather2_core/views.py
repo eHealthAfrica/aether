@@ -59,3 +59,16 @@ class SurveyItemViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelVie
     serializer_class = SurveyItemSerialzer
     paginate_by = 100
     permission_classes = (SurveyItemPermissions,)
+
+    def get_queryset(self):
+        # Eventually replace this naive implementation with a
+        # django-restframework-filters + django-filter version that supports
+        # JSONField
+
+        data_queries = dict([
+            (k, v) for (k, v) in
+            self.request.query_params.items()
+            if k.startswith('data__')
+        ])
+
+        return super().get_queryset().filter(**data_queries)
