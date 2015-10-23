@@ -24,6 +24,7 @@ class Base(Configuration):
         'rest_framework',
         'django_extensions',
         'gather2_core',
+        'gather2_odk_import',
     ]
 
     MIDDLEWARE_CLASSES = [
