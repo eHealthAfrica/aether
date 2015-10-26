@@ -2,6 +2,8 @@ from django.db import models
 
 # Create your models here.
 from django.conf import settings
+from rest_framework.reverse import reverse
+
 
 class FormTemplate(models.Model):
 
@@ -12,6 +14,9 @@ class FormTemplate(models.Model):
     description = models.CharField(max_length=200, blank=True)
 
     source = models.TextField(blank=False)
+
+    def get_absolute_url(self):
+        return reverse("formtemplate-detail", args=[str(self.id)])
 
     def __str__(self):
         return '%s - %s' % (self.id, self.name)

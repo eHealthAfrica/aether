@@ -12,14 +12,13 @@ from django.utils.encoding import force_text
 
 from .models import FormTemplate
 
+
 class ReadOnlyXMLWidget(Widget):
 
     def render(self, name, value, attrs=None):
 
         if value is None:
             value = ''
-
-        value = re.compile("\n[\t\s]+\n").sub("\n", value)
 
         final_attrs = self.build_attrs(
             attrs,
@@ -30,6 +29,7 @@ class ReadOnlyXMLWidget(Widget):
                            flatatt(final_attrs),
                            force_text(value))
 
+
 class FormTemplateCreateForm(forms.ModelForm):
 
     upload = forms.FileField(widget=admin.widgets.AdminFileWidget)
@@ -37,6 +37,7 @@ class FormTemplateCreateForm(forms.ModelForm):
     class Meta:
         model = FormTemplate
         exclude = ['source', ]
+
 
 class FormTemplateAdmin(admin.ModelAdmin):
 
@@ -48,7 +49,13 @@ class FormTemplateAdmin(admin.ModelAdmin):
     }
 
     def save_model(self, request, obj, form, change):
-        obj.source = minidom.parseString(request.FILES['upload'].read()).toprettyxml()
+
+        obj.source = re.compile("\n[\t\s]+\n").sub("\n",
+                                                   minidom.parseString(
+                                                       request.FILES['upload'].read()
+                                                   ).toprettyxml()
+                                                   )
+
         obj.created_by = request.user
         obj.save()
 

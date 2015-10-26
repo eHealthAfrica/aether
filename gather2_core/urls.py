@@ -19,6 +19,7 @@ from . import views
 from .routers import TemplateRouter
 from django.contrib import admin
 
+import gather2_odk_import.urls
 
 router = TemplateRouter(template_name='index.html')
 (
@@ -35,5 +36,6 @@ urlpatterns = [
     url(r'^api-auth/', include('rest_framework.urls',
                                namespace='rest_framework')),
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^odk/', include(gather2_odk_import.urls)),
 
 ]
