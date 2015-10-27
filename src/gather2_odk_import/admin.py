@@ -49,13 +49,8 @@ class FormTemplateAdmin(admin.ModelAdmin):
     }
 
     def save_model(self, request, obj, form, change):
-
-        obj.source = re.compile("\n[\t\s]+\n").sub("\n",
-                                                   minidom.parseString(
-                                                       request.FILES['upload'].read()
-                                                   ).toprettyxml()
-                                                   )
-
+        pretty_xml = minidom.parseString(request.FILES['upload'].read()).toprettyxml()
+        obj.source = re.compile("\n[\t\s]+\n").sub("\n", pretty_xml)
         obj.created_by = request.user
         obj.save()
 
