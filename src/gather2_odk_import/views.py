@@ -11,9 +11,15 @@ from rest_framework.utils.serializer_helpers import ReturnDict
 from .models import FormTemplate
 
 
+class AbsoluteURLField(serializers.URLField):
+
+    def to_representation(self, value):
+        return self.context['request'].build_absolute_uri(value)
+
+
 class FormTemplateSerializer(serializers.ModelSerializer):
 
-    downloadUrl = serializers.URLField(source='get_absolute_url')
+    downloadUrl = AbsoluteURLField(source='get_absolute_url')
     descriptionText = serializers.CharField(source='description')
     formID = serializers.CharField(source='id')
 
