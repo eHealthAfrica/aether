@@ -13,7 +13,7 @@ manage     : Invoke django manage.py commands
 
 case "$1" in
     serve)
-        uwsgi \
+        exec uwsgi \
             --master \
             --die-on-term \
             --http-socket 0.0.0.0:8080 \
