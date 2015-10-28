@@ -1,12 +1,11 @@
-from django.conf.urls import include, url
+from django.conf.urls import url
 
 from .views import XFormViewSet
 
-from rest_framework import routers
-
-router = routers.DefaultRouter()
-router.register(r'formList', XFormViewSet)
-
 urlpatterns = [
-    url(r'^', include(router.urls)),
+
+    # deliberately choosing this very url here because /formList is ODK collect's default
+    url(r'^formList$', XFormViewSet.as_view({'get': 'list'}), name='formtemplate-list'),
+
+    url(r'^form/(?P<pk>[^/.]+)/$', XFormViewSet.as_view({'get': 'retrieve'}), name='formtemplate-detail'),
 ]

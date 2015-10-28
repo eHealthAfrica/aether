@@ -107,6 +107,8 @@ class Base(Configuration):
     STATICFILES_DIRS = [
     ]
 
+    APPEND_SLASH = False
+
 
 class Dev(Base):
     DEBUG = True
