@@ -104,7 +104,6 @@ class Base(Configuration):
     STATIC_URL = '/static/'
 
     STATICFILES_DIRS = [
-        ('node_modules', here('../node_modules')),
     ]
 
 
@@ -119,3 +118,17 @@ class Test(Dev):
 
 class Travis(Test):
     DATABASES = values.DatabaseURLValue("postgres://postgres@localhost/travis_ci_test")
+
+
+class Docker(Base):
+    DEBUG = False
+    STATIC_ROOT = '/var/www/data/'
+    DATABASES = values.DatabaseURLValue()
+
+
+class Staging(Docker):
+    pass
+
+
+class Production(Docker):
+    pass
