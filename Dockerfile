@@ -19,7 +19,7 @@ RUN virtualenv /opt/gather2/venv/
 ADD ./requirements.txt /opt/gather2/requirements.txt
 RUN /opt/gather2/venv/bin/pip install --src /tmp -r /opt/gather2/requirements.txt
 
-ADD ./src/ /tmp/gather2_src/
+ADD . /tmp/gather2_src/
 RUN /opt/gather2/venv/bin/pip install /tmp/gather2_src/
 RUN rm -r /tmp/gather2_src
 
