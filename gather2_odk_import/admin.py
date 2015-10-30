@@ -48,7 +48,7 @@ class FormTemplateAdmin(admin.ModelAdmin):
         models.TextField: {'widget': ReadOnlyXMLWidget},
     }
 
-    def save_model(self, request, obj, form, change):
+    def save_model(self, request, obj, form=None, change=None):
         pretty_xml = minidom.parseString(request.FILES['upload'].read()).toprettyxml()
         obj.source = re.compile("\n[\t\s]+\n").sub("\n", pretty_xml)
         obj.created_by = request.user
