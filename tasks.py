@@ -26,7 +26,7 @@ def runserver(configuration="Dev"):
 
 @task
 def test(configuration="Test"):
-    _run("DJANGO_CONFIGURATION={} py.test gather2*/tests.py".format(
+    _run("py.test gather2*/tests.py".format(
         configuration
     ))
 
