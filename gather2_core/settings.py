@@ -12,7 +12,7 @@ class Base(Configuration):
 
     DEBUG = True
 
-    ALLOWED_HOSTS = []
+    ALLOWED_HOSTS = values.ListValue([])
 
     INSTALLED_APPS = [
         'django.contrib.admin',

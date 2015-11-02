@@ -28,6 +28,7 @@ EXPOSE 8080
 ENV DATABASE_URL ""
 ENV DJANGO_CONFIGURATION Docker
 ENV DJANGO_SETTINGS_MODULE gather2_core.settings
+ENV DJANGO_ALLOWED_HOSTS ""
 
 COPY ./docker-entrypoint.sh /opt/gather2/
 RUN chmod +x /opt/gather2/docker-entrypoint.sh
