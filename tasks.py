@@ -26,16 +26,16 @@ def runserver(configuration="Dev"):
 
 @task
 def test(configuration="Test"):
-    _run("PYTHONPATH=. DJANGO_CONFIGURATION={} py.test ./gather2_core/tests.py".format(
+    _run("py.test gather2*/tests.py".format(
         configuration
     ))
 
 
 @task
 def check():
-    _run("flake8 --exclude migrations --ignore E501,C901 ./gather2_core *.py")
+    _run("flake8 --exclude migrations --ignore E501,C901 ./gather2_* *.py")
 
 
 @task
 def fix():
-    _run("autopep8 -r --in-place --exclude migrations --max-line-length 120 ./gather2_core *.py")
+    _run("autopep8 -r --in-place --exclude migrations --max-line-length 120 ./gather2_* *.py")
