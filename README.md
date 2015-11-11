@@ -11,6 +11,7 @@
 ### Dependencies
 
 git
+
 [docker-compose](https://docs.docker.com/compose/)
 
 
@@ -42,7 +43,7 @@ sqlcreate  : Create empty database for Gather2, will still need migrations run
 
 ## Development
 
-All developemnt shoud be done within the container
+All development shoud be done within the container
 ```
 $ sudo docker-compose run core bash
 root@localhost:/#
