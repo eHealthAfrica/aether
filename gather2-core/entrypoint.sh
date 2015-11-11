@@ -4,11 +4,10 @@ set -e
 # Define help message
 show_help() {
     echo """
-Usage: docker run <imagename> COMMAND
 Commands
 serve      : Serve the application with uwsgi
 manage     : Invoke django manage.py commands
-sqlcreate  : Create empty database for Gather2, will sill need migrations run
+sqlcreate  : Create empty database for Gather2, will still need migrations run
 """
 }
 
