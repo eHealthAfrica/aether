@@ -5,7 +5,6 @@ addons:
 
 python:
   - "3.4"
-  - "3.5"
 
 cache:
   directories:
@@ -13,12 +12,11 @@ cache:
 
 install:
   - pip install flake8
-  - pip install -r dev-requirements.txt
 
 before_script:
-  - psql -c 'create database travis_ci_test;' -U postgres
+  - flake8
+  - docker-compose run core /opt/gather2-core/entrypoint.sh sqlcreate
 
 script:
-  - invoke check
-  - invoke test -c Travis
+  - docker-compose run core /opt/gather2-core/entrypoint.sh manage test core
 

@@ -15,9 +15,8 @@ RUN pip3 install virtualenv uwsgi
 
 RUN virtualenv /opt/env/
 
-ADD ./requirements.txt /opt/gather2/requirements.txt
-RUN /opt/env/bin/pip install -r /opt/gather2/requirements.txt
+ADD ./gather2-core/requirements.txt /opt/gather2-core/requirements.txt
+RUN /opt/env/bin/pip install -r /opt/gather2-core/requirements.txt
 
-ADD . /opt/gather2/
-RUN /opt/env/bin/python /opt/gather2/gather2-core/manage.py collectstatic --no-input
-
+ADD . /opt/
+RUN /opt/env/bin/python /opt/gather2-core/manage.py collectstatic --no-input

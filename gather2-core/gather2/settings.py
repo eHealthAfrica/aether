@@ -42,7 +42,7 @@ ROOT_URLCONF = 'gather2.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [here('templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -104,8 +104,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
-    ('node_modules', here('../node_modules')),
+    ("node_modules", here('../node_modules')),
 ]
+
+STATIC_ROOT = here('../static_root')
 
 DATABASES = {
     'default': {

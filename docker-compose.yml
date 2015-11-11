@@ -1,0 +1,12 @@
+core:
+  build: .
+  volumes:
+          - ./gather2-core:/opt/gather2-core
+  net: "host"
+  command: bash /opt/gather2-core/entrypoint.sh  manage runserver 0.0.0.0:8000
+  privileged: true
+
+db:
+  image: "postgres:9.4"
+  net: "host"
+
