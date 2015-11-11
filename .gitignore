@@ -82,5 +82,3 @@ local_settings.py
 Session.vim
 .netrwhist
 *~
-
-node_modules

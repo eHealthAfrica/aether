@@ -9,7 +9,8 @@ RUN apt-get update && apt-get -y upgrade && apt-get install -y \
   python3-dev \
   python3-pip \
   postgresql-client-9.4 \
-  postgresql-server-dev-9.4
+  postgresql-server-dev-9.4 \
+  npm
 
 RUN pip3 install virtualenv uwsgi
 
