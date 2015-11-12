@@ -24,7 +24,7 @@ $ cd gather2
 
 $ sudo docker-compose up -d db  # Or run this in a different tab without `-d` to make it easy to reset the db
 $ sudo docker-compose run core /opt/gather2-core/entrypoint.sh manage test core
-$ sudo docker-compose run core /opt/gather2-core/entrypoint.sh createsql
+$ sudo docker-compose run core /opt/gather2-core/entrypoint.sh sqlcreate
 $ sudo docker-compose run core /opt/gather2-core/entrypoint.sh manage migrate
 $ sudo docker-compose run core /opt/gather2-core/entrypoint.sh manage runserver 0.0.0.0:8000
 ```
@@ -43,7 +43,7 @@ sqlcreate  : Create empty database for Gather2, will still need migrations run
 
 ## Development
 
-All development should be done within the container
+All development should be tested within the container, but developed in the host folder. Read the `docker-compose.yml` file to see how it's mounted.
 ```
 $ sudo docker-compose run core bash
 root@localhost:/#
