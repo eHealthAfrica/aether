@@ -23,11 +23,11 @@ from django.contrib import admin
 router = TemplateRouter(template_name='index.html')
 (
     router.register('surveys', views.SurveyViewSet)
-    .register('items', views.SurveyItemViewSet,
-              base_name='results',
+    .register('responses', views.ResponseViewSet,
+              base_name='response',
               parents_query_lookups=['survey'])
 )
-router.register('items', views.SurveyItemViewSet)
+router.register('responses', views.ResponseViewSet)
 
 urlpatterns = [
     url(r'^v1/', include(router.urls, namespace='v1')),

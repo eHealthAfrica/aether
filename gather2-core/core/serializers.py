@@ -1,7 +1,7 @@
 from rest_framework import serializers
 import json
 import logging
-from .models import SurveyItem, Survey
+from .models import Response, Survey
 import jsonschema
 
 
@@ -48,7 +48,7 @@ def is_json(value):
 class JSONSpecValidator(object):
 
     """
-    This validates the submitted json with the schema saved on the SurveyItem.Survey.schema
+    This validates the submitted json with the schema saved on the Response.Survey.schema
     """
 
     def __init__(self):
@@ -71,8 +71,8 @@ class JSONSpecValidator(object):
 
 class SurveySerialzer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField('survey-detail')
-    surveyitems = serializers.HyperlinkedIdentityField(
-        'results-list', read_only=True, lookup_url_kwarg='parent_lookup_survey')
+    responses = serializers.HyperlinkedIdentityField(
+        'response-list', read_only=True, lookup_url_kwarg='parent_lookup_survey')
     schema = JSONSerializerField(validators=[is_json])
     created_by = serializers.HiddenField(
         default=serializers.CurrentUserDefault())
@@ -85,16 +85,17 @@ def first_last(obj):
     return "%s %s".format(obj.firstName, obj.lastName)
 
 
-class SurveyItemSerialzer(serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField('surveyitem-detail')
+class ResponseSerialzer(serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField('response-detail')
     survey_url = serializers.HyperlinkedRelatedField(
         'survey-detail', source='survey', read_only=True)
     data = JSONSerializerField(validators=[JSONSpecValidator()])
-    created_by = serializers.HiddenField(
+    created_by = serializers.PrimaryKeyRelatedField(
+        read_only=True,
         default=serializers.CurrentUserDefault())
 
     def to_representation(self, obj):
-        return super(SurveyItemSerialzer, self).to_representation(obj)
+        return super(ResponseSerialzer, self).to_representation(obj)
 
     class Meta:
-        model = SurveyItem
+        model = Response

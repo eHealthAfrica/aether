@@ -14,7 +14,7 @@ class Survey(models.Model):
         return '%s - %s' % (self.id, self.name)
 
 
-class SurveyItem(models.Model):
+class Response(models.Model):
     uuid = models.UUIDField(blank=False, editable=False, default=uuid.uuid4)
     survey = models.ForeignKey(Survey)
     data = JSONField(blank=False, null=False)

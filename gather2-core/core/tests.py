@@ -74,7 +74,7 @@ class SimpleTestCase(TestCase):
         response_json = json.loads(response.content.decode('utf-8'))
 
         survey_id = response_json['id']
-        items_url = response_json['surveyitems']
+        items_url = response_json['responses']
 
         data = {
             'survey': survey_id,
@@ -124,7 +124,7 @@ class SimpleTestCase(TestCase):
         response_json = json.loads(response.content.decode('utf-8'))
 
         survey_id = response_json['id']
-        items_url = response_json['surveyitems']
+        items_url = response_json['responses']
 
         data = {
             'survey': survey_id,
@@ -162,7 +162,7 @@ class SimpleTestCase(TestCase):
         response_json = json.loads(response.content.decode('utf-8'))
 
         survey_id = response_json['id']
-        items_url = response_json['surveyitems']
+        items_url = response_json['responses']
 
         def gen_data(offset):
             return {
@@ -180,7 +180,7 @@ class SimpleTestCase(TestCase):
         client.post(items_url, data=gen_data(1))
         client.post(items_url, data=gen_data(2))
 
-        response = client.get("/items/?data__firstName=Peter")
+        response = client.get("/responses/?data__firstName=Peter")
         response_json = json.loads(response.content.decode('utf-8'))
 
         assert response.status_code == 200, response_json

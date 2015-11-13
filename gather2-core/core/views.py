@@ -1,11 +1,18 @@
 from rest_framework import viewsets
 from rest_framework_extensions.mixins import NestedViewSetMixin
-from .serializers import SurveySerialzer, SurveyItemSerialzer
-from .models import Survey, SurveyItem
+from .serializers import SurveySerialzer, ResponseSerialzer
+from .models import Survey, Response
 from rest_framework import permissions
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 
 
-class SurveyItemPermissions(permissions.BasePermission):
+# This disabled CSRF checks only on the survey API calls.
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+    def enforce_csrf(self, request):
+        return
+
+
+class ResponsePermissions(permissions.BasePermission):
 
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
@@ -13,10 +20,6 @@ class SurveyItemPermissions(permissions.BasePermission):
 
         if request.user.is_anonymous():
             return False
-
-        survey_id = view.kwargs.get('parent_lookup_survey', "-1")
-        survey = Survey.objects.filter(id=int(survey_id), created_by=request.user).exists()
-        return survey
 
     def has_object_permission(self, request, view, obj):
         return True
@@ -35,16 +38,18 @@ class TemplateNameMixin:
 
 
 class SurveyViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
     queryset = Survey.objects.all()
     serializer_class = SurveySerialzer
     paginate_by = 100
 
 
-class SurveyItemViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
-    queryset = SurveyItem.objects.all()
-    serializer_class = SurveyItemSerialzer
+class ResponseViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+    queryset = Response.objects.all()
+    serializer_class = ResponseSerialzer
     paginate_by = 100
-    permission_classes = (SurveyItemPermissions,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
         # Eventually replace this naive implementation with a
