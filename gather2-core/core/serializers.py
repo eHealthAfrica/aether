@@ -74,7 +74,8 @@ class SurveySerialzer(serializers.ModelSerializer):
     responses = serializers.HyperlinkedIdentityField(
         'response-list', read_only=True, lookup_url_kwarg='parent_lookup_survey')
     schema = JSONSerializerField(validators=[is_json])
-    created_by = serializers.HiddenField(
+    created_by = serializers.PrimaryKeyRelatedField(
+        read_only=True,
         default=serializers.CurrentUserDefault())
 
     class Meta:
