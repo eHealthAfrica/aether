@@ -21,13 +21,21 @@ from django.contrib import admin
 
 
 router = TemplateRouter(template_name='index.html')
+
+(
+    router.register('surveys', views.SurveyViewSet)
+    .register('map_functions', views.MapViewSet,
+              base_name='survey_map_function',
+              parents_query_lookups=['survey'])
+)
 (
     router.register('surveys', views.SurveyViewSet)
     .register('responses', views.ResponseViewSet,
-              base_name='response',
+              base_name='survey_response',
               parents_query_lookups=['survey'])
 )
-router.register('responses', views.ResponseViewSet)
+router.register('map_functions', views.MapViewSet, base_name='map_function')
+router.register('responses', views.ResponseViewSet, base_name='response')
 
 urlpatterns = [
     url(r'^v1/', include(router.urls, namespace='v1')),

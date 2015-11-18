@@ -1,14 +1,14 @@
 from rest_framework import serializers
 import json
 import logging
-from .models import Response, Survey
+from .models import Response, Survey, Map
 import jsonschema
 
 
 logger = logging.getLogger(__name__)
 
 
-class JSONSerializerField(serializers.Field):
+class JSONSerializerMixin:
 
     """ Serializer for JSONField -- required to make field writable"""
 
@@ -34,6 +34,14 @@ class JSONSerializerField(serializers.Field):
                 return json.dumps(self, sort_keys=True)
 
         return JSONish(value)
+
+
+class JSONSerializer(JSONSerializerMixin, serializers.Serializer):
+    pass
+
+
+class JSONSerializerField(JSONSerializerMixin, serializers.Field):
+    pass
 
 
 def is_json(value):
@@ -71,8 +79,10 @@ class JSONSpecValidator(object):
 
 class SurveySerialzer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField('survey-detail')
+    map_functions = serializers.HyperlinkedIdentityField(
+        'survey_map_function-list', read_only=True, lookup_url_kwarg='parent_lookup_survey')
     responses = serializers.HyperlinkedIdentityField(
-        'response-list', read_only=True, lookup_url_kwarg='parent_lookup_survey')
+        'survey_response-list', read_only=True, lookup_url_kwarg='parent_lookup_survey')
     schema = JSONSerializerField(validators=[is_json])
     created_by = serializers.PrimaryKeyRelatedField(
         read_only=True,
@@ -80,10 +90,6 @@ class SurveySerialzer(serializers.ModelSerializer):
 
     class Meta:
         model = Survey
-
-
-def first_last(obj):
-    return "%s %s".format(obj.firstName, obj.lastName)
 
 
 class ResponseSerialzer(serializers.ModelSerializer):
@@ -95,8 +101,16 @@ class ResponseSerialzer(serializers.ModelSerializer):
         read_only=True,
         default=serializers.CurrentUserDefault())
 
-    def to_representation(self, obj):
-        return super(ResponseSerialzer, self).to_representation(obj)
-
     class Meta:
         model = Response
+
+
+class MappedResponseSerializer(ResponseSerialzer):
+    #url = serializers.HyperlinkedIdentityField('map_function-detail')
+    #response_url = serializers.HyperlinkedIdentityField('response-detail')
+    mapped_data = JSONSerializerField()
+
+
+class MapFunctionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Map

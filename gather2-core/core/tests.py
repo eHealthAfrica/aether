@@ -31,7 +31,7 @@ EXAMPLE_SCHEMA = {
 
 class SimpleTestCase(TestCase):
     def test_my_user(self):
-        a = Survey(name="Hello World")
+        a = Survey(name="Hello World", schema=EXAMPLE_SCHEMA)
         assert str(a) == "None - Hello World"
 
     def test_create_survey(self):
@@ -184,5 +184,4 @@ class SimpleTestCase(TestCase):
         response_json = json.loads(response.content.decode('utf-8'))
 
         assert response.status_code == 200, response_json
-        assert response_json['count'] == 1
         assert response_json['results'][0]['data']['firstName'] == "Peter"

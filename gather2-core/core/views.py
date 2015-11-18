@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from rest_framework_extensions.mixins import NestedViewSetMixin
-from .serializers import SurveySerialzer, ResponseSerialzer
-from .models import Survey, Response
+from .serializers import SurveySerialzer, ResponseSerialzer, MapFunctionSerializer, MappedResponseSerializer
+from .models import Survey, Response, Map
 from rest_framework import permissions
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 
@@ -10,19 +10,6 @@ from rest_framework.authentication import SessionAuthentication, BasicAuthentica
 class CsrfExemptSessionAuthentication(SessionAuthentication):
     def enforce_csrf(self, request):
         return
-
-
-class ResponsePermissions(permissions.BasePermission):
-
-    def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-
-        if request.user.is_anonymous():
-            return False
-
-    def has_object_permission(self, request, view, obj):
-        return True
 
 
 class TemplateNameMixin:
@@ -42,20 +29,19 @@ class SurveyViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     queryset = Survey.objects.all()
     serializer_class = SurveySerialzer
-    paginate_by = 100
 
 
 class ResponseViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
     authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
     queryset = Response.objects.all()
-    serializer_class = ResponseSerialzer
-    paginate_by = 100
+    serializer_class = MappedResponseSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
         # Eventually replace this naive implementation with a
         # django-restframework-filters + django-filter version that supports
         # JSONField
+        orig_qs = super(ResponseViewSet, self).get_queryset()
 
         data_queries = dict([
             (k, v) for (k, v) in
@@ -63,4 +49,13 @@ class ResponseViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewS
             if k.startswith('data__')
         ])
 
-        return super().get_queryset().filter(**data_queries)
+        filtered_qs = orig_qs.filter(**data_queries)
+        mapped_qs = filtered_qs#.decorate(lambda x: {'id': x['id']})
+        return mapped_qs
+
+
+class MapViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
+    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+    queryset = Map.objects.all()
+    serializer_class = MapFunctionSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
