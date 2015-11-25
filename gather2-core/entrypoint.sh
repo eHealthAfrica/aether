@@ -33,7 +33,7 @@ case "$1" in
 	cat ~/annotated/*
 	~/env/bin/coverage report --rcfile="/opt/.coveragerc"
 	cat << "EOF"
-____                 _     _       _     _
+ ____                 _     _       _     _
 / ___| ___   ___   __| |   (_) ___ | |__ | |
 | |  _ / _ \ / _ \ / _` |   | |/ _ \| '_ \| |
 | |_| | (_) | (_) | (_| |   | | (_) | |_) |_|
