@@ -24,7 +24,7 @@ case "$1" in
             --static-map /static=/opt/gather2-core/static_root
     ;;
     manage)
-        /opt/gather2-core/manage.py "${@:2}"
+        ~/env/bin/python /opt/gather2-core/manage.py "${@:2}"
     ;;
     test_coverage)
         ~/env/bin/coverage run --rcfile="/opt/.coveragerc" /opt/gather2-core/manage.py test core.tests.SimpleTestCase.test_query_decorator
