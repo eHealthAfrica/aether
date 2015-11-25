@@ -35,7 +35,7 @@ EXAMPLE_BAD_SCHEMA = "{'why is a string in a dict?'}"
 
 
 user_1 = models(User, username=strategies.text(max_size=30), first_name=strategies.text(
-    max_size=30), last_name=strategies.text(max_size=30)).example()
+    max_size=30), last_name=strategies.text(max_size=30), email=strategies.just('example@example.com')).example()
 
 SurveyGoalData = strategies.fixed_dictionaries(mapping={
     "schema": strategies.one_of(
