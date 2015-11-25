@@ -27,7 +27,7 @@ case "$1" in
         ~/env/bin/python /opt/gather2-core/manage.py "${@:2}"
     ;;
     test_coverage)
-        ~/env/bin/coverage run --rcfile="/opt/.coveragerc" /opt/gather2-core/manage.py test core.tests.SimpleTestCase.test_query_decorator
+        ~/env/bin/coverage run --rcfile="/opt/.coveragerc" /opt/gather2-core/manage.py test core
 	mkdir ~/annotated
 	~/env/bin/coverage annotate --rcfile="/opt/.coveragerc" -d ~/annotated
 	cat ~/annotated/*
