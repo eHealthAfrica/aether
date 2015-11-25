@@ -83,3 +83,4 @@ Session.vim
 .netrwhist
 *~
 .hypothesis
+coverage_html/
