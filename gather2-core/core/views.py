@@ -50,8 +50,14 @@ class ResponseViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewS
         ])
 
         filtered_qs = orig_qs.filter(**data_queries)
-        mapped_qs = filtered_qs#.decorate(lambda x: {'id': x['id']})
-        return mapped_qs
+
+        map_id = self.kwargs.get('parent_lookup_survey__map', None)
+        if map_id:
+            map_function = Map.objects.get(id=self.kwargs['parent_lookup_survey__map'])
+            mapped_qs = filtered_qs.decorate(map_function.code)
+            return mapped_qs
+
+        return filtered_qs
 
 
 class MapViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):

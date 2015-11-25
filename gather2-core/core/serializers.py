@@ -1,11 +1,28 @@
+# -*- coding: utf-8 -*-
 from rest_framework import serializers
-import json
+import simplejson as json
 import logging
 from .models import Response, Survey, Map
 import jsonschema
+import string
 
 
 logger = logging.getLogger(__name__)
+
+
+# Note: a combinations of JSONB in postgres and json parsing gives a nasty db
+# error
+# See: https://bugs.python.org/issue10976#msg159391
+# and http://www.postgresql.org/message-id/E1YHHV8-00032A-Em@gemulon.postgresql.org
+def make_printable(obj):
+    if isinstance(obj, dict):
+        return {make_printable(k): make_printable(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [make_printable(elem) for elem in obj]
+    elif isinstance(obj, str):
+        return ''.join(x for x in obj if x in string.printable)  # Only printables
+    else:
+        return obj
 
 
 class JSONSerializerMixin:
@@ -15,10 +32,11 @@ class JSONSerializerMixin:
     def to_internal_value(self, data):
         if isinstance(data, str):
             try:
-                return json.loads(data)
+                data = json.loads(data)
             except Exception as e:
                 raise serializers.ValidationError(str(e))
-        return data
+
+        return make_printable(data)
 
     def to_representation(self, value):
 
@@ -40,7 +58,7 @@ class JSONSerializer(JSONSerializerMixin, serializers.Serializer):
     pass
 
 
-class JSONSerializerField(JSONSerializerMixin, serializers.Field):
+class JSONSerializerField(JSONSerializerMixin, serializers.CharField):
     pass
 
 
@@ -79,9 +97,9 @@ class JSONSpecValidator(object):
 
 class SurveySerialzer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField('survey-detail')
-    map_functions = serializers.HyperlinkedIdentityField(
+    map_functions_url = serializers.HyperlinkedIdentityField(
         'survey_map_function-list', read_only=True, lookup_url_kwarg='parent_lookup_survey')
-    responses = serializers.HyperlinkedIdentityField(
+    responses_url = serializers.HyperlinkedIdentityField(
         'survey_response-list', read_only=True, lookup_url_kwarg='parent_lookup_survey')
     schema = JSONSerializerField(validators=[is_json])
     created_by = serializers.PrimaryKeyRelatedField(
@@ -106,11 +124,16 @@ class ResponseSerialzer(serializers.ModelSerializer):
 
 
 class MappedResponseSerializer(ResponseSerialzer):
-    #url = serializers.HyperlinkedIdentityField('map_function-detail')
-    #response_url = serializers.HyperlinkedIdentityField('response-detail')
-    mapped_data = JSONSerializerField()
+    mapped_data = JSONSerializerField(read_only=True)
+    mapped_err = serializers.CharField(read_only=True)
 
 
 class MapFunctionSerializer(serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        'map_functions-detail', read_only=True)
+    survey_url = serializers.HyperlinkedRelatedField('survey-detail', read_only=True, source='survey')
+    responses_url = serializers.HyperlinkedIdentityField(
+        'map_function_response-list', read_only=True, lookup_url_kwarg='parent_lookup_survey__map')
+
     class Meta:
         model = Map

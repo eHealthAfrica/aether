@@ -1,8 +1,15 @@
+#encoding: utf-8
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 from django.conf import settings
 from django.db.models.query import QuerySet
 from django.forms.models import model_to_dict
+from django.core.validators import MaxLengthValidator, MinLengthValidator
+import os
+import io
+import json
+import tempfile
+import subprocess
 
 
 # Based on django-queryset-transform.
@@ -39,14 +46,45 @@ class DecoratingQuerySet(QuerySet):
         Overwritten iterator which will apply the decorate functions before returning it.
         """
         base_iterator = super(DecoratingQuerySet, self).iterator()
+        import ast
+        # TODO: Do not run this if there are no functions to run, also pull this out to it's own function.
+        with tempfile.TemporaryDirectory(dir='/tmp/') as tmpdirname:
+            print('created temporary directory', tmpdirname)
+            with tempfile.NamedTemporaryFile(dir=tmpdirname, suffix='.py') as fp:
+                print(fp.name)
+                for obj in base_iterator:
+                    mapped_data = obj.data
+                    if self._decorate_funcs:
+                        for fn in self._decorate_funcs:
+                            fp.truncate()
+                            code = '''
+data={mapped_data}
 
-        for obj in base_iterator:
-            mapped_data = model_to_dict(obj)
-            # Apply the decorators
-            for fn in self._decorate_funcs:
-                mapped_data = fn(mapped_data)
-            obj.mapped_data = mapped_data
-            yield obj
+{fn}
+'''.format(mapped_data=mapped_data, fn=fn)
+                            fp.write(bytes(code, 'UTF-8'))
+                            fp.seek(0)
+                            raw_mapped_data, raw_err = subprocess.Popen(["pypy-sandbox", "--timeout", "1", "--tmp", tmpdirname, os.path.basename(fp.name)],
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE
+                                ).communicate()
+                            err = '\n'.join((raw_err.decode("utf-8")).splitlines()[1:-1]) or None
+
+                            try:
+                                if raw_mapped_data:
+                                    mapped_data = (ast.literal_eval(raw_mapped_data.decode("utf-8").strip()))
+                                else:
+                                    mapped_data = None
+                            except (ValueError, SyntaxError) as e:
+                                print(e, raw_mapped_data)
+                                mapped_data = raw_mapped_data.decode("utf-8").strip()
+                        obj.mapped_data = mapped_data
+                        obj.mapped_err = err
+
+                    else:
+                        obj.mapped_data = None
+
+                    yield obj
 
 
 class DecoratorManager(models.Manager):
