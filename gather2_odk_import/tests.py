@@ -129,6 +129,7 @@ def test_get_formlist():
     response = client.get(formUrl)
 
     assert response.status_code == 200
-    assert 'nodeset="/data/meta/instanceID"' in response.content.decode('utf-8')
+    assert 'nodeset="/data/meta/instanceID"' in response.content.decode(
+        'utf-8')
     assert response.has_header('x-openrosa-accept-content-length')
     assert response.has_header('x-openrosa-version')

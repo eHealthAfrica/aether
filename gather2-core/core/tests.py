@@ -298,8 +298,6 @@ class SimpleTestCase(TestCase):
         qs = Response.objects.all().decorate('123').decorate('123')
         self.assertEqual(['123'], qs._decorate_funcs)
 
-
-
     def test_template_names(self):
         url = reverse('survey-list', kwargs={'format': 'html'})
         client = Client()

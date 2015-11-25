@@ -1,6 +1,6 @@
 from rest_framework import viewsets
 from rest_framework_extensions.mixins import NestedViewSetMixin
-from .serializers import SurveySerialzer, ResponseSerialzer, MapFunctionSerializer, MappedResponseSerializer
+from .serializers import SurveySerialzer, MapFunctionSerializer, MappedResponseSerializer
 from .models import Survey, Response, Map
 from rest_framework import permissions
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
@@ -8,6 +8,7 @@ from rest_framework.authentication import SessionAuthentication, BasicAuthentica
 
 # This disabled CSRF checks only on the survey API calls.
 class CsrfExemptSessionAuthentication(SessionAuthentication):
+
     def enforce_csrf(self, request):
         return
 
@@ -25,14 +26,16 @@ class TemplateNameMixin:
 
 
 class SurveyViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
-    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+    authentication_classes = (
+        CsrfExemptSessionAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     queryset = Survey.objects.all()
     serializer_class = SurveySerialzer
 
 
 class ResponseViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
-    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+    authentication_classes = (
+        CsrfExemptSessionAuthentication, BasicAuthentication)
     queryset = Response.objects.all()
     serializer_class = MappedResponseSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
@@ -53,7 +56,8 @@ class ResponseViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewS
 
         map_id = self.kwargs.get('parent_lookup_survey__map', None)
         if map_id:
-            map_function = Map.objects.get(id=self.kwargs['parent_lookup_survey__map'])
+            map_function = Map.objects.get(
+                id=self.kwargs['parent_lookup_survey__map'])
             mapped_qs = filtered_qs.decorate(map_function.code)
             return mapped_qs
 
@@ -61,7 +65,8 @@ class ResponseViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewS
 
 
 class MapViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
-    authentication_classes = (CsrfExemptSessionAuthentication, BasicAuthentication)
+    authentication_classes = (
+        CsrfExemptSessionAuthentication, BasicAuthentication)
     queryset = Map.objects.all()
     serializer_class = MapFunctionSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)

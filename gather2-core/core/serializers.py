@@ -13,14 +13,16 @@ logger = logging.getLogger(__name__)
 # Note: a combinations of JSONB in postgres and json parsing gives a nasty db
 # error
 # See: https://bugs.python.org/issue10976#msg159391
-# and http://www.postgresql.org/message-id/E1YHHV8-00032A-Em@gemulon.postgresql.org
+# and
+# http://www.postgresql.org/message-id/E1YHHV8-00032A-Em@gemulon.postgresql.org
 def make_printable(obj):
     if isinstance(obj, dict):
         return {make_printable(k): make_printable(v) for k, v in obj.items()}
     elif isinstance(obj, list):
         return [make_printable(elem) for elem in obj]
     elif isinstance(obj, str):
-        return ''.join(x for x in obj if x in string.printable)  # Only printables
+        # Only printables
+        return ''.join(x for x in obj if x in string.printable)
     else:
         return obj
 
@@ -131,7 +133,8 @@ class MappedResponseSerializer(ResponseSerialzer):
 class MapFunctionSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         'map_functions-detail', read_only=True)
-    survey_url = serializers.HyperlinkedRelatedField('survey-detail', read_only=True, source='survey')
+    survey_url = serializers.HyperlinkedRelatedField(
+        'survey-detail', read_only=True, source='survey')
     responses_url = serializers.HyperlinkedIdentityField(
         'map_function_response-list', read_only=True, lookup_url_kwarg='parent_lookup_survey__map')
 

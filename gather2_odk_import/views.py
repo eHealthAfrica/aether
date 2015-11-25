@@ -64,7 +64,8 @@ class XFormViewSet(ReadOnlyModelViewSet):
     model = FormTemplate
     queryset = FormTemplate.objects.all()
     serializer_class = FormTemplateSerializer
-    renderer_classes = [XFormListRenderer, ]  # + ReadOnlyModelViewSet.renderer_classes
+    # + ReadOnlyModelViewSet.renderer_classes
+    renderer_classes = [XFormListRenderer, ]
 
     def _add_openrosa_headers(self, response):
         response['X-OpenRosa-Accept-Content-Length'] = '10000000'

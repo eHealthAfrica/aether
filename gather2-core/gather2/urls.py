@@ -37,7 +37,7 @@ router = TemplateRouter(template_name='index.html')
 (
     router.register('surveys', views.SurveyViewSet)
     .register('map_functions', views.MapViewSet,
-               base_name='survey_map_function',
+              base_name='survey_map_function',
               parents_query_lookups=['survey'])
 )
 router.register('map_functions', views.MapViewSet, base_name='map_functions')
