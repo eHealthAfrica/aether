@@ -23,5 +23,4 @@ before_script:
   - docker-compose run core /opt/gather2-core/entrypoint.sh sqlcreate
 
 script:
-  - docker-compose run core /opt/gather2-core/entrypoint.sh manage test core
-
+  - docker-compose run core /opt/gather2-core/entrypoint.sh test_coverage

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from rest_framework import serializers
-import simplejson as json
+import json
 import logging
 from .models import Response, Survey, Map
 import jsonschema
