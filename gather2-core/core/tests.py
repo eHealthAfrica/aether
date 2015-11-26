@@ -66,10 +66,6 @@ UglyMapFunctionResponseGoal = strategies.fixed_dictionaries({
 
 class SimpleTestCase(TestCase):
 
-    def test_my_user(self):
-        a = Survey(name="Hello World", schema=EXAMPLE_SCHEMA)
-        assert str(a) == "None - Hello World"
-
     @given(SurveyGoalData)
     def test_survey_smoke_test(self, data):
 
@@ -92,7 +88,7 @@ class SimpleTestCase(TestCase):
 
         # Now test with a logged in user
         login = client.login(username=username, password=password)
-        assert login is True
+        self.assertTrue(login)
 
         response = client.post(reverse('survey-list'),
                                json.dumps(data),
@@ -113,7 +109,7 @@ class SimpleTestCase(TestCase):
         u = User.objects.create_user(username, email, password)
 
         login = client.login(username=username, password=password)
-        assert login is True
+        self.assertTrue(login)
 
         response = client.post(reverse('response-list'),
                                json.dumps(survey_response),
@@ -158,7 +154,7 @@ class SimpleTestCase(TestCase):
         u = User.objects.create_user(username, email, password)
 
         login = client.login(username=username, password=password)
-        assert login is True
+        self.assertTrue(login)
 
         # Make a survey
         s = {
@@ -192,7 +188,7 @@ class SimpleTestCase(TestCase):
         u = User.objects.create_user(username, email, password)
 
         login = client.login(username=username, password=password)
-        assert login is True
+        self.assertTrue(login)
 
         # Make a survey
         s = {
@@ -320,13 +316,13 @@ class SimpleTestCase(TestCase):
         User.objects.create_superuser(username, email, password)
 
         login = client.login(username=username, password=password)
-        assert login is True
+        self.assertTrue(login)
 
         response = client.post(reverse('survey-list'), {
             'name': 'b_survey',
             'schema': json.dumps(EXAMPLE_SCHEMA),
         })
-        assert response.status_code == 201, response.content.decode('utf-8')
+        self.assertEqual(response.status_code, 201, response.content.decode('utf-8'))
 
         response_json = json.loads(response.content.decode('utf-8'))
 
@@ -344,7 +340,7 @@ class SimpleTestCase(TestCase):
 
         response = client.post(items_url, data=data)
         response_json = json.loads(response.content.decode('utf-8'))
-        assert response.status_code == 400, response.content.decode('utf-8')
+        self.assertEqual(response.status_code,400, response.content.decode('utf-8'))
 
     def test_query_nested_data_by_string(self):
 
@@ -357,7 +353,7 @@ class SimpleTestCase(TestCase):
         User.objects.create_superuser(username, email, password)
 
         login = client.login(username=username, password=password)
-        assert login is True
+        self.assertTrue(login)
 
         response = client.post('/surveys/', data={
             'name': 'b_survey',
@@ -388,5 +384,5 @@ class SimpleTestCase(TestCase):
         response = client.get("/responses/?data__firstName=Peter")
         response_json = json.loads(response.content.decode('utf-8'))
 
-        assert response.status_code == 200, response_json
-        assert response_json['results'][0]['data']['firstName'] == "Peter"
+        self.assertEqual(response.status_code, 200, response_json)
+        self.assertEqual(response_json['results'][0]['data']['firstName'], "Peter")

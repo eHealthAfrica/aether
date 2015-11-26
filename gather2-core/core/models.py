@@ -1,4 +1,5 @@
 # encoding: utf-8
+import logging
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 from django.conf import settings
@@ -6,6 +7,9 @@ from django.db.models.query import QuerySet
 import os
 import tempfile
 import subprocess
+
+logger = logging.getLogger(__name__)
+
 
 
 # Based on django-queryset-transform.
@@ -46,9 +50,8 @@ class DecoratingQuerySet(QuerySet):
         # TODO: Do not run this if there are no functions to run, also pull
         # this out to it's own function.
         with tempfile.TemporaryDirectory(dir='/tmp/') as tmpdirname:
-            print('created temporary directory', tmpdirname)
+            logger.info('created temporary directory', tmpdirname)
             with tempfile.NamedTemporaryFile(dir=tmpdirname, suffix='.py') as fp:
-                print(fp.name)
                 for obj in base_iterator:
                     mapped_data = obj.data
                     if self._decorate_funcs:
@@ -75,7 +78,7 @@ data={mapped_data}
                                 else:
                                     mapped_data = None
                             except (ValueError, SyntaxError) as e:
-                                print(e, raw_mapped_data)
+                                logger.exception(e, raw_mapped_data)
                                 mapped_data = raw_mapped_data.decode(
                                     "utf-8").strip()
                         obj.mapped_data = mapped_data
