@@ -1,24 +1,44 @@
+# -*- coding: utf-8 -*-
 from rest_framework import serializers
 import json
 import logging
-from .models import SurveyItem, Survey
+from .models import Response, Survey, Map
 import jsonschema
+import string
 
 
 logger = logging.getLogger(__name__)
 
 
-class JSONSerializerField(serializers.Field):
+# Note: a combinations of JSONB in postgres and json parsing gives a nasty db
+# error
+# See: https://bugs.python.org/issue10976#msg159391
+# and
+# http://www.postgresql.org/message-id/E1YHHV8-00032A-Em@gemulon.postgresql.org
+def make_printable(obj):
+    if isinstance(obj, dict):
+        return {make_printable(k): make_printable(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [make_printable(elem) for elem in obj]
+    elif isinstance(obj, str):
+        # Only printables
+        return ''.join(x for x in obj if x in string.printable)
+    else:
+        return obj
+
+
+class JSONSerializerMixin:
 
     """ Serializer for JSONField -- required to make field writable"""
 
     def to_internal_value(self, data):
         if isinstance(data, str):
             try:
-                return json.loads(data)
+                data = json.loads(data)
             except Exception as e:
                 raise serializers.ValidationError(str(e))
-        return data
+
+        return make_printable(data)
 
     def to_representation(self, value):
 
@@ -36,6 +56,14 @@ class JSONSerializerField(serializers.Field):
         return JSONish(value)
 
 
+class JSONSerializer(JSONSerializerMixin, serializers.Serializer):
+    pass
+
+
+class JSONSerializerField(JSONSerializerMixin, serializers.CharField):
+    pass
+
+
 def is_json(value):
     if isinstance(value, str):
         try:
@@ -48,7 +76,7 @@ def is_json(value):
 class JSONSpecValidator(object):
 
     """
-    This validates the submitted json with the schema saved on the SurveyItem.Survey.schema
+    This validates the submitted json with the schema saved on the Response.Survey.schema
     """
 
     def __init__(self):
@@ -71,30 +99,44 @@ class JSONSpecValidator(object):
 
 class SurveySerialzer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField('survey-detail')
-    surveyitems = serializers.HyperlinkedIdentityField(
-        'results-list', read_only=True, lookup_url_kwarg='parent_lookup_survey')
+    map_functions_url = serializers.HyperlinkedIdentityField(
+        'survey_map_function-list', read_only=True, lookup_url_kwarg='parent_lookup_survey')
+    responses_url = serializers.HyperlinkedIdentityField(
+        'survey_response-list', read_only=True, lookup_url_kwarg='parent_lookup_survey')
     schema = JSONSerializerField(validators=[is_json])
-    created_by = serializers.HiddenField(
+    created_by = serializers.PrimaryKeyRelatedField(
+        read_only=True,
         default=serializers.CurrentUserDefault())
 
     class Meta:
         model = Survey
 
 
-def first_last(obj):
-    return "%s %s".format(obj.firstName, obj.lastName)
-
-
-class SurveyItemSerialzer(serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField('surveyitem-detail')
+class ResponseSerialzer(serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField('response-detail')
     survey_url = serializers.HyperlinkedRelatedField(
         'survey-detail', source='survey', read_only=True)
     data = JSONSerializerField(validators=[JSONSpecValidator()])
-    created_by = serializers.HiddenField(
+    created_by = serializers.PrimaryKeyRelatedField(
+        read_only=True,
         default=serializers.CurrentUserDefault())
 
-    def to_representation(self, obj):
-        return super(SurveyItemSerialzer, self).to_representation(obj)
+    class Meta:
+        model = Response
+
+
+class MappedResponseSerializer(ResponseSerialzer):
+    mapped_data = JSONSerializerField(read_only=True)
+    mapped_err = serializers.CharField(read_only=True)
+
+
+class MapFunctionSerializer(serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        'map_functions-detail', read_only=True)
+    survey_url = serializers.HyperlinkedRelatedField(
+        'survey-detail', read_only=True, source='survey')
+    responses_url = serializers.HyperlinkedIdentityField(
+        'map_function_response-list', read_only=True, lookup_url_kwarg='parent_lookup_survey__map')
 
     class Meta:
-        model = SurveyItem
+        model = Map
