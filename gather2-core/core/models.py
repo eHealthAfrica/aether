@@ -11,7 +11,6 @@ import subprocess
 logger = logging.getLogger(__name__)
 
 
-
 # Based on django-queryset-transform.
 # This object however, operates on a per-object instance,
 # so it doesn't break the result generators

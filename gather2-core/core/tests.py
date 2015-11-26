@@ -322,7 +322,8 @@ class SimpleTestCase(TestCase):
             'name': 'b_survey',
             'schema': json.dumps(EXAMPLE_SCHEMA),
         })
-        self.assertEqual(response.status_code, 201, response.content.decode('utf-8'))
+        self.assertEqual(
+            response.status_code, 201, response.content.decode('utf-8'))
 
         response_json = json.loads(response.content.decode('utf-8'))
 
@@ -340,7 +341,8 @@ class SimpleTestCase(TestCase):
 
         response = client.post(items_url, data=data)
         response_json = json.loads(response.content.decode('utf-8'))
-        self.assertEqual(response.status_code,400, response.content.decode('utf-8'))
+        self.assertEqual(
+            response.status_code, 400, response.content.decode('utf-8'))
 
     def test_query_nested_data_by_string(self):
 
@@ -385,4 +387,5 @@ class SimpleTestCase(TestCase):
         response_json = json.loads(response.content.decode('utf-8'))
 
         self.assertEqual(response.status_code, 200, response_json)
-        self.assertEqual(response_json['results'][0]['data']['firstName'], "Peter")
+        self.assertEqual(
+            response_json['results'][0]['data']['firstName'], "Peter")
