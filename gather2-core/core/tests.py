@@ -1,6 +1,6 @@
 import json
 from django.test import Client, RequestFactory
-from .models import Survey, Response
+from .models import Response
 from django.contrib.auth import get_user_model
 from django.core.urlresolvers import reverse
 from hypothesis.extra.django import TestCase
