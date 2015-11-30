@@ -1,0 +1,6 @@
+gcc
+build-essential
+python-dev
+python-pip
+postgresql-client-9.4
+postgresql-server-dev-9.4
