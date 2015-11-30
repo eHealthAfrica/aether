@@ -15,6 +15,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "importer.docker")
 
 _application = get_wsgi_application()
 
+
 def application(environ, start_response):
     # Check for custom header from load balancer, and use it
     # to manually set the url_scheme variable
