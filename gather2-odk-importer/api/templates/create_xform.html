@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="create xform">
+    <meta name="author" content="eHealth Africa">
+    <title>XForm Create</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <form action="" method="post" class="form" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form }}
+        <input type="submit" value="Create" />
+    </form>
+</body>
+</html>

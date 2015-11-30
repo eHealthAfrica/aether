@@ -1,0 +1,14 @@
+db:
+  image: "postgres:9.4"
+
+web:
+  build: .
+  volumes:
+    - .:/code
+  environment:
+      DJANGO_SETTINGS_MODULE: "importer.docker"
+  command: python manage.py runserver 0.0.0.0:8000
+  ports:
+    - "8000:8000"
+  links:
+    - db
