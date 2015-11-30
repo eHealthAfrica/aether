@@ -1,25 +1,16 @@
 from rest_framework import viewsets
 from rest_framework_extensions.mixins import NestedViewSetMixin
-from .serializers import SurveySerialzer, SurveyItemSerialzer
-from .models import Survey, SurveyItem
+from .serializers import SurveySerialzer, MapFunctionSerializer, MappedResponseSerializer
+from .models import Survey, Response, Map
 from rest_framework import permissions
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 
 
-class SurveyItemPermissions(permissions.BasePermission):
+# This disabled CSRF checks only on the survey API calls.
+class CsrfExemptSessionAuthentication(SessionAuthentication):
 
-    def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-
-        if request.user.is_anonymous():
-            return False
-
-        survey_id = view.kwargs.get('parent_lookup_survey', "-1")
-        survey = Survey.objects.filter(id=int(survey_id), created_by=request.user).exists()
-        return survey
-
-    def has_object_permission(self, request, view, obj):
-        return True
+    def enforce_csrf(self, request):
+        return
 
 
 class TemplateNameMixin:
@@ -35,21 +26,25 @@ class TemplateNameMixin:
 
 
 class SurveyViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
+    authentication_classes = (
+        CsrfExemptSessionAuthentication, BasicAuthentication)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     queryset = Survey.objects.all()
     serializer_class = SurveySerialzer
-    paginate_by = 100
 
 
-class SurveyItemViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
-    queryset = SurveyItem.objects.all()
-    serializer_class = SurveyItemSerialzer
-    paginate_by = 100
-    permission_classes = (SurveyItemPermissions,)
+class ResponseViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
+    authentication_classes = (
+        CsrfExemptSessionAuthentication, BasicAuthentication)
+    queryset = Response.objects.all()
+    serializer_class = MappedResponseSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
         # Eventually replace this naive implementation with a
         # django-restframework-filters + django-filter version that supports
         # JSONField
+        orig_qs = super(ResponseViewSet, self).get_queryset()
 
         data_queries = dict([
             (k, v) for (k, v) in
@@ -57,4 +52,21 @@ class SurveyItemViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelVie
             if k.startswith('data__')
         ])
 
-        return super().get_queryset().filter(**data_queries)
+        filtered_qs = orig_qs.filter(**data_queries)
+
+        map_id = self.kwargs.get('parent_lookup_survey__map', None)
+        if map_id:
+            map_function = Map.objects.get(
+                id=self.kwargs['parent_lookup_survey__map'])
+            mapped_qs = filtered_qs.decorate(map_function.code)
+            return mapped_qs
+
+        return filtered_qs
+
+
+class MapViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
+    authentication_classes = (
+        CsrfExemptSessionAuthentication, BasicAuthentication)
+    queryset = Map.objects.all()
+    serializer_class = MapFunctionSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)

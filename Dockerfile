@@ -10,14 +10,19 @@ RUN apt-get update && apt-get -y upgrade && apt-get install -y \
   python3-pip \
   postgresql-client-9.4 \
   postgresql-server-dev-9.4 \
+  python-pypy.sandbox \
   npm
 
 RUN pip3 install virtualenv uwsgi
 
-RUN virtualenv /opt/env/
+RUN virtualenv ~/env/
 
 ADD ./gather2-core/requirements.txt /opt/gather2-core/requirements.txt
-RUN /opt/env/bin/pip install -r /opt/gather2-core/requirements.txt
+RUN ~/env/bin/pip install -r /opt/gather2-core/requirements.txt
 
 ADD . /opt/
-RUN /opt/env/bin/python /opt/gather2-core/manage.py collectstatic --no-input
+RUN ~/env/bin/python /opt/gather2-core/manage.py collectstatic --no-input
+
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8

@@ -1,0 +1,13 @@
+[run]
+branch = true
+omit = /opt/gather2-core/core/apps.py
+source = /opt/gather2-core/core
+
+[paths]
+source = /opt/gather2-core/core
+omit = /opt/gather2-core/core/apps.py
+
+[report]
+omit = /opt/gather2-core/core/apps.py
+show_missing = true
+fail_under = 100
