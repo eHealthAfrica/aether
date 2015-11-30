@@ -22,6 +22,7 @@ class XForm(models.Model):
 
     title = models.CharField(
         editable=False,
+        default=u'',
         max_length=64
     )
 
@@ -41,11 +42,20 @@ class XForm(models.Model):
         return u'%s' % md5(self.xml_data.encode('utf8')).hexdigest()
 
     @property
+    def id_string(self):
+        return str(self.pk)
+
+    @property
     def url(self):
         return reverse(
             "download_xform",
             kwargs={
-                "username": self.user.username,
+                "username": self.username,
                 "pk": self.pk
             }
         )
+
+    @property
+    def is_crowd_form(self):
+        # TODO make this a model member
+        return False

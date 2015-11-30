@@ -19,6 +19,10 @@ class XFormCreateForm(forms.Form):
         max_length=100
     )
 
-    name = forms.CharField(
+    title = forms.CharField(
         max_length=100
+    )
+
+    description = forms.CharField(
+        widget=forms.Textarea()
     )
