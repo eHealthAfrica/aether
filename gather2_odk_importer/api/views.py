@@ -1,10 +1,11 @@
 from django.views.generic import View, FormView
 from django.core.urlresolvers import reverse
+from django.shortcuts import render_to_response
+from django.utils import timezone
+
 from api import forms as api_forms
 from api import auth_utils
 from api.models import XForm
-
-# Create your views here.
 
 
 class XFormListView(View):
@@ -17,6 +18,23 @@ class XFormListView(View):
 
     def __init__(self, *args, **kwargs):
         super(XFormListView, self).__init__(*args, **kwargs)
+
+    def get(self, *args, **kwargs):
+        if not auth_utils.authorise(username='test', password='test'):
+            return auth_utils.HttpResponseNotAuthorized()
+
+        xforms = XForm.objects.filter(username=kwargs.get('username'))
+
+        response = render_to_response('xformsList.xml', {
+            'host': self.request.build_absolute_uri().replace(
+                self.request.get_full_path(), ''),
+            'xforms': xforms
+        }, mimetype='text/xml; charset=utf-8')
+
+        response['X-OpenRosa-Version'] = '1.0'
+        dt = timezone.now().strftime('%a, %d %b %Y %H:%M:%S %Z')
+        response['Date'] = dt
+        return response
 
 
 class XFormCreateView(FormView):
@@ -63,7 +81,7 @@ class XFormCreateView(FormView):
         xml_file = form.cleaned_data.get("xml_file")
         xml_contents = xml_file.read()
 
-        xform = XForm(username=username, name=form_name, xml_data=xml_contents)
+        xform = XForm(username=username, title=form_name, xml_data=xml_contents)
         xform.save()
 
         return super(XFormCreateView, self).form_valid(form)
