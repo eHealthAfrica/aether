@@ -2,7 +2,7 @@
 from rest_framework import serializers
 import json
 import logging
-from .models import Response, Survey, Map
+from .models import Response, Survey, MapFunction, MapResult
 import jsonschema
 import string
 
@@ -97,7 +97,7 @@ class JSONSpecValidator(object):
             self.schema = survey.schema
 
 
-class SurveySerialzer(serializers.ModelSerializer):
+class SurveySerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField('survey-detail')
     map_functions_url = serializers.HyperlinkedIdentityField(
         'survey_map_function-list', read_only=True, lookup_url_kwarg='parent_lookup_survey')
@@ -112,7 +112,7 @@ class SurveySerialzer(serializers.ModelSerializer):
         model = Survey
 
 
-class ResponseSerialzer(serializers.ModelSerializer):
+class ResponseSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField('response-detail')
     survey_url = serializers.HyperlinkedRelatedField(
         'survey-detail', source='survey', read_only=True)
@@ -125,18 +125,19 @@ class ResponseSerialzer(serializers.ModelSerializer):
         model = Response
 
 
-class MappedResponseSerializer(ResponseSerialzer):
-    mapped_data = JSONSerializerField(read_only=True)
-    mapped_err = serializers.CharField(read_only=True)
-
-
 class MapFunctionSerializer(serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField(
-        'map_functions-detail', read_only=True)
+    url = serializers.HyperlinkedIdentityField('response-detail')
     survey_url = serializers.HyperlinkedRelatedField(
-        'survey-detail', read_only=True, source='survey')
-    responses_url = serializers.HyperlinkedIdentityField(
-        'map_function_response-list', read_only=True, lookup_url_kwarg='parent_lookup_survey__map')
+        'survey-detail', source='survey', read_only=True)
 
     class Meta:
-        model = Map
+        model = MapFunction
+
+
+class MapResultSerializer(serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField('response-detail')
+    survey_url = serializers.HyperlinkedRelatedField(
+        'survey-detail', source='survey', read_only=True)
+
+    class Meta:
+        model = MapResult

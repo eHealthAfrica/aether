@@ -1,6 +1,6 @@
 import json
 from django.test import Client, RequestFactory
-from .models import Response
+from .models import Response, Survey
 from django.contrib.auth import get_user_model
 from django.core.urlresolvers import reverse
 from hypothesis.extra.django import TestCase
@@ -34,8 +34,11 @@ EXAMPLE_SCHEMA = {
 EXAMPLE_BAD_SCHEMA = "{'why is a string in a dict?'}"
 
 
-user_1 = models(User, username=strategies.text(max_size=30), first_name=strategies.text(
-    max_size=30), last_name=strategies.text(max_size=30), email=strategies.just('example@example.com')).example()
+UserGenerator = models(User, username=strategies.text(max_size=30), first_name=strategies.text(
+    max_size=30), last_name=strategies.text(max_size=30), email=strategies.just('example@example.com'))
+
+SurveyGenerator = models(Survey, schema=strategies.just(EXAMPLE_SCHEMA), created_by=UserGenerator)
+
 
 SurveyGoalData = strategies.fixed_dictionaries(mapping={
     "schema": strategies.one_of(

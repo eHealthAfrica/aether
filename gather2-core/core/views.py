@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from rest_framework_extensions.mixins import NestedViewSetMixin
-from .serializers import SurveySerialzer, MapFunctionSerializer, MappedResponseSerializer
-from .models import Survey, Response, Map
+from .serializers import SurveySerializer, ResponseSerializer, MapFunctionSerializer, MapResultSerializer
+from .models import Survey, Response, MapResult, MapFunction
 from rest_framework import permissions
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 
@@ -30,43 +30,28 @@ class SurveyViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet
         CsrfExemptSessionAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     queryset = Survey.objects.all()
-    serializer_class = SurveySerialzer
+    serializer_class = SurveySerializer
 
 
 class ResponseViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
     authentication_classes = (
         CsrfExemptSessionAuthentication, BasicAuthentication)
     queryset = Response.objects.all()
-    serializer_class = MappedResponseSerializer
+    serializer_class = ResponseSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
-    def get_queryset(self):
-        # Eventually replace this naive implementation with a
-        # django-restframework-filters + django-filter version that supports
-        # JSONField
-        orig_qs = super(ResponseViewSet, self).get_queryset()
 
-        data_queries = dict([
-            (k, v) for (k, v) in
-            self.request.query_params.items()
-            if k.startswith('data__')
-        ])
-
-        filtered_qs = orig_qs.filter(**data_queries)
-
-        map_id = self.kwargs.get('parent_lookup_survey__map', None)
-        if map_id:
-            map_function = Map.objects.get(
-                id=self.kwargs['parent_lookup_survey__map'])
-            mapped_qs = filtered_qs.decorate(map_function.code)
-            return mapped_qs
-
-        return filtered_qs
-
-
-class MapViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
+class MapFunctionViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
     authentication_classes = (
         CsrfExemptSessionAuthentication, BasicAuthentication)
-    queryset = Map.objects.all()
+    queryset = MapFunction.objects.all()
     serializer_class = MapFunctionSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+
+class MapResultViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
+    authentication_classes = (
+        CsrfExemptSessionAuthentication, BasicAuthentication)
+    queryset = MapResult.objects.all()
+    serializer_class = MapResultSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)

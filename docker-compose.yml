@@ -5,6 +5,11 @@ core:
   net: "host"
   command: bash /opt/gather2-core/entrypoint.sh  manage runserver 0.0.0.0:8000
   privileged: true
+  environment:
+    LANG: en_US.UTF-8
+    LANGUAGE: en_US:en
+    LC_ALL: en_US.UTF-8
+    PYTHONIOENCODING: utf8
 
 db:
   image: "postgres:9.4"
