@@ -4,8 +4,8 @@ db:
 core:
   build: gather2-core/.
   volumes:
-      - .:/opt/
-  command: bash /opt/gather2-core/entrypoint.sh  manage runserver 0.0.0.0:8000
+      - .:/code/
+  command: bash /code/gather2-core/entrypoint.sh  manage runserver 0.0.0.0:8000
   ports:
     - "8000:8000"
   links:

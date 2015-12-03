@@ -17,11 +17,11 @@ RUN pip3 install virtualenv uwsgi
 
 RUN virtualenv ~/env/
 
-ADD requirements.txt /opt/gather2-core/requirements.txt
-RUN ~/env/bin/pip install -r /opt/gather2-core/requirements.txt
+ADD requirements.txt /code/gather2-core/requirements.txt
+RUN ~/env/bin/pip install -r /code/gather2-core/requirements.txt
 
-ADD . /opt/
-RUN ~/env/bin/python /opt/manage.py collectstatic --no-input
+ADD . /code/
+RUN ~/env/bin/python /code/manage.py collectstatic --no-input
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
