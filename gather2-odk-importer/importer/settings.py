@@ -99,3 +99,5 @@ DATABASES = {
         'PORT': os.environ.get('DATABASE_PORT', '5432'),
     }
 }
+
+CORE_URL = os.environ.get('CORE_URL', 'core:8000')

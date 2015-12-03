@@ -1,12 +1,25 @@
-core:
-  build: .
-  volumes:
-          - .:/opt/
-  net: "host"
-  command: bash /opt/gather2-core/entrypoint.sh  manage runserver 0.0.0.0:8000
-  privileged: true
-
 db:
   image: "postgres:9.4"
-  net: "host"
 
+core:
+  build: gather2-core/.
+  volumes:
+      - .:/opt/
+  command: bash /opt/gather2-core/entrypoint.sh  manage runserver 0.0.0.0:8000
+  ports:
+    - "8000:8000"
+  links:
+    - db
+
+importer:
+  build: gather2-odk-importer/.
+  volumes:
+      - ./gather2-odk-importer/:/code
+  environment:
+      DJANGO_SETTINGS_MODULE: "importer.settings"
+  command: python manage.py runserver 0.0.0.0:8000
+  ports:
+    - "7000:8000"
+  links:
+    - db
+    - core

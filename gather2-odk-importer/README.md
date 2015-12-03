@@ -19,9 +19,11 @@ git
 
 ```sh
 git clone git@github.com:eHealthAfrica/gather2.git
-cd gather2/gather2_odk_importer
+cd gather2
 
 docker-compose up -d db 
-docker-compose run web startupimporter.sh setupdb
-docker-compose up web
+docker-compose run importer startupimporter.sh setupdb
+docker-compose up importer
 ```
+
+go to localhost:7000 in the host browser, eh voila!
