@@ -45,7 +45,7 @@ EOF
 
     ;;
     sqlcreate )
-	~/env/bin/python /opt/gather2-core/manage.py sqlcreate | psql -U postgres -h localhost
+	~/env/bin/python /opt/gather2-core/manage.py sqlcreate | psql -U postgres -h db
     ;;
     *)
         show_help
