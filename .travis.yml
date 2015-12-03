@@ -18,8 +18,8 @@ install:
 before_script:
   - flake8
   - docker-compose up -d db
-  - docker-compose run core /opt/gather2-core/entrypoint.sh sqlcreate
-  - docker-compose run core /opt/gather2-core/entrypoint.sh manage migrate
+  - docker-compose run core /code/gather2-core/entrypoint.sh sqlcreate
+  - docker-compose run core /code/gather2-core/entrypoint.sh manage migrate
 
 script:
-  - docker-compose run core /opt/gather2-core/entrypoint.sh test_coverage
+  - docker-compose run core /code/gather2-core/entrypoint.sh test_coverage

@@ -1,5 +1,11 @@
 FROM ubuntu:14.04
 
+ENV TERM screen-256color
+
+RUN locale-gen --no-purge en_US.UTF-8
+ENV LC_ALL en_US.UTF-8
+RUN update-locale LANG=en_US.UTF-8
+
 RUN apt-get install -y wget
 RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main 9.4" > /etc/apt/sources.list.d/pgdg.list
@@ -22,7 +28,3 @@ RUN ~/env/bin/pip install -r /code/gather2-core/requirements.txt
 
 ADD . /code/
 RUN ~/env/bin/python /code/manage.py collectstatic --no-input
-
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
