@@ -18,6 +18,9 @@ cache:
 install:
     - pip install flake8 docker-compose
 
+env:
+  - DATABASE_HOST=localhost
+
 before_script:
   - flake8
   - docker-compose run core /opt/gather2-core/entrypoint.sh sqlcreate
