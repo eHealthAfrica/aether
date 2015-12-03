@@ -1,8 +1,5 @@
 language: python
 
-addons:
-  postgresql: "9.4"
-
 python:
   - "3.4"
 
@@ -20,8 +17,9 @@ install:
 
 before_script:
   - flake8
-  - docker-compose run core /opt/gather2-core/entrypoint.sh sqlcreate
-  - docker-compose run core /opt/gather2-core/entrypoint.sh manage migrate
+  - docker-compose up -d db
+  - docker-compose run core /code/gather2-core/entrypoint.sh sqlcreate
+  - docker-compose run core /code/gather2-core/entrypoint.sh manage migrate
 
 script:
-  - docker-compose run core /opt/gather2-core/entrypoint.sh test_coverage
+  - docker-compose run core /code/gather2-core/entrypoint.sh test_coverage
