@@ -23,4 +23,4 @@ before_script:
 
 script:
   - docker-compose run core /code/gather2-core/entrypoint.sh test_coverage
-  - docker-compose run importer startupimporter.sh test
+  - docker-compose run importer startupimporter.sh test_coverage
