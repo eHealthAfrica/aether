@@ -1,8 +1,9 @@
 from django.views.generic import View, FormView
 from django.core.urlresolvers import reverse
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, get_object_or_404
 from django.utils import timezone
 from django.db.models.query import EmptyQuerySet
+from django.http import HttpResponse
 
 from api import forms as api_forms
 from api import auth_utils
@@ -133,5 +134,23 @@ class XFormXMLView(View):
 
     http_method_names = ["get", ]
 
-    def __init__(self, *args, **kwargs):
-        super(XFormXMLView, self).__init__(*args, **kwargs)
+    def get(self, *args, **kwargs):
+        username = kwargs.get("username")
+
+        if not auth_utils.authorise(username='test', password='test'):
+            return auth_utils.HttpResponseNotAuthorized()
+
+        pk = kwargs.get("pk")
+
+        xform = get_object_or_404(
+            XForm,
+            username=username,
+            pk=pk
+        )
+
+        response = HttpResponse(
+            xform.xml_data,
+            content_type="text/xml; charset=utf-8"
+        )
+        response['X-OpenRosa-Version'] = '1.0'
+        return response

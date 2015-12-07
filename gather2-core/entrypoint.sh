@@ -18,20 +18,19 @@ case "$1" in
             --master \
             --die-on-term \
             --http-socket 0.0.0.0:8080 \
-            --home /opt/env/ \
+            --home /code/env/ \
             --processes 4 \
             --module gather2.wsgi \
-            --static-map /static=/opt/gather2-core/static_root
+            --static-map /static=/code/gather2-core/static_root
     ;;
     manage)
-        ~/env/bin/python /opt/gather2-core/manage.py "${@:2}"
+        ~/env/bin/python /code/gather2-core/manage.py "${@:2}"
     ;;
     test_coverage)
-        ~/env/bin/coverage run --rcfile="/opt/.coveragerc" /opt/gather2-core/manage.py test core
+        ~/env/bin/coverage run --rcfile="/code/.coveragerc" /code/gather2-core/manage.py test core
 	mkdir ~/annotated
-	~/env/bin/coverage annotate --rcfile="/opt/.coveragerc" -d ~/annotated
-	~/env/bin/coverage report --rcfile="/opt/.coveragerc" || cat ~/annotated/*
-
+	~/env/bin/coverage annotate --rcfile="/code/.coveragerc" -d ~/annotated
+	~/env/bin/coverage report --rcfile="/code/.coveragerc" || cat ~/annotated/*
 	cat << "EOF"
   ____                 _     _       _     _
  / ___| ___   ___   __| |   (_) ___ | |__ | |
@@ -45,7 +44,7 @@ EOF
 
     ;;
     sqlcreate )
-	~/env/bin/python /opt/gather2-core/manage.py sqlcreate | psql -U postgres -h localhost
+	~/env/bin/python /code/gather2-core/manage.py sqlcreate | psql -U postgres -h db
     ;;
     *)
         show_help
