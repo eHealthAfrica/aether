@@ -1,4 +1,4 @@
-Django>=1.9a1
+Django==1.9
 flake8==2.4.1
 autopep8==1.2.1
 ipdb==0.8.1
@@ -12,4 +12,4 @@ Werkzeug==0.11.2
 django-extensions==1.5.9
 hypothesis-django
 coverage
-
+Celery

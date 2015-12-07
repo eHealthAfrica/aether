@@ -38,15 +38,15 @@ class MapFunction(models.Model):
 class MapResult(models.Model):
     map_function = models.ForeignKey(MapFunction)
     response = models.ForeignKey(Response)
-    data = JSONField(blank=False, null=False)
-    output = models.TextField()
+    data = JSONField(blank=True, null=False, editable=False)
+    output = models.TextField(editable=False)
     created = models.DateTimeField(auto_now_add=True, db_index=True)
 
 
 class ReduceFunction(models.Model):
     code = models.TextField()
-    data = JSONField(blank=False, null=False)
-    output = models.TextField()
+    data = JSONField(blank=False, null=False, default="{}")
+    output = models.TextField(blank=True, default="")
     map_function = models.ForeignKey(MapFunction)
     created = models.DateTimeField(auto_now_add=True, db_index=True)
 
@@ -89,6 +89,6 @@ data={data}
                 else:
                     results = [None]
             except (ValueError, SyntaxError) as e:
-                logger.exception(e)
-                results = raw_out.decode("utf-8")
+                logger.info(e)
+                results = [raw_out.decode("utf-8").strip()]
     return results, err

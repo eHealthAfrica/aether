@@ -30,8 +30,8 @@ case "$1" in
         ~/env/bin/coverage run --rcfile="/opt/.coveragerc" /opt/gather2-core/manage.py test core
 	mkdir ~/annotated
 	~/env/bin/coverage annotate --rcfile="/opt/.coveragerc" -d ~/annotated
-	cat ~/annotated/*
-	~/env/bin/coverage report --rcfile="/opt/.coveragerc"
+	~/env/bin/coverage report --rcfile="/opt/.coveragerc" || cat ~/annotated/*
+
 	cat << "EOF"
   ____                 _     _       _     _
  / ___| ___   ___   __| |   (_) ___ | |__ | |

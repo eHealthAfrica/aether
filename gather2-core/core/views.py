@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from rest_framework_extensions.mixins import NestedViewSetMixin
-from .serializers import SurveySerializer, ResponseSerializer, MapFunctionSerializer, MapResultSerializer
-from .models import Survey, Response, MapResult, MapFunction
+from .serializers import SurveySerializer, ResponseSerializer, MapFunctionSerializer, MapResultSerializer, ReduceFunctionSerializer
+from .models import Survey, Response, MapResult, MapFunction, ReduceFunction
 from rest_framework import permissions
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 
@@ -40,6 +40,22 @@ class ResponseViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewS
     serializer_class = ResponseSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
+    def get_queryset(self):
+        # Eventually replace this naive implementation with a
+        # django-restframework-filters + django-filter version that supports
+        # JSONField
+        orig_qs = super(ResponseViewSet, self).get_queryset()
+
+        data_queries = dict([
+            (k, v) for (k, v) in
+            self.request.query_params.items()
+            if k.startswith('data__')
+        ])
+
+        filtered_qs = orig_qs.filter(**data_queries)
+
+        return filtered_qs
+
 
 class MapFunctionViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
     authentication_classes = (
@@ -54,4 +70,12 @@ class MapResultViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelView
         CsrfExemptSessionAuthentication, BasicAuthentication)
     queryset = MapResult.objects.all()
     serializer_class = MapResultSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+
+class ReduceFunctionViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
+    authentication_classes = (
+        CsrfExemptSessionAuthentication, BasicAuthentication)
+    queryset = ReduceFunction.objects.all()
+    serializer_class = ReduceFunctionSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)

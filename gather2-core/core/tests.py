@@ -1,6 +1,6 @@
 import json
 from django.test import Client, RequestFactory
-from .models import Response, Survey
+from .models import Survey
 from django.contrib.auth import get_user_model
 from django.core.urlresolvers import reverse
 from hypothesis.extra.django import TestCase
@@ -31,7 +31,9 @@ EXAMPLE_SCHEMA = {
     "required": ["firstName", "lastName"]
 }
 
-EXAMPLE_BAD_SCHEMA = "{'why is a string in a dict?'}"
+EXAMPLE_BAD_SCHEMA1 = "{'why is a string in a dict?'}"
+EXAMPLE_BAD_SCHEMA2 = "\"[]\""
+EXAMPLE_BAD_SCHEMA3 = "\"af[]23\""
 
 
 UserGenerator = models(User, username=strategies.text(max_size=30), first_name=strategies.text(
@@ -41,13 +43,15 @@ SurveyGenerator = models(Survey, schema=strategies.just(EXAMPLE_SCHEMA), created
 
 
 SurveyGoalData = strategies.fixed_dictionaries(mapping={
-    "schema": strategies.one_of(
+    'schema': strategies.one_of(
         strategies.just(EXAMPLE_SCHEMA),
         strategies.text(),
-        strategies.just(EXAMPLE_BAD_SCHEMA),
+        strategies.just(EXAMPLE_BAD_SCHEMA1),
+        strategies.just(EXAMPLE_BAD_SCHEMA2),
+        strategies.just(EXAMPLE_BAD_SCHEMA3),
     ),
-    "created_by": strategies.integers(),
-    "name": strategies.text(),
+    'created_by': strategies.integers(),
+    'name': strategies.text(),
 })
 
 
@@ -57,13 +61,23 @@ SurveyResponseGoal = strategies.fixed_dictionaries({
         'lastName': strategies.text(),
         'created_by': strategies.integers(),
     }),
-    "created_by": strategies.integers(),
-    "survey": strategies.integers(),
+    'created_by': strategies.integers(),
+    'survey': strategies.integers(),
 })
 
-UglyMapFunctionResponseGoal = strategies.fixed_dictionaries({
+GoodMapFunctionGoal = strategies.fixed_dictionaries({
+    'code': strategies.just('print data'),
+    'survey': strategies.integers(),
+})
+
+BadMapFunctionGoal = strategies.fixed_dictionaries({
+    'code': strategies.just('1/0'),
+    'survey': strategies.integers(),
+})
+
+UglyMapFunctionGoal = strategies.fixed_dictionaries({
     'code': strategies.text(),
-    "survey": strategies.integers(),
+    'survey': strategies.integers(),
 })
 
 
@@ -146,7 +160,128 @@ class SimpleTestCase(TestCase):
             status.is_success(response.status_code), response.content)
         self.crawl('http://testserver' + reverse('api-root'), seen=[])
 
-    @given(UglyMapFunctionResponseGoal)
+    def test_reduce_function(self):
+        client = Client()
+
+        username = 'test'
+        email = 'test@example.com'
+        password = 'test'
+
+        u = User.objects.create_user(username, email, password)
+
+        login = client.login(username=username, password=password)
+        self.assertTrue(login)
+
+        # Make a survey
+        s = {
+            'owner': u.id,
+            'name': 'a title',
+            'schema': EXAMPLE_SCHEMA
+        }
+        response = client.post(reverse('survey-list'),
+                               json.dumps(s),
+                               content_type='application/json')
+
+        self.assertTrue(
+            status.is_success(response.status_code), response.content)
+        survey_id = response.json()['id']
+
+        response = client.post(reverse('response-list'),
+                               json.dumps({
+                                   "data": {"firstName": "tim", "lastName": "qux"},
+                                   "survey": survey_id
+                               }),
+                               content_type='application/json')
+        self.assertTrue(
+            status.is_success(response.status_code), response.content)
+        # Make a map func
+        response = client.post(reverse('map_function-list'),
+                               json.dumps({
+                                   "code": "print data['firstName']",
+                                   "survey": survey_id
+                               }),
+                               content_type='application/json')
+        self.assertFalse(
+            status.is_server_error(response.status_code), response.content)
+        map_function_id = response.json()['id']
+
+        # Make a reduce func
+        response = client.post(reverse('reduce_function-list'),
+                               json.dumps({
+                                   "code": "print ''.join(data)",
+                                   "map_function": map_function_id
+                               }),
+                               content_type='application/json')
+        self.assertFalse(
+            status.is_server_error(response.status_code), response.content)
+
+        reduce_function_id = response.json()['id']
+
+        response = client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
+        self.assertEqual(response.json()['data'], ['tim'])
+
+        response = client.post(reverse('response-list'),
+                               json.dumps({
+                                   "data": {"firstName": "bob", "lastName": "smith"},
+                                   "survey": survey_id
+                               }),
+                               content_type='application/json')
+        self.assertTrue(
+            status.is_success(response.status_code), response.content)
+
+        response = client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
+        self.assertEqual(response.json()['data'], ['timbob'])
+
+        response = client.put(reverse('reduce_function-detail', args=[reduce_function_id]),
+                              json.dumps({
+                                  "code": "print '-'.join(d for d in data if d)",
+                                  "map_function": map_function_id
+                              }),
+                              content_type='application/json')
+        self.assertFalse(
+            status.is_server_error(response.status_code), response.content)
+        response = client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
+        self.assertEqual(response.json()['data'], ['tim-bob'])
+
+        response = client.put(reverse('map_function-detail', args=[map_function_id]),
+                              json.dumps({
+                                  "code": "print data['lastName']",
+                                  "survey": survey_id,
+                              }),
+                              content_type='application/json')
+        self.assertFalse(
+            status.is_server_error(response.status_code), response.content)
+
+        response = client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
+        self.assertEqual(response.json()['data'], ['qux-smith'])
+
+        response = client.post(reverse('response-list'),
+                               json.dumps({
+                                   "data": {"firstName": "foo", "lastName": "bar"},
+                                   "survey": survey_id
+                               }),
+                               content_type='application/json')
+        self.assertTrue(
+            status.is_success(response.status_code), response.content)
+
+        response = client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
+        self.assertEqual(response.json()['data'], ['qux-smith-bar'])
+
+        response = client.put(reverse('map_function-detail', args=[map_function_id]),
+                              json.dumps({
+                                  "code": "# Do nothing",
+                                  "survey": survey_id,
+                              }),
+                              content_type='application/json')
+        self.assertFalse(
+            status.is_server_error(response.status_code), response.content)
+
+        response = client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
+        self.assertEqual(response.json()['data'], [''])
+
+        self.crawl('http://testserver' + reverse('api-root'), seen=[])
+
+    @given(UglyMapFunctionGoal)
     def test_map_function_smoke_test(self, map_function_data):
         client = Client()
 
@@ -172,7 +307,7 @@ class SimpleTestCase(TestCase):
         self.assertTrue(
             status.is_success(response.status_code), response.content)
 
-        response = client.post(reverse('map_functions-list'),
+        response = client.post(reverse('map_function-list'),
                                json.dumps(map_function_data),
                                content_type='application/json')
 
@@ -212,7 +347,7 @@ class SimpleTestCase(TestCase):
             'code': '''1/0''',
             'survey': survey_id
         }
-        response = client.post(reverse('map_functions-list'),
+        response = client.post(reverse('map_function-list'),
                                json.dumps(map_code),
                                content_type='application/json')
 
@@ -225,7 +360,7 @@ class SimpleTestCase(TestCase):
             'code': '''print object()''',
             'survey': survey_id
         }
-        response = client.post(reverse('map_functions-list'),
+        response = client.post(reverse('map_function-list'),
                                json.dumps(map_code),
                                content_type='application/json')
 
@@ -237,7 +372,7 @@ class SimpleTestCase(TestCase):
             'code': '''print data''',
             'survey': survey_id
         }
-        response = client.post(reverse('map_functions-list'),
+        response = client.post(reverse('map_function-list'),
                                json.dumps(map_code),
                                content_type='application/json')
 
@@ -257,6 +392,9 @@ class SimpleTestCase(TestCase):
         self.crawl('http://testserver' + reverse('api-root'), seen=[])
 
     def crawl(self, obj, seen=[]):
+        '''
+        Crawls the API for urls to assert that all GET  requests do not error.
+        '''
         if isinstance(obj, dict):
             {k: self.crawl(v, seen) for k, v in obj.items()}
         elif isinstance(obj, list):
@@ -281,7 +419,7 @@ class SimpleTestCase(TestCase):
 
         # This also tests that the json will be parsed correctly in the api
         # form
-        from core.serializers import SurveySerialzer
+        from core.serializers import SurveySerializer
 
         r = RequestFactory().get('/')
         username = 'test'
@@ -289,13 +427,9 @@ class SimpleTestCase(TestCase):
         password = 'test'
         u = User.objects.create_user(username, email, password)
         r.user = u
-        s = SurveySerialzer(
-            data={'survey': '2', 'schema': '"123,3"'}, context={'request': r})
+        s = SurveySerializer(
+            data={'survey': '2', 'schema': '{}'}, context={'request': r})
         s.is_valid()
-
-    def test_query_decorator(self):
-        qs = Response.objects.all().decorate('123').decorate('123')
-        self.assertEqual(['123'], qs._decorate_funcs)
 
     def test_template_names(self):
         url = reverse('survey-list', kwargs={'format': 'html'})
@@ -373,8 +507,6 @@ class SimpleTestCase(TestCase):
         def gen_data(offset):
             return {
                 'survey': survey_id,
-                # ^- TODO this must go because we're POSTing to the survey's items url already
-
                 'data': json.dumps({
                     'firstName': ['Joe', 'Peter', 'Tom'][offset],
                     'lastName': 'Pan',

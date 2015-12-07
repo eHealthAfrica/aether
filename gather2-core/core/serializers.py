@@ -2,7 +2,7 @@
 from rest_framework import serializers
 import json
 import logging
-from .models import Response, Survey, MapFunction, MapResult
+from .models import Response, Survey, MapFunction, MapResult, ReduceFunction
 import jsonschema
 import string
 
@@ -126,18 +126,33 @@ class ResponseSerializer(serializers.ModelSerializer):
 
 
 class MapFunctionSerializer(serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField('response-detail')
+    url = serializers.HyperlinkedIdentityField('map_function-detail')
     survey_url = serializers.HyperlinkedRelatedField(
         'survey-detail', source='survey', read_only=True)
+    results_url = serializers.HyperlinkedIdentityField(
+        'map_function_result-list', read_only=True, lookup_url_kwarg='parent_lookup_map_function')
+    reduce_functions_url = serializers.HyperlinkedIdentityField(
+        'reduce_function-list', read_only=True, lookup_url_kwarg='parent_lookup_map_function')
 
     class Meta:
         model = MapFunction
 
 
 class MapResultSerializer(serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField('response-detail')
-    survey_url = serializers.HyperlinkedRelatedField(
-        'survey-detail', source='survey', read_only=True)
+    url = serializers.HyperlinkedIdentityField('map_results-detail')
+    response_url = serializers.HyperlinkedRelatedField(
+        'response-detail', source='response', read_only=True)
+    map_functions_url = serializers.HyperlinkedRelatedField(
+        'map_function-detail', source='map_function', read_only=True)
 
     class Meta:
         model = MapResult
+
+
+class ReduceFunctionSerializer(serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField('reduce_function-detail')
+    map_functions_url = serializers.HyperlinkedRelatedField(
+        'map_function-detail', source='map_function', read_only=True)
+
+    class Meta:
+        model = ReduceFunction
