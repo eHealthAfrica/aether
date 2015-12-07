@@ -22,6 +22,10 @@ case "$1" in
         python manage.py syncdb
         python manage.py migrate
     ;;
+    test )
+        cd /code
+        python manage.py test
+    ;;
     *)
         show_help
     ;;
