@@ -1,0 +1,10 @@
+[run]
+branch = true
+source = /code
+
+[paths]
+source = /code/api
+
+[report]
+show_missing = true
+fail_under = 100

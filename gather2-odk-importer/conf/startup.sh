@@ -26,6 +26,24 @@ case "$1" in
         cd /code
         python manage.py test
     ;;
+    test_coverage )
+        coverage run --rcfile="/code/.coveragerc" /code/manage.py test
+        mkdir ~/annotated
+        coverage annotate --rcfile="/code/.coveragerc" -d ~/annotated
+        cat ~/annotated/*
+        coverage report --rcfile="/code/.coveragerc"
+        cat << "EOF"
+  ____                 _     _       _     _
+ / ___| ___   ___   __| |   (_) ___ | |__ | |
+| |  _ / _ \ / _ \ / _` |   | |/ _ \| '_ \| |
+| |_| | (_) | (_) | (_| |   | | (_) | |_) |_|
+ \____|\___/ \___/ \__,_|  _/ |\___/|_.__/(_)
+                          |__/
+
+EOF
+
+
+    ;;
     *)
         show_help
     ;;
