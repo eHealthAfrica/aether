@@ -28,6 +28,9 @@ class XFormAPITestCase(TestCase):
         """
         response = self.c.get('/test_user/formList')
         self.assertEqual(response.status_code, 200)
+        self.assertTrue("<formID>%s</formID>" % self.xform1.pk in response.content)
+        self.assertTrue("<formID>%s</formID>" % self.xform2.pk not in response.content)
+        self.assertTrue("<formID>%s</formID>" % self.xform3.pk not in response.content)
 
     def test_number_of_forms(self):
         """
