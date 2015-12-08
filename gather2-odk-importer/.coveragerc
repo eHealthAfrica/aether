@@ -1,10 +1,19 @@
 [run]
 branch = true
 source = /code
+omit = 
+    /code/manage.py
+    /code/importer/wsgi.py
 
 [paths]
 source = /code/api
+omit = 
+    /code/manage.py
+    /code/importer/wsgi.py
 
 [report]
+omit = 
+    /code/manage.py
+    /code/importer/wsgi.py
 show_missing = true
 fail_under = 100
