@@ -17,11 +17,11 @@ RUN apt-get update -qq
 ADD apt-packages.txt /tmp/apt-packages.txt
 RUN cat /tmp/apt-packages.txt | xargs apt-get --yes --force-yes install
 
-ADD conf/startup.sh /usr/local/bin/startupimporter.sh
-RUN chmod +x /usr/local/bin/startupimporter.sh
-
 ADD requirements_importer.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt
+
+ADD conf/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 WORKDIR /code
 

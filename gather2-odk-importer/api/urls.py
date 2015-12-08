@@ -6,7 +6,7 @@ urlpatterns = [
     url(r'^(?P<username>\w+)/formList$', views.XFormListView.as_view(), name='xformlistview'),
     url(r'^(?P<username>\w+)/forms/(?P<pk>[^/]+)/form\.xml$', views.XFormXMLView.as_view(), name='download_xform'),
     url(r'^(?P<username>\w+)/forms/create$', views.XFormCreateView.as_view(), name='xformcreate'),
-    url(r"^(?P<username>\w+)/xformsManifest/(?P<id_string>[^/]+)$", views.XFormManifestView.as_view(), name='xform_manifest'),
+    url(r'^(?P<username>\w+)/xformsManifest/(?P<id_string>[^$]+)$', views.XFormManifestView.as_view(), name='xform_manifest'),
 ]
 
 ###########################################################################
