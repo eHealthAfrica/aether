@@ -30,8 +30,7 @@ case "$1" in
         coverage run --rcfile="/code/.coveragerc" /code/manage.py test
         mkdir ~/annotated
         coverage annotate --rcfile="/code/.coveragerc" -d ~/annotated
-        cat ~/annotated/*
-        coverage report --rcfile="/code/.coveragerc"
+        coverage report --rcfile="/code/.coveragerc" || cat ~/annotated/*
         cat << "EOF"
   ____                 _     _       _     _
  / ___| ___   ___   __| |   (_) ___ | |__ | |
