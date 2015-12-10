@@ -23,7 +23,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_extensions',
     'core.apps.CoreConfig',
-    'kombu.transport.django'
 ]
 
 MIDDLEWARE_CLASSES = [
