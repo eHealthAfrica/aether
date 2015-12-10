@@ -194,32 +194,35 @@ class SimpleTestCase(TestCase):
                                content_type='application/json')
         self.assertTrue(
             status.is_success(response.status_code), response.content)
-        # Make a map func
+
+        # Make a map function
         response = client.post(reverse('map_function-list'),
                                json.dumps({
                                    "code": "print data['firstName']",
                                    "survey": survey_id
                                }),
                                content_type='application/json')
-        self.assertFalse(
-            status.is_server_error(response.status_code), response.content)
+        self.assertTrue(
+            status.is_success(response.status_code), response.content)
         map_function_id = response.json()['id']
 
-        # Make a reduce func
+        # Make a reduce function
         response = client.post(reverse('reduce_function-list'),
                                json.dumps({
                                    "code": "print ''.join(data)",
                                    "map_function": map_function_id
                                }),
                                content_type='application/json')
-        self.assertFalse(
-            status.is_server_error(response.status_code), response.content)
+        self.assertTrue(
+            status.is_success(response.status_code), response.content)
 
         reduce_function_id = response.json()['id']
 
+        # Assert the reduce function only gets the first name
         response = client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
         self.assertEqual(response.json()['data'], ['tim'])
 
+        # Add new Response
         response = client.post(reverse('response-list'),
                                json.dumps({
                                    "data": {"firstName": "bob", "lastName": "smith"},
@@ -229,55 +232,37 @@ class SimpleTestCase(TestCase):
         self.assertTrue(
             status.is_success(response.status_code), response.content)
 
+        # Assert reduce function is recalcualted with new response included
         response = client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
         self.assertEqual(response.json()['data'], ['timbob'])
 
+        # Update Reduce function
         response = client.put(reverse('reduce_function-detail', args=[reduce_function_id]),
                               json.dumps({
                                   "code": "print '-'.join(d for d in data if d)",
                                   "map_function": map_function_id
                               }),
                               content_type='application/json')
-        self.assertFalse(
-            status.is_server_error(response.status_code), response.content)
+        self.assertTrue(
+            status.is_success(response.status_code), response.content)
+
+        # Assert the reduce function is recalculated when updated
         response = client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
         self.assertEqual(response.json()['data'], ['tim-bob'])
 
+        # Updated the map function
         response = client.put(reverse('map_function-detail', args=[map_function_id]),
                               json.dumps({
                                   "code": "print data['lastName']",
                                   "survey": survey_id,
                               }),
                               content_type='application/json')
-        self.assertFalse(
-            status.is_server_error(response.status_code), response.content)
-
-        response = client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
-        self.assertEqual(response.json()['data'], ['qux-smith'])
-
-        response = client.post(reverse('response-list'),
-                               json.dumps({
-                                   "data": {"firstName": "foo", "lastName": "bar"},
-                                   "survey": survey_id
-                               }),
-                               content_type='application/json')
         self.assertTrue(
             status.is_success(response.status_code), response.content)
 
+        # Assert reduce function is recalcualted with new map function
         response = client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
-        self.assertEqual(response.json()['data'], ['qux-smith-bar'])
-
-        response = client.put(reverse('map_function-detail', args=[map_function_id]),
-                              json.dumps({
-                                  "code": "# Do nothing",
-                                  "survey": survey_id,
-                              }),
-                              content_type='application/json')
-        self.assertFalse(
-            status.is_server_error(response.status_code), response.content)
-
-        response = client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
-        self.assertEqual(response.json()['data'], [''])
+        self.assertEqual(response.json()['data'], ['qux-smith'])
 
         self.crawl('http://testserver' + reverse('api-root'), seen=[])
 

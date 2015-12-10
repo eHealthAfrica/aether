@@ -12,4 +12,3 @@ Werkzeug==0.11.2
 django-extensions==1.5.9
 hypothesis-django
 coverage
-Celery
