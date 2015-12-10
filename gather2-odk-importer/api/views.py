@@ -6,7 +6,7 @@ from django.db.models.query import EmptyQuerySet
 from django.http import HttpResponse
 
 from api import forms as api_forms
-from api import auth_utils
+from api.auth_utils import AuthService, HttpResponseNotAuthorised
 from api.models import XForm
 
 
@@ -30,7 +30,7 @@ class XFormManifestView(View):
             'host': self.request.build_absolute_uri().replace(
                 self.request.get_full_path(), ''),
             # TODO do not use an empty query set when we support attachments
-            'media_files': EmptyQuerySet()
+            'media_files': EmptyQuerySet
         }, content_type="text/xml; charset=utf-8")
 
         response['X-OpenRosa-Version'] = '1.0'
@@ -49,8 +49,8 @@ class XFormListView(View):
     http_method_names = ["get", ]
 
     def get(self, *args, **kwargs):
-        if not auth_utils.authorise(username='test', password='test'):
-            return auth_utils.HttpResponseNotAuthorized()
+        if not AuthService().authorise(username='test', password='test'):
+            return HttpResponseNotAuthorised()
 
         xforms = XForm.objects.filter(username=kwargs.get('username'))
 
@@ -76,18 +76,14 @@ class XFormCreateView(FormView):
     form_class = api_forms.XFormCreateForm
 
     def get(self, *args, **kwargs):
-        if auth_utils.authorise(username='test', password='test'):
-            return super(XFormCreateView, self).get(*args, **kwargs)
-        else:
-            # TODO raise a good exception here
-            raise Exception("Not authorised")
+        if not AuthService().authorise(username='test', password='test'):
+            return HttpResponseNotAuthorised()
+        return super(XFormCreateView, self).get(*args, **kwargs)
 
     def post(self, *args, **kwargs):
-        if auth_utils.authorise(username='test', password='test'):
-            return super(XFormCreateView, self).post(*args, **kwargs)
-        else:
-            # TODO raise a good exception here
-            raise Exception("Not authorised")
+        if not AuthService().authorise(username='test', password='test'):
+            return HttpResponseNotAuthorised()
+        return super(XFormCreateView, self).post(*args, **kwargs)
 
     def get_context_data(self, *args, **kwargs):
         ctx = super(XFormCreateView, self).get_context_data(*args, **kwargs)
@@ -137,8 +133,8 @@ class XFormXMLView(View):
     def get(self, *args, **kwargs):
         username = kwargs.get("username")
 
-        if not auth_utils.authorise(username='test', password='test'):
-            return auth_utils.HttpResponseNotAuthorized()
+        if not AuthService().authorise(username='test', password='test'):
+            return HttpResponseNotAuthorised()
 
         pk = kwargs.get("pk")
 
