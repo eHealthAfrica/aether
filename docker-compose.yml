@@ -19,7 +19,7 @@ importer:
       DJANGO_SETTINGS_MODULE: "importer.settings"
   command: python manage.py runserver 0.0.0.0:8000
   ports:
-    - "7000:8010"
+    - "7000:8000"
   links:
     - db
     - core
