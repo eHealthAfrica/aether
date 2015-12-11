@@ -19,7 +19,6 @@ case "$1" in
     setupdb )
         cd /code
         psql -U postgres -h db -c "create database odkimporter"
-        python manage.py syncdb
         python manage.py migrate
     ;;
     test )
