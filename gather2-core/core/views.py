@@ -26,6 +26,30 @@ class TemplateNameMixin:
 
 
 class SurveyViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
+    '''
+    Create a new survey in the [json-schema standard](http://json-schema.org/examples.html).
+
+    Example:
+
+        {
+            "title": "Example Schema",
+            "type": "object",
+            "properties": {
+                "firstName": {
+                    "type": "string"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "age": {
+                    "description": "Age in years",
+                    "type": "integer",
+                    "minimum": 0
+                }
+            },
+            "required": ["firstName", "lastName"]
+        }
+    '''
     authentication_classes = (
         CsrfExemptSessionAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
@@ -34,6 +58,9 @@ class SurveyViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet
 
 
 class ResponseViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
+    '''
+    All the responses to surveys.
+    '''
     authentication_classes = (
         CsrfExemptSessionAuthentication, BasicAuthentication)
     queryset = Response.objects.all()

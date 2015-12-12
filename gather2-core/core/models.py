@@ -19,7 +19,7 @@ class Survey(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, db_index=True)
 
     def __str__(self):
-        return '%s - %r' % (self.id, self.name)
+        return '%s - %r'.format(self.id, self.name)
 
 
 class Response(models.Model):
@@ -38,15 +38,15 @@ class MapFunction(models.Model):
 class MapResult(models.Model):
     map_function = models.ForeignKey(MapFunction)
     response = models.ForeignKey(Response)
-    data = JSONField(blank=True, null=False, editable=False)
-    output = models.TextField(editable=False)
+    output = JSONField(blank=True, null=False, default="{}" ,editable=False)
+    error = models.TextField(editable=False)
     created = models.DateTimeField(auto_now_add=True, db_index=True)
 
 
 class ReduceFunction(models.Model):
     code = models.TextField()
-    data = JSONField(blank=False, null=False, default="{}")
-    output = models.TextField(blank=True, default="")
+    output = JSONField(blank=False, null=False, default="{}", editable=False)
+    error = models.TextField(blank=True, default="", editable=False)
     map_function = models.ForeignKey(MapFunction)
     created = models.DateTimeField(auto_now_add=True, db_index=True)
 
@@ -57,7 +57,8 @@ def calculate(code, data):
     python literals as a list or the raw output.
     """
     # TODO: dont hardcode the tmp dir
-    results = []
+    # TODO: Set up a ramdisk in tmp and use that
+    out = []
     with tempfile.TemporaryDirectory(dir='/tmp/') as tmpdirname:
         logger.info('created temporary directory', tmpdirname)
         with tempfile.NamedTemporaryFile(dir=tmpdirname, suffix='.py') as fp:
@@ -85,10 +86,10 @@ data={data}
                 if raw_out:
                     # See if what was returned was a python literal, this is safe
                     for line in raw_out.decode("utf-8").splitlines():
-                        results.append(ast.literal_eval(line.strip()))
+                        out.append(ast.literal_eval(line.strip()))
                 else:
-                    results = [None]
+                    out.append(None)
             except (ValueError, SyntaxError) as e:
                 logger.info(e)
-                results = [raw_out.decode("utf-8").strip()]
-    return results, err
+                out.append(raw_out.decode("utf-8").strip())
+    return out, err

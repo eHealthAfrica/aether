@@ -46,7 +46,7 @@ router = TemplateRouter(template_name='index.html')
 (
     router.register('map-functions', views.MapFunctionViewSet, base_name='map_function')
     .register('reduce-functions', views.ReduceFunctionViewSet,
-              base_name='reduce_function',
+              base_name='map_reduce_function',
               parents_query_lookups=['map_function'])
 )
 

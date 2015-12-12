@@ -12,24 +12,26 @@ def response_saved(sender, instance, **kwargs):
 
     for map_function in response.survey.mapfunction_set.all():
 
-        # Calcualte the new results
-        results, error = calculate(map_function.code, response.data)
+        # Calcualte the new output
+        outputs, error = calculate(map_function.code, response.data)
 
         # Remove existing calculated data
         MapResult.objects.filter(map_function=map_function, response=response).delete()
 
         # Save new data
-        for result in results:
+        for output in outputs:
             MapResult.objects.create(
                 map_function=map_function,
                 response=response,
-                output=error or "",
-                data=result or "")
+                output=output or "",
+                error=error or "")
 
         for reduce_function in map_function.reducefunction_set.all():
-            results, error = calculate(reduce_function.code, map_function.mapresult_set.all().values_list('data', flat=True))
-            reduce_function.data = results
-            reduce_function.output = error or ""
+            code = reduce_function.code
+            data = map_function.mapresult_set.all().values_list('output', flat=True)
+            out, err = calculate(code, data)
+            reduce_function.output = out
+            reduce_function.error = err or ""
             reduce_function.save()
 
 
@@ -40,29 +42,31 @@ def map_function_saved(sender, instance, **kwargs):
     for response in map_function.survey.response_set.all():
 
         # Calcualte the new results
-        results, error = calculate(map_function.code, response.data)
+        outputs, err = calculate(map_function.code, response.data)
 
         # Remove existing calculated data
         MapResult.objects.filter(map_function=map_function, response=response).delete()
 
         # Save new data
-        for result in results:
+        for output in outputs:
             MapResult.objects.create(
                 map_function=map_function,
                 response=response,
-                output=error or "",
-                data=result or "")
+                output=output or "",
+                error=err or "")
 
     for reduce_function in map_function.reducefunction_set.all():
-        results, error = calculate(reduce_function.code, map_function.mapresult_set.all().values_list('data', flat=True))
-        reduce_function.data = results
-        reduce_function.output = error or ""
+        code = reduce_function.code
+        data = map_function.mapresult_set.all().values_list('output', flat=True)
+        out, err = calculate(code, data)
+        reduce_function.output = out
+        reduce_function.error = err or ""
         reduce_function.save()
 
 
 @receiver(pre_save, sender=ReduceFunction, dispatch_uid='reduce_function_save')
 def reduce_function_saved(sender, instance, **kwargs):
     reduce_function = instance
-    results, error = calculate(reduce_function.code, reduce_function.map_function.mapresult_set.all().values_list('data', flat=True))
-    reduce_function.data = results
-    reduce_function.output = error or ""
+    outputs, error = calculate(reduce_function.code, reduce_function.map_function.mapresult_set.all().values_list('output', flat=True))
+    reduce_function.output = outputs
+    reduce_function.error = error or ""

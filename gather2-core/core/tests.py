@@ -220,7 +220,7 @@ class SimpleTestCase(TestCase):
 
         # Assert the reduce function only gets the first name
         response = client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
-        self.assertEqual(response.json()['data'], ['tim'])
+        self.assertEqual(response.json()['output'], ['tim'])
 
         # Add new Response
         response = client.post(reverse('response-list'),
@@ -234,7 +234,7 @@ class SimpleTestCase(TestCase):
 
         # Assert reduce function is recalcualted with new response included
         response = client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
-        self.assertEqual(response.json()['data'], ['timbob'])
+        self.assertEqual(response.json()['output'], ['timbob'])
 
         # Update Reduce function
         response = client.put(reverse('reduce_function-detail', args=[reduce_function_id]),
@@ -248,7 +248,7 @@ class SimpleTestCase(TestCase):
 
         # Assert the reduce function is recalculated when updated
         response = client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
-        self.assertEqual(response.json()['data'], ['tim-bob'])
+        self.assertEqual(response.json()['output'], ['tim-bob'])
 
         # Updated the map function
         response = client.put(reverse('map_function-detail', args=[map_function_id]),
@@ -262,7 +262,7 @@ class SimpleTestCase(TestCase):
 
         # Assert reduce function is recalcualted with new map function
         response = client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
-        self.assertEqual(response.json()['data'], ['qux-smith'])
+        self.assertEqual(response.json()['output'], ['qux-smith'])
 
         self.crawl('http://testserver' + reverse('api-root'), seen=[])
 

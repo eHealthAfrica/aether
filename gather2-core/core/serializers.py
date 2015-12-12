@@ -132,7 +132,7 @@ class MapFunctionSerializer(serializers.ModelSerializer):
     results_url = serializers.HyperlinkedIdentityField(
         'map_function_result-list', read_only=True, lookup_url_kwarg='parent_lookup_map_function')
     reduce_functions_url = serializers.HyperlinkedIdentityField(
-        'reduce_function-list', read_only=True, lookup_url_kwarg='parent_lookup_map_function')
+        'map_reduce_function-list', read_only=True, lookup_url_kwarg='parent_lookup_map_function')
 
     class Meta:
         model = MapFunction
