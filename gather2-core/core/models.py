@@ -38,7 +38,7 @@ class MapFunction(models.Model):
 class MapResult(models.Model):
     map_function = models.ForeignKey(MapFunction)
     response = models.ForeignKey(Response)
-    output = JSONField(blank=True, null=False, default="{}" ,editable=False)
+    output = JSONField(blank=True, null=False, default="{}", editable=False)
     error = models.TextField(editable=False)
     created = models.DateTimeField(auto_now_add=True, db_index=True)
 
