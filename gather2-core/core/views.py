@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from rest_framework_extensions.mixins import NestedViewSetMixin
-from .serializers import SurveySerialzer, MapFunctionSerializer, MappedResponseSerializer
-from .models import Survey, Response, Map
+from .serializers import SurveySerializer, ResponseSerializer, MapFunctionSerializer, MapResultSerializer, ReduceFunctionSerializer
+from .models import Survey, Response, MapResult, MapFunction, ReduceFunction
 from rest_framework import permissions
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 
@@ -26,18 +26,45 @@ class TemplateNameMixin:
 
 
 class SurveyViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
+    '''
+    Create a new survey in the [json-schema standard](http://json-schema.org/examples.html).
+
+    Example:
+
+        {
+            "title": "Example Schema",
+            "type": "object",
+            "properties": {
+                "firstName": {
+                    "type": "string"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "age": {
+                    "description": "Age in years",
+                    "type": "integer",
+                    "minimum": 0
+                }
+            },
+            "required": ["firstName", "lastName"]
+        }
+    '''
     authentication_classes = (
         CsrfExemptSessionAuthentication, BasicAuthentication)
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     queryset = Survey.objects.all()
-    serializer_class = SurveySerialzer
+    serializer_class = SurveySerializer
 
 
 class ResponseViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
+    '''
+    All the responses to surveys.
+    '''
     authentication_classes = (
         CsrfExemptSessionAuthentication, BasicAuthentication)
     queryset = Response.objects.all()
-    serializer_class = MappedResponseSerializer
+    serializer_class = ResponseSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
@@ -54,19 +81,28 @@ class ResponseViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewS
 
         filtered_qs = orig_qs.filter(**data_queries)
 
-        map_id = self.kwargs.get('parent_lookup_survey__map', None)
-        if map_id:
-            map_function = Map.objects.get(
-                id=self.kwargs['parent_lookup_survey__map'])
-            mapped_qs = filtered_qs.decorate(map_function.code)
-            return mapped_qs
-
         return filtered_qs
 
 
-class MapViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
+class MapFunctionViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
     authentication_classes = (
         CsrfExemptSessionAuthentication, BasicAuthentication)
-    queryset = Map.objects.all()
+    queryset = MapFunction.objects.all()
     serializer_class = MapFunctionSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+
+class MapResultViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
+    authentication_classes = (
+        CsrfExemptSessionAuthentication, BasicAuthentication)
+    queryset = MapResult.objects.all()
+    serializer_class = MapResultSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+
+class ReduceFunctionViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
+    authentication_classes = (
+        CsrfExemptSessionAuthentication, BasicAuthentication)
+    queryset = ReduceFunction.objects.all()
+    serializer_class = ReduceFunctionSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
