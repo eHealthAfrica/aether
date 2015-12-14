@@ -1,7 +1,6 @@
 import os
 import logging
 
-
 logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -23,7 +22,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'django_extensions',
-    'core',
+    'core.apps.CoreConfig',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -119,6 +118,9 @@ DATABASES = {
         'PORT': os.environ.get('DATABASE_PORT', '5432'),
     }
 }
+
+BROKER_URL = 'django://'
+
 
 try:
     from local_settings import *  # noqa
