@@ -20,6 +20,7 @@ before_script:
   - docker-compose up -d db
   - docker-compose run core /code/gather2-core/entrypoint.sh sqlcreate
   - docker-compose run core /code/gather2-core/entrypoint.sh manage migrate
+  - docker-compose run importer entrypoint.sh setupdb
 
 script:
   - docker-compose run core /code/gather2-core/entrypoint.sh test_coverage
