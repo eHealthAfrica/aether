@@ -24,8 +24,6 @@ before_script:
 script:
   - docker-compose run core /code/gather2-core/entrypoint.sh test_coverage
   - docker-compose run importer entrypoint.sh test_coverage
-<<<<<<< Updated upstream
-=======
 before_deploy:
   - skip_cleanup: true
 deploy:
@@ -45,4 +43,3 @@ deploy:
       on:
           repo: https://github.com/eHealthAfrica/gather2
           branch: master 
->>>>>>> Stashed changes
