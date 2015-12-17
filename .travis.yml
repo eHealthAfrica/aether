@@ -24,3 +24,25 @@ before_script:
 script:
   - docker-compose run core /code/gather2-core/entrypoint.sh test_coverage
   - docker-compose run importer entrypoint.sh test_coverage
+<<<<<<< Updated upstream
+=======
+before_deploy:
+  - skip_cleanup: true
+deploy:
+    - provider: elasticbeanstalk
+      app: gather2 
+      env: gather2-env
+#      zip_file: <<include zip file from travis here>>
+      bucket_name: elasticbeanstalk-eu-west-1-38752636172 
+#      bucket_path: << Allows for multiple branches of a repo in a single bucket. >>
+      region: eu-west-1
+#pending requirement of AWS keys for nominated role.
+    #  access_key_id:
+    #    secure: "encrypted key id"
+    #  secret_access_key:
+    #    secure: "encrypted key"
+#allow for different roles and credentials using workers & RDS.
+      on:
+          repo: https://github.com/eHealthAfrica/gather2
+          branch: master 
+>>>>>>> Stashed changes
