@@ -20,8 +20,8 @@ fi
 if [ $BRANCH = "dev" -a $PR = "false" ]
 then
     aws ecr get-login --region=us-east-1 | bash
-    docker tag -f gather2_core:latest 387526361725.dkr.ecr.us-east-1.amazonaws.com/gathercore:$TAG
-    docker push 387526361725.dkr.ecr.us-east-1.amazonaws.com/gathercore:$TAG
+    docker tag -f gather2_core:latest 387526361725.dkr.ecr.us-east-1.amazonaws.com/gather2core:$TAG
+    docker push 387526361725.dkr.ecr.us-east-1.amazonaws.com/gather2core:$TAG
 
     fab stage preparedeploy
 
