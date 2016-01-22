@@ -8,39 +8,33 @@ sudo: required
 services:
   - docker
 
+env:
+  DOCKER_COMPOSE_VERSION: 1.5.2
+
+before_install:
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
+
 cache:
   directories:
     - $HOME/.cache/pip
 
 install:
-    - pip install flake8 docker-compose
+    - pip install flake8
+    - pip install -r pip-deploy.txt
 
 before_script:
   - flake8
+  - fab stage prebuild
   - docker-compose up -d db
-  - docker-compose run core /code/gather2-core/entrypoint.sh sqlcreate
-  - docker-compose run core /code/gather2-core/entrypoint.sh manage migrate
+  - docker-compose run core setuplocaldb
   - docker-compose run importer entrypoint.sh setupdb
 
 script:
-  - docker-compose run core /code/gather2-core/entrypoint.sh test_coverage
+  - docker-compose run core test_coverage
   - docker-compose run importer entrypoint.sh test_coverage
-before_deploy:
-  - skip_cleanup: true
-deploy:
-    - provider: elasticbeanstalk
-      app: gather2 
-      env: gather2-env
-#      zip_file: <<include zip file from travis here>>
-      bucket_name: elasticbeanstalk-eu-west-1-38752636172 
-#      bucket_path: << Allows for multiple branches of a repo in a single bucket. >>
-      region: eu-west-1
-#pending requirement of AWS keys for nominated role.
-    #  access_key_id:
-    #    secure: "encrypted key id"
-    #  secret_access_key:
-    #    secure: "encrypted key"
-#allow for different roles and credentials using workers & RDS.
-      on:
-          repo: https://github.com/eHealthAfrica/gather2
-          branch: master 
+
+after_success:
+  ./travis_deploy.sh

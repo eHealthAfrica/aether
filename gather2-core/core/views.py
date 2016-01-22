@@ -5,6 +5,9 @@ from .models import Survey, Response, MapResult, MapFunction, ReduceFunction
 from rest_framework import permissions
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 
+from django.views.generic import View
+from django.http import HttpResponse
+
 
 # This disabled CSRF checks only on the survey API calls.
 class CsrfExemptSessionAuthentication(SessionAuthentication):
@@ -26,6 +29,7 @@ class TemplateNameMixin:
 
 
 class SurveyViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
+
     '''
     Create a new survey in the [json-schema standard](http://json-schema.org/examples.html).
 
@@ -58,6 +62,7 @@ class SurveyViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet
 
 
 class ResponseViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.ModelViewSet):
+
     '''
     All the responses to surveys.
     '''
@@ -106,3 +111,13 @@ class ReduceFunctionViewSet(TemplateNameMixin, NestedViewSetMixin, viewsets.Mode
     queryset = ReduceFunction.objects.all()
     serializer_class = ReduceFunctionSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+
+class AWSHealthView(View):
+
+    """
+    AWS Health Endpoint
+    """
+
+    def get(self, *args, **kwargs):
+        return HttpResponse(status=200)

@@ -84,3 +84,8 @@ Session.vim
 *~
 .hypothesis
 coverage_html/
+
+# Deployment
+gather2-core/conf/Dockerrun.aws.json
+gather2-core/conf/deploy.zip
+gather2-core/conf/nginx.gathercore.conf

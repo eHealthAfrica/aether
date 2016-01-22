@@ -3,10 +3,18 @@ db:
 
 core:
   build: gather2-core/.
+  environment:
+      RDS_HOSTNAME: "db"
+      RDS_USERNAME: "postgres"
+      RDS_PASSWORD: ""
+      RDS_PORT: ""
+      RDS_DB_NAME: "connectdb"
+      STATIC_ROOT: "/var/www/static/"
   volumes:
     - .:/code/
-  command: bash /code/gather2-core/entrypoint.sh  manage runserver 0.0.0.0:8000
+  command: manage runserver 0.0.0.0:8000
   ports:
+    - "5000:5000"
     - "8000:8000"
   links:
     - db
