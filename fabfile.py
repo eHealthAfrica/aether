@@ -21,11 +21,11 @@ def _get_current_branch_name():
 
 def notify(msg):
     bar = '+' + '-' * (len(msg) + 2) + '+'
-    print green('')
-    print green(bar)
-    print green("| %s |" % msg)
-    print green(bar)
-    print green('')
+    print(green(''))
+    print(green(bar))
+    print(green("| %s |" % msg))
+    print(green(bar))
+    print(green(''))
 
 
 def createDockerrunFile(tag):
