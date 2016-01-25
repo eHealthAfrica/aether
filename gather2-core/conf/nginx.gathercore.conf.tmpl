@@ -3,7 +3,7 @@ server {
     server_name  {{ subdomain }}.elasticbeanstalk.com;
 
 
-    location /sitestatic/ {
+    location /static/ {
         alias /var/www/static/;
     }
 
