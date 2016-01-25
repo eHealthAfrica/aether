@@ -5,7 +5,10 @@ logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-here = lambda x: os.path.join(os.path.abspath(os.path.dirname(__file__)), x)
+
+def here(x):
+    return os.path.join(os.path.abspath(os.path.dirname(__file__)), x)
+
 
 SECRET_KEY = 'n)&_bvxfe$g)gfa4b-uy&aqt$vx!w7jw%fyi9mc8#onh2^$m=='
 
