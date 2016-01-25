@@ -30,11 +30,9 @@ before_script:
   - fab stage prebuild
   - docker-compose up -d db
   - docker-compose run core setuplocaldb
-  - docker-compose run importer entrypoint.sh setupdb
 
 script:
   - docker-compose run core test_coverage
-  - docker-compose run importer entrypoint.sh test_coverage
 
 after_success:
   ./travis_deploy.sh
