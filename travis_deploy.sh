@@ -17,7 +17,7 @@ then
 fi
 
 # if this is on the master branch and this is not a PR, deploy it
-if [ $BRANCH = "dev" -a $PR = "false" ]
+if [ $BRANCH = "master" -a $PR = "false" ]
 then
     aws ecr get-login --region=us-east-1 | bash
     docker tag -f gather2_core:latest 387526361725.dkr.ecr.us-east-1.amazonaws.com/gather2core:$TAG
