@@ -5,13 +5,17 @@ logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-here = lambda x: os.path.join(os.path.abspath(os.path.dirname(__file__)), x)
+
+def here(x):
+    return os.path.join(os.path.abspath(os.path.dirname(__file__)), x)
+
 
 SECRET_KEY = 'n)&_bvxfe$g)gfa4b-uy&aqt$vx!w7jw%fyi9mc8#onh2^$m=='
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# TODO make this an env var that defaults to []
+ALLOWED_HOSTS = ["gather*.elasticbeanstalk.com"]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -107,15 +111,16 @@ STATICFILES_DIRS = [
     ("node_modules", here('../node_modules')),
 ]
 
-STATIC_ROOT = here('../static_root')
+STATIC_ROOT = os.environ.get("STATIC_ROOT", here('../static_root'))
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('DATABASE_NAME', 'gather2'),
-        'USER': os.environ.get('DATABASE_USER', 'postgres'),
-        'HOST': os.environ.get('DATABASE_HOST', 'db'),
-        'PORT': os.environ.get('DATABASE_PORT', '5432'),
+        'NAME': os.environ.get('RDS_DB_NAME', 'gather2'),
+        'PASSWORD': os.environ.get('RDS_PASSWORD', ''),
+        'USER': os.environ.get('RDS_USERNAME', 'postgres'),
+        'HOST': os.environ.get('RDS_HOSTNAME', 'db'),
+        'PORT': os.environ.get('RDS_PORT', '5432'),
     }
 }
 

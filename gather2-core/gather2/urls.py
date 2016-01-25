@@ -61,4 +61,5 @@ urlpatterns = [
     url(r'^api-auth/', include('rest_framework.urls',
                                namespace='rest_framework')),
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^health/', views.AWSHealthView.as_view(), name='aws-health-view'),
 ]

@@ -83,6 +83,12 @@ UglyMapFunctionGoal = strategies.fixed_dictionaries({
 
 class SimpleTestCase(TestCase):
 
+    def test_aws_health(self):
+        client = Client()
+
+        response = client.get(reverse('aws-health-view'))
+        self.assertEqual(response.status_code, 200)
+
     @given(SurveyGoalData)
     def test_survey_smoke_test(self, data):
 

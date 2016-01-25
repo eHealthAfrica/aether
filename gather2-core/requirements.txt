@@ -13,3 +13,4 @@ django-extensions==1.5.9
 hypothesis-django
 coverage
 markdown
+uwsgi
