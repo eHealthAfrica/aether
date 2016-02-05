@@ -63,7 +63,6 @@ def calculate(code, data):
     # TODO: dont hardcode the tmp dir
     # TODO: Set up a ramdisk in tmp and use that
     out = []
-    #print(code, data)
     with tempfile.TemporaryDirectory(dir='/tmp/') as tmpdirname:
         logger.info('created temporary directory', tmpdirname)
         with tempfile.NamedTemporaryFile(dir=tmpdirname, suffix='.py') as fp:
