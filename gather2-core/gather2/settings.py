@@ -26,10 +26,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'django_extensions',
+    'corsheaders',
     'core.apps.CoreConfig',
+
 ]
 
 MIDDLEWARE_CLASSES = [
+     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -69,15 +72,14 @@ ANONYMOUS_USER_ID = -1
 REST_FRAMEWORK = {
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
     'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
-        'rest_framework.renderers.TemplateHTMLRenderer',
+        'rest_framework.renderers.JSONRenderer',
     ),
     'DEFAULT_PARSER_CLASSES': (
         'rest_framework.parsers.JSONParser',
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.CursorPagination',
-    'PAGE_SIZE': 10,
+    'PAGE_SIZE': 30,
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -109,6 +111,7 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
     ("node_modules", here('../node_modules')),
+    ("gather", here('../static')),
 ]
 
 STATIC_ROOT = os.environ.get("STATIC_ROOT", here('../static_root'))
@@ -125,6 +128,8 @@ DATABASES = {
 }
 
 BROKER_URL = 'django://'
+
+CORS_ORIGIN_ALLOW_ALL = True
 
 
 try:

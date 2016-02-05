@@ -67,6 +67,6 @@ def map_function_saved(sender, instance, **kwargs):
 @receiver(pre_save, sender=ReduceFunction, dispatch_uid='reduce_function_save')
 def reduce_function_saved(sender, instance, **kwargs):
     reduce_function = instance
-    outputs, error = calculate(reduce_function.code, reduce_function.map_function.mapresult_set.all().values_list('output', flat=True))
+    outputs, error = calculate(reduce_function.code, list(reduce_function.map_function.mapresult_set.all().values_list('output', flat=True)))
     reduce_function.output = outputs
     reduce_function.error = error or ""

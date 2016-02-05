@@ -41,7 +41,6 @@ class JSONSerializerMixin:
         return make_printable(data)
 
     def to_representation(self, value):
-
         class JSONish(type(value)):
 
             """
@@ -116,7 +115,8 @@ class ResponseSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField('response-detail')
     survey_url = serializers.HyperlinkedRelatedField(
         'survey-detail', source='survey', read_only=True)
-    data = JSONSerializerField(validators=[JSONSpecValidator()])
+    data = JSONSerializerField(validators=[JSONSpecValidator()],
+                               style={'base_template': 'schema_field.html'})
     created_by = serializers.PrimaryKeyRelatedField(
         read_only=True,
         default=serializers.CurrentUserDefault())
