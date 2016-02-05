@@ -8,7 +8,7 @@ core:
       RDS_USERNAME: "postgres"
       RDS_PASSWORD: ""
       RDS_PORT: ""
-      RDS_DB_NAME: "connectdb"
+      RDS_DB_NAME: "gather2"
       STATIC_ROOT: "/var/www/static/"
   volumes:
     - .:/code/
@@ -18,16 +18,3 @@ core:
     - "8000:8000"
   links:
     - db
-
-importer:
-  build: gather2-odk-importer/.
-  volumes:
-      - ./gather2-odk-importer/:/code
-  environment:
-      DJANGO_SETTINGS_MODULE: "importer.settings"
-  command: python manage.py runserver 0.0.0.0:8000
-  ports:
-    - "7000:8000"
-  links:
-    - db
-    - core

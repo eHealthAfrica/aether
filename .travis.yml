@@ -20,6 +20,7 @@ before_install:
 cache:
   directories:
     - $HOME/.cache/pip
+    - /var/lib/docker
 
 install:
     - pip install flake8

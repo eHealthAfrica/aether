@@ -13,13 +13,17 @@ logger = logging.getLogger(__name__)
 
 
 class Survey(models.Model):
-    name = models.CharField(max_length=15)
+    name = models.CharField(max_length=50)
     schema = JSONField(blank=False, null=False, default="{}")  # TODO: Make this readonly
     created = models.DateTimeField(auto_now_add=True, db_index=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, db_index=True)
 
+    def get_absolute_url(self):
+        from django.core.urlresolvers import reverse
+        return reverse('survey-detail', args=[str(self.id)])
+
     def __str__(self):
-        return '%s - %r'.format(self.id, self.name)
+        return 'ID:{} - {}'.format(self.id, self.name)
 
 
 class Response(models.Model):
@@ -74,13 +78,13 @@ data={data}
             # Go back to the beginning so, this may not be needed
             fp.seek(0)
             # Run the code in the sandbox
-            raw_out, raw_err = subprocess.Popen(["pypy-sandbox", "--timeout", "1", "--tmp", tmpdirname, os.path.basename(fp.name)],
+            raw_out, raw_err = subprocess.Popen(["pypy-sandbox", "--timeout", "5", "--tmp", tmpdirname, os.path.basename(fp.name)],
                                                 stdout=subprocess.PIPE,
                                                 stderr=subprocess.PIPE
                                                 ).communicate()
             # Strip off the "site" import error
             err = '\n'.join(
-                (raw_err.decode("utf-8")).splitlines()[1:-1]) or None
+                (raw_err.decode("utf-8")).splitlines()[1:]) or None
 
             try:
                 if raw_out:

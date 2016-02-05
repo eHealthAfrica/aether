@@ -121,6 +121,9 @@ class SimpleTestCase(TestCase):
             status.is_server_error(response.status_code), response.json())
         self.crawl('http://testserver' + reverse('api-root'), seen=[])
 
+        for s in Survey.objects.all():
+            assert s.get_absolute_url()
+
     @given(SurveyResponseGoal)
     def test_survey_response_smoke_test(self, survey_response):
         client = Client()
@@ -421,13 +424,6 @@ class SimpleTestCase(TestCase):
         s = SurveySerializer(
             data={'survey': '2', 'schema': '{}'}, context={'request': r})
         s.is_valid()
-
-    def test_template_names(self):
-        url = reverse('survey-list', kwargs={'format': 'html'})
-        client = Client()
-        response = client.get(url)
-        self.assertTrue(
-            status.is_success(response.status_code), response.content)
 
     def test_app_config(self):
         from django.apps import apps

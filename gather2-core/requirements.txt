@@ -1,5 +1,5 @@
 Django==1.9
-flake8==2.4.1
+flake8==2.4
 autopep8==1.2.1
 ipdb==0.8.1
 djangorestframework==3.2
@@ -14,3 +14,4 @@ hypothesis-django
 coverage
 markdown
 uwsgi
+requests
