@@ -422,13 +422,6 @@ class SimpleTestCase(TestCase):
             data={'survey': '2', 'schema': '{}'}, context={'request': r})
         s.is_valid()
 
-    def test_template_names(self):
-        url = reverse('survey-list', kwargs={'format': 'html'})
-        client = Client()
-        response = client.get(url)
-        self.assertTrue(
-            status.is_success(response.status_code), response.content)
-
     def test_app_config(self):
         from django.apps import apps
         self.assertEquals(apps.get_app_config('core').verbose_name, 'Core')
