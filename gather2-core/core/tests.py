@@ -121,6 +121,9 @@ class SimpleTestCase(TestCase):
             status.is_server_error(response.status_code), response.json())
         self.crawl('http://testserver' + reverse('api-root'), seen=[])
 
+        for s in Survey.objects.all():
+            assert s.get_absolute_url()
+
     @given(SurveyResponseGoal)
     def test_survey_response_smoke_test(self, survey_response):
         client = Client()
