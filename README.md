@@ -47,3 +47,7 @@ All development should be tested within the container, but developed in the host
 $ sudo docker-compose run core bash
 root@localhost:/#
 ```
+
+## Monitoring
+
+On production environment, supervisord starts filebeat, a software that sends the log specified in `gather2-core/conf/filebeat.yml` line 15 to a remote logstash server, specified in line 227.
