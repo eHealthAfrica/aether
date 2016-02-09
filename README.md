@@ -23,10 +23,9 @@ $ git clone git@github.com:eHealthAfrica/gather2.git
 $ cd gather2
 
 $ sudo docker-compose up -d db  # Or run this in a different tab without `-d` to make it easy to reset the db
-$ sudo docker-compose run core /code/gather2-core/entrypoint.sh manage test core
-$ sudo docker-compose run core /code/gather2-core/entrypoint.sh sqlcreate
-$ sudo docker-compose run core /code/gather2-core/entrypoint.sh manage migrate
-$ sudo docker-compose run --service-ports core /code/gather2-core/entrypoint.sh manage runserver 0.0.0.0:8000
+$ sudo docker-compose run core manage test core
+$ sudo docker-compose run core setuplocaldb
+$ sudo docker-compose run --service-ports core manage runserver 0.0.0.0:8000
 ```
 
 ## Usage
