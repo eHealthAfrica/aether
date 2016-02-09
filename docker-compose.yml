@@ -12,6 +12,7 @@ core:
       STATIC_ROOT: "/var/www/static/"
   volumes:
     - .:/code/
+  hostname: gathercore-app
   command: manage runserver 0.0.0.0:8000
   ports:
     - "5000:5000"
