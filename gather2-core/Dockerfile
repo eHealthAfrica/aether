@@ -13,7 +13,7 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg m
 ADD conf/apt-packages.txt /tmp/apt-packages.txt
 RUN apt-get update -qq && cat /tmp/apt-packages.txt | xargs apt-get --yes --force-yes install
 
-RUN curl -o /tmp/filebeat.deb -L -O https://download.elastic.co/beats/filebeat/filebeat_1.1.0_amd64.deb
+ADD https://download.elastic.co/beats/filebeat/filebeat_1.1.0_amd64.deb /tmp/filebeat.deb
 RUN dpkg -i /tmp/filebeat.deb
 RUN rm /tmp/filebeat.deb
 ADD conf/filebeat.yml /etc/filebeat/filebeat.yml
