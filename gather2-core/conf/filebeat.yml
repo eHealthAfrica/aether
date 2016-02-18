@@ -12,7 +12,7 @@ filebeat:
 output:
   logstash:
     # The Logstash hosts
-    hosts: ["docker-elk-dev2.elasticbeanstalk.com:5044"]
+    hosts: ["logstash:5044"]
 
     # Number of workers per Logstash host.
     worker: 1

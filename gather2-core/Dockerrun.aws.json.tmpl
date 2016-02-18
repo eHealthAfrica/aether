@@ -1,0 +1,111 @@
+{
+  "AWSEBDockerrunVersion": 2,
+    "volumes": [
+    {
+      "name": "logstash-conf",
+      "host": {
+        "sourcePath": "/etc/logstash"
+      }
+    },
+    {
+      "name": "filebeat",
+      "host": {
+        "sourcePath": "/etc/gather2/filebeat"
+      }
+    },
+    {
+      "name": "supervisord",
+      "host": {
+        "sourcePath": "/etc/gather2/supervisord"
+      }
+    },
+    {
+      "name": "nginx",
+      "host": {
+        "sourcePath": "/etc/gather2/nginx"
+      }
+    }
+  ],
+  "containerDefinitions": [
+    {
+      "name": "logstash",
+      "image": "387526361725.dkr.ecr.us-east-1.amazonaws.com/logstash:latest",
+      "entryPoint": ["logstash", "agent", "-f", "/src/logstash.conf"],
+      "essential": true,
+      "memory": 512,
+      "mountPoints": [
+      {
+        "sourceVolume": "logstash-conf",
+        "containerPath": "/src/",
+        "readOnly": true
+      }
+      ],
+        "portMappings": [
+        {
+          "containerPort": 5044
+        }
+      ]
+    },
+    {
+      "name": "gathercore-app",
+      "image": "387526361725.dkr.ecr.us-east-1.amazonaws.com/gather2core:{{ tag }}",
+      "essential": true,
+      "hostname": "gathercore-app",
+      "command": [ "start" ],
+      "memory": 3000,
+      "mountPoints": [
+      {
+        "sourceVolume": "filebeat",
+        "containerPath": "/etc/filebeat/",
+        "readOnly": true
+      },
+      {
+        "sourceVolume": "supervisord",
+        "containerPath": "/etc/supervisor/",
+        "readOnly": true
+      },
+      {
+        "sourceVolume": "nginx",
+        "containerPath": "/etc/nginx/sites-enabled/",
+        "readOnly": true
+      }
+      ],
+        "portMappings": [
+        {
+          "hostPort": 80,
+          "containerPort": 5000
+        }
+      ],
+        "environment": [
+        {
+          "name": "STATIC_ROOT",
+          "value": "/var/www/static"
+        },
+
+        {
+          "name": "RDS_HOSTNAME", 
+          "value": ""
+        },
+        {
+          "name": "RDS_USERNAME", 
+          "value": ""
+        },
+        {
+          "name": "RDS_PASSWORD", 
+          "value": ""
+        },
+        {
+          "name": "RDS_PORT", 
+          "value": ""
+        },
+        {
+          "name": "RDS_DB_NAME", 
+          "value": ""
+        }
+      ],
+      "links": [
+        "logstash"
+      ]
+    }
+  ]
+}
