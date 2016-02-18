@@ -6,17 +6,13 @@
 
 ## Setup
 
-
-
 ### Dependencies
 
 git
 
 [docker-compose](https://docs.docker.com/compose/)
 
-
 ### Installation
-
 
 ```
 $ git clone git@github.com:eHealthAfrica/gather2.git
@@ -51,3 +47,17 @@ root@localhost:/#
 ## Monitoring
 
 On production environment, supervisord starts filebeat, a software that sends the log specified in `gather2-core/conf/filebeat.yml` line 15 to a remote logstash server, specified in line 227.
+
+## Elastic Beanstalk Setup
+
+```
+$ cd gather2-core
+```
+
+1. Create a new beanstalk environment with a RDS istance
+2. Rename `Dockerrun.aws.json.tmlp` to `Dockerrun.aws.json`
+3. Set the RDS variables on the `Dockerrun.aws.json` file
+4. Copy `conf/nginx.gathercore.conf.tmpl` to `conf/nginx.gathercore.conf`
+5. Edit the `conf/nginx.gathercore.conf` to match the ElasticBeanstalk environment's url (line 3, `server_name` variable)
+6. Edit the `conf/logstash.conf` to match your credentials and the Elasticsearch's url
+7. Deploy
