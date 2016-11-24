@@ -1,21 +1,26 @@
-db:
-  image: "postgres:9.4"
+version: '2'
 
-core:
-  build: gather2-core/.
-  environment:
-      RDS_HOSTNAME: "db"
-      RDS_USERNAME: "postgres"
-      RDS_PASSWORD: ""
-      RDS_PORT: ""
-      RDS_DB_NAME: "gather2"
-      STATIC_ROOT: "/var/www/static/"
-  volumes:
-    - .:/code/
-  hostname: gathercore-app
-  command: manage runserver 0.0.0.0:8000
-  ports:
-    - "5000:5000"
-    - "8000:8000"
-  links:
-    - db
+services:
+
+  db:
+    image: "postgres:9.5.2"
+
+  core:
+    build: gather2-core
+    image: gather2-core
+    environment:
+        RDS_HOSTNAME: "db"
+        RDS_USERNAME: "postgres"
+        RDS_PASSWORD: ""
+        RDS_PORT: ""
+        RDS_DB_NAME: "gather2"
+        STATIC_ROOT: "/var/www/static/"
+    volumes:
+      - .:/code/
+    hostname: gathercore-app
+    command: manage runserver 0.0.0.0:8000
+    ports:
+      - "5000:5000"
+      - "8000:8000"
+    links:
+      - db

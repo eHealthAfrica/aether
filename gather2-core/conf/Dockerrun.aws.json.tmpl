@@ -1,0 +1,42 @@
+{
+  "AWSEBDockerrunVersion": 2,
+
+  "containerDefinitions": [
+    {
+      "name": "${PROJECT_NAME}",
+      "image": "${DOCKER_IMAGE_REPO}/${PROJECT_NAME}:${TAG}",
+      "essential": true,
+      "hostname": "${PROJECT_NAME}",
+      "command": [ "start" ],
+      "memory": 3000,
+      "portMappings": [
+        {
+          "hostPort": 80,
+          "containerPort": 5000
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "${DEPLOY_ENV}",
+          "awslogs-region": "${AWS_REGION}",
+          "awslogs-stream-prefix": "${PROJECT_NAME}"
+        }
+      },
+      "environment": [
+        {
+          "name": "STATIC_ROOT",
+          "value": "/var/www/static"
+        },
+        {
+          "name": "PROJECT_NAME",
+          "value": "${PROJECT_NAME}"
+        },
+        {
+          "name": "DEPLOY_ENV",
+          "value": "${DEPLOY_ENV}"
+        }
+      ]
+    }
+  ]
+}

@@ -29,6 +29,19 @@ setup_prod_db() {
     /var/env/bin/python manage.py migrate
 }
 
+setup_logs_forwarding() {
+    local logfiles="${*}"
+    for logfile in ${logfiles}; do
+       cat >> /var/awslogs/etc/awslogs.conf <<EOF
+[${logfile}]
+file = ${logfile}
+log_stream_name = ${PROJECT_NAME}/${logfile}/$(hostname)
+initial_position = start_of_file
+log_group_name = ${DEPLOY_ENV}
+EOF
+    done
+}
+
 case "$1" in
     manage )
         cd /code/gather2-core/
@@ -57,9 +70,11 @@ case "$1" in
 EOF
     ;;
     start )
+        setup_prod_db
         cd /code/gather2-core/
         /var/env/bin/python manage.py collectstatic --noinput
         /usr/local/bin/supervisord -c /etc/supervisor/supervisord.conf
+        setup_logs_forwarding "/var/log/uwsgi/uwsgi.log"
         nginx -g "daemon off;"
     ;;
     bash )
