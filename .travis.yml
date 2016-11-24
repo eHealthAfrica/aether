@@ -3,32 +3,25 @@ language: python
 python:
   - "2.7"
 
-sudo: required
-
 services:
   - docker
 
 env:
-  DOCKER_COMPOSE_VERSION: 1.5.2
-
-before_install:
-  - sudo rm /usr/local/bin/docker-compose
-  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
-  - chmod +x docker-compose
-  - sudo mv docker-compose /usr/local/bin
+  global:
+    - DOCKER_IMAGE_REPO: 387526361725.dkr.ecr.eu-west-1.amazonaws.com
+    - PROJECT_NAME: gather2
+    - AWS_REGION: eu-west-1
 
 cache:
   directories:
     - $HOME/.cache/pip
-    - /var/lib/docker
 
 install:
-    - pip install flake8
-    - pip install -r pip-deploy.txt
+  - pip install flake8
+  - pip install -r pip-deploy.txt
 
 before_script:
   - flake8
-  - fab stage prebuild
   - docker-compose up -d db
   - docker-compose run core setuplocaldb
 
@@ -36,4 +29,11 @@ script:
   - docker-compose run core test_coverage
 
 after_success:
-  ./travis_deploy.sh
+  - git clone "https://${GH_USER}:${GH_TOKEN}@github.com/eHealthAfrica/beanstalk-deploy" .ebextensions
+
+deploy:
+  - provider: script
+    script: ./scripts/deploy.sh "gather2-core-dev"
+    skip_cleanup: true
+    on:
+      branch: master

@@ -1,4 +1,2 @@
-fabric==1.10.2
-jinja2==2.8
-awscli==1.9.15
-awsebcli==3.7.2
+awscli==1.10.34
+awsebcli==3.7.6
