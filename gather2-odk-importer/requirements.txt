@@ -1,0 +1,16 @@
+coverage==4.0.3
+Django==1.9
+hypothesis==1.15.0
+psycopg2==2.6.1
+ipdb
+djangorestframework
+markdown
+uwsgi
+django-extensions
+Werkzeug
+pyOpenSSL
+pytz
+xmltodict
+defusedxml
+lxml
+requests

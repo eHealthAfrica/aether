@@ -1,0 +1,8 @@
+git
+python3-dev
+python3-pip
+postgresql-client-9.4
+postgresql-server-dev-9.4
+libffi-dev
+libxml2-dev
+libxslt1-dev

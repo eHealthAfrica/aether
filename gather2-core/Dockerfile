@@ -17,21 +17,17 @@ RUN wget --quiet https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslog
 
 ADD requirements.txt /tmp/requirements.txt
 RUN pip3 install virtualenv
-RUN pip install supervisor==3.2
 
 RUN virtualenv -p python3 /var/env/
 RUN /var/env/bin/pip install -r /tmp/requirements.txt
 
 WORKDIR /code/
 
-COPY ./ /code/gather2-core
+COPY ./ /code
 
-RUN python /tmp/awslogs-agent-setup.py -n -r ${AWS_REGION:-eu-west-1} -c /code/gather2-core/conf/awslogs.conf.dummy
+RUN python /tmp/awslogs-agent-setup.py -n -r ${AWS_REGION:-eu-west-1} -c /code/conf/awslogs.conf.dummy
 
 RUN mkdir -p /var/log/gathercore
-
-ADD conf/entrypoint.sh /usr/local/bin/entrypoint.sh 
-RUN chmod +x /usr/local/bin/entrypoint.sh
 
 RUN mkdir -p /etc/supervisor/conf.d && mkdir -p /var/log/supervisor
 RUN ln -sf /code/gather2-core/conf/supervisor.gathercore.conf /etc/supervisor/conf.d/gc.conf
@@ -44,5 +40,4 @@ RUN mkdir -p /var/www/static && chmod -R 760 /var/www/static/ && chown -R www-da
 EXPOSE 5000
 EXPOSE 8000
 
-ENTRYPOINT ["entrypoint.sh"]
-CMD ["start"]
+ENTRYPOINT ["bash", "/code/entrypoint.sh"]

@@ -1,5 +1,8 @@
 # Created by https://www.gitignore.io/api/python,ipythonnotebook,django,vim
 
+importer_home
+gather_home
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -6,19 +6,12 @@ python:
 services:
   - docker
 
-env:
-  global:
-    - DOCKER_IMAGE_REPO: 387526361725.dkr.ecr.eu-west-1.amazonaws.com
-    - PROJECT_NAME: gather2
-    - AWS_REGION: eu-west-1
-
 cache:
   directories:
     - $HOME/.cache/pip
 
 install:
   - pip install flake8
-  - pip install -r pip-deploy.txt
 
 before_script:
   - flake8
