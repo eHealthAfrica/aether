@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-from rest_framework import serializers
 import json
 import logging
-from .models import Response, Survey, MapFunction, MapResult, ReduceFunction
-import jsonschema
 import string
 
+import jsonschema
+from rest_framework import serializers
+
+from .models import MapFunction, MapResult, ReduceFunction, Response, Survey
 
 logger = logging.getLogger(__name__)
 

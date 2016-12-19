@@ -1,20 +1,21 @@
 # encoding: utf-8
-import logging
-from django.db import models
-from django.contrib.postgres.fields import JSONField
-from django.conf import settings
-import os
-import tempfile
-import subprocess
 import ast
+import logging
+import os
+import subprocess
+import tempfile
 
+from django.conf import settings
+from django.contrib.postgres.fields import JSONField
+from django.db import models
 
 logger = logging.getLogger(__name__)
 
 
 class Survey(models.Model):
     name = models.CharField(max_length=50)
-    schema = JSONField(blank=False, null=False, default="{}")  # TODO: Make this readonly
+    # TODO: Make this readonly
+    schema = JSONField(blank=False, null=False, default="{}")
     created = models.DateTimeField(auto_now_add=True, db_index=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, db_index=True)
 
@@ -88,7 +89,8 @@ data={data}
 
             try:
                 if raw_out:
-                    # See if what was returned was a python literal, this is safe
+                    # See if what was returned was a python literal, this is
+                    # safe
                     for line in raw_out.decode("utf-8").splitlines():
                         out.append(ast.literal_eval(line.strip()))
                 else:

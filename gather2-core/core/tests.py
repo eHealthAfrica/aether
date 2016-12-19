@@ -1,14 +1,15 @@
 import json
-from django.test import Client, RequestFactory
-from .models import Survey
+
 from django.contrib.auth import get_user_model
 from django.core.urlresolvers import reverse
+from django.test import Client, RequestFactory
+
+from hypothesis import given, strategies
 from hypothesis.extra.django import TestCase
-from hypothesis import given
 from hypothesis.extra.django.models import models
-from hypothesis import strategies
 from rest_framework import status
 
+from .models import Survey
 
 User = get_user_model()
 
@@ -39,7 +40,8 @@ EXAMPLE_BAD_SCHEMA3 = "\"af[]23\""
 UserGenerator = models(User, username=strategies.text(max_size=30), first_name=strategies.text(
     max_size=30), last_name=strategies.text(max_size=30), email=strategies.just('example@example.com'))
 
-SurveyGenerator = models(Survey, schema=strategies.just(EXAMPLE_SCHEMA), created_by=UserGenerator)
+SurveyGenerator = models(Survey, schema=strategies.just(
+    EXAMPLE_SCHEMA), created_by=UserGenerator)
 
 
 SurveyGoalData = strategies.fixed_dictionaries(mapping={
@@ -83,12 +85,6 @@ UglyMapFunctionGoal = strategies.fixed_dictionaries({
 
 class SimpleTestCase(TestCase):
 
-    def test_aws_health(self):
-        client = Client()
-
-        response = client.get(reverse('aws-health-view'))
-        self.assertEqual(response.status_code, 200)
-
     @given(SurveyGoalData)
     def test_survey_smoke_test(self, data):
 
@@ -119,7 +115,7 @@ class SimpleTestCase(TestCase):
 
         self.assertFalse(
             status.is_server_error(response.status_code), response.json())
-        self.crawl('http://testserver' + reverse('api-root'), seen=[])
+        self.crawl('http://testserver' + reverse('api-root'), seen=[], client=client)
 
         for s in Survey.objects.all():
             assert s.get_absolute_url()
@@ -167,7 +163,7 @@ class SimpleTestCase(TestCase):
 
         self.assertTrue(
             status.is_success(response.status_code), response.content)
-        self.crawl('http://testserver' + reverse('api-root'), seen=[])
+        self.crawl('http://testserver' + reverse('api-root'), seen=[], client=client)
 
     def test_reduce_function(self):
         client = Client()
@@ -228,7 +224,8 @@ class SimpleTestCase(TestCase):
         reduce_function_id = response.json()['id']
 
         # Assert the reduce function only gets the first name
-        response = client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
+        response = client.get(
+            reverse('reduce_function-detail', args=[reduce_function_id]))
         self.assertEqual(response.json()['output'], ['tim'])
 
         # Add new Response
@@ -242,7 +239,8 @@ class SimpleTestCase(TestCase):
             status.is_success(response.status_code), response.content)
 
         # Assert reduce function is recalcualted with new response included
-        response = client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
+        response = client.get(
+            reverse('reduce_function-detail', args=[reduce_function_id]))
         self.assertEqual(response.json()['output'], ['timbob'])
 
         # Update Reduce function
@@ -256,7 +254,8 @@ class SimpleTestCase(TestCase):
             status.is_success(response.status_code), response.content)
 
         # Assert the reduce function is recalculated when updated
-        response = client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
+        response = client.get(
+            reverse('reduce_function-detail', args=[reduce_function_id]))
         self.assertEqual(response.json()['output'], ['tim-bob'])
 
         # Updated the map function
@@ -270,10 +269,11 @@ class SimpleTestCase(TestCase):
             status.is_success(response.status_code), response.content)
 
         # Assert reduce function is recalcualted with new map function
-        response = client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
+        response = client.get(
+            reverse('reduce_function-detail', args=[reduce_function_id]))
         self.assertEqual(response.json()['output'], ['qux-smith'])
 
-        self.crawl('http://testserver' + reverse('api-root'), seen=[])
+        self.crawl('http://testserver' + reverse('api-root'), seen=[], client=client)
 
     @given(UglyMapFunctionGoal)
     def test_map_function_smoke_test(self, map_function_data):
@@ -307,7 +307,7 @@ class SimpleTestCase(TestCase):
 
         self.assertFalse(
             status.is_server_error(response.status_code), response.content)
-        self.crawl('http://testserver' + reverse('api-root'), seen=[])
+        self.crawl('http://testserver' + reverse('api-root'), seen=[], client=client)
 
     @given(SurveyResponseGoal)
     def test_response_smoke_test(self, survey_response):
@@ -383,24 +383,27 @@ class SimpleTestCase(TestCase):
         self.assertTrue(
             status.is_success(response.status_code), response.content)
 
-        self.crawl('http://testserver' + reverse('api-root'), seen=[])
+        self.crawl('http://testserver' + reverse('api-root'), seen=[], client=client)
 
-    def crawl(self, obj, seen=[]):
+    def crawl(self, obj, seen=[], client=None):
         '''
         Crawls the API for urls to assert that all GET  requests do not error.
         '''
+
+        if not client:
+            client = Client()
+
         if isinstance(obj, dict):
-            {k: self.crawl(v, seen) for k, v in obj.items()}
+            {k: self.crawl(v, seen, client) for k, v in obj.items()}
         elif isinstance(obj, list):
-            [self.crawl(elem, seen) for elem in obj]
+            [self.crawl(elem, seen, client) for elem in obj]
         elif isinstance(obj, str):
             # Is this a url?
             if obj.startswith('http://') and (obj not in seen):
                 seen.append(obj)
-                client = Client()
                 response = client.get(obj)
-                self.assertTrue(
-                    status.is_success(response.status_code), response.content)
+                self.assertFalse(
+                    status.is_server_error(response.status_code), response.content)
                 self.crawl(response.json(), seen)
 
     def test_json_serializer(self):

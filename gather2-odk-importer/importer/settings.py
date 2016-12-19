@@ -37,6 +37,8 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
+    'rest_framework',
     'api',
 )
 
@@ -93,9 +95,10 @@ STATIC_URL = '/static/'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('DATABASE_NAME', 'odkimporter'),
-        'USER': os.environ.get('DATABASE_USER', 'postgres'),
-        'HOST': os.environ.get('DATABASE_HOST', 'db'),
-        'PORT': os.environ.get('DATABASE_PORT', '5432'),
+        'NAME': os.environ.get('RDS_DB_NAME', 'odk_importer'),
+        'PASSWORD': os.environ.get('RDS_PASSWORD', ''),
+        'USER': os.environ.get('RDS_USERNAME', 'postgres'),
+        'HOST': os.environ.get('RDS_HOSTNAME', 'db'),
+        'PORT': os.environ.get('RDS_PORT', '5432'),
     }
 }

@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +130,6 @@ DATABASES = {
 BROKER_URL = 'django://'
 
 CORS_ORIGIN_ALLOW_ALL = True
-
 
 try:
     from local_settings import *  # noqa

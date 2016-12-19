@@ -13,12 +13,12 @@ Including another URLconf
     1. Add an import:  from blog import urls as blog_urls
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
-from django.conf.urls import url, include
-
-from core import views
-from .routers import TemplateRouter
+from django.conf.urls import include, url
 from django.contrib import admin
 
+from core import views
+
+from .routers import TemplateRouter
 
 router = TemplateRouter(template_name='index.html')
 
@@ -37,21 +37,24 @@ router = TemplateRouter(template_name='index.html')
 )
 
 (
-    router.register('map-functions', views.MapFunctionViewSet, base_name='map_function')
+    router.register('map-functions', views.MapFunctionViewSet,
+                    base_name='map_function')
     .register('map-results', views.MapResultViewSet,
               base_name='map_function_result',
               parents_query_lookups=['map_function'])
 )
 
 (
-    router.register('map-functions', views.MapFunctionViewSet, base_name='map_function')
+    router.register('map-functions', views.MapFunctionViewSet,
+                    base_name='map_function')
     .register('reduce-functions', views.ReduceFunctionViewSet,
               base_name='map_reduce_function',
               parents_query_lookups=['map_function'])
 )
 
 router.register('map-results', views.MapResultViewSet, base_name='map_results')
-router.register('reduce-functions', views.ReduceFunctionViewSet, base_name='reduce_function')
+router.register('reduce-functions', views.ReduceFunctionViewSet,
+                base_name='reduce_function')
 router.register('responses', views.ResponseViewSet, base_name='response')
 
 
@@ -61,5 +64,4 @@ urlpatterns = [
     url(r'^api-auth/', include('rest_framework.urls',
                                namespace='rest_framework')),
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^health/', views.AWSHealthView.as_view(), name='aws-health-view'),
 ]

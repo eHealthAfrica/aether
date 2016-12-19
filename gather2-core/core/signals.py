@@ -1,7 +1,9 @@
+import logging
+
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
-from .models import Response, calculate, MapResult, MapFunction, ReduceFunction
-import logging
+
+from .models import MapFunction, MapResult, ReduceFunction, Response, calculate
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +18,8 @@ def response_saved(sender, instance, **kwargs):
         outputs, error = calculate(map_function.code, response.data)
 
         # Remove existing calculated data
-        MapResult.objects.filter(map_function=map_function, response=response).delete()
+        MapResult.objects.filter(
+            map_function=map_function, response=response).delete()
 
         # Save new data
         for output in outputs:
@@ -45,7 +48,8 @@ def map_function_saved(sender, instance, **kwargs):
         outputs, err = calculate(map_function.code, response.data)
 
         # Remove existing calculated data
-        MapResult.objects.filter(map_function=map_function, response=response).delete()
+        MapResult.objects.filter(
+            map_function=map_function, response=response).delete()
 
         # Save new data
         for output in outputs:
@@ -67,6 +71,7 @@ def map_function_saved(sender, instance, **kwargs):
 @receiver(pre_save, sender=ReduceFunction, dispatch_uid='reduce_function_save')
 def reduce_function_saved(sender, instance, **kwargs):
     reduce_function = instance
-    outputs, error = calculate(reduce_function.code, list(reduce_function.map_function.mapresult_set.all().values_list('output', flat=True)))
+    outputs, error = calculate(reduce_function.code, list(
+        reduce_function.map_function.mapresult_set.all().values_list('output', flat=True)))
     reduce_function.output = outputs
     reduce_function.error = error or ""

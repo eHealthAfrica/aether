@@ -1,6 +1,9 @@
 import re
 
 from django import http
+
+from corsheaders import defaults as settings
+
 try:
     from urlparse import urlparse
 except ImportError:
@@ -15,7 +18,6 @@ except ImportError:
     except ImportError:
         from django.apps.apps.get_model import get_model
 
-from corsheaders import defaults as settings
 
 
 ACCESS_CONTROL_ALLOW_ORIGIN = 'Access-Control-Allow-Origin'

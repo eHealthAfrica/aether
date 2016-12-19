@@ -1,8 +1,10 @@
+from hashlib import md5
+
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils import timezone
-from django.core.urlresolvers import reverse
+
 import xmltodict
-from hashlib import md5
 
 
 class XForm(models.Model):

@@ -1,5 +1,6 @@
 from django.conf import settings
 
+
 default_headers = (
     'x-requested-with',
     'content-type',

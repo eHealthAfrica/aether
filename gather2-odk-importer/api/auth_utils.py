@@ -1,5 +1,5 @@
-from django.http import HttpResponse
 from django.contrib.sites.models import Site
+from django.http import HttpResponse
 
 
 def authorise(username=None, password=None):

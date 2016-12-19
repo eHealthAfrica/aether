@@ -1,6 +1,5 @@
-from rest_framework_extensions.routers import (
+from rest_framework_extensions.routers import \
     ExtendedDefaultRouter as DefaultRouter
-)
 
 
 class TemplateRouter(DefaultRouter):

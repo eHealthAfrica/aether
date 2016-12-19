@@ -1,12 +1,12 @@
-from rest_framework import viewsets
+from rest_framework import permissions, viewsets
+from rest_framework.authentication import (BasicAuthentication,
+                                           SessionAuthentication)
 from rest_framework_extensions.mixins import NestedViewSetMixin
-from .serializers import SurveySerializer, ResponseSerializer, MapFunctionSerializer, MapResultSerializer, ReduceFunctionSerializer
-from .models import Survey, Response, MapResult, MapFunction, ReduceFunction
-from rest_framework import permissions
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 
-from django.views.generic import View
-from django.http import HttpResponse
+from .models import MapFunction, MapResult, ReduceFunction, Response, Survey
+from .serializers import (MapFunctionSerializer, MapResultSerializer,
+                          ReduceFunctionSerializer, ResponseSerializer,
+                          SurveySerializer)
 
 
 # This disabled CSRF checks only on the survey API calls.
@@ -43,8 +43,8 @@ class SurveyViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
         }
     '''
     authentication_classes = (
-        CsrfExemptSessionAuthentication, BasicAuthentication)
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+        BasicAuthentication, CsrfExemptSessionAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
     queryset = Survey.objects.all()
     serializer_class = SurveySerializer
 
@@ -99,13 +99,3 @@ class ReduceFunctionViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
     queryset = ReduceFunction.objects.all()
     serializer_class = ReduceFunctionSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-
-
-class AWSHealthView(View):
-
-    """
-    AWS Health Endpoint
-    """
-
-    def get(self, *args, **kwargs):
-        return HttpResponse(status=200)
