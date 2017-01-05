@@ -23,8 +23,8 @@ export TAG
 $(aws ecr get-login --region="${AWS_REGION}")
 for APP in $APPS
 do
-	docker tag "${APP}:latest" "${DOCKER_IMAGE_REPO}/${PROJECT_NAME}:${TAG}"
-	docker push "${DOCKER_IMAGE_REPO}/${PROJECT_NAME}:${TAG}"
+	docker tag "${APP}:latest" "${DOCKER_IMAGE_REPO}/${APP}:${TAG}"
+	docker push "${DOCKER_IMAGE_REPO}/${APP}:${TAG}"
 done
 
 tmp_dir="tmp"
