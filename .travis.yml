@@ -26,7 +26,7 @@ after_success:
 
 deploy:
   - provider: script
-    script: ./scripts/deploy.sh "gather2-core-dev"
+    script: ./scripts/deploy.sh 
     skip_cleanup: true
     on:
       branch: master
