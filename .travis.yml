@@ -12,6 +12,7 @@ cache:
 
 install:
   - pip install flake8
+  - pip install awscli
 
 before_script:
   - flake8
@@ -26,7 +27,7 @@ after_success:
 
 deploy:
   - provider: script
-    script: ./scripts/deploy.sh 
+    script: ./scripts/deploy.sh
     skip_cleanup: true
     on:
       branch: master
