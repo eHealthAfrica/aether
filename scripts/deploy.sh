@@ -7,12 +7,7 @@ _recreate() {
     mkdir -p "${directory}"
 }
 
-export DEPLOY_ENV="${1}"
-
-if [ -z "${DEPLOY_ENV}" ]; then
-    echo 'no DEPLOY_ENV set'
-    exit 0
-fi
+export APPS=( gather2-core gather2-odk-importer )
 
 TAG="${TRAVIS_TAG}"
 COMMIT="${TRAVIS_COMMIT}"
@@ -26,8 +21,11 @@ fi
 export TAG
 
 $(aws ecr get-login --region="${AWS_REGION}")
-docker tag "gather2-core:latest" "${DOCKER_IMAGE_REPO}/${PROJECT_NAME}:${TAG}"
-docker push "${DOCKER_IMAGE_REPO}/${PROJECT_NAME}:${TAG}"
+for APP in $APPS
+do
+	docker tag "${APP}:latest" "${DOCKER_IMAGE_REPO}/${PROJECT_NAME}:${TAG}"
+	docker push "${DOCKER_IMAGE_REPO}/${PROJECT_NAME}:${TAG}"
+done
 
 tmp_dir="tmp"
 _recreate "${tmp_dir}"
@@ -37,4 +35,7 @@ zip_file="${tmp_dir}/deploy.zip"
 zip -r "${zip_file}" .ebextensions -x '*.git*'
 zip -j "${zip_file}" ${tmp_dir}/* -x "${zip_file}"
 
-eb deploy "${DEPLOY_ENV}" -l "${TAG}"
+for APP in $APPS
+do
+	eb deploy "${APP}-dev" -l "${TAG}"
+done
