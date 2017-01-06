@@ -13,6 +13,8 @@ TAG="${TRAVIS_TAG}"
 COMMIT="${TRAVIS_COMMIT}"
 BRANCH="${TRAVIS_BRANCH}"
 PR="${TRAVIS_PULL_REQUEST}"
+DOCKER_IMAGE_REPO="${DOCKER_IMAGE_REPO}"
+
 
 if ! [ -n "${TAG}" ]; then
   echo "Not a git tag, tagging as: ${COMMIT}"
@@ -23,19 +25,17 @@ export TAG
 $(aws ecr get-login --region="${AWS_REGION}")
 for APP in $APPS
 do
-	docker tag "${APP}:latest" "${DOCKER_IMAGE_REPO}/${APP}:${TAG}"
-	docker push "${DOCKER_IMAGE_REPO}/${APP}:${TAG}"
-done
+  docker tag "${APP}:latest" "${DOCKER_IMAGE_REPO}/${APP}:${TAG}"
+  docker push "${DOCKER_IMAGE_REPO}/${APP}:${TAG}"
 
-tmp_dir="tmp"
-_recreate "${tmp_dir}"
-envsubst < gather2-core/conf/Dockerrun.aws.json.tmpl > "${tmp_dir}/Dockerrun.aws.json"
+  tmp_dir="tmp"
+  _recreate "${tmp_dir}"
+  envsubst < ${APP}/conf/Dockerrun.aws.json.tmpl > "${tmp_dir}/Dockerrun.aws.json"
 
-zip_file="${tmp_dir}/deploy.zip"
-zip -r "${zip_file}" .ebextensions -x '*.git*'
-zip -j "${zip_file}" ${tmp_dir}/* -x "${zip_file}"
+  pushd "${script_dir}" >/dev/null
+  zip_file="${tmp_dir}/deploy.zip"
+  zip -r "${zip_file}" ".ebextensions" -x '*.git*'
+  zip -j "${zip_file}" "${tmp_dir}"/* -x "${zip_file}
 
-for APP in $APPS
-do
-	eb deploy "${APP}-dev" -l "${TAG}"
+  eb deploy "${APP}-dev" -l "${TAG}"
 done
