@@ -23,7 +23,7 @@ fi
 export TAG
 
 $(aws ecr get-login --region="${AWS_REGION}")
-for APP in $APPS
+for APP in "${APPS[@]}"
 do
 	echo "Tagging "${DOCKER_IMAGE_REPO}/${APP}:${TAG}"
   docker tag "${APP}:latest" "${DOCKER_IMAGE_REPO}/${APP}:${TAG}"
