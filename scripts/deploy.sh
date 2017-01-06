@@ -32,12 +32,13 @@ do
 
   tmp_dir="tmp"
   _recreate "${tmp_dir}"
-  envsubst < ${APP}/conf/Dockerrun.aws.json.tmpl > "${tmp_dir}/Dockerrun.aws.json"
+  envsubst < "${APP}/conf/Dockerrun.aws.json.tmpl" > "${tmp_dir}/Dockerrun.aws.json"
 
   pushd "${script_dir}" >/dev/null
   zip_file="${tmp_dir}/deploy.zip"
   zip -r "${zip_file}" ".ebextensions" -x '*.git*'
   zip -j "${zip_file}" "${tmp_dir}"/* -x "${zip_file}"
 
+  echo "Deploying ${APP}-dev ${TAG}""
   eb deploy "${APP}-dev" -l "${TAG}"
 done
