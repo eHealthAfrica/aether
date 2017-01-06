@@ -1,8 +1,3 @@
-branch-defaults:
-  default:
-    environment: gather2-core-dev
-  master:
-    environment: gather2-core-dev
 global:
   application_name: gather2
   default_ec2_keyname: aws-deploy
