@@ -7,6 +7,8 @@ _recreate() {
     mkdir -p "${directory}"
 }
 
+script_dir="$(cd "$(dirname "$0")"; pwd)"
+
 export APPS=( gather2-core gather2-odk-importer )
 
 TAG="${TRAVIS_TAG}"
