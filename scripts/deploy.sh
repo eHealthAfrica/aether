@@ -22,8 +22,6 @@ if ! [ -n "${TAG}" ]; then
 fi
 export TAG
 
-git clone "https://${GH_USER}:${GH_TOKEN}@github.com/eHealthAfrica/beanstalk-deploy" "${script_dir}/.ebextensions"
-
 $(aws ecr get-login --region="${AWS_REGION}")
 for APP in $APPS
 do
