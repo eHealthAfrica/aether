@@ -28,7 +28,6 @@ INSTALLED_APPS = [
     'django_extensions',
     'corsheaders',
     'core.apps.CoreConfig',
-
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -73,10 +72,13 @@ REST_FRAMEWORK = {
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.AdminRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ),
     'DEFAULT_PARSER_CLASSES': (
         'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.CursorPagination',
     'PAGE_SIZE': 30,
@@ -115,6 +117,10 @@ STATICFILES_DIRS = [
 ]
 
 STATIC_ROOT = os.environ.get("STATIC_ROOT", here('../static_root'))
+
+
+MEDIA_ROOT = here('../media_root')
+MEDIA_URL = '/media/'
 
 DATABASES = {
     'default': {

@@ -12,6 +12,13 @@ from django.db import models
 logger = logging.getLogger(__name__)
 
 
+class Attachment(models.Model):
+    attachment_file = models.FileField('attachment')
+    response = models.ForeignKey('Response', related_name='attachments')
+    name = models.CharField(max_length=50)
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+
+
 class Survey(models.Model):
     name = models.CharField(max_length=50)
     # TODO: Make this readonly
@@ -22,9 +29,6 @@ class Survey(models.Model):
     def get_absolute_url(self):
         from django.core.urlresolvers import reverse
         return reverse('survey-detail', args=[str(self.id)])
-
-    def __str__(self):
-        return 'ID:{} - {}'.format(self.id, self.name)
 
 
 class Response(models.Model):

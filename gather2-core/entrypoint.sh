@@ -46,7 +46,7 @@ EOF
 
 pip_freeze() {
     virtualenv -p python3 /tmp/env/
-    /tmp/env/bin/pip install -r ./primary-requirements.txt
+    /tmp/env/bin/pip install -r ./primary-requirements.txt --upgrade
     set +x
     echo -e "###\n# frozen requirements DO NOT CHANGE\n# To update this update 'primary-requirements.txt' then run ./entrypoint.sh pip_freeze\n###" | tee requirements.txt
     /tmp/env/bin/pip freeze | tee -a requirements.txt
@@ -65,8 +65,7 @@ case "$1" in
     ;;
     test_coverage)
         source /var/env/bin/activate
-        coverage run --rcfile="/code/.coveragerc" /code/manage.py test core
-        mkdir /var/annotated
+        coverage run --rcfile="/code/.coveragerc" /code/manage.py test core "${@:2}"
         coverage annotate --rcfile="/code/.coveragerc"
         coverage report --rcfile="/code/.coveragerc"
         cat << "EOF"

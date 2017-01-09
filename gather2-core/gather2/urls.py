@@ -1,19 +1,7 @@
-"""gather2 URL Configuration
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/dev/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  url(r'^$', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  url(r'^$', Home.as_view(), name='home')
-Including another URLconf
-    1. Add an import:  from blog import urls as blog_urls
-    2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
-"""
 from django.conf.urls import include, url
+from django.conf import settings
+from django.conf.urls.static import static
+
 from django.contrib import admin
 
 from core import views
@@ -27,6 +15,13 @@ router = TemplateRouter(template_name='index.html')
     .register('responses', views.ResponseViewSet,
               base_name='survey_response',
               parents_query_lookups=['survey'])
+)
+
+(
+    router.register('responses', views.ResponseViewSet)
+    .register('attachments', views.AttachmentViewSet,
+              base_name='response_attachment',
+              parents_query_lookups=['response'])
 )
 
 (
@@ -56,6 +51,7 @@ router.register('map-results', views.MapResultViewSet, base_name='map_results')
 router.register('reduce-functions', views.ReduceFunctionViewSet,
                 base_name='reduce_function')
 router.register('responses', views.ResponseViewSet, base_name='response')
+router.register('attachments', views.AttachmentViewSet, base_name='attachment')
 
 
 urlpatterns = [
@@ -63,5 +59,5 @@ urlpatterns = [
     url(r'', include(router.urls)),
     url(r'^api-auth/', include('rest_framework.urls',
                                namespace='rest_framework')),
-    url(r'^admin/', include(admin.site.urls)),
-]
+    url(r'^admin/', include(admin.site.urls))
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

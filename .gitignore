@@ -2,6 +2,8 @@
 
 importer_home
 gather_home
+static_root
+media_root
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

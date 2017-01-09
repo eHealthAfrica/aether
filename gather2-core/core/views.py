@@ -3,10 +3,10 @@ from rest_framework.authentication import (BasicAuthentication,
                                            SessionAuthentication)
 from rest_framework_extensions.mixins import NestedViewSetMixin
 
-from .models import MapFunction, MapResult, ReduceFunction, Response, Survey
+from .models import MapFunction, MapResult, ReduceFunction, Response, Survey, Attachment
 from .serializers import (MapFunctionSerializer, MapResultSerializer,
                           ReduceFunctionSerializer, ResponseSerializer,
-                          SurveySerializer)
+                          SurveySerializer, AttachmentSerializer)
 
 
 # This disabled CSRF checks only on the survey API calls.
@@ -75,6 +75,24 @@ class ResponseViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
         filtered_qs = orig_qs.filter(**data_queries)
 
         return filtered_qs
+
+    def get_serializer(self, *args, **kwargs):
+        """Use the parent relationship, if available, on the child resource"""
+        kwargs.get('data', {}).update(self.get_parents_query_dict())
+        return super(ResponseViewSet, self).get_serializer(*args, **kwargs)
+
+
+class AttachmentViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
+    authentication_classes = (
+        CsrfExemptSessionAuthentication, BasicAuthentication)
+    queryset = Attachment.objects.all()
+    serializer_class = AttachmentSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+    def get_serializer(self, *args, **kwargs):
+        """Use the parent relationship, if available, on the child resource"""
+        kwargs.get('data', {}).update(self.get_parents_query_dict())
+        return super(AttachmentViewSet, self).get_serializer(*args, **kwargs)
 
 
 class MapFunctionViewSet(NestedViewSetMixin, viewsets.ModelViewSet):

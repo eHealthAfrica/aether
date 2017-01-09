@@ -6,7 +6,8 @@ import string
 import jsonschema
 from rest_framework import serializers
 
-from .models import MapFunction, MapResult, ReduceFunction, Response, Survey
+from .models import MapFunction, MapResult, ReduceFunction, Response, Survey, Attachment
+
 
 logger = logging.getLogger(__name__)
 
@@ -90,11 +91,21 @@ class JSONSpecValidator(object):
         return True
 
     def set_context(self, serializer_field):
-        survey_id = serializer_field.parent.initial_data['survey']
+        survey_id = serializer_field.parent.initial_data.get('survey')
         # First (only) or None
         survey = (Survey.objects.filter(id=survey_id) or [None])[0]
         if survey:
             self.schema = survey.schema
+
+
+class AttachmentSerializer(serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField('attachment-detail')
+    response_url = serializers.HyperlinkedRelatedField(
+        'response-detail', source='response', read_only=True)
+
+    class Meta:
+        model = Attachment
+        fields = ['id', 'url', 'attachment_file', 'name', 'response', 'response_url']
 
 
 class SurveySerializer(serializers.ModelSerializer):
@@ -110,6 +121,8 @@ class SurveySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Survey
+        fields = ['id', 'url', 'schema', 'name', 'responses_url', 'map_functions_url', 'created_by']
+        read_only_fields = ['id', 'url', 'responses_url', 'map_functions_url', 'created_by']
 
 
 class ResponseSerializer(serializers.ModelSerializer):
@@ -121,9 +134,12 @@ class ResponseSerializer(serializers.ModelSerializer):
     created_by = serializers.PrimaryKeyRelatedField(
         read_only=True,
         default=serializers.CurrentUserDefault())
+    attachments_url = serializers.HyperlinkedIdentityField(
+        'response_attachment-list', read_only=True, lookup_url_kwarg='parent_lookup_response')
 
     class Meta:
         model = Response
+        fields = '__all__'
 
 
 class MapFunctionSerializer(serializers.ModelSerializer):
@@ -137,6 +153,7 @@ class MapFunctionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MapFunction
+        fields = '__all__'
 
 
 class MapResultSerializer(serializers.ModelSerializer):
@@ -148,6 +165,7 @@ class MapResultSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MapResult
+        fields = '__all__'
 
 
 class ReduceFunctionSerializer(serializers.ModelSerializer):
@@ -157,3 +175,4 @@ class ReduceFunctionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ReduceFunction
+        fields = '__all__'

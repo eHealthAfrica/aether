@@ -16,3 +16,4 @@ lxml
 requests
 python-dateutil
 geojson
+pyxform

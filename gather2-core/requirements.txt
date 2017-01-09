@@ -3,17 +3,18 @@
 # To update this update 'primary-requirements.txt' then run ./entrypoint.sh pip_freeze
 ###
 autopep8==1.2.1
-coverage==4.2
+coverage==4.3.1
 decorator==4.0.10
 dj-database-url==0.3.0
-Django==1.9
-django-extensions==1.5.9
+Django==1.10
+django-attachments==1.0.1
+django-extensions==1.7.5
 django-filter==0.11.0
-djangorestframework==3.2.0
-drf-extensions==0.2.8
+djangorestframework==3.5.3
+drf-extensions==0.3.1
 fake-factory==0.7.2
 flake8==2.4.0
-hypothesis==3.6.0
+hypothesis==3.6.1
 ipdb==0.8.1
 ipython==5.1.0
 ipython-genutils==0.1.0

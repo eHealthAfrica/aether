@@ -1,5 +1,7 @@
 import re
 
+from urllib.parse import urlparse
+
 import requests
 from dateutil import parser
 from django.shortcuts import get_object_or_404
@@ -29,7 +31,7 @@ def walk(obj, parent_keys, coerce_dict):
             for i in v:
                 # indicies are not important
                 walk(i, keys, coerce_dict)
-        else:
+        elif v is not None:
             xpath = '/' + '/'.join(keys)
             _type = coerce_dict.get(xpath)
             if _type == 'int':
@@ -90,12 +92,21 @@ def submission(request):
         xml = request.FILES['xml_submission_file'].read()
         d = xmltodict.parse(xml)
         title = list(d.items())[0][1]['@id']
-        xform = XForm.objects.get(title=title)
+        xform = XForm.objects.filter(title=title).first()
         coerce_dict = {}
         for n in re.findall(r"<bind.*/>", xform.xml_data):
             coerce_dict[re.findall(r'nodeset="([^"]*)"', n)
                         [0]] = re.findall(r'type="([^"]*)"', n)[0]
         walk(d, None, coerce_dict)  # modifies inplace
-        r = requests.post(xform.gather_core_url, json={'data': d, 'survey': 1})
-        return Response(status=r.status)
+        r = requests.post(xform.gather_core_url, json={'data': d})
+        if r.status_code != 201:
+            return Response(status=r.status_code)
+
+        attachment_url = r.json().get('attachments_url')
+        parse_result = urlparse(xform.gather_core_url)
+        for name, f in request.FILES.items():
+            if name != 'xml_submission_file':
+                r = requests.post(attachment_url, data={'name': name}, files={'attachment_file': (f.name, f, f.content_type)}, auth=(parse_result.username, parse_result.password))
+
+        return Response(status=r.status_code)
     return Response(status=status.HTTP_204_NO_CONTENT)
