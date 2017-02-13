@@ -23,3 +23,4 @@ WORKDIR /code
 ADD ./ /code/
 
 ENTRYPOINT ["bash", "/code/entrypoint.sh"]
+CMD ["manage", "runserver", "0.0.0.0:8443"]

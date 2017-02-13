@@ -5,7 +5,6 @@ services:
 
     core:
         build: gather2-core
-        image: gather2-core
         environment:
             RDS_HOSTNAME: "db"
             RDS_USERNAME: "postgres"
@@ -25,7 +24,6 @@ services:
 
     odk-importer:
         build: gather2-odk-importer
-        build: gather2-odk-importer
         environment:
             RDS_HOSTNAME: "db"
             RDS_USERNAME: "postgres"
@@ -37,6 +35,6 @@ services:
             - ./gather2-odk-importer:/code
             - ./importer_home:/root/
         ports:
-            - "8443:8000"
+            - "8443:8443"
         links:
             - db

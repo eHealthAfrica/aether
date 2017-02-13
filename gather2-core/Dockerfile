@@ -38,3 +38,4 @@ ADD conf/nginx.gathercore.conf /etc/nginx/sites-enabled/default
 RUN mkdir -p /var/www/static && chmod -R 760 /var/www/static/ && chown -R www-data:www-data /var/www/static
 
 ENTRYPOINT ["bash", "/code/entrypoint.sh"]
+CMD ["manage", "runserver", "0.0.0.0:8000"]

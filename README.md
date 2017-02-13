@@ -17,17 +17,26 @@
 $ git clone git@github.com:eHealthAfrica/gather2.git
 $ cd gather2
 
-$ docker-compose up -d db  # Or run this in a different tab without `-d` to make it easy to reset the db
-$ docker-compose run core manage test core
+$ docker-compose build
 $ docker-compose run core setuplocaldb
-$ docker-compose run --service-ports core manage runserver 0.0.0.0:8000
+$ docker-compose run odk-importer setuplocaldb
+```
+
+### Setup
+
+The only thing that you need now is a superuser!
+```
+docker-compose run core manage createsuperuser
+docker-compose run odk-importer manage createsuperuser
 ```
 
 ## Usage
 
-Below command will print out available entrypoint commands:
+This will start the gather-core 0.0.0.0:8000 and the odk-importer on 0.0.0.0:8443
+
+
 ```
-$ docker-compose run core /code/gather2-core/entrypoint.sh
+$ docker-compose up
 ```
 
 ## Development
