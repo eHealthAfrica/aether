@@ -16,6 +16,10 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+def here(x):
+    return os.path.join(os.path.abspath(os.path.dirname(__file__)), x)
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
@@ -39,6 +43,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django_extensions',
     'rest_framework',
+    'storages',
     'api',
 )
 
@@ -91,6 +96,24 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.environ.get("STATIC_ROOT", here('../static_root'))
+
+
+MEDIA_ROOT = here('../media_root')
+MEDIA_URL = '/media/'
+
+
+# If you want to store static files on AWS S3, set DJANGO_S3_FILE_STORAGE
+# in an env var when deploying.
+
+if os.environ.get('DJANGO_S3_FILE_STORAGE'):
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+    AWS_AUTO_CREATE_BUCKET = True
+    AWS_S3_FILE_OVERWRITE = False
+
 
 DATABASES = {
     'default': {

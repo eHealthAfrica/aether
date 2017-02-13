@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_extensions',
     'corsheaders',
+    'storages',
     'core.apps.CoreConfig',
 ]
 
@@ -121,6 +122,19 @@ STATIC_ROOT = os.environ.get("STATIC_ROOT", here('../static_root'))
 
 MEDIA_ROOT = here('../media_root')
 MEDIA_URL = '/media/'
+
+
+# If you want to store static files on AWS S3, set DJANGO_S3_FILE_STORAGE
+# in an env var when deploying.
+
+if os.environ.get('DJANGO_S3_FILE_STORAGE'):
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+    AWS_AUTO_CREATE_BUCKET = True
+    AWS_S3_FILE_OVERWRITE = False
+
 
 DATABASES = {
     'default': {

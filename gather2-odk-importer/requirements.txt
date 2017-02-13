@@ -17,3 +17,4 @@ requests
 python-dateutil
 geojson
 pyxform
+django-storages==1.5.2

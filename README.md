@@ -49,6 +49,9 @@ root@localhost:/#
 
 ## Deployment
 
+
+When deploying set the env var `DJANGO_S3_FILE_STORAGE` to True. See `settings.py` for the other available settings.
+
 Infrastructure deployment is done with AWS CloudFormation, which configuration files are stored in [cloudformation](cloudformation) directory.
 
 Application deployment is managed by AWS Beanstalk and is being done automatically on the following branches/environments:
