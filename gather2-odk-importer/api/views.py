@@ -15,7 +15,9 @@ from rest_framework.decorators import (api_view, authentication_classes,
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import StaticHTMLRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
+from rest_framework import viewsets
 
+from .serializers import XFormSerializer
 from .models import XForm
 
 
@@ -110,3 +112,9 @@ def submission(request):
 
         return Response(status=r.status_code)
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class XFormViewset(viewsets.ModelViewSet):
+    queryset = XForm.objects.all()
+    serializer_class = XFormSerializer
+    permission_classes = [IsAuthenticated]
