@@ -17,7 +17,6 @@ services:
             - ./core_home:/root/
         hostname: gathercore-app
         ports:
-            - "5000:5000"
             - "8000:8000"
         links:
             - db

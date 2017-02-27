@@ -29,6 +29,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'storages',
     'core.apps.CoreConfig',
+    'django_cas_ng',
+    'ums_client',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -65,7 +67,15 @@ WSGI_APPLICATION = 'gather2.wsgi.application'
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',  # this is default
+    'ums_client.backends.UMSRoleBackend'
 )
+
+CAS_SERVER_URL = os.environ.get(
+    "CAS_SERVER_URL", "https://ums-dev.ehealthafrica.org")
+HOSTNAME = os.environ.get("HOSTNAME", "HOSTNAME")
+CAS_VERSION = 3
+CAS_LOGOUT_COMPLETELY = True
+
 
 ANONYMOUS_USER_ID = -1
 
@@ -118,7 +128,6 @@ STATICFILES_DIRS = [
 ]
 
 STATIC_ROOT = os.environ.get("STATIC_ROOT", here('../static_root'))
-
 
 MEDIA_ROOT = here('../media_root')
 MEDIA_URL = '/media/'

@@ -93,8 +93,8 @@ def submission(request):
     if request.method == 'POST':
         xml = request.FILES['xml_submission_file'].read()
         d = xmltodict.parse(xml)
-        title = list(d.items())[0][1]['@id']
-        xform = XForm.objects.filter(title=title).first()
+        form_id = list(d.items())[0][1]['@id']
+        xform = XForm.objects.filter(form_id=form_id).first()
         coerce_dict = {}
         for n in re.findall(r"<bind.*/>", xform.xml_data):
             coerce_dict[re.findall(r'nodeset="([^"]*)"', n)
@@ -108,7 +108,8 @@ def submission(request):
         parse_result = urlparse(xform.gather_core_url)
         for name, f in request.FILES.items():
             if name != 'xml_submission_file':
-                r = requests.post(attachment_url, data={'name': name}, files={'attachment_file': (f.name, f, f.content_type)}, auth=(parse_result.username, parse_result.password))
+                r = requests.post(attachment_url, data={'name': name}, files={'attachment_file': (
+                    f.name, f, f.content_type)}, auth=(parse_result.username, parse_result.password))
 
         return Response(status=r.status_code)
     return Response(status=status.HTTP_204_NO_CONTENT)

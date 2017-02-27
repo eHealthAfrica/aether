@@ -43,8 +43,11 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django_extensions',
     'rest_framework',
+    'django_cas_ng',
+    'ums_client',
     'storages',
     'api',
+
 )
 
 MIDDLEWARE_CLASSES = (
@@ -125,3 +128,15 @@ DATABASES = {
         'PORT': os.environ.get('RDS_PORT', '5432'),
     }
 }
+
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',  # this is default
+    'ums_client.backends.UMSRoleBackend'
+)
+
+CAS_SERVER_URL = os.environ.get(
+    "CAS_SERVER_URL", "https://ums-dev.ehealthafrica.org")
+HOSTNAME = os.environ.get("HOSTNAME", "localhost")
+CAS_VERSION = 3
+CAS_LOGOUT_COMPLETELY = True

@@ -1,5 +1,5 @@
 coverage==4.0.3
-Django==1.9
+Django==1.10
 hypothesis==1.15.0
 psycopg2==2.6.1
 ipdb
@@ -17,4 +17,6 @@ requests
 python-dateutil
 geojson
 pyxform
+django-cas-ng
+django-ums-client
 django-storages==1.5.2

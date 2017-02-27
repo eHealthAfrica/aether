@@ -118,6 +118,7 @@ class SimpleTestCase(TestCase):
         self.crawl('http://testserver' + reverse('api-root'), seen=[], client=client)
 
         for s in Survey.objects.all():
+            assert isinstance(str(s), str)
             assert s.get_absolute_url()
 
     @given(SurveyResponseGoal)

@@ -27,6 +27,7 @@ class XForm(models.Model):
     # username as a field on the model
     username = models.CharField(max_length=100)
     title = models.CharField(default='', max_length=64, editable=False)
+    form_id = models.CharField(default='', max_length=64, editable=False)
     xml_data = models.TextField(blank=True, validators=[validate_xmldict])
     description = models.TextField(default=u'', null=True)
     created_at = models.DateTimeField(default=timezone.now)
@@ -48,6 +49,7 @@ class XForm(models.Model):
         try:
             d = xmltodict.parse(self.xml_data)
             self.title = d['h:html']['h:head']['h:title']  # TODO: make this more robust
+            self.form_id = d['h:html']['h:head']['model']['instance']['None']['@id']
         except Exception as e:
             print(e)
 

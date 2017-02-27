@@ -15,11 +15,12 @@ RUN apt-get update -qq && cat /tmp/apt-packages.txt | xargs apt-get -qq --yes --
 
 RUN wget --quiet https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py -O /tmp/awslogs-agent-setup.py
 
-ADD requirements.txt /tmp/requirements.txt
 RUN pip3 install virtualenv
-
 RUN virtualenv -p python3 /var/env/
-RUN /var/env/bin/pip install -r /tmp/requirements.txt
+
+ADD requirements.txt /code/requirements.txt
+COPY ./dependencies /code/dependencies
+RUN /var/env/bin/pip install -f /code/dependencies -r /code/requirements.txt
 
 WORKDIR /code/
 

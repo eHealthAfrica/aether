@@ -26,6 +26,9 @@ class Survey(models.Model):
     created = models.DateTimeField(auto_now_add=True, db_index=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, db_index=True)
 
+    def __str__(self):
+        return self.name
+
     def get_absolute_url(self):
         from django.core.urlresolvers import reverse
         return reverse('survey-detail', args=[str(self.id)])

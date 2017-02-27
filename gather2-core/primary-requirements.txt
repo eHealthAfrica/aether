@@ -17,4 +17,6 @@ markdown
 uwsgi
 requests
 django-attachments
+django-cas-ng
+django-ums-client
 django-storages
