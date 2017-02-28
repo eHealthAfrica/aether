@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+import logging
+logger = logging.getLogger(__name__)
+
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -129,6 +132,29 @@ DATABASES = {
     }
 }
 
+
+GATHER_CORE_URL = os.environ.get('GATHER_CORE_URL')
+GATHER_CORE_TOKEN = os.environ.get('GATHER_CORE_TOKEN')
+
+
+def test_gather_core_connection():
+    import requests
+    r = requests.post(GATHER_CORE_URL + '/surveys.json',
+                      headers={'Authorization': 'Token {}'.format(GATHER_CORE_TOKEN)})
+    return r
+
+
+if GATHER_CORE_URL and GATHER_CORE_TOKEN:
+    try:
+        r = test_gather_core_connection()
+        assert r.status_code == 200, r.content
+        logger.info('GATHER_CORE_URL and GATHER_CORE_TOKEN are valid', )
+    except Exception as e:
+        logger.exception(
+            "GATHER_CORE_URL and GATHER_CORE_TOKEN are not valid, saving XForm responses will not work: {}".format(GATHER_CORE_URL))
+else:
+    logger.warning(
+        'GATHER_CORE_URL and GATHER_CORE_TOKEN are not set, saving XForm responses will not work.')
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',  # this is default

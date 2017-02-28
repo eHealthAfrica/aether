@@ -49,6 +49,8 @@ root@localhost:/#
 
 ## Deployment
 
+Set the `GATHER_CORE_TOKEN` and `GATHER_CORE_URL` environment variables when starting the `gather2-odk-importer` to have ODK Collect submissions posted to Gather2 Core.
+If a valid `GATHER_CORE_TOKEN` and `GATHER_CORE_URL` combination is not set, the server will still start, but ODK Collection submissions will fail.
 
 When deploying set the env var `DJANGO_S3_FILE_STORAGE` to True. See `settings.py` for the other available settings.
 

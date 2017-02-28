@@ -18,8 +18,8 @@ class XFormForm(forms.ModelForm):
 
     class Meta:
         model = XForm
-        fields = ['id', 'username', 'description',
-                  'xml_data', 'xlsform', 'gather_core_url']
+        fields = ['id', 'description',
+                  'xml_data', 'xlsform', 'gather_core_survey_id']
 
     def clean_xml_data(self):
         print('cleaning xform')
@@ -39,8 +39,6 @@ class XFormForm(forms.ModelForm):
 class XFormAdmin(admin.ModelAdmin):
     list_display = (
         'id',
-        'form_id',
-        'username',
         'title',
         'description',
         'created_at',

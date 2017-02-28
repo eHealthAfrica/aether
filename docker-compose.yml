@@ -36,4 +36,5 @@ services:
         ports:
             - "8443:8443"
         links:
+            - core
             - db

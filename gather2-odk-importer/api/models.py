@@ -1,4 +1,5 @@
 from hashlib import md5
+from django.conf import settings
 
 from django.core.urlresolvers import reverse
 from django.db import models
@@ -11,6 +12,7 @@ import xmltodict
 def validate_xmldict(value):
     try:
         xmltodict.parse(value)
+        assert ['h:html']['h:head']['h:title'], 'missing "title" in xlsform or XForm'
     except Exception as e:
         raise ValidationError(e)
 
@@ -23,15 +25,15 @@ class XForm(models.Model):
     formats when it is needed
     """
 
-    # Users can only see their forms, auth is done by core so store the
-    # username as a field on the model
-    username = models.CharField(max_length=100)
-    title = models.CharField(default='', max_length=64, editable=False)
-    form_id = models.CharField(default='', max_length=64, editable=False)
+    title = models.CharField(default='', max_length=64, editable=False, unique=True)
     xml_data = models.TextField(blank=True, validators=[validate_xmldict])
     description = models.TextField(default=u'', null=True)
     created_at = models.DateTimeField(default=timezone.now)
-    gather_core_url = models.URLField(max_length=200, default='', blank=False)
+    gather_core_survey_id = models.IntegerField()
+
+    @property
+    def gather_core_url(self):
+        return settings.GATHER_CORE_URL + '/surveys/{survey_id}/responses/'.format(survey_id=self.gather_core_survey_id)
 
     @property
     def hash(self):
