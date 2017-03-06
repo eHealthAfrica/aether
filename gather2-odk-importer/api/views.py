@@ -96,8 +96,8 @@ def submission(request):
     if request.method == 'POST':
         xml = request.FILES['xml_submission_file'].read()
         d = xmltodict.parse(xml)
-        form_id = list(d.items())[0][1]['@id']
-        xform = XForm.objects.filter(form_id=form_id).first()
+        form_id = list(d.items())[0][1]['@id']  # TODO make more robust
+        xform = get_object_or_404(XForm, id=form_id)
         coerce_dict = {}
         for n in re.findall(r"<bind.*/>", xform.xml_data):
             coerce_dict[re.findall(r'nodeset="([^"]*)"', n)
