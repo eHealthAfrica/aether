@@ -1,8 +1,14 @@
 from django.conf.urls import url
+from rest_framework import routers
 
 from api import views
 
-urlpatterns = [
+
+router = routers.DefaultRouter()
+router.register(r'xforms', views.XFormViewset)
+urlpatterns = router.urls
+
+urlpatterns += [
     url(r'^formList$', views.form_list, name='form_list'),
     url(r'^forms/(?P<pk>[^/]+)/form\.xml$',
         views.download_xform, name='download_xform'),

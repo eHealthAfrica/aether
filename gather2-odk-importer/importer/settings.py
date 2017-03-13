@@ -133,6 +133,12 @@ DATABASES = {
 }
 
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    )
+}
 GATHER_CORE_URL = os.environ.get('GATHER_CORE_URL')
 GATHER_CORE_TOKEN = os.environ.get('GATHER_CORE_TOKEN')
 
