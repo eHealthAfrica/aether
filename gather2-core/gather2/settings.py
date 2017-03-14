@@ -24,6 +24,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'reversion',
+    'reversion_compare',
     'rest_framework',
     'rest_framework.authtoken',
     'django_extensions',
@@ -33,6 +35,8 @@ INSTALLED_APPS = [
     'django_cas_ng',
     'ums_client',
 ]
+
+ADD_REVERSION_ADMIN = True
 
 MIDDLEWARE_CLASSES = [
     'corsheaders.middleware.CorsMiddleware',

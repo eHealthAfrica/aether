@@ -50,7 +50,7 @@ pip_freeze() {
     /tmp/env/bin/pip install -f /code/dependencies -r ./primary-requirements.txt --upgrade
     set +x
     echo -e "###\n# frozen requirements DO NOT CHANGE\n# To update this update 'primary-requirements.txt' then run ./entrypoint.sh pip_freeze\n###" | tee requirements.txt
-    /tmp/env/bin/pip freeze | tee -a requirements.txt
+    /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a requirements.txt
 }
 
 case "$1" in
