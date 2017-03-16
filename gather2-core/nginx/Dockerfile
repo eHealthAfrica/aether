@@ -1,0 +1,4 @@
+FROM  nginx:alpine
+
+RUN rm /etc/nginx/conf.d/default.conf
+ADD conf/gathercore.conf /etc/nginx/conf.d/default.conf

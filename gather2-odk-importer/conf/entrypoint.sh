@@ -6,8 +6,9 @@ set -e
 show_help() {
     echo """
     Commands
-    manage     : Invoke django manage.py commands
-    setupdb  : Create empty database, will still need migrations run
+    manage  : Invoke django manage.py commands
+    setupdb : Create empty database, will still need migrations run
+    start   : Start prod
     """
 }
 
@@ -25,6 +26,10 @@ case "$1" in
     test )
         python manage.py test
     ;;
+    start )
+        cd /code/
+        /var/env/bin/python manage.py collectstatic --noinput
+        /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
     test_coverage )
         coverage run --rcfile="/code/.coveragerc" /code/manage.py test
         mkdir ~/annotated

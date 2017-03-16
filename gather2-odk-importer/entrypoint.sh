@@ -60,8 +60,8 @@ EOF
     start )
         cd /code/
         /var/env/bin/python manage.py collectstatic --noinput
-        /usr/local/bin/supervisord -c /etc/supervisor/supervisord.conf
-        nginx -g "daemon off;"
+        chmod -R 755 /var/www/static
+        sudo -u gather2 /var/env/bin/uwsgi --ini /code/conf/uwsgi.ini
     ;;
     bash )
         bash "${@:2}"
