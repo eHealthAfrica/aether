@@ -45,7 +45,7 @@ class XFormAdmin(admin.ModelAdmin):
     )
     list_filter = ('created_at',)
     date_hierarchy = 'created_at'
-    readonly_fields = ('title', 'form_id')
+    readonly_fields = ('title',)
     form = XFormForm
 
 
