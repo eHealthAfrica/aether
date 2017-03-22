@@ -5,15 +5,13 @@ ENV TERM screen-256color
 RUN locale-gen --no-purge en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
 RUN update-locale LANG=en_US.UTF-8
+RUN useradd -ms /bin/false gather2
 
 RUN apt-get update -qq && apt-get install -y wget
-RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main 9.4" > /etc/apt/sources.list.d/pgdg.list
-
 ADD conf/apt-packages.txt /tmp/apt-packages.txt
+RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" >> /etc/apt/sources.list.d/pgdg.list'
+RUN wget -q https://www.postgresql.org/media/keys/ACCC4CF8.asc -O - | sudo apt-key add -
 RUN apt-get update -qq && cat /tmp/apt-packages.txt | xargs apt-get -qq --yes --force-yes install
-
-RUN wget --quiet https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py -O /tmp/awslogs-agent-setup.py
 
 RUN pip3 install virtualenv
 RUN virtualenv -p python3 /var/env/
@@ -24,19 +22,8 @@ RUN /var/env/bin/pip install -f /code/dependencies -r /code/requirements.txt
 
 WORKDIR /code/
 
-COPY ./ /code
-
-RUN python /tmp/awslogs-agent-setup.py -n -r ${AWS_REGION:-eu-west-1} -c /code/conf/awslogs.conf.dummy
-
-RUN mkdir -p /var/log/gathercore
-
-RUN mkdir -p /etc/supervisor/conf.d && mkdir -p /var/log/supervisor
-RUN ln -sf /code/gather2-core/conf/supervisor.gathercore.conf /etc/supervisor/conf.d/gc.conf
-RUN ln -sf /code/gather2-core/conf/supervisord.conf /etc/supervisor/supervisord.conf
-
-ADD conf/nginx.gathercore.conf /etc/nginx/sites-enabled/default
-
-RUN mkdir -p /var/www/static && chmod -R 760 /var/www/static/ && chown -R www-data:www-data /var/www/static
+ADD ./ /code
+RUN chown -R gather2: /code
 
 ENTRYPOINT ["bash", "/code/entrypoint.sh"]
 CMD ["manage", "runserver", "0.0.0.0:8000"]

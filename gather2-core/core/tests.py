@@ -227,7 +227,7 @@ class SimpleTestCase(TestCase):
         # Assert the reduce function only gets the first name
         response = client.get(
             reverse('reduce_function-detail', args=[reduce_function_id]))
-        self.assertEqual(response.json()['output'], ['tim'])
+        self.assertEqual(response.json()['output'], ['tim'], response.content)
 
         # Add new Response
         response = client.post(reverse('response-list'),

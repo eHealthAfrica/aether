@@ -93,3 +93,6 @@ coverage_html/
 # Deployment
 tmp
 .ebextensions
+
+# Terraform
+.terraform

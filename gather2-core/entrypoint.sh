@@ -31,19 +31,6 @@ setup_prod_db() {
     /var/env/bin/python manage.py migrate
 }
 
-setup_logs_forwarding() {
-    local logfiles="${*}"
-    for logfile in ${logfiles}; do
-       cat >> /var/awslogs/etc/awslogs.conf <<EOF
-[${logfile}]
-file = ${logfile}
-log_stream_name = ${PROJECT_NAME}/${logfile}/$(hostname)
-initial_position = start_of_file
-log_group_name = ${DEPLOY_ENV}
-EOF
-    done
-}
-
 pip_freeze() {
     rm -rf /tmp/env
     virtualenv -p python3 /tmp/env/
@@ -83,9 +70,7 @@ EOF
         cd /code/
         setup_prod_db
         /var/env/bin/python manage.py collectstatic --noinput
-        /usr/local/bin/supervisord -c /etc/supervisor/supervisord.conf
-        setup_logs_forwarding "/var/log/uwsgi/uwsgi.log"
-        nginx -g "daemon off;"
+        sudo -u gather2 /var/env/bin/uwsgi --ini /code/conf/uwsgi.ini
     ;;
     pip_freeze )
         pip_freeze
