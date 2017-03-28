@@ -170,6 +170,16 @@ BROKER_URL = 'django://'
 
 CORS_ORIGIN_ALLOW_ALL = True
 
+if os.environ.get('DJANGO_USE_X_FORWARDED_HOST', False):
+    USE_X_FORWARDED_HOST = True
+
+if os.environ.get('DJANGO_USE_X_FORWARDED_PORT', False):
+    USE_X_FORWARDED_PORT = True
+
+if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
 try:
     from local_settings import *  # noqa
 except ImportError as e:
