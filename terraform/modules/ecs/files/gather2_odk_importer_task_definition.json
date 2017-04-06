@@ -12,7 +12,10 @@
       { "name": "RDS_PASSWORD", "value": "${database_password}"},
       { "name": "RDS_PORT", "value": "${database_port}"},
       { "name": "RDS_DB_NAME", "value": "${database_name}"},
-      { "name": "STATIC_ROOT", "value": "/var/www/static" }
+      { "name": "STATIC_ROOT", "value": "/var/www/static" },
+      { "name": "DJANGO_USE_X_FORWARDED_PORT", "value": "${django_use_x_forwarded_port}"},
+      { "name": "DJANGO_HTTP_X_FORWARDED_PROTO", "value": "${django_http_x_forwarded_proto}"},
+      { "name": "DJANGO_USE_X_FORWARDED_HOST", "value": "${django_use_x_forwarded_host}"}
     ]
   },
   {
