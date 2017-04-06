@@ -1,0 +1,46 @@
+[
+  {
+    "name": "${application_container_name}",
+    "image": "${image_url}",
+    "cpu": 1,
+    "memory": 512,
+    "essential": true,
+    "command": ["start"],
+    "environment": [
+      { "name": "RDS_HOSTNAME", "value": "${database_hostname}"},
+      { "name": "RDS_USERNAME", "value": "${database_user}"},
+      { "name": "RDS_PASSWORD", "value": "${database_password}"},
+      { "name": "RDS_PORT", "value": "${database_port}"},
+      { "name": "RDS_DB_NAME", "value": "${database_name}"},
+      { "name": "STATIC_ROOT", "value": "/var/www/static"}
+    ],
+    "mountPoints": [
+      {
+        "sourceVolume": "static-core",
+        "containerPath": "/var/www/static"
+      }
+    ]
+  },
+  {
+    "name": "${nginx_container_name}",
+    "image": "${nginx_image_url}",
+    "cpu": 1,
+    "memory": 512,
+    "essential": true,
+    "links": [
+      "gather2-core"
+    ],
+    "portMappings": [
+      {
+        "containerPort": 80,
+        "hostPort": ${host_port}
+      }
+    ],
+    "mountPoints": [
+      {
+        "sourceVolume": "static-core",
+        "containerPath": "/var/www/static"
+      }
+    ]
+  }
+]

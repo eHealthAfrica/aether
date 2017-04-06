@@ -1,9 +1,0 @@
-global:
-  application_name: gather2
-  default_ec2_keyname: aws-deploy
-  default_platform: 64bit Amazon Linux 2016.03 v2.1.6 running Multi-container Docker 1.11.2 (Generic)
-  default_region: eu-west-1
-  profile: null
-  sc: git
-deploy:
-  artifact: tmp/deploy.zip

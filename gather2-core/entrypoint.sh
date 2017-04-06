@@ -28,6 +28,7 @@ setup_prod_db() {
     set +e
     cd /code/
     set -e
+    createdb -h $RDS_HOSTNAME -U $RDS_USERNAME -e $RDS_DB_NAME
     /var/env/bin/python manage.py migrate
 }
 
