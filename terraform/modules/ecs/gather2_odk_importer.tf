@@ -83,6 +83,9 @@ data "template_file" "gather2_odk_importer" {
     database_password = "${data.credstash_secret.gather2_odk_importer.value}"
     database_name = "${var.database_name}"
     database_port = "${var.database_port}"
+    django_use_x_forwarded_port = "1"
+    django_http_x_forwarded_proto = "1"
+    django_use_x_forwarded_host = "1"
   }
 }
 
