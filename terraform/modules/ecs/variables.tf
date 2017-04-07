@@ -34,6 +34,6 @@ variable "ssl_certificate_id" {
 variable "bastion_sg_id" {
   type = "map"
   default = {
-    dev = "sg-eaf10e93"
+    dev = "sg-1241916b"
   }
 }

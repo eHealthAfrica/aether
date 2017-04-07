@@ -27,7 +27,12 @@ setup_prod_db() {
     set +e
     cd /code/
     set -e
-    createdb -h $RDS_HOSTNAME -U $RDS_USERNAME -e $RDS_DB_NAME
+    export PGPASSWORD=$RDS_PASSWORD
+    if psql -h $RDS_HOSTNAME -U $RDS_USERNAME -c "" $RDS_DB_NAME; then
+      echo "Database exists!"
+    else
+      createdb -h $RDS_HOSTNAME -U $RDS_USERNAME -e $RDS_DB_NAME
+    fi
     /var/env/bin/python manage.py migrate
 }
 
@@ -63,7 +68,7 @@ EOF
         setup_prod_db
         /var/env/bin/python manage.py collectstatic --noinput
         chmod -R 755 /var/www/static
-        sudo -u gather2 /var/env/bin/uwsgi --ini /code/conf/uwsgi.ini
+        /var/env/bin/uwsgi --ini /code/conf/uwsgi.ini
     ;;
     bash )
         bash "${@:2}"

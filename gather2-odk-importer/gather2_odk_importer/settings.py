@@ -79,8 +79,12 @@ WSGI_APPLICATION = 'gather2_odk_importer.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.environ.get('RDS_DB_NAME', 'odk_importer'),
+        'PASSWORD': os.environ.get('RDS_PASSWORD', ''),
+        'USER': os.environ.get('RDS_USERNAME', 'postgres'),
+        'HOST': os.environ.get('RDS_HOSTNAME', 'db'),
+        'PORT': os.environ.get('RDS_PORT', '5432'),
     }
 }
 
