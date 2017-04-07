@@ -35,5 +35,6 @@ variable "bastion_sg_id" {
   type = "map"
   default = {
     dev = "sg-1241916b"
+    prod = "sg-0608a57f"
   }
 }
