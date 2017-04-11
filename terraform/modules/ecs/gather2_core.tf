@@ -101,7 +101,7 @@ resource "aws_ecs_task_definition" "gather2_core" {
 resource "aws_ecs_service" "gather2_core" {
   name            = "${var.gather2_core_container_name}"
   cluster         = "${aws_ecs_cluster.cluster.id}"
-  task_definition = "${aws_ecs_task_definition.gather2_core.arn}"
+  task_definition = "${data.external.current_task_def.result.task_arn}"
   desired_count   = 1
   iam_role        = "${var.iam_role_id}"
 

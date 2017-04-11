@@ -101,7 +101,7 @@ resource "aws_ecs_task_definition" "gather2_odk_importer" {
 resource "aws_ecs_service" "gather2_odk_importer" {
   name            = "gather2-odk-importer"
   cluster         = "${aws_ecs_cluster.cluster.id}"
-  task_definition = "${aws_ecs_task_definition.gather2_odk_importer.arn}"
+  task_definition = "${data.external.current_task_def.result.task_arn}"
   desired_count   = 1
   iam_role        = "${var.iam_role_id}"
 
