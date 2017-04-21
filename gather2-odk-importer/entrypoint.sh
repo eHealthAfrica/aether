@@ -36,10 +36,21 @@ setup_prod_db() {
     /var/env/bin/python manage.py migrate
 }
 
+pip_freeze() {
+    virtualenv -p python3 /tmp/env/
+    /tmp/env/bin/pip install -r ./primary-requirements.txt --upgrade
+    set +x
+    echo -e "###\n# frozen requirements DO NOT CHANGE\n# To update this update 'primary-requirements.txt' then run ./entrypoint.sh pip_freeze\n###" | tee requirements.txt
+    /tmp/env/bin/pip freeze | tee -a requirements.txt
+}
+
 case "$1" in
     manage )
         cd /code/
         /var/env/bin/python manage.py "${@:2}"
+    ;;
+    pip_freeze )
+        pip_freeze
     ;;
     setuplocaldb )
         setup_local_db
