@@ -1,15 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
-_recreate() {
-    local directory="${1}"
-    rm -fr "${directory}"
-    mkdir -p "${directory}"
-}
-
-script_dir="$(cd "$(dirname "$0")"; pwd)"
-
 export APPS=( gather2-core gather2-odk-importer )
+
+if [ "${TRAVIS_BRANCH}" == "develop" ]; then
+  export ENV="dev"
+fi
 
 TAG="${TRAVIS_TAG}"
 COMMIT="${TRAVIS_COMMIT}"
@@ -25,20 +21,11 @@ export TAG
 $(aws ecr get-login --region="${AWS_REGION}")
 for APP in "${APPS[@]}"
 do
-	echo "Tagging "${DOCKER_IMAGE_REPO}/${APP}:${TAG}"
-  docker tag "${APP}:latest" "${DOCKER_IMAGE_REPO}/${APP}:${TAG}"
-  echo "Pushsing to ${DOCKER_IMAGE_REPO}/${APP}:${TAG}"
-  docker push "${DOCKER_IMAGE_REPO}/${APP}:${TAG}"
+	echo "Tagging "${DOCKER_IMAGE_REPO}-${ENV}/${APP}:${TAG}"
+  docker tag "${APP}:latest" "${DOCKER_IMAGE_REPO}-${ENV}/${APP}:${TAG}"
+  echo "Pushing to ${DOCKER_IMAGE_REPO}-${ENV}/${APP}:${TAG}"
+  docker push "${DOCKER_IMAGE_REPO}-${ENV}/${APP}:${TAG}"
 
-  tmp_dir="tmp"
-  _recreate "${tmp_dir}"
-  envsubst < "${APP}/conf/Dockerrun.aws.json.tmpl" > "${tmp_dir}/Dockerrun.aws.json"
-
-  pushd "${script_dir}" >/dev/null
-  zip_file="${tmp_dir}/deploy.zip"
-  zip -r "${zip_file}" ".ebextensions" -x '*.git*'
-  zip -j "${zip_file}" "${tmp_dir}"/* -x "${zip_file}"
-
-  echo "Deploying ${APP}-dev ${TAG}""
-  eb deploy "${APP}-dev" -l "${TAG}"
+  echo "Deploying ${APP}-${ENV}-${TAG}"
+  ecs deploy gather2-${ENV} ${APP} -i ${DOCKER_IMAGE_REPO}-${ENV}/${APP}:${TAG}" --timeout 300
 done
