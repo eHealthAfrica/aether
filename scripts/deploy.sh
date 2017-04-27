@@ -20,7 +20,7 @@ if ! [ -n "${TAG}" ]; then
 fi
 export TAG
 
-$(aws ecr get-login --region="${AWS_REGION}")
+$(aws ecr get-login --region="${AWS_DEFAULT_REGION}")
 for APP in "${APPS[@]}"
 do
 	echo "Tagging "${IMAGE_REPO}/${APP}-${ENV}:${TAG}"
@@ -32,5 +32,4 @@ do
 
   echo "Deploying ${APP}-${ENV}-${TAG}"
   ecs deploy gather2-${ENV} ${APP} -i ${IMAGE_REPO}/${APP}-${ENV}:${TAG}" --timeout 600
-
 done
