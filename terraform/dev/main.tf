@@ -29,9 +29,3 @@ module "autoscaling" {
   private_subnets = "${split(",", var.private_subnets)}"
   vpc_id = "${var.vpc_id}"
 }
-
-module "deployment_config" {
-  source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//deployment_config"
-  project = "${var.project}"
-  project_billing_id = "${var.project_billing_id}"
-}

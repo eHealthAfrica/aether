@@ -98,10 +98,14 @@ resource "aws_ecs_task_definition" "gather2_odk_importer" {
   }
 }
 
+data "aws_ecs_task_definition" "gather2_core" {
+  task_definition = "${aws_ecs_task_definition.gather2_odk_importer.family}"
+}
+
 resource "aws_ecs_service" "gather2_odk_importer" {
   name            = "gather2-odk-importer"
   cluster         = "${aws_ecs_cluster.cluster.id}"
-  task_definition = "${data.external.current_task_def.result.task_arn}"
+  task_definition = "${aws_ecs_task_definition.gather2_odk_importer.family}:${max("${aws_ecs_task_definition.gather2_odk_importer.revision}", "${data.aws_ecs_task_definition.gather2_odk_importer.revision}")}"
   desired_count   = 1
   iam_role        = "${var.iam_role_id}"
 
@@ -114,5 +118,3 @@ resource "aws_ecs_service" "gather2_odk_importer" {
     "aws_alb_listener.gather2_odk_importer_http"
   ]
 }
-
-
