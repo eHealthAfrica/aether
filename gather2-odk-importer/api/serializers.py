@@ -6,3 +6,4 @@ class XFormSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = XForm
+        fields = '__all__'

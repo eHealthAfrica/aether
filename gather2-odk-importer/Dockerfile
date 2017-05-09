@@ -20,7 +20,6 @@ RUN pip3 install virtualenv
 RUN virtualenv -p python3 /var/env/
 COPY ./dependencies /code/dependencies
 RUN /var/env/bin/pip install -f /code/dependencies -r /code/requirements.txt
-RUN /var/env/bin/pip install -r /code/requirements.txt
 
 WORKDIR /code
 
