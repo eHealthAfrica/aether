@@ -14,6 +14,7 @@ variable "project" {}
 variable "gather2_core_container_name" { default="gather2-core"}
 variable "gather2_core_nginx_host_port" { default=81 }
 variable "gather2_core_nginx_container_name" { default="gather2-core-nginx" }
+variable "gather2_couchdb_container_name" { default="gather2-couchdb" }
 
 // gather2 ODK importer
 variable "gather2_odk_importer_container_name" { default="gather2-odk-importer" }

@@ -48,12 +48,12 @@ router = TemplateRouter(template_name='index.html')
               parents_query_lookups=['map_function'])
 )
 
+
 router.register('map-results', views.MapResultViewSet, base_name='map_results')
 router.register('reduce-functions', views.ReduceFunctionViewSet,
                 base_name='reduce_function')
 router.register('responses', views.ResponseViewSet, base_name='response')
 router.register('attachments', views.AttachmentViewSet, base_name='attachment')
-
 
 urlpatterns = [
     url(r'^v1/', include(router.urls, namespace='v1')),

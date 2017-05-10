@@ -1,9 +1,9 @@
 [
   {
-    "name": "${application_container_name}",
+    "name": "gather2-odk-importer",
     "image": "${image_url}",
     "cpu": 1,
-    "memory": 512,
+    "memory": 256,
     "essential": true,
     "command": ["start"],
     "environment": [
@@ -16,21 +16,26 @@
       { "name": "DJANGO_USE_X_FORWARDED_PORT", "value": "${django_use_x_forwarded_port}"},
       { "name": "DJANGO_HTTP_X_FORWARDED_PROTO", "value": "${django_http_x_forwarded_proto}"},
       { "name": "DJANGO_USE_X_FORWARDED_HOST", "value": "${django_use_x_forwarded_host}"}
+    ],
+    "mountPoints": [
+      {
+        "sourceVolume": "static-odk-importer",
+        "containerPath": "/var/www/static"
+      }
     ]
   },
   {
-    "name": "${nginx_container_name}",
+    "name": "gather2-odk-importer-nginx",
     "image": "${nginx_image_url}",
     "cpu": 1,
-    "memory": 512,
+    "memory": 128,
     "essential": true,
     "links": [
       "gather2-odk-importer"
     ],
     "portMappings": [
       {
-        "containerPort": 80,
-        "hostPort": ${host_port}
+        "containerPort": 80
       }
     ],
     "mountPoints": [

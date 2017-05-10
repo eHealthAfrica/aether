@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-export APPS=( gather2-core gather2-odk-importer )
+export APPS=( gather2-core gather2-couchdb-sync gather2-odk-importer )
 
 if [ "${TRAVIS_BRANCH}" == "develop" ]; then
   export ENV="dev"

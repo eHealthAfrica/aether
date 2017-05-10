@@ -2,11 +2,19 @@
 
 // ECR core repository
 resource "aws_ecr_repository" "gather2_core" {
-  name = "${var.gather2_core_container_name}-${var.environment}"
+  name = "${var.project}-core-${var.environment}"
 }
 
 resource "aws_ecr_repository" "gather2_core_nginx" {
-  name = "${var.gather2_core_container_name}-nginx-${var.environment}"
+  name = "${var.project}-core-nginx-${var.environment}"
+}
+
+data "external" "current_task_def_core" {
+  program = ["python", "${path.module}/files/find_task_def.py"]
+
+  query = {
+    family_prefix = "${var.project}-core-${var.environment}"
+  }
 }
 
 resource "aws_alb" "gather2_core" {
@@ -90,7 +98,7 @@ data "template_file" "gather2_core" {
 }
 
 resource "aws_ecs_task_definition" "gather2_core" {
-  family                = "${var.project}-${var.environment}"
+  family                = "${var.project}-core-${var.environment}"
   container_definitions = "${data.template_file.gather2_core.rendered}"
 
   volume {
@@ -103,7 +111,7 @@ data "aws_ecs_task_definition" "gather2_core" {
 }
 
 resource "aws_ecs_service" "gather2_core" {
-  name            = "${var.gather2_core_container_name}"
+  name            = "gather2-core"
   cluster         = "${aws_ecs_cluster.cluster.id}"
   task_definition = "${aws_ecs_task_definition.gather2_core.family}:${max("${aws_ecs_task_definition.gather2_core.revision}", "${data.aws_ecs_task_definition.gather2_core.revision}")}"
   desired_count   = 1
@@ -111,7 +119,7 @@ resource "aws_ecs_service" "gather2_core" {
 
   load_balancer {
     target_group_arn = "${aws_alb_target_group.gather2_core.id}"
-    container_name   = "${var.gather2_core_nginx_container_name}"
+    container_name   = "gather2-core-nginx"
     container_port   = 80
   }
   depends_on = [

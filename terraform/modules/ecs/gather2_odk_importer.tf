@@ -2,11 +2,11 @@
 
 // ECR core repository
 resource "aws_ecr_repository" "gather2_odk_importer" {
-  name = "${var.gather2_odk_importer_container_name}-${var.environment}"
+  name = "${var.project}-odk-importer-${var.environment}"
 }
 
 resource "aws_ecr_repository" "gather2_odk_importer_nginx" {
-  name = "${var.gather2_odk_importer_container_name}-nginx-${var.environment}"
+  name = "${var.project}-odk-importer-nginx-${var.environment}"
 }
 
 resource "aws_alb" "gather2_odk_importer" {
@@ -90,7 +90,7 @@ data "template_file" "gather2_odk_importer" {
 }
 
 resource "aws_ecs_task_definition" "gather2_odk_importer" {
-  family  = "${var.project}-${var.environment}"
+  family  = "${var.project}-odk-importer-${var.environment}"
   container_definitions = "${data.template_file.gather2_odk_importer.rendered}"
 
   volume {

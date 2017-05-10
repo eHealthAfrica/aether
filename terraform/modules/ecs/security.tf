@@ -35,20 +35,11 @@ resource "aws_security_group" "lb_sg" {
   }
 }
 
-resource "aws_security_group_rule" "gather2_odk_importer" {
+resource "aws_security_group_rule" "gather2" {
   type = "ingress"
   protocol  = "tcp"
-  from_port = "${var.gather2_odk_importer_nginx_host_port}"
-  to_port   = "${var.gather2_odk_importer_nginx_host_port}"
-  security_group_id =  "${var.internal_sg_id}"
-  source_security_group_id = "${aws_security_group.lb_sg.id}"
-}
-
-resource "aws_security_group_rule" "gather2_core" {
-  type = "ingress"
-  protocol  = "tcp"
-  from_port = "${var.gather2_core_nginx_host_port}"
-  to_port   = "${var.gather2_core_nginx_host_port}"
+  from_port = "10000"
+  to_port   = "50000"
   security_group_id =  "${var.internal_sg_id}"
   source_security_group_id = "${aws_security_group.lb_sg.id}"
 }

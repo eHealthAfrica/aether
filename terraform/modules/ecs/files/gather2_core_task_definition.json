@@ -1,9 +1,9 @@
 [
   {
-    "name": "${application_container_name}",
+    "name": "gather2-core",
     "image": "${image_url}",
     "cpu": 1,
-    "memory": 512,
+    "memory": 256,
     "essential": true,
     "command": ["start"],
     "environment": [
@@ -25,18 +25,17 @@
     ]
   },
   {
-    "name": "${nginx_container_name}",
+    "name": "gather2-core-nginx",
     "image": "${nginx_image_url}",
     "cpu": 1,
-    "memory": 512,
+    "memory": 128,
     "essential": true,
     "links": [
       "gather2-core"
     ],
     "portMappings": [
       {
-        "containerPort": 80,
-        "hostPort": ${host_port}
+        "containerPort": 80
       }
     ],
     "mountPoints": [

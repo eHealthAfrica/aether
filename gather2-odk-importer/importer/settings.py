@@ -32,7 +32,8 @@ SECRET_KEY = 'yqfif65*_d43!c)3-7-$9f3ii%2z#^dox!rjhg6uw_a2$_3(wv'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
+CSRF_COOKIE_DOMAIN = ".ehealthafrica.org"
 
 
 # Application definition

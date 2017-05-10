@@ -15,7 +15,8 @@ SECRET_KEY = 'n)&_bvxfe$g)gfa4b-uy&aqt$vx!w7jw%fyi9mc8#onh2^$m=='
 DEBUG = True
 
 # TODO make this an env var that defaults to []
-ALLOWED_HOSTS = ["gather*.elasticbeanstalk.com"]
+ALLOWED_HOSTS = ["*"]
+CSRF_COOKIE_DOMAIN = ".ehealthafrica.org"
 
 INSTALLED_APPS = [
     'django.contrib.admin',
