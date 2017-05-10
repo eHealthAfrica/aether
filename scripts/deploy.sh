@@ -23,14 +23,12 @@ export TAG
 $(aws ecr get-login --region="${AWS_DEFAULT_REGION}")
 for APP in "${APPS[@]}"
 do
-  cd $APP
   echo "Building Docker image ${IMAGE_REPO}/${APP}-${ENV}:${TAG}"
-  docker build -t "${IMAGE_REPO}/${APP}-${ENV}:${TAG}" .
-  docker build -t "${IMAGE_REPO}/${APP}-${ENV}:${BRANCH}" .
+  docker tag $APP "${IMAGE_REPO}/${APP}-${ENV}:${BRANCH}" 
+  docker tag $APP "${IMAGE_REPO}/${APP}-${ENV}:${TAG}" 
   echo "Pushing Docker image ${IMAGE_REPO}/${APP}-${ENV}:${TAG}"
   docker push "${IMAGE_REPO}/${APP}-${ENV}:${TAG}"
   docker push "${IMAGE_REPO}/${APP}-${ENV}:${BRANCH}"
   echo "Deploying ${APP}"
   ecs deploy --timeout 600 "gather2-${ENV}" $APP -i $APP "${IMAGE_REPO}/${APP}-${ENV}:${TAG}"
-  cd ../
 done

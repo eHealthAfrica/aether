@@ -16,6 +16,7 @@ services:
 
     core:
         build: gather2-core
+        image: gather2-core
         environment:
             RDS_HOSTNAME: "db"
             RDS_USERNAME: "postgres"
@@ -34,6 +35,7 @@ services:
 
     odk-importer:
         build: gather2-odk-importer
+        image: gather2-odk-importer
         environment:
             RDS_HOSTNAME: "db"
             RDS_USERNAME: "postgres"
