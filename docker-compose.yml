@@ -16,7 +16,7 @@ services:
 
     core:
         build: gather2-core
-        image: gather2-core
+        image: core
         environment:
             RDS_HOSTNAME: "db"
             RDS_USERNAME: "postgres"
@@ -35,7 +35,7 @@ services:
 
     odk-importer:
         build: gather2-odk-importer
-        image: gather2-odk-importer
+        image: odk-importer
         environment:
             RDS_HOSTNAME: "db"
             RDS_USERNAME: "postgres"
@@ -54,7 +54,7 @@ services:
 
     couchdb-sync:
         build: gather2-couchdb-sync
-        image: gather2-couchdb-sync
+        image: couchdb-sync
         environment: &couchdb_environment
             RDS_HOSTNAME: "db"
             RDS_USERNAME: "postgres"
@@ -84,7 +84,7 @@ services:
         image: redis:3.2
 
     couchdb-sync-rq:
-        image: gather2-couchdb-sync
+        image: couchdb-sync
         links:
             - couchdb
             - core

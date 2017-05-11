@@ -11,9 +11,9 @@ install:
   - pip install awscli ecs-deploy
 before_script:
 - flake8
-- docker-compose build
 - docker-compose up -d db
 - docker-compose run core setuplocaldb
+- docker-compose build couchdb-sync odk-importer
 script:
 - docker-compose run core test_coverage
 deploy:

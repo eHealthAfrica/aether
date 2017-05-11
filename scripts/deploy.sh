@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 set -e
 
-export APPS=( gather2-core gather2-couchdb-sync gather2-odk-importer )
+export APPS=( core couchdb-sync odk-importer )
 
 if [ "${TRAVIS_BRANCH}" == "develop" ]; then
   export ENV="dev"
 fi
+
 
 TAG="${TRAVIS_TAG}"
 COMMIT="${TRAVIS_COMMIT}"
@@ -20,15 +21,17 @@ if ! [ -n "${TAG}" ]; then
 fi
 export TAG
 
+
 $(aws ecr get-login --region="${AWS_DEFAULT_REGION}")
 for APP in "${APPS[@]}"
 do
-  echo "Building Docker image ${IMAGE_REPO}/${APP}-${ENV}:${TAG}"
-  docker tag $APP "${IMAGE_REPO}/${APP}-${ENV}:${BRANCH}" 
-  docker tag $APP "${IMAGE_REPO}/${APP}-${ENV}:${TAG}" 
-  echo "Pushing Docker image ${IMAGE_REPO}/${APP}-${ENV}:${TAG}"
-  docker push "${IMAGE_REPO}/${APP}-${ENV}:${TAG}"
-  docker push "${IMAGE_REPO}/${APP}-${ENV}:${BRANCH}"
+  GATHER2_APP="gather2-${APP}"
+  echo "Building Docker image ${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${TAG}"
+  docker tag $APP "${IMAGE_REPO}/gather2-${GATHER2_APP}-${ENV}:${BRANCH}"
+  docker tag $APP "${IMAGE_REPO}/gather2-${GATHER2_APP}-${ENV}:${TAG}"
+  echo "Pushing Docker image ${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${TAG}"
+  docker push "${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${TAG}"
+  docker push "${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${BRANCH}"
   echo "Deploying ${APP}"
-  ecs deploy --timeout 600 "gather2-${ENV}" $APP -i $APP "${IMAGE_REPO}/${APP}-${ENV}:${TAG}"
+  ecs deploy --timeout 600 "gather2-${ENV}" $GATHER2_APP -i $APP "${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${TAG}"
 done
