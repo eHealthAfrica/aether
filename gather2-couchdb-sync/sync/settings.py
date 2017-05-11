@@ -37,6 +37,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 CSRF_COOKIE_DOMAIN = '.ehealthafrica.org'
+CSRF_TRUSTED_ORIGINS = [".ehealthafrica.org"]
 
 # # Tell django to view requests as secure(ssl) that have this header set
 # SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

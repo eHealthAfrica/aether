@@ -17,6 +17,7 @@ DEBUG = True
 # TODO make this an env var that defaults to []
 ALLOWED_HOSTS = ["*"]
 CSRF_COOKIE_DOMAIN = ".ehealthafrica.org"
+CSRF_TRUSTED_ORIGINS = [".ehealthafrica.org"]
 
 INSTALLED_APPS = [
     'django.contrib.admin',

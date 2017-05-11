@@ -34,7 +34,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 CSRF_COOKIE_DOMAIN = ".ehealthafrica.org"
-
+CSRF_TRUSTED_ORIGINS = [".ehealthafrica.org"]
 
 # Application definition
 

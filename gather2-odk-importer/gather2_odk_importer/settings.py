@@ -25,8 +25,10 @@ SECRET_KEY = '2#ft2gjpj@hyu^-nt#0rjqy#p)y6x+16evu3^c$-jc(4167(j6'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+# TODO make this an env var that defaults to []
+ALLOWED_HOSTS = ["*"]
+CSRF_COOKIE_DOMAIN = ".ehealthafrica.org"
+CSRF_TRUSTED_ORIGINS = [".ehealthafrica.org"]
 
 # Application definition
 
