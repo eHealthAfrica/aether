@@ -60,8 +60,8 @@ case "$1" in
     ;;
     test_coverage)
         source /var/env/bin/activate
-        coverage run --rcfile="/code/.coveragerc" /code/manage.py test core
-        mkdir /var/annotated
+        coverage run --rcfile="/code/.coveragerc" /code/manage.py test
+        mkdir -p  /var/annotated
         coverage annotate --rcfile="/code/.coveragerc"
         coverage report --rcfile="/code/.coveragerc"
         cat << "EOF"

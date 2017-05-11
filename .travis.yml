@@ -13,9 +13,11 @@ before_script:
 - flake8
 - docker-compose up -d db
 - docker-compose run core setuplocaldb
-- docker-compose build couchdb-sync odk-importer
+- docker-compose run odk-importer setuplocaldb
+- docker-compose build couchdb-sync
 script:
 - docker-compose run core test_coverage
+- docker-compose run odk-importer test_coverage
 deploy:
 - provider: script
   script: "./scripts/deploy.sh"

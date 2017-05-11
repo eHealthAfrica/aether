@@ -1,0 +1,13 @@
+[run]
+branch = true
+omit = /code/api/apps.py
+source = /code/api
+
+[paths]
+source = /code/api
+omit = /code/api/apps.py
+
+[report]
+omit = /code/api/apps.py
+show_missing = true
+fail_under = 50

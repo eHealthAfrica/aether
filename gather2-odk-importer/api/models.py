@@ -12,7 +12,6 @@ import xmltodict
 def validate_xmldict(value):
     try:
         xmltodict.parse(value)
-        assert ['h:html']['h:head']['h:title'], 'missing "title" in xlsform or XForm'
     except Exception as e:
         raise ValidationError(e)
 

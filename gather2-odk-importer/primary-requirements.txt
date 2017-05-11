@@ -1,10 +1,10 @@
-coverage==4.0.3
-Django==1.9
-hypothesis==1.15.0
-psycopg2==2.6.1
+coverage
+Django
+hypothesis
+psycopg2
 ipdb
-djangorestframework==3.3
-django-storages==1.5.2
+djangorestframework
+django-storages
 django-cas-ng
 markdown
 django-ums-client
