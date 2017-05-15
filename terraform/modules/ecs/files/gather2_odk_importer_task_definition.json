@@ -1,6 +1,6 @@
 [
   {
-    "name": "gather2-odk-importer",
+    "name": "odk-importer",
     "image": "${image_url}",
     "cpu": 1,
     "memory": 256,
@@ -25,13 +25,13 @@
     ]
   },
   {
-    "name": "gather2-odk-importer-nginx",
+    "name": "odk-importer-nginx",
     "image": "${nginx_image_url}",
     "cpu": 1,
     "memory": 128,
     "essential": true,
     "links": [
-      "gather2-odk-importer"
+      "odk-importer"
     ],
     "portMappings": [
       {

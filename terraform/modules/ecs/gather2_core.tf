@@ -36,9 +36,13 @@ resource "aws_route53_record" "gather2_core" {
 
 resource "aws_alb_target_group" "gather2_core" {
   name     = "gather2-core-${var.environment}"
-  port     = "${var.gather2_core_nginx_host_port}"
+  port     = 80
   protocol = "HTTP"
   vpc_id   = "${var.vpc_id}"
+
+  health_check {
+    path = "/health"
+  }
 }
 
 resource "aws_alb_listener" "gather2_core_http" {
@@ -111,10 +115,14 @@ resource "aws_ecs_service" "gather2_core" {
 
   load_balancer {
     target_group_arn = "${aws_alb_target_group.gather2_core.id}"
-    container_name   = "gather2-core-nginx"
+    container_name   = "core-nginx"
     container_port   = 80
   }
   depends_on = [
     "aws_alb_listener.gather2_core_http"
   ]
+}
+
+output "core_target_group" {
+  value = "${aws_alb_target_group.gather2_core.arn}"
 }

@@ -36,9 +36,13 @@ resource "aws_route53_record" "gather2_odk_importer" {
 
 resource "aws_alb_target_group" "gather2_odk_importer" {
   name     = "gather2-odk-${var.environment}"
-  port     = "${var.gather2_odk_importer_nginx_host_port}"
+  port     = 80
   protocol = "HTTP"
   vpc_id   = "${var.vpc_id}"
+
+  health_check {
+    path = "/health"
+  }
 }
 
 resource "aws_alb_listener" "gather2_odk_importer_http" {
@@ -111,10 +115,14 @@ resource "aws_ecs_service" "gather2_odk_importer" {
 
   load_balancer {
     target_group_arn = "${aws_alb_target_group.gather2_odk_importer.id}"
-    container_name   = "${var.gather2_odk_importer_nginx_container_name}"
+    container_name   = "odk-importer-nginx"
     container_port   = 80
   }
   depends_on = [
     "aws_alb_listener.gather2_odk_importer_http"
   ]
+}
+
+output "odk_importer_target_group" {
+  value = "${aws_alb_target_group.gather2_odk_importer.arn}"
 }

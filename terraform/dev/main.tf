@@ -28,4 +28,5 @@ module "autoscaling" {
   project_billing_id = "${var.project_billing_id}"
   private_subnets = "${split(",", var.private_subnets)}"
   vpc_id = "${var.vpc_id}"
+  target_group_arns = ["${module.ecs.core_target_group}","${module.ecs.odk_importer_target_group}","${module.ecs.couchdb_sync_target_group}"]
 }

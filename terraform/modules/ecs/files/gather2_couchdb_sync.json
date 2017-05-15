@@ -70,7 +70,7 @@
     ]
   },
   {
-    "name": "gather2-couchdb-sync-nginx",
+    "name": "couchdb-sync-nginx",
     "image": "${nginx_image_url}",
     "cpu": 1,
     "memory": 128,

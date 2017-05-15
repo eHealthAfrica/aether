@@ -31,14 +31,6 @@ data "credstash_secret" "google_client_id" {
   name = "${var.project}-${var.environment}-google-client-id"
 }
 
-data "external" "current_task_def_sync" {
-  program = ["python", "${path.module}/files/find_task_def.py"]
-
-  query = {
-    family_prefix = "${var.project}-couchdb-sync-${var.environment}"
-  }
-}
-
 data "template_file" "gather2_couchdb_sync" {
   template = "${file("${path.module}/files/gather2_couchdb_sync.json")}"
 
@@ -87,9 +79,13 @@ resource "aws_route53_record" "gather2_couchdb_sync" {
 
 resource "aws_alb_target_group" "gather2_couchdb_sync" {
   name     = "gather2-couchdb-sync-${var.environment}"
-  port     = "80"
+  port     = 80
   protocol = "HTTP"
   vpc_id   = "${var.vpc_id}"
+
+  health_check {
+    path = "/health"
+  }
 }
 
 resource "aws_alb_listener" "gather2_couchdb_sync_http" {
@@ -133,21 +129,28 @@ resource "aws_ecs_task_definition" "gather2_couchdb_sync" {
   }
 }
 
+data "aws_ecs_task_definition" "gather2_couchdb_sync" {
+  task_definition = "${aws_ecs_task_definition.gather2_couchdb_sync.family}"
+}
+
 resource "aws_ecs_service" "gather2_couchdb_sync" {
   name            = "gather2-couchdb-sync"
   cluster         = "${aws_ecs_cluster.cluster.id}"
-  task_definition = "${data.external.current_task_def_sync.result.task_arn}"
-  #task_definition = "${aws_ecs_task_definition.gather2_couchdb_sync.arn}"
+  task_definition = "${aws_ecs_task_definition.gather2_couchdb_sync.family}:${max("${aws_ecs_task_definition.gather2_couchdb_sync.revision}", "${data.aws_ecs_task_definition.gather2_couchdb_sync.revision}")}"
   desired_count   = 1
   iam_role        = "${var.iam_role_id}"
 
   load_balancer {
     target_group_arn = "${aws_alb_target_group.gather2_couchdb_sync.id}"
-    container_name   = "gather2-couchdb-sync-nginx"
-    container_port   = 80
+    container_name   = "couchdb-sync-nginx"
+    container_port = 80
   }
 
   depends_on = [
     "aws_alb_listener.gather2_couchdb_sync_http"
   ]
+}
+
+output "couchdb_sync_target_group" {
+  value = "${aws_alb_target_group.gather2_couchdb_sync.arn}"
 }
