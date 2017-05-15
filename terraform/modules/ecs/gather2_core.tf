@@ -9,14 +9,6 @@ resource "aws_ecr_repository" "gather2_core_nginx" {
   name = "${var.project}-core-nginx-${var.environment}"
 }
 
-data "external" "current_task_def_core" {
-  program = ["python", "${path.module}/files/find_task_def.py"]
-
-  query = {
-    family_prefix = "${var.project}-core-${var.environment}"
-  }
-}
-
 resource "aws_alb" "gather2_core" {
   internal        = false
   subnets = ["${var.public_subnets}"]

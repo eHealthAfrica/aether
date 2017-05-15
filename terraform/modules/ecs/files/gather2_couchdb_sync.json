@@ -1,6 +1,6 @@
 [
   {
-    "name": "couchdb-sync",
+    "name": "gather2-couchdb-sync",
     "image": "${image_url}",
     "cpu": 1,
     "memory": 256,
@@ -38,7 +38,7 @@
     ]
   },
   {
-    "name": "couchdb-sync-worker",
+    "name": "gather2-couchdb-sync-worker",
     "image": "${image_url}",
     "cpu": 1,
     "memory": 128,
@@ -88,7 +88,7 @@
     ],
     "links": [
       "couchdb",
-      "couchdb-sync"
+      "gather2-couchdb-sync"
     ]
   },
   {

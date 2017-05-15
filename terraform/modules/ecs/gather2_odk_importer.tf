@@ -98,7 +98,7 @@ resource "aws_ecs_task_definition" "gather2_odk_importer" {
   }
 }
 
-data "aws_ecs_task_definition" "gather2_core" {
+data "aws_ecs_task_definition" "gather2_odk_importer" {
   task_definition = "${aws_ecs_task_definition.gather2_odk_importer.family}"
 }
 
