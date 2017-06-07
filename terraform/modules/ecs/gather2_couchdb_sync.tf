@@ -67,7 +67,8 @@ resource "aws_alb" "gather2_couchdb_sync" {
 
 resource "aws_route53_record" "gather2_couchdb_sync" {
   zone_id = "${var.route53_zone_id}"
-  name    = "couchdb-sync-gather-${var.environment}"
+  name    = "${replace("couchdb-sync-gather-${var.environment}", "-prod", "")}"
+
   type    = "A"
 
   alias {

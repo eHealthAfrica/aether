@@ -24,7 +24,7 @@ resource "aws_alb" "gather2_core" {
 
 resource "aws_route53_record" "gather2_core" {
   zone_id = "${var.route53_zone_id}"
-  name    = "core-gather-${var.environment}"
+  name    = "${replace("core-gather-${var.environment}", "-prod", "")}"
   type    = "A"
 
   alias {

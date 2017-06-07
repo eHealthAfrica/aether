@@ -24,7 +24,7 @@ resource "aws_alb" "gather2_odk_importer" {
 
 resource "aws_route53_record" "gather2_odk_importer" {
   zone_id = "${var.route53_zone_id}"
-  name    = "odk-gather-${var.environment}"
+  name    = "${replace("odk-importer-gather-${var.environment}", "-prod", "")}"
   type    = "A"
 
   alias {

@@ -6,6 +6,7 @@ module "rds" {
   internal_sg_id = "${module.autoscaling.internal_sg_id}"
   db_engine_type = "${var.db_engine_type}"
   db_engine_version = "${var.db_engine_version}"
+  project_billing_id = "${var.project_billing_id}"
 }
 
 module "ecs" {
@@ -28,10 +29,6 @@ module "autoscaling" {
   project_billing_id = "${var.project_billing_id}"
   private_subnets = "${split(",", var.private_subnets)}"
   vpc_id = "${var.vpc_id}"
-}
-
-module "deployment_config" {
-  source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//deployment_config"
-  project = "${var.project}"
-  project_billing_id = "${var.project_billing_id}"
+  hostname = ""
+  target_group_arns = ["${module.ecs.core_target_group}","${module.ecs.odk_importer_target_group}","${module.ecs.couchdb_sync_target_group}"]
 }
