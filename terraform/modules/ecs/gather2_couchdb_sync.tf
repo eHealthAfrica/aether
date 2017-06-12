@@ -49,7 +49,7 @@ data "template_file" "gather2_couchdb_sync" {
     django_use_x_forwarded_host = "1"
     gather2_token = "${data.credstash_secret.gather2_token.value}"
     google_client_id = "${data.credstash_secret.google_client_id.value}"
-    gather2_core_url = replace("https://core-gather-${var.environment}.ehealthafrica.org", "prod", "")
+    gather2_core_url = "${replace("https://core-gather-${var.environment}.ehealthafrica.org", "-prod", "")}"
   }
 }
 

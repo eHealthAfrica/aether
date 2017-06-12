@@ -62,7 +62,7 @@
       { "name": "COUCHDB_USER", "value": "admin"},
       { "name": "COUCHDB_PASSWORD", "value": "${couchdb_password}"},
       { "name": "GOOGLE_CLIENT_ID", "value": "${google_client_id}"},
-      { "name": "GATHER_CORE_URL", "value": "https://core-gather-dev.ehealthafrica.org"},
+      { "name": "GATHER_CORE_URL", "value": "${gather2_core_url}"},
       { "name": "GATHER_CORE_TOKEN", "value": "${gather2_token}"},
       { "name": "REDIS_HOST", "value": "redis"},
       { "name": "REDIS_PORT", "value": "6379"},
