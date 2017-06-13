@@ -35,7 +35,7 @@ data "template_file" "gather2_couchdb_sync" {
   template = "${file("${path.module}/files/gather2_couchdb_sync.json")}"
 
   vars {
-    image_url = "${aws_ecr_repository.gather2_couchdb_sync.repository_url}"
+    image_url = "${aws_ecr_repository.gather2_couchdb_sync.repository_url}:${var.deploy_branch}"
     nginx_image_url = "${aws_ecr_repository.gather2_couchdb_sync_nginx.repository_url}"
     couchdb_image_url = "${aws_ecr_repository.gather2_couchdb.repository_url}"
     couchdb_password = "${data.credstash_secret.database_password.value}"

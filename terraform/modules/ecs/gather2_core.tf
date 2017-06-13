@@ -77,7 +77,7 @@ data "template_file" "gather2_core" {
   template = "${file("${path.module}/files/gather2_core_task_definition.json")}"
 
   vars {
-    image_url  = "${aws_ecr_repository.gather2_core.repository_url}:latest"
+    image_url  = "${aws_ecr_repository.gather2_core.repository_url}:${var.deploy_branch}"
     application_container_name = "${var.gather2_core_container_name}"
     nginx_container_name = "${var.gather2_core_nginx_container_name}"
     host_port = "${var.gather2_core_nginx_host_port}"

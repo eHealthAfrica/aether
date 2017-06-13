@@ -6,6 +6,7 @@ module "rds" {
   internal_sg_id = "${module.autoscaling.internal_sg_id}"
   db_engine_type = "${var.db_engine_type}"
   db_engine_version = "${var.db_engine_version}"
+  project_billing_id = "${var.project_billing_id}"
 }
 
 module "ecs" {
@@ -18,6 +19,7 @@ module "ecs" {
   internal_sg_id = "${module.autoscaling.internal_sg_id}"
   iam_role_id = "${module.autoscaling.aws_iam_role_ecs_service}"
   database_hostname = "${module.rds.database_hostname}"
+  deploy_branch = "develop"
 }
 
 # // Creates ECS cluster and SG's

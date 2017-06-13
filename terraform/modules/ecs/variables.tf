@@ -24,6 +24,7 @@ variable "gather2_odk_importer_nginx_container_name" { default="gather2-odk-impo
 variable "private_subnets" { type="list" }
 variable "public_subnets" { type="list" }
 variable "vpc_id" {}
+variable "deploy_branch" {}
 
 variable "ssl_certificate_id" {
   type = "map"

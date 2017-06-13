@@ -77,7 +77,7 @@ data "template_file" "gather2_odk_importer" {
   template = "${file("${path.module}/files/gather2_odk_importer_task_definition.json")}"
 
   vars {
-    image_url = "${aws_ecr_repository.gather2_odk_importer.repository_url}"
+    image_url = "${aws_ecr_repository.gather2_odk_importer.repository_url}:${var.deploy_branch}"
     application_container_name = "${var.gather2_odk_importer_container_name}"
     nginx_container_name = "${var.gather2_odk_importer_nginx_container_name}"
     host_port = "${var.gather2_odk_importer_nginx_host_port}",
