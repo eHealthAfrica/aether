@@ -211,3 +211,8 @@ RQ_QUEUES = {
     },
 }
 RQ_SHOW_ADMIN_LINK = True
+
+try:
+    from local_settings import *  # noqa
+except ImportError as e:
+    logger.error(e)

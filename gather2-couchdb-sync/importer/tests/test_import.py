@@ -6,7 +6,7 @@ from couchdb_tools import api
 from api.tests import clean_couch
 from ..import_couchdb import import_synced_devices, get_meta_doc, get_survey_mapping
 from django.conf import settings
-from api.couchdb_helpers import generate_password as random_string
+from api.couchdb_helpers import create_db, generate_password as random_string
 
 device_id = 'test_import-from-couch'
 auth_headers = {'Authorization': 'Token {}'.format(settings.GATHER_CORE_TOKEN), 'Content-Type': 'application/json'}
@@ -15,6 +15,7 @@ auth_headers = {'Authorization': 'Token {}'.format(settings.GATHER_CORE_TOKEN), 
 def get_gather_docs():
     url = '{}/responses/'.format(settings.GATHER_CORE_URL)
     resp = requests.get(url, headers=auth_headers)
+    resp.raise_for_status()
     results = resp.json()['results']
     return results
 
@@ -48,8 +49,10 @@ class ImportTestCase(TestCase):
         super().setUp()
         url = '{}/surveys/'.format(settings.GATHER_CORE_URL)
         example_survey['name'] = 'example'
-        resp = requests.post(url, json=example_survey, headers=auth_headers).json()
-        self.survey_id = resp['id']
+        resp = requests.post(url, json=example_survey, headers=auth_headers)
+        resp.raise_for_status()
+        data = resp.json()
+        self.survey_id = data['id']
 
     def tearDown(self):
         super().tearDown()
@@ -63,6 +66,7 @@ class ImportTestCase(TestCase):
         # this creates a test couchdb
         device = DeviceDB(device_id=device_id)
         device.save()
+        create_db(device_id)
 
         resp = api.put('{}/{}'.format(device.db_name, example_doc['_id']), json=example_doc)
         self.assertEqual(resp.status_code, 201, 'The example document got created')
@@ -88,6 +92,7 @@ class ImportTestCase(TestCase):
         # this creates a test couchdb
         device = DeviceDB(device_id=device_id)
         device.save()
+        create_db(device_id)
 
         resp = api.put('{}/{}'.format(device.db_name, example_doc['_id']), json=example_doc)
         self.assertEqual(resp.status_code, 201, 'The example document got created')
@@ -100,21 +105,15 @@ class ImportTestCase(TestCase):
 
         import_synced_devices()
 
-        data = get_gather_docs()
-        last = data[0]['data']
-        if data[1]:
-            second_last = data[1]['data']
-        else:
-            second_last = {}
-
-        for key in ['_id', 'firstName', 'lastName']:
-            self.assertNotEqual(last.get(key), second_last.get(key))
+        docs = get_gather_docs()
+        self.assertEqual(len(docs), 1, 'Document is not imported a second time')
 
     def test_update_document(self):
         clean_couch()
         # this creates a test couchdb
         device = DeviceDB(device_id=device_id)
         device.save()
+        create_db(device_id)
 
         doc_url = '{}/{}'.format(device.db_name, example_doc['_id'])
 
@@ -123,8 +122,8 @@ class ImportTestCase(TestCase):
 
         import_synced_devices()
 
-        data = get_gather_docs()
-        response_id = data[0]['id']
+        docs = get_gather_docs()
+        response_id = docs[0]['id']
 
         doc_to_update = api.get(doc_url).json()
         doc_to_update['firstName'] = 'Rey'
@@ -149,6 +148,7 @@ class ImportTestCase(TestCase):
 
         device = DeviceDB(device_id=device_id)
         device.save()
+        create_db(device_id)
 
         # post document which is not validating
         doc_url = '{}/{}'.format(device.db_name, example_doc['_id'])
@@ -158,11 +158,8 @@ class ImportTestCase(TestCase):
         self.assertEqual(resp.status_code, 201, 'The example document got created')
 
         import_synced_devices()
-        data = get_gather_docs()
-
-        if data[0] and data[0]['data']:
-            self.assertNotEqual(data[0], example_doc['_id'], 'doc didnt get imported to CouchDB')
-
+        docs = get_gather_docs()
+        self.assertEqual(len(docs), 0, 'doc did not get imported to gather')
         status = get_meta_doc(device.db_name, example_doc['_id'])
 
         self.assertTrue('error' in status, 'posts error key')

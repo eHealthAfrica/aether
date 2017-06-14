@@ -5,6 +5,7 @@ from django.db import IntegrityError
 from api.tests import clean_couch
 from api import couchdb_helpers
 from couchdb_tools import api
+from ..couchdb_helpers import create_db
 
 
 class ModelsTestCase(TransactionTestCase):
@@ -71,6 +72,7 @@ class ModelsTestCase(TransactionTestCase):
         device_id = 'test_Xx'
         devicedb = DeviceDB(device_id=device_id)
         devicedb.save()
+        create_db(device_id)
 
         db_req = api.get(couchdb_helpers.generate_db_name(device_id))
         self.assertEqual(db_req.status_code, 200, db_req.text)
@@ -102,12 +104,14 @@ class ModelsTestCase(TransactionTestCase):
 
         device_db = DeviceDB(device_id=device_id)
         device_db.save()
+        create_db(device_id)
 
         db_req = api.get(db_name)
         self.assertEqual(db_req.status_code, 200, db_req.text)
 
         device_db2 = DeviceDB(device_id=device_id2)
         device_db2.save()
+        create_db(device_id2)
 
         db_req2 = api.get(db_name2)
         self.assertEqual(db_req2.status_code, 200, db_req.text)
