@@ -12,7 +12,7 @@ from rest_framework.throttling import AnonRateThrottle
 from rest_framework.response import Response
 import logging
 
-from .couchdb_helpers import create_or_update_user
+from .couchdb_helpers import create_db, create_or_update_user
 from .models import MobileUser, DeviceDB
 
 logger = logging.getLogger(__name__)
@@ -93,6 +93,13 @@ def signin(request):
     else:
         device_db.mobileuser = user
         device_db.save()
+
+    # Create couchdb for device
+    try:
+        create_db(device_id)
+    except Exception as err:
+        logger.exception(str(err))
+        return Response('Creating couchdb db failed', status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     payload = {
         'username': couchdb_config['username'],

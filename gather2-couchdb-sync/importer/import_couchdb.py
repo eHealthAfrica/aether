@@ -50,14 +50,19 @@ def get_meta_doc(db_name, couchdb_id):
 
 
 def get_survey_mapping():
-    resp = requests.get('{}/surveys/'.format(settings.GATHER_CORE_URL), headers=headers).json()
-    results = resp['results']
+    resp = requests.get('{}/surveys/'.format(settings.GATHER_CORE_URL), headers=headers)
+    resp.raise_for_status()
+
+    data = resp.json()
+    results = data['results']
 
     # Pagination: seems like we do 30 per page
     # Loop through all the pages
-    while resp['next']:
-        resp = requests.get(resp['next'], headers=headers).json()
-        results += resp['results']
+    while data['next']:
+        resp = requests.get(data['next'], headers=headers)
+        resp.raise_for_status()
+        data = resp.json()
+        results += data['results']
 
     mapping = {}
     for survey in results:
@@ -140,14 +145,19 @@ def import_synced_docs(docs, db_name, mapping):
 
         try:
             resp = post_to_gather(doc, mapping, gather_id=gather_id)
-
-            if resp.status_code != 201 and resp.status_code != 200:
+            try:
+                resp.raise_for_status()
+            except requests.exceptions.HTTPError as err:
+                logger.error('post survey to gather failed: ' + resp.text)
                 stats['errors'].append(resp.content)
-                write_meta_doc(db_name, {}, doc, error=resp.text)
+                resp = write_meta_doc(db_name, {}, doc, error=resp.text)
+                resp.raise_for_status()
                 continue
 
             data = resp.json()
-            write_meta_doc(db_name, data, doc)
+
+            resp = write_meta_doc(db_name, data, doc)
+            resp.raise_for_status()
 
             if gather_id is not None:
                 stats['updated'] += 1
@@ -155,7 +165,9 @@ def import_synced_docs(docs, db_name, mapping):
                 stats['created'] += 1
 
         except Exception as e:
-            write_meta_doc(db_name, {}, doc, error=str(e))
+            logger.exception(e)
+            resp = write_meta_doc(db_name, {}, doc, error=str(e))
+            resp.raise_for_status()
             stats['errors'].append(str(e))
             stats['errored'] += 1
 
