@@ -18,9 +18,12 @@ IMAGE_REPO="387526361725.dkr.ecr.eu-west-1.amazonaws.com"
 if ! [ -n "${TAG}" ]; then
   echo "Not a git tag, tagging as: ${COMMIT}"
   TAG="${COMMIT}"
+elif [ "${BRANCH}" == "master" ]; then
+  echo "tagged commit on master, setting ENV to production"
+  export ENV="prod" 
 fi
-export TAG
 
+export TAG
 
 $(aws ecr get-login --region="${AWS_DEFAULT_REGION}")
 for APP in "${APPS[@]}"
@@ -32,6 +35,6 @@ do
   echo "Pushing Docker image ${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${TAG}"
   docker push "${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${TAG}"
   docker push "${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${BRANCH}"
-  echo "Deploying ${APP}"
+  echo "Deploying ${APP} to ${ENV}"
   ecs deploy --timeout 600 "gather2-${ENV}" $GATHER2_APP -i $APP "${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${TAG}"
 done
