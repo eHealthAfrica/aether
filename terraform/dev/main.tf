@@ -9,6 +9,14 @@ module "rds" {
   project_billing_id = "${var.project_billing_id}"
 }
 
+module "efs" {
+  source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//efs"
+  private_subnets = "${split(",", var.private_subnets)}"
+  aws_region = "${var.aws_region}"
+  performance_mode = "maxIO"
+  internal_sg_id = "${module.autoscaling.internal_sg_id}"
+}
+
 module "ecs" {
   source = "../modules/ecs"
   environment = "${var.environment}"
@@ -31,4 +39,5 @@ module "autoscaling" {
   private_subnets = "${split(",", var.private_subnets)}"
   vpc_id = "${var.vpc_id}"
   target_group_arns = ["${module.ecs.core_target_group}","${module.ecs.odk_importer_target_group}","${module.ecs.couchdb_sync_target_group}"]
+  efs_id = "${module.efs.efs_output}"
 }

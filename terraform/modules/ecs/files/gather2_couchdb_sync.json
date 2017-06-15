@@ -41,7 +41,7 @@
     "name": "couchdb-sync-worker",
     "image": "${image_url}",
     "cpu": 1,
-    "memory": 1024,
+    "memory": 512,
     "essential": true,
     "command": ["start_rq"],
     "links": [

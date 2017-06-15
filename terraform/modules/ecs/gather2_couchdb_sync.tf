@@ -120,10 +120,12 @@ resource "aws_ecs_task_definition" "gather2_couchdb_sync" {
 
   volume {
     name  = "redis-data"
+    host_path = "/data/redis"
   }
 
   volume {
     name  = "couchdb-data"
+    host_path = "/data/couchdb"
   }
 
   volume {

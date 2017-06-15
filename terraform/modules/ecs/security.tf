@@ -35,13 +35,22 @@ resource "aws_security_group" "lb_sg" {
   }
 }
 
-resource "aws_security_group_rule" "gather2" {
+resource "aws_security_group_rule" "gather2_ecs" {
   type = "ingress"
   protocol  = "tcp"
   from_port = "10000"
   to_port   = "50000"
   security_group_id =  "${var.internal_sg_id}"
   source_security_group_id = "${aws_security_group.lb_sg.id}"
+}
+
+resource "aws_security_group_rule" "gather2_efs" {
+  type = "ingress"
+  protocol  = "tcp"
+  from_port = "2049"
+  to_port   = "2049"
+  security_group_id =  "${var.internal_sg_id}"
+  source_security_group_id = "${var.internal_sg_id}"
 }
 
 resource "aws_security_group_rule" "bastion" {
