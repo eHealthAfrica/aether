@@ -121,7 +121,7 @@ class SurveySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Survey
-        fields = ['id', 'url', 'schema', 'name', 'responses_url', 'map_functions_url', 'created_by']
+        fields = ['id', 'url', 'schema', 'name', 'responses_url', 'map_functions_url', 'created', 'created_by']
         read_only_fields = ['id', 'url', 'responses_url', 'map_functions_url', 'created_by']
 
 

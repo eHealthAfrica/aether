@@ -4,8 +4,8 @@ Django==1.10
 django-attachments
 django-cas-ng
 django-extensions
-django-filter==0.11.0
-djangorestframework==3.6.2
+django-filter
+djangorestframework
 django-reversion-compare
 django-storages
 django-ums-client
@@ -21,3 +21,4 @@ psycopg2==2.6.1
 requests
 uwsgi==2.0.14
 Werkzeug==0.11.2
+djangorestframework-filters

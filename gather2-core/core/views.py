@@ -1,4 +1,5 @@
 from rest_framework import permissions, viewsets
+import rest_framework_filters as filters
 from rest_framework_extensions.mixins import NestedViewSetMixin
 
 from .models import MapFunction, MapResult, ReduceFunction, Response, Survey, Attachment
@@ -38,6 +39,15 @@ class SurveyViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
     serializer_class = SurveySerializer
 
 
+class ResponseFilter(filters.FilterSet):
+
+    class Meta:
+        model = Response
+        fields = {
+            'created': ['lt', 'gt']
+        }
+
+
 class ResponseViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
 
     '''
@@ -46,6 +56,8 @@ class ResponseViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
     queryset = Response.objects.all()
     serializer_class = ResponseSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    filter_fields = ('created_by', 'created')
+    filter_class = ResponseFilter
 
     def get_queryset(self):
         # Eventually replace this naive implementation with a

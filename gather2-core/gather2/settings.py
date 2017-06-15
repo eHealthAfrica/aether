@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'reversion',
     'reversion_compare',
+    'django_filters',
     'rest_framework',
     'rest_framework.authtoken',
     'django_extensions',
@@ -104,6 +105,10 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_FILTER_BACKENDS': (
+        'rest_framework_filters.backends.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
     )
 }
 
