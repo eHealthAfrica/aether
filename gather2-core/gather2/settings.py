@@ -187,7 +187,8 @@ if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
+# This scriptlet allows you to include custom settings in your local environment
 try:
     from local_settings import *  # noqa
 except ImportError as e:
-    logger.error(e)
+    logger.info('No local settings!')

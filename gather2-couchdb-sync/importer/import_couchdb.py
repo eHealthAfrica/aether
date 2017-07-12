@@ -50,6 +50,9 @@ def get_meta_doc(db_name, couchdb_id):
 
 
 def get_survey_mapping():
+    # first of all check if the connection is possible
+    settings.test_gather_core_connection()
+
     resp = requests.get('{}/surveys/'.format(settings.GATHER_CORE_URL), headers=headers)
     resp.raise_for_status()
 
@@ -175,6 +178,9 @@ def import_synced_docs(docs, db_name, mapping):
 
 
 def post_to_gather(document, mapping, gather_id=False):
+    # first of all check if the connection is possible
+    settings.test_gather_core_connection()
+
     prefix = document['_id'].split("-")[0]
     survey_id = mapping.get(prefix)
 

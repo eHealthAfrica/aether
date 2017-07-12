@@ -93,6 +93,10 @@ def xform_manifest(request, id_string):
 @authentication_classes([BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def submission(request):
+    # first of all check if the connection is possible
+    if not settings.test_gather_core_connection():
+        return Response(status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
     if request.method == 'POST':
         xml = request.FILES['xml_submission_file'].read()
         d = xmltodict.parse(xml)

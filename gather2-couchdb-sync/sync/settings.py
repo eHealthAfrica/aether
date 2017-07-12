@@ -147,28 +147,6 @@ REST_FRAMEWORK = {
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_URLS_REGEX = r'^/sync/.*$'
 
-GATHER_CORE_URL = os.environ.get('GATHER_CORE_URL')
-GATHER_CORE_TOKEN = os.environ.get('GATHER_CORE_TOKEN')
-
-
-def test_gather_core_connection():
-    import requests
-    return requests.get(GATHER_CORE_URL + '/surveys.json',
-                        headers={'Authorization': 'Token {}'.format(GATHER_CORE_TOKEN)})
-
-
-if GATHER_CORE_URL and GATHER_CORE_TOKEN:
-    try:
-        r = test_gather_core_connection()
-        assert r.status_code == 200, r.content
-        logger.info('GATHER_CORE_URL and GATHER_CORE_TOKEN are valid', )
-    except Exception as e:
-        logger.exception(
-            "GATHER_CORE_URL and GATHER_CORE_TOKEN are not valid, saving XForm responses will not work: {}".format(GATHER_CORE_URL))
-else:
-    logger.warning(
-        'GATHER_CORE_URL and GATHER_CORE_TOKEN are not set, saving XForm responses will not work.')
-
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',  # this is default
     'ums_client.backends.UMSRoleBackend'
@@ -212,7 +190,53 @@ RQ_QUEUES = {
 }
 RQ_SHOW_ADMIN_LINK = True
 
+
+# Check possible connection with CORE
+def test_gather_core_connection():
+    import requests
+
+    fail_action = 'syncing data to core will not work'
+
+    if GATHER_CORE_URL and GATHER_CORE_TOKEN:
+        try:
+            # check that the server is up
+            h = requests.head(GATHER_CORE_URL)
+            assert h.status_code == 200
+            logger.info('GATHER_CORE_URL ({}) is up and responding!'.format(GATHER_CORE_URL))
+            try:
+                # check that the token is valid
+                auth_token = {'Authorization': 'Token {}'.format(GATHER_CORE_TOKEN)}
+                g = requests.get(GATHER_CORE_URL + '/surveys.json', headers=auth_token)
+                assert g.status_code == 200, g.content
+                logger.info('GATHER_CORE_TOKEN is valid!')
+
+                return  # it's possible to connect with core
+
+            except Exception as eg:
+                logger.exception(
+                    'GATHER_CORE_TOKEN is not valid for GATHER_CORE_URL ({}), {}'.format(
+                        GATHER_CORE_URL, fail_action))
+        except Exception as eh:
+            logger.warning('GATHER_CORE_URL ({}) is not available, {}.'.format(
+                GATHER_CORE_URL, fail_action))
+    else:
+        logger.warning(
+            'GATHER_CORE_URL and/or GATHER_CORE_TOKEN are not set, {}.'.format(fail_action))
+
+    # it's not possible to connect with core
+    raise RuntimeError('Cannot connect to {}'.format(GATHER_CORE_URL))
+
+
+GATHER_CORE_URL = os.environ.get('GATHER_CORE_URL')
+GATHER_CORE_TOKEN = os.environ.get('GATHER_CORE_TOKEN')
+try:
+    test_gather_core_connection()
+except RuntimeError as re:
+    logger.warning('Cannot connect to {}'.format(GATHER_CORE_URL))
+
+
+# This scriptlet allows you to include custom settings in your local environment
 try:
     from local_settings import *  # noqa
 except ImportError as e:
-    logger.error(e)
+    logger.info('No local settings!')
