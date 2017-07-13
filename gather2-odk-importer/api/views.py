@@ -55,7 +55,7 @@ def walk(obj, parent_keys, coerce_dict):
 @authentication_classes([BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def form_list(request):
-    xforms = XForm.objects.filter(username=request.user.username)
+    xforms = XForm.objects.all()
     context = {
         'xforms': xforms,
         'host': request.build_absolute_uri().replace(
@@ -72,7 +72,7 @@ def form_list(request):
 @authentication_classes([BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def download_xform(request, pk):
-    xform = get_object_or_404(XForm, pk=pk, username=request.user.username)
+    xform = get_object_or_404(XForm, pk=pk)
     return Response(xform.xml_data, content_type='text/xml')
 
 
