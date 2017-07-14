@@ -46,22 +46,26 @@ CSRF_TRUSTED_ORIGINS = [".ehealthafrica.org"]
 # Application definition
 
 INSTALLED_APPS = (
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.sessions',
     'django.contrib.staticfiles',
-    'django_extensions',
-    'rest_framework',
     'django_cas_ng',
+    'django_extensions',
+    'django_rq',
+    'rest_framework',
     'ums_client',
+
+    # gather2 apps
     'api',
     'importer',
-    'django_rq',
 )
 
 MIDDLEWARE_CLASSES = (
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -70,7 +74,6 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 )
 
 FIXTURE_DIRS = (
@@ -158,7 +161,6 @@ HOSTNAME = os.environ.get("HOSTNAME", "localhost")
 CAS_VERSION = 3
 CAS_LOGOUT_COMPLETELY = True
 
-CORS_ORIGIN_ALLOW_ALL = True
 
 if os.environ.get('DJANGO_USE_X_FORWARDED_HOST', False):
     USE_X_FORWARDED_HOST = True

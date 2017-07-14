@@ -1,5 +1,5 @@
 """
-WSGI config for gather2_odk_importer project.
+WSGI config for gather2_couchdb_sync project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 

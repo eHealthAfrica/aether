@@ -1,24 +1,33 @@
-autopep8==1.2.1
+#############################################################
+#                                                           #
+#                   Primary requirements                    #
+#                                                           #
+#                       CHANGE ME !!!                       #
+#                                                           #
+# Update me and then run './entrypoint.sh pip_freeze'       #
+#                                                           #
+#############################################################
+
+autopep8
 coverage
-Django==1.10
 django-attachments
 django-cas-ng
+django-cors-headers
 django-extensions
 django-filter
-djangorestframework
 django-reversion-compare
 django-storages
 django-ums-client
-dj_database_url==0.3.0
-drf-extensions
-fake-factory==0.7.2  # until hypothosis is updated to fix their dependency
-flake8==2.4
-hypothesis[django]
-ipdb==0.8.1
-jsonschema==2.5.1
-markdown
-psycopg2==2.6.1
-requests
-uwsgi==2.0.14
-Werkzeug==0.11.2
+django==1.10.7
+djangorestframework
 djangorestframework-filters
+drf-extensions
+flake8
+hypothesis[django]
+ipdb
+jsonschema
+markdown
+mock
+psycopg2==2.6.2
+requests
+uwsgi

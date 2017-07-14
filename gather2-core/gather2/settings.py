@@ -20,23 +20,25 @@ CSRF_COOKIE_DOMAIN = ".ehealthafrica.org"
 CSRF_TRUSTED_ORIGINS = [".ehealthafrica.org"]
 
 INSTALLED_APPS = [
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.sessions',
     'django.contrib.staticfiles',
-    'reversion',
-    'reversion_compare',
+    'django_cas_ng',
+    'django_extensions',
     'django_filters',
     'rest_framework',
     'rest_framework.authtoken',
-    'django_extensions',
-    'corsheaders',
+    'reversion',
+    'reversion_compare',
     'storages',
-    'core.apps.CoreConfig',
-    'django_cas_ng',
     'ums_client',
+
+    # gather2 apps
+    'core',  # this enables signals
 ]
 
 ADD_REVERSION_ADMIN = True

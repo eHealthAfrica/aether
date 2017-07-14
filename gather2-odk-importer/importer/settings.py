@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -39,22 +40,27 @@ CSRF_TRUSTED_ORIGINS = [".ehealthafrica.org"]
 # Application definition
 
 INSTALLED_APPS = (
+    # 'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.sessions',
     'django.contrib.staticfiles',
+    'django_cas_ng',
     'django_extensions',
     'rest_framework',
-    'django_cas_ng',
-    'ums_client',
     'storages',
+    'ums_client',
+
+    # gather2 apps
     'api',
 
 )
 
 MIDDLEWARE_CLASSES = (
+    # 'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -62,7 +68,6 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
 )
 
 ROOT_URLCONF = 'importer.urls'
@@ -136,8 +141,8 @@ DATABASES = {
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     )
 }
 
@@ -151,6 +156,8 @@ CAS_SERVER_URL = os.environ.get(
 HOSTNAME = os.environ.get("HOSTNAME", "localhost")
 CAS_VERSION = 3
 CAS_LOGOUT_COMPLETELY = True
+
+# CORS_ORIGIN_ALLOW_ALL = True
 
 
 # Check possible connection with CORE
