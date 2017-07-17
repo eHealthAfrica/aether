@@ -1,57 +1,142 @@
-from hashlib import md5
-from django.conf import settings
-
-from django.core.urlresolvers import reverse
-from django.db import models
-from django.utils import timezone
-from django.core.exceptions import ValidationError
-
 import xmltodict
+
+from hashlib import md5
+
+from django.core.exceptions import ValidationError
+from django.core.urlresolvers import reverse
+from django.db import models, IntegrityError
+from django.utils import timezone
+
+from . import core_utils
+
+
+def get_xml_title(data):
+    '''
+    extracts form title from xml definition
+
+        <h:html>
+          <h:head>
+            <h:title> T I T L E </h:title>
+            <model>
+              <instance>
+                <None id="F O R M I D"></None>
+              </instance>
+              <instance id="1"></instance>
+              <instance id="2"></instance>
+
+              <instance id="n"></instance>
+            </model>
+          </h:head>
+          <h:body>
+          </h:body>
+        </h:html>
+     '''
+    try:
+        return data['h:html']['h:head']['h:title']
+    except:
+        return None
+
+
+def get_xml_form_id(data):
+    '''
+    extracts form id from xml definition
+
+        <h:html>
+          <h:head>
+            <h:title> T I T L E </h:title>
+            <model>
+              <instance>
+                <None id="F O R M I D"></None>
+              </instance>
+              <instance id="1"></instance>
+              <instance id="2"></instance>
+
+              <instance id="n"></instance>
+            </model>
+          </h:head>
+          <h:body>
+          </h:body>
+        </h:html>
+    '''
+    try:
+        instance = data['h:html']['h:head']['model']['instance']
+        # this can be a list of intances or one entry
+        try:
+            return instance['None']['@id']
+        except:
+            # assumption: the first one is the form definition, the rest are the choices
+            return instance[0]['None']['@id']
+    except:
+        pass
+
+    return None
 
 
 def validate_xmldict(value):
+    '''
+    Validates xml definition:
+    1. parses xml
+    2. checks if title is valid
+    3. checks if form id is valid
+    '''
     try:
-        xmltodict.parse(value)
+        data = xmltodict.parse(value)
+
+        if not get_xml_title(data):
+            raise ValidationError('missing title')
+        if not get_xml_form_id(data):
+            raise ValidationError('missing form_id')
+
     except Exception as e:
         raise ValidationError(e)
 
 
 class XForm(models.Model):
+    '''
+    Database representation of an XForm
 
-    """
-    database representation of an XForm
     The data is stored in XML format and converted to the other supported
     formats when it is needed
-    """
+    '''
 
-    title = models.CharField(default='', max_length=64, editable=False, unique=True)
+    # taken from xml_data
+    title = models.TextField(default='', editable=False)
+    form_id = models.TextField(default='', editable=False, null=False)
+
+    # here comes the extracted data from an xForm file
     xml_data = models.TextField(blank=True, validators=[validate_xmldict])
-    description = models.TextField(default=u'', null=True)
+
+    description = models.TextField(default='', null=True)
     created_at = models.DateTimeField(default=timezone.now)
+
+    # This is needed to submit data to core
     gather_core_survey_id = models.IntegerField()
 
     @property
     def gather_core_url(self):
-        return settings.GATHER_CORE_URL + '/surveys/{survey_id}/responses/'.format(survey_id=self.gather_core_survey_id)
+        return core_utils.get_survey_url(
+            survey_id=self.gather_core_survey_id,
+        )
 
     @property
-    def hash(self):
+    def hash(self):  # pragma: no cover
         return u'%s' % md5(self.xml_data.encode('utf8')).hexdigest()
 
     @property
-    def id_string(self):
+    def id_string(self):  # pragma: no cover
         return str(self.pk)
 
     @property
     def url(self):
-        return reverse("download_xform", kwargs={"pk": self.pk})
+        return reverse('download_xform', kwargs={'pk': self.pk})
 
     def save(self, *args, **kwargs):
         try:
-            d = xmltodict.parse(self.xml_data)
-            self.title = d['h:html']['h:head']['h:title']  # TODO: make this more robust
-            self.form_id = d['h:html']['h:head']['model']['instance']['None']['@id']
-        except Exception as e:
-            print(e)
+            validate_xmldict(self.xml_data)
+        except:
+            raise IntegrityError('xml_data not valid')
 
+        data = xmltodict.parse(self.xml_data)
+        self.title = get_xml_title(data)
+        self.form_id = get_xml_form_id(data)
         return super(XForm, self).save(*args, **kwargs)

@@ -43,6 +43,8 @@ services:
             RDS_PORT: ""
             RDS_DB_NAME: "odk_importer"
             STATIC_ROOT: "/var/www/static/"
+            GATHER_CORE_URL: "http://core:8000"
+            GATHER_CORE_TOKEN: "${GATHER_CORE_TOKEN}"
         volumes:
             - ./gather2-odk-importer:/code
             - ./importer_home:/root/

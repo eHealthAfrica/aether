@@ -16,36 +16,35 @@ class XFormForm(forms.ModelForm):
         survey = builder.create_survey_element_from_dict(json_survey)
         return survey.xml().toprettyxml(indent='  ')
 
-    class Meta:
-        model = XForm
-        fields = ['id', 'description',
-                  'xml_data', 'xlsform', 'gather_core_survey_id']
-
     def clean_xml_data(self):
-        print('cleaning xform')
         if 'xlsform' in self.files:
             return self.parse_xlsform(self.files['xlsform'].file)
         return self.cleaned_data['xml_data']
 
     def clean(self):
         cleaned_data = super(XFormForm, self).clean()
-        xlsform = cleaned_data.get("xlsform")
-        xml_data = cleaned_data.get("xml_data")
+        xlsform = cleaned_data.get('xlsform')
+        xml_data = cleaned_data.get('xml_data')
 
         if not (xlsform or xml_data):
-            raise forms.ValidationError("please specify XForm data or upload an XLSForm")
+            raise forms.ValidationError('please specify XForm data or upload an XLSForm')
+
+    class Meta:
+        model = XForm
+        fields = ['id', 'description', 'xml_data', 'xlsform', 'gather_core_survey_id']
 
 
 class XFormAdmin(admin.ModelAdmin):
     list_display = (
         'id',
         'title',
+        'form_id',
         'description',
         'created_at',
     )
     list_filter = ('created_at',)
     date_hierarchy = 'created_at'
-    readonly_fields = ('title',)
+    readonly_fields = ('title', 'form_id',)
     form = XFormForm
 
 

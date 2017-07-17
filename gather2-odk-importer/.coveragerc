@@ -1,13 +1,13 @@
 [run]
 branch = true
-omit = /code/api/apps.py
 source = /code/api
+omit = *migrations*, *tests*
 
 [paths]
 source = /code/api
-omit = /code/api/apps.py
+omit = *migrations*, *tests*
 
 [report]
-omit = /code/api/apps.py
+omit = *migrations*, *tests*
 show_missing = true
 fail_under = 50

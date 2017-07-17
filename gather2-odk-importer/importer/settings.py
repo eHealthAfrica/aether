@@ -156,49 +156,7 @@ CAS_SERVER_URL = os.environ.get(
 HOSTNAME = os.environ.get("HOSTNAME", "localhost")
 CAS_VERSION = 3
 CAS_LOGOUT_COMPLETELY = True
-
 # CORS_ORIGIN_ALLOW_ALL = True
-
-
-# Check possible connection with CORE
-def test_gather_core_connection():
-    import requests
-
-    fail_action = 'saving XForm responses will not work'
-
-    if GATHER_CORE_URL and GATHER_CORE_TOKEN:
-        try:
-            # check that the server is up
-            h = requests.head(GATHER_CORE_URL)
-            assert h.status_code == 200
-            logger.info('GATHER_CORE_URL ({}) is up and responding!'.format(GATHER_CORE_URL))
-            try:
-                # check that the token is valid
-                auth_token = {'Authorization': 'Token {}'.format(GATHER_CORE_TOKEN)}
-                g = requests.get(GATHER_CORE_URL + '/surveys.json', headers=auth_token)
-                assert g.status_code == 200, g.content
-                logger.info('GATHER_CORE_TOKEN is valid!')
-
-                return True  # it's possible to connect with core
-
-            except Exception as eg:
-                logger.exception(
-                    'GATHER_CORE_TOKEN is not valid for GATHER_CORE_URL ({}), {}'.format(
-                        GATHER_CORE_URL, fail_action))
-        except Exception as eh:
-            logger.warning('GATHER_CORE_URL ({}) is not available, {}.'.format(
-                GATHER_CORE_URL, fail_action))
-    else:
-        logger.warning(
-            'GATHER_CORE_URL and/or GATHER_CORE_TOKEN are not set, {}.'.format(fail_action))
-
-    return False  # it's not possible to connect with core
-
-
-GATHER_CORE_URL = os.environ.get('GATHER_CORE_URL')
-GATHER_CORE_TOKEN = os.environ.get('GATHER_CORE_TOKEN')
-test_gather_core_connection()
-
 
 # This scriptlet allows you to include custom settings in your local environment
 try:

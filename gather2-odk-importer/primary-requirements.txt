@@ -19,7 +19,6 @@ django-ums-client
 djangorestframework
 flake8
 geojson
-hypothesis[django]
 ipdb
 lxml
 psycopg2
