@@ -129,8 +129,7 @@ class ResponseSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField('response-detail')
     survey_url = serializers.HyperlinkedRelatedField(
         'survey-detail', source='survey', read_only=True)
-    data = JSONSerializerField(validators=[JSONSpecValidator()],
-                               style={'base_template': 'schema_field.html'})
+    data = JSONSerializerField(validators=[JSONSpecValidator()])
     created_by = serializers.PrimaryKeyRelatedField(
         read_only=True,
         default=serializers.CurrentUserDefault())
