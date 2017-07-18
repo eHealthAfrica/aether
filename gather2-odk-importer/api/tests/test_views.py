@@ -88,15 +88,3 @@ class ApiViewsTests(TestCase):
         url = reverse('xform_manifest', kwargs={'id_string': instance.id_string})
         response = self.client.get(url, **self.headers)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test__submission__head(self):
-        # TODO !!!
-        # response = self.client.head(reverse('submission'), **self.headers)
-        # self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        pass
-
-    def test__submission__post(self):
-        # TODO !!!
-        # response = self.client.post(reverse('submission'), **self.headers)
-        # self.assertEqual(response.status_code, status.HTTP_200_OK)
-        pass

@@ -19,36 +19,17 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import StaticHTMLRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
 
-from .serializers import XFormSerializer
+from .core_utils import get_auth_header
 from .models import XForm
+from .serializers import XFormSerializer
 
 logger = logging.getLogger(__name__)
 
 
-def walk(obj, parent_keys, coerce_dict):
-    if not parent_keys:
-        parent_keys = []
-
-    for k, v in obj.items():
-        keys = parent_keys + [k]
-        if isinstance(v, dict):
-            walk(v, keys, coerce_dict)
-        elif isinstance(v, list):
-            for i in v:
-                # indicies are not important
-                walk(i, keys, coerce_dict)
-        elif v is not None:
-            xpath = '/' + '/'.join(keys)
-            _type = coerce_dict.get(xpath)
-            if _type == 'int':
-                obj[k] = int(v)
-            if _type == 'dateTime':
-                obj[k] = parser.parse(v).isoformat()
-            if _type == 'date':
-                obj[k] = parser.parse(v).isoformat()
-            if _type == 'geopoint':
-                lat, lng, altitude, accuracy = v.split()
-                obj[k] = Point((float(lat), float(lng)))
+class XFormViewset(viewsets.ModelViewSet):
+    queryset = XForm.objects.all()
+    serializer_class = XFormSerializer
+    permission_classes = [IsAuthenticated]
 
 
 @api_view(['GET'])
@@ -100,46 +81,82 @@ def xform_manifest(request, id_string):
 @authentication_classes([BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def submission(request):
-    from .core_utils import get_auth_header
+    def walk(obj, parent_keys, coerce_dict):
+        if not parent_keys:
+            parent_keys = []
+
+        for k, v in obj.items():
+            keys = parent_keys + [k]
+            if isinstance(v, dict):
+                walk(v, keys, coerce_dict)
+            elif isinstance(v, list):
+                for i in v:
+                    # indices are not important
+                    walk(i, keys, coerce_dict)
+            elif v is not None:
+                xpath = '/' + '/'.join(keys)
+                _type = coerce_dict.get(xpath)
+                if _type == 'int':
+                    obj[k] = int(v)
+                if _type == 'dateTime':
+                    obj[k] = parser.parse(v).isoformat()
+                if _type == 'date':
+                    obj[k] = parser.parse(v).isoformat()
+                if _type == 'geopoint':
+                    lat, lng, altitude, accuracy = v.split()
+                    obj[k] = Point((float(lat), float(lng)))
 
     # first of all check if the connection is possible
     auth_header = get_auth_header()
     if not auth_header:
         return Response(status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-    if request.method == 'POST':
-        xml = request.FILES['xml_submission_file'].read()
-        d = xmltodict.parse(xml)
-        form_id = list(d.items())[0][1]['@id']  # TODO make more robust
-        # xform = get_object_or_404(XForm, id=form_id)
-        xform = XForm.objects.filter(form_id=form_id).first()
+    if request.method == 'HEAD':
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-        coerce_dict = {}
-        for n in re.findall(r"<bind.*/>", xform.xml_data):
-            re_nodeset = re.findall(r'nodeset="([^"]*)"', n)
-            re_type = re.findall(r'type="([^"]*)"', n)
+    file_param = 'xml_submission_file'
+    xml = request.FILES[file_param].read()
+    d = xmltodict.parse(xml)
+    form_id = list(d.items())[0][1]['@id']  # TODO make more robust
+
+    xform = XForm.objects.filter(form_id=form_id).first()
+    if not xform:
+        logger.error('xForm entry {} not found.'.format(form_id))
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    coerce_dict = {}
+    # bind entries define the fields and its types or possible values (choices list)
+    for bind_entry in re.findall(r'<bind.*/>', xform.xml_data):
+        re_nodeset = re.findall(r'nodeset="([^"]*)"', bind_entry)
+        re_type = re.findall(r'type="([^"]*)"', bind_entry)
+
+        try:
             coerce_dict[re_nodeset[0]] = re_type[0]
-        walk(d, None, coerce_dict)  # modifies inplace
+        except:
+            # ignore, sometimes there is no "type"
+            # <bind nodeset="/None/some_field" relevant=" /None/some_choice ='value'"/>
+            pass
 
-        r = requests.post(xform.gather_core_url, json={'data': d})
-        if r.status_code != 201:
-            logger.debug(r.content)
-            return Response(status=r.status_code)
+    walk(d, None, coerce_dict)  # modifies inplace
 
-        attachment_url = r.json().get('attachments_url')
-        for name, f in request.FILES.items():
-            if name != 'xml_submission_file':
-                r = requests.post(
-                    attachment_url,
-                    data={'name': name},
-                    files={'attachment_file': (f.name, f, f.content_type)},
-                    headers=auth_header
-                )
-        return Response(status=r.status_code)
-    return Response(status=status.HTTP_204_NO_CONTENT)
+    response = requests.post(
+        xform.gather_core_url,
+        json={'data': d},
+        headers=auth_header,
+    )
+    if response.status_code != 201:
+        logger.warning(response.content)
+        return Response(status=response.status_code)
 
+    attachment_url = response.json().get('attachments_url')
+    for name, f in request.FILES.items():
+        # submit possible attachments to the response and ignore response
+        if name != file_param:
+            requests.post(
+                attachment_url,
+                data={'name': name},
+                files={'attachment_file': (f.name, f, f.content_type)},
+                headers=auth_header,
+            )
 
-class XFormViewset(viewsets.ModelViewSet):
-    queryset = XForm.objects.all()
-    serializer_class = XFormSerializer
-    permission_classes = [IsAuthenticated]
+    return Response(status=response.status_code)
