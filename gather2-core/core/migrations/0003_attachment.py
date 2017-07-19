@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
                 ('attachment_file', models.FileField(upload_to='', verbose_name='attachment')),
                 ('name', models.CharField(max_length=50)),
                 ('created', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('response', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='core.Response')),
+                ('response', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='attachments', to='core.Response')),
             ],
         ),
     ]

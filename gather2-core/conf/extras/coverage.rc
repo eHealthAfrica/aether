@@ -1,13 +1,13 @@
 [run]
 branch = true
-omit = /code/core/apps.py
 source = /code/core
+omit = *migrations*, *tests*
 
 [paths]
 source = /code/core
-omit = /code/core/apps.py
+omit = *migrations*, *tests*
 
 [report]
-omit = /code/core/apps.py
+omit = *migrations*, *tests*
 show_missing = true
 fail_under = 100

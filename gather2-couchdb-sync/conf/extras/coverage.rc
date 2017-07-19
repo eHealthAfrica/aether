@@ -1,0 +1,13 @@
+[run]
+branch = true
+source = /code/api
+omit = *migrations*, *tests*
+
+[paths]
+source = /code/api
+omit = *migrations*, *tests*
+
+[report]
+omit = *migrations*, *tests*
+show_missing = true
+fail_under = 90

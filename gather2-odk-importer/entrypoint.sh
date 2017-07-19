@@ -1,92 +1,117 @@
 #!/bin/bash
 set -e
-set -x
 
 
 # Define help message
 show_help() {
     echo """
     Commands
-    manage        : Invoke django manage.py commands
-    setuplocaldb  : Create empty database for gather core
-    setupproddb   : Create empty database for production
-    test_coverage : runs tests with coverage output
-    start         : start webserver behind nginx (prod for serving static files)
+    ----------------------------------------------------------------------------
+    bash          : run bash
+    eval          : eval shell command
+    manage        : invoke django manage.py commands
+
+    pip_freeze    : freeze pip dependencies and write to requirements.txt
+
+    setupproddb   : create/migrate database for production
+    setuplocaldb  : create/migrate database for development (creates superuser)
+
+    test_lint     : run flake8 tests
+    test_coverage : run tests with coverage output
+
+    start         : start webserver behind nginx
+    start_dev     : start webserver for development
     """
 }
 
-setup_local_db() {
-    set +e
-    cd /code/
-    /var/env/bin/python manage.py sqlcreate | psql -U $RDS_USERNAME -h $RDS_HOSTNAME
-    set -e
-    /var/env/bin/python manage.py migrate
-}
+setup_db() {
+    until psql -h $RDS_HOSTNAME -U $RDS_USERNAME  -c '\l' > /dev/null; do
+      >&2 echo "Waiting for postgres..."
+      sleep 1
+    done
 
-setup_prod_db() {
-    set +e
-    cd /code/
-    set -e
     export PGPASSWORD=$RDS_PASSWORD
     if psql -h $RDS_HOSTNAME -U $RDS_USERNAME -c "" $RDS_DB_NAME; then
-      echo "Database exists!"
+      echo "$RDS_DB_NAME database exists!"
     else
       createdb -h $RDS_HOSTNAME -U $RDS_USERNAME -e $RDS_DB_NAME
     fi
-    /var/env/bin/python manage.py migrate
+
+    # migrate data model if needed
+    /var/env/bin/python manage.py migrate --noinput
 }
 
-pip_freeze() {
-    virtualenv -p python3 /tmp/env/
-    /tmp/env/bin/pip install -f /code/dependencies -r ./primary-requirements.txt --upgrade
-    set +x
-    echo -e "###\n# frozen requirements DO NOT CHANGE\n# To update this update 'primary-requirements.txt' then run ./entrypoint.sh pip_freeze\n###" | tee requirements.txt
-    /tmp/env/bin/pip freeze | tee -a requirements.txt
+setup_initial_data() {
+    # create initial superuser
+    /var/env/bin/python manage.py loaddata /code/conf/extras/users_initial.json
 }
+
 
 case "$1" in
+    bash )
+        bash
+    ;;
+
+    eval )
+        eval "${@:2}"
+    ;;
+
     manage )
-        cd /code/
         /var/env/bin/python manage.py "${@:2}"
     ;;
+
     pip_freeze )
-        pip_freeze
+        rm -rf /tmp/env
+        virtualenv -p python3 /tmp/env/
+        /tmp/env/bin/pip install -f /code/dependencies -r ./primary-requirements.txt --upgrade
+
+        cat /code/conf/extras/requirements_header.txt | tee requirements.txt
+        /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a requirements.txt
     ;;
+
     setuplocaldb )
-        setup_local_db
+        setup_db
+        setup_initial_data
     ;;
+
     setupproddb )
-        setup_prod_db
+        setup_db
     ;;
+
+    test_lint)
+        /var/env/bin/python -m flake8 /code/. --config=/code/conf/extras/flake8.cfg
+    ;;
+
     test_coverage)
         source /var/env/bin/activate
-        coverage run --rcfile="/code/.coveragerc" /code/manage.py test
-        mkdir -p  /var/annotated
-        coverage annotate --rcfile="/code/.coveragerc"
-        coverage report --rcfile="/code/.coveragerc"
-        cat << "EOF"
-  ____                 _     _       _     _
- / ___| ___   ___   __| |   (_) ___ | |__ | |
-| |  _ / _ \ / _ \ / _` |   | |/ _ \| '_ \| |
-| |_| | (_) | (_) | (_| |   | | (_) | |_) |_|
- \____|\___/ \___/ \__,_|  _/ |\___/|_.__/(_)
-                          |__/
+        export RCFILE=/code/conf/extras/coverage.rc
 
-EOF
+        coverage erase
+        coverage run      --rcfile="$RCFILE" /code/manage.py test "${@:2}"
+        coverage report   --rcfile="$RCFILE"
+
+        cat /code/conf/extras/good_job.txt
     ;;
+
     start )
-        cd /code/
-        setup_prod_db
+        setup_db
+
         /var/env/bin/python manage.py collectstatic --noinput
         chmod -R 755 /var/www/static
         /var/env/bin/uwsgi --ini /code/conf/uwsgi.ini
     ;;
-    bash )
-        bash "${@:2}"
+
+    start_dev )
+        setup_db
+        setup_initial_data
+
+        /var/env/bin/python manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
+
     help)
         show_help
     ;;
+
     *)
         show_help
     ;;

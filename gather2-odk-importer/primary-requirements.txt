@@ -14,13 +14,13 @@ django
 django-cas-ng
 django-cors-headers
 django-extensions
-django-storages
 django-ums-client
 djangorestframework
 flake8
 geojson
 ipdb
 lxml
+mock
 psycopg2
 pyopenssl
 python-dateutil

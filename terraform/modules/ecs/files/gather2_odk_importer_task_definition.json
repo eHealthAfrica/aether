@@ -6,6 +6,7 @@
     "memory": 256,
     "essential": true,
     "command": ["start"],
+    "entryPoint": ["/code/entrypoint.sh"],
     "environment": [
       { "name": "RDS_HOSTNAME", "value": "${database_hostname}"},
       { "name": "RDS_USERNAME", "value": "${database_user}"},

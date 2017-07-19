@@ -3,21 +3,26 @@ import os
 
 logger = logging.getLogger(__name__)
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
-def here(x):
-    return os.path.join(os.path.abspath(os.path.dirname(__file__)), x)
-
 
 SECRET_KEY = 'n)&_bvxfe$g)gfa4b-uy&aqt$vx!w7jw%fyi9mc8#onh2^$m=='
 
-DEBUG = True
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
+CSRF_COOKIE_DOMAIN = os.environ.get('CSRF_COOKIE_DOMAIN', '.ehealthafrica.org')
+CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', CSRF_COOKIE_DOMAIN).split(',')
 
-# TODO make this an env var that defaults to []
-ALLOWED_HOSTS = ["*"]
-CSRF_COOKIE_DOMAIN = ".ehealthafrica.org"
-CSRF_TRUSTED_ORIGINS = [".ehealthafrica.org"]
+
+CAS_SERVER_URL = os.environ.get('CAS_SERVER_URL', 'https://ums-dev.ehealthafrica.org')
+HOSTNAME = os.environ.get('HOSTNAME', 'localhost')
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEBUG = (os.environ.get('DEBUG', '').lower() == 'true')
+
+ROOT_URLCONF = 'gather2.urls'
+WSGI_APPLICATION = 'gather2.wsgi.application'
+
 
 INSTALLED_APPS = [
     'corsheaders',
@@ -34,7 +39,6 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'reversion',
     'reversion_compare',
-    'storages',
     'ums_client',
 
     # gather2 apps
@@ -55,7 +59,6 @@ MIDDLEWARE_CLASSES = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'gather2.urls'
 
 TEMPLATES = [
     {
@@ -73,21 +76,15 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'gather2.wsgi.application'
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',  # this is default
     'ums_client.backends.UMSRoleBackend'
 )
 
-CAS_SERVER_URL = os.environ.get(
-    "CAS_SERVER_URL", "https://ums-dev.ehealthafrica.org")
-HOSTNAME = os.environ.get("HOSTNAME", "HOSTNAME")
 CAS_VERSION = 3
 CAS_LOGOUT_COMPLETELY = True
 
-
-ANONYMOUS_USER_ID = -1
 
 REST_FRAMEWORK = {
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
@@ -130,37 +127,13 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
 STATIC_URL = '/static/'
-
-STATICFILES_DIRS = [
-    ("gather", here('../static')),
-]
-
-STATIC_ROOT = os.environ.get("STATIC_ROOT", here('../static_root'))
-
-MEDIA_ROOT = here('../media_root')
-MEDIA_URL = '/media/'
-
-
-# If you want to store static files on AWS S3, set DJANGO_S3_FILE_STORAGE
-# in an env var when deploying.
-
-if os.environ.get('DJANGO_S3_FILE_STORAGE'):
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-    AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
-    AWS_AUTO_CREATE_BUCKET = True
-    AWS_S3_FILE_OVERWRITE = False
+STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/static/')
 
 
 DATABASES = {
@@ -176,7 +149,6 @@ DATABASES = {
 
 BROKER_URL = 'django://'
 
-CORS_ORIGIN_ALLOW_ALL = True
 
 if os.environ.get('DJANGO_USE_X_FORWARDED_HOST', False):
     USE_X_FORWARDED_HOST = True

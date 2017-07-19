@@ -16,7 +16,6 @@ django-cors-headers
 django-extensions
 django-filter
 django-reversion-compare
-django-storages
 django-ums-client
 django==1.10.7
 djangorestframework
