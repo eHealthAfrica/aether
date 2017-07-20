@@ -50,17 +50,20 @@ Gather2 Core.
 If a valid `GATHER_CORE_TOKEN` and `GATHER_CORE_URL` combination is not set,
 the server will still start, but ODK Collection submissions will fail.
 
-This also applies for `gather2-couchdb-sync`.
+This also applies for `gather2-couchdb-sync`. 
+
+In the case of `gather2-couchdb-sync` also a valid `GOOGLE_CLIENT_ID` 
+environment variable is necessary to verify the device credentials.
 
 Infrastructure deployment is done with Terraform, which configuration
 files are stored in [terraform](terraform) directory.
 
 Application deployment is managed by AWS Elastic Container Service and is being done automatically
 on the following branches/environments:
-- branch `master` is deployed to `dev` environment:
-  [gather2-dev.ehealthafrica.org](https://gather2-dev.ehealthafrica.org)
 
-All the logs are forwarded to CloudWatch Logs to be easily accessible for developers.
+- branch `develop` is deployed to `dev` environment.
+
+- branch `master` is deployed to `prod` environment.
 
 
 ## Containers and services
