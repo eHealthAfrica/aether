@@ -98,3 +98,4 @@ tmp
 
 # Terraform
 .terraform
+terraform.tfstate.backup
