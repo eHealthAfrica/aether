@@ -28,6 +28,7 @@ show_help() {
 }
 
 setup_db() {
+    export PGPASSWORD=$RDS_PASSWORD
     until psql -h $RDS_HOSTNAME -U $RDS_USERNAME  -c '\l' > /dev/null; do
       >&2 echo "Waiting for postgres..."
       sleep 1
@@ -38,7 +39,6 @@ setup_db() {
       sleep 1
     done
 
-    export PGPASSWORD=$RDS_PASSWORD
     if psql -h $RDS_HOSTNAME -U $RDS_USERNAME -c "" $RDS_DB_NAME; then
       echo "$RDS_DB_NAME database exists!"
     else
