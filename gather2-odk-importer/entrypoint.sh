@@ -26,15 +26,19 @@ show_help() {
 
 setup_db() {
     export PGPASSWORD=$RDS_PASSWORD
-    until psql -h $RDS_HOSTNAME -U $RDS_USERNAME  -c '\l' > /dev/null; do
+    export PGHOST=$RDS_HOSTNAME
+    export PGUSER=$RDS_USERNAME
+
+    until pg_isready -q; do
       >&2 echo "Waiting for postgres..."
       sleep 1
     done
 
-    if psql -h $RDS_HOSTNAME -U $RDS_USERNAME -c "" $RDS_DB_NAME; then
+    if psql -c "" $RDS_DB_NAME; then
       echo "$RDS_DB_NAME database exists!"
     else
-      createdb -h $RDS_HOSTNAME -U $RDS_USERNAME -e $RDS_DB_NAME
+      createdb -e $RDS_DB_NAME
+      echo "$RDS_DB_NAME database created!"
     fi
 
     # migrate data model if needed
