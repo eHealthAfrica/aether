@@ -25,3 +25,4 @@ requests
 rq
 rq-scheduler
 uwsgi
+raven

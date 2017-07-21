@@ -34,6 +34,7 @@ INSTALLED_APPS = (
     'django_extensions',
     'rest_framework',
     'ums_client',
+    'raven.contrib.django.raven_compat',
 
     # gather2 apps
     'api',
@@ -78,6 +79,17 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/static/')
 
+# Sentry Configuration
+# ------------------------------------------------------------------------------
+# See https://docs.sentry.io/clients/python/integrations/django/
+
+MIDDLEWARE_CLASSES = (
+    'raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware',
+) + MIDDLEWARE_CLASSES
+
+SENTRY_DSN = os.environ.get('SENTRY_DSN')
+SENTRY_CLIENT = os.environ.get('DJANGO_SENTRY_CLIENT', 'raven.contrib.django.raven_compat.DjangoClient')
+SENTRY_CELERY_LOGLEVEL = logging.INFO
 
 DATABASES = {
     'default': {

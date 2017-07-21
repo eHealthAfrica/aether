@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'reversion',
     'reversion_compare',
     'ums_client',
+    'raven.contrib.django.raven_compat',
 
     # gather2 apps
     'core',  # this enables signals
@@ -148,6 +149,18 @@ DATABASES = {
 }
 
 BROKER_URL = 'django://'
+
+# Sentry Configuration
+# ------------------------------------------------------------------------------
+# See https://docs.sentry.io/clients/python/integrations/django/
+
+MIDDLEWARE_CLASSES = [
+    'raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware',
+] + MIDDLEWARE_CLASSES
+
+SENTRY_DSN = os.environ.get('SENTRY_DSN')
+SENTRY_CLIENT = os.environ.get('DJANGO_SENTRY_CLIENT', 'raven.contrib.django.raven_compat.DjangoClient')
+SENTRY_CELERY_LOGLEVEL = logging.INFO
 
 
 if os.environ.get('DJANGO_USE_X_FORWARDED_HOST', False):

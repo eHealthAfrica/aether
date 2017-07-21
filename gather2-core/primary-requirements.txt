@@ -30,3 +30,4 @@ mock
 psycopg2==2.6.2
 requests
 uwsgi
+raven

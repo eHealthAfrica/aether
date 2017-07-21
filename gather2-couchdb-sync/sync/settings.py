@@ -41,6 +41,7 @@ INSTALLED_APPS = (
     'django_rq',
     'rest_framework',
     'ums_client',
+    'raven.contrib.django.raven_compat',
 
     # gather2 apps
     'api',
@@ -141,6 +142,17 @@ REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
 REDIS_DB = os.environ.get('REDIS_DB', 0)
 REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', None)
 
+# Sentry Configuration
+# ------------------------------------------------------------------------------
+# See https://docs.sentry.io/clients/python/integrations/django/
+
+MIDDLEWARE_CLASSES = (
+    'raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware',
+) + MIDDLEWARE_CLASSES
+
+SENTRY_DSN = os.environ.get('SENTRY_DSN')
+SENTRY_CLIENT = os.environ.get('DJANGO_SENTRY_CLIENT', 'raven.contrib.django.raven_compat.DjangoClient')
+SENTRY_CELERY_LOGLEVEL = logging.INFO
 
 # RQ
 RQ_QUEUES = {
