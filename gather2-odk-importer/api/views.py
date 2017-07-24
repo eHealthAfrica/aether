@@ -96,11 +96,11 @@ def submission(request):
             elif v is not None:
                 xpath = '/' + '/'.join(keys)
                 _type = coerce_dict.get(xpath)
-                if _type == 'int':
+                if _type in ('int', 'integer'):
                     obj[k] = int(v)
-                if _type == 'dateTime':
-                    obj[k] = parser.parse(v).isoformat()
-                if _type == 'date':
+                if _type == 'decimal':
+                    obj[k] = float(v)
+                if _type in ('date', 'dateTime'):
                     obj[k] = parser.parse(v).isoformat()
                 if _type == 'geopoint':
                     lat, lng, altitude, accuracy = v.split()
@@ -115,10 +115,14 @@ def submission(request):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     file_param = 'xml_submission_file'
-    xml = request.FILES[file_param].read()
-    d = xmltodict.parse(xml)
-    form_id = list(d.items())[0][1]['@id']  # TODO make more robust
+    try:
+        xml = request.FILES[file_param].read()
+        data = xmltodict.parse(xml)
+    except Exception as e:
+        logger.warning('Unexpected error when handling file "{}"'.format(str(e)))
+        return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
+    form_id = list(data.items())[0][1]['@id']  # TODO make more robust
     xform = XForm.objects.filter(form_id=form_id).first()
     if not xform:
         logger.error('xForm entry {} not found.'.format(form_id))
@@ -137,26 +141,41 @@ def submission(request):
             # <bind nodeset="/None/some_field" relevant=" /None/some_choice ='value'"/>
             pass
 
-    walk(d, None, coerce_dict)  # modifies inplace
+    walk(data, None, coerce_dict)  # modifies inplace
 
-    response = requests.post(
-        xform.gather_core_url,
-        json={'data': d},
-        headers=auth_header,
-    )
-    if response.status_code != 201:
-        logger.warning(response.content)
+    try:
+        response = requests.post(
+            xform.gather_core_url,
+            json={'data': data},
+            headers=auth_header,
+        )
+        if response.status_code != 201:
+            logger.warning(
+                'Unexpected response {} from Gather2 Core server when submiting form "{}"'.format(
+                    response.status_code, form_id
+                )
+            )
+            logger.warning(response.content.decode())
+            return Response(status=response.status_code)
+
+        attachment_url = response.json().get('attachments_url')
+
+        for name, f in request.FILES.items():
+            # submit possible attachments to the response and ignore response
+            if name != file_param:
+                requests.post(
+                    attachment_url,
+                    data={'name': name},
+                    files={'attachment_file': (f.name, f, f.content_type)},
+                    headers=auth_header,
+                )
+
         return Response(status=response.status_code)
 
-    attachment_url = response.json().get('attachments_url')
-    for name, f in request.FILES.items():
-        # submit possible attachments to the response and ignore response
-        if name != file_param:
-            requests.post(
-                attachment_url,
-                data={'name': name},
-                files={'attachment_file': (f.name, f, f.content_type)},
-                headers=auth_header,
-            )
-
-    return Response(status=response.status_code)
+    except Exception as e:
+        logger.error(
+            'Unexpected error from Gather2 Core server when submiting form "{}"'.format(form_id)
+        )
+        logger.error(str(e))
+        # something went wrong... just send an 400 error
+        return Response(status=status.HTTP_400_BAD_REQUEST)

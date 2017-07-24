@@ -157,5 +157,5 @@ class ApiModelsTests(TestCase):
 
         self.assertEqual(instance.form_id, 'xform-id-test')
         self.assertEqual(instance.title, 'xForm - Test')
-        self.assertEqual(instance.gather_core_url, 'http://core:8000/surveys/1/responses/')
+        self.assertTrue(instance.gather_core_url.endswith('/surveys/1/responses/'))
         self.assertEqual(instance.url, '/forms/{}/form.xml'.format(instance.id))
