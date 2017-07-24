@@ -19,6 +19,7 @@ module "ecs" {
   internal_sg_id = "${module.autoscaling.internal_sg_id}"
   iam_role_id = "${module.autoscaling.aws_iam_role_ecs_service}"
   database_hostname = "${module.rds.database_hostname}"
+  deploy_branch = "latest"
 }
 
 # // Creates ECS cluster and SG's
