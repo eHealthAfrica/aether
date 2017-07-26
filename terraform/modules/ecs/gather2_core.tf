@@ -23,8 +23,8 @@ resource "aws_alb" "gather2_core" {
 }
 
 resource "aws_route53_record" "gather2_core" {
-  zone_id = "${var.route53_zone_id}"
-  name    = "${replace("core-gather-${var.environment}", "-prod", "")}"
+  zone_id = "${lookup("${var.route53_zone_id}","${var.domain}")}"
+  name    = "${replace("${var.core_url}-${var.environment}", "-prod", "")}"
   type    = "A"
 
   alias {
@@ -35,7 +35,7 @@ resource "aws_route53_record" "gather2_core" {
 }
 
 resource "aws_alb_target_group" "gather2_core" {
-  name     = "gather2-core-${var.environment}"
+  name     = "${var.project}-core-${var.environment}"
   port     = 80
   protocol = "HTTP"
   vpc_id   = "${var.vpc_id}"
@@ -73,6 +73,10 @@ data "credstash_secret" "gather2_core" {
   name = "${var.project}-${var.environment}-database-password"
 }
 
+data "credstash_secret" "gather2_core_sentry_dsn" {
+  name = "${var.project}-${var.environment}-sentry-dsn"
+}
+
 data "template_file" "gather2_core" {
   template = "${file("${path.module}/files/gather2_core_task_definition.json")}"
 
@@ -83,13 +87,15 @@ data "template_file" "gather2_core" {
     host_port = "${var.gather2_core_nginx_host_port}"
     nginx_image_url  = "${aws_ecr_repository.gather2_core_nginx.repository_url}:latest"
     database_hostname = "${var.database_hostname}"
-    database_user = "${var.database_user}"
     database_password = "${data.credstash_secret.gather2_core.value}"
-    database_name = "${var.database_name}"
+    database_name = "${replace("${var.project}", "-", "_")}"
+    database_user = "${replace("${var.project}", "-", "")}"
     database_port = "${var.database_port}"
     django_use_x_forwarded_port = "1"
     django_http_x_forwarded_proto = "1"
     django_use_x_forwarded_host = "1"
+    domain = ".${var.domain}"
+    sentry_dsn = "${data.credstash_secret.gather2_core_sentry_dsn.value}"
   }
 }
 
@@ -107,7 +113,7 @@ data "aws_ecs_task_definition" "gather2_core" {
 }
 
 resource "aws_ecs_service" "gather2_core" {
-  name            = "gather2-core"
+  name            = "${var.project}-core"
   cluster         = "${aws_ecs_cluster.cluster.id}"
   task_definition = "${aws_ecs_task_definition.gather2_core.family}:${max("${aws_ecs_task_definition.gather2_core.revision}", "${data.aws_ecs_task_definition.gather2_core.revision}")}"
   desired_count   = 1

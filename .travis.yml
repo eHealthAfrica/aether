@@ -40,6 +40,13 @@ deploy:
   on:
     branch: master
 
+deploy:
+- provider: script
+  script: "./scripts/deploy.sh"
+  skip_cleanup: true
+  on:
+    branch: lake-chad-basin
+
 env:
   global:
   - GATHER_CORE_TOKEN=a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24

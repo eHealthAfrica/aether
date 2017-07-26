@@ -35,7 +35,8 @@
       { "name": "GATHER_CORE_TOKEN", "value": "${gather2_token}"},
       { "name": "REDIS_HOST", "value": "redis"},
       { "name": "REDIS_PORT", "value": "6379"},
-      { "name": "REDIS_DATABASE", "value": "0"}
+      { "name": "REDIS_DATABASE", "value": "0"},
+      { "name": "SENTRY_DSN", "value": "${sentry_dsn}"}
     ]
   },
   {

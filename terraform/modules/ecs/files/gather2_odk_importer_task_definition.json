@@ -1,5 +1,26 @@
 [
   {
+    "name": "odk-importer-nginx",
+    "image": "${nginx_image_url}",
+    "cpu": 1,
+    "memory": 128,
+    "essential": true,
+    "links": [
+      "odk-importer"
+    ],
+    "portMappings": [
+      {
+        "containerPort": 80
+      }
+    ],
+    "mountPoints": [
+      {
+        "sourceVolume": "static-odk-importer",
+        "containerPath": "/var/www/static"
+      }
+    ]
+  },
+  {
     "name": "odk-importer",
     "image": "${image_url}",
     "cpu": 1,
@@ -24,26 +45,6 @@
         "containerPath": "/var/www/static"
       }
     ]
-  },
-  {
-    "name": "odk-importer-nginx",
-    "image": "${nginx_image_url}",
-    "cpu": 1,
-    "memory": 128,
-    "essential": true,
-    "links": [
-      "odk-importer"
-    ],
-    "portMappings": [
-      {
-        "containerPort": 80
-      }
-    ],
-    "mountPoints": [
-      {
-        "sourceVolume": "static-odk-importer",
-        "containerPath": "/var/www/static"
-      }
-    ]
   }
 ]
+

@@ -16,7 +16,10 @@
       { "name": "STATIC_ROOT", "value": "/var/www/static"},
       { "name": "DJANGO_USE_X_FORWARDED_PORT", "value": "${django_use_x_forwarded_port}"},
       { "name": "DJANGO_HTTP_X_FORWARDED_PROTO", "value": "${django_http_x_forwarded_proto}"},
-      { "name": "DJANGO_USE_X_FORWARDED_HOST", "value": "${django_use_x_forwarded_host}"}
+      { "name": "DJANGO_USE_X_FORWARDED_HOST", "value": "${django_use_x_forwarded_host}"},
+      { "name": "CSRF_COOKIE_DOMAIN", "value": "${domain}"},
+      { "name": "CSRF_TRUSTED_ORIGINS", "value": "${domain}"},
+      { "name": "SENTRY_DSN", "value": "${sentry_dsn}"}
     ],
     "mountPoints": [
       {

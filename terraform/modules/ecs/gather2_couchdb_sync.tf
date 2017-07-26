@@ -31,6 +31,10 @@ data "credstash_secret" "google_client_id" {
   name = "${var.project}-${var.environment}-google-client-id"
 }
 
+data "credstash_secret" "gather2_sync_sentry_dsn" {
+  name = "${var.project}-${var.environment}-sentry-dsn"
+}
+
 data "template_file" "gather2_couchdb_sync" {
   template = "${file("${path.module}/files/gather2_couchdb_sync.json")}"
 
@@ -40,9 +44,9 @@ data "template_file" "gather2_couchdb_sync" {
     couchdb_image_url = "${aws_ecr_repository.gather2_couchdb.repository_url}"
     couchdb_password = "${data.credstash_secret.database_password.value}"
     database_hostname = "${var.database_hostname}"
-    database_user = "${var.database_user}"
+    database_name = "${replace("${var.project}", "-", "_")}"
+    database_user = "${replace("${var.project}", "-", "")}"
     database_password = "${data.credstash_secret.gather2_core.value}"
-    database_name = "${var.database_name}"
     database_port = "${var.database_port}"
     django_use_x_forwarded_port = "1"
     django_http_x_forwarded_proto = "1"
@@ -50,6 +54,8 @@ data "template_file" "gather2_couchdb_sync" {
     gather2_token = "${data.credstash_secret.gather2_token.value}"
     google_client_id = "${data.credstash_secret.google_client_id.value}"
     gather2_core_url = "${replace("https://core-gather-${var.environment}.ehealthafrica.org", "-prod", "")}"
+    sentry_dsn = "${data.credstash_secret.gather2_sync_sentry_dsn.value}"
+    domain = ".${var.domain}"
   }
 }
 
@@ -67,9 +73,8 @@ resource "aws_alb" "gather2_couchdb_sync" {
 }
 
 resource "aws_route53_record" "gather2_couchdb_sync" {
-  zone_id = "${var.route53_zone_id}"
-  name    = "${replace("couchdb-sync-gather-${var.environment}", "-prod", "")}"
-
+  zone_id = "${lookup("${var.route53_zone_id}","${var.domain}")}"
+  name    = "${replace("${var.couchdb_sync_url}-${var.environment}", "-prod", "")}"
   type    = "A"
 
   alias {
@@ -80,7 +85,7 @@ resource "aws_route53_record" "gather2_couchdb_sync" {
 }
 
 resource "aws_alb_target_group" "gather2_couchdb_sync" {
-  name     = "gather2-couchdb-sync-${var.environment}"
+  name     = "${var.project}-couchdb-sync-${var.environment}"
   port     = 80
   protocol = "HTTP"
   vpc_id   = "${var.vpc_id}"
@@ -138,7 +143,7 @@ data "aws_ecs_task_definition" "gather2_couchdb_sync" {
 }
 
 resource "aws_ecs_service" "gather2_couchdb_sync" {
-  name            = "gather2-couchdb-sync"
+  name            = "${var.project}-couchdb-sync"
   cluster         = "${aws_ecs_cluster.cluster.id}"
   task_definition = "${aws_ecs_task_definition.gather2_couchdb_sync.family}:${max("${aws_ecs_task_definition.gather2_couchdb_sync.revision}", "${data.aws_ecs_task_definition.gather2_couchdb_sync.revision}")}"
   desired_count   = 1

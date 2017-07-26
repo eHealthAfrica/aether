@@ -23,8 +23,8 @@ resource "aws_alb" "gather2_odk_importer" {
 }
 
 resource "aws_route53_record" "gather2_odk_importer" {
-  zone_id = "${var.route53_zone_id}"
-  name    = "${replace("odk-importer-gather-${var.environment}", "-prod", "")}"
+  zone_id = "${lookup("${var.route53_zone_id}","${var.domain}")}"
+  name    = "${replace("${var.odk_url}-${var.environment}", "-prod", "")}"
   type    = "A"
 
   alias {
@@ -35,7 +35,7 @@ resource "aws_route53_record" "gather2_odk_importer" {
 }
 
 resource "aws_alb_target_group" "gather2_odk_importer" {
-  name     = "gather2-odk-${var.environment}"
+  name     = "${var.project}-odk-${var.environment}"
   port     = 80
   protocol = "HTTP"
   vpc_id   = "${var.vpc_id}"
@@ -73,6 +73,10 @@ data "credstash_secret" "gather2_odk_importer" {
   name = "${var.project}-${var.environment}-database-password"
 }
 
+data "credstash_secret" "gather2_odk_sentry_dsn" {
+  name = "${var.project}-${var.environment}-sentry-dsn"
+}
+
 data "template_file" "gather2_odk_importer" {
   template = "${file("${path.module}/files/gather2_odk_importer_task_definition.json")}"
 
@@ -82,14 +86,16 @@ data "template_file" "gather2_odk_importer" {
     nginx_container_name = "${var.gather2_odk_importer_nginx_container_name}"
     host_port = "${var.gather2_odk_importer_nginx_host_port}",
     nginx_image_url = "${aws_ecr_repository.gather2_odk_importer_nginx.repository_url}:latest"
+    database_name = "${replace("${var.project}", "-", "_")}"
+    database_user = "${replace("${var.project}", "-", "")}"
     database_hostname = "${var.database_hostname}"
-    database_user = "${var.database_user}"
     database_password = "${data.credstash_secret.gather2_odk_importer.value}"
-    database_name = "${var.database_name}"
     database_port = "${var.database_port}"
     django_use_x_forwarded_port = "1"
     django_http_x_forwarded_proto = "1"
     django_use_x_forwarded_host = "1"
+    domain = ".${var.domain}"
+    sentry_dsn = "${data.credstash_secret.gather2_odk_sentry_dsn.value}"
   }
 }
 
@@ -107,7 +113,7 @@ data "aws_ecs_task_definition" "gather2_odk_importer" {
 }
 
 resource "aws_ecs_service" "gather2_odk_importer" {
-  name            = "gather2-odk-importer"
+  name            = "${var.project}-odk-importer"
   cluster         = "${aws_ecs_cluster.cluster.id}"
   task_definition = "${aws_ecs_task_definition.gather2_odk_importer.family}:${max("${aws_ecs_task_definition.gather2_odk_importer.revision}", "${data.aws_ecs_task_definition.gather2_odk_importer.revision}")}"
   desired_count   = 1

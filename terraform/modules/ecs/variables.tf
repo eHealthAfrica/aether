@@ -1,13 +1,24 @@
 variable "aws_region" { default = "eu-west-1" }
-variable "domain" { default = "ehealth_org" }
+variable "domain" {}
 variable "environment" {}
-variable "database_name" { default="gather2" }
-variable "database_user" { default="gather2" }
 variable "database_hostname" {}
 variable "database_port" { default="5432" }
 variable "internal_sg_id" {}
 variable "iam_role_id" {}
-variable "route53_zone_id" { default="Z1B5Q25BUE3TXB" }
+
+# URL's
+variable "core_url" {}
+variable "odk_url" {}
+variable "couchdb_sync_url" {}
+
+variable "route53_zone_id" {
+  type = "map"
+  default = {
+    ehealthafrica.org = "Z1B5Q25BUE3TXB"
+    gather2.org = "ZUBAIJA96RBHB"
+  }
+}
+
 variable "project" {}
 
 // gather2 core variables
@@ -29,7 +40,9 @@ variable "deploy_branch" {}
 variable "ssl_certificate_id" {
   type = "map"
   default = {
-    ehealth_org = "arn:aws:acm:eu-west-1:387526361725:certificate/b093a099-e453-4290-90b4-8a97f43174ec"
+    ehealthafrica.org = "arn:aws:acm:eu-west-1:387526361725:certificate/b093a099-e453-4290-90b4-8a97f43174ec"
+    gather2.org = "arn:aws:acm:eu-west-1:387526361725:certificate/fbaf389d-f290-42ab-8902-0c051fa922e2"
+
   }
 }
 

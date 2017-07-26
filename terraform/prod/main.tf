@@ -20,6 +20,9 @@ module "ecs" {
   iam_role_id = "${module.autoscaling.aws_iam_role_ecs_service}"
   database_hostname = "${module.rds.database_hostname}"
   deploy_branch = "latest"
+  core_url = "core-gather"
+  odk_url = "odk-importer-gather"
+  couchdb_sync_url = "couchdb-sync-gather
 }
 
 # // Creates ECS cluster and SG's

@@ -27,11 +27,12 @@ module "ecs" {
   internal_sg_id = "${module.autoscaling.internal_sg_id}"
   iam_role_id = "${module.autoscaling.aws_iam_role_ecs_service}"
   database_hostname = "${module.rds.database_hostname}"
-  deploy_branch = "develop"
-  core_url = "core-gather"
-  odk_url = "odk-importer-gather"
-  couchdb_sync_url = "couchdb-sync-gather"
-  domain = "ehealthafrica.org"
+  deploy_branch = "latest"
+  domain = "gather2_org"
+  core_url = "${var.core_url}"
+  odk_url = "${var.odk_url}"
+  database_name = "${replace("${var.project}", "-", "_")}"
+  database_user = "${replace("${var.project}", "-", "")}"
 }
 
 # // Creates ECS cluster and SG's
