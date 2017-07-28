@@ -1,27 +1,32 @@
 import logging
 import os
 
-logger = logging.getLogger(__name__)
 
-
-SECRET_KEY = 'n)&_bvxfe$g)gfa4b-uy&aqt$vx!w7jw%fyi9mc8#onh2^$m=='
-
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
-CSRF_COOKIE_DOMAIN = os.environ.get('CSRF_COOKIE_DOMAIN', '.ehealthafrica.org')
-CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', CSRF_COOKIE_DOMAIN).split(',')
-
-
-CAS_SERVER_URL = os.environ.get('CAS_SERVER_URL', 'https://ums-dev.ehealthafrica.org')
-HOSTNAME = os.environ.get('HOSTNAME', 'localhost')
-
-CORS_ORIGIN_ALLOW_ALL = True
-
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DEBUG = (os.environ.get('DEBUG', '').lower() == 'true')
+# Core Configuration
+# ------------------------------------------------------------------------------
 
 ROOT_URLCONF = 'gather2.urls'
 WSGI_APPLICATION = 'gather2.wsgi.application'
+
+ADD_REVERSION_ADMIN = True
+
+
+# Common Configuration
+# ------------------------------------------------------------------------------
+
+logger = logging.getLogger(__name__)
+
+DEBUG = (os.environ.get('DEBUG', '').lower() == 'true')
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'UTC'
+USE_I18N = True
+USE_L10N = True
+USE_TZ = True
+
+STATIC_URL = '/static/'
+STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/static/')
 
 
 INSTALLED_APPS = [
@@ -47,12 +52,12 @@ INSTALLED_APPS = [
     'core',  # this enables signals
 ]
 
-ADD_REVERSION_ADMIN = True
 
 MIDDLEWARE_CLASSES = [
-    'corsheaders.middleware.CorsMiddleware',
+    'raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -79,14 +84,24 @@ TEMPLATES = [
 ]
 
 
-AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',  # this is default
-    'ums_client.backends.UMSRoleBackend'
-)
+# Database Configuration
+# ------------------------------------------------------------------------------
 
-CAS_VERSION = 3
-CAS_LOGOUT_COMPLETELY = True
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.environ.get('RDS_DB_NAME', 'gather2'),
+        'PASSWORD': os.environ.get('RDS_PASSWORD', ''),
+        'USER': os.environ.get('RDS_USERNAME', 'postgres'),
+        'HOST': os.environ.get('RDS_HOSTNAME', 'db'),
+        'PORT': os.environ.get('RDS_PORT', '5432'),
+        'TESTING': {'CHARSET': 'UTF8'},
+    }
+}
 
+
+# REST Framework Configuration
+# ------------------------------------------------------------------------------
 
 REST_FRAMEWORK = {
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
@@ -114,6 +129,15 @@ REST_FRAMEWORK = {
     )
 }
 
+
+# Authentication Configuration
+# ------------------------------------------------------------------------------
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',  # this is default
+    'ums_client.backends.UMSRoleBackend'
+)
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -129,44 +153,32 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
-USE_I18N = True
-USE_L10N = True
-USE_TZ = True
+CAS_VERSION = 3
+CAS_LOGOUT_COMPLETELY = True
+CAS_SERVER_URL = os.environ.get('CAS_SERVER_URL', 'https://ums-dev.ehealthafrica.org')
 
-STATIC_URL = '/static/'
-STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/static/')
-
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('RDS_DB_NAME', 'gather2'),
-        'PASSWORD': os.environ.get('RDS_PASSWORD', ''),
-        'USER': os.environ.get('RDS_USERNAME', 'postgres'),
-        'HOST': os.environ.get('RDS_HOSTNAME', 'db'),
-        'PORT': os.environ.get('RDS_PORT', '5432'),
-        'TEST': {'CHARSET': 'UTF8'},
-    }
-}
-
-BROKER_URL = 'django://'
 
 # Sentry Configuration
 # ------------------------------------------------------------------------------
-# See https://docs.sentry.io/clients/python/integrations/django/
-
-MIDDLEWARE_CLASSES = [
-    'raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware',
-] + MIDDLEWARE_CLASSES
 
 SENTRY_DSN = os.environ.get('SENTRY_DSN')
 SENTRY_CLIENT = os.environ.get(
     'DJANGO_SENTRY_CLIENT',
-    'raven.contrib.django.raven_compat.DjangoClient')
+    'raven.contrib.django.raven_compat.DjangoClient'
+)
 SENTRY_CELERY_LOGLEVEL = logging.INFO
 
+
+# Security Configuration
+# ------------------------------------------------------------------------------
+
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+CSRF_COOKIE_DOMAIN = os.environ.get('CSRF_COOKIE_DOMAIN', '.gather2.org')
+CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', CSRF_COOKIE_DOMAIN).split(',')
+SESSION_COOKIE_DOMAIN = CSRF_COOKIE_DOMAIN
 
 if os.environ.get('DJANGO_USE_X_FORWARDED_HOST', False):
     USE_X_FORWARDED_HOST = True
@@ -178,7 +190,10 @@ if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
+# Local Configuration
+# ------------------------------------------------------------------------------
 # This scriptlet allows you to include custom settings in your local environment
+
 try:
     from local_settings import *  # noqa
 except ImportError as e:

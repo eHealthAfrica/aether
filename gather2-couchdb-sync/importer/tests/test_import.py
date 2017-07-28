@@ -9,7 +9,10 @@ from django.conf import settings
 from api.couchdb_helpers import create_db, generate_password as random_string
 
 device_id = 'test_import-from-couch'
-auth_headers = {'Authorization': 'Token {}'.format(settings.GATHER_CORE_TOKEN), 'Content-Type': 'application/json'}
+auth_headers = {
+    'Authorization': 'Token {}'.format(settings.GATHER_CORE_TOKEN),
+    'Content-Type': 'application/json',
+}
 
 
 def get_gather_docs():
@@ -76,7 +79,11 @@ class ImportTestCase(TestCase):
         data = get_gather_docs()
         posted = data[0]  # Gather responds with the latest post first
 
-        self.assertEqual(posted['survey'], self.survey_id, 'Survey posted ot the correct id, identified via survey name')
+        self.assertEqual(
+            posted['survey'],
+            self.survey_id,
+            'Survey posted to the correct id, identified via survey name'
+        )
         for key in ['_id', 'firstName', 'lastName']:
             self.assertEqual(posted['data'].get(key), example_doc.get(key), 'posted example doc')
 

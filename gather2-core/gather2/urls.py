@@ -3,7 +3,6 @@ from django.conf.urls import include, url
 from django.contrib import admin
 
 from core import views
-
 from .routers import TemplateRouter
 
 router = TemplateRouter(template_name='index.html')

@@ -1,11 +1,11 @@
-#############################################################
-#                                                           #
-#                    Frozen requirements                    #
-#                                                           #
-#                     DO NOT CHANGE !!!                     #
-#                                                           #
-# To update this first update 'primary-requirements.txt'    #
-# then run './entrypoint.sh pip_freeze'                     #
-#                                                           #
-#############################################################
+################################################################################
+#                                                                              #
+#                              Frozen requirements                             #
+#                                                                              #
+#                               DO NOT CHANGE !!!                              #
+#                                                                              #
+# To update this first update 'primary-requirements.txt'                       #
+# then run 'docker-compose run couchdb-sync pip_freeze'                        #
+#                                                                              #
+################################################################################
 

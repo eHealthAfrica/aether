@@ -1,12 +1,12 @@
-#############################################################
-#                                                           #
-#                   Primary requirements                    #
-#                                                           #
-#                       CHANGE ME !!!                       #
-#                                                           #
-# Update me and then run './entrypoint.sh pip_freeze'       #
-#                                                           #
-#############################################################
+################################################################################
+#                                                                              #
+#                             Primary requirements                             #
+#                                                                              #
+#                                 CHANGE ME !!!                                #
+#                                                                              #
+# Update me and then run 'docker-compose run couchdb-sync pip_freeze'          #
+#                                                                              #
+################################################################################
 
 coverage
 django

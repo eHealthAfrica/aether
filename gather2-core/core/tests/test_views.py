@@ -107,10 +107,8 @@ class ViewsTest(TransactionTestCase):
             # Is this a url?
             if obj.startswith('http://') and (obj not in seen):
                 seen.append(obj)
-                print(obj)
                 response = self.client.get(obj)
-                self.assertFalse(
-                    status.is_server_error(response.status_code), response.json())
+                self.assertFalse(status.is_server_error(response.status_code), response.json())
                 self.crawl(response.json(), seen)
 
     @given(SurveyGoalData)

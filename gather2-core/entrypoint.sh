@@ -16,6 +16,7 @@ show_help() {
     setupproddb   : create/migrate database for production
     setuplocaldb  : create/migrate database for development (creates superuser and token)
 
+    test          : run tests
     test_lint     : run flake8 tests
     test_coverage : run tests with coverage output
 
@@ -37,7 +38,7 @@ setup_db() {
     if psql -c "" $RDS_DB_NAME; then
       echo "$RDS_DB_NAME database exists!"
     else
-      createdb -e $RDS_DB_NAME -e UTF8
+      createdb -e $RDS_DB_NAME -e ENCODING=UTF8
       echo "$RDS_DB_NAME database created!"
     fi
 
@@ -47,9 +48,35 @@ setup_db() {
 
 setup_initial_data() {
     # create initial superuser and its token
-    /var/env/bin/python manage.py loaddata /code/conf/extras/users_initial.json
-    /var/env/bin/python manage.py loaddata /code/conf/extras/token_initial.json
+    /var/env/bin/python manage.py loaddata /code/conf/extras/initial.json
 }
+
+test_flake8() {
+    /var/env/bin/python -m flake8 /code/. --config=/code/conf/extras/flake8.cfg
+}
+
+test_coverage() {
+    source /var/env/bin/activate
+    export RCFILE=/code/conf/extras/coverage.rc
+    export TESTING=true
+
+    coverage erase
+    coverage run    --rcfile="$RCFILE" /code/manage.py test "${@:2}"
+    coverage report --rcfile="$RCFILE"
+
+    cat /code/conf/extras/good_job.txt
+}
+
+
+# --------------------------------
+# set DJANGO_SECRET_KEY if needed
+if [ "$DJANGO_SECRET_KEY" = "" ]
+then
+   export DJANGO_SECRET_KEY=$(
+        cat /dev/urandom | tr -dc 'a-zA-Z0-9-_!@#$%^&*()_+{}|:<>?=' | fold -w 64 | head -n 4
+    )
+fi
+# --------------------------------
 
 
 case "$1" in
@@ -83,19 +110,17 @@ case "$1" in
         setup_db
     ;;
 
+    test)
+        test_flake8
+        test_coverage
+    ;;
+
     test_lint)
-        /var/env/bin/python -m flake8 /code/. --config=/code/conf/extras/flake8.cfg
+        test_flake8
     ;;
 
     test_coverage)
-        source /var/env/bin/activate
-        export RCFILE=/code/conf/extras/coverage.rc
-
-        coverage erase
-        coverage run      --rcfile="$RCFILE" /code/manage.py test "${@:2}"
-        coverage report   --rcfile="$RCFILE"
-
-        cat /code/conf/extras/good_job.txt
+        test_coverage
     ;;
 
     start )

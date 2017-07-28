@@ -60,7 +60,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True,primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=15)),
-                ('schema', django.contrib.postgres.fields.jsonb.JSONField(default='{}')),
+                ('schema', django.contrib.postgres.fields.jsonb.JSONField(blank=True, default='{}')),
                 ('created', models.DateTimeField(auto_now_add=True, db_index=True)),
                 ('created_by', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='surveys', to=settings.AUTH_USER_MODEL)),
             ],

@@ -1,11 +1,3 @@
-# Created by https://www.gitignore.io/api/python,ipythonnotebook,django,vim
-
-importer_home
-gather_home
-couchdb_home
-static_root
-media_root
-
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
