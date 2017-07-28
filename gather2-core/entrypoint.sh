@@ -37,7 +37,7 @@ setup_db() {
     if psql -c "" $RDS_DB_NAME; then
       echo "$RDS_DB_NAME database exists!"
     else
-      createdb -e $RDS_DB_NAME
+      createdb -e $RDS_DB_NAME -e UTF8
       echo "$RDS_DB_NAME database created!"
     fi
 

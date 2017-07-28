@@ -20,8 +20,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='MapFunction',
             fields=[
-                ('id', models.AutoField(auto_created=True,
-                                        primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('code', models.TextField()),
                 ('created', models.DateTimeField(auto_now_add=True, db_index=True)),
             ],
@@ -29,69 +28,56 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='MapResult',
             fields=[
-                ('id', models.AutoField(auto_created=True,
-                                        primary_key=True, serialize=False, verbose_name='ID')),
-                ('output', django.contrib.postgres.fields.jsonb.JSONField(
-                    blank=True, default='{}', editable=False)),
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('output', django.contrib.postgres.fields.jsonb.JSONField(blank=True, default='{}', editable=False)),
                 ('error', models.TextField(editable=False)),
                 ('created', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('map_function', models.ForeignKey(
-                    on_delete=django.db.models.deletion.CASCADE, to='core.MapFunction')),
+                ('map_function', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='map_results', to='core.MapFunction')),
             ],
         ),
         migrations.CreateModel(
             name='ReduceFunction',
             fields=[
-                ('id', models.AutoField(auto_created=True,
-                                        primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('code', models.TextField()),
-                ('output', django.contrib.postgres.fields.jsonb.JSONField(
-                    default='{}', editable=False)),
+                ('output', django.contrib.postgres.fields.jsonb.JSONField(default='{}', editable=False)),
                 ('error', models.TextField(blank=True, default='', editable=False)),
                 ('created', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('map_function', models.ForeignKey(
-                    on_delete=django.db.models.deletion.CASCADE, to='core.MapFunction')),
+                ('map_function', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reduce_functions', to='core.MapFunction')),
             ],
         ),
         migrations.CreateModel(
             name='Response',
             fields=[
-                ('id', models.AutoField(auto_created=True,
-                                        primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('data', django.contrib.postgres.fields.jsonb.JSONField()),
                 ('created', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('created_by', models.ForeignKey(
-                    on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('created_by', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='responses', to=settings.AUTH_USER_MODEL)),
             ],
         ),
         migrations.CreateModel(
             name='Survey',
             fields=[
-                ('id', models.AutoField(auto_created=True,
-                                        primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=15)),
                 ('schema', django.contrib.postgres.fields.jsonb.JSONField(default='{}')),
                 ('created', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('created_by', models.ForeignKey(
-                    on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('created_by', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='surveys', to=settings.AUTH_USER_MODEL)),
             ],
         ),
         migrations.AddField(
             model_name='response',
             name='survey',
-            field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, to='core.Survey'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='responses', to='core.Survey'),
         ),
         migrations.AddField(
             model_name='mapresult',
             name='response',
-            field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, to='core.Response'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='map_results', to='core.Response'),
         ),
         migrations.AddField(
             model_name='mapfunction',
             name='survey',
-            field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, to='core.Survey'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='map_functions', to='core.Survey'),
         ),
     ]

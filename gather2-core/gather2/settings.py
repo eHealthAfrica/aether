@@ -35,12 +35,13 @@ INSTALLED_APPS = [
     'django_cas_ng',
     'django_extensions',
     'django_filters',
+    'raven.contrib.django.raven_compat',
     'rest_framework',
     'rest_framework.authtoken',
+    'rest_framework_filters',
     'reversion',
     'reversion_compare',
     'ums_client',
-    'raven.contrib.django.raven_compat',
 
     # gather2 apps
     'core',  # this enables signals
@@ -102,13 +103,14 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.CursorPagination',
     'PAGE_SIZE': 30,
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.TokenAuthentication',
     ),
     'DEFAULT_FILTER_BACKENDS': (
         'rest_framework_filters.backends.DjangoFilterBackend',
         'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
     )
 }
 
@@ -145,6 +147,7 @@ DATABASES = {
         'USER': os.environ.get('RDS_USERNAME', 'postgres'),
         'HOST': os.environ.get('RDS_HOSTNAME', 'db'),
         'PORT': os.environ.get('RDS_PORT', '5432'),
+        'TEST': {'CHARSET': 'UTF8'},
     }
 }
 
@@ -159,7 +162,9 @@ MIDDLEWARE_CLASSES = [
 ] + MIDDLEWARE_CLASSES
 
 SENTRY_DSN = os.environ.get('SENTRY_DSN')
-SENTRY_CLIENT = os.environ.get('DJANGO_SENTRY_CLIENT', 'raven.contrib.django.raven_compat.DjangoClient')
+SENTRY_CLIENT = os.environ.get(
+    'DJANGO_SENTRY_CLIENT',
+    'raven.contrib.django.raven_compat.DjangoClient')
 SENTRY_CELERY_LOGLEVEL = logging.INFO
 
 

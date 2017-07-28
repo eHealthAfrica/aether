@@ -1,6 +1,5 @@
-from django.conf.urls import include, url
 import django_cas_ng.views
-
+from django.conf.urls import include, url
 from django.contrib import admin
 
 from core import views
@@ -31,16 +30,14 @@ router = TemplateRouter(template_name='index.html')
 )
 
 (
-    router.register('map-functions', views.MapFunctionViewSet,
-                    base_name='map_function')
+    router.register('map-functions', views.MapFunctionViewSet, base_name='map_function')
     .register('map-results', views.MapResultViewSet,
               base_name='map_function_result',
               parents_query_lookups=['map_function'])
 )
 
 (
-    router.register('map-functions', views.MapFunctionViewSet,
-                    base_name='map_function')
+    router.register('map-functions', views.MapFunctionViewSet, base_name='map_function')
     .register('reduce-functions', views.ReduceFunctionViewSet,
               base_name='map_reduce_function',
               parents_query_lookups=['map_function'])
@@ -48,17 +45,16 @@ router = TemplateRouter(template_name='index.html')
 
 
 router.register('map-results', views.MapResultViewSet, base_name='map_results')
-router.register('reduce-functions', views.ReduceFunctionViewSet,
-                base_name='reduce_function')
+router.register('reduce-functions', views.ReduceFunctionViewSet, base_name='reduce_function')
 router.register('responses', views.ResponseViewSet, base_name='response')
 router.register('attachments', views.AttachmentViewSet, base_name='attachment')
 
 urlpatterns = [
-    url(r'^v1/', include(router.urls, namespace='v1')),
     url(r'', include(router.urls)),
-    url(r'^api-auth/', include('rest_framework.urls',
-                               namespace='rest_framework')),
+    url(r'^v1/', include(router.urls, namespace='v1')),
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^ums_login/$', django_cas_ng.views.login, name="cas_login"),
-    url(r'^ums_logout/$', django_cas_ng.views.logout, name="cas_logout"),
+    url(r'^accounts/login/$', django_cas_ng.views.login, name="cas_login"),
+    url(r'^accounts/logout/$', django_cas_ng.views.logout, name="cas_logout"),
 ]

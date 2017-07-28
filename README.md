@@ -50,9 +50,9 @@ Gather2 Core.
 If a valid `GATHER_CORE_TOKEN` and `GATHER_CORE_URL` combination is not set,
 the server will still start, but ODK Collection submissions will fail.
 
-This also applies for `gather2-couchdb-sync`. 
+This also applies for `gather2-couchdb-sync`.
 
-In the case of `gather2-couchdb-sync` also a valid `GOOGLE_CLIENT_ID` 
+In the case of `gather2-couchdb-sync` also a valid `GOOGLE_CLIENT_ID`
 environment variable is necessary to verify the device credentials.
 
 Infrastructure deployment is done with Terraform, which configuration

@@ -1,108 +1,101 @@
 # encoding: utf-8
-import ast
 import logging
-import os
-import subprocess
-import tempfile
 
 from django.conf import settings
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 
+from .utils import json_prettified, code_prettified
+
 logger = logging.getLogger(__name__)
-
-
-class Attachment(models.Model):
-    attachment_file = models.FileField('attachment')
-    response = models.ForeignKey('Response', related_name='attachments')
-    name = models.CharField(max_length=50)
-    created = models.DateTimeField(auto_now_add=True, db_index=True)
+UserModel = settings.AUTH_USER_MODEL
 
 
 class Survey(models.Model):
     name = models.CharField(max_length=50)
-    # TODO: Make this readonly
-    schema = JSONField(blank=False, null=False, default="{}")
+    schema = JSONField(blank=True, null=False, default='{}')
     created = models.DateTimeField(auto_now_add=True, db_index=True)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, db_index=True)
+    created_by = models.ForeignKey(UserModel, db_index=True, related_name='surveys')
+
+    @property
+    def schema_prettified(self):
+        return json_prettified(self.schema)
 
     def __str__(self):
         return self.name
 
-    def get_absolute_url(self):
-        from django.core.urlresolvers import reverse
-        return reverse('survey-detail', args=[str(self.id)])
-
 
 class Response(models.Model):
-    survey = models.ForeignKey(Survey)
+    survey = models.ForeignKey(Survey, related_name='responses')
+
     data = JSONField(blank=False, null=False)
     created = models.DateTimeField(auto_now_add=True, db_index=True)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, db_index=True)
+    created_by = models.ForeignKey(UserModel, db_index=True, related_name='responses')
+
+    @property
+    def data_prettified(self):
+        return json_prettified(self.data)
+
+    def __str__(self):
+        return '{} - {}'.format(str(self.survey), self.id)
+
+
+class Attachment(models.Model):
+    response = models.ForeignKey(Response, related_name='attachments')
+
+    name = models.CharField(max_length=50)
+    attachment_file = models.FileField('attachment')
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    def __str__(self):  # pragma: no cover
+        return '{} - {}'.format(str(self.response), self.name)
 
 
 class MapFunction(models.Model):
+    survey = models.ForeignKey(Survey, related_name='map_functions')
+
     code = models.TextField()
-    survey = models.ForeignKey(Survey)
     created = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    @property
+    def code_prettified(self):
+        return code_prettified(self.code)
+
+    def __str__(self):
+        return '{} - {}'.format(str(self.survey), self.id)
 
 
 class MapResult(models.Model):
-    map_function = models.ForeignKey(MapFunction)
-    response = models.ForeignKey(Response)
-    output = JSONField(blank=True, null=False, default="{}", editable=False)
+    response = models.ForeignKey(Response, related_name='map_results')
+    map_function = models.ForeignKey(MapFunction, related_name='map_results')
+
+    output = JSONField(blank=True, null=False, default='{}', editable=False)
     error = models.TextField(editable=False)
     created = models.DateTimeField(auto_now_add=True, db_index=True)
 
+    @property
+    def output_prettified(self):
+        return json_prettified(self.output)
+
+    def __str__(self):
+        return '{} - {}'.format(str(self.response), self.id)
+
 
 class ReduceFunction(models.Model):
+    map_function = models.ForeignKey(MapFunction, related_name='reduce_functions')
+
     code = models.TextField()
-    output = JSONField(blank=False, null=False, default="{}", editable=False)
-    error = models.TextField(blank=True, default="", editable=False)
-    map_function = models.ForeignKey(MapFunction)
+    output = JSONField(blank=False, null=False, default='{}', editable=False)
+    error = models.TextField(blank=True, default='', editable=False)
     created = models.DateTimeField(auto_now_add=True, db_index=True)
 
+    @property
+    def code_prettified(self):
+        return code_prettified(self.code)
 
-def calculate(code, data):
-    """
-    This takes some python2 code and the data to be applied to it. Returns
-    python literals as a list or the raw output.
-    """
-    # TODO: dont hardcode the tmp dir
-    # TODO: Set up a ramdisk in tmp and use that
-    out = []
-    with tempfile.TemporaryDirectory(dir='/tmp/') as tmpdirname:
-        logger.info('created temporary directory', tmpdirname)
-        with tempfile.NamedTemporaryFile(dir=tmpdirname, suffix='.py') as fp:
-            # Maybe this should be moved to use stdin in the `communicate`
-            # and not written to file.
-            sandbox_code = '''
-data={data}
+    @property
+    def output_prettified(self):
+        return json_prettified(self.output)
 
-{code}
-'''.format(data=data, code=code)
-            # Write the sandbox code to the tmp file
-            fp.write(bytes(sandbox_code, 'UTF-8'))
-            # Go back to the beginning so, this may not be needed
-            fp.seek(0)
-            # Run the code in the sandbox
-            raw_out, raw_err = subprocess.Popen(["pypy-sandbox", "--timeout", "5", "--tmp", tmpdirname, os.path.basename(fp.name)],
-                                                stdout=subprocess.PIPE,
-                                                stderr=subprocess.PIPE
-                                                ).communicate()
-            # Strip off the "site" import error
-            err = '\n'.join(
-                (raw_err.decode("utf-8")).splitlines()[1:]) or None
-
-            try:
-                if raw_out:
-                    # See if what was returned was a python literal, this is
-                    # safe
-                    for line in raw_out.decode("utf-8").splitlines():
-                        out.append(ast.literal_eval(line.strip()))
-                else:
-                    out.append(None)
-            except (ValueError, SyntaxError) as e:
-                logger.info(e)
-                out.append(raw_out.decode("utf-8").strip())
-    return out, err
+    def __str__(self):
+        return '{} - {}'.format(str(self.map_function), self.id)

@@ -1,14 +1,13 @@
-#############################################################
-#                                                           #
-#                   Primary requirements                    #
-#                                                           #
-#                       CHANGE ME !!!                       #
-#                                                           #
-# Update me and then run './entrypoint.sh pip_freeze'       #
-#                                                           #
-#############################################################
+################################################################################
+#                                                                              #
+#                             Primary requirements                             #
+#                                                                              #
+#                                 CHANGE ME !!!                                #
+#                                                                              #
+# Update me and then run 'docker-compose run core pip_freeze'                  #
+#                                                                              #
+################################################################################
 
-autopep8
 coverage
 django-attachments
 django-cas-ng
@@ -17,7 +16,7 @@ django-extensions
 django-filter
 django-reversion-compare
 django-ums-client
-django==1.10.7
+django
 djangorestframework
 djangorestframework-filters
 drf-extensions
@@ -27,7 +26,7 @@ ipdb
 jsonschema
 markdown
 mock
-psycopg2==2.6.2
+psycopg2
 requests
 uwsgi
 raven
