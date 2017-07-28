@@ -1,11 +1,11 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.urls import reverse
 
 from ..models import XForm
 
 
-class ApiAdminTests(TestCase):
+class ApiAdminTests(TransactionTestCase):
 
     def setUp(self):
         username = 'test'

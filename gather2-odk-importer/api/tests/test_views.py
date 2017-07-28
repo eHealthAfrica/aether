@@ -1,6 +1,6 @@
 import base64
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.urls import reverse
 
 from rest_framework import status
@@ -39,7 +39,7 @@ xml_data = '''
 '''
 
 
-class ApiViewsTests(TestCase):
+class ApiViewsTests(TransactionTestCase):
 
     def setUp(self):
         username = 'test'

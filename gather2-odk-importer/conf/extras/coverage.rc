@@ -10,4 +10,4 @@ omit = *migrations*, *tests*
 [report]
 omit = *migrations*, *tests*
 show_missing = true
-fail_under = 50
+fail_under = 100

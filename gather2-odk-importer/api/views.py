@@ -104,6 +104,7 @@ def submission(request):
                     obj[k] = parser.parse(v).isoformat()
                 if _type == 'geopoint':
                     lat, lng, altitude, accuracy = v.split()
+                    # {"coordinates": [<<lat>>, <<lng>>], "type": "Point"}
                     obj[k] = Point((float(lat), float(lng)))
 
     # first of all check if the connection is possible

@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
-from django.test import TestCase
+from django.test import TransactionTestCase
 
 from ..models import XForm, validate_xmldict
 
@@ -37,7 +37,7 @@ xml_data = '''
 '''
 
 
-class ApiModelsTests(TestCase):
+class ApiModelsTests(TransactionTestCase):
 
     def test__validate_xmldict(self):
         self.assertRaises(
