@@ -9,6 +9,7 @@
 ################################################################################
 
 coverage
+django
 django-attachments
 django-cas-ng
 django-cors-headers
@@ -16,7 +17,6 @@ django-extensions
 django-filter
 django-reversion-compare
 django-ums-client
-django
 djangorestframework
 djangorestframework-filters
 drf-extensions
@@ -27,6 +27,6 @@ jsonschema
 markdown
 mock
 psycopg2
+raven
 requests
 uwsgi
-raven
