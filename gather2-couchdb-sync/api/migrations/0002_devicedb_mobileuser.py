@@ -16,6 +16,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='devicedb',
             name='mobileuser',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='api.MobileUser'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='api.MobileUser', related_name='devices'),
         ),
     ]

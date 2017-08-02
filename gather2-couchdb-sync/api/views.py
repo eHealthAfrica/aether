@@ -10,12 +10,12 @@ from rest_framework.decorators import (
 )
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.response import Response
-import logging
+
 
 from .couchdb_helpers import create_db, create_or_update_user
 from .models import MobileUser, DeviceDB
 
-logger = logging.getLogger(__name__)
+from sync.settings import logger
 
 
 # Sync credentials endpoint

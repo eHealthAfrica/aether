@@ -73,11 +73,6 @@ class ApiViewsTests(TransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.content.decode(), xml_data)
 
-    # def test__xform_manifest__none(self):
-    #     url = reverse('xform_manifest', kwargs={'id_string': 'none'})
-    #     response = self.client.get(url, **self.headers)
-    #     self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
     def test__xform_manifest(self):
         instance = XForm.objects.create(
             gather_core_survey_id=1,

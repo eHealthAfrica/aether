@@ -55,3 +55,8 @@ class UtilsTests(TestCase):
         d4 = utils.fetch_db_docs(self.test_db, d3['last_seq'])
         self.assertEqual(d4['last_seq'], d3['last_seq'], msg='last seq not changed')
         self.assertEqual(len(d4['docs']), 0, msg='No docs changed since last seq')
+
+    def test_fetch_dbs_info(self):
+        dbs = utils.fetch_dbs_info()
+        self.assertNotEqual(dbs, None, 'fetch_dbs_info method works')
+        self.assertTrue(self.test_db in dbs, 'test db is in databases info')

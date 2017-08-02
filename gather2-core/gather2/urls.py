@@ -54,6 +54,6 @@ urlpatterns = [
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^accounts/login/$', django_cas_ng.views.login, name="cas_login"),
-    url(r'^accounts/logout/$', django_cas_ng.views.logout, name="cas_logout"),
+    url(r'^accounts/login/$', django_cas_ng.views.login, name='cas_login'),
+    url(r'^accounts/logout/$', django_cas_ng.views.logout, name='cas_logout'),
 ]

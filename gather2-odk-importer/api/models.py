@@ -114,7 +114,7 @@ class XForm(models.Model):
 
     @property
     def gather_core_url(self):
-        return core_utils.get_survey_url(
+        return core_utils.get_survey_responses_url(
             survey_id=self.gather_core_survey_id,
         )
 

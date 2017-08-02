@@ -18,10 +18,18 @@ GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
 # Common Configuration
 # ------------------------------------------------------------------------------
 
-logger = logging.getLogger(__name__)
-
 DEBUG = (os.environ.get('DEBUG', '').lower() == 'true')
+TESTING = (os.environ.get('TESTING', '').lower() == 'true')
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+if DEBUG:  # pragma: no cover
+    logger.setLevel(logging.DEBUG)
+if TESTING:  # pragma: no cover
+    logger.setLevel(logging.CRITICAL)
+
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -31,6 +39,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/static/')
+MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/tmp/')
 
 
 INSTALLED_APPS = (
@@ -105,6 +114,7 @@ DATABASES = {
 COUCHDB_URL = os.environ.get('COUCHDB_URL', 'http://couchdb:5984')
 COUCHDB_USER = os.environ.get('COUCHDB_USER', None)
 COUCHDB_PASSWORD = os.environ.get('COUCHDB_PASSWORD', None)
+COUCHDB_DIR = './couchdb'
 
 REDIS_HOST = os.environ.get('REDIS_HOST', 'redis')
 REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
@@ -158,50 +168,6 @@ SENTRY_CLIENT = os.environ.get(
 SENTRY_CELERY_LOGLEVEL = logging.INFO
 
 
-# Check possible connection with CORE
-def test_gather_core_connection():
-    import requests
-
-    fail_action = 'syncing data to core will not work'
-
-    if GATHER_CORE_URL and GATHER_CORE_TOKEN:
-        try:
-            # check that the server is up
-            h = requests.head(GATHER_CORE_URL)
-            assert h.status_code == 200
-            logger.info('GATHER_CORE_URL ({}) is up and responding!'.format(GATHER_CORE_URL))
-            try:
-                # check that the token is valid
-                auth_token = {'Authorization': 'Token {}'.format(GATHER_CORE_TOKEN)}
-                g = requests.get(GATHER_CORE_URL + '/surveys.json', headers=auth_token)
-                assert g.status_code == 200, g.content
-                logger.info('GATHER_CORE_TOKEN is valid!')
-
-                return  # it's possible to connect with core
-
-            except Exception as eg:
-                logger.exception(
-                    'GATHER_CORE_TOKEN is not valid for GATHER_CORE_URL ({}), {}'.format(
-                        GATHER_CORE_URL, fail_action))
-        except Exception as eh:
-            logger.warning('GATHER_CORE_URL ({}) is not available, {}.'.format(
-                GATHER_CORE_URL, fail_action))
-    else:
-        logger.warning(
-            'GATHER_CORE_URL and/or GATHER_CORE_TOKEN are not set, {}.'.format(fail_action))
-
-    # it's not possible to connect with core
-    raise RuntimeError('Cannot connect to {}'.format(GATHER_CORE_URL))
-
-
-GATHER_CORE_URL = os.environ.get('GATHER_CORE_URL')
-GATHER_CORE_TOKEN = os.environ.get('GATHER_CORE_TOKEN')
-try:
-    test_gather_core_connection()
-except RuntimeError as re:
-    logger.warning('Cannot connect to {}'.format(GATHER_CORE_URL))
-
-
 # Security Configuration
 # ------------------------------------------------------------------------------
 
@@ -213,13 +179,13 @@ CSRF_COOKIE_DOMAIN = os.environ.get('CSRF_COOKIE_DOMAIN', '.gather2.org')
 CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', CSRF_COOKIE_DOMAIN).split(',')
 SESSION_COOKIE_DOMAIN = CSRF_COOKIE_DOMAIN
 
-if os.environ.get('DJANGO_USE_X_FORWARDED_HOST', False):
+if os.environ.get('DJANGO_USE_X_FORWARDED_HOST', False):  # pragma: no cover
     USE_X_FORWARDED_HOST = True
 
-if os.environ.get('DJANGO_USE_X_FORWARDED_PORT', False):
+if os.environ.get('DJANGO_USE_X_FORWARDED_PORT', False):  # pragma: no cover
     USE_X_FORWARDED_PORT = True
 
-if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):
+if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):  # pragma: no cover
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 

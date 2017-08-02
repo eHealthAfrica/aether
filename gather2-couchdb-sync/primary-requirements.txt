@@ -20,9 +20,9 @@ flake8
 mock
 oauth2client
 psycopg2
+raven
 redis
 requests
 rq
 rq-scheduler
 uwsgi
-raven

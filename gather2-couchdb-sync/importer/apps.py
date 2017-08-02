@@ -5,6 +5,7 @@ from django_rq import get_scheduler
 
 class ImporterConfig(AppConfig):
     name = 'importer'
+    verbose_name = 'Gather2 Sync Importer'
 
     def ready(self):
         # schedule jobs

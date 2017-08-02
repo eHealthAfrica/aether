@@ -1,10 +1,7 @@
 from . import api
 
 
-def walk_changes(db,
-                 f,
-                 *args,
-                 **kwargs):
+def walk_changes(db, f, *args, **kwargs):
     supplied_params = kwargs.get('params', {})
     # set some defaults
     params = {'since': 0, 'limit': 100}

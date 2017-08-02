@@ -1,10 +1,7 @@
-import logging
 from django.db import models
 from django.dispatch import receiver
 from django.db.models.signals import pre_delete
 from .couchdb_helpers import delete_user, generate_db_name
-
-logger = logging.getLogger(__name__)
 
 
 class MobileUser(models.Model):
@@ -15,7 +12,10 @@ class MobileUser(models.Model):
 
 
 class DeviceDB(models.Model):
-    mobileuser = models.ForeignKey(MobileUser, on_delete=models.SET_NULL, null=True)
+    mobileuser = models.ForeignKey(MobileUser,
+                                   on_delete=models.SET_NULL,
+                                   null=True,
+                                   related_name='devices')
     device_id = models.TextField(unique=True)
 
     # used to log the sync execution
@@ -30,8 +30,8 @@ class DeviceDB(models.Model):
 
 
 @receiver(pre_delete, sender=MobileUser)
-def mobile_user_pre_delete(sender, instance, *args, **kwargs):  # type: ignore
+def mobile_user_pre_delete(sender, instance, *args, **kwargs):
     ''' When a Mobile User is deleted, delete the CouchDB users to revoke sync access '''
-    devices = instance.devicedb_set.all()
+    devices = instance.devices.all()
     for device in devices:
         delete_user(device.device_id)

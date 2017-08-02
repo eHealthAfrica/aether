@@ -8,9 +8,13 @@ from couchdb_tools import api, setup
 Generate and update CouchDB credentials and dbs
 (for mobile users authenticating via their google token)
 
+The CouchDB User represents a Device. There should be one username per device id not per
+mobile user, that can be shared among different devices.
+
 This file contains tools to create and update CouchDB credentials and dbs.
+
 Use the create_or_update_user function, which either creates a new set of credentials or
-generates a new password for an existing user (as an automatic 'forgot password' function)
+generates a new password for an existing user (as an automatic 'forgot password' function).
 '''
 
 
@@ -60,7 +64,7 @@ def create_db(device_id):
 
 def create_user(email, password, device_id):
     '''
-    Uses the email as username
+    Uses the device id as username
     Creates a user for that username.
     '''
     # couchdb stops empty username
@@ -100,19 +104,22 @@ def update_user(url, password, device_id, existing):
 
 def create_or_update_user(email, device_id):
     '''
-    For emails not having a CouchDB user, creates a DB, and a couchdb user,
-    returns the credentials for that DB
+    For devices not having a CouchDB user, creates a DB, and a couchdb user,
+    returns the credentials for that DB.
 
-    For emails with an existing user, generate a new password, update
-    the user and return the new credentials set
+    For devices with an existing user, generate a new password, update
+    the user and return the new credentials set.
     '''
     if email is None or email == '':
         raise ValueError('No email provided')
 
+    if device_id is None or device_id == '':
+        raise ValueError('No Device ID provided')
+
     username = filter_id(device_id)
     user_id = generate_user_id(device_id)
 
-    if username is None or username == settings.COUCHDB_USER:
+    if username == '' or username == settings.COUCHDB_USER:
         raise ValueError('Invalid Device ID')
 
     user_url = '_users/{}'.format(user_id)

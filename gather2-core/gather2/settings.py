@@ -14,10 +14,18 @@ ADD_REVERSION_ADMIN = True
 # Common Configuration
 # ------------------------------------------------------------------------------
 
-logger = logging.getLogger(__name__)
-
 DEBUG = (os.environ.get('DEBUG', '').lower() == 'true')
+TESTING = (os.environ.get('TESTING', '').lower() == 'true')
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+if DEBUG:  # pragma: no cover
+    logger.setLevel(logging.DEBUG)
+if TESTING:  # pragma: no cover
+    logger.setLevel(logging.CRITICAL)
+
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -27,6 +35,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/static/')
+MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/tmp/')
 
 
 INSTALLED_APPS = [
@@ -180,13 +189,13 @@ CSRF_COOKIE_DOMAIN = os.environ.get('CSRF_COOKIE_DOMAIN', '.gather2.org')
 CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', CSRF_COOKIE_DOMAIN).split(',')
 SESSION_COOKIE_DOMAIN = CSRF_COOKIE_DOMAIN
 
-if os.environ.get('DJANGO_USE_X_FORWARDED_HOST', False):
+if os.environ.get('DJANGO_USE_X_FORWARDED_HOST', False):  # pragma: no cover
     USE_X_FORWARDED_HOST = True
 
-if os.environ.get('DJANGO_USE_X_FORWARDED_PORT', False):
+if os.environ.get('DJANGO_USE_X_FORWARDED_PORT', False):  # pragma: no cover
     USE_X_FORWARDED_PORT = True
 
-if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):
+if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):  # pragma: no cover
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 

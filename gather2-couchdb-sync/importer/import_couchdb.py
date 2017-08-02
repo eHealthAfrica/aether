@@ -1,18 +1,13 @@
-import logging
-import requests
-import json
 import re
+import requests
 
-from sync import settings
 from django.utils import timezone
-from couchdb_tools import utils, api
+
+from api import core_utils
 from api.models import DeviceDB
+from couchdb_tools import utils, api
+from sync.settings import logger
 
-logger = logging.getLogger(__name__)
-
-# survey_ids = {'building': 2, 'village': 3}
-headers = {'Authorization': 'Token {}'.format(settings.GATHER_CORE_TOKEN),
-           'Content-Type': 'application/json'}
 
 SYNC_DOC = 'sync_doc'
 
@@ -49,23 +44,12 @@ def get_meta_doc(db_name, couchdb_id):
     return {}
 
 
-def get_survey_mapping():
+def get_surveys_mapping():
     # first of all check if the connection is possible
-    settings.test_gather_core_connection()
+    if not core_utils.test_connection():
+        raise RuntimeError('Cannot connect to Gather2 Core server')
 
-    resp = requests.get('{}/surveys/'.format(settings.GATHER_CORE_URL), headers=headers)
-    resp.raise_for_status()
-
-    data = resp.json()
-    results = data['results']
-
-    # Pagination: seems like we do 30 per page
-    # Loop through all the pages
-    while data['next']:
-        resp = requests.get(data['next'], headers=headers)
-        resp.raise_for_status()
-        data = resp.json()
-        results += data['results']
+    results = core_utils.get_all_docs(core_utils.get_surveys_url())
 
     mapping = {}
     for survey in results:
@@ -83,7 +67,7 @@ def is_sync_doc(doc):
 
 
 def import_synced_devices():
-    mapping = get_survey_mapping()
+    mapping = get_surveys_mapping()
     results = []
 
     for device in DeviceDB.objects.all():
@@ -153,6 +137,7 @@ def import_synced_docs(docs, db_name, mapping):
             except requests.exceptions.HTTPError as err:
                 logger.error('post survey to gather failed: ' + resp.text)
                 stats['errors'].append(resp.content)
+                stats['errored'] += 1
                 resp = write_meta_doc(db_name, {}, doc, error=resp.text)
                 resp.raise_for_status()
                 continue
@@ -162,41 +147,35 @@ def import_synced_docs(docs, db_name, mapping):
             resp = write_meta_doc(db_name, data, doc)
             resp.raise_for_status()
 
-            if gather_id is not None:
+            if gather_id:
                 stats['updated'] += 1
             else:
                 stats['created'] += 1
 
         except Exception as e:
             logger.exception(e)
-            resp = write_meta_doc(db_name, {}, doc, error=str(e))
-            resp.raise_for_status()
             stats['errors'].append(str(e))
             stats['errored'] += 1
+            resp = write_meta_doc(db_name, {}, doc, error=str(e))
+            resp.raise_for_status()
+
+    if stats['errored'] > 0:
+        raise Exception(stats['errors'][0])
 
     return stats
 
 
 def post_to_gather(document, mapping, gather_id=False):
     # first of all check if the connection is possible
-    settings.test_gather_core_connection()
+    if not core_utils.test_connection():
+        raise RuntimeError('Cannot connect to Gather2 Core server')
 
-    prefix = document['_id'].split("-")[0]
-    survey_id = mapping.get(prefix)
+    try:
+        prefix = document['_id'].split('-')[0]
+        survey_id = mapping.get(prefix)
+    except:
+        raise Exception('Cannot submit document "{}"'.format(document['_id']))
 
-    if survey_id is None:
-        raise Exception('no matching id for prefix {}'.format(prefix))
-
-    if gather_id:
-        # update existing doc
-        url = '{}/surveys/{}/responses/{}/'.format(settings.GATHER_CORE_URL, survey_id, gather_id)
-        return requests.put(url,
-                            json={'data': json.dumps(document),
-                                  'survey': survey_id},
-                            headers=headers)
-
-    url = '{}/surveys/{}/responses/'.format(settings.GATHER_CORE_URL, survey_id)
-    return requests.post(url,
-                         json={'data': json.dumps(document),
-                               'survey': survey_id},
-                         headers=headers)
+    return core_utils.submit_to_core(response=document,
+                                     survey_id=survey_id,
+                                     response_id=gather_id)

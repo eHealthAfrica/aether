@@ -32,6 +32,7 @@ setup_db() {
     export PGPASSWORD=$RDS_PASSWORD
     export PGHOST=$RDS_HOSTNAME
     export PGUSER=$RDS_USERNAME
+    export PGPORT=$RDS_PORT
 
     until pg_isready -q; do
       >&2 echo "Waiting for postgres..."
@@ -52,6 +53,7 @@ setup_db() {
       >&2 echo "Waiting for couchdb..."
       sleep 1
     done
+    curl -s $COUCHDB_URL
 }
 
 setup_initial_data() {
@@ -67,6 +69,7 @@ test_coverage() {
     source /var/env/bin/activate
     export RCFILE=/code/conf/extras/coverage.rc
     export TESTING=true
+    export DEBUG=false
 
     coverage erase
     coverage run    --rcfile="$RCFILE" /code/manage.py test "${@:2}"

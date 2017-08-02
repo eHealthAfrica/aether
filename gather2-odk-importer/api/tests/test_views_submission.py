@@ -1,26 +1,20 @@
 import base64
 import mock
+import requests
 
 from django.contrib.auth import get_user_model
 from django.test import TransactionTestCase
 from django.urls import reverse
 
 from rest_framework import status
+from api import core_utils
 
 XLS_FILE = '/code/api/tests/demo-xlsform.xls'
 XML_FILE = '/code/api/tests/demo-xlsform.xml'
 XML_ERR_FILE = '/code/api/tests/demo-xlsform--error.xml'
 
-GATHER_CORE_URL_MOCK = 'http://mock-core:8000'
-GATHER_CORE_TOKEN_MOCK = 'mock-valid-token'
-GATHER_ENV_MOCK = {
-    'GATHER_CORE_URL': GATHER_CORE_URL_MOCK,
-    'GATHER_CORE_TOKEN': GATHER_CORE_TOKEN_MOCK,
-}
-GATHER_HEADER_MOCK = {'Authorization': 'Token {}'.format(GATHER_CORE_TOKEN_MOCK)}
-
-SURVEY_URL = '{}/surveys/1/responses/'.format(GATHER_CORE_URL_MOCK)
-ATTACHMENT_URL = '{}/responses/2/attachments'.format(GATHER_CORE_URL_MOCK)
+GATHER_CORE_URL_TESTING = core_utils.get_core_server_url()
+GATHER_HEADER_TESTING = core_utils.get_auth_header()
 
 
 class CustomTestCase(TransactionTestCase):
@@ -36,16 +30,6 @@ class CustomTestCase(TransactionTestCase):
         self.headers = {
             'HTTP_AUTHORIZATION': 'Basic ' + base64.b64encode(basic).decode('ascii')
         }
-
-        # mock test connection (pass authorization)
-        patcherTC = mock.patch('api.core_utils.test_connection', return_value=True)
-        patcherTC.start()
-        self.addCleanup(patcherTC.stop)
-
-        # mock gather env variables
-        patcherEnv = mock.patch.dict('os.environ', GATHER_ENV_MOCK)
-        patcherEnv.start()
-        self.addCleanup(patcherEnv.stop)
 
     def tearDown(self):
         self.client.logout()
@@ -101,7 +85,7 @@ class SubmissionTests(CustomTestCase):
         with open(XLS_FILE, 'rb') as f:
             self.client.post(
                 reverse('admin:api_xform_add'),
-                {'xlsform': f, 'description': 'some text', 'gather_core_survey_id': 1},
+                {'xlsform': f, 'description': 'some text', 'gather_core_survey_id': 99},
             )
         # submit right response but server is not available yet
         with open(XML_FILE, 'rb') as f:
@@ -118,20 +102,40 @@ class PostSubmissionTests(CustomTestCase):
     def setUp(self):
         super(PostSubmissionTests, self).setUp()
 
+        # create survey in Core testing server
+        testing_survey = {
+            "name": "testing",
+            "schema": {}
+        }
+
+        self.assertTrue(core_utils.test_connection())
+        # create survey in core testing server
+        response = requests.post(core_utils.get_surveys_url(),
+                                 json=testing_survey,
+                                 headers=GATHER_HEADER_TESTING)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        data = response.json()
+        survey_id = data['id']
+        self.SURVEY_URL = core_utils.get_surveys_url(survey_id)
+        self.RESPONSES_URL = core_utils.get_survey_responses_url(survey_id)
+
         # create xForm entry
         with open(XLS_FILE, 'rb') as f:
-            self.client.post(
+            response = self.client.post(
                 reverse('admin:api_xform_add'),
                 {
                     'xlsform': f,
                     'description': 'some text',
-                    'gather_core_survey_id': 1,
+                    'gather_core_survey_id': survey_id,
                 },
             )
+        self.assertFalse(status.is_server_error(response.status_code))
 
-    #
-    # Test submission with error on core server side
-    #
+    def tearDown(self):
+        super().tearDown()
+        # delete ALL surveys in core testing server
+        requests.delete(self.SURVEY_URL, headers=GATHER_HEADER_TESTING)
+
     @mock.patch('requests.post', return_value=mock.Mock(status_code=500))
     def test__submission__post__with_core_error(self, mock_post):
         with open(XML_FILE, 'rb') as f:
@@ -142,43 +146,21 @@ class PostSubmissionTests(CustomTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         mock_post.assert_called_once_with(
-            SURVEY_URL,
-            headers=GATHER_HEADER_MOCK,
+            self.RESPONSES_URL,
+            headers=GATHER_HEADER_TESTING,
             json=mock.ANY,
         )
 
-    #
-    # Test submission without error on core server side
-    #
-    @mock.patch('requests.post',
-                return_value=mock.Mock(
-                    status_code=201,
-                    content={'attachments_url': ATTACHMENT_URL},
-                ))
-    def test__submission__post(self, mock_post):
+    def test__submission__post(self):
         with open(XML_FILE, 'rb') as f:
             response = self.client.post(
                 reverse('submission'),
                 {'xml_submission_file': f},
                 **self.headers
             )
-
-        mock_post.assert_called_with(
-            SURVEY_URL,
-            headers=GATHER_HEADER_MOCK,
-            json=mock.ANY,
-        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    #
-    # Test submission with attachments
-    #
-    @mock.patch('requests.post',
-                return_value=mock.Mock(
-                    status_code=201,
-                    content={'attachments_url': ATTACHMENT_URL},
-                ))
-    def test__submission__post__with_attachments(self, mock_post):
+    def test__submission__post__with_attachments(self):
         # submit response with itself as attachment
         with open(XML_FILE, 'rb') as f:
             with open(XML_FILE, 'rb') as f2:
@@ -187,11 +169,21 @@ class PostSubmissionTests(CustomTestCase):
                     {'xml_submission_file': f, 'attach': f2},
                     **self.headers
                 )
-
-        mock_post.assert_called_with(
-            mock.ANY,
-            headers=GATHER_HEADER_MOCK,
-            data={'name': 'attach'},
-            files=mock.ANY,
-        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    @mock.patch('requests.post', side_effect=[mock.DEFAULT, mock.Mock(status_code=500)])
+    def test__submission__post__with_attachments_error_400(self, mock_post):
+        # there is going to be an error during attachment post
+        with open(XML_FILE, 'rb') as f:
+            with open(XML_FILE, 'rb') as f2:
+                response = self.client.post(
+                    reverse('submission'),
+                    {'xml_submission_file': f, 'attach': f2},
+                    **self.headers
+                )
+        mock_post.assert_called_once_with(
+            self.RESPONSES_URL,
+            headers=GATHER_HEADER_TESTING,
+            json=mock.ANY,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

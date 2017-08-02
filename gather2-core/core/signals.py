@@ -1,5 +1,4 @@
 import ast
-import logging
 import os
 import subprocess
 import tempfile
@@ -8,8 +7,8 @@ from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
 from .models import MapFunction, MapResult, ReduceFunction, Response
+from gather2.settings import logger
 
-logger = logging.getLogger(__name__)
 
 SANDBOX_TEMPLATE = '''
 data={data}

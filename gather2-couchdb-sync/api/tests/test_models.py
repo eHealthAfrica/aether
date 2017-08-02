@@ -13,6 +13,12 @@ class ModelsTestCase(TransactionTestCase):
         super().tearDown()
         clean_couch()
 
+    def test_mobileuser_str(self):
+        email = 'test_ally@ehealthnigeria.org'
+        test_user = MobileUser.objects.create(email=email)
+
+        self.assertTrue(email in str(test_user))
+
     def test_create_user_model(self):
         '''
         Test that we create the MobileUsers with email as unique primary key,

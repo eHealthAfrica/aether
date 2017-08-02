@@ -1,5 +1,4 @@
 # encoding: utf-8
-import logging
 
 from django.conf import settings
 from django.contrib.postgres.fields import JSONField
@@ -7,7 +6,6 @@ from django.db import models
 
 from .utils import json_prettified, code_prettified
 
-logger = logging.getLogger(__name__)
 UserModel = settings.AUTH_USER_MODEL
 
 

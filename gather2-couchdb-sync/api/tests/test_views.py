@@ -1,8 +1,8 @@
 from django.core.urlresolvers import reverse
-from rest_framework.test import APITestCase
 from django.test import override_settings
-from oauth2client.crypt import AppIdentityError
 from oauth2client.client import VerifyJwtTokenError
+from oauth2client.crypt import AppIdentityError
+from rest_framework.test import APITestCase
 # This was really helpful about mocking:
 # http://fgimian.github.io/blog/2014/04/10/using-the-python-mock-library-to-fake-regular-functions-during-tests/
 import mock
@@ -197,3 +197,28 @@ class SyncViewsTests(APITestCase):
         response = self.client.post(url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
                                     format='json')
         self.assertEqual(response.status_code, 500, 'returns server error')
+
+    @mock.patch('api.views.create_or_update_user', side_effect=ValueError)
+    @mock.patch('oauth2client.client.verify_id_token', side_effect=valid_token)
+    def test_create_or_update_user_error(self,
+                                         valid_token_function,
+                                         create_or_update_user_function):
+        '''somehow, the couchdb database does not respond'''
+        url = reverse('sync:signin')
+        response = self.client.post(url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
+                                    format='json')
+        self.assertEqual(response.status_code, 500, 'returns server error')
+        create_or_update_user_function.assert_called_with(
+            'test_karl@ehealthnigeria.org',
+            'test_xxx',
+        )
+
+    @mock.patch('api.views.create_db', side_effect=ValueError)
+    @mock.patch('oauth2client.client.verify_id_token', side_effect=valid_token)
+    def test_create_db_error(self, valid_token_function, create_db_function):
+        '''somehow, the couchdb database does not respond'''
+        url = reverse('sync:signin')
+        response = self.client.post(url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
+                                    format='json')
+        self.assertEqual(response.status_code, 500, 'returns server error')
+        create_db_function.assert_called_with('test_xxx',)

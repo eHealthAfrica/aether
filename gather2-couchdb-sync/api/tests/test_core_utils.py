@@ -14,7 +14,7 @@ GATHER_ENV_MOCK = {
 
 class CoreTests(TestCase):
 
-    def test__get_survey_url(self):
+    def test__get_core_urls(self):
         with mock.patch.dict('os.environ', {
             'TESTING': 'false',
             'GATHER_CORE_URL': GATHER_CORE_URL_MOCK,
@@ -24,16 +24,12 @@ class CoreTests(TestCase):
                 'http://test/surveys/'
             )
             self.assertEqual(
-                core_utils.get_surveys_url(1),
-                'http://test/surveys/1'
-            )
-            self.assertEqual(
                 core_utils.get_survey_responses_url(1),
                 'http://test/surveys/1/responses/'
             )
             self.assertEqual(
                 core_utils.get_survey_responses_url(1, 2),
-                'http://test/surveys/1/responses/2'
+                'http://test/surveys/1/responses/2/'
             )
 
     def test__test_connection_testing_env(self):
@@ -83,3 +79,17 @@ class CoreTests(TestCase):
                     'Authorization': 'Token {}'.format(GATHER_CORE_TOKEN_MOCK)
                 },
             )
+
+    @mock.patch('requests.put')
+    @mock.patch('requests.post')
+    def test_submit_to_core__without_response_id(self, mock_post, mock_put):
+        core_utils.submit_to_core(response={'_id': 'a'}, survey_id=1, response_id=None)
+        mock_put.assert_not_called()
+        mock_post.assert_called()
+
+    @mock.patch('requests.put')
+    @mock.patch('requests.post')
+    def test_submit_to_core__with_response_id(self, mock_post, mock_put):
+        core_utils.submit_to_core(response={'_id': 'a'}, survey_id=1, response_id=1)
+        mock_put.assert_called()
+        mock_post.assert_not_called()

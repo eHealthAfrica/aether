@@ -1,4 +1,3 @@
-import logging
 import re
 import requests
 import xmltodict
@@ -23,7 +22,7 @@ from .core_utils import get_auth_header
 from .models import XForm
 from .serializers import XFormSerializer
 
-logger = logging.getLogger(__name__)
+from importer.settings import logger
 
 
 class XFormViewset(viewsets.ModelViewSet):
@@ -120,7 +119,8 @@ def submission(request):
         xml = request.FILES[file_param].read()
         data = xmltodict.parse(xml)
     except Exception as e:
-        logger.warning('Unexpected error when handling file "{}"'.format(str(e)))
+        logger.warning('Unexpected error when handling file')
+        logger.error(str(e))
         return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     form_id = list(data.items())[0][1]['@id']  # TODO make more robust
@@ -174,7 +174,7 @@ def submission(request):
         return Response(status=response.status_code)
 
     except Exception as e:
-        logger.error(
+        logger.warning(
             'Unexpected error from Gather2 Core server when submiting form "{}"'.format(form_id)
         )
         logger.error(str(e))

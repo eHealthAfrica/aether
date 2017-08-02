@@ -1,23 +1,22 @@
+import json
 import os
 import os.path
-from pathlib import Path
-import json
-import logging
+
 from django.conf import settings
+from pathlib import Path
+
 from . import api
 from .utils import force_put_doc
 
-logger = logging.getLogger(__name__)
+from sync.settings import logger
 
 
 class DuplicateKeyError(ValueError):
     pass
 
 
-def load_config(directory,
-                strip=False,
-                predicate=None):
-    """
+def load_config(directory, strip=False, predicate=None):  # pragma: no cover
+    '''
     Load a couchdb configuration from the filesystem, like couchdbkit or couchdb-bootstrap.
 
     strip: remove leading and trailing whitespace from file contents, like couchdbkit.
@@ -25,11 +24,11 @@ def load_config(directory,
     predicate: function that is passed the full path to each file or directory.
         Each entry is only added to the document if predicate returns True.
         Can be used to ignore backup files etc.
-    """
+    '''
     objects = {}
 
     if not os.path.isdir(directory):
-        raise OSError("No directory: '{0}'".format(directory))
+        raise OSError('No directory: "{0}"'.format(directory))
 
     for (dirpath, dirnames, filenames) in os.walk(directory, topdown=False):
         key = os.path.split(dirpath)[-1]
@@ -42,7 +41,7 @@ def load_config(directory,
             if predicate and not predicate(fullname):
                 continue
             if fkey in ob:
-                raise DuplicateKeyError("file '{0}' clobbers key '{1}'"
+                raise DuplicateKeyError('file "{0}" clobbers key "{1}"'
                                         .format(fullname, fkey))
             with open(fullname, 'r') as f:
                 contents = f.read()
@@ -54,20 +53,20 @@ def load_config(directory,
 
         for name in dirnames:
             if name == '_attachments':
-                raise NotImplementedError("_attachments are not supported")
+                raise NotImplementedError('_attachments are not supported')
             fullpath = os.path.join(dirpath, name)
             if predicate and not predicate(fullpath):
                 continue
             subkey, subthing = objects[fullpath]
             if subkey in ob:
-                raise DuplicateKeyError("directory '{0}' clobbers key '{1}'"
+                raise DuplicateKeyError('directory "{0}" clobbers key "{1}"'
                                         .format(fullpath, subkey))
             ob[subkey] = subthing
 
     return ob
 
 
-def setup_db(db_name, config, cleanup=False):
+def setup_db(db_name, config, cleanup=False):  # pragma: no cover
     '''
     Setup up a couchdb database from a configuration
     When `cleanup` is True all the data will be wiped from the existing database!
@@ -104,7 +103,7 @@ def setup_db(db_name, config, cleanup=False):
     force_put_doc(secdoc_url, secdoc)
 
 
-def setup_couchdb(cleanup=False):
+def setup_couchdb(cleanup=False):  # pragma: no cover
     ''' Setup couchdb by loading the configuration from a directory structure '''
     base_path = Path(settings.COUCHDB_DIR)
     dirs = (p for p in base_path.iterdir() if p.is_dir())
