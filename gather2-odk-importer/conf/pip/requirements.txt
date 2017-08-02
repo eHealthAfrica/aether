@@ -15,7 +15,7 @@ contextlib2==0.5.5
 coverage==4.4.1
 decorator==4.1.2
 defusedxml==0.5.0
-Django==1.11.3
+Django==1.11.4
 django-cas-ng==3.5.8
 django-cors-headers==2.1.0
 django-extensions==1.8.1
@@ -47,7 +47,7 @@ python-dateutil==2.6.1
 pytz==2017.2
 pyxform==0.9.24
 raven==6.1.0
-requests==2.18.2
+requests==2.18.3
 simplegeneric==0.8.1
 six==1.10.0
 traceback2==1.4.0

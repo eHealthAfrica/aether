@@ -44,27 +44,27 @@ setup_db() {
     fi
 
     # migrate data model if needed
-    /var/env/bin/python manage.py migrate --noinput
+    ./manage.py migrate --noinput
 }
 
 setup_initial_data() {
     # create initial superuser
-    /var/env/bin/python manage.py loaddata /code/conf/extras/initial.json
+    ./manage.py loaddata /code/conf/extras/initial.json
 }
 
 test_flake8() {
-    /var/env/bin/python -m flake8 /code/. --config=/code/conf/extras/flake8.cfg
+    flake8 /code/. --config=/code/conf/extras/flake8.cfg
 }
 
 test_coverage() {
-    source /var/env/bin/activate
     export RCFILE=/code/conf/extras/coverage.rc
     export TESTING=true
     export DEBUG=false
 
-    coverage erase
-    coverage run    --rcfile="$RCFILE" /code/manage.py test "${@:2}"
+    coverage run    --rcfile="$RCFILE" manage.py test "${@:2}"
     coverage report --rcfile="$RCFILE"
+    coverage erase
+    rm -rf /code/.hypothesis
 
     cat /code/conf/extras/good_job.txt
 }
@@ -91,16 +91,15 @@ case "$1" in
     ;;
 
     manage )
-        /var/env/bin/python manage.py "${@:2}"
+        ./manage.py "${@:2}"
     ;;
 
     pip_freeze )
         rm -rf /tmp/env
-        virtualenv -p python3 /tmp/env/
-        /tmp/env/bin/pip install -f /code/dependencies -r ./primary-requirements.txt --upgrade
+        pip install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
 
-        cat /code/conf/extras/requirements_header.txt | tee requirements.txt
-        /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a requirements.txt
+        cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
+        pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
     ;;
 
     setuplocaldb )
@@ -128,16 +127,16 @@ case "$1" in
     start )
         setup_db
 
-        /var/env/bin/python manage.py collectstatic --noinput
+        ./manage.py collectstatic --noinput
         chmod -R 755 /var/www/static
-        /var/env/bin/uwsgi --ini /code/conf/uwsgi.ini
+        /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
     ;;
 
     start_dev )
         setup_db
         setup_initial_data
 
-        /var/env/bin/python manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
+        ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
 
     help)
