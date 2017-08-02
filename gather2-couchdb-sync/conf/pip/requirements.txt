@@ -15,7 +15,7 @@ click==6.7
 contextlib2==0.5.5
 coverage==4.4.1
 croniter==0.3.17
-Django==1.11.3
+Django==1.11.4
 django-cas-ng==3.5.8
 django-cors-headers==2.1.0
 django-extensions==1.8.1
@@ -39,7 +39,7 @@ python-dateutil==2.6.1
 pytz==2017.2
 raven==6.1.0
 redis==2.10.5
-requests==2.18.2
+requests==2.18.3
 rq==0.8.1
 rq-scheduler==0.7.0
 rsa==3.4.2

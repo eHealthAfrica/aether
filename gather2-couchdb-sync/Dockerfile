@@ -1,30 +1,31 @@
-FROM ubuntu:14.04
+FROM python:3.6
 
-ENV TERM screen-256color
+################################################################################
+## setup container
+################################################################################
 
-RUN locale-gen --no-purge en_US.UTF-8
-ENV LC_ALL en_US.UTF-8
-RUN update-locale LANG=en_US.UTF-8
-RUN useradd -ms /bin/false gather2
+COPY conf/docker/* /tmp/
+RUN /tmp/setup.sh
 
-RUN apt-get update -qq && apt-get install -y wget
 
-RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" >> /etc/apt/sources.list.d/pgdg.list'
-RUN wget -q https://www.postgresql.org/media/keys/ACCC4CF8.asc -O - | sudo apt-key add -
-
-COPY ./conf/apt-packages.txt /tmp/apt-packages.txt
-RUN apt-get update -qq && cat /tmp/apt-packages.txt | xargs apt-get -qq --yes --force-yes install
-
-RUN pip3 install virtualenv
-RUN virtualenv -p python3 /var/env/
-
-COPY ./requirements.txt /code/requirements.txt
-COPY ./dependencies /code/dependencies
-RUN /var/env/bin/pip install -f /code/dependencies -r /code/requirements.txt
+################################################################################
+## install app
+## copy files one by one and split commands to use docker cache
+################################################################################
 
 WORKDIR /code
 
-ADD ./ /code
+COPY ./conf/pip /code/conf/pip
+RUN pip install -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt
+
+COPY ./ /code
+
+################################################################################
+## last setup steps
+################################################################################
+
+# create user to run container (avoid root user)
+RUN useradd -ms /bin/false gather2
 RUN chown -R gather2: /code
 
 ENTRYPOINT ["/code/entrypoint.sh"]
