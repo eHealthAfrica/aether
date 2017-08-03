@@ -5,6 +5,7 @@ variable "database_hostname" {}
 variable "database_port" { default="5432" }
 variable "internal_sg_id" {}
 variable "iam_role_id" {}
+variable "project" {}
 
 # URL's
 variable "core_url" {}
@@ -18,8 +19,6 @@ variable "route53_zone_id" {
     gather2.org = "ZUBAIJA96RBHB"
   }
 }
-
-variable "project" {}
 
 // gather2 core variables
 variable "gather2_core_container_name" { default="gather2-core"}

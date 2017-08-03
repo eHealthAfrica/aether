@@ -106,6 +106,11 @@ resource "aws_ecs_task_definition" "gather2_core" {
   volume {
     name = "static-core"
   }
+
+  volume {
+    host_path = "/data/upload-data"
+    name = "upload-data"
+  }
 }
 
 data "aws_ecs_task_definition" "gather2_core" {

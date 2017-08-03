@@ -28,11 +28,10 @@ module "ecs" {
   iam_role_id = "${module.autoscaling.aws_iam_role_ecs_service}"
   database_hostname = "${module.rds.database_hostname}"
   deploy_branch = "latest"
-  domain = "gather2_org"
+  domain = "gather2.org"
   core_url = "${var.core_url}"
   odk_url = "${var.odk_url}"
-  database_name = "${replace("${var.project}", "-", "_")}"
-  database_user = "${replace("${var.project}", "-", "")}"
+  couchdb_sync_url = "${var.couchdb_sync_url}"
 }
 
 # // Creates ECS cluster and SG's

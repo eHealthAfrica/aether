@@ -19,12 +19,17 @@
       { "name": "DJANGO_USE_X_FORWARDED_HOST", "value": "${django_use_x_forwarded_host}"},
       { "name": "CSRF_COOKIE_DOMAIN", "value": "${domain}"},
       { "name": "CSRF_TRUSTED_ORIGINS", "value": "${domain}"},
-      { "name": "SENTRY_DSN", "value": "${sentry_dsn}"}
+      { "name": "SENTRY_DSN", "value": "${sentry_dsn}"},
+      { "name": "MEDIA_ROOT", "value": "/data"}
     ],
     "mountPoints": [
       {
         "sourceVolume": "static-core",
         "containerPath": "/var/www/static"
+      },
+      {
+        "sourceVolume": "upload-data",
+        "containerPath": "/data"
       }
     ]
   },

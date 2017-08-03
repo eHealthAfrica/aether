@@ -24,7 +24,7 @@
     "name": "odk-importer",
     "image": "${image_url}",
     "cpu": 1,
-    "memory": 256,
+    "memory": 512,
     "essential": true,
     "command": ["start"],
     "entryPoint": ["/code/entrypoint.sh"],

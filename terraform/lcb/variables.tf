@@ -26,6 +26,7 @@ variable "private_subnets" {
 // Core URL
 variable "core_url" { default="lakechadbasin" }
 variable "odk_url" { default="lakechadbasin-odk" }
+variable "couchdb_sync_url" { default="lakechadbasin-couchdb-sync" }
 
 // Domain 
 variable "domain" { default="gather2.org" }
