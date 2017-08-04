@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.messages',
+    'django.contrib.postgres',
     'django.contrib.sessions',
     'django.contrib.staticfiles',
     'django_cas_ng',
@@ -62,7 +63,7 @@ INSTALLED_APPS = [
 ]
 
 
-MIDDLEWARE_CLASSES = [
+MIDDLEWARE = [
     'raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -124,8 +125,6 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.FormParser',
         'rest_framework.parsers.MultiPartParser',
     ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.CursorPagination',
-    'PAGE_SIZE': 30,
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
@@ -135,7 +134,9 @@ REST_FRAMEWORK = {
         'rest_framework_filters.backends.DjangoFilterBackend',
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
-    )
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.CursorPagination',
+    'PAGE_SIZE': 30,
 }
 
 
@@ -143,8 +144,8 @@ REST_FRAMEWORK = {
 # ------------------------------------------------------------------------------
 
 AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',  # this is default
-    'ums_client.backends.UMSRoleBackend'
+    'django.contrib.auth.backends.ModelBackend',
+    'ums_client.backends.UMSRoleBackend',
 )
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -153,6 +154,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 10,
+        },
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -164,7 +168,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 CAS_VERSION = 3
 CAS_LOGOUT_COMPLETELY = True
-CAS_SERVER_URL = os.environ.get('CAS_SERVER_URL', 'https://ums-dev.ehealthafrica.org')
+CAS_SERVER_URL = os.environ.get('CAS_SERVER_URL', '')
+HOSTNAME = os.environ.get('HOSTNAME', '')
 
 
 # Sentry Configuration

@@ -42,7 +42,7 @@ class Attachment(models.Model):
     response = models.ForeignKey(Response, related_name='attachments')
 
     name = models.CharField(max_length=50)
-    attachment_file = models.FileField('attachment')
+    attachment_file = models.FileField(verbose_name='attachment')
     created = models.DateTimeField(auto_now_add=True, db_index=True)
 
     def __str__(self):  # pragma: no cover

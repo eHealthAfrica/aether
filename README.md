@@ -19,20 +19,29 @@ cd gather2
 docker-compose build
 ```
 
+Include this entry in your `/etc/hosts` file:
+
+```
+127.0.0.1    core.gather2.local odk.gather2.local sync.gather2.local
+```
+
 ### Environment Variables
 
 Most of the environment variables are set to default values. This is the short list
-of the most common ones with non-default values. For more info take a look at the file
+of the most common ones with non default values. For more info take a look at the file
 [docker-compose.yml](docker-compose.yml)
+
 
 #### Gather Core
 
+- `HOSTNAME`: `core.gather2.local` Used by UMS.
 - `RDS_DB_NAME`: `gather2` Postgres database name.
 - `WEB_SERVER_PORT`: `8000` Web server port.
 
 
 #### Gather ODK Importer
 
+- `HOSTNAME`: `odk.gather2.local` Used by UMS.
 - `RDS_DB_NAME`: `odk_importer` Postgres database name.
 - `WEB_SERVER_PORT`: `8443` Web server port.
 - `GATHER_CORE_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24` Token to connect to core server.
@@ -42,6 +51,7 @@ of the most common ones with non-default values. For more info take a look at th
 
 #### Gather Couchdb Sync
 
+- `HOSTNAME`: `sync.gather2.local` Used by UMS.
 - `RDS_DB_NAME`: `couchdb_sync` Postgres database name.
 - `WEB_SERVER_PORT`: `8666` Web server port.
 - `GATHER_CORE_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24` Token to connect to core server.
@@ -51,7 +61,7 @@ of the most common ones with non-default values. For more info take a look at th
 
 
 **WARNING**
-Never run `odk-importer` or `coucdhb-sync` tests against any PRODUCTION server.
+Never run `odk-importer` or `couchdb-sync` tests against any PRODUCTION server.
 The tests clean up will DELETE ALL SURVEYS!!!
 
 
@@ -63,11 +73,26 @@ docker-compose up
 
 This will start:
 
-- **gather-core** on `0.0.0.0:8000` and create a superuser `admin-core` with the needed TOKEN.
-- **odk-importer** on `0.0.0.0:8443` and create a superuser `admin-odk`.
-- **couchdb-sync** on `0.0.0.0:8666` and create a superuser `admin-sync`.
+- **gather-core** on `http://core.gather2.local:8000`
+  and create a superuser `admin-core` with the needed TOKEN.
+
+- **odk-importer** on `http://odk.gather2.local:8443`
+  and create a superuser `admin-odk`.
+
+- **couchdb-sync** on `http://sync.gather2.local:8666`
+  and create a superuser `admin-sync`.
 
 All the created superusers have password `adminadmin` in each container.
+
+
+### Users & Authentication
+
+The app defers part of the users management to
+[eHA UMS tool](https://github.com/eHealthAfrica/ums).
+
+Other options are to log in via token, via basic authentication or via the
+standard django authentication process in the admin section.
+The available options depend on each container.
 
 
 ## Development
@@ -78,17 +103,20 @@ Read the `docker-compose.yml` file to see how it's mounted.
 
 ## Deployment
 
+Set the `HOSTNAME` and `CAS_SERVER_URL` environment variables if you want to
+activate the UMS integration in each container.
+
 Set the `GATHER_CORE_TOKEN` and `GATHER_CORE_URL` environment variables when
 starting the `gather2-odk-importer` to have ODK Collect submissions posted to
 Gather2 Core.
 
 If a valid `GATHER_CORE_TOKEN` and `GATHER_CORE_URL` combination is not set,
-the server will still start, but ODK Collection submissions will fail.
+the server will still start, but ODK Collect submissions will fail.
 
 This also applies for `gather2-couchdb-sync`.
 
-In the case of `gather2-couchdb-sync` also a valid `GOOGLE_CLIENT_ID`
-environment variable is necessary to verify the device credentials.
+In the case of `gather2-couchdb-sync` a valid `GOOGLE_CLIENT_ID`
+environment variable is necessary to verify the device credentials as well.
 
 Infrastructure deployment is done with Terraform, which configuration
 files are stored in [terraform](terraform) directory.
@@ -165,7 +193,7 @@ docker-compose run couchdb-sync test_coverage
 ```
 
 **WARNING**
-Never run `odk-importer` or `coucdhb-sync` tests against a
+Never run `odk-importer` or `couchdb-sync` tests against a
 PRODUCTION server. The tests clean up will DELETE ALL SURVEYS!!!
 
 Look into [docker-compose.yml](docker-compose.yml), the variable

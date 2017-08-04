@@ -27,8 +27,10 @@ services:
         build: gather2-core
         image: core
         environment:
-            CSRF_COOKIE_DOMAIN: localhost
+            CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
+            CSRF_COOKIE_DOMAIN: .gather2.local
             DEBUG: "true"
+            HOSTNAME: core.gather2.local
 
             RDS_DB_NAME: gather2
             RDS_HOSTNAME: db
@@ -54,8 +56,10 @@ services:
         build: gather2-core
         image: core
         environment:
-            CSRF_COOKIE_DOMAIN: localhost
+            CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
+            CSRF_COOKIE_DOMAIN: .gather2.local
             DEBUG: "true"
+            HOSTNAME: core.gather2.local
 
             RDS_DB_NAME: gather2-testing
             RDS_HOSTNAME: db
@@ -80,8 +84,10 @@ services:
         build: gather2-odk-importer
         image: odk-importer
         environment:
-            CSRF_COOKIE_DOMAIN: localhost
+            CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
+            CSRF_COOKIE_DOMAIN: .gather2.local
             DEBUG: "true"
+            HOSTNAME: odk.gather2.local
 
             GATHER_CORE_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
             GATHER_CORE_URL: http://core:8000
@@ -113,8 +119,10 @@ services:
         build: gather2-couchdb-sync
         image: couchdb-sync
         environment: &sync-environment
-            CSRF_COOKIE_DOMAIN: localhost
+            CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
+            CSRF_COOKIE_DOMAIN: .gather2.local
             DEBUG: "true"
+            HOSTNAME: sync.gather2.local
 
             COUCHDB_PASSWORD: secret
             COUCHDB_URL: http://couchdb:5984
