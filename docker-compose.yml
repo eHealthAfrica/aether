@@ -49,34 +49,6 @@ services:
 
 
     # ---------------------------------
-    # Gather2 Core TEST container
-    # ---------------------------------
-
-    core-test:
-        build: gather2-core
-        image: core
-        environment:
-            CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
-            CSRF_COOKIE_DOMAIN: .gather2.local
-            DEBUG: "true"
-            HOSTNAME: core.gather2.local
-
-            RDS_DB_NAME: gather2-testing
-            RDS_HOSTNAME: db
-            RDS_PASSWORD: ""
-            RDS_PORT: 5432
-            RDS_USERNAME: postgres
-
-            WEB_SERVER_PORT: 9000
-        volumes: *core-volumes
-        depends_on:
-            - db
-        ports:
-            - "9000:9000"
-        command: start_dev
-
-
-    # ---------------------------------
     # ODK Adapter container
     # ---------------------------------
 
@@ -104,7 +76,6 @@ services:
             - ./gather2-odk-importer:/code
         depends_on:
             - core
-            - core-test
             - db
         ports:
             - "8443:8443"
@@ -148,9 +119,8 @@ services:
             WEB_SERVER_PORT: 8666
         volumes: &sync-volumes
             - ./gather2-couchdb-sync:/code
-        depends_on:
+        depends_on: &sync-dependencies
             - core
-            - core-test
             - couchdb
             - db
             - redis
@@ -162,9 +132,66 @@ services:
         image: couchdb-sync
         environment: *sync-environment
         volumes: *sync-volumes
+        depends_on: *sync-dependencies
+        command: start_rq_dev
+
+
+    # ---------------------------------
+    # UI containers
+    # ---------------------------------
+
+    ui:
+        build: gather2-ui
+        image: ui
+        environment: &ui-environment
+            CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
+            CSRF_COOKIE_DOMAIN: .gather2.local
+            DEBUG: "true"
+            HOSTNAME: ui.gather2.local
+            STATIC_ROOT: /code/ui/assets/bundles
+
+            GATHER_CORE_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
+            GATHER_CORE_URL: http://core:8000
+            GATHER_CORE_URL_TEST: http://core-test:9000
+
+            GATHER_ODK_URL: http://odk-importer:8443
+            GATHER_ODK_URL_TEST: http://odk-importer-test:9443
+
+            RDS_DB_NAME: ui
+            RDS_HOSTNAME: db
+            RDS_PASSWORD: ""
+            RDS_PORT: 5432
+            RDS_USERNAME: postgres
+
+            WEB_SERVER_PORT: 8080
+        volumes: &ui-volumes
+            #################################################
+            #                    WARNING                    #
+            # do not include the root folder or             #
+            # `node_modules` will not be available          #
+            #                                               #
+            # - ./gather2-ui:/code # DO NOT UNCOMMENT!!!    #
+            #################################################
+
+            - ./gather2-ui/conf:/code/conf
+            - ./gather2-ui/ui:/code/ui
+
+            - ./gather2-ui/entrypoint.sh:/code/entrypoint.sh
+            - ./gather2-ui/manage.py:/code/manage.py
+            - ./gather2-ui/package.json:/code/package.json
         depends_on:
-            - couchdb
             - core
             - db
-            - redis
-        command: start_rq_dev
+            - odk-importer
+            - webpack
+        ports:
+            - "8080:8080"
+        command: start_dev
+
+    webpack:
+        image: ui
+        environment: *ui-environment
+        volumes: *ui-volumes
+        ports:
+            - "3000:3000"
+        command: start_webpack

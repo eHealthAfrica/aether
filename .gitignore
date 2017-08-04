@@ -50,10 +50,6 @@ coverage.xml
 *.mo
 *.pot
 
-# Django stuff:
-*.log
-local_setting.py
-
 # Sphinx documentation
 docs/_build/
 
@@ -91,3 +87,7 @@ tmp
 # Terraform
 .terraform
 terraform.tfstate.backup
+
+
+# Webpack build files
+**/assets/bundles/

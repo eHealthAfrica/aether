@@ -1,0 +1,99 @@
+version: "2"
+
+services:
+
+    # ---------------------------------
+    # Gather2 Core container
+    # ---------------------------------
+
+    core-test:
+        build: gather2-core
+        image: core
+        environment:
+            CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
+            CSRF_COOKIE_DOMAIN: .gather2.local
+            TESTING: "true"
+            HOSTNAME: core.gather2.local
+
+            RDS_DB_NAME: gather2-testing
+            RDS_HOSTNAME: db
+            RDS_PASSWORD: ""
+            RDS_PORT: 5432
+            RDS_USERNAME: postgres
+
+            WEB_SERVER_PORT: 9000
+        volumes:
+            - ./gather2-core:/code
+        ports:
+            - "9000:9000"
+        command: start_dev
+
+
+    # ---------------------------------
+    # ODK Adapter container
+    # ---------------------------------
+
+    odk-importer-test:
+        build: gather2-odk-importer
+        image: odk-importer
+        environment:
+            CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
+            CSRF_COOKIE_DOMAIN: .gather2.local
+            TESTING: "true"
+            HOSTNAME: odk.gather2.local
+
+            GATHER_CORE_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
+            GATHER_CORE_URL_TEST: http://core-test:9000
+
+            RDS_DB_NAME: odk-importer-testing
+            RDS_HOSTNAME: db
+            RDS_PASSWORD: ""
+            RDS_PORT: 5432
+            RDS_USERNAME: postgres
+
+            WEB_SERVER_PORT: 9443
+        volumes:
+            - ./gather2-odk-importer:/code
+        ports:
+            - "9443:9443"
+        command: start_dev
+
+
+    # ---------------------------------
+    # Mobile Sync container
+    # ---------------------------------
+
+    couchdb-sync-test:
+        build: gather2-couchdb-sync
+        image: couchdb-sync
+        environment:
+            CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
+            CSRF_COOKIE_DOMAIN: .gather2.local
+            TESTING: "true"
+            HOSTNAME: sync.gather2.local
+
+            COUCHDB_PASSWORD: secret
+            COUCHDB_URL: http://couchdb:5984
+            COUCHDB_USER: admin
+
+            GATHER_CORE_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
+            GATHER_CORE_URL_TEST: http://core-test:9000
+
+            GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
+
+            RDS_DB_NAME: couchdb-sync-testing
+            RDS_PASSWORD: ""
+            RDS_PORT: 5432
+            RDS_USERNAME: postgres
+
+            REDIS_DB: 0
+            REDIS_HOST: redis-test
+            REDIS_PASSWORD: ""
+            REDIS_PORT: 6379
+
+            WEB_SERVER_PORT: 9666
+        volumes:
+            - ./gather2-couchdb-sync:/code
+        ports:
+            - "9666:9666"
+        command: start_dev

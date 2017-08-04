@@ -22,7 +22,7 @@ docker-compose build
 Include this entry in your `/etc/hosts` file:
 
 ```
-127.0.0.1    core.gather2.local odk.gather2.local sync.gather2.local
+127.0.0.1    core.gather2.local odk.gather2.local sync.gather2.local ui.gather2.local
 ```
 
 ### Environment Variables
@@ -60,8 +60,19 @@ of the most common ones with non default values. For more info take a look at th
 - `GOOGLE_CLIENT_ID`: `search for it in lastpass` Token used to verify the device identity with Google.
 
 
+#### Gather UI
+
+- `RDS_DB_NAME`: `ui` Postgres database name.
+- `WEB_SERVER_PORT`: `8080` Web server port.
+- `GATHER_CORE_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24` Token to connect to core server.
+- `GATHER_CORE_URL`: `http://core:8000` Gather Core Server url.
+- `GATHER_CORE_URL_TEST`: `http://core-test:9000` Gather Core Testing Server url.
+- `GATHER_ODK_URL`: `http://odk-importer:8443` Gather ODK Importer Server url.
+- `GATHER_ODK_URL_TEST`: `http://odk-importer-test:9443` Gather ODK Importer Testing Server url.
+
+
 **WARNING**
-Never run `odk-importer` or `couchdb-sync` tests against any PRODUCTION server.
+Never run `odk-importer`, `couchdb-sync` or `ui` tests against any PRODUCTION server.
 The tests clean up will DELETE ALL SURVEYS!!!
 
 
@@ -81,6 +92,10 @@ This will start:
 
 - **couchdb-sync** on `http://sync.gather2.local:8666`
   and create a superuser `admin-sync`.
+
+- **ui** on `http://ui.gather2.local:8080`
+  and create a superuser `admin-ui`.
+
 
 All the created superusers have password `adminadmin` in each container.
 
@@ -148,6 +163,7 @@ The list of the main containers:
 | **core**          | Gather2 Core app                                                        |
 | **odk-importer**  | Gather2 ODK Collect Adapter app (imports data from ODK Collect)         |
 | **couchdb-sync**  | Gather2 Couchdb Sync app (imports data from Gather2 Mobile app)         |
+| **ui**            | Gather2 UI app                                                          |
 | couchdb-sync-rq   | [RQ python](http://python-rq.org/) task runner to perform sync jobs     |
 | core-test         | Gather2 Core TESTING app (used only in e2e tests with other containers) |
 
@@ -175,25 +191,29 @@ The pattern to run a command is always
 or
 
 ```bash
-docker-compose run core         test
-docker-compose run odk-importer test
-docker-compose run couchdb-sync test
+docker-compose run <container-name> test
+
 ```
 
 or
 
 ```bash
-docker-compose run core         test_lint
-docker-compose run odk-importer test_lint
-docker-compose run couchdb-sync test_lint
+docker-compose run <container-name> test_lint
+docker-compose run <container-name> test_coverage
+```
 
-docker-compose run core         test_coverage
-docker-compose run odk-importer test_coverage
-docker-compose run couchdb-sync test_coverage
+The e2e tests are run against different containers, the config file used
+for them is [docker-compose-test.yml](docker-compose-test.yml).
+
+Before running `odk-importer`, `couchdb-sync` or `ui` you should start
+the needed test containers.
+
+```bash
+docker-compose -f docker-compose-test.yml up -d <container-name>-test
 ```
 
 **WARNING**
-Never run `odk-importer` or `couchdb-sync` tests against a
+Never run `odk-importer`, `couchdb-sync` or `ui` tests against any
 PRODUCTION server. The tests clean up will DELETE ALL SURVEYS!!!
 
 Look into [docker-compose.yml](docker-compose.yml), the variable
@@ -205,9 +225,7 @@ Look into [docker-compose.yml](docker-compose.yml), the variable
 #### Check outdated dependencies
 
 ```bash
-docker-compose run core         eval pip list --outdated
-docker-compose run odk-importer eval pip list --outdated
-docker-compose run couchdb-sync eval pip list --outdated
+docker-compose run <container-name> eval pip list --outdated
 ```
 
 #### Update requirements file
@@ -219,7 +237,5 @@ docker-compose run couchdb-sync eval pip list --outdated
 or
 
 ```bash
-docker-compose run core         pip_freeze
-docker-compose run odk-importer pip_freeze
-docker-compose run couchdb-sync pip_freeze
+docker-compose run <container-name> pip_freeze
 ```

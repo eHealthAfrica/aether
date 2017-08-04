@@ -1,0 +1,126 @@
+.navbar {
+  background: $text-color;
+  box-shadow: 0 1px 2px rgba($text-color, 0.6);
+  padding: 0.8em 1em;
+  height: 52px;
+}
+
+.navbar-collapse {
+  border-left: 1px solid rgba(white, 0.2);
+}
+
+.navbar-nav {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+}
+
+.navbar-nav.pull-right {
+  margin-left: auto;
+  float: none;
+}
+
+.nav-item {
+  color: rgba(white, 0.5);
+  padding: 0.2rem 1em 0;
+  @include label;
+
+  border-right: 1px solid $dark-grey;
+  margin-right: 0.1em;
+
+  &:last-child {
+    border-right: none;
+    margin-right: 0;
+  }
+
+  .btn:not(.btn-primary) {
+    color: $action-blue;
+  }
+}
+
+.navbar-nav .nav-link {
+  padding: 0.3em 0.5em;
+}
+
+.navbar-brand {
+  padding: 0 0 0 1em;
+  position: relative;
+  span {
+    display: inline-block;
+    padding: 0.2em 0.4em;
+    margin-left: 30px;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    font-size: 1.1em;
+  }
+}
+
+nav {
+  color: $white;
+
+  a {
+    color: $white;
+    &:hover {
+      color: $action-blue;
+    }
+  }
+}
+
+.navbar-toggler {
+  color: white;
+  z-index: 2;
+}
+
+.nav-item {
+
+  input[type="search"] {
+    background: none;
+    color: white;
+    border: none;
+    font: $font-size-s $body-font-family;
+    font-weight: 400;
+    padding: 0.1em 0.2em;
+    width: 9em;
+    transition: all 0.3s;
+
+    &:focus {
+      font-size: $font-size-standard;
+      border: 1px dotted $light-grey;
+      outline: none;
+      border: none;
+      background: none;
+      width: 10em;
+    }
+  }
+
+  .fa-search {
+    font-size: 1.4rem;
+    color: white;
+    margin-top: -0.2em;
+    margin-right: 0.4em;
+  }
+}
+
+@media screen and (max-width: 992px) {
+
+  .navbar {
+    height: auto;
+  }
+
+  .nav-item {
+    padding: 0.3em 1em;
+  }
+
+  .navbar-collapse {
+    padding-left: 48px;
+    border: none;
+    border-top: 1px solid rgba(white, 0.2);
+    position: relative;
+    top: 12px;
+  }
+
+  .nav-link {
+    background: none;
+    color: $action-blue;
+  }
+}

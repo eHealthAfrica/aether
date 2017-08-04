@@ -1,0 +1,35 @@
+@mixin label {
+  font-size: 0.825rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+@mixin label-light {
+  color: $grey;
+  font-size: $font-size-xs;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+@mixin status-label {
+  text-transform: uppercase;
+  vertical-align: super;
+  font-size: 10px;
+  line-height: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  border-radius: 10px;
+  background: rgba($text-color, 0.1);
+  padding: 0 0.5em;
+  margin: 4px;
+}
+
+@mixin logo-gather2 {
+  background: url('/static/images/gather2-icon.svg');
+}
+
+@mixin logo-eha {
+  background: url('/static/images/eHA-icon.svg');
+}

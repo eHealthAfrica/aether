@@ -10,20 +10,10 @@ cache:
     - "$HOME/.cache/pip"
 
 install:
-  - pip install flake8 awscli ecs-deploy
-
-before_script:
-  - flake8
-  - docker-compose up -d db
-  - docker-compose build
-  - docker-compose run core         setuplocaldb
-  - docker-compose run odk-importer setuplocaldb
-  - docker-compose run couchdb-sync setuplocaldb
+  - pip install awscli ecs-deploy
 
 script:
-  - docker-compose run core         test_coverage
-  - docker-compose run odk-importer test_coverage
-  - docker-compose run couchdb-sync test_coverage
+  - ./scripts/test_all.sh
 
 deploy:
   - provider: script

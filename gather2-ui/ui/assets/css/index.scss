@@ -1,0 +1,15 @@
+/* third-party styles */
+
+$fa-font-path: "~font-awesome/fonts";
+
+@import "~font-awesome/scss/font-awesome";
+@import "~bootstrap/scss/bootstrap";
+
+
+/* custom styles */
+
+@import "settings";
+@import "mixins";
+@import "nav-bar";
+@import "logo";
+@import "custom";

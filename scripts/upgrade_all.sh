@@ -5,3 +5,4 @@ set -e
 docker-compose run core         pip_freeze
 docker-compose run odk-importer pip_freeze
 docker-compose run couchdb-sync pip_freeze
+docker-compose run ui           pip_freeze

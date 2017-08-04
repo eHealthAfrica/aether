@@ -1,0 +1,44 @@
+.logo-container {
+  perspective: 1000px;
+  position: absolute;
+}
+
+.logo-container:hover .flipper {
+  transform: rotateY(180deg);
+}
+
+.logo-container, .front, .back {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+.flipper {
+  transition: 1s;
+  transform-style: preserve-3d;
+  position: relative;
+}
+
+.front, .back {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+}
+
+/* front pane, placed above back */
+.front {
+  @include logo-gather2;
+  z-index: 2;
+  transform: rotateY(0deg);
+  background-size: 100%;
+}
+
+/* back, initially hidden pane */
+.back {
+  @include logo-eha;
+  transform: rotateY(180deg);
+  background-size: 100%;
+}
