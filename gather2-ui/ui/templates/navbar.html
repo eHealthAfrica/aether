@@ -31,25 +31,6 @@
           <li class="nav-item">
             <a class="nav-link" href="{% url 'surveys-list' %}">{% trans 'Surveys' %}</a>
           </li>
-          <li class="nav-item">
-            <form name="search"
-                  method="GET"
-                  action="{% url 'search' %}"
-                  class="form-inline">
-              <i class="fa fa-search" aria-hidden="true"></i>
-              <input type="search"
-                     name="search"
-                     value="{{ request.GET.search }}"
-                     placeholder="{% trans 'Search in surveys…' %}"
-                     required="true">
-            </form>
-          </li>
-          <li class="nav-item">
-            <a class="btn nav-link" href="{% url 'manage-survey' %}">
-              <i class="fa fa-plus" aria-hidden="true"></i>
-              <span>{% trans 'Add survey' %}</span>
-            </a>
-          </li>
         </ul>
         <ul class="nav navbar-nav pull-right">
           <li class="nav-item user-name">
@@ -59,8 +40,8 @@
               {{ request.user|get_fullname }}
             </span>
           </li>
-          <li class="logout">
-            <a class="nav-link" href="{% url 'rest_framework:logout' %}">
+          <li class="nav-item logout">
+            <a href="{% url 'rest_framework:logout' %}">
               <i class="fa fa-sign-out" title="{% trans 'Sign Out' %}" aria-hidden="true"></i>
             </a>
           </li>
