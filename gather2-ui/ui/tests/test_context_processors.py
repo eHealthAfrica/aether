@@ -10,5 +10,5 @@ class ContextProcessorsTests(TestCase):
 
         self.assertEqual(gather2(request), {
             'dev_mode': False,
-            'app_name': 'Gather2 UI',
+            'app_name': 'Gather',
         })

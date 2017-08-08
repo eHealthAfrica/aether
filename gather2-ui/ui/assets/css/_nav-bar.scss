@@ -1,17 +1,18 @@
 .navbar {
   background: $text-color;
-  box-shadow: 0 1px 2px rgba($text-color, 0.6);
-  padding: 0.8em 1em;
-  height: 52px;
+  box-shadow: 0 -2px 2px rgba(black, 0.4) inset;
+  padding: 0;
+  font: 0.9rem "Quicksand";
+  font-weight: 700;
 }
 
-.navbar-collapse {
-  border-left: 1px solid rgba(white, 0.2);
+.navbar-toggleable-md {
+  align-items: stretch;
 }
 
 .navbar-nav {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   flex-direction: row;
 }
 
@@ -23,35 +24,28 @@
 .nav-item {
   color: rgba(white, 0.5);
   padding: 0.2rem 1em 0;
+  display: flex;
+  align-items: center;
   @include label;
 
-  border-right: 1px solid $dark-grey;
-  margin-right: 0.1em;
-
-  &:last-child {
-    border-right: none;
-    margin-right: 0;
-  }
-
   .btn:not(.btn-primary) {
-    color: $action-blue;
+    color: $action-color;
   }
 }
 
-.navbar-nav .nav-link {
-  padding: 0.3em 0.5em;
+.user-name {
+  text-transform: none;
+  border-left: 1px solid rgba(white, 0.2);
 }
 
 .navbar-brand {
-  padding: 0 0 0 1em;
+  padding: 0.6rem 2rem;
+  background: rgba($action-color, 0.3);
   position: relative;
   span {
     display: inline-block;
-    padding: 0.2em 0.4em;
-    margin-left: 30px;
-    font-weight: 300;
-    letter-spacing: 0.02em;
-    font-size: 1.1em;
+    padding: 0.1em;
+    margin-left: 36px;
   }
 }
 
@@ -61,7 +55,7 @@ nav {
   a {
     color: $white;
     &:hover {
-      color: $action-blue;
+      color: $action-color;
     }
   }
 }
@@ -121,6 +115,6 @@ nav {
 
   .nav-link {
     background: none;
-    color: $action-blue;
+    color: $action-color;
   }
 }

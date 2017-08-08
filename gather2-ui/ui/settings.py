@@ -8,7 +8,7 @@ import os
 ROOT_URLCONF = 'ui.urls'
 WSGI_APPLICATION = 'ui.wsgi.application'
 
-APP_NAME = 'Gather2 UI'
+APP_NAME = 'Gather'
 
 
 # Common Configuration
