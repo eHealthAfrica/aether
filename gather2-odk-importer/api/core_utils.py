@@ -35,12 +35,12 @@ def test_connection():
         try:
             # check that the server is up
             h = requests.head(url)
-            assert h.status_code == 200
+            assert h.status_code == 403  # expected response 403 Forbidden
             logger.info('Gather2 Core server ({url}) is up and responding!'.format(url=url))
 
             try:
                 # check that the token is valid
-                g = requests.get(url + '/surveys.json',
+                g = requests.get(url,
                                  headers={'Authorization': 'Token {token}'.format(token=token)})
                 assert g.status_code == 200, g.content
                 logger.info('Gather2 Core token is valid!')

@@ -43,5 +43,7 @@ router.register('map-results', views.MapResultViewSet, base_name='map_results')
 router.register('reduce-functions', views.ReduceFunctionViewSet, base_name='reduce_function')
 router.register('responses', views.ResponseViewSet, base_name='response')
 router.register('attachments', views.AttachmentViewSet, base_name='attachment')
+router.register('surveys-stats', views.SurveyStatsViewSet, base_name='survey_stats')
+router.register('users', views.UserViewSet, base_name='user')
 
 urlpatterns = router.urls

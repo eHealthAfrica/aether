@@ -70,7 +70,7 @@ class CoreTests(TestCase):
             self.assertFalse(core_utils.test_connection())
             mock_head.assert_called_with(GATHER_CORE_URL_MOCK)
 
-    @mock.patch('requests.head', return_value=mock.Mock(status_code=200))
+    @mock.patch('requests.head', return_value=mock.Mock(status_code=403))
     @mock.patch('requests.get', return_value=mock.Mock(status_code=401))
     def test__test_connection_get_fail(self, mock_get, mock_head):
         with mock.patch.dict('os.environ', GATHER_ENV_MOCK):
@@ -78,7 +78,7 @@ class CoreTests(TestCase):
             self.assertEqual(core_utils.get_auth_header(), None)
             mock_head.assert_called_with(GATHER_CORE_URL_MOCK)
             mock_get.assert_called_with(
-                '{}/surveys.json'.format(GATHER_CORE_URL_MOCK),
+                GATHER_CORE_URL_MOCK,
                 headers={
                     'Authorization': 'Token {}'.format(GATHER_CORE_TOKEN_MOCK)
                 },

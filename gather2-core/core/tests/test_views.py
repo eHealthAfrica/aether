@@ -333,7 +333,7 @@ class ViewsTest(TransactionTestCase):
                 },
             }
 
-        for i in range(0, 2):
+        for i in range(3):
             response = self.client.post(items_url,
                                         data=json.dumps(gen_data(i)),
                                         content_type='application/json')
@@ -345,3 +345,11 @@ class ViewsTest(TransactionTestCase):
         data = response.json()['results']
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]['data']['firstName'], 'Peter')
+
+        # check survey stats
+        response = self.client.get('/surveys-stats/')
+        self.assertEqual(response.status_code, 200, response.json())
+
+        data = response.json()['results']
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]['responses'], 3, '3 responses were created')

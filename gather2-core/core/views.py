@@ -1,4 +1,6 @@
-from rest_framework import permissions, viewsets, filters
+from django.contrib.auth import get_user_model
+from django.db.models import Count, Min, Max
+from rest_framework import viewsets
 from rest_framework_extensions.mixins import NestedViewSetMixin
 
 from . import models, serializers
@@ -34,9 +36,7 @@ class SurveyViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
 
     queryset = models.Survey.objects.all()
     serializer_class = serializers.SurveySerializer
-    permission_classes = (permissions.IsAuthenticated,)
 
-    filter_backends = (filters.SearchFilter, filters.OrderingFilter,)
     search_fields = ('name', 'created_by__username', 'schema',)
     ordering_fields = ('name', 'created',)
     ordering = ('name',)
@@ -51,9 +51,7 @@ class ResponseViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
 
     queryset = models.Response.objects.all()
     serializer_class = serializers.ResponseSerializer
-    permission_classes = (permissions.IsAuthenticated,)
 
-    filter_backends = (filters.SearchFilter, filters.OrderingFilter,)
     search_fields = ('survey__name', 'created_by__username', 'data',)
     ordering_fields = ('survey', 'created',)
     ordering = ('survey',)
@@ -75,6 +73,7 @@ class ResponseViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
         '''
         Use the parent relationship, if available, on the child resource
         '''
+        # Needed by ODK-Importer submission
 
         # fixes "AttributeError: This QueryDict instance is immutable"
         self.request.POST._mutable = True
@@ -91,9 +90,7 @@ class AttachmentViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
 
     queryset = models.Attachment.objects.all()
     serializer_class = serializers.AttachmentSerializer
-    permission_classes = (permissions.IsAuthenticated,)
 
-    filter_backends = (filters.SearchFilter, filters.OrderingFilter,)
     search_fields = ('name',)
     ordering_fields = ('name', 'created',)
     ordering = ('name',)
@@ -102,6 +99,7 @@ class AttachmentViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
         '''
         Use the parent relationship, if available, on the child resource
         '''
+        # Needed by ODK-Importer submission
 
         # fixes "AttributeError: This QueryDict instance is immutable"
         self.request.POST._mutable = True
@@ -126,9 +124,7 @@ class MapFunctionViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
 
     queryset = models.MapFunction.objects.all()
     serializer_class = serializers.MapFunctionSerializer
-    permission_classes = (permissions.IsAuthenticated,)
 
-    filter_backends = (filters.SearchFilter, filters.OrderingFilter,)
     search_fields = ('survey__name', 'code')
     ordering_fields = ('survey', 'created',)
     ordering = ('survey',)
@@ -145,9 +141,7 @@ class MapResultViewSet(NestedViewSetMixin, viewsets.ReadOnlyModelViewSet):
 
     queryset = models.MapResult.objects.all()
     serializer_class = serializers.MapResultSerializer
-    permission_classes = (permissions.IsAuthenticated,)
 
-    filter_backends = (filters.SearchFilter, filters.OrderingFilter,)
     search_fields = ('output', 'error',)
     ordering_fields = ('response', 'map_function', 'created',)
     ordering = ('response',)
@@ -170,9 +164,43 @@ class ReduceFunctionViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
 
     queryset = models.ReduceFunction.objects.all()
     serializer_class = serializers.ReduceFunctionSerializer
-    permission_classes = (permissions.IsAuthenticated,)
 
-    filter_backends = (filters.SearchFilter, filters.OrderingFilter,)
     search_fields = ('code', 'output', 'error',)
     ordering_fields = ('map_function', 'created',)
     ordering = ('map_function',)
+
+
+class SurveyStatsViewSet(NestedViewSetMixin, viewsets.ReadOnlyModelViewSet):
+    '''
+    Contains the aggregated data from survey responses like:
+
+    - first response date
+    - last response date
+    - number of responses
+
+    '''
+
+    queryset = models.Survey.objects.all()
+    serializer_class = serializers.SurveyStatsSerializer
+
+    search_fields = ('name',)
+    ordering_fields = ('name', 'created',)
+    ordering = ('name',)
+
+    def get_queryset(self):
+        return models.Survey \
+                     .objects \
+                     .values('id', 'name', 'schema', 'created', 'created_by_id') \
+                     .annotate(
+                         first_response=Min('responses__created'),
+                         last_response=Max('responses__created'),
+                         responses=Count('responses__id'),
+                     )
+
+
+class UserViewSet(NestedViewSetMixin, viewsets.ReadOnlyModelViewSet):
+    queryset = get_user_model().objects.all()
+    serializer_class = serializers.UserSerializer
+
+    search_fields = ('username', 'email',)
+    ordering = ('username',)

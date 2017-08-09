@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import jsonschema
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from . import models
 
@@ -181,3 +182,40 @@ class ReduceFunctionSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ReduceFunction
         fields = '__all__'
+
+
+class SurveyStatsSerializer(serializers.ModelSerializer):
+    first_response = serializers.DateTimeField()
+    last_response = serializers.DateTimeField()
+    responses = serializers.IntegerField()
+
+    class Meta:
+        model = models.Survey
+        fields = (
+            # survey fields
+            'id', 'name', 'schema', 'created', 'created_by_id',
+            # calculated fields
+            'first_response', 'last_response', 'responses',
+        )
+
+
+class UserSerializer(serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField('user-detail', read_only=True)
+    full_name = serializers.SerializerMethodField(source='get_full_name', read_only=True)
+
+    def get_full_name(self, instance):  # pragma: no cover
+        '''
+        Returns a readable name of the instance.
+
+        - ``first_name`` + ``last_name``
+        - ``username``
+        '''
+
+        if instance.first_name and instance.last_name:
+            return '{} {}'. format(instance.first_name, instance.last_name)
+
+        return instance.username
+
+    class Meta:
+        model = get_user_model()
+        fields = ('id', 'username', 'full_name', 'email', 'url',)
