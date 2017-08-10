@@ -154,6 +154,7 @@ services:
             GATHER_CORE_URL: http://core:8000
             GATHER_CORE_URL_TEST: http://core-test:9000
 
+            GATHER_ODK_TOKEN: d5184a044bb5acff89a76ec4e67d0fcddd5cd3a1
             GATHER_ODK_URL: http://odk-importer:8443
             GATHER_ODK_URL_TEST: http://odk-importer-test:9443
 

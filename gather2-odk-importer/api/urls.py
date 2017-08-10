@@ -1,11 +1,12 @@
 from django.conf.urls import url
 from rest_framework import routers
 
-from api import views
+from . import views
 
 
 router = routers.DefaultRouter()
 router.register(r'xforms', views.XFormViewset)
+router.register(r'surveyors', views.SurveyorViewSet)
 urlpatterns = router.urls
 
 urlpatterns += [

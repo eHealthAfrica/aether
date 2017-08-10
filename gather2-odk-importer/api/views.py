@@ -3,6 +3,7 @@ import requests
 import xmltodict
 
 from dateutil import parser
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from geojson import Point
 
@@ -20,15 +21,25 @@ from rest_framework.response import Response
 
 from .core_utils import get_auth_header
 from .models import XForm
-from .serializers import XFormSerializer
+from .serializers import XFormSerializer, SurveyorSerializer
 
 from importer.settings import logger
 
 
 class XFormViewset(viewsets.ModelViewSet):
-    queryset = XForm.objects.all()
+    queryset = XForm.objects.all().order_by('title')
     serializer_class = XFormSerializer
     permission_classes = [IsAuthenticated]
+
+
+class SurveyorViewSet(viewsets.ModelViewSet):
+    # all the surveyors have as first name `surveyor`
+    queryset = get_user_model().objects \
+                               .filter(is_staff=False) \
+                               .filter(is_superuser=False) \
+                               .filter(first_name='surveyor') \
+                               .order_by('username')
+    serializer_class = SurveyorSerializer
 
 
 @api_view(['GET'])
