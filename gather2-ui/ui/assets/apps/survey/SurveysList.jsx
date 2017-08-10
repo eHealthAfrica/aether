@@ -4,7 +4,7 @@ import SurveyCard from './SurveyCard'
 
 export default class SurveysList extends Component {
   render () {
-    const {survey} = this.props
+    const {surveys} = this.props
 
     return (
       <div className='surveys-list' data-qa='surveys-list'>
@@ -21,7 +21,7 @@ export default class SurveysList extends Component {
         <h4 className='title'>Surveys</h4>
         <div className='surveys-list__cards'>
           {
-            survey.results.map(survey => <SurveyCard className='col-4' key={survey.id} survey={survey} />)
+            surveys.results.map(survey => <SurveyCard className='col-4' key={survey.id} survey={survey} />)
           }
         </div>
       </div>

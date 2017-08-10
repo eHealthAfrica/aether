@@ -30,7 +30,7 @@ switch (action) {
     const editUrls = [
       {
         name: 'survey',
-        url: `/core/surveys/${surveyId}?format=json`
+        url: `/core/surveys/${surveyId}.json`
       }
     ]
 
@@ -45,11 +45,11 @@ switch (action) {
     const viewUrls = [
       {
         name: 'survey',
-        url: `/core/surveys-stats/${surveyId}?format=json`
+        url: `/core/surveys-stats/${surveyId}.json`
       },
       {
         name: 'responses',
-        url: `/core/surveys/${surveyId}/responses?format=json`
+        url: `/core/surveys/${surveyId}/responses.json`
       }
     ]
 
@@ -63,8 +63,8 @@ switch (action) {
   default:
     const listUrls = [
       {
-        name: 'survey',
-        url: `/core/surveys-stats/?format=json`
+        name: 'surveys',
+        url: '/core/surveys-stats.json'
       }
     ]
 

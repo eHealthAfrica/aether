@@ -1,9 +1,9 @@
 body {
-    font: 17px $body-font-family;
-    color: $text-color;
-    line-height: 1.3em;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+  font: 17px $body-font-family;
+  color: $text-color;
+  line-height: 1.3em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a, a:not([href]):not([tabindex]) {
@@ -14,11 +14,11 @@ a, a:not([href]):not([tabindex]) {
     color: $hover-color;
     text-decoration: none;
   }
- }
+}
 
- .container-fluid {
+.container-fluid {
   padding: 0;
- }
+}
 
 
 button,
@@ -77,6 +77,18 @@ a.btn-primary:not([href]) {
   }
 }
 
+.btn-delete {
+  padding: 0.9em 1.5em;
+  border-radius: 2px;
+  color: white;
+  background: $red;
+  &:hover,
+  &:focus,
+  &:active {
+    background-color: darken($red, 6);
+  }
+}
+
 .btn-default {
   background: none;
   border: 1px solid $light-grey;
@@ -96,7 +108,7 @@ a.btn-primary:not([href]) {
   font-size: $font-size-s;
 }
 
-input[type="text"] {
+input[type="text"], input[type="password"] {
   border: 0;
   border-radius: 0;
   box-shadow: 1px 1px 1px rgba($text-color, 0.3) inset;

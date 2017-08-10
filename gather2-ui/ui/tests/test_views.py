@@ -6,7 +6,7 @@ from django.test import TestCase, RequestFactory
 from ..views import ProxyView
 
 
-RETURN_MOCK = mock.Mock(status_code=200, headers={'content-type': 'aaa'})
+RETURN_MOCK = mock.Mock(status_code=200)
 
 
 class ViewsTest(TestCase):

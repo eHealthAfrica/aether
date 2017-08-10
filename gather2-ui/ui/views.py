@@ -70,6 +70,5 @@ class ProxyView(View):
                                     headers=headers,
                                     *args,
                                     **kwargs)
-        return HttpResponse(response,
-                            status=response.status_code,
-                            content_type=response.headers['content-type'])
+
+        return HttpResponse(response, status=response.status_code)

@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% load render_bundle from webpack_loader %}
+
+{% block content %}
+  <div
+    class="container-fluid"
+    id="surveyors-app"></div>
+
+  {% render_bundle 'surveyors' %}
+{% endblock %}

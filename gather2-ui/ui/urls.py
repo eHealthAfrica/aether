@@ -43,6 +43,10 @@ urlpatterns = [
     url(r'^surveys/(?P<action>\w+)/(?P<survey_id>[0-9]+)?$',
         login_required(TemplateView.as_view(template_name='pages/surveys.html')),
         name='surveys'),
+
+    url(r'^surveyors$',
+        login_required(TemplateView.as_view(template_name='pages/surveyors.html')),
+        name='surveyors'),
 ]
 
 

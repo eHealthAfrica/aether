@@ -8,8 +8,12 @@
   .title {
     font-size: $font-size-standard;
   }
-  input[type="text"] {
+
+  input[type="text"], input[type="password"] {
     font-size: 1.2em;
   }
 }
 
+.form-overlay {
+  @include overlay;
+}

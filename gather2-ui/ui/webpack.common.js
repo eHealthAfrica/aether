@@ -20,6 +20,10 @@ function getApps (hmr) {
     {
       name: 'surveys',
       path: './assets/apps/surveys'
+    },
+    {
+      name: 'surveyors',
+      path: './assets/apps/surveyors'
     }
   ]
 

@@ -21,3 +21,46 @@
 @mixin logo-eha {
   background: url('/static/images/eHA-icon.svg');
 }
+
+@mixin overlay {
+  position: fixed;
+  top: 160px;
+  left: 4%;
+  width: 92%;
+  z-index: 10;
+  background: $background-color;
+  padding: 3rem 3rem 2rem;
+  color: $darker-grey;
+  box-shadow: 2px 2px 4px $darker-grey;
+
+  .close-button {
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    z-index: 15;
+    right: 1rem;
+    top: 1rem;
+    cursor: pointer;
+
+    &:before, &:after {
+      content: "";
+      display: block;
+      width: 100%;
+      height: 3px;
+      border-radius: 3px;
+      background-color: $shadow-color;
+      transform: rotate(45deg);
+      position: absolute;
+      top: 50%;
+    }
+    &:after {
+      transform: rotate(-45deg);
+    }
+
+    &:hover {
+      &:before, &:after {
+        background-color: $hover-color;
+      }
+    }
+  }
+}
