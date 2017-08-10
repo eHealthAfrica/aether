@@ -1,0 +1,17 @@
+.survey-view {
+  padding: 4rem 5vW;
+}
+
+.survey__header {
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+
+  h1 {
+    font: $font-size-xxl $nav-font-family;
+    font-weight: 400;
+    color: $light-grey;
+    margin:0;
+  }
+}

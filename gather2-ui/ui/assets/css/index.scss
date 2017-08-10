@@ -10,6 +10,12 @@ $fa-font-path: "~font-awesome/fonts";
 
 @import "settings";
 @import "mixins";
+@import "global";
 @import "nav-bar";
 @import "logo";
-@import "custom";
+@import "loading-spinner";
+@import "alerts";
+
+@import "survey-list";
+@import "survey-view";
+@import "survey-edit";

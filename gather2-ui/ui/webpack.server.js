@@ -18,6 +18,9 @@ var hmrEntry = [
 ]
 
 var config = buildConfig({
+  production: false,
+  stylesAsCss: false,
+
   entry: hmrEntry,
 
   output: {

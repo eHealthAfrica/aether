@@ -58,7 +58,7 @@ test_flake8() {
 }
 
 test_coverage() {
-    # npm run mocha
+    npm run mocha
     npm run webpack
 
     export RCFILE=/code/conf/extras/coverage.rc

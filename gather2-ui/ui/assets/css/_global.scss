@@ -1,0 +1,106 @@
+body {
+    font: 17px $body-font-family;
+    color: $text-color;
+    line-height: 1.3em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+a, a:not([href]):not([tabindex]) {
+  color: $action-color;
+  &:hover,
+  &:focus,
+  &:active {
+    color: $hover-color;
+    text-decoration: none;
+  }
+ }
+
+ .container-fluid {
+  padding: 0;
+ }
+
+
+button,
+ .btn {
+  font: 1em $nav-font-family;
+  border-color: transparent;
+  border:none;
+  @include label;
+  &:hover,
+  &:focus,
+  &:active {
+    box-shadow: none;
+    outline: none;
+    cursor: pointer;
+  }
+ }
+
+.btn-primary,
+a.btn-primary:not([href]) {
+  color: white;
+  background-color: $action-color;
+  background-image: linear-gradient(to right, rgba($action-color, 0), $hover-color);
+  border-radius: 2px;
+  padding: 0.9em 1.5em;
+  transition: background 1s;
+  box-shadow: 1px 1px 1px rgba($text-color, 0.2), 1px 1px 0 rgba(white, 0.1) inset;
+  &:hover,
+  &:focus,
+  &:active {
+    color: white;
+    background-color: $edit-color;
+    box-shadow: 1px 1px 1px rgba($text-color, 0.3), 1px 1px 0 rgba(white, 0.2) inset;
+  }
+}
+
+.btn-icon {
+  padding: 0.6em 1.5em 0.9em 1em;
+  i {
+    display: inline-block;
+    font-size: 1.6em;
+    margin-right: 0.5em;
+    position: relative;
+    top: 0.1em;
+  }
+}
+
+.btn-cancel {
+  padding: 0.9em 1.5em;
+  border-radius: 2px;
+  color: white;
+  background: $grey;
+  &:hover,
+  &:focus,
+  &:active {
+    background-color: darken($grey, 6);
+  }
+}
+
+.btn-default {
+  background: none;
+  border: 1px solid $light-grey;
+}
+
+.title {
+  font-size: $font-size-s;
+  font-style: italic;
+}
+
+.label  {
+  font-size: $font-size-xs;
+  font-style: italic;
+}
+
+.small {
+  font-size: $font-size-s;
+}
+
+input[type="text"] {
+  border: 0;
+  border-radius: 0;
+  box-shadow: 1px 1px 1px rgba($text-color, 0.3) inset;
+  font-family: $body-font-family;
+  padding: 0.8em;
+}
+

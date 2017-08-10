@@ -18,8 +18,8 @@ function getApps (hmr) {
       path: './assets/css/index.scss'
     },
     {
-      name: 'index',
-      path: './assets/apps/index'
+      name: 'surveys',
+      path: './assets/apps/surveys'
     }
   ]
 
@@ -163,6 +163,12 @@ module.exports = function (custom) {
       new BundleTracker({
         path: __dirname,
         filename: './assets/bundles/webpack-stats.json'
+      }),
+
+      new webpack.DefinePlugin({
+        'process.env': {
+          'NODE_ENV': JSON.stringify(custom.production ? 'production' : 'development')
+        }
       })
     ].concat(custom.plugins),
 

@@ -1,0 +1,76 @@
+.notification, .alert {
+  margin: 0 -2em 1px;
+  background: $background-color;
+  padding: 1em 2em 1em 4em;
+  display: flex;
+  align-items: baseline;
+  box-shadow: 0px 1px 2px $shadow-color;
+  position: relative;
+
+  i, .badge {
+    margin: 0 0.5em;
+  }
+
+  .badge {
+    font-size: $font-size-s;
+    display: block;
+    width: 1.7em;
+    height: 1.7em;
+    padding: 0;
+    line-height: 1.75em;
+    text-align: center;
+  }
+
+  .badge-danger {
+    background: $red;
+  }
+
+  .btn {
+    margin-left: auto;
+  }
+
+  p {
+    margin: 0;
+  }
+
+}
+
+.notification {
+
+  .fa-exclamation-circle {
+    color: $red;
+  }
+
+  &:last-child {
+    margin-bottom: 1em;
+
+    &:after {
+      content: "";
+      display: block;
+      box-shadow: 1px 1px 2px $shadow-color;
+      width: 20px;
+      height: 20px;
+      background: $background-color;
+      transform: rotate(45deg);
+      position: absolute;
+      bottom: -10px;
+      left: 4.5em;
+    }
+  }
+}
+
+.notification-summary:hover {
+  cursor: pointer;
+
+  .btn {
+    color: $hover-color;
+  }
+}
+
+.alert-info {
+  color: $dark-grey;
+}
+
+.alert-danger {
+  color: $red;
+}

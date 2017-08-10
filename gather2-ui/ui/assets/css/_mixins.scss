@@ -1,5 +1,6 @@
 @mixin label {
-  font-size: 0.825rem;
+  font-family: $nav-font-family;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -11,19 +12,6 @@
   font-weight: 400;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-}
-
-@mixin status-label {
-  text-transform: uppercase;
-  vertical-align: super;
-  font-size: 10px;
-  line-height: 13px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  border-radius: 10px;
-  background: rgba($text-color, 0.1);
-  padding: 0 0.5em;
-  margin: 4px;
 }
 
 @mixin logo-gather2 {

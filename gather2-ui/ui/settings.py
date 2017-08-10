@@ -174,6 +174,19 @@ if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):  # pragma: no cover
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
+# Proxy Configuration
+# ------------------------------------------------------------------------------
+GATHER_CORE_TOKEN = os.environ.get('GATHER_CORE_TOKEN', '')
+GATHER_ODK_TOKEN = os.environ.get('GATHER_ODK_TOKEN', '')
+
+if TESTING:  # pragma: no cover
+    GATHER_CORE_URL = os.environ.get('GATHER_CORE_URL_TEST', '')
+    GATHER_ODK_URL = os.environ.get('GATHER_ODK_URL_TEST', '')
+else:  # pragma: no cover
+    GATHER_CORE_URL = os.environ.get('GATHER_CORE_URL', '')
+    GATHER_ODK_URL = os.environ.get('GATHER_ODK_URL', '')
+
+
 # Debug Configuration
 # ------------------------------------------------------------------------------
 

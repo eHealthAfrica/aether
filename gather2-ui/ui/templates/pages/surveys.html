@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% load render_bundle from webpack_loader %}
+
+{% block content %}
+  <div
+    class="container-fluid"
+    id="surveys-app"
+    data-action="{{action}}"
+    data-survey-id="{{survey_id}}"></div>
+
+  {% render_bundle 'surveys' %}
+{% endblock %}

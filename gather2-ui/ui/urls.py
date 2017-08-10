@@ -4,6 +4,8 @@ from django.contrib import admin
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 
+from .views import ProxyView
+
 
 auth_urls = 'rest_framework.urls'
 if settings.CAS_SERVER_URL:  # pragma: no cover
@@ -19,21 +21,28 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^accounts/', include(auth_urls, namespace='rest_framework')),
 
+    # Proxy to other apps
+    url(r'^core/(?P<path>.*)$',
+        login_required(ProxyView.as_view(
+            base_url=settings.GATHER_CORE_URL,
+            token=settings.GATHER_CORE_TOKEN,
+        )),
+        name='core-proxy'),
+    url(r'^odk/(?P<path>.*)$',
+        login_required(ProxyView.as_view(
+            base_url=settings.GATHER_ODK_URL,
+            token=settings.GATHER_ODK_TOKEN,
+        )),
+        name='odk-proxy'),
+
     # Entrypoints
     url(r'^$',
         login_required(TemplateView.as_view(template_name='pages/index.html')),
         name='index-page'),
 
-    url(r'^search$',
-        login_required(TemplateView.as_view(template_name='pages/index.html')),
-        name='search'),
-
-    url(r'^surveys/$',
-        login_required(TemplateView.as_view(template_name='pages/index.html')),
-        name='surveys-list'),
-    url(r'^surveys/manage$',
-        login_required(TemplateView.as_view(template_name='pages/index.html')),
-        name='manage-survey'),
+    url(r'^surveys/(?P<action>\w+)/(?P<survey_id>[0-9]+)?$',
+        login_required(TemplateView.as_view(template_name='pages/surveys.html')),
+        name='surveys'),
 ]
 
 
