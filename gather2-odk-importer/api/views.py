@@ -29,7 +29,6 @@ from importer.settings import logger
 class XFormViewset(viewsets.ModelViewSet):
     queryset = XForm.objects.all().order_by('title')
     serializer_class = XFormSerializer
-    permission_classes = [IsAuthenticated]
 
 
 class SurveyorViewSet(viewsets.ModelViewSet):
@@ -46,51 +45,49 @@ class SurveyorViewSet(viewsets.ModelViewSet):
 @renderer_classes([TemplateHTMLRenderer])
 @authentication_classes([BasicAuthentication])
 @permission_classes([IsAuthenticated])
-def form_list(request):
-    xforms = XForm.objects.all()
-    context = {
-        'xforms': xforms,
-        'host': request.build_absolute_uri().replace(request.get_full_path(), '')
-    }
-    headers = {
-        'X-OpenRosa-Version': '1.0'
-    }
-    return Response(context,
-                    template_name='xformsList.xml',
-                    content_type='text/xml',
-                    headers=headers)
+def xform_list(request):
+    '''
+    https://bitbucket.org/javarosa/javarosa/wiki/FormListAPI
+    '''
+
+    return Response(
+        {
+            'xforms': [f for f in XForm.objects.all() if f.is_surveyor(request.user)],
+            'host': request.build_absolute_uri().replace(request.get_full_path(), ''),
+        },
+        template_name='xformsList.xml',
+        content_type='text/xml',
+        headers={'X-OpenRosa-Version': '1.0'},
+    )
 
 
 @api_view(['GET'])
 @renderer_classes([StaticHTMLRenderer])
 @authentication_classes([BasicAuthentication])
 @permission_classes([IsAuthenticated])
-def download_xform(request, pk):
+def xform_get(request, pk):
+    '''
+    https://bitbucket.org/javarosa/javarosa/wiki/FormListAPI
+
+    Represents the `<downloadUrl/>` entry in the forms list.
+    '''
+
     xform = get_object_or_404(XForm, pk=pk)
+    if not xform.is_surveyor(request.user):
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+
     return Response(xform.xml_data, content_type='text/xml')
-
-
-@api_view(['GET'])
-@renderer_classes([TemplateHTMLRenderer])
-@authentication_classes([BasicAuthentication])
-@permission_classes([IsAuthenticated])
-def xform_manifest(request, id_string):
-    # TODO ???
-    context = {}
-    headers = {
-        'X-OpenRosa-Version': '1.0'
-    }
-    return Response(context,
-                    template_name='xformsManifest.xml',
-                    content_type='text/xml',
-                    headers=headers)
 
 
 @api_view(['POST', 'HEAD'])
 @renderer_classes([StaticHTMLRenderer])
 @authentication_classes([BasicAuthentication])
 @permission_classes([IsAuthenticated])
-def submission(request):
+def xform_submission(request):
+    '''
+    https://bitbucket.org/javarosa/javarosa/wiki/FormSubmissionAPI
+    '''
+
     def walk(obj, parent_keys, coerce_dict):
         if not parent_keys:
             parent_keys = []
@@ -135,10 +132,22 @@ def submission(request):
         return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     form_id = list(data.items())[0][1]['@id']  # TODO make more robust
-    xform = XForm.objects.filter(form_id=form_id).first()
+
+    # take the first xForm in which the current user is granted surveyor
+    xform = None
+    xforms = False
+    for f in XForm.objects.filter(form_id=form_id):
+        xforms = True
+        if f.is_surveyor(request.user):
+            xform = f
+            break
     if not xform:
-        logger.error('xForm entry {} not found.'.format(form_id))
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        if xforms:
+            logger.error('xForm entry {} unauthorized.'.format(form_id))
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            logger.error('xForm entry {} not found.'.format(form_id))
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
     coerce_dict = {}
     # bind entries define the fields and its types or possible values (choices list)

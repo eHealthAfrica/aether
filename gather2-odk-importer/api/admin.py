@@ -31,7 +31,7 @@ class XFormForm(forms.ModelForm):
 
     class Meta:
         model = XForm
-        fields = ['id', 'description', 'xml_data', 'xlsform', 'gather_core_survey_id']
+        fields = ['id', 'description', 'xml_data', 'xlsform', 'gather_core_survey_id', 'surveyors']
 
 
 class XFormAdmin(admin.ModelAdmin):

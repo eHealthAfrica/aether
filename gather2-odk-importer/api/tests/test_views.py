@@ -1,85 +1,91 @@
-import base64
-from django.contrib.auth import get_user_model
-from django.test import TransactionTestCase
 from django.urls import reverse
-
 from rest_framework import status
 
-from ..models import XForm
-
-xml_data = '''
-    <h:html
-        xmlns="http://www.w3.org/2002/xforms"
-        xmlns:ev="http://www.w3.org/2001/xml-events"
-        xmlns:h="http://www.w3.org/1999/xhtml"
-        xmlns:jr="http://openrosa.org/javarosa"
-        xmlns:orx="http://openrosa.org/xforms"
-        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-
-      <h:head>
-        <h:title>xForm - Test</h:title>
-        <model>
-          <instance>
-            <None id="xform-id-test">
-              <starttime/>
-              <endtime/>
-              <deviceid/>
-              <meta>
-                <instanceID/>
-              </meta>
-            </None>
-          </instance>
-          <instance id="other-entry">
-          </instance>
-        </model>
-      </h:head>
-      <h:body>
-      </h:body>
-    </h:html>
-'''
+from . import CustomTestCase
 
 
-class ApiViewsTests(TransactionTestCase):
+class ViewsTests(CustomTestCase):
 
     def setUp(self):
-        username = 'test'
-        email = 'test@example.com'
-        password = 'testtest'
-        basic = b'test:testtest'
-        get_user_model().objects.create_superuser(username, email, password)
+        super(ViewsTests, self).setUp()
+        self.helper_create_user()
+        self.xform = self.helper_create_xform()
+        self.formIdXml = '<formID>%s</formID>' % self.xform.id_string
+        self.url_get = reverse('xform-get-xml_data', kwargs={'pk': self.xform.id})
+        self.url_list = reverse('xform-list-xml')
 
-        self.headers = {
-            'HTTP_AUTHORIZATION': 'Basic ' + base64.b64encode(basic).decode('ascii')
-        }
-
-    def test__form_list(self):
-        response = self.client.get(reverse('form_list'), **self.headers)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test__download_form__none(self):
-        url = reverse('download_xform', kwargs={'pk': 0})
-        response = self.client.get(url, **self.headers)
+    def test__form_get__none(self):
+        url = reverse('xform-get-xml_data', kwargs={'pk': 0})
+        response = self.client.get(url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test__download_form(self):
-        instance = XForm.objects.create(
-            gather_core_survey_id=1,
-            xml_data=xml_data,
-        )
-        instance.save()
-
-        url = reverse('download_xform', kwargs={'pk': instance.id})
-        response = self.client.get(url, **self.headers)
+    def test__form_get__no_surveyors(self):
+        response = self.client.get(self.url_get, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.content.decode(), xml_data)
+        self.assertEqual(response.content.decode(), self.xform.xml_data)
 
-    def test__xform_manifest(self):
-        instance = XForm.objects.create(
-            gather_core_survey_id=1,
-            xml_data=xml_data,
-        )
-        instance.save()
+    def test__form_get__one_surveyor(self):
+        self.xform.surveyors.add(self.helper_create_surveyor())
+        self.xform.save()
+        response = self.client.get(self.url_get, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-        url = reverse('xform_manifest', kwargs={'id_string': instance.id_string})
-        response = self.client.get(url, **self.headers)
+    def test__form_get__as_surveyor(self):
+        self.xform.surveyors.add(self.user)
+        self.xform.save()
+        response = self.client.get(self.url_get, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.content.decode(), self.xform.xml_data)
+
+    def test__form_get__as_superuser(self):
+        self.helper_create_superuser()
+        # with at least one surveyor
+        self.xform.surveyors.add(self.helper_create_surveyor())
+        self.xform.save()
+
+        response = self.client.get(self.url_get, **self.headers_admin)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.content.decode(), self.xform.xml_data)
+
+    def test__form_list(self):
+        response = self.client.get(self.url_list, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test__form_list__no_surveyors(self):
+        # if no granted surveyors...
+        response = self.client.get(self.url_list, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn(self.formIdXml,
+                      response.content.decode(),
+                      'current user is granted surveyor')
+
+    def test__form_list__one_surveyor(self):
+        # if at least one surveyor
+        self.xform.surveyors.add(self.helper_create_surveyor())
+        self.xform.save()
+        response = self.client.get(self.url_list, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotIn(self.formIdXml,
+                         response.content.decode(),
+                         'current user is not granted surveyor')
+
+    def test__form_list__as_surveyor(self):
+        self.xform.surveyors.add(self.user)
+        self.xform.save()
+        response = self.client.get(self.url_list, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn(self.formIdXml,
+                      response.content.decode(),
+                      'current user is granted surveyor')
+
+    def test__form_list__as_superuser(self):
+        self.helper_create_superuser()
+        # with at least one surveyor
+        self.xform.surveyors.add(self.helper_create_surveyor())
+        self.xform.save()
+
+        response = self.client.get(self.url_list, **self.headers_admin)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn(self.formIdXml,
+                      response.content.decode(),
+                      'superusers are granted surveyors')

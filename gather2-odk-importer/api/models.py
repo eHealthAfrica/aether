@@ -2,6 +2,7 @@ import xmltodict
 
 from hashlib import md5
 
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.db import models, IntegrityError
@@ -12,7 +13,7 @@ from . import core_utils
 
 def get_xml_title(data):
     '''
-    extracts form title from xml definition
+    Extracts form title from xml definition
 
         <h:html>
           <h:head>
@@ -39,7 +40,7 @@ def get_xml_title(data):
 
 def get_xml_form_id(data):
     '''
-    extracts form id from xml definition
+    Extracts form id from xml definition
 
         <h:html>
           <h:head>
@@ -75,6 +76,7 @@ def get_xml_form_id(data):
 def validate_xmldict(value):
     '''
     Validates xml definition:
+
     1. parses xml
     2. checks if title is valid
     3. checks if form id is valid
@@ -112,6 +114,9 @@ class XForm(models.Model):
     # This is needed to submit data to core
     gather_core_survey_id = models.IntegerField()
 
+    # the list of granted surveyors
+    surveyors = models.ManyToManyField(to=get_user_model(), related_name='xforms', blank=True)
+
     @property
     def gather_core_url(self):
         return core_utils.get_survey_responses_url(
@@ -119,16 +124,16 @@ class XForm(models.Model):
         )
 
     @property
-    def hash(self):  # pragma: no cover
+    def hash(self):
         return u'%s' % md5(self.xml_data.encode('utf8')).hexdigest()
 
     @property
-    def id_string(self):  # pragma: no cover
+    def id_string(self):
         return str(self.pk)
 
     @property
     def url(self):
-        return reverse('download_xform', kwargs={'pk': self.pk})
+        return reverse('xform-get-xml_data', kwargs={'pk': self.pk})
 
     def save(self, *args, **kwargs):
         try:
@@ -140,3 +145,14 @@ class XForm(models.Model):
         self.title = get_xml_title(data)
         self.form_id = get_xml_form_id(data)
         return super(XForm, self).save(*args, **kwargs)
+
+    def is_surveyor(self, user):
+        '''
+        Indicates if the given user is a granted surveyor of the xForm.
+
+        Rules:
+        - User is superuser.
+        - xForm has no surveyors.
+        - User is in the surveyors list.
+        '''
+        return user.is_superuser or self.surveyors.count() == 0 or user in self.surveyors.all()
