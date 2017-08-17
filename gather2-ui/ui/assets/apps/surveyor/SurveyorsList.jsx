@@ -9,7 +9,7 @@ export default class SurveyorsList extends Component {
   }
 
   render () {
-    const {surveyors} = this.props
+    const {list} = this.props
     const {surveyor} = this.state
     const enableActions = (surveyor === undefined)
 
@@ -28,33 +28,31 @@ export default class SurveyorsList extends Component {
           </div>
         </div>
 
-        <table className='table table-hover'>
-          <thead>
-            <tr>
-              <th className='title'>Surveyors</th>
-              <th />
-            </tr>
-          </thead>
+        {
+          list.length > 0 &&
+          <div>
+            <h4 className='title'>Surveyors</h4>
+            <div className='surveys-list__cards justify-content-md-start'>
+              {
+                list.map((surveyor) => (
+                  <div key={surveyor.id} className='col-6 col-sm-4 col-md-3 col-lg-2 card'>
+                    <div className='card-header'>
+                      {surveyor.username}
 
-          <tbody>
-            {
-              surveyors.results.map(surveyor => (
-                <tr key={surveyor.id}>
-                  <td>{surveyor.username}</td>
-                  <td>
-                    {
-                      enableActions &&
-                      <button
-                        className='btn btn-primary pull-right'
-                        onClick={(evt) => this.edit(evt, surveyor)}
-                      ><i className='fa fa-pencil' /></button>
-                    }
-                  </td>
-                </tr>
-              ))
-            }
-          </tbody>
-        </table>
+                      {
+                        enableActions &&
+                        <button
+                          className='btn btn-sm btn-secondary pull-right'
+                          onClick={(evt) => this.edit(evt, surveyor)}
+                        ><i className='fa fa-pencil' /></button>
+                      }
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        }
 
         {
           surveyor &&

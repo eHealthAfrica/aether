@@ -64,8 +64,11 @@ class ProxyView(View):
                 norm_header = header.replace('HTTP_', '').title().replace('_', '-')
                 headers[norm_header] = value
 
+        param_str = request.GET.urlencode()
+        url = request.path + ('?%s' % param_str if param_str else '')
+
         response = requests.request(method=request.method,
-                                    url=request.path,
+                                    url=url,
                                     data=request.body if request.body else None,
                                     headers=headers,
                                     *args,

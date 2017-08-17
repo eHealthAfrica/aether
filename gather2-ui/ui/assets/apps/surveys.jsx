@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 
 import FetchUrlsContainer from './components/FetchUrlsContainer'
+import PaginationContainer from './components/PaginationContainer'
 
 import Survey from './survey/Survey'
 import SurveyForm from './survey/SurveyForm'
@@ -46,10 +47,6 @@ switch (action) {
       {
         name: 'survey',
         url: `/core/surveys-stats/${surveyId}.json`
-      },
-      {
-        name: 'responses',
-        url: `/core/surveys/${surveyId}/responses.json`
       }
     ]
 
@@ -61,17 +58,13 @@ switch (action) {
     break
 
   default:
-    const listUrls = [
-      {
-        name: 'surveys',
-        url: '/core/surveys-stats.json'
-      }
-    ]
-
     component = (
-      <FetchUrlsContainer urls={listUrls}>
-        <SurveysList />
-      </FetchUrlsContainer>
+      <PaginationContainer
+        pageSize={30}
+        url='/core/surveys-stats.json?page='
+        position='top'
+        listComponent={SurveysList}
+      />
     )
     break
 }

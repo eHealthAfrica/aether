@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 
-import FetchUrlsContainer from './components/FetchUrlsContainer'
+import PaginationContainer from './components/PaginationContainer'
 import SurveyorsList from './surveyor/SurveyorsList'
 
 // Include this to enable HMR for this module
@@ -14,13 +14,10 @@ This is the surveyors app
 */
 
 ReactDOM.render(
-  <FetchUrlsContainer urls={[
-    {
-      name: 'surveyors',
-      url: '/odk/surveyors.json'
-    }
-  ]}>
-    <SurveyorsList />
-  </FetchUrlsContainer>,
+  <PaginationContainer
+    pageSize={36}
+    url='/odk/surveyors.json?page='
+    listComponent={SurveyorsList}
+  />,
   document.getElementById('surveyors-app')
 )

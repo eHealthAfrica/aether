@@ -1,0 +1,42 @@
+/* pagination */
+
+.pagination {
+  display: flex;
+  align-items: baseline;
+  flex-direction: row;
+
+  background: rgba($action-color, 0.8);
+  color: $text-color;
+  font: 0.9rem $nav-font-family;
+
+  margin: 0;
+  padding: 0.6rem 1.5rem;
+  border-radius: 0;
+}
+
+.pagination li {
+  display: inline;
+  margin: 0 10px;
+
+  span.badge {
+    border-radius: $border-radius;
+    font: 0.9rem $nav-font-family;
+    margin: 0 5px;
+    padding: 0.1rem 0.4rem;
+  }
+}
+
+.pagination a {
+  background: transparent;
+  border-radius: $border-radius !important;
+  border: none;
+  color: white !important;
+  cursor: pointer;
+  font-weight: 700;
+  text-decoration: none;
+  text-transform: uppercase;
+
+  &:hover {
+    color: $hover-color !important;
+  }
+}
