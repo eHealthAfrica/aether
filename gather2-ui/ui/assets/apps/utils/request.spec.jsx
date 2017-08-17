@@ -2,7 +2,7 @@
 
 import assert from 'assert'
 import nock from 'nock'
-import request from './request'
+import {request, fetchUrls} from './request'
 
 describe('request utils', () => {
   describe('request', () => {
@@ -59,6 +59,107 @@ describe('request utils', () => {
         })
         .catch((error) => {
           assert(!error, 'Unexpected error')
+        })
+    })
+
+    it('should throw an error', () => {
+      nock('http://localhost')
+        .get('/foo')
+        .reply(404, {ok: false, message: 'something went wrong'})
+
+      return request('get', 'http://localhost/foo')
+        .then((body) => {
+          assert(!body, 'Unexpected response')
+        })
+        .catch((error) => {
+          assert(error, 'Expected error')
+          assert.equal(error.message, 'Not Found', '404 error message')
+          error.response.then(response => {
+            assert(!response.ok)
+            assert.equal(response.message, 'something went wrong')
+          })
+        })
+    })
+  })
+
+  describe('fetchUrls', () => {
+    it('should do a GET request', () => {
+      nock('http://localhost')
+        .get('/foo')
+        .reply(200, {ok: true, content: 'something'})
+
+      return fetchUrls([{
+        name: 'first',
+        url: 'http://localhost/foo'
+      }])
+        .then((payload) => {
+          assert.deepEqual(payload.first, {ok: true, content: 'something'})
+        })
+        .catch((error) => {
+          assert(!error, 'Unexpected error')
+        })
+    })
+
+    it('should do more than one GET request', () => {
+      nock('http://localhost')
+        .get('/foo')
+        .reply(200, {ok: true, content: 'something'})
+      nock('http://localhost')
+        .get('/bar')
+        .reply(200, {ok: true, content: 'else'})
+
+      return fetchUrls([
+        {
+          name: 'first',
+          url: 'http://localhost/foo'
+        },
+        {
+          name: 'second',
+          url: 'http://localhost/bar'
+        }
+      ])
+        .then((payload) => {
+          assert.deepEqual(payload,
+            {
+              first: {ok: true, content: 'something'},
+              second: {ok: true, content: 'else'}
+            }
+          )
+        })
+        .catch((error) => {
+          assert(!error, 'Unexpected error')
+        })
+    })
+
+    it('should throw an error', () => {
+      nock('http://localhost')
+        .get('/foo')
+        .reply(400, {ok: false, message: 'something went wrong'})
+      nock('http://localhost')
+        .get('/bar')
+        .reply(404, {ok: false, message: 'something went really wrong'})
+
+      return fetchUrls([
+        {
+          name: 'first',
+          url: 'http://localhost/foo'
+        },
+        {
+          name: 'second',
+          url: 'http://localhost/bar'
+        }
+      ])
+        .then((body) => {
+          assert(!body, 'Unexpected response')
+        })
+        .catch((error) => {
+          assert(error, 'Expected error', error)
+          // it throws the first error and does not continue with the rest of Promises
+          assert.equal(error.message, 'Bad Request', '400 error message')
+          error.response.then(response => {
+            assert(!response.ok)
+            assert.equal(response.message, 'something went wrong')
+          })
         })
     })
   })

@@ -188,20 +188,18 @@ export default class SurveyorForm extends Component {
         window.location.pathname = '/surveyors'
       })
       .catch(error => {
-        try {
-          return error.response.json()
-        } catch (e) {
-          console.log('error', e)
-          this.setState({
-            errors: {
-              global: [`An error occurred while saving “${surveyor.username}”`]
-            }
+        console.log(error.message)
+        error.response
+          .then(resp => {
+            this.setState({ errors: resp })
           })
-        }
-      })
-      .then(response => {
-        if (!response) return
-        this.setState({ errors: response })
+          .catch(() => {
+            this.setState({
+              errors: {
+                global: [`An error occurred while saving “${surveyor.username}”`]
+              }
+            })
+          })
       })
   }
 

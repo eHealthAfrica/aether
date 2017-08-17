@@ -19,6 +19,7 @@ show_help() {
     test          : run tests
     test_lint     : run flake8 tests
     test_coverage : run tests with coverage output
+    test_js       : run js tests
 
     start         : start webserver behind nginx
     start_dev     : start webserver for development
@@ -69,6 +70,11 @@ test_coverage() {
     coverage erase
 
     cat /code/conf/extras/good_job.txt
+}
+
+test_js() {
+    npm run lint
+    npm run mocha
 }
 
 
@@ -124,6 +130,10 @@ case "$1" in
 
     test_coverage)
         test_coverage
+    ;;
+
+    test_js)
+        test_js
     ;;
 
     start )

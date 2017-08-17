@@ -1,8 +1,6 @@
-export function clone (x) {
-  return JSON.parse(JSON.stringify(x))
-}
+export const clone = (x) => JSON.parse(JSON.stringify(x))
 
-export function deepEqual (a, b, ignoreNull = false) {
+export const deepEqual = (a, b, ignoreNull = false) => {
   if (typeof a !== 'object') {
     return a === b
   }
