@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.staticfiles',
     'django_cas_ng',
-    'django_extensions',
     'django_filters',
     'raven.contrib.django.raven_compat',
     'rest_framework',

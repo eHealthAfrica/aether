@@ -105,6 +105,18 @@ All the created superusers have password `adminadmin` in each container.
 The app defers part of the users management to
 [eHA UMS tool](https://github.com/eHealthAfrica/ums).
 
+#### UMS settings for local development
+
+The project is `gather2-all` **Gather2 Suite**.
+
+The client services are:
+
+  - **Gather2 Core (local)** for `core.gather2.local`.
+  - **Gather2 ODK (local)**  for `odk.gather2.local`.
+  - **Gather2 Sync (local)** for `sync.gather2.local`.
+  - **Gather2 UI (local)**   for `ui.gather2.local`.
+
+
 Other options are to log in via token, via basic authentication or via the
 standard django authentication process in the admin section.
 The available options depend on each container.
@@ -184,11 +196,13 @@ The pattern to run a command is always
 
 ### Run tests
 
+This will stop ALL running containers and execute the containers tests.
+
 ```bash
 ./scripts/test_all.sh
 ```
 
-or
+To execute tests in just one container.
 
 ```bash
 docker-compose run <container-name> test
@@ -210,6 +224,13 @@ the needed test containers.
 
 ```bash
 docker-compose -f docker-compose-test.yml up -d <container-name>-test
+```
+
+This script will start the auxiliary containers and execute the tests
+in `odk-importer` or `couchdb-sync`.
+
+```bash
+./scripts/test_with_core.sh <container-name>
 ```
 
 **WARNING**

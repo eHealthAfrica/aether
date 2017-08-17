@@ -3,20 +3,41 @@ version: "2"
 services:
 
     # ---------------------------------
+    # Databases containers
+    # ---------------------------------
+
+    db-test:
+        image: postgres:9.5.2
+
+    couchdb-test:
+        image: couchdb:1.6
+        environment:
+            COUCHDB_USER: admin
+            COUCHDB_PASSWORD: secret
+        volumes:
+            # enable cors for mobile app in-browser development:
+            - ./gather2-couchdb-sync/couchdb/conf/config.ini:/usr/local/etc/couchdb/local.ini
+        ports:
+            - "5984:5984"
+
+    redis-test:
+        image: redis:3.2-alpine
+
+
+    # ---------------------------------
     # Gather2 Core container
     # ---------------------------------
 
     core-test:
         build: gather2-core
-        image: core
         environment:
             CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
             CSRF_COOKIE_DOMAIN: .gather2.local
             TESTING: "true"
             HOSTNAME: core.gather2.local
 
-            RDS_DB_NAME: gather2-testing
-            RDS_HOSTNAME: db
+            RDS_DB_NAME: gather2-core-testing
+            RDS_HOSTNAME: db-test
             RDS_PASSWORD: ""
             RDS_PORT: 5432
             RDS_USERNAME: postgres
@@ -35,7 +56,6 @@ services:
 
     odk-importer-test:
         build: gather2-odk-importer
-        image: odk-importer
         environment:
             CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
             CSRF_COOKIE_DOMAIN: .gather2.local
@@ -46,7 +66,7 @@ services:
             GATHER_CORE_URL_TEST: http://core-test:9000
 
             RDS_DB_NAME: odk-importer-testing
-            RDS_HOSTNAME: db
+            RDS_HOSTNAME: db-test
             RDS_PASSWORD: ""
             RDS_PORT: 5432
             RDS_USERNAME: postgres
@@ -65,7 +85,6 @@ services:
 
     couchdb-sync-test:
         build: gather2-couchdb-sync
-        image: couchdb-sync
         environment:
             CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
             CSRF_COOKIE_DOMAIN: .gather2.local
@@ -73,7 +92,7 @@ services:
             HOSTNAME: sync.gather2.local
 
             COUCHDB_PASSWORD: secret
-            COUCHDB_URL: http://couchdb:5984
+            COUCHDB_URL: http://couchdb-test:5984
             COUCHDB_USER: admin
 
             GATHER_CORE_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
@@ -82,6 +101,7 @@ services:
             GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
 
             RDS_DB_NAME: couchdb-sync-testing
+            RDS_HOSTNAME: db-test
             RDS_PASSWORD: ""
             RDS_PORT: 5432
             RDS_USERNAME: postgres
@@ -96,4 +116,52 @@ services:
             - ./gather2-couchdb-sync:/code
         ports:
             - "9666:9666"
+        command: start_dev
+
+
+    # ---------------------------------
+    # UI container
+    # ---------------------------------
+
+    ui-test:
+        build: gather2-ui
+        environment: &ui-environment
+            CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
+            CSRF_COOKIE_DOMAIN: .gather2.local
+            TESTING: "true"
+            HOSTNAME: ui.gather2.local
+            STATIC_ROOT: /code/ui/assets/bundles
+
+            GATHER_CORE_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
+            GATHER_CORE_URL: http://core-test:9000
+            GATHER_CORE_URL_TEST: http://core-test:9000
+
+            GATHER_ODK_TOKEN: d5184a044bb5acff89a76ec4e67d0fcddd5cd3a1
+            GATHER_ODK_URL: http://odk-importer-test:9443
+            GATHER_ODK_URL_TEST: http://odk-importer-test:9443
+
+            RDS_DB_NAME: ui-testing
+            RDS_HOSTNAME: db-test
+            RDS_PASSWORD: ""
+            RDS_PORT: 5432
+            RDS_USERNAME: postgres
+
+            WEB_SERVER_PORT: 9090
+        volumes:
+            #################################################
+            #                    WARNING                    #
+            # do not include the root folder as volume or   #
+            # `node_modules` will not be available          #
+            #                                               #
+            # - ./gather2-ui:/code # DO NOT UNCOMMENT!!!    #
+            #################################################
+
+            - ./gather2-ui/conf:/code/conf
+            - ./gather2-ui/ui:/code/ui
+
+            - ./gather2-ui/entrypoint.sh:/code/entrypoint.sh
+            - ./gather2-ui/manage.py:/code/manage.py
+            - ./gather2-ui/package.json:/code/package.json
+        ports:
+            - "9090:9090"
         command: start_dev

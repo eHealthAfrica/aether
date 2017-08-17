@@ -70,7 +70,7 @@ test_coverage() {
     export TESTING=true
     export DEBUG=false
 
-    coverage run    --rcfile="$RCFILE" manage.py test "${@:2}"
+    coverage run    --rcfile="$RCFILE" manage.py test "${@:1}"
     coverage report --rcfile="$RCFILE"
     coverage erase
 
@@ -121,7 +121,7 @@ case "$1" in
 
     test)
         test_flake8
-        test_coverage
+        test_coverage "${@:2}"
     ;;
 
     test_lint)
@@ -129,7 +129,7 @@ case "$1" in
     ;;
 
     test_coverage)
-        test_coverage
+        test_coverage "${@:2}"
     ;;
 
     start )

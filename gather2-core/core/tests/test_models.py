@@ -11,7 +11,7 @@ class ModelsTests(TransactionTestCase):
         email = 'test@example.com'
         password = 'testtest'
 
-        self.user = get_user_model().objects.create_superuser(username, email, password)
+        self.user = get_user_model().objects.create_user(username, email, password)
 
     def test_models(self):
         self.assertEquals(models.MapResult.objects.count(), 0)

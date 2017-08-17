@@ -12,7 +12,6 @@ coverage
 django
 django-cas-ng
 django-cors-headers
-django-extensions
 django-rq
 django-ums-client
 djangorestframework

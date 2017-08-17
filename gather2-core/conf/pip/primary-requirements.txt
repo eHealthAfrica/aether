@@ -10,10 +10,8 @@
 
 coverage
 django
-django-attachments
 django-cas-ng
 django-cors-headers
-django-extensions
 django-filter
 django-reversion-compare
 django-ums-client
@@ -21,12 +19,10 @@ djangorestframework
 djangorestframework-filters
 drf-extensions
 flake8
-hypothesis[django]
-ipdb
 jsonschema
-markdown
 mock
 psycopg2
+pygments
 raven
 requests
 uwsgi

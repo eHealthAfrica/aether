@@ -1,32 +1,54 @@
 #!/usr/bin/env bash
 set -e
 
-export DC_TEST=docker-compose-test.yml
+function prepare_and_test_container() {
+  container="$1"-test
 
-docker-compose build
-docker-compose -f $DC_TEST build
+  echo "_____________________________________________ Starting $1 tasks"
+  $DC_TEST build $container
+  set +e
+  $DC_TEST run $container manage flush --noinput
+  set -e
+  $DC_TEST run $container setuplocaldb
+  $DC_TEST run $container test --noinput
+  echo "_____________________________________________ $1 tasks done"
+}
+
+DC_TEST="docker-compose -f docker-compose-test.yml"
+
+echo "_____________________________________________ TESTING"
+
+# kill ALL containers
+echo "_____________________________________________ Killing ALL containers"
+docker-compose kill
+$DC_TEST kill
+
+# start databases
+echo "_____________________________________________ Starting databases"
+$DC_TEST up -d db-test couchdb-test redis-test
 
 
-docker-compose up -d db
+# test and start a clean CORE TEST container
+prepare_and_test_container core
 
-docker-compose run core setuplocaldb
-docker-compose run core test
+echo "_____________________________________________ Starting core"
+$DC_TEST up -d core-test
 
+# test and start a clean ODK TEST container
+prepare_and_test_container odk-importer
 
-docker-compose -f $DC_TEST up -d core-test
+echo "_____________________________________________ Starting odk-importer"
+$DC_TEST up -d odk-importer-test
 
-docker-compose run odk-importer setuplocaldb
-docker-compose run odk-importer test
+# test a clean SYNC TEST container
+prepare_and_test_container couchdb-sync
 
-docker-compose run couchdb-sync setuplocaldb
-docker-compose run couchdb-sync test
-
-
-docker-compose -f $DC_TEST up -d odk-importer-test
-
-docker-compose run ui setuplocaldb
-docker-compose run ui test
+# test a clean UI TEST container
+prepare_and_test_container ui
 
 
-docker-compose -f $DC_TEST kill odk-importer-test
-docker-compose -f $DC_TEST kill core-test
+# kill ALL containers
+echo "_____________________________________________ Killing auxiliary containers"
+$DC_TEST kill
+
+echo "_____________________________________________ END"

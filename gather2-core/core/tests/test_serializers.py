@@ -12,7 +12,7 @@ class SerializersTests(TestCase):
         password = 'testtest'
 
         self.request = RequestFactory().get('/')
-        self.request.user = get_user_model().objects.create_superuser(username, email, password)
+        self.request.user = get_user_model().objects.create_user(username, email, password)
 
     def test_survey_serializer_1(self):
         survey = SurveySerializer(

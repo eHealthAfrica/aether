@@ -9,17 +9,13 @@
 ################################################################################
 
 coverage
-defusedxml
 django
 django-cas-ng
 django-cors-headers
-django-extensions
 django-ums-client
 djangorestframework
 flake8
 geojson
-ipdb
-lxml
 mock
 psycopg2
 python-dateutil
