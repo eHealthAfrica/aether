@@ -3,7 +3,9 @@ import json
 import jsonschema
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+
 from . import models
+from .utils import json_printable
 
 
 JSON_STYLE = {'base_template': 'textarea.html', 'rows': 10}
@@ -11,8 +13,9 @@ JSON_STYLE = {'base_template': 'textarea.html', 'rows': 10}
 
 class JSONValidator(object):
     '''
-    This validates the submitted json with the schema saved on the
-    `Response.Survey.schema` or with `{"type": "object"}` for the schemas
+    This validates the submitted json data with the schema saved on the
+    `Response.Survey.schema` for the responses
+    or with `{"type": "object"}` for the schemas
     '''
 
     def __init__(self):
@@ -27,9 +30,10 @@ class JSONValidator(object):
 
     def set_context(self, serializer_field):
         survey_id = serializer_field.parent.initial_data.get('survey')
-        survey = models.Survey.objects.filter(pk=survey_id).first()
-        if survey:
-            self.schema = survey.schema
+        if survey_id:
+            survey = models.Survey.objects.filter(pk=survey_id).first()
+            if survey:
+                self.schema = survey.schema
 
 
 # JSONField in REST Framework
@@ -39,23 +43,6 @@ class JSONSerializerField(serializers.JSONField):
     Extends JSONField class and coerces to transform strings into JSON objects
     '''
 
-    # Note: a combinations of JSONB in postgres and json parsing gives a nasty db error
-    # See: https://bugs.python.org/issue10976#msg159391
-    # and
-    # http://www.postgresql.org/message-id/E1YHHV8-00032A-Em@gemulon.postgresql.org
-    def make_printable(self, obj):
-        import string
-
-        if isinstance(obj, dict):
-            return {self.make_printable(k): self.make_printable(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
-            return [self.make_printable(elem) for elem in obj]
-        elif isinstance(obj, str):
-            # Only printables
-            return ''.join(x for x in obj if x in string.printable)
-        else:
-            return obj
-
     def to_internal_value(self, data):
         if isinstance(data, str):
             try:
@@ -64,12 +51,24 @@ class JSONSerializerField(serializers.JSONField):
                 raise serializers.ValidationError(str(e))
 
         data = super(JSONSerializerField, self).to_internal_value(data)
-        return self.make_printable(data)
+        return json_printable(data)
 
 
 class SurveySerializer(serializers.ModelSerializer):
     name = serializers.CharField()
-    schema = JSONSerializerField(style=JSON_STYLE, validators=[JSONValidator()])
+    schema = JSONSerializerField(
+        default={},
+        initial={},
+        style=JSON_STYLE,
+        validators=[JSONValidator()],
+    )
+    schema_file = serializers.FileField(
+        write_only=True,
+        allow_null=True,
+        label='Schema File',
+        help_text='Upload file with JSON Schema definition',
+        default=None,
+    )
     created_by = serializers.PrimaryKeyRelatedField(
         read_only=True,
         default=serializers.CurrentUserDefault()
@@ -86,6 +85,14 @@ class SurveySerializer(serializers.ModelSerializer):
         read_only=True,
         lookup_url_kwarg='parent_lookup_survey'
     )
+
+    def validate(self, value):
+        if value['schema_file']:
+            # extract data from file and put it on `schema`
+            value['schema'] = json.loads(value['schema_file'].read())
+        value.pop('schema_file')
+
+        return super(SurveySerializer, self).validate(value)
 
     class Meta:
         model = models.Survey

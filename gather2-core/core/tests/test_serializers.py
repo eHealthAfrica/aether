@@ -1,10 +1,12 @@
 from django.contrib.auth import get_user_model
-from django.test import RequestFactory, TestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import RequestFactory, TransactionTestCase
 
-from ..serializers import SurveySerializer
+from . import EXAMPLE_SCHEMA
+from ..serializers import SurveySerializer, ResponseSerializer
 
 
-class SerializersTests(TestCase):
+class SerializersTests(TransactionTestCase):
 
     def setUp(self):
         username = 'test'
@@ -14,44 +16,40 @@ class SerializersTests(TestCase):
         self.request = RequestFactory().get('/')
         self.request.user = get_user_model().objects.create_user(username, email, password)
 
-    def test_survey_serializer_1(self):
+    def test_survey_serializer__missing_name(self):
         survey = SurveySerializer(
             data={
                 # missing 'name': 'a name',
-                'survey': '2',
                 'schema': {},
             },
             context={'request': self.request}
         )
         self.assertFalse(survey.is_valid())
 
-    def test_survey_serializer_2(self):
+    def test_survey_serializer__wrong_schema(self):
         survey = SurveySerializer(
             data={
                 'name': 'a name',
-                'survey': '2',
                 'schema': '{ "something wrong" }',  # wrong schema
             },
             context={'request': self.request}
         )
         self.assertFalse(survey.is_valid())
 
-    def test_survey_serializer_3(self):
+    def test_survey_serializer__empty_schema(self):
         survey = SurveySerializer(
             data={
                 'name': 'a name',
-                'survey': '2',
                 'schema': '{}',
             },
             context={'request': self.request}
         )
         self.assertTrue(survey.is_valid())
 
-    def test_survey_serializer_4(self):
+    def test_survey_serializer__with_schema(self):
         survey = SurveySerializer(
             data={
                 'name': 'a name',
-                'survey': '2',
                 'schema': {
                     "a": 1,
                     "b": "2",
@@ -70,3 +68,80 @@ class SerializersTests(TestCase):
             context={'request': self.request}
         )
         self.assertTrue(survey.is_valid())
+
+    def test_survey_serializer__with_schema_file(self):
+        with open('/code/core/tests/files/empty_schema.json', 'rb') as data:
+            file = SimpleUploadedFile('schema.json', data.read())
+
+        survey = SurveySerializer(
+            data={
+                'name': 'a name',
+                'schema_file': file,
+            },
+            context={'request': self.request}
+        )
+        self.assertTrue(survey.is_valid())
+
+    def test_survey_serializer__with_schema_file_2(self):
+        with open('/code/core/tests/files/sample_schema.json', 'rb') as data:
+            file = SimpleUploadedFile('schema.json', data.read())
+
+        survey = SurveySerializer(
+            data={
+                'name': 'a name',
+                'schema_file': file,
+            },
+            context={'request': self.request}
+        )
+        self.assertTrue(survey.is_valid())
+
+    def test_response_serializer(self):
+        survey = SurveySerializer(
+            data={
+                'name': 'a name',
+                'schema': EXAMPLE_SCHEMA,
+            },
+            context={'request': self.request}
+        )
+        self.assertTrue(survey.is_valid())
+        survey.save()
+
+        response = ResponseSerializer(
+            data={
+                'survey': survey.data['id'],
+                'data': {
+                    'firstName': 'Peter',
+                    # 'lastName': 'Pan',
+                    'age': 99,
+                },
+            },
+            context={'request': self.request}
+        )
+        self.assertFalse(response.is_valid(), 'missing required property')
+
+        response = ResponseSerializer(
+            data={
+                'survey': survey.data['id'] + 99,
+                'data': {
+                    'firstName': 'Peter',
+                    # 'lastName': 'Pan',
+                    'age': 99,
+                },
+            },
+            context={'request': self.request}
+        )
+        self.assertFalse(response.is_valid(),
+                         'missing required property without REAL survey')
+
+        response = ResponseSerializer(
+            data={
+                'survey': survey.data['id'],
+                'data': {
+                    'firstName': 'Peter',
+                    'lastName': 'Pan',
+                    'age': 99,
+                },
+            },
+            context={'request': self.request}
+        )
+        self.assertTrue(response.is_valid())
