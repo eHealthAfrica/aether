@@ -1,10 +1,69 @@
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import RequestFactory
 
-from ..serializers import SurveyorSerializer
+from . import CustomTestCase
+from ..serializers import SurveyorSerializer, XFormSerializer
 
 
-class SerializersTests(TestCase):
+class SerializersTests(CustomTestCase):
+
+    def setUp(self):
+        super(SerializersTests, self).setUp()
+        self.request = RequestFactory().get('/')
+
+    def test_xform_serializer__no_files(self):
+        xform = XFormSerializer(
+            data={
+                'gather_core_survey_id': 1,
+                'description': 'test xml data',
+                'xml_data': self.samples['xform']['raw-xml'],
+            },
+            context={'request': self.request},
+        )
+        self.assertTrue(xform.is_valid(), xform.errors)
+        xform.save()
+        self.assertEqual(xform.data['form_id'], 'my-test-form')
+        self.assertEqual(xform.data['title'], 'my-test-form')
+        self.assertIn('<h:head>', xform.data['xml_data'])
+
+    def test_xform_serializer__with_xml_file(self):
+        with open(self.samples['xform']['file-xml'], 'rb') as data:
+            file = SimpleUploadedFile('xform.xml', data.read())
+
+        xform = XFormSerializer(
+            data={
+                'gather_core_survey_id': 1,
+                'description': 'test xml file',
+                'xml_file': file,
+            },
+            context={'request': self.request},
+        )
+
+        self.assertTrue(xform.is_valid(), xform.errors)
+        xform.save()
+        self.assertEqual(xform.data['form_id'], 'my-test-form')
+        self.assertEqual(xform.data['title'], 'my-test-form')
+        self.assertIn('<h:head>', xform.data['xml_data'])
+
+    def test_xform_serializer__with_xls_file(self):
+        with open(self.samples['xform']['file-xls'], 'rb') as data:
+            file = SimpleUploadedFile('xform.xls', data.read())
+
+        xform = XFormSerializer(
+            data={
+                'gather_core_survey_id': 1,
+                'description': 'test xls file',
+                'xls_file': file,
+            },
+            context={'request': self.request},
+        )
+
+        self.assertTrue(xform.is_valid(), xform.errors)
+        xform.save()
+        self.assertEqual(xform.data['form_id'], 'my-test-form')
+        self.assertEqual(xform.data['title'], 'my-test-form')
+        self.assertIn('<h:head>', xform.data['xml_data'])
 
     def test_surveyor_serializer__empty_password(self):
         user = SurveyorSerializer(

@@ -3,9 +3,39 @@ from django.contrib.auth.password_validation import validate_password as validat
 from rest_framework import serializers
 
 from .models import XForm
+from .xform_utils import parse_xlsform, parse_xmlform
 
 
 class XFormSerializer(serializers.ModelSerializer):
+
+    url = serializers.HyperlinkedIdentityField('xform-detail', read_only=True)
+    xls_file = serializers.FileField(
+        write_only=True,
+        allow_null=True,
+        default=None,
+        label='XLS Form',
+        help_text='Upload file with XLS Form definition',
+    )
+    xml_file = serializers.FileField(
+        write_only=True,
+        allow_null=True,
+        default=None,
+        label='XML File',
+        help_text='Upload file with XML Data definition',
+    )
+
+    def validate(self, value):
+        if value['xls_file']:
+            # extract data from file and put it on `xml_data`
+            value['xml_data'] = parse_xlsform(value['xls_file'])
+        value.pop('xls_file')
+
+        if value['xml_file']:
+            # extract data from file and put it on `xml_data`
+            value['xml_data'] = parse_xmlform(value['xml_file'])
+        value.pop('xml_file')
+
+        return super(XFormSerializer, self).validate(value)
 
     class Meta:
         model = XForm
@@ -16,6 +46,7 @@ class SurveyorSerializer(serializers.ModelSerializer):
     password = serializers.CharField(style={'input_type': 'password'})
     # all the surveyors have as first name `surveyor`, display it as `role`
     role = serializers.CharField(
+        label='Role',
         source='first_name',
         read_only=True,
         default='surveyor'

@@ -27,11 +27,25 @@ from importer.settings import logger
 
 
 class XFormViewset(viewsets.ModelViewSet):
+    '''
+    Create new xForms entries providing:
+
+    - the XLS Form definition or
+    - the XML Data (via file or raw data)
+
+    '''
     queryset = XForm.objects.all().order_by('title')
     serializer_class = XFormSerializer
 
 
 class SurveyorViewSet(viewsets.ModelViewSet):
+    '''
+    Create new Surveyors entries providing:
+
+    - Username
+    - Password
+
+    '''
     # all the surveyors have as first name `surveyor`
     queryset = get_user_model().objects \
                                .filter(is_staff=False) \

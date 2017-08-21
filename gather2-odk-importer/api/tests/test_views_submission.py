@@ -32,7 +32,7 @@ class SubmissionTests(CustomTestCase):
 
     def test__submission__404(self):
         # submit response without xForm
-        with open(self.samples['data']['file-ok'], 'rb') as f:
+        with open(self.samples['submission']['file-ok'], 'rb') as f:
             response = self.client.post(
                 self.url,
                 {'xml_submission_file': f},
@@ -42,7 +42,7 @@ class SubmissionTests(CustomTestCase):
 
     def test__submission__422(self):
         # submit without xml file
-        with open(self.samples['data']['file-ok'], 'rb') as f:
+        with open(self.samples['submission']['file-ok'], 'rb') as f:
             response = self.client.post(
                 self.url,
                 {'xml_submission_file': ''},
@@ -50,7 +50,7 @@ class SubmissionTests(CustomTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
         # submit wrong xml
-        with open(self.samples['data']['file-err'], 'rb') as f:
+        with open(self.samples['submission']['file-err'], 'rb') as f:
             response = self.client.post(
                 self.url,
                 {'xml_submission_file': f},
@@ -63,7 +63,7 @@ class SubmissionTests(CustomTestCase):
         self.helper_create_xform(surveyor=self.user)
 
         # submit right response but server is not available yet
-        with open(self.samples['data']['file-ok'], 'rb') as f:
+        with open(self.samples['submission']['file-ok'], 'rb') as f:
             response = self.client.post(
                 self.url,
                 {'xml_submission_file': f},
@@ -104,13 +104,13 @@ class PostSubmissionTests(CustomTestCase):
         self.assertTrue(self.xform.is_surveyor(self.user))
 
     def tearDown(self):
-        super().tearDown()
+        super(PostSubmissionTests, self).tearDown()
         # delete ALL surveys in core testing server
         requests.delete(self.SURVEY_URL, headers=self.CORE_HEADERS)
 
     @mock.patch('requests.post', return_value=mock.Mock(status_code=500))
     def test__submission__post__with_core_error(self, mock_post):
-        with open(self.samples['data']['file-ok'], 'rb') as f:
+        with open(self.samples['submission']['file-ok'], 'rb') as f:
             response = self.client.post(
                 self.url,
                 {'xml_submission_file': f},
@@ -130,7 +130,7 @@ class PostSubmissionTests(CustomTestCase):
         self.xform.save()
         self.assertFalse(self.xform.is_surveyor(self.user))
 
-        with open(self.samples['data']['file-ok'], 'rb') as f:
+        with open(self.samples['submission']['file-ok'], 'rb') as f:
             response = self.client.post(
                 self.url,
                 {'xml_submission_file': f},
@@ -139,7 +139,7 @@ class PostSubmissionTests(CustomTestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test__submission__post(self):
-        with open(self.samples['data']['file-ok'], 'rb') as f:
+        with open(self.samples['submission']['file-ok'], 'rb') as f:
             response = self.client.post(
                 self.url,
                 {'xml_submission_file': f},
@@ -149,8 +149,8 @@ class PostSubmissionTests(CustomTestCase):
 
     def test__submission__post__with_attachments(self):
         # submit response with itself as attachment
-        with open(self.samples['data']['file-ok'], 'rb') as f:
-            with open(self.samples['data']['file-ok'], 'rb') as f2:
+        with open(self.samples['submission']['file-ok'], 'rb') as f:
+            with open(self.samples['submission']['file-ok'], 'rb') as f2:
                 response = self.client.post(
                     self.url,
                     {'xml_submission_file': f, 'attach': f2},
@@ -161,8 +161,8 @@ class PostSubmissionTests(CustomTestCase):
     @mock.patch('requests.post', side_effect=[mock.DEFAULT, mock.Mock(status_code=500)])
     def test__submission__post__with_attachments_error_400(self, mock_post):
         # there is going to be an error during attachment post
-        with open(self.samples['data']['file-ok'], 'rb') as f:
-            with open(self.samples['data']['file-ok'], 'rb') as f2:
+        with open(self.samples['submission']['file-ok'], 'rb') as f:
+            with open(self.samples['submission']['file-ok'], 'rb') as f2:
                 response = self.client.post(
                     self.url,
                     {'xml_submission_file': f, 'attach': f2},

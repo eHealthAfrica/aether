@@ -101,7 +101,7 @@ class ModelsTests(CustomTestCase):
         self.assertRaises(
             IntegrityError,
             XForm.objects.create,
-            xml_data=self.samples['data']['xml-ok'],
+            xml_data=self.samples['xform']['xml-ok'],
         )
         # xml_data with missing properties
         self.assertRaises(
@@ -142,7 +142,7 @@ class ModelsTests(CustomTestCase):
     def test__xform__save(self):
         instance = XForm.objects.create(
             gather_core_survey_id=1,
-            xml_data=self.samples['data']['xml-ok'],
+            xml_data=self.samples['xform']['xml-ok'],
         )
         instance.save()
 
@@ -154,7 +154,7 @@ class ModelsTests(CustomTestCase):
     def test__xform__surveyors(self):
         instance = XForm.objects.create(
             gather_core_survey_id=1,
-            xml_data=self.samples['data']['xml-ok'],
+            xml_data=self.samples['xform']['xml-ok'],
         )
         instance.save()
         self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')

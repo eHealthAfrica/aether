@@ -23,7 +23,7 @@ class AdminTests(CustomTestCase):
         response = self.client.post(
             self.url,
             {
-                'xml_data': self.samples['data']['xml-err'],
+                'xml_data': self.samples['xform']['xml-err'],
                 'description': 'some text',
                 'gather_core_survey_id': 1,
             },
@@ -46,11 +46,26 @@ class AdminTests(CustomTestCase):
         self.assertEqual(instance.description, 'some text')
         self.assertEqual(instance.gather_core_survey_id, 1)
 
+    def test__post__xml_file(self):
+        with open(self.samples['xform']['file-xml'], 'rb') as f:
+            response = self.client.post(
+                reverse('admin:api_xform_add'),
+                {'xmlform': f, 'description': 'some text', 'gather_core_survey_id': 1},
+            )
+        self.assertEqual(response.status_code, 302)  # redirected to list
+        self.assertEqual(XForm.objects.count(), 1)
+
+        instance = XForm.objects.first()
+        self.assertEqual(instance.form_id, 'my-test-form')
+        self.assertEqual(instance.title, 'my-test-form')
+        self.assertEqual(instance.description, 'some text')
+        self.assertEqual(instance.gather_core_survey_id, 1)
+
     def test__post__xml_data(self):
         response = self.client.post(
             self.url,
             {
-                'xml_data': self.samples['data']['xml-ok'],
+                'xml_data': self.samples['xform']['xml-ok'],
                 'description': 'some text',
                 'gather_core_survey_id': 1,
             },
@@ -71,7 +86,7 @@ class AdminTests(CustomTestCase):
         response = self.client.post(
             self.url,
             {
-                'xml_data': self.samples['data']['xml-ok'],
+                'xml_data': self.samples['xform']['xml-ok'],
                 'description': 'some text',
                 'gather_core_survey_id': 1,
                 'surveyors': [surveyor.id],
