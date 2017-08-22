@@ -55,6 +55,18 @@ class SurveyorViewSet(viewsets.ModelViewSet):
     serializer_class = SurveyorSerializer
 
 
+def check_core(request):
+    '''
+    Check if the connection with Core server is possible
+    '''
+    from api.core_utils import test_connection
+    from django.http import HttpResponse
+
+    if not test_connection():
+        return HttpResponse('Always Look on the Bright Side of Life!!!')
+    return HttpResponse('Brought to you by eHealth Africa - good tech for hard places')
+
+
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer])
 @authentication_classes([BasicAuthentication])
@@ -131,7 +143,7 @@ def xform_submission(request):
     # first of all check if the connection is possible
     auth_header = get_auth_header()
     if not auth_header:
-        return Response(status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        return Response(status=status.HTTP_424_FAILED_DEPENDENCY)
 
     if request.method == 'HEAD':
         return Response(status=status.HTTP_204_NO_CONTENT)

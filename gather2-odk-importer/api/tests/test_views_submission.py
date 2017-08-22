@@ -19,12 +19,12 @@ class SubmissionTests(CustomTestCase):
     # Test submission with authorization error on core server side
     #
     @mock.patch('api.core_utils.test_connection', return_value=False)
-    def test__submission__503(self, mock_test):
+    def test__submission__424(self, mock_test):
         response = self.client.head(self.url, **self.headers_user)
-        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertEqual(response.status_code, status.HTTP_424_FAILED_DEPENDENCY)
 
         response = self.client.post(self.url, **self.headers_user)
-        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertEqual(response.status_code, status.HTTP_424_FAILED_DEPENDENCY)
 
     def test__submission__204(self):
         response = self.client.head(self.url, **self.headers_user)

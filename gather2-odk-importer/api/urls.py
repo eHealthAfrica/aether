@@ -10,6 +10,7 @@ router.register(r'surveyors', views.SurveyorViewSet)
 urlpatterns = router.urls
 
 urlpatterns += [
+    url(r'^core$', views.check_core, name='check-core'),
     url(r'^formList$', views.xform_list, name='xform-list-xml'),
     url(r'^forms/(?P<pk>[^/]+)/form\.xml$', views.xform_get, name='xform-get-xml_data'),
     url(r'^submission$', views.xform_submission, name='xform-submission'),

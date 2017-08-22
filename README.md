@@ -67,6 +67,7 @@ of the most common ones with non default values. For more info take a look at th
 - `GATHER_CORE_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24` Token to connect to core server.
 - `GATHER_CORE_URL`: `http://core:8000` Gather Core Server url.
 - `GATHER_CORE_URL_TEST`: `http://core-test:9000` Gather Core Testing Server url.
+- `GATHER_ODK_TOKEN`: `d5184a044bb5acff89a76ec4e67d0fcddd5cd3a1` Token to connect to odk server.
 - `GATHER_ODK_URL`: `http://odk-importer:8443` Gather ODK Importer Server url.
 - `GATHER_ODK_URL_TEST`: `http://odk-importer-test:9443` Gather ODK Importer Testing Server url.
 
@@ -139,6 +140,12 @@ Gather2 Core.
 
 If a valid `GATHER_CORE_TOKEN` and `GATHER_CORE_URL` combination is not set,
 the server will still start, but ODK Collect submissions will fail.
+
+To check if it is possible to connect to Gather2 Core with those variables
+visit the entrypoint `/core` in the odk server (no credentials needed).
+If the response is `Always Look on the Bright Side of Life!!!`
+it's not possible to connect, on the other hand if the message is
+`Brought to you by eHealth Africa - good tech for hard places` everything goes fine.
 
 This also applies for `gather2-couchdb-sync`.
 

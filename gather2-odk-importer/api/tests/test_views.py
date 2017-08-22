@@ -1,3 +1,5 @@
+import mock
+
 from django.urls import reverse
 from rest_framework import status
 
@@ -89,3 +91,18 @@ class ViewsTests(CustomTestCase):
         self.assertIn(self.formIdXml,
                       response.content.decode(),
                       'superusers are granted surveyors')
+
+    def test__check_core(self):
+        with mock.patch('api.core_utils.test_connection', return_value=False):
+            response = self.client.get(reverse('check-core'))
+            self.assertEqual(
+                response.content.decode(),
+                'Always Look on the Bright Side of Life!!!',
+            )
+
+        with mock.patch('api.core_utils.test_connection', return_value=True):
+            response = self.client.get(reverse('check-core'))
+            self.assertEqual(
+                response.content.decode(),
+                'Brought to you by eHealth Africa - good tech for hard places',
+            )
