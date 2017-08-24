@@ -1,28 +1,94 @@
 import React, { Component } from 'react'
+import { defineMessages, injectIntl, FormattedMessage } from 'react-intl'
 
 import { clone } from '../utils'
 import { deleteData, postData, putData } from '../utils/request'
 
-export default class SurveyorForm extends Component {
+const MESSAGES = defineMessages({
+  addTitle: {
+    defaultMessage: 'New surveyor',
+    id: 'surveyor.form.title.add'
+  },
+  editTitle: {
+    defaultMessage: 'Edit surveyor “{username}”',
+    id: 'surveyor.form.title.edit'
+  },
+
+  deleteConfirm: {
+    defaultMessage: 'Are you sure you want to delete the surveyor “{username}”?',
+    id: 'surveyor.form.action.delete.confirm'
+  },
+  deleteError: {
+    defaultMessage: 'An error occurred while deleting “{username}”',
+    id: 'surveyor.form.action.delete.error'
+  },
+  submitError: {
+    defaultMessage: 'An error occurred while saving “{username}”',
+    id: 'surveyor.form.action.submit.error'
+  },
+
+  passwordLengthWarning: {
+    defaultMessage: 'The password must contain at least 10 characters.',
+    id: 'surveyor.form.password.warning.length'
+  },
+  passwordSimilarWarning: {
+    defaultMessage: 'The password can\'t be too similar to your other personal information.',
+    id: 'surveyor.form.password.warning.similar'
+  },
+  passwordCommonWarning: {
+    defaultMessage: 'The password can\'t be a commonly used password.',
+    id: 'surveyor.form.password.warning.common'
+  },
+  passwordNumericWarning: {
+    defaultMessage: 'The password can\'t be entirely numeric.',
+    id: 'surveyor.form.password.warning.numeric'
+  },
+
+  passwordRepeatedError: {
+    defaultMessage: 'The two password fields didn\'t match.',
+    id: 'surveyor.form.password.error.repeated'
+  },
+  passwordShortError: {
+    defaultMessage: 'This password is too short. It must contain at least 10 characters.',
+    id: 'surveyor.form.password.error.length'
+  }
+})
+
+export class SurveyorForm extends Component {
   constructor (props) {
     super(props)
     this.state = { ...clone(this.props.surveyor), errors: {} }
   }
 
   render () {
+    const {formatMessage} = this.props.intl
     const surveyor = this.state
     const isNew = (surveyor.id === undefined)
-    const title = (isNew ? 'New surveyor' : `Edit surveyor: ${this.props.surveyor.username}`)
+
+    const title = (
+      isNew
+      ? formatMessage(MESSAGES.addTitle)
+      : formatMessage(MESSAGES.editTitle, {...this.props.surveyor})
+    )
+    const dataQA = (
+      isNew
+      ? 'surveyor-add'
+      : `surveyor-edit-${surveyor.id}`
+    )
 
     return (
-      <div className='surveyor-edit' data-qa='edit-surveyor'>
+      <div data-qa={dataQA} className='surveyor-edit'>
         <h3>{title}</h3>
 
         { this.renderErrors(surveyor.errors.global) }
 
         <form onSubmit={this.onSubmit.bind(this)}>
           <div className='form-group big-input'>
-            <label className='form-control-label title'>Surveyor username</label>
+            <label className='form-control-label title'>
+              <FormattedMessage
+                id='surveyor.form.username'
+                defaultMessage='Surveyor username' />
+            </label>
             <input
               name='username'
               type='text'
@@ -35,7 +101,11 @@ export default class SurveyorForm extends Component {
           </div>
 
           <div className='form-group big-input'>
-            <label className='form-control-label title'>Password</label>
+            <label className='form-control-label title'>
+              <FormattedMessage
+                id='surveyor.form.password'
+                defaultMessage='Password' />
+            </label>
             <input
               name='password_1'
               type='password'
@@ -47,16 +117,20 @@ export default class SurveyorForm extends Component {
             { this.renderErrors(surveyor.errors.password) }
             {
               this.renderWarnings([
-                'The password must contain at least 10 characters.',
-                'The password can\'t be too similar to your other personal information.',
-                'The password can\'t be a commonly used password.',
-                'The password can\'t be entirely numeric.'
+                formatMessage(MESSAGES.passwordLengthWarning),
+                formatMessage(MESSAGES.passwordSimilarWarning),
+                formatMessage(MESSAGES.passwordCommonWarning),
+                formatMessage(MESSAGES.passwordNumericWarning)
               ])
             }
           </div>
 
           <div className='form-group big-input'>
-            <label className='form-control-label title'>Repeat password</label>
+            <label className='form-control-label title'>
+              <FormattedMessage
+                id='surveyor.form.password.repeat'
+                defaultMessage='Repeat password' />
+            </label>
             <input
               name='password_2'
               type='password'
@@ -74,7 +148,9 @@ export default class SurveyorForm extends Component {
                   type='button'
                   className='btn btn-delete pull-right col-sm-6'
                   onClick={this.onDelete.bind(this)}>
-                  Delete Surveyor
+                  <FormattedMessage
+                    id='surveyor.form.action.delete'
+                    defaultMessage='Delete surveyor' />
                 </button>
               }
             </div>
@@ -83,12 +159,16 @@ export default class SurveyorForm extends Component {
                 type='button'
                 className='btn btn-cancel btn-block'
                 onClick={(evt) => this.props.onCancel(evt)}>
-                Cancel
+                <FormattedMessage
+                  id='surveyor.form.action.cancel'
+                  defaultMessage='Cancel' />
               </button>
             </div>
             <div className='col-sm-3'>
               <button type='submit' className='btn btn-primary btn-block'>
-                Save Surveyor
+                <FormattedMessage
+                  id='surveyor.form.action.submit'
+                  defaultMessage='Save surveyor' />
               </button>
             </div>
           </div>
@@ -143,12 +223,14 @@ export default class SurveyorForm extends Component {
   }
 
   validatePassword () {
+    const {formatMessage} = this.props.intl
+
     if (!this.state.id || this.state.password_1) {
       // validate password
       if (this.state.password_1 !== this.state.password_2) {
         this.setState({
           errors: {
-            password: ['The two password fields didn\'t match.']
+            password: [formatMessage(MESSAGES.passwordRepeatedError)]
           }
         })
         return false
@@ -157,7 +239,7 @@ export default class SurveyorForm extends Component {
       if (this.state.password_1.length < 10) {
         this.setState({
           errors: {
-            password: ['This password is too short. It must contain at least 10 characters.']
+            password: [formatMessage(MESSAGES.passwordShortError)]
           }
         })
         return false
@@ -174,6 +256,7 @@ export default class SurveyorForm extends Component {
       return
     }
 
+    const {formatMessage} = this.props.intl
     const surveyor = {
       username: this.state.username,
       password: this.state.password_1 || this.props.surveyor.password
@@ -196,7 +279,7 @@ export default class SurveyorForm extends Component {
           .catch(() => {
             this.setState({
               errors: {
-                global: [`An error occurred while saving “${surveyor.username}”`]
+                global: [formatMessage(MESSAGES.submitError, {...surveyor})]
               }
             })
           })
@@ -206,11 +289,11 @@ export default class SurveyorForm extends Component {
   onDelete (event) {
     event.preventDefault()
 
+    const {formatMessage} = this.props.intl
     const surveyor = this.state
 
     // check if there were changes
-    const shouldDelete = window.confirm(
-      `Are you sure you want to delete the surveyor “${surveyor.username}”?`)
+    const shouldDelete = window.confirm(formatMessage(MESSAGES.deleteConfirm, {...surveyor}))
 
     if (shouldDelete) {
       return deleteData(`/odk/surveyors/${surveyor.id}.json`)
@@ -222,10 +305,13 @@ export default class SurveyorForm extends Component {
           console.log(error.message)
           this.setState({
             errors: {
-              global: [`An error occurred while deleting “${surveyor.username}”`]
+              global: [formatMessage(MESSAGES.deleteError, {...surveyor})]
             }
           })
         })
     }
   }
 }
+
+// Include this to enable `this.props.intl` for this component.
+export default injectIntl(SurveyorForm)

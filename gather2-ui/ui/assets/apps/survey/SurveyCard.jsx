@@ -1,36 +1,75 @@
 import React, { Component } from 'react'
-import moment from 'moment'
-
-const DATE_FORMAT = 'DD.MM.YYYY'
+import { FormattedDate, FormattedMessage, FormattedNumber } from 'react-intl'
 
 export default class SurveyCard extends Component {
   render () {
     const {survey} = this.props
 
     return (
-      <a href={`/surveys/view/${survey.id}`} className='card'>
+      <a
+        data-qa={`survey-card-${survey.id}`}
+        href={`/surveys/view/${survey.id}`}
+        className='card'>
         <h3 className='card-header'>{survey.name}</h3>
         <div className='card-block'>
           <p className='card-text small'>
-            <span className='card-dates'><span className='label'>created</span> { moment(survey.created).format(DATE_FORMAT) } </span>
+            <span className='card-dates'>
+              <span className='label'>
+                <FormattedMessage
+                  id='survey.card.created'
+                  defaultMessage='created' />
+              </span>
+              &nbsp;
+              <FormattedDate
+                value={survey.created}
+                year='numeric'
+                month='short'
+                day='numeric' />
+              &nbsp;
+            </span>
 
             { survey.responses > 0 &&
               <span className='card-dates'>
-                <span className='label'>data entry from</span>
-                <span> { moment(survey.first_response).format(DATE_FORMAT) } </span>
-                <span className='label'>to</span>
-                <span> { moment(survey.last_response).format(DATE_FORMAT) } </span>
+                <span className='label'>
+                  <FormattedMessage
+                    id='survey.card.responses.from'
+                    defaultMessage='data entry from' />
+                </span>
+                &nbsp;
+                <FormattedDate
+                  value={survey.first_response}
+                  year='numeric'
+                  month='short'
+                  day='numeric' />
+                &nbsp;
+                <span className='label'>
+                  <FormattedMessage
+                    id='survey.card.responses.to'
+                    defaultMessage='to' />
+                </span>
+                &nbsp;
+                <FormattedDate
+                  value={survey.last_response}
+                  year='numeric'
+                  month='short'
+                  day='numeric' />
               </span>
             }
 
             { survey.responses === 0 &&
-              <span>no data entry</span>
+              <FormattedMessage
+                id='survey.card.responses.zero'
+                defaultMessage='no data entry' />
             }
 
           </p>
           <p className='card-display text-center'>
-            <span className='card-number'>{survey.responses}</span>
-            records
+            <span className='card-number'>
+              <FormattedNumber value={survey.responses} />
+            </span>
+            <FormattedMessage
+              id='survey.card.responses'
+              defaultMessage='records' />
           </p>
         </div>
       </a>

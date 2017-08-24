@@ -45,9 +45,11 @@ export default class FetchUrlsContainer extends Component {
       return <EmptyAlert />
     }
 
+    const TargetComponent = this.props.targetComponent
+
     return (
       <div data-qa='data-loaded'>
-        { React.cloneElement(this.props.children, {...this.state.response}) }
+        <TargetComponent {...this.state.response} />
       </div>
     )
   }

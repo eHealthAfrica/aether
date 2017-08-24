@@ -1,39 +1,72 @@
 import React, { Component } from 'react'
+import {
+  defineMessages,
+  injectIntl,
+  FormattedMessage,
+  FormattedNumber
+} from 'react-intl'
 
-export default class PaginationBar extends Component {
+const MESSAGES = defineMessages({
+  previous: {
+    defaultMessage: 'Previous',
+    id: 'pagination.previous'
+  },
+  next: {
+    defaultMessage: 'Next',
+    id: 'pagination.next'
+  },
+  record: {
+    defaultMessage: 'Record',
+    id: 'pagination.type.record'
+  },
+  page: {
+    defaultMessage: 'Page',
+    id: 'pagination.type.page'
+  }
+})
+
+export class PaginationBar extends Component {
   render (list) {
     const {records, pageSize} = this.props
     if (records <= pageSize) {
       return <div />
     }
 
+    const {formatMessage} = this.props.intl
     const {currentPage, nextAction, previousAction} = this.props
     const numberOfPages = Math.ceil(records / pageSize)
-    const pageType = (pageSize === 1 ? 'Record' : 'Page')
 
     return (
       <nav data-qa='data-pagination'>
         <ul className='pagination justify-content-end'>
           {
             previousAction &&
-            <li className='page-item'>
-              <a className='page-link' onClick={previousAction} aria-label='Previous'>
-                Previous
+            <li data-qa='data-pagination-previous' className='page-item'>
+              <a
+                className='page-link'
+                onClick={previousAction}
+                aria-label={formatMessage(MESSAGES.previous)}>
+                <FormattedMessage {...MESSAGES.previous} />
               </a>
             </li>
           }
 
           <li className='page-item disabled'>
-            { pageType }
-            <span className='badge badge-default'>{currentPage}</span>
-            of {numberOfPages}
+            <FormattedMessage {...MESSAGES[(pageSize === 1 ? 'record' : 'page')]} />
+            <span data-qa='data-pagination-page' className='badge badge-default'>
+              <FormattedNumber value={currentPage} />
+            </span>
+            / <FormattedNumber value={numberOfPages} />
           </li>
 
           {
             nextAction &&
-            <li className='page-item'>
-              <a className='page-link' onClick={nextAction} aria-label='Next'>
-                Next
+            <li data-qa='data-pagination-next' className='page-item'>
+              <a
+                className='page-link'
+                onClick={nextAction}
+                aria-label={formatMessage(MESSAGES.next)}>
+                <FormattedMessage {...MESSAGES.next} />
               </a>
             </li>
           }
@@ -42,3 +75,6 @@ export default class PaginationBar extends Component {
     )
   }
 }
+
+// Include this to enable `this.props.intl` for this component.
+export default injectIntl(PaginationBar)

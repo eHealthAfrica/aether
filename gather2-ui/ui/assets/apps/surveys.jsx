@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
+import { IntlProvider } from 'react-intl'
 
 import FetchUrlsContainer from './components/FetchUrlsContainer'
 import PaginationContainer from './components/PaginationContainer'
@@ -35,11 +36,7 @@ switch (action) {
       }
     ]
 
-    component = (
-      <FetchUrlsContainer urls={editUrls}>
-        <SurveyForm />
-      </FetchUrlsContainer>
-    )
+    component = <FetchUrlsContainer urls={editUrls} targetComponent={SurveyForm} />
     break
 
   case 'view':
@@ -50,11 +47,7 @@ switch (action) {
       }
     ]
 
-    component = (
-      <FetchUrlsContainer urls={viewUrls}>
-        <Survey />
-      </FetchUrlsContainer>
-    )
+    component = <FetchUrlsContainer urls={viewUrls} targetComponent={Survey} />
     break
 
   default:
@@ -69,4 +62,8 @@ switch (action) {
     break
 }
 
-ReactDOM.render(component, appElement)
+ReactDOM.render(
+  <IntlProvider defaultLocale='en' locale={navigator.locale || 'en'}>
+    { component }
+  </IntlProvider>,
+  appElement)

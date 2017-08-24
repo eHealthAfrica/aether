@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import { FormattedMessage } from 'react-intl'
 
 import SurveyorForm from './SurveyorForm'
 
@@ -14,7 +15,7 @@ export default class SurveyorsList extends Component {
     const enableActions = (surveyor === undefined)
 
     return (
-      <div className='surveys-list' data-qa='surveyors-list'>
+      <div data-qa='surveyors-list' className='surveys-list'>
         <div className='surveys-list__header'>
           <h1>eHealth Africa (Org name)</h1>
           <div>
@@ -22,7 +23,10 @@ export default class SurveyorsList extends Component {
               enableActions &&
               <button className='btn btn-primary btn-icon' onClick={this.add.bind(this)}>
                 <i className='fa fa-plus-circle' />
-                New surveyor
+                &nbsp;
+                <FormattedMessage
+                  id='surveyor.list.action.add'
+                  defaultMessage='New surveyor' />
               </button>
             }
           </div>
@@ -31,7 +35,11 @@ export default class SurveyorsList extends Component {
         {
           list.length > 0 &&
           <div>
-            <h4 className='title'>Surveyors</h4>
+            <h4 className='title'>
+              <FormattedMessage
+                id='surveyor.list.title'
+                defaultMessage='Surveyors' />
+            </h4>
             <div className='surveys-list__cards justify-content-md-start'>
               {
                 list.map((surveyor) => (
