@@ -95,7 +95,10 @@ data "template_file" "gather2_odk_importer" {
     django_http_x_forwarded_proto = "1"
     django_use_x_forwarded_host = "1"
     domain = ".${var.domain}"
-    sentry_dsn = "${data.credstash_secret.gather2_odk_sentry_dsn.value}"
+    gather2_token = "${data.credstash_secret.gather2_token.value}"
+    google_client_id = "${data.credstash_secret.google_client_id.value}"
+    gather2_core_url = "${replace("https://${var.core_url}-${var.environment}", "-prod", "")}.${var.domain}"
+    sentry_dsn = "${data.credstash_secret.gather2_sync_sentry_dsn.value}"
   }
 }
 

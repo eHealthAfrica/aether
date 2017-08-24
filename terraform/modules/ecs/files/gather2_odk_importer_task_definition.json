@@ -37,7 +37,10 @@
       { "name": "STATIC_ROOT", "value": "/var/www/static" },
       { "name": "DJANGO_USE_X_FORWARDED_PORT", "value": "${django_use_x_forwarded_port}"},
       { "name": "DJANGO_HTTP_X_FORWARDED_PROTO", "value": "${django_http_x_forwarded_proto}"},
-      { "name": "DJANGO_USE_X_FORWARDED_HOST", "value": "${django_use_x_forwarded_host}"}
+      { "name": "DJANGO_USE_X_FORWARDED_HOST", "value": "${django_use_x_forwarded_host}"},
+      { "name": "GATHER_CORE_URL", "value": "${gather2_core_url}"},
+      { "name": "GATHER_CORE_TOKEN", "value": "${gather2_token}"},
+      { "name": "SENTRY_DSN", "value": "${sentry_dsn}"}
     ],
     "mountPoints": [
       {
