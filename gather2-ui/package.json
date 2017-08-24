@@ -15,7 +15,7 @@
   },
 
   "scripts": {
-    "lint": "standard",
+    "lint": "standard && sass-lint --config ./conf/extras/sass-lint.yml --verbose",
     "mocha": "mocha --require ./ui/assets/tests/mocha.setup.js './ui/assets/apps/**/*.spec.jsx'",
     "test": "npm run lint && npm run mocha",
     "webpack": "webpack --config ./ui/webpack.prod.js",
@@ -50,6 +50,7 @@
     "react-intl": "~2.3.0",
     "react-select": "~1.0.0-rc.5",
     "reactable": "~0.14.0",
+    "sass-lint": "~1.10.0",
     "sass-loader": "~6.0.0",
     "standard": "~10.0.0",
     "style-loader": "~0.18.0",

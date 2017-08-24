@@ -3,15 +3,15 @@
 }
 
 .survey__header {
-  display:flex;
-  justify-content: space-between;
   align-items: center;
+  display: flex;
+  justify-content: space-between;
   margin-bottom: 2rem;
 
   h1 {
+    color: $light-grey;
     font: $font-size-xxl $nav-font-family;
     font-weight: 400;
-    color: $light-grey;
-    margin:0;
+    margin: 0;
   }
 }

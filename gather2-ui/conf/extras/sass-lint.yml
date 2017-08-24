@@ -1,0 +1,46 @@
+options:
+  max-warnings: 300
+
+files:
+  include:
+    - './ui/assets/css/*.scss'
+
+rules:
+
+  indentation:
+    - 2  # error
+    -
+      size: 2
+
+  quotes:
+    - 2  # error
+    -
+      style: single  # values: single | double
+
+  border-zero:
+    - 2  # error
+    -
+      convention: 0  # values: 0 | none
+
+  hex-notation:
+    - 2 # error
+    -
+      style: lowercase  # values: lowercase | uppercase
+
+  property-sort-order:
+    - 2  # error
+    -
+      order: alphabetical
+      ignore-custom-properties: true
+
+  no-color-literals: 0  # disabled
+  no-important: 1  # warning
+  no-qualifying-elements: 0  # disabled
+  no-trailing-whitespace: 2  # error
+  no-vendor-prefixes: 0  # disabled
+
+  force-attribute-nesting: 0  # disabled
+  force-element-nesting: 0  # disabled
+  force-pseudo-nesting: 0  # disabled
+
+  class-name-format: 1  # warning

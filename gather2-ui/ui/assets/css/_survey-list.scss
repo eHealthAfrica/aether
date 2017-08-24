@@ -3,16 +3,16 @@
 }
 
 .surveys-list__header {
-  display:flex;
-  justify-content: space-between;
   align-items: center;
+  display: flex;
+  justify-content: space-between;
   margin-bottom: 2rem;
 
   h1 {
+    color: $light-grey;
     font: $font-size-xxl $nav-font-family;
     font-weight: 400;
-    color: $light-grey;
-    margin:0;
+    margin: 0;
   }
 }
 
@@ -20,7 +20,7 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  margin: 0 -0.8rem;
+  margin: 0 -.8rem;
 }
 
 .card-block {
@@ -29,40 +29,43 @@
 }
 
 .card {
-  border: none;
+  border: 0;
   border-radius: 0;
-  margin: 0.3rem 0 1.5rem;
-  padding: 0 0.8rem;
+  margin: .3rem 0 1.5rem;
+  padding: 0 .8rem;
   width: 100%;
 
   &:hover {
-    background: $action-color;
-    background-image: linear-gradient(to right, rgba($action-color, 0), $hover-color);
-    color: white;
-    .card-header, .card-header:first-child {
+    @include bg-gradient;
+
+    .card-header,
+    .card-header:first-child {
       border-top-color: transparent;
     }
+
     .card-display {
-      color: white;
+      color: $white;
     }
   }
 }
 
-.card-header, .card-header:first-child {
-  padding: 0.8rem 0;
+.card-header,
+.card-header:first-child {
   background: none;
-  border: none;
+  border: 0;
   border-radius: 0;
   border-top: 1px solid $text-color;
+  padding: .8rem 0;
 }
+
 .card-dates {
-  padding: 0.2em 0;
+  padding: .2em 0;
 }
 
 .card-dates:not(:last-child) {
-  border-right: 1px solid rgba($text-color, 0.3);
-  padding-right: 0.2em;
-  margin-right: 0.4em;
+  border-right: 1px solid rgba($text-color, .3);
+  margin-right: .4em;
+  padding-right: .2em;
 }
 
 .card-display {
@@ -70,12 +73,12 @@
   font-weight: 500;
   padding: 1rem 0;
 }
+
 .card-number {
+  display: block;
   font-size: 5em;
   line-height: 1em;
-  display: block;
 }
-
 @media screen and (min-width: 992px) {
   .card {
     width: 48%;

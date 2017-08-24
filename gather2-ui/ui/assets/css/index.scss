@@ -1,22 +1,28 @@
-/* third-party styles */
+// ************************************
+// third-party styles
+// ************************************
 
-$fa-font-path: "~font-awesome/fonts";
+$fa-font-path: '~font-awesome/fonts';
+@import '~font-awesome/scss/font-awesome';
+@import '~bootstrap/scss/bootstrap';
 
-@import "~font-awesome/scss/font-awesome";
-@import "~bootstrap/scss/bootstrap";
+// ************************************
+// custom styles
+// ************************************
 
+@import 'settings';
+@import 'mixins';
+@import 'global';
+@import 'nav-bar';
+@import 'logo';
+@import 'loading-spinner';
+@import 'alerts';
+@import 'pagination';
 
-/* custom styles */
+// ************************************
+// app dependant styles
+// ************************************
 
-@import "settings";
-@import "mixins";
-@import "global";
-@import "nav-bar";
-@import "logo";
-@import "loading-spinner";
-@import "alerts";
-@import "pagination";
-
-@import "survey-list";
-@import "survey-view";
-@import "survey-edit";
+@import 'survey-list';
+@import 'survey-view';
+@import 'survey-edit';

@@ -1,7 +1,7 @@
 .survey-edit {
-  padding: 2rem 5vW;
   background: $background-color;
   height: 100vH;
+  padding: 2rem 5vW;
 }
 
 .big-input {
@@ -9,7 +9,8 @@
     font-size: $font-size-standard;
   }
 
-  input[type="text"], input[type="password"] {
+  input[type='password'],
+  input[type='text'] {
     font-size: 1.2em;
   }
 }

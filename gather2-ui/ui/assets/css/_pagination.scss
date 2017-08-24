@@ -1,17 +1,13 @@
-/* pagination */
-
 .pagination {
-  display: flex;
   align-items: baseline;
-  flex-direction: row;
-
-  background: rgba($action-color, 0.8);
-  color: $text-color;
-  font: 0.9rem $nav-font-family;
-
-  margin: 0;
-  padding: 0.6rem 1.5rem;
+  background: rgba($action-color, .8);
   border-radius: 0;
+  color: $text-color;
+  display: flex;
+  flex-direction: row;
+  font: .9rem $nav-font-family;
+  margin: 0;
+  padding: .6rem 1.5rem;
 }
 
 .pagination li {
@@ -20,17 +16,17 @@
 
   span.badge {
     border-radius: $border-radius;
-    font: 0.9rem $nav-font-family;
+    font: .9rem $nav-font-family;
     margin: 0 5px;
-    padding: 0.1rem 0.4rem;
+    padding: .1rem .4rem;
   }
 }
 
 .pagination a {
   background: transparent;
+  border: 0;
   border-radius: $border-radius !important;
-  border: none;
-  color: white !important;
+  color: $white !important;
   cursor: pointer;
   font-weight: 700;
   text-decoration: none;

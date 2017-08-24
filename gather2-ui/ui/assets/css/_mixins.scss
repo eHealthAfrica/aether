@@ -1,64 +1,68 @@
 @mixin label {
   font-family: $nav-font-family;
-  font-size: 0.85rem;
+  font-size: .85rem;
   font-weight: 600;
-  letter-spacing: 0.03em;
+  letter-spacing: .03em;
   text-transform: uppercase;
 }
-
 @mixin label-light {
   color: $grey;
   font-size: $font-size-xs;
   font-weight: 400;
-  letter-spacing: 0.03em;
+  letter-spacing: .03em;
   text-transform: uppercase;
 }
-
 @mixin logo-gather2 {
   background: url('/static/images/gather-icon.svg');
 }
-
 @mixin logo-eha {
   background: url('/static/images/eHA-icon.svg');
 }
-
+@mixin bg-gradient {
+  background: $action-color;
+  background-image: linear-gradient(to right, transparent, $hover-color);
+  color: $white;
+}
 @mixin overlay {
+  background: $background-color;
+  box-shadow: 2px 2px 4px $darker-grey;
+  color: $darker-grey;
+  left: 4%;
+  padding: 3rem 3rem 2rem;
   position: fixed;
   top: 160px;
-  left: 4%;
   width: 92%;
   z-index: 10;
-  background: $background-color;
-  padding: 3rem 3rem 2rem;
-  color: $darker-grey;
-  box-shadow: 2px 2px 4px $darker-grey;
 
   .close-button {
-    width: 30px;
+    cursor: pointer;
     height: 30px;
     position: absolute;
-    z-index: 15;
     right: 1rem;
     top: 1rem;
-    cursor: pointer;
+    width: 30px;
+    z-index: 15;
 
-    &:before, &:after {
-      content: "";
-      display: block;
-      width: 100%;
-      height: 3px;
-      border-radius: 3px;
+    &::after,
+    &::before {
       background-color: $shadow-color;
-      transform: rotate(45deg);
+      border-radius: 3px;
+      content: '';
+      display: block;
+      height: 3px;
       position: absolute;
       top: 50%;
+      transform: rotate(45deg);
+      width: 100%;
     }
-    &:after {
+
+    &::after {
       transform: rotate(-45deg);
     }
 
     &:hover {
-      &:before, &:after {
+      &::after,
+      &::before {
         background-color: $hover-color;
       }
     }

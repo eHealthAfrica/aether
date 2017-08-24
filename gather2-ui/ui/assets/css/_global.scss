@@ -1,16 +1,18 @@
 body {
-  font: 17px $body-font-family;
-  color: $text-color;
-  line-height: 1.3em;
-  -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  color: $text-color;
+  font: 17px $body-font-family;
+  line-height: 1.3em;
 }
 
-a, a:not([href]):not([tabindex]) {
+a,
+a:not([href]):not([tabindex]) {
   color: $action-color;
-  &:hover,
+
+  &:active,
   &:focus,
-  &:active {
+  &:hover {
     color: $hover-color;
     text-decoration: none;
   }
@@ -20,71 +22,73 @@ a, a:not([href]):not([tabindex]) {
   padding: 0;
 }
 
-
-button,
- .btn {
-  font: 1em $nav-font-family;
-  border-color: transparent;
-  border:none;
+.btn,
+button {
   @include label;
-  &:hover,
+  border: 0;
+  border-color: transparent;
+  font: 1em $nav-font-family;
+
+  &:active,
   &:focus,
-  &:active {
+  &:hover {
     box-shadow: none;
-    outline: none;
     cursor: pointer;
+    outline: none;
   }
- }
+}
 
 .btn-primary,
 a.btn-primary:not([href]) {
-  color: white;
-  background-color: $action-color;
-  background-image: linear-gradient(to right, rgba($action-color, 0), $hover-color);
+  @include bg-gradient;
   border-radius: 2px;
-  padding: 0.9em 1.5em;
+  box-shadow: 1px 1px 1px rgba($text-color, .2), 1px 1px 0 rgba($white, .1) inset;
+  padding: .9em 1.5em;
   transition: background 1s;
-  box-shadow: 1px 1px 1px rgba($text-color, 0.2), 1px 1px 0 rgba(white, 0.1) inset;
-  &:hover,
+
+  &:active,
   &:focus,
-  &:active {
-    color: white;
+  &:hover {
     background-color: $edit-color;
-    box-shadow: 1px 1px 1px rgba($text-color, 0.3), 1px 1px 0 rgba(white, 0.2) inset;
+    box-shadow: 1px 1px 1px rgba($text-color, .3), 1px 1px 0 rgba($white, .2) inset;
+    color: $white;
   }
 }
 
 .btn-icon {
-  padding: 0.6em 1.5em 0.9em 1em;
+  padding: .6em 1.5em .9em 1em;
+
   i {
     display: inline-block;
     font-size: 1.6em;
-    margin-right: 0.5em;
+    margin-right: .5em;
     position: relative;
-    top: 0.1em;
+    top: .1em;
   }
 }
 
 .btn-cancel {
-  padding: 0.9em 1.5em;
-  border-radius: 2px;
-  color: white;
   background: $grey;
-  &:hover,
+  border-radius: 2px;
+  color: $white;
+  padding: .9em 1.5em;
+
+  &:active,
   &:focus,
-  &:active {
+  &:hover {
     background-color: darken($grey, 6);
   }
 }
 
 .btn-delete {
-  padding: 0.9em 1.5em;
-  border-radius: 2px;
-  color: white;
   background: $red;
-  &:hover,
+  border-radius: 2px;
+  color: $white;
+  padding: .9em 1.5em;
+
+  &:active,
   &:focus,
-  &:active {
+  &:hover {
     background-color: darken($red, 6);
   }
 }
@@ -99,7 +103,7 @@ a.btn-primary:not([href]) {
   font-style: italic;
 }
 
-.label  {
+.label {
   font-size: $font-size-xs;
   font-style: italic;
 }
@@ -108,11 +112,11 @@ a.btn-primary:not([href]) {
   font-size: $font-size-s;
 }
 
-input[type="text"], input[type="password"] {
+input[type='password'],
+input[type='text'] {
   border: 0;
   border-radius: 0;
-  box-shadow: 1px 1px 1px rgba($text-color, 0.3) inset;
+  box-shadow: 1px 1px 1px rgba($text-color, .3) inset;
   font-family: $body-font-family;
-  padding: 0.8em;
+  padding: .8em;
 }
-
