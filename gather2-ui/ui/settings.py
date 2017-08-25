@@ -9,6 +9,7 @@ ROOT_URLCONF = 'ui.urls'
 WSGI_APPLICATION = 'ui.wsgi.application'
 
 APP_NAME = 'Gather'
+ORG_NAME = os.environ.get('GATHER_ORG_NAME', 'eHealth Africa')
 
 
 # Common Configuration

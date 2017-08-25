@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 
+import { ORG_NAME } from '../utils/env'
 import SurveyCard from './SurveyCard'
 
 export default class SurveysList extends Component {
@@ -8,9 +9,9 @@ export default class SurveysList extends Component {
     const {list} = this.props
 
     return (
-      <div data-qa='surveys-list' className='surveys-list'>
-        <div className='surveys-list__header'>
-          <h1>eHealth Africa (Org name)</h1>
+      <div data-qa='surveys-list' className='page-container'>
+        <div className='page-header'>
+          <h1 data-qa='organization-name'>{ ORG_NAME }</h1>
           <div>
             <a href='/surveys/add/' role='button' className='btn btn-primary btn-icon'>
               <i className='fa fa-plus-circle' />
@@ -24,13 +25,14 @@ export default class SurveysList extends Component {
 
         {
           list.length > 0 &&
-          <div>
+          <div className='page-content'>
             <h4 className='title'>
               <FormattedMessage
                 id='survey.list.title'
                 defaultMessage='Surveys' />
             </h4>
-            <div className='surveys-list__cards justify-content-md-start'>
+
+            <div className='surveys-list-cards justify-content-md-start'>
               {
                 list.map(survey => <SurveyCard className='col-6 col-sm-4 col-md-3' key={survey.id} survey={survey} />)
               }

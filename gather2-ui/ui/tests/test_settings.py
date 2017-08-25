@@ -16,3 +16,4 @@ class SettingsTest(TestCase):
         self.assertEqual(settings.ROOT_URLCONF, 'ui.urls')
         self.assertEqual(settings.WSGI_APPLICATION, 'ui.wsgi.application')
         self.assertEqual(settings.APP_NAME, 'Gather')
+        self.assertEqual(settings.ORG_NAME, 'eHealth Africa (Dev mode)')

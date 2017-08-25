@@ -9,7 +9,7 @@ export default class Survey extends Component {
 
     return (
       <div data-qa={`survey-item-${survey.id}`} className='survey-view'>
-        <div className='survey__header'>
+        <div className='survey-header'>
           <h2>{survey.name}</h2>
           <a href={`/surveys/edit/${survey.id}`} role='button' className='btn btn-primary btn-icon'>
             <i className='fa fa-pencil' />

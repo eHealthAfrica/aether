@@ -11,4 +11,5 @@ class ContextProcessorsTests(TestCase):
         self.assertEqual(gather2(request), {
             'dev_mode': False,
             'app_name': 'Gather',
+            'org_name': 'eHealth Africa (Dev mode)',
         })

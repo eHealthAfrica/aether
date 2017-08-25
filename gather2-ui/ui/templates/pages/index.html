@@ -1,5 +1,20 @@
 {% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{{ app_name }} - {% trans 'Welcome!' %}{% endblock title %}
 
 {% block content %}
-  This is the Welcome page!!!
+  <div class="container-fluid">
+    <div class="page-container">
+      <div class="page-header">
+        <h1 data-qa='organization-name'>{{ org_name }}</h1>
+      </div>
+
+      <div class="page-content">
+        {% blocktrans %}
+        This is the Welcome page!!!
+        {% endblocktrans %}
+      </div>
+    </div>
+  </div>
 {% endblock %}

@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 
+import { ORG_NAME } from '../utils/env'
 import SurveyorForm from './SurveyorForm'
 
 export default class SurveyorsList extends Component {
@@ -15,9 +16,9 @@ export default class SurveyorsList extends Component {
     const enableActions = (surveyor === undefined)
 
     return (
-      <div data-qa='surveyors-list' className='surveys-list'>
-        <div className='surveys-list__header'>
-          <h1>eHealth Africa (Org name)</h1>
+      <div data-qa='surveyors-list' className='page-container'>
+        <div className='page-header'>
+          <h1 data-qa='organization-name'>{ ORG_NAME }</h1>
           <div>
             {
               enableActions &&
@@ -34,13 +35,14 @@ export default class SurveyorsList extends Component {
 
         {
           list.length > 0 &&
-          <div>
+          <div className='page-content'>
             <h4 className='title'>
               <FormattedMessage
                 id='surveyor.list.title'
                 defaultMessage='Surveyors' />
             </h4>
-            <div className='surveys-list__cards justify-content-md-start'>
+
+            <div className='surveys-list-cards justify-content-md-start'>
               {
                 list.map((surveyor) => (
                   <div key={surveyor.id} className='col-6 col-sm-4 col-md-3 col-lg-2 card'>

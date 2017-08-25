@@ -120,3 +120,25 @@ input[type='text'] {
   font-family: $body-font-family;
   padding: .8em;
 }
+
+.page-container {
+  padding: 2rem 5vW;
+}
+
+.page-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+
+  h1 {
+    color: $light-grey;
+    font: $font-size-xxl $nav-font-family;
+    font-weight: 400;
+    margin: 0;
+  }
+}
+
+.page-content {
+  font-size: $font-size-standard;
+}

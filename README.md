@@ -62,8 +62,10 @@ of the most common ones with non default values. For more info take a look at th
 
 #### Gather UI
 
+- `HOSTNAME`: `ui.gather2.local` Used by UMS.
 - `RDS_DB_NAME`: `ui` Postgres database name.
 - `WEB_SERVER_PORT`: `8080` Web server port.
+- `GATHER_ORG_NAME`: `eHealth Africa` Text to be displayed as page title.
 - `GATHER_CORE_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24` Token to connect to core server.
 - `GATHER_CORE_URL`: `http://core:8000` Gather Core Server url.
 - `GATHER_CORE_URL_TEST`: `http://core-test:9000` Gather Core Testing Server url.

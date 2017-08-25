@@ -5,4 +5,5 @@ def gather2(request):
     return {
         'dev_mode': settings.DEBUG,
         'app_name': settings.APP_NAME,
+        'org_name': settings.ORG_NAME,
     }
