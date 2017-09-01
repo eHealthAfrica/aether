@@ -24,6 +24,7 @@ $(aws ecr get-login --region="${AWS_DEFAULT_REGION}")
 for APP in "${APPS[@]}"
 do
   GATHER2_APP="gather2${PREFIX}-${APP}"
+  docker-compose build $APP
   echo "Building Docker image ${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${BRANCH}"
   docker tag $APP "${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${BRANCH}"
   docker tag $APP "${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${COMMIT}"
