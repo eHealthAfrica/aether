@@ -22,14 +22,12 @@ deploy:
     on:
       branch: develop
 
-deploy:
   - provider: script
     script: "./scripts/deploy.sh"
     skip_cleanup: true
     on:
       branch: master
 
-deploy:
   - provider: script
     script: "./scripts/deploy.sh"
     skip_cleanup: true
