@@ -32,8 +32,5 @@ do
   docker push "${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${BRANCH}"
   docker push "${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${COMMIT}"
   echo "Deploying ${APP} to ${ENV}"
-  for ENV in "${ENVS[@]}"
-  do
-    ecs deploy --timeout 600 ${GATHER2_APP}-$ENV $GATHER2_APP -i $APP "${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${COMMIT}"
-  done
+  ecs deploy --timeout 600 ${GATHER2_APP}-$ENV $GATHER2_APP -i $APP "${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${COMMIT}"
 done
