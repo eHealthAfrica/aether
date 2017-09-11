@@ -8,31 +8,31 @@
   font: .9rem $nav-font-family;
   margin: 0;
   padding: .6rem 1.5rem;
-}
 
-.pagination li {
-  display: inline;
-  margin: 0 10px;
+  li {
+    display: inline;
+    margin: 0 10px;
 
-  span.badge {
-    border-radius: $border-radius;
-    font: .9rem $nav-font-family;
-    margin: 0 5px;
-    padding: .1rem .4rem;
+    span.badge {
+      border-radius: $border-radius;
+      font: .9rem $nav-font-family;
+      margin: 0 5px;
+      padding: .1rem .4rem;
+    }
   }
-}
 
-.pagination a {
-  background: transparent;
-  border: 0;
-  border-radius: $border-radius !important;
-  color: $white !important;
-  cursor: pointer;
-  font-weight: 700;
-  text-decoration: none;
-  text-transform: uppercase;
+  a {
+    background: transparent;
+    border: 0;
+    border-radius: $border-radius !important;
+    color: $white !important;
+    cursor: pointer;
+    font-weight: 700;
+    text-decoration: none;
+    text-transform: uppercase;
 
-  &:hover {
-    color: $hover-color !important;
+    &:hover {
+      color: $hover-color !important;
+    }
   }
 }
