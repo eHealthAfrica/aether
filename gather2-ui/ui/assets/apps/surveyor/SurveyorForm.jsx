@@ -4,6 +4,8 @@ import { defineMessages, injectIntl, FormattedMessage } from 'react-intl'
 import { clone } from '../utils'
 import { deleteData, postData, putData } from '../utils/request'
 
+import { ErrorAlert, WarningAlert } from '../components'
+
 const MESSAGES = defineMessages({
   addTitle: {
     defaultMessage: 'New surveyor',
@@ -80,7 +82,7 @@ export class SurveyorForm extends Component {
       <div data-qa={dataQA} className='surveyor-edit'>
         <h3>{title}</h3>
 
-        { this.renderErrors(surveyor.errors.global) }
+        <ErrorAlert errors={surveyor.errors.global} />
 
         <form onSubmit={this.onSubmit.bind(this)}>
           <div className='form-group big-input'>
@@ -97,7 +99,7 @@ export class SurveyorForm extends Component {
               value={surveyor.username || ''}
               onChange={this.onInputChange.bind(this)}
             />
-            { this.renderErrors(surveyor.errors.username) }
+            <ErrorAlert errors={surveyor.errors.username} />
           </div>
 
           <div className='form-group big-input'>
@@ -114,15 +116,16 @@ export class SurveyorForm extends Component {
               value={surveyor.password_1 || ''}
               onChange={this.onInputChange.bind(this)}
             />
-            { this.renderErrors(surveyor.errors.password) }
-            {
-              this.renderWarnings([
+            <ErrorAlert errors={surveyor.errors.password} />
+
+            <WarningAlert
+              warnings={[
                 formatMessage(MESSAGES.passwordLengthWarning),
                 formatMessage(MESSAGES.passwordSimilarWarning),
                 formatMessage(MESSAGES.passwordCommonWarning),
                 formatMessage(MESSAGES.passwordNumericWarning)
-              ])
-            }
+              ]}
+            />
           </div>
 
           <div className='form-group big-input'>
@@ -177,46 +180,6 @@ export class SurveyorForm extends Component {
     )
   }
 
-  renderErrors (errors) {
-    if (!errors || !errors.length) {
-      return ''
-    }
-
-    return (
-      <div data-qa='data-erred'>
-        {
-          errors.map((error, index) => (
-            <p className='badge badge-danger' key={index}>
-              <i className='fa fa-warning' />
-              &nbsp;
-              { error }
-            </p>
-          ))
-        }
-      </div>
-    )
-  }
-
-  renderWarnings (warnings) {
-    if (!warnings || !warnings.length) {
-      return ''
-    }
-
-    return (
-      <div data-qa='data-warning'>
-        {
-          warnings.map((warning, index) => (
-            <div key={index}>
-              <small className='badge badge-warning'>
-                { warning }
-              </small>
-            </div>
-          ))
-        }
-      </div>
-    )
-  }
-
   onInputChange (event) {
     event.preventDefault()
     this.setState({ [event.target.name]: event.target.value })
@@ -251,6 +214,7 @@ export class SurveyorForm extends Component {
 
   onSubmit (event) {
     event.preventDefault()
+    this.setState({ errors: {} })
 
     if (!this.validatePassword()) {
       return
@@ -288,7 +252,6 @@ export class SurveyorForm extends Component {
 
   onDelete (event) {
     event.preventDefault()
-
     const {formatMessage} = this.props.intl
     const surveyor = this.state
 

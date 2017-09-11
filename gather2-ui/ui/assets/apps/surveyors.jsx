@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { IntlProvider } from 'react-intl'
 
-import PaginationContainer from './components/PaginationContainer'
+import { PaginationContainer } from './components'
 import SurveyorsList from './surveyor/SurveyorsList'
 
 // Include this to enable HMR for this module

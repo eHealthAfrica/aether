@@ -48,6 +48,25 @@ describe('request utils', () => {
         })
     })
 
+    it('should do a fake PUT request', () => {
+      nock('http://localhost')
+        .put('/foo')
+        .reply(200, {ok: true, put: true})
+
+      nock('http://localhost')
+        .post('/foo')
+        .reply(400, {ok: false, put: false})
+
+      return request('POST', 'http://localhost/foo', {foo: 'bar'}, true)
+        .then((body) => {
+          assert(body.ok, 'Fake PUT request should return true')
+          assert(body.put)
+        })
+        .catch((error) => {
+          assert(!error, 'Unexpected error')
+        })
+    })
+
     it('should do a DELETE request', () => {
       nock('http://localhost')
         .delete('/foo')

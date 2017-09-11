@@ -48,7 +48,7 @@ class ProxyView(View):
     def patch(self, request, *args, **kwargs):
         return self.handle(request, *args, **kwargs)
 
-    def post(self, request, data=None, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         return self.handle(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
@@ -56,10 +56,27 @@ class ProxyView(View):
 
     def handle(self, request, *args, **kwargs):
         def valid_header(name):
-            return name.startswith('HTTP_') or name.startswith('CSRF_') or name == 'CONTENT_TYPE'
+            return (
+                name.startswith('HTTP_') or
+                name.startswith('CSRF_') or
+                name == 'CONTENT_TYPE'
+            )
 
+        method = request.method
         headers = {}
         for header, value in request.META.items():
+            # Fixes:
+            # django.http.request.RawPostDataException:
+            #     You cannot access body after reading from request's data stream
+            # Django does not read twice the `request.body` on `POST` calls:
+            # but it is read while checking the CSRF token.
+            # This raises an exception in the line below `data=request.body ...`.
+            # The Ajax call changed it from `POST` to `PUT`,
+            # here it's changed back to its real value.
+            # All the conditions are checked to avoid further attacks with this.
+            if method == 'PUT' and header == 'HTTP_X_METHOD' and value == 'POST':
+                method = value
+
             if valid_header(header):
                 norm_header = header.replace('HTTP_', '').title().replace('_', '-')
                 headers[norm_header] = value
@@ -67,7 +84,7 @@ class ProxyView(View):
         param_str = request.GET.urlencode()
         url = request.path + ('?%s' % param_str if param_str else '')
 
-        response = requests.request(method=request.method,
+        response = requests.request(method=method,
                                     url=url,
                                     data=request.body if request.body else None,
                                     headers=headers,

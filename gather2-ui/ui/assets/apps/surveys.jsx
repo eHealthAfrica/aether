@@ -2,8 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { IntlProvider } from 'react-intl'
 
-import FetchUrlsContainer from './components/FetchUrlsContainer'
-import PaginationContainer from './components/PaginationContainer'
+import { FetchUrlsContainer, PaginationContainer } from './components'
 
 import Survey from './survey/Survey'
 import SurveyForm from './survey/SurveyForm'

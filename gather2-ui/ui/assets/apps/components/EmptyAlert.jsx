@@ -6,8 +6,7 @@ export default class EmptyAlert extends Component {
     return (
       <div data-qa='data-empty' className='container-fluid'>
         <p className='alert alert-danger'>
-          <i className='fa fa-warning' />
-          &nbsp;
+          <i className='fa fa-warning mr-1' />
           <FormattedMessage
             id='alert.empty'
             defaultMessage='Nothing to display.' />

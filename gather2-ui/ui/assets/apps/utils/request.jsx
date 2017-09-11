@@ -1,7 +1,7 @@
 import 'whatwg-fetch'
 import jQuery from 'jquery'
 
-export const request = (method, url, data) => {
+export const request = (method, url, data = null, multipart = false) => {
   const inspectResponse = (response) => {
     // According to fetch docs: https://github.github.io/fetch/
     // Note that the promise won't be rejected in case of HTTP 4xx or 5xx server responses.
@@ -27,18 +27,44 @@ export const request = (method, url, data) => {
     }
   }
 
+  // See: https://docs.djangoproject.com/en/1.11/ref/csrf/
+  const csrfToken = jQuery('[name=csrfmiddlewaretoken]').val()
   const options = {
     method,
     credentials: 'same-origin',
     headers: {
-      'Content-Type': 'application/json',
-      // See: https://docs.djangoproject.com/en/1.11/ref/csrf/
-      'X-CSRFToken': jQuery('[name=csrfmiddlewaretoken]').val()
+      'X-CSRFToken': csrfToken,
+      'X-METHOD': method  // See comment below
     }
   }
 
   if (data) {
-    options.body = JSON.stringify(data)
+    if (multipart) {
+      /* global FormData */
+      const formData = new FormData()
+      formData.append('csrfmiddlewaretoken', csrfToken)
+      Object.keys(data).forEach(key => {
+        if (data[key]) {
+          formData.append(key, data[key])
+        }
+      })
+      options.body = formData
+      /*
+        Fixes:
+          django.http.request.RawPostDataException:
+            You cannot access body after reading from request's data stream
+
+        Django does not read twice the `request.body` on POST calls;
+        but it is read while checking the CSRF token.
+        This raises an exception in our ProxyTokenView.
+        We are trying to skip it by changing the method from `POST` to `PUT`
+        and the ProxyTokenView handler will change it back again.
+      */
+      options.method = 'PUT'
+    } else {
+      options.headers['Content-Type'] = 'application/json'
+      options.body = JSON.stringify(data)
+    }
   }
 
   return window.fetch(url, options).then(inspectResponse)
@@ -46,8 +72,8 @@ export const request = (method, url, data) => {
 
 export const deleteData = (url) => request('DELETE', url)
 export const getData = (url) => request('GET', url)
-export const postData = (url, data) => request('POST', url, data)
-export const putData = (url, data) => request('PUT', url, data)
+export const postData = (url, data, multipart = false) => request('POST', url, data, multipart)
+export const putData = (url, data, multipart = false) => request('PUT', url, data, multipart)
 
 /*
  * The expected urls format is:

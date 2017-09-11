@@ -13,41 +13,36 @@ export default class SurveyCard extends Component {
         <h3 className='card-header'>{survey.name}</h3>
         <div className='card-block'>
           <p className='card-text small'>
-            <span className='card-dates'>
-              <span className='label'>
+            <span className='card-dates pr-2'>
+              <span className='label mr-1'>
                 <FormattedMessage
                   id='survey.card.created'
                   defaultMessage='created' />
               </span>
-              &nbsp;
               <FormattedDate
                 value={survey.created}
                 year='numeric'
                 month='short'
                 day='numeric' />
-              &nbsp;
             </span>
 
             { survey.responses > 0 &&
-              <span className='card-dates'>
-                <span className='label'>
+              <span className='card-dates ml-2'>
+                <span className='label mr-1'>
                   <FormattedMessage
                     id='survey.card.responses.from'
                     defaultMessage='data entry from' />
                 </span>
-                &nbsp;
                 <FormattedDate
                   value={survey.first_response}
                   year='numeric'
                   month='short'
                   day='numeric' />
-                &nbsp;
-                <span className='label'>
+                <span className='label mx-1'>
                   <FormattedMessage
                     id='survey.card.responses.to'
                     defaultMessage='to' />
                 </span>
-                &nbsp;
                 <FormattedDate
                   value={survey.last_response}
                   year='numeric'

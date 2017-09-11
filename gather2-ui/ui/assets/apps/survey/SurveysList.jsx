@@ -14,8 +14,7 @@ export default class SurveysList extends Component {
           <h1 data-qa='organization-name'>{ ORG_NAME }</h1>
           <div>
             <a href='/surveys/add/' role='button' className='btn btn-primary btn-icon'>
-              <i className='fa fa-plus-circle' />
-              &nbsp;
+              <i className='fa fa-plus-circle mr-1' />
               <FormattedMessage
                 id='survey.list.action.add'
                 defaultMessage='New survey' />

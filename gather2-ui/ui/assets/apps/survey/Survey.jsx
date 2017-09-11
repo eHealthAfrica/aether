@@ -12,8 +12,7 @@ export default class Survey extends Component {
         <div className='survey-header'>
           <h2>{survey.name}</h2>
           <a href={`/surveys/edit/${survey.id}`} role='button' className='btn btn-primary btn-icon'>
-            <i className='fa fa-pencil' />
-            &nbsp;
+            <i className='fa fa-pencil mr-1' />
             <FormattedMessage
               id='survey.view.action.edit'
               defaultMessage='Edit survey' />

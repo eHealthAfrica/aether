@@ -141,3 +141,43 @@ class ViewsTest(TestCase):
                 'Content-Type': 'application/octet-stream',
             }
         )
+
+    @mock.patch('requests.request', return_value=RETURN_MOCK)
+    def test_proxy_view_put_but_post(self, mock_request):
+        request = RequestFactory().put('/go_to_example',
+                                       data='something',
+                                       **{'HTTP_X_METHOD': 'POST'})
+        response = self.viewWithToken(request, path='fake_put')
+
+        self.assertEqual(response.status_code, 200)
+        mock_request.assert_called_once_with(
+            method='POST',
+            url='http://example.com/fake_put',
+            data=b'something',
+            headers={
+                'Cookie': '',
+                'Authorization': 'Token ABCDEFGH',
+                'Content-Type': 'application/octet-stream',
+                'X-Method': 'POST',
+            }
+        )
+
+    @mock.patch('requests.request', return_value=RETURN_MOCK)
+    def test_proxy_view_put_but_other(self, mock_request):
+        request = RequestFactory().put('/go_to_example',
+                                       data='something',
+                                       **{'HTTP_X_METHOD': 'GET'})
+        response = self.viewWithToken(request, path='fake_put')
+
+        self.assertEqual(response.status_code, 200)
+        mock_request.assert_called_once_with(
+            method='PUT',
+            url='http://example.com/fake_put',
+            data=b'something',
+            headers={
+                'Cookie': '',
+                'Authorization': 'Token ABCDEFGH',
+                'Content-Type': 'application/octet-stream',
+                'X-Method': 'GET',
+            }
+        )

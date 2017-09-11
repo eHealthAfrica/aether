@@ -32,6 +32,7 @@ class SurveyViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
             },
             "required": ["firstName", "lastName"]
         }
+
     '''
 
     queryset = models.Survey.objects.all()
