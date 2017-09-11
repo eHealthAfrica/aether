@@ -29,15 +29,12 @@
       {% if request.user.is_authenticated %}
         <ul class="nav navbar-nav">
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'surveys' action='list' %}">{% trans 'Surveys' %}</a>
+            <a class="nav-link {% if request.resolver_match.view_name == 'surveys' %}active{% endif %}" href="{% url 'surveys' action='list' %}">{% trans 'Surveys' %}</a>
           </li>
-        </ul>
-        <ul class="nav navbar-nav">
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'surveyors' %}">{% trans 'Surveyors' %}</a>
+            <a class="nav-link {% if request.resolver_match.view_name == 'surveyors' %}active{% endif %}" href="{% url 'surveyors' %}">{% trans 'Surveyors' %}</a>
           </li>
         </ul>
-
         <ul class="nav navbar-nav pull-right">
           <li class="nav-item user-name">
             <i class="fa fa-user-circle mr-1"></i>
@@ -46,9 +43,7 @@
               data-user-id="{{ request.user.id }}">
               {{ request.user|get_fullname }}
             </span>
-          </li>
-          <li class="nav-item logout">
-            <a href="{% url 'rest_framework:logout' %}">
+            <a class="logout" href="{% url 'rest_framework:logout' %}">
               <i class="fa fa-sign-out" title="{% trans 'Sign Out' %}" aria-hidden="true"></i>
             </a>
           </li>
