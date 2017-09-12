@@ -23,7 +23,7 @@ export default class SurveyorsList extends Component {
             {
               enableActions &&
               <button className='btn btn-primary btn-icon' onClick={this.add.bind(this)}>
-                <i className='fa fa-plus-circle mr-1' />
+                <i className='fa fa-plus-circle mr-3' />
                 <FormattedMessage
                   id='surveyor.list.action.add'
                   defaultMessage='New surveyor' />
