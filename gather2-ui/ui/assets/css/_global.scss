@@ -27,7 +27,6 @@ button {
   @include label;
   border: 0;
   border-color: transparent;
-  font: 1em $nav-font-family;
 
   &:active,
   &:focus,
