@@ -17,7 +17,7 @@ This is the surveyors app
 ReactDOM.render(
   <IntlProvider defaultLocale='en' locale={navigator.locale || 'en'}>
     <PaginationContainer
-      pageSize={36}
+      pageSize={2}
       url='/odk/surveyors.json?'
       listComponent={SurveyorsList}
     />

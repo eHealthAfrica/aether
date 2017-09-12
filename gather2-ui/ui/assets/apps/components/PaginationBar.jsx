@@ -38,7 +38,7 @@ export class PaginationBar extends Component {
 
     return (
       <nav data-qa='data-pagination'>
-        <ul className='pagination justify-content-end'>
+        <ul className='pagination'>
           {
             previousAction &&
             <li data-qa='data-pagination-previous' className='page-item'>
@@ -56,7 +56,7 @@ export class PaginationBar extends Component {
             <span data-qa='data-pagination-page' className='badge badge-default'>
               <FormattedNumber value={currentPage} />
             </span>
-            / <FormattedNumber value={numberOfPages} />
+            of <FormattedNumber value={numberOfPages} />
           </li>
 
           {
