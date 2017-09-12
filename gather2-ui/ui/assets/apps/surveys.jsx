@@ -52,8 +52,8 @@ switch (action) {
   default:
     component = (
       <PaginationContainer
-        pageSize={30}
-        url='/core/surveys-stats.json?page='
+        pageSize={12}
+        url='/core/surveys-stats.json?'
         position='top'
         listComponent={SurveysList}
       />

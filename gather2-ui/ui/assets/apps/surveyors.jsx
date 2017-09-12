@@ -18,7 +18,7 @@ ReactDOM.render(
   <IntlProvider defaultLocale='en' locale={navigator.locale || 'en'}>
     <PaginationContainer
       pageSize={36}
-      url='/odk/surveyors.json?page='
+      url='/odk/surveyors.json?'
       listComponent={SurveyorsList}
     />
   </IntlProvider>,

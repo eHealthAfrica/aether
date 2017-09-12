@@ -12,6 +12,7 @@ export default class PaginationContainer extends Component {
 
     this.state = {
       // default status variables
+      pageSize: this.props.pageSize || 25,
       page: 1,
       isLoading: true,
       error: false
@@ -29,7 +30,8 @@ export default class PaginationContainer extends Component {
   }
 
   fetchData () {
-    const url = this.props.url + this.state.page
+    const {page, pageSize} = this.state
+    const url = `${this.props.url}&page=${page}&page_size=${pageSize}`
 
     getData(url)
       .then((response) => {
@@ -75,8 +77,7 @@ export default class PaginationContainer extends Component {
 
   renderPaginationBar (list) {
     const {count, next, previous} = this.state.list
-    const {page} = this.state
-    const {pageSize} = this.props
+    const {page, pageSize} = this.state
 
     if (count <= pageSize) {
       return ''
