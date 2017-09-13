@@ -12,7 +12,7 @@ export PYTHONUNBUFFERED=true
 
 # https://nodejs.org
 export NPM_CONFIG_LOGLEVEL=info
-export NODE_VERSION=6.11.0
+export NODE_VERSION=6.11.3
 
 
 ################################################################################
