@@ -8,7 +8,7 @@ export default class WarningAlert extends Component {
     }
 
     return (
-      <div className='form-warning' data-qa='data-warning'>
+      <div data-qa='data-warning' className='form-warning'>
         {
           warnings.map((warning, index) => (
             <p className='warning' key={index}>

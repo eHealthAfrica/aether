@@ -114,10 +114,6 @@ export class SurveyorForm extends Component {
             />
             <ErrorAlert errors={surveyor.errors.username} />
           </div>
-          {
-            surveyor.errors.password &&
-            <p>test</p>
-          }
 
           <div className={`form-group big-input ${surveyor.errors.password ? 'error' : ''}`}>
             <label className='form-control-label title'>

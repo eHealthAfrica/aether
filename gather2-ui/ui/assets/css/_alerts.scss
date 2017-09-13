@@ -49,14 +49,18 @@
   margin-top: .5rem;
 
   p {
-    font-style: italic;
-    font-size: $font-size-xs;
-    margin: 0;
-    color: $dark-grey;
+    font-style: italic;    
+    margin: 0;    
   }
 
   .error {
-    color: $red;
+    font-size: $font-size-s;
+    color: darken($red, 10);
+  }
+
+  .warning {
+    font-size: $font-size-xs;
+    color: $dark-grey;
   }
 }
 
