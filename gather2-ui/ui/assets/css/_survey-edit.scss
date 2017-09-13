@@ -18,3 +18,7 @@
 .form-overlay {
   @include overlay;
 }
+
+textarea.code {
+  font-family: monospace;
+}

@@ -1,8 +1,9 @@
-body {
+body,
+html {
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   color: $text-color;
-  font: 17px $body-font-family;
+  font: 16px $body-font-family;
   line-height: 1.3em;
 }
 
@@ -190,4 +191,16 @@ input[type='text'] {
 
 .page-content {
   font-size: $font-size-standard;
+}
+
+pre {
+  background-color: $black;
+  font-family: monospace;
+  font-size: $font-size-xs;
+  color: $green;
+  max-height: 200px;
+  max-width: 500px;
+  overflow: auto;
+  white-space: pre;
+  padding: .5rem;
 }

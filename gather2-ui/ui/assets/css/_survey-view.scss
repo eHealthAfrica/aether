@@ -1,17 +1,136 @@
-.survey-view {
-  padding: 4rem 5vW;
-}
-
 .survey-header {
   align-items: center;
   display: flex;
   justify-content: space-between;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
+  padding: 4rem 5vW 1rem;
 
-  h1 {
-    color: $light-grey;
-    font: $font-size-xxl $nav-font-family;
+  h2 {
+    font-size: $font-size-xl;
     font-weight: 400;
     margin: 0;
+  }
+}
+
+.survey-detail {
+  padding: 1rem 5vW;
+  position: relative;
+  display: flex;
+  min-height: 12rem;
+
+  .title {
+    border-bottom: 1px solid $text-color;
+    margin-bottom: 1rem;
+    padding-bottom: .5rem;
+  }
+}
+
+.survey-schema {
+  flex: 1;
+}
+
+.survey-dates {
+  flex: 2;
+  margin-right: 2rem;
+}
+
+.survey-records {
+  @include label;
+  position: absolute;
+  bottom: 2rem;
+  font-weight: 500;
+  padding: 1rem 0;
+}
+
+.record-number {
+  font-size: 3em;
+}
+
+.survey-data-toolbar {
+  background: $action-color;
+  padding: 1.5rem 5vW 1.1rem;
+  box-shadow: 0 1px 2px rgba($text-color, .5) inset, 0 1px 2px rgba($text-color, .5);
+  position: relative;
+  z-index: 5;
+}
+
+.survey-data-tabs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+}
+
+.tab {
+  background: none;
+  color: $white;
+  margin-right: 2rem;
+  font-size: $font-size-s;
+  letter-spacing: 0;
+
+  &:hover,
+  &.active {
+    color: $text-color;
+  }
+}
+
+.survey-content.single {
+  background: $bg-grey;
+  padding: 2rem 12vW;
+
+  &>div {
+    border-bottom: 1px solid $light-grey;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: baseline;
+  }
+
+  .title {
+    width: 50%;
+    font-size: $font-size-standard;
+  }
+}
+
+.survey-content table {
+  font-size: $font-size-s;
+
+  thead {
+    background: $bg-grey;
+  }
+
+  th {
+    border: 0;
+    border-bottom: 1px solid $dark-grey;
+    font-weight: 400;
+    font-style: italic;
+    padding: 1rem .6rem;
+
+    &::before {
+      content: '';
+      display: inline-block;
+      position: relative;
+      left: -.5rem;
+      top: .3rem;
+      height: 1.5rem;
+      width: 1px;
+      border-left: 1px solid $dark-grey;
+    }
+
+    &:first-child {
+      opacity: 0;
+    }
+
+  }
+
+  td {
+    border: 0;
+    border-bottom: 1px solid $lighter-grey;
+    padding: .6rem 1rem;
+
+    &:first-child {
+      border-right: 1px solid $dark-grey;
+      font-size: $font-size-l;
+      text-align: right;
+    }
   }
 }
