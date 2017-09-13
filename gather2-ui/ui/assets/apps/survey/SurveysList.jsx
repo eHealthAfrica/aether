@@ -31,7 +31,7 @@ export default class SurveysList extends Component {
                 defaultMessage='Surveys' />
             </h4>
 
-            <div className='surveys-list-cards justify-content-md-start'>
+            <div className='surveys-list-cards'>
               {
                 list.map(survey => <SurveyCard className='col-6 col-sm-4 col-md-3' key={survey.id} survey={survey} />)
               }

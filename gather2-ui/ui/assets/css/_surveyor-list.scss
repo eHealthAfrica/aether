@@ -1,0 +1,27 @@
+.surveyors-list {
+  padding: 2rem 5vW;
+}
+
+.surveyors {
+  -webkit-column-count: 2; /* Chrome, Safari, Opera */
+  -moz-column-count: 2; /* Firefox */
+  column-count: 2;
+  -webkit-column-gap: 2rem; /* Chrome, Safari, Opera */
+  -moz-column-gap: 2rem; /* Firefox */
+  column-gap: 2rem;
+
+  .surveyor-list-item {
+    border-top: 1px solid $light-grey;
+    display: inline-block;
+    width: 100%;
+
+    .fa-user {
+      font-size: .9rem;
+      color: $dark-grey;
+    }
+  }
+
+  .surveyor-header {
+    padding: .4rem;
+  }
+}

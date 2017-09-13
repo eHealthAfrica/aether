@@ -41,11 +41,12 @@ export default class SurveyorsList extends Component {
                 defaultMessage='Surveyors' />
             </h4>
 
-            <div className='surveys-list-cards justify-content-md-start'>
+            <div className='surveyors'>
               {
                 list.map((surveyor) => (
-                  <div key={surveyor.id} className='col-6 col-sm-4 col-md-3 col-lg-2 card'>
-                    <div className='card-header'>
+                  <div key={surveyor.id} className='surveyor-list-item'>
+                    <div className='surveyor-header'>
+                      <i className='fa fa-user mr-2' />
                       {surveyor.username}
 
                       {
