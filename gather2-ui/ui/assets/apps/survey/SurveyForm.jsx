@@ -147,7 +147,7 @@ export class SurveyForm extends Component {
           </div>
 
           <div className='actions'>
-            
+
             { !isNew &&
               <div>
                 <ConfirmButton
@@ -160,7 +160,7 @@ export class SurveyForm extends Component {
                 />
               </div>
             }
-            
+
             <div>
               <ConfirmButton
                 className='btn btn-cancel btn-block'

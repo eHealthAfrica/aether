@@ -74,8 +74,8 @@ export class SurveyorForm extends Component {
     const title = (
       isNew
       ? <FormattedMessage
-            id='surveyor.form.title.add'
-            defaultMessage='New surveyor' />
+        id='surveyor.form.title.add'
+        defaultMessage='New surveyor' />
       : (
         <span>
           <FormattedMessage
