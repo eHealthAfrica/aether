@@ -54,12 +54,14 @@
     margin: 0;
     color: $dark-grey;
   }
+
   .error {
     color: $red;
   }
 }
 
-.error input, .error input:focus {
+.error input,
+.error input:focus {
   background: $red;
   color: $white;
 }
