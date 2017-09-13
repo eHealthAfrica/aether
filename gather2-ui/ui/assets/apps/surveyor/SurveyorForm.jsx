@@ -4,7 +4,7 @@ import { defineMessages, injectIntl, FormattedMessage } from 'react-intl'
 import { clone } from '../utils'
 import { deleteData, postData, putData } from '../utils/request'
 
-import { ErrorAlert, WarningAlert } from '../components'
+import { ConfirmButton, ErrorAlert, WarningAlert } from '../components'
 
 const MESSAGES = defineMessages({
   addTitle: {
@@ -16,6 +16,10 @@ const MESSAGES = defineMessages({
     id: 'surveyor.form.title.edit'
   },
 
+  deleteButton: {
+    defaultMessage: 'Delete surveyor',
+    id: 'surveyor.form.action.delete'
+  },
   deleteConfirm: {
     defaultMessage: 'Are you sure you want to delete the surveyor “{username}”?',
     id: 'surveyor.form.action.delete.confirm'
@@ -147,14 +151,14 @@ export class SurveyorForm extends Component {
           <div className='row actions'>
             <div className='col-sm-6'>
               { !isNew &&
-                <button
-                  type='button'
+                <ConfirmButton
                   className='btn btn-delete pull-right col-sm-6'
-                  onClick={this.onDelete.bind(this)}>
-                  <FormattedMessage
-                    id='surveyor.form.action.delete'
-                    defaultMessage='Delete surveyor' />
-                </button>
+                  cancelable
+                  onConfirm={this.onDelete.bind(this)}
+                  title={title}
+                  message={formatMessage(MESSAGES.deleteConfirm, {...this.props.surveyor})}
+                  buttonLabel={formatMessage(MESSAGES.deleteButton)}
+                />
               }
             </div>
             <div className='col-sm-3'>
@@ -250,29 +254,23 @@ export class SurveyorForm extends Component {
       })
   }
 
-  onDelete (event) {
-    event.preventDefault()
+  onDelete () {
     const {formatMessage} = this.props.intl
     const surveyor = this.state
 
-    // check if there were changes
-    const shouldDelete = window.confirm(formatMessage(MESSAGES.deleteConfirm, {...surveyor}))
-
-    if (shouldDelete) {
-      return deleteData(`/odk/surveyors/${surveyor.id}.json`)
-        .then(() => {
-          // navigate to Surveyors list page
-          window.location.pathname = '/surveyors'
+    return deleteData(`/odk/surveyors/${surveyor.id}.json`)
+      .then(() => {
+        // navigate to Surveyors list page
+        window.location.pathname = '/surveyors'
+      })
+      .catch(error => {
+        console.log(error.message)
+        this.setState({
+          errors: {
+            global: [formatMessage(MESSAGES.deleteError, {...surveyor})]
+          }
         })
-        .catch(error => {
-          console.log(error.message)
-          this.setState({
-            errors: {
-              global: [formatMessage(MESSAGES.deleteError, {...surveyor})]
-            }
-          })
-        })
-    }
+      })
   }
 }
 
