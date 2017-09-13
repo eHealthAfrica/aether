@@ -81,7 +81,7 @@ export class SurveyForm extends Component {
         <ErrorAlert errors={survey.errors.global} />
 
         <form onSubmit={this.onSubmit.bind(this)} encType='multipart/form-data'>
-          <div className='form-group big-input'>
+          <div className={`form-group big-input ${survey.errors.name ? 'error' : ''}`}>
             <label className='form-control-label title'>
               <FormattedMessage
                 id='survey.form.name'
@@ -98,7 +98,7 @@ export class SurveyForm extends Component {
             <ErrorAlert errors={survey.errors.name} />
           </div>
 
-          <div className='form-group big-input'>
+          <div className={`form-group big-input ${survey.errors.schema ? 'error' : ''}`}>
             <label className='form-control-label title'>
               <FormattedMessage
                 id='survey.form.schema'
@@ -125,7 +125,7 @@ export class SurveyForm extends Component {
             <ErrorAlert errors={survey.errors.schema} />
           </div>
 
-          <div className='form-group big-input'>
+          <div className={`form-group big-input ${survey.errors.schema_file ? 'error' : ''}`}>
             <label className='form-control-label title'>
               <FormattedMessage
                 id='survey.form.schema.file'

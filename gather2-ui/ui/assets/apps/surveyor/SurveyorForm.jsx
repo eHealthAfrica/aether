@@ -92,7 +92,7 @@ export class SurveyorForm extends Component {
         <ErrorAlert errors={surveyor.errors.global} />
 
         <form onSubmit={this.onSubmit.bind(this)}>
-          <div className='form-group big-input'>
+          <div className={`form-group big-input ${surveyor.errors.username ? 'error' : ''}`}>
             <label className='form-control-label title'>
               <FormattedMessage
                 id='surveyor.form.username'

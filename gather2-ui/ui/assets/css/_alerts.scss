@@ -64,8 +64,12 @@
   }
 }
 
-.error input,
-.error input:focus {
-  background: $red;
-  color: $white;
+.error {
+  input,
+  input:focus,
+  textarea,
+  textarea:focus {
+    background: $red;
+    color: $white;
+  }
 }
