@@ -12,7 +12,7 @@ const MESSAGES = defineMessages({
     id: 'surveyor.form.title.add'
   },
   editTitle: {
-    defaultMessage: 'Edit surveyor “{username}”',
+    defaultMessage: 'Edit surveyor',
     id: 'surveyor.form.title.edit'
   },
 
@@ -73,8 +73,17 @@ export class SurveyorForm extends Component {
 
     const title = (
       isNew
-      ? formatMessage(MESSAGES.addTitle)
-      : formatMessage(MESSAGES.editTitle, {...this.props.surveyor})
+      ? <FormattedMessage
+            id='surveyor.form.title.add'
+            defaultMessage='New surveyor' />
+      : (
+        <span>
+          <FormattedMessage
+            id='surveyor.form.title.edit'
+            defaultMessage='Edit surveyor' />
+          <span className='username ml-2'><i className='fa fa-user mr-1' />{this.props.surveyor.username}</span>
+        </span>
+        )
     )
     const dataQA = (
       isNew
@@ -84,7 +93,7 @@ export class SurveyorForm extends Component {
 
     return (
       <div data-qa={dataQA} className='surveyor-edit'>
-        <h3>{title}</h3>
+        <h3 className='page-title'>{title}</h3>
 
         <ErrorAlert errors={surveyor.errors.global} />
 
@@ -148,11 +157,11 @@ export class SurveyorForm extends Component {
             />
           </div>
 
-          <div className='row actions'>
-            <div className='col-sm-6'>
+          <div className='actions'>
+            <div>
               { !isNew &&
                 <ConfirmButton
-                  className='btn btn-delete pull-right col-sm-6'
+                  className='btn btn-delete'
                   cancelable
                   onConfirm={this.onDelete.bind(this)}
                   title={title}
@@ -161,7 +170,7 @@ export class SurveyorForm extends Component {
                 />
               }
             </div>
-            <div className='col-sm-3'>
+            <div>
               <button
                 type='button'
                 className='btn btn-cancel btn-block'
@@ -171,7 +180,7 @@ export class SurveyorForm extends Component {
                   defaultMessage='Cancel' />
               </button>
             </div>
-            <div className='col-sm-3'>
+            <div>
               <button type='submit' className='btn btn-primary btn-block'>
                 <FormattedMessage
                   id='surveyor.form.action.submit'

@@ -208,3 +208,38 @@ input[type='text'] {
 .page-content {
   font-size: $font-size-standard;
 }
+
+.page-title {
+  font: $font-size-s $nav-font-family;
+  font-weight: 700;
+  margin-bottom: 3rem;
+}
+
+.actions {
+  padding: 2rem 0;
+  border-top: 1px solid $grey;
+  display: flex;
+  flex-wrap: wrap;
+
+  &>div {
+    margin-right: 1rem;
+    margin-bottom: .5rem;
+    &:last-child {
+      margin-left: auto;
+      margin-right: 0;
+    }
+  }
+}
+
+.big-input {
+  margin-bottom: 2rem;
+
+  .title {
+    font-size: $font-size-standard;
+  }
+
+  input[type='password'],
+  input[type='text'] {
+    font-size: 1.2em;
+  }
+}

@@ -25,3 +25,30 @@
     padding: .4rem;
   }
 }
+
+.form-overlay {
+  @include overlay;
+  overflow: auto;
+}
+
+.surveyor-edit {
+
+  .username {
+    font-family: $body-font-family;
+    font-weight: 500;
+  }
+
+  .fa-user {
+    font-size: .9rem;
+    color: $dark-grey;
+  }
+}
+
+@media screen and (min-width: 992px) {
+
+  .surveyor-edit {
+    form {
+      width: 80%;
+    }
+  }
+}

@@ -4,17 +4,3 @@
   padding: 2rem 5vW;
 }
 
-.big-input {
-  .title {
-    font-size: $font-size-standard;
-  }
-
-  input[type='password'],
-  input[type='text'] {
-    font-size: 1.2em;
-  }
-}
-
-.form-overlay {
-  @include overlay;
-}
