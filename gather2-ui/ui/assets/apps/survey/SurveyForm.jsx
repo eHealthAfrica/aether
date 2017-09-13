@@ -4,7 +4,7 @@ import { defineMessages, injectIntl, FormattedMessage } from 'react-intl'
 import { clone, deepEqual } from '../utils'
 import { deleteData, postData, putData } from '../utils/request'
 
-import { ErrorAlert, HelpMessage } from '../components'
+import { ConfirmButton, ErrorAlert, HelpMessage } from '../components'
 
 const MESSAGES = defineMessages({
   addTitle: {
@@ -21,9 +21,18 @@ const MESSAGES = defineMessages({
     id: 'survey.form.schema.error'
   },
 
+  cancelButton: {
+    defaultMessage: 'Cancel',
+    id: 'survey.form.action.cancel'
+  },
   cancelConfirm: {
     defaultMessage: 'Are you sure you want to cancel your changes?',
     id: 'survey.form.action.cancel.confirm'
+  },
+
+  deleteButton: {
+    defaultMessage: 'Delete survey',
+    id: 'survey.form.action.delete'
   },
   deleteConfirm: {
     defaultMessage: 'Are you sure you want to delete the survey “{name}”?',
@@ -140,25 +149,26 @@ export class SurveyForm extends Component {
           <div className='row actions'>
             <div className='col-sm-6'>
               { !isNew &&
-                <button
-                  type='button'
+                <ConfirmButton
                   className='btn btn-delete pull-right col-sm-6'
-                  onClick={this.onDelete.bind(this)}>
-                  <FormattedMessage
-                    id='survey.form.action.delete'
-                    defaultMessage='Delete survey' />
-                </button>
+                  cancelable
+                  onConfirm={this.onDelete.bind(this)}
+                  title={title}
+                  message={formatMessage(MESSAGES.deleteConfirm, {...this.props.survey})}
+                  buttonLabel={formatMessage(MESSAGES.deleteButton)}
+                />
               }
             </div>
             <div className='col-sm-3'>
-              <button
-                type='button'
+              <ConfirmButton
                 className='btn btn-cancel btn-block'
-                onClick={this.onCancel.bind(this)}>
-                <FormattedMessage
-                  id='survey.form.action.cancel'
-                  defaultMessage='Cancel' />
-              </button>
+                cancelable
+                condition={this.onCancelCondition.bind(this)}
+                onConfirm={this.onCancel.bind(this)}
+                title={title}
+                message={formatMessage(MESSAGES.cancelConfirm)}
+                buttonLabel={formatMessage(MESSAGES.cancelButton)}
+              />
             </div>
             <div className='col-sm-3'>
               <button type='submit' className='btn btn-primary btn-block'>
@@ -183,40 +193,34 @@ export class SurveyForm extends Component {
     this.setState({ [event.target.name]: event.target.files[0] })
   }
 
-  onCancel (event) {
-    event.preventDefault()
-    const {formatMessage} = this.props.intl
-
+  onCancelCondition () {
     // check if there were changes
-    const {schemaFile, schemaStringified} = this.state
-    let hasChanged = (schemaFile !== undefined)
-    if (!hasChanged) {
-      try {
-        const survey = {
-          id: this.state.id,
-          name: this.state.name,
-          schema: JSON.parse(schemaStringified)
-        }
-        hasChanged = !deepEqual(this.props.survey, survey, true)
-      } catch (e) {
-        // let's suppose that the `schemaStringified` is wrong because it was modified
-        hasChanged = true
-      }
+    if (this.state.schemaFile !== undefined) {
+      return true
     }
 
-    let shouldCancel = true
-    if (hasChanged) {
-      shouldCancel = window.confirm(formatMessage(MESSAGES.cancelConfirm))
-    }
-
-    if (shouldCancel) {
-      if (this.state.id) {
-        // navigate to Survey view page
-        window.location.pathname = `/surveys/view/${this.state.id}`
-      } else {
-        // navigate to Surveys list page
-        window.location.pathname = '/surveys/list/'
+    try {
+      const survey = {
+        ...clone(this.props.survey),
+        name: this.state.name,
+        schema: JSON.parse(this.state.schemaStringified)
       }
+
+      return !deepEqual(this.props.survey, survey, true)
+    } catch (e) {
+      console.log(e)
+      // let's suppose that the `schemaStringified` is wrong because it was modified
+      return true
+    }
+  }
+
+  onCancel () {
+    if (this.state.id) {
+      // navigate to Survey view page
+      window.location.pathname = `/surveys/view/${this.state.id}`
+    } else {
+      // navigate to Surveys list page
+      window.location.pathname = '/surveys/list/'
     }
   }
 
@@ -279,29 +283,23 @@ export class SurveyForm extends Component {
       })
   }
 
-  onDelete (event) {
-    event.preventDefault()
+  onDelete () {
     const {formatMessage} = this.props.intl
     const survey = this.state
 
-    // check if there were changes
-    const shouldDelete = window.confirm(formatMessage(MESSAGES.deleteConfirm, {...survey}))
-
-    if (shouldDelete) {
-      return deleteData(`/core/surveys/${survey.id}.json`)
-        .then(() => {
-          // navigate to Surveys list page
-          window.location.pathname = '/surveys/list/'
+    return deleteData(`/core/surveys/${survey.id}.json`)
+      .then(() => {
+        // navigate to Surveys list page
+        window.location.pathname = '/surveys/list/'
+      })
+      .catch(error => {
+        console.log(error.message)
+        this.setState({
+          errors: {
+            global: [formatMessage(MESSAGES.deleteError, {...survey})]
+          }
         })
-        .catch(error => {
-          console.log(error.message)
-          this.setState({
-            errors: {
-              global: [formatMessage(MESSAGES.deleteError, {...survey})]
-            }
-          })
-        })
-    }
+      })
   }
 }
 

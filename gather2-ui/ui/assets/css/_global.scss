@@ -103,7 +103,23 @@ a.btn-primary:not([href]) {
 
 .btn-default {
   background: none;
-  border: 1px solid $light-grey;
+  border: 0;
+  color: $edit-color;
+
+  &:hover {
+    color: $hover-color;
+  }
+}
+
+.btn-secondary {
+  background: $edit-color;
+  border: 0;
+  color: $white;
+
+  &:hover {
+    background: $hover-color;
+    color: $white;
+  }
 }
 
 .title {
@@ -127,6 +143,40 @@ input[type='text'] {
   box-shadow: 1px 1px 1px rgba($text-color, .3) inset;
   font-family: $body-font-family;
   padding: .8em;
+}
+
+.modal {
+  background-color: rgba($text-color, .7);
+
+  &.show {
+    display: block;
+  }
+
+  .modal-header {
+    align-items: flex-start;
+  }
+
+  .modal-dialog {
+    margin: 80px auto;
+  }
+
+  .modal-content {
+    box-shadow: 2px 2px 4px $darker-grey;
+    border: 0;
+    border-radius: $border-radius;
+  }
+}
+
+.close {
+  color: $action-color;
+  opacity: 1;
+  font-size: 2.5rem;
+  line-height: 1rem;
+  font-weight: 400;
+
+  &:hover {
+    color: $hover-color;
+  }
 }
 
 .page-container {
