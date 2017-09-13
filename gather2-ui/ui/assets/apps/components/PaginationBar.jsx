@@ -16,11 +16,11 @@ const MESSAGES = defineMessages({
     id: 'pagination.next'
   },
   record: {
-    defaultMessage: 'Record',
+    defaultMessage: 'Record {current} of {total}',
     id: 'pagination.type.record'
   },
   page: {
-    defaultMessage: 'Page',
+    defaultMessage: 'Page {current} of {total}',
     id: 'pagination.type.page'
   }
 })
@@ -35,6 +35,16 @@ export class PaginationBar extends Component {
     const {formatMessage} = this.props.intl
     const {currentPage, nextAction, previousAction} = this.props
     const numberOfPages = Math.ceil(records / pageSize)
+    const current = (
+      <span data-qa='data-pagination-page' className='badge badge-default'>
+        <FormattedNumber value={currentPage} />
+      </span>
+    )
+    const total = (
+      <span data-qa='data-pagination-total'>
+        <FormattedNumber value={numberOfPages} />
+      </span>
+    )
 
     return (
       <nav data-qa='data-pagination'>
@@ -52,11 +62,10 @@ export class PaginationBar extends Component {
           }
 
           <li className='page-item disabled'>
-            <FormattedMessage {...MESSAGES[(pageSize === 1 ? 'record' : 'page')]} />
-            <span data-qa='data-pagination-page' className='badge badge-default'>
-              <FormattedNumber value={currentPage} />
-            </span>
-            of <FormattedNumber value={numberOfPages} />
+            <FormattedMessage
+              {...MESSAGES[(pageSize === 1 ? 'record' : 'page')]}
+              values={{ current, total }}
+            />
           </li>
 
           {
