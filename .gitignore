@@ -7,6 +7,43 @@ __pycache__/
 # C extensions
 *.so
 
+# Visual Studio Code
+.vscode
+
+# Eclipse
+.project
+.classpath
+.settings
+
+# IntelliJ IDEA
+.idea
+*.iml
+*.ipr
+*.iws
+out
+
+# Ant
+build.xml
+local.properties
+proguard.cfg
+
+# Gradle
+.gradle
+build
+
+### OSX ###
+.DS_Store
+.AppleDouble
+.LSOverride
+
+### SublimeText ###
+# cache files for sublime text
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+
 # Distribution / packaging
 .Python
 env/

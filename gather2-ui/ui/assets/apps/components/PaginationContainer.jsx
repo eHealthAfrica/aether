@@ -19,12 +19,19 @@ export default class PaginationContainer extends Component {
     }
   }
 
+  componentWillReceiveProps (nextProps) {
+    if (nextProps.pageSize !== this.state.pageSize) {
+      this.setState({ pageSize: nextProps.pageSize, page: 1 })
+    }
+  }
+
   componentDidMount () {
     this.fetchData()
   }
 
   componentDidUpdate (prevProps, prevState) {
-    if (prevState.page !== this.state.page) {
+    if (prevState.page !== this.state.page ||
+        prevState.pageSize !== this.state.pageSize) {
       this.fetchData()
     }
   }
@@ -68,7 +75,11 @@ export default class PaginationContainer extends Component {
 
         { (position === 'top') && this.renderPaginationBar() }
 
-        <ListComponent list={results} />
+        <ListComponent
+          list={results}
+          total={count}
+          start={this.props.pageSize * (this.state.page - 1) + 1}
+        />
 
         { (position === 'bottom') && this.renderPaginationBar() }
       </div>

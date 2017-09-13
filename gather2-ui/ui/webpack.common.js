@@ -140,12 +140,6 @@ module.exports = function (custom) {
             limit: 10000,
             mimetype: 'image/png'
           }
-        },
-
-        // JSON
-        {
-          test: /\.json$/,
-          loader: 'json-loader'
         }
       ].concat((custom.stylesAsCss ? stylesAsCssRules : stylesAsJsRules))
     },

@@ -117,7 +117,7 @@ export class SurveyForm extends Component {
             </HelpMessage>
             <textarea
               name='schemaStringified'
-              className='form-control'
+              className='form-control code'
               rows={10}
               value={survey.schemaStringified}
               onChange={this.onInputChange.bind(this)}
