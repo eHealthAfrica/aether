@@ -75,6 +75,14 @@ a.btn-primary:not([href]) {
   }
 }
 
+.btn.icon-only {
+  border-radius: 50%;
+  font-size: .86rem;
+  width: 1.3rem;
+  height: 1.3rem;
+  padding: .1rem .2rem;
+}
+
 .btn-cancel {
   background: $grey;
   border-radius: 2px;

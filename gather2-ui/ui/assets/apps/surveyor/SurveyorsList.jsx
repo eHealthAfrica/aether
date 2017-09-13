@@ -52,7 +52,7 @@ export default class SurveyorsList extends Component {
                       {
                         enableActions &&
                         <button
-                          className='btn btn-sm btn-secondary pull-right'
+                          className='btn btn-sm btn-secondary icon-only pull-right'
                           onClick={(evt) => this.edit(evt, surveyor)}
                         ><i className='fa fa-pencil' /></button>
                       }
