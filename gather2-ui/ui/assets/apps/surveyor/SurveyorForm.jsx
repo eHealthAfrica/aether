@@ -7,21 +7,12 @@ import { deleteData, postData, putData } from '../utils/request'
 import { ConfirmButton, ErrorAlert, WarningAlert } from '../components'
 
 const MESSAGES = defineMessages({
-  addTitle: {
-    defaultMessage: 'New surveyor',
-    id: 'surveyor.form.title.add'
-  },
-  editTitle: {
-    defaultMessage: 'Edit surveyor',
-    id: 'surveyor.form.title.edit'
-  },
-
   deleteButton: {
     defaultMessage: 'Delete surveyor',
     id: 'surveyor.form.action.delete'
   },
   deleteConfirm: {
-    defaultMessage: 'Are you sure you want to delete the surveyor “{username}”?',
+    defaultMessage: 'Are you sure you want to delete the surveyor?',
     id: 'surveyor.form.action.delete.confirm'
   },
   deleteError: {
@@ -81,7 +72,10 @@ export class SurveyorForm extends Component {
           <FormattedMessage
             id='surveyor.form.title.edit'
             defaultMessage='Edit surveyor' />
-          <span className='username ml-2'><i className='fa fa-user mr-1' />{this.props.surveyor.username}</span>
+          <span className='username ml-2'>
+            <i className='fa fa-user mr-1' />
+            {this.props.surveyor.username}
+          </span>
         </span>
         )
     )
@@ -164,8 +158,13 @@ export class SurveyorForm extends Component {
                   className='btn btn-delete'
                   cancelable
                   onConfirm={this.onDelete.bind(this)}
-                  title={title}
-                  message={formatMessage(MESSAGES.deleteConfirm, {...this.props.surveyor})}
+                  title={
+                    <span className='username'>
+                      <i className='fa fa-user mr-1' />
+                      {this.props.surveyor.username}
+                    </span>
+                  }
+                  message={formatMessage(MESSAGES.deleteConfirm)}
                   buttonLabel={formatMessage(MESSAGES.deleteButton)}
                 />
               }
@@ -174,7 +173,7 @@ export class SurveyorForm extends Component {
               <button
                 type='button'
                 className='btn btn-cancel'
-                onClick={(evt) => this.props.onCancel(evt)}>
+                onClick={this.props.onCancel}>
                 <FormattedMessage
                   id='surveyor.form.action.cancel'
                   defaultMessage='Cancel' />
