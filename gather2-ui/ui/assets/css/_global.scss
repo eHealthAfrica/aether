@@ -243,3 +243,17 @@ input[type='text'] {
     font-size: 1.2em;
   }
 }
+
+@media screen and (max-width: 576px) {
+
+  .actions {
+
+    &>div:last-child {
+      width: 100%;
+      
+      button {
+        width: 100%;
+      }
+    }
+  }
+}

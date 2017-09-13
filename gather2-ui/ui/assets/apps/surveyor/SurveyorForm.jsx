@@ -34,19 +34,19 @@ const MESSAGES = defineMessages({
   },
 
   passwordLengthWarning: {
-    defaultMessage: 'The password must contain at least 10 characters.',
+    defaultMessage: '- must contain at least 10 characters.',
     id: 'surveyor.form.password.warning.length'
   },
   passwordSimilarWarning: {
-    defaultMessage: 'The password can\'t be too similar to your other personal information.',
+    defaultMessage: '- can\'t be too similar to your other personal information.',
     id: 'surveyor.form.password.warning.similar'
   },
   passwordCommonWarning: {
-    defaultMessage: 'The password can\'t be a commonly used password.',
+    defaultMessage: '- can\'t be a commonly used password.',
     id: 'surveyor.form.password.warning.common'
   },
   passwordNumericWarning: {
-    defaultMessage: 'The password can\'t be entirely numeric.',
+    defaultMessage: '- can\'t be entirely numeric.',
     id: 'surveyor.form.password.warning.numeric'
   },
 
@@ -114,8 +114,12 @@ export class SurveyorForm extends Component {
             />
             <ErrorAlert errors={surveyor.errors.username} />
           </div>
+          {
+            surveyor.errors.password &&
+            <p>test</p>
+          }
 
-          <div className='form-group big-input'>
+          <div className={`form-group big-input ${surveyor.errors.password ? 'error' : ''}`}>
             <label className='form-control-label title'>
               <FormattedMessage
                 id='surveyor.form.password'
@@ -173,7 +177,7 @@ export class SurveyorForm extends Component {
             <div>
               <button
                 type='button'
-                className='btn btn-cancel btn-block'
+                className='btn btn-cancel'
                 onClick={(evt) => this.props.onCancel(evt)}>
                 <FormattedMessage
                   id='surveyor.form.action.cancel'

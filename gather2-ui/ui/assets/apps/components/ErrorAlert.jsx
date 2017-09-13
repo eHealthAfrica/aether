@@ -8,11 +8,10 @@ export default class ErrorAlert extends Component {
     }
 
     return (
-      <div data-qa='data-erred'>
+      <div className='form-error' data-qa='data-error'>
         {
           errors.map((error, index) => (
-            <p className='badge badge-danger' key={index}>
-              <i className='fa fa-warning mr-1' />
+            <p className='error' key={index}>
               { error }
             </p>
           ))

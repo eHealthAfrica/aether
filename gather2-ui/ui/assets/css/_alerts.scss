@@ -43,3 +43,23 @@
 .alert-danger {
   color: $red;
 }
+
+.form-warning,
+.form-error {
+  margin-top: .5rem;
+
+  p {
+    font-style: italic;
+    font-size: $font-size-xs;
+    margin: 0;
+    color: $dark-grey;
+  }
+  .error {
+    color: $red;
+  }
+}
+
+.error input, .error input:focus {
+  background: $red;
+  color: $white;
+}
