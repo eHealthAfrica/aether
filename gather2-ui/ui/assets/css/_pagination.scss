@@ -1,38 +1,44 @@
 .pagination {
   align-items: baseline;
-  background: rgba($action-color, .8);
+  background: $action-color;
   border-radius: 0;
   color: $text-color;
   display: flex;
   flex-direction: row;
-  font: .9rem $nav-font-family;
+  justify-content: flex-end;
+  font: $font-size-s $nav-font-family;
+  font-weight: 500;
   margin: 0;
-  padding: .6rem 1.5rem;
+  padding: .6rem 3rem;
 
   li {
     display: inline;
     margin: 0 10px;
 
     span.badge {
-      border-radius: $border-radius;
-      font: .9rem $nav-font-family;
-      margin: 0 5px;
-      padding: .1rem .4rem;
+      border-radius: 1rem;
+      font-size: $font-size-s;
+      font-weight: 500;
+      margin: 0 .5rem;
+      padding: .5rem 1.5rem;
+      background: rgba($white, .3);
     }
   }
 
-  a {
+  .page-item .page-link {
+    @include label;
     background: transparent;
     border: 0;
-    border-radius: $border-radius !important;
-    color: $white !important;
+    border-radius: 1rem;
+    color: $white;
     cursor: pointer;
     font-weight: 700;
     text-decoration: none;
     text-transform: uppercase;
 
     &:hover {
-      color: $hover-color !important;
+      color: $action-color;
+      background: $white;
     }
   }
 }

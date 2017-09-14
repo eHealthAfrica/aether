@@ -43,3 +43,33 @@
 .alert-danger {
   color: $red;
 }
+
+.form-warning,
+.form-error {
+  margin-top: .5rem;
+
+  p {
+    font-style: italic;
+    margin: 0;
+  }
+
+  .error {
+    font-size: $font-size-s;
+    color: darken($red, 10);
+  }
+
+  .warning {
+    font-size: $font-size-xs;
+    color: $dark-grey;
+  }
+}
+
+.error {
+  input,
+  input:focus,
+  textarea,
+  textarea:focus {
+    background: $red;
+    color: $white;
+  }
+}

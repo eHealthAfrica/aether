@@ -76,12 +76,12 @@ export class SurveyForm extends Component {
 
     return (
       <div data-qa={dataQA} className='survey-edit'>
-        <h3>{title}</h3>
+        <h3 className='page-title'>{title}</h3>
 
         <ErrorAlert errors={survey.errors.global} />
 
         <form onSubmit={this.onSubmit.bind(this)} encType='multipart/form-data'>
-          <div className='form-group big-input'>
+          <div className={`form-group big-input ${survey.errors.name ? 'error' : ''}`}>
             <label className='form-control-label title'>
               <FormattedMessage
                 id='survey.form.name'
@@ -98,7 +98,7 @@ export class SurveyForm extends Component {
             <ErrorAlert errors={survey.errors.name} />
           </div>
 
-          <div className='form-group big-input'>
+          <div className={`form-group big-input ${survey.errors.schema ? 'error' : ''}`}>
             <label className='form-control-label title'>
               <FormattedMessage
                 id='survey.form.schema'
@@ -125,7 +125,7 @@ export class SurveyForm extends Component {
             <ErrorAlert errors={survey.errors.schema} />
           </div>
 
-          <div className='form-group big-input'>
+          <div className={`form-group big-input ${survey.errors.schema_file ? 'error' : ''}`}>
             <label className='form-control-label title'>
               <FormattedMessage
                 id='survey.form.schema.file'
@@ -146,20 +146,22 @@ export class SurveyForm extends Component {
             <ErrorAlert errors={survey.errors.schema_file} />
           </div>
 
-          <div className='row actions'>
-            <div className='col-sm-6'>
-              { !isNew &&
+          <div className='actions'>
+
+            { !isNew &&
+              <div>
                 <ConfirmButton
-                  className='btn btn-delete pull-right col-sm-6'
+                  className='btn btn-delete'
                   cancelable
                   onConfirm={this.onDelete.bind(this)}
                   title={title}
                   message={formatMessage(MESSAGES.deleteConfirm, {...this.props.survey})}
                   buttonLabel={formatMessage(MESSAGES.deleteButton)}
                 />
-              }
-            </div>
-            <div className='col-sm-3'>
+              </div>
+            }
+
+            <div>
               <ConfirmButton
                 className='btn btn-cancel btn-block'
                 cancelable
@@ -170,7 +172,7 @@ export class SurveyForm extends Component {
                 buttonLabel={formatMessage(MESSAGES.cancelButton)}
               />
             </div>
-            <div className='col-sm-3'>
+            <div>
               <button type='submit' className='btn btn-primary btn-block'>
                 <FormattedMessage
                   id='survey.form.action.submit'

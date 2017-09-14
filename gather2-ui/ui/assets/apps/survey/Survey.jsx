@@ -28,7 +28,7 @@ export default class Survey extends Component {
             href={`/surveys/edit/${survey.id}`}
             role='button'
             className='btn btn-primary btn-icon'>
-            <i className='fa fa-pencil mr-1' />
+            <i className='fa fa-pencil invert mr-3' />
             <FormattedMessage
               id='survey.view.action.edit'
               defaultMessage='Edit survey' />

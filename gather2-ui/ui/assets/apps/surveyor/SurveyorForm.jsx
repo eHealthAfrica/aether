@@ -7,21 +7,12 @@ import { deleteData, postData, putData } from '../utils/request'
 import { ConfirmButton, ErrorAlert, WarningAlert } from '../components'
 
 const MESSAGES = defineMessages({
-  addTitle: {
-    defaultMessage: 'New surveyor',
-    id: 'surveyor.form.title.add'
-  },
-  editTitle: {
-    defaultMessage: 'Edit surveyor “{username}”',
-    id: 'surveyor.form.title.edit'
-  },
-
   deleteButton: {
     defaultMessage: 'Delete surveyor',
     id: 'surveyor.form.action.delete'
   },
   deleteConfirm: {
-    defaultMessage: 'Are you sure you want to delete the surveyor “{username}”?',
+    defaultMessage: 'Are you sure you want to delete the surveyor?',
     id: 'surveyor.form.action.delete.confirm'
   },
   deleteError: {
@@ -34,19 +25,19 @@ const MESSAGES = defineMessages({
   },
 
   passwordLengthWarning: {
-    defaultMessage: 'The password must contain at least 10 characters.',
+    defaultMessage: '- must contain at least 10 characters.',
     id: 'surveyor.form.password.warning.length'
   },
   passwordSimilarWarning: {
-    defaultMessage: 'The password can\'t be too similar to your other personal information.',
+    defaultMessage: '- can\'t be too similar to your other personal information.',
     id: 'surveyor.form.password.warning.similar'
   },
   passwordCommonWarning: {
-    defaultMessage: 'The password can\'t be a commonly used password.',
+    defaultMessage: '- can\'t be a commonly used password.',
     id: 'surveyor.form.password.warning.common'
   },
   passwordNumericWarning: {
-    defaultMessage: 'The password can\'t be entirely numeric.',
+    defaultMessage: '- can\'t be entirely numeric.',
     id: 'surveyor.form.password.warning.numeric'
   },
 
@@ -73,8 +64,20 @@ export class SurveyorForm extends Component {
 
     const title = (
       isNew
-      ? formatMessage(MESSAGES.addTitle)
-      : formatMessage(MESSAGES.editTitle, {...this.props.surveyor})
+      ? <FormattedMessage
+        id='surveyor.form.title.add'
+        defaultMessage='New surveyor' />
+      : (
+        <span>
+          <FormattedMessage
+            id='surveyor.form.title.edit'
+            defaultMessage='Edit surveyor' />
+          <span className='username ml-2'>
+            <i className='fa fa-user mr-1' />
+            {this.props.surveyor.username}
+          </span>
+        </span>
+        )
     )
     const dataQA = (
       isNew
@@ -84,12 +87,12 @@ export class SurveyorForm extends Component {
 
     return (
       <div data-qa={dataQA} className='surveyor-edit'>
-        <h3>{title}</h3>
+        <h3 className='page-title'>{title}</h3>
 
         <ErrorAlert errors={surveyor.errors.global} />
 
         <form onSubmit={this.onSubmit.bind(this)}>
-          <div className='form-group big-input'>
+          <div className={`form-group big-input ${surveyor.errors.username ? 'error' : ''}`}>
             <label className='form-control-label title'>
               <FormattedMessage
                 id='surveyor.form.username'
@@ -106,7 +109,7 @@ export class SurveyorForm extends Component {
             <ErrorAlert errors={surveyor.errors.username} />
           </div>
 
-          <div className='form-group big-input'>
+          <div className={`form-group big-input ${surveyor.errors.password ? 'error' : ''}`}>
             <label className='form-control-label title'>
               <FormattedMessage
                 id='surveyor.form.password'
@@ -148,30 +151,35 @@ export class SurveyorForm extends Component {
             />
           </div>
 
-          <div className='row actions'>
-            <div className='col-sm-6'>
+          <div className='actions'>
+            <div>
               { !isNew &&
                 <ConfirmButton
-                  className='btn btn-delete pull-right col-sm-6'
+                  className='btn btn-delete'
                   cancelable
                   onConfirm={this.onDelete.bind(this)}
-                  title={title}
-                  message={formatMessage(MESSAGES.deleteConfirm, {...this.props.surveyor})}
+                  title={
+                    <span className='username'>
+                      <i className='fa fa-user mr-1' />
+                      {this.props.surveyor.username}
+                    </span>
+                  }
+                  message={formatMessage(MESSAGES.deleteConfirm)}
                   buttonLabel={formatMessage(MESSAGES.deleteButton)}
                 />
               }
             </div>
-            <div className='col-sm-3'>
+            <div>
               <button
                 type='button'
-                className='btn btn-cancel btn-block'
-                onClick={(evt) => this.props.onCancel(evt)}>
+                className='btn btn-cancel'
+                onClick={this.onCancel.bind(this)}>
                 <FormattedMessage
                   id='surveyor.form.action.cancel'
                   defaultMessage='Cancel' />
               </button>
             </div>
-            <div className='col-sm-3'>
+            <div>
               <button type='submit' className='btn btn-primary btn-block'>
                 <FormattedMessage
                   id='surveyor.form.action.submit'
@@ -216,6 +224,10 @@ export class SurveyorForm extends Component {
     return true
   }
 
+  onCancel () {
+    this.goBack()
+  }
+
   onSubmit (event) {
     event.preventDefault()
     this.setState({ errors: {} })
@@ -234,10 +246,7 @@ export class SurveyorForm extends Component {
     const url = '/odk/surveyors' + (this.state.id ? '/' + this.state.id : '') + '.json'
 
     return saveMethod(url, surveyor)
-      .then(response => {
-        // navigate to Surveyors list page
-        window.location.pathname = '/surveyors'
-      })
+      .then(this.goBack)
       .catch(error => {
         console.log(error.message)
         error.response
@@ -259,10 +268,7 @@ export class SurveyorForm extends Component {
     const surveyor = this.state
 
     return deleteData(`/odk/surveyors/${surveyor.id}.json`)
-      .then(() => {
-        // navigate to Surveyors list page
-        window.location.pathname = '/surveyors'
-      })
+      .then(this.goBack)
       .catch(error => {
         console.log(error.message)
         this.setState({
@@ -271,6 +277,11 @@ export class SurveyorForm extends Component {
           }
         })
       })
+  }
+
+  goBack () {
+    // navigate to Surveyors list page
+    window.location.pathname = '/surveyors/list/'
   }
 }
 

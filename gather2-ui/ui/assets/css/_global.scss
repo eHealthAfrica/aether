@@ -7,8 +7,7 @@ html {
   line-height: 1.3em;
 }
 
-a,
-a:not([href]):not([tabindex]) {
+a {
   color: $action-color;
 
   &:active,
@@ -56,15 +55,33 @@ a.btn-primary:not([href]) {
 }
 
 .btn-icon {
-  padding: .6em 1.5em .9em 1em;
+  padding: .6em 1.5em .7em 1em;
+  display: flex;
+  align-items: center;
 
   i {
-    display: inline-block;
     font-size: 1.6em;
     margin-right: .5em;
     position: relative;
-    top: .1em;
   }
+
+  i.invert {
+    background: $white;
+    font-size: .9rem;
+    border-radius: 50%;
+    padding: 3px 2px 3px 3px;
+    width: 1.3rem;
+    height: 1.3rem;
+    color: $action-color;
+  }
+}
+
+.btn.icon-only {
+  border-radius: 50%;
+  font-size: .86rem;
+  width: 1.3rem;
+  height: 1.3rem;
+  padding: .1rem .2rem;
 }
 
 .btn-cancel {
@@ -193,6 +210,42 @@ input[type='text'] {
   font-size: $font-size-standard;
 }
 
+.page-title {
+  font: $font-size-s $nav-font-family;
+  font-weight: 700;
+  margin-bottom: 3rem;
+}
+
+.actions {
+  padding: 2rem 0;
+  border-top: 1px solid $grey;
+  display: flex;
+  flex-wrap: wrap;
+
+  &>div {
+    margin-right: 1rem;
+    margin-bottom: .5rem;
+
+    &:last-child {
+      margin-left: auto;
+      margin-right: 0;
+    }
+  }
+}
+
+.big-input {
+  margin-bottom: 2rem;
+
+  .title {
+    font-size: $font-size-standard;
+  }
+
+  input[type='password'],
+  input[type='text'] {
+    font-size: 1.2em;
+  }
+}
+
 pre {
   background-color: $black;
   font-family: monospace;
@@ -204,3 +257,18 @@ pre {
   white-space: pre;
   padding: .5rem;
 }
+
+@media screen and (max-width: 576px) {
+
+  .actions {
+
+    &>div:last-child {
+      width: 100%;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}
+

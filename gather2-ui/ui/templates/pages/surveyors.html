@@ -4,7 +4,9 @@
 {% block content %}
   <div
     class="container-fluid"
-    id="surveyors-app"></div>
+    id="surveyors-app"
+    data-action="{{action}}"
+    data-surveyor-id="{{surveyor_id}}"></div>
 
   {% render_bundle 'surveyors' %}
 {% endblock %}
