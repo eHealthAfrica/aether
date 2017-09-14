@@ -1,4 +1,5 @@
 // import all components
+import AppIntl from './AppIntl'
 import ConfirmButton from './ConfirmButton'
 import EmptyAlert from './EmptyAlert'
 import ErrorAlert from './ErrorAlert'
@@ -12,6 +13,7 @@ import WarningAlert from './WarningAlert'
 
 // export all components
 export {
+  AppIntl,
   ConfirmButton,
   EmptyAlert,
   ErrorAlert,

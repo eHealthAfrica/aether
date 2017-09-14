@@ -1,8 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import { IntlProvider } from 'react-intl'
 
-import { FetchUrlsContainer, PaginationContainer } from './components'
+import { AppIntl, FetchUrlsContainer, PaginationContainer } from './components'
 
 import Survey from './survey/Survey'
 import SurveyForm from './survey/SurveyForm'
@@ -61,8 +60,4 @@ switch (action) {
     break
 }
 
-ReactDOM.render(
-  <IntlProvider defaultLocale='en' locale={navigator.locale || 'en'}>
-    { component }
-  </IntlProvider>,
-  appElement)
+ReactDOM.render(<AppIntl>{ component }</AppIntl>, appElement)
