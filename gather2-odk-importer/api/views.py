@@ -34,8 +34,18 @@ class XFormViewset(viewsets.ModelViewSet):
     - the XML Data (via file or raw data)
 
     '''
-    queryset = XForm.objects.all().order_by('title')
+    queryset = XForm.objects.order_by('title')
     serializer_class = XFormSerializer
+    search_fields = ('name',)
+
+    def get_queryset(self):
+        queryset = self.queryset
+
+        survey_id = self.request.query_params.get('survey_id', None)
+        if survey_id is not None:
+            queryset = queryset.filter(gather_core_survey_id=survey_id)
+
+        return queryset
 
 
 class SurveyorViewSet(viewsets.ModelViewSet):
@@ -53,6 +63,7 @@ class SurveyorViewSet(viewsets.ModelViewSet):
                                .filter(first_name='surveyor') \
                                .order_by('username')
     serializer_class = SurveyorSerializer
+    search_fields = ('username',)
 
 
 def check_core(request):

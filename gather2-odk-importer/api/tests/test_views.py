@@ -106,3 +106,56 @@ class ViewsTests(CustomTestCase):
                 response.content.decode(),
                 'Brought to you by eHealth Africa - good tech for hard places',
             )
+
+    def test__xform__filters(self):
+        self.xform.delete()  # remove default survey
+        self.helper_create_xform(survey_id=1)
+        self.helper_create_xform(survey_id=1)
+        self.helper_create_xform(survey_id=2)
+        self.helper_create_xform(survey_id=3)
+
+        response = self.client.get('/xforms.json', **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['count'], 4)
+
+        response = self.client.get('/xforms.json?survey_id=1', **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['count'], 2)
+
+        response = self.client.get('/xforms.json?survey_id=2', **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['count'], 1)
+
+        response = self.client.get('/xforms.json?survey_id=3', **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['count'], 1)
+
+        response = self.client.get('/xforms.json?survey_id=4', **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['count'], 0)
+
+    def test__surveyors__search(self):
+        self.helper_create_surveyor(username='peter-pan')
+        self.helper_create_surveyor(username='peter-smith')
+        self.helper_create_surveyor(username='peter-doe')
+        self.helper_create_surveyor(username='paul-pan')
+
+        response = self.client.get('/surveyors.json', **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['count'], 4)
+
+        response = self.client.get('/surveyors.json?search=peter', **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['count'], 3)
+
+        response = self.client.get('/surveyors.json?search=pan', **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['count'], 2)
+
+        response = self.client.get('/surveyors.json?search=paul', **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['count'], 1)
+
+        response = self.client.get('/surveyors.json?search=wendy', **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['count'], 0)

@@ -28,7 +28,7 @@
 
 .surveyor-edit {
   background: $background-color;
-  height: 100vH;
+  min-height: 100vH;
   padding: 2rem 5vW;
 
   .username {

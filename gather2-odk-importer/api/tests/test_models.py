@@ -144,7 +144,6 @@ class ModelsTests(CustomTestCase):
             gather_core_survey_id=1,
             xml_data=self.samples['xform']['xml-ok'],
         )
-        instance.save()
 
         self.assertEqual(instance.form_id, 'xform-id-test')
         self.assertEqual(instance.title, 'xForm - Test')
@@ -156,7 +155,6 @@ class ModelsTests(CustomTestCase):
             gather_core_survey_id=1,
             xml_data=self.samples['xform']['xml-ok'],
         )
-        instance.save()
         self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')
 
         self.helper_create_superuser()

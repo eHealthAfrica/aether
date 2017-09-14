@@ -108,11 +108,13 @@ class CustomTestCase(TransactionTestCase):
             'HTTP_AUTHORIZATION': 'Basic ' + base64.b64encode(basic).decode('ascii')
         }
 
-    def helper_create_surveyor(self):
-        username = 'surveyor'
+    def helper_create_surveyor(self, username='surveyor'):
         email = username + '@example.com'
         password = 'surveyorsurveyor'
-        return UserModel.create_superuser(username, email, password)
+        surveyor = UserModel.create_user(username, email, password)
+        surveyor.first_name = 'surveyor'
+        surveyor.save()
+        return surveyor
 
     def helper_create_xform(self, surveyor=None, survey_id=1):
         xform = XForm.objects.create(

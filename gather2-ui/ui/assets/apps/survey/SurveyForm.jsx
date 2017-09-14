@@ -7,15 +7,6 @@ import { deleteData, postData, putData } from '../utils/request'
 import { ConfirmButton, ErrorAlert, HelpMessage } from '../components'
 
 const MESSAGES = defineMessages({
-  addTitle: {
-    defaultMessage: 'New survey',
-    id: 'survey.form.title.add'
-  },
-  editTitle: {
-    defaultMessage: 'Edit survey “{name}”',
-    id: 'survey.form.title.edit'
-  },
-
   schemaError: {
     defaultMessage: 'This is not a valid JSON schema.',
     id: 'survey.form.schema.error'
@@ -52,174 +43,233 @@ export class SurveyForm extends Component {
   constructor (props) {
     super(props)
     this.state = {
-      ...clone(this.props.survey),
-      schemaStringified: JSON.stringify(this.props.survey.schema || {}, 0, 2),
+      survey: {
+        ...clone(this.props.survey),
+        schemaStringified: JSON.stringify(this.props.survey.schema || {}, 0, 2)
+      },
       errors: {}
     }
   }
 
   render () {
-    const {formatMessage} = this.props.intl
-
-    const survey = this.state
-    const isNew = (survey.id === undefined)
-    const title = (
-      isNew
-      ? formatMessage(MESSAGES.addTitle)
-      : formatMessage(MESSAGES.editTitle, {...this.props.survey})
-    )
+    const {survey, errors} = this.state
     const dataQA = (
-      isNew
+      (survey.id === undefined)
       ? 'survey-add'
       : `survey-edit-${survey.id}`
     )
 
     return (
       <div data-qa={dataQA} className='survey-edit'>
-        <h3 className='page-title'>{title}</h3>
+        <h3 className='page-title'>{ this.renderTitle() }</h3>
 
-        <ErrorAlert errors={survey.errors.global} />
+        <ErrorAlert errors={errors.global} />
 
         <form onSubmit={this.onSubmit.bind(this)} encType='multipart/form-data'>
-          <div className={`form-group big-input ${survey.errors.name ? 'error' : ''}`}>
-            <label className='form-control-label title'>
-              <FormattedMessage
-                id='survey.form.name'
-                defaultMessage='Survey name' />
-            </label>
-            <input
-              name='name'
-              type='text'
-              className='form-control'
-              required
-              value={survey.name || ''}
-              onChange={this.onInputChange.bind(this)}
-            />
-            <ErrorAlert errors={survey.errors.name} />
-          </div>
-
-          <div className={`form-group big-input ${survey.errors.schema ? 'error' : ''}`}>
-            <label className='form-control-label title'>
-              <FormattedMessage
-                id='survey.form.schema'
-                defaultMessage='JSON Schema' />
-            </label>
-            <HelpMessage>
-              <FormattedMessage
-                id='survey.form.schema.help'
-                defaultMessage='You can type or paste the JSON schema here, or upload a file using the button below.' />
-              <br />
-              <a href='http://json-schema.org/examples.html' target='_blank'>
-                <FormattedMessage
-                  id='survey.form.schema.json.link'
-                  defaultMessage='Click here to see more about JSON Schema' />
-              </a>
-            </HelpMessage>
-            <textarea
-              name='schemaStringified'
-              className='form-control code'
-              rows={10}
-              value={survey.schemaStringified}
-              onChange={this.onInputChange.bind(this)}
-            />
-            <ErrorAlert errors={survey.errors.schema} />
-          </div>
-
-          <div className={`form-group big-input ${survey.errors.schema_file ? 'error' : ''}`}>
-            <label className='form-control-label title'>
-              <FormattedMessage
-                id='survey.form.schema.file'
-                defaultMessage='Schema file' />
-            </label>
-            <HelpMessage>
-              <FormattedMessage
-                id='survey.form.schema.file.help'
-                defaultMessage='You can also upload a file instead of entering the JSON schema manually' />
-            </HelpMessage>
-            <input
-              name='schemaFile'
-              type='file'
-              className='form-control'
-              accept='.json'
-              onChange={this.onFileChange.bind(this)}
-            />
-            <ErrorAlert errors={survey.errors.schema_file} />
-          </div>
-
-          <div className='actions'>
-
-            { !isNew &&
-              <div>
-                <ConfirmButton
-                  className='btn btn-delete'
-                  cancelable
-                  onConfirm={this.onDelete.bind(this)}
-                  title={title}
-                  message={formatMessage(MESSAGES.deleteConfirm, {...this.props.survey})}
-                  buttonLabel={formatMessage(MESSAGES.deleteButton)}
-                />
-              </div>
-            }
-
-            <div>
-              <ConfirmButton
-                className='btn btn-cancel btn-block'
-                cancelable
-                condition={this.onCancelCondition.bind(this)}
-                onConfirm={this.onCancel.bind(this)}
-                title={title}
-                message={formatMessage(MESSAGES.cancelConfirm)}
-                buttonLabel={formatMessage(MESSAGES.cancelButton)}
-              />
-            </div>
-            <div>
-              <button type='submit' className='btn btn-primary btn-block'>
-                <FormattedMessage
-                  id='survey.form.action.submit'
-                  defaultMessage='Save survey' />
-              </button>
-            </div>
-          </div>
+          { this.renderName() }
+          { this.renderJSONSchema() }
+          { this.renderButtons() }
         </form>
+      </div>
+    )
+  }
+
+  renderTitle () {
+    const {survey} = this.state
+    if (survey.id === undefined) {
+      return (
+        <FormattedMessage
+          id='survey.form.title.add'
+          defaultMessage='New survey' />
+      )
+    } else {
+      return (
+        <span>
+          <FormattedMessage
+            id='survey.form.title.edit'
+            defaultMessage='Edit survey' />
+          <b className='ml-2'>{survey.name}</b>
+        </span>
+      )
+    }
+  }
+
+  renderName () {
+    const {survey, errors} = this.state
+
+    return (
+      <div className={`form-group big-input ${errors.name ? 'error' : ''}`}>
+        <label className='form-control-label title'>
+          <FormattedMessage
+            id='survey.form.name'
+            defaultMessage='Survey name' />
+        </label>
+        <input
+          name='survey.name'
+          type='text'
+          className='form-control'
+          required
+          value={survey.name || ''}
+          onChange={this.onInputChange.bind(this)}
+        />
+        <ErrorAlert errors={errors.name} />
+      </div>
+    )
+  }
+
+  renderJSONSchema () {
+    const {survey, errors} = this.state
+
+    return (
+      <div>
+        <div className={`form-group big-input ${errors.schema ? 'error' : ''}`}>
+          <label className='form-control-label title'>
+            <FormattedMessage
+              id='survey.form.schema'
+              defaultMessage='JSON Schema' />
+          </label>
+          <HelpMessage>
+            <FormattedMessage
+              id='survey.form.schema.help'
+              defaultMessage='You can type or paste the JSON schema here, or upload a file using the button below.' />
+            <br />
+            <a href='http://json-schema.org/examples.html' target='_blank'>
+              <FormattedMessage
+                id='survey.form.schema.json.link'
+                defaultMessage='Click here to see more about JSON Schema' />
+            </a>
+          </HelpMessage>
+          <textarea
+            name='survey.schemaStringified'
+            className='form-control code'
+            rows={10}
+            value={survey.schemaStringified}
+            onChange={this.onInputChange.bind(this)}
+          />
+          <ErrorAlert errors={errors.schema} />
+        </div>
+
+        <div className={`form-group big-input ${errors.schema_file ? 'error' : ''}`}>
+          <label className='form-control-label title'>
+            <FormattedMessage
+              id='survey.form.schema.file'
+              defaultMessage='Schema file' />
+          </label>
+          <HelpMessage>
+            <FormattedMessage
+              id='survey.form.schema.file.help'
+              defaultMessage='You can also upload a file instead of entering the JSON schema manually' />
+          </HelpMessage>
+          <input
+            name='survey.schemaFile'
+            type='file'
+            className='form-control-file'
+            accept='.json'
+            onChange={this.onFileChange.bind(this)}
+          />
+          <ErrorAlert errors={errors.schema_file} />
+        </div>
+      </div>
+    )
+  }
+
+  renderButtons () {
+    const {formatMessage} = this.props.intl
+
+    return (
+      <div className='actions'>
+        { (this.props.survey.id !== undefined) &&
+          <div>
+            <ConfirmButton
+              className='btn btn-delete'
+              cancelable
+              onConfirm={this.onDelete.bind(this)}
+              title={this.renderTitle()}
+              message={formatMessage(MESSAGES.deleteConfirm, {...this.props.survey})}
+              buttonLabel={formatMessage(MESSAGES.deleteButton)}
+            />
+          </div>
+        }
+        <div>
+          <ConfirmButton
+            className='btn btn-cancel btn-block'
+            cancelable
+            condition={this.onCancelCondition.bind(this)}
+            onConfirm={this.onCancel.bind(this)}
+            title={this.renderTitle()}
+            message={formatMessage(MESSAGES.cancelConfirm)}
+            buttonLabel={formatMessage(MESSAGES.cancelButton)}
+          />
+        </div>
+        <div>
+          <button type='submit' className='btn btn-primary btn-block'>
+            <FormattedMessage
+              id='survey.form.action.submit'
+              defaultMessage='Save survey' />
+          </button>
+        </div>
       </div>
     )
   }
 
   onInputChange (event) {
     event.preventDefault()
-    this.setState({ [event.target.name]: event.target.value })
+    const [object, property] = event.target.name.split('.')
+    this.setState({
+      [object]: {
+        ...this.state[object],
+        [property]: event.target.value
+      }
+    })
   }
 
   onFileChange (event) {
     event.preventDefault()
-    this.setState({ [event.target.name]: event.target.files[0] })
+    const [object, property] = event.target.name.split('.')
+
+    let files
+    if (event.target.multiple) {
+      // https://developer.mozilla.org/en-US/docs/Web/API/FileList
+      files = []
+      for (let i = 0; i < event.target.files.length; i++) {
+        files.push(event.target.files.item(i))
+      }
+    } else {
+      files = event.target.files.item(0)
+    }
+
+    this.setState({
+      [object]: {
+        ...this.state[object],
+        [property]: files
+      }
+    })
   }
 
   onCancelCondition () {
     // check if there were changes
-    if (this.state.schemaFile !== undefined) {
+    if (this.state.survey.schemaFile !== undefined) {
       return true
     }
 
     try {
       const survey = {
         ...clone(this.props.survey),
-        name: this.state.name,
-        schema: JSON.parse(this.state.schemaStringified)
+        name: this.state.survey.name,
+        schema: JSON.parse(this.state.survey.schemaStringified)
       }
 
       return !deepEqual(this.props.survey, survey, true)
     } catch (e) {
-      console.log(e)
       // let's suppose that the `schemaStringified` is wrong because it was modified
       return true
     }
   }
 
   onCancel () {
-    if (this.state.id) {
+    if (this.props.survey.id) {
       // navigate to Survey view page
-      window.location.pathname = `/surveys/view/${this.state.id}`
+      window.location.pathname = `/surveys/view/${this.props.survey.id}`
     } else {
       // navigate to Surveys list page
       window.location.pathname = '/surveys/list/'
@@ -232,12 +282,12 @@ export class SurveyForm extends Component {
 
     const {formatMessage} = this.props.intl
     const survey = {
-      id: this.state.id,
-      name: this.state.name
+      id: this.state.survey.id,
+      name: this.state.survey.name
     }
 
     // check if the schema comes from a file or from the textarea
-    const {schemaFile, schemaStringified} = this.state
+    const {schemaFile, schemaStringified} = this.state.survey
     let multipart = false
     if (schemaFile) {
       multipart = true
@@ -256,8 +306,8 @@ export class SurveyForm extends Component {
       }
     }
 
-    const saveMethod = (this.state.id ? putData : postData)
-    const url = '/core/surveys' + (this.state.id ? '/' + this.state.id : '') + '.json'
+    const saveMethod = (survey.id ? putData : postData)
+    const url = '/core/surveys' + (survey.id ? '/' + survey.id : '') + '.json'
 
     return saveMethod(url, survey, multipart)
       .then(response => {
@@ -287,7 +337,7 @@ export class SurveyForm extends Component {
 
   onDelete () {
     const {formatMessage} = this.props.intl
-    const survey = this.state
+    const {survey} = this.props
 
     return deleteData(`/core/surveys/${survey.id}.json`)
       .then(() => {
