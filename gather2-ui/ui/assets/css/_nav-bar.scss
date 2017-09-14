@@ -6,10 +6,6 @@
   padding: 0;
 }
 
-.navbar-toggleable-md {
-  align-items: stretch;
-}
-
 .navbar-nav {
   align-items: stretch;
   display: flex;
@@ -52,6 +48,7 @@
   margin: 0;
   padding: .6rem 1.5rem;
   position: relative;
+  height: $navbar-height;
 
   span {
     display: inline-block;

@@ -3,8 +3,8 @@
   background: $background-color;
   box-shadow: 0 1px 2px $shadow-color;
   display: flex;
-  margin: 0 -2em 1px;
-  padding: 1em 2em 1em 4em;
+  margin: 0 -2rem 1px;
+  padding: 1rem 2rem 1rem 4rem;
   position: relative;
 
   .badge,
@@ -38,6 +38,7 @@
 
 .alert-info {
   color: $dark-grey;
+  border: 0;
 }
 
 .alert-danger {

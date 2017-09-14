@@ -10,12 +10,12 @@
 
 .loading-spinner {
   animation: spin 1.5s normal linear infinite;
-  border: 4px solid $shadow-color;
-  border-bottom-color: $dark-grey;
-  border-left-color: $dark-grey;
+  border: 5px solid $light-grey;
+  border-bottom-color: $action-color;
+  border-left-color: $action-color;
   border-radius: 50%;
   height: 20px;
   position: relative;
-  top: .2em;
+  top: .2rem;
   width: 20px;
 }

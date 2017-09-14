@@ -1,6 +1,6 @@
 .survey-edit {
   background: $background-color;
-  min-height: 100vH;
+  min-height: calc(100vH - #{$navbar-height});
   padding: 2rem 5vW;
 }
 
