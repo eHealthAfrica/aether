@@ -173,7 +173,7 @@ export class SurveyorForm extends Component {
               <button
                 type='button'
                 className='btn btn-cancel'
-                onClick={this.props.onCancel}>
+                onClick={this.onCancel.bind(this)}>
                 <FormattedMessage
                   id='surveyor.form.action.cancel'
                   defaultMessage='Cancel' />
@@ -224,6 +224,10 @@ export class SurveyorForm extends Component {
     return true
   }
 
+  onCancel () {
+    this.goBack()
+  }
+
   onSubmit (event) {
     event.preventDefault()
     this.setState({ errors: {} })
@@ -242,10 +246,7 @@ export class SurveyorForm extends Component {
     const url = '/odk/surveyors' + (this.state.id ? '/' + this.state.id : '') + '.json'
 
     return saveMethod(url, surveyor)
-      .then(response => {
-        // navigate to Surveyors list page
-        window.location.pathname = '/surveyors'
-      })
+      .then(this.goBack)
       .catch(error => {
         console.log(error.message)
         error.response
@@ -267,10 +268,7 @@ export class SurveyorForm extends Component {
     const surveyor = this.state
 
     return deleteData(`/odk/surveyors/${surveyor.id}.json`)
-      .then(() => {
-        // navigate to Surveyors list page
-        window.location.pathname = '/surveyors'
-      })
+      .then(this.goBack)
       .catch(error => {
         console.log(error.message)
         this.setState({
@@ -279,6 +277,11 @@ export class SurveyorForm extends Component {
           }
         })
       })
+  }
+
+  goBack () {
+    // navigate to Surveyors list page
+    window.location.pathname = '/surveyors/list/'
   }
 }
 

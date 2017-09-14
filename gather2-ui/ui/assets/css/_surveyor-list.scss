@@ -26,12 +26,10 @@
   }
 }
 
-.form-overlay {
-  @include overlay;
-  overflow: auto;
-}
-
 .surveyor-edit {
+  background: $background-color;
+  height: 100vH;
+  padding: 2rem 5vW;
 
   .username {
     font-family: $body-font-family;
