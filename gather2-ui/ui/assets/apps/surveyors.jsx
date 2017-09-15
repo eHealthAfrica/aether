@@ -42,6 +42,8 @@ switch (action) {
         pageSize={36}
         url='/odk/surveyors.json?'
         listComponent={SurveyorsList}
+        showPrevious
+        showNext
       />
     )
     break

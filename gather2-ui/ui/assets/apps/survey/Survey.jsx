@@ -85,6 +85,8 @@ export default class Survey extends Component {
           url={`/core/surveys/${survey.id}/responses.json?`}
           position='bottom'
           listComponent={ResponseComponent}
+          showPrevious
+          showNext
         />
       </div>
     )

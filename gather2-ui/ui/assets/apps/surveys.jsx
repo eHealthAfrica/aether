@@ -55,6 +55,8 @@ switch (action) {
         url='/core/surveys-stats.json?'
         position='top'
         listComponent={SurveysList}
+        showPrevious
+        showNext
       />
     )
     break

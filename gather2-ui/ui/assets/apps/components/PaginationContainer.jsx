@@ -87,21 +87,11 @@ export default class PaginationContainer extends Component {
   }
 
   renderPaginationBar (list) {
-    const {count, next, previous} = this.state.list
+    const {count} = this.state.list
     const {page, pageSize} = this.state
 
     if (count <= pageSize) {
       return ''
-    }
-
-    let nextAction
-    if (next) {
-      nextAction = (evt) => { this.updateCurrentPage(evt, page + 1) }
-    }
-
-    let prevAction
-    if (previous) {
-      prevAction = (evt) => { this.updateCurrentPage(evt, page - 1) }
     }
 
     return (
@@ -109,14 +99,17 @@ export default class PaginationContainer extends Component {
         currentPage={page}
         pageSize={pageSize}
         records={count}
-        previousAction={prevAction}
-        nextAction={nextAction}
+        gotToPage={this.updateCurrentPage.bind(this)}
+
+        showFirst={this.props.showFirst}
+        showPrevious={this.props.showPrevious}
+        showNext={this.props.showNext}
+        showLast={this.props.showLast}
       />
     )
   }
 
-  updateCurrentPage (event, page) {
-    event.preventDefault()
+  updateCurrentPage (page) {
     this.setState({ page, isLoading: true, error: false })
   }
 }

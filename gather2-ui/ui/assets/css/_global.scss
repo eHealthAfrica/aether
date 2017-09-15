@@ -154,6 +154,12 @@ input[type='text'] {
   padding: .8em;
 }
 
+input,
+input:focus,
+input:active {
+  outline: 0;
+}
+
 .modal {
   background-color: rgba($text-color, .7);
 

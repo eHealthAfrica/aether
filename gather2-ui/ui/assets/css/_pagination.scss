@@ -15,14 +15,36 @@
   li {
     display: inline;
     margin: 0 10px;
+  }
 
-    span.badge {
-      border-radius: 1rem;
-      font-size: $font-size-s;
-      font-weight: 500;
-      margin: 0 .5rem;
-      padding: .5rem 1.5rem;
+  .current-page {
+    color: $text-color;
+
+    &:hover input {
+      background: rgba($white, .6);
+    }
+
+    &.pending input {
+      background: $white;
+    }
+
+    input {
       background: rgba($white, .3);
+      border-radius: 1rem;
+      margin: 0 .5rem;
+      padding: .4rem .5rem .4rem 1rem;
+      border: 0;
+      color: inherit;
+      font: $font-size-s $nav-font-family;
+      font-weight: 500;
+      text-align: right;
+    }
+
+    input[type=number]::-webkit-inner-spin-button {
+      width: 1rem;
+      height: 2rem;
+      position: relative;
+      left: .1rem;
     }
   }
 

@@ -7,6 +7,15 @@ import {
 } from 'react-intl'
 
 const MESSAGES = defineMessages({
+  first: {
+    defaultMessage: 'First',
+    id: 'pagination.first'
+  },
+  last: {
+    defaultMessage: 'Last',
+    id: 'pagination.last'
+  },
+
   previous: {
     defaultMessage: 'Previous',
     id: 'pagination.previous'
@@ -15,6 +24,7 @@ const MESSAGES = defineMessages({
     defaultMessage: 'Next',
     id: 'pagination.next'
   },
+
   record: {
     defaultMessage: 'Record {current} of {total}',
     id: 'pagination.type.record'
@@ -26,61 +36,165 @@ const MESSAGES = defineMessages({
 })
 
 export class PaginationBar extends Component {
+  constructor (props) {
+    super(props)
+
+    this.state = {
+      currentPage: props.currentPage
+    }
+  }
+
+  componentWillReceiveProps (nextProps) {
+    if (nextProps.currentPage !== this.state.currentPage) {
+      this.setState({ currentPage: nextProps.currentPage })
+    }
+  }
+
   render (list) {
-    const {records, pageSize} = this.props
-    if (records <= pageSize) {
+    if (this.getNumberOfPages() < 2) {
       return <div />
     }
-
-    const {formatMessage} = this.props.intl
-    const {currentPage, nextAction, previousAction} = this.props
-    const numberOfPages = Math.ceil(records / pageSize)
-    const current = (
-      <span data-qa='data-pagination-page' className='badge badge-default'>
-        <FormattedNumber value={currentPage} />
-      </span>
-    )
-    const total = (
-      <span data-qa='data-pagination-total'>
-        <FormattedNumber value={numberOfPages} />
-      </span>
-    )
 
     return (
       <nav data-qa='data-pagination'>
         <ul className='pagination'>
-          {
-            previousAction &&
-            <li data-qa='data-pagination-previous' className='page-item'>
-              <a
-                className='page-link'
-                onClick={previousAction}
-                aria-label={formatMessage(MESSAGES.previous)}>
-                <FormattedMessage {...MESSAGES.previous} />
-              </a>
-            </li>
-          }
+          { /* go to FIRST page */}
+          { this.renderLinkToPage('first') }
 
+          { /* go to PREVIOUS page */}
+          { this.renderLinkToPage('previous') }
+
+          { /* CURRENT page */}
           <li className='page-item disabled'>
             <FormattedMessage
-              {...MESSAGES[(pageSize === 1 ? 'record' : 'page')]}
-              values={{ current, total }}
+              {...MESSAGES[(this.props.pageSize === 1 ? 'record' : 'page')]}
+              values={{
+                current: this.renderCurrentPage(),
+                total: this.renderNumberOfPages()
+              }}
             />
           </li>
 
-          {
-            nextAction &&
-            <li data-qa='data-pagination-next' className='page-item'>
-              <a
-                className='page-link'
-                onClick={nextAction}
-                aria-label={formatMessage(MESSAGES.next)}>
-                <FormattedMessage {...MESSAGES.next} />
-              </a>
-            </li>
-          }
+          { /* go to NEXT page */}
+          { this.renderLinkToPage('next') }
+
+          { /* go to LAST page */}
+          { this.renderLinkToPage('last') }
         </ul>
       </nav>
+    )
+  }
+
+  getNumberOfPages () {
+    return Math.ceil(this.props.records / this.props.pageSize)
+  }
+
+  renderNumberOfPages () {
+    return (
+      <span data-qa='data-pagination-total'>
+        <FormattedNumber value={this.getNumberOfPages()} />
+      </span>
+    )
+  }
+
+  renderCurrentPage () {
+    const numberOfPages = this.getNumberOfPages()
+
+    // indicates if the value in the input reflects the current page or
+    // if it is still pending.
+    // (only after losing the focus, `onBlur` event, will request a new page)
+    const isPending = (this.state.currentPage !== this.props.currentPage)
+
+    return (
+      <span
+        data-qa='data-pagination-page'
+        className={`current-page ${isPending ? 'pending' : ''}`}>
+        <input
+          type='number'
+          name='currentPage'
+          value={this.state.currentPage}
+          maxLength={Math.ceil(numberOfPages / 10) + 1}
+          min={1}
+          max={numberOfPages}
+          onChange={this.onChangePage.bind(this)}
+          onBlur={this.onBlurPage.bind(this)}
+        />
+      </span>
+    )
+  }
+
+  onChangePage (event) {
+    const numberOfPages = this.getNumberOfPages()
+    const newPage = parseInt(event.target.value || 0, 10)
+
+    if (newPage < 1) {
+      this.setState({ currentPage: 1 })
+    } else if (newPage > numberOfPages) {
+      this.setState({ currentPage: numberOfPages })
+    } else {
+      this.setState({ currentPage: newPage })
+    }
+  }
+
+  onBlurPage () {
+    if (this.state.currentPage !== this.props.currentPage) {
+      this.props.gotToPage(this.state.currentPage)
+    }
+  }
+
+  renderLinkToPage (pageName) {
+    const {formatMessage} = this.props.intl
+    const {currentPage} = this.props
+    const numberOfPages = this.getNumberOfPages()
+    let newPage = currentPage
+
+    switch (pageName) {
+      case 'first':
+        // condition: show FIRST link and current PAGE > 1
+        if (this.props.showFirst && currentPage > 1) {
+          newPage = 1
+        }
+        break
+
+      case 'previous':
+        // condition: show NEXT link and current PAGE > 1
+        // except: show FIRST and current PAGE = 2
+        if (this.props.showPrevious && currentPage > 1 &&
+          !(this.props.showFirst && currentPage === 2)) {
+          newPage = currentPage - 1
+        }
+        break
+
+      case 'next':
+        // condition: show NEXT link and current PAGE < total PAGES
+        // except: show LAST and current PAGE = total PAGES - 1
+        if (this.props.showNext && currentPage < numberOfPages &&
+          !(this.props.showLast && currentPage === numberOfPages - 1)) {
+          newPage = currentPage + 1
+        }
+        break
+
+      case 'last':
+        // condition: show LAST link and current PAGE < total PAGES
+        if (this.props.showLast && currentPage < numberOfPages) {
+          newPage = numberOfPages
+        }
+        break
+    }
+
+    if (newPage === currentPage) {
+      return ''
+    }
+
+    return (
+      <li data-qa={`data-pagination-${pageName}`} className='page-item'>
+        <a
+          className='page-link'
+          onClick={() => this.props.gotToPage(newPage)}
+          aria-label={formatMessage(MESSAGES[pageName])}>
+          <FormattedMessage {...MESSAGES[pageName]} />
+        </a>
+      </li>
     )
   }
 }
