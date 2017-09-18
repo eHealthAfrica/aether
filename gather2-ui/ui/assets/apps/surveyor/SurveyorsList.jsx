@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 
 import { ORG_NAME } from '../utils/env'
+import { getSurveyorsPath } from '../utils/paths'
 
 export default class SurveyorsList extends Component {
   render () {
@@ -12,7 +13,10 @@ export default class SurveyorsList extends Component {
         <div className='page-header'>
           <h1 data-qa='organization-name'>{ ORG_NAME }</h1>
           <div>
-            <a href='/surveyors/add/' role='button' className='btn btn-primary btn-icon'>
+            <a
+              href={getSurveyorsPath({action: 'add'})}
+              role='button'
+              className='btn btn-primary btn-icon'>
               <i className='fa fa-plus-circle mr-3' />
               <FormattedMessage
                 id='surveyor.list.action.add'
@@ -39,7 +43,7 @@ export default class SurveyorsList extends Component {
                       {surveyor.username}
 
                       <a
-                        href={`/surveyors/edit/${surveyor.id}`}
+                        href={getSurveyorsPath({action: 'edit', id: surveyor.id})}
                         role='button'
                         className='btn btn-sm btn-secondary icon-only pull-right'>
                         <i className='fa fa-pencil' />

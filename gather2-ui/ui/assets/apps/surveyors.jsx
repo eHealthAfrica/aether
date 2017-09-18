@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 
 import { AppIntl, FetchUrlsContainer, PaginationContainer } from './components'
+import { getSurveyorsAPIPath } from './utils/paths'
 
 import SurveyorForm from './surveyor/SurveyorForm'
 import SurveyorsList from './surveyor/SurveyorsList'
@@ -29,7 +30,7 @@ switch (action) {
     const editUrls = [
       {
         name: 'surveyor',
-        url: `/odk/surveyors/${surveyorId}.json`
+        url: getSurveyorsAPIPath({id: surveyorId})
       }
     ]
 
@@ -40,7 +41,7 @@ switch (action) {
     component = (
       <PaginationContainer
         pageSize={36}
-        url='/odk/surveyors.json?'
+        url={getSurveyorsAPIPath({})}
         listComponent={SurveyorsList}
         showPrevious
         showNext

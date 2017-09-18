@@ -2,6 +2,8 @@ import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 
 import { ORG_NAME } from '../utils/env'
+import { getSurveysPath } from '../utils/paths'
+
 import SurveyCard from './SurveyCard'
 
 export default class SurveysList extends Component {
@@ -13,7 +15,10 @@ export default class SurveysList extends Component {
         <div className='page-header'>
           <h1 data-qa='organization-name'>{ ORG_NAME }</h1>
           <div>
-            <a href='/surveys/add/' role='button' className='btn btn-primary btn-icon'>
+            <a
+              href={getSurveysPath({action: 'add'})}
+              role='button'
+              className='btn btn-primary btn-icon'>
               <i className='fa fa-plus-circle mr-3' />
               <FormattedMessage
                 id='survey.list.action.add'
@@ -33,7 +38,13 @@ export default class SurveysList extends Component {
 
             <div className='surveys-list-cards'>
               {
-                list.map(survey => <SurveyCard className='col-6 col-sm-4 col-md-3' key={survey.id} survey={survey} />)
+                list.map(survey => (
+                  <SurveyCard
+                    key={survey.id}
+                    className='col-6 col-sm-4 col-md-3'
+                    survey={survey}
+                  />
+                ))
               }
             </div>
           </div>

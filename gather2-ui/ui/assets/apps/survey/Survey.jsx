@@ -2,6 +2,8 @@ import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 
 import { PaginationContainer } from '../components'
+import { getSurveysPath, getResponsesAPIPath } from '../utils/paths'
+
 import SurveyDetail from './SurveyDetail'
 import ResponsesList from '../response/ResponsesList'
 import ResponsesItem from '../response/ResponsesItem'
@@ -25,7 +27,7 @@ export default class Survey extends Component {
         <div className='survey-header'>
           <h2>{survey.name}</h2>
           <a
-            href={`/surveys/edit/${survey.id}`}
+            href={getSurveysPath({action: 'edit', id: survey.id})}
             role='button'
             className='btn btn-primary btn-icon'>
             <i className='fa fa-pencil invert mr-3' />
@@ -82,7 +84,7 @@ export default class Survey extends Component {
         </div>
         <PaginationContainer
           pageSize={pageSize}
-          url={`/core/surveys/${survey.id}/responses.json?`}
+          url={getResponsesAPIPath({surveyId: survey.id})}
           position='bottom'
           listComponent={ResponseComponent}
           showPrevious

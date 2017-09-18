@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { FormattedMessage, FormattedNumber } from 'react-intl'
 
+import { getSurveysPath } from '../utils/paths'
 import SurveyDates from './SurveyDates'
 
 export default class SurveyCard extends Component {
@@ -10,7 +11,7 @@ export default class SurveyCard extends Component {
     return (
       <a
         data-qa={`survey-card-${survey.id}`}
-        href={`/surveys/view/${survey.id}`}
+        href={getSurveysPath({action: 'view', id: survey.id})}
         className='card'>
         <h3 className='card-header'>{survey.name}</h3>
         <div className='card-block'>

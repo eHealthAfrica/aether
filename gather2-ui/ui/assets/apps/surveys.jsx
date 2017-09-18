@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 
 import { AppIntl, FetchUrlsContainer, PaginationContainer } from './components'
+import { getSurveysAPIPath } from './utils/paths'
 
 import Survey from './survey/Survey'
 import SurveyForm from './survey/SurveyForm'
@@ -30,7 +31,7 @@ switch (action) {
     const editUrls = [
       {
         name: 'survey',
-        url: `/core/surveys/${surveyId}.json`
+        url: getSurveysAPIPath({id: surveyId})
       }
     ]
 
@@ -41,7 +42,7 @@ switch (action) {
     const viewUrls = [
       {
         name: 'survey',
-        url: `/core/surveys-stats/${surveyId}.json`
+        url: getSurveysAPIPath({id: surveyId, withStats: true})
       }
     ]
 
@@ -52,7 +53,7 @@ switch (action) {
     component = (
       <PaginationContainer
         pageSize={12}
-        url='/core/surveys-stats.json?'
+        url={getSurveysAPIPath({withStats: true})}
         position='top'
         listComponent={SurveysList}
         showPrevious

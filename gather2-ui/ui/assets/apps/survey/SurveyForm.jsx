@@ -3,6 +3,7 @@ import { defineMessages, injectIntl, FormattedMessage } from 'react-intl'
 
 import { clone, deepEqual } from '../utils'
 import { deleteData, postData, putData } from '../utils/request'
+import { getSurveysAPIPath, getSurveysPath } from '../utils/paths'
 
 import { ConfirmButton, ErrorAlert, HelpMessage } from '../components'
 
@@ -269,10 +270,10 @@ export class SurveyForm extends Component {
   onCancel () {
     if (this.props.survey.id) {
       // navigate to Survey view page
-      window.location.pathname = `/surveys/view/${this.props.survey.id}`
+      window.location.pathname = getSurveysPath({action: 'view', id: this.props.survey.id})
     } else {
       // navigate to Surveys list page
-      window.location.pathname = '/surveys/list/'
+      window.location.pathname = getSurveysPath({action: 'list'})
     }
   }
 
@@ -307,16 +308,16 @@ export class SurveyForm extends Component {
     }
 
     const saveMethod = (survey.id ? putData : postData)
-    const url = '/core/surveys' + (survey.id ? '/' + survey.id : '') + '.json'
+    const url = getSurveysAPIPath({id: survey.id})
 
     return saveMethod(url, survey, multipart)
       .then(response => {
         if (response.id) {
           // navigate to Surveys view page
-          window.location.pathname = `/surveys/view/${response.id}`
+          window.location.pathname = getSurveysPath({action: 'view', id: response.id})
         } else {
           // navigate to Surveys list page
-          window.location.pathname = '/surveys/list/'
+          window.location.pathname = getSurveysPath({action: 'list'})
         }
       })
       .catch(error => {
@@ -339,10 +340,10 @@ export class SurveyForm extends Component {
     const {formatMessage} = this.props.intl
     const {survey} = this.props
 
-    return deleteData(`/core/surveys/${survey.id}.json`)
+    return deleteData(getSurveysAPIPath({id: survey.id}))
       .then(() => {
         // navigate to Surveys list page
-        window.location.pathname = '/surveys/list/'
+        window.location.pathname = getSurveysPath({action: 'list'})
       })
       .catch(error => {
         console.log(error.message)

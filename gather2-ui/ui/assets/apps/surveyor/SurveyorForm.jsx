@@ -3,6 +3,7 @@ import { defineMessages, injectIntl, FormattedMessage } from 'react-intl'
 
 import { clone } from '../utils'
 import { deleteData, postData, putData } from '../utils/request'
+import { getSurveyorsPath, getSurveyorsAPIPath } from '../utils/paths'
 
 import { ConfirmButton, ErrorAlert, WarningAlert } from '../components'
 
@@ -243,7 +244,7 @@ export class SurveyorForm extends Component {
     }
 
     const saveMethod = (this.state.id ? putData : postData)
-    const url = '/odk/surveyors' + (this.state.id ? '/' + this.state.id : '') + '.json'
+    const url = getSurveyorsAPIPath({id: this.props.surveyor.id})
 
     return saveMethod(url, surveyor)
       .then(this.goBack)
@@ -267,7 +268,8 @@ export class SurveyorForm extends Component {
     const {formatMessage} = this.props.intl
     const surveyor = this.state
 
-    return deleteData(`/odk/surveyors/${surveyor.id}.json`)
+    const url = getSurveyorsAPIPath({id: this.props.surveyor.id})
+    return deleteData(url)
       .then(this.goBack)
       .catch(error => {
         console.log(error.message)
@@ -281,7 +283,7 @@ export class SurveyorForm extends Component {
 
   goBack () {
     // navigate to Surveyors list page
-    window.location.pathname = '/surveyors/list/'
+    window.location.pathname = getSurveyorsPath({action: 'list'})
   }
 }
 
