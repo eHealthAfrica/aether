@@ -1,5 +1,12 @@
 import React, { Component } from 'react'
-import { FormattedDate, FormattedMessage } from 'react-intl'
+import {
+  FormattedDate,
+  FormattedMessage,
+  FormattedRelative,
+  FormattedTime
+} from 'react-intl'
+
+import { JSONViewer } from '../components'
 
 export default class ResponsesItem extends Component {
   render () {
@@ -15,27 +22,37 @@ export default class ResponsesItem extends Component {
     return (
       <div data-qa={`response-item-${response.id}`} className='x-2'>
         <div className='survey-content single'>
-          <div>
-            <h5 className='title'>
+          <div className='property'>
+            <h5 className='property-title'>
               <FormattedMessage
                 id='response.view.created'
                 defaultMessage='Submitted' />
             </h5>
-            <FormattedDate
-              value={response.created}
-              year='numeric'
-              month='short'
-              day='numeric' />
+            <div className='property-value'>
+              <span className='mr-2'>
+                <FormattedDate
+                  value={response.created}
+                  year='numeric'
+                  month='long'
+                  day='numeric' />
+              </span>
+              <span className='mr-2'>
+                <FormattedTime
+                  value={response.created}
+                  hour12={false}
+                  hour='2-digit'
+                  minute='2-digit'
+                  second='2-digit'
+                  timeZoneName='short' />
+              </span>
+              <span>
+                (<FormattedRelative value={response.created} />)
+              </span>
+            </div>
           </div>
 
           <div>
-            <h5 className='title'>
-              <FormattedMessage
-                id='response.view.data'
-                defaultMessage='Data' />
-            </h5>
-
-            <pre>{JSON.stringify(response.data, 0, 2)}</pre>
+            <JSONViewer data={response.data} />
           </div>
         </div>
       </div>

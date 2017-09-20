@@ -109,6 +109,7 @@
     border-bottom: 1px solid $light-grey;
     display: flex;
     padding: .5rem 0;
+    position: relative;
 
     .empty {
       color: lighten($dark-grey, 20);
@@ -118,6 +119,11 @@
     .btn-expand {
       position: absolute;
       margin-left: -2rem;
+      top: 1.5rem;
+    }
+
+    .property:first-child {
+      padding-top: 0;
     }
   }
 
@@ -127,13 +133,15 @@
 
   .property:only-child {
     padding: 0;
-
   }
 
   .property-title {
     font-style: italic;
+    font-size: $font-size-standard;
     flex: 1;
     color: $dark-grey;
+    margin: 0;
+    margin-right: 1rem;
   }
 
   .property-value {
@@ -143,12 +151,51 @@
   .property-list {
     margin: 0;
     padding: 0;
-    list-style: none;
+    list-style-position: inside;
   }
-
 
   .property-item {
     padding-bottom: .5rem;
+  }
+
+  .array {
+    display: block;
+
+    &>.property-title {
+      margin: 0;
+      font-weight: 800;
+      font-style: normal;
+      color: $text-color;
+      padding: 1rem 0;
+    }
+
+    .property-item {
+      border-top: 2px solid $text-color;
+      background: $white;
+      padding: 1rem 1rem 0;
+    }
+
+    .data {
+      padding-top: .5rem;
+    }
+  }
+
+  .array .array {
+    display: flex;
+    &>.property-title {
+      padding: 0;
+      margin: 0 1rem 0 0;
+    }
+    .property-item {
+      border: 0;
+      margin: 0;
+      padding: 1rem 0 0;
+    }
+
+    .btn-collapse,
+    .btn-expand {
+      top: .55rem;
+    }
   }
 }
 

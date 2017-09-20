@@ -85,7 +85,7 @@ export default class Survey extends Component {
         <PaginationContainer
           pageSize={pageSize}
           url={getResponsesAPIPath({surveyId: survey.id})}
-          position='bottom'
+          position='top'
           listComponent={ResponseComponent}
           showPrevious
           showNext

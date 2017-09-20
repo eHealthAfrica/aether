@@ -168,7 +168,7 @@ class JSONArrayViewer extends Component {
 
     if (collapsed) {
       return (
-        <div className='property array'>
+        <div>
           <button
             className='btn btn-primary icon-only btn-expand'
             onClick={this.toggleView.bind(this)}>
