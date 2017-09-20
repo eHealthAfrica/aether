@@ -8,6 +8,15 @@ textarea.code {
   font-family: monospace;
 }
 
+input.hidden-file {
+  width: .1px;
+  height: .1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
 .survey-section {
   border-top: 1px solid $grey;
   padding: 1.5rem 0;

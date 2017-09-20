@@ -151,10 +151,10 @@ export class SurveyForm extends Component {
         </div>
 
         <div className={`form-group big-input ${errors.schema_file ? 'error' : ''}`}>
-          <label className='form-control-label title'>
+          <label className='btn btn-info' htmlFor='survey.schemaFile'>
             <FormattedMessage
               id='survey.form.schema.file'
-              defaultMessage='Schema file' />
+              defaultMessage='Choose JSON schema file' />
           </label>
           <HelpMessage>
             <FormattedMessage
@@ -163,11 +163,21 @@ export class SurveyForm extends Component {
           </HelpMessage>
           <input
             name='survey.schemaFile'
+            id='survey.schemaFile'
             type='file'
-            className='form-control-file'
+            className='hidden-file'
             accept='.json'
             onChange={this.onFileChange.bind(this)}
           />
+          {
+            survey.schemaFile &&
+            <span className='ml-4'>
+              <i>{ survey.schemaFile.name }</i>
+              <button
+                className='btn btn-sm btn-danger ml-2'
+                onClick={() => this.setState({survey: { ...survey, schemaFile: null }})}>&times;</button>
+            </span>
+          }
           <ErrorAlert errors={errors.schema_file} />
         </div>
       </div>
