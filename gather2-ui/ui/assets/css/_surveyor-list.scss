@@ -1,5 +1,5 @@
 .surveyors-list {
-  padding: 2rem 5vW;
+  padding: 2rem 5vw;
 }
 
 .surveyors {
@@ -31,8 +31,8 @@
 
 .surveyor-edit {
   background: $background-color;
-  min-height: calc(100vH - #{$navbar-height});
-  padding: 2rem 5vW;
+  min-height: calc(100vh - #{$navbar-height});
+  padding: 2rem 5vw;
 
   .username {
     font-family: $body-font-family;

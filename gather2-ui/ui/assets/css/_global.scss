@@ -145,6 +145,12 @@ a.btn-primary:not([href]) {
   font-size: $font-size-s;
 }
 
+.badge {
+  background: $grey;
+  border-radius: 1rem;
+  padding: .3rem .6rem;
+}
+
 input[type='password'],
 input[type='text'] {
   border: 0;
@@ -195,7 +201,7 @@ input:active {
 }
 
 .page-container {
-  padding: 2rem 5vW;
+  padding: 2rem 5vw;
 }
 
 .page-header {

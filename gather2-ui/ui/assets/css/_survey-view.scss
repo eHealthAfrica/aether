@@ -3,7 +3,7 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 1rem;
-  padding: 4rem 5vW 1rem;
+  padding: 4rem 5vw 1rem;
 
   h2 {
     font-size: $font-size-xl;
@@ -13,7 +13,7 @@
 }
 
 .survey-detail {
-  padding: 1rem 5vW;
+  padding: 1rem 5vw;
   position: relative;
   display: flex;
   min-height: 12rem;
@@ -47,14 +47,30 @@
 }
 
 .survey-data {
-  height: 100vH;
+  min-height: 100vh;
+  overflow-x: hidden;
+
+  nav {
+    position: sticky;
+    top: 70px;
+  }
+
+  .pagination {
+    background: rgba($action-color, .9);
+    padding: .3rem 3rem;
+
+    input {
+      padding: .3rem .5rem .2rem 1rem;
+    }
+  }
 }
 
 .survey-data-toolbar {
   background: $action-color;
-  padding: 1.5rem 5vW 1.1rem;
+  padding: 1.5rem 5vw 1.1rem;
   box-shadow: 0 1px 2px rgba($text-color, .5) inset, 0 1px 2px rgba($text-color, .5);
   position: sticky;
+  height: 70px;
   top: 0;
   z-index: 100;
 }
@@ -79,20 +95,60 @@
   }
 }
 
+.survey-content {
+  width: 100vw;
+  overflow: auto;
+}
+
 .survey-content.single {
   background: $bg-grey;
-  padding: 2rem 12vW;
+  padding: 2rem 12vw;
 
-  &>div {
+  .property {
+    width: 100%;
     border-bottom: 1px solid $light-grey;
-    margin-bottom: 1rem;
     display: flex;
-    align-items: baseline;
+    padding: .5rem 0;
+
+    .empty {
+      color: lighten($dark-grey, 20);
+    }
+
+    .btn-collapse,
+    .btn-expand {
+      position: absolute;
+      margin-left: -2rem;
+    }
   }
 
-  .title {
-    width: 50%;
-    font-size: $font-size-standard;
+  .property:last-child {
+    border: 0;
+  }
+
+  .property:only-child {
+    padding: 0;
+
+  }
+
+  .property-title {
+    font-style: italic;
+    flex: 1;
+    color: $dark-grey;
+  }
+
+  .property-value {
+    flex: 3;
+  }
+
+  .property-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+
+  .property-item {
+    padding-bottom: .5rem;
   }
 }
 
@@ -110,22 +166,18 @@
     font-weight: 400;
     font-style: italic;
     padding: 1rem .6rem;
+    position: relative;
 
     &::before {
       content: '';
       display: inline-block;
-      position: relative;
-      left: -.5rem;
-      top: .3rem;
-      height: 1.5rem;
+      position: absolute;
+      left: 0;
+      top: 1rem;
+      bottom: 1rem;
       width: 1px;
       border-left: 1px solid $dark-grey;
     }
-
-    &:first-child {
-      opacity: 0;
-    }
-
   }
 
   td {

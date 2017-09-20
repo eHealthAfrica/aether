@@ -1,7 +1,7 @@
 .survey-edit {
   background: $background-color;
-  min-height: calc(100vH - #{$navbar-height});
-  padding: 2rem 5vW;
+  min-height: calc(100vh - #{$navbar-height});
+  padding: 2rem 5vw;
 }
 
 textarea.code {
