@@ -38,6 +38,7 @@
   @include label;
   position: absolute;
   bottom: 2rem;
+  left: 5vw;
   font-weight: 500;
   padding: 1rem 0;
 }
@@ -48,7 +49,6 @@
 
 .survey-data {
   min-height: 100vh;
-  overflow-x: hidden;
 
   nav {
     position: sticky;
@@ -96,7 +96,7 @@
 }
 
 .survey-content {
-  width: 100vw;
+  width: 100%;
   overflow: auto;
 }
 
@@ -182,10 +182,12 @@
 
   .array .array {
     display: flex;
+
     &>.property-title {
       padding: 0;
       margin: 0 1rem 0 0;
     }
+
     .property-item {
       border: 0;
       margin: 0;
@@ -205,11 +207,11 @@
 
   thead {
     background: $bg-grey;
+    border-bottom: 1px solid $dark-grey;
   }
 
   th {
     border: 0;
-    border-bottom: 1px solid $dark-grey;
     font-weight: 400;
     font-style: italic;
     padding: 1rem .6rem;
@@ -220,22 +222,80 @@
       display: inline-block;
       position: absolute;
       left: 0;
-      top: 1rem;
-      bottom: 1rem;
+      top: .6rem;
+      bottom: .6rem;
       width: 1px;
       border-left: 1px solid $dark-grey;
+    }
+  }
+
+  tr:first-child th:first-child {
+    &::before {
+      content: none;
+    }
+  }
+
+  th[colspan] {
+    padding: .4rem .6rem;
+
+    &::before {
+      bottom: 0;
+    }
+  }
+
+  th[colspan='1'] {
+    padding: 1rem .6rem;
+
+    &::before {
+      top: .6rem;
+      bottom: .6rem;
     }
   }
 
   td {
     border: 0;
     border-bottom: 1px solid $lighter-grey;
-    padding: .6rem 1rem;
+    padding: .6rem;
 
     &:first-child {
       border-right: 1px solid $dark-grey;
       font-size: $font-size-l;
       text-align: right;
     }
+  }
+
+  .property-list {
+    min-width: 300px;
+    padding: 0;
+    list-style-position: inside;
+  }
+
+  .property {
+    display: flex;
+    padding: .2rem 0;
+    border-bottom: 1px dotted $light-grey;
+  }
+
+  .property:last-child {
+    border: 0;
+  }
+
+  .property:only-child {
+    padding: 0;
+  }
+
+  .property-title {
+    font-style: italic;
+    flex: 1;
+    color: $dark-grey;
+    margin-right: 1rem;
+  }
+
+  .property-value {
+    flex: 3;
+  }
+
+  .badge {
+    margin-left: .5rem;
   }
 }
