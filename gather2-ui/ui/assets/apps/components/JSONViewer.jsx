@@ -183,21 +183,23 @@ class JSONArrayViewer extends Component {
     }
 
     return (
-      <ol className='property-list'>
+      <div>
         <button
           className='btn btn-primary icon-only btn-collapse'
           onClick={this.toggleView.bind(this)}>
           <i className='fa fa-minus' />
         </button>
+        <ol className='property-list'>
 
-        {
-          values.map((value, index) => (
-            <li key={index} className='property-item'>
-              <JSONViewer data={value} />
-            </li>
-          ))
-        }
-      </ol>
+          {
+            values.map((value, index) => (
+              <li key={index} className='property-item'>
+                <JSONViewer data={value} />
+              </li>
+            ))
+          }
+        </ol>
+      </div>
     )
   }
 
