@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.test import TransactionTestCase
 
 from ..models import XForm
+from ..surveyors_utils import get_surveyor_group
 
 
 UserModel = get_user_model().objects
@@ -61,6 +62,8 @@ XML_DATA_ERR = '''
 class CustomTestCase(TransactionTestCase):
 
     def setUp(self):
+        self.surveyor_group = get_surveyor_group()
+
         with open(XFORM_XML_FILE, 'r') as f:
             XFORM_XML_RAW = f.read()
 
@@ -112,7 +115,8 @@ class CustomTestCase(TransactionTestCase):
         email = username + '@example.com'
         password = 'surveyorsurveyor'
         surveyor = UserModel.create_user(username, email, password)
-        surveyor.first_name = 'surveyor'
+        surveyor.save()
+        surveyor.groups.add(self.surveyor_group)
         surveyor.save()
         return surveyor
 
@@ -124,7 +128,10 @@ class CustomTestCase(TransactionTestCase):
         )
 
         if surveyor:
-            xform.surveyors.add(surveyor)
+            if type(surveyor) is list:
+                xform.surveyors.set(surveyor)
+            else:
+                xform.surveyors.add(surveyor)
             xform.save()
 
         return xform

@@ -3,7 +3,6 @@ import requests
 import xmltodict
 
 from dateutil import parser
-from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from geojson import Point
 
@@ -22,6 +21,7 @@ from rest_framework.response import Response
 from .core_utils import get_auth_header
 from .models import XForm
 from .serializers import XFormSerializer, SurveyorSerializer
+from .surveyors_utils import get_surveyors
 
 from importer.settings import logger
 
@@ -36,7 +36,7 @@ class XFormViewset(viewsets.ModelViewSet):
     '''
     queryset = XForm.objects.order_by('title')
     serializer_class = XFormSerializer
-    search_fields = ('name',)
+    search_fields = ('title', 'description', 'xml_data',)
 
     def get_queryset(self):
         queryset = self.queryset
@@ -56,14 +56,32 @@ class SurveyorViewSet(viewsets.ModelViewSet):
     - Password
 
     '''
-    # all the surveyors have as first name `surveyor`
-    queryset = get_user_model().objects \
-                               .filter(is_staff=False) \
-                               .filter(is_superuser=False) \
-                               .filter(first_name='surveyor') \
-                               .order_by('username')
+    queryset = get_surveyors()
     serializer_class = SurveyorSerializer
     search_fields = ('username',)
+
+    def get_queryset(self):
+        queryset = self.queryset
+
+        survey_id = self.request.query_params.get('survey_id', None)
+        if survey_id is not None:
+            # get forms with this survey id and with surveyors
+            xforms = XForm.objects \
+                          .filter(gather_core_survey_id=survey_id) \
+                          .exclude(surveyors=None) \
+                          .values_list('surveyors', flat=True)
+            # build the surveyors list
+            surveyors = set([])
+            for item in xforms:
+                try:
+                    surveyors = surveyors.union(item)
+                except:
+                    surveyors.add(item)
+            surveyors = list(surveyors)
+            # filter by these surveyors
+            queryset = queryset.filter(id__in=surveyors)
+
+        return queryset
 
 
 def check_core(request):

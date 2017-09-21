@@ -18,6 +18,7 @@ class SerializersTests(CustomTestCase):
                 'gather_core_survey_id': 1,
                 'description': 'test xml data',
                 'xml_data': self.samples['xform']['raw-xml'],
+                'surveyors': [],
             },
             context={'request': self.request},
         )
@@ -36,6 +37,7 @@ class SerializersTests(CustomTestCase):
                 'gather_core_survey_id': 1,
                 'description': 'test xml file',
                 'xml_file': file,
+                'surveyors': [],
             },
             context={'request': self.request},
         )
@@ -55,6 +57,7 @@ class SerializersTests(CustomTestCase):
                 'gather_core_survey_id': 1,
                 'description': 'test xls file',
                 'xls_file': file,
+                'surveyors': [],
             },
             context={'request': self.request},
         )
@@ -111,12 +114,13 @@ class SerializersTests(CustomTestCase):
         )
         self.assertTrue(user.is_valid(), user.errors)
         user.save()
+        user_obj = get_user_model().objects.get(pk=user.data['id'])
 
-        self.assertEqual(user.data['role'], 'surveyor')
         self.assertNotEqual(user.data['password'], password, 'no raw password')
+        self.assertIn(self.surveyor_group, user_obj.groups.all(), 'has the group "surveyor"')
 
         updated_user = SurveyorSerializer(
-            get_user_model().objects.get(pk=user.data['id']),
+            user_obj,
             data={
                 'username': 'test',
                 'password': 'wUCK:CQsUd?)Zr93',
@@ -125,12 +129,14 @@ class SerializersTests(CustomTestCase):
 
         self.assertTrue(updated_user.is_valid(), updated_user.errors)
         updated_user.save()
-        self.assertEqual(updated_user.data['role'], 'surveyor')
+        updated_user_obj = get_user_model().objects.get(pk=updated_user.data['id'])
+
         self.assertNotEqual(updated_user.data['password'], user.data['password'])
+        self.assertIn(self.surveyor_group, updated_user_obj.groups.all())
 
         # update with the hashed password does not change the password
         updated_user_2 = SurveyorSerializer(
-            get_user_model().objects.get(pk=user.data['id']),
+            updated_user_obj,
             data={
                 'username': 'test2',
                 'password': updated_user.data['password']
@@ -139,6 +145,8 @@ class SerializersTests(CustomTestCase):
 
         self.assertTrue(updated_user_2.is_valid(), updated_user_2.errors)
         updated_user_2.save()
+        updated_user_2_obj = get_user_model().objects.get(pk=updated_user_2.data['id'])
+
         self.assertEqual(updated_user_2.data['username'], 'test2')
-        self.assertEqual(updated_user_2.data['role'], 'surveyor')
         self.assertEqual(updated_user_2.data['password'], updated_user.data['password'])
+        self.assertIn(self.surveyor_group, updated_user_2_obj.groups.all())

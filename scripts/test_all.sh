@@ -6,9 +6,6 @@ function prepare_and_test_container() {
 
   echo "_____________________________________________ Starting $1 tasks"
   $DC_TEST build $container
-  set +e
-  $DC_TEST run $container manage flush --noinput
-  set -e
   $DC_TEST run $container setuplocaldb
   $DC_TEST run $container test --noinput
   echo "_____________________________________________ $1 tasks done"
@@ -18,10 +15,11 @@ DC_TEST="docker-compose -f docker-compose-test.yml"
 
 echo "_____________________________________________ TESTING"
 
-# kill ALL containers
+# kill ALL containers and clean TEST ones
 echo "_____________________________________________ Killing ALL containers"
 docker-compose kill
 $DC_TEST kill
+$DC_TEST down
 
 # start databases
 echo "_____________________________________________ Starting databases"
