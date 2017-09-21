@@ -53,6 +53,7 @@
   nav {
     position: sticky;
     top: 70px;
+    z-index: 100;
   }
 
   .pagination {
@@ -98,6 +99,7 @@
 .survey-content {
   width: 100%;
   overflow: auto;
+  position: relative;
 }
 
 .survey-content.single {
