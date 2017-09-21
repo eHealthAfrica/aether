@@ -56,20 +56,36 @@ export default class ResponsesList extends Component {
 
         Table header
         ============
-        +---+------------+------+----------------+---+
-        | # | Submitted  | Data | A              | H |
-        |   |            |      +-------+---+----+   |
-        |   |            |      | B     | E | G  |   |
-        |   |            |      +---+---+---+    |   |
-        |   |            |      | C | D | F |    |   |
-        +---+------------+------+---+---+---+----+---+
-        | 1 | 1999-01-01 | #### | 1 | 2 | T | [] | 0 |
-        +---+------------+------+---+---+---+----+---+
+        +---+------------++----------------+---+
+        | # | Submitted  | A              | H |
+        |   |            +-------+---+----+   |
+        |   |            | B     | E | G  |   |
+        |   |            +---+---+---+    |   |
+        |   |            | C | D | F |    |   |
+        +---+------------+---+---+---+----+---+
+        | 1 | 1999-01-01 | 1 | 2 | T | [] | 0 |
+        +---+------------+---+---+---+----+---+
 
     ****************************************************************/
 
     const headers = inflate(columns, SEPARATOR)
     const rows = headers.length
+
+    if (rows === 0) {
+      // empty first row???
+      return (
+        <thead>
+          <tr>
+            <th />
+            <th>
+              <FormattedMessage
+                id='response.list.table.created'
+                defaultMessage='Submitted' />
+            </th>
+          </tr>
+        </thead>
+      )
+    }
 
     return (
       <thead>
