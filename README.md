@@ -2,6 +2,29 @@
 
 > Survey collection and analytics
 
+## Table of contents
+
+- [Table of contents](#table-of-contents)
+- [Setup](#Setup)
+  - [Dependencies](#dependencies)
+  - [Installation](#installation)
+  - [Environment Variables](#environment-variables)
+    - [Gather Core](#gather-core)
+    - [Gather ODK Importer](#gather-odk-importer)
+    - [Gather Couchdb Sync](#gather-couchdb-sync)
+    - [Gather UI](#gather-ui)
+- [Usage](#usage)
+  - [Users & Authentication](#users--authentication)
+    - [UMS settings for local development](#ums-settings-for-local-development)
+- [Development](#development)
+- [Deployment](#deployment)
+- [Containers and services](#containers-and-services)
+- [Run commands in the containers](#run-commands-in-the-containers)
+  - [Run tests](#run-tests)
+  - [Upgrade python dependencies](#upgrade-python-dependencies)
+    - [Check outdated dependencies](#check-outdated-dependencies)
+    - [Update requirements file](#update-requirements-file)
+
 
 ## Setup
 
@@ -34,14 +57,14 @@ of the most common ones with non default values. For more info take a look at th
 
 #### Gather Core
 
-- `HOSTNAME`: `core.gather2.local` Used by UMS.
+- `HOSTNAME`: `http://core.gather2.local:8000` Used by UMS.
 - `RDS_DB_NAME`: `gather2` Postgres database name.
 - `WEB_SERVER_PORT`: `8000` Web server port.
 
 
 #### Gather ODK Importer
 
-- `HOSTNAME`: `odk.gather2.local` Used by UMS.
+- `HOSTNAME`: `http://odk.gather2.local:8443` Used by UMS.
 - `RDS_DB_NAME`: `odk_importer` Postgres database name.
 - `WEB_SERVER_PORT`: `8443` Web server port.
 - `GATHER_CORE_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24` Token to connect to core server.
@@ -51,7 +74,7 @@ of the most common ones with non default values. For more info take a look at th
 
 #### Gather Couchdb Sync
 
-- `HOSTNAME`: `sync.gather2.local` Used by UMS.
+- `HOSTNAME`: `http://sync.gather2.local:8666` Used by UMS.
 - `RDS_DB_NAME`: `couchdb_sync` Postgres database name.
 - `WEB_SERVER_PORT`: `8666` Web server port.
 - `GATHER_CORE_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24` Token to connect to core server.
@@ -62,21 +85,24 @@ of the most common ones with non default values. For more info take a look at th
 
 #### Gather UI
 
-- `HOSTNAME`: `ui.gather2.local` Used by UMS.
+- `HOSTNAME`: `http://ui.gather2.local:8080` Used by UMS.
 - `RDS_DB_NAME`: `ui` Postgres database name.
 - `WEB_SERVER_PORT`: `8080` Web server port.
 - `GATHER_ORG_NAME`: `eHealth Africa` Text to be displayed as page title.
 - `GATHER_CORE_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24` Token to connect to core server.
 - `GATHER_CORE_URL`: `http://core:8000` Gather Core Server url.
 - `GATHER_CORE_URL_TEST`: `http://core-test:9000` Gather Core Testing Server url.
+- `GATHER_MODULES`: `odk-importer` Comma separated list with the available modules.
+  To avoid confusion, the values will match the container name, `odk-importer`, `couchdb-sync`.
 - `GATHER_ODK_TOKEN`: `d5184a044bb5acff89a76ec4e67d0fcddd5cd3a1` Token to connect to odk server.
 - `GATHER_ODK_URL`: `http://odk-importer:8443` Gather ODK Importer Server url.
 - `GATHER_ODK_URL_TEST`: `http://odk-importer-test:9443` Gather ODK Importer Testing Server url.
 
 
 **WARNING**
-Never run `odk-importer`, `couchdb-sync` or `ui` tests against any PRODUCTION server.
-The tests clean up will DELETE ALL SURVEYS!!!
+
+Never run `odk-importer`, `couchdb-sync` or `ui` tests against any
+PRODUCTION server. The tests clean up will **DELETE ALL SURVEYS!!!**
 
 
 ## Usage
@@ -193,7 +219,7 @@ All of the containers definition for development can be found in the
 [docker-compose.yml](docker-compose.yml) file.
 
 
-## Run commands on the server
+## Run commands in the containers
 
 Each docker container uses the same script as entrypoint. The `entrypoint.sh`
 script offers a range of commands to start services or run commands.
@@ -243,10 +269,12 @@ in `odk-importer` or `couchdb-sync`.
 ```
 
 **WARNING**
-Never run `odk-importer`, `couchdb-sync` or `ui` tests against any
-PRODUCTION server. The tests clean up will DELETE ALL SURVEYS!!!
 
-Look into [docker-compose.yml](docker-compose.yml), the variable
+Never run `odk-importer`, `couchdb-sync` or `ui` tests against any
+PRODUCTION server. The tests clean up will **DELETE ALL SURVEYS!!!**
+
+Look into [docker-compose.yml](docker-compose.yml) or
+[docker-compose-test.yml](docker-compose-test.yml), the variable
 `GATHER_CORE_URL_TEST` indicates the Gather Core Server used in tests.
 
 

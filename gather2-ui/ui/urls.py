@@ -28,12 +28,6 @@ urlpatterns = [
             token=settings.GATHER_CORE_TOKEN,
         )),
         name='core-proxy'),
-    url(r'^odk/(?P<path>.*)$',
-        login_required(ProxyView.as_view(
-            base_url=settings.GATHER_ODK_URL,
-            token=settings.GATHER_ODK_TOKEN,
-        )),
-        name='odk-proxy'),
 
     # Entrypoints
     url(r'^$',
@@ -43,11 +37,21 @@ urlpatterns = [
     url(r'^surveys/(?P<action>\w+)/(?P<survey_id>[0-9]+)?$',
         login_required(TemplateView.as_view(template_name='pages/surveys.html')),
         name='surveys'),
-
-    url(r'^surveyors/(?P<action>\w+)/(?P<surveyor_id>[0-9]+)?$',
-        login_required(TemplateView.as_view(template_name='pages/surveyors.html')),
-        name='surveyors'),
 ]
+
+if settings.GATHER_ODK:  # pragma: no cover
+    urlpatterns += [
+        url(r'^odk/(?P<path>.*)$',
+            login_required(ProxyView.as_view(
+                base_url=settings.GATHER_ODK_URL,
+                token=settings.GATHER_ODK_TOKEN,
+            )),
+            name='odk-proxy'),
+
+        url(r'^surveyors/(?P<action>\w+)/(?P<surveyor_id>[0-9]+)?$',
+            login_required(TemplateView.as_view(template_name='pages/surveyors.html')),
+            name='surveyors'),
+    ]
 
 
 if settings.DEBUG:  # pragma: no cover

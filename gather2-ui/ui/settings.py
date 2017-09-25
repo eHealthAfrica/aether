@@ -11,6 +11,9 @@ WSGI_APPLICATION = 'ui.wsgi.application'
 APP_NAME = 'Gather'
 ORG_NAME = os.environ.get('GATHER_ORG_NAME', 'eHealth Africa')
 
+# check the available modules linked to this instance
+GATHER_MODULES = os.environ.get('GATHER_MODULES', '').split(',')
+
 
 # Common Configuration
 # ------------------------------------------------------------------------------
@@ -177,21 +180,26 @@ if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):  # pragma: no cover
 
 # Proxy Configuration
 # ------------------------------------------------------------------------------
-GATHER_CORE_TOKEN = os.environ.get('GATHER_CORE_TOKEN', '')
-GATHER_ODK_TOKEN = os.environ.get('GATHER_ODK_TOKEN', '')
-
+GATHER_CORE_TOKEN = os.environ.get('GATHER_CORE_TOKEN')
 if TESTING:  # pragma: no cover
-    GATHER_CORE_URL = os.environ.get('GATHER_CORE_URL_TEST', '')
-    GATHER_ODK_URL = os.environ.get('GATHER_ODK_URL_TEST', '')
+    GATHER_CORE_URL = os.environ.get('GATHER_CORE_URL_TEST')
 else:  # pragma: no cover
-    GATHER_CORE_URL = os.environ.get('GATHER_CORE_URL', '')
-    GATHER_ODK_URL = os.environ.get('GATHER_ODK_URL', '')
+    GATHER_CORE_URL = os.environ.get('GATHER_CORE_URL')
+
+# check if ODK is available in this instance
+GATHER_ODK = ('odk-importer' in GATHER_MODULES)
+if GATHER_ODK:  # pragma: no cover
+    GATHER_ODK_TOKEN = os.environ.get('GATHER_ODK_TOKEN')
+    if TESTING:
+        GATHER_ODK_URL = os.environ.get('GATHER_ODK_URL_TEST')
+    else:
+        GATHER_ODK_URL = os.environ.get('GATHER_ODK_URL')
 
 
 # Debug Configuration
 # ------------------------------------------------------------------------------
 
-if DEBUG:  # pragma: no cover
+if not TESTING and DEBUG:  # pragma: no cover
     INSTALLED_APPS += ['debug_toolbar', ]
     MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware', ]
 

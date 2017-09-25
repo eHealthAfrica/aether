@@ -34,7 +34,7 @@ services:
             CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
             CSRF_COOKIE_DOMAIN: .gather2.local
             TESTING: "true"
-            HOSTNAME: core.gather2.local
+            HOSTNAME: http://core.gather2.local:9000
 
             RDS_DB_NAME: gather2-core-testing
             RDS_HOSTNAME: db-test
@@ -45,6 +45,8 @@ services:
             WEB_SERVER_PORT: 9000
         volumes:
             - ./gather2-core:/code
+        depends_on:
+            - db-test
         ports:
             - "9000:9000"
         command: start_dev
@@ -60,7 +62,7 @@ services:
             CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
             CSRF_COOKIE_DOMAIN: .gather2.local
             TESTING: "true"
-            HOSTNAME: odk.gather2.local
+            HOSTNAME: http://odk.gather2.local:9443
 
             GATHER_CORE_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
             GATHER_CORE_URL_TEST: http://core-test:9000
@@ -74,6 +76,9 @@ services:
             WEB_SERVER_PORT: 9443
         volumes:
             - ./gather2-odk-importer:/code
+        depends_on:
+            - core-test
+            - db-test
         ports:
             - "9443:9443"
         command: start_dev
@@ -89,7 +94,7 @@ services:
             CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
             CSRF_COOKIE_DOMAIN: .gather2.local
             TESTING: "true"
-            HOSTNAME: sync.gather2.local
+            HOSTNAME: http://sync.gather2.local:9666
 
             COUCHDB_PASSWORD: secret
             COUCHDB_URL: http://couchdb-test:5984
@@ -114,6 +119,11 @@ services:
             WEB_SERVER_PORT: 9666
         volumes:
             - ./gather2-couchdb-sync:/code
+        depends_on:
+            - core-test
+            - couchdb-test
+            - db-test
+            - redis-test
         ports:
             - "9666:9666"
         command: start_dev
@@ -129,7 +139,7 @@ services:
             CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
             CSRF_COOKIE_DOMAIN: .gather2.local
             TESTING: "true"
-            HOSTNAME: ui.gather2.local
+            HOSTNAME: http://ui.gather2.local:9090
             STATIC_ROOT: /code/ui/assets/bundles
 
             GATHER_ORG_NAME: eHealth Africa (Dev mode)
@@ -137,6 +147,8 @@ services:
             GATHER_CORE_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
             GATHER_CORE_URL: http://core-test:9000
             GATHER_CORE_URL_TEST: http://core-test:9000
+
+            GATHER_MODULES: "odk-importer"
 
             GATHER_ODK_TOKEN: d5184a044bb5acff89a76ec4e67d0fcddd5cd3a1
             GATHER_ODK_URL: http://odk-importer-test:9443
@@ -153,7 +165,7 @@ services:
             #################################################
             #                    WARNING                    #
             # do not include the root folder as volume or   #
-            # `node_modules` will not be available          #
+            # `node_modules` folder will not be available   #
             #                                               #
             # - ./gather2-ui:/code # DO NOT UNCOMMENT!!!    #
             #################################################
@@ -164,6 +176,10 @@ services:
             - ./gather2-ui/entrypoint.sh:/code/entrypoint.sh
             - ./gather2-ui/manage.py:/code/manage.py
             - ./gather2-ui/package.json:/code/package.json
+        depends_on:
+            - core-test
+            - db-test
+            - odk-importer-test
         ports:
             - "9090:9090"
         command: start_dev

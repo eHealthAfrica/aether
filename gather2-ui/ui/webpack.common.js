@@ -163,7 +163,7 @@ module.exports = function (custom) {
         filename: './assets/bundles/webpack-stats.json'
       }),
 
-      new webpack.EnvironmentPlugin(['GATHER_ORG_NAME']),
+      new webpack.EnvironmentPlugin(['GATHER_ORG_NAME', 'GATHER_MODULES']),
       new webpack.DefinePlugin({
         'process.env': {
           'NODE_ENV': JSON.stringify(custom.production ? 'production' : 'development')

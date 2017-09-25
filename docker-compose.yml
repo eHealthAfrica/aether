@@ -30,7 +30,7 @@ services:
             CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
             CSRF_COOKIE_DOMAIN: .gather2.local
             DEBUG: "true"
-            HOSTNAME: core.gather2.local
+            HOSTNAME: http://core.gather2.local:8000
 
             RDS_DB_NAME: gather2
             RDS_HOSTNAME: db
@@ -39,7 +39,7 @@ services:
             RDS_USERNAME: postgres
 
             WEB_SERVER_PORT: 8000
-        volumes: &core-volumes
+        volumes:
             - ./gather2-core:/code
         depends_on:
             - db
@@ -59,7 +59,7 @@ services:
             CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
             CSRF_COOKIE_DOMAIN: .gather2.local
             DEBUG: "true"
-            HOSTNAME: odk.gather2.local
+            HOSTNAME: http://odk.gather2.local:8443
 
             GATHER_CORE_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
             GATHER_CORE_URL: http://core:8000
@@ -72,7 +72,7 @@ services:
             RDS_USERNAME: postgres
 
             WEB_SERVER_PORT: 8443
-        volumes: &odk_volumes
+        volumes:
             - ./gather2-odk-importer:/code
         depends_on:
             - core
@@ -93,7 +93,7 @@ services:
             CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
             CSRF_COOKIE_DOMAIN: .gather2.local
             DEBUG: "true"
-            HOSTNAME: sync.gather2.local
+            HOSTNAME: http://sync.gather2.local:8666
 
             COUCHDB_PASSWORD: secret
             COUCHDB_URL: http://couchdb:5984
@@ -147,7 +147,7 @@ services:
             CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
             CSRF_COOKIE_DOMAIN: .gather2.local
             DEBUG: "true"
-            HOSTNAME: ui.gather2.local
+            HOSTNAME: http://ui.gather2.local:8080
             STATIC_ROOT: /code/ui/assets/bundles
 
             GATHER_ORG_NAME: eHealth Africa (Dev mode)
@@ -155,6 +155,8 @@ services:
             GATHER_CORE_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
             GATHER_CORE_URL: http://core:8000
             GATHER_CORE_URL_TEST: http://core-test:9000
+
+            GATHER_MODULES: "odk-importer"
 
             GATHER_ODK_TOKEN: d5184a044bb5acff89a76ec4e67d0fcddd5cd3a1
             GATHER_ODK_URL: http://odk-importer:8443
@@ -170,8 +172,8 @@ services:
         volumes: &ui-volumes
             #################################################
             #                    WARNING                    #
-            # do not include the root folder or             #
-            # `node_modules` will not be available          #
+            # do not include the root folder as volume or   #
+            # `node_modules` folder will not be available   #
             #                                               #
             # - ./gather2-ui:/code # DO NOT UNCOMMENT!!!    #
             #################################################

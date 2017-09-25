@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom'
 
 import { AppIntl, FetchUrlsContainer, PaginationContainer } from './components'
 import { getSurveyorsAPIPath } from './utils/paths'
+import { ODK_ACTIVE } from './utils/env'
 
 import SurveyorForm from './surveyor/SurveyorForm'
 import SurveyorsList from './surveyor/SurveyorsList'
@@ -48,6 +49,12 @@ switch (action) {
       />
     )
     break
+}
+
+// ODK check
+if (!ODK_ACTIVE) {
+  // blank page
+  component = <div />
 }
 
 ReactDOM.render(<AppIntl>{ component }</AppIntl>, appElement)

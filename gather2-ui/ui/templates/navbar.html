@@ -27,17 +27,17 @@
       {% if request.user.is_authenticated %}
 
         <ul class="nav navbar-nav">
-          {% with 'surveys surveyors' as nav_list %}
-            {% for nav_item in nav_list.split %}
-              <li class="nav-item">
-                <a
-                  class="nav-link {% if request.resolver_match.view_name == nav_item %}active{% endif %}"
-                  href="{% url nav_item action='list' %}">
-                  {% trans nav_item %}
-                </a>
-              </li>
-            {% endfor %}
-          {% endwith %}
+
+          {% for nav_item in navigation_list %}
+            <li class="nav-item">
+              <a
+                class="nav-link {% if request.resolver_match.view_name == nav_item %}active{% endif %}"
+                href="{% url nav_item action='list' %}">
+                {% trans nav_item %}
+              </a>
+            </li>
+          {% endfor %}
+
         </ul>
 
         <ul class="nav navbar-nav pull-right">
