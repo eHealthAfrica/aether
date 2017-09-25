@@ -4,9 +4,37 @@ from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.translation import ugettext as _
 
-from .models import XForm
+from .models import Survey, XForm
 from .xform_utils import parse_xlsform, parse_xmlform
 from .surveyors_utils import get_surveyors
+
+
+class SurveyForm(forms.ModelForm):
+
+    surveyors = forms.ModelMultipleChoiceField(
+        label=_('Surveyors'),
+        help_text=_('Only users with group "surveyor" appear in this list'),
+        queryset=get_surveyors(),
+        required=False,
+        widget=FilteredSelectMultiple(verbose_name=_('users'), is_stacked=False),
+    )
+
+    class Meta:
+        model = Survey
+        fields = (
+            'survey_id',
+            'name',
+            'surveyors',
+        )
+
+
+class SurveyAdmin(admin.ModelAdmin):
+
+    form = SurveyForm
+    list_display = (
+        'survey_id',
+        'name',
+    )
 
 
 class XFormForm(forms.ModelForm):
@@ -50,7 +78,7 @@ class XFormForm(forms.ModelForm):
     class Meta:
         model = XForm
         fields = [
-            'id', 'gather_core_survey_id',
+            'id', 'survey',
             'xlsform', 'xmlform', 'xml_data',
             'surveyors', 'description',
         ]
@@ -61,6 +89,7 @@ class XFormAdmin(admin.ModelAdmin):
     form = XFormForm
     list_display = (
         'id',
+        'survey',
         'title',
         'form_id',
         'description',
@@ -72,8 +101,8 @@ class XFormAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (_('Gather2 Core'), {
-            'description': _('Please enter the Survey ID provided by Gather2 Core.'),
-            'fields': ['gather_core_survey_id', ]
+            'description': _('Please choose the Gather2 Core Survey.'),
+            'fields': ['survey', ]
         }),
 
         (_('xForm definition'), {
@@ -94,4 +123,5 @@ class XFormAdmin(admin.ModelAdmin):
     )
 
 
+admin.site.register(Survey, SurveyAdmin)
 admin.site.register(XForm, XFormAdmin)

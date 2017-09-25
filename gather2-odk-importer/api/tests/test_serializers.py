@@ -13,9 +13,10 @@ class SerializersTests(CustomTestCase):
         self.request = RequestFactory().get('/')
 
     def test_xform_serializer__no_files(self):
+        self.helper_create_survey(survey_id=1)
         xform = XFormSerializer(
             data={
-                'gather_core_survey_id': 1,
+                'survey': 1,
                 'description': 'test xml data',
                 'xml_data': self.samples['xform']['raw-xml'],
                 'surveyors': [],
@@ -32,9 +33,10 @@ class SerializersTests(CustomTestCase):
         with open(self.samples['xform']['file-xml'], 'rb') as data:
             file = SimpleUploadedFile('xform.xml', data.read())
 
+        self.helper_create_survey(survey_id=1)
         xform = XFormSerializer(
             data={
-                'gather_core_survey_id': 1,
+                'survey': 1,
                 'description': 'test xml file',
                 'xml_file': file,
                 'surveyors': [],
@@ -52,9 +54,10 @@ class SerializersTests(CustomTestCase):
         with open(self.samples['xform']['file-xls'], 'rb') as data:
             file = SimpleUploadedFile('xform.xls', data.read())
 
+        self.helper_create_survey(survey_id=1)
         xform = XFormSerializer(
             data={
-                'gather_core_survey_id': 1,
+                'survey': 1,
                 'description': 'test xls file',
                 'xls_file': file,
                 'surveyors': [],
@@ -74,6 +77,7 @@ class SerializersTests(CustomTestCase):
                 'username': 'test',
                 'password': '',
             },
+            context={'request': self.request},
         )
         self.assertFalse(user.is_valid(), user.errors)
 
@@ -83,6 +87,7 @@ class SerializersTests(CustomTestCase):
                 'username': 'test',
                 'password': 'test',
             },
+            context={'request': self.request},
         )
         self.assertFalse(user.is_valid(), user.errors)
 
@@ -92,6 +97,7 @@ class SerializersTests(CustomTestCase):
                 'username': 'test',
                 'password': '0123456',
             },
+            context={'request': self.request},
         )
         self.assertFalse(user.is_valid(), user.errors)
 
@@ -101,6 +107,7 @@ class SerializersTests(CustomTestCase):
                 'username': 'test',
                 'password': '~t]:vS3Q>e{2k]CE',
             },
+            context={'request': self.request},
         )
         self.assertTrue(user.is_valid(), user.errors)
 
@@ -111,6 +118,7 @@ class SerializersTests(CustomTestCase):
                 'username': 'test',
                 'password': password,
             },
+            context={'request': self.request},
         )
         self.assertTrue(user.is_valid(), user.errors)
         user.save()
@@ -125,6 +133,7 @@ class SerializersTests(CustomTestCase):
                 'username': 'test',
                 'password': 'wUCK:CQsUd?)Zr93',
             },
+            context={'request': self.request},
         )
 
         self.assertTrue(updated_user.is_valid(), updated_user.errors)
@@ -141,6 +150,7 @@ class SerializersTests(CustomTestCase):
                 'username': 'test2',
                 'password': updated_user.data['password']
             },
+            context={'request': self.request},
         )
 
         self.assertTrue(updated_user_2.is_valid(), updated_user_2.errors)

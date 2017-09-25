@@ -5,6 +5,7 @@ from . import views
 
 
 router = routers.DefaultRouter()
+router.register(r'surveys', views.SurveyViewset)
 router.register(r'xforms', views.XFormViewset)
 router.register(r'surveyors', views.SurveyorViewSet)
 urlpatterns = router.urls

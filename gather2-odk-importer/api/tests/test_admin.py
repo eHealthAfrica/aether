@@ -10,11 +10,12 @@ class AdminTests(CustomTestCase):
         super(AdminTests, self).setUp()
         self.helper_create_superuser()
         self.url = reverse('admin:api_xform_add')
+        self.survey = self.helper_create_survey(survey_id=1)
 
     def test__post__empty(self):
         response = self.client.post(
             self.url,
-            {'description': 'some text', 'gather_core_survey_id': 1},
+            {'description': 'some text', 'survey': 1},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(XForm.objects.count(), 0)
@@ -25,7 +26,7 @@ class AdminTests(CustomTestCase):
             {
                 'xml_data': self.samples['xform']['xml-err'],
                 'description': 'some text',
-                'gather_core_survey_id': 1,
+                'survey': 1,
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -35,7 +36,7 @@ class AdminTests(CustomTestCase):
         with open(self.samples['xform']['file-xls'], 'rb') as f:
             response = self.client.post(
                 self.url,
-                {'xlsform': f, 'description': 'some text', 'gather_core_survey_id': 1},
+                {'xlsform': f, 'description': 'some text', 'survey': 1},
             )
         self.assertEqual(response.status_code, 302)  # redirected to list
         self.assertEqual(XForm.objects.count(), 1)
@@ -44,13 +45,13 @@ class AdminTests(CustomTestCase):
         self.assertEqual(instance.form_id, 'my-test-form')
         self.assertEqual(instance.title, 'my-test-form')
         self.assertEqual(instance.description, 'some text')
-        self.assertEqual(instance.gather_core_survey_id, 1)
+        self.assertEqual(instance.survey, self.survey)
 
     def test__post__xml_file(self):
         with open(self.samples['xform']['file-xml'], 'rb') as f:
             response = self.client.post(
                 reverse('admin:api_xform_add'),
-                {'xmlform': f, 'description': 'some text', 'gather_core_survey_id': 1},
+                {'xmlform': f, 'description': 'some text', 'survey': 1},
             )
         self.assertEqual(response.status_code, 302)  # redirected to list
         self.assertEqual(XForm.objects.count(), 1)
@@ -59,7 +60,7 @@ class AdminTests(CustomTestCase):
         self.assertEqual(instance.form_id, 'my-test-form')
         self.assertEqual(instance.title, 'my-test-form')
         self.assertEqual(instance.description, 'some text')
-        self.assertEqual(instance.gather_core_survey_id, 1)
+        self.assertEqual(instance.survey, self.survey)
 
     def test__post__xml_data(self):
         response = self.client.post(
@@ -67,7 +68,7 @@ class AdminTests(CustomTestCase):
             {
                 'xml_data': self.samples['xform']['xml-ok'],
                 'description': 'some text',
-                'gather_core_survey_id': 1,
+                'survey': 1,
             },
         )
         self.assertEqual(response.status_code, 302)  # redirected to list
@@ -77,7 +78,7 @@ class AdminTests(CustomTestCase):
         self.assertEqual(instance.form_id, 'xform-id-test')
         self.assertEqual(instance.title, 'xForm - Test')
         self.assertEqual(instance.description, 'some text')
-        self.assertEqual(instance.gather_core_survey_id, 1)
+        self.assertEqual(instance.survey, self.survey)
         self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')
         self.assertTrue(instance.is_surveyor(self.admin), 'superusers are always granted surveyors')
 
@@ -88,7 +89,7 @@ class AdminTests(CustomTestCase):
             {
                 'xml_data': self.samples['xform']['xml-ok'],
                 'description': 'some text',
-                'gather_core_survey_id': 1,
+                'survey': 1,
                 'surveyors': [surveyor.id],
             },
         )
@@ -99,7 +100,7 @@ class AdminTests(CustomTestCase):
         self.assertEqual(instance.form_id, 'xform-id-test')
         self.assertEqual(instance.title, 'xForm - Test')
         self.assertEqual(instance.description, 'some text')
-        self.assertEqual(instance.gather_core_survey_id, 1)
+        self.assertEqual(instance.survey, self.survey)
 
         self.assertEqual(instance.surveyors.count(), 1)
         self.assertIn(surveyor, instance.surveyors.all())

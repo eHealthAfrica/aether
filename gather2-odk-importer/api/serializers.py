@@ -3,14 +3,35 @@ from django.contrib.auth.password_validation import validate_password as validat
 from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
-from .models import XForm
+from .models import Survey, XForm
 from .xform_utils import parse_xlsform, parse_xmlform
 from .surveyors_utils import get_surveyors, flag_as_surveyor
+
+
+class SurveySerializer(serializers.ModelSerializer):
+
+    url = serializers.HyperlinkedIdentityField('survey-detail', read_only=True)
+    surveyors = serializers.PrimaryKeyRelatedField(
+        label=_('Surveyors'),
+        many=True,
+        queryset=get_surveyors(),
+        allow_null=True,
+    )
+
+    class Meta:
+        model = Survey
+        fields = '__all__'
 
 
 class XFormSerializer(serializers.ModelSerializer):
 
     url = serializers.HyperlinkedIdentityField('xform-detail', read_only=True)
+    survey_url = serializers.HyperlinkedRelatedField(
+        'survey-detail',
+        source='survey',
+        read_only=True
+    )
+
     surveyors = serializers.PrimaryKeyRelatedField(
         label=_('Surveyors'),
         many=True,

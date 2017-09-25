@@ -2,10 +2,13 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
 from . import CustomTestCase
-from ..models import XForm, validate_xmldict
+from ..models import Survey, XForm, validate_xmldict
 
 
 class ModelsTests(CustomTestCase):
+
+    def setUp(self):
+        super(ModelsTests, self).setUp()
 
     def test__validate_xmldict_no_title(self):
         self.assertRaises(
@@ -95,7 +98,7 @@ class ModelsTests(CustomTestCase):
         self.assertRaises(
             IntegrityError,
             XForm.objects.create,
-            gather_core_survey_id=1,
+            survey=self.helper_create_survey(survey_id=1),
         )
         # missing survey id
         self.assertRaises(
@@ -107,7 +110,7 @@ class ModelsTests(CustomTestCase):
         self.assertRaises(
             IntegrityError,
             XForm.objects.create,
-            gather_core_survey_id=1,
+            survey=self.helper_create_survey(survey_id=1),
             xml_data='''
                 <h:html>
                   <h:head>
@@ -125,7 +128,7 @@ class ModelsTests(CustomTestCase):
         self.assertRaises(
             IntegrityError,
             XForm.objects.create,
-            gather_core_survey_id=1,
+            survey=self.helper_create_survey(survey_id=1),
             xml_data='''
                 <h:html
                     xmlns="http://www.w3.org/2002/xforms"
@@ -141,7 +144,7 @@ class ModelsTests(CustomTestCase):
 
     def test__xform__save(self):
         instance = XForm.objects.create(
-            gather_core_survey_id=1,
+            survey=self.helper_create_survey(survey_id=1),
             xml_data=self.samples['xform']['xml-ok'],
         )
 
@@ -150,10 +153,9 @@ class ModelsTests(CustomTestCase):
         self.assertTrue(instance.gather_core_url.endswith('/surveys/1/responses/'))
         self.assertEqual(instance.url, '/forms/{}/form.xml'.format(instance.id))
 
-    def test__xform__surveyors(self):
-        instance = XForm.objects.create(
-            gather_core_survey_id=1,
-            xml_data=self.samples['xform']['xml-ok'],
+    def test__survey__surveyors(self):
+        instance = Survey.objects.create(
+            survey_id=1,
         )
         self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')
 
@@ -175,3 +177,44 @@ class ModelsTests(CustomTestCase):
                         'superusers are always granted surveyors')
         self.assertFalse(instance.is_surveyor(self.user),
                          'if granted surveyors not all users are surveyors')
+
+    def test__xform__surveyors(self):
+        instance = XForm.objects.create(
+            survey=self.helper_create_survey(survey_id=1),
+            xml_data=self.samples['xform']['xml-ok'],
+        )
+        self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')
+
+        self.helper_create_superuser()
+        self.assertTrue(instance.is_surveyor(self.admin),
+                        'superusers are always granted surveyors')
+
+        self.helper_create_user()
+        self.assertTrue(instance.is_surveyor(self.user),
+                        'if not granted surveyors all users are surveyors')
+
+        surveyor = self.helper_create_surveyor(username='surveyor')
+        instance.surveyors.add(surveyor)
+        instance.save()
+
+        self.assertEqual(instance.surveyors.count(), 1, 'one custom granted surveyor')
+        self.assertTrue(instance.is_surveyor(surveyor))
+        self.assertTrue(instance.is_surveyor(self.admin),
+                        'superusers are always granted surveyors')
+        self.assertFalse(instance.is_surveyor(self.user),
+                         'if granted surveyors not all users are surveyors')
+
+        surveyor2 = self.helper_create_surveyor(username='surveyor2')
+        instance.survey.surveyors.add(surveyor2)
+        instance.survey.save()
+        self.assertEqual(instance.surveyors.count(), 1, 'one custom granted surveyor')
+        self.assertTrue(instance.is_surveyor(surveyor))
+        self.assertTrue(instance.is_surveyor(surveyor2),
+                        'survey surveyors are also xform surveyors')
+
+        instance.surveyors.clear()
+        instance.save()
+        self.assertEqual(instance.surveyors.count(), 0, 'no custom granted surveyor')
+        self.assertFalse(instance.is_surveyor(surveyor))
+        self.assertTrue(instance.is_surveyor(surveyor2),
+                        'survey surveyors are always xform surveyors')

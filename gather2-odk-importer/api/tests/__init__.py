@@ -3,7 +3,7 @@ import base64
 from django.contrib.auth import get_user_model
 from django.test import TransactionTestCase
 
-from ..models import XForm
+from ..models import Survey, XForm
 from ..surveyors_utils import get_surveyor_group
 
 
@@ -120,10 +120,28 @@ class CustomTestCase(TransactionTestCase):
         surveyor.save()
         return surveyor
 
+    def helper_create_survey(self, surveyor=None, survey_id=1):
+        survey, _ = Survey.objects.get_or_create(
+            name='test',
+            survey_id=survey_id,
+        )
+
+        if surveyor:
+            if type(surveyor) is list:
+                survey.surveyors.set(surveyor)
+            else:
+                survey.surveyors.add(surveyor)
+            survey.save()
+
+        return survey
+
     def helper_create_xform(self, surveyor=None, survey_id=1):
         xform = XForm.objects.create(
             description='test',
-            gather_core_survey_id=survey_id,
+            survey=self.helper_create_survey(
+                surveyor=surveyor,
+                survey_id=survey_id,
+            ),
             xml_data=self.samples['xform']['raw-xml'],
         )
 

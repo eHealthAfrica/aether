@@ -19,11 +19,20 @@ from rest_framework.renderers import StaticHTMLRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
 
 from .core_utils import get_auth_header
-from .models import XForm
-from .serializers import XFormSerializer, SurveyorSerializer
+from .models import Survey, XForm
+from .serializers import SurveySerializer, XFormSerializer, SurveyorSerializer
 from .surveyors_utils import get_surveyors
 
 from importer.settings import logger
+
+
+class SurveyViewset(viewsets.ModelViewSet):
+    '''
+    Create new Survey entries.
+    '''
+    queryset = Survey.objects.order_by('name')
+    serializer_class = SurveySerializer
+    search_fields = ('name',)
 
 
 class XFormViewset(viewsets.ModelViewSet):
@@ -43,7 +52,7 @@ class XFormViewset(viewsets.ModelViewSet):
 
         survey_id = self.request.query_params.get('survey_id', None)
         if survey_id is not None:
-            queryset = queryset.filter(gather_core_survey_id=survey_id)
+            queryset = queryset.filter(survey=survey_id)
 
         return queryset
 
@@ -67,17 +76,24 @@ class SurveyorViewSet(viewsets.ModelViewSet):
         if survey_id is not None:
             # get forms with this survey id and with surveyors
             xforms = XForm.objects \
-                          .filter(gather_core_survey_id=survey_id) \
+                          .filter(survey=survey_id) \
                           .exclude(surveyors=None) \
                           .values_list('surveyors', flat=True)
+
+            # take also the Survey surveyors
+            surveys = Survey.objects \
+                            .filter(survey_id=survey_id) \
+                            .exclude(surveyors=None) \
+                            .values_list('surveyors', flat=True)
+
+            items = xforms.union(surveys)
             # build the surveyors list
             surveyors = set([])
-            for item in xforms:
+            for item in items:
                 try:
                     surveyors = surveyors.union(item)
                 except:
                     surveyors.add(item)
-            surveyors = list(surveyors)
             # filter by these surveyors
             queryset = queryset.filter(id__in=surveyors)
 

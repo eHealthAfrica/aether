@@ -11,6 +11,45 @@ from django.utils import timezone
 from . import core_utils
 
 
+class Survey(models.Model):
+    '''
+    Database link of a Gather2 Core Survey
+
+    The needed and common data is stored here, like the list of granted surveyors.
+    '''
+
+    # This is needed to submit data to core
+    # (there is a one to one relation)
+    survey_id = models.IntegerField(primary_key=True)
+
+    name = models.TextField(null=True, blank=True, default='')
+
+    # the list of granted surveyors
+    surveyors = models.ManyToManyField(to=get_user_model(), related_name='surveys', blank=True)
+
+    @property
+    def gather_core_url(self):
+        return core_utils.get_survey_responses_url(survey_id=self.pk)
+
+    def is_surveyor(self, user):
+        '''
+        Indicates if the given user is a granted surveyor of the Survey.
+
+        Rules:
+        - User is superuser.
+        - Survey has no surveyors.
+        - User is in the surveyors list.
+        '''
+        return (
+            user.is_superuser or
+            self.surveyors.count() == 0 or
+            user in self.surveyors.all()
+        )
+
+    def __str__(self):  # pragma: no cover
+        return '{} - {}'.format(str(self.survey_id), self.name)
+
+
 def get_xml_title(data):
     '''
     Extracts form title from xml definition
@@ -112,16 +151,19 @@ class XForm(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
 
     # This is needed to submit data to core
-    gather_core_survey_id = models.IntegerField()
+    survey = models.ForeignKey(
+        Survey,
+        related_name='xforms',
+        null=False,
+        blank=False,
+    )
 
     # the list of granted surveyors
     surveyors = models.ManyToManyField(to=get_user_model(), related_name='xforms', blank=True)
 
     @property
     def gather_core_url(self):
-        return core_utils.get_survey_responses_url(
-            survey_id=self.gather_core_survey_id,
-        )
+        return self.survey.gather_core_url
 
     @property
     def hash(self):
@@ -152,7 +194,12 @@ class XForm(models.Model):
 
         Rules:
         - User is superuser.
-        - xForm has no surveyors.
-        - User is in the surveyors list.
+        - xForm and Survey have no surveyors.
+        - User is in the xForm or Survey surveyors list.
         '''
-        return user.is_superuser or self.surveyors.count() == 0 or user in self.surveyors.all()
+        return (
+            user.is_superuser or
+            (self.surveyors.count() == 0 and self.survey.surveyors.count() == 0) or
+            user in self.surveyors.all() or
+            user in self.survey.surveyors.all()
+        )
