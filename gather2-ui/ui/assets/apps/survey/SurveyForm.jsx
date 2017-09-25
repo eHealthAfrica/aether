@@ -44,16 +44,15 @@ export class SurveyForm extends Component {
   constructor (props) {
     super(props)
     this.state = {
-      survey: {
-        ...clone(this.props.survey),
-        schemaStringified: JSON.stringify(this.props.survey.schema || {}, 0, 2)
-      },
+      ...clone(this.props.survey),
+      schemaStringified: JSON.stringify(this.props.survey.schema || {}, 0, 2),
       errors: {}
     }
   }
 
   render () {
-    const {survey, errors} = this.state
+    const survey = this.state
+    const {errors} = survey
     const dataQA = (
       (survey.id === undefined)
       ? 'survey-add'
@@ -76,7 +75,7 @@ export class SurveyForm extends Component {
   }
 
   renderTitle () {
-    const {survey} = this.state
+    const survey = this.state
     if (survey.id === undefined) {
       return (
         <FormattedMessage
@@ -96,7 +95,8 @@ export class SurveyForm extends Component {
   }
 
   renderName () {
-    const {survey, errors} = this.state
+    const survey = this.state
+    const {errors} = survey
 
     return (
       <div className={`form-group big-input ${errors.name ? 'error' : ''}`}>
@@ -106,7 +106,7 @@ export class SurveyForm extends Component {
             defaultMessage='Survey name' />
         </label>
         <input
-          name='survey.name'
+          name='name'
           type='text'
           className='form-control'
           required
@@ -119,11 +119,12 @@ export class SurveyForm extends Component {
   }
 
   renderJSONSchema () {
-    const {survey, errors} = this.state
+    const survey = this.state
+    const {errors} = survey
 
     return (
       <div>
-        <div className={`form-group big-input ${errors.schema ? 'error' : ''}`}>
+        <div className={`form-group big-input ${errors.schema || errors.schema_file ? 'error' : ''}`}>
           <label className='form-control-label title'>
             <FormattedMessage
               id='survey.form.schema'
@@ -132,7 +133,7 @@ export class SurveyForm extends Component {
           <HelpMessage>
             <FormattedMessage
               id='survey.form.schema.help'
-              defaultMessage='You can type or paste the JSON schema here, or upload a file using the button below.' />
+              defaultMessage='You can upload a file using the button below or type or paste the JSON schema in the textarea.' />
             <br />
             <a href='http://json-schema.org/examples.html' target='_blank'>
               <FormattedMessage
@@ -140,30 +141,17 @@ export class SurveyForm extends Component {
                 defaultMessage='Click here to see more about JSON Schema' />
             </a>
           </HelpMessage>
-          <textarea
-            name='survey.schemaStringified'
-            className='form-control code'
-            rows={10}
-            value={survey.schemaStringified}
-            onChange={this.onInputChange.bind(this)}
-          />
-          <ErrorAlert errors={errors.schema} />
         </div>
 
         <div className={`form-group big-input ${errors.schema_file ? 'error' : ''}`}>
-          <label className='btn btn-info' htmlFor='survey.schemaFile'>
+          <label className='btn btn-info' htmlFor='schemaFile'>
             <FormattedMessage
               id='survey.form.schema.file'
               defaultMessage='Choose JSON schema file' />
           </label>
-          <HelpMessage>
-            <FormattedMessage
-              id='survey.form.schema.file.help'
-              defaultMessage='You can also upload a file instead of entering the JSON schema manually' />
-          </HelpMessage>
           <input
-            name='survey.schemaFile'
-            id='survey.schemaFile'
+            name='schemaFile'
+            id='schemaFile'
             type='file'
             className='hidden-file'
             accept='.json'
@@ -175,10 +163,22 @@ export class SurveyForm extends Component {
               <i>{ survey.schemaFile.name }</i>
               <button
                 className='btn btn-sm btn-danger ml-2'
-                onClick={() => this.setState({survey: { ...survey, schemaFile: null }})}>&times;</button>
+                onClick={this.removeFile.bind(this)}>&times;</button>
             </span>
           }
           <ErrorAlert errors={errors.schema_file} />
+        </div>
+
+        <div className={`form-group big-input ${errors.schema ? 'error' : ''}`}>
+          <textarea
+            name='schemaStringified'
+            className='form-control code'
+            disabled={survey.schemaFile !== undefined}
+            rows={10}
+            value={survey.schemaStringified}
+            onChange={this.onInputChange.bind(this)}
+          />
+          <ErrorAlert errors={errors.schema} />
         </div>
       </div>
     )
@@ -225,49 +225,30 @@ export class SurveyForm extends Component {
 
   onInputChange (event) {
     event.preventDefault()
-    const [object, property] = event.target.name.split('.')
-    this.setState({
-      [object]: {
-        ...this.state[object],
-        [property]: event.target.value
-      }
-    })
+    this.setState({ [event.target.name]: event.target.value })
   }
 
   onFileChange (event) {
     event.preventDefault()
-    const [object, property] = event.target.name.split('.')
+    this.setState({ [event.target.name]: event.target.files.item(0) })
+  }
 
-    let files
-    if (event.target.multiple) {
-      // https://developer.mozilla.org/en-US/docs/Web/API/FileList
-      files = []
-      for (let i = 0; i < event.target.files.length; i++) {
-        files.push(event.target.files.item(i))
-      }
-    } else {
-      files = event.target.files.item(0)
-    }
-
-    this.setState({
-      [object]: {
-        ...this.state[object],
-        [property]: files
-      }
-    })
+  removeFile (event) {
+    event.preventDefault()
+    this.setState({ schemaFile: undefined })
   }
 
   onCancelCondition () {
     // check if there were changes
-    if (this.state.survey.schemaFile !== undefined) {
+    if (this.state.schemaFile !== undefined) {
       return true
     }
 
     try {
       const survey = {
         ...clone(this.props.survey),
-        name: this.state.survey.name,
-        schema: JSON.parse(this.state.survey.schemaStringified)
+        name: this.state.name,
+        schema: JSON.parse(this.state.schemaStringified)
       }
 
       return !deepEqual(this.props.survey, survey, true)
@@ -293,12 +274,12 @@ export class SurveyForm extends Component {
 
     const {formatMessage} = this.props.intl
     const survey = {
-      id: this.state.survey.id,
-      name: this.state.survey.name
+      id: this.state.id,
+      name: this.state.name
     }
 
     // check if the schema comes from a file or from the textarea
-    const {schemaFile, schemaStringified} = this.state.survey
+    const {schemaFile, schemaStringified} = this.state
     let multipart = false
     if (schemaFile) {
       multipart = true
