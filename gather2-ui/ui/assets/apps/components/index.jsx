@@ -8,6 +8,7 @@ import FetchUrlsContainer from './FetchUrlsContainer'
 import JSONViewer from './JSONViewer'
 import HelpMessage from './HelpMessage'
 import LoadingSpinner from './LoadingSpinner'
+import MultiSelect from './MultiSelect'
 import PaginationBar from './PaginationBar'
 import PaginationContainer from './PaginationContainer'
 import WarningAlert from './WarningAlert'
@@ -23,6 +24,7 @@ export {
   JSONViewer,
   HelpMessage,
   LoadingSpinner,
+  MultiSelect,
   PaginationBar,
   PaginationContainer,
   WarningAlert
