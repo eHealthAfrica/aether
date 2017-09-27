@@ -58,7 +58,7 @@ export default class ConfirmButton extends Component {
               <button
                 type='button'
                 className='btn btn-secondary'
-                onClick={this.props.onConfirm}>
+                onClick={this.execute.bind(this)}>
                 <FormattedMessage
                   id='confirm.button.action.confirm'
                   defaultMessage='Yes' />
@@ -70,18 +70,23 @@ export default class ConfirmButton extends Component {
     )
   }
 
-  onCancel (event) {
+  onCancel () {
     this.setState({ open: false })
   }
 
-  onClick (event) {
+  onClick () {
     // if there is a condition but it is not satisfied
     if (this.props.condition && !this.props.condition()) {
-      this.props.onConfirm()
+      this.execute()
       return
     }
 
     // show modal
     this.setState({ open: true })
+  }
+
+  execute () {
+    this.setState({ open: false })
+    this.props.onConfirm()
   }
 }
