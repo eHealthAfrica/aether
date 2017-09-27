@@ -6,6 +6,7 @@ import ErrorAlert from './ErrorAlert'
 import FetchErrorAlert from './FetchErrorAlert'
 import FetchUrlsContainer from './FetchUrlsContainer'
 import JSONViewer from './JSONViewer'
+import FullDateTime from './FullDateTime'
 import HelpMessage from './HelpMessage'
 import LoadingSpinner from './LoadingSpinner'
 import MultiSelect from './MultiSelect'
@@ -22,6 +23,7 @@ export {
   FetchErrorAlert,
   FetchUrlsContainer,
   JSONViewer,
+  FullDateTime,
   HelpMessage,
   LoadingSpinner,
   MultiSelect,

@@ -1,12 +1,7 @@
 import React, { Component } from 'react'
-import {
-  FormattedDate,
-  FormattedMessage,
-  FormattedRelative,
-  FormattedTime
-} from 'react-intl'
+import { FormattedMessage } from 'react-intl'
 
-import { JSONViewer } from '../components'
+import { JSONViewer, FullDateTime } from '../components'
 
 export default class ResponsesItem extends Component {
   render () {
@@ -29,25 +24,7 @@ export default class ResponsesItem extends Component {
                 defaultMessage='Submitted' />
             </h5>
             <div className='property-value'>
-              <span className='mr-2'>
-                <FormattedDate
-                  value={response.created}
-                  year='numeric'
-                  month='long'
-                  day='numeric' />
-              </span>
-              <span className='mr-2'>
-                <FormattedTime
-                  value={response.created}
-                  hour12={false}
-                  hour='2-digit'
-                  minute='2-digit'
-                  second='2-digit'
-                  timeZoneName='short' />
-              </span>
-              <span>
-                (<FormattedRelative value={response.created} />)
-              </span>
+              <FullDateTime date={response.created} />
             </div>
           </div>
 

@@ -1,13 +1,8 @@
 import React, { Component } from 'react'
-import {
-  FormattedDate,
-  FormattedMessage,
-  FormattedRelative,
-  FormattedTime
-} from 'react-intl'
+import { FormattedMessage } from 'react-intl'
 
 import { flatten, inflate } from '../utils/types'
-import { JSONViewer } from '../components'
+import { JSONViewer, FullDateTime } from '../components'
 
 const SEPARATOR = '¬¬¬'  // very uncommon string
 
@@ -130,25 +125,7 @@ export default class ResponsesList extends Component {
       <tr data-qa={`response-row-${response.id}`} key={response.id}>
         <td scope='row'>{this.props.start + index}</td>
         <td>
-          <span className='mr-2'>
-            <FormattedDate
-              value={response.created}
-              year='numeric'
-              month='long'
-              day='numeric' />
-          </span>
-          <span className='mr-2'>
-            <FormattedTime
-              value={response.created}
-              hour12={false}
-              hour='2-digit'
-              minute='2-digit'
-              second='2-digit'
-              timeZoneName='short' />
-          </span>
-          <span>
-            (<FormattedRelative value={response.created} />)
-          </span>
+          <FullDateTime date={response.created} />
         </td>
 
         {
