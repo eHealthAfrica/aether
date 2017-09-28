@@ -69,7 +69,6 @@ test_coverage() {
     cat /code/conf/extras/good_job.txt
 }
 
-
 # --------------------------------
 # set DJANGO_SECRET_KEY if needed
 if [ "$DJANGO_SECRET_KEY" = "" ]
@@ -126,7 +125,7 @@ case "$1" in
 
     start )
         setup_db
-
+        . ./conf/aws.sh
         ./manage.py collectstatic --noinput
         chmod -R 755 /var/www/static
         /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini

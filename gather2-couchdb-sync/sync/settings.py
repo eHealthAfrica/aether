@@ -55,6 +55,7 @@ INSTALLED_APPS = (
     'django_rq',
     'raven.contrib.django.raven_compat',
     'rest_framework',
+    'rest_framework.authtoken',
     'ums_client',
 
     # gather2 apps

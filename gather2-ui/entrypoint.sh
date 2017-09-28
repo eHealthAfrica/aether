@@ -139,7 +139,7 @@ case "$1" in
     start )
         setup_db
         npm run webpack
-
+        . ./conf/aws.sh
         ./manage.py collectstatic --noinput
         cp -r /code/ui/assets/bundles/* /var/www/static/
         chmod -R 755 /var/www/static

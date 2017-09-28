@@ -126,7 +126,7 @@ case "$1" in
 
     start )
         setup_db
-
+        . ./conf/aws.sh
         ./manage.py collectstatic --noinput
         chmod -R 755 /var/www/static
         /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
