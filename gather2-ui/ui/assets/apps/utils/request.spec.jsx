@@ -2,7 +2,7 @@
 
 import assert from 'assert'
 import nock from 'nock'
-import {request, fetchUrls} from './request'
+import {request, fetchUrls, forceGetData} from './request'
 
 describe('request utils', () => {
   describe('request', () => {
@@ -67,6 +67,20 @@ describe('request utils', () => {
         })
     })
 
+    it('should do a PATCH request', () => {
+      nock('http://localhost')
+        .patch('/foo', {foo: 'bar'})
+        .reply(200, {ok: true})
+
+      return request('patch', 'http://localhost/foo', {foo: 'bar'})
+        .then((body) => {
+          assert(body.ok, 'PUT request should return true')
+        })
+        .catch((error) => {
+          assert(!error, 'Unexpected error')
+        })
+    })
+
     it('should do a DELETE request', () => {
       nock('http://localhost')
         .delete('/foo')
@@ -97,6 +111,44 @@ describe('request utils', () => {
             assert(!response.ok)
             assert.equal(response.message, 'something went wrong')
           })
+        })
+    })
+  })
+
+  describe('forceGetData', () => {
+    it('should return a GET request', () => {
+      nock('http://localhost')
+        .get('/get')
+        .reply(200, {ok: true})
+
+      return forceGetData('http://localhost/get', 'http://localhost/post', {foo: 'bar'})
+        .then((body) => {
+          assert(body.ok, 'Should return true')
+        })
+        .catch((error) => {
+          assert(!error, 'Unexpected error')
+        })
+    })
+
+    it('should FORCE a GET request', () => {
+      nock('http://localhost')
+        .get('/get')
+        .reply(404, {ok: false, message: 'something went wrong'})
+
+      nock('http://localhost')
+        .post('/post', {foo: 'bar'})
+        .reply(200, {ok: true})
+
+      nock('http://localhost')
+        .get('/get')
+        .reply(200, {ok: true})
+
+      return forceGetData('http://localhost/get', 'http://localhost/post', {foo: 'bar'})
+        .then((body) => {
+          assert(body.ok, 'Should return true')
+        })
+        .catch((error) => {
+          assert(!error, 'Unexpected error')
         })
     })
   })
