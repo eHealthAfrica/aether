@@ -3,12 +3,12 @@ import xmltodict
 from hashlib import md5
 
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.db import models, IntegrityError
 from django.utils import timezone
 
 from . import core_utils
+from .xform_utils import get_xml_title, get_xml_form_id, validate_xmldict
 
 
 class Survey(models.Model):
@@ -50,88 +50,6 @@ class Survey(models.Model):
         return '{} - {}'.format(str(self.survey_id), self.name)
 
 
-def get_xml_title(data):
-    '''
-    Extracts form title from xml definition
-
-        <h:html>
-          <h:head>
-            <h:title> T I T L E </h:title>
-            <model>
-              <instance>
-                <None id="F O R M I D"></None>
-              </instance>
-              <instance id="1"></instance>
-              <instance id="2"></instance>
-
-              <instance id="n"></instance>
-            </model>
-          </h:head>
-          <h:body>
-          </h:body>
-        </h:html>
-     '''
-    try:
-        return data['h:html']['h:head']['h:title']
-    except:
-        return None
-
-
-def get_xml_form_id(data):
-    '''
-    Extracts form id from xml definition
-
-        <h:html>
-          <h:head>
-            <h:title> T I T L E </h:title>
-            <model>
-              <instance>
-                <None id="F O R M I D"></None>
-              </instance>
-              <instance id="1"></instance>
-              <instance id="2"></instance>
-
-              <instance id="n"></instance>
-            </model>
-          </h:head>
-          <h:body>
-          </h:body>
-        </h:html>
-    '''
-    try:
-        instance = data['h:html']['h:head']['model']['instance']
-        # this can be a list of intances or one entry
-        try:
-            return instance['None']['@id']
-        except:
-            # assumption: the first one is the form definition, the rest are the choices
-            return instance[0]['None']['@id']
-    except:
-        pass
-
-    return None
-
-
-def validate_xmldict(value):
-    '''
-    Validates xml definition:
-
-    1. parses xml
-    2. checks if title is valid
-    3. checks if form id is valid
-    '''
-    try:
-        data = xmltodict.parse(value)
-
-        if not get_xml_title(data):
-            raise ValidationError('missing title')
-        if not get_xml_form_id(data):
-            raise ValidationError('missing form_id')
-
-    except Exception as e:
-        raise ValidationError(e)
-
-
 class XForm(models.Model):
     '''
     Database representation of an XForm
@@ -147,7 +65,7 @@ class XForm(models.Model):
     # here comes the extracted data from an xForm file
     xml_data = models.TextField(blank=True, validators=[validate_xmldict])
 
-    description = models.TextField(default='', null=True)
+    description = models.TextField(default='', null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
 
     # This is needed to submit data to core
@@ -203,3 +121,6 @@ class XForm(models.Model):
             user in self.surveyors.all() or
             user in self.survey.surveyors.all()
         )
+
+    def __str__(self):  # pragma: no cover
+        return '{} - {}'.format(str(self.title), self.form_id)

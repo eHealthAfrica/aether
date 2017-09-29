@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
                 ('username', models.CharField(max_length=100)),
                 ('title', models.CharField(default='', editable=False, max_length=64)),
                 ('xml_data', models.TextField()),
-                ('description', models.TextField(default='', null=True)),
+                ('description', models.TextField(default='', null=True, blank=True)),
                 ('created_at', models.DateTimeField(default=django.utils.timezone.now)),
                 ('gather_core_url', models.URLField(default='')),
             ],

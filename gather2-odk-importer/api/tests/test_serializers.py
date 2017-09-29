@@ -38,7 +38,7 @@ class SerializersTests(CustomTestCase):
             data={
                 'survey': 1,
                 'description': 'test xml file',
-                'xml_file': file,
+                'file': file,
                 'surveyors': [],
             },
             context={'request': self.request},
@@ -59,7 +59,7 @@ class SerializersTests(CustomTestCase):
             data={
                 'survey': 1,
                 'description': 'test xls file',
-                'xls_file': file,
+                'file': file,
                 'surveyors': [],
             },
             context={'request': self.request},

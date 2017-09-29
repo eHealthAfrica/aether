@@ -5,7 +5,7 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.translation import ugettext as _
 
 from .models import Survey, XForm
-from .xform_utils import parse_xlsform, parse_xmlform
+from .xform_utils import parse_file
 from .surveyors_utils import get_surveyors
 
 
@@ -39,14 +39,9 @@ class SurveyAdmin(admin.ModelAdmin):
 
 class XFormForm(forms.ModelForm):
 
-    xlsform = forms.FileField(
-        label=_('XLS Form'),
-        help_text=_('Upload file with XLS Form definition'),
-        required=False,
-    )
-    xmlform = forms.FileField(
-        label=_('XML File'),
-        help_text=_('Upload file with XML Data definition'),
+    file = forms.FileField(
+        label=_('XLS Form / XML File'),
+        help_text=_('Upload an XLS Form or an XML File'),
         required=False,
     )
     surveyors = forms.ModelMultipleChoiceField(
@@ -58,19 +53,19 @@ class XFormForm(forms.ModelForm):
     )
 
     def clean_xml_data(self):
-        if 'xlsform' in self.files:
-            return parse_xlsform(self.files['xlsform'].file)
-        if 'xmlform' in self.files:
-            return parse_xmlform(self.files['xmlform'].file)
+        if 'file' in self.files:
+            return parse_file(
+                filename=str(self.files['file']),
+                content=self.files['file'].file,
+            )
         return self.cleaned_data['xml_data']
 
     def clean(self):
         cleaned_data = super(XFormForm, self).clean()
-        xlsform = cleaned_data.get('xlsform')
-        xmlform = cleaned_data.get('xmlform')
+        file = cleaned_data.get('file')
         xml_data = cleaned_data.get('xml_data')
 
-        if not (xlsform or xmlform or xml_data):
+        if not (file or xml_data):
             raise forms.ValidationError(
                 _('Please upload an XLS Form or an XML File, or enter the XML data.')
             )
@@ -79,7 +74,7 @@ class XFormForm(forms.ModelForm):
         model = XForm
         fields = [
             'id', 'survey',
-            'xlsform', 'xmlform', 'xml_data',
+            'file', 'xml_data',
             'surveyors', 'description',
         ]
 
@@ -102,12 +97,12 @@ class XFormAdmin(admin.ModelAdmin):
     fieldsets = (
         (_('Gather2 Core'), {
             'description': _('Please choose the Gather2 Core Survey.'),
-            'fields': ['survey', ]
+            'fields': ['survey', 'description', ]
         }),
 
         (_('xForm definition'), {
             'description': _('Please upload an XLS Form or an XML File, or enter the XML data.'),
-            'fields': ['xlsform', 'xmlform', 'xml_data', 'title', 'form_id', ],
+            'fields': ['file', 'xml_data', 'title', 'form_id', ],
         }),
 
         (_('Granted surveyors'), {
@@ -115,10 +110,6 @@ class XFormAdmin(admin.ModelAdmin):
                 'If you do not specify any surveyors, EVERYONE will be able to access this xForm.'
             ),
             'fields': ['surveyors', ],
-        }),
-
-        (_('Comments'), {
-            'fields': ['description', ],
         }),
     )
 

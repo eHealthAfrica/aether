@@ -36,7 +36,7 @@ class AdminTests(CustomTestCase):
         with open(self.samples['xform']['file-xls'], 'rb') as f:
             response = self.client.post(
                 self.url,
-                {'xlsform': f, 'description': 'some text', 'survey': 1},
+                {'file': f, 'description': 'some text', 'survey': 1},
             )
         self.assertEqual(response.status_code, 302)  # redirected to list
         self.assertEqual(XForm.objects.count(), 1)
@@ -51,7 +51,7 @@ class AdminTests(CustomTestCase):
         with open(self.samples['xform']['file-xml'], 'rb') as f:
             response = self.client.post(
                 reverse('admin:api_xform_add'),
-                {'xmlform': f, 'description': 'some text', 'survey': 1},
+                {'file': f, 'description': 'some text', 'survey': 1},
             )
         self.assertEqual(response.status_code, 302)  # redirected to list
         self.assertEqual(XForm.objects.count(), 1)

@@ -4,23 +4,8 @@ from django.utils.translation import ugettext as _
 from rest_framework import serializers
 
 from .models import Survey, XForm
-from .xform_utils import parse_xlsform, parse_xmlform
+from .xform_utils import parse_file
 from .surveyors_utils import get_surveyors, flag_as_surveyor
-
-
-class SurveySerializer(serializers.ModelSerializer):
-
-    url = serializers.HyperlinkedIdentityField('survey-detail', read_only=True)
-    surveyors = serializers.PrimaryKeyRelatedField(
-        label=_('Surveyors'),
-        many=True,
-        queryset=get_surveyors(),
-        allow_null=True,
-    )
-
-    class Meta:
-        model = Survey
-        fields = '__all__'
 
 
 class XFormSerializer(serializers.ModelSerializer):
@@ -39,31 +24,22 @@ class XFormSerializer(serializers.ModelSerializer):
         allow_null=True,
     )
 
-    xls_file = serializers.FileField(
+    file = serializers.FileField(
         write_only=True,
         allow_null=True,
         default=None,
-        label=_('XLS Form'),
-        help_text=_('Upload file with XLS Form definition'),
-    )
-    xml_file = serializers.FileField(
-        write_only=True,
-        allow_null=True,
-        default=None,
-        label=_('XML File'),
-        help_text=_('Upload file with XML Data definition'),
+        label=_('XLS Form / XML File'),
+        help_text=_('Upload an XLS Form or an XML File'),
     )
 
     def validate(self, value):
-        if value['xls_file']:
+        if value['file']:
             # extract data from file and put it on `xml_data`
-            value['xml_data'] = parse_xlsform(value['xls_file'])
-        value.pop('xls_file')
-
-        if value['xml_file']:
-            # extract data from file and put it on `xml_data`
-            value['xml_data'] = parse_xmlform(value['xml_file'])
-        value.pop('xml_file')
+            value['xml_data'] = parse_file(
+                filename=str(value['file']),
+                content=value['file'],
+            )
+        value.pop('file')
 
         return super(XFormSerializer, self).validate(value)
 
@@ -104,3 +80,18 @@ class SurveyorSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('id', 'username', 'password', )
+
+
+class SurveySerializer(serializers.ModelSerializer):
+
+    url = serializers.HyperlinkedIdentityField('survey-detail', read_only=True)
+    surveyors = serializers.PrimaryKeyRelatedField(
+        label=_('Surveyors'),
+        many=True,
+        queryset=get_surveyors(),
+        allow_null=True,
+    )
+
+    class Meta:
+        model = Survey
+        fields = '__all__'
