@@ -22,6 +22,7 @@ class XFormSerializer(serializers.ModelSerializer):
         many=True,
         queryset=get_surveyors(),
         allow_null=True,
+        default=[],
     )
 
     file = serializers.FileField(
@@ -82,6 +83,13 @@ class SurveyorSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'password', )
 
 
+class XFormSimpleSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = XForm
+        fields = '__all__'
+
+
 class SurveySerializer(serializers.ModelSerializer):
 
     url = serializers.HyperlinkedIdentityField('survey-detail', read_only=True)
@@ -90,7 +98,10 @@ class SurveySerializer(serializers.ModelSerializer):
         many=True,
         queryset=get_surveyors(),
         allow_null=True,
+        default=[],
     )
+    # this will return all linked xForms in one request call
+    xforms = XFormSimpleSerializer(read_only=True, many=True)
 
     class Meta:
         model = Survey

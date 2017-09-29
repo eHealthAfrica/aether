@@ -19,7 +19,6 @@ class SerializersTests(CustomTestCase):
                 'survey': 1,
                 'description': 'test xml data',
                 'xml_data': self.samples['xform']['raw-xml'],
-                'surveyors': [],
             },
             context={'request': self.request},
         )
@@ -39,7 +38,6 @@ class SerializersTests(CustomTestCase):
                 'survey': 1,
                 'description': 'test xml file',
                 'file': file,
-                'surveyors': [],
             },
             context={'request': self.request},
         )
@@ -60,7 +58,6 @@ class SerializersTests(CustomTestCase):
                 'survey': 1,
                 'description': 'test xls file',
                 'file': file,
-                'surveyors': [],
             },
             context={'request': self.request},
         )
