@@ -11,18 +11,19 @@ IMAGE_REPO="387526361725.dkr.ecr.eu-west-1.amazonaws.com"
 
 if [ "${BRANCH}" == "develop" ]; then
   export ENV="dev"
+  export PREFIX="gather2"
   export CLUSTER_NAME="gather2"
 elif [ "${BRANCH}" == "master" ]; then
   echo "commit on master, setting ENV to production"
   export ENV="prod"
-  export PREFIX="-grid"
+  export PREFIX="grid"
   export CLUSTER_NAME="ehealth-africa"
 fi
 
 $(aws ecr get-login --region="${AWS_DEFAULT_REGION}")
 for APP in "${APPS[@]}"
 do
-  GATHER2_APP="gather2${PREFIX}-${APP}"
+  GATHER2_APP="${PREFIX}-${APP}"
   docker-compose build $APP
   echo "Building Docker image ${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${BRANCH}"
   docker tag $APP "${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${BRANCH}"
