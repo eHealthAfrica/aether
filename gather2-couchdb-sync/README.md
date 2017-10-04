@@ -52,6 +52,8 @@ When going to the admin interface, find a model called DeviceDB. Under the Devic
 #### Re-running all imports including the ones that got imported already.
 If this is the effect you want, you'll need to delete all the `-synced` documents. You probably wanna write a CouchDB view for this, and then script deleting all the documents.
 
+#### Run the import task manually
+The import task can be run manually in development with: `docker-compose run couchdb-sync manage rqenqueue "importer.tasks.import_synced_devices_task"`
 
 Testing sync locally
 ----
@@ -86,4 +88,3 @@ Everything about the Google Tokens
 - Anywhere you use a GOOGLE_CLIENT ID it should always be the **Web Application** one. The **Android** is **never to be used but it needs to be there**
 
 - When you do the **Android** you need to hash the signing certificate for the App. You need one for debug key and one for release key. Run `keytool -exportcert -list -v -alias release -keystore ./android.release.keystore` (you need to decrypt the release keystore first) and submit the resulting **SHA-1** hash.
-

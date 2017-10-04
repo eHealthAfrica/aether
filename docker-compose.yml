@@ -133,7 +133,7 @@ services:
         environment: *sync-environment
         volumes: *sync-volumes
         depends_on: *sync-dependencies
-        command: start_rq_dev
+        command: start_rq
 
 
     # ---------------------------------

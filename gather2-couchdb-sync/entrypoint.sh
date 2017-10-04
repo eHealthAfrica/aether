@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-
 # Define help message
 show_help() {
     echo """
@@ -24,7 +23,6 @@ show_help() {
     start_dev     : start webserver for development
 
     start_rq      : start rq worker and scheduler
-    start_rq_dev  : start rq worker and scheduler for development
     """
 }
 
@@ -148,18 +146,26 @@ case "$1" in
     ;;
 
     start_rq )
-        ./manage.py rqscheduler &
-        ./manage.py rqworker default
-    ;;
+        # Start the rq worker and rq scheduler.
+        # To cleanly shutdown both, this script needs to capture SIGINT
+        # and SIGTERM and forward them to the worker and scheduler.
+        _term() {
+            kill -TERM "$scheduler" 2>/dev/null
+            kill -TERM "$worker" 2>/dev/null
+        }
+        trap _term SIGINT SIGTERM
 
-    start_rq_dev )
-        # In local dev we assign a random name to the rq worker,
-        # to get around conflicts when restarting its container.
-        # RQ uses the PID as part of it's name and that does not
-        # change with container restarts and RQ the exits because
-        # it finds the old worker under it's name in redis.
         ./manage.py rqscheduler &
-        ./manage.py rqworker default --name "rq-${RANDOM}"
+        scheduler=$!
+
+        # We assign a random worker name to avoid collisions with old worker
+        # values in redis. RQ uses the hostname and PID as name and those
+        # might be the same as before when restarting the container.
+        ./manage.py rqworker default --name "rq-${RANDOM}" &
+        worker=$!
+
+        wait $scheduler
+        wait $worker
     ;;
 
     help)
