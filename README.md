@@ -57,14 +57,16 @@ of the most common ones with non default values. For more info take a look at th
 
 #### Gather Core
 
-- `HOSTNAME`: `http://core.gather2.local:8000` Used by UMS.
+- `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
+- `HOSTNAME`: `core.gather2.local` Used by UMS.
 - `RDS_DB_NAME`: `gather2` Postgres database name.
 - `WEB_SERVER_PORT`: `8000` Web server port.
 
 
 #### Gather ODK Importer
 
-- `HOSTNAME`: `http://odk.gather2.local:8443` Used by UMS.
+- `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
+- `HOSTNAME`: `odk.gather2.local` Used by UMS.
 - `RDS_DB_NAME`: `odk_importer` Postgres database name.
 - `WEB_SERVER_PORT`: `8443` Web server port.
 - `GATHER_CORE_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24` Token to connect to core server.
@@ -74,7 +76,8 @@ of the most common ones with non default values. For more info take a look at th
 
 #### Gather Couchdb Sync
 
-- `HOSTNAME`: `http://sync.gather2.local:8666` Used by UMS.
+- `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
+- `HOSTNAME`: `sync.gather2.local` Used by UMS.
 - `RDS_DB_NAME`: `couchdb_sync` Postgres database name.
 - `WEB_SERVER_PORT`: `8666` Web server port.
 - `GATHER_CORE_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24` Token to connect to core server.
@@ -85,7 +88,8 @@ of the most common ones with non default values. For more info take a look at th
 
 #### Gather UI
 
-- `HOSTNAME`: `http://ui.gather2.local:8080` Used by UMS.
+- `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
+- `HOSTNAME`: `ui.gather2.local` Used by UMS.
 - `RDS_DB_NAME`: `ui` Postgres database name.
 - `WEB_SERVER_PORT`: `8080` Web server port.
 - `GATHER_ORG_NAME`: `eHealth Africa` Text to be displayed as page title.
@@ -133,6 +137,10 @@ All the created superusers have password `adminadmin` in each container.
 
 The app defers part of the users management to
 [eHA UMS tool](https://github.com/eHealthAfrica/ums).
+
+Set the `HOSTNAME` and `CAS_SERVER_URL` environment variables if you want to
+activate the UMS integration in each container.
+
 
 #### UMS settings for local development
 

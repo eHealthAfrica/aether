@@ -34,7 +34,7 @@ services:
             CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
             CSRF_COOKIE_DOMAIN: .gather2.local
             TESTING: "true"
-            HOSTNAME: http://core.gather2.local:9000
+            HOSTNAME: core.gather2.local
 
             RDS_DB_NAME: gather2-core-testing
             RDS_HOSTNAME: db-test
@@ -62,7 +62,7 @@ services:
             CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
             CSRF_COOKIE_DOMAIN: .gather2.local
             TESTING: "true"
-            HOSTNAME: http://odk.gather2.local:9443
+            HOSTNAME: odk.gather2.local
 
             GATHER_CORE_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
             GATHER_CORE_URL_TEST: http://core-test:9000
@@ -94,7 +94,7 @@ services:
             CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
             CSRF_COOKIE_DOMAIN: .gather2.local
             TESTING: "true"
-            HOSTNAME: http://sync.gather2.local:9666
+            HOSTNAME: sync.gather2.local
 
             COUCHDB_PASSWORD: secret
             COUCHDB_URL: http://couchdb-test:5984
@@ -139,7 +139,7 @@ services:
             CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
             CSRF_COOKIE_DOMAIN: .gather2.local
             TESTING: "true"
-            HOSTNAME: http://ui.gather2.local:9090
+            HOSTNAME: ui.gather2.local
             STATIC_ROOT: /code/ui/assets/bundles
 
             GATHER_ORG_NAME: eHealth Africa (Dev mode)
