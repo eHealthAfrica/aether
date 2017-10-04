@@ -139,6 +139,7 @@ case "$1" in
     start )
         setup_db
         npm run webpack
+        envsubst < /code/conf/aws.sh.tmpl > /code/conf/aws.sh
         . ./conf/aws.sh
         ./manage.py collectstatic --noinput
         cp -r /code/ui/assets/bundles/* /var/www/static/

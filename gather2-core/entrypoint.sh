@@ -125,6 +125,7 @@ case "$1" in
 
     start )
         setup_db
+        envsubst < /code/conf/aws.sh.tmpl > /code/conf/aws.sh 
         . ./conf/aws.sh
         ./manage.py collectstatic --noinput
         chmod -R 755 /var/www/static
