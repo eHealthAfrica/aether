@@ -28,11 +28,11 @@ deploy:
     on:
       branch: master
 
-  - provider: script
-    script: "./scripts/deploy.sh"
-    skip_cleanup: true
-    on:
-      branch: lake-chad-basin
+  # - provider: script
+  #   script: "./scripts/deploy.sh"
+  #   skip_cleanup: true
+  #   on:
+  #     branch: lake-chad-basin
 
 env:
   global:
