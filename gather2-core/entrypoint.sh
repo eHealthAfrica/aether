@@ -125,8 +125,9 @@ case "$1" in
 
     start )
         setup_db
-        envsubst < /code/conf/aws.sh.tmpl > /code/conf/aws.sh 
-        . ./conf/aws.sh
+        ./code/conf/aws_cli_setup.sh
+        envsubst < /code/conf/aws.sh.tmpl > /code/conf/aws.sh
+        ./conf/aws.sh
         ./manage.py collectstatic --noinput
         chmod -R 755 /var/www/static
         /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
