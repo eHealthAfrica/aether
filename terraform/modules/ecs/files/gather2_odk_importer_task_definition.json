@@ -40,6 +40,8 @@
       { "name": "DJANGO_USE_X_FORWARDED_HOST", "value": "${django_use_x_forwarded_host}"},
       { "name": "GATHER_CORE_URL", "value": "${gather2_core_url}"},
       { "name": "GATHER_CORE_TOKEN", "value": "${gather2_token}"},
+      { "name": "AWS_KEY", "value": "${aws_key}"},
+      { "name": "AWS_SECRET_KEY", "value": "${aws_secret_key}"},
       { "name": "SENTRY_DSN", "value": "${sentry_dsn}"}
     ],
     "mountPoints": [

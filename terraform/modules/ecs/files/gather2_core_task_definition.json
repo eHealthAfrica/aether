@@ -20,6 +20,8 @@
       { "name": "CSRF_COOKIE_DOMAIN", "value": "${domain}"},
       { "name": "CSRF_TRUSTED_ORIGINS", "value": "${domain}"},
       { "name": "SENTRY_DSN", "value": "${sentry_dsn}"},
+      { "name": "AWS_KEY", "value": "${aws_key}"},
+      { "name": "AWS_SECRET_KEY", "value": "${aws_secret_key}"},
       { "name": "MEDIA_ROOT", "value": "/data"}
     ],
     "mountPoints": [

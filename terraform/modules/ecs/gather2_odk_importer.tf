@@ -77,6 +77,14 @@ data "credstash_secret" "gather2_odk_sentry_dsn" {
   name = "${var.project}-${var.environment}-sentry-dsn"
 }
 
+data "credstash_secret" "aws_key_odk" {
+  name = "ecs-secrets-${var.environment}-aws_key"
+}
+
+data "credstash_secret" "aws_secret_key_odk" {
+  name = "ecs-secrets-${var.environment}-aws_secret_key"
+}
+
 data "template_file" "gather2_odk_importer" {
   template = "${file("${path.module}/files/gather2_odk_importer_task_definition.json")}"
 
@@ -99,6 +107,8 @@ data "template_file" "gather2_odk_importer" {
     google_client_id = "${data.credstash_secret.google_client_id.value}"
     gather2_core_url = "${replace("https://${var.core_url}-${var.environment}", "-prod", "")}.${var.domain}"
     sentry_dsn = "${data.credstash_secret.gather2_sync_sentry_dsn.value}"
+    aws_key = "${data.credstash_secret.aws_key_odk.value}"
+    aws_secret_key = "${data.credstash_secret.aws_secret_key_odk.value}"
   }
 }
 

@@ -77,6 +77,14 @@ data "credstash_secret" "gather2_core_sentry_dsn" {
   name = "${var.project}-${var.environment}-sentry-dsn"
 }
 
+data "credstash_secret" "aws_key_core" {
+  name = "ecs-secrets-${var.environment}-aws_key"
+}
+
+data "credstash_secret" "aws_secret_key_core" {
+  name = "ecs-secrets-${var.environment}-aws_secret_key"
+}
+
 data "template_file" "gather2_core" {
   template = "${file("${path.module}/files/gather2_core_task_definition.json")}"
 
@@ -96,6 +104,8 @@ data "template_file" "gather2_core" {
     django_use_x_forwarded_host = "1"
     domain = ".${var.domain}"
     sentry_dsn = "${data.credstash_secret.gather2_core_sentry_dsn.value}"
+    aws_key = "${data.credstash_secret.aws_key_core.value}"
+    aws_secret_key = "${data.credstash_secret.aws_secret_key_core.value}"
   }
 }
 

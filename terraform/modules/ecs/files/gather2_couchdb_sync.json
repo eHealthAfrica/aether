@@ -36,6 +36,8 @@
       { "name": "REDIS_HOST", "value": "redis"},
       { "name": "REDIS_PORT", "value": "6379"},
       { "name": "REDIS_DATABASE", "value": "0"},
+      { "name": "AWS_KEY", "value": "${aws_key}"},
+      { "name": "AWS_SECRET_KEY", "value": "${aws_secret_key}"},
       { "name": "SENTRY_DSN", "value": "${sentry_dsn}"}
     ]
   },

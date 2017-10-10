@@ -35,6 +35,14 @@ data "credstash_secret" "gather2_sync_sentry_dsn" {
   name = "${var.project}-${var.environment}-sentry-dsn"
 }
 
+data "credstash_secret" "aws_key_sync" {
+  name = "ecs-secrets-${var.environment}-aws_key"
+}
+
+data "credstash_secret" "aws_secret_key_sync" {
+  name = "ecs-secrets-${var.environment}-aws_secret_key"
+}
+
 data "template_file" "gather2_couchdb_sync" {
   template = "${file("${path.module}/files/gather2_couchdb_sync.json")}"
 
@@ -56,6 +64,8 @@ data "template_file" "gather2_couchdb_sync" {
     gather2_core_url = "${replace("https://core-gather-${var.environment}.ehealthafrica.org", "-prod", "")}"
     sentry_dsn = "${data.credstash_secret.gather2_sync_sentry_dsn.value}"
     domain = ".${var.domain}"
+    aws_key = "${data.credstash_secret.aws_key_sync.value}"
+    aws_secret_key = "${data.credstash_secret.aws_secret_key_sync.value}"
   }
 }
 
