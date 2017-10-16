@@ -132,6 +132,7 @@ case "$1" in
 
     start )
         setup_db
+        envsubst < /code/conf/aws_cli_setup.sh.tmpl > /code/conf/aws_cli_setup.sh
         /code/conf/aws_cli_setup.sh
         envsubst < /code/conf/aws.sh.tmpl > /code/conf/aws.sh
         /code/conf/aws.sh

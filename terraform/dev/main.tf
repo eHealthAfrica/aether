@@ -2,46 +2,69 @@ module "rds" {
   source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//rds"
   project = "${var.project}"
   environment = "${var.environment}"
-  private_subnets = "${split(",", var.private_subnets)}"
-  internal_sg_id = "${module.autoscaling.internal_sg_id}"
-  db_engine_type = "${var.db_engine_type}"
-  db_engine_version = "${var.db_engine_version}"
   project_billing_id = "${var.project_billing_id}"
+  cluster_name = "ehealth-africa-dev"
 }
 
-module "efs" {
-  source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//efs"
-  private_subnets = "${split(",", var.private_subnets)}"
-  aws_region = "${var.aws_region}"
-  performance_mode = "maxIO"
-  internal_sg_id = "${module.autoscaling.internal_sg_id}"
-}
-
-module "ecs" {
-  source = "../modules/ecs"
+module "odk" {
+  source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_service"
   environment = "${var.environment}"
-  vpc_id = "${var.vpc_id}"
   project = "${var.project}"
-  private_subnets = "${split(",", var.private_subnets)}"
-  public_subnets = "${split(",", var.public_subnets)}"
-  internal_sg_id = "${module.autoscaling.internal_sg_id}"
-  iam_role_id = "${module.autoscaling.aws_iam_role_ecs_service}"
   database_hostname = "${module.rds.database_hostname}"
-  deploy_branch = "develop"
-  core_url = "core-gather"
-  odk_url = "odk-importer-gather"
-  couchdb_sync_url = "couchdb-sync-gather"
-  domain = "ehealthafrica.org"
+  app = "odk"
+  application_memory = 512
+  http_rule_priority = 11
+  domain = "ehealthafrica"
 }
 
-# // Creates ECS cluster and SG's
-module "autoscaling" {
-  source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//autoscaling"
+module "core" {
+  source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_service"
   environment = "${var.environment}"
   project = "${var.project}"
-  project_billing_id = "${var.project_billing_id}"
-  private_subnets = "${split(",", var.private_subnets)}"
-  vpc_id = "${var.vpc_id}"
-  target_group_arns = ["${module.ecs.core_target_group}","${module.ecs.odk_importer_target_group}","${module.ecs.couchdb_sync_target_group}"]
-  efs_id = "${module.efs.efs_output}"
+  database_hostname = "${module.rds.database_hostname}"
+  app = "core"
+  application_memory = 512
+  http_rule_priority = 12 
+  domain = "ehealthafrica"
+}
+
+module "couchcb_sync" {
+  source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_service"
+  environment = "${var.environment}"
+  project = "${var.project}"
+  app = "sync"
+  database_hostname = "${module.rds.database_hostname}"
+  application_memory = 512
+  http_rule_priority = 13 
+  domain = "ehealthafrica"
+}
+
+module "couchcb" {
+  // source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_service"
+  source = "../../../ehealth-deployment/terraform/modules/generic_ecs_data_service"
+  image_url = "couchdb"
+  environment = "${var.environment}"
+  project = "${var.project}"
+  database_hostname = "${module.rds.database_hostname}"
+  service = "couchdb"
+  container_memory = 512
+  data_dir = "/var/lib/couchdb"
+  app = "sync"
+  port = 5984
+  domain = "ehealthafrica"
+}
+
+module "redis" {
+  // source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_service"
+  source = "../../../ehealth-deployment/terraform/modules/generic_ecs_data_service"
+  environment = "${var.environment}"
+  project = "${var.project}"
+  image_url = "redis"
+  database_hostname = "${module.rds.database_hostname}"
+  service = "redis"
+  container_memory = 512
+  app = "sync"
+  port = 6379
+  data_dir = "/data"
+  domain = "ehealthafrica"
 }
