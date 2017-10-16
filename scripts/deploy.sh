@@ -12,7 +12,7 @@ IMAGE_REPO="387526361725.dkr.ecr.eu-west-1.amazonaws.com"
 if [ "${BRANCH}" == "develop" ]; then
   export ENV="dev"
   export PREFIX="gather2"
-  export CLUSTER_NAME="gather2"
+  export CLUSTER_NAME="ehealth-africa"
 elif [ "${BRANCH}" == "master" ]; then
   echo "commit on master, setting ENV to production"
   export ENV="prod"
