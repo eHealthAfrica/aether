@@ -1,6 +1,13 @@
 import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 
+/**
+ * EmptyAlert component.
+ *
+ * Renders an alert message indicating that no data was found
+ * while requesting it from server.
+ */
+
 export default class EmptyAlert extends Component {
   render () {
     return (

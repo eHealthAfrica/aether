@@ -1,20 +1,31 @@
-.pagination {
+.pagination-bar {
   align-items: baseline;
   background: $action-color;
   border-radius: 0;
   color: $text-color;
   display: flex;
   flex-direction: row;
-  justify-content: flex-end;
+  justify-content: space-between;
   font: $font-size-s $nav-font-family;
   font-weight: 500;
   margin: 0;
   padding: .6rem 3rem;
   box-shadow: 0 -1px 2px rgba($text-color, .5);
 
-  li {
-    display: inline;
-    margin: 0 10px;
+  .pagination {
+    margin: 0;
+    border-left: 1px solid $light-grey;
+    border-radius: 0;
+    display: flex;
+    justify-content: flex-end;
+    align-items: baseline;
+    padding-left: .75rem;
+    flex: 1 1 content;
+
+    li {
+      display: inline;
+      margin: 0 10px;
+    }
   }
 
   .current-page {
@@ -62,6 +73,33 @@
     &:hover {
       color: $action-color;
       background: $white;
+    }
+  }
+
+  .search {
+    flex: 3 1 0;
+    display: flex;
+    align-items: baseline;
+
+    &::before {
+      content: '\f002';
+      display: inline-block;
+      font-family: $icon-font;
+      font-size: 1.3em;
+      color: $light-grey;
+    }
+
+    input {
+      border-bottom: 1px dotted $light-grey;
+      border-radius: 0;
+      border: 0;
+      display: inline;
+      color: inherit;
+      font-family: $nav-font-family;
+      font-size: $font-size-standard;
+      padding: .5rem 1rem;
+      background: none;
+      min-width: 6rem;
     }
   }
 }

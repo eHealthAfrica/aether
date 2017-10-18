@@ -1,6 +1,13 @@
 import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 
+/**
+ * FetchErrorAlert component.
+ *
+ * Renders an alert message indicating that an error happened
+ * while requesting data from server.
+ */
+
 export default class FetchErrorAlert extends Component {
   render () {
     return (

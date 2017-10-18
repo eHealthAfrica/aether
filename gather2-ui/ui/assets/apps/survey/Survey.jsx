@@ -87,6 +87,7 @@ export default class Survey extends Component {
           url={getResponsesAPIPath({surveyId: survey.id})}
           position='top'
           listComponent={ResponseComponent}
+          search
           showPrevious
           showNext
         />

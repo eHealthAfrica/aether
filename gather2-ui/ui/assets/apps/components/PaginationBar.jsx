@@ -25,6 +25,11 @@ const MESSAGES = defineMessages({
     id: 'pagination.next'
   },
 
+  search: {
+    defaultMessage: 'Search…',
+    id: 'pagination.search'
+  },
+
   record: {
     defaultMessage: 'Record {current} of {total}',
     id: 'pagination.type.record'
@@ -34,6 +39,19 @@ const MESSAGES = defineMessages({
     id: 'pagination.type.page'
   }
 })
+
+/**
+ * PaginationBar component.
+ *
+ * Renders the bar with:
+ *  - the search input (optional),
+ *  - the current page, an interactive input to go to the indicated page, and
+ *  - the pagination buttons:
+ *     - FIRST,
+ *     - PREVIOUS,
+ *     - NEXT and
+ *     - LAST.
+ */
 
 export class PaginationBar extends Component {
   constructor (props) {
@@ -51,12 +69,24 @@ export class PaginationBar extends Component {
   }
 
   render (list) {
-    if (this.getNumberOfPages() < 2) {
+    if (this.getNumberOfPages() < 2 && !this.props.search) {
       return <div />
     }
 
+    if (this.getNumberOfPages() === 0) {
+      return (
+        <nav data-qa='data-pagination' className='pagination-bar'>
+          { /* render SEARCH */ }
+          { this.renderSearchBar() }
+        </nav>
+      )
+    }
+
     return (
-      <nav data-qa='data-pagination'>
+      <nav data-qa='data-pagination' className='pagination-bar'>
+        { /* render SEARCH */ }
+        { this.renderSearchBar() }
+
         <ul className='pagination'>
           { /* go to FIRST page */}
           { this.renderLinkToPage('first') }
@@ -87,6 +117,35 @@ export class PaginationBar extends Component {
 
   getNumberOfPages () {
     return Math.ceil(this.props.records / this.props.pageSize)
+  }
+
+  renderSearchBar () {
+    if (!this.props.search) {
+      return ''
+    }
+
+    const onChange = (event) => {
+      this.setState({ [event.target.name]: event.target.value })
+    }
+    const onKeyPress = (event) => {
+      if (event.charCode === 13) { // Enter
+        this.props.onSearch(this.state.search)
+      }
+    }
+    const {formatMessage} = this.props.intl
+
+    return (
+      <div data-qa='data-pagination-search' className='search'>
+        <input
+          type='search'
+          name='search'
+          placeholder={formatMessage(MESSAGES.search)}
+          value={this.state.search || ''}
+          onChange={onChange}
+          onKeyPress={onKeyPress}
+        />
+      </div>
+    )
   }
 
   renderNumberOfPages () {

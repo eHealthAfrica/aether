@@ -16,6 +16,12 @@ const renderEmptyValue = () => {
   )
 }
 
+/**
+ * JSONViewer component.
+ *
+ * Renders a JSON object in "pretty" format.
+ */
+
 export default class JSONViewer extends Component {
   render () {
     const {data} = this.props

@@ -77,7 +77,7 @@ const buildAPIPath = (app, type, id, params) => {
  * @param {number} page         - current page
  * @param {number} pageSize     - page size
  */
-const buildQueryString = ({surveyId, search, page, pageSize}) => {
+export const buildQueryString = ({surveyId, search, page, pageSize}) => {
   return (search ? `&search=${encodeURIComponent(search)}` : '') +
          (surveyId ? `&survey_id=${surveyId}` : '') +
          (page ? `&page=${page}` : '') +

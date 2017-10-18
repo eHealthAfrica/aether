@@ -1,5 +1,11 @@
 import React, { Component } from 'react'
 
+/**
+ * HelpMessage component.
+ *
+ * Renders a question button that shows/hides a help message.
+ */
+
 export default class HelpMessage extends Component {
   render () {
     const randomId = `help-content-${Math.random().toString(36).slice(2)}`

@@ -1,6 +1,12 @@
 import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 
+/**
+ * LoadingSpinner component.
+ *
+ * Renders a spinner indicating that data is being loaded from server.
+ */
+
 export default class LoadingSpinner extends Component {
   render () {
     return (

@@ -56,6 +56,7 @@ switch (action) {
         url={getSurveysAPIPath({withStats: true})}
         position='top'
         listComponent={SurveysList}
+        search
         showPrevious
         showNext
       />

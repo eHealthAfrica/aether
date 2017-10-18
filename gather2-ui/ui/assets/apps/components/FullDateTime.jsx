@@ -5,6 +5,13 @@ import {
   FormattedTime
 } from 'react-intl'
 
+/**
+ * FullDateTime component.
+ *
+ * Renders the given date in long format including the relative time.
+ * Like: October 17, 2017 18:30:20 GMT+2 (1 hour ago)
+ */
+
 export default class FullDateTime extends Component {
   render () {
     const {date} = this.props

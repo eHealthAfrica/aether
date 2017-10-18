@@ -44,6 +44,7 @@ switch (action) {
         pageSize={36}
         url={getSurveyorsAPIPath({})}
         listComponent={SurveyorsList}
+        search
         showPrevious
         showNext
       />

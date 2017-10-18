@@ -17,6 +17,13 @@ const MESSAGES = defineMessages({
   }
 })
 
+/**
+ * MultiSelect component.
+ *
+ * Renders a multi-select component similar to Django MultiSelect widget.
+ * https://github.com/insin/react-filtered-multiselect
+ */
+
 export class MultiSelect extends Component {
   constructor (props) {
     super(props)

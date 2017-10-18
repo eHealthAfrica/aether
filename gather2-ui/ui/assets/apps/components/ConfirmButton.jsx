@@ -86,7 +86,6 @@ export default class ConfirmButton extends Component {
   }
 
   execute () {
-    this.setState({ open: false })
-    this.props.onConfirm()
+    this.setState({ open: false }, this.props.onConfirm)
   }
 }

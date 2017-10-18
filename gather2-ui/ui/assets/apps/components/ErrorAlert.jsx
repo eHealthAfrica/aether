@@ -1,5 +1,12 @@
 import React, { Component } from 'react'
 
+/**
+ * ErrorAlert component.
+ *
+ * Renders a list of alert messages indicating the errors that happened
+ * while executing any action.
+ */
+
 export default class ErrorAlert extends Component {
   render () {
     const {errors} = this.props

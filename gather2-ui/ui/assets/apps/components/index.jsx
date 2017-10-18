@@ -12,6 +12,7 @@ import LoadingSpinner from './LoadingSpinner'
 import MultiSelect from './MultiSelect'
 import PaginationBar from './PaginationBar'
 import PaginationContainer from './PaginationContainer'
+import RefreshSpinner from './RefreshSpinner'
 import WarningAlert from './WarningAlert'
 
 // export all components
@@ -29,5 +30,6 @@ export {
   MultiSelect,
   PaginationBar,
   PaginationContainer,
+  RefreshSpinner,
   WarningAlert
 }
