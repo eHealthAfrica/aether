@@ -11,7 +11,7 @@ module "odk" {
   environment = "${var.environment}"
   project = "${var.project}"
   database_hostname = "${module.rds.database_hostname}"
-  app = "odk"
+  app = "odk-importer"
   application_memory = 512
   http_rule_priority = 11
   domain = "ehealthafrica"
@@ -32,7 +32,7 @@ module "couchcb_sync" {
   source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_service"
   environment = "${var.environment}"
   project = "${var.project}"
-  app = "sync"
+  app = "couchdb-sync"
   database_hostname = "${module.rds.database_hostname}"
   application_memory = 512
   http_rule_priority = 13 

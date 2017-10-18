@@ -140,8 +140,9 @@ case "$1" in
         setup_db
         npm run webpack
         envsubst < /code/conf/aws_cli_setup.sh.tmpl > /code/conf/aws_cli_setup.sh
-        /code/conf/aws_cli_setup.sh
         envsubst < /code/conf/aws.sh.tmpl > /code/conf/aws.sh
+        chmod +x /code/conf/aws*
+        /code/conf/aws_cli_setup.sh
         /code/conf/aws.sh
         ./manage.py collectstatic --noinput
         cp -r /code/ui/assets/bundles/* /var/www/static/
