@@ -27,6 +27,8 @@ button {
   @include label;
   border: 0;
   border-color: transparent;
+  background-color: $action-color;
+  color: $white;
 
   &:active,
   &:focus,
@@ -34,6 +36,7 @@ button {
     box-shadow: none;
     cursor: pointer;
     outline: none;
+    background-color: $hover-color;
   }
 }
 
@@ -81,7 +84,14 @@ a.btn-primary:not([href]) {
   font-size: .86rem;
   width: 1.3rem;
   height: 1.3rem;
-  padding: .1rem .3rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-danger {
+  background: $red;
 }
 
 .btn-cancel {
@@ -117,6 +127,7 @@ a.btn-primary:not([href]) {
 
   &:hover {
     color: $hover-color;
+    background: none;
   }
 }
 
@@ -128,6 +139,11 @@ a.btn-primary:not([href]) {
   &:hover {
     background: $hover-color;
     color: $white;
+  }
+
+  &:disabled,
+  &.disabled {
+    background-color: $grey;
   }
 }
 
@@ -152,12 +168,19 @@ a.btn-primary:not([href]) {
 }
 
 input[type='password'],
-input[type='text'] {
+input[type='text'],
+textarea,
+textarea.form-control {
   border: 0;
   border-radius: 0;
   box-shadow: 1px 1px 1px rgba($text-color, .3) inset;
   font-family: $body-font-family;
   padding: .8em;
+
+  &:disabled {
+    background: $lighter-grey;
+    color: $light-grey;
+  }
 }
 
 input,

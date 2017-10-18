@@ -3,8 +3,11 @@ import requests
 import xmltodict
 
 from dateutil import parser
-from django.shortcuts import get_object_or_404
 from geojson import Point
+
+from django.db import transaction
+from django.shortcuts import get_object_or_404
+from django.utils.translation import ugettext as _
 
 from rest_framework import viewsets, status
 from rest_framework.authentication import BasicAuthentication
@@ -33,6 +36,116 @@ class SurveyViewset(viewsets.ModelViewSet):
     queryset = Survey.objects.order_by('name')
     serializer_class = SurveySerializer
     search_fields = ('name',)
+
+    def partial_update(self, request, pk, *args, **kwargs):
+        '''
+        We are posting the xForms in only one call, to update them all together.
+
+        There are two options:
+        - JSON format
+        - Multipart format
+
+        The first case will be straight forward, the second one will imply FILES.
+        This means that only a list with the form id and the file will be sent.
+        The xforms will be created or updated with this info.
+        '''
+
+        instance = get_object_or_404(Survey, pk=pk)
+        data = request.data
+
+        if request.FILES or 'files' in data:
+            return self.partial_update_with_files(request, instance)
+
+        if 'xforms' not in data:
+            return Response(
+                data={'xforms': [_('This field is required')]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return self.partial_update_without_files(request, instance, data['xforms'])
+
+    @transaction.atomic
+    def partial_update_with_files(self, request, survey):
+        '''
+        Updates or creates xForms with file content.
+
+        Expected format:
+        - `files`: number of files to upload
+            For each # in length range:
+                - `id_#`: xform id or 0 for new entries
+                - `file_#`: file content
+        '''
+        for index in range(int(request.data['files'])):
+            xform_id = int(request.data['id_' + str(index)])
+            data = {
+                'survey': survey.pk,
+                'xml_file': request.data['file_' + str(index)],
+            }
+
+            if xform_id > 0:
+                data['id'] = xform_id
+                serializer = XFormSerializer(
+                    XForm.objects.get(pk=xform_id),
+                    data=data,
+                    context={'request': request},
+                )
+            else:
+                serializer = XFormSerializer(
+                    data=data,
+                    context={'request': request},
+                )
+
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        return Response(
+            data=self.serializer_class(survey, context={'request': request}).data,
+            status=status.HTTP_200_OK
+        )
+
+    @transaction.atomic
+    def partial_update_without_files(self, request, survey, xforms):
+        '''
+        Every time that a Survey is partially updated all its xForms are also
+        created, updated or even deleted if they are not longer in use.
+        '''
+
+        xform_ids = []
+        for xform in xforms:
+            xform['survey'] = survey.pk
+
+            if 'id' in xform and xform['id']:
+                serializer_xform = XFormSerializer(
+                    XForm.objects.get(pk=xform['id']),
+                    data=xform,
+                    context={'request': request},
+                )
+            else:
+                serializer_xform = XFormSerializer(data=xform, context={'request': request})
+
+            if serializer_xform.is_valid():
+                serializer_xform.save()
+                xform_ids.append(serializer_xform.data['id'])
+            else:
+                return Response(
+                    data=serializer_xform.errors,
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        # remove orphans form survey
+        XForm.objects \
+             .filter(survey=survey) \
+             .exclude(id__in=xform_ids) \
+             .delete()
+
+        return Response(
+            data=self.serializer_class(survey, context={'request': request}).data,
+            status=status.HTTP_200_OK
+        )
 
 
 class XFormViewset(viewsets.ModelViewSet):

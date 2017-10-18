@@ -30,14 +30,14 @@ class SerializersTests(CustomTestCase):
 
     def test_xform_serializer__with_xml_file(self):
         with open(self.samples['xform']['file-xml'], 'rb') as data:
-            file = SimpleUploadedFile('xform.xml', data.read())
+            content = SimpleUploadedFile('xform.xml', data.read())
 
         self.helper_create_survey(survey_id=1)
         xform = XFormSerializer(
             data={
                 'survey': 1,
                 'description': 'test xml file',
-                'file': file,
+                'xml_file': content,
             },
             context={'request': self.request},
         )
@@ -50,14 +50,14 @@ class SerializersTests(CustomTestCase):
 
     def test_xform_serializer__with_xls_file(self):
         with open(self.samples['xform']['file-xls'], 'rb') as data:
-            file = SimpleUploadedFile('xform.xls', data.read())
+            content = SimpleUploadedFile('xform.xls', data.read())
 
         self.helper_create_survey(survey_id=1)
         xform = XFormSerializer(
             data={
                 'survey': 1,
                 'description': 'test xls file',
-                'file': file,
+                'xml_file': content,
             },
             context={'request': self.request},
         )

@@ -69,27 +69,40 @@ class SerializersTests(TransactionTestCase):
         )
         self.assertTrue(survey.is_valid())
 
-    def test_survey_serializer__with_schema_file(self):
+    def test_survey_serializer__with_schema_file__empty(self):
         with open('/code/core/tests/files/empty_schema.json', 'rb') as data:
-            file = SimpleUploadedFile('schema.json', data.read())
+            content = SimpleUploadedFile('schema.json', data.read())
 
         survey = SurveySerializer(
             data={
                 'name': 'a name',
-                'schema_file': file,
+                'schema_file': content,
             },
             context={'request': self.request}
         )
         self.assertTrue(survey.is_valid())
 
-    def test_survey_serializer__with_schema_file_2(self):
-        with open('/code/core/tests/files/sample_schema.json', 'rb') as data:
-            file = SimpleUploadedFile('schema.json', data.read())
+    def test_survey_serializer__with_schema_file__err(self):
+        with open('/code/core/tests/files/err_schema.json', 'rb') as data:
+            content = SimpleUploadedFile('schema.json', data.read())
 
         survey = SurveySerializer(
             data={
                 'name': 'a name',
-                'schema_file': file,
+                'schema_file': content,
+            },
+            context={'request': self.request}
+        )
+        self.assertFalse(survey.is_valid())
+
+    def test_survey_serializer__with_schema_file__with_content(self):
+        with open('/code/core/tests/files/sample_schema.json', 'rb') as data:
+            content = SimpleUploadedFile('schema.json', data.read())
+
+        survey = SurveySerializer(
+            data={
+                'name': 'a name',
+                'schema_file': content,
             },
             context={'request': self.request}
         )

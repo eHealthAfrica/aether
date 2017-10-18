@@ -39,7 +39,7 @@ class SurveyAdmin(admin.ModelAdmin):
 
 class XFormForm(forms.ModelForm):
 
-    file = forms.FileField(
+    xml_file = forms.FileField(
         label=_('XLS Form / XML File'),
         help_text=_('Upload an XLS Form or an XML File'),
         required=False,
@@ -53,19 +53,19 @@ class XFormForm(forms.ModelForm):
     )
 
     def clean_xml_data(self):
-        if 'file' in self.files:
+        if 'xml_file' in self.files:
             return parse_file(
-                filename=str(self.files['file']),
-                content=self.files['file'].file,
+                filename=str(self.files['xml_file']),
+                content=self.files['xml_file'].file,
             )
         return self.cleaned_data['xml_data']
 
     def clean(self):
         cleaned_data = super(XFormForm, self).clean()
-        file = cleaned_data.get('file')
+        xml_file = cleaned_data.get('xml_file')
         xml_data = cleaned_data.get('xml_data')
 
-        if not (file or xml_data):
+        if not (xml_file or xml_data):
             raise forms.ValidationError(
                 _('Please upload an XLS Form or an XML File, or enter the XML data.')
             )
@@ -74,7 +74,7 @@ class XFormForm(forms.ModelForm):
         model = XForm
         fields = [
             'id', 'survey',
-            'file', 'xml_data',
+            'xml_file', 'xml_data',
             'surveyors', 'description',
         ]
 
@@ -102,7 +102,7 @@ class XFormAdmin(admin.ModelAdmin):
 
         (_('xForm definition'), {
             'description': _('Please upload an XLS Form or an XML File, or enter the XML data.'),
-            'fields': ['file', 'xml_data', 'title', 'form_id', ],
+            'fields': ['xml_file', 'xml_data', 'title', 'form_id', ],
         }),
 
         (_('Granted surveyors'), {

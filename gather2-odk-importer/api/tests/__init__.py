@@ -82,6 +82,7 @@ class CustomTestCase(TransactionTestCase):
                 'raw-xml': XFORM_XML_RAW,
                 'file-xls': XFORM_XLS_FILE,
                 'file-xml': XFORM_XML_FILE,
+                'file-err': XML_DATA_FILE_ERR,
             },
         }
 

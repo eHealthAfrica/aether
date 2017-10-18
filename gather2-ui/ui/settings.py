@@ -14,6 +14,8 @@ ORG_NAME = os.environ.get('GATHER_ORG_NAME', 'eHealth Africa')
 # check the available modules linked to this instance
 GATHER_MODULES = os.environ.get('GATHER_MODULES', '').split(',')
 
+DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50MB
+
 
 # Common Configuration
 # ------------------------------------------------------------------------------

@@ -25,7 +25,7 @@ class XFormSerializer(serializers.ModelSerializer):
         default=[],
     )
 
-    file = serializers.FileField(
+    xml_file = serializers.FileField(
         write_only=True,
         allow_null=True,
         default=None,
@@ -34,13 +34,16 @@ class XFormSerializer(serializers.ModelSerializer):
     )
 
     def validate(self, value):
-        if value['file']:
-            # extract data from file and put it on `xml_data`
-            value['xml_data'] = parse_file(
-                filename=str(value['file']),
-                content=value['file'],
-            )
-        value.pop('file')
+        if value['xml_file']:
+            try:
+                # extract data from file and put it on `xml_data`
+                value['xml_data'] = parse_file(
+                    filename=str(value['xml_file']),
+                    content=value['xml_file'],
+                )
+            except Exception as e:
+                raise serializers.ValidationError({'xml_file': str(e)})
+        value.pop('xml_file')
 
         return super(XFormSerializer, self).validate(value)
 

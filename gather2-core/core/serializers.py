@@ -88,8 +88,11 @@ class SurveySerializer(serializers.ModelSerializer):
 
     def validate(self, value):
         if value['schema_file']:
-            # extract data from file and put it on `schema`
-            value['schema'] = json.loads(value['schema_file'].read())
+            try:
+                # extract data from file and put it on `schema`
+                value['schema'] = json.loads(value['schema_file'].read())
+            except Exception as e:
+                raise serializers.ValidationError({'schema_file': str(e)})
         value.pop('schema_file')
 
         return super(SurveySerializer, self).validate(value)

@@ -176,7 +176,7 @@ class JSONArrayViewer extends Component {
       return (
         <div>
           <button
-            className='btn btn-primary icon-only btn-expand'
+            className='btn icon-only btn-expand'
             onClick={this.toggleView.bind(this)}>
             <i className='fa fa-plus' />
           </button>
@@ -191,7 +191,7 @@ class JSONArrayViewer extends Component {
     return (
       <div>
         <button
-          className='btn btn-primary icon-only btn-collapse'
+          className='btn icon-only btn-collapse'
           onClick={this.toggleView.bind(this)}>
           <i className='fa fa-minus' />
         </button>

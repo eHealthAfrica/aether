@@ -90,7 +90,7 @@ export class SurveyorForm extends Component {
       <div data-qa={dataQA} className='surveyor-edit'>
         <h3 className='page-title'>{title}</h3>
 
-        <ErrorAlert errors={surveyor.errors.global} />
+        <ErrorAlert errors={surveyor.errors.generic} />
 
         <form onSubmit={this.onSubmit.bind(this)}>
           <div className={`form-group big-input ${surveyor.errors.username ? 'error' : ''}`}>
@@ -257,7 +257,7 @@ export class SurveyorForm extends Component {
           .catch(() => {
             this.setState({
               errors: {
-                global: [formatMessage(MESSAGES.submitError, {...surveyor})]
+                generic: [formatMessage(MESSAGES.submitError, {...surveyor})]
               }
             })
           })
@@ -275,7 +275,7 @@ export class SurveyorForm extends Component {
         console.log(error.message)
         this.setState({
           errors: {
-            global: [formatMessage(MESSAGES.deleteError, {...surveyor})]
+            generic: [formatMessage(MESSAGES.deleteError, {...surveyor})]
           }
         })
       })

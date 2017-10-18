@@ -2,10 +2,12 @@ import React, { Component } from 'react'
 import { defineMessages, injectIntl, FormattedMessage } from 'react-intl'
 
 import { clone, deepEqual } from '../utils'
-import { deleteData, postData, putData } from '../utils/request'
+import { deleteData, postData, putData, patchData } from '../utils/request'
 import { getSurveysAPIPath, getSurveysPath } from '../utils/paths'
+import { ODK_ACTIVE } from '../utils/env'
 
 import { ConfirmButton, ErrorAlert, HelpMessage } from '../components'
+import SurveyODKForm from './SurveyODKForm'
 
 const MESSAGES = defineMessages({
   schemaError: {
@@ -43,16 +45,22 @@ const MESSAGES = defineMessages({
 export class SurveyForm extends Component {
   constructor (props) {
     super(props)
+    const survey = clone(this.props.survey || {})
     this.state = {
-      ...clone(this.props.survey),
-      schemaStringified: JSON.stringify(this.props.survey.schema || {}, 0, 2),
-      errors: {}
+      ...survey,
+      schemaStringified: JSON.stringify(survey.schema || {}, 0, 2),
+      errors: {},
+      isUpdating: false
+    }
+
+    if (ODK_ACTIVE) {
+      this.state.odk = {...clone(props.odkSurvey || {})}
     }
   }
 
   render () {
     const survey = this.state
-    const {errors} = survey
+    const {errors, isUpdating} = survey
     const dataQA = (
       (survey.id === undefined)
       ? 'survey-add'
@@ -63,11 +71,21 @@ export class SurveyForm extends Component {
       <div data-qa={dataQA} className='survey-edit'>
         <h3 className='page-title'>{ this.renderTitle() }</h3>
 
-        <ErrorAlert errors={errors.global} />
+        <ErrorAlert errors={errors.generic} />
+        { isUpdating && this.renderUpdating() }
 
         <form onSubmit={this.onSubmit.bind(this)} encType='multipart/form-data'>
           { this.renderName() }
           { this.renderJSONSchema() }
+          {
+            ODK_ACTIVE &&
+            <SurveyODKForm
+              survey={this.state.odk}
+              surveyors={this.props.surveyors}
+              onChange={(odk) => this.setState({ odk })}
+              errors={errors.odk}
+            />
+          }
           { this.renderButtons() }
         </form>
       </div>
@@ -88,7 +106,7 @@ export class SurveyForm extends Component {
           <FormattedMessage
             id='survey.form.title.edit'
             defaultMessage='Edit survey' />
-          <b className='ml-2'>{survey.name}</b>
+          <span className='surveyname ml-1'>{survey.name}</span>
         </span>
       )
     }
@@ -124,7 +142,7 @@ export class SurveyForm extends Component {
 
     return (
       <div>
-        <div className={`form-group big-input ${errors.schema || errors.schema_file ? 'error' : ''}`}>
+        <div className={`form-group ${errors.schema_file ? 'error' : ''}`}>
           <label className='form-control-label title'>
             <FormattedMessage
               id='survey.form.schema'
@@ -141,35 +159,35 @@ export class SurveyForm extends Component {
                 defaultMessage='Click here to see more about JSON Schema' />
             </a>
           </HelpMessage>
+          <div>
+            <label className='btn btn-secondary' htmlFor='schemaFile'>
+              <FormattedMessage
+                id='survey.form.schema.file'
+                defaultMessage='Upload JSON schema file' />
+            </label>
+            <input
+              name='schemaFile'
+              id='schemaFile'
+              type='file'
+              className='hidden-file'
+              accept='.json'
+              onChange={this.onFileChange.bind(this)}
+            />
+            {
+              survey.schemaFile &&
+              <span className='form-item ml-4'>
+                <i className='fa fa-file mr-2' />
+                <span>{ survey.schemaFile.name }</span>
+                <button
+                  className='btn btn-sm icon-only btn-danger ml-2'
+                  onClick={this.removeFile.bind(this)}><i className='fa fa-close' /></button>
+              </span>
+            }
+            <ErrorAlert errors={errors.schema_file} />
+          </div>
         </div>
 
-        <div className={`form-group big-input ${errors.schema_file ? 'error' : ''}`}>
-          <label className='btn btn-info' htmlFor='schemaFile'>
-            <FormattedMessage
-              id='survey.form.schema.file'
-              defaultMessage='Choose JSON schema file' />
-          </label>
-          <input
-            name='schemaFile'
-            id='schemaFile'
-            type='file'
-            className='hidden-file'
-            accept='.json'
-            onChange={this.onFileChange.bind(this)}
-          />
-          {
-            survey.schemaFile &&
-            <span className='ml-4'>
-              <i>{ survey.schemaFile.name }</i>
-              <button
-                className='btn btn-sm btn-danger ml-2'
-                onClick={this.removeFile.bind(this)}>&times;</button>
-            </span>
-          }
-          <ErrorAlert errors={errors.schema_file} />
-        </div>
-
-        <div className={`form-group big-input ${errors.schema ? 'error' : ''}`}>
+        <div className={`form-group ${errors.schema ? 'error' : ''}`}>
           <textarea
             name='schemaStringified'
             className='form-control code'
@@ -189,7 +207,7 @@ export class SurveyForm extends Component {
 
     return (
       <div className='actions'>
-        { (this.props.survey.id !== undefined) &&
+        { (this.props.survey && this.props.survey.id) &&
           <div>
             <ConfirmButton
               className='btn btn-delete'
@@ -218,6 +236,27 @@ export class SurveyForm extends Component {
               id='survey.form.action.submit'
               defaultMessage='Save survey' />
           </button>
+        </div>
+      </div>
+    )
+  }
+
+  renderUpdating () {
+    return (
+      <div className='modal show'>
+        <div className='modal-dialog modal-md'>
+          <div className='modal-content'>
+            <div className='modal-header'>
+              <h5 className='modal-title'>{this.renderTitle()}</h5>
+            </div>
+
+            <div className='modal-body'>
+              <i className='fa fa-spin fa-cog mr-2' />
+              <FormattedMessage
+                id='survey.form.action.updating'
+                defaultMessage='Saving data in progress…' />
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -301,49 +340,136 @@ export class SurveyForm extends Component {
     const saveMethod = (survey.id ? putData : postData)
     const url = getSurveysAPIPath({id: survey.id})
 
+    this.setState({ isUpdating: true })
     return saveMethod(url, survey, multipart)
       .then(response => {
-        if (response.id) {
-          // navigate to Surveys view page
-          window.location.pathname = getSurveysPath({action: 'view', id: response.id})
+        if (ODK_ACTIVE) {
+          return this.onSubmitODK(response)
         } else {
-          // navigate to Surveys list page
-          window.location.pathname = getSurveysPath({action: 'list'})
+          this.backToView(response)
         }
       })
-      .catch(error => {
-        console.log(error.message)
-        error.response
-          .then(resp => {
-            this.setState({ errors: resp })
-          })
-          .catch(() => {
-            this.setState({
-              errors: {
-                global: [formatMessage(MESSAGES.submitError, {...survey})]
-              }
-            })
-          })
-      })
+      .catch(this.handleError.bind(this))
   }
 
   onDelete () {
-    const {formatMessage} = this.props.intl
     const {survey} = this.props
+    const handleError = (error) => { this.handleError(error, 'delete') }
 
+    this.setState({ isUpdating: true })
     return deleteData(getSurveysAPIPath({id: survey.id}))
       .then(() => {
-        // navigate to Surveys list page
-        window.location.pathname = getSurveysPath({action: 'list'})
+        if (ODK_ACTIVE) {
+          // remove it also in ODK
+          return this.onDeleteODK()
+        } else {
+          this.backToList()
+        }
       })
-      .catch(error => {
-        console.log(error.message)
-        this.setState({
-          errors: {
-            global: [formatMessage(MESSAGES.deleteError, {...survey})]
-          }
-        })
+      .catch(handleError)
+  }
+
+  onSubmitODK (coreSurvey) {
+    const survey = this.state
+
+    // save changes in ODK
+    const saveMethod = (survey.id ? putData : postData)
+    const saveUrl = getSurveysAPIPath({app: 'odk', id: survey.id})
+    const patchUrl = getSurveysAPIPath({app: 'odk', id: coreSurvey.id})
+
+    const odkSurvey = {
+      survey_id: coreSurvey.id,
+      name: coreSurvey.name,
+      surveyors: this.state.odk.surveyors
+    }
+
+    // update ALL the existing xForms and create the new ones without FILE.
+    const {xforms} = this.state.odk
+    const xFormsWithoutFiles = xforms
+      .filter(xform => (!xform.file || xform.id))
+      .map(xform => ({...xform, file: undefined}))
+
+    // update ALL the xForms (existing and new ones) with FILE
+    const xFormsWithFiles = xforms.filter(xform => xform.file)
+    const filesPayload = {
+      files: xFormsWithFiles.length
+    }
+    xFormsWithFiles.forEach((xform, index) => {
+      filesPayload[`id_${index}`] = xform.id || 0
+      filesPayload[`file_${index}`] = xform.file
+    })
+
+    const handleODKError = (error) => { this.handleError(error, 'submit', 'odk') }
+
+    return saveMethod(saveUrl, odkSurvey)
+      .then(() => {
+        // save xForms without files
+        return patchData(patchUrl, { xforms: xFormsWithoutFiles })
+          .then(() => {
+            if (xFormsWithFiles.length === 0) {
+              // nothing more to do, skip last call
+              this.backToView(coreSurvey)
+              return
+            }
+            // save xForms with files
+            return patchData(patchUrl, filesPayload, true)
+              .then(() => this.backToView(coreSurvey))
+              .catch(handleODKError)
+          })
+          .catch(handleODKError)
       })
+      .catch(handleODKError)
+  }
+
+  onDeleteODK () {
+    return deleteData(getSurveysAPIPath({app: 'odk', id: this.props.survey.id}))
+      .then(this.backToList)
+      .catch(this.backToList) // ignore ODK errors???
+  }
+
+  handleError (error, action, nestedProperty) {
+    /**
+     * Handles the given error during the execution of the specific action.
+     * The error response object is assigned to `errors` or to some of its
+     * nested objects (defined by `nestedProperty`)
+     */
+    const {formatMessage} = this.props.intl
+
+    console.log(error.message)
+    this.setState({ isUpdating: false })
+
+    error.response
+      .then(errors => {
+        if (nestedProperty) {
+          this.setState({ errors: { [nestedProperty]: errors } })
+        } else {
+          this.setState({ errors })
+        }
+      })
+      .catch((err) => {
+        console.log(err.message)
+
+        const actionMessage = (action === 'delete')
+          ? MESSAGES.deleteError
+          : MESSAGES.submitError
+        const generic = [formatMessage(actionMessage, {...this.state})]
+
+        if (nestedProperty) {
+          this.setState({ errors: { [nestedProperty]: { generic } } })
+        } else {
+          this.setState({ errors: { generic } })
+        }
+      })
+  }
+
+  backToView (survey) {
+    // navigate to Survey view page
+    window.location.pathname = getSurveysPath({action: 'view', id: survey.id})
+  }
+
+  backToList () {
+    // navigate to Surveys list page
+    window.location.pathname = getSurveysPath({action: 'list'})
   }
 }
 

@@ -12,7 +12,7 @@ const MESSAGES = defineMessages({
     id: 'multiselect.deselect'
   },
   filter: {
-    defaultMessage: 'Filter…',
+    defaultMessage: 'Type…',
     id: 'multiselect.filter'
   }
 })
@@ -59,12 +59,12 @@ export class MultiSelect extends Component {
 
             onChange={this.onSelect.bind(this)}
 
-            size={10}
+            size={6}
             classNames={{
               filter: 'form-control',
               select: 'form-control',
-              button: 'btn btn-block btn-primary',
-              buttonActive: 'btn btn-block btn-warning'
+              button: 'btn btn-block btn-secondary',
+              buttonActive: 'btn btn-block btn-secondary'
             }}
           />
         </div>
@@ -79,12 +79,12 @@ export class MultiSelect extends Component {
 
             onChange={this.onDeselect.bind(this)}
 
-            size={10}
+            size={6}
             classNames={{
               filter: 'form-control',
               select: 'form-control',
-              button: 'btn btn-block btn-primary',
-              buttonActive: 'btn btn-block btn-danger'
+              button: 'btn btn-block btn-secondary',
+              buttonActive: 'btn btn-block btn-secondary'
             }}
           />
         </div>
