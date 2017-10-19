@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 
 import { AppIntl, FetchUrlsContainer, PaginationContainer } from './components'
-import { getSurveysAPIPath, getSurveyorsAPIPath } from './utils/paths'
+import { getResponsesAPIPath, getSurveyorsAPIPath, getSurveysAPIPath } from './utils/paths'
 import { ODK_ACTIVE } from './utils/env'
 
 import Survey from './survey/Survey'
@@ -74,6 +74,11 @@ switch (action) {
       {
         name: 'survey',
         url: getSurveysAPIPath({id: surveyId, withStats: true})
+      },
+      {
+        // take the first response to extract the table columns
+        name: 'response',
+        url: getResponsesAPIPath({surveyId, pageSize: 1})
       }
     ]
 

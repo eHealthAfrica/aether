@@ -56,11 +56,11 @@
     z-index: 100;
   }
 
-  .pagination {
+  .pagination-bar {
     background: rgba($action-color, .9);
     padding: .3rem 3rem;
 
-    input {
+    .pagination input {
       padding: .3rem .5rem .2rem 1rem;
     }
   }
@@ -73,7 +73,7 @@
   position: sticky;
   height: 70px;
   top: 0;
-  z-index: 100;
+  z-index: 101;
 }
 
 .survey-data-tabs {
@@ -81,6 +81,10 @@
   padding: 0;
   list-style: none;
   display: flex;
+}
+
+.toolbar-filter {
+  margin-left: auto;
 }
 
 .tab {

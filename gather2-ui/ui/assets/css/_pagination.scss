@@ -5,7 +5,7 @@
   color: $text-color;
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: flex-end;
   font: $font-size-s $nav-font-family;
   font-weight: 500;
   margin: 0;
@@ -14,17 +14,15 @@
 
   .pagination {
     margin: 0;
-    border-left: 1px solid $light-grey;
     border-radius: 0;
     display: flex;
-    justify-content: flex-end;
     align-items: baseline;
     padding-left: .75rem;
-    flex: 1 1 content;
+    border-left: 1px solid $white;
 
     li {
       display: inline;
-      margin: 0 10px;
+      margin: 0 .5rem;
     }
   }
 
@@ -77,7 +75,6 @@
   }
 
   .search {
-    flex: 3 1 0;
     display: flex;
     align-items: baseline;
 
@@ -86,7 +83,9 @@
       display: inline-block;
       font-family: $icon-font;
       font-size: 1.3em;
-      color: $light-grey;
+      color: $white;
+      position: absolute;
+      top: .7rem;
     }
 
     input {
@@ -94,12 +93,23 @@
       border-radius: 0;
       border: 0;
       display: inline;
-      color: inherit;
-      font-family: $nav-font-family;
+      color: $white;
+      font-family: $body-font-family;
       font-size: $font-size-standard;
-      padding: .5rem 1rem;
+      padding: .5rem 1rem .5rem 1.5rem;
       background: none;
-      min-width: 6rem;
+      z-index: 2;
+      width: 0;
+      transition: width .5s;
+
+      &:focus,
+      &:hover {
+        width: 150px;
+      }
+
+      &::placeholder {
+        color: rgba($white, .5);
+      }
     }
   }
 }

@@ -4,8 +4,6 @@ import { FormattedMessage } from 'react-intl'
 import { flatten, inflate } from '../utils/types'
 import { JSONViewer, FullDateTime } from '../components'
 
-const SEPARATOR = '¬¬¬'  // very uncommon string
-
 export default class ResponsesList extends Component {
   render () {
     const {list} = this.props
@@ -14,16 +12,13 @@ export default class ResponsesList extends Component {
       return <div data-qa='responses-list-empty' />
     }
 
-    // the first entry will decide the table columns
-    const columns = Object.keys(flatten(list[0].data, SEPARATOR))
-
     return (
       <div data-qa='responses-list' className='x-0'>
         <div className='survey-content'>
           <table className='table table-sm'>
-            { this.renderHeader(columns) }
+            { this.renderHeader() }
             <tbody>
-              { list.map((response, index) => this.renderResponse(response, index, columns)) }
+              { list.map((response, index) => this.renderResponse(response, index)) }
             </tbody>
           </table>
         </div>
@@ -31,7 +26,7 @@ export default class ResponsesList extends Component {
     )
   }
 
-  renderHeader (columns) {
+  renderHeader () {
     /****************************************************************
         Data
         ====
@@ -63,7 +58,8 @@ export default class ResponsesList extends Component {
 
     ****************************************************************/
 
-    const headers = inflate(columns, SEPARATOR)
+    const {columns, separator} = this.props
+    const headers = inflate(columns, separator)
     const rows = headers.length
 
     if (rows === 0) {
@@ -118,8 +114,9 @@ export default class ResponsesList extends Component {
     )
   }
 
-  renderResponse (response, index, columns) {
-    const flattenData = flatten({...response.data}, SEPARATOR)
+  renderResponse (response, index) {
+    const {columns, separator} = this.props
+    const flattenData = flatten({...response.data}, separator)
 
     return (
       <tr data-qa={`response-row-${response.id}`} key={response.id}>
