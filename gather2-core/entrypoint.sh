@@ -52,6 +52,16 @@ setup_initial_data() {
     ./manage.py loaddata /code/conf/extras/initial.json
 }
 
+setup_aws_requirements() {
+    envsubst < /code/conf/aws_cli_setup.sh.tmpl > /code/conf/aws_cli_setup.sh
+    chmod +x /code/conf/aws_cli_setup.sh
+    /code/conf/aws_cli_setup.sh
+    source ~/.bashrc
+    envsubst < /code/conf/aws.sh.tmpl > /code/conf/aws.sh
+    chmod +x /code/conf/aws.sh
+    /code/conf/aws.sh
+}
+
 test_flake8() {
     flake8 /code/. --config=/code/conf/extras/flake8.cfg
 }
@@ -64,7 +74,6 @@ test_coverage() {
     coverage run    --rcfile="$RCFILE" manage.py test "${@:1}"
     coverage report --rcfile="$RCFILE"
     coverage erase
-    rm -rf /code/.hypothesis
 
     cat /code/conf/extras/good_job.txt
 }
@@ -125,13 +134,11 @@ case "$1" in
 
     start )
         setup_db
-        envsubst < /code/conf/aws_cli_setup.sh.tmpl > /code/conf/aws_cli_setup.sh
-        envsubst < /code/conf/aws.sh.tmpl > /code/conf/aws.sh
-        chmod +x /code/conf/aws*
-        /code/conf/aws_cli_setup.sh
-        /code/conf/aws.sh
+        setup_aws_requirements
+
         ./manage.py collectstatic --noinput
         chmod -R 755 /var/www/static
+
         /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
     ;;
 

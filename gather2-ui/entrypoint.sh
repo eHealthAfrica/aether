@@ -53,7 +53,17 @@ setup_initial_data() {
     ./manage.py loaddata /code/conf/extras/initial.json
 }
 
-test_flake8() {
+setup_aws_requirements() {
+    envsubst < /code/conf/aws_cli_setup.sh.tmpl > /code/conf/aws_cli_setup.sh
+    chmod +x /code/conf/aws_cli_setup.sh
+    /code/conf/aws_cli_setup.sh
+    source ~/.bashrc
+    envsubst < /code/conf/aws.sh.tmpl > /code/conf/aws.sh
+    chmod +x /code/conf/aws.sh
+    /code/conf/aws.sh
+}
+
+test_lint() {
     npm run lint
     flake8 /code/. --config=/code/conf/extras/flake8.cfg
 }
@@ -73,7 +83,6 @@ test_coverage() {
 }
 
 test_js() {
-    npm run lint
     npm run mocha
 }
 
@@ -120,12 +129,12 @@ case "$1" in
     ;;
 
     test)
-        test_flake8
+        test_lint
         test_coverage "${@:2}"
     ;;
 
     test_lint)
-        test_flake8
+        test_lint
     ;;
 
     test_coverage)
@@ -138,12 +147,10 @@ case "$1" in
 
     start )
         setup_db
+        setup_aws_requirements
+
         npm run webpack
-        envsubst < /code/conf/aws_cli_setup.sh.tmpl > /code/conf/aws_cli_setup.sh
-        envsubst < /code/conf/aws.sh.tmpl > /code/conf/aws.sh
-        chmod +x /code/conf/aws*
-        /code/conf/aws_cli_setup.sh
-        /code/conf/aws.sh
+
         ./manage.py collectstatic --noinput
         cp -r /code/ui/assets/bundles/* /var/www/static/
         chmod -R 755 /var/www/static

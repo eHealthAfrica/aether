@@ -9,5 +9,21 @@ setup_user() {
   ./manage.py setup_admin -p=$ADMIN_PASSWORD -t=$GATHER_ODK_TOKEN
 }
 
-# run them
+check_variable() {
+  if [ -n "$1" ];
+  then
+    echo "$2 in Ordnung!"
+  else
+    echo "Missing $2"
+    exit -1
+  fi
+}
+
+check_core() {
+  # check if CORE env variables were set
+  check_variable $GATHER_CORE_URL   "CORE url"
+  check_variable $GATHER_CORE_TOKEN "CORE token"
+}
+
+check_core
 setup_user
