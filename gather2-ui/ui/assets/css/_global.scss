@@ -27,8 +27,6 @@ button {
   @include label;
   border: 0;
   border-color: transparent;
-  background-color: $action-color;
-  color: $white;
 
   &:active,
   &:focus,
@@ -36,6 +34,16 @@ button {
     box-shadow: none;
     cursor: pointer;
     outline: none;
+  }
+}
+
+.btn {
+  background-color: $action-color;
+  color: $white;
+
+  &:active,
+  &:focus,
+  &:hover {
     background-color: $hover-color;
   }
 }

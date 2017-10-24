@@ -132,7 +132,7 @@ export default class Survey extends Component {
     const allChecked = Object.keys(this.state.columns).length === columns.length
 
     return (
-      <div className='pull-right filter-toggles'>
+      <div className='filter-toggles'>
         <FormattedMessage
           id='response.list.table.action.columns'
           defaultMessage='Columns:' />
@@ -148,18 +148,12 @@ export default class Survey extends Component {
           id='response.list.table.action.columns.or'
           defaultMessage='or' />
         <button
-          className={`btn badge ${!allChecked ? 'active' : ''}`}
+          className={`btn badge ${!allChecked ? 'active' : ''} ${this.state.showColumns ? 'selected' : ''}`}
           onClick={() => { this.setState({ showColumns: !this.state.showColumns }) }}
           >
-          {
-            this.state.showColumns
-            ? <FormattedMessage
-              id='response.list.table.action.columns.select.hide'
-              defaultMessage='hide selected' />
-            : <FormattedMessage
-              id='response.list.table.action.columns.select.show'
-              defaultMessage='show selected' />
-          }
+          <FormattedMessage
+            id='response.list.table.action.columns.select.show'
+            defaultMessage='show selected' />
         </button>
       </div>
     )

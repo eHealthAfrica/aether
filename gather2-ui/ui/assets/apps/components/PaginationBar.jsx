@@ -69,7 +69,7 @@ export class PaginationBar extends Component {
   }
 
   render (list) {
-    if (this.getNumberOfPages() < 2 && !this.props.search) {
+    if (this.getNumberOfPages() < 2 && (!this.props.search || !this.state.currentSearch)) {
       return <div />
     }
 
@@ -123,13 +123,13 @@ export class PaginationBar extends Component {
     if (!this.props.search) {
       return ''
     }
-
     const onChange = (event) => {
       this.setState({ [event.target.name]: event.target.value })
     }
     const onKeyPress = (event) => {
       if (event.charCode === 13) { // Enter
         this.props.onSearch(this.state.search)
+        this.state.currentSearch = this.state.search
       }
     }
     const {formatMessage} = this.props.intl
@@ -141,6 +141,7 @@ export class PaginationBar extends Component {
           name='search'
           placeholder={formatMessage(MESSAGES.search)}
           value={this.state.search || ''}
+          className={(this.state.search ? 'value' : '')}
           onChange={onChange}
           onKeyPress={onKeyPress}
         />

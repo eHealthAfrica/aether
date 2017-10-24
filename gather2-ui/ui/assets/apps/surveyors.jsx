@@ -43,6 +43,7 @@ switch (action) {
       <PaginationContainer
         pageSize={36}
         url={getSurveyorsAPIPath({})}
+        position='top'
         listComponent={SurveyorsList}
         search
         showPrevious

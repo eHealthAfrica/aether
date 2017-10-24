@@ -79,7 +79,7 @@ export default class SurveyDates extends Component {
           year='numeric'
           month='short'
           day='numeric' />
-        <span className='label mx-1'>
+        <span className='label mr-1'>
           <FormattedMessage
             id='survey.dates.responses.to'
             defaultMessage='to' />
@@ -99,7 +99,7 @@ export default class SurveyDates extends Component {
 
     return (
       <span className='card-dates'>
-        <span className='label mx-1'>
+        <span className='label mr-1'>
           <FormattedMessage
             id='survey.dates.responses.duration'
             defaultMessage='duration' />

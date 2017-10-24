@@ -99,7 +99,6 @@ export default class PaginationContainer extends Component {
     return (
       <div data-qa='data-loaded'>
         { this.state.isRefreshing && <RefreshSpinner /> }
-
         { (position === 'top') && this.renderPaginationBar() }
 
         { count === 0 && <EmptyAlert /> }

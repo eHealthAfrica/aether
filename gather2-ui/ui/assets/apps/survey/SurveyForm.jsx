@@ -384,7 +384,8 @@ export class SurveyForm extends Component {
     }
 
     // update ALL the existing xForms and create the new ones without FILE.
-    const {xforms} = this.state.odk
+    const xforms = this.state.odk.xforms || []
+
     const xFormsWithoutFiles = xforms
       .filter(xform => (!xform.file || xform.id))
       .map(xform => ({...xform, file: undefined}))
