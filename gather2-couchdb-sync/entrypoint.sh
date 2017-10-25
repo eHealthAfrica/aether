@@ -43,6 +43,13 @@ setup_db() {
       echo "$RDS_DB_NAME database created!"
     fi
 
+    # fix: new module structure -> change `api` with `sync` before apply migrations
+    set +e
+    psql -c "UPDATE django_migrations SET app='sync' WHERE app='api';"
+    set -e
+    psql -c "ALTER TABLE IF EXISTS api_mobileuser  RENAME TO sync_mobileuser;"
+    psql -c "ALTER TABLE IF EXISTS sync_mobileuser RENAME TO api_mobileuser;"
+
     # migrate data model if needed
     ./manage.py migrate --noinput
 

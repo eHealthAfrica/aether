@@ -33,7 +33,7 @@ In order for a mobile client to gain access, it needs to send a token from a val
 
 ### RQ Import Task
 
-The import task is ran as an RQ scheduled job, the interval is defined in `importer/apps.py`. The importer writes its results to the logs, and it also writes meta documents for each imported/errored document. If the main document is `village-aaabbb` the meta document will be written under `village-aaabbb-synced`. This will contain any error messages from importing as well.
+The import task is run as an RQ scheduled job, the interval is defined in `gather2/sync/apps.py`. The importer writes its results to the logs, and it also writes meta documents for each imported/errored document. If the main document is `village-aaabbb` the meta document will be written under `village-aaabbb-synced`. This will contain any error messages from importing as well.
 
 **Dev note** when working on the the RQ Task, the container needs to be restarted manually for changes to take effect :(
 
@@ -53,7 +53,7 @@ When going to the admin interface, find a model called DeviceDB. Under the Devic
 If this is the effect you want, you'll need to delete all the `-synced` documents. You probably wanna write a CouchDB view for this, and then script deleting all the documents.
 
 #### Run the import task manually
-The import task can be run manually in development with: `docker-compose run couchdb-sync manage rqenqueue "importer.tasks.import_synced_devices_task"`
+The import task can be run manually in development with: `docker-compose run couchdb-sync manage rqenqueue "gather2.sync.tasks.import_synced_devices_task"`
 
 Testing sync locally
 ----
@@ -71,11 +71,11 @@ To test Gather import, you need to generate a Gather API key in the gather core 
 
 Run all tests with:
 
-`docker-compose run couchdb-sync manage test`
+`docker-compose run couchdb-sync test`
 
 You can run separate tests using (for example):
 
-`docker-compose run couchdb-sync manage test importer.tests.test_import`
+`docker-compose run couchdb-sync test gather2.sync.tests.test_import`
 
 Everything about the Google Tokens
 -------

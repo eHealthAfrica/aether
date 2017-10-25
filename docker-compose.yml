@@ -148,7 +148,7 @@ services:
             CSRF_COOKIE_DOMAIN: .gather2.local
             DEBUG: "true"
             HOSTNAME: ui.gather2.local
-            STATIC_ROOT: /code/ui/assets/bundles
+            STATIC_ROOT: /code/gather2/ui/assets/bundles
 
             GATHER_ORG_NAME: eHealth Africa (Dev mode)
 
@@ -179,7 +179,7 @@ services:
             #################################################
 
             - ./gather2-ui/conf:/code/conf
-            - ./gather2-ui/ui:/code/ui
+            - ./gather2-ui/gather2:/code/gather2
 
             - ./gather2-ui/entrypoint.sh:/code/entrypoint.sh
             - ./gather2-ui/manage.py:/code/manage.py

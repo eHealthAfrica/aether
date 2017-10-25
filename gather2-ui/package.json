@@ -15,11 +15,13 @@
   },
 
   "scripts": {
-    "lint": "standard && sass-lint --config ./conf/extras/sass-lint.yml --verbose",
-    "mocha": "mocha --require ./ui/assets/tests/mocha.setup.js './ui/assets/apps/**/*.spec.jsx'",
+    "lint-js": "standard './gather2/ui/assets/apps/**/*.jsx'",
+    "lint-scss": "sass-lint --config ./conf/extras/sass-lint.yml --verbose",
+    "lint": "npm run lint-js && npm run lint-scss",
+    "mocha": "mocha --require ./gather2/ui/assets/tests/mocha.setup.js './gather2/ui/assets/apps/**/*.spec.jsx'",
     "test": "npm run lint && npm run mocha",
-    "webpack": "webpack --config ./ui/webpack.prod.js",
-    "webpack-server": "node ./ui/webpack.server.js"
+    "webpack": "webpack --config ./gather2/ui/webpack.prod.js",
+    "webpack-server": "node ./gather2/ui/webpack.server.js"
   },
 
   "dependencies": {},
@@ -32,37 +34,30 @@
     "bootstrap": "4.0.0-alpha.6",
     "css-loader": "~0.28.0",
     "extract-text-webpack-plugin": "~3.0.0",
-    "file-loader": "~0.11.0",
+    "file-loader": "~1.1.0",
     "font-awesome": "~4.7.0",
     "html5shiv": "~3.7.0",
     "jquery": "~3.2.0",
-    "jsdom": "~11.2.0",
-    "mocha": "~3.5.0",
-    "moment": "~2.18.0",
+    "jsdom": "~11.3.0",
+    "mocha": "~4.0.0",
+    "moment": "~2.19.0",
     "nock": "~9.0.0",
     "node-fetch": "~1.7.0",
     "node-sass": "~4.5.0",
     "react": "~15.6.0",
     "react-addons-shallow-compare": "~15.6.0",
     "react-dom": "~15.6.0",
-    "react-hot-loader": "~3.0.0-beta.6",
+    "react-hot-loader": "~3.1.0",
     "react-intl": "~2.4.0",
     "react-filtered-multiselect": "~0.5.0",
-    "sass-lint": "~1.11.0",
+    "sass-lint": "~1.12.0",
     "sass-loader": "~6.0.0",
     "standard": "~10.0.0",
-    "style-loader": "~0.18.0",
-    "url-loader": "~0.5.0",
-    "webpack": "~3.6.0",
+    "style-loader": "~0.19.0",
+    "url-loader": "~0.6.0",
+    "webpack": "~3.8.0",
     "webpack-bundle-tracker": "~0.2.0",
-    "webpack-dev-server": "~2.8.0",
+    "webpack-dev-server": "~2.9.0",
     "whatwg-fetch": "~2.0.0"
-  },
-
-  "standard": {
-    "ignore": [
-      "ui/assets/bundles",
-      "ui/static/docs"
-    ]
   }
 }

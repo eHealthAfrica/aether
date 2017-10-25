@@ -36,7 +36,7 @@ services:
             TESTING: "true"
             HOSTNAME: core.gather2.local
 
-            RDS_DB_NAME: gather2-core-testing
+            RDS_DB_NAME: core-test
             RDS_HOSTNAME: db-test
             RDS_PASSWORD: ""
             RDS_PORT: 5432
@@ -67,7 +67,7 @@ services:
             GATHER_CORE_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
             GATHER_CORE_URL_TEST: http://core-test:9000
 
-            RDS_DB_NAME: odk-importer-testing
+            RDS_DB_NAME: odk-importer-test
             RDS_HOSTNAME: db-test
             RDS_PASSWORD: ""
             RDS_PORT: 5432
@@ -105,7 +105,7 @@ services:
 
             GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
 
-            RDS_DB_NAME: couchdb-sync-testing
+            RDS_DB_NAME: couchdb-sync-test
             RDS_HOSTNAME: db-test
             RDS_PASSWORD: ""
             RDS_PORT: 5432
@@ -140,7 +140,7 @@ services:
             CSRF_COOKIE_DOMAIN: .gather2.local
             TESTING: "true"
             HOSTNAME: ui.gather2.local
-            STATIC_ROOT: /code/ui/assets/bundles
+            STATIC_ROOT: /code/gather2/ui/assets/bundles
 
             GATHER_ORG_NAME: eHealth Africa (Dev mode)
 
@@ -154,7 +154,7 @@ services:
             GATHER_ODK_URL: http://odk-importer-test:9443
             GATHER_ODK_URL_TEST: http://odk-importer-test:9443
 
-            RDS_DB_NAME: ui-testing
+            RDS_DB_NAME: ui-test
             RDS_HOSTNAME: db-test
             RDS_PASSWORD: ""
             RDS_PORT: 5432
@@ -171,7 +171,7 @@ services:
             #################################################
 
             - ./gather2-ui/conf:/code/conf
-            - ./gather2-ui/ui:/code/ui
+            - ./gather2-ui/gather2:/code/gather2
 
             - ./gather2-ui/entrypoint.sh:/code/entrypoint.sh
             - ./gather2-ui/manage.py:/code/manage.py
@@ -183,3 +183,24 @@ services:
         ports:
             - "9090:9090"
         command: start_dev
+
+
+    # ---------------------------------
+    # Gather2 Common module container
+    # ---------------------------------
+
+    common-test:
+        build: gather2-common
+        environment:
+            TESTING: "true"
+
+            RDS_DB_NAME: common-test
+            RDS_HOSTNAME: db-test
+            RDS_PASSWORD: ""
+            RDS_PORT: 5432
+            RDS_USERNAME: postgres
+        volumes:
+            - ./gather2-common:/code
+        depends_on:
+            - db-test
+        command: test

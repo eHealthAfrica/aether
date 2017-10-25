@@ -8,6 +8,7 @@
 - [Setup](#Setup)
   - [Dependencies](#dependencies)
   - [Installation](#installation)
+  - [Common Module](#common-module)
   - [Environment Variables](#environment-variables)
     - [Gather Core](#gather-core)
     - [Gather ODK Importer](#gather-odk-importer)
@@ -47,6 +48,18 @@ Include this entry in your `/etc/hosts` file:
 ```
 127.0.0.1    core.gather2.local odk.gather2.local sync.gather2.local ui.gather2.local
 ```
+
+### Common module
+
+This module contains the shared features among different containers.
+
+To create a new version and distribute it:
+
+```bash
+./scripts/build_common_and_distribute.sh
+```
+
+See more in [README](/gather2-common/README.md).
 
 ### Environment Variables
 
@@ -112,7 +125,7 @@ PRODUCTION server. The tests clean up will **DELETE ALL SURVEYS!!!**
 ## Usage
 
 ```bash
-docker-compose up
+docker-compose up --build    # this will update the cointainers if needed
 ```
 
 This will start:
@@ -178,12 +191,12 @@ If a valid `GATHER_CORE_TOKEN` and `GATHER_CORE_URL` combination is not set,
 the server will still start, but ODK Collect submissions will fail.
 
 To check if it is possible to connect to Gather2 Core with those variables
-visit the entrypoint `/core` in the odk server (no credentials needed).
+visit the entrypoint `/check-core` in the odk server (no credentials needed).
 If the response is `Always Look on the Bright Side of Life!!!`
 it's not possible to connect, on the other hand if the message is
 `Brought to you by eHealth Africa - good tech for hard places` everything goes fine.
 
-This also applies for `gather2-couchdb-sync`.
+This also applies for `gather2-couchdb-sync` and `gather2-ui`.
 
 In the case of `gather2-couchdb-sync` a valid `GOOGLE_CLIENT_ID`
 environment variable is necessary to verify the device credentials as well.
@@ -221,6 +234,7 @@ The list of the main containers:
 | **ui**            | Gather2 UI app                                                          |
 | couchdb-sync-rq   | [RQ python](http://python-rq.org/) task runner to perform sync jobs     |
 | core-test         | Gather2 Core TESTING app (used only in e2e tests with other containers) |
+| common-test       | Gather2 Common module (only for tests)                                  |
 
 
 All of the containers definition for development can be found in the
@@ -299,9 +313,12 @@ docker-compose run <container-name> eval pip list --outdated
 ```bash
 ./scripts/upgrade_all.sh
 ```
+This also rebuilds `gather2.common` module and distributes it within the containers.
+Do not forget to include new containers in the file.
 
 or
 
 ```bash
 docker-compose run <container-name> pip_freeze
 ```
+In this case `gather2.common` is not rebuilt.

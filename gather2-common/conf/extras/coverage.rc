@@ -1,0 +1,13 @@
+[run]
+branch = true
+source = /code/gather2
+omit = *migrations*, *tests*, *management*
+
+[paths]
+source = /code/gather2
+omit = *migrations*, *tests*, *management*
+
+[report]
+omit = *migrations*, *tests*, *management*
+show_missing = true
+fail_under = 100

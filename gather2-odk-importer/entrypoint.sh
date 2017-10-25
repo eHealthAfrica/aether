@@ -43,6 +43,13 @@ setup_db() {
       echo "$RDS_DB_NAME database created!"
     fi
 
+    # fix: new module structure -> change `api` with `odk` before apply migrations
+    set +e
+    psql -c "UPDATE django_migrations SET app='odk' WHERE app='api';"
+    set -e
+    psql -c "ALTER TABLE IF EXISTS api_xform  RENAME TO odk_xform;"
+    psql -c "ALTER TABLE IF EXISTS api_survey RENAME TO odk_survey;"
+
     # migrate data model if needed
     ./manage.py migrate --noinput
 }

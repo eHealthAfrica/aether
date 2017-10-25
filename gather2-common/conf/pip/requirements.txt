@@ -1,0 +1,28 @@
+################################################################################
+#                                                                              #
+#                              Frozen requirements                             #
+#                                                                              #
+#                               DO NOT CHANGE !!!                              #
+#                                                                              #
+# To update this first update 'primary-requirements.txt'                       #
+# then run 'docker-compose -f docker-compose-test.yml run common pip_freeze'   #
+#                                                                              #
+################################################################################
+
+certifi==2017.7.27.1
+chardet==3.0.4
+coverage==4.4.1
+Django==1.11.6
+djangorestframework==3.7.1
+flake8==3.4.1
+idna==2.6
+mccabe==0.6.1
+mock==2.0.0
+pbr==3.1.1
+psycopg2==2.7.3.1
+pycodestyle==2.3.1
+pyflakes==1.5.0
+pytz==2017.2
+requests==2.18.4
+six==1.11.0
+urllib3==1.22

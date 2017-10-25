@@ -43,6 +43,17 @@ setup_db() {
       echo "$RDS_DB_NAME database created!"
     fi
 
+    # fix: new module structure -> change `api` with `core` before apply migrations
+    set +e
+    psql -c "UPDATE django_migrations SET app='core' WHERE app='api';"
+    set -e
+    psql -c "ALTER TABLE IF EXISTS api_attachment     RENAME TO core_attachment;"
+    psql -c "ALTER TABLE IF EXISTS api_mapfunction    RENAME TO core_mapfunction;"
+    psql -c "ALTER TABLE IF EXISTS api_mapresult      RENAME TO core_mapresult;"
+    psql -c "ALTER TABLE IF EXISTS api_reducefunction RENAME TO core_reducefunction;"
+    psql -c "ALTER TABLE IF EXISTS api_response       RENAME TO core_response;"
+    psql -c "ALTER TABLE IF EXISTS api_survey         RENAME TO core_survey;"
+
     # migrate data model if needed
     ./manage.py migrate --noinput
 }
