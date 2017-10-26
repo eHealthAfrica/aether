@@ -1,37 +1,79 @@
 import requests
+
+from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
 from django.views import View
 
+from .models import get_or_create_valid_app_token, GATHER_APPS
 
-class ProxyView(View):
 
-    base_url = None
+def tokens_required(function=None, redirect_field_name=None, login_url='tokens'):
     '''
-    The base URL that the proxy should forward requests to.
+    Decorator for views that checks that a user is logged in and
+    he/she has valid tokens for each app used in the proxy view,
+    redirecting to the "tokens" endpoint if erred.
     '''
 
-    token = None
+    def user_token_test(user):
+        '''
+        Checks for each external app that the user can currently connect to it.
+        '''
+        try:
+            for app in GATHER_APPS:
+                # checks if there is a valid token for this app
+                if get_or_create_valid_app_token(user, app) is None:
+                    return False
+            return True
+        except Exception:
+            return False
+
+    actual_decorator = user_passes_test(
+        lambda u: u.is_authenticated and user_token_test(u),
+        login_url=login_url,
+        redirect_field_name=redirect_field_name,
+    )
+    if function:  # pragma: no cover
+        return actual_decorator(function)
+    return actual_decorator  # pragma: no cover
+
+
+class TokenProxyView(View):
     '''
-    The Authentication Token that the proxy should use to forward requests to ``base_url``.
+    This view will proxy any request to the indicated app with the user auth token.
+    '''
+
+    app_name = None
+    '''
+    The app that the proxy should forward requests to.
     '''
 
     def dispatch(self, request, path, *args, **kwargs):
+        '''
+        Dispatches the request including/modifying the needed properties
+        '''
+
+        if self.app_name not in GATHER_APPS:
+            raise RuntimeError('"{}" app is not recognized.'.format(self.app_name))
+
+        app_token = get_or_create_valid_app_token(request.user, self.app_name)
+        if app_token is None:
+            raise RuntimeError('User "{}" cannot conenct to app "{}"'
+                               .format(request.user, self.app_name))
+
         self.path = path
         self.original_request_path = request.path
         if not self.path.startswith('/'):
             self.path = '/' + self.path
 
         # build request path with `base_url` + `path`
-        url = u'%s%s' % (self.base_url, self.path)
+        url = '{base_url}{path}'.format(base_url=app_token.base_url, path=self.path)
 
         request.path = url
         request.path_info = url
         request.META['PATH_INFO'] = url
+        request.META['HTTP_AUTHORIZATION'] = 'Token {token}'.format(token=app_token.token)
 
-        if self.token:
-            request.META['HTTP_AUTHORIZATION'] = 'Token {token}'.format(token=self.token)
-
-        return super(ProxyView, self).dispatch(request, *args, **kwargs)
+        return super(TokenProxyView, self).dispatch(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
         return self.handle(request, *args, **kwargs)
@@ -56,6 +98,9 @@ class ProxyView(View):
 
     def handle(self, request, *args, **kwargs):
         def valid_header(name):
+            '''
+            Validates if the header can be passed within the request headers.
+            '''
             return (
                 name.startswith('HTTP_') or
                 name.startswith('CSRF_') or
@@ -63,26 +108,31 @@ class ProxyView(View):
             )
 
         method = request.method
+        # builds request headers
         headers = {}
         for header, value in request.META.items():
             # Fixes:
             # django.http.request.RawPostDataException:
             #     You cannot access body after reading from request's data stream
+            #
             # Django does not read twice the `request.body` on `POST` calls:
-            # but it is read while checking the CSRF token.
+            # but it was already read while checking the CSRF token.
             # This raises an exception in the line below `data=request.body ...`.
             # The Ajax call changed it from `POST` to `PUT`,
             # here it's changed back to its real value.
-            # All the conditions are checked to avoid further attacks with this.
+            #
+            # All the conditions are checked to avoid further issues with this.
             if method == 'PUT' and header == 'HTTP_X_METHOD' and value == 'POST':
                 method = value
 
             if valid_header(header):
+                # normalize header name
                 norm_header = header.replace('HTTP_', '').title().replace('_', '-')
                 headers[norm_header] = value
 
+        # builds url with the query string
         param_str = request.GET.urlencode()
-        url = request.path + ('?%s' % param_str if param_str else '')
+        url = request.path + ('?{}'.format(param_str) if param_str else '')
 
         response = requests.request(method=method,
                                     url=url,
@@ -90,5 +140,4 @@ class ProxyView(View):
                                     headers=headers,
                                     *args,
                                     **kwargs)
-
         return HttpResponse(response, status=response.status_code)

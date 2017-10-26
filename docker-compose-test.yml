@@ -49,6 +49,8 @@ services:
             - db-test
         ports:
             - "9000:9000"
+        depends_on:
+            - db-test
         command: start_dev
 
 
@@ -81,6 +83,9 @@ services:
             - db-test
         ports:
             - "9443:9443"
+        depends_on:
+            - db-test
+            - core-test
         command: start_dev
 
 
@@ -126,6 +131,11 @@ services:
             - redis-test
         ports:
             - "9666:9666"
+        depends_on:
+            - db-test
+            - redis-test
+            - couchdb-test
+            - core-test
         command: start_dev
 
 
@@ -145,13 +155,11 @@ services:
             GATHER_ORG_NAME: eHealth Africa (Dev mode)
 
             GATHER_CORE_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
-            GATHER_CORE_URL: http://core-test:9000
             GATHER_CORE_URL_TEST: http://core-test:9000
 
             GATHER_MODULES: "odk-importer"
 
             GATHER_ODK_TOKEN: d5184a044bb5acff89a76ec4e67d0fcddd5cd3a1
-            GATHER_ODK_URL: http://odk-importer-test:9443
             GATHER_ODK_URL_TEST: http://odk-importer-test:9443
 
             RDS_DB_NAME: ui-test
@@ -182,6 +190,10 @@ services:
             - odk-importer-test
         ports:
             - "9090:9090"
+        depends_on:
+            - db-test
+            - core-test
+            - odk-importer-test
         command: start_dev
 
 

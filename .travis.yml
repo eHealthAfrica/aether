@@ -15,6 +15,9 @@ install:
 script:
   - ./scripts/test_all.sh
 
+after_script:
+  - ./scripts/kill_all.sh
+
 deploy:
   - provider: script
     script: "./scripts/deploy.sh"

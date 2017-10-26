@@ -17,6 +17,7 @@
 - [Usage](#usage)
   - [Users & Authentication](#users--authentication)
     - [UMS settings for local development](#ums-settings-for-local-development)
+    - [Token Authentication](#token-authentication)
 - [Development](#development)
 - [Deployment](#deployment)
 - [Containers and services](#containers-and-services)
@@ -34,6 +35,8 @@
 - git
 - [docker-compose](https://docs.docker.com/compose/)
 
+*[Return to TOC](#table-of-contents)*
+
 ### Installation
 
 ```bash
@@ -49,6 +52,8 @@ Include this entry in your `/etc/hosts` file:
 127.0.0.1    core.gather2.local odk.gather2.local sync.gather2.local ui.gather2.local
 ```
 
+*[Return to TOC](#table-of-contents)*
+
 ### Common module
 
 This module contains the shared features among different containers.
@@ -60,6 +65,8 @@ To create a new version and distribute it:
 ```
 
 See more in [README](/gather2-common/README.md).
+
+*[Return to TOC](#table-of-contents)*
 
 ### Environment Variables
 
@@ -121,6 +128,7 @@ of the most common ones with non default values. For more info take a look at th
 Never run `odk-importer`, `couchdb-sync` or `ui` tests against any
 PRODUCTION server. The tests clean up will **DELETE ALL SURVEYS!!!**
 
+*[Return to TOC](#table-of-contents)*
 
 ## Usage
 
@@ -134,7 +142,7 @@ This will start:
   and create a superuser `admin-core` with the needed TOKEN.
 
 - **odk-importer** on `http://odk.gather2.local:8443`
-  and create a superuser `admin-odk`.
+  and create a superuser `admin-odk` with the needed TOKEN.
 
 - **couchdb-sync** on `http://sync.gather2.local:8666`
   and create a superuser `admin-sync`.
@@ -145,6 +153,7 @@ This will start:
 
 All the created superusers have password `adminadmin` in each container.
 
+*[Return to TOC](#table-of-contents)*
 
 ### Users & Authentication
 
@@ -171,11 +180,33 @@ Other options are to log in via token, via basic authentication or via the
 standard django authentication process in the admin section.
 The available options depend on each container.
 
+*[Return to TOC](#table-of-contents)*
+
+#### Token Authentication
+
+The communication between the containers is done via
+[token authentication](http://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication).
+
+In the case of `gather2-odk-importer` and `gather2-couchdb-sync` there is a
+global token to connect to `gather2-core` set in the **required** environment
+variable `GATHER_CORE_TOKEN`.
+
+In the case of `gather2-ui` there are tokens per user. This means that every time
+a logged in user tries to visit any page that requires to fetch data from any of
+the other apps, `gather2-core` and/or `gather2-odk-importer`, the system will verify
+that the user token for that app is valid or will request a new one using the
+global tokens, `GATHER_CORE_TOKEN` and/or `GATHER_ODK_TOKEN`; that's going to
+be used for all requests and will allow the system to better track the user actions.
+
+*[Return to TOC](#table-of-contents)*
+
 
 ## Development
 
 All development should be tested within the container, but developed in the host folder.
 Read the `docker-compose.yml` file to see how it's mounted.
+
+*[Return to TOC](#table-of-contents)*
 
 
 ## Deployment
@@ -216,6 +247,7 @@ being done automatically on the following branches/environments:
 - branch `lake-chad-basin` is deployed to `lake chad basin` environment.
   [![Build Status](https://travis-ci.com/eHealthAfrica/gather2.svg?token=Rizk7xZxRNoTexqsQfXy&branch=lake-chad-basin)](https://travis-ci.com/eHealthAfrica/gather2)
 
+*[Return to TOC](#table-of-contents)*
 
 
 ## Containers and services
@@ -240,6 +272,8 @@ The list of the main containers:
 All of the containers definition for development can be found in the
 [docker-compose.yml](docker-compose.yml) file.
 
+*[Return to TOC](#table-of-contents)*
+
 
 ## Run commands in the containers
 
@@ -249,6 +283,8 @@ The full list of commands can be seen in the script.
 
 The pattern to run a command is always
 ``docker-compose run <container-name> <entrypoint-command> <...args>``
+
+*[Return to TOC](#table-of-contents)*
 
 
 ### Run tests
@@ -299,6 +335,8 @@ Look into [docker-compose.yml](docker-compose.yml) or
 [docker-compose-test.yml](docker-compose-test.yml), the variable
 `GATHER_CORE_URL_TEST` indicates the Gather Core Server used in tests.
 
+*[Return to TOC](#table-of-contents)*
+
 
 ### Upgrade python dependencies
 
@@ -322,3 +360,5 @@ or
 docker-compose run <container-name> pip_freeze
 ```
 In this case `gather2.common` is not rebuilt.
+
+*[Return to TOC](#table-of-contents)*

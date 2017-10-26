@@ -1,122 +1,148 @@
 import mock
 import json
 
+from django.contrib.auth import get_user_model
+from django.core.urlresolvers import reverse
 from django.test import TestCase, RequestFactory
 
-from ..views import ProxyView
+from ..views import TokenProxyView
 
 
-RETURN_MOCK = mock.Mock(status_code=200)
+RESPONSE_MOCK = mock.Mock(status_code=200)
+APP_TOKEN_MOCK = mock.Mock(base_url='http://test', token='ABCDEFGH')
 
 
 class ViewsTest(TestCase):
 
     def setUp(self):
-        self.viewWithoutToken = ProxyView.as_view(base_url='http://example.com')
-        self.viewWithToken = ProxyView.as_view(base_url='http://example.com', token='ABCDEFGH')
+        username = 'test'
+        email = 'test@example.com'
+        password = 'testtest'
 
-    @mock.patch('requests.request', return_value=RETURN_MOCK)
-    def test_proxy_view_delete(self, mock_request):
-        request = RequestFactory().delete('/go_to_example')
-        response = self.viewWithToken(request, path='to-delete')
+        self.user = get_user_model().objects.create_user(username, email, password)
+        self.view = TokenProxyView.as_view(app_name='core')
+
+    @mock.patch('gather2.ui.views.get_or_create_valid_app_token')
+    def test_proxy_view_without_valid_app(self, mock_test_conn):
+        request = RequestFactory().get('/go_to_proxy')
+        request.user = self.user
+        view_unknown = TokenProxyView.as_view(app_name='unknown')
+
+        self.assertRaises(
+            RuntimeError,
+            view_unknown,
+            request,
+            path='to-get',
+        )
+        mock_test_conn.assert_not_called()
+
+    @mock.patch('gather2.ui.views.get_or_create_valid_app_token', return_value=None)
+    def test_proxy_view_without_valid_token(self, mock_test_conn):
+        request = RequestFactory().get('/go_to_proxy')
+        request.user = self.user
+
+        self.assertRaises(
+            RuntimeError,
+            self.view,
+            request,
+            path='to-get',
+        )
+        mock_test_conn.assert_called_once()
+
+    @mock.patch('gather2.ui.views.get_or_create_valid_app_token', return_value=APP_TOKEN_MOCK)
+    @mock.patch('requests.request', return_value=RESPONSE_MOCK)
+    def test_proxy_view_delete(self, mock_request, mock_test_conn):
+        request = RequestFactory().delete('/go_to_proxy')
+        request.user = self.user
+        response = self.view(request, path='to-delete')
 
         self.assertEqual(response.status_code, 200)
+        mock_test_conn.assert_called_once()
         mock_request.assert_called_once_with(
             method='DELETE',
-            url='http://example.com/to-delete',
+            url='http://test/to-delete',
             data=None,
             headers={'Cookie': '', 'Authorization': 'Token ABCDEFGH'}
         )
 
-    @mock.patch('requests.request', return_value=RETURN_MOCK)
-    def test_proxy_view_delete_without_token(self, mock_request):
-        request = RequestFactory().delete('/go_to_example')
-        response = self.viewWithoutToken(request, path='/no-token')
+    @mock.patch('gather2.ui.views.get_or_create_valid_app_token', return_value=APP_TOKEN_MOCK)
+    @mock.patch('requests.request', return_value=RESPONSE_MOCK)
+    def test_proxy_view_get(self, mock_request, mock_test_conn):
+        request = RequestFactory().get('/go_to_proxy')
+        request.user = self.user
+        response = self.view(request, path='/to-get')
 
         self.assertEqual(response.status_code, 200)
-        mock_request.assert_called_once_with(
-            method='DELETE',
-            url='http://example.com/no-token',
-            data=None,
-            headers={'Cookie': ''}
-        )
-
-    @mock.patch('requests.request', return_value=RETURN_MOCK)
-    def test_proxy_view_get(self, mock_request):
-        request = RequestFactory().get('/go_to_example')
-        response = self.viewWithToken(request, path='to-get')
-
-        self.assertEqual(response.status_code, 200)
+        mock_test_conn.assert_called_once()
         mock_request.assert_called_once_with(
             method='GET',
-            url='http://example.com/to-get',
+            url='http://test/to-get',
             data=None,
             headers={'Cookie': '', 'Authorization': 'Token ABCDEFGH'}
         )
 
-    @mock.patch('requests.request', return_value=RETURN_MOCK)
-    def test_proxy_view_get_without_token(self, mock_request):
-        request = RequestFactory().get('/go_to_example')
-        response = self.viewWithoutToken(request, path='/no-token')
+    @mock.patch('gather2.ui.views.get_or_create_valid_app_token', return_value=APP_TOKEN_MOCK)
+    @mock.patch('requests.request', return_value=RESPONSE_MOCK)
+    def test_proxy_view_head(self, mock_request, mock_test_conn):
+        request = RequestFactory().head('/go_to_proxy')
+        request.user = self.user
+        response = self.view(request, path='proxy')
 
         self.assertEqual(response.status_code, 200)
-        mock_request.assert_called_once_with(
-            method='GET',
-            url='http://example.com/no-token',
-            data=None,
-            headers={'Cookie': ''}
-        )
-
-    @mock.patch('requests.request', return_value=RETURN_MOCK)
-    def test_proxy_view_head(self, mock_request):
-        request = RequestFactory().head('/go_to_example')
-        response = self.viewWithToken(request, path='proxy')
-
-        self.assertEqual(response.status_code, 200)
+        mock_test_conn.assert_called_once()
         mock_request.assert_called_once_with(
             method='HEAD',
-            url='http://example.com/proxy',
+            url='http://test/proxy',
             data=None,
             headers={'Cookie': '', 'Authorization': 'Token ABCDEFGH'}
         )
 
-    @mock.patch('requests.request', return_value=RETURN_MOCK)
-    def test_proxy_view_options(self, mock_request):
-        request = RequestFactory().options('/go_to_example')
-        response = self.viewWithToken(request, path='to-options')
+    @mock.patch('gather2.ui.views.get_or_create_valid_app_token', return_value=APP_TOKEN_MOCK)
+    @mock.patch('requests.request', return_value=RESPONSE_MOCK)
+    def test_proxy_view_options(self, mock_request, mock_test_conn):
+        request = RequestFactory().options('/go_to_proxy')
+        request.user = self.user
+        response = self.view(request, path='/to-options')
 
         self.assertEqual(response.status_code, 200)
+        mock_test_conn.assert_called_once()
         mock_request.assert_called_once_with(
             method='OPTIONS',
-            url='http://example.com/to-options',
+            url='http://test/to-options',
             data=None,
             headers={'Cookie': '', 'Authorization': 'Token ABCDEFGH'}
         )
 
-    @mock.patch('requests.request', return_value=RETURN_MOCK)
-    def test_proxy_view_patch(self, mock_request):
-        request = RequestFactory().patch('/go_to_example')
-        response = self.viewWithToken(request, path='to-patch')
+    @mock.patch('gather2.ui.views.get_or_create_valid_app_token', return_value=APP_TOKEN_MOCK)
+    @mock.patch('requests.request', return_value=RESPONSE_MOCK)
+    def test_proxy_view_patch(self, mock_request, mock_test_conn):
+        request = RequestFactory().patch('/go_to_proxy')
+        request.user = self.user
+        response = self.view(request, path='to-patch')
 
         self.assertEqual(response.status_code, 200)
+        mock_test_conn.assert_called_once()
         mock_request.assert_called_once_with(
             method='PATCH',
-            url='http://example.com/to-patch',
+            url='http://test/to-patch',
             data=None,
             headers={'Cookie': '', 'Authorization': 'Token ABCDEFGH'}
         )
 
-    @mock.patch('requests.request', return_value=RETURN_MOCK)
-    def test_proxy_view_post(self, mock_request):
-        request = RequestFactory().post('/go_to_example',
+    @mock.patch('gather2.ui.views.get_or_create_valid_app_token', return_value=APP_TOKEN_MOCK)
+    @mock.patch('requests.request', return_value=RESPONSE_MOCK)
+    def test_proxy_view_post(self, mock_request, mock_test_conn):
+        request = RequestFactory().post('/go_to_proxy',
                                         data=json.dumps({'a': 1}),
                                         content_type='application/json')
-        response = self.viewWithToken(request, path='posting')
+        request.user = self.user
+        response = self.view(request, path='posting')
 
         self.assertEqual(response.status_code, 200)
+        mock_test_conn.assert_called_once()
         mock_request.assert_called_once_with(
             method='POST',
-            url='http://example.com/posting',
+            url='http://test/posting',
             data=b'{"a": 1}',
             headers={
                 'Cookie': '',
@@ -125,15 +151,18 @@ class ViewsTest(TestCase):
             }
         )
 
-    @mock.patch('requests.request', return_value=RETURN_MOCK)
-    def test_proxy_view_put(self, mock_request):
-        request = RequestFactory().put('/go_to_example', data='something')
-        response = self.viewWithToken(request, path='putting')
+    @mock.patch('gather2.ui.views.get_or_create_valid_app_token', return_value=APP_TOKEN_MOCK)
+    @mock.patch('requests.request', return_value=RESPONSE_MOCK)
+    def test_proxy_view_put(self, mock_request, mock_test_conn):
+        request = RequestFactory().put('/go_to_proxy', data='something')
+        request.user = self.user
+        response = self.view(request, path='putting')
 
         self.assertEqual(response.status_code, 200)
+        mock_test_conn.assert_called_once()
         mock_request.assert_called_once_with(
             method='PUT',
-            url='http://example.com/putting',
+            url='http://test/putting',
             data=b'something',
             headers={
                 'Cookie': '',
@@ -142,17 +171,56 @@ class ViewsTest(TestCase):
             }
         )
 
-    @mock.patch('requests.request', return_value=RETURN_MOCK)
-    def test_proxy_view_put_but_post(self, mock_request):
+    def test_tokens_required(self):
+        # if no logged in user...
+        url = reverse('surveyors', kwargs={'action': 'list'})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('tokens'))
+
+        self.assertTrue(self.client.login(username='test', password='testtest'))
+
+        # redirects to `tokens` url if something unexpected happens
+        with mock.patch('gather2.ui.views.get_or_create_valid_app_token',
+                        side_effect=RuntimeError):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 302)
+            self.assertEqual(response.url, reverse('tokens'))
+
+        # redirects to `tokens` url if the tokens are not valid
+        with mock.patch('gather2.ui.views.get_or_create_valid_app_token',
+                        return_value=None):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 302)
+            self.assertEqual(response.url, reverse('tokens'))
+
+        # with valid tokens it does not redirect
+        with mock.patch('gather2.ui.views.get_or_create_valid_app_token',
+                        return_value=APP_TOKEN_MOCK) as mock_get_app_token:
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            # it checks every app in `ui.models.APPS`: `core` and `odk`
+            self.assertEqual(mock_get_app_token.call_count, 2)
+            self.assertEqual(mock_get_app_token.call_args_list,
+                             [
+                                 mock.call(self.user, 'core'),
+                                 mock.call(self.user, 'odk-importer'),
+                             ])
+
+    @mock.patch('gather2.ui.views.get_or_create_valid_app_token', return_value=APP_TOKEN_MOCK)
+    @mock.patch('requests.request', return_value=RESPONSE_MOCK)
+    def test_proxy_view_put_but_post(self, mock_request, mock_test_conn):
         request = RequestFactory().put('/go_to_example',
                                        data='something',
                                        **{'HTTP_X_METHOD': 'POST'})
-        response = self.viewWithToken(request, path='fake_put')
+        request.user = self.user
+        response = self.view(request, path='fake_put')
 
         self.assertEqual(response.status_code, 200)
+        mock_test_conn.assert_called_once()
         mock_request.assert_called_once_with(
             method='POST',
-            url='http://example.com/fake_put',
+            url='http://test/fake_put',
             data=b'something',
             headers={
                 'Cookie': '',
@@ -162,17 +230,20 @@ class ViewsTest(TestCase):
             }
         )
 
-    @mock.patch('requests.request', return_value=RETURN_MOCK)
-    def test_proxy_view_put_but_other(self, mock_request):
+    @mock.patch('gather2.ui.views.get_or_create_valid_app_token', return_value=APP_TOKEN_MOCK)
+    @mock.patch('requests.request', return_value=RESPONSE_MOCK)
+    def test_proxy_view_put_but_other(self, mock_request, mock_test_conn):
         request = RequestFactory().put('/go_to_example',
                                        data='something',
                                        **{'HTTP_X_METHOD': 'GET'})
-        response = self.viewWithToken(request, path='fake_put')
+        request.user = self.user
+        response = self.view(request, path='fake_put')
 
         self.assertEqual(response.status_code, 200)
+        mock_test_conn.assert_called_once()
         mock_request.assert_called_once_with(
             method='PUT',
-            url='http://example.com/fake_put',
+            url='http://test/fake_put',
             data=b'something',
             headers={
                 'Cookie': '',

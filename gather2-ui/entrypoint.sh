@@ -69,9 +69,6 @@ test_lint() {
 }
 
 test_coverage() {
-    npm run mocha
-    npm run webpack
-
     export RCFILE=/code/conf/extras/coverage.rc
     export TESTING=true
 
@@ -130,6 +127,8 @@ case "$1" in
 
     test)
         test_lint
+        test_js
+        npm run webpack
         test_coverage "${@:2}"
     ;;
 

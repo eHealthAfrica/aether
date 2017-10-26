@@ -15,7 +15,6 @@ if settings.CAS_SERVER_URL:  # pragma: no cover
         url(r'^logout/$', django_cas_ng.views.logout, name='logout'),
     ]
 
-
 urlpatterns = [
     url(r'', include('gather2.core.api.urls')),
     url(r'^v1/', include('gather2.core.api.urls', namespace='v1')),

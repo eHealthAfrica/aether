@@ -35,9 +35,9 @@ TEMPLATES[0]['OPTIONS']['context_processors'] += [
     'gather2.ui.context_processors.gather2',
 ]
 
-# MIGRATION_MODULES = {
-#     'ui': 'gather2.ui.migrations'
-# }
+MIGRATION_MODULES = {
+    'ui': 'gather2.ui.migrations'
+}
 
 # check the available modules linked to this instance
 GATHER_MODULES = os.environ.get('GATHER_MODULES', '').split(',')

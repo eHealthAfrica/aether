@@ -1,5 +1,5 @@
-import string
 import json
+import string
 
 from django.utils.safestring import mark_safe
 

@@ -1,12 +1,15 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% load render_bundle from webpack_loader %}
+
+{% block title %}{{ app_name }} - {% trans 'Surveyors' %}{% endblock title %}
 
 {% block content %}
   <div
     class="container-fluid"
     id="surveyors-app"
-    data-action="{{action}}"
-    data-surveyor-id="{{surveyor_id}}"></div>
+    data-action="{{ action }}"
+    data-surveyor-id="{{ surveyor_id }}"></div>
 
   {% render_bundle 'surveyors' %}
 {% endblock %}

@@ -4,8 +4,8 @@ from django.contrib import admin
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 
+from .views import TokenProxyView, tokens_required
 from gather2.common.core.views import check_core
-from .views import ProxyView
 
 
 auth_urls = 'rest_framework.urls'
@@ -19,39 +19,52 @@ if settings.CAS_SERVER_URL:  # pragma: no cover
 
 
 urlpatterns = [
+    # ----------------------
+    # Common entries
     url(r'^admin/', include(admin.site.urls)),
     url(r'^accounts/', include(auth_urls, namespace='rest_framework')),
     url(r'^check-core$', check_core, name='check-core'),
 
-    # Proxy to other apps
+    # ----------------------
+    # Proxy to Gather2 Core
     url(r'^core/(?P<path>.*)$',
-        login_required(ProxyView.as_view(
-            base_url=settings.GATHER_CORE_URL,
-            token=settings.GATHER_CORE_TOKEN,
-        )),
+        login_required(TokenProxyView.as_view(app_name='core')),
         name='core-proxy'),
 
+    # ----------------------
     # Entrypoints
+
+    # ----------------------
+    # Welcome page (WIP)
     url(r'^$',
         login_required(TemplateView.as_view(template_name='pages/index.html')),
         name='index-page'),
 
+    # ----------------------
+    # shows error if the user app tokens are not valid
+    url(r'^tokens$',
+        login_required(TemplateView.as_view(template_name='pages/tokens.html')),
+        name='tokens'),
+
+    # ----------------------
+    # Gather2 entrypoints
+    # Any entry here needs the decorator `tokens_required` if it's going to execute
+    # AJAX request to any of the other apps
     url(r'^surveys/(?P<action>\w+)/(?P<survey_id>[0-9]+)?$',
-        login_required(TemplateView.as_view(template_name='pages/surveys.html')),
+        tokens_required(TemplateView.as_view(template_name='pages/surveys.html')),
         name='surveys'),
+
 ]
 
 if settings.GATHER_ODK:  # pragma: no cover
     urlpatterns += [
+        # Proxy to other odk-importer
         url(r'^odk/(?P<path>.*)$',
-            login_required(ProxyView.as_view(
-                base_url=settings.GATHER_ODK_URL,
-                token=settings.GATHER_ODK_TOKEN,
-            )),
+            login_required(TokenProxyView.as_view(app_name='odk-importer')),
             name='odk-proxy'),
-
+        # Entry point with `tokes_required` test.
         url(r'^surveyors/(?P<action>\w+)/(?P<surveyor_id>[0-9]+)?$',
-            login_required(TemplateView.as_view(template_name='pages/surveyors.html')),
+            tokens_required(TemplateView.as_view(template_name='pages/surveyors.html')),
             name='surveyors'),
     ]
 
