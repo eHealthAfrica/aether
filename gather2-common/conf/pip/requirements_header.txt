@@ -4,8 +4,8 @@
 #                                                                              #
 #                               DO NOT CHANGE !!!                              #
 #                                                                              #
-# To update this first update 'primary-requirements.txt'                       #
-# then run 'docker-compose -f docker-compose-test.yml run common pip_freeze'   #
+# To update this first update 'primary-requirements.txt' then run              #
+#    'docker-compose -f docker-compose-test.yml run common-test pip_freeze'    #
 #                                                                              #
 ################################################################################
 

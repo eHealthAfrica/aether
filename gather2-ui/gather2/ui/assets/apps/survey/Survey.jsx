@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 
 import { PaginationContainer } from '../components'
+import { range } from '../utils'
 import { getSurveysPath, getResponsesAPIPath } from '../utils/paths'
 import { flatten, cleanPropertyName } from '../utils/types'
 
@@ -17,7 +18,8 @@ export default class Survey extends Component {
     super(props)
 
     this.state = {
-      pageSize: TABLE_SIZE
+      pageSize: TABLE_SIZE,
+      total: props.response.count
     }
 
     if (props.response.results.length) {
@@ -95,6 +97,9 @@ export default class Survey extends Component {
                   id='survey.view.action.single'
                   defaultMessage='Single' />
               </button>
+            </li>
+            <li>
+              { this.renderDownloadButton() }
             </li>
             <li className='toolbar-filter'>
               { this.renderColumnsBar() }
@@ -198,6 +203,71 @@ export default class Survey extends Component {
             </button>
           </div>
         }
+      </div>
+    )
+  }
+
+  renderDownloadButton () {
+    const {survey} = this.props
+    const {total} = this.state
+    // `10000` is the maximum value accepted by the pagination class
+    const pageSize = 10000
+    const params = {
+      surveyId: survey.id,
+      fields: 'created,data,survey',
+      format: 'csv',
+      pageSize
+    }
+
+    if (total < pageSize) {
+      return (
+        <a
+          className='tab'
+          href={getResponsesAPIPath(params)}
+          download={`${survey.name}.csv`}
+          >
+          <i className='fa fa-download mr-2' />
+          <FormattedMessage
+            id='survey.view.action.download'
+            defaultMessage='Download' />
+        </a>
+      )
+    }
+
+    const pages = range(1, Math.ceil(total / pageSize) + 1)
+    const dropdown = 'downloadLinkChoices'
+
+    return (
+      <div className='dropdown'>
+        <button
+          className='tab'
+          id={dropdown}
+          data-toggle='dropdown'
+          >
+          <i className='fa fa-download mr-2' />
+          <FormattedMessage
+            id='survey.view.action.download'
+            defaultMessage='Download' />
+        </button>
+
+        <div
+          className='dropdown-menu'
+          aria-labelledby={dropdown}
+          >
+          <div className='dropdown-list'>
+            {
+              pages.map(page => (
+                <a
+                  key={page}
+                  className='dropdown-item'
+                  href={getResponsesAPIPath({...params, page})}
+                  download={`${survey.name}-${page}.csv`}>
+                  {`${survey.name}-${page}.csv`}
+                </a>
+              ))
+            }
+          </div>
+        </div>
       </div>
     )
   }

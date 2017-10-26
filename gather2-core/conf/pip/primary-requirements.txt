@@ -18,6 +18,7 @@ django-reversion-compare
 django-ums-client
 djangorestframework
 djangorestframework-filters
+drf-dynamic-fields
 drf-extensions
 flake8
 jsonschema

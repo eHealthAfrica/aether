@@ -44,9 +44,10 @@ export const getXFormsAPIPath = ({id, ...params}) => {
  */
 export const getResponsesAPIPath = ({surveyId, ...params}) => {
   const surveyNested = (surveyId ? `/surveys/${surveyId}` : '')
+  const format = params.format || 'json'
   const queryString = buildQueryString(params)
 
-  return `/core${surveyNested}/responses.json?${queryString}`
+  return `/core${surveyNested}/responses.${format}?${queryString}`
 }
 
 /**
@@ -64,9 +65,10 @@ const buildAPIPath = (app, type, id, params) => {
   if (id) {
     return `/${app}/${type}/${id}.json`
   }
+  const format = params.format || 'json'
 
   const queryString = buildQueryString(params || {})
-  return `/${app}/${type}.json?${queryString}`
+  return `/${app}/${type}.${format}?${queryString}`
 }
 
 /**
@@ -76,12 +78,16 @@ const buildAPIPath = (app, type, id, params) => {
  * @param {string} search       - search text
  * @param {number} page         - current page
  * @param {number} pageSize     - page size
+ * @param {string} fields       - comma separated list of fields to include in the response
+ * @param {string} omit         - comma separated list of fields to omit in the response
  */
-export const buildQueryString = ({surveyId, search, page, pageSize}) => {
+export const buildQueryString = ({surveyId, search, page, pageSize, fields, omit}) => {
   return (search ? `&search=${encodeURIComponent(search)}` : '') +
          (surveyId ? `&survey_id=${surveyId}` : '') +
          (page ? `&page=${page}` : '') +
-         (pageSize ? `&page_size=${pageSize}` : '')
+         (pageSize ? `&page_size=${pageSize}` : '') +
+         (fields ? `&fields=${fields}` : '') +
+         (omit ? `&omit=${omit}` : '')
 }
 
 /**

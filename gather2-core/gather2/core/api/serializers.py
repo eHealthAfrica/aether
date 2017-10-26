@@ -2,6 +2,7 @@
 import json
 import jsonschema
 from django.contrib.auth import get_user_model
+from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
 from . import models
@@ -54,7 +55,7 @@ class JSONSerializerField(serializers.JSONField):
         return json_printable(data)
 
 
-class SurveySerializer(serializers.ModelSerializer):
+class SurveySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     name = serializers.CharField()
     schema = JSONSerializerField(
         default={},
@@ -102,7 +103,7 @@ class SurveySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ResponseSerializer(serializers.ModelSerializer):
+class ResponseSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     data = JSONSerializerField(style=JSON_STYLE, validators=[JSONValidator()])
     created_by = serializers.PrimaryKeyRelatedField(
         read_only=True,
@@ -126,7 +127,7 @@ class ResponseSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class AttachmentSerializer(serializers.ModelSerializer):
+class AttachmentSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     name = serializers.CharField(read_only=True)
     url = serializers.HyperlinkedIdentityField('attachment-detail', read_only=True)
     response_url = serializers.HyperlinkedRelatedField(
@@ -140,7 +141,7 @@ class AttachmentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class MapFunctionSerializer(serializers.ModelSerializer):
+class MapFunctionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField('map_function-detail', read_only=True)
     survey_url = serializers.HyperlinkedRelatedField(
         'survey-detail',
@@ -163,7 +164,7 @@ class MapFunctionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class MapResultSerializer(serializers.ModelSerializer):
+class MapResultSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField('map_results-detail', read_only=True)
     response_url = serializers.HyperlinkedRelatedField(
         'response-detail',
@@ -181,7 +182,7 @@ class MapResultSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ReduceFunctionSerializer(serializers.ModelSerializer):
+class ReduceFunctionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField('reduce_function-detail', read_only=True)
     map_functions_url = serializers.HyperlinkedRelatedField(
         'map_function-detail',
@@ -194,7 +195,7 @@ class ReduceFunctionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SurveyStatsSerializer(serializers.ModelSerializer):
+class SurveyStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     first_response = serializers.DateTimeField()
     last_response = serializers.DateTimeField()
     responses = serializers.IntegerField()
@@ -209,7 +210,7 @@ class SurveyStatsSerializer(serializers.ModelSerializer):
         )
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField('user-detail', read_only=True)
     full_name = serializers.SerializerMethodField(source='get_full_name', read_only=True)
 

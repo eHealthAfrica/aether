@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password as validate_pwd
 from django.utils.translation import ugettext as _
+from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
 from .models import Survey, XForm
@@ -8,7 +9,7 @@ from .xform_utils import parse_file
 from .surveyors_utils import get_surveyors, flag_as_surveyor
 
 
-class XFormSerializer(serializers.ModelSerializer):
+class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     url = serializers.HyperlinkedIdentityField('xform-detail', read_only=True)
     survey_url = serializers.HyperlinkedRelatedField(
@@ -52,7 +53,7 @@ class XFormSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SurveyorSerializer(serializers.ModelSerializer):
+class SurveyorSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     password = serializers.CharField(style={'input_type': 'password'})
 
@@ -86,14 +87,14 @@ class SurveyorSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'password', )
 
 
-class XFormSimpleSerializer(serializers.ModelSerializer):
+class XFormSimpleSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     class Meta:
         model = XForm
         fields = '__all__'
 
 
-class SurveySerializer(serializers.ModelSerializer):
+class SurveySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     url = serializers.HyperlinkedIdentityField('survey-detail', read_only=True)
     surveyors = serializers.PrimaryKeyRelatedField(

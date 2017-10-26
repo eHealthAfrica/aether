@@ -5,14 +5,14 @@
 #                                 CHANGE ME !!!                                #
 #                                                                              #
 # Update me and then run                                                       #
-#       'docker-compose -f docker-compose-test.yml run common pip_freeze'      #
+#  'docker-compose -f docker-compose-test.yml run common-test pip_freeze'      #
 #                                                                              #
 ################################################################################
 
 coverage
 django
 djangorestframework
+djangorestframework-csv
 flake8
 mock
-psycopg2
 requests

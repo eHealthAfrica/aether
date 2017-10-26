@@ -15,6 +15,7 @@ django-cors-headers
 django-debug-toolbar
 django-ums-client
 djangorestframework
+drf-dynamic-fields
 flake8
 geojson
 mock

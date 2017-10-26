@@ -20,6 +20,7 @@ setup(
     install_requires=[
         'django>=1.11<2',
         'djangorestframework>=3.6<4',
+        'djangorestframework-csv>=2.0.0<3',
     ],
 
     classifiers=[

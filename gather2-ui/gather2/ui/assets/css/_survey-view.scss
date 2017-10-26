@@ -84,6 +84,7 @@
 }
 
 .tab {
+  @include label;
   background: none;
   color: $white;
   margin-right: 2rem;
@@ -91,6 +92,7 @@
   letter-spacing: 0;
 
   &:hover,
+  &:focus,
   &.active {
     color: $text-color;
     background: none;

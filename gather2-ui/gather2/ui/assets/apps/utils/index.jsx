@@ -40,3 +40,6 @@ export const deepEqual = (a, b, ignoreNull = false) => {
   }
   return true
 }
+
+// https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Array/from
+export const range = (start, end) => Array.from({length: end - start}, (v, i) => i + start)

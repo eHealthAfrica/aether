@@ -193,14 +193,6 @@ services:
         build: gather2-common
         environment:
             TESTING: "true"
-
-            RDS_DB_NAME: common-test
-            RDS_HOSTNAME: db-test
-            RDS_PASSWORD: ""
-            RDS_PORT: 5432
-            RDS_USERNAME: postgres
         volumes:
             - ./gather2-common:/code
-        depends_on:
-            - db-test
         command: test

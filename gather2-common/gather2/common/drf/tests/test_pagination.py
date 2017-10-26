@@ -1,9 +1,9 @@
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
 from rest_framework import generics, serializers, status
-from rest_framework.test import APIRequestFactory
+
 from ..pagination import CustomPagination
 
-factory = APIRequestFactory()
+factory = RequestFactory()
 
 
 class PassThroughSerializer(serializers.BaseSerializer):
@@ -50,7 +50,7 @@ class PaginationTests(TestCase):
         response = self.view(request)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(dict(response.data), {
-            'results': list(range(1, 1001)),  # max `page_size` is 1000
+            'results': list(range(1, 10001)),  # max `page_size` is 10000
             'previous': None,
             # parameter value is not updated
             'next': 'http://testserver/?page=2&page_size=100000',

@@ -20,10 +20,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'rest_framework',
     'rest_framework.authtoken',
+    'rest_framework_csv',
     'gather2.common',
 ]
 
 MIDDLEWARE = (
+    'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
@@ -35,14 +37,9 @@ MIDDLEWARE = (
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('RDS_DB_NAME', 'common'),
-        'PASSWORD': os.environ.get('RDS_PASSWORD', ''),
-        'USER': os.environ.get('RDS_USERNAME', 'postgres'),
-        'HOST': os.environ.get('RDS_HOSTNAME', 'db'),
-        'PORT': os.environ.get('RDS_PORT', '5432'),
-        'TESTING': {'CHARSET': 'UTF8'},
-    }
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
+    },
 }
 
 

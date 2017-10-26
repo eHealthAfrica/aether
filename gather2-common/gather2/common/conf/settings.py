@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     # REST framework with auth token
     'rest_framework',
     'rest_framework.authtoken',
+    'rest_framework_csv',
 
     # CORS checking
     'corsheaders',
@@ -93,6 +94,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
         'rest_framework.renderers.AdminRenderer',
+        'gather2.common.drf.renderers.CustomCSVRenderer',
     ),
     'DEFAULT_PARSER_CLASSES': (
         'rest_framework.parsers.JSONParser',
@@ -127,7 +129,7 @@ DATABASES = {
         'HOST': os.environ.get('RDS_HOSTNAME', 'db'),
         'PORT': os.environ.get('RDS_PORT', '5432'),
         'TESTING': {'CHARSET': 'UTF8'},
-    }
+    },
 }
 
 
@@ -171,7 +173,8 @@ if CAS_SERVER_URL:  # pragma: no cover
         'ums_client.backends.UMSRoleBackend',
     ]
 else:  # pragma: no cover
-    logger.warning('No UMS enable!')
+    logger.info('No UMS enable!')
+
 
 # Sentry Configuration
 # ------------------------------------------------------------------------------
@@ -191,7 +194,7 @@ if SENTRY_DSN:  # pragma: no cover
         'raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware',
     ] + MIDDLEWARE
 else:  # pragma: no cover
-    logger.warning('No SENTRY enable!')
+    logger.info('No SENTRY enable!')
 
 
 # Security Configuration
