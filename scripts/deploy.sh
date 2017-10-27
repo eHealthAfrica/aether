@@ -16,7 +16,7 @@ elif [ "${BRANCH}" == "master" ]; then
   export ENV="prod"
   export PREFIX=( champs grid )
   export CLUSTER_NAME="ehealth-africa"
-  export APPS=( core odk )
+  export APPS=( core odk-importer )
 fi
 
 $(aws ecr get-login --region="${AWS_DEFAULT_REGION}")
