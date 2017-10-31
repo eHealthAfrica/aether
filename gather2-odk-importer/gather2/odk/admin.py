@@ -4,12 +4,12 @@ from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.translation import ugettext as _
 
-from .api.models import Survey, XForm
+from .api.models import Mapping, XForm
 from .api.xform_utils import parse_file
 from .api.surveyors_utils import get_surveyors
 
 
-class SurveyForm(forms.ModelForm):
+class MappingForm(forms.ModelForm):
 
     surveyors = forms.ModelMultipleChoiceField(
         label=_('Surveyors'),
@@ -20,19 +20,19 @@ class SurveyForm(forms.ModelForm):
     )
 
     class Meta:
-        model = Survey
+        model = Mapping
         fields = (
-            'survey_id',
+            'mapping_id',
             'name',
             'surveyors',
         )
 
 
-class SurveyAdmin(admin.ModelAdmin):
+class MappingAdmin(admin.ModelAdmin):
 
-    form = SurveyForm
+    form = MappingForm
     list_display = (
-        'survey_id',
+        'mapping_id',
         'name',
     )
 
@@ -73,7 +73,7 @@ class XFormForm(forms.ModelForm):
     class Meta:
         model = XForm
         fields = [
-            'id', 'survey',
+            'id', 'mapping',
             'xml_file', 'xml_data',
             'surveyors', 'description',
         ]
@@ -84,7 +84,7 @@ class XFormAdmin(admin.ModelAdmin):
     form = XFormForm
     list_display = (
         'id',
-        'survey',
+        'mapping',
         'title',
         'form_id',
         'description',
@@ -96,7 +96,7 @@ class XFormAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (_('Gather2 Core'), {
-            'description': _('Please choose the Gather2 Core Survey.'),
+            'description': _('Please choose the Gather2 Core Mapping.'),
             'fields': ['survey', 'description', ]
         }),
 
@@ -114,5 +114,5 @@ class XFormAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(Survey, SurveyAdmin)
+admin.site.register(Mapping, MappingAdmin)
 admin.site.register(XForm, XFormAdmin)

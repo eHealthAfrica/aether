@@ -4,7 +4,7 @@ from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
-from .models import Survey, XForm
+from .models import Mapping, XForm
 from .xform_utils import parse_file
 from .surveyors_utils import get_surveyors, flag_as_surveyor
 
@@ -12,9 +12,9 @@ from .surveyors_utils import get_surveyors, flag_as_surveyor
 class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     url = serializers.HyperlinkedIdentityField('xform-detail', read_only=True)
-    survey_url = serializers.HyperlinkedRelatedField(
+    mapping_url = serializers.HyperlinkedRelatedField(
         'survey-detail',
-        source='survey',
+        source='mapping',
         read_only=True
     )
 
@@ -94,9 +94,9 @@ class XFormSimpleSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SurveySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
-    url = serializers.HyperlinkedIdentityField('survey-detail', read_only=True)
+    url = serializers.HyperlinkedIdentityField('mapping-detail', read_only=True)
     surveyors = serializers.PrimaryKeyRelatedField(
         label=_('Surveyors'),
         many=True,
@@ -108,5 +108,5 @@ class SurveySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     xforms = XFormSimpleSerializer(read_only=True, many=True)
 
     class Meta:
-        model = Survey
+        model = Mapping
         fields = '__all__'
