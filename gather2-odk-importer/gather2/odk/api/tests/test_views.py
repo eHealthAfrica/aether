@@ -91,29 +91,29 @@ class ViewsTests(CustomTestCase):
                       'superusers are granted surveyors')
 
     def test__xform__filters(self):
-        self.xform.delete()  # remove default survey
-        self.helper_create_xform(survey_id=1)
-        self.helper_create_xform(survey_id=1)
-        self.helper_create_xform(survey_id=2)
-        self.helper_create_xform(survey_id=3)
+        self.xform.delete()  # remove default mapping
+        self.helper_create_xform(mapping_id=1)
+        self.helper_create_xform(mapping_id=1)
+        self.helper_create_xform(mapping_id=2)
+        self.helper_create_xform(mapping_id=3)
 
         response = self.client.get('/xforms.json', **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 4)
 
-        response = self.client.get('/xforms.json?survey_id=1', **self.headers_user)
+        response = self.client.get('/xforms.json?mapping_id=1', **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 2)
 
-        response = self.client.get('/xforms.json?survey_id=2', **self.headers_user)
+        response = self.client.get('/xforms.json?mapping_id=2', **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 1)
 
-        response = self.client.get('/xforms.json?survey_id=3', **self.headers_user)
+        response = self.client.get('/xforms.json?mapping_id=3', **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 1)
 
-        response = self.client.get('/xforms.json?survey_id=4', **self.headers_user)
+        response = self.client.get('/xforms.json?mapping_id=4', **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 0)
 
@@ -151,32 +151,32 @@ class ViewsTests(CustomTestCase):
         d = self.helper_create_surveyor(username='d')
 
         # create forms with or without surveyors
-        self.xform.delete()  # remove default survey
+        self.xform.delete()  # remove default mapping
 
         response = self.client.get('/surveyors.json', **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 4)
 
-        self.helper_create_xform(survey_id=1)
-        self.helper_create_xform(survey_id=1, surveyor=a)
-        response = self.client.get('/surveyors.json?survey_id=1', **self.headers_user)
+        self.helper_create_xform(mapping_id=1)
+        self.helper_create_xform(mapping_id=1, surveyor=a)
+        response = self.client.get('/surveyors.json?mapping_id=1', **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 1)
 
-        self.helper_create_xform(survey_id=2, surveyor=[b, c, d])
-        response = self.client.get('/surveyors.json?survey_id=2', **self.headers_user)
+        self.helper_create_xform(mapping_id=2, surveyor=[b, c, d])
+        response = self.client.get('/surveyors.json?mapping_id=2', **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 3)
 
-        self.helper_create_xform(survey_id=3)
-        response = self.client.get('/surveyors.json?survey_id=3', **self.headers_user)
+        self.helper_create_xform(mapping_id=3)
+        response = self.client.get('/surveyors.json?mapping_id=3', **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 0)
 
-        self.helper_create_xform(survey_id=4)
-        self.helper_create_xform(survey_id=4, surveyor=b)
-        self.helper_create_xform(survey_id=4, surveyor=b)
-        self.helper_create_xform(survey_id=4, surveyor=[b, c])
-        response = self.client.get('/surveyors.json?survey_id=4', **self.headers_user)
+        self.helper_create_xform(mapping_id=4)
+        self.helper_create_xform(mapping_id=4, surveyor=b)
+        self.helper_create_xform(mapping_id=4, surveyor=b)
+        self.helper_create_xform(mapping_id=4, surveyor=[b, c])
+        response = self.client.get('/surveyors.json?mapping_id=4', **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 2)
