@@ -1,12 +1,13 @@
 import json
+import datetime
 
 from django.contrib.auth import get_user_model
-from django.core.urlresolvers import reverse
 from django.test import TransactionTestCase
 
 from rest_framework import status
+from .. import models
 
-from . import EXAMPLE_SCHEMA, EXAMPLE_CODE_UNSAFE_1, EXAMPLE_CODE_UNSAFE_2
+from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA)
 
 
 class ViewsTest(TransactionTestCase):
@@ -18,249 +19,196 @@ class ViewsTest(TransactionTestCase):
         self.user = get_user_model().objects.create_user(username, email, password)
         self.assertTrue(self.client.login(username=username, password=password))
 
-        self.survey = {
-            'owner': self.user.id,
-            'name': 'a title',
-            'schema': EXAMPLE_SCHEMA,
-        }
+        # Set up test model instances:
+        self.project = models.Project.objects.create(
+            revision='rev 1',
+            name='a project name',
+            salad_schema='a sample salad schema',
+            jsonld_context='sample context',
+            rdf_definition='a sample rdf definition'
+        )
+
+        self.mapping = models.Mapping.objects.create(
+            definition={"sample": "json schema"},
+            revision='a sample revision field',
+            project=self.project
+        )
+
+        self.response = models.Response.objects.create(
+            revision='a sample revision',
+            map_revision='a sample map revision',
+            date=datetime.datetime.now(),
+            payload={},
+            mapping=self.mapping
+        )
+
+        self.schema = models.Schema.objects.create(
+            definition={},
+            revision='a sample revision'
+        )
+
+        self.projectschema = models.ProjectSchema.objects.create(
+            mandatory_fields='a sample mandatory fields',
+            transport_rule='a sample transport rule',
+            masked_fields='a sample masked field',
+            is_encrypted=False,
+            project=self.project,
+            schema=self.schema
+        )
+
+        self.entity = models.Entity.objects.create(
+            revision='a sample revision',
+            payload={},
+            status='a sample status',
+            projectschema=self.projectschema,
+            response=self.response
+        )
 
     def tearDown(self):
         self.client.logout()
 
-    def crawl(self, obj, seen=[]):
-        '''
-        Crawls the API for urls to assert that all GET requests do not error.
-        '''
+    """
+    def test_get_object(self):
+        factory = RequestFactory()
+        url = '/mappings/2/'
+        data = {
+            'definition': EXAMPLE_MAPPING,
+            'revision': 'test revision (revised)',
+            'project': self.project.pk
+        }
+        response = factory.get(url, data)
+        self.assertEquals(models.Mapping.objects.count(), 2)
+    """
 
-        if isinstance(obj, dict):
-            {k: self.crawl(v, seen) for k, v in obj.items()}
-        elif isinstance(obj, list):
-            [self.crawl(elem, seen) for elem in obj]
-        elif isinstance(obj, str):
-            # Is this a url?
-            if obj.startswith('http://') and (obj not in seen):
-                seen.append(obj)
-                response = self.client.get(obj)
-                self.assertEqual(response.status_code, status.HTTP_200_OK, response.json())
-                self.crawl(response.json(), seen)
+    # TEST CREATE:
+    def helper_create_object(self, view_name, data):
+        url = '/{}/'.format(view_name)
+        data = json.dumps(data)
+        response = self.client.post(url, data, content_type='application/json')
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
-    def helper_post(self, url, data, expected_status=status.HTTP_201_CREATED):
-        response = self.client.post(url, data=json.dumps(data), content_type='application/json')
-        self.assertEqual(response.status_code, expected_status, response.json())
-        if expected_status == status.HTTP_201_CREATED:
-            return response.json()
+    def test_api_create_instance(self):
+        self.helper_create_object('projects', {
+            'name': 'Project name',
+            'revision': 'Sample project revision',
+            'salad_schema': 'Sample project SALAD schema',
+            'jsonld_context': 'Sample JSONLD context',
+            'rdf_definition': 'Sample RDF definition'
+        })
+        self.helper_create_object('mappings', {
+            'definition': EXAMPLE_MAPPING,
+            'revision': 'Sample mapping revision',
+            'project': self.project.pk
+        })
+        self.helper_create_object('responses', {
+            'revision': 'Sample response revision',
+            'map_revision': 'Sample map revision',
+            'date': str(datetime.datetime.now()),
+            'payload': EXAMPLE_SOURCE_DATA,
+            # 'mapping': self.mapping.pk TODO
+        })
+        self.helper_create_object('schemas', {
+            'definition': EXAMPLE_SCHEMA,
+            'revision': 'a sample revision'
+        })
+        self.helper_create_object('projectschemas', {
+            'mandatory_fields': 'Sample projectschema mandatory fields',
+            'transport_rule': 'Sample projectschema transport rule',
+            'masked_fields': 'Sample projectschema masked fields',
+            'isEncrypted': True,
+            'project': self.project.pk,
+            'schema': self.schema.pk
+        })
+        self.helper_create_object('entities', {
+            'revision': 'Sample entity revision',
+            'payload': {},
+            'status': 'Publishable',
+            'projectschema': self.projectschema.pk,
+            'response': self.response.pk
+        })
 
-    def helper_put(self, url, data, expected_status=status.HTTP_200_OK):
-        response = self.client.put(url, data=json.dumps(data), content_type='application/json')
-        self.assertEqual(response.status_code, expected_status, response.json())
+    # TEST READ
+    def helper_read_object(self, view_name, Obj):
+        url = '/{}/{}/'.format(view_name, Obj.pk)
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def helper_get_list(self, url):
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.json())
-        return response.json()['results']
+    def test_api_read_instance(self):
+        self.helper_read_object('projects', self.project)
+        self.helper_read_object('mappings', self.mapping)
+        self.helper_read_object('responses', self.response)
+        self.helper_read_object('schemas', self.schema)
+        self.helper_read_object('projectschemas', self.projectschema)
+        self.helper_read_object('entities', self.entity)
 
-    def helper_create_survey(self):
-        survey = self.helper_post(url=reverse('survey-list'), data=self.survey)
-        return survey['id'], survey['responses_url']
+    # TEST UPDATE
 
-    def helper_test_map_function(self, code):
-        survey_id, items_url = self.helper_create_survey()
-        self.helper_post(
-            url=items_url,
-            data={
-                'survey': survey_id,
-                'data': {
-                    'firstName': 'Peter',
-                    'lastName': 'Pan',
-                    'age': 99,
-                },
-            },
-        )
-        map_function = self.helper_post(
-            url=reverse('map_function-list'),
-            data={
-                'code': code,
-                'survey': survey_id,
-            },
-        )
-        results_url = map_function['results_url']
-        results = self.helper_get_list(results_url)
-        self.assertEqual(len(results), 1)
-        return results[0]['output'], results[0]['error']
+    def helper_update_object(self, view_name, updated_data, Obj):
+        url = '/{}/{}/'.format(view_name, Obj.pk)
+        updated_data = json.dumps(updated_data)
+        response = self.client.put(url, updated_data, content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_survey(self):
-        # Make surveys with bad schemas
-        self.helper_post(
-            url=reverse('survey-list'),
-            data={
-                'owner': self.user.id,
-                'name': 'a title',
-                'schema': '{"why is a string in a dict?"}',
-            },
-            expected_status=status.HTTP_400_BAD_REQUEST,
-        )
-        self.helper_post(
-            url=reverse('survey-list'),
-            data={
-                'owner': self.user.id,
-                'name': 'a title',
-                'schema': '"[]"',
-            },
-            expected_status=status.HTTP_400_BAD_REQUEST,
-        )
-        self.helper_post(
-            url=reverse('survey-list'),
-            data={
-                'owner': self.user.id,
-                'name': 'a title',
-                'schema': '"{}"',
-            },
-            expected_status=status.HTTP_400_BAD_REQUEST,
-        )
+    def test_api_update_instance(self):
+        self.helper_update_object('projects', {
+            'name': 'Project name 2',
+            'revision': 'Sample project revision',
+            'salad_schema': 'Sample project SALAD schema',
+            'jsonld_context': 'Sample JSONLD context',
+            'rdf_definition': 'Sample RDF definition'
+        }, self.project)
+        self.helper_update_object('mappings', {
+            'definition': {},
+            'revision': 'Sample mapping revision',
+            'project': self.project.pk
+        }, self.mapping)
+        self.helper_update_object('responses', {
+            'revision': 'Sample response revision updated',
+            'map_revision': 'Sample map revision updated',
+            'date': str(datetime.datetime.now()),
+            'payload': {},
+            'mapping': self.mapping.pk
+        }, self.response)
+        self.helper_update_object('schemas', {
+            'definition': {},
+            'revision': 'Sample schema revision',
+        }, self.schema)
+        self.helper_update_object('projectschemas', {
+            'mandatory_fields': 'Sample projectschema mandatory fields updated',
+            'transport_rule': 'Sample projectschema transport rule',
+            'masked_fields': 'Sample projectschema masked fields',
+            'isEncrypted': True,
+            'project': self.project.pk,
+            'schema': self.schema.pk
+        }, self.projectschema)
+        self.helper_update_object('entities', {
+            'revision': 'Sample entity revision updated',
+            'payload': {},
+            'status': 'Publishable',
+            'projectschema': self.projectschema.pk
+        }, self.entity)
 
-        # try to create a survey without credentials
-        self.client.logout()
-        self.helper_post(
-            url=reverse('survey-list'),
-            data=self.survey,
-            expected_status=status.HTTP_403_FORBIDDEN,
-        )
+    # TEST DELETE
+    def helper_delete_object(self, view_name, Obj):
+        # url = reverse(view_name, kwargs={'pk': Obj.pk})
+        url = '/{}/{}/'.format(view_name, Obj.pk)
+        response = self.client.delete(url, format='json', follow=True)
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
 
-    def test_response__not_fit_survey_schema(self):
-        survey_id, items_url = self.helper_create_survey()
-        self.helper_post(
-            url=items_url,
-            data={
-                'survey': survey_id,
-                'data': {
-                    'firstName': 'Peter',
-                    # missing: 'lastName': 'Pan',
-                    'age': 99,
-                },
-            },
-            expected_status=status.HTTP_400_BAD_REQUEST,
-        )
+    def test_api_delete_project(self):
+        self.helper_delete_object('projects', self.project)
 
-    def test_response__query_nested_data_by_string(self):
-        survey_id, items_url = self.helper_create_survey()
+    def test_api_delete_mapping(self):
+        self.helper_delete_object('mappings', self.mapping)
 
-        def gen_data(offset):
-            return {
-                'survey': survey_id,
-                'data': {
-                    'firstName': ['Joe', 'Peter', 'Tom'][offset],
-                    'lastName': 'Pan',
-                    'age': 98 + offset,
-                },
-            }
+    def test_api_delete_response(self):
+        self.helper_delete_object('responses', self.response)
 
-        for i in range(3):
-            self.helper_post(url=items_url, data=gen_data(i))
+    def test_api_delete_schema(self):
+        self.helper_delete_object('schemas', self.schema)
 
-        results = self.helper_get_list('/responses/?data__firstName=Peter')
-        self.assertEqual(len(results), 1)
-        self.assertEqual(results[0]['data']['firstName'], 'Peter')
+    def test_api_delete_projectschema(self):
+        self.helper_delete_object('projectschemas', self.projectschema)
 
-        # check survey stats
-        results = self.helper_get_list('/surveys-stats/')
-        self.assertEqual(len(results), 1)
-        self.assertEqual(results[0]['responses'], 3, '3 responses were created')
-
-    def test_map_function__zero_division(self):
-        output, error = self.helper_test_map_function(code='''1/0''')
-        self.assertEqual(output, '')
-        self.assertIn('ZeroDivisionError: integer division by zero', error)
-
-    def test_map_function__print_object(self):
-        output, error = self.helper_test_map_function(code='''print object()''')
-        self.assertIn('<object object at', output)
-        self.assertEqual(error, '')
-
-    def test_map_function__unsafe_1(self):
-        output, error = self.helper_test_map_function(code=EXAMPLE_CODE_UNSAFE_1)
-        self.assertEqual(output, '')
-        self.assertEqual(error, '')
-
-    def test_map_function__unsafe_2(self):
-        output, error = self.helper_test_map_function(code=EXAMPLE_CODE_UNSAFE_2)
-        self.assertNotEqual(output, '')
-        self.assertNotEqual(error, '')
-
-    def test_full_workflow(self):
-        # Make survey
-        survey_id, _ = self.helper_create_survey()
-
-        # Make a map function
-        map_function = self.helper_post(
-            url=reverse('map_function-list'),
-            data={
-                'code': '''print data['firstName']''',
-                'survey': survey_id,
-            },
-        )
-        map_function_id = map_function['id']
-
-        # Make a reduce function
-        reduce_function = self.helper_post(
-            url=reverse('reduce_function-list'),
-            data={
-                'code': '''print ''.join(data)''',
-                'map_function': map_function_id,
-            },
-        )
-        reduce_function_id = reduce_function['id']
-
-        # Add response
-        self.helper_post(
-            url=reverse('response-list'),
-            data={
-                'data': {'firstName': 'tim', 'lastName': 'qux'},
-                'survey': survey_id,
-            },
-        )
-
-        # Assert the reduce function only gets the first name
-        response = self.client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
-        self.assertEqual(response.json()['output'], ['tim'], response.json())
-
-        # Add new Response
-        self.helper_post(
-            url=reverse('response-list'),
-            data={
-                'data': {'firstName': 'bob', 'lastName': 'smith'},
-                'survey': survey_id,
-            },
-        )
-
-        # Assert reduce function is recalculated with new response included
-        response = self.client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
-        self.assertEqual(response.json()['output'], ['timbob'])
-
-        # Update Reduce function
-        self.helper_put(
-            url=reverse('reduce_function-detail', args=[reduce_function_id]),
-            data={
-                'code': '''print '-'.join(d for d in data if d)''',
-                'map_function': map_function_id
-            },
-        )
-
-        # Assert the reduce function is recalculated when updated
-        response = self.client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
-        self.assertEqual(response.json()['output'], ['tim-bob'])
-
-        # Update the map function
-        self.helper_put(
-            url=reverse('map_function-detail', args=[map_function_id]),
-            data={
-                'code': '''print data['lastName']''',
-                'survey': survey_id,
-            },
-        )
-
-        # Assert reduce function is recalculated with new map function
-        response = self.client.get(reverse('reduce_function-detail', args=[reduce_function_id]))
-        self.assertEqual(response.json()['output'], ['qux-smith'])
-
-        # With all the data tree created, test that all the given urls work
-        self.crawl('http://testserver' + reverse('api-root'), seen=[])
+    def test_api_delete_entity(self):
+        self.helper_delete_object('entities', self.entity)

@@ -1,99 +1,92 @@
 # encoding: utf-8
 
-from django.conf import settings
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 
-from .utils import json_prettified, code_prettified
+from .utils import json_prettified
 
-UserModel = settings.AUTH_USER_MODEL
+STATUS_CHOICES = (
+    ('Pending Approval', 'Pending Approval'),
+    ('Publishable', 'Publishable'),
+)
 
 
-class Survey(models.Model):
+class Project(models.Model):
+    revision = models.TextField()
     name = models.CharField(max_length=50)
-    schema = JSONField(blank=True, null=False, default='{}')
-    created = models.DateTimeField(auto_now_add=True, db_index=True)
-    created_by = models.ForeignKey(UserModel, db_index=True, related_name='surveys')
-
-    @property
-    def schema_prettified(self):
-        return json_prettified(self.schema)
+    salad_schema = models.TextField()
+    jsonld_context = models.TextField()
+    rdf_definition = models.TextField()
 
     def __str__(self):
         return self.name
 
 
+class Mapping(models.Model):
+    definition = JSONField(blank=False, null=False)
+    revision = models.TextField()
+    project = models.ForeignKey(Project, related_name='mappings')
+
+    @property
+    def definition_prettified(self):
+        return json_prettified(self.definition)
+
+    def __str__(self):
+        return '{} - {}'.format(str(self.project), self.id)
+
+
 class Response(models.Model):
-    survey = models.ForeignKey(Survey, related_name='responses')
-
-    data = JSONField(blank=False, null=False)
-    created = models.DateTimeField(auto_now_add=True, db_index=True)
-    created_by = models.ForeignKey(UserModel, db_index=True, related_name='responses')
+    revision = models.TextField()
+    map_revision = models.TextField()
+    date = models.DateTimeField(auto_now_add=True, db_index=True)
+    payload = JSONField(blank=False, null=False)
+    mapping = models.ForeignKey(Mapping, related_name='responses', blank=True, null=True)
 
     @property
-    def data_prettified(self):
-        return json_prettified(self.data)
+    def payload_prettified(self):
+        return json_prettified(self.payload)
 
     def __str__(self):
-        return '{} - {}'.format(str(self.survey), self.id)
+        return '{} - {}'.format(str(self.mapping), self.id)
 
 
-class Attachment(models.Model):
-    response = models.ForeignKey(Response, related_name='attachments')
-
-    name = models.CharField(max_length=50)
-    attachment_file = models.FileField(verbose_name='attachment')
-    created = models.DateTimeField(auto_now_add=True, db_index=True)
-
-    def __str__(self):  # pragma: no cover
-        return '{} - {}'.format(str(self.response), self.name)
-
-
-class MapFunction(models.Model):
-    survey = models.ForeignKey(Survey, related_name='map_functions')
-
-    code = models.TextField()
-    created = models.DateTimeField(auto_now_add=True, db_index=True)
+class Schema(models.Model):
+    definition = JSONField(blank=False, null=False)
+    revision = models.TextField()
 
     @property
-    def code_prettified(self):
-        return code_prettified(self.code)
+    def definition_prettified(self):
+        return json_prettified(self.definition)
 
     def __str__(self):
-        return '{} - {}'.format(str(self.survey), self.id)
+        return 'Schema {}'.format(self.id)
 
 
-class MapResult(models.Model):
-    response = models.ForeignKey(Response, related_name='map_results')
-    map_function = models.ForeignKey(MapFunction, related_name='map_results')
-
-    output = JSONField(blank=True, null=False, default='{}', editable=False)
-    error = models.TextField(editable=False)
-    created = models.DateTimeField(auto_now_add=True, db_index=True)
-
-    @property
-    def output_prettified(self):
-        return json_prettified(self.output)
+class ProjectSchema(models.Model):
+    mandatory_fields = models.CharField(max_length=100)
+    transport_rule = models.TextField()
+    masked_fields = models.TextField()
+    is_encrypted = models.BooleanField(default=False)
+    project = models.ForeignKey(Project, related_name='projectschemas')
+    schema = models.ForeignKey(Schema, related_name='projectschemas')
 
     def __str__(self):
-        return '{} - {}'.format(str(self.response), self.id)
+        return '{} - {}'.format(str(self.project), self.id)
 
 
-class ReduceFunction(models.Model):
-    map_function = models.ForeignKey(MapFunction, related_name='reduce_functions')
-
-    code = models.TextField()
-    output = JSONField(blank=False, null=False, default='{}', editable=False)
-    error = models.TextField(blank=True, default='', editable=False)
-    created = models.DateTimeField(auto_now_add=True, db_index=True)
-
-    @property
-    def code_prettified(self):
-        return code_prettified(self.code)
+class Entity(models.Model):
+    revision = models.TextField()
+    payload = JSONField(blank=False, null=False)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    projectschema = models.ForeignKey(ProjectSchema, related_name='entities')
+    response = models.ForeignKey(Response, related_name='entities', blank=True, null=True)
 
     @property
-    def output_prettified(self):
-        return json_prettified(self.output)
+    def payload_prettified(self):
+        return json_prettified(self.payload)
 
     def __str__(self):
-        return '{} - {}'.format(str(self.map_function), self.id)
+        return 'Entity {}'.format(self.id)
+
+    class Meta:
+        verbose_name_plural = 'entities'

@@ -1,125 +1,127 @@
 # -*- coding: utf-8 -*-
-import json
-import jsonschema
-from django.contrib.auth import get_user_model
-from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
 from . import models
-from .utils import json_printable
+from . import utils
 
 
-JSON_STYLE = {'base_template': 'textarea.html', 'rows': 10}
+class ProjectSerializer(serializers.ModelSerializer):
 
+    url = serializers.HyperlinkedIdentityField('project-detail', read_only=True)
 
-class JSONValidator(object):
-    '''
-    This validates the submitted json data with the schema saved on the
-    `Response.Survey.schema` for the responses
-    or with `{"type": "object"}` for the schemas
-    '''
-
-    def __init__(self):
-        self.schema = {'type': 'object'}
-
-    def __call__(self, value):
-        validation = jsonschema.Draft4Validator(self.schema)
-        errors = sorted(validation.iter_errors(value), key=lambda e: e.path)
-        if errors:
-            raise serializers.ValidationError(list(map(str, errors)))
-        return True
-
-    def set_context(self, serializer_field):
-        survey_id = serializer_field.parent.initial_data.get('survey')
-        if survey_id:
-            survey = models.Survey.objects.filter(pk=survey_id).first()
-            if survey:
-                self.schema = survey.schema
-
-
-# JSONField in REST Framework
-# https://github.com/encode/django-rest-framework/blob/master/rest_framework/fields.py#L1627
-class JSONSerializerField(serializers.JSONField):
-    '''
-    Extends JSONField class and coerces to transform strings into JSON objects
-    '''
-
-    def to_internal_value(self, data):
-        if isinstance(data, str):
-            try:
-                data = json.loads(data)
-            except Exception as e:
-                raise serializers.ValidationError(str(e))
-
-        data = super(JSONSerializerField, self).to_internal_value(data)
-        return json_printable(data)
-
-
-class SurveySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    name = serializers.CharField()
-    schema = JSONSerializerField(
-        default={},
-        initial={},
-        style=JSON_STYLE,
-        validators=[JSONValidator()],
-    )
-    schema_file = serializers.FileField(
-        write_only=True,
-        allow_null=True,
-        label='Schema File',
-        help_text='Upload file with JSON Schema definition',
-        default=None,
-    )
-    created_by = serializers.PrimaryKeyRelatedField(
+    mappings_url = serializers.HyperlinkedIdentityField(
+        'project_mapping-list',
         read_only=True,
-        default=serializers.CurrentUserDefault()
+        lookup_url_kwarg='parent_lookup_project'
     )
-
-    url = serializers.HyperlinkedIdentityField('survey-detail', read_only=True)
-    responses_url = serializers.HyperlinkedIdentityField(
-        'survey_response-list',
+    projectschemas_url = serializers.HyperlinkedIdentityField(
+        'project_projectschema-list',
         read_only=True,
-        lookup_url_kwarg='parent_lookup_survey'
+        lookup_url_kwarg='parent_lookup_project'
     )
-    map_functions_url = serializers.HyperlinkedIdentityField(
-        'survey_map_function-list',
-        read_only=True,
-        lookup_url_kwarg='parent_lookup_survey'
-    )
-
-    def validate(self, value):
-        if value['schema_file']:
-            try:
-                # extract data from file and put it on `schema`
-                value['schema'] = json.loads(value['schema_file'].read())
-            except Exception as e:
-                raise serializers.ValidationError({'schema_file': str(e)})
-        value.pop('schema_file')
-
-        return super(SurveySerializer, self).validate(value)
 
     class Meta:
-        model = models.Survey
+        model = models.Project
         fields = '__all__'
 
 
-class ResponseSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    data = JSONSerializerField(style=JSON_STYLE, validators=[JSONValidator()])
-    created_by = serializers.PrimaryKeyRelatedField(
-        read_only=True,
-        default=serializers.CurrentUserDefault()
-    )
+class MappingSerializer(serializers.ModelSerializer):
 
-    url = serializers.HyperlinkedIdentityField('response-detail', read_only=True)
-    survey_url = serializers.HyperlinkedRelatedField(
-        'survey-detail',
-        source='survey',
+    url = serializers.HyperlinkedIdentityField('mapping-detail', read_only=True)
+
+    project_url = serializers.HyperlinkedRelatedField(
+        view_name='project-detail',
+        source='project',
         read_only=True
     )
-    attachments_url = serializers.HyperlinkedIdentityField(
-        'response_attachment-list',
+    responses_url = serializers.HyperlinkedIdentityField(
+        'mapping_response-list',
         read_only=True,
-        lookup_url_kwarg='parent_lookup_response'
+        lookup_url_kwarg='parent_lookup_mapping'
+    )
+
+    class Meta:
+        model = models.Mapping
+        fields = '__all__'
+
+
+class ResponseSerializer(serializers.ModelSerializer):
+
+    def create(self, validated_data):
+        if 'mapping' in validated_data:
+            response = models.Response(
+                revision=validated_data.pop('revision'),
+                payload=validated_data.pop('payload'),
+                mapping=validated_data.pop('mapping')
+            )
+
+            # Get the mapping definition from the response (response.mapping.definition):
+            mapping_definition = response.mapping.definition
+
+            # Get the primary key of the projectschema
+            entity_pks = list(mapping_definition['entities'].values())
+
+            # Get the schema of the projectschema
+            project_schema = models.ProjectSchema.objects.get(pk=entity_pks[0])
+            schema = project_schema.schema.definition
+
+            # Get entity definitions
+            entities = utils.get_entity_definitions(mapping_definition, schema)
+
+            # Get field mappings
+            field_mappings = utils.get_field_mappings(mapping_definition)
+
+            # Get entity requirements
+            requirements = utils.get_entity_requirements(entities, field_mappings)
+
+            response_data = response.payload
+            data, entities = utils.extract_entity(requirements, response_data, entities)
+
+            entities_payload = list(entities.values())
+
+            entity_list = []
+            for payload in entities_payload[0]:
+                entity = {
+                    'revision': 'rev 1',
+                    'payload': payload,
+                    'status': 'Publishable',
+                    'projectschema': project_schema
+                }
+                entity_list.append(entity)
+
+            # Extract entities from response data (response.payload)
+
+            # Save the response to the db
+            response.save()
+
+            # If extraction successful, create new entities
+
+            if entity_list:
+                for e in entity_list:
+                    entity = models.Entity(
+                        revision=e['revision'],
+                        payload=e['payload'],
+                        status=e['status'],
+                        projectschema=e['projectschema'],
+                        response=response
+                    )
+                    entity.save()
+        else:
+            response = models.Response(
+                revision=validated_data.pop('revision'),
+                payload=validated_data.pop('payload'),
+            )
+            # Save the response to the db
+            response.save()
+
+        return response
+
+    url = serializers.HyperlinkedIdentityField('response-detail', read_only=True)
+
+    mapping_url = serializers.HyperlinkedRelatedField(
+        'mapping-detail',
+        source='mapping',
+        read_only=True
     )
 
     class Meta:
@@ -127,106 +129,52 @@ class ResponseSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = '__all__'
 
 
-class AttachmentSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    name = serializers.CharField(read_only=True)
-    url = serializers.HyperlinkedIdentityField('attachment-detail', read_only=True)
-    response_url = serializers.HyperlinkedRelatedField(
-        'response-detail',
-        source='response',
-        read_only=True
-    )
+class SchemaSerializer(serializers.ModelSerializer):
 
-    class Meta:
-        model = models.Attachment
-        fields = '__all__'
-
-
-class MapFunctionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField('map_function-detail', read_only=True)
-    survey_url = serializers.HyperlinkedRelatedField(
-        'survey-detail',
-        source='survey',
-        read_only=True
-    )
-    results_url = serializers.HyperlinkedIdentityField(
-        'map_function_result-list',
+    url = serializers.HyperlinkedIdentityField('schema-detail', read_only=True)
+    projectschemas_url = serializers.HyperlinkedIdentityField(
+        'schema_projectschema-list',
         read_only=True,
-        lookup_url_kwarg='parent_lookup_map_function'
+        lookup_url_kwarg='parent_lookup_schema'
     )
-    reduce_functions_url = serializers.HyperlinkedIdentityField(
-        'map_reduce_function-list',
+
+    class Meta:
+        model = models.Schema
+        fields = '__all__'
+
+
+class ProjectSchemaSerializer(serializers.ModelSerializer):
+
+    url = serializers.HyperlinkedIdentityField('projectschema-detail', read_only=True)
+    project_url = serializers.HyperlinkedRelatedField(
+        'project-detail',
+        source='project',
+        read_only=True
+    )
+    schema_url = serializers.HyperlinkedRelatedField(
+        'schema-detail',
+        source='schema',
+        read_only=True
+    )
+    entities_url = serializers.HyperlinkedIdentityField(
+        'projectschema_entity-list',
         read_only=True,
-        lookup_url_kwarg='parent_lookup_map_function'
+        lookup_url_kwarg='parent_lookup_projectschema'
     )
 
     class Meta:
-        model = models.MapFunction
+        model = models.ProjectSchema
         fields = '__all__'
 
 
-class MapResultSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField('map_results-detail', read_only=True)
-    response_url = serializers.HyperlinkedRelatedField(
-        'response-detail',
-        source='response',
-        read_only=True
-    )
-    map_functions_url = serializers.HyperlinkedRelatedField(
-        'map_function-detail',
-        source='map_function',
+class EntitySerializer(serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField('entity-detail', read_only=True)
+    projectschema_url = serializers.HyperlinkedRelatedField(
+        'projectschema-detail',
+        source='projectschema',
         read_only=True
     )
 
     class Meta:
-        model = models.MapResult
+        model = models.Entity
         fields = '__all__'
-
-
-class ReduceFunctionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField('reduce_function-detail', read_only=True)
-    map_functions_url = serializers.HyperlinkedRelatedField(
-        'map_function-detail',
-        source='map_function',
-        read_only=True
-    )
-
-    class Meta:
-        model = models.ReduceFunction
-        fields = '__all__'
-
-
-class SurveyStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    first_response = serializers.DateTimeField()
-    last_response = serializers.DateTimeField()
-    responses = serializers.IntegerField()
-
-    class Meta:
-        model = models.Survey
-        fields = (
-            # survey fields
-            'id', 'name', 'schema', 'created', 'created_by_id',
-            # calculated fields
-            'first_response', 'last_response', 'responses',
-        )
-
-
-class UserSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField('user-detail', read_only=True)
-    full_name = serializers.SerializerMethodField(source='get_full_name', read_only=True)
-
-    def get_full_name(self, instance):  # pragma: no cover
-        '''
-        Returns a readable name of the instance.
-
-        - ``first_name`` + ``last_name``
-        - ``username``
-        '''
-
-        if instance.first_name and instance.last_name:
-            return '{} {}'. format(instance.first_name, instance.last_name)
-
-        return instance.username
-
-    class Meta:
-        model = get_user_model()
-        fields = ('id', 'username', 'full_name', 'email', 'url',)
