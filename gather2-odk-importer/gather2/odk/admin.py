@@ -97,7 +97,7 @@ class XFormAdmin(admin.ModelAdmin):
     fieldsets = (
         (_('Gather2 Core'), {
             'description': _('Please choose the Gather2 Core Mapping.'),
-            'fields': ['survey', 'description', ]
+            'fields': ['mapping', 'description', ]
         }),
 
         (_('xForm definition'), {
