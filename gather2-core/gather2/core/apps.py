@@ -3,7 +3,7 @@ from django.apps import AppConfig
 
 class Config(AppConfig):
     name = 'gather2.core'
-    verbose_name = 'Gather2 Core'
+    verbose_name = 'Aether Core'
 
     def ready(self):
         ''' activates signals!!! '''

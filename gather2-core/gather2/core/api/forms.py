@@ -3,7 +3,6 @@ import json
 from django import forms
 from django.core.exceptions import ValidationError
 
-from .models import Survey
 from .utils import json_printable
 
 
@@ -35,20 +34,17 @@ class JSONField(forms.CharField):   # pragma: no cover
             raise ValidationError('Invalid JSON format {}'.format(str(e)))
 
 
-class SurveyForm(forms.ModelForm):
-    schema_file = forms.FileField(required=False)
-    schema = JSONField(required=False, initial={})
-
-    def clean_schema(self):
-        if 'schema_file' in self.files:
-            return str_to_json(self.files['schema_file'].file.read())
-
-        return self.cleaned_data['schema']
-
-    class Meta:
-        model = Survey
-        fields = ['id', 'name', 'created_by', 'schema', 'schema_file', ]
+class MappingForm(forms.ModelForm):
+    definition = JSONField()
 
 
 class ResponseForm(forms.ModelForm):
-    data = JSONField()
+    payload = JSONField()
+
+
+class SchemaForm(forms.ModelForm):
+    definition = JSONField()
+
+
+class EntityForm(forms.ModelForm):
+    payload = JSONField()
