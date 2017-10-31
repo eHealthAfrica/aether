@@ -13,7 +13,7 @@ class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     url = serializers.HyperlinkedIdentityField('xform-detail', read_only=True)
     mapping_url = serializers.HyperlinkedRelatedField(
-        'survey-detail',
+        'mapping-detail',
         source='mapping',
         read_only=True
     )
