@@ -7,4 +7,4 @@ class Config(AppConfig):
 
     def ready(self):
         ''' activates signals!!! '''
-        from .api import signals  # flake8: noqa
+        # from .api import signals  # flake8: noqa
