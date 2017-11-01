@@ -2,7 +2,7 @@ from django.test import TestCase
 from .. import utils
 from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA,
                EXAMPLE_REQUIREMENTS, EXAMPLE_ENTITY_DEFINITION,
-               EXAMPLE_FIELD_MAPPINGS)
+               EXAMPLE_FIELD_MAPPINGS, EXAMPLE_ENTITY)
 
 
 class UtilsTests(TestCase):
@@ -70,27 +70,6 @@ class UtilsTests(TestCase):
         requirements = EXAMPLE_REQUIREMENTS
         response_data = EXAMPLE_SOURCE_DATA
         entity_stubs = EXAMPLE_ENTITY_DEFINITION
-        expected_entity = {
-          "Person": [
-            {
-              "_id": "1d119b5d-ca71-4f03-a061-1481e1a694ea",
-              "name": "PersonA",
-              "dob": "2000-01-01",
-              "villageID": "somevillageID"
-            },
-            {
-              "_id": "5474b768-92d9-431f-bf90-3c6db1788109",
-              "name": "PersonB",
-              "dob": "2001-01-01",
-              "villageID": "somevillageID"
-            },
-            {
-              "_id": "64d30f72-c15e-4476-9522-d26cb036c73b",
-              "name": "PersonC",
-              "dob": "2002-01-01",
-              "villageID": "somevillageID"
-            }
-          ]
-        }
+        expected_entity = EXAMPLE_ENTITY
         data, entities = utils.extract_entity(requirements, response_data, entity_stubs)
         self.assertEquals(len(expected_entity['Person']), len(entities['Person']))
