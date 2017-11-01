@@ -48,7 +48,7 @@ class MappingSerializer(serializers.ModelSerializer):
 class ResponseSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
-        if 'mapping' in validated_data:
+        if validated_data['mapping']:
             response = models.Response(
                 revision=validated_data.pop('revision'),
                 payload=validated_data.pop('payload'),

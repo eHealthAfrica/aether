@@ -27,11 +27,12 @@ class ModelsTests(TransactionTestCase):
         self.assertNotEqual(models.Project.objects.count(), 0)
 
         mapping = models.Mapping.objects.create(
+            name='sample mapping',
             definition={},
             revision='a sample revision field',
             project=project
         )
-        self.assertEquals(str(mapping), '{} - {}'.format(str(project), mapping.id))
+        self.assertEquals(str(mapping), mapping.name)
         self.assertNotEqual(models.Mapping.objects.count(), 0)
         self.assertTrue(mapping.definition_prettified is not None)
 
@@ -47,14 +48,16 @@ class ModelsTests(TransactionTestCase):
         self.assertTrue(response.payload_prettified is not None)
 
         schema = models.Schema.objects.create(
+            name='sample schema',
             definition={},
             revision='a sample revision'
         )
-        self.assertEquals(str(schema), 'Schema {}'.format(schema.id))
+        self.assertEquals(str(schema), schema.name)
         self.assertNotEqual(models.Schema.objects.count(), 0)
         self.assertTrue(schema.definition_prettified is not None)
 
         projectschema = models.ProjectSchema.objects.create(
+            name='sample project schema',
             mandatory_fields='a sample mandatory fields',
             transport_rule='a sample transport rule',
             masked_fields='a sample masked field',
@@ -62,7 +65,7 @@ class ModelsTests(TransactionTestCase):
             project=project,
             schema=schema
         )
-        self.assertEquals(str(projectschema), '{} - {}'.format(str(project), projectschema.id))
+        self.assertEquals(str(projectschema), projectschema.name)
         self.assertNotEqual(models.ProjectSchema.objects.count(), 0)
 
         entity = models.Entity.objects.create(

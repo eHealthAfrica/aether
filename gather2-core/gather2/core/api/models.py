@@ -13,7 +13,7 @@ STATUS_CHOICES = (
 
 class Project(models.Model):
     revision = models.TextField()
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, db_index=True, unique=True)
     salad_schema = models.TextField()
     jsonld_context = models.TextField()
     rdf_definition = models.TextField()
@@ -23,6 +23,7 @@ class Project(models.Model):
 
 
 class Mapping(models.Model):
+    name = models.CharField(max_length=50, db_index=True, unique=True)
     definition = JSONField(blank=False, null=False)
     revision = models.TextField()
     project = models.ForeignKey(Project, related_name='mappings')
@@ -32,7 +33,7 @@ class Mapping(models.Model):
         return json_prettified(self.definition)
 
     def __str__(self):
-        return '{} - {}'.format(str(self.project), self.id)
+        return self.name
 
 
 class Response(models.Model):
@@ -51,6 +52,7 @@ class Response(models.Model):
 
 
 class Schema(models.Model):
+    name = models.CharField(max_length=50, db_index=True, unique=True)
     definition = JSONField(blank=False, null=False)
     revision = models.TextField()
 
@@ -59,10 +61,11 @@ class Schema(models.Model):
         return json_prettified(self.definition)
 
     def __str__(self):
-        return 'Schema {}'.format(self.id)
+        return self.name
 
 
 class ProjectSchema(models.Model):
+    name = models.CharField(max_length=50, db_index=True, unique=True)
     mandatory_fields = models.CharField(max_length=100)
     transport_rule = models.TextField()
     masked_fields = models.TextField()
@@ -71,7 +74,7 @@ class ProjectSchema(models.Model):
     schema = models.ForeignKey(Schema, related_name='projectschemas')
 
     def __str__(self):
-        return '{} - {}'.format(str(self.project), self.id)
+        return self.name
 
 
 class Entity(models.Model):

@@ -11,7 +11,7 @@ class ProjectAdmin(CompareVersionAdmin):
 
 class MappingAdmin(CompareVersionAdmin):
     form = forms.MappingForm
-    list_display = ('id', 'revision', 'project',)
+    list_display = ('id', 'name', 'revision', 'project',)
     readonly_fields = ('id',)
 
 
@@ -23,12 +23,12 @@ class ResponseAdmin(CompareVersionAdmin):
 
 class SchemaAdmin(CompareVersionAdmin):
     form = forms.SchemaForm
-    list_display = ('id', 'revision',)
+    list_display = ('id', 'name', 'revision',)
     readonly_fields = ('id',)
 
 
 class ProjectSchemaAdmin(CompareVersionAdmin):
-    list_display = ('id', 'is_encrypted', 'project', 'schema',)
+    list_display = ('id', 'name', 'is_encrypted', 'project', 'schema',)
     readonly_fields = ('id',)
 
 
