@@ -29,6 +29,7 @@ class ViewsTest(TransactionTestCase):
         )
 
         self.mapping = models.Mapping.objects.create(
+            name='a mapping name',
             definition={"sample": "json schema"},
             revision='a sample revision field',
             project=self.project
@@ -43,11 +44,13 @@ class ViewsTest(TransactionTestCase):
         )
 
         self.schema = models.Schema.objects.create(
+            name='a schema name',
             definition={},
             revision='a sample revision'
         )
 
         self.projectschema = models.ProjectSchema.objects.create(
+            name='a project schema name',
             mandatory_fields='a sample mandatory fields',
             transport_rule='a sample transport rule',
             masked_fields='a sample masked field',
@@ -96,6 +99,7 @@ class ViewsTest(TransactionTestCase):
             'rdf_definition': 'Sample RDF definition'
         })
         self.helper_create_object('mappings', {
+            'name': 'Mapping name',
             'definition': EXAMPLE_MAPPING,
             'revision': 'Sample mapping revision',
             'project': self.project.pk
@@ -108,10 +112,12 @@ class ViewsTest(TransactionTestCase):
             # 'mapping': self.mapping.pk TODO
         })
         self.helper_create_object('schemas', {
+            'name': 'Schema name',
             'definition': EXAMPLE_SCHEMA,
             'revision': 'a sample revision'
         })
         self.helper_create_object('projectschemas', {
+            'name': 'Project Schema name',
             'mandatory_fields': 'Sample projectschema mandatory fields',
             'transport_rule': 'Sample projectschema transport rule',
             'masked_fields': 'Sample projectschema masked fields',
@@ -158,6 +164,7 @@ class ViewsTest(TransactionTestCase):
             'rdf_definition': 'Sample RDF definition'
         }, self.project)
         self.helper_update_object('mappings', {
+            'name': 'Mapping name 2',
             'definition': {},
             'revision': 'Sample mapping revision',
             'project': self.project.pk
@@ -170,10 +177,12 @@ class ViewsTest(TransactionTestCase):
             'mapping': self.mapping.pk
         }, self.response)
         self.helper_update_object('schemas', {
+            'name': 'Schema name 2',
             'definition': {},
             'revision': 'Sample schema revision',
         }, self.schema)
         self.helper_update_object('projectschemas', {
+            'name': 'Project Schema name 2',
             'mandatory_fields': 'Sample projectschema mandatory fields updated',
             'transport_rule': 'Sample projectschema transport rule',
             'masked_fields': 'Sample projectschema masked fields',
