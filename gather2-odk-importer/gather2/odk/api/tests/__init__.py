@@ -3,7 +3,7 @@ import base64
 from django.contrib.auth import get_user_model
 from django.test import TransactionTestCase
 
-from ..models import Mapping, XForm
+from ..models import Survey, XForm
 from ..surveyors_utils import get_surveyor_group
 
 
@@ -123,25 +123,25 @@ class CustomTestCase(TransactionTestCase):
         surveyor.save()
         return surveyor
 
-    def helper_create_mapping(self, surveyor=None, mapping_id=1):
-        mapping, _ = Mapping.objects.get_or_create(
+    def helper_create_survey(self, surveyor=None, mapping_id=1):
+        survey, _ = Survey.objects.get_or_create(
             name='test',
             mapping_id=mapping_id,
         )
 
         if surveyor:
             if type(surveyor) is list:
-                mapping.surveyors.set(surveyor)
+                survey.surveyors.set(surveyor)
             else:
-                mapping.surveyors.add(surveyor)
-            mapping.save()
+                survey.surveyors.add(surveyor)
+            survey.save()
 
-        return mapping
+        return survey
 
     def helper_create_xform(self, surveyor=None, mapping_id=1):
         xform = XForm.objects.create(
             description='test',
-            mapping=self.helper_create_mapping(
+            survey=self.helper_create_survey(
                 surveyor=surveyor,
                 mapping_id=mapping_id,
             ),

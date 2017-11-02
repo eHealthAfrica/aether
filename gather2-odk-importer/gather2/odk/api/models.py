@@ -12,7 +12,7 @@ from gather2.common.core import utils as core_utils
 from .xform_utils import get_xml_title, get_xml_form_id, validate_xmldict
 
 
-class Mapping(models.Model):
+class Survey(models.Model):
     '''
     Database link of a Gather2 Core Survey
 
@@ -26,11 +26,11 @@ class Mapping(models.Model):
     name = models.TextField(null=True, blank=True, default='')
 
     # the list of granted surveyors
-    surveyors = models.ManyToManyField(to=get_user_model(), related_name='mappings', blank=True)
+    surveyors = models.ManyToManyField(to=get_user_model(), related_name='surveys', blank=True)
 
     @property
     def gather_core_url(self):
-        return core_utils.get_mapping_responses_url(mapping_id=self.pk)
+        return core_utils.get_survey_responses_url(mapping_id=self.pk)
 
     def is_surveyor(self, user):
         '''
@@ -70,8 +70,8 @@ class XForm(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
 
     # This is needed to submit data to core
-    mapping = models.ForeignKey(
-        Mapping,
+    survey = models.ForeignKey(
+        Survey,
         related_name='xforms',
         null=False,
         blank=False,
@@ -82,7 +82,7 @@ class XForm(models.Model):
 
     @property
     def gather_core_url(self):
-        return self.mapping.gather_core_url
+        return self.survey.gather_core_url
 
     @property
     def hash(self):
@@ -118,9 +118,9 @@ class XForm(models.Model):
         '''
         return (
             user.is_superuser or
-            (self.surveyors.count() == 0 and self.mapping.surveyors.count() == 0) or
+            (self.surveyors.count() == 0 and self.survey.surveyors.count() == 0) or
             user in self.surveyors.all() or
-            user in self.mapping.surveyors.all()
+            user in self.survey.surveyors.all()
         )
 
     def __str__(self):  # pragma: no cover

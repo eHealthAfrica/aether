@@ -13,10 +13,10 @@ class SerializersTests(CustomTestCase):
         self.request = RequestFactory().get('/')
 
     def test_xform_serializer__no_files(self):
-        self.helper_create_mapping(mapping_id=1)
+        self.helper_create_survey(mapping_id=1)
         xform = XFormSerializer(
             data={
-                'mapping': 1,
+                'survey': 1,
                 'description': 'test xml data',
                 'xml_data': self.samples['xform']['raw-xml'],
             },
@@ -32,10 +32,10 @@ class SerializersTests(CustomTestCase):
         with open(self.samples['xform']['file-xml'], 'rb') as data:
             content = SimpleUploadedFile('xform.xml', data.read())
 
-        self.helper_create_mapping(mapping_id=1)
+        self.helper_create_survey(mapping_id=1)
         xform = XFormSerializer(
             data={
-                'mapping': 1,
+                'survey': 1,
                 'description': 'test xml file',
                 'xml_file': content,
             },
@@ -52,10 +52,10 @@ class SerializersTests(CustomTestCase):
         with open(self.samples['xform']['file-xls'], 'rb') as data:
             content = SimpleUploadedFile('xform.xls', data.read())
 
-        self.helper_create_mapping(mapping_id=1)
+        self.helper_create_survey(mapping_id=1)
         xform = XFormSerializer(
             data={
-                'mapping': 1,
+                'survey': 1,
                 'description': 'test xls file',
                 'xml_file': content,
             },
