@@ -1,5 +1,5 @@
 # encoding: utf-8
-
+import uuid
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 
@@ -37,6 +37,7 @@ class Mapping(models.Model):
 
 
 class Response(models.Model):
+    id = models.CharField(primary_key=True, default=uuid.uuid4, editable=False, max_length=50)
     revision = models.TextField()
     map_revision = models.TextField()
     date = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -79,7 +80,7 @@ class ProjectSchema(models.Model):
 
 
 class Entity(models.Model):
-    # uuid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
+    id = models.CharField(primary_key=True, default=uuid.uuid4, editable=False, max_length=50)
     revision = models.TextField(default='1')
     payload = JSONField(blank=False, null=False)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
