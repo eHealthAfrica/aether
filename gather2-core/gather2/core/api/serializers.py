@@ -188,8 +188,9 @@ class EntitySerializer(serializers.ModelSerializer):
             payload=validated_data.pop('payload'),
             status=validated_data.pop('status'),
             projectschema=validated_data.pop('projectschema'),
-            response=validated_data.pop('response')
         )
+        if "response" in validated_data:
+            entity.response = validated_data.pop('response') 
         if 'id' in validated_data:
             entity.id = validated_data.pop('id')
         entity.payload['_id'] = str(entity.id)
