@@ -53,7 +53,7 @@ class MappingSerializer(serializers.ModelSerializer):
 class ResponseSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
-        if validated_data['mapping']:
+        if 'mapping' in validated_data:
             response = models.Response(
                 revision=validated_data.pop('revision'),
                 payload=validated_data.pop('payload'),
@@ -185,6 +185,17 @@ class ProjectSchemaSerializer(serializers.ModelSerializer):
 
 
 class EntitySerializer(serializers.ModelSerializer):
+    def create(self, validated_data):
+        entity = models.Entity(
+            id=validated_data['payload']['_id'],
+            payload=validated_data.pop('payload'),
+            status=validated_data.pop('status'),
+            projectschema=validated_data.pop('projectschema'),
+            response=validated_data.pop('response')
+        )
+        entity.save()
+        return entity
+
     url = serializers.HyperlinkedIdentityField('entity-detail', read_only=True)
     projectschema_url = serializers.HyperlinkedRelatedField(
         'projectschema-detail',
