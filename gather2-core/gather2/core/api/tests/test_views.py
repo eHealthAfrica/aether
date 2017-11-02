@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.test import TransactionTestCase
 from django.urls import reverse
 
-from rest_framework import status
+from rest_framework import status, test
 from .. import models
 
 from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA)
@@ -30,7 +30,7 @@ class ViewsTest(TransactionTestCase):
         )
 
         self.mapping = models.Mapping.objects.create(
-            name='a mapping name',
+            name='mapping1',
             definition={"sample": "json schema"},
             revision='a sample revision field',
             project=self.project
@@ -73,15 +73,11 @@ class ViewsTest(TransactionTestCase):
 
     """
     def test_get_object(self):
-        factory = RequestFactory()
-        url = '/mappings/2/'
-        data = {
-            'definition': EXAMPLE_MAPPING,
-            'revision': 'test revision (revised)',
-            'project': self.project.pk
-        }
-        response = factory.get(url, data)
-        self.assertEquals(models.Mapping.objects.count(), 2)
+        client = test.APIClient()
+        url = reverse('mapping-detail', kwargs={'name': 'mapping1'})
+        # data = {}
+        response = client.get(url)
+        self.assertEquals(response, 'a sample revision field')
     """
 
     # TEST CREATE:
