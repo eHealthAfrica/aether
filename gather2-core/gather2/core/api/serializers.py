@@ -104,7 +104,7 @@ class ResponseSerializer(serializers.ModelSerializer):
             if entity_list:
                 for e in entity_list:
                     entity = models.Entity(
-                        id = e['id'],
+                        id=e['id'],
                         payload=e['payload'],
                         status=e['status'],
                         projectschema=e['projectschema'],
