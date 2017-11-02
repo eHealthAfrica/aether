@@ -94,8 +94,6 @@ class ResponseSerializer(serializers.ModelSerializer):
                 }
                 entity_list.append(entity)
 
-            # Extract entities from response data (response.payload)
-
             # Save the response to the db
             response.save()
 
@@ -187,12 +185,14 @@ class ProjectSchemaSerializer(serializers.ModelSerializer):
 class EntitySerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         entity = models.Entity(
-            id=validated_data['payload']['_id'],
             payload=validated_data.pop('payload'),
             status=validated_data.pop('status'),
             projectschema=validated_data.pop('projectschema'),
             response=validated_data.pop('response')
         )
+        if 'id' in validated_data:
+            entity.id = validated_data.pop('id')
+        entity.payload['_id'] = str(entity.id)
         entity.save()
         return entity
 

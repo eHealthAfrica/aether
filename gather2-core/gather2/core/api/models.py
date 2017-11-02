@@ -80,7 +80,7 @@ class ProjectSchema(models.Model):
 
 
 class Entity(models.Model):
-    id = models.CharField(primary_key=True, default=uuid.uuid4, editable=False, max_length=50)
+    id = models.CharField(primary_key=True, default=uuid.uuid4, max_length=50)
     revision = models.TextField(default='1')
     payload = JSONField(blank=False, null=False)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
