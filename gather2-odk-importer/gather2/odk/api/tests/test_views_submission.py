@@ -79,8 +79,8 @@ class PostSubmissionTests(CustomTestCase):
         self.helper_create_user()
         self.url = reverse('xform-submission')
 
-        # create mapping in Core testing server
-        testing_mapping = {
+        # create survey in Core testing server
+        testing_survey = {
             "name": "testing",
             "schema": {}
         }
@@ -88,16 +88,16 @@ class PostSubmissionTests(CustomTestCase):
         self.assertTrue(core_utils.test_connection())
         self.CORE_HEADERS = core_utils.get_auth_header()
 
-        # create mapping in core testing server
-        response = requests.post(core_utils.get_mappings_url(),
-                                 json=testing_mapping,
+        # create survey in core testing server
+        response = requests.post(core_utils.get_surveys_url(),
+                                 json=testing_survey,
                                  headers=self.CORE_HEADERS)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.json())
         data = response.json()
 
         mapping_id = data['id']
-        self.MAPPING_URL = core_utils.get_mappings_url(mapping_id)
-        self.RESPONSES_URL = core_utils.get_mapping_responses_url(mapping_id)
+        self.SURVEY_URL = core_utils.get_surveys_url(mapping_id)
+        self.RESPONSES_URL = core_utils.get_survey_responses_url(mapping_id)
 
         # create xForm entry
         self.xform = self.helper_create_xform(surveyor=self.user, mapping_id=mapping_id)
@@ -105,8 +105,8 @@ class PostSubmissionTests(CustomTestCase):
 
     def tearDown(self):
         super(PostSubmissionTests, self).tearDown()
-        # delete ALL mappings in core testing server
-        requests.delete(self.MAPPING_URL, headers=self.CORE_HEADERS)
+        # delete ALL surveys in core testing server
+        requests.delete(self.SURVEY_URL, headers=self.CORE_HEADERS)
 
     @mock.patch('requests.post', return_value=mock.Mock(status_code=500))
     def test__submission__post__with_core_error(self, mock_post):
@@ -125,8 +125,8 @@ class PostSubmissionTests(CustomTestCase):
 
     def test__submission__post__no_granted_surveyor(self):
         # remove user as granted surveyor
-        self.xform.mapping.surveyors.clear()
-        self.xform.mapping.save()
+        self.xform.survey.surveyors.clear()
+        self.xform.survey.save()
         self.xform.surveyors.clear()
         self.xform.surveyors.add(self.helper_create_surveyor())
         self.xform.save()

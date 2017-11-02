@@ -22,19 +22,19 @@ from rest_framework.renderers import StaticHTMLRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
 
 from gather2.common.core.utils import get_auth_header
-from .models import Mapping, XForm
-from .serializers import MappingSerializer, XFormSerializer, SurveyorSerializer
+from .models import Survey, XForm
+from .serializers import SurveySerializer, XFormSerializer, SurveyorSerializer
 from .surveyors_utils import get_surveyors
 
 from ..settings import logger
 
 
-class MappingViewset(viewsets.ModelViewSet):
+class SurveyViewset(viewsets.ModelViewSet):
     '''
-    Create new Mapping entries.
+    Create new Survey entries.
     '''
-    queryset = Mapping.objects.order_by('name')
-    serializer_class = MappingSerializer
+    queryset = Survey.objects.order_by('name')
+    serializer_class = SurveySerializer
     search_fields = ('name',)
 
     def partial_update(self, request, pk, *args, **kwargs):
@@ -50,7 +50,7 @@ class MappingViewset(viewsets.ModelViewSet):
         The xforms will be created or updated with this info.
         '''
 
-        instance = get_object_or_404(Mapping, pk=pk)
+        instance = get_object_or_404(Survey, pk=pk)
         data = request.data
 
         if request.FILES or 'files' in data:
@@ -64,7 +64,7 @@ class MappingViewset(viewsets.ModelViewSet):
         return self.partial_update_without_files(request, instance, data['xforms'])
 
     @transaction.atomic
-    def partial_update_with_files(self, request, mapping):
+    def partial_update_with_files(self, request, survey):
         '''
         Updates or creates xForms with file content.
 
@@ -77,7 +77,7 @@ class MappingViewset(viewsets.ModelViewSet):
         for index in range(int(request.data['files'])):
             xform_id = int(request.data['id_' + str(index)])
             data = {
-                'mapping': mapping.pk,
+                'survey': survey.pk,
                 'xml_file': request.data['file_' + str(index)],
             }
 
@@ -103,20 +103,20 @@ class MappingViewset(viewsets.ModelViewSet):
                 )
 
         return Response(
-            data=self.serializer_class(mapping, context={'request': request}).data,
+            data=self.serializer_class(survey, context={'request': request}).data,
             status=status.HTTP_200_OK
         )
 
     @transaction.atomic
-    def partial_update_without_files(self, request, mapping, xforms):
+    def partial_update_without_files(self, request, survey, xforms):
         '''
-        Every time that a Mapping is partially updated all its xForms are also
+        Every time that a Survey is partially updated all its xForms are also
         created, updated or even deleted if they are not longer in use.
         '''
 
         xform_ids = []
         for xform in xforms:
-            xform['mapping'] = mapping.pk
+            xform['survey'] = survey.pk
 
             if 'id' in xform and xform['id']:
                 serializer_xform = XFormSerializer(
@@ -138,12 +138,12 @@ class MappingViewset(viewsets.ModelViewSet):
 
         # remove orphans form survey
         XForm.objects \
-             .filter(mapping=mapping) \
+             .filter(survey=survey) \
              .exclude(id__in=xform_ids) \
              .delete()
 
         return Response(
-            data=self.serializer_class(mapping, context={'request': request}).data,
+            data=self.serializer_class(survey, context={'request': request}).data,
             status=status.HTTP_200_OK
         )
 
@@ -165,7 +165,7 @@ class XFormViewset(viewsets.ModelViewSet):
 
         mapping_id = self.request.query_params.get('mapping_id', None)
         if mapping_id is not None:
-            queryset = queryset.filter(mapping=mapping_id)
+            queryset = queryset.filter(survey=mapping_id)
 
         return queryset
 
@@ -189,17 +189,17 @@ class SurveyorViewSet(viewsets.ModelViewSet):
         if mapping_id is not None:
             # get forms with this survey id and with surveyors
             xforms = XForm.objects \
-                          .filter(mapping=mapping_id) \
+                          .filter(survey=mapping_id) \
                           .exclude(surveyors=None) \
                           .values_list('surveyors', flat=True)
 
             # take also the Survey surveyors
-            mappings = Mapping.objects \
-                .filter(mapping_id=mapping_id) \
-                .exclude(surveyors=None) \
-                .values_list('surveyors', flat=True)
+            surveys = Survey.objects \
+                            .filter(mapping_id=mapping_id) \
+                            .exclude(surveyors=None) \
+                            .values_list('surveyors', flat=True)
 
-            items = xforms.union(mappings)
+            items = xforms.union(surveys)
             # build the surveyors list
             surveyors = set([])
             for item in items:

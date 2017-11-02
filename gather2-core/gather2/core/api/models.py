@@ -53,6 +53,7 @@ class Response(models.Model):
 
 class Schema(models.Model):
     name = models.CharField(max_length=50, db_index=True, unique=True)
+    type = models.CharField(max_length=50)
     definition = JSONField(blank=False, null=False)
     revision = models.TextField()
 
@@ -78,7 +79,8 @@ class ProjectSchema(models.Model):
 
 
 class Entity(models.Model):
-    revision = models.TextField()
+    # uuid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
+    revision = models.TextField(default='1')
     payload = JSONField(blank=False, null=False)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
     projectschema = models.ForeignKey(ProjectSchema, related_name='entities')

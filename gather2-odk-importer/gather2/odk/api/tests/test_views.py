@@ -91,7 +91,7 @@ class ViewsTests(CustomTestCase):
                       'superusers are granted surveyors')
 
     def test__xform__filters(self):
-        self.xform.delete()  # remove default mapping
+        self.xform.delete()  # remove default survey
         self.helper_create_xform(mapping_id=1)
         self.helper_create_xform(mapping_id=1)
         self.helper_create_xform(mapping_id=2)
@@ -151,7 +151,7 @@ class ViewsTests(CustomTestCase):
         d = self.helper_create_surveyor(username='d')
 
         # create forms with or without surveyors
-        self.xform.delete()  # remove default mapping
+        self.xform.delete()  # remove default survey
 
         response = self.client.get('/surveyors.json', **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

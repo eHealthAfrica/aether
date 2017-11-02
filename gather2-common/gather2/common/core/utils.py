@@ -71,32 +71,32 @@ def check_connection():
     return 'Brought to you by eHealth Africa - good tech for hard places'
 
 
-def get_surveys_url(survey_id=''):
+def get_surveys_url(mapping_id=''):
     '''
     Returns Gather2 Core url for the given survey
     '''
-    return '{core_url}/surveys/{survey_id}'.format(
+    return '{core_url}/mappings/{mapping_id}'.format(
         core_url=get_core_server_url(),
-        survey_id=survey_id
+        mapping_id=mapping_id
     )
 
 
-def get_survey_responses_url(survey_id, response_id=None):
+def get_survey_responses_url(mapping_id, response_id=None):
     '''
     Returns Gather2 Core url to submit survey responses
     '''
-    if survey_id is None:
+    if mapping_id is None:
         raise Exception('Cannot get responses url without survey!')
 
     if not response_id:
-        return '{core_url}/surveys/{survey_id}/responses/'.format(
+        return '{core_url}/mappings/{mapping_id}/responses/'.format(
             core_url=get_core_server_url(),
-            survey_id=survey_id,
+            mapping_id=mapping_id,
         )
     else:
-        return '{core_url}/surveys/{survey_id}/responses/{response_id}/'.format(
+        return '{core_url}/mappings/{mapping_id}/responses/{response_id}/'.format(
             core_url=get_core_server_url(),
-            survey_id=survey_id,
+            mapping_id=mapping_id,
             response_id=response_id,
         )
 
@@ -119,11 +119,11 @@ def get_all_docs(url):
     return results
 
 
-def submit_to_core(response, survey_id, response_id=None):
+def submit_to_core(response, mapping_id, response_id=None):
     '''
     Submit the response to Gather2 Core survey
     '''
-    if survey_id is None:
+    if mapping_id is None:
         raise Exception('Cannot submit response without survey!')
 
     if response is None:
@@ -132,13 +132,13 @@ def submit_to_core(response, survey_id, response_id=None):
     if response_id:
         # update existing doc
         method = requests.put
-        url = get_survey_responses_url(survey_id, response_id)
+        url = get_survey_responses_url(mapping_id, response_id)
     else:
         # create new doc
         method = requests.post
-        url = get_survey_responses_url(survey_id)
+        url = get_survey_responses_url(mapping_id)
 
     logger.debug('{method} to {url}'.format(method=method, url=url))
     return method(url,
-                  json={'data': json.dumps(response), 'survey': survey_id},
+                  json={'data': json.dumps(response), 'survey': mapping_id},
                   headers=get_auth_header())

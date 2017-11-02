@@ -19,19 +19,19 @@ class UtilsTests(TestCase):
     def test__get_survey_url_testing(self):
         self.assertEqual(
             utils.get_surveys_url(),
-            'http://core-test/surveys/'
+            'http://core-test/mappings/'
         )
         self.assertEqual(
             utils.get_surveys_url(1),
-            'http://core-test/surveys/1'
+            'http://core-test/mappings/1'
         )
         self.assertEqual(
             utils.get_survey_responses_url(1),
-            'http://core-test/surveys/1/responses/'
+            'http://core-test/mappings/1/responses/'
         )
         self.assertEqual(
             utils.get_survey_responses_url(1, 2),
-            'http://core-test/surveys/1/responses/2/'
+            'http://core-test/mappings/1/responses/2/'
         )
         self.assertRaises(
             Exception,
@@ -44,19 +44,19 @@ class UtilsTests(TestCase):
     def test__get_survey_url__no_testing(self):
         self.assertEqual(
             utils.get_surveys_url(),
-            'http://core/surveys/'
+            'http://core/mappings/'
         )
         self.assertEqual(
             utils.get_surveys_url(1),
-            'http://core/surveys/1'
+            'http://core/mappings/1'
         )
         self.assertEqual(
             utils.get_survey_responses_url(1),
-            'http://core/surveys/1/responses/'
+            'http://core/mappings/1/responses/'
         )
         self.assertEqual(
             utils.get_survey_responses_url(1, 2),
-            'http://core/surveys/1/responses/2/'
+            'http://core/mappings/1/responses/2/'
         )
         self.assertRaises(
             Exception,

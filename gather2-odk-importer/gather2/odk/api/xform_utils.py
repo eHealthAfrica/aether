@@ -14,9 +14,9 @@ def parse_file(filename, content):
 
 def parse_xlsform(fp):
     warnings = []
-    json_mapping = xls2json.workbook_to_json(xls_to_dict(fp), None, 'default', warnings)
-    mapping = builder.create_mapping_element_from_dict(json_mapping)
-    return mapping.xml().toprettyxml(indent='  ')
+    json_survey = xls2json.workbook_to_json(xls_to_dict(fp), None, 'default', warnings)
+    survey = builder.create_survey_element_from_dict(json_survey)
+    return survey.xml().toprettyxml(indent='  ')
 
 
 def parse_xmlform(fp):

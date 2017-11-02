@@ -10,7 +10,7 @@ class AdminTests(CustomTestCase):
         super(AdminTests, self).setUp()
         self.helper_create_superuser()
         self.url = reverse('admin:odk_xform_add')
-        self.survey = self.helper_create_survey(survey_id=1)
+        self.survey = self.helper_create_survey(mapping_id=1)
 
     def test__post__empty(self):
         response = self.client.post(

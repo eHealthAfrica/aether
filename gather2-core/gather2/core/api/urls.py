@@ -26,6 +26,9 @@ router = ExtendedDefaultRouter()
 )
 (
     router.register('responses', views.ResponseViewSet)
+          .register('entities', views.EntityViewSet,
+                    base_name='response_entity',
+                    parents_query_lookups=['response'])
 )
 (
     router.register('schemas', views.SchemaViewSet)
