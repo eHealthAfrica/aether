@@ -87,7 +87,7 @@ class ResponseSerializer(serializers.ModelSerializer):
             entity_list = []
             for payload in entities_payload[0]:
                 entity = {
-                    'id': payload['_id'],
+                    'id': payload['id'],
                     'payload': payload,
                     'status': 'Publishable',
                     'projectschema': project_schema
