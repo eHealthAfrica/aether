@@ -11,6 +11,11 @@ if [ "${BRANCH}" == "develop" ]; then
   export PREFIX="gather2"
   export APPS=( core couchdb-sync odk-importer ui )
   export CLUSTER_NAME="ehealth-africa"
+elif [ "${BRANCH}" == "staging" ]; then
+  export ENV="staging"
+  export PREFIX="gather2"
+  export APPS=( core couchdb-sync odk-importer ui )
+  export CLUSTER_NAME="ehealth-africa"
 elif [ "${BRANCH}" == "master" ]; then
   echo "commit on master, setting ENV to production"
   export ENV="prod"
@@ -26,6 +31,10 @@ do
   do
     GATHER2_APP="${PREFIX}-${APP}"
     docker-compose build $APP
+    # build nginx containers
+    docker build -t "${IMAGE_REPO}/${GATHER2_APP}-nginx-${ENV}:${BRANCH}" nginx/
+    docker push "${IMAGE_REPO}/${GATHER2_APP}-nginx-${ENV}:${BRANCH}"
+
     echo "Building Docker image ${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${BRANCH}"
     docker tag $APP "${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${BRANCH}"
     docker tag $APP "${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${COMMIT}"
