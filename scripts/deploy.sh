@@ -32,7 +32,7 @@ do
     GATHER2_APP="${PREFIX}-${APP}"
     docker-compose build $APP
     # build nginx containers
-    docker build -t "${IMAGE_REPO}/${GATHER2_APP}-nginx-${ENV}:${BRANCH}" nginx/
+    docker build -t "${IMAGE_REPO}/${GATHER2_APP}-nginx-${ENV}:${BRANCH}" "gather2-${APP}/nginx"
     docker push "${IMAGE_REPO}/${GATHER2_APP}-nginx-${ENV}:${BRANCH}"
 
     echo "Building Docker image ${IMAGE_REPO}/${GATHER2_APP}-${ENV}:${BRANCH}"
