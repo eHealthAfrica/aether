@@ -98,7 +98,13 @@ def resolve_entity_reference(entity_jsonpath, constructed_entities, entity_name,
     #called via  #!entity-reference#jsonpath
     #looks inside of the entities to be exported as currently constructed
     #returns the value(s) found at entity_jsonpath
-    return "this is a dummy value!"
+    matches = parse(entity_jsonpath).find(constructed_entities)
+    if len(matches) < 2:
+        # single value
+        return matches[0].value
+    else:
+        # multiple values, choose the one aligned with this entity (#i)
+        return matches[instance_number].value
 
 
 def get_or_make_uuid(entity_name, field_name, instance_number, source_data):
@@ -153,7 +159,7 @@ def extractor_action(source_path, constructed_entities, entity_name, field_name,
     if action == "uuid":
         return get_or_make_uuid(entity_name, field_name, instance_number, source_data)
     elif action == "entity-reference":
-        resolve_entity_reference(args, constructed_entities, entity_name, field_name, instance_number, source_data)        
+        return resolve_entity_reference(args, constructed_entities, entity_name, field_name, instance_number, source_data)        
     else:
         raise ValueError("No action by name %s" % action)        
 
@@ -209,7 +215,6 @@ def extract_entity(requirements, response_data, entity_stubs):
                         entities[entity_name][i][field] = matches[i].value
                 else:
                     #Special action to be dispatched
-                    #entities[entity_name][i][field] = get_or_make_uuid(entity_name, field, i, data)
                     entities[entity_name][i][field] = extractor_action(path, entities, entity_name, field, i, data)
 
     return data, entities
