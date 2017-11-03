@@ -94,7 +94,15 @@ def get_entity_requirements(entities, field_mappings):
     return all_requirements
 
 
+def resolve_entity_reference(entity_jsonpath, constructed_entities, entity_name, field_name, instance_number, source_data):
+    #called via  #!entity-reference#jsonpath
+    #looks inside of the entities to be exported as currently constructed
+    #returns the value(s) found at entity_jsonpath
+
+
 def get_or_make_uuid(entity_name, field_name, instance_number, source_data):
+    #either uses a pre-created uuid present in source_data
+    #--or-- creates a new uuid and saves it in source data
     # make one uuid, we may not use it
     value = str(uuid.uuid4())
     base = "aether_extractor_enrichment"
@@ -117,6 +125,36 @@ def get_or_make_uuid(entity_name, field_name, instance_number, source_data):
         else:
             source_data[base][entity_name][field_name].append(value)
         return value
+
+def resolve_action(source_path):
+    #take a path instuction (like #!uuid# or #!entity-reference#a.json[path]) and resolves the action and arguments
+    opts = source_path.split("#!")[1].split("#")
+    #action string is between #! and #
+    action = opts[0]
+    #if arguments are present we'll try and parse them
+    args = opts[-1] if len(opts) > 1 else None
+    if args:
+        try:
+            #see if we can parse json from the argument
+            args = json.loads(args)
+        except ValueError:
+            #not a json value so we'll leave it alone
+            pass
+    else:
+        #in case args is an empty string
+        args = None
+    return action , args
+
+
+def extractor_action(source_path, constructed_entities, entity_name, field_name, instance_number, source_data):
+    #takes an extractor action instuction (#!action#args) and dispatches it to the proper funciton
+    action , args = resolve_action(source_path)
+    if action == "uuid":
+        return get_or_make_uuid(entity_name, field_name, instance_number, source_data)
+    elif action == "entity-reference":
+        resolve_entity_reference(args, constructed_entities, entity_name, field_name, instance_number, source_data)        
+    else:
+        raise ValueError("No action by name %s" % action)        
 
 
 def extract_entity(requirements, response_data, entity_stubs):
