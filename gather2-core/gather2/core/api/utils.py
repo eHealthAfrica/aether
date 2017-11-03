@@ -98,6 +98,7 @@ def resolve_entity_reference(entity_jsonpath, constructed_entities, entity_name,
     #called via  #!entity-reference#jsonpath
     #looks inside of the entities to be exported as currently constructed
     #returns the value(s) found at entity_jsonpath
+    return "this is a dummy value!"
 
 
 def get_or_make_uuid(entity_name, field_name, instance_number, source_data):
@@ -173,11 +174,12 @@ def extract_entity(requirements, response_data, entity_stubs):
         # do a quick first resolution of paths to size output requirement
         for field, paths in requirements.get(entity_name).items():
             for i, path in enumerate(paths):
-                if path != "UUID":
+                #if this is a json path, we'll resolve it to see how big the result is
+                if not "#!" in path:
                     matches = parse(path).find(data)
                     [entity_stub[field].append(match.value) for match in matches]
                 else:
-                    entity_stub[field].append("UUID")
+                    entity_stub[field].append(path)
         # calculate how many instances we need to split the resolved data
         # into by maximum number of path resolutions
         count = max([len(entity_stub.get(field)) for field in entity_stub.keys()])
@@ -196,7 +198,7 @@ def extract_entity(requirements, response_data, entity_stubs):
                 # otherwise use the current path
                 path = paths[-1] if len(paths) < (i + 1) else paths[i]
                 # check to see if we need to use a UUID here
-                if path != "UUID":
+                if not "#!"in path:
                     # find the matches and assign them
                     matches = parse(path).find(data)
                     if len(matches) < 2:
@@ -206,7 +208,8 @@ def extract_entity(requirements, response_data, entity_stubs):
                         # multiple values, choose the one aligned with this entity (#i)
                         entities[entity_name][i][field] = matches[i].value
                 else:
-                    # use a UUID
-                    entities[entity_name][i][field] = get_or_make_uuid(entity_name, field, i, data)
+                    #Special action to be dispatched
+                    #entities[entity_name][i][field] = get_or_make_uuid(entity_name, field, i, data)
+                    entities[entity_name][i][field] = extractor_action(path, entities, entity_name, field, i, data)
 
     return data, entities
