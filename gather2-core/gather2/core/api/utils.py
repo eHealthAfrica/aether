@@ -198,7 +198,7 @@ def extract_entity(requirements, response_data, entity_stubs):
                 # otherwise use the current path
                 path = paths[-1] if len(paths) < (i + 1) else paths[i]
                 # check to see if we need to use a UUID here
-                if not "#!"in path:
+                if not "#!" in path:
                     # find the matches and assign them
                     matches = parse(path).find(data)
                     if len(matches) < 2:
