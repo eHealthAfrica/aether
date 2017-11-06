@@ -25,7 +25,6 @@ deploy:
     on:
       branch: develop
 
-deploy:
   - provider: script
     script: "./scripts/deploy.sh"
     skip_cleanup: true
@@ -37,12 +36,6 @@ deploy:
     skip_cleanup: true
     on:
       branch: master
-
-  # - provider: script
-  #   script: "./scripts/deploy.sh"
-  #   skip_cleanup: true
-  #   on:
-  #     branch: lake-chad-basin
 
 env:
   global:
