@@ -1,7 +1,6 @@
 import string
 import json
 import uuid
-import traceback
 
 from jsonpath_ng import parse
 from collections import defaultdict
@@ -71,14 +70,14 @@ def JSP_get_basic_fields(avro_obj):
     return [match.value for match in jsonpath_expr.find(avro_obj)]
 
 
-def get_entity_definitions(mapping_definition, schema):
+def get_entity_definitions(mapping_definition, schemas):
     required_entities = {}
     mapping = mapping_definition
     found_entities = parse("entities[*]").find(mapping)
     entities = [match.value for match in found_entities][0]
     for entity_definition in entities.items():
         entity_name, file_name = entity_definition
-        required_entities[entity_name] = JSP_get_basic_fields(schema)
+        required_entities[entity_name] = JSP_get_basic_fields(schemas.get(entity_name))
     return required_entities
 
 
@@ -311,14 +310,17 @@ def extract_create_entities(response):
     mapping_definition = response.mapping.definition
 
     # Get the primary key of the projectschema
-    entity_pks = list(mapping_definition['entities'].values())
+    #entity_pks = list(mapping_definition['entities'].values())
+    entity_ps_ids = mapping_definition.get("entities")
 
     # Get the schema of the projectschema
-    project_schema = models.ProjectSchema.objects.get(pk=entity_pks[0])
-    schema = project_schema.schema.definition
+    #project_schema = models.ProjectSchema.objects.get(pk=entity_pks[0])
+    project_schemas = {name: models.ProjectSchema.objects.get(pk=_id) for name, _id in entity_ps_ids.items()}
+    schemas = {name : ps.schema.definition for name, ps in project_schemas.items()}    
+    #schema = project_schema.schema.definition
 
     # Get entity definitions
-    entities = get_entity_definitions(mapping_definition, schema)
+    entities = get_entity_definitions(mapping_definition, schemas)
 
     # Get field mappings
     field_mappings = get_field_mappings(mapping_definition)
@@ -329,9 +331,22 @@ def extract_create_entities(response):
     response_data = response.payload
     data, entities = extract_entity(requirements, response_data, entities)
 
+    '''
     entities_payload = list(entities.values())
 
     entity_list = []
+    '''
+    entity_list = []
+    for name, entity_instances in entities.items():
+        for entity in entity_instances:
+            obj = {
+                'id': entity['id'],
+                'payload': entity,
+                'status': 'Publishable',
+                'projectschema': project_schemas.get(name)
+            }
+            entity_list.append(obj)
+    '''
     for payload in entities_payload[0]:
         entity = {
             'id': payload['id'],
@@ -340,7 +355,7 @@ def extract_create_entities(response):
             'projectschema': project_schema
         }
         entity_list.append(entity)
-
+    '''
     # Save the response to the db
     response.save()
 
