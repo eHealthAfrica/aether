@@ -335,7 +335,6 @@ def xform_submission(request):
             pass
 
     walk(data, None, coerce_dict)  # modifies inplace
-
     try:
         response = requests.post(
             xform.gather_core_url,

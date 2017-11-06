@@ -41,8 +41,7 @@ class MappingSerializer(serializers.ModelSerializer):
     responses_url = serializers.HyperlinkedIdentityField(
         'mapping_response-list',
         read_only=True,
-        lookup_url_kwarg='parent_lookup_mapping',
-        lookup_field='name'
+        lookup_url_kwarg='parent_lookup_mapping'
     )
 
     class Meta:
@@ -54,62 +53,39 @@ class ResponseSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         if 'mapping' in validated_data:
-            response = models.Response(
-                revision=validated_data.pop('revision'),
-                map_revision=validated_data.pop('map_revision'),
-                payload=validated_data.pop('payload'),
-                mapping=validated_data.pop('mapping')
-            )
+            if 'revision' and 'map_revision' in validated_data:
+                response = models.Response(
+                    revision=validated_data.pop('revision'),
+                    map_revision=validated_data.pop('map_revision'),
+                    payload=validated_data.pop('payload'),
+                    mapping=validated_data.pop('mapping')
+                )
+            else:
+                response = models.Response(
+                    payload=validated_data.pop('payload'),
+                    mapping=validated_data.pop('mapping')
+                )
 
-            # Get the mapping definition from the response (response.mapping.definition):
-            mapping_definition = response.mapping.definition
+            utils.extract_create_entities(response)
 
-            # Get the primary key of the projectschema
-            entity_pks = list(mapping_definition['entities'].values())
+        elif 'parent_lookup_mapping' in self.context.get('request').parser_context['kwargs']:
+            kwargs = self.context.get('request').parser_context['kwargs']
+            mapping_id = kwargs['parent_lookup_mapping']
+            mapping = models.Mapping.objects.get(pk=mapping_id)
+            if 'revision' and 'map_revision' in validated_data:
+                response = models.Response(
+                    revision=validated_data.pop('revision'),
+                    map_revision=validated_data.pop('map_revision'),
+                    payload=validated_data.pop('payload'),
+                    mapping=mapping_id
+                )
+            else:
+                response = models.Response(
+                    payload=validated_data.pop('payload'),
+                    mapping=mapping
+                )
 
-            # Get the schema of the projectschema
-            project_schema = models.ProjectSchema.objects.get(pk=entity_pks[0])
-            schema = project_schema.schema.definition
-
-            # Get entity definitions
-            entities = utils.get_entity_definitions(mapping_definition, schema)
-
-            # Get field mappings
-            field_mappings = utils.get_field_mappings(mapping_definition)
-
-            # Get entity requirements
-            requirements = utils.get_entity_requirements(entities, field_mappings)
-
-            response_data = response.payload
-            data, entities = utils.extract_entity(requirements, response_data, entities)
-
-            entities_payload = list(entities.values())
-
-            entity_list = []
-            for payload in entities_payload[0]:
-                entity = {
-                    'id': payload['id'],
-                    'payload': payload,
-                    'status': 'Publishable',
-                    'projectschema': project_schema
-                }
-                entity_list.append(entity)
-
-            # Save the response to the db
-            response.save()
-
-            # If extraction successful, create new entities
-
-            if entity_list:
-                for e in entity_list:
-                    entity = models.Entity(
-                        id=e['id'],
-                        payload=e['payload'],
-                        status=e['status'],
-                        projectschema=e['projectschema'],
-                        response=response
-                    )
-                    entity.save()
+            utils.extract_create_entities(response)
         else:
             if 'revision' and 'map_revision' in validated_data:
                 response = models.Response(
