@@ -339,7 +339,7 @@ def xform_submission(request):
     try:
         response = requests.post(
             xform.gather_core_url,
-            json={'data': data},
+            json={'payload': data},
             headers=auth_header,
         )
         if response.status_code != 201:

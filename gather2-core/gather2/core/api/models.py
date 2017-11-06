@@ -38,8 +38,8 @@ class Mapping(models.Model):
 
 class Response(models.Model):
     id = models.CharField(primary_key=True, default=uuid.uuid4, editable=False, max_length=50)
-    revision = models.TextField()
-    map_revision = models.TextField()
+    revision = models.TextField(default='1')
+    map_revision = models.TextField(default='1')
     date = models.DateTimeField(auto_now_add=True, db_index=True)
     payload = JSONField(blank=False, null=False)
     mapping = models.ForeignKey(Mapping, related_name='responses', blank=True, null=True)
