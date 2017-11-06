@@ -331,11 +331,6 @@ def extract_create_entities(response):
     response_data = response.payload
     data, entities = extract_entity(requirements, response_data, entities)
 
-    '''
-    entities_payload = list(entities.values())
-
-    entity_list = []
-    '''
     entity_list = []
     for name, entity_instances in entities.items():
         for entity in entity_instances:
@@ -346,16 +341,6 @@ def extract_create_entities(response):
                 'projectschema': project_schemas.get(name)
             }
             entity_list.append(obj)
-    '''
-    for payload in entities_payload[0]:
-        entity = {
-            'id': payload['id'],
-            'payload': payload,
-            'status': 'Publishable',
-            'projectschema': project_schema
-        }
-        entity_list.append(entity)
-    '''
     # Save the response to the db
     response.save()
 
