@@ -1,7 +1,11 @@
 import string
 import json
 import uuid
+import traceback
+
 from jsonpath_ng import parse
+from collections import defaultdict
+
 from django.utils.safestring import mark_safe
 
 from pygments import highlight
@@ -10,7 +14,6 @@ from pygments.lexers import JsonLexer
 from pygments.lexers.python import Python3Lexer
 
 from . import models
-
 
 def __prettified__(response, lexer):
     # Truncate the data. Alter as needed
@@ -95,19 +98,64 @@ def get_entity_requirements(entities, field_mappings):
         all_requirements[entity_name] = entity_requirements
     return all_requirements
 
+class DeferrableAction(object):
+    '''
+    There are many potential race conditions that mapping creators shouldn't have to worry about. 
+    If something can't be resolved, we save it for later and attempt resolution at the end of entity construction.
+    '''
+    def __init__(self, path, args, function=None):
+        self.res = None
+        self.path = path
+        self.func = function
+        self.args = args
+        self.complete = False
+        self.error = None
+
+    def run(self):
+        self.error = None
+        try:
+            if not self.func:
+                self.res = self.args
+            else:
+                self.res = self.func(*self.args)
+            self.complete = True
+        except Exception as e:
+            self.complete = False
+            self.error = e
+
+    def resolve(self, entities):
+        #takes the entities object as an argument and attempts to assign the resolved value to the proper path
+        p = self.path
+        entities[p[0]][p[1]][p[2]] = self.res
+        '''
+        for loc in self.path:
+            obj = obj[loc]
+            if loc == self.path[-1]:
+                obj.set(self.res)
+        '''
+
+
+def action_none():
+    #called via #!none acts as a dummy instruction when you need to the first entity to have a value but no others
+    return None
+
+def action_constant(args):
+    #called via #!constant#args returns the arguments to be assigned as the value for the path
+    return args
 
 def resolve_entity_reference(entity_jsonpath, constructed_entities, entity_name, field_name, instance_number, source_data):
     #called via  #!entity-reference#jsonpath
     #looks inside of the entities to be exported as currently constructed
     #returns the value(s) found at entity_jsonpath
     matches = parse(entity_jsonpath).find(constructed_entities)
+    if len(matches) < 1:
+        raise ValueError("path %s has no matches; aborting" % entity_jsonpath)
     if len(matches) < 2:
         # single value
         return matches[0].value
     else:
         # multiple values, choose the one aligned with this entity (#i)
         return matches[instance_number].value
-
 
 def get_or_make_uuid(entity_name, field_name, instance_number, source_data):
     #either uses a pre-created uuid present in source_data
@@ -162,6 +210,10 @@ def extractor_action(source_path, constructed_entities, entity_name, field_name,
         return get_or_make_uuid(entity_name, field_name, instance_number, source_data)
     elif action == "entity-reference":
         return resolve_entity_reference(args, constructed_entities, entity_name, field_name, instance_number, source_data)
+    elif action == "none":
+        return action_none()
+    elif action == "constant":
+        return action_constant(args)
     else:
         raise ValueError("No action by name %s" % action)
 
@@ -170,7 +222,9 @@ def extract_entity(requirements, response_data, entity_stubs):
     data = None
     if response_data:
         data = response_data
-
+    data["aether_errors"] = []
+    #sometimes order matters and our custom actions failed. We'll put them here
+    failed_actions = []
     # for output. Since we need to submit the extracted entities as different
     # types, it's helpful to seperate them here
     entities = {}
@@ -193,31 +247,61 @@ def extract_entity(requirements, response_data, entity_stubs):
         count = max([len(entity_stub.get(field)) for field in entity_stub.keys()])
         # make empty stubs for our expected outputs. One for each member
         # identified in count process
-        entities[entity_name] = [{} for i in range(count)]
+        entities[entity_name] = [{field:None for field in entity_stub.keys()} for i in range(count)]
 
         # iterate required fields, resolve paths and copy data to stubs
         for field, paths in requirements.get(entity_name).items():
             # ignore fields with empty paths
             if len(paths) < 1:
+                for i in range(count): del entities[entity_name][i][field]
                 continue
             # iterate over expected output entities
-            for i in range(count):
+            # some paths will satisfy more than one entity, so we increment in different places
+            i = 0
+            while i <= count-1:
                 # if fewer paths than required use the last value
                 # otherwise use the current path
                 path = paths[-1] if len(paths) < (i + 1) else paths[i]
                 # check to see if we need to use a UUID here
                 if not "#!" in path:
                     # find the matches and assign them
+
                     matches = parse(path).find(data)
                     if len(matches) < 2:
                         # single value
                         entities[entity_name][i][field] = matches[0].value
+                        i+=1
+                        continue
                     else:
-                        # multiple values, choose the one aligned with this entity (#i)
-                        entities[entity_name][i][field] = matches[i].value
+                        for x, match in enumerate(matches):
+                        # multiple values, choose the one aligned with this entity (#i) & order of match(x)
+                            entities[entity_name][i][field] = matches[x].value
+                            i +=1
+                        continue
                 else:
                     #Special action to be dispatched
-                    entities[entity_name][i][field] = extractor_action(path, entities, entity_name, field, i, data)
+                    action = DeferrableAction([entity_name,i,field], [path, entities, entity_name, field, i, data], extractor_action)
+                    action.run()
+                    #If the action throws an exception (usually reference to something not yet created)
+                    #--then we allow for it to be resolved later
+                    if action.complete:
+                        action.resolve(entities)
+                    else:
+                        failed_actions.append(action)
+                    i+=1
+
+    failed_again = []
+    for action in failed_actions:
+        #these actions failed, so we'll try again, hoping it was caused by ordering of mapping instructions (it usually is...)
+        action.run()
+        if not (action.complete):
+            failed_again.append(action)        
+        else:
+            action.resolve(entities)
+
+    #send a log of paths with errors to the user via saved response
+    for action in failed_again:
+        data["aether_errors"].append("failed %s" % action.path)
 
     return data, entities
 
