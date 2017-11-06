@@ -56,6 +56,7 @@ class ResponseSerializer(serializers.ModelSerializer):
         if 'mapping' in validated_data:
             response = models.Response(
                 revision=validated_data.pop('revision'),
+                map_revision=validated_data.pop('map_revision'),
                 payload=validated_data.pop('payload'),
                 mapping=validated_data.pop('mapping')
             )
@@ -110,10 +111,16 @@ class ResponseSerializer(serializers.ModelSerializer):
                     )
                     entity.save()
         else:
-            response = models.Response(
-                revision=validated_data.pop('revision'),
-                payload=validated_data.pop('payload'),
-            )
+            if 'revision' and 'map_revision' in validated_data:
+                response = models.Response(
+                    revision=validated_data.pop('revision'),
+                    map_revision=validated_data.pop('revision'),
+                    payload=validated_data.pop('payload'),
+                )
+            else:
+                response = models.Response(
+                    payload=validated_data.pop('payload')
+                )
             # Save the response to the db
             response.save()
 
@@ -190,7 +197,7 @@ class EntitySerializer(serializers.ModelSerializer):
             projectschema=validated_data.pop('projectschema'),
         )
         if "response" in validated_data:
-            entity.response = validated_data.pop('response') 
+            entity.response = validated_data.pop('response')
         if 'id' in validated_data:
             entity.id = validated_data.pop('id')
         entity.payload['_id'] = str(entity.id)
