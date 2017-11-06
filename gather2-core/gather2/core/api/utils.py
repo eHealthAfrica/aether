@@ -9,6 +9,8 @@ from pygments.formatters import HtmlFormatter
 from pygments.lexers import JsonLexer
 from pygments.lexers.python import Python3Lexer
 
+from . import models
+
 
 def __prettified__(response, lexer):
     # Truncate the data. Alter as needed
@@ -159,9 +161,9 @@ def extractor_action(source_path, constructed_entities, entity_name, field_name,
     if action == "uuid":
         return get_or_make_uuid(entity_name, field_name, instance_number, source_data)
     elif action == "entity-reference":
-        return resolve_entity_reference(args, constructed_entities, entity_name, field_name, instance_number, source_data)        
+        return resolve_entity_reference(args, constructed_entities, entity_name, field_name, instance_number, source_data)
     else:
-        raise ValueError("No action by name %s" % action)        
+        raise ValueError("No action by name %s" % action)
 
 
 def extract_entity(requirements, response_data, entity_stubs):
@@ -218,3 +220,55 @@ def extract_entity(requirements, response_data, entity_stubs):
                     entities[entity_name][i][field] = extractor_action(path, entities, entity_name, field, i, data)
 
     return data, entities
+
+def extract_create_entities(response):
+
+    # Get the mapping definition from the response (response.mapping.definition):
+    mapping_definition = response.mapping.definition
+
+    # Get the primary key of the projectschema
+    entity_pks = list(mapping_definition['entities'].values())
+
+    # Get the schema of the projectschema
+    project_schema = models.ProjectSchema.objects.get(pk=entity_pks[0])
+    schema = project_schema.schema.definition
+
+    # Get entity definitions
+    entities = get_entity_definitions(mapping_definition, schema)
+
+    # Get field mappings
+    field_mappings = get_field_mappings(mapping_definition)
+
+    # Get entity requirements
+    requirements = get_entity_requirements(entities, field_mappings)
+
+    response_data = response.payload
+    data, entities = extract_entity(requirements, response_data, entities)
+
+    entities_payload = list(entities.values())
+
+    entity_list = []
+    for payload in entities_payload[0]:
+        entity = {
+            'id': payload['id'],
+            'payload': payload,
+            'status': 'Publishable',
+            'projectschema': project_schema
+        }
+        entity_list.append(entity)
+
+    # Save the response to the db
+    response.save()
+
+    # If extraction successful, create new entities
+
+    if entity_list:
+        for e in entity_list:
+            entity = models.Entity(
+                id=e['id'],
+                payload=e['payload'],
+                status=e['status'],
+                projectschema=e['projectschema'],
+                response=response
+            )
+            entity.save()
