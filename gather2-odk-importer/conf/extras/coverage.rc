@@ -10,4 +10,4 @@ omit = *migrations*, *tests*
 [report]
 omit = *migrations*, *tests*, *wsgi.py
 show_missing = true
-fail_under = 100
+fail_under = 70
