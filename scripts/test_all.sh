@@ -38,11 +38,11 @@ prepare_and_test_container odk-importer
 echo "_____________________________________________ Starting odk-importer"
 $DC_TEST up -d odk-importer-test
 
-# test a clean SYNC TEST container
-prepare_and_test_container couchdb-sync
+# # test a clean SYNC TEST container
+# prepare_and_test_container couchdb-sync
 
-# test a clean UI TEST container
-prepare_and_test_container ui
+# # test a clean UI TEST container
+# prepare_and_test_container ui
 
 
 # kill ALL containers
