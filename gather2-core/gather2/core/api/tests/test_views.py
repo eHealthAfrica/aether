@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.test import TransactionTestCase
 from django.urls import reverse
 
-from rest_framework import status, test
+from rest_framework import status
 from .. import models
 
 from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA)
