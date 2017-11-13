@@ -1,10 +1,12 @@
 import os
 
+
 def get_core_server_url():
     if os.environ.get('TESTING', '').lower() == 'true':
         return os.environ.get('GATHER_CORE_URL_TEST', '')
     else:
         return os.environ.get('GATHER_CORE_URL', '')
+
 
 def get_survey_responses_url(mapping_id, response_id=None):
     '''
