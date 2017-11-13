@@ -18,26 +18,3 @@ script:
 after_script:
   - ./scripts/kill_all.sh
 
-deploy:
-  - provider: script
-    script: "./scripts/deploy.sh"
-    skip_cleanup: true
-    on:
-      branch: develop
-
-  - provider: script
-    script: "./scripts/deploy.sh"
-    skip_cleanup: true
-    on:
-      branch: staging
-
-  - provider: script
-    script: "./scripts/deploy.sh"
-    skip_cleanup: true
-    on:
-      branch: master
-
-env:
-  global:
-    - secure: qrmkKRMrpQ3hqG+Q+w5f9Yd9mICPCnQ3J11hSepRCBvcSMyDdnjMjeTlAwdb48QQjAAe+/oF6Vi36Ob6M30NC9ECuHd86wUvbsDdtdJLv4IVrxERWk4u3ZUAJGWjLAhOMqPasHTFB+IJytjh0SaZD1AFiYW4X2SKigTd+XE25rw1psZMk+YNvBZlNytPNLnfFM4ieJZfjEdNShJ+XON7EmLbD2kbEZfgVvooXcrPEdkmIjvNkrOWVCW9QB2cImP3cqaVqr96OuS/Sqz4mriQ39yyDDbJYd3qviXVlLLh1kjSiHzoyJ/Te+eBjomWJXXjvTIbBSBCkw9UX5kgP4xUPorBUmMrO16D2OnxuxmceRKIxjVQamv4sNjbUQrKYVw2Ixvjs7l5FI5oTonbmjDQeZH5DdNaCLXR2KcEgqK3TcXqa2BnaUHD7W4VcQOtWn75HEinN3VH0eXXB+Kz215yHArZw35ZCB1l8EDDwqicUA0eMXo9/U7OkpgfelqmYCz/9IV30vGgoS0ghzFvPNfoGIc8qvYAkgF394kHokVURYFSvw7Pd/6Zr/RCbjOsKmPJyNiE8zeaanbikTMlyrqwqjdFvhhTZt3DNBp7fTR/8VkGY/rI6aXy5n6X1oXrOuZpercK4+uVPry3fydRlanpx/0RM46bAjbepsSiVnQVGmw=
-    - secure: GMPXsQxQkNuGBJ9LaLdnqheiSpMLNsQRrvr77YSnZK8bq5D+C5eyGOjJphcOmv2gI0D9LXR91NN69uVMGmpHAfJpk8deLm24/6m6iQLdK2Qc4Jj/FTcovlbVjiaz0h7e7j1iZiOQd1dRIKDjWZsFp3ZNhyseFCibfbTDSmn2E8Py5Fz7R17XVlh3O9yqNTxr5Dm2BVTWgA9EkRtVL/GGvLbjTrQZkiF7iRcnoBzsZl1A/rpvv8nC70+fdyMhkwvaW+nqP9d5kZd8slzt+fVaCZ0rIgRyIpXlw/gkIPPRzDbs64RHttRM5Fi0K0OeWscciKq0ThM9IG0i7z7zn2L8cpUcqO7gkZIEyeUPMiCwDQ+/j8KWwcAlW372UkSBAAfMISaLjwyfXjNS+ibnYyOcuTgD+IbJqtXEyMTI82GWi5/F8OweRtZZdZPGuYQU3mTuTbr/ev0C/C897z33k/C13Y07EHxgMWORmP85so9uVljOlDpyyjdq4Rj+3Jvo6cHjTE0LWcqvbdq6Z+yNwLXWWqsahAdXdTymrc67ecc+XfvHBqnQwRLsdX471DvoP0+0DdEJnS6NBHk8Khj2AHZpKV5TqbOQ9eqnCSRu/s0y/GO+g7C+0xiVO/3CKuYUNL+m/dH1BeUldbyp0NF/U3u0NocYnmWDoIILei3SKaiw/O8=
