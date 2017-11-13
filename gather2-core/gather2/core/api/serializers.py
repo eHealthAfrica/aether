@@ -90,7 +90,7 @@ class ResponseSerializer(serializers.ModelSerializer):
             if 'revision' and 'map_revision' in validated_data:
                 response = models.Response(
                     revision=validated_data.pop('revision'),
-                    map_revision=validated_data.pop('revision'),
+                    map_revision=validated_data.pop('map_revision'),
                     payload=validated_data.pop('payload'),
                 )
             else:

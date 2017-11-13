@@ -45,8 +45,9 @@ class UtilsTests(TestCase):
         self.assertTrue(str(expected) in basic_fields, basic_fields)
 
     def test_get_entity_definitions(self):
+        entity_name = 'Person'
         mapping = EXAMPLE_MAPPING
-        schema = EXAMPLE_SCHEMA
+        schema = {entity_name: EXAMPLE_SCHEMA}
         expected = EXAMPLE_ENTITY_DEFINITION
         entity_definition = str(utils.get_entity_definitions(mapping, schema))
         self.assertTrue(str(expected) in entity_definition, entity_definition)
