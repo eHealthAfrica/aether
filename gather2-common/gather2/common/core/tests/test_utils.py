@@ -140,7 +140,7 @@ class UtilsTests(TestCase):
     @mock.patch('requests.post')
     @mock.patch.dict('os.environ', GATHER_ENV_MOCK)
     def test_submit_to_core__without_response_id(self, mock_post, mock_put):
-        utils.submit_to_core(response={'_id': 'a'}, survey_id=1, response_id=None)
+        utils.submit_to_core(response={'_id': 'a'}, mapping_id=1, response_id=None)
         mock_put.assert_not_called()
         mock_post.assert_called()
 
@@ -148,7 +148,7 @@ class UtilsTests(TestCase):
     @mock.patch('requests.post')
     @mock.patch.dict('os.environ', GATHER_ENV_MOCK)
     def test_submit_to_core__with_response_id(self, mock_post, mock_put):
-        utils.submit_to_core(response={'_id': 'a'}, survey_id=1, response_id=1)
+        utils.submit_to_core(response={'_id': 'a'}, mapping_id=1, response_id=1)
         mock_put.assert_called()
         mock_post.assert_not_called()
 
