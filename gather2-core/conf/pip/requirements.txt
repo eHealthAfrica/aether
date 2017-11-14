@@ -9,21 +9,21 @@
 #                                                                              #
 ################################################################################
 
-awscli==1.11.177
-botocore==1.7.35
-certifi==2017.7.27.1
+awscli==1.11.185
+botocore==1.7.43
+certifi==2017.11.5
 chardet==3.0.4
 colorama==0.3.7
-coverage==4.4.1
-Django==1.11.6
+coverage==4.4.2
+Django==1.11.7
 django-cas-ng==3.5.8
 django-cors-headers==2.1.0
-django-debug-toolbar==1.8
+django-debug-toolbar==1.9
 django-filter==1.1.0
 django-reversion==2.0.10
 django-reversion-compare==0.8.1
 django-ums-client==0.2.3
-djangorestframework==3.7.1
+djangorestframework==3.7.3
 djangorestframework-csv==2.0.0
 djangorestframework-filters==0.10.2
 docutils==0.14
@@ -44,9 +44,9 @@ pyflakes==1.6.0
 Pygments==2.2.0
 python-cas==1.2.0
 python-dateutil==2.6.1
-pytz==2017.2
+pytz==2017.3
 PyYAML==3.12
-raven==6.2.1
+raven==6.3.0
 requests==2.18.4
 rsa==3.4.2
 s3transfer==0.1.11
