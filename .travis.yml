@@ -18,3 +18,9 @@ script:
 after_script:
   - ./scripts/kill_all.sh
 
+deploy:
+  - provider: script
+    script: "./scripts/deploy.sh"
+    skip_cleanup: true
+    on:
+      branch: develop
