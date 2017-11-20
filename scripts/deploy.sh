@@ -21,8 +21,8 @@ do
     AETHER_APP="${PREFIX}-${APP}"
     docker-compose build $APP
     # build nginx containers
-    docker build -t "${IMAGE_REPO}/${AETHER_APP}-nginx-${ENV}:${BRANCH}" "gather2-${APP}/nginx"
-    docker push "${IMAGE_REPO}/${AETHER_APP}-nginx-${ENV}:${BRANCH}"
+    docker build -t "${IMAGE_REPO}/${AETHER_APP}-nginx-${ENV}:latest" "gather2-${APP}/nginx"
+    docker push "${IMAGE_REPO}/${AETHER_APP}-nginx-${ENV}:latest"
 
     echo "Building Docker image ${IMAGE_REPO}/${AETHER_APP}-${ENV}:${BRANCH}"
     docker tag $APP "${IMAGE_REPO}/${AETHER_APP}-${ENV}:${BRANCH}"
