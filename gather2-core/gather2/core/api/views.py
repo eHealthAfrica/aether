@@ -34,7 +34,7 @@ class ResponseViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
 class SchemaViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
     queryset = models.Schema.objects.all()
     serializer_class = serializers.SchemaSerializer
-    # lookup_field = 'name'
+    lookup_field = 'name'
 
 
 class ProjectSchemaViewSet(NestedViewSetMixin, viewsets.ModelViewSet):

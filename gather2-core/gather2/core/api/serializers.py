@@ -126,12 +126,13 @@ class ResponseSerializer(serializers.ModelSerializer):
 class SchemaSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name='schema-detail',
-        read_only=True
+        read_only=True,
+        lookup_field='name',
     )
     projectschemas_url = serializers.HyperlinkedIdentityField(
         view_name='schema_projectschema-list',
         read_only=True,
-        lookup_url_kwarg='parent_lookup_schema',
+        lookup_url_kwarg='parent_lookup_schema__name',
     )
 
     class Meta:
@@ -154,6 +155,7 @@ class ProjectSchemaSerializer(serializers.ModelSerializer):
         view_name='schema-detail',
         source='schema',
         read_only=True,
+        lookup_field='name',
     )
     entities_url = serializers.HyperlinkedIdentityField(
         view_name='projectschema_entity-list',

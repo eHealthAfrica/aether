@@ -34,7 +34,7 @@ router = ExtendedDefaultRouter()
     router.register('schemas', views.SchemaViewSet)
           .register('projectschemas', views.ProjectSchemaViewSet,
                     base_name='schema_projectschema',
-                    parents_query_lookups=['schema'])
+                    parents_query_lookups=['schema__name'])
 )
 (
     router.register('projectschemas', views.ProjectSchemaViewSet)
