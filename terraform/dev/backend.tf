@@ -1,8 +1,8 @@
 terraform {
   backend "s3" {
         bucket = "eha-dev-state-files"
-        key = "gather2-dev/terraform.tfstate"
+        key = "aether-dev/terraform.tfstate"
         region = "eu-west-1"
-        lock_table = "gather2-dev-terraform-lock"
+        lock_table = "aether-dev-terraform-lock"
   }
 }

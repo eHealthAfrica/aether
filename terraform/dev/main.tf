@@ -13,7 +13,7 @@ module "odk" {
   database_hostname = "${module.rds.database_hostname}"
   app = "odk-importer"
   application_memory = 512
-  http_rule_priority = 11
+  http_rule_priority = 30 
   domain = "ehealthafrica"
 }
 
@@ -24,7 +24,7 @@ module "core" {
   database_hostname = "${module.rds.database_hostname}"
   app = "core"
   application_memory = 512
-  http_rule_priority = 12 
+  http_rule_priority = 31 
   domain = "ehealthafrica"
 }
 
@@ -35,7 +35,7 @@ module "ui" {
   database_hostname = "${module.rds.database_hostname}"
   app = "ui"
   application_memory = 512
-  http_rule_priority = 14 
+  http_rule_priority = 32 
   domain = "ehealthafrica"
 }
 
@@ -46,13 +46,12 @@ module "couchcb_sync" {
   app = "couchdb-sync"
   database_hostname = "${module.rds.database_hostname}"
   application_memory = 512
-  http_rule_priority = 13 
+  http_rule_priority = 33 
   domain = "ehealthafrica"
 }
 
 module "couchcb" {
-  // source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_service"
-  source = "../../../ehealth-deployment/terraform/modules/generic_ecs_data_service"
+  source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_data_service"
   image_url = "couchdb"
   environment = "${var.environment}"
   project = "${var.project}"
@@ -63,8 +62,7 @@ module "couchcb" {
 }
 
 module "redis" {
-  // source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_service"
-  source = "../../../ehealth-deployment/terraform/modules/generic_ecs_data_service"
+  source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_data_service"
   environment = "${var.environment}"
   project = "${var.project}"
   image_url = "redis"
