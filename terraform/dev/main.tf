@@ -7,8 +7,7 @@ module "rds" {
 }
 
 module "odk" {
-  // source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_service"
-  source = "../../../ehealth-deployment/terraform/modules/generic_ecs_service"
+  source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_service"
   environment = "${var.environment}"
   project = "${var.project}"
   database_hostname = "${module.rds.database_hostname}"
@@ -19,8 +18,7 @@ module "odk" {
 }
 
 module "core" {
-  // source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_service"
-  source = "../../../ehealth-deployment/terraform/modules/generic_ecs_service"
+  source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_service"
   environment = "${var.environment}"
   project = "${var.project}"
   database_hostname = "${module.rds.database_hostname}"
@@ -31,8 +29,7 @@ module "core" {
 }
 
 module "ui" {
-  source = "../../../ehealth-deployment/terraform/modules/generic_ecs_service"
-  // source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_service"
+  source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_service"
   environment = "${var.environment}"
   project = "${var.project}"
   database_hostname = "${module.rds.database_hostname}"
@@ -43,8 +40,7 @@ module "ui" {
 }
 
 module "couchcb_sync" {
-  // source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_service"
-  source = "../../../ehealth-deployment/terraform/modules/generic_ecs_service"
+  source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_service"
   environment = "${var.environment}"
   project = "${var.project}"
   app = "couchdb-sync"
