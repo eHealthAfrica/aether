@@ -286,6 +286,7 @@ def xform_submission(request):
                     # {"coordinates": [<<lat>>, <<lng>>], "type": "Point"}
                     obj[k] = Point((float(lat), float(lng)))
 
+    import pdb; pdb.set_trace()
     # first of all check if the connection is possible
     auth_header = get_auth_header()
     if not auth_header:
