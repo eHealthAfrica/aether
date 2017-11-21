@@ -53,8 +53,7 @@ def get_surveys_mapping():
 
     mapping = {}
     for survey in results:
-        if not mapping.get(survey['name']):
-            mapping[survey['name']] = survey['id']
+        mapping[survey['name']] = survey['id']
     return mapping
 
 
@@ -165,37 +164,6 @@ def import_synced_docs(docs, db_name, mapping):
     return stats
 
 
-def submit_to_core(response, mapping_id, response_id=None):
-    '''
-    Submit the response to Gather2 Core survey
-    '''
-    if mapping_id is None:
-        raise Exception('Cannot submit response without survey!')
-
-    if response is None:
-        raise Exception('Cannot submit response without content!')
-
-    if response_id:
-        # update existing doc
-        method = requests.put
-        url = core_utils.get_survey_responses_url(mapping_id, response_id)
-    else:
-        # create new doc
-        method = requests.post
-        url = core_utils.get_survey_responses_url(mapping_id)
-
-    logger.debug('{method} to {url}'.format(method=method, url=url))
-    # import pdb; pdb.set_trace()
-    return method(
-        url,
-        json={
-            'payload': response,
-            'survey': mapping_id
-        },
-        headers=core_utils.get_auth_header(),
-    )
-
-
 def post_to_gather(document, mapping, gather_id=False):
     # first of all check if the connection is possible
     if not core_utils.test_connection():
@@ -207,6 +175,6 @@ def post_to_gather(document, mapping, gather_id=False):
     except Exception:
         raise Exception('Cannot submit document "{}"'.format(document['_id']))
 
-    return submit_to_core(response=document,
+    return core_utils.submit_to_core(response=document,
                                      mapping_id=survey_id,
                                      response_id=gather_id)

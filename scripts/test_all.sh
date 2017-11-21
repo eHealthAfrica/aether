@@ -29,7 +29,6 @@ $DC_TEST down
 echo "_____________________________________________ Starting databases"
 $DC_TEST up -d db-test couchdb-test redis-test
 
-
 # test and start a clean CORE TEST container
 prepare_and_test_container core
 
@@ -42,7 +41,6 @@ prepare_and_test_container odk-importer dump_empty_schema.json
 echo "_____________________________________________ Starting odk-importer"
 $DC_TEST up -d odk-importer-test
 
-# docker-compose -f docker-compose-test.yml run core-test manage loaddata dump_empty_schema.json
 # test a clean SYNC TEST container
 prepare_and_test_container couchdb-sync dump.json
 
