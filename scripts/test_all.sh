@@ -7,6 +7,7 @@ function prepare_and_test_container() {
   echo "_____________________________________________ Starting $1 tasks"
   $DC_TEST build $container
   $DC_TEST run $container setuplocaldb
+  docker-compose -f docker-compose-test.yml run core-test manage loaddata dump.json
   $DC_TEST run $container test --noinput
   echo "_____________________________________________ $1 tasks done"
 }
