@@ -26,20 +26,20 @@ echo "_____________________________________________ Starting databases"
 $DC_TEST up -d db-test couchdb-test redis-test
 
 
-# test and start a clean CORE TEST container
-prepare_and_test_container core
+# # test and start a clean CORE TEST container
+# prepare_and_test_container core
 
-echo "_____________________________________________ Starting core"
-$DC_TEST up -d core-test
+# echo "_____________________________________________ Starting core"
+# $DC_TEST up -d core-test
 
-# test and start a clean ODK TEST container
-prepare_and_test_container odk-importer
+# # test and start a clean ODK TEST container
+# prepare_and_test_container odk-importer
 
-echo "_____________________________________________ Starting odk-importer"
-$DC_TEST up -d odk-importer-test
+# echo "_____________________________________________ Starting odk-importer"
+# $DC_TEST up -d odk-importer-test
 
-# # test a clean SYNC TEST container
-# prepare_and_test_container couchdb-sync
+# test a clean SYNC TEST container
+prepare_and_test_container couchdb-sync
 
 # # test a clean UI TEST container
 # prepare_and_test_container ui

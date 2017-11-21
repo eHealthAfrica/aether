@@ -133,6 +133,7 @@ class SchemaSerializer(serializers.ModelSerializer):
         view_name='schema_projectschema-list',
         read_only=True,
         lookup_url_kwarg='parent_lookup_schema__name',
+        lookup_field='name',
     )
 
     class Meta:
@@ -143,7 +144,8 @@ class SchemaSerializer(serializers.ModelSerializer):
 class ProjectSchemaSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name='projectschema-detail',
-        read_only=True
+        read_only=True,
+        lookup_field='name',
     )
     project_url = serializers.HyperlinkedRelatedField(
         view_name='project-detail',
@@ -160,7 +162,8 @@ class ProjectSchemaSerializer(serializers.ModelSerializer):
     entities_url = serializers.HyperlinkedIdentityField(
         view_name='projectschema_entity-list',
         read_only=True,
-        lookup_url_kwarg='parent_lookup_projectschema',
+        lookup_url_kwarg='parent_lookup_projectschema__name',
+        lookup_field='name',
     )
 
     class Meta:
@@ -173,11 +176,13 @@ class EntitySerializer(serializers.ModelSerializer):
         view_name='entity-detail',
         read_only=True
     )
-    projectschema_url = serializers.HyperlinkedRelatedField(
-        view_name='projectschema-detail',
-        source='projectschema',
-        read_only=True,
-    )
+    # projectschema_url = serializers.HyperlinkedRelatedField(
+    #     # view_name='projectschema-detail',
+    #     view_name='projectschema-detail',
+    #     # source='projectschema',
+    #     read_only=True,
+    #     lookup_field='name',
+    # )
 
     def create(self, validated_data):
         entity = models.Entity(

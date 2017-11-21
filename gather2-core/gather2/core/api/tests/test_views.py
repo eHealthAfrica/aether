@@ -93,13 +93,13 @@ class ViewsTest(TransactionTestCase):
             'revision': 'Sample project revision',
             'salad_schema': 'Sample project SALAD schema',
             'jsonld_context': 'Sample JSONLD context',
-            'rdf_definition': 'Sample RDF definition'
+            'rdf_definition': 'Sample RDF definition',
         })
         self.helper_create_object('mapping-list', {
             'name': 'Mapping name',
             'definition': EXAMPLE_MAPPING,
             'revision': 'Sample mapping revision',
-            'project': self.project.pk
+            'project': str(self.project.pk),
         })
         self.helper_create_object('response-list', {
             'revision': 'Sample response revision',
@@ -112,7 +112,7 @@ class ViewsTest(TransactionTestCase):
             'name': 'Schema name',
             'type': 'Type',
             'definition': EXAMPLE_SCHEMA,
-            'revision': 'a sample revision'
+            'revision': 'a sample revision',
         })
         self.helper_create_object('projectschema-list', {
             'name': 'Project Schema name',
@@ -120,15 +120,15 @@ class ViewsTest(TransactionTestCase):
             'transport_rule': 'Sample projectschema transport rule',
             'masked_fields': 'Sample projectschema masked fields',
             'isEncrypted': True,
-            'project': self.project.pk,
-            'schema': self.schema.pk
+            'project': str(self.project.pk),
+            'schema': str(self.schema.pk),
         })
         self.helper_create_object('entity-list', {
             'revision': 'Sample entity revision',
             'payload': {},
             'status': 'Publishable',
-            'projectschema': self.projectschema.pk,
-            'response': str(self.response.pk)
+            'projectschema': str(self.projectschema.pk),
+            'response': str(self.response.pk),
         })
 
     # TEST READ
@@ -144,11 +144,11 @@ class ViewsTest(TransactionTestCase):
 
     def test_api_read_instance_name(self):
         self.helper_read_object_name('project-detail', self.project)
-        self.helper_read_object_name('mapping-detail', self.mapping)
         self.helper_read_object_name('schema-detail', self.schema)
         self.helper_read_object_name('projectschema-detail', self.projectschema)
 
     def test_api_read_instance(self):
+        self.helper_read_object_id('mapping-detail', self.mapping)
         self.helper_read_object_id('response-detail', self.response)
         self.helper_read_object_id('entity-detail', self.entity)
 
@@ -161,18 +161,24 @@ class ViewsTest(TransactionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_api_update_instance_id(self):
+        self.helper_update_object_id('mapping-detail', {
+            'name': 'Mapping name 2',
+            'definition': {},
+            'revision': 'Sample mapping revision',
+            'project': str(self.project.pk)
+        }, self.mapping)
         self.helper_update_object_id('response-detail', {
             'revision': 'Sample response revision updated',
             'map_revision': 'Sample map revision updated',
             'date': str(datetime.datetime.now()),
             'payload': {},
-            'mapping': self.mapping.pk
+            'mapping': str(self.mapping.pk),
         }, self.response)
         self.helper_update_object_id('entity-detail', {
             'revision': 'Sample entity revision updated',
             'payload': {},
             'status': 'Publishable',
-            'projectschema': self.projectschema.pk
+            'projectschema': str(self.projectschema.pk),
         }, self.entity)
 
     def helper_update_object_name(self, view_name, updated_data, Obj):
@@ -189,12 +195,6 @@ class ViewsTest(TransactionTestCase):
             'jsonld_context': 'Sample JSONLD context',
             'rdf_definition': 'Sample RDF definition'
         }, self.project)
-        self.helper_update_object_name('mapping-detail', {
-            'name': 'Mapping name 2',
-            'definition': {},
-            'revision': 'Sample mapping revision',
-            'project': self.project.pk
-        }, self.mapping)
         self.helper_update_object_name('schema-detail', {
             'name': 'Schema name 2',
             'type': 'Type',
@@ -207,21 +207,23 @@ class ViewsTest(TransactionTestCase):
             'transport_rule': 'Sample projectschema transport rule',
             'masked_fields': 'Sample projectschema masked fields',
             'isEncrypted': True,
-            'project': self.project.pk,
-            'schema': self.schema.pk
+            'project': str(self.project.pk),
+            'schema': str(self.schema.pk)
         }, self.projectschema)
 
-    # TEST DELETE
+    # # TEST DELETE
     def helper_delete_object(self, view_name, Obj):
         url = reverse(view_name, kwargs={'name': Obj.name})
         response = self.client.delete(url, format='json', follow=True)
         self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
 
+    def helper_delete_object_pk(self, view_name, Obj):
+        url = reverse(view_name, kwargs={'pk': Obj.pk})
+        response = self.client.delete(url, format='json', follow=True)
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
     def test_api_delete_project(self):
         self.helper_delete_object('project-detail', self.project)
-
-    def test_api_delete_mapping(self):
-        self.helper_delete_object('mapping-detail', self.mapping)
 
     def test_api_delete_schema(self):
         self.helper_delete_object('schema-detail', self.schema)
@@ -229,10 +231,8 @@ class ViewsTest(TransactionTestCase):
     def test_api_delete_projectschema(self):
         self.helper_delete_object('projectschema-detail', self.projectschema)
 
-    def helper_delete_object_pk(self, view_name, Obj):
-        url = reverse(view_name, kwargs={'pk': Obj.pk})
-        response = self.client.delete(url, format='json', follow=True)
-        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+    def test_api_delete_mapping(self):
+        self.helper_delete_object_pk('mapping-detail', self.mapping)
 
     def test_api_delete_response(self):
         self.helper_delete_object_pk('response-detail', self.response)

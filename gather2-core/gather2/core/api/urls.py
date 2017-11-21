@@ -40,7 +40,7 @@ router = ExtendedDefaultRouter()
     router.register('projectschemas', views.ProjectSchemaViewSet)
           .register('entities', views.EntityViewSet,
                     base_name='projectschema_entity',
-                    parents_query_lookups=['projectschema'])
+                    parents_query_lookups=['projectschema__name'])
 )
 (
     router.register('entities', views.EntityViewSet)

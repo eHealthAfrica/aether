@@ -40,6 +40,7 @@ class SchemaViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
 class ProjectSchemaViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
     queryset = models.ProjectSchema.objects.all()
     serializer_class = serializers.ProjectSchemaSerializer
+    lookup_field = 'name'
 
 
 class EntityViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
