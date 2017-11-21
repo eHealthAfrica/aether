@@ -14,25 +14,7 @@
     "fields": {
       "project": "d3ee41be-e696-424b-8b45-ab6a0d787f6a",
       "revision": "1",
-      "definition": {
-        "entities": {
-          "Person": "75bcf79d-b97d-4dbf-8f0d-414b8c0c0d75"
-        },
-        "mapping": [
-          [
-            "#!uuid",
-            "Person.id"
-          ],
-          [
-            "firstname",
-            "Person.firstName"
-          ],
-          [
-            "lastname",
-            "Person.familyName"
-          ]
-        ]
-      },
+      "definition": {},
       "name": "mapping-1"
     },
     "pk": "5faf2ee5-55b2-4de8-bdd9-628c491c69c6",
@@ -41,31 +23,7 @@
   {
     "fields": {
       "revision": "1",
-      "definition": {
-        "fields": [
-          {
-            "jsonldPredicate": "@id",
-            "type": "string",
-            "name": "id"
-          },
-          {
-            "type": [
-              "null",
-              "string"
-            ],
-            "name": "firstName"
-          },
-          {
-            "type": [
-              "null",
-              "string"
-            ],
-            "name": "familyName"
-          }
-        ],
-        "type": "record",
-        "name": "Person"
-      },
+      "definition": {},
       "type": "",
       "name": "Person"
     },

@@ -58,19 +58,18 @@ class SubmissionTests(CustomTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-    def test__submission__400(self):
-        # create xForm entry
-        self.helper_create_xform(surveyor=self.user)
+    # def test__submission__400(self):
+    #     # create xForm entry
+    #     self.helper_create_xform(surveyor=self.user)
 
-        # submit right response but server is not available yet
-        with open(self.samples['submission']['file-ok'], 'rb') as f:
-            response = self.client.post(
-                self.url,
-                {'xml_submission_file': f},
-                **self.headers_user
-            )
-        import pdb; pdb.set_trace()
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+    #     # submit right response but server is not available yet
+    #     with open(self.samples['submission']['file-ok'], 'rb') as f:
+    #         response = self.client.post(
+    #             self.url,
+    #             {'xml_submission_file': f},
+    #             **self.headers_user
+    #         )
+    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class PostSubmissionTests(CustomTestCase):
@@ -98,6 +97,7 @@ class PostSubmissionTests(CustomTestCase):
             'http://core-test:9000/projectschemas/Person/',
             headers=self.CORE_HEADERS,
         ).json()
+
         testing_survey = {
             'name': 'example',
             'revision': 1,
@@ -142,37 +142,37 @@ class PostSubmissionTests(CustomTestCase):
         # delete ALL surveys in core testing server
         requests.delete(self.SURVEY_URL, headers=self.CORE_HEADERS)
 
-    # @mock.patch('requests.post', return_value=mock.Mock(status_code=500))
-    # def test__submission__post__with_core_error(self, mock_post):
-    #     with open(self.samples['submission']['file-ok'], 'rb') as f:
-    #         response = self.client.post(
-    #             self.url,
-    #             {'xml_submission_file': f},
-    #             **self.headers_user
-    #         )
-    #     self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-    #     mock_post.assert_called_once_with(
-    #         self.RESPONSES_URL,
-    #         headers=self.CORE_HEADERS,
-    #         json=mock.ANY,
-    #     )
+    @mock.patch('requests.post', return_value=mock.Mock(status_code=500))
+    def test__submission__post__with_core_error(self, mock_post):
+        with open(self.samples['submission']['file-ok'], 'rb') as f:
+            response = self.client.post(
+                self.url,
+                {'xml_submission_file': f},
+                **self.headers_user
+            )
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        mock_post.assert_called_once_with(
+            self.RESPONSES_URL,
+            headers=self.CORE_HEADERS,
+            json=mock.ANY,
+        )
 
-    # def test__submission__post__no_granted_surveyor(self):
-    #     # remove user as granted surveyor
-    #     self.xform.survey.surveyors.clear()
-    #     self.xform.survey.save()
-    #     self.xform.surveyors.clear()
-    #     self.xform.surveyors.add(self.helper_create_surveyor())
-    #     self.xform.save()
-    #     self.assertFalse(self.xform.is_surveyor(self.user))
+    def test__submission__post__no_granted_surveyor(self):
+        # remove user as granted surveyor
+        self.xform.survey.surveyors.clear()
+        self.xform.survey.save()
+        self.xform.surveyors.clear()
+        self.xform.surveyors.add(self.helper_create_surveyor())
+        self.xform.save()
+        self.assertFalse(self.xform.is_surveyor(self.user))
 
-    #     with open(self.samples['submission']['file-ok'], 'rb') as f:
-    #         response = self.client.post(
-    #             self.url,
-    #             {'xml_submission_file': f},
-    #             **self.headers_user
-    #         )
-    #     self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        with open(self.samples['submission']['file-ok'], 'rb') as f:
+            response = self.client.post(
+                self.url,
+                {'xml_submission_file': f},
+                **self.headers_user
+            )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test__submission__post(self):
         with open(self.samples['submission']['file-ok'], 'rb') as f:
@@ -183,6 +183,8 @@ class PostSubmissionTests(CustomTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    # FIXME: The Attachment model used in Gather2 is absent from
+    # Aether -- once bring that back, we can uncomment this test.
     # def test__submission__post__with_attachments(self):
     #     # submit response with itself as attachment
     #     with open(self.samples['submission']['file-ok'], 'rb') as f:
@@ -194,6 +196,8 @@ class PostSubmissionTests(CustomTestCase):
     #             )
     #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    # FIXME: The Attachment model used in Gather2 is absent from
+    # Aether -- once bring that back, we can uncomment this test.
     # @mock.patch('requests.post', side_effect=[mock.DEFAULT, mock.Mock(status_code=500)])
     # def test__submission__post__with_attachments_error_400(self, mock_post):
     #     # there is going to be an error during attachment post

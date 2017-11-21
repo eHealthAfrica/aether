@@ -176,13 +176,13 @@ class EntitySerializer(serializers.ModelSerializer):
         view_name='entity-detail',
         read_only=True
     )
-    # projectschema_url = serializers.HyperlinkedRelatedField(
-    #     # view_name='projectschema-detail',
-    #     view_name='projectschema-detail',
-    #     # source='projectschema',
-    #     read_only=True,
-    #     lookup_field='name',
-    # )
+    projectschema_url = serializers.HyperlinkedRelatedField(
+        # view_name='projectschema-detail',
+        view_name='projectschema-detail',
+        source='projectschema',
+        read_only=True,
+        lookup_field='name',
+    )
 
     def create(self, validated_data):
         entity = models.Entity(
