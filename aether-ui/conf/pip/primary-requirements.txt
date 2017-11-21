@@ -1,0 +1,30 @@
+################################################################################
+#                                                                              #
+#                             Primary requirements                             #
+#                                                                              #
+#                                 CHANGE ME !!!                                #
+#                                                                              #
+# Update me and then run 'docker-compose run ui pip_freeze'                    #
+#                                                                              #
+################################################################################
+
+coverage
+django
+django-cas-ng
+django-cors-headers
+django-debug-toolbar
+django-ums-client
+django-webpack-loader
+djangorestframework
+flake8
+mock
+psycopg2
+raven
+requests
+uwsgi
+
+# this is used for pulling down secrets from S3
+awscli
+
+# Aether common module
+aether.common
