@@ -80,15 +80,49 @@ class PostSubmissionTests(CustomTestCase):
         self.url = reverse('xform-submission')
 
         # create survey in Core testing server
-        testing_survey = {
-            "name": "testing",
-            "schema": {}
-        }
 
         self.assertTrue(core_utils.test_connection())
         self.CORE_HEADERS = core_utils.get_auth_header()
 
+        for survey in get_gather_surveys():
+            url = core_utils.get_surveys_url(survey['id'])
+            url = survey['url']
+            requests.delete(url, headers=headers_testing)
+
+        project = requests.get(
+            'http://core-test:9000/projects/demo/',
+            headers=headers_testing
+        ).json()
+        projectschema = requests.get(
+            'http://core-test:9000/projectschemas/Person/',
+            headers=headers_testing
+        ).json()
+        testing_survey = {
+            'name': 'example',
+            'revision': 1,
+            'project': project['id'],
+            'definition': {
+                "mapping": [
+                    [
+                        "#!uuid",
+                        "Person.id"
+                    ],
+                    [
+                        "firstname",
+                        "Person.firstName"
+                    ],
+                    [
+                        "lastname",
+                        "Person.familyName"
+                    ]
+                ],
+                "entities": {
+                    "Person": projectschema['id']
+                }
+            }
+        }
         # create survey in core testing server
+        import pdb; pdb.set_trace()
         response = requests.post(core_utils.get_surveys_url(),
                                  json=testing_survey,
                                  headers=self.CORE_HEADERS)

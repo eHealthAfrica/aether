@@ -237,10 +237,10 @@ class ImportTestCase(TestCase):
             'http://core-test:9000/projectschemas/Person/',
             headers=headers_testing
         ).json()
-        for survey in get_gather_surveys():
-            url = core_utils.get_surveys_url(survey['id'])
-            url = survey['url']
-            requests.delete(url, headers=headers_testing)
+        # for survey in get_gather_surveys():
+        #     url = core_utils.get_surveys_url(survey['id'])
+        #     url = survey['url']
+        #     requests.delete(url, headers=headers_testing)
 
         self.assertTrue(core_utils.test_connection())
         url = core_utils.get_surveys_url()
