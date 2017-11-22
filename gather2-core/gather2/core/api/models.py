@@ -1,5 +1,6 @@
 # encoding: utf-8
 import uuid
+from datetime import datetime
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 
@@ -90,6 +91,14 @@ class Entity(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
     projectschema = models.ForeignKey(ProjectSchema, related_name='entities')
     response = models.ForeignKey(Response, related_name='entities', blank=True, null=True)
+    modified = models.CharField(max_length=100, editable=False)
+
+    def save(self, **kwargs):
+        if self.modified:
+            self.modified = '{}-{}'.format(datetime.now().isoformat(), self.modified[27:None])
+        else:
+            self.modified = '{}-{}'.format(datetime.now().isoformat(), self.id)
+        super(Entity, self).save(**kwargs)
 
     @property
     def payload_prettified(self):
