@@ -16,20 +16,20 @@ variable "route53_zone_id" {
   type = "map"
   default = {
     ehealthafrica.org = "Z1B5Q25BUE3TXB"
-    gather2.org = "ZUBAIJA96RBHB"
+    aether.org = "ZUBAIJA96RBHB"
   }
 }
 
-// gather2 core variables
-variable "gather2_core_container_name" { default="gather2-core"}
-variable "gather2_core_nginx_host_port" { default=81 }
-variable "gather2_core_nginx_container_name" { default="gather2-core-nginx" }
-variable "gather2_couchdb_container_name" { default="gather2-couchdb" }
+// aether core variables
+variable "aether_core_container_name" { default="aether-core"}
+variable "aether_core_nginx_host_port" { default=81 }
+variable "aether_core_nginx_container_name" { default="aether-core-nginx" }
+variable "aether_couchdb_container_name" { default="aether-couchdb" }
 
-// gather2 ODK importer
-variable "gather2_odk_importer_container_name" { default="gather2-odk-importer" }
-variable "gather2_odk_importer_nginx_host_port" { default=82 }
-variable "gather2_odk_importer_nginx_container_name" { default="gather2-odk-importer-nginx" }
+// aether ODK importer
+variable "aether_odk_importer_container_name" { default="aether-odk-importer" }
+variable "aether_odk_importer_nginx_host_port" { default=82 }
+variable "aether_odk_importer_nginx_container_name" { default="aether-odk-importer-nginx" }
 
 variable "private_subnets" { type="list" }
 variable "public_subnets" { type="list" }
@@ -40,7 +40,7 @@ variable "ssl_certificate_id" {
   type = "map"
   default = {
     ehealthafrica.org = "arn:aws:acm:eu-west-1:387526361725:certificate/b093a099-e453-4290-90b4-8a97f43174ec"
-    gather2.org = "arn:aws:acm:eu-west-1:387526361725:certificate/fbaf389d-f290-42ab-8902-0c051fa922e2"
+    aether.org = "arn:aws:acm:eu-west-1:387526361725:certificate/fbaf389d-f290-42ab-8902-0c051fa922e2"
 
   }
 }

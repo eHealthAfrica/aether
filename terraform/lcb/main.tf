@@ -28,7 +28,7 @@ module "ecs" {
   iam_role_id = "${module.autoscaling.aws_iam_role_ecs_service}"
   database_hostname = "${module.rds.database_hostname}"
   deploy_branch = "latest"
-  domain = "gather2.org"
+  domain = "aether.org"
   core_url = "${var.core_url}"
   odk_url = "${var.odk_url}"
   couchdb_sync_url = "${var.couchdb_sync_url}"

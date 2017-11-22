@@ -35,7 +35,7 @@ resource "aws_security_group" "lb_sg" {
   }
 }
 
-resource "aws_security_group_rule" "gather2_ecs" {
+resource "aws_security_group_rule" "aether_ecs" {
   type = "ingress"
   protocol  = "tcp"
   from_port = "10000"
@@ -44,7 +44,7 @@ resource "aws_security_group_rule" "gather2_ecs" {
   source_security_group_id = "${aws_security_group.lb_sg.id}"
 }
 
-resource "aws_security_group_rule" "gather2_efs" {
+resource "aws_security_group_rule" "aether_efs" {
   type = "ingress"
   protocol  = "tcp"
   from_port = "2049"
