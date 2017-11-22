@@ -29,199 +29,9 @@ def get_gather_responses(survey_id):
 headers_testing = core_utils.get_auth_header()
 device_id = 'test_import-from-couch'
 
-example_survey = {
-    'name': 'example',
-    'schema': {
-        'title': 'example',
-        'properties': {
-            'firstName': {
-                'type': 'string',
-            },
-            'lastName': {
-                'type': 'string',
-            },
-        },
-        'required': ['firstName', 'lastName'],
-    }
-}
-
-example_doc = {
-    '_id': 'example-aabbbdddccc',
-    'deviceId': device_id,
-    'firstname': 'Han',
-    'lastname': 'Solo'
-}
-
-EXAMPLE_MAPPING = {
-    "definition": "",
-    "revision": 1,
-    "project": 1,
-    "entities": {
-        "Person": 1
-    },
-    "mapping": [
-        ["#!UUID", "Person._id"],
-        ["data.village", "Person.villageID"],
-        ["data.people[*].name", "Person.name"],
-        ["data.people[*].dob", "Person.dob"]
-    ]
-}
-
-
-EXAMPLE_SCHEMA = {
-    "extends": "http://ehealthafrica.org/#CouchDoc",
-    "type": "record",
-    "name": "Person",
-    "fields": [
-        {
-            "jsonldPredicate": "@id",
-            "type": "string",
-            "name": "_id",
-            "inherited_from": "http://ehealthafrica.org/#CouchDoc"
-        },
-        {
-            "type": [
-                "null",
-                "string"
-            ],
-            "name": "_rev",
-            "inherited_from": "http://ehealthafrica.org/#CouchDoc"
-        },
-        {
-            "type": "string",
-            "name": "name"
-        },
-        {
-            "type": "string",
-            "name": "dob"
-        },
-        {
-            "jsonldPredicate": {
-                "_type": "@id",
-                "_id": "http://ehealthafrica.org/#Village"
-            },
-            "type": "string",
-            "name": "villageID"
-        }
-    ]
-}
-
-EXAMPLE_SOURCE_DATA = {
-    "name": "test",
-    "definition": "test",
-    "revision": 1,
-    "project": 1,
-    "data": {
-        "village": "somevillageID",
-        'deviceId': device_id,
-        "people": [
-            {
-                "name": "PersonA",
-                "dob": "2000-01-01"
-            },
-            {
-                "name": "PersonB",
-                "dob": "2001-01-01"
-            },
-            {
-                "name": "PersonC",
-                "dob": "2002-01-01"
-            }
-        ]
-    }
-}
-
-EXAMPLE_REQUIREMENTS = {
-    'Person': {
-        '_id': ['#!UUID'],
-        '_rev': [],
-        'name': ['data.people[*].name'],
-        'dob': ['data.people[*].dob'],
-        'villageID': ['data.village']
-        }
-}
-
-EXAMPLE_ENTITY = {
-  "Person": [
-    {
-      "_id": "1d119b5d-ca71-4f03-a061-1481e1a694ea",
-      "name": "PersonA",
-      "dob": "2000-01-01",
-      "villageID": "somevillageID"
-    },
-    {
-      "_id": "5474b768-92d9-431f-bf90-3c6db1788109",
-      "name": "PersonB",
-      "dob": "2001-01-01",
-      "villageID": "somevillageID"
-    },
-    {
-      "_id": "64d30f72-c15e-4476-9522-d26cb036c73b",
-      "name": "PersonC",
-      "dob": "2002-01-01",
-      "villageID": "somevillageID"
-    }
-  ]
-}
-
-EXAMPLE_ENTITY_DEFINITION = {'Person': ['_id', '_rev', 'name', 'dob', 'villageID']}
-
-EXAMPLE_FIELD_MAPPINGS = [
-    ['#!UUID', 'Person._id'],
-    ['data.village', 'Person.villageID'],
-    ['data.people[*].name', 'Person.name'],
-    ['data.people[*].dob', 'Person.dob']]
-
-        # self.project = models.Project.objects.create(
-        #     revision='rev 1',
-        #     name='a project name',
-        #     salad_schema='a sample salad schema',
-        #     jsonld_context='sample context',
-        #     rdf_definition='a sample rdf definition'
-        # )
-
-        # self.mapping = models.Mapping.objects.create(
-        #     name='mapping1',
-        #     definition={"sample": "json schema"},
-        #     revision='a sample revision field',
-        #     project=self.project
-        # )
-
-        # self.response = models.Response.objects.create(
-        #     revision='a sample revision',
-        #     map_revision='a sample map revision',
-        #     date=datetime.datetime.now(),
-        #     payload={},
-        #     mapping=self.mapping
-        # )
-
-        # self.schema = models.Schema.objects.create(
-        #     name='schema1',
-        #     definition={},
-        #     revision='a sample revision'
-        # )
-
-        # self.projectschema = models.ProjectSchema.objects.create(
-        #     name='a project schema name',
-        #     mandatory_fields='a sample mandatory fields',
-        #     transport_rule='a sample transport rule',
-        #     masked_fields='a sample masked field',
-        #     is_encrypted=False,
-        #     project=self.project,
-        #     schema=self.schema
-        # )
-
-        # self.entity = models.Entity.objects.create(
-        #     revision='a sample revision',
-        #     payload={},
-        #     status='a sample status',
-        #     projectschema=self.projectschema,
-        #     response=self.response
-        # )
-
-example_survey = EXAMPLE_MAPPING
 
 class ImportTestCase(TestCase):
+
     def setUp(self):
         clean_couch()
         for survey in get_gather_surveys():
@@ -237,6 +47,7 @@ class ImportTestCase(TestCase):
             'http://core-test:9000/projectschemas/Person/',
             headers=headers_testing
         ).json()
+
         # for survey in get_gather_surveys():
         #     url = core_utils.get_surveys_url(survey['id'])
         #     url = survey['url']
@@ -244,6 +55,13 @@ class ImportTestCase(TestCase):
 
         self.assertTrue(core_utils.test_connection())
         url = core_utils.get_surveys_url()
+
+        self.example_doc = {
+            '_id': 'example-aabbbdddccc',
+            'deviceId': device_id,
+            'firstname': 'Han',
+            'lastname': 'Solo'
+        }
 
         self.example_survey = {
             'name': 'example',
@@ -269,7 +87,7 @@ class ImportTestCase(TestCase):
                 }
             }
         }
-        example_doc['_id'] = 'example-aabbbdddccc'  # reset `_id` changed by tests
+        self.example_doc['_id'] = 'example-aabbbdddccc'  # reset `_id` changed by tests
         # example_survey['name'] = 'example'  # reset `name` changed by tests
 
         resp = requests.post(url, json=self.example_survey, headers=headers_testing)
@@ -310,7 +128,11 @@ class ImportTestCase(TestCase):
         mapping = get_surveys_mapping()
 
         # There's gonna be some fixture surveys etc so more than 40
-        self.assertGreater(len(mapping.keys()), len(survey_names), 'mapping contains all survey names')
+        self.assertGreater(
+            len(mapping.keys()),
+            len(survey_names),
+            'mapping contains all survey names',
+        )
 
         for survey_name in survey_names:
             self.assertIn(survey_name, mapping)
@@ -360,7 +182,8 @@ class ImportTestCase(TestCase):
         device.save()
         create_db(device_id)
 
-        resp = couchdb.put('{}/{}'.format(device.db_name, example_doc['_id']), json=example_doc)
+        resp = couchdb.put('{}/{}'.format(device.db_name, self.example_doc['_id']),
+                           json=self.example_doc)
         self.assertEqual(resp.status_code, 201, 'The example document got created')
 
         results = import_synced_devices()
@@ -376,7 +199,8 @@ class ImportTestCase(TestCase):
         device.save()
         create_db(device_id)
 
-        resp = couchdb.put('{}/{}'.format(device.db_name, example_doc['_id']), json=example_doc)
+        resp = couchdb.put('{}/{}'.format(device.db_name, self.example_doc['_id']),
+                           json=self.example_doc)
         self.assertEqual(resp.status_code, 201, 'The example document got created')
 
         results = import_synced_devices()
@@ -390,7 +214,8 @@ class ImportTestCase(TestCase):
         device.save()
         create_db(device_id)
 
-        resp = couchdb.put('{}/{}'.format(device.db_name, example_doc['_id']), json=example_doc)
+        resp = couchdb.put('{}/{}'.format(device.db_name, self.example_doc['_id']),
+                           json=self.example_doc)
         self.assertEqual(resp.status_code, 201, 'The example document got created')
 
         # import pdb; pdb.set_trace()
@@ -406,10 +231,14 @@ class ImportTestCase(TestCase):
             'Survey posted to the correct id',
         )
         for key in ['_id', 'firstname', 'lastname']:
-            self.assertEqual(posted['payload'].get(key), example_doc.get(key), 'posted example doc')
+            self.assertEqual(
+                posted['payload'].get(key),
+                self.example_doc.get(key),
+                'posted example doc',
+            )
 
         # check the written meta document
-        status = get_meta_doc(device.db_name, example_doc['_id'])
+        status = get_meta_doc(device.db_name, self.example_doc['_id'])
 
         self.assertFalse('error' in status, 'no error key')
         self.assertTrue('last_rev' in status, 'last rev key')
@@ -421,7 +250,8 @@ class ImportTestCase(TestCase):
         device.save()
         create_db(device_id)
 
-        resp = couchdb.put('{}/{}'.format(device.db_name, example_doc['_id']), json=example_doc)
+        resp = couchdb.put('{}/{}'.format(device.db_name, self.example_doc['_id']),
+                           json=self.example_doc)
         self.assertEqual(resp.status_code, 201, 'The example document got created')
 
         import_synced_devices()
@@ -441,9 +271,9 @@ class ImportTestCase(TestCase):
         device.save()
         create_db(device_id)
 
-        doc_url = '{}/{}'.format(device.db_name, example_doc['_id'])
+        doc_url = '{}/{}'.format(device.db_name, self.example_doc['_id'])
 
-        resp = couchdb.put(doc_url, json=example_doc)
+        resp = couchdb.put(doc_url, json=self.example_doc)
         self.assertEqual(resp.status_code, 201, 'The example document got created')
 
         import_synced_devices()
@@ -461,12 +291,16 @@ class ImportTestCase(TestCase):
 
         updated = get_gather_responses(self.survey_id)[0]
         self.assertEqual(updated['id'], response_id, 'updated same doc')
-        self.assertEqual(updated['payload']['_id'], example_doc['_id'], 'updated survey response')
+        self.assertEqual(
+            updated['payload']['_id'],
+            self.example_doc['_id'],
+            'updated survey response',
+        )
         self.assertEqual(updated['payload']['firstname'], 'Rey', 'updated survey response')
         self.assertEqual(updated['payload']['lastname'], '(Unknown)', 'updated survey response')
 
         # check the written meta document
-        status = get_meta_doc(device.db_name, example_doc['_id'])
+        status = get_meta_doc(device.db_name, self.example_doc['_id'])
         self.assertEqual(status['last_rev'][0], '2', 'updated meta document')
 
     def test_document_not_validating(self):
@@ -475,8 +309,8 @@ class ImportTestCase(TestCase):
         create_db(device_id)
 
         # post document which is not validating
-        doc_url = '{}/{}'.format(device.db_name, example_doc['_id'])
-        non_validating_doc = example_doc.copy()
+        doc_url = '{}/{}'.format(device.db_name, self.example_doc['_id'])
+        non_validating_doc = self.example_doc.copy()
         non_validating_doc.pop('firstname')  # remove required key
         resp = couchdb.put(doc_url, json=non_validating_doc)
         self.assertEqual(resp.status_code, 201, 'The example document got created')
@@ -484,7 +318,7 @@ class ImportTestCase(TestCase):
         import_synced_devices()
         docs = get_gather_responses(self.survey_id)
         self.assertEqual(len(docs), 0, 'doc did not get imported to gather')
-        status = get_meta_doc(device.db_name, example_doc['_id'])
+        status = get_meta_doc(device.db_name, self.example_doc['_id'])
 
         self.assertTrue('error' in status, 'posts error key')
         self.assertFalse('last_rev' in status, 'no last rev key')
