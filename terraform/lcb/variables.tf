@@ -1,6 +1,6 @@
 variable "environment" { default = "prod" }
-variable "project" { default = "gather2-lcb" }
-variable "project_billing_id" { default = "gather2" }
+variable "project" { default = "aether-lcb" }
+variable "project_billing_id" { default = "aether" }
 variable "aws_region" { default = "eu-west-1" }
 
 # RDS
@@ -29,4 +29,4 @@ variable "odk_url" { default="lakechadbasin-odk" }
 variable "couchdb_sync_url" { default="lakechadbasin-couchdb-sync" }
 
 // Domain 
-variable "domain" { default="gather2.org" }
+variable "domain" { default="aether.org" }

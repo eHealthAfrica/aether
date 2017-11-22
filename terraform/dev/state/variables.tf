@@ -1,2 +1,2 @@
 variable "environment" { default="dev" }
-variable "project" { default="gather2" }
+variable "project" { default="aether" }

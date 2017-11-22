@@ -1,6 +1,6 @@
 variable "environment" { default = "dev" }
-variable "project" { default = "gather2" }
-variable "project_billing_id" { default = "gather2" }
+variable "project" { default = "aether" }
+variable "project_billing_id" { default = "aether" }
 variable "aws_region" { default = "eu-west-1" }
 
 # RDS
