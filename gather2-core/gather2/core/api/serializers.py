@@ -177,7 +177,6 @@ class EntitySerializer(serializers.ModelSerializer):
         read_only=True
     )
     projectschema_url = serializers.HyperlinkedRelatedField(
-        # view_name='projectschema-detail',
         view_name='projectschema-detail',
         source='projectschema',
         read_only=True,

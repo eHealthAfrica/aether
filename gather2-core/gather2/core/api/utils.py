@@ -373,6 +373,7 @@ def extract_create_entities(response):
 
     response_data = response.payload
 
+    # If no requirements are present, do not attempt entity extraction.
     if any(requirements.values()):
         data, entities = extract_entity(
             requirements,

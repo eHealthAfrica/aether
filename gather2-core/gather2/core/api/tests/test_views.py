@@ -211,7 +211,7 @@ class ViewsTest(TransactionTestCase):
             'schema': str(self.schema.pk)
         }, self.projectschema)
 
-    # # TEST DELETE
+    # TEST DELETE
     def helper_delete_object(self, view_name, Obj):
         url = reverse(view_name, kwargs={'name': Obj.name})
         response = self.client.delete(url, format='json', follow=True)
