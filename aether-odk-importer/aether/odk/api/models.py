@@ -8,7 +8,7 @@ from django.core.urlresolvers import reverse
 from django.db import models, IntegrityError
 from django.utils import timezone
 
-from . import core_utils
+from aether.common.core import utils as core_utils
 from .xform_utils import get_xml_title, get_xml_form_id, validate_xmldict
 
 
