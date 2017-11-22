@@ -372,7 +372,16 @@ def extract_create_entities(response):
     requirements = get_entity_requirements(entities, field_mappings)
 
     response_data = response.payload
-    data, entities = extract_entity(requirements, response_data, entities)
+
+    # Only attempt entity extraction if requirements are present
+    if any(requirements.values()):
+        data, entities = extract_entity(
+            requirements,
+            response_data,
+            entities,
+        )
+    else:
+        entities = {}
 
     entity_list = []
     for name, entity_instances in entities.items():

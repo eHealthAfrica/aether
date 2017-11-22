@@ -1,4 +1,5 @@
 import xmltodict
+import uuid
 
 from hashlib import md5
 
@@ -21,7 +22,7 @@ class Survey(models.Model):
 
     # This is needed to submit data to core
     # (there is a one to one relation)
-    mapping_id = models.IntegerField(primary_key=True)
+    mapping_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
 
     name = models.TextField(null=True, blank=True, default='')
 

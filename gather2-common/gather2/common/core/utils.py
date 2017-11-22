@@ -1,4 +1,3 @@
-import json
 import os
 import requests
 
@@ -139,6 +138,11 @@ def submit_to_core(response, mapping_id, response_id=None):
         url = get_survey_responses_url(mapping_id)
 
     logger.debug('{method} to {url}'.format(method=method, url=url))
-    return method(url,
-                  json={'data': json.dumps(response), 'survey': mapping_id},
-                  headers=get_auth_header())
+    return method(
+        url,
+        json={
+            'payload': response,
+            'survey': mapping_id
+        },
+        headers=get_auth_header(),
+    )

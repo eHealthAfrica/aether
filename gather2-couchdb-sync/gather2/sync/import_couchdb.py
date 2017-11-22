@@ -53,8 +53,7 @@ def get_surveys_mapping():
 
     mapping = {}
     for survey in results:
-        if not mapping.get(survey['name']):
-            mapping[survey['name']] = survey['id']
+        mapping[survey['name']] = survey['id']
     return mapping
 
 
@@ -177,5 +176,5 @@ def post_to_gather(document, mapping, gather_id=False):
         raise Exception('Cannot submit document "{}"'.format(document['_id']))
 
     return core_utils.submit_to_core(response=document,
-                                     survey_id=survey_id,
+                                     mapping_id=survey_id,
                                      response_id=gather_id)

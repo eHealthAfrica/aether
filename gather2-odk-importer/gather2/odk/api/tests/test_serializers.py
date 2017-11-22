@@ -1,3 +1,5 @@
+import uuid
+
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory
@@ -13,10 +15,11 @@ class SerializersTests(CustomTestCase):
         self.request = RequestFactory().get('/')
 
     def test_xform_serializer__no_files(self):
-        self.helper_create_survey(mapping_id=1)
+        mapping_id = uuid.uuid4()
+        self.helper_create_survey(mapping_id=mapping_id)
         xform = XFormSerializer(
             data={
-                'survey': 1,
+                'survey': mapping_id,
                 'description': 'test xml data',
                 'xml_data': self.samples['xform']['raw-xml'],
             },
@@ -32,10 +35,11 @@ class SerializersTests(CustomTestCase):
         with open(self.samples['xform']['file-xml'], 'rb') as data:
             content = SimpleUploadedFile('xform.xml', data.read())
 
-        self.helper_create_survey(mapping_id=1)
+        mapping_id = uuid.uuid4()
+        self.helper_create_survey(mapping_id=mapping_id)
         xform = XFormSerializer(
             data={
-                'survey': 1,
+                'survey': mapping_id,
                 'description': 'test xml file',
                 'xml_file': content,
             },
@@ -52,10 +56,11 @@ class SerializersTests(CustomTestCase):
         with open(self.samples['xform']['file-xls'], 'rb') as data:
             content = SimpleUploadedFile('xform.xls', data.read())
 
-        self.helper_create_survey(mapping_id=1)
+        mapping_id = uuid.uuid4()
+        self.helper_create_survey(mapping_id=mapping_id)
         xform = XFormSerializer(
             data={
-                'survey': 1,
+                'survey': mapping_id,
                 'description': 'test xls file',
                 'xml_file': content,
             },
