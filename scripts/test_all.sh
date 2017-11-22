@@ -36,13 +36,13 @@ echo "_____________________________________________ Starting core"
 $DC_TEST up -d core-test
 
 # test and start a clean ODK TEST container
-prepare_and_test_container odk-importer dump_empty_schema.json
+prepare_and_test_container odk-importer gather2/core/api/tests/fixtures/project_empty_schema.json
 
 echo "_____________________________________________ Starting odk-importer"
 $DC_TEST up -d odk-importer-test
 
 # test a clean SYNC TEST container
-prepare_and_test_container couchdb-sync dump.json
+prepare_and_test_container couchdb-sync gather2/core/api/tests/fixtures/project.json
 
 # FIXME: run ui tests
 # # test a clean UI TEST container
