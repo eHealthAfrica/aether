@@ -8,14 +8,14 @@ router = ExtendedDefaultRouter()
     router.register('projects', views.ProjectViewSet)
           .register('projectschemas', views.ProjectSchemaViewSet,
                     base_name='project_projectschema',
-                    parents_query_lookups=['project'])
+                    parents_query_lookups=['project__name'])
 )
 
 (
     router.register('projects', views.ProjectViewSet)
           .register('mappings', views.MappingViewSet,
                     base_name='project_mapping',
-                    parents_query_lookups=['project'])
+                    parents_query_lookups=['project__name'])
 )
 
 (
@@ -34,23 +34,16 @@ router = ExtendedDefaultRouter()
     router.register('schemas', views.SchemaViewSet)
           .register('projectschemas', views.ProjectSchemaViewSet,
                     base_name='schema_projectschema',
-                    parents_query_lookups=['schema'])
+                    parents_query_lookups=['schema__name'])
 )
 (
     router.register('projectschemas', views.ProjectSchemaViewSet)
           .register('entities', views.EntityViewSet,
                     base_name='projectschema_entity',
-                    parents_query_lookups=['projectschema'])
+                    parents_query_lookups=['projectschema__name'])
 )
 (
     router.register('entities', views.EntityViewSet)
 )
-
-router.register('projects', views.ProjectViewSet, base_name='project')
-router.register('mappings', views.MappingViewSet, base_name='mapping')
-router.register('responses', views.ResponseViewSet, base_name='response')
-router.register('schemas', views.SchemaViewSet, base_name='schema')
-router.register('projectschemas', views.ProjectSchemaViewSet, base_name='projectschema')
-router.register('entities', views.EntityViewSet, base_name='entity')
 
 urlpatterns = router.urls

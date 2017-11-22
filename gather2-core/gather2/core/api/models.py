@@ -13,6 +13,7 @@ STATUS_CHOICES = (
 
 
 class Project(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     revision = models.TextField()
     name = models.CharField(max_length=50, db_index=True, unique=True)
     salad_schema = models.TextField()
@@ -24,6 +25,7 @@ class Project(models.Model):
 
 
 class Mapping(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50, db_index=True, unique=True)
     definition = JSONField(blank=False, null=False)
     revision = models.TextField()
@@ -38,7 +40,7 @@ class Mapping(models.Model):
 
 
 class Response(models.Model):
-    id = models.CharField(primary_key=True, default=uuid.uuid4, editable=False, max_length=50)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     revision = models.TextField(default='1')
     map_revision = models.TextField(default='1')
     date = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -54,6 +56,7 @@ class Response(models.Model):
 
 
 class Schema(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50, db_index=True, unique=True)
     type = models.CharField(max_length=50)
     definition = JSONField(blank=False, null=False)
@@ -68,6 +71,7 @@ class Schema(models.Model):
 
 
 class ProjectSchema(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50, db_index=True, unique=True)
     mandatory_fields = models.CharField(max_length=100)
     transport_rule = models.TextField()
@@ -81,7 +85,7 @@ class ProjectSchema(models.Model):
 
 
 class Entity(models.Model):
-    id = models.CharField(primary_key=True, default=uuid.uuid4, max_length=50, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     revision = models.TextField(default='1')
     payload = JSONField(blank=False, null=False)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)

@@ -1,3 +1,5 @@
+import uuid
+
 from django.urls import reverse
 from rest_framework import status
 
@@ -92,28 +94,33 @@ class ViewsTests(CustomTestCase):
 
     def test__xform__filters(self):
         self.xform.delete()  # remove default survey
-        self.helper_create_xform(mapping_id=1)
-        self.helper_create_xform(mapping_id=1)
-        self.helper_create_xform(mapping_id=2)
-        self.helper_create_xform(mapping_id=3)
+        mapping_ids = {i: uuid.uuid4() for i in range(4)}
+        self.helper_create_xform(mapping_id=mapping_ids[0])
+        self.helper_create_xform(mapping_id=mapping_ids[0])
+        self.helper_create_xform(mapping_id=mapping_ids[1])
+        self.helper_create_xform(mapping_id=mapping_ids[2])
 
         response = self.client.get('/xforms.json', **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 4)
 
-        response = self.client.get('/xforms.json?mapping_id=1', **self.headers_user)
+        url = '/xforms.json?mapping_id={}'.format(mapping_ids[0])
+        response = self.client.get(url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 2)
 
-        response = self.client.get('/xforms.json?mapping_id=2', **self.headers_user)
+        url = '/xforms.json?mapping_id={}'.format(mapping_ids[1])
+        response = self.client.get(url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 1)
 
-        response = self.client.get('/xforms.json?mapping_id=3', **self.headers_user)
+        url = '/xforms.json?mapping_id={}'.format(mapping_ids[2])
+        response = self.client.get(url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 1)
 
-        response = self.client.get('/xforms.json?mapping_id=4', **self.headers_user)
+        url = '/xforms.json?mapping_id={}'.format(mapping_ids[3])
+        response = self.client.get(url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 0)
 
@@ -144,6 +151,7 @@ class ViewsTests(CustomTestCase):
         self.assertEqual(response.json()['count'], 0)
 
     def test__surveyors__by_survey(self):
+        mapping_ids = {i: uuid.uuid4() for i in range(4)}
         # create surveyors
         a = self.helper_create_surveyor(username='a')
         b = self.helper_create_surveyor(username='b')
@@ -157,26 +165,33 @@ class ViewsTests(CustomTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 4)
 
-        self.helper_create_xform(mapping_id=1)
-        self.helper_create_xform(mapping_id=1, surveyor=a)
-        response = self.client.get('/surveyors.json?mapping_id=1', **self.headers_user)
+        mapping_id = mapping_ids[0]
+        url = '/surveyors.json?mapping_id={}'.format(mapping_id)
+        self.helper_create_xform(mapping_id=mapping_id)
+        self.helper_create_xform(mapping_id=mapping_id, surveyor=a)
+        response = self.client.get(url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 1)
 
-        self.helper_create_xform(mapping_id=2, surveyor=[b, c, d])
-        response = self.client.get('/surveyors.json?mapping_id=2', **self.headers_user)
+        mapping_id = mapping_ids[1]
+        url = '/surveyors.json?mapping_id={}'.format(mapping_id)
+        self.helper_create_xform(mapping_id=mapping_id, surveyor=[b, c, d])
+        response = self.client.get(url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 3)
 
-        self.helper_create_xform(mapping_id=3)
-        response = self.client.get('/surveyors.json?mapping_id=3', **self.headers_user)
+        mapping_id = mapping_ids[2]
+        url = '/surveyors.json?mapping_id={}'.format(mapping_id)
+        response = self.client.get(url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 0)
 
-        self.helper_create_xform(mapping_id=4)
-        self.helper_create_xform(mapping_id=4, surveyor=b)
-        self.helper_create_xform(mapping_id=4, surveyor=b)
-        self.helper_create_xform(mapping_id=4, surveyor=[b, c])
-        response = self.client.get('/surveyors.json?mapping_id=4', **self.headers_user)
+        mapping_id = mapping_ids[3]
+        url = '/surveyors.json?mapping_id={}'.format(mapping_id)
+        self.helper_create_xform(mapping_id=mapping_id)
+        self.helper_create_xform(mapping_id=mapping_id, surveyor=b)
+        self.helper_create_xform(mapping_id=mapping_id, surveyor=b)
+        self.helper_create_xform(mapping_id=mapping_id, surveyor=[b, c])
+        response = self.client.get(url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 2)

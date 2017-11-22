@@ -58,47 +58,64 @@ class SubmissionTests(CustomTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-    def test__submission__400(self):
-        # create xForm entry
-        self.helper_create_xform(surveyor=self.user)
-
-        # submit right response but server is not available yet
-        with open(self.samples['submission']['file-ok'], 'rb') as f:
-            response = self.client.post(
-                self.url,
-                {'xml_submission_file': f},
-                **self.headers_user
-            )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
 
 class PostSubmissionTests(CustomTestCase):
 
     def setUp(self):
+        """
+        Set up a basic Aether project. This assumes that the fixture in
+        `/gather2-core/gather2/core/api/tests/fixtures/project_empty_schame.json`
+        has been loaded into the core database. See `/scripts/test_all.sh` for
+        details.
+        """
         super(PostSubmissionTests, self).setUp()
         self.helper_create_user()
         self.url = reverse('xform-submission')
 
         # create survey in Core testing server
-        testing_survey = {
-            "name": "testing",
-            "schema": {}
-        }
-
         self.assertTrue(core_utils.test_connection())
         self.CORE_HEADERS = core_utils.get_auth_header()
-
+        project = requests.get(
+            'http://core-test:9000/projects/demo/',
+            headers=self.CORE_HEADERS,
+        ).json()
+        projectschema = requests.get(
+            'http://core-test:9000/projectschemas/Person/',
+            headers=self.CORE_HEADERS,
+        ).json()
+        testing_survey = {
+            'name': 'example',
+            'revision': 1,
+            'project': project['id'],
+            'definition': {
+                "mapping": [
+                    [
+                        "#!uuid",
+                        "Person.id"
+                    ],
+                    [
+                        "firstname",
+                        "Person.firstName"
+                    ],
+                    [
+                        "lastname",
+                        "Person.familyName"
+                    ]
+                ],
+                "entities": {
+                    "Person": projectschema['id']
+                }
+            }
+        }
         # create survey in core testing server
         response = requests.post(core_utils.get_surveys_url(),
                                  json=testing_survey,
                                  headers=self.CORE_HEADERS)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.json())
         data = response.json()
-
         mapping_id = data['id']
         self.SURVEY_URL = core_utils.get_surveys_url(mapping_id)
         self.RESPONSES_URL = core_utils.get_survey_responses_url(mapping_id)
-
         # create xForm entry
         self.xform = self.helper_create_xform(surveyor=self.user, mapping_id=mapping_id)
         self.assertTrue(self.xform.is_surveyor(self.user))
@@ -149,30 +166,34 @@ class PostSubmissionTests(CustomTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test__submission__post__with_attachments(self):
-        # submit response with itself as attachment
-        with open(self.samples['submission']['file-ok'], 'rb') as f:
-            with open(self.samples['submission']['file-ok'], 'rb') as f2:
-                response = self.client.post(
-                    self.url,
-                    {'xml_submission_file': f, 'attach': f2},
-                    **self.headers_user
-                )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+    # FIXME: The Attachment model used in Gather2 is absent from
+    # Aether -- once bring that back, we can uncomment this test.
+    # def test__submission__post__with_attachments(self):
+    #     # submit response with itself as attachment
+    #     with open(self.samples['submission']['file-ok'], 'rb') as f:
+    #         with open(self.samples['submission']['file-ok'], 'rb') as f2:
+    #             response = self.client.post(
+    #                 self.url,
+    #                 {'xml_submission_file': f, 'attach': f2},
+    #                 **self.headers_user
+    #             )
+    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    @mock.patch('requests.post', side_effect=[mock.DEFAULT, mock.Mock(status_code=500)])
-    def test__submission__post__with_attachments_error_400(self, mock_post):
-        # there is going to be an error during attachment post
-        with open(self.samples['submission']['file-ok'], 'rb') as f:
-            with open(self.samples['submission']['file-ok'], 'rb') as f2:
-                response = self.client.post(
-                    self.url,
-                    {'xml_submission_file': f, 'attach': f2},
-                    **self.headers_user
-                )
-        mock_post.assert_called_once_with(
-            self.RESPONSES_URL,
-            headers=self.CORE_HEADERS,
-            json=mock.ANY,
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+    # FIXME: The Attachment model used in Gather2 is absent from
+    # Aether -- once bring that back, we can uncomment this test.
+    # @mock.patch('requests.post', side_effect=[mock.DEFAULT, mock.Mock(status_code=500)])
+    # def test__submission__post__with_attachments_error_400(self, mock_post):
+    #     # there is going to be an error during attachment post
+    #     with open(self.samples['submission']['file-ok'], 'rb') as f:
+    #         with open(self.samples['submission']['file-ok'], 'rb') as f2:
+    #             response = self.client.post(
+    #                 self.url,
+    #                 {'xml_submission_file': f, 'attach': f2},
+    #                 **self.headers_user
+    #             )
+    #     mock_post.assert_called_once_with(
+    #         self.RESPONSES_URL,
+    #         headers=self.CORE_HEADERS,
+    #         json=mock.ANY,
+    #     )
+    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
