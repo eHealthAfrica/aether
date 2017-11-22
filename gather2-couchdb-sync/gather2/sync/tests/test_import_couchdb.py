@@ -33,12 +33,24 @@ device_id = 'test_import-from-couch'
 class ImportTestCase(TestCase):
 
     def setUp(self):
+        """
+        Set up a basic Aether project. This assumes that the fixture in
+        `/gather2-core/gather2/core/api/tests/fixtures/project.json` has been
+        loaded into the core database. See `/scripts/test_all.sh` for details.
+        """
         clean_couch()
+        # Check that we can connect to the core container.
+        self.assertTrue(core_utils.test_connection())
+        # Delete all existing surveys in `core`:
         for survey in get_gather_surveys():
             url = core_utils.get_surveys_url(survey['id'])
             url = survey['url']
             requests.delete(url, headers=headers_testing)
-
+        # In order to be able to fetch this instance of
+        # gather2.core.api.models.Project and
+        # gather2.core.api.models.ProjectSchema, the fixture
+        # `/gather2-core/gather2/core/api/tests/fixtures/project.json` needs to
+        # have been loaded into the core database.
         project = requests.get(
             'http://core-test:9000/projects/demo/',
             headers=headers_testing
@@ -47,22 +59,8 @@ class ImportTestCase(TestCase):
             'http://core-test:9000/projectschemas/Person/',
             headers=headers_testing
         ).json()
-
-        # for survey in get_gather_surveys():
-        #     url = core_utils.get_surveys_url(survey['id'])
-        #     url = survey['url']
-        #     requests.delete(url, headers=headers_testing)
-
-        self.assertTrue(core_utils.test_connection())
-        url = core_utils.get_surveys_url()
-
-        self.example_doc = {
-            '_id': 'example-aabbbdddccc',
-            'deviceId': device_id,
-            'firstname': 'Han',
-            'lastname': 'Solo'
-        }
-
+        # An example survey, corresponding to the model
+        # `gather2.core.api.models.Mapping.
         self.example_survey = {
             'name': 'example',
             'revision': 1,
@@ -80,18 +78,23 @@ class ImportTestCase(TestCase):
                     [
                         "lastname",
                         "Person.familyName"
-                    ]
+                    ],
                 ],
                 "entities": {
-                    "Person": projectschema['id']
+                    "Person": projectschema['id'],
                 }
             }
         }
-        self.example_doc['_id'] = 'example-aabbbdddccc'  # reset `_id` changed by tests
-        # example_survey['name'] = 'example'  # reset `name` changed by tests
-
+        # An example document, which will eventually be submitted as `payload`
+        # the model `gather2.core.api.models.Response`
+        self.example_doc = {
+            '_id': 'example-aabbbdddccc',
+            'deviceId': device_id,
+            'firstname': 'Han',
+            'lastname': 'Solo',
+        }
+        url = core_utils.get_surveys_url()
         resp = requests.post(url, json=self.example_survey, headers=headers_testing)
-
         resp.raise_for_status()
         data = resp.json()
         self.survey_id = data['id']
@@ -99,11 +102,6 @@ class ImportTestCase(TestCase):
 
     def tearDown(self):
         clean_couch()
-        # DANGER: remove ALL created surveys (never test against any PROD server!!!)
-        for survey in get_gather_surveys():
-            url = core_utils.get_surveys_url(survey['id'])
-            url = survey['url']
-            requests.delete(url, headers=headers_testing)
 
     @mock.patch('gather2.sync.import_couchdb.core_utils.test_connection', return_value=False)
     def test_get_surveys_mapping_no_core(self, mock_test):
@@ -114,7 +112,6 @@ class ImportTestCase(TestCase):
 
     def test_get_surveys_mapping(self):
         survey_names = []
-
         # Post 30+ surveys to the gather instance, so it starts paginate
         # then we can see that they get mapped right
         while len(survey_names) < 40:
@@ -133,7 +130,6 @@ class ImportTestCase(TestCase):
             len(survey_names),
             'mapping contains all survey names',
         )
-
         for survey_name in survey_names:
             self.assertIn(survey_name, mapping)
 
@@ -218,13 +214,11 @@ class ImportTestCase(TestCase):
                            json=self.example_doc)
         self.assertEqual(resp.status_code, 201, 'The example document got created')
 
-        # import pdb; pdb.set_trace()
         import_synced_devices()
 
         data = get_gather_responses(self.survey_id)
         posted = data[0]  # Gather responds with the latest post first
 
-        # import pdb; pdb.set_trace()
         self.assertEqual(
             posted['mapping'],
             self.survey_id,

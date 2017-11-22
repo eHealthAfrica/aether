@@ -58,37 +58,23 @@ class SubmissionTests(CustomTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-    # def test__submission__400(self):
-    #     # create xForm entry
-    #     self.helper_create_xform(surveyor=self.user)
-
-    #     # submit right response but server is not available yet
-    #     with open(self.samples['submission']['file-ok'], 'rb') as f:
-    #         response = self.client.post(
-    #             self.url,
-    #             {'xml_submission_file': f},
-    #             **self.headers_user
-    #         )
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
 
 class PostSubmissionTests(CustomTestCase):
 
     def setUp(self):
+        """
+        Set up a basic Aether project. This assumes that the fixture in
+        `/gather2-core/gather2/core/api/tests/fixtures/project_empty_schame.json`
+        has been loaded into the core database. See `/scripts/test_all.sh` for
+        details.
+        """
         super(PostSubmissionTests, self).setUp()
         self.helper_create_user()
         self.url = reverse('xform-submission')
 
         # create survey in Core testing server
-
         self.assertTrue(core_utils.test_connection())
         self.CORE_HEADERS = core_utils.get_auth_header()
-
-        # for survey in get_gather_surveys():
-        #     url = core_utils.get_surveys_url(survey['id'])
-        #     url = survey['url']
-        #     requests.delete(url, headers=headers_testing)
-
         project = requests.get(
             'http://core-test:9000/projects/demo/',
             headers=self.CORE_HEADERS,
@@ -97,7 +83,6 @@ class PostSubmissionTests(CustomTestCase):
             'http://core-test:9000/projectschemas/Person/',
             headers=self.CORE_HEADERS,
         ).json()
-
         testing_survey = {
             'name': 'example',
             'revision': 1,
@@ -128,11 +113,9 @@ class PostSubmissionTests(CustomTestCase):
                                  headers=self.CORE_HEADERS)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.json())
         data = response.json()
-
         mapping_id = data['id']
         self.SURVEY_URL = core_utils.get_surveys_url(mapping_id)
         self.RESPONSES_URL = core_utils.get_survey_responses_url(mapping_id)
-
         # create xForm entry
         self.xform = self.helper_create_xform(surveyor=self.user, mapping_id=mapping_id)
         self.assertTrue(self.xform.is_surveyor(self.user))
