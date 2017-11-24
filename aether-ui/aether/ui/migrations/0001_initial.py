@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
             name='UserTokens',
             fields=[
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, related_name='app_tokens', serialize=False, to=settings.AUTH_USER_MODEL)),
-                ('core_token', models.CharField(blank=True, max_length=40, null=True)),
+                ('kernel_token', models.CharField(blank=True, max_length=40, null=True)),
                 ('odk_importer_token', models.CharField(blank=True, max_length=40, null=True)),
                 ('couchdb_sync_token', models.CharField(blank=True, max_length=40, null=True)),
             ],

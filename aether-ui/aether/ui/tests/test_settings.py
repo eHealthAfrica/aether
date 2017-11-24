@@ -17,7 +17,7 @@ class SettingsTest(TestCase):
         self.assertEqual(settings.WSGI_APPLICATION, 'aether.ui.wsgi.application')
         self.assertEqual(settings.APP_NAME, 'Aether')
         self.assertEqual(settings.ORG_NAME, 'eHealth Africa (Dev mode)')
-        self.assertEqual(settings.AETHER_CORE_URL, 'http://core-test:9000')
+        self.assertEqual(settings.AETHER_KERNEL_URL, 'http://kernel-test:9000')
         self.assertEqual(settings.AETHER_ODK_URL, 'http://odk-importer-test:9443')
 
         self.assertEqual(settings.AETHER_MODULES, ['odk-importer'])

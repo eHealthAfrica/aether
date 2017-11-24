@@ -1,6 +1,6 @@
 from django_rq import job
 
-from aether.common.core.utils import test_connection
+from aether.common.kernel.utils import test_connection
 from .import_couchdb import import_synced_devices
 
 

@@ -369,17 +369,17 @@ export class SurveyForm extends Component {
       .catch(handleError)
   }
 
-  onSubmitODK (coreSurvey) {
+  onSubmitODK (kernelSurvey) {
     const survey = this.state
 
     // save changes in ODK
     const saveMethod = (survey.id ? putData : postData)
     const saveUrl = getSurveysAPIPath({app: 'odk', id: survey.id})
-    const patchUrl = getSurveysAPIPath({app: 'odk', id: coreSurvey.id})
+    const patchUrl = getSurveysAPIPath({app: 'odk', id: kernelSurvey.id})
 
     const odkSurvey = {
-      survey_id: coreSurvey.id,
-      name: coreSurvey.name,
+      survey_id: kernelSurvey.id,
+      name: kernelSurvey.name,
       surveyors: this.state.odk.surveyors
     }
 
@@ -409,12 +409,12 @@ export class SurveyForm extends Component {
           .then(() => {
             if (xFormsWithFiles.length === 0) {
               // nothing more to do, skip last call
-              this.backToView(coreSurvey)
+              this.backToView(kernelSurvey)
               return
             }
             // save xForms with files
             return patchData(patchUrl, filesPayload, true)
-              .then(() => this.backToView(coreSurvey))
+              .then(() => this.backToView(kernelSurvey))
               .catch(handleODKError)
           })
           .catch(handleODKError)

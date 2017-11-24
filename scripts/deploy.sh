@@ -9,14 +9,14 @@ IMAGE_REPO="387526361725.dkr.ecr.eu-west-1.amazonaws.com"
 if [ "${BRANCH}" == "develop" ]; then
   export ENV="dev"
   export PREFIX="aether"
-  export APPS=( core couchdb-sync odk-importer )
+  export APPS=( kernel couchdb-sync odk-importer )
   export CLUSTER_NAME="ehealth-africa"
 elif [ "${BRANCH}" == "master" ]; then
   echo "commit on master, setting ENV to production"
   export ENV="prod"
   export PREFIX=( champs grid )
   export CLUSTER_NAME="ehealth-africa"
-  export APPS=( core odk-importer )
+  export APPS=( kernel odk-importer )
 fi
 
 $(aws ecr get-login --region="${AWS_DEFAULT_REGION}")

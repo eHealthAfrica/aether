@@ -18,11 +18,11 @@ check_variable() {
   fi
 }
 
-check_core() {
-  # check if CORE env variables were set
-  check_variable $AETHER_CORE_URL   "CORE url"
-  check_variable $AETHER_CORE_TOKEN "CORE token"
+check_kernel() {
+  # check if KERNEL env variables were set
+  check_variable $AETHER_KERNEL_URL   "KERNEL url"
+  check_variable $AETHER_KERNEL_TOKEN "KERNEL token"
 }
 
-check_core
+check_kernel
 setup_user

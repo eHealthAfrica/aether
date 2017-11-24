@@ -2,7 +2,7 @@ import mock
 import requests
 from django.test import TestCase
 
-from aether.common.core import utils as core_utils
+from aether.common.kernel import utils as kernel_utils
 
 from ..api.couchdb_helpers import create_db, generate_password as random_string
 from ..api.models import DeviceDB
@@ -17,16 +17,16 @@ from ..import_couchdb import (
 
 
 def get_aether_surveys():
-    url = core_utils.get_surveys_url()
-    return core_utils.get_all_docs(url)
+    url = kernel_utils.get_surveys_url()
+    return kernel_utils.get_all_docs(url)
 
 
 def get_aether_responses(survey_id):
-    url = core_utils.get_survey_responses_url(survey_id)
-    return core_utils.get_all_docs(url)
+    url = kernel_utils.get_survey_responses_url(survey_id)
+    return kernel_utils.get_all_docs(url)
 
 
-headers_testing = core_utils.get_auth_header()
+headers_testing = kernel_utils.get_auth_header()
 device_id = 'test_import-from-couch'
 
 
@@ -35,32 +35,32 @@ class ImportTestCase(TestCase):
     def setUp(self):
         """
         Set up a basic Aether project. This assumes that the fixture in
-        `/aether-core/aether/core/api/tests/fixtures/project.json` has been
-        loaded into the core database. See `/scripts/test_all.sh` for details.
+        `/aether-kernel/aether/kernel/api/tests/fixtures/project.json` has been
+        loaded into the kernel database. See `/scripts/test_all.sh` for details.
         """
         clean_couch()
-        # Check that we can connect to the core container.
-        self.assertTrue(core_utils.test_connection())
-        # Delete all existing surveys in `core`:
+        # Check that we can connect to the kernel container.
+        self.assertTrue(kernel_utils.test_connection())
+        # Delete all existing surveys in `kernel`:
         for survey in get_aether_surveys():
-            url = core_utils.get_surveys_url(survey['id'])
+            url = kernel_utils.get_surveys_url(survey['id'])
             url = survey['url']
             requests.delete(url, headers=headers_testing)
         # In order to be able to fetch this instance of
-        # aether.core.api.models.Project and
-        # aether.core.api.models.ProjectSchema, the fixture
-        # `/aether-core/aether/core/api/tests/fixtures/project.json` needs to
-        # have been loaded into the core database.
+        # aether.kernel.api.models.Project and
+        # aether.kernel.api.models.ProjectSchema, the fixture
+        # `/aether-kernel/aether/kernel/api/tests/fixtures/project.json` needs to
+        # have been loaded into the kernel database.
         project = requests.get(
-            'http://core-test:9000/projects/demo/',
+            'http://kernel-test:9000/projects/demo/',
             headers=headers_testing
         ).json()
         projectschema = requests.get(
-            'http://core-test:9000/projectschemas/Person/',
+            'http://kernel-test:9000/projectschemas/Person/',
             headers=headers_testing
         ).json()
         # An example survey, corresponding to the model
-        # `aether.core.api.models.Mapping.
+        # `aether.kernel.api.models.Mapping.
         self.example_survey = {
             'name': 'example',
             'revision': 1,
@@ -86,14 +86,14 @@ class ImportTestCase(TestCase):
             }
         }
         # An example document, which will eventually be submitted as `payload`
-        # the model `aether.core.api.models.Response`
+        # the model `aether.kernel.api.models.Response`
         self.example_doc = {
             '_id': 'example-aabbbdddccc',
             'deviceId': device_id,
             'firstname': 'Han',
             'lastname': 'Solo',
         }
-        url = core_utils.get_surveys_url()
+        url = kernel_utils.get_surveys_url()
         resp = requests.post(url, json=self.example_survey, headers=headers_testing)
         resp.raise_for_status()
         data = resp.json()
@@ -103,8 +103,8 @@ class ImportTestCase(TestCase):
     def tearDown(self):
         clean_couch()
 
-    @mock.patch('aether.sync.import_couchdb.core_utils.test_connection', return_value=False)
-    def test_get_surveys_mapping_no_core(self, mock_test):
+    @mock.patch('aether.sync.import_couchdb.kernel_utils.test_connection', return_value=False)
+    def test_get_surveys_mapping_no_kernel(self, mock_test):
         self.assertRaises(
             RuntimeError,
             get_surveys_mapping,
@@ -115,7 +115,7 @@ class ImportTestCase(TestCase):
         # Post 30+ surveys to the aether instance, so it starts paginate
         # then we can see that they get mapped right
         while len(survey_names) < 40:
-            url = core_utils.get_surveys_url()
+            url = kernel_utils.get_surveys_url()
             survey_name = random_string()[:49]
             self.example_survey['name'] = survey_name
             response = requests.post(url, json=self.example_survey, headers=headers_testing)
@@ -133,8 +133,8 @@ class ImportTestCase(TestCase):
         for survey_name in survey_names:
             self.assertIn(survey_name, mapping)
 
-    @mock.patch('aether.sync.import_couchdb.core_utils.test_connection', return_value=False)
-    def test_post_to_aether_no_core(self, mock_test):
+    @mock.patch('aether.sync.import_couchdb.kernel_utils.test_connection', return_value=False)
+    def test_post_to_aether_no_kernel(self, mock_test):
         self.assertRaises(
             RuntimeError,
             post_to_aether,
@@ -189,7 +189,7 @@ class ImportTestCase(TestCase):
 
     @mock.patch('aether.sync.import_couchdb.post_to_aether',
                 side_effect=Exception('mocked exception'))
-    def test_import_one_document_with_with_error_in_core(self, mock_post):
+    def test_import_one_document_with_with_error_in_kernel(self, mock_post):
         # this creates a test couchdb
         device = DeviceDB(device_id=device_id)
         device.save()
@@ -318,7 +318,7 @@ class ImportTestCase(TestCase):
         self.assertFalse('last_rev' in status, 'no last rev key')
         self.assertFalse('aether_id' in status, 'no aether id key')
 
-        # FIXME: Once error handling in aether-core has been improved, we should
+        # FIXME: Once error handling in aether-kernel has been improved, we should
         # be able to uncomment this. See: https://jira.ehealthafrica.org/browse/AET-46
         # self.assertIn('validat', status['error'], 'saves error object')
         # self.assertNotIn('JSON serializable', status['error'], 'not error on posting error')

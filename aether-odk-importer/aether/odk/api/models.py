@@ -9,18 +9,18 @@ from django.core.urlresolvers import reverse
 from django.db import models, IntegrityError
 from django.utils import timezone
 
-from aether.common.core import utils as core_utils
+from aether.common.kernel import utils as kernel_utils
 from .xform_utils import get_xml_title, get_xml_form_id, validate_xmldict
 
 
 class Survey(models.Model):
     '''
-    Database link of a Aether Core Survey
+    Database link of a Aether Kernel Survey
 
     The needed and common data is stored here, like the list of granted surveyors.
     '''
 
-    # This is needed to submit data to core
+    # This is needed to submit data to kernel
     # (there is a one to one relation)
     mapping_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
 
@@ -30,8 +30,8 @@ class Survey(models.Model):
     surveyors = models.ManyToManyField(to=get_user_model(), related_name='surveys', blank=True)
 
     @property
-    def aether_core_url(self):
-        return core_utils.get_survey_responses_url(mapping_id=self.pk)
+    def aether_kernel_url(self):
+        return kernel_utils.get_survey_responses_url(mapping_id=self.pk)
 
     def is_surveyor(self, user):
         '''
@@ -70,7 +70,7 @@ class XForm(models.Model):
     description = models.TextField(default='', null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
 
-    # This is needed to submit data to core
+    # This is needed to submit data to kernel
     survey = models.ForeignKey(
         Survey,
         related_name='xforms',
@@ -82,8 +82,8 @@ class XForm(models.Model):
     surveyors = models.ManyToManyField(to=get_user_model(), related_name='xforms', blank=True)
 
     @property
-    def aether_core_url(self):
-        return self.survey.aether_core_url
+    def aether_kernel_url(self):
+        return self.survey.aether_kernel_url
 
     @property
     def hash(self):

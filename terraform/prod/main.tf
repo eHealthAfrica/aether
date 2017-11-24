@@ -20,7 +20,7 @@ module "ecs" {
   iam_role_id = "${module.autoscaling.aws_iam_role_ecs_service}"
   database_hostname = "${module.rds.database_hostname}"
   deploy_branch = "latest"
-  core_url = "core-aether"
+  kernel_url = "kernel-aether"
   odk_url = "odk-importer-aether"
   couchdb_sync_url = "couchdb-sync-aether
 }
@@ -34,5 +34,5 @@ module "autoscaling" {
   private_subnets = "${split(",", var.private_subnets)}"
   vpc_id = "${var.vpc_id}"
   hostname = ""
-  target_group_arns = ["${module.ecs.core_target_group}","${module.ecs.odk_importer_target_group}","${module.ecs.couchdb_sync_target_group}"]
+  target_group_arns = ["${module.ecs.kernel_target_group}","${module.ecs.odk_importer_target_group}","${module.ecs.couchdb_sync_target_group}"]
 }

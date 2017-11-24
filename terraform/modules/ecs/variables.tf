@@ -8,7 +8,7 @@ variable "iam_role_id" {}
 variable "project" {}
 
 # URL's
-variable "core_url" {}
+variable "kernel_url" {}
 variable "odk_url" {}
 variable "couchdb_sync_url" {}
 
@@ -20,10 +20,10 @@ variable "route53_zone_id" {
   }
 }
 
-// aether core variables
-variable "aether_core_container_name" { default="aether-core"}
-variable "aether_core_nginx_host_port" { default=81 }
-variable "aether_core_nginx_container_name" { default="aether-core-nginx" }
+// aether kernel variables
+variable "aether_kernel_container_name" { default="aether-kernel"}
+variable "aether_kernel_nginx_host_port" { default=81 }
+variable "aether_kernel_nginx_container_name" { default="aether-kernel-nginx" }
 variable "aether_couchdb_container_name" { default="aether-couchdb" }
 
 // aether ODK importer
