@@ -45,9 +45,9 @@ class UtilsTests(TestCase):
         self.assertTrue(str(expected) in basic_fields, basic_fields)
 
     def test_get_entity_definitions(self):
-        entity_name = 'Person'
+        entity_type = 'Person'
         mapping = EXAMPLE_MAPPING
-        schema = {entity_name: EXAMPLE_SCHEMA}
+        schema = {entity_type: EXAMPLE_SCHEMA}
         expected = EXAMPLE_ENTITY_DEFINITION
         entity_definition = str(utils.get_entity_definitions(mapping, schema))
         self.assertTrue(str(expected) in entity_definition, entity_definition)
@@ -60,11 +60,11 @@ class UtilsTests(TestCase):
         self.assertTrue(str(expected) in entity_requirements, entity_requirements)
 
     def test_get_or_make_uuid(self):
-        entity_name = 'Person'
+        entity_type = 'Person'
         field_name = '_id'
         instance_number = 0
         source_data = EXAMPLE_SOURCE_DATA
-        uuid = str(utils.get_or_make_uuid(entity_name, field_name, instance_number, source_data))
+        uuid = str(utils.get_or_make_uuid(entity_type, field_name, instance_number, source_data))
         self.assertEquals(uuid.count('-'), 4)
 
     def test_extract_entity(self):

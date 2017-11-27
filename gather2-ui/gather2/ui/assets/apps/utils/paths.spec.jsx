@@ -79,7 +79,7 @@ describe('paths utils', () => {
     })
 
     it('should return the Surveyors API path filtering by survey', () => {
-      assert.equal(getSurveyorsAPIPath({surveyId: 1}), prefix + 'surveyors.json?&survey_id=1')
+      assert.equal(getSurveyorsAPIPath({surveyId: 1}), prefix + 'surveyors.json?&mapping_id=1')
     })
 
     it('should return the Surveyors API path but not filtering by survey', () => {
@@ -103,7 +103,7 @@ describe('paths utils', () => {
     })
 
     it('should return the xForms API path filtering by survey', () => {
-      assert.equal(getXFormsAPIPath({surveyId: 1}), prefix + 'xforms.json?&survey_id=1')
+      assert.equal(getXFormsAPIPath({surveyId: 1}), prefix + 'xforms.json?&mapping_id=1')
     })
 
     it('should return the xForms API path with search', () => {

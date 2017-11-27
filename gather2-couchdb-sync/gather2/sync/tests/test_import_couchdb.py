@@ -16,13 +16,13 @@ from ..import_couchdb import (
 )
 
 
-def get_gather_surveys():
-    url = core_utils.get_surveys_url()
+def get_gather_mappings():
+    url = core_utils.get_mappings_url()
     return core_utils.get_all_docs(url)
 
 
-def get_gather_responses(survey_id):
-    url = core_utils.get_survey_responses_url(survey_id)
+def get_gather_responses(mapping_id):
+    url = core_utils.get_mapping_responses_url(mapping_id)
     return core_utils.get_all_docs(url)
 
 
@@ -41,10 +41,10 @@ class ImportTestCase(TestCase):
         clean_couch()
         # Check that we can connect to the core container.
         self.assertTrue(core_utils.test_connection())
-        # Delete all existing surveys in `core`:
-        for survey in get_gather_surveys():
-            url = core_utils.get_surveys_url(survey['id'])
-            url = survey['url']
+        # Delete all existing mappings in `core`:
+        for mapping in get_gather_mappings():
+            url = core_utils.get_mappings_url(mapping['id'])
+            url = mapping['url']
             requests.delete(url, headers=headers_testing)
         # In order to be able to fetch this instance of
         # gather2.core.api.models.Project and
@@ -59,9 +59,9 @@ class ImportTestCase(TestCase):
             'http://core-test:9000/projectschemas/Person/',
             headers=headers_testing
         ).json()
-        # An example survey, corresponding to the model
+        # An example mapping, corresponding to the model
         # `gather2.core.api.models.Mapping.
-        self.example_survey = {
+        self.example_mapping = {
             'name': 'example',
             'revision': 1,
             'project': project['id'],
@@ -93,12 +93,12 @@ class ImportTestCase(TestCase):
             'firstname': 'Han',
             'lastname': 'Solo',
         }
-        url = core_utils.get_surveys_url()
-        resp = requests.post(url, json=self.example_survey, headers=headers_testing)
+        url = core_utils.get_mappings_url()
+        resp = requests.post(url, json=self.example_mapping, headers=headers_testing)
         resp.raise_for_status()
         data = resp.json()
-        self.survey_id = data['id']
-        self.survey_name = data['name']
+        self.mapping_id = data['id']
+        self.mapping_name = data['name']
 
     def tearDown(self):
         clean_couch()
@@ -111,27 +111,27 @@ class ImportTestCase(TestCase):
         )
 
     def test_get_surveys_mapping(self):
-        survey_names = []
+        mapping_names = []
         # Post 30+ surveys to the gather instance, so it starts paginate
         # then we can see that they get mapped right
-        while len(survey_names) < 40:
-            url = core_utils.get_surveys_url()
-            survey_name = random_string()[:49]
-            self.example_survey['name'] = survey_name
-            response = requests.post(url, json=self.example_survey, headers=headers_testing)
+        while len(mapping_names) < 40:
+            url = core_utils.get_mappings_url()
+            mapping_name = random_string()[:49]
+            self.example_mapping['name'] = mapping_name
+            response = requests.post(url, json=self.example_mapping, headers=headers_testing)
             self.assertEqual(response.status_code, 201, 'The new survey got created')
-            survey_names.append(survey_name)
+            mapping_names.append(mapping_name)
 
         mapping = get_surveys_mapping()
 
-        # There's gonna be some fixture surveys etc so more than 40
+        # There's gonna be some fixture mappings etc so more than 40
         self.assertGreater(
             len(mapping.keys()),
-            len(survey_names),
+            len(mapping_names),
             'mapping contains all survey names',
         )
-        for survey_name in survey_names:
-            self.assertIn(survey_name, mapping)
+        for mapping_name in mapping_names:
+            self.assertIn(mapping_name, mapping)
 
     @mock.patch('gather2.sync.import_couchdb.core_utils.test_connection', return_value=False)
     def test_post_to_gather_no_core(self, mock_test):
@@ -216,12 +216,12 @@ class ImportTestCase(TestCase):
 
         import_synced_devices()
 
-        data = get_gather_responses(self.survey_id)
+        data = get_gather_responses(self.mapping_id)
         posted = data[0]  # Gather responds with the latest post first
 
         self.assertEqual(
             posted['mapping'],
-            self.survey_id,
+            self.mapping_id,
             'Survey posted to the correct id',
         )
         for key in ['_id', 'firstname', 'lastname']:
@@ -256,7 +256,7 @@ class ImportTestCase(TestCase):
 
         import_synced_devices()
 
-        docs = get_gather_responses(self.survey_id)
+        docs = get_gather_responses(self.mapping_id)
         self.assertEqual(len(docs), 1, 'Document is not imported a second time')
 
     def test_update_document(self):
@@ -272,7 +272,7 @@ class ImportTestCase(TestCase):
 
         import_synced_devices()
 
-        docs = get_gather_responses(self.survey_id)
+        docs = get_gather_responses(self.mapping_id)
         response_id = docs[0]['id']
 
         doc_to_update = couchdb.get(doc_url).json()
@@ -283,7 +283,7 @@ class ImportTestCase(TestCase):
 
         import_synced_devices()
 
-        updated = get_gather_responses(self.survey_id)[0]
+        updated = get_gather_responses(self.mapping_id)[0]
         self.assertEqual(updated['id'], response_id, 'updated same doc')
         self.assertEqual(
             updated['payload']['_id'],
@@ -310,7 +310,7 @@ class ImportTestCase(TestCase):
         self.assertEqual(resp.status_code, 201, 'The example document got created')
 
         import_synced_devices()
-        docs = get_gather_responses(self.survey_id)
+        docs = get_gather_responses(self.mapping_id)
         self.assertEqual(len(docs), 0, 'doc did not get imported to gather')
         status = get_meta_doc(device.db_name, self.example_doc['_id'])
 

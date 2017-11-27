@@ -50,7 +50,7 @@ urlpatterns = [
     # Gather2 entrypoints
     # Any entry here needs the decorator `tokens_required` if it's going to execute
     # AJAX request to any of the other apps
-    url(r'^surveys/(?P<action>\w+)/(?P<survey_id>[0-9]+)?$',
+    url(r'^surveys/(?P<action>\w+)/(?P<mapping_id>[0-9]+)?$',
         tokens_required(TemplateView.as_view(template_name='pages/surveys.html')),
         name='surveys'),
 

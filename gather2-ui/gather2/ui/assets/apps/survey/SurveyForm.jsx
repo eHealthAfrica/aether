@@ -378,7 +378,7 @@ export class SurveyForm extends Component {
     const patchUrl = getSurveysAPIPath({app: 'odk', id: coreSurvey.id})
 
     const odkSurvey = {
-      survey_id: coreSurvey.id,
+      mapping_id: coreSurvey.id,
       name: coreSurvey.name,
       surveyors: this.state.odk.surveyors
     }
