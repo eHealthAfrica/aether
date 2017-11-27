@@ -38,8 +38,8 @@
       { "name": "DJANGO_USE_X_FORWARDED_PORT", "value": "${django_use_x_forwarded_port}"},
       { "name": "DJANGO_HTTP_X_FORWARDED_PROTO", "value": "${django_http_x_forwarded_proto}"},
       { "name": "DJANGO_USE_X_FORWARDED_HOST", "value": "${django_use_x_forwarded_host}"},
-      { "name": "AETHER_CORE_URL", "value": "${aether_core_url}"},
-      { "name": "AETHER_CORE_TOKEN", "value": "${aether_token}"},
+      { "name": "AETHER_KERNEL_URL", "value": "${aether_kernel_url}"},
+      { "name": "AETHER_KERNEL_TOKEN", "value": "${aether_token}"},
       { "name": "AWS_KEY", "value": "${aws_key}"},
       { "name": "AWS_SECRET_KEY", "value": "${aws_secret_key}"},
       { "name": "SENTRY_DSN", "value": "${sentry_dsn}"}

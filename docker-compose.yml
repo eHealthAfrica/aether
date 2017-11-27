@@ -20,17 +20,17 @@ services:
 
 
     # ---------------------------------
-    # Aether Core container
+    # Aether Kernel container
     # ---------------------------------
 
-    core:
-        build: aether-core
-        image: core
+    kernel:
+        build: aether-kernel
+        image: kernel
         environment:
             CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
             CSRF_COOKIE_DOMAIN: .aether.local
             DEBUG: "true"
-            HOSTNAME: core.aether.local
+            HOSTNAME: kernel.aether.local
 
             RDS_DB_NAME: aether
             RDS_HOSTNAME: db
@@ -40,7 +40,7 @@ services:
 
             WEB_SERVER_PORT: 8000
         volumes:
-            - ./aether-core:/code
+            - ./aether-kernel:/code
         depends_on:
             - db
         ports:
@@ -61,9 +61,9 @@ services:
             DEBUG: "true"
             HOSTNAME: odk.aether.local
 
-            AETHER_CORE_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
-            AETHER_CORE_URL: http://core:8000
-            AETHER_CORE_URL_TEST: http://core-test:9000
+            AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
+            AETHER_KERNEL_URL: http://kernel:8000
+            AETHER_KERNEL_URL_TEST: http://kernel-test:9000
 
             RDS_DB_NAME: odk_importer
             RDS_HOSTNAME: db
@@ -75,7 +75,7 @@ services:
         volumes:
             - ./aether-odk-importer:/code
         depends_on:
-            - core
+            - kernel
             - db
         ports:
             - "8443:8443"
@@ -99,9 +99,9 @@ services:
             COUCHDB_URL: http://couchdb:5984
             COUCHDB_USER: admin
 
-            AETHER_CORE_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
-            AETHER_CORE_URL: http://core:8000
-            AETHER_CORE_URL_TEST: http://core-test:9000
+            AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
+            AETHER_KERNEL_URL: http://kernel:8000
+            AETHER_KERNEL_URL_TEST: http://kernel-test:9000
 
             GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
 
@@ -120,7 +120,7 @@ services:
         volumes: &sync-volumes
             - ./aether-couchdb-sync:/code
         depends_on: &sync-dependencies
-            - core
+            - kernel
             - couchdb
             - db
             - redis
@@ -152,9 +152,9 @@ services:
 
             AETHER_ORG_NAME: eHealth Africa (Dev mode)
 
-            AETHER_CORE_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
-            AETHER_CORE_URL: http://core:8000
-            AETHER_CORE_URL_TEST: http://core-test:9000
+            AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
+            AETHER_KERNEL_URL: http://kernel:8000
+            AETHER_KERNEL_URL_TEST: http://kernel-test:9000
 
             AETHER_MODULES: "odk-importer"
 
@@ -185,7 +185,7 @@ services:
             - ./aether-ui/manage.py:/code/manage.py
             - ./aether-ui/package.json:/code/package.json
         depends_on:
-            - core
+            - kernel
             - db
             - odk-importer
             - webpack

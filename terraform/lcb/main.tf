@@ -29,7 +29,7 @@ module "ecs" {
   database_hostname = "${module.rds.database_hostname}"
   deploy_branch = "latest"
   domain = "aether.org"
-  core_url = "${var.core_url}"
+  kernel_url = "${var.kernel_url}"
   odk_url = "${var.odk_url}"
   couchdb_sync_url = "${var.couchdb_sync_url}"
 }
@@ -42,6 +42,6 @@ module "autoscaling" {
   project_billing_id = "${var.project_billing_id}"
   private_subnets = "${split(",", var.private_subnets)}"
   vpc_id = "${var.vpc_id}"
-  target_group_arns = ["${module.ecs.core_target_group}","${module.ecs.odk_importer_target_group}","${module.ecs.couchdb_sync_target_group}"]
+  target_group_arns = ["${module.ecs.kernel_target_group}","${module.ecs.odk_importer_target_group}","${module.ecs.couchdb_sync_target_group}"]
   efs_id = "${module.efs.efs_output}"
 }

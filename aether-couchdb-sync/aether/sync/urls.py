@@ -2,7 +2,7 @@ from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
 
-from aether.common.core.views import check_core
+from aether.common.kernel.views import check_kernel
 
 
 auth_urls = 'rest_framework.urls'
@@ -16,8 +16,8 @@ if settings.CAS_SERVER_URL:  # pragma: no cover
 
 
 urlpatterns = [
-    url(r'^$', check_core, name='index'),
-    url(r'^check-core$', check_core, name='check-core'),
+    url(r'^$', check_kernel, name='index'),
+    url(r'^check-kernel$', check_kernel, name='check-kernel'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^rq/', include('django_rq.urls')),
     url(r'^sync/', include('aether.sync.api.urls', 'sync')),

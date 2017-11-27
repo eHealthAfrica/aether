@@ -20,7 +20,7 @@ class ViewsTest(TestCase):
         password = 'testtest'
 
         self.user = get_user_model().objects.create_user(username, email, password)
-        self.view = TokenProxyView.as_view(app_name='core')
+        self.view = TokenProxyView.as_view(app_name='kernel')
 
     @mock.patch('aether.ui.views.get_or_create_valid_app_token')
     def test_proxy_view_without_valid_app(self, mock_test_conn):
@@ -199,11 +199,11 @@ class ViewsTest(TestCase):
                         return_value=APP_TOKEN_MOCK) as mock_get_app_token:
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            # it checks every app in `ui.models.APPS`: `core` and `odk`
+            # it checks every app in `ui.models.APPS`: `kernel` and `odk`
             self.assertEqual(mock_get_app_token.call_count, 2)
             self.assertEqual(mock_get_app_token.call_args_list,
                              [
-                                 mock.call(self.user, 'core'),
+                                 mock.call(self.user, 'kernel'),
                                  mock.call(self.user, 'odk-importer'),
                              ])
 

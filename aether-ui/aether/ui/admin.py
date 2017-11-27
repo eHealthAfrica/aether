@@ -6,7 +6,7 @@ from .models import UserTokens
 class UserTokensAdmin(admin.ModelAdmin):
     list_display = (
         'user',
-        'core_token',
+        'kernel_token',
         'odk_importer_token',
         'couchdb_sync_token',
     )

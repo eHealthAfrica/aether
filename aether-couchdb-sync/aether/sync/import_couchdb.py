@@ -3,7 +3,7 @@ import requests
 
 from django.utils import timezone
 
-from aether.common.core import utils as core_utils
+from aether.common.kernel import utils as kernel_utils
 from .api.models import DeviceDB
 from .couchdb import utils, api
 from .settings import logger
@@ -46,10 +46,10 @@ def get_meta_doc(db_name, couchdb_id):
 
 def get_surveys_mapping():
     # first of all check if the connection is possible
-    if not core_utils.test_connection():
-        raise RuntimeError('Cannot connect to Aether Core server')
+    if not kernel_utils.test_connection():
+        raise RuntimeError('Cannot connect to Aether Kernel server')
 
-    results = core_utils.get_all_docs(core_utils.get_surveys_url())
+    results = kernel_utils.get_all_docs(kernel_utils.get_surveys_url())
 
     mapping = {}
     for survey in results:
@@ -166,8 +166,8 @@ def import_synced_docs(docs, db_name, mapping):
 
 def post_to_aether(document, mapping, aether_id=False):
     # first of all check if the connection is possible
-    if not core_utils.test_connection():
-        raise RuntimeError('Cannot connect to Aether Core server')
+    if not kernel_utils.test_connection():
+        raise RuntimeError('Cannot connect to Aether Kernel server')
 
     try:
         prefix = document['_id'].split('-')[0]
@@ -175,6 +175,6 @@ def post_to_aether(document, mapping, aether_id=False):
     except Exception:
         raise Exception('Cannot submit document "{}"'.format(document['_id']))
 
-    return core_utils.submit_to_core(response=document,
-                                     mapping_id=survey_id,
-                                     response_id=aether_id)
+    return kernel_utils.submit_to_kernel(response=document,
+                                         mapping_id=survey_id,
+                                         response_id=aether_id)
