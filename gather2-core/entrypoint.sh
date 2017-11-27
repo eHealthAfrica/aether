@@ -68,7 +68,7 @@ setup_kafka() {
     then
         echo "Call Add Kafka Connection - AetherDB ..."
         chmod +x /aether/setKafkaConnectors.sh
-        nohup /aether/setKafkaConnectors.sh &
+        nohup /aether/setKafkaConnectors.sh 90s &
     fi
 }
 
