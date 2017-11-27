@@ -65,7 +65,7 @@ setup_initial_data() {
 
 setup_kafka() {
 	echo "Call Add Kafka Connection - AetherDB ..."
-	chmod +x /aether/setKafkaConnectors.sh
+#	chmod +x /aether/setKafkaConnectors.sh
 #	nohup /aether/setKafkaConnectors.sh &
 }
 
