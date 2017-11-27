@@ -16,52 +16,52 @@ GATHER_ENV_MOCK = {
 class UtilsTests(TestCase):
 
     @mock.patch.dict('os.environ', GATHER_ENV_MOCK)
-    def test__get_survey_url_testing(self):
+    def test__get_mapping_url_testing(self):
         self.assertEqual(
-            utils.get_surveys_url(),
+            utils.get_mappings_url(),
             'http://core-test/mappings/'
         )
         self.assertEqual(
-            utils.get_surveys_url(1),
+            utils.get_mappings_url(1),
             'http://core-test/mappings/1'
         )
         self.assertEqual(
-            utils.get_survey_responses_url(1),
+            utils.get_mapping_responses_url(1),
             'http://core-test/mappings/1/responses/'
         )
         self.assertEqual(
-            utils.get_survey_responses_url(1, 2),
+            utils.get_mapping_responses_url(1, 2),
             'http://core-test/mappings/1/responses/2/'
         )
         self.assertRaises(
             Exception,
-            utils.get_survey_responses_url,
-            survey_id=None,
+            utils.get_mapping_responses_url,
+            mapping_id=None,
         )
 
     @mock.patch.dict('os.environ', {'TESTING': ''})
     @mock.patch.dict('os.environ', GATHER_ENV_MOCK)
-    def test__get_survey_url__no_testing(self):
+    def test__get_mapping_url__no_testing(self):
         self.assertEqual(
-            utils.get_surveys_url(),
+            utils.get_mappings_url(),
             'http://core/mappings/'
         )
         self.assertEqual(
-            utils.get_surveys_url(1),
+            utils.get_mappings_url(1),
             'http://core/mappings/1'
         )
         self.assertEqual(
-            utils.get_survey_responses_url(1),
+            utils.get_mapping_responses_url(1),
             'http://core/mappings/1/responses/'
         )
         self.assertEqual(
-            utils.get_survey_responses_url(1, 2),
+            utils.get_mapping_responses_url(1, 2),
             'http://core/mappings/1/responses/2/'
         )
         self.assertRaises(
             Exception,
-            utils.get_survey_responses_url,
-            survey_id=None,
+            utils.get_mapping_responses_url,
+            mapping_id=None,
         )
 
     @mock.patch('requests.head', return_value=mock.Mock(status_code=403))
@@ -119,12 +119,12 @@ class UtilsTests(TestCase):
             )
 
     @mock.patch.dict('os.environ', GATHER_ENV_MOCK)
-    def test_submit_to_core__without_survey_id(self):
+    def test_submit_to_core__without_mapping_id(self):
         self.assertRaises(
             Exception,
             utils.submit_to_core,
             response={},
-            survey_id=None,
+            mapping_id=None,
         )
 
     @mock.patch.dict('os.environ', GATHER_ENV_MOCK)
@@ -133,7 +133,7 @@ class UtilsTests(TestCase):
             Exception,
             utils.submit_to_core,
             response=None,
-            survey_id=1,
+            mapping_id=1,
         )
 
     @mock.patch('requests.put')

@@ -9,7 +9,7 @@ from django.core.urlresolvers import reverse
 from django.db import models, IntegrityError
 from django.utils import timezone
 
-from . import core_utils
+from gather2.common.core import utils as core_utils
 from .xform_utils import get_xml_title, get_xml_form_id, validate_xmldict
 
 
@@ -31,7 +31,7 @@ class Survey(models.Model):
 
     @property
     def gather_core_url(self):
-        return core_utils.get_survey_responses_url(mapping_id=self.pk)
+        return core_utils.get_mapping_responses_url(mapping_id=self.pk)
 
     def is_surveyor(self, user):
         '''

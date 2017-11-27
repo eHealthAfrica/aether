@@ -108,14 +108,14 @@ class PostSubmissionTests(CustomTestCase):
             }
         }
         # create survey in core testing server
-        response = requests.post(core_utils.get_surveys_url(),
+        response = requests.post(core_utils.get_mappings_url(),
                                  json=testing_survey,
                                  headers=self.CORE_HEADERS)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.json())
         data = response.json()
         mapping_id = data['id']
-        self.SURVEY_URL = core_utils.get_surveys_url(mapping_id)
-        self.RESPONSES_URL = core_utils.get_survey_responses_url(mapping_id)
+        self.MAPPING_URL = core_utils.get_mappings_url(mapping_id)
+        self.RESPONSES_URL = core_utils.get_mapping_responses_url(mapping_id)
         # create xForm entry
         self.xform = self.helper_create_xform(surveyor=self.user, mapping_id=mapping_id)
         self.assertTrue(self.xform.is_surveyor(self.user))
@@ -123,7 +123,7 @@ class PostSubmissionTests(CustomTestCase):
     def tearDown(self):
         super(PostSubmissionTests, self).tearDown()
         # delete ALL surveys in core testing server
-        requests.delete(self.SURVEY_URL, headers=self.CORE_HEADERS)
+        requests.delete(self.MAPPING_URL, headers=self.CORE_HEADERS)
 
     @mock.patch('requests.post', return_value=mock.Mock(status_code=500))
     def test__submission__post__with_core_error(self, mock_post):

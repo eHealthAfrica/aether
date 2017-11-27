@@ -57,9 +57,9 @@ export class SurveyODKForm extends Component {
 
   render () {
     const dataQA = (
-      (!this.props.survey.survey_id)
+      (!this.props.survey.mapping_id)
       ? 'survey-odk-add'
-      : `survey-odk-edit-${this.props.survey.survey_id}`
+      : `survey-odk-edit-${this.props.survey.mapping_id}`
     )
 
     return (
