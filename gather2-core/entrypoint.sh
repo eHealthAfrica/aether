@@ -63,6 +63,10 @@ setup_initial_data() {
     ./manage.py loaddata /code/conf/extras/initial.json
 }
 
+setup_kafka() {
+	echo "Call Add Kafka Connection - AetherDB ..."
+}
+
 setup_aws_requirements() {
     envsubst < /code/conf/aws_cli_setup.sh.tmpl > /code/conf/aws_cli_setup.sh
     chmod +x /code/conf/aws_cli_setup.sh
@@ -156,7 +160,8 @@ case "$1" in
     start_dev )
         setup_db
         setup_initial_data
-
+        setup_kafka
+        
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
 
