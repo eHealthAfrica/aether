@@ -1,0 +1,11 @@
+{
+  "name": "AetherDB",
+  "config": {
+    "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+    "tasks.max": "1",
+    "connection.url": "jdbc:postgresql://db:5432/gather2?user=postgres",
+    "topic.prefix": "aether_",
+    "mode": "bulk",
+    "query": "SELECT e.id, e.revision, e.payload, s.name, s.revision from core_entity e inner join core_projectschema ps on e.projectschema_id = ps.id inner join core_schema s on ps.schema_id = s.id"
+  }
+}
