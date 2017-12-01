@@ -14,6 +14,10 @@ from pygments.lexers.python import Python3Lexer
 from . import models
 
 
+class EntityExtractionError(Exception):
+    pass
+
+
 def __prettified__(response, lexer):
     # Truncate the data. Alter as needed
     response = response[:5000]
@@ -299,7 +303,10 @@ def extract_entity(requirements, response_data, entity_stubs):
                 if "#!" not in path:
                     # Find the matches and assign them
                     matches = parse(path).find(data)
-                    if len(matches) == 1:
+                    if len(matches) == 0:
+                        msg = 'No matches found for path: "{}"'
+                        raise EntityExtractionError(msg.format(path))
+                    elif len(matches) == 1:
                         # single value
                         entities[entity_type][i][field] = matches[0].value
                         i += 1
