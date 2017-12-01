@@ -59,6 +59,34 @@ class UtilsTests(TestCase):
         entity_requirements = str(utils.get_entity_requirements(entities, field_mappings))
         self.assertTrue(str(expected) in entity_requirements, entity_requirements)
 
+    def test_get_entity_stub(self):
+        requirements = EXAMPLE_REQUIREMENTS
+        source_data = EXAMPLE_SOURCE_DATA
+        entity_definitions = EXAMPLE_ENTITY_DEFINITION
+        entity_name = "Person"
+        stub = utils.get_entity_stub(requirements, entity_definitions, entity_name, source_data)
+        self.assertEquals(len(stub.get("dob")), 3)
+
+    def test_resolve_source_reference__single_resolution(self):
+        data = EXAMPLE_SOURCE_DATA
+        requirements = EXAMPLE_REQUIREMENTS
+        entities = EXAMPLE_ENTITY
+        entity_name = "Person"
+        field = "villageID"
+        path = requirements.get(entity_name, {}).get(field)[0]
+        resolved_count = utils.resolve_source_reference(path, entities, entity_name, 0, field, data)
+        self.assertEquals(resolved_count, 1)
+
+    def test_resolve_source_reference__multiple_resolutions(self):
+        data = EXAMPLE_SOURCE_DATA
+        requirements = EXAMPLE_REQUIREMENTS
+        entities = EXAMPLE_ENTITY
+        entity_name = "Person"
+        field = "dob"
+        path = requirements.get(entity_name, {}).get(field)[0]
+        resolved_count = utils.resolve_source_reference(path, entities, entity_name, 0, field, data)
+        self.assertEquals(resolved_count, 3)
+
     def test_get_or_make_uuid(self):
         entity_type = 'Person'
         field_name = '_id'
@@ -70,7 +98,23 @@ class UtilsTests(TestCase):
     def test_extract_entity(self):
         requirements = EXAMPLE_REQUIREMENTS
         response_data = EXAMPLE_SOURCE_DATA
+        entity_definitions = EXAMPLE_ENTITY_DEFINITION
+        expected_entity = EXAMPLE_ENTITY
+        entities = {"Person": []}
+        entity_name = "Person"
+        entity_stub = utils.get_entity_stub(
+            requirements, entity_definitions, entity_name, response_data
+        )
+        failed_actions = utils.extract_entity(
+            entity_name, entities, requirements, response_data, entity_stub
+        )
+        self.assertEquals(len(expected_entity['Person']), len(entities['Person']))
+        self.assertEquals(len(failed_actions), 0)
+
+    def test_extract_entities(self):
+        requirements = EXAMPLE_REQUIREMENTS
+        response_data = EXAMPLE_SOURCE_DATA
         entity_stubs = EXAMPLE_ENTITY_DEFINITION
         expected_entity = EXAMPLE_ENTITY
-        data, entities = utils.extract_entity(requirements, response_data, entity_stubs)
+        data, entities = utils.extract_entities(requirements, response_data, entity_stubs)
         self.assertEquals(len(expected_entity['Person']), len(entities['Person']))
