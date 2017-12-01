@@ -83,7 +83,7 @@ const buildAPIPath = (app, type, id, params) => {
  */
 export const buildQueryString = ({surveyId, search, page, pageSize, fields, omit}) => {
   return (search ? `&search=${encodeURIComponent(search)}` : '') +
-         (surveyId ? `&survey_id=${surveyId}` : '') +
+         (surveyId ? `&mapping_id=${surveyId}` : '') +
          (page ? `&page=${page}` : '') +
          (pageSize ? `&page_size=${pageSize}` : '') +
          (fields ? `&fields=${fields}` : '') +

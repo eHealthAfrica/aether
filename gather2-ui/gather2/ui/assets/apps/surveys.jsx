@@ -53,7 +53,7 @@ switch (action) {
           url: getSurveysAPIPath({ app: 'odk', id: surveyId }),
           force: {
             url: getSurveysAPIPath({ app: 'odk' }),
-            data: { survey_id: surveyId }
+            data: { mapping_id: surveyId }
           }
         },
         {

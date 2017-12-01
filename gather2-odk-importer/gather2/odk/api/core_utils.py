@@ -8,7 +8,7 @@ def get_core_server_url():
         return os.environ.get('GATHER_CORE_URL', '')
 
 
-def get_survey_responses_url(mapping_id, response_id=None):
+def get_mapping_responses_url(mapping_id, response_id=None):
     '''
     Returns Gather2 Core url to submit survey responses
     '''

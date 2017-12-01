@@ -14,6 +14,10 @@ from pygments.lexers.python import Python3Lexer
 from . import models
 
 
+class EntityExtractionError(Exception):
+    pass
+
+
 def __prettified__(response, lexer):
     # Truncate the data. Alter as needed
     response = response[:5000]
@@ -72,29 +76,28 @@ def JSP_get_basic_fields(avro_obj):
 
 def get_entity_definitions(mapping_definition, schemas):
     required_entities = {}
-    mapping = mapping_definition
-    found_entities = parse("entities[*]").find(mapping)
+    found_entities = parse("entities[*]").find(mapping_definition)
     entities = [match.value for match in found_entities][0]
     for entity_definition in entities.items():
-        entity_name, file_name = entity_definition
-        required_entities[entity_name] = JSP_get_basic_fields(schemas.get(entity_name))
+        entity_type, file_name = entity_definition
+        required_entities[entity_type] = JSP_get_basic_fields(schemas.get(entity_type))
     return required_entities
 
 
 def get_entity_requirements(entities, field_mappings):
     all_requirements = {}
-    for entity_name, entity_definition in entities.items():
+    for entity_type, entity_definition in entities.items():
         entity_requirements = {}
         # find mappings that start with the entity name
-        # and return a list with the entity_name ( and dot ) removed from the destination
-        matching_mappings = [[src, dst.split(entity_name+".")[1]]
+        # and return a list with the entity_type ( and dot ) removed from the destination
+        matching_mappings = [[src, dst.split(entity_type+".")[1]]
                              for src, dst in field_mappings
-                             if dst.startswith(entity_name+".")]
+                             if dst.startswith(entity_type+".")]
         for field in entity_definition:
             # filter again to find sources pertaining to this particular field in this entity
             field_sources = [src for src, dst in matching_mappings if dst == field]
             entity_requirements[field] = field_sources
-        all_requirements[entity_name] = entity_requirements
+        all_requirements[entity_type] = entity_requirements
     return all_requirements
 
 
@@ -152,7 +155,7 @@ def action_constant(args):
 def resolve_entity_reference(
         entity_jsonpath,
         constructed_entities,
-        entity_name,
+        entity_type,
         field_name,
         instance_number,
         source_data,
@@ -171,16 +174,16 @@ def resolve_entity_reference(
         return matches[instance_number].value
 
 
-def get_or_make_uuid(entity_name, field_name, instance_number, source_data):
+def get_or_make_uuid(entity_type, field_name, instance_number, source_data):
     # Either uses a pre-created uuid present in source_data --or-- creates a new
     # uuid and saves it in source data make one uuid, we may not use it
     value = str(uuid.uuid4())
     base = "aether_extractor_enrichment"
-    if source_data.get(base, {}).get(entity_name, {}).get(field_name):
+    if source_data.get(base, {}).get(entity_type, {}).get(field_name):
         try:
-            value = source_data.get(base, {}).get(entity_name).get(field_name)[instance_number]
+            value = source_data.get(base, {}).get(entity_type).get(field_name)[instance_number]
         except IndexError as e:
-            source_data[base][entity_name][field_name].append(value)
+            source_data[base][entity_type][field_name].append(value)
         finally:
             return value
     else:
@@ -188,17 +191,17 @@ def get_or_make_uuid(entity_name, field_name, instance_number, source_data):
         # there's a better way to do this with collections.defaultdict
         if not source_data.get(base):
             source_data[base] = {}
-        if not source_data[base].get(entity_name):
-            source_data[base][entity_name] = {}
-        if not source_data[base][entity_name].get(field_name):
-            source_data[base][entity_name][field_name] = [value]
+        if not source_data[base].get(entity_type):
+            source_data[base][entity_type] = {}
+        if not source_data[base][entity_type].get(field_name):
+            source_data[base][entity_type][field_name] = [value]
         else:
-            source_data[base][entity_name][field_name].append(value)
+            source_data[base][entity_type][field_name].append(value)
         return value
 
 
 def resolve_action(source_path):
-    # Take a path instuction (like #!uuid# or #!entity-reference#a.json[path])
+    # Take a path instruction (like #!uuid# or #!entity-reference#a.json[path])
     # and resolves the action and arguments
     opts = source_path.split("#!")[1].split("#")
     # Action string is between #! and #
@@ -221,21 +224,21 @@ def resolve_action(source_path):
 def extractor_action(
         source_path,
         constructed_entities,
-        entity_name,
+        entity_type,
         field_name,
         instance_number,
         source_data,
 ):
-    # Takes an extractor action instuction (#!action#args) and dispatches it to
-    # the proper funciton
+    # Takes an extractor action instruction (#!action#args) and dispatches it to
+    # the proper function
     action, args = resolve_action(source_path)
     if action == "uuid":
-        return get_or_make_uuid(entity_name, field_name, instance_number, source_data)
+        return get_or_make_uuid(entity_type, field_name, instance_number, source_data)
     elif action == "entity-reference":
         return resolve_entity_reference(
             args,
             constructed_entities,
-            entity_name,
+            entity_type,
             field_name,
             instance_number,
             source_data,
@@ -245,11 +248,11 @@ def extractor_action(
     elif action == "constant":
         return action_constant(args)
     else:
-        raise ValueError("No action by name %s" % action)
+        raise ValueError("No action with name %s" % action)
 
 
 def extract_entity(requirements, response_data, entity_stubs):
-    data = None
+    data = {}
     if response_data:
         data = response_data
     data["aether_errors"] = []
@@ -258,13 +261,13 @@ def extract_entity(requirements, response_data, entity_stubs):
     # For output. Since we need to submit the extracted entities as different
     # types, it's helpful to seperate them here
     entities = {}
-    # entitie names that have requirements
+    # entity names that have requirements
     required_entities = requirements.keys()
-    for entity_name in required_entities:
+    for entity_type in required_entities:
         # Copy an empty instance of available fields
-        entity_stub = {k: [] for k in entity_stubs.get(entity_name)}
+        entity_stub = {k: [] for k in entity_stubs.get(entity_type)}
         # Do a quick first resolution of paths to size output requirement
-        for field, paths in requirements.get(entity_name).items():
+        for field, paths in requirements.get(entity_type).items():
             for i, path in enumerate(paths):
                 # If this is a json path, we'll resolve it to see how big the result is
                 if "#!" not in path:
@@ -277,22 +280,22 @@ def extract_entity(requirements, response_data, entity_stubs):
         count = max([len(entity_stub.get(field)) for field in entity_stub.keys()])
         # Make empty stubs for our expected outputs. One for each member
         # identified in count process
-        entities[entity_name] = [
+        entities[entity_type] = [
             {field: None for field in entity_stub.keys()} for i in range(count)
         ]
 
         # Iterate required fields, resolve paths and copy data to stubs
-        for field, paths in requirements.get(entity_name).items():
+        for field, paths in requirements.get(entity_type).items():
             # Ignore fields with empty paths
             if len(paths) < 1:
                 for i in range(count):
-                    del entities[entity_name][i][field]
+                    del entities[entity_type][i][field]
                 continue
             # Iterate over expected output entities.
             # Some paths will satisfy more than one entity, so we increment in
             # different places
             i = 0
-            while i <= count-1:
+            while i < count:
                 # If fewer paths than required use the last value
                 # otherwise use the current path
                 path = paths[-1] if len(paths) < (i + 1) else paths[i]
@@ -300,23 +303,26 @@ def extract_entity(requirements, response_data, entity_stubs):
                 if "#!" not in path:
                     # Find the matches and assign them
                     matches = parse(path).find(data)
-                    if len(matches) < 2:
+                    if len(matches) == 0:
+                        msg = 'No matches found for path: "{}"'
+                        raise EntityExtractionError(msg.format(path))
+                    elif len(matches) == 1:
                         # single value
-                        entities[entity_name][i][field] = matches[0].value
+                        entities[entity_type][i][field] = matches[0].value
                         i += 1
                         continue
                     else:
                         for x, match in enumerate(matches):
                             # Multiple values, choose the one aligned with this
                             # entity (#i) & order of match(x)
-                            entities[entity_name][i][field] = matches[x].value
+                            entities[entity_type][i][field] = matches[x].value
                             i += 1
                         continue
                 else:
                     # Special action to be dispatched
                     action = DeferrableAction(
-                        [entity_name, i, field],
-                        [path, entities, entity_name, field, i, data],
+                        [entity_type, i, field],
+                        [path, entities, entity_type, field, i, data],
                         extractor_action,
                     )
                     action.run()
@@ -363,29 +369,29 @@ def extract_create_entities(response):
     # schema = project_schema.schema.definition
 
     # Get entity definitions
-    entities = get_entity_definitions(mapping_definition, schemas)
+    entity_defs = get_entity_definitions(mapping_definition, schemas)
 
     # Get field mappings
     field_mappings = get_field_mappings(mapping_definition)
 
     # Get entity requirements
-    requirements = get_entity_requirements(entities, field_mappings)
+    requirements = get_entity_requirements(entity_defs, field_mappings)
 
     response_data = response.payload
 
     # Only attempt entity extraction if requirements are present
     if any(requirements.values()):
-        data, entities = extract_entity(
+        data, entity_types = extract_entity(
             requirements,
             response_data,
-            entities,
+            entity_defs,
         )
     else:
-        entities = {}
+        entity_types = {}
 
     entity_list = []
-    for name, entity_instances in entities.items():
-        for entity in entity_instances:
+    for name, entities in entity_types.items():
+        for entity in entities:
             obj = {
                 'id': entity['id'],
                 'payload': entity,
