@@ -145,8 +145,9 @@ case "$1" in
     ;;
 
     start )
-        setup_db
         setup_aws_requirements
+        source ~/.bashrc  
+        setup_db
 
         npm run webpack
 
