@@ -5,45 +5,45 @@ from . import views
 router = ExtendedDefaultRouter()
 
 (
-    router.register('surveys', views.SurveyViewSet)
-          .register('responses', views.ResponseViewSet,
-                    base_name='survey_response',
-                    parents_query_lookups=['survey'])
+    router.register('projects', views.ProjectViewSet)
+          .register('projectschemas', views.ProjectSchemaViewSet,
+                    base_name='project_projectschema',
+                    parents_query_lookups=['project__name'])
 )
 
+(
+    router.register('projects', views.ProjectViewSet)
+          .register('mappings', views.MappingViewSet,
+                    base_name='project_mapping',
+                    parents_query_lookups=['project__name'])
+)
+
+(
+    router.register('mappings', views.MappingViewSet)
+          .register('responses', views.ResponseViewSet,
+                    base_name='mapping_response',
+                    parents_query_lookups=['mapping'])
+)
 (
     router.register('responses', views.ResponseViewSet)
-          .register('attachments', views.AttachmentViewSet,
-                    base_name='response_attachment',
+          .register('entities', views.EntityViewSet,
+                    base_name='response_entity',
                     parents_query_lookups=['response'])
 )
-
 (
-    router.register('surveys', views.SurveyViewSet)
-          .register('map-functions', views.MapFunctionViewSet,
-                    base_name='survey_map_function',
-                    parents_query_lookups=['survey'])
+    router.register('schemas', views.SchemaViewSet)
+          .register('projectschemas', views.ProjectSchemaViewSet,
+                    base_name='schema_projectschema',
+                    parents_query_lookups=['schema__name'])
 )
-
 (
-    router.register('map-functions', views.MapFunctionViewSet, base_name='map_function')
-          .register('map-results', views.MapResultViewSet,
-                    base_name='map_function_result',
-                    parents_query_lookups=['map_function'])
+    router.register('projectschemas', views.ProjectSchemaViewSet)
+          .register('entities', views.EntityViewSet,
+                    base_name='projectschema_entity',
+                    parents_query_lookups=['projectschema__name'])
 )
-
 (
-    router.register('map-functions', views.MapFunctionViewSet, base_name='map_function')
-          .register('reduce-functions', views.ReduceFunctionViewSet,
-                    base_name='map_reduce_function',
-                    parents_query_lookups=['map_function'])
+    router.register('entities', views.EntityViewSet)
 )
-
-router.register('map-results', views.MapResultViewSet, base_name='map_results')
-router.register('reduce-functions', views.ReduceFunctionViewSet, base_name='reduce_function')
-router.register('responses', views.ResponseViewSet, base_name='response')
-router.register('attachments', views.AttachmentViewSet, base_name='attachment')
-router.register('surveys-stats', views.SurveyStatsViewSet, base_name='survey_stats')
-router.register('users', views.UserViewSet, base_name='user')
 
 urlpatterns = router.urls

@@ -163,9 +163,9 @@ class XFormViewset(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = self.queryset
 
-        survey_id = self.request.query_params.get('survey_id', None)
-        if survey_id is not None:
-            queryset = queryset.filter(survey=survey_id)
+        mapping_id = self.request.query_params.get('mapping_id', None)
+        if mapping_id is not None:
+            queryset = queryset.filter(survey=mapping_id)
 
         return queryset
 
@@ -185,17 +185,17 @@ class SurveyorViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = self.queryset
 
-        survey_id = self.request.query_params.get('survey_id', None)
-        if survey_id is not None:
+        mapping_id = self.request.query_params.get('mapping_id', None)
+        if mapping_id is not None:
             # get forms with this survey id and with surveyors
             xforms = XForm.objects \
-                          .filter(survey=survey_id) \
+                          .filter(survey=mapping_id) \
                           .exclude(surveyors=None) \
                           .values_list('surveyors', flat=True)
 
             # take also the Survey surveyors
             surveys = Survey.objects \
-                            .filter(survey_id=survey_id) \
+                            .filter(mapping_id=mapping_id) \
                             .exclude(surveyors=None) \
                             .values_list('surveyors', flat=True)
 
@@ -335,11 +335,10 @@ def xform_submission(request):
             pass
 
     walk(data, None, coerce_dict)  # modifies inplace
-
     try:
         response = requests.post(
             xform.gather_core_url,
-            json={'data': data},
+            json={'payload': data},
             headers=auth_header,
         )
         if response.status_code != 201:

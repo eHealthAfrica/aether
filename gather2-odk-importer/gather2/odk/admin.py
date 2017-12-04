@@ -22,7 +22,7 @@ class SurveyForm(forms.ModelForm):
     class Meta:
         model = Survey
         fields = (
-            'survey_id',
+            'mapping_id',
             'name',
             'surveyors',
         )
@@ -32,7 +32,7 @@ class SurveyAdmin(admin.ModelAdmin):
 
     form = SurveyForm
     list_display = (
-        'survey_id',
+        'mapping_id',
         'name',
     )
 

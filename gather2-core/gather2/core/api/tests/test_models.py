@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.test import TransactionTestCase
+import datetime
 
 from .. import models
 
@@ -14,47 +15,66 @@ class ModelsTests(TransactionTestCase):
         self.user = get_user_model().objects.create_user(username, email, password)
 
     def test_models(self):
-        self.assertEquals(models.MapResult.objects.count(), 0)
 
-        survey = models.Survey.objects.create(
-            created_by=self.user,
-            name='a name',
-            schema={},
+        project = models.Project.objects.create(
+            revision='rev 1',
+            name='a project name',
+            salad_schema='a sample salad schema',
+            jsonld_context='sample context',
+            rdf_definition='a sample rdf definition'
         )
-        self.assertEquals(str(survey), survey.name)
-        self.assertTrue(survey.schema_prettified is not None)
+        self.assertEquals(str(project), project.name)
+        self.assertNotEqual(models.Project.objects.count(), 0)
+
+        mapping = models.Mapping.objects.create(
+            name='sample mapping',
+            definition={},
+            revision='a sample revision field',
+            project=project
+        )
+        self.assertEquals(str(mapping), mapping.name)
+        self.assertNotEqual(models.Mapping.objects.count(), 0)
+        self.assertTrue(mapping.definition_prettified is not None)
 
         response = models.Response.objects.create(
-            created_by=self.user,
-            data={'a': 1},
-            survey=survey,
+            revision='a sample revision',
+            map_revision='a sample map revision',
+            date=datetime.datetime.now(),
+            payload={},
+            mapping=mapping
         )
-        self.assertEquals(str(response), '{} - {}'.format(survey.name, response.id))
-        self.assertTrue(response.data_prettified is not None)
+        self.assertEquals(str(response), '{} - {}'.format(str(mapping), response.id))
+        self.assertNotEqual(models.Response.objects.count(), 0)
+        self.assertTrue(response.payload_prettified is not None)
 
-        map_function = models.MapFunction.objects.create(
-            code='print "Hello World!"',
-            survey=survey,
+        schema = models.Schema.objects.create(
+            name='sample schema',
+            definition={},
+            revision='a sample revision'
         )
-        self.assertEquals(str(map_function), '{} - {}'.format(survey.name, map_function.id))
-        self.assertTrue(map_function.code_prettified is not None)
+        self.assertEquals(str(schema), schema.name)
+        self.assertNotEqual(models.Schema.objects.count(), 0)
+        self.assertTrue(schema.definition_prettified is not None)
 
-        # map result is generated automatically
-        map_result = models.MapResult.objects.first()
-
-        self.assertEquals(str(map_result), '{} - {}'.format(response, map_result.id))
-        self.assertTrue(map_result.output is not None)
-        self.assertEquals(map_result.output, 'Hello World!', map_result.output)
-        self.assertEquals(map_result.error, '', map_result.error)
-        self.assertTrue(map_result.output_prettified is not None)
-
-        reduce_function = models.ReduceFunction.objects.create(
-            code='print "Good bye!"',
-            map_function=map_function,
+        projectschema = models.ProjectSchema.objects.create(
+            name='sample project schema',
+            mandatory_fields='a sample mandatory fields',
+            transport_rule='a sample transport rule',
+            masked_fields='a sample masked field',
+            is_encrypted=False,
+            project=project,
+            schema=schema
         )
-        self.assertEquals(str(reduce_function), '{} - {}'.format(map_function, reduce_function.id))
-        self.assertTrue(reduce_function.code_prettified is not None)
-        self.assertTrue(reduce_function.output is not None)
-        self.assertEquals(reduce_function.output, ['Good bye!'], reduce_function.output)
-        self.assertEquals(reduce_function.error, '', reduce_function.error)
-        self.assertTrue(reduce_function.output_prettified is not None)
+        self.assertEquals(str(projectschema), projectschema.name)
+        self.assertNotEqual(models.ProjectSchema.objects.count(), 0)
+
+        entity = models.Entity.objects.create(
+            revision='a sample revision',
+            payload={},
+            status='a sample status',
+            projectschema=projectschema,
+            response=response
+        )
+        self.assertEquals(str(entity), 'Entity {}'.format(entity.id))
+        self.assertNotEqual(models.Entity.objects.count(), 0)
+        self.assertTrue(entity.payload_prettified is not None)

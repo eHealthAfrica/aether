@@ -1,3 +1,5 @@
+import uuid
+
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
@@ -6,6 +8,8 @@ from ..models import Survey, XForm, validate_xmldict
 
 
 class ModelsTests(CustomTestCase):
+
+    MAPPING_ID = uuid.uuid4()
 
     def setUp(self):
         super(ModelsTests, self).setUp()
@@ -98,7 +102,7 @@ class ModelsTests(CustomTestCase):
         self.assertRaises(
             IntegrityError,
             XForm.objects.create,
-            survey=self.helper_create_survey(survey_id=1),
+            survey=self.helper_create_survey(mapping_id=self.MAPPING_ID),
         )
         # missing survey id
         self.assertRaises(
@@ -110,7 +114,7 @@ class ModelsTests(CustomTestCase):
         self.assertRaises(
             IntegrityError,
             XForm.objects.create,
-            survey=self.helper_create_survey(survey_id=1),
+            survey=self.helper_create_survey(mapping_id=self.MAPPING_ID),
             xml_data='''
                 <h:html>
                   <h:head>
@@ -128,7 +132,7 @@ class ModelsTests(CustomTestCase):
         self.assertRaises(
             IntegrityError,
             XForm.objects.create,
-            survey=self.helper_create_survey(survey_id=1),
+            survey=self.helper_create_survey(mapping_id=self.MAPPING_ID),
             xml_data='''
                 <h:html
                     xmlns="http://www.w3.org/2002/xforms"
@@ -144,18 +148,19 @@ class ModelsTests(CustomTestCase):
 
     def test__xform__save(self):
         instance = XForm.objects.create(
-            survey=self.helper_create_survey(survey_id=1),
+            survey=self.helper_create_survey(mapping_id=self.MAPPING_ID),
             xml_data=self.samples['xform']['xml-ok'],
         )
 
         self.assertEqual(instance.form_id, 'xform-id-test')
         self.assertEqual(instance.title, 'xForm - Test')
-        self.assertTrue(instance.gather_core_url.endswith('/surveys/1/responses/'))
+        mappings_url = '/mappings/{}/responses/'.format(self.MAPPING_ID)
+        self.assertTrue(instance.gather_core_url.endswith(mappings_url))
         self.assertEqual(instance.url, '/forms/{}/form.xml'.format(instance.id))
 
     def test__survey__surveyors(self):
         instance = Survey.objects.create(
-            survey_id=1,
+            mapping_id=self.MAPPING_ID,
         )
         self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')
 
@@ -180,7 +185,7 @@ class ModelsTests(CustomTestCase):
 
     def test__xform__surveyors(self):
         instance = XForm.objects.create(
-            survey=self.helper_create_survey(survey_id=1),
+            survey=self.helper_create_survey(mapping_id=self.MAPPING_ID),
             xml_data=self.samples['xform']['xml-ok'],
         )
         self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')

@@ -1,3 +1,5 @@
+import uuid
+
 from django.urls import reverse
 
 from ..api.tests import CustomTestCase
@@ -6,16 +8,18 @@ from ..api.models import XForm
 
 class AdminTests(CustomTestCase):
 
+    MAPPING_ID = uuid.uuid4()
+
     def setUp(self):
         super(AdminTests, self).setUp()
         self.helper_create_superuser()
         self.url = reverse('admin:odk_xform_add')
-        self.survey = self.helper_create_survey(survey_id=1)
+        self.survey = self.helper_create_survey(mapping_id=self.MAPPING_ID)
 
     def test__post__empty(self):
         response = self.client.post(
             self.url,
-            {'description': 'some text', 'survey': 1},
+            {'description': 'some text', 'survey': self.MAPPING_ID},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(XForm.objects.count(), 0)
@@ -26,7 +30,7 @@ class AdminTests(CustomTestCase):
             {
                 'xml_data': self.samples['xform']['xml-err'],
                 'description': 'some text',
-                'survey': 1,
+                'survey': self.MAPPING_ID,
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -36,7 +40,7 @@ class AdminTests(CustomTestCase):
         with open(self.samples['xform']['file-xls'], 'rb') as fp:
             response = self.client.post(
                 self.url,
-                {'xml_file': fp, 'description': 'some text', 'survey': 1},
+                {'xml_file': fp, 'description': 'some text', 'survey': self.MAPPING_ID},
             )
         self.assertEqual(response.status_code, 302)  # redirected to list
         self.assertEqual(XForm.objects.count(), 1)
@@ -51,7 +55,7 @@ class AdminTests(CustomTestCase):
         with open(self.samples['xform']['file-xml'], 'rb') as fp:
             response = self.client.post(
                 self.url,
-                {'xml_file': fp, 'description': 'some text', 'survey': 1},
+                {'xml_file': fp, 'description': 'some text', 'survey': self.MAPPING_ID},
             )
         self.assertEqual(response.status_code, 302)  # redirected to list
         self.assertEqual(XForm.objects.count(), 1)
@@ -68,7 +72,7 @@ class AdminTests(CustomTestCase):
             {
                 'xml_data': self.samples['xform']['xml-ok'],
                 'description': 'some text',
-                'survey': 1,
+                'survey': self.MAPPING_ID,
             },
         )
         self.assertEqual(response.status_code, 302)  # redirected to list
@@ -89,7 +93,7 @@ class AdminTests(CustomTestCase):
             {
                 'xml_data': self.samples['xform']['xml-ok'],
                 'description': 'some text',
-                'survey': 1,
+                'survey': self.MAPPING_ID,
                 'surveyors': [surveyor.id],
             },
         )

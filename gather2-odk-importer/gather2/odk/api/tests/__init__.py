@@ -1,4 +1,5 @@
 import base64
+import uuid
 
 from django.contrib.auth import get_user_model
 from django.test import TransactionTestCase
@@ -123,10 +124,12 @@ class CustomTestCase(TransactionTestCase):
         surveyor.save()
         return surveyor
 
-    def helper_create_survey(self, surveyor=None, survey_id=1):
+    def helper_create_survey(self, surveyor=None, mapping_id=None):
+        if mapping_id is None:
+            mapping_id = uuid.uuid4()
         survey, _ = Survey.objects.get_or_create(
             name='test',
-            survey_id=survey_id,
+            mapping_id=mapping_id,
         )
 
         if surveyor:
@@ -138,12 +141,14 @@ class CustomTestCase(TransactionTestCase):
 
         return survey
 
-    def helper_create_xform(self, surveyor=None, survey_id=1):
+    def helper_create_xform(self, surveyor=None, mapping_id=None):
+        if mapping_id is None:
+            mapping_id = uuid.uuid4()
         xform = XForm.objects.create(
             description='test',
             survey=self.helper_create_survey(
                 surveyor=surveyor,
-                survey_id=survey_id,
+                mapping_id=mapping_id,
             ),
             xml_data=self.samples['xform']['raw-xml'],
         )

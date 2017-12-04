@@ -49,12 +49,11 @@ def get_surveys_mapping():
     if not core_utils.test_connection():
         raise RuntimeError('Cannot connect to Gather2 Core server')
 
-    results = core_utils.get_all_docs(core_utils.get_surveys_url())
+    results = core_utils.get_all_docs(core_utils.get_mappings_url())
 
     mapping = {}
     for survey in results:
-        if not mapping.get(survey['name']):
-            mapping[survey['name']] = survey['id']
+        mapping[survey['name']] = survey['id']
     return mapping
 
 
@@ -172,10 +171,10 @@ def post_to_gather(document, mapping, gather_id=False):
 
     try:
         prefix = document['_id'].split('-')[0]
-        survey_id = mapping.get(prefix)
+        mapping_id = mapping.get(prefix)
     except Exception:
         raise Exception('Cannot submit document "{}"'.format(document['_id']))
 
     return core_utils.submit_to_core(response=document,
-                                     survey_id=survey_id,
+                                     mapping_id=mapping_id,
                                      response_id=gather_id)

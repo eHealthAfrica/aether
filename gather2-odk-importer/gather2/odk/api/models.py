@@ -1,4 +1,5 @@
 import xmltodict
+import uuid
 
 from hashlib import md5
 
@@ -21,7 +22,7 @@ class Survey(models.Model):
 
     # This is needed to submit data to core
     # (there is a one to one relation)
-    survey_id = models.IntegerField(primary_key=True)
+    mapping_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
 
     name = models.TextField(null=True, blank=True, default='')
 
@@ -30,7 +31,7 @@ class Survey(models.Model):
 
     @property
     def gather_core_url(self):
-        return core_utils.get_survey_responses_url(survey_id=self.pk)
+        return core_utils.get_mapping_responses_url(mapping_id=self.pk)
 
     def is_surveyor(self, user):
         '''
@@ -48,7 +49,7 @@ class Survey(models.Model):
         )
 
     def __str__(self):  # pragma: no cover
-        return '{} - {}'.format(str(self.survey_id), self.name)
+        return '{} - {}'.format(str(self.mapping_id), self.name)
 
 
 class XForm(models.Model):
