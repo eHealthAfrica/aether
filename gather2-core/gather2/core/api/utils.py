@@ -101,6 +101,22 @@ def get_entity_requirements(entities, field_mappings):
     return all_requirements
 
 
+def get_entity_stub(requirements, entity_definitions, entity_type, source_data):
+    # takes an entity definition and returns an empty "stub" instance to be populated
+    # copy an empty instance of available fields
+    entity_stub = {k: [] for k in entity_definitions.get(entity_type)}
+    # do a quick first resolution of paths to size output requirement
+    for field, paths in requirements.get(entity_type).items():
+        for i, path in enumerate(paths):
+            # if this is a json path, we'll resolve it to see how big the result is
+            if "#!" not in path:
+                matches = parse(path).find(source_data)
+                [entity_stub[field].append(match.value) for match in matches]
+            else:
+                entity_stub[field].append(path)
+    return entity_stub
+
+
 class DeferrableAction(object):
     '''
     There are many potential race conditions that mapping creators shouldn't
@@ -172,6 +188,26 @@ def resolve_entity_reference(
     else:
         # multiple values, choose the one aligned with this entity (#i)
         return matches[instance_number].value
+
+
+def resolve_source_reference(path, entities, entity_type, i, field, data):
+    # called via normal jsonpath as source
+    # is NOT defferable as all source data should be present at extractor start
+    # assignes values directly to entities within function and return new offset value (i)
+    matches = parse(path).find(data)
+    if not matches:
+        entities[entity_type][i][field] = None
+        i += 1
+    elif len(matches) == 1:
+        # single value
+        entities[entity_type][i][field] = matches[0].value
+        i += 1
+    else:
+        for x, match in enumerate(matches):
+            # multiple values, choose the one aligned with this entity (#i) & order of match(x)
+            entities[entity_type][i][field] = matches[x].value
+            i += 1
+    return i
 
 
 def get_or_make_uuid(entity_type, field_name, instance_number, source_data):
@@ -251,104 +287,79 @@ def extractor_action(
         raise ValueError("No action with name %s" % action)
 
 
-def extract_entity(requirements, response_data, entity_stubs):
-    data = {}
-    if response_data:
-        data = response_data
-    data["aether_errors"] = []
-    # Sometimes order matters and our custom actions failed. We'll put them here
+def extract_entity(entity_type, entities, requirements, data, entity_stub):
     failed_actions = []
-    # For output. Since we need to submit the extracted entities as different
+    # calculate how many instances we need to split the resolved data
+    # into by maximum number of path resolutions
+    count = max([len(entity_stub.get(field)) for field in entity_stub.keys()])
+    # make empty stubs for our expected outputs. One for each member
+    # identified in count process
+    entities[entity_type] = [{field: None for field in entity_stub.keys()} for i in range(count)]
+
+    # iterate required fields, resolve paths and copy data to stubs
+    for field, paths in requirements.get(entity_type).items():
+        # ignore fields with empty paths
+        if len(paths) < 1:
+            for i in range(count):
+                del entities[entity_type][i][field]
+            continue
+        # iterate over expected output entities
+        # some paths will satisfy more than one entity, so we increment in different places
+        i = 0
+        while i <= count-1:
+            # if fewer paths than required use the last value
+            # otherwise use the current path
+            path = paths[-1] if len(paths) < (i + 1) else paths[i]
+            # check to see if we need to use a special reference here
+            if "#!" not in path:
+                i = resolve_source_reference(path, entities, entity_type, i, field, data)
+            else:
+                # Special action to be dispatched
+                action = DeferrableAction(
+                    [entity_type, i, field],
+                    [path, entities, entity_type, field, i, data],
+                    extractor_action)
+                action.run()
+                # If the action throws an exception (usually reference to something not yet created)
+                # --then we allow for it to be resolved later
+                if action.complete:
+                    action.resolve(entities)
+                else:
+                    failed_actions.append(action)
+                i += 1
+    return failed_actions
+
+
+def extract_entities(requirements, response_data, entity_definitions):
+    data = response_data if response_data else []
+    data["aether_errors"] = []
+    # for output. Since we need to submit the extracted entities as different
     # types, it's helpful to seperate them here
     entities = {}
     # entity names that have requirements
     required_entities = requirements.keys()
+    # sometimes order matters and our custom actions failed. We'll put them here
+    failed_actions = []
     for entity_type in required_entities:
-        # Copy an empty instance of available fields
-        entity_stub = {k: [] for k in entity_stubs.get(entity_type)}
-        # Do a quick first resolution of paths to size output requirement
-        for field, paths in requirements.get(entity_type).items():
-            for i, path in enumerate(paths):
-                # If this is a json path, we'll resolve it to see how big the result is
-                if "#!" not in path:
-                    matches = parse(path).find(data)
-                    [entity_stub[field].append(match.value) for match in matches]
-                else:
-                    entity_stub[field].append(path)
-        # Calculate how many instances we need to split the resolved data
-        # into by maximum number of path resolutions
-        count = max([len(entity_stub.get(field)) for field in entity_stub.keys()])
-        # Make empty stubs for our expected outputs. One for each member
-        # identified in count process
-        entities[entity_type] = [
-            {field: None for field in entity_stub.keys()} for i in range(count)
-        ]
-
-        # Iterate required fields, resolve paths and copy data to stubs
-        for field, paths in requirements.get(entity_type).items():
-            # Ignore fields with empty paths
-            if len(paths) < 1:
-                for i in range(count):
-                    del entities[entity_type][i][field]
-                continue
-            # Iterate over expected output entities.
-            # Some paths will satisfy more than one entity, so we increment in
-            # different places
-            i = 0
-            while i < count:
-                # If fewer paths than required use the last value
-                # otherwise use the current path
-                path = paths[-1] if len(paths) < (i + 1) else paths[i]
-                # Check to see if we need to use a UUID here
-                if "#!" not in path:
-                    # Find the matches and assign them
-                    matches = parse(path).find(data)
-                    if len(matches) == 0:
-                        msg = 'No matches found for path: "{}"'
-                        raise EntityExtractionError(msg.format(path))
-                    elif len(matches) == 1:
-                        # single value
-                        entities[entity_type][i][field] = matches[0].value
-                        i += 1
-                        continue
-                    else:
-                        for x, match in enumerate(matches):
-                            # Multiple values, choose the one aligned with this
-                            # entity (#i) & order of match(x)
-                            entities[entity_type][i][field] = matches[x].value
-                            i += 1
-                        continue
-                else:
-                    # Special action to be dispatched
-                    action = DeferrableAction(
-                        [entity_type, i, field],
-                        [path, entities, entity_type, field, i, data],
-                        extractor_action,
-                    )
-                    action.run()
-                    # If the action throws an exception (usually reference to
-                    # something not yet created) --then we allow for it to be
-                    # resolved later
-                    if action.complete:
-                        action.resolve(entities)
-                    else:
-                        failed_actions.append(action)
-                    i += 1
+        entity_stub = get_entity_stub(requirements, entity_definitions, entity_type, data)
+        # extract the entity pushing failures onto failed actions
+        failed_actions.extend(
+            extract_entity(
+                entity_type, entities, requirements, data, entity_stub)
+        )
 
     failed_again = []
     for action in failed_actions:
-        # These actions failed, so we'll try again, hoping it was caused by
-        # ordering of mapping instructions (it usually is...)
+        # these actions failed, so we'll try again,
+        # hoping it was caused by ordering of mapping instructions (it usually is...)
         action.run()
         if not (action.complete):
             failed_again.append(action)
         else:
             action.resolve(entities)
-
-    # Send a log of paths with errors to the user via saved response
+    # send a log of paths with errors to the user via saved response
     for action in failed_again:
         data["aether_errors"].append("failed %s" % action.path)
-
     return data, entities
 
 
@@ -381,7 +392,7 @@ def extract_create_entities(response):
 
     # Only attempt entity extraction if requirements are present
     if any(requirements.values()):
-        data, entity_types = extract_entity(
+        data, entity_types = extract_entities(
             requirements,
             response_data,
             entity_defs,

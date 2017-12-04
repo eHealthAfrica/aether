@@ -9,7 +9,7 @@ EXAMPLE_MAPPING = {
         "Person": 1
     },
     "mapping": [
-        ["#!UUID", "Person._id"],
+        ["#!uuid", "Person._id"],
         ["data.village", "Person.villageID"],
         ["data.people[*].name", "Person.name"],
         ["data.people[*].dob", "Person.dob"]
@@ -77,7 +77,7 @@ EXAMPLE_SOURCE_DATA = {
 
 EXAMPLE_REQUIREMENTS = {
     'Person': {
-        '_id': ['#!UUID'],
+        '_id': ['#!uuid'],
         '_rev': [],
         'name': ['data.people[*].name'],
         'dob': ['data.people[*].dob'],
@@ -111,7 +111,7 @@ EXAMPLE_ENTITY = {
 EXAMPLE_ENTITY_DEFINITION = {'Person': ['_id', '_rev', 'name', 'dob', 'villageID']}
 
 EXAMPLE_FIELD_MAPPINGS = [
-    ['#!UUID', 'Person._id'],
+    ['#!uuid', 'Person._id'],
     ['data.village', 'Person.villageID'],
     ['data.people[*].name', 'Person.name'],
     ['data.people[*].dob', 'Person.dob']]
