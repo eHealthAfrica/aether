@@ -68,55 +68,60 @@ class ResponseSerializer(serializers.ModelSerializer):
     )
 
     def create(self, validated_data):
-        if 'mapping' in validated_data:
-            if 'revision' and 'map_revision' in validated_data:
-                response = models.Response(
-                    revision=validated_data.pop('revision'),
-                    map_revision=validated_data.pop('map_revision'),
-                    payload=validated_data.pop('payload'),
-                    mapping=validated_data.pop('mapping')
-                )
+        try:
+            if 'mapping' in validated_data:
+                if 'revision' and 'map_revision' in validated_data:
+                    response = models.Response(
+                        revision=validated_data.pop('revision'),
+                        map_revision=validated_data.pop('map_revision'),
+                        payload=validated_data.pop('payload'),
+                        mapping=validated_data.pop('mapping')
+                    )
+                else:
+                    response = models.Response(
+                        payload=validated_data.pop('payload'),
+                        mapping=validated_data.pop('mapping')
+                    )
+
+                utils.extract_create_entities(response)
+
+            elif 'parent_lookup_mapping' in self.context.get('request').parser_context['kwargs']:
+                kwargs = self.context.get('request').parser_context['kwargs']
+                mapping_id = kwargs['parent_lookup_mapping']
+                mapping = models.Mapping.objects.get(pk=mapping_id)
+                if 'revision' and 'map_revision' in validated_data:
+                    response = models.Response(
+                        revision=validated_data.pop('revision'),
+                        map_revision=validated_data.pop('map_revision'),
+                        payload=validated_data.pop('payload'),
+                        mapping=mapping_id
+                    )
+                else:
+                    response = models.Response(
+                        payload=validated_data.pop('payload'),
+                        mapping=mapping
+                    )
+
+                utils.extract_create_entities(response)
             else:
-                response = models.Response(
-                    payload=validated_data.pop('payload'),
-                    mapping=validated_data.pop('mapping')
-                )
+                if 'revision' and 'map_revision' in validated_data:
+                    response = models.Response(
+                        revision=validated_data.pop('revision'),
+                        map_revision=validated_data.pop('map_revision'),
+                        payload=validated_data.pop('payload'),
+                    )
+                else:
+                    response = models.Response(
+                        payload=validated_data.pop('payload')
+                    )
+                # Save the response to the db
+                response.save()
 
-            utils.extract_create_entities(response)
-
-        elif 'parent_lookup_mapping' in self.context.get('request').parser_context['kwargs']:
-            kwargs = self.context.get('request').parser_context['kwargs']
-            mapping_id = kwargs['parent_lookup_mapping']
-            mapping = models.Mapping.objects.get(pk=mapping_id)
-            if 'revision' and 'map_revision' in validated_data:
-                response = models.Response(
-                    revision=validated_data.pop('revision'),
-                    map_revision=validated_data.pop('map_revision'),
-                    payload=validated_data.pop('payload'),
-                    mapping=mapping_id
-                )
-            else:
-                response = models.Response(
-                    payload=validated_data.pop('payload'),
-                    mapping=mapping
-                )
-
-            utils.extract_create_entities(response)
-        else:
-            if 'revision' and 'map_revision' in validated_data:
-                response = models.Response(
-                    revision=validated_data.pop('revision'),
-                    map_revision=validated_data.pop('map_revision'),
-                    payload=validated_data.pop('payload'),
-                )
-            else:
-                response = models.Response(
-                    payload=validated_data.pop('payload')
-                )
-            # Save the response to the db
-            response.save()
-
-        return response
+            return response
+        except Exception as e:
+            raise serializers.ValidationError({
+                'description': 'Response validation failed'
+            })
 
     class Meta:
         model = models.Response
