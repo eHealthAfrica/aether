@@ -318,7 +318,5 @@ class ImportTestCase(TestCase):
         self.assertFalse('last_rev' in status, 'no last rev key')
         self.assertFalse('gather_id' in status, 'no gather id key')
 
-        # FIXME: Once error handling in gather-core has been improved, we should
-        # be able to uncomment this. See: https://jira.ehealthafrica.org/browse/AET-46
-        # self.assertIn('validat', status['error'], 'saves error object')
-        # self.assertNotIn('JSON serializable', status['error'], 'not error on posting error')
+        self.assertIn('validat', status['error'], 'saves error object')
+        self.assertNotIn('JSON serializable', status['error'], 'not error on posting error')
