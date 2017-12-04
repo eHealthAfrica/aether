@@ -74,3 +74,101 @@ class UtilsTests(TestCase):
         expected_entity = EXAMPLE_ENTITY
         data, entities = utils.extract_entity(requirements, submission_data, entity_stubs)
         self.assertEquals(len(expected_entity['Person']), len(entities['Person']))
+
+    def test_is_not_custom_jsonpath(self):
+        # Examples taken from https://github.com/json-path/JsonPath#path-examples
+        example_paths = [
+            '$.store.book[*].author',
+            '$..author',
+            '$.store.*',
+            '$.store..price',
+            '$..book[2]',
+            '$..book[-2]',
+            '$..book[0,1]',
+            '$..book[:2]',
+            '$..book[1:2]',
+            '$..book[-2:]',
+            '$..book[2:]',
+            '$..book[?(@.isbn)]',
+            '$.store.book[?(@.price < 10)]',
+            '$..book[?(@.price <= $["expensive"])]'
+            '$..book[?(@.author =~ /.*REES/i)]'
+            '$..*',
+            '$..book.length()',
+        ]
+        for path in example_paths:
+            result = utils.custom_jsonpath_wildcard_regex.match(path)
+            self.assertIsNone(result)
+
+    def test_find_by_jsonpath__filter_by_prefix(self):
+        obj = {
+            'dose-1': {
+                'id': 1,
+            },
+            'dose-2': {
+                'id': 2,
+            },
+            'person-1': {
+                'id': 3,
+            },
+        }
+        expected = set([1, 2])
+        path = '$.dose-*.id'
+        result = set([x.value for x in utils.find_by_jsonpath(obj, path)])
+        self.assertEquals(expected, result)
+
+    def test_find_by_jsonpath__nested(self):
+        obj = {
+            'dose-1': {
+                'id': 1,
+            },
+            'dose-2': {
+                'id': 2,
+            },
+            'person-1': {
+                'id': 3,
+                'household': {
+                    'id': 4,
+                },
+            },
+        }
+        expected = set([4])
+        path = '$.person-*.household.id'
+        result = set([x.value for x in utils.find_by_jsonpath(obj, path)])
+        self.assertEquals(expected, result)
+
+    def test_find_by_jsonpath__fallback_to_jsonpath_ng(self):
+        obj = {
+            'dose-1': {
+                'id': 1,
+            },
+            'dose-2': {
+                'id': 2,
+            },
+            'person-1': {
+                'id': 3,
+            },
+        }
+        expected = set([1, 2, 3])
+        path = '$.*.id'
+        result = set([x.value for x in utils.find_by_jsonpath(obj, path)])
+        self.assertEquals(expected, result)
+
+    def test_find_by_jsonpath__fallback_array(self):
+        obj = {
+            'households': [
+                {
+                    'id': 1,
+                },
+                {
+                    'id': 2,
+                },
+                {
+                    'id': 3,
+                },
+            ]
+        }
+        expected = set([1, 2, 3])
+        path = '$.households[*].id'
+        result = set([x.value for x in utils.find_by_jsonpath(obj, path)])
+        self.assertEquals(expected, result)

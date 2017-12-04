@@ -68,55 +68,60 @@ class SubmissionSerializer(serializers.ModelSerializer):
     )
 
     def create(self, validated_data):
-        if 'mapping' in validated_data:
-            if 'revision' and 'map_revision' in validated_data:
-                submission = models.Submission(
-                    revision=validated_data.pop('revision'),
-                    map_revision=validated_data.pop('map_revision'),
-                    payload=validated_data.pop('payload'),
-                    mapping=validated_data.pop('mapping')
-                )
+        try:
+            if 'mapping' in validated_data:
+                if 'revision' and 'map_revision' in validated_data:
+                    submission = models.Submission(
+                        revision=validated_data.pop('revision'),
+                        map_revision=validated_data.pop('map_revision'),
+                        payload=validated_data.pop('payload'),
+                        mapping=validated_data.pop('mapping')
+                    )
+                else:
+                    submission = models.Submission(
+                        payload=validated_data.pop('payload'),
+                        mapping=validated_data.pop('mapping')
+                    )
+
+                utils.extract_create_entities(submission)
+
+            elif 'parent_lookup_mapping' in self.context.get('request').parser_context['kwargs']:
+                kwargs = self.context.get('request').parser_context['kwargs']
+                mapping_id = kwargs['parent_lookup_mapping']
+                mapping = models.Mapping.objects.get(pk=mapping_id)
+                if 'revision' and 'map_revision' in validated_data:
+                    submission = models.Submission(
+                        revision=validated_data.pop('revision'),
+                        map_revision=validated_data.pop('map_revision'),
+                        payload=validated_data.pop('payload'),
+                        mapping=mapping_id
+                    )
+                else:
+                    submission = models.Submission(
+                        payload=validated_data.pop('payload'),
+                        mapping=mapping
+                    )
+
+                utils.extract_create_entities(submission)
             else:
-                submission = models.Submission(
-                    payload=validated_data.pop('payload'),
-                    mapping=validated_data.pop('mapping')
-                )
+                if 'revision' and 'map_revision' in validated_data:
+                    submission = models.Submission(
+                        revision=validated_data.pop('revision'),
+                        map_revision=validated_data.pop('map_revision'),
+                        payload=validated_data.pop('payload'),
+                    )
+                else:
+                    submission = models.Submission(
+                        payload=validated_data.pop('payload')
+                    )
+                # Save the submission to the db
+                submission.save()
 
-            utils.extract_create_entities(submission)
-
-        elif 'parent_lookup_mapping' in self.context.get('request').parser_context['kwargs']:
-            kwargs = self.context.get('request').parser_context['kwargs']
-            mapping_id = kwargs['parent_lookup_mapping']
-            mapping = models.Mapping.objects.get(pk=mapping_id)
-            if 'revision' and 'map_revision' in validated_data:
-                submission = models.Submission(
-                    revision=validated_data.pop('revision'),
-                    map_revision=validated_data.pop('map_revision'),
-                    payload=validated_data.pop('payload'),
-                    mapping=mapping_id
-                )
-            else:
-                submission = models.Submission(
-                    payload=validated_data.pop('payload'),
-                    mapping=mapping
-                )
-
-            utils.extract_create_entities(submission)
-        else:
-            if 'revision' and 'map_revision' in validated_data:
-                submission = models.Submission(
-                    revision=validated_data.pop('revision'),
-                    map_revision=validated_data.pop('map_revision'),
-                    payload=validated_data.pop('payload'),
-                )
-            else:
-                submission = models.Submission(
-                    payload=validated_data.pop('payload')
-                )
-            # Save the submission to the db
-            submission.save()
-
-        return submission
+            return submission
+        except Exception as e:
+            raise serializers.ValidationError({
+                'description': 'Submission validation failed'
+            })
 
     class Meta:
         model = models.Submission

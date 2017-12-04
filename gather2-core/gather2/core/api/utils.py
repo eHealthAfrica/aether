@@ -1,7 +1,9 @@
 import string
 import json
+import re
 import uuid
 
+import jsonpath_ng
 from jsonpath_ng import parse
 
 from django.utils.safestring import mark_safe
@@ -60,6 +62,48 @@ def json_printable(obj):
         return ''.join(x for x in obj if x in string.printable)
     else:
         return obj
+
+
+custom_jsonpath_wildcard_regex = re.compile('(\$\.)?[a-zA-Z0-9_-]+\*')
+
+
+def find_by_jsonpath(obj, path):
+    """
+    This function wraps `jsonpath_ng.parse()` and
+    `jsonpath_ng.jsonpath.Child.find()` in order to provide custom
+    functionality as described in https://jira.ehealthafrica.org/browse/AET-38.
+
+    If the first element in `path` is a wildcard match prefixed by an arbitrary
+    string, `find` will attempt to filter the results by that prefix.
+
+    **NOTE**: this behavior is not part of jsonpath spec.
+    """
+
+    # Matches any string/jsonpath which starts with a sequence of characters
+    # followed by an asterisk.
+    match = custom_jsonpath_wildcard_regex.match(path)
+    if match:
+        # If `path` matches our criteria for a custom jsonpath, split `path` in
+        # two parts based on the span of the regex.
+        #
+        # Example: given a `path` like `dose-*.id`, this will result in:
+        #
+        #     prefix = 'dose-'
+        #     standard_jsonpath = '*.id'
+        split_pos = match.end() - 1
+        prefix = path[:split_pos].replace('$.', '')
+        standard_jsonpath = path[split_pos:]
+        # Perform an standard jsonpath search.
+        result = []
+        for datum in jsonpath_ng.parse(standard_jsonpath).find(obj):
+            full_path = str(datum.full_path)
+            # Only include datum if its full path starts with `prefix`.
+            if full_path.startswith(prefix):
+                result.append(datum)
+        return result
+    else:
+        # Otherwise, perform a standard jsonpath search of `obj`.
+        return jsonpath_ng.parse(path).find(obj)
 
 
 def get_field_mappings(mapping_definition):
