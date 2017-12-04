@@ -31,7 +31,7 @@ class Survey(models.Model):
 
     @property
     def gather_core_url(self):
-        return core_utils.get_mapping_responses_url(mapping_id=self.pk)
+        return core_utils.get_mapping_submissions_url(mapping_id=self.pk)
 
     def is_surveyor(self, user):
         '''

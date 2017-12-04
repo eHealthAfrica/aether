@@ -20,15 +20,15 @@ router = ExtendedDefaultRouter()
 
 (
     router.register('mappings', views.MappingViewSet)
-          .register('responses', views.ResponseViewSet,
-                    base_name='mapping_response',
+          .register('submissions', views.SubmissionViewSet,
+                    base_name='mapping_submission',
                     parents_query_lookups=['mapping'])
 )
 (
-    router.register('responses', views.ResponseViewSet)
+    router.register('submissions', views.SubmissionViewSet)
           .register('entities', views.EntityViewSet,
-                    base_name='response_entity',
-                    parents_query_lookups=['response'])
+                    base_name='submission_entity',
+                    parents_query_lookups=['submission'])
 )
 (
     router.register('schemas', views.SchemaViewSet)

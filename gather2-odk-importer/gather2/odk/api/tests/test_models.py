@@ -154,7 +154,7 @@ class ModelsTests(CustomTestCase):
 
         self.assertEqual(instance.form_id, 'xform-id-test')
         self.assertEqual(instance.title, 'xForm - Test')
-        mappings_url = '/mappings/{}/responses/'.format(self.MAPPING_ID)
+        mappings_url = '/mappings/{}/submissions/'.format(self.MAPPING_ID)
         self.assertTrue(instance.gather_core_url.endswith(mappings_url))
         self.assertEqual(instance.url, '/forms/{}/form.xml'.format(instance.id))
 

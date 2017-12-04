@@ -10,7 +10,7 @@
 ################################################################################
 
 coverage
-django
+django==1.11.7
 djangorestframework
 djangorestframework-csv
 flake8

@@ -52,10 +52,10 @@ Include the view entry in the ``urls.py`` file.
   ]
 ```
 
-#### To submit responses linked to an existing mapping.
+#### To make submissions linked to an existing mapping.
 
 ```python
-  gather2.common.core.utils.submit_to_core(response, mapping_id, response_id=None)
+  gather2.common.core.utils.submit_to_core(submission, mapping_id, submission_id=None)
 ```
 
 ### Conf section

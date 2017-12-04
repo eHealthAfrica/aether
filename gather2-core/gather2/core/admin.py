@@ -15,8 +15,8 @@ class MappingAdmin(CompareVersionAdmin):
     readonly_fields = ('id',)
 
 
-class ResponseAdmin(CompareVersionAdmin):
-    form = forms.ResponseForm
+class SubmissionAdmin(CompareVersionAdmin):
+    form = forms.SubmissionForm
     list_display = ('id', 'revision', 'mapping', 'map_revision',)
     readonly_fields = ('id',)
 
@@ -34,13 +34,13 @@ class ProjectSchemaAdmin(CompareVersionAdmin):
 
 class EntityAdmin(CompareVersionAdmin):
     form = forms.EntityForm
-    list_display = ('id', 'revision', 'status', 'projectschema',  'response',)
-    readonly_fields = ('id', 'response',)
+    list_display = ('id', 'revision', 'status', 'projectschema',  'submission',)
+    readonly_fields = ('id', 'submission',)
 
 
 admin.site.register(models.Project, ProjectAdmin)
 admin.site.register(models.Mapping, MappingAdmin)
-admin.site.register(models.Response, ResponseAdmin)
+admin.site.register(models.Submission, SubmissionAdmin)
 admin.site.register(models.Schema, SchemaAdmin)
 admin.site.register(models.ProjectSchema, ProjectSchemaAdmin)
 admin.site.register(models.Entity, EntityAdmin)

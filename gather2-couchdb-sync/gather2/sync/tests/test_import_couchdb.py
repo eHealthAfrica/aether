@@ -21,8 +21,8 @@ def get_gather_mappings():
     return core_utils.get_all_docs(url)
 
 
-def get_gather_responses(mapping_id):
-    url = core_utils.get_mapping_responses_url(mapping_id)
+def get_gather_submissions(mapping_id):
+    url = core_utils.get_mapping_submissions_url(mapping_id)
     return core_utils.get_all_docs(url)
 
 
@@ -86,7 +86,7 @@ class ImportTestCase(TestCase):
             }
         }
         # An example document, which will eventually be submitted as `payload`
-        # the model `gather2.core.api.models.Response`
+        # the model `gather2.core.api.models.Submission`
         self.example_doc = {
             '_id': 'example-aabbbdddccc',
             'deviceId': device_id,
@@ -216,7 +216,7 @@ class ImportTestCase(TestCase):
 
         import_synced_devices()
 
-        data = get_gather_responses(self.mapping_id)
+        data = get_gather_submissions(self.mapping_id)
         posted = data[0]  # Gather responds with the latest post first
 
         self.assertEqual(
@@ -256,7 +256,7 @@ class ImportTestCase(TestCase):
 
         import_synced_devices()
 
-        docs = get_gather_responses(self.mapping_id)
+        docs = get_gather_submissions(self.mapping_id)
         self.assertEqual(len(docs), 1, 'Document is not imported a second time')
 
     def test_update_document(self):
@@ -272,8 +272,8 @@ class ImportTestCase(TestCase):
 
         import_synced_devices()
 
-        docs = get_gather_responses(self.mapping_id)
-        response_id = docs[0]['id']
+        docs = get_gather_submissions(self.mapping_id)
+        submission_id = docs[0]['id']
 
         doc_to_update = couchdb.get(doc_url).json()
         doc_to_update['firstname'] = 'Rey'
@@ -283,15 +283,15 @@ class ImportTestCase(TestCase):
 
         import_synced_devices()
 
-        updated = get_gather_responses(self.mapping_id)[0]
-        self.assertEqual(updated['id'], response_id, 'updated same doc')
+        updated = get_gather_submissions(self.mapping_id)[0]
+        self.assertEqual(updated['id'], submission_id, 'updated same doc')
         self.assertEqual(
             updated['payload']['_id'],
             self.example_doc['_id'],
-            'updated survey response',
+            'updated mapping submission',
         )
-        self.assertEqual(updated['payload']['firstname'], 'Rey', 'updated survey response')
-        self.assertEqual(updated['payload']['lastname'], '(Unknown)', 'updated survey response')
+        self.assertEqual(updated['payload']['firstname'], 'Rey', 'updated mapping submission')
+        self.assertEqual(updated['payload']['lastname'], '(Unknown)', 'updated mapping submission')
 
         # check the written meta document
         status = get_meta_doc(device.db_name, self.example_doc['_id'])
@@ -310,7 +310,7 @@ class ImportTestCase(TestCase):
         self.assertEqual(resp.status_code, 201, 'The example document got created')
 
         import_synced_devices()
-        docs = get_gather_responses(self.mapping_id)
+        docs = get_gather_submissions(self.mapping_id)
         self.assertEqual(len(docs), 0, 'doc did not get imported to gather')
         status = get_meta_doc(device.db_name, self.example_doc['_id'])
 

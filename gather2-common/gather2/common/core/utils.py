@@ -80,23 +80,23 @@ def get_mappings_url(mapping_id=''):
     )
 
 
-def get_mapping_responses_url(mapping_id, response_id=None):
+def get_mapping_submissions_url(mapping_id, submission_id=None):
     '''
-    Returns Gather2 Core url to submit mapping responses
+    Returns Gather2 Core url to make mapping submissions
     '''
     if mapping_id is None:
-        raise Exception('Cannot get responses url without mapping!')
+        raise Exception('Cannot get submissions url without mapping!')
 
-    if not response_id:
-        return '{core_url}/mappings/{mapping_id}/responses/'.format(
+    if not submission_id:
+        return '{core_url}/mappings/{mapping_id}/submissions/'.format(
             core_url=get_core_server_url(),
             mapping_id=mapping_id,
         )
     else:
-        return '{core_url}/mappings/{mapping_id}/responses/{response_id}/'.format(
+        return '{core_url}/mappings/{mapping_id}/submissions/{submission_id}/'.format(
             core_url=get_core_server_url(),
             mapping_id=mapping_id,
-            response_id=response_id,
+            submission_id=submission_id,
         )
 
 
@@ -118,30 +118,30 @@ def get_all_docs(url):
     return results
 
 
-def submit_to_core(response, mapping_id, response_id=None):
+def submit_to_core(submission, mapping_id, submission_id=None):
     '''
-    Submit the response to Gather2 Core mapping
+    Make the submission to Gather2 Core mapping
     '''
     if mapping_id is None:
-        raise Exception('Cannot submit response without mapping!')
+        raise Exception('Cannot make submission without mapping!')
 
-    if response is None:
-        raise Exception('Cannot submit response without content!')
+    if submission is None:
+        raise Exception('Cannot make submission without content!')
 
-    if response_id:
+    if submission_id:
         # update existing doc
         method = requests.put
-        url = get_mapping_responses_url(mapping_id, response_id)
+        url = get_mapping_submissions_url(mapping_id, submission_id)
     else:
         # create new doc
         method = requests.post
-        url = get_mapping_responses_url(mapping_id)
+        url = get_mapping_submissions_url(mapping_id)
 
     logger.debug('{method} to {url}'.format(method=method, url=url))
     return method(
         url,
         json={
-            'payload': response,
+            'payload': submission,
             'mapping': mapping_id
         },
         headers=get_auth_header(),

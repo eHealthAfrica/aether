@@ -36,16 +36,16 @@ class ModelsTests(TransactionTestCase):
         self.assertNotEqual(models.Mapping.objects.count(), 0)
         self.assertTrue(mapping.definition_prettified is not None)
 
-        response = models.Response.objects.create(
+        submission = models.Submission.objects.create(
             revision='a sample revision',
             map_revision='a sample map revision',
             date=datetime.datetime.now(),
             payload={},
             mapping=mapping
         )
-        self.assertEquals(str(response), '{} - {}'.format(str(mapping), response.id))
-        self.assertNotEqual(models.Response.objects.count(), 0)
-        self.assertTrue(response.payload_prettified is not None)
+        self.assertEquals(str(submission), '{} - {}'.format(str(mapping), submission.id))
+        self.assertNotEqual(models.Submission.objects.count(), 0)
+        self.assertTrue(submission.payload_prettified is not None)
 
         schema = models.Schema.objects.create(
             name='sample schema',
@@ -73,7 +73,7 @@ class ModelsTests(TransactionTestCase):
             payload={},
             status='a sample status',
             projectschema=projectschema,
-            response=response
+            submission=submission
         )
         self.assertEquals(str(entity), 'Entity {}'.format(entity.id))
         self.assertNotEqual(models.Entity.objects.count(), 0)
