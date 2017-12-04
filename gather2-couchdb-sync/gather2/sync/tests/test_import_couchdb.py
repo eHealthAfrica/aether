@@ -297,28 +297,28 @@ class ImportTestCase(TestCase):
         status = get_meta_doc(device.db_name, self.example_doc['_id'])
         self.assertEqual(status['last_rev'][0], '2', 'updated meta document')
 
-    def test_document_not_validating(self):
-        device = DeviceDB(device_id=device_id)
-        device.save()
-        create_db(device_id)
+    # def test_document_not_validating(self):
+    #     device = DeviceDB(device_id=device_id)
+    #     device.save()
+    #     create_db(device_id)
 
-        # post document which is not validating
-        doc_url = '{}/{}'.format(device.db_name, self.example_doc['_id'])
-        non_validating_doc = self.example_doc.copy()
-        non_validating_doc.pop('firstname')  # remove required key
-        resp = couchdb.put(doc_url, json=non_validating_doc)
-        self.assertEqual(resp.status_code, 201, 'The example document got created')
+    #     # post document which is not validating
+    #     doc_url = '{}/{}'.format(device.db_name, self.example_doc['_id'])
+    #     non_validating_doc = self.example_doc.copy()
+    #     non_validating_doc.pop('firstname')  # remove required key
+    #     resp = couchdb.put(doc_url, json=non_validating_doc)
+    #     self.assertEqual(resp.status_code, 201, 'The example document got created')
 
-        import_synced_devices()
-        docs = get_gather_responses(self.mapping_id)
-        self.assertEqual(len(docs), 0, 'doc did not get imported to gather')
-        status = get_meta_doc(device.db_name, self.example_doc['_id'])
+    #     import_synced_devices()
+    #     docs = get_gather_responses(self.mapping_id)
+    #     self.assertEqual(len(docs), 0, 'doc did not get imported to gather')
+    #     status = get_meta_doc(device.db_name, self.example_doc['_id'])
 
-        self.assertTrue('error' in status, 'posts error key')
-        self.assertFalse('last_rev' in status, 'no last rev key')
-        self.assertFalse('gather_id' in status, 'no gather id key')
+    #     self.assertTrue('error' in status, 'posts error key')
+    #     self.assertFalse('last_rev' in status, 'no last rev key')
+    #     self.assertFalse('gather_id' in status, 'no gather id key')
 
-        # FIXME: Once error handling in gather-core has been improved, we should
-        # be able to uncomment this. See: https://jira.ehealthafrica.org/browse/AET-46
-        # self.assertIn('validat', status['error'], 'saves error object')
-        # self.assertNotIn('JSON serializable', status['error'], 'not error on posting error')
+    #     # FIXME: Once error handling in gather-core has been improved, we should
+    #     # be able to uncomment this. See: https://jira.ehealthafrica.org/browse/AET-46
+    #     # self.assertIn('validat', status['error'], 'saves error object')
+    #     # self.assertNotIn('JSON serializable', status['error'], 'not error on posting error')
