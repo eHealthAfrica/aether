@@ -1,0 +1,37 @@
+################################################################################
+#                                                                              #
+#                             Primary requirements                             #
+#                                                                              #
+#                                 CHANGE ME !!!                                #
+#                                                                              #
+# Update me and then run 'docker-compose run core pip_freeze'                  #
+#                                                                              #
+################################################################################
+
+coverage
+django==1.11.7
+django-cas-ng
+django-cors-headers
+django-debug-toolbar
+django-filter
+django-reversion-compare
+django-ums-client
+djangorestframework
+djangorestframework-filters
+drf-dynamic-fields
+drf-extensions
+flake8
+jsonschema
+mock
+psycopg2
+pygments
+raven
+requests
+uwsgi
+jsonpath_ng
+
+# this is used for pulling down secrets from S3
+awscli
+
+# Aether common module
+aether.common
