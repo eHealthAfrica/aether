@@ -3,7 +3,7 @@ options:
 
 files:
   include:
-    - './gather2/ui/assets/css/*.scss'
+    - './aether/ui/assets/css/*.scss'
 
 rules:
   # ========================

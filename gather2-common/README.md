@@ -1,4 +1,4 @@
-# Gather2 common
+# Aether common
 
 This module contains the shared features among different containers.
 
@@ -14,7 +14,7 @@ Includes the methods that allow:
 #### To create "admin" users via command.
 
 ```bash
-  # arguments: -u=admin -p=secretsecret -e=admin@gather2.org -t=01234656789abcdefghij
+  # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
   ./manage.py setup_admin -p=$ADMIN_PASSWORD -t=$ADMIN_TOKEN
 ```
 
@@ -25,7 +25,7 @@ Include the view entry in the ``urls.py`` file.
 
 ```python
   from django.conf.urls import url
-  from gather2.common.auth.views import obtain_auth_token
+  from aether.common.auth.views import obtain_auth_token
 
 
   urlpatterns = [
@@ -38,13 +38,13 @@ Include the view entry in the ``urls.py`` file.
 
 Includes the methods that allow:
 
-#### To check connection to Gather2 Core Server.
+#### To check connection to Aether Core Server.
 
 Include the view entry in the ``urls.py`` file.
 
 ```python
   from django.conf.urls import url
-  from gather2.common.core.views import check_core
+  from aether.common.core.views import check_core
 
 
   urlpatterns = [
@@ -55,7 +55,7 @@ Include the view entry in the ``urls.py`` file.
 #### To submit responses linked to an existing mapping.
 
 ```python
-  gather2.common.core.utils.submit_to_core(response, mapping_id, response_id=None)
+  aether.common.core.utils.submit_to_core(response, mapping_id, response_id=None)
 ```
 
 ### Conf section
@@ -66,7 +66,7 @@ Import this line to have the common app settings.
   # Common settings
   # ------------------------------------------------------------------------------
 
-  from gather2.common.conf.settings import *  # noqa
+  from aether.common.conf.settings import *  # noqa
 ```
 
 ## How to create the package distribution

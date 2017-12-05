@@ -3,15 +3,15 @@ import os
 # Common settings
 # ------------------------------------------------------------------------------
 
-from gather2.common.conf.settings import *  # noqa
-from gather2.common.conf.settings import INSTALLED_APPS
+from aether.common.conf.settings import *  # noqa
+from aether.common.conf.settings import INSTALLED_APPS
 
 
 # Sync Configuration
 # ------------------------------------------------------------------------------
 
-ROOT_URLCONF = 'gather2.sync.urls'
-WSGI_APPLICATION = 'gather2.sync.wsgi.application'
+ROOT_URLCONF = 'aether.sync.urls'
+WSGI_APPLICATION = 'aether.sync.wsgi.application'
 
 # Allow cors for all origins but only for the sync endpoint
 CORS_URLS_REGEX = r'^/sync/.*$'
@@ -20,16 +20,16 @@ CORS_URLS_REGEX = r'^/sync/.*$'
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
 
 FIXTURE_DIRS = (
-    'gather2/sync/fixtures/',
+    'aether/sync/fixtures/',
 )
 
 INSTALLED_APPS += [
     'django_rq',
-    'gather2.sync',
+    'aether.sync',
 ]
 
 MIGRATION_MODULES = {
-    'sync': 'gather2.sync.api.migrations',
+    'sync': 'aether.sync.api.migrations',
 }
 
 COUCHDB_URL = os.environ.get('COUCHDB_URL', 'http://couchdb:5984')

@@ -2,7 +2,7 @@ from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
 
-from gather2.common.core.views import check_core
+from aether.common.core.views import check_core
 
 
 auth_urls = 'rest_framework.urls'
@@ -20,7 +20,7 @@ urlpatterns = [
     url(r'^check-core$', check_core, name='check-core'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^rq/', include('django_rq.urls')),
-    url(r'^sync/', include('gather2.sync.api.urls', 'sync')),
+    url(r'^sync/', include('aether.sync.api.urls', 'sync')),
     url(r'^accounts/', include(auth_urls, namespace='rest_framework')),
 ]
 

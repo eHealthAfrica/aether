@@ -36,12 +36,12 @@ class CouchdbHelpersTests(TestCase):
     def test_create_db_none(self):
         self.assertRaises(Exception, couchdb_helpers.create_db, device_id=None)
 
-    @mock.patch('gather2.sync.api.couchdb_helpers.setup.setup_db', side_effect=Exception)
+    @mock.patch('aether.sync.api.couchdb_helpers.setup.setup_db', side_effect=Exception)
     def test_create_db_error(self, setup_db_function):
         self.assertRaises(Exception, couchdb_helpers.create_db, device_id='test_xxx')
         setup_db_function.assert_called_with('device_test_xxx', mock.ANY)
 
-    @mock.patch('gather2.sync.api.couchdb_helpers.setup.setup_db')
+    @mock.patch('aether.sync.api.couchdb_helpers.setup.setup_db')
     def test_create_db(self, setup_db_function):
         couchdb_helpers.create_db(device_id='test_xxx')
         setup_db_function.assert_called_with('device_test_xxx', mock.ANY)
@@ -54,7 +54,7 @@ class CouchdbHelpersTests(TestCase):
                           device_id='',
                           )
 
-    @mock.patch('gather2.sync.api.couchdb_helpers.api.put')
+    @mock.patch('aether.sync.api.couchdb_helpers.api.put')
     def test_create_user(self, put_function):
         couchdb_helpers.create_user(
             email='test@test.com',
@@ -72,7 +72,7 @@ class CouchdbHelpersTests(TestCase):
                 'mobile_user': True
             })
 
-    @mock.patch('gather2.sync.api.couchdb_helpers.api')
+    @mock.patch('aether.sync.api.couchdb_helpers.api')
     def test_update_user(self, api_mock):
         couchdb_helpers.update_user(
             url='https://test',
@@ -92,7 +92,7 @@ class CouchdbHelpersTests(TestCase):
                 'roles': ['test_zzz', 'test_xxx']
             })
 
-    @mock.patch('gather2.sync.api.couchdb_helpers.api')
+    @mock.patch('aether.sync.api.couchdb_helpers.api')
     def test_create_or_update_user(self, api_mock):
         self.assertRaises(
             ValueError,
@@ -134,7 +134,7 @@ class CouchdbHelpersTests(TestCase):
         api_mock.put.assert_called_with('_users/org.couchdb.user:test_xxx', json=mock.ANY)
         self.assertNotEqual(updated['password'], 'secret')
 
-    @mock.patch('gather2.sync.api.couchdb_helpers.api')
+    @mock.patch('aether.sync.api.couchdb_helpers.api')
     def test_delete_user(self, api_mock):
         self.assertRaises(Exception, couchdb_helpers.delete_user, device_id=None)
 

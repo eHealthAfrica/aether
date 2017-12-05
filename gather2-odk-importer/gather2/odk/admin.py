@@ -95,8 +95,8 @@ class XFormAdmin(admin.ModelAdmin):
     readonly_fields = ('title', 'form_id',)
 
     fieldsets = (
-        (_('Gather2 Core'), {
-            'description': _('Please choose the Gather2 Core Survey.'),
+        (_('Aether Core'), {
+            'description': _('Please choose the Aether Core Survey.'),
             'fields': ['survey', 'description', ]
         }),
 

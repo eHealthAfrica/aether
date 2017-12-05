@@ -10,7 +10,7 @@ from ..surveyors_utils import get_surveyor_group
 
 UserModel = get_user_model().objects
 
-PATH_DIR = '/code/gather2/odk/api/tests/files/'
+PATH_DIR = '/code/aether/odk/api/tests/files/'
 
 XFORM_XLS_FILE = PATH_DIR + 'demo-xform.xls'
 XFORM_XML_FILE = PATH_DIR + 'demo-xform.xml'

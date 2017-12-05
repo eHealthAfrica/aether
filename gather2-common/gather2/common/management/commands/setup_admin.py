@@ -37,7 +37,7 @@ class Command(BaseCommand):
             dest='email',
             action='store',
             required=False,
-            default='admin@gather2.org',
+            default='admin@aether.org',
         )
         parser.add_argument(
             '--token',

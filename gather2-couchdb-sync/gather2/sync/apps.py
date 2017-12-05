@@ -4,8 +4,8 @@ from django_rq import get_scheduler
 
 
 class Config(AppConfig):
-    name = 'gather2.sync'
-    verbose_name = 'Gather2 Sync'
+    name = 'aether.sync'
+    verbose_name = 'Aether Sync'
 
     def ready(self):
         # schedule jobs
@@ -18,6 +18,6 @@ class Config(AppConfig):
         # run the sync import task every hour since now
         scheduler.schedule(
             scheduled_time=datetime.utcnow(),
-            func='gather2.sync.tasks.import_synced_devices_task',
+            func='aether.sync.tasks.import_synced_devices_task',
             interval=15 * 60,
         )

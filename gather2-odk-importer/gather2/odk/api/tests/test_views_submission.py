@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from . import CustomTestCase
-from gather2.common.core import utils as core_utils
+from aether.common.core import utils as core_utils
 
 
 class SubmissionTests(CustomTestCase):
@@ -18,7 +18,7 @@ class SubmissionTests(CustomTestCase):
     #
     # Test submission with authorization error on core server side
     #
-    @mock.patch('gather2.common.core.utils.test_connection', return_value=False)
+    @mock.patch('aether.common.core.utils.test_connection', return_value=False)
     def test__submission__424(self, mock_test):
         response = self.client.head(self.url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_424_FAILED_DEPENDENCY)
@@ -64,7 +64,7 @@ class PostSubmissionTests(CustomTestCase):
     def setUp(self):
         """
         Set up a basic Aether project. This assumes that the fixture in
-        `/gather2-core/gather2/core/api/tests/fixtures/project_empty_schame.json`
+        `/aether-core/aether/core/api/tests/fixtures/project_empty_schame.json`
         has been loaded into the core database. See `/scripts/test_all.sh` for
         details.
         """
@@ -166,7 +166,7 @@ class PostSubmissionTests(CustomTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    # FIXME: The Attachment model used in Gather2 is absent from
+    # FIXME: The Attachment model used in Aether is absent from
     # Aether -- once bring that back, we can uncomment this test.
     # def test__submission__post__with_attachments(self):
     #     # submit response with itself as attachment
@@ -179,7 +179,7 @@ class PostSubmissionTests(CustomTestCase):
     #             )
     #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    # FIXME: The Attachment model used in Gather2 is absent from
+    # FIXME: The Attachment model used in Aether is absent from
     # Aether -- once bring that back, we can uncomment this test.
     # @mock.patch('requests.post', side_effect=[mock.DEFAULT, mock.Mock(status_code=500)])
     # def test__submission__post__with_attachments_error_400(self, mock_post):

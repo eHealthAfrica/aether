@@ -31,7 +31,7 @@ docutils==0.14
 drf-dynamic-fields==0.2.0
 drf-extensions==0.3.1
 flake8==3.5.0
-gather2.common==0.0.0
+aether.common==0.0.0
 idna==2.6
 jmespath==0.9.3
 jsonpath-ng==1.4.3

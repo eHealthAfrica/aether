@@ -6,56 +6,56 @@ from ..conf.settings import logger
 
 def get_core_server_url():
     if os.environ.get('TESTING', '').lower() == 'true':
-        return os.environ.get('GATHER_CORE_URL_TEST', '')
+        return os.environ.get('AETHER_CORE_URL_TEST', '')
     else:
-        return os.environ.get('GATHER_CORE_URL', '')
+        return os.environ.get('AETHER_CORE_URL', '')
 
 
 def get_auth_header():
     '''
-    Returns the Authorization Header if connection to Gather2 Core is possible
+    Returns the Authorization Header if connection to Aether Core is possible
     '''
 
     if test_connection():
-        token = os.environ.get('GATHER_CORE_TOKEN', '')
+        token = os.environ.get('AETHER_CORE_TOKEN', '')
         return {'Authorization': 'Token {token}'.format(token=token)}
     return None
 
 
 def test_connection():
     '''
-    Checks possible connection with Gather2 Core
+    Checks possible connection with Aether Core
     '''
 
     url = get_core_server_url()
-    token = os.environ.get('GATHER_CORE_TOKEN', '')
+    token = os.environ.get('AETHER_CORE_TOKEN', '')
 
     if url and token:
         try:
             # check that the server is up
             h = requests.head(url)
             assert h.status_code == 403  # expected response 403 Forbidden
-            logger.info('Gather2 Core server ({url}) is up and responding!'.format(url=url))
+            logger.info('Aether Core server ({url}) is up and responding!'.format(url=url))
 
             try:
                 # check that the token is valid
                 g = requests.get(url,
                                  headers={'Authorization': 'Token {token}'.format(token=token)})
                 assert g.status_code == 200, g.content
-                logger.info('Gather2 Core token is valid!')
+                logger.info('Aether Core token is valid!')
 
                 return True  # it's possible to connect with core :D
 
             except Exception as eg:
                 logger.warning(
-                    'Gather2 Core token is not valid for Gather2 Core server ({url})'
+                    'Aether Core token is not valid for Aether Core server ({url})'
                     .format(url=url))
         except Exception as eh:
             logger.warning(
-                'Gather2 Core server ({url}) is not available.'
+                'Aether Core server ({url}) is not available.'
                 .format(url=url))
     else:
-        logger.warning('Gather2 Core server and/or token are not set.')
+        logger.warning('Aether Core server and/or token are not set.')
 
     return False  # it's not possible to connect with core :(
 
@@ -72,7 +72,7 @@ def check_connection():
 
 def get_mappings_url(mapping_id=''):
     '''
-    Returns Gather2 Core url for the given mapping
+    Returns Aether Core url for the given mapping
     '''
     return '{core_url}/mappings/{mapping_id}'.format(
         core_url=get_core_server_url(),
@@ -82,7 +82,7 @@ def get_mappings_url(mapping_id=''):
 
 def get_mapping_responses_url(mapping_id, response_id=None):
     '''
-    Returns Gather2 Core url to submit mapping responses
+    Returns Aether Core url to submit mapping responses
     '''
     if mapping_id is None:
         raise Exception('Cannot get responses url without mapping!')
@@ -120,7 +120,7 @@ def get_all_docs(url):
 
 def submit_to_core(response, mapping_id, response_id=None):
     '''
-    Submit the response to Gather2 Core mapping
+    Submit the response to Aether Core mapping
     '''
     if mapping_id is None:
         raise Exception('Cannot submit response without mapping!')

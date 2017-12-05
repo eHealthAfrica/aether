@@ -2,5 +2,5 @@ from django.apps import AppConfig
 
 
 class Config(AppConfig):
-    name = 'gather2.core'
+    name = 'aether.core'
     verbose_name = 'Aether Core'

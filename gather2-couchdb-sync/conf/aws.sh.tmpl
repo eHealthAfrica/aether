@@ -4,7 +4,7 @@ set -e
 # Production specific functions
 
 setup_user() {
-  # arguments: -u=admin -p=secretsecret -e=admin@gather2.org -t=01234656789abcdefghij
+  # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
   ./manage.py setup_admin -p=$ADMIN_PASSWORD
 }
 
@@ -20,8 +20,8 @@ check_variable() {
 
 check_core() {
   # check if CORE env variables were set
-  check_variable $GATHER_CORE_URL   "CORE url"
-  check_variable $GATHER_CORE_TOKEN "CORE token"
+  check_variable $AETHER_CORE_URL   "CORE url"
+  check_variable $AETHER_CORE_TOKEN "CORE token"
 }
 
 check_core

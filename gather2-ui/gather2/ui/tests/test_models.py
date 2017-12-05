@@ -3,7 +3,7 @@ import mock
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from ..models import GATHER_APPS, UserTokens, get_or_create_valid_app_token
+from ..models import AETHER_APPS, UserTokens, get_or_create_valid_app_token
 
 
 def mock_return_none(*args):
@@ -106,7 +106,7 @@ class ModelsTests(TestCase):
             self.assertTrue(user_tokens.validates_app_token(app_name))
 
         # what happens if the base_url for the APP was not set
-        with mock.patch('gather2.ui.models.UserTokens.get_app_url', new=mock_return_none):
+        with mock.patch('aether.ui.models.UserTokens.get_app_url', new=mock_return_none):
             self.assertFalse(user_tokens.validates_app_token(app_name))
 
         # None tokens are always not valid
@@ -125,14 +125,14 @@ class ModelsTests(TestCase):
             mock_post.assert_called_once()
 
         # what happens if the base_url for the APP was not set
-        with mock.patch('gather2.ui.models.UserTokens.get_app_url', new=mock_return_none):
+        with mock.patch('aether.ui.models.UserTokens.get_app_url', new=mock_return_none):
             self.assertEqual(user_tokens.obtain_app_token(app_name), None)
 
         # what happens if the auxiliary token for the APP was not set
         env_var_name = app_name.upper()
         if app_name == 'odk-importer':
             env_var_name = 'ODK'
-        with mock.patch('gather2.ui.models.GATHER_{}_TOKEN'.format(env_var_name), new=None):
+        with mock.patch('aether.ui.models.AETHER_{}_TOKEN'.format(env_var_name), new=None):
             self.assertEqual(user_tokens.obtain_app_token(app_name), None)
 
         # with an error on the other side
@@ -140,7 +140,7 @@ class ModelsTests(TestCase):
             self.assertEqual(user_tokens.obtain_app_token(app_name), None)
 
     def test_user_tokens__apps(self):
-        for app in GATHER_APPS:
+        for app in AETHER_APPS:
             ut, _ = UserTokens.objects.get_or_create(user=self.user)
             prop = '{}_token'.format(app.replace('-', '_'))
 
@@ -155,27 +155,27 @@ class ModelsTests(TestCase):
     def test_get_or_create_valid_app_token__unknown_app(self):
         self.assertEqual(get_or_create_valid_app_token(self.user, 'other'), None)
 
-    @mock.patch('gather2.ui.models.UserTokens.get_app_url', new=mock_return_none)
+    @mock.patch('aether.ui.models.UserTokens.get_app_url', new=mock_return_none)
     def test_get_or_create_valid_app_token__not_base_url(self):
-        for app in GATHER_APPS:
+        for app in AETHER_APPS:
             self.assertEqual(get_or_create_valid_app_token(self.user, app), None)
 
-    @mock.patch('gather2.ui.models.UserTokens.create_app_token', new=mock_return_none)
-    @mock.patch('gather2.ui.models.UserTokens.validates_app_token', new=mock_return_false)
+    @mock.patch('aether.ui.models.UserTokens.create_app_token', new=mock_return_none)
+    @mock.patch('aether.ui.models.UserTokens.validates_app_token', new=mock_return_false)
     def test_get_or_create_valid_app_token__not_valid_token(self):
-        for app in GATHER_APPS:
+        for app in AETHER_APPS:
             self.assertEqual(get_or_create_valid_app_token(self.user, app), None)
 
-    @mock.patch('gather2.ui.models.UserTokens.get_app_token', new=mock_return_none)
-    @mock.patch('gather2.ui.models.UserTokens.validates_app_token', new=mock_return_true)
+    @mock.patch('aether.ui.models.UserTokens.get_app_token', new=mock_return_none)
+    @mock.patch('aether.ui.models.UserTokens.validates_app_token', new=mock_return_true)
     def test_get_or_create_valid_app_token__none_token(self):
-        for app in GATHER_APPS:
+        for app in AETHER_APPS:
             self.assertEqual(get_or_create_valid_app_token(self.user, app), None)
 
-    @mock.patch('gather2.ui.models.UserTokens.validates_app_token', new=mock_return_true)
+    @mock.patch('aether.ui.models.UserTokens.validates_app_token', new=mock_return_true)
     def test_get_or_create_valid_app_token__valid_token(self):
         user_tokens, _ = UserTokens.objects.get_or_create(user=self.user)
-        for app in GATHER_APPS:
+        for app in AETHER_APPS:
             user_tokens.save_app_token(app, 'ABCDEFGH')
             self.assertEqual(get_or_create_valid_app_token(self.user, app).token,
                              'ABCDEFGH')

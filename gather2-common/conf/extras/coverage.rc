@@ -1,10 +1,10 @@
 [run]
 branch = true
-source = /code/gather2
+source = /code/aether
 omit = *migrations*, *tests*, *management*
 
 [paths]
-source = /code/gather2
+source = /code/aether
 omit = *migrations*, *tests*, *management*
 
 [report]

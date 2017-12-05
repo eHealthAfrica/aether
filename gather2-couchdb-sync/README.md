@@ -1,14 +1,14 @@
-Gather2 CouchDB Sync
+Aether CouchDB Sync
 ==========
 
-Let's mobile clients sync to CouchDB. This server posts from CouchDB to Gather 2.
+Let's mobile clients sync to CouchDB. This server posts from CouchDB to Aether.
 
 Setup
 ----
 
 - You'll need the `GOOGLE_CLIENT_ID` from lastpass. The client secret is not needed.
-- You need to generate a `GATHER_CORE_TOKEN` in your Gather Core admin interface.
-- To run with HAT-Microsensus you need to make sure the 'village' and 'building' surveys have been created in your Gather Core instance (the 'name' should be exactly like the document prefixes from the HAT-Microcensus mobile app).
+- You need to generate a `AETHER_CORE_TOKEN` in your Aether Core admin interface.
+- To run with HAT-Microsensus you need to make sure the 'village' and 'building' surveys have been created in your Aether Core instance (the 'name' should be exactly like the document prefixes from the HAT-Microcensus mobile app).
 
 Components
 ----
@@ -33,7 +33,7 @@ In order for a mobile client to gain access, it needs to send a token from a val
 
 ### RQ Import Task
 
-The import task is run as an RQ scheduled job, the interval is defined in `gather2/sync/apps.py`. The importer writes its results to the logs, and it also writes meta documents for each imported/errored document. If the main document is `village-aaabbb` the meta document will be written under `village-aaabbb-synced`. This will contain any error messages from importing as well.
+The import task is run as an RQ scheduled job, the interval is defined in `aether/sync/apps.py`. The importer writes its results to the logs, and it also writes meta documents for each imported/errored document. If the main document is `village-aaabbb` the meta document will be written under `village-aaabbb-synced`. This will contain any error messages from importing as well.
 
 **Dev note** when working on the the RQ Task, the container needs to be restarted manually for changes to take effect :(
 
@@ -43,7 +43,7 @@ Every user database have a design doc `sync/errors` that can be used to look for
 
 #### Matching Surveys and Responses
 
-Right now surveys are matched on the `name` key in Gather, and the `doc._id` prefix. To run with hat microsurveys, the **village** schema needs to be posted with the name **village** and the **building** schema needs to be posted with that name. Otherwise, those documents won't be imported.
+Right now surveys are matched on the `name` key in Aether, and the `doc._id` prefix. To run with hat microsurveys, the **village** schema needs to be posted with the name **village** and the **building** schema needs to be posted with that name. Otherwise, those documents won't be imported.
 
 #### Re-trying imports
 
@@ -53,21 +53,21 @@ When going to the admin interface, find a model called DeviceDB. Under the Devic
 If this is the effect you want, you'll need to delete all the `-synced` documents. You probably wanna write a CouchDB view for this, and then script deleting all the documents.
 
 #### Run the import task manually
-The import task can be run manually in development with: `docker-compose run couchdb-sync manage rqenqueue "gather2.sync.tasks.import_synced_devices_task"`
+The import task can be run manually in development with: `docker-compose run couchdb-sync manage rqenqueue "aether.sync.tasks.import_synced_devices_task"`
 
 Testing sync locally
 ----
 
-1. Run this repository with `docker-compose up`. You'll need to define the following env vars for sync (see docker-compose.yml): `GOOGLE_CLIENT_ID` and `GATHER_CORE_TOKEN`. The Gather Core token is created inside the Admin interface of your local gather core instance. The Google Client Id can be found in Lastpass or created in [https://console.developers.google.com/apis/credentials?project=hat-microsurveys&organizationId=883350201643](Google API Dev Console). If you create one, you need a Web Application Client for the Google+ Api.
+1. Run this repository with `docker-compose up`. You'll need to define the following env vars for sync (see docker-compose.yml): `GOOGLE_CLIENT_ID` and `AETHER_CORE_TOKEN`. The Aether Core token is created inside the Admin interface of your local aether core instance. The Google Client Id can be found in Lastpass or created in [https://console.developers.google.com/apis/credentials?project=hat-microsurveys&organizationId=883350201643](Google API Dev Console). If you create one, you need a Web Application Client for the Google+ Api.
 
 2. Inside the local admin, set up a MobileUser for the email-address you're gonna use.
 
-3. Run/build HAT-Microsurveys. If running in the browser, you'll need to setup `GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and HAT_GATHER_SERVER_URL`. The URL should be pointing to *the nginx instance in docker-compose (port 8667), not couchdb-sync*. If running on mobile, you need `GOOGLE_CLIENT_ID, and HAT_GATHER_SERVER_URL`. Use the same key as in 1, it should be a Web Application key, **not** a Mobile Application key.
+3. Run/build HAT-Microsurveys. If running in the browser, you'll need to setup `GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and HAT_AETHER_SERVER_URL`. The URL should be pointing to *the nginx instance in docker-compose (port 8667), not couchdb-sync*. If running on mobile, you need `GOOGLE_CLIENT_ID, and HAT_AETHER_SERVER_URL`. Use the same key as in 1, it should be a Web Application key, **not** a Mobile Application key.
 
 Running tests
 -----
 
-To test Gather import, you need to generate a Gather API key in the gather core interface and set the `GATHER_CORE_TOKEN` and `GATHER_CORE_URL` environment variables.
+To test Aether import, you need to generate a Aether API key in the aether core interface and set the `AETHER_CORE_TOKEN` and `AETHER_CORE_URL` environment variables.
 
 Run all tests with:
 
@@ -75,7 +75,7 @@ Run all tests with:
 
 You can run separate tests using (for example):
 
-`docker-compose run couchdb-sync test gather2.sync.tests.test_import`
+`docker-compose run couchdb-sync test aether.sync.tests.test_import`
 
 Everything about the Google Tokens
 -------

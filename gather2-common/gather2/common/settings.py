@@ -7,7 +7,7 @@ import os
 
 TESTING = True
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
-ROOT_URLCONF = 'gather2.common.urls'
+ROOT_URLCONF = 'aether.common.urls'
 
 # Django Applications
 # ------------------------------------------------------------------------------
@@ -21,7 +21,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_csv',
-    'gather2.common',
+    'aether.common',
 ]
 
 MIDDLEWARE = (

@@ -28,9 +28,9 @@ def get_surveyors():
     #
     # `django.db.utils.ProgrammingError: relation "auth_group" does not exist`
     #
-    #   File "/code/gather2/odk/api/admin.py", line 12, in <module>
+    #   File "/code/aether/odk/api/admin.py", line 12, in <module>
     #     class XFormForm(forms.ModelForm):
-    #   File "/code/gather2/odk/api/admin.py", line 18, in XFormForm
+    #   File "/code/aether/odk/api/admin.py", line 18, in XFormForm
     #     queryset=get_surveyors(),
     #
     try:

@@ -6,8 +6,8 @@ from django_rq import get_scheduler
 class AppsTests(TestCase):
 
     def test_app_config(self):
-        # this is only valid in tests, the correct name is `gather2.sync`
-        self.assertEquals(apps.get_app_config('sync').verbose_name, 'Gather2 Sync')
+        # this is only valid in tests, the correct name is `aether.sync`
+        self.assertEquals(apps.get_app_config('sync').verbose_name, 'Aether Sync')
 
     def test_scheduler(self):
         scheduler = get_scheduler('default')

@@ -31,5 +31,5 @@ xmltodict
 # this is used for pulling down secrets from S3
 awscli
 
-# Gather2 common module
-gather2.common
+# Aether common module
+aether.common

@@ -31,7 +31,7 @@ COPY ./ /code
 ################################################################################
 
 # create user to run container (avoid root user)
-RUN useradd -ms /bin/false gather2
-RUN chown -R gather2: /code
+RUN useradd -ms /bin/false aether
+RUN chown -R aether: /code
 
 ENTRYPOINT ["/code/entrypoint.sh"]

@@ -13,5 +13,5 @@ class SettingsTest(TestCase):
         self.assertFalse(settings.USE_X_FORWARDED_PORT)
         self.assertEqual(settings.SECURE_PROXY_SSL_HEADER, None)
 
-        self.assertEqual(settings.ROOT_URLCONF, 'gather2.odk.urls')
-        self.assertEqual(settings.WSGI_APPLICATION, 'gather2.odk.wsgi.application')
+        self.assertEqual(settings.ROOT_URLCONF, 'aether.odk.urls')
+        self.assertEqual(settings.WSGI_APPLICATION, 'aether.odk.wsgi.application')

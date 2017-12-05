@@ -6,23 +6,23 @@ from django.db import models
 import requests
 
 from .settings import (
-    GATHER_CORE_URL,
-    GATHER_CORE_TOKEN,
-    GATHER_ODK,
-    GATHER_ODK_URL,
-    GATHER_ODK_TOKEN,
+    AETHER_CORE_URL,
+    AETHER_CORE_TOKEN,
+    AETHER_ODK,
+    AETHER_ODK_URL,
+    AETHER_ODK_TOKEN,
 )
 
 '''
 Current external apps
 '''
 # only the ones with url and token
-GATHER_APPS = []
-if GATHER_CORE_URL is not None and GATHER_CORE_TOKEN is not None:  # pragma: no cover
-    GATHER_APPS.append('core')
+AETHER_APPS = []
+if AETHER_CORE_URL is not None and AETHER_CORE_TOKEN is not None:  # pragma: no cover
+    AETHER_APPS.append('core')
 
-if GATHER_ODK and GATHER_ODK_URL is not None and GATHER_ODK_TOKEN is not None:  # pragma: no cover
-    GATHER_APPS.append('odk-importer')
+if AETHER_ODK and AETHER_ODK_URL is not None and AETHER_ODK_TOKEN is not None:  # pragma: no cover
+    AETHER_APPS.append('odk-importer')
 
 '''
 Named tuple to pass together the app base url and the user auth token
@@ -52,16 +52,16 @@ class UserTokens(models.Model):
         '''
 
         if app_name == 'core':
-            return GATHER_CORE_URL
+            return AETHER_CORE_URL
         if app_name == 'odk-importer':
-            return GATHER_ODK_URL
+            return AETHER_ODK_URL
         return None
 
     def save_app_token(self, app_name, token):
         '''
         Saves the auth `token` of the app.
         '''
-        if app_name not in GATHER_APPS:
+        if app_name not in AETHER_APPS:
             return
 
         app_property = '{}_token'.format(self.__clean_app_name__(app_name))
@@ -72,7 +72,7 @@ class UserTokens(models.Model):
         '''
         Gets the auth `token` of the app.
         '''
-        if app_name not in GATHER_APPS:
+        if app_name not in AETHER_APPS:
             return None
 
         app_property = '{}_token'.format(self.__clean_app_name__(app_name))
@@ -82,7 +82,7 @@ class UserTokens(models.Model):
         '''
         Creates a new auth `token` of the app.
         '''
-        if app_name not in GATHER_APPS:
+        if app_name not in AETHER_APPS:
             return None
 
         # obtain it from app server
@@ -94,7 +94,7 @@ class UserTokens(models.Model):
         '''
         Gets the auth `token` of the app. If it does not exist yet, it's created.
         '''
-        if app_name not in GATHER_APPS:
+        if app_name not in AETHER_APPS:
             return None
 
         token = self.get_app_token(app_name)
@@ -106,7 +106,7 @@ class UserTokens(models.Model):
         '''
         Gets the auth `token` of the app from the app itself.
         '''
-        if app_name not in GATHER_APPS:
+        if app_name not in AETHER_APPS:
             return None
         base_url = self.get_app_url(app_name)
         if base_url is None:
@@ -114,9 +114,9 @@ class UserTokens(models.Model):
 
         auxiliary_token = None
         if app_name == 'core':
-            auxiliary_token = GATHER_CORE_TOKEN
+            auxiliary_token = AETHER_CORE_TOKEN
         if app_name == 'odk-importer':
-            auxiliary_token = GATHER_ODK_TOKEN
+            auxiliary_token = AETHER_ODK_TOKEN
         if auxiliary_token is None:
             return None
 
@@ -135,7 +135,7 @@ class UserTokens(models.Model):
         '''
         Checks if with the current auth `token` it's possible to connect to the app server.
         '''
-        if app_name not in GATHER_APPS:
+        if app_name not in AETHER_APPS:
             return False
         base_url = self.get_app_url(app_name)
         if base_url is None:
@@ -159,7 +159,7 @@ def get_or_create_valid_app_token(user, app_name):
     Gets the user auth token to connect to the app, checking first if it's valid.
     '''
 
-    if app_name not in GATHER_APPS:
+    if app_name not in AETHER_APPS:
         return None
 
     user_tokens, _ = UserTokens.objects.get_or_create(user=user)

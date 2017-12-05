@@ -1,4 +1,4 @@
-PATH_DIR = '/code/gather2/core/api/tests/files/'
+PATH_DIR = '/code/aether/core/api/tests/files/'
 
 SCHEMA_FILE_EMPTY = PATH_DIR + 'empty_schema.json'
 SCHEMA_FILE_SAMPLE = PATH_DIR + 'sample_schema.json'

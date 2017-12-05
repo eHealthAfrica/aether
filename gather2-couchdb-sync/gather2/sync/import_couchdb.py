@@ -3,7 +3,7 @@ import requests
 
 from django.utils import timezone
 
-from gather2.common.core import utils as core_utils
+from aether.common.core import utils as core_utils
 from .api.models import DeviceDB
 from .couchdb import utils, api
 from .settings import logger
@@ -12,11 +12,11 @@ from .settings import logger
 SYNC_DOC = 'sync_doc'
 
 
-def write_meta_doc(db_name, gather_response, doc, error=''):
+def write_meta_doc(db_name, aether_response, doc, error=''):
     meta_doc = get_meta_doc(db_name, doc['_id'])
     sync_status_url = '{}/{}-synced'.format(db_name, doc['_id'])
 
-    # Rather than writing gather id etc on a doc,
+    # Rather than writing aether id etc on a doc,
     # we add a separate META doc
     # this way, we don't create conflicts if the client updates the survey response
     meta_doc['type'] = SYNC_DOC
@@ -28,7 +28,7 @@ def write_meta_doc(db_name, gather_response, doc, error=''):
         meta_doc['error'] = error
     else:
         meta_doc['last_rev'] = doc['_rev']
-        meta_doc['gather_id'] = gather_response['id']
+        meta_doc['aether_id'] = aether_response['id']
         meta_doc.pop('error', None)  # remove any error annotations
 
     return api.put(sync_status_url, json=meta_doc)
@@ -47,7 +47,7 @@ def get_meta_doc(db_name, couchdb_id):
 def get_surveys_mapping():
     # first of all check if the connection is possible
     if not core_utils.test_connection():
-        raise RuntimeError('Cannot connect to Gather2 Core server')
+        raise RuntimeError('Cannot connect to Aether Core server')
 
     results = core_utils.get_all_docs(core_utils.get_mappings_url())
 
@@ -127,14 +127,14 @@ def import_synced_docs(docs, db_name, mapping):
             stats['up-to-date'] += 1
             continue
 
-        gather_id = status.get('gather_id') or False
+        aether_id = status.get('aether_id') or False
 
         try:
-            resp = post_to_gather(doc, mapping, gather_id=gather_id)
+            resp = post_to_aether(doc, mapping, aether_id=aether_id)
             try:
                 resp.raise_for_status()
             except requests.exceptions.HTTPError as err:
-                logger.error('post survey to gather failed: ' + resp.text)
+                logger.error('post survey to aether failed: ' + resp.text)
                 stats['errors'].append(resp.content)
                 stats['errored'] += 1
                 resp = write_meta_doc(db_name, {}, doc, error=resp.text)
@@ -146,7 +146,7 @@ def import_synced_docs(docs, db_name, mapping):
             resp = write_meta_doc(db_name, data, doc)
             resp.raise_for_status()
 
-            if gather_id:
+            if aether_id:
                 stats['updated'] += 1
             else:
                 stats['created'] += 1
@@ -164,10 +164,10 @@ def import_synced_docs(docs, db_name, mapping):
     return stats
 
 
-def post_to_gather(document, mapping, gather_id=False):
+def post_to_aether(document, mapping, aether_id=False):
     # first of all check if the connection is possible
     if not core_utils.test_connection():
-        raise RuntimeError('Cannot connect to Gather2 Core server')
+        raise RuntimeError('Cannot connect to Aether Core server')
 
     try:
         prefix = document['_id'].split('-')[0]
@@ -177,4 +177,4 @@ def post_to_gather(document, mapping, gather_id=False):
 
     return core_utils.submit_to_core(response=document,
                                      mapping_id=mapping_id,
-                                     response_id=gather_id)
+                                     response_id=aether_id)

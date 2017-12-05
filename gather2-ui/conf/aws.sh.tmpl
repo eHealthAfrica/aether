@@ -4,7 +4,7 @@ set -e
 # Production specific functions
 
 setup_user() {
-  # arguments: -u=admin -p=secretsecret -e=admin@gather2.org -t=01234656789abcdefghij
+  # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
   ./manage.py setup_admin -p=$ADMIN_PASSWORD
 }
 
@@ -20,25 +20,25 @@ check_variable() {
 
 check_core() {
   # check if CORE env variables were set
-  check_variable $GATHER_CORE_URL   "CORE url"
-  check_variable $GATHER_CORE_TOKEN "CORE token"
+  check_variable $AETHER_CORE_URL   "CORE url"
+  check_variable $AETHER_CORE_TOKEN "CORE token"
 }
 
 check_odk() {
-  if [[ "$GATHER_MODULES" == *odk-importer* ]];
+  if [[ "$AETHER_MODULES" == *odk-importer* ]];
   then
     # check if ODK env variables were set only if it's included in the modules list.
-    check_variable $GATHER_ODK_URL   "ODK url"
-    check_variable $GATHER_ODK_TOKEN "ODK token"
+    check_variable $AETHER_ODK_URL   "ODK url"
+    check_variable $AETHER_ODK_TOKEN "ODK token"
   fi
 }
 
 check_sync() {
-  if [[ "$GATHER_MODULES" == *couchdb-sync* ]];
+  if [[ "$AETHER_MODULES" == *couchdb-sync* ]];
   then
     # check if SYNC env variables were set only if it's included in the modules list.
-    check_variable $GATHER_SYNC_URL   "SYNC url"
-    check_variable $GATHER_SYNC_TOKEN "SYNC token"
+    check_variable $AETHER_SYNC_URL   "SYNC url"
+    check_variable $AETHER_SYNC_TOKEN "SYNC token"
   fi
 }
 

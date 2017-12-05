@@ -52,8 +52,8 @@ INSTALLED_APPS = [
     # CORS checking
     'corsheaders',
 
-    # gather2 apps
-    'gather2.common',
+    # aether apps
+    'aether.common',
 ]
 
 MIDDLEWARE = [
@@ -94,7 +94,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
         'rest_framework.renderers.AdminRenderer',
-        'gather2.common.drf.renderers.CustomCSVRenderer',
+        'aether.common.drf.renderers.CustomCSVRenderer',
     ),
     'DEFAULT_PARSER_CLASSES': (
         'rest_framework.parsers.JSONParser',
@@ -113,7 +113,7 @@ REST_FRAMEWORK = {
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
     ),
-    'DEFAULT_PAGINATION_CLASS': 'gather2.common.drf.pagination.CustomPagination',
+    'DEFAULT_PAGINATION_CLASS': 'aether.common.drf.pagination.CustomPagination',
 }
 
 
@@ -204,7 +204,7 @@ ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-CSRF_COOKIE_DOMAIN = os.environ.get('CSRF_COOKIE_DOMAIN', '.gather2.org')
+CSRF_COOKIE_DOMAIN = os.environ.get('CSRF_COOKIE_DOMAIN', '.aether.org')
 CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', CSRF_COOKIE_DOMAIN).split(',')
 SESSION_COOKIE_DOMAIN = CSRF_COOKIE_DOMAIN
 

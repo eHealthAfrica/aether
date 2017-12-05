@@ -5,13 +5,13 @@ from setuptools import find_packages, setup
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
-    name='gather2.odk',
+    name='aether.odk',
     version='0.0.0',
-    description='A python module with Gather2 ODK functionality',
-    url='https://github.com/eHealthAfrica/gather2/',
+    description='A python module with Aether ODK functionality',
+    url='https://github.com/eHealthAfrica/aether/',
 
     author='eHealth Africa',
-    author_email='gather2@ehealthafrica.org',
+    author_email='aether@ehealthafrica.org',
 
     license='Apache2 License',
 

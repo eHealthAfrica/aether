@@ -3,14 +3,14 @@ import os
 
 def get_core_server_url():
     if os.environ.get('TESTING', '').lower() == 'true':
-        return os.environ.get('GATHER_CORE_URL_TEST', '')
+        return os.environ.get('AETHER_CORE_URL_TEST', '')
     else:
-        return os.environ.get('GATHER_CORE_URL', '')
+        return os.environ.get('AETHER_CORE_URL', '')
 
 
 def get_mapping_responses_url(mapping_id, response_id=None):
     '''
-    Returns Gather2 Core url to submit survey responses
+    Returns Aether Core url to submit survey responses
     '''
     if mapping_id is None:
         raise Exception('Cannot get responses url without survey!')

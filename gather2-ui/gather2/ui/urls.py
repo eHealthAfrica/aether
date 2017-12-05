@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 
 from .views import TokenProxyView, tokens_required
-from gather2.common.core.views import check_core
+from aether.common.core.views import check_core
 
 
 auth_urls = 'rest_framework.urls'
@@ -26,7 +26,7 @@ urlpatterns = [
     url(r'^check-core$', check_core, name='check-core'),
 
     # ----------------------
-    # Proxy to Gather2 Core
+    # Proxy to Aether Core
     url(r'^core/(?P<path>.*)$',
         login_required(TokenProxyView.as_view(app_name='core')),
         name='core-proxy'),
@@ -47,7 +47,7 @@ urlpatterns = [
         name='tokens'),
 
     # ----------------------
-    # Gather2 entrypoints
+    # Aether entrypoints
     # Any entry here needs the decorator `tokens_required` if it's going to execute
     # AJAX request to any of the other apps
     url(r'^surveys/(?P<action>\w+)/(?P<mapping_id>[0-9]+)?$',
@@ -56,7 +56,7 @@ urlpatterns = [
 
 ]
 
-if settings.GATHER_ODK:  # pragma: no cover
+if settings.AETHER_ODK:  # pragma: no cover
     urlpatterns += [
         # Proxy to other odk-importer
         url(r'^odk/(?P<path>.*)$',

@@ -70,7 +70,7 @@ class ViewsTest(TestCase):
         self.assertEqual(user_model.filter(username=token_username).count(), 0)
 
         with mock.patch(
-            'gather2.common.auth.views.Token.objects.get_or_create',
+            'aether.common.auth.views.Token.objects.get_or_create',
             side_effect=Exception(':('),
         ):
             response = self.client.post(self.token_url, data={'username': token_username})

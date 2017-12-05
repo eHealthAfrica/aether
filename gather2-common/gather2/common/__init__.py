@@ -1,1 +1,1 @@
-default_app_config = 'gather2.common.apps.Config'
+default_app_config = 'aether.common.apps.Config'

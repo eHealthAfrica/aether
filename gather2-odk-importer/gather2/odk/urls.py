@@ -2,8 +2,8 @@ from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
 
-from gather2.common.auth.views import obtain_auth_token
-from gather2.common.core.views import check_core
+from aether.common.auth.views import obtain_auth_token
+from aether.common.core.views import check_core
 
 
 auth_urls = 'rest_framework.urls'
@@ -16,7 +16,7 @@ if settings.CAS_SERVER_URL:  # pragma: no cover
     ]
 
 urlpatterns = [
-    url(r'', include('gather2.odk.api.urls')),
+    url(r'', include('aether.odk.api.urls')),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^accounts/', include(auth_urls, namespace='rest_framework')),
     url(r'^accounts/token', obtain_auth_token, name='token'),

@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
 from django.views import View
 
-from .models import get_or_create_valid_app_token, GATHER_APPS
+from .models import get_or_create_valid_app_token, AETHER_APPS
 
 
 def tokens_required(function=None, redirect_field_name=None, login_url='tokens'):
@@ -19,7 +19,7 @@ def tokens_required(function=None, redirect_field_name=None, login_url='tokens')
         Checks for each external app that the user can currently connect to it.
         '''
         try:
-            for app in GATHER_APPS:
+            for app in AETHER_APPS:
                 # checks if there is a valid token for this app
                 if get_or_create_valid_app_token(user, app) is None:
                     return False
@@ -52,7 +52,7 @@ class TokenProxyView(View):
         Dispatches the request including/modifying the needed properties
         '''
 
-        if self.app_name not in GATHER_APPS:
+        if self.app_name not in AETHER_APPS:
             raise RuntimeError('"{}" app is not recognized.'.format(self.app_name))
 
         app_token = get_or_create_valid_app_token(request.user, self.app_name)

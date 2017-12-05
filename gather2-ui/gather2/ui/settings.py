@@ -3,18 +3,18 @@ import os
 # Common settings
 # ------------------------------------------------------------------------------
 
-from gather2.common.conf.settings import *  # noqa
-from gather2.common.conf.settings import INSTALLED_APPS, TEMPLATES, TESTING, STATIC_ROOT
+from aether.common.conf.settings import *  # noqa
+from aether.common.conf.settings import INSTALLED_APPS, TEMPLATES, TESTING, STATIC_ROOT
 
 
 # UI Configuration
 # ------------------------------------------------------------------------------
 
-ROOT_URLCONF = 'gather2.ui.urls'
-WSGI_APPLICATION = 'gather2.ui.wsgi.application'
+ROOT_URLCONF = 'aether.ui.urls'
+WSGI_APPLICATION = 'aether.ui.wsgi.application'
 
-APP_NAME = 'Gather'
-ORG_NAME = os.environ.get('GATHER_ORG_NAME', 'eHealth Africa')
+APP_NAME = 'Aether'
+ORG_NAME = os.environ.get('AETHER_ORG_NAME', 'eHealth Africa')
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50MB
 
@@ -28,31 +28,31 @@ WEBPACK_LOADER = {
 
 INSTALLED_APPS += [
     'webpack_loader',
-    'gather2.ui',
+    'aether.ui',
 ]
 
 TEMPLATES[0]['OPTIONS']['context_processors'] += [
-    'gather2.ui.context_processors.gather2',
+    'aether.ui.context_processors.aether',
 ]
 
 MIGRATION_MODULES = {
-    'ui': 'gather2.ui.migrations'
+    'ui': 'aether.ui.migrations'
 }
 
 # check the available modules linked to this instance
-GATHER_MODULES = os.environ.get('GATHER_MODULES', '').split(',')
+AETHER_MODULES = os.environ.get('AETHER_MODULES', '').split(',')
 
-GATHER_CORE_TOKEN = os.environ.get('GATHER_CORE_TOKEN')
+AETHER_CORE_TOKEN = os.environ.get('AETHER_CORE_TOKEN')
 if TESTING:  # pragma: no cover
-    GATHER_CORE_URL = os.environ.get('GATHER_CORE_URL_TEST')
+    AETHER_CORE_URL = os.environ.get('AETHER_CORE_URL_TEST')
 else:  # pragma: no cover
-    GATHER_CORE_URL = os.environ.get('GATHER_CORE_URL')
+    AETHER_CORE_URL = os.environ.get('AETHER_CORE_URL')
 
 # check if ODK is available in this instance
-GATHER_ODK = ('odk-importer' in GATHER_MODULES)
-if GATHER_ODK:  # pragma: no cover
-    GATHER_ODK_TOKEN = os.environ.get('GATHER_ODK_TOKEN')
+AETHER_ODK = ('odk-importer' in AETHER_MODULES)
+if AETHER_ODK:  # pragma: no cover
+    AETHER_ODK_TOKEN = os.environ.get('AETHER_ODK_TOKEN')
     if TESTING:
-        GATHER_ODK_URL = os.environ.get('GATHER_ODK_URL_TEST')
+        AETHER_ODK_URL = os.environ.get('AETHER_ODK_URL_TEST')
     else:
-        GATHER_ODK_URL = os.environ.get('GATHER_ODK_URL')
+        AETHER_ODK_URL = os.environ.get('AETHER_ODK_URL')

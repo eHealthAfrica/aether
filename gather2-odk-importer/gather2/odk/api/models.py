@@ -9,13 +9,13 @@ from django.core.urlresolvers import reverse
 from django.db import models, IntegrityError
 from django.utils import timezone
 
-from gather2.common.core import utils as core_utils
+from aether.common.core import utils as core_utils
 from .xform_utils import get_xml_title, get_xml_form_id, validate_xmldict
 
 
 class Survey(models.Model):
     '''
-    Database link of a Gather2 Core Survey
+    Database link of a Aether Core Survey
 
     The needed and common data is stored here, like the list of granted surveyors.
     '''
@@ -30,7 +30,7 @@ class Survey(models.Model):
     surveyors = models.ManyToManyField(to=get_user_model(), related_name='surveys', blank=True)
 
     @property
-    def gather_core_url(self):
+    def aether_core_url(self):
         return core_utils.get_mapping_responses_url(mapping_id=self.pk)
 
     def is_surveyor(self, user):
@@ -82,8 +82,8 @@ class XForm(models.Model):
     surveyors = models.ManyToManyField(to=get_user_model(), related_name='xforms', blank=True)
 
     @property
-    def gather_core_url(self):
-        return self.survey.gather_core_url
+    def aether_core_url(self):
+        return self.survey.aether_core_url
 
     @property
     def hash(self):

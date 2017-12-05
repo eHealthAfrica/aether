@@ -27,7 +27,7 @@ djangorestframework==3.7.3
 djangorestframework-csv==2.0.0
 docutils==0.14
 flake8==3.5.0
-gather2.common==0.0.0
+aether.common==0.0.0
 httplib2==0.10.3
 idna==2.6
 jmespath==0.9.3

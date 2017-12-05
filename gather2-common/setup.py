@@ -5,13 +5,13 @@ from setuptools import find_packages, setup
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
-    name='gather2.common',
+    name='aether.common',
     version='0.0.0',
-    description='A python module with common gather2 functionality',
-    url='https://github.com/eHealthAfrica/gather2/',
+    description='A python module with common aether functionality',
+    url='https://github.com/eHealthAfrica/aether/',
 
     author='eHealth Africa',
-    author_email='gather2@ehealthafrica.org',
+    author_email='aether@ehealthafrica.org',
 
     license='Apache2 License',
 

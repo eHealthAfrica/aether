@@ -146,7 +146,7 @@ module.exports = function (custom) {
 
     output: Object.assign({
       filename: '[name]-[hash].js',
-      library: ['gather2', '[name]'],
+      library: ['aether', '[name]'],
       libraryTarget: 'var',
       path: path.resolve(__dirname, './assets/bundles')
     }, custom.output),
@@ -163,7 +163,7 @@ module.exports = function (custom) {
         filename: './assets/bundles/webpack-stats.json'
       }),
 
-      new webpack.EnvironmentPlugin(['GATHER_ORG_NAME', 'GATHER_MODULES']),
+      new webpack.EnvironmentPlugin(['AETHER_ORG_NAME', 'AETHER_MODULES']),
       new webpack.DefinePlugin({
         'process.env': {
           'NODE_ENV': JSON.stringify(custom.production ? 'production' : 'development')

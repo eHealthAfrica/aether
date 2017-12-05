@@ -21,7 +21,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import StaticHTMLRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
 
-from gather2.common.core.utils import get_auth_header
+from aether.common.core.utils import get_auth_header
 from .models import Survey, XForm
 from .serializers import SurveySerializer, XFormSerializer, SurveyorSerializer
 from .surveyors_utils import get_surveyors
@@ -337,13 +337,13 @@ def xform_submission(request):
     walk(data, None, coerce_dict)  # modifies inplace
     try:
         response = requests.post(
-            xform.gather_core_url,
+            xform.aether_core_url,
             json={'payload': data},
             headers=auth_header,
         )
         if response.status_code != 201:
             logger.warning(
-                'Unexpected response {} from Gather2 Core server when submiting form "{}"'.format(
+                'Unexpected response {} from Aether Core server when submiting form "{}"'.format(
                     response.status_code, form_id
                 )
             )
@@ -366,7 +366,7 @@ def xform_submission(request):
 
     except Exception as e:
         logger.warning(
-            'Unexpected error from Gather2 Core server when submiting form "{}"'.format(form_id)
+            'Unexpected error from Aether Core server when submiting form "{}"'.format(form_id)
         )
         logger.error(str(e))
         # something went wrong... just send an 400 error

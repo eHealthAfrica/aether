@@ -1,5 +1,5 @@
 '''
-WSGI config for gather2_odk_importer project.
+WSGI config for aether_odk_importer project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gather2.odk.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aether.odk.settings')
 
 application = get_wsgi_application()
