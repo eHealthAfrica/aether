@@ -295,10 +295,10 @@ def extractor_action(
         raise ValueError("No action with name %s" % action)
 
 
-def extract_entity(requirements, response_data, entity_stubs):
+def extract_entity(requirements, submission_data, entity_stubs):
     data = {}
-    if response_data:
-        data = response_data
+    if submission_data:
+        data = submission_data
     data["aether_errors"] = []
     # Sometimes order matters and our custom actions failed. We'll put them here
     failed_actions = []
@@ -389,16 +389,16 @@ def extract_entity(requirements, response_data, entity_stubs):
         else:
             action.resolve(entities)
 
-    # Send a log of paths with errors to the user via saved response
+    # Send a log of paths with errors to the user via saved submission
     for action in failed_again:
         data["aether_errors"].append("failed %s" % action.path)
 
     return data, entities
 
 
-def extract_create_entities(response):
-    # Get the mapping definition from the response (response.mapping.definition):
-    mapping_definition = response.mapping.definition
+def extract_create_entities(submission):
+    # Get the mapping definition from the submission (submission.mapping.definition):
+    mapping_definition = submission.mapping.definition
 
     # Get the primary key of the projectschema
     # entity_pks = list(mapping_definition['entities'].values())
@@ -421,13 +421,13 @@ def extract_create_entities(response):
     # Get entity requirements
     requirements = get_entity_requirements(entity_defs, field_mappings)
 
-    response_data = response.payload
+    submission_data = submission.payload
 
     # Only attempt entity extraction if requirements are present
     if any(requirements.values()):
         data, entity_types = extract_entity(
             requirements,
-            response_data,
+            submission_data,
             entity_defs,
         )
     else:
@@ -443,8 +443,8 @@ def extract_create_entities(response):
                 'projectschema': project_schemas.get(name)
             }
             entity_list.append(obj)
-    # Save the response to the db
-    response.save()
+    # Save the submission to the db
+    submission.save()
 
     # If extraction was successful, create new entities
     if entity_list:
@@ -454,6 +454,6 @@ def extract_create_entities(response):
                 payload=e['payload'],
                 status=e['status'],
                 projectschema=e['projectschema'],
-                response=response
+                submission=submission
             )
             entity.save()

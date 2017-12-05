@@ -39,13 +39,13 @@ class Mapping(models.Model):
         return self.name
 
 
-class Response(models.Model):
+class Submission(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     revision = models.TextField(default='1')
     map_revision = models.TextField(default='1')
     date = models.DateTimeField(auto_now_add=True, db_index=True)
     payload = JSONField(blank=False, null=False)
-    mapping = models.ForeignKey(Mapping, related_name='responses', blank=True, null=True)
+    mapping = models.ForeignKey(Mapping, related_name='submissions', blank=True, null=True)
 
     @property
     def payload_prettified(self):
@@ -90,7 +90,7 @@ class Entity(models.Model):
     payload = JSONField(blank=False, null=False)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
     projectschema = models.ForeignKey(ProjectSchema, related_name='entities')
-    response = models.ForeignKey(Response, related_name='entities', blank=True, null=True)
+    submission = models.ForeignKey(Submission, related_name='entities', blank=True, null=True)
     modified = models.CharField(max_length=100, editable=False)
 
     def save(self, **kwargs):

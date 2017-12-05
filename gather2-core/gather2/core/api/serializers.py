@@ -40,8 +40,8 @@ class MappingSerializer(serializers.ModelSerializer):
         read_only=True,
         lookup_field='name',
     )
-    responses_url = serializers.HyperlinkedIdentityField(
-        view_name='mapping_response-list',
+    submissions_url = serializers.HyperlinkedIdentityField(
+        view_name='mapping_submission-list',
         read_only=True,
         lookup_url_kwarg='parent_lookup_mapping'
     )
@@ -51,9 +51,9 @@ class MappingSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ResponseSerializer(serializers.ModelSerializer):
+class SubmissionSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name='response-detail',
+        view_name='submission-detail',
         read_only=True
     )
     mapping_url = serializers.HyperlinkedRelatedField(
@@ -62,69 +62,69 @@ class ResponseSerializer(serializers.ModelSerializer):
         read_only=True,
     )
     entities_url = serializers.HyperlinkedIdentityField(
-        view_name='response_entity-list',
+        view_name='submission_entity-list',
         read_only=True,
-        lookup_url_kwarg='parent_lookup_response'
+        lookup_url_kwarg='parent_lookup_submission'
     )
 
     def create(self, validated_data):
         try:
             if 'mapping' in validated_data:
                 if 'revision' and 'map_revision' in validated_data:
-                    response = models.Response(
+                    submission = models.Submission(
                         revision=validated_data.pop('revision'),
                         map_revision=validated_data.pop('map_revision'),
                         payload=validated_data.pop('payload'),
                         mapping=validated_data.pop('mapping')
                     )
                 else:
-                    response = models.Response(
+                    submission = models.Submission(
                         payload=validated_data.pop('payload'),
                         mapping=validated_data.pop('mapping')
                     )
 
-                utils.extract_create_entities(response)
+                utils.extract_create_entities(submission)
 
             elif 'parent_lookup_mapping' in self.context.get('request').parser_context['kwargs']:
                 kwargs = self.context.get('request').parser_context['kwargs']
                 mapping_id = kwargs['parent_lookup_mapping']
                 mapping = models.Mapping.objects.get(pk=mapping_id)
                 if 'revision' and 'map_revision' in validated_data:
-                    response = models.Response(
+                    submission = models.Submission(
                         revision=validated_data.pop('revision'),
                         map_revision=validated_data.pop('map_revision'),
                         payload=validated_data.pop('payload'),
                         mapping=mapping_id
                     )
                 else:
-                    response = models.Response(
+                    submission = models.Submission(
                         payload=validated_data.pop('payload'),
                         mapping=mapping
                     )
 
-                utils.extract_create_entities(response)
+                utils.extract_create_entities(submission)
             else:
                 if 'revision' and 'map_revision' in validated_data:
-                    response = models.Response(
+                    submission = models.Submission(
                         revision=validated_data.pop('revision'),
                         map_revision=validated_data.pop('map_revision'),
                         payload=validated_data.pop('payload'),
                     )
                 else:
-                    response = models.Response(
+                    submission = models.Submission(
                         payload=validated_data.pop('payload')
                     )
-                # Save the response to the db
-                response.save()
+                # Save the submission to the db
+                submission.save()
 
-            return response
+            return submission
         except Exception as e:
             raise serializers.ValidationError({
-                'description': 'Response validation failed'
+                'description': 'Submission validation failed'
             })
 
     class Meta:
-        model = models.Response
+        model = models.Submission
         fields = '__all__'
 
 
@@ -194,8 +194,8 @@ class EntitySerializer(serializers.ModelSerializer):
             status=validated_data.pop('status'),
             projectschema=validated_data.pop('projectschema'),
         )
-        if "response" in validated_data:
-            entity.response = validated_data.pop('response')
+        if "submission" in validated_data:
+            entity.submission = validated_data.pop('submission')
         if 'id' in validated_data:
             entity.id = validated_data.pop('id')
         entity.payload['_id'] = str(entity.id)

@@ -49,7 +49,7 @@ setup_db() {
     set -e
     psql -c "ALTER TABLE IF EXISTS api_project       RENAME TO core_project;"
     psql -c "ALTER TABLE IF EXISTS api_mapping       RENAME TO core_mapping;"
-    psql -c "ALTER TABLE IF EXISTS api_response      RENAME TO core_response;"
+    psql -c "ALTER TABLE IF EXISTS api_submission      RENAME TO core_submission;"
     psql -c "ALTER TABLE IF EXISTS api_schema        RENAME TO core_schema;"
     psql -c "ALTER TABLE IF EXISTS api_projectschema RENAME TO core_projectschema;"
     psql -c "ALTER TABLE IF EXISTS api_entity        RENAME TO core_entity;"

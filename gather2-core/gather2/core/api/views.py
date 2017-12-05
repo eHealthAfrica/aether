@@ -15,9 +15,9 @@ class MappingViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
     serializer_class = serializers.MappingSerializer
 
 
-class ResponseViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
-    queryset = models.Response.objects.all()
-    serializer_class = serializers.ResponseSerializer
+class SubmissionViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
+    queryset = models.Submission.objects.all()
+    serializer_class = serializers.SubmissionSerializer
 
 
 class SchemaViewSet(NestedViewSetMixin, viewsets.ModelViewSet):

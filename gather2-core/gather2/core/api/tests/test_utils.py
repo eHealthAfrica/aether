@@ -69,10 +69,10 @@ class UtilsTests(TestCase):
 
     def test_extract_entity(self):
         requirements = EXAMPLE_REQUIREMENTS
-        response_data = EXAMPLE_SOURCE_DATA
+        submission_data = EXAMPLE_SOURCE_DATA
         entity_stubs = EXAMPLE_ENTITY_DEFINITION
         expected_entity = EXAMPLE_ENTITY
-        data, entities = utils.extract_entity(requirements, response_data, entity_stubs)
+        data, entities = utils.extract_entity(requirements, submission_data, entity_stubs)
         self.assertEquals(len(expected_entity['Person']), len(entities['Person']))
 
     def test_is_not_custom_jsonpath(self):

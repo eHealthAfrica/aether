@@ -36,7 +36,7 @@ class ViewsTest(TransactionTestCase):
             project=self.project
         )
 
-        self.response = models.Response.objects.create(
+        self.submission = models.Submission.objects.create(
             revision='a sample revision',
             map_revision='a sample map revision',
             date=datetime.datetime.now(),
@@ -65,20 +65,11 @@ class ViewsTest(TransactionTestCase):
             payload={},
             status='a sample status',
             projectschema=self.projectschema,
-            response=self.response
+            submission=self.submission
         )
 
     def tearDown(self):
         self.client.logout()
-
-    """
-    def test_get_object(self):
-        client = test.APIClient()
-        url = reverse('mapping-detail', kwargs={'name': 'mapping1'})
-        # data = {}
-        response = client.get(url)
-        self.assertEquals(response, 'a sample revision field')
-    """
 
     # TEST CREATE:
     def helper_create_object(self, view_name, data):
@@ -101,8 +92,8 @@ class ViewsTest(TransactionTestCase):
             'revision': 'Sample mapping revision',
             'project': str(self.project.pk),
         })
-        self.helper_create_object('response-list', {
-            'revision': 'Sample response revision',
+        self.helper_create_object('submission-list', {
+            'revision': 'Sample submission revision',
             'map_revision': 'Sample map revision',
             'date': str(datetime.datetime.now()),
             'payload': EXAMPLE_SOURCE_DATA,
@@ -128,7 +119,7 @@ class ViewsTest(TransactionTestCase):
             'payload': {},
             'status': 'Publishable',
             'projectschema': str(self.projectschema.pk),
-            'response': str(self.response.pk),
+            'submission': str(self.submission.pk),
         })
 
     # TEST READ
@@ -149,7 +140,7 @@ class ViewsTest(TransactionTestCase):
 
     def test_api_read_instance(self):
         self.helper_read_object_id('mapping-detail', self.mapping)
-        self.helper_read_object_id('response-detail', self.response)
+        self.helper_read_object_id('submission-detail', self.submission)
         self.helper_read_object_id('entity-detail', self.entity)
 
     # TEST UPDATE
@@ -167,13 +158,13 @@ class ViewsTest(TransactionTestCase):
             'revision': 'Sample mapping revision',
             'project': str(self.project.pk)
         }, self.mapping)
-        self.helper_update_object_id('response-detail', {
-            'revision': 'Sample response revision updated',
+        self.helper_update_object_id('submission-detail', {
+            'revision': 'Sample submission revision updated',
             'map_revision': 'Sample map revision updated',
             'date': str(datetime.datetime.now()),
             'payload': {},
             'mapping': str(self.mapping.pk),
-        }, self.response)
+        }, self.submission)
         self.helper_update_object_id('entity-detail', {
             'revision': 'Sample entity revision updated',
             'payload': {},
@@ -234,8 +225,8 @@ class ViewsTest(TransactionTestCase):
     def test_api_delete_mapping(self):
         self.helper_delete_object_pk('mapping-detail', self.mapping)
 
-    def test_api_delete_response(self):
-        self.helper_delete_object_pk('response-detail', self.response)
+    def test_api_delete_submission(self):
+        self.helper_delete_object_pk('submission-detail', self.submission)
 
     def test_api_delete_entity(self):
         self.helper_delete_object_pk('entity-detail', self.entity)

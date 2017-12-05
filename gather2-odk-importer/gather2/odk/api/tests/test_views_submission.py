@@ -115,7 +115,7 @@ class PostSubmissionTests(CustomTestCase):
         data = response.json()
         mapping_id = data['id']
         self.MAPPING_URL = core_utils.get_mappings_url(mapping_id)
-        self.RESPONSES_URL = core_utils.get_mapping_responses_url(mapping_id)
+        self.SUBMISSIONS_URL = core_utils.get_mapping_submissions_url(mapping_id)
         # create xForm entry
         self.xform = self.helper_create_xform(surveyor=self.user, mapping_id=mapping_id)
         self.assertTrue(self.xform.is_surveyor(self.user))
@@ -135,7 +135,7 @@ class PostSubmissionTests(CustomTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         mock_post.assert_called_once_with(
-            self.RESPONSES_URL,
+            self.SUBMISSIONS_URL,
             headers=self.CORE_HEADERS,
             json=mock.ANY,
         )
@@ -192,7 +192,7 @@ class PostSubmissionTests(CustomTestCase):
     #                 **self.headers_user
     #             )
     #     mock_post.assert_called_once_with(
-    #         self.RESPONSES_URL,
+    #         self.SUBMISSIONS_URL,
     #         headers=self.CORE_HEADERS,
     #         json=mock.ANY,
     #     )
