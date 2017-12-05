@@ -7,6 +7,7 @@ from gather2.common.core import utils as core_utils
 from .api.models import DeviceDB
 from .couchdb import utils, api
 from .settings import logger
+from . import errors
 
 
 SYNC_DOC = 'sync_doc'
@@ -159,7 +160,7 @@ def import_synced_docs(docs, db_name, mapping):
             resp.raise_for_status()
 
     if stats['errored'] > 0:
-        raise Exception(stats['errors'][0])
+        raise errors.AetherSubmissionError(stats['errors'][0])
 
     return stats
 
@@ -173,7 +174,7 @@ def post_to_gather(document, mapping, gather_id=False):
         prefix = document['_id'].split('-')[0]
         mapping_id = mapping.get(prefix)
     except Exception:
-        raise Exception('Cannot submit document "{}"'.format(document['_id']))
+        raise errors.SubmissionMappingError('Cannot submit document "{}"'.format(document['_id']))
 
     return core_utils.submit_to_core(response=document,
                                      mapping_id=mapping_id,

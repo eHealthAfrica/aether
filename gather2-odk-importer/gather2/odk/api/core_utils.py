@@ -1,5 +1,7 @@
 import os
 
+import errors
+
 
 def get_core_server_url():
     if os.environ.get('TESTING', '').lower() == 'true':
@@ -13,7 +15,9 @@ def get_mapping_responses_url(mapping_id, response_id=None):
     Returns Gather2 Core url to submit survey responses
     '''
     if mapping_id is None:
-        raise Exception('Cannot get responses url without survey!')
+        raise errors.SubmissionError(
+            'Cannot get responses url without survey!'
+        )
 
     if not response_id:
         return '{core_url}/mappings/{mapping_id}/responses/'.format(

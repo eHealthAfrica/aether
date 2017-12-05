@@ -1,6 +1,8 @@
 import os
 import requests
 
+from . import errors
+
 from ..conf.settings import logger
 
 
@@ -85,7 +87,7 @@ def get_mapping_responses_url(mapping_id, response_id=None):
     Returns Gather2 Core url to submit mapping responses
     '''
     if mapping_id is None:
-        raise Exception('Cannot get responses url without mapping!')
+        raise errors.SubmissionError('Cannot get responses url without mapping!')
 
     if not response_id:
         return '{core_url}/mappings/{mapping_id}/responses/'.format(
@@ -123,10 +125,10 @@ def submit_to_core(response, mapping_id, response_id=None):
     Submit the response to Gather2 Core mapping
     '''
     if mapping_id is None:
-        raise Exception('Cannot submit response without mapping!')
+        raise errors.SubmissionError('Cannot submit response without mapping!')
 
     if response is None:
-        raise Exception('Cannot submit response without content!')
+        raise errors.SubmissionError('Cannot submit response without content!')
 
     if response_id:
         # update existing doc
