@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+  <div class="container-fluid">
+    <div class="alert alert-danger" role="alert">
+      <i class="fa fa-warning"></i>
+      &nbsp;
+      {% blocktrans %}
+      If you see this, it's because you may not be able to connect to “Aether Kernel” and/or “Aether ODK” Servers.
+      {% endblocktrans %}
+      <br><br>&nbsp;
+      {% blocktrans %}
+      Try to log in again and if the issue persists, ask your administrator to check it.
+      {% endblocktrans %}
+    </div>
+  </div>
+{% endblock %}

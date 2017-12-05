@@ -9,7 +9,7 @@ IMAGE_REPO="387526361725.dkr.ecr.eu-west-1.amazonaws.com"
 if [ "${BRANCH}" == "develop" ]; then
   export ENV="dev"
   export PREFIX="aether"
-  export APPS=( core couchdb-sync odk-importer ui )
+  export APPS=( kernel couchdb-sync odk-importer ui )
   export CLUSTER_NAME="ehealth-africa"
 fi
 
@@ -21,7 +21,7 @@ do
     AETHER_APP="${PREFIX}-${APP}"
     docker-compose build $APP
     # build nginx containers
-    docker build -t "${IMAGE_REPO}/${AETHER_APP}-nginx-${ENV}:latest" "gather2-${APP}/nginx"
+    docker build -t "${IMAGE_REPO}/${AETHER_APP}-nginx-${ENV}:latest" "aether-${APP}/nginx"
     docker push "${IMAGE_REPO}/${AETHER_APP}-nginx-${ENV}:latest"
 
     echo "Building Docker image ${IMAGE_REPO}/${AETHER_APP}-${ENV}:${BRANCH}"

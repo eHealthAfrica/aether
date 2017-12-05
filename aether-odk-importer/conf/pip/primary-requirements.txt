@@ -1,0 +1,35 @@
+################################################################################
+#                                                                              #
+#                             Primary requirements                             #
+#                                                                              #
+#                                 CHANGE ME !!!                                #
+#                                                                              #
+# Update me and then run 'docker-compose run odk-importer pip_freeze'          #
+#                                                                              #
+################################################################################
+
+coverage
+django==1.11.7
+django-cas-ng
+django-cors-headers
+django-debug-toolbar
+django-ums-client
+djangorestframework
+drf-dynamic-fields
+flake8
+geojson
+mock
+psycopg2
+python-dateutil
+pytz
+pyxform
+raven
+requests
+uwsgi
+xmltodict
+
+# this is used for pulling down secrets from S3
+awscli
+
+# Aether common module
+aether.common
