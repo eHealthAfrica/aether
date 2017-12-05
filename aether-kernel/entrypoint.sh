@@ -43,17 +43,6 @@ setup_db() {
       echo "$RDS_DB_NAME database created!"
     fi
 
-    # fix: new module structure -> change `api` with `kernel` before apply migrations
-    set +e
-    psql -c "UPDATE django_migrations SET app='kernel' WHERE app='api';"
-    set -e
-    psql -c "ALTER TABLE IF EXISTS api_project       RENAME TO kernel_project;"
-    psql -c "ALTER TABLE IF EXISTS api_mapping       RENAME TO kernel_mapping;"
-    psql -c "ALTER TABLE IF EXISTS api_response      RENAME TO kernel_response;"
-    psql -c "ALTER TABLE IF EXISTS api_schema        RENAME TO kernel_schema;"
-    psql -c "ALTER TABLE IF EXISTS api_projectschema RENAME TO kernel_projectschema;"
-    psql -c "ALTER TABLE IF EXISTS api_entity        RENAME TO kernel_entity;"
-
     # migrate data model if needed
     ./manage.py migrate --noinput
 }
