@@ -80,23 +80,23 @@ def get_mappings_url(mapping_id=''):
     )
 
 
-def get_mapping_responses_url(mapping_id, response_id=None):
+def get_mapping_submissions_url(mapping_id, submission_id=None):
     '''
-    Returns Aether Kernel url to submit mapping responses
+    Returns Aether Kernel url to make mapping submissions
     '''
     if mapping_id is None:
-        raise Exception('Cannot get responses url without mapping!')
+        raise Exception('Cannot get submissions url without mapping!')
 
-    if not response_id:
-        return '{kernel_url}/mappings/{mapping_id}/responses/'.format(
+    if not submission_id:
+        return '{kernel_url}/mappings/{mapping_id}/submissions/'.format(
             kernel_url=get_kernel_server_url(),
             mapping_id=mapping_id,
         )
     else:
-        return '{kernel_url}/mappings/{mapping_id}/responses/{response_id}/'.format(
+        return '{kernel_url}/mappings/{mapping_id}/submissions/{submission_id}/'.format(
             kernel_url=get_kernel_server_url(),
             mapping_id=mapping_id,
-            response_id=response_id,
+            submission_id=submission_id,
         )
 
 
@@ -118,30 +118,30 @@ def get_all_docs(url):
     return results
 
 
-def submit_to_kernel(response, mapping_id, response_id=None):
+def submit_to_kernel(submission, mapping_id, submission_id=None):
     '''
-    Submit the response to Aether Kernel mapping
+    Make the submission to Aether Kernel mapping
     '''
     if mapping_id is None:
-        raise Exception('Cannot submit response without mapping!')
+        raise Exception('Cannot make submission without mapping!')
 
-    if response is None:
-        raise Exception('Cannot submit response without content!')
+    if submission is None:
+        raise Exception('Cannot make submission without content!')
 
-    if response_id:
+    if submission_id:
         # update existing doc
         method = requests.put
-        url = get_mapping_responses_url(mapping_id, response_id)
+        url = get_mapping_submissions_url(mapping_id, submission_id)
     else:
         # create new doc
         method = requests.post
-        url = get_mapping_responses_url(mapping_id)
+        url = get_mapping_submissions_url(mapping_id)
 
     logger.debug('{method} to {url}'.format(method=method, url=url))
     return method(
         url,
         json={
-            'payload': response,
+            'payload': submission,
             'mapping': mapping_id
         },
         headers=get_auth_header(),

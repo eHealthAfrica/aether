@@ -41,7 +41,7 @@ The import task is run as an RQ scheduled job, the interval is defined in `aethe
 
 Every user database have a design doc `sync/errors` that can be used to look for import errors under `[COUCH_URL]/[DB_NAME]/_design/sync/_view/errors`
 
-#### Matching Surveys and Responses
+#### Matching Mappings and Submissions
 
 Right now surveys are matched on the `name` key in Aether, and the `doc._id` prefix. To run with hat microsurveys, the **village** schema needs to be posted with the name **village** and the **building** schema needs to be posted with that name. Otherwise, those documents won't be imported.
 

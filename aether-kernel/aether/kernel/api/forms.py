@@ -38,7 +38,7 @@ class MappingForm(forms.ModelForm):
     definition = JSONField()
 
 
-class ResponseForm(forms.ModelForm):
+class SubmissionForm(forms.ModelForm):
     payload = JSONField()
 
 

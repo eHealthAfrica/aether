@@ -12,13 +12,13 @@ from .settings import logger
 SYNC_DOC = 'sync_doc'
 
 
-def write_meta_doc(db_name, aether_response, doc, error=''):
+def write_meta_doc(db_name, aether_submission, doc, error=''):
     meta_doc = get_meta_doc(db_name, doc['_id'])
     sync_status_url = '{}/{}-synced'.format(db_name, doc['_id'])
 
     # Rather than writing aether id etc on a doc,
     # we add a separate META doc
-    # this way, we don't create conflicts if the client updates the survey response
+    # this way, we don't create conflicts if the client updates the mapping submission
     meta_doc['type'] = SYNC_DOC
     # We can use linked docs to get the full docs in a couchdb view:
     meta_doc['main_doc_id'] = doc['_id']
@@ -28,7 +28,7 @@ def write_meta_doc(db_name, aether_response, doc, error=''):
         meta_doc['error'] = error
     else:
         meta_doc['last_rev'] = doc['_rev']
-        meta_doc['aether_id'] = aether_response['id']
+        meta_doc['aether_id'] = aether_submission['id']
         meta_doc.pop('error', None)  # remove any error annotations
 
     return api.put(sync_status_url, json=meta_doc)
@@ -175,6 +175,6 @@ def post_to_aether(document, mapping, aether_id=False):
     except Exception:
         raise Exception('Cannot submit document "{}"'.format(document['_id']))
 
-    return kernel_utils.submit_to_kernel(response=document,
+    return kernel_utils.submit_to_kernel(submission=document,
                                          mapping_id=mapping_id,
-                                         response_id=aether_id)
+                                         submission_id=aether_id)

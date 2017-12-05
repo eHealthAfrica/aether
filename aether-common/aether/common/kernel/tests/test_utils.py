@@ -26,16 +26,16 @@ class UtilsTests(TestCase):
             'http://kernel-test/mappings/1'
         )
         self.assertEqual(
-            utils.get_mapping_responses_url(1),
-            'http://kernel-test/mappings/1/responses/'
+            utils.get_mapping_submissions_url(1),
+            'http://kernel-test/mappings/1/submissions/'
         )
         self.assertEqual(
-            utils.get_mapping_responses_url(1, 2),
-            'http://kernel-test/mappings/1/responses/2/'
+            utils.get_mapping_submissions_url(1, 2),
+            'http://kernel-test/mappings/1/submissions/2/'
         )
         self.assertRaises(
             Exception,
-            utils.get_mapping_responses_url,
+            utils.get_mapping_submissions_url,
             mapping_id=None,
         )
 
@@ -51,16 +51,16 @@ class UtilsTests(TestCase):
             'http://kernel/mappings/1'
         )
         self.assertEqual(
-            utils.get_mapping_responses_url(1),
-            'http://kernel/mappings/1/responses/'
+            utils.get_mapping_submissions_url(1),
+            'http://kernel/mappings/1/submissions/'
         )
         self.assertEqual(
-            utils.get_mapping_responses_url(1, 2),
-            'http://kernel/mappings/1/responses/2/'
+            utils.get_mapping_submissions_url(1, 2),
+            'http://kernel/mappings/1/submissions/2/'
         )
         self.assertRaises(
             Exception,
-            utils.get_mapping_responses_url,
+            utils.get_mapping_submissions_url,
             mapping_id=None,
         )
 
@@ -123,32 +123,32 @@ class UtilsTests(TestCase):
         self.assertRaises(
             Exception,
             utils.submit_to_kernel,
-            response={},
+            submission={},
             mapping_id=None,
         )
 
     @mock.patch.dict('os.environ', AETHER_ENV_MOCK)
-    def test_submit_to_kernel__without_response(self):
+    def test_submit_to_kernel__without_submission(self):
         self.assertRaises(
             Exception,
             utils.submit_to_kernel,
-            response=None,
+            submission=None,
             mapping_id=1,
         )
 
     @mock.patch('requests.put')
     @mock.patch('requests.post')
     @mock.patch.dict('os.environ', AETHER_ENV_MOCK)
-    def test_submit_to_kernel__without_response_id(self, mock_post, mock_put):
-        utils.submit_to_kernel(response={'_id': 'a'}, mapping_id=1, response_id=None)
+    def test_submit_to_kernel__without_submission_id(self, mock_post, mock_put):
+        utils.submit_to_kernel(submission={'_id': 'a'}, mapping_id=1, submission_id=None)
         mock_put.assert_not_called()
         mock_post.assert_called()
 
     @mock.patch('requests.put')
     @mock.patch('requests.post')
     @mock.patch.dict('os.environ', AETHER_ENV_MOCK)
-    def test_submit_to_kernel__with_response_id(self, mock_post, mock_put):
-        utils.submit_to_kernel(response={'_id': 'a'}, mapping_id=1, response_id=1)
+    def test_submit_to_kernel__with_submission_id(self, mock_post, mock_put):
+        utils.submit_to_kernel(submission={'_id': 'a'}, mapping_id=1, submission_id=1)
         mock_put.assert_called()
         mock_post.assert_not_called()
 

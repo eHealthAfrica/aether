@@ -52,10 +52,10 @@ Include the view entry in the ``urls.py`` file.
   ]
 ```
 
-#### To submit responses linked to an existing mapping.
+#### To make submissions linked to an existing mapping.
 
 ```python
-  aether.common.kernel.utils.submit_to_kernel(response, mapping_id, response_id=None)
+  aether.common.kernel.utils.submit_to_kernel(submission, mapping_id, submission_id=None)
 ```
 
 ### Conf section
