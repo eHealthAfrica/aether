@@ -9,10 +9,11 @@
 ################################################################################
 
 coverage
-django
+django==1.11
 django-cas-ng
 django-cors-headers
 django-debug-toolbar
+django-extensions
 django-filter
 django-reversion-compare
 django-ums-client
@@ -21,6 +22,7 @@ djangorestframework-filters
 drf-dynamic-fields
 drf-extensions
 flake8
+ipython
 jsonschema
 mock
 psycopg2
