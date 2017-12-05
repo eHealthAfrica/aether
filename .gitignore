@@ -98,6 +98,9 @@ target/
 # Temporary data
 .ipynb_checkpoints/
 
+# IPython
+.ipython/
+
 
 ### Django ###
 *.log

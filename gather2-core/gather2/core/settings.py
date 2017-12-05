@@ -13,6 +13,7 @@ WSGI_APPLICATION = 'gather2.core.wsgi.application'
 ADD_REVERSION_ADMIN = True
 
 INSTALLED_APPS += [
+    'django_extensions',
     'django_filters',
     'rest_framework_filters',
     'reversion',

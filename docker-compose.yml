@@ -31,6 +31,7 @@ services:
             CSRF_COOKIE_DOMAIN: .gather2.local
             DEBUG: "true"
             HOSTNAME: core.gather2.local
+            IPYTHONDIR: /code/.ipython
 
             RDS_DB_NAME: gather2
             RDS_HOSTNAME: db
