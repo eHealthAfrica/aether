@@ -37,13 +37,13 @@ class ModelsTests(TestCase):
 
     def test__user_tokens__get_app_url(self):
         user_tokens, _ = UserTokens.objects.get_or_create(user=self.user)
-        self.assertEqual(user_tokens.get_app_url('core'), 'http://core-test:9000')
+        self.assertEqual(user_tokens.get_app_url('kernel'), 'http://kernel-test:9000')
         self.assertEqual(user_tokens.get_app_url('odk-importer'), 'http://odk-importer-test:9443')
         self.assertEqual(user_tokens.get_app_url('other'), None)
 
     def test__user_tokens__unknown_app(self):
         user_tokens, _ = UserTokens.objects.get_or_create(user=self.user)
-        self.assertEqual(user_tokens.core_token, None)
+        self.assertEqual(user_tokens.kernel_token, None)
         self.assertEqual(user_tokens.odk_importer_token, None)
         self.assertEqual(user_tokens.couchdb_sync_token, None)
 
@@ -60,7 +60,7 @@ class ModelsTests(TestCase):
             mock_post.assert_not_called()
 
         user_tokens.save_app_token(app_name, '9876543210')
-        self.assertEqual(user_tokens.core_token, None)
+        self.assertEqual(user_tokens.kernel_token, None)
         self.assertEqual(user_tokens.odk_importer_token, None)
         self.assertEqual(user_tokens.couchdb_sync_token, None)
 

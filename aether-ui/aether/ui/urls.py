@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 
 from .views import TokenProxyView, tokens_required
-from aether.common.core.views import check_core
+from aether.common.kernel.views import check_kernel
 
 
 auth_urls = 'rest_framework.urls'
@@ -23,13 +23,13 @@ urlpatterns = [
     # Common entries
     url(r'^admin/', include(admin.site.urls)),
     url(r'^accounts/', include(auth_urls, namespace='rest_framework')),
-    url(r'^check-core$', check_core, name='check-core'),
+    url(r'^check-kernel$', check_kernel, name='check-kernel'),
 
     # ----------------------
-    # Proxy to Aether Core
-    url(r'^core/(?P<path>.*)$',
-        login_required(TokenProxyView.as_view(app_name='core')),
-        name='core-proxy'),
+    # Proxy to Aether Kernel
+    url(r'^kernel/(?P<path>.*)$',
+        login_required(TokenProxyView.as_view(app_name='kernel')),
+        name='kernel-proxy'),
 
     # ----------------------
     # Entrypoints

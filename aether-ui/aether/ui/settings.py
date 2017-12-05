@@ -42,11 +42,11 @@ MIGRATION_MODULES = {
 # check the available modules linked to this instance
 AETHER_MODULES = os.environ.get('AETHER_MODULES', '').split(',')
 
-AETHER_CORE_TOKEN = os.environ.get('AETHER_CORE_TOKEN')
+AETHER_KERNEL_TOKEN = os.environ.get('AETHER_KERNEL_TOKEN')
 if TESTING:  # pragma: no cover
-    AETHER_CORE_URL = os.environ.get('AETHER_CORE_URL_TEST')
+    AETHER_KERNEL_URL = os.environ.get('AETHER_KERNEL_URL_TEST')
 else:  # pragma: no cover
-    AETHER_CORE_URL = os.environ.get('AETHER_CORE_URL')
+    AETHER_KERNEL_URL = os.environ.get('AETHER_KERNEL_URL')
 
 # check if ODK is available in this instance
 AETHER_ODK = ('odk-importer' in AETHER_MODULES)

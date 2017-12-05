@@ -10,7 +10,7 @@
   - [Installation](#installation)
   - [Common Module](#common-module)
   - [Environment Variables](#environment-variables)
-    - [Aether Core](#aether-core)
+    - [Aether Kernel](#aether-kernel)
     - [Aether ODK Importer](#aether-odk-importer)
     - [Aether Couchdb Sync](#aether-couchdb-sync)
     - [Aether UI](#aether-ui)
@@ -49,7 +49,7 @@ docker-compose build
 Include this entry in your `/etc/hosts` file:
 
 ```
-127.0.0.1    core.aether.local odk.aether.local sync.aether.local ui.aether.local
+127.0.0.1    kernel.aether.local odk.aether.local sync.aether.local ui.aether.local
 ```
 
 *[Return to TOC](#table-of-contents)*
@@ -75,10 +75,10 @@ of the most common ones with non default values. For more info take a look at th
 [docker-compose.yml](docker-compose.yml)
 
 
-#### Aether Core
+#### Aether Kernel
 
 - `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
-- `HOSTNAME`: `core.aether.local` Used by UMS.
+- `HOSTNAME`: `kernel.aether.local` Used by UMS.
 - `RDS_DB_NAME`: `aether` Postgres database name.
 - `WEB_SERVER_PORT`: `8000` Web server port.
 
@@ -89,9 +89,9 @@ of the most common ones with non default values. For more info take a look at th
 - `HOSTNAME`: `odk.aether.local` Used by UMS.
 - `RDS_DB_NAME`: `odk_importer` Postgres database name.
 - `WEB_SERVER_PORT`: `8443` Web server port.
-- `AETHER_CORE_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24` Token to connect to core server.
-- `AETHER_CORE_URL`: `http://core:8000` Aether Core Server url.
-- `AETHER_CORE_URL_TEST`: `http://core-test:9000` Aether Core Server url.
+- `AETHER_KERNEL_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24` Token to connect to kernel server.
+- `AETHER_KERNEL_URL`: `http://kernel:8000` Aether Kernel Server url.
+- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9000` Aether Kernel Server url.
 
 
 #### Aether Couchdb Sync
@@ -100,9 +100,9 @@ of the most common ones with non default values. For more info take a look at th
 - `HOSTNAME`: `sync.aether.local` Used by UMS.
 - `RDS_DB_NAME`: `couchdb_sync` Postgres database name.
 - `WEB_SERVER_PORT`: `8666` Web server port.
-- `AETHER_CORE_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24` Token to connect to core server.
-- `AETHER_CORE_URL`: `http://core:8000` Aether Core Server url.
-- `AETHER_CORE_URL_TEST`: `http://core-test:9000` Aether Core Testing Server url.
+- `AETHER_KERNEL_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24` Token to connect to kernel server.
+- `AETHER_KERNEL_URL`: `http://kernel:8000` Aether Kernel Server url.
+- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9000` Aether Kernel Testing Server url.
 - `GOOGLE_CLIENT_ID`: `search for it in lastpass` Token used to verify the device identity with Google.
 
 
@@ -113,9 +113,9 @@ of the most common ones with non default values. For more info take a look at th
 - `RDS_DB_NAME`: `ui` Postgres database name.
 - `WEB_SERVER_PORT`: `8080` Web server port.
 - `AETHER_ORG_NAME`: `eHealth Africa` Text to be displayed as page title.
-- `AETHER_CORE_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24` Token to connect to core server.
-- `AETHER_CORE_URL`: `http://core:8000` Aether Core Server url.
-- `AETHER_CORE_URL_TEST`: `http://core-test:9000` Aether Core Testing Server url.
+- `AETHER_KERNEL_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24` Token to connect to kernel server.
+- `AETHER_KERNEL_URL`: `http://kernel:8000` Aether Kernel Server url.
+- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9000` Aether Kernel Testing Server url.
 - `AETHER_MODULES`: `odk-importer` Comma separated list with the available modules.
   To avoid confusion, the values will match the container name, `odk-importer`, `couchdb-sync`.
 - `AETHER_ODK_TOKEN`: `d5184a044bb5acff89a76ec4e67d0fcddd5cd3a1` Token to connect to odk server.
@@ -138,8 +138,8 @@ docker-compose up --build    # this will update the cointainers if needed
 
 This will start:
 
-- **aether-core** on `http://core.aether.local:8000`
-  and create a superuser `admin-core` with the needed TOKEN.
+- **aether-kernel** on `http://kernel.aether.local:8000`
+  and create a superuser `admin-kernel` with the needed TOKEN.
 
 - **odk-importer** on `http://odk.aether.local:8443`
   and create a superuser `admin-odk` with the needed TOKEN.
@@ -170,7 +170,7 @@ The project is `aether-all` **Aether Suite**.
 
 The client services are:
 
-  - **Aether Core (local)** for `core.aether.local`.
+  - **Aether Kernel (local)** for `kernel.aether.local`.
   - **Aether ODK (local)**  for `odk.aether.local`.
   - **Aether Sync (local)** for `sync.aether.local`.
   - **Aether UI (local)**   for `ui.aether.local`.
@@ -188,14 +188,14 @@ The communication between the containers is done via
 [token authentication](http://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication).
 
 In the case of `aether-odk-importer` and `aether-couchdb-sync` there is a
-global token to connect to `aether-core` set in the **required** environment
-variable `AETHER_CORE_TOKEN`.
+global token to connect to `aether-kernel` set in the **required** environment
+variable `AETHER_KERNEL_TOKEN`.
 
 In the case of `aether-ui` there are tokens per user. This means that every time
 a logged in user tries to visit any page that requires to fetch data from any of
-the other apps, `aether-core` and/or `aether-odk-importer`, the system will verify
+the other apps, `aether-kernel` and/or `aether-odk-importer`, the system will verify
 that the user token for that app is valid or will request a new one using the
-global tokens, `AETHER_CORE_TOKEN` and/or `AETHER_ODK_TOKEN`; that's going to
+global tokens, `AETHER_KERNEL_TOKEN` and/or `AETHER_ODK_TOKEN`; that's going to
 be used for all requests and will allow the system to better track the user actions.
 
 *[Return to TOC](#table-of-contents)*
@@ -214,15 +214,15 @@ Read the `docker-compose.yml` file to see how it's mounted.
 Set the `HOSTNAME` and `CAS_SERVER_URL` environment variables if you want to
 activate the UMS integration in each container.
 
-Set the `AETHER_CORE_TOKEN` and `AETHER_CORE_URL` environment variables when
+Set the `AETHER_KERNEL_TOKEN` and `AETHER_KERNEL_URL` environment variables when
 starting the `aether-odk-importer` to have ODK Collect submissions posted to
-Aether Core.
+Aether Kernel.
 
-If a valid `AETHER_CORE_TOKEN` and `AETHER_CORE_URL` combination is not set,
+If a valid `AETHER_KERNEL_TOKEN` and `AETHER_KERNEL_URL` combination is not set,
 the server will still start, but ODK Collect submissions will fail.
 
-To check if it is possible to connect to Aether Core with those variables
-visit the entrypoint `/check-core` in the odk server (no credentials needed).
+To check if it is possible to connect to Aether Kernel with those variables
+visit the entrypoint `/check-kernel` in the odk server (no credentials needed).
 If the response is `Always Look on the Bright Side of Life!!!`
 it's not possible to connect, on the other hand if the message is
 `Brought to you by eHealth Africa - good tech for hard places` everything goes fine.
@@ -260,12 +260,12 @@ The list of the main containers:
 | db                | [PostgreSQL](https://www.postgresql.org/) database                      |
 | couchdb           | [CouchDB](http://couchdb.apache.org/) database for sync                 |
 | redis             | [Redis](https://redis.io/) for task queueing and task result storage    |
-| **core**          | Aether Core app                                                        |
+| **kernel**          | Aether Kernel app                                                        |
 | **odk-importer**  | Aether ODK Collect Adapter app (imports data from ODK Collect)         |
 | **couchdb-sync**  | Aether Couchdb Sync app (imports data from Aether Mobile app)         |
 | **ui**            | Aether UI app                                                          |
 | couchdb-sync-rq   | [RQ python](http://python-rq.org/) task runner to perform sync jobs     |
-| core-test         | Aether Core TESTING app (used only in e2e tests with other containers) |
+| kernel-test         | Aether Kernel TESTING app (used only in e2e tests with other containers) |
 | common-test       | Aether Common module (only for tests)                                  |
 
 
@@ -323,7 +323,7 @@ This script will start the auxiliary containers and execute the tests
 in `odk-importer` or `couchdb-sync`.
 
 ```bash
-./scripts/test_with_core.sh <container-name>
+./scripts/test_with_kernel.sh <container-name>
 ```
 
 **WARNING**
@@ -333,7 +333,7 @@ PRODUCTION server. The tests clean up will **DELETE ALL SURVEYS!!!**
 
 Look into [docker-compose.yml](docker-compose.yml) or
 [docker-compose-test.yml](docker-compose-test.yml), the variable
-`AETHER_CORE_URL_TEST` indicates the Aether Core Server used in tests.
+`AETHER_KERNEL_URL_TEST` indicates the Aether Kernel Server used in tests.
 
 *[Return to TOC](#table-of-contents)*
 

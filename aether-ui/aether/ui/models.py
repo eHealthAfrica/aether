@@ -6,8 +6,8 @@ from django.db import models
 import requests
 
 from .settings import (
-    AETHER_CORE_URL,
-    AETHER_CORE_TOKEN,
+    AETHER_KERNEL_URL,
+    AETHER_KERNEL_TOKEN,
     AETHER_ODK,
     AETHER_ODK_URL,
     AETHER_ODK_TOKEN,
@@ -18,8 +18,8 @@ Current external apps
 '''
 # only the ones with url and token
 AETHER_APPS = []
-if AETHER_CORE_URL is not None and AETHER_CORE_TOKEN is not None:  # pragma: no cover
-    AETHER_APPS.append('core')
+if AETHER_KERNEL_URL is not None and AETHER_KERNEL_TOKEN is not None:  # pragma: no cover
+    AETHER_APPS.append('kernel')
 
 if AETHER_ODK and AETHER_ODK_URL is not None and AETHER_ODK_TOKEN is not None:  # pragma: no cover
     AETHER_APPS.append('odk-importer')
@@ -42,7 +42,7 @@ class UserTokens(models.Model):
         on_delete=models.CASCADE,
     )
 
-    core_token = models.CharField(max_length=40, null=True, blank=True)
+    kernel_token = models.CharField(max_length=40, null=True, blank=True)
     odk_importer_token = models.CharField(max_length=40, null=True, blank=True)
     couchdb_sync_token = models.CharField(max_length=40, null=True, blank=True)
 
@@ -51,8 +51,8 @@ class UserTokens(models.Model):
         Gets the `url` of the app.
         '''
 
-        if app_name == 'core':
-            return AETHER_CORE_URL
+        if app_name == 'kernel':
+            return AETHER_KERNEL_URL
         if app_name == 'odk-importer':
             return AETHER_ODK_URL
         return None
@@ -113,8 +113,8 @@ class UserTokens(models.Model):
             return None
 
         auxiliary_token = None
-        if app_name == 'core':
-            auxiliary_token = AETHER_CORE_TOKEN
+        if app_name == 'kernel':
+            auxiliary_token = AETHER_KERNEL_TOKEN
         if app_name == 'odk-importer':
             auxiliary_token = AETHER_ODK_TOKEN
         if auxiliary_token is None:

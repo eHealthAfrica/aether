@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from . import CustomTestCase
-from aether.common.core import utils as core_utils
+from aether.common.kernel import utils as kernel_utils
 
 
 class SubmissionTests(CustomTestCase):
@@ -16,9 +16,9 @@ class SubmissionTests(CustomTestCase):
         self.url = reverse('xform-submission')
 
     #
-    # Test submission with authorization error on core server side
+    # Test submission with authorization error on kernel server side
     #
-    @mock.patch('aether.common.core.utils.test_connection', return_value=False)
+    @mock.patch('aether.common.kernel.utils.test_connection', return_value=False)
     def test__submission__424(self, mock_test):
         response = self.client.head(self.url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_424_FAILED_DEPENDENCY)
@@ -64,24 +64,24 @@ class PostSubmissionTests(CustomTestCase):
     def setUp(self):
         """
         Set up a basic Aether project. This assumes that the fixture in
-        `/aether-core/aether/core/api/tests/fixtures/project_empty_schame.json`
-        has been loaded into the core database. See `/scripts/test_all.sh` for
+        `/aether-kernel/aether/kernel/api/tests/fixtures/project_empty_schame.json`
+        has been loaded into the kernel database. See `/scripts/test_all.sh` for
         details.
         """
         super(PostSubmissionTests, self).setUp()
         self.helper_create_user()
         self.url = reverse('xform-submission')
 
-        # create survey in Core testing server
-        self.assertTrue(core_utils.test_connection())
-        self.CORE_HEADERS = core_utils.get_auth_header()
+        # create survey in Kernel testing server
+        self.assertTrue(kernel_utils.test_connection())
+        self.KERNEL_HEADERS = kernel_utils.get_auth_header()
         project = requests.get(
-            'http://core-test:9000/projects/demo/',
-            headers=self.CORE_HEADERS,
+            'http://kernel-test:9000/projects/demo/',
+            headers=self.KERNEL_HEADERS,
         ).json()
         projectschema = requests.get(
-            'http://core-test:9000/projectschemas/Person/',
-            headers=self.CORE_HEADERS,
+            'http://kernel-test:9000/projectschemas/Person/',
+            headers=self.KERNEL_HEADERS,
         ).json()
         testing_survey = {
             'name': 'example',
@@ -107,26 +107,26 @@ class PostSubmissionTests(CustomTestCase):
                 }
             }
         }
-        # create survey in core testing server
-        response = requests.post(core_utils.get_mappings_url(),
+        # create survey in kernel testing server
+        response = requests.post(kernel_utils.get_mappings_url(),
                                  json=testing_survey,
-                                 headers=self.CORE_HEADERS)
+                                 headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.json())
         data = response.json()
         mapping_id = data['id']
-        self.MAPPING_URL = core_utils.get_mappings_url(mapping_id)
-        self.RESPONSES_URL = core_utils.get_mapping_responses_url(mapping_id)
+        self.MAPPING_URL = kernel_utils.get_mappings_url(mapping_id)
+        self.RESPONSES_URL = kernel_utils.get_mapping_responses_url(mapping_id)
         # create xForm entry
         self.xform = self.helper_create_xform(surveyor=self.user, mapping_id=mapping_id)
         self.assertTrue(self.xform.is_surveyor(self.user))
 
     def tearDown(self):
         super(PostSubmissionTests, self).tearDown()
-        # delete ALL surveys in core testing server
-        requests.delete(self.MAPPING_URL, headers=self.CORE_HEADERS)
+        # delete ALL surveys in kernel testing server
+        requests.delete(self.MAPPING_URL, headers=self.KERNEL_HEADERS)
 
     @mock.patch('requests.post', return_value=mock.Mock(status_code=500))
-    def test__submission__post__with_core_error(self, mock_post):
+    def test__submission__post__with_kernel_error(self, mock_post):
         with open(self.samples['submission']['file-ok'], 'rb') as f:
             response = self.client.post(
                 self.url,
@@ -136,7 +136,7 @@ class PostSubmissionTests(CustomTestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         mock_post.assert_called_once_with(
             self.RESPONSES_URL,
-            headers=self.CORE_HEADERS,
+            headers=self.KERNEL_HEADERS,
             json=mock.ANY,
         )
 
@@ -193,7 +193,7 @@ class PostSubmissionTests(CustomTestCase):
     #             )
     #     mock_post.assert_called_once_with(
     #         self.RESPONSES_URL,
-    #         headers=self.CORE_HEADERS,
+    #         headers=self.KERNEL_HEADERS,
     #         json=mock.ANY,
     #     )
     #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

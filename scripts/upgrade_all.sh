@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-containers=( core odk-importer couchdb-sync ui )
+containers=( kernel odk-importer couchdb-sync ui )
 
 # create the common module
 echo "_____________________________________________ Building aether.common module"

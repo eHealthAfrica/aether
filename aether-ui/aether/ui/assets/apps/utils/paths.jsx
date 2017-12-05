@@ -1,14 +1,14 @@
 /**
  * Returns the API url to get the Surveys data
  *
- * @param {string}  app          - app source: `core` (default) or `odk`
+ * @param {string}  app          - app source: `kernel` (default) or `odk`
  * @param {number}  id           - survey id
  * @param {boolean} withStats    - include survey stats
  * @param {object}  params       - query string parameters
  */
 export const getSurveysAPIPath = ({app, id, withStats, ...params}) => {
-  const source = (app === 'odk' ? 'odk' : 'core')
-  const stats = (source === 'core' && withStats ? '-stats' : '')
+  const source = (app === 'odk' ? 'odk' : 'kernel')
+  const stats = (source === 'kernel' && withStats ? '-stats' : '')
 
   return buildAPIPath(source, `surveys${stats}`, id, params)
 }
@@ -36,8 +36,8 @@ export const getXFormsAPIPath = ({id, ...params}) => {
 /**
  * Returns the API url to get the Responses data by survey
  *
- * With    {surveyId} -> core/surveys/{surveyId}/responses.json?{queryString}
- * Without {surveyId} -> core/responses.json?{queryString}
+ * With    {surveyId} -> kernel/surveys/{surveyId}/responses.json?{queryString}
+ * Without {surveyId} -> kernel/responses.json?{queryString}
  *
  * @param {number}  surveyId    - survey id
  * @param {object}  params      - query string parameters
@@ -47,7 +47,7 @@ export const getResponsesAPIPath = ({surveyId, ...params}) => {
   const format = params.format || 'json'
   const queryString = buildQueryString(params)
 
-  return `/core${surveyNested}/responses.${format}?${queryString}`
+  return `/kernel${surveyNested}/responses.${format}?${queryString}`
 }
 
 /**
@@ -56,7 +56,7 @@ export const getResponsesAPIPath = ({surveyId, ...params}) => {
  * With    {id} -> {app}/{type}/{id}.json
  * Without {id} -> {app}/{type}.json?{queryString}
  *
- * @param {string}  app         - app source: `core` or `odk`
+ * @param {string}  app         - app source: `kernel` or `odk`
  * @param {string}  type        - item type
  * @param {number}  id          - item id
  * @param {object}  params      - query string parameters

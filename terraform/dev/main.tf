@@ -13,18 +13,18 @@ module "odk" {
   database_hostname = "${module.rds.database_hostname}"
   app = "odk-importer"
   application_memory = 512
-  http_rule_priority = 30 
+  http_rule_priority = 30
   domain = "ehealthafrica"
 }
 
-module "core" {
+module "kernel" {
   source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_service"
   environment = "${var.environment}"
   project = "${var.project}"
   database_hostname = "${module.rds.database_hostname}"
-  app = "core"
+  app = "kernel"
   application_memory = 512
-  http_rule_priority = 31 
+  http_rule_priority = 31
   domain = "ehealthafrica"
 }
 
@@ -35,7 +35,7 @@ module "ui" {
   database_hostname = "${module.rds.database_hostname}"
   app = "ui"
   application_memory = 512
-  http_rule_priority = 32 
+  http_rule_priority = 32
   domain = "ehealthafrica"
 }
 
@@ -46,7 +46,7 @@ module "couchcb_sync" {
   app = "couchdb-sync"
   database_hostname = "${module.rds.database_hostname}"
   application_memory = 512
-  http_rule_priority = 33 
+  http_rule_priority = 33
   domain = "ehealthafrica"
 }
 

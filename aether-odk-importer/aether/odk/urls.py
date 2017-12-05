@@ -3,7 +3,7 @@ from django.conf.urls import include, url
 from django.contrib import admin
 
 from aether.common.auth.views import obtain_auth_token
-from aether.common.core.views import check_core
+from aether.common.kernel.views import check_kernel
 
 
 auth_urls = 'rest_framework.urls'
@@ -20,7 +20,7 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^accounts/', include(auth_urls, namespace='rest_framework')),
     url(r'^accounts/token', obtain_auth_token, name='token'),
-    url(r'^check-core$', check_core, name='check-core'),
+    url(r'^check-kernel$', check_kernel, name='check-kernel'),
 ]
 
 

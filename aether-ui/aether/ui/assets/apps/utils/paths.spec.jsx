@@ -13,8 +13,8 @@ import {
 
 describe('paths utils', () => {
   describe('getSurveysAPIPath', () => {
-    describe('without app or `core` app', () => {
-      const prefix = '/core/'
+    describe('without app or `kernel` app', () => {
+      const prefix = '/kernel/'
 
       it('should return the Surveys API path', () => {
         assert.equal(getSurveysAPIPath({}), prefix + 'surveys.json?')
@@ -22,7 +22,7 @@ describe('paths utils', () => {
       })
 
       it('should return the Surveys Stats API path', () => {
-        assert.equal(getSurveysAPIPath({app: 'core', withStats: true}), prefix + 'surveys-stats.json?')
+        assert.equal(getSurveysAPIPath({app: 'kernel', withStats: true}), prefix + 'surveys-stats.json?')
         assert.equal(getSurveysAPIPath({withStats: true, id: 1}), prefix + 'surveys-stats/1.json')
       })
 
@@ -31,7 +31,7 @@ describe('paths utils', () => {
       })
 
       it('should return the Surveys API path without search', () => {
-        assert.equal(getSurveysAPIPath({app: 'core', search: 'survey', id: 1}), prefix + 'surveys/1.json')
+        assert.equal(getSurveysAPIPath({app: 'kernel', search: 'survey', id: 1}), prefix + 'surveys/1.json')
       })
     })
 
@@ -59,7 +59,7 @@ describe('paths utils', () => {
   })
 
   describe('getResponsesAPIPath', () => {
-    const prefix = '/core/'
+    const prefix = '/kernel/'
 
     it('should return the Responses API path', () => {
       assert.equal(getResponsesAPIPath({}), prefix + 'responses.json?')

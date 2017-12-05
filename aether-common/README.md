@@ -34,28 +34,28 @@ Include the view entry in the ``urls.py`` file.
 ```
 
 
-### Core section
+### Kernel section
 
 Includes the methods that allow:
 
-#### To check connection to Aether Core Server.
+#### To check connection to Aether Kernel Server.
 
 Include the view entry in the ``urls.py`` file.
 
 ```python
   from django.conf.urls import url
-  from aether.common.core.views import check_core
+  from aether.common.kernel.views import check_kernel
 
 
   urlpatterns = [
-      url(r'^check-core', check_core, name='check-core'),
+      url(r'^check-kernel', check_kernel, name='check-kernel'),
   ]
 ```
 
 #### To submit responses linked to an existing mapping.
 
 ```python
-  aether.common.core.utils.submit_to_core(response, mapping_id, response_id=None)
+  aether.common.kernel.utils.submit_to_kernel(response, mapping_id, response_id=None)
 ```
 
 ### Conf section

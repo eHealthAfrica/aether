@@ -7,8 +7,8 @@ Setup
 ----
 
 - You'll need the `GOOGLE_CLIENT_ID` from lastpass. The client secret is not needed.
-- You need to generate a `AETHER_CORE_TOKEN` in your Aether Core admin interface.
-- To run with HAT-Microsensus you need to make sure the 'village' and 'building' surveys have been created in your Aether Core instance (the 'name' should be exactly like the document prefixes from the HAT-Microcensus mobile app).
+- You need to generate a `AETHER_KERNEL_TOKEN` in your Aether Kernel admin interface.
+- To run with HAT-Microsensus you need to make sure the 'village' and 'building' surveys have been created in your Aether Kernel instance (the 'name' should be exactly like the document prefixes from the HAT-Microcensus mobile app).
 
 Components
 ----
@@ -58,7 +58,7 @@ The import task can be run manually in development with: `docker-compose run cou
 Testing sync locally
 ----
 
-1. Run this repository with `docker-compose up`. You'll need to define the following env vars for sync (see docker-compose.yml): `GOOGLE_CLIENT_ID` and `AETHER_CORE_TOKEN`. The Aether Core token is created inside the Admin interface of your local aether core instance. The Google Client Id can be found in Lastpass or created in [https://console.developers.google.com/apis/credentials?project=hat-microsurveys&organizationId=883350201643](Google API Dev Console). If you create one, you need a Web Application Client for the Google+ Api.
+1. Run this repository with `docker-compose up`. You'll need to define the following env vars for sync (see docker-compose.yml): `GOOGLE_CLIENT_ID` and `AETHER_KERNEL_TOKEN`. The Aether Kernel token is created inside the Admin interface of your local aether kernel instance. The Google Client Id can be found in Lastpass or created in [https://console.developers.google.com/apis/credentials?project=hat-microsurveys&organizationId=883350201643](Google API Dev Console). If you create one, you need a Web Application Client for the Google+ Api.
 
 2. Inside the local admin, set up a MobileUser for the email-address you're gonna use.
 
@@ -67,7 +67,7 @@ Testing sync locally
 Running tests
 -----
 
-To test Aether import, you need to generate a Aether API key in the aether core interface and set the `AETHER_CORE_TOKEN` and `AETHER_CORE_URL` environment variables.
+To test Aether import, you need to generate a Aether API key in the aether kernel interface and set the `AETHER_KERNEL_TOKEN` and `AETHER_KERNEL_URL` environment variables.
 
 Run all tests with:
 
