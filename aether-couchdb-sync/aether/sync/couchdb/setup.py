@@ -6,6 +6,7 @@ from django.conf import settings
 from pathlib import Path
 
 from . import api
+from .. import errors
 from .utils import force_put_doc
 from ..settings import logger
 
@@ -77,7 +78,9 @@ def setup_db(db_name, config, cleanup=False):  # pragma: no cover
         secdoc = ddoc['_security']
         del ddoc['_security']
     else:
-        raise Exception('Provide a security document for the couchdb: ' + db_name)
+        raise errors.CouchDBInitializationError(
+            'Provide a security document for the couchdb: ' + db_name
+        )
 
     r = api.get(db_name)
     exists = r.status_code < 400
