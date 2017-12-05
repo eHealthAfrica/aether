@@ -1,6 +1,7 @@
 import os
 import requests
 
+from . import errors
 from ..conf.settings import logger
 
 
@@ -85,7 +86,7 @@ def get_mapping_submissions_url(mapping_id, submission_id=None):
     Returns Aether Kernel url to make mapping submissions
     '''
     if mapping_id is None:
-        raise Exception('Cannot get submissions url without mapping!')
+        raise errors.SubmissionError('Cannot get submissions url without mapping!')
 
     if not submission_id:
         return '{kernel_url}/mappings/{mapping_id}/submissions/'.format(
@@ -123,10 +124,10 @@ def submit_to_kernel(submission, mapping_id, submission_id=None):
     Make the submission to Aether Kernel mapping
     '''
     if mapping_id is None:
-        raise Exception('Cannot make submission without mapping!')
+        raise errors.SubmissionError('Cannot make submission without mapping!')
 
     if submission is None:
-        raise Exception('Cannot make submission without content!')
+        raise errors.SubmissionError('Cannot make submission without content!')
 
     if submission_id:
         # update existing doc

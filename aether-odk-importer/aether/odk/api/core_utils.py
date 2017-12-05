@@ -1,5 +1,7 @@
 import os
 
+import errors
+
 
 def get_kernel_server_url():
     if os.environ.get('TESTING', '').lower() == 'true':
@@ -13,7 +15,7 @@ def get_mapping_submissions_url(mapping_id, submission_id=None):
     Returns Aether Kernel url to make mapping submissions
     '''
     if mapping_id is None:
-        raise Exception('Cannot get submissions url without mapping!')
+        raise errors.SubmissionError('Cannot get submissions url without mapping!')
 
     if not submission_id:
         return '{kernel_url}/mappings/{mapping_id}/submissions/'.format(
