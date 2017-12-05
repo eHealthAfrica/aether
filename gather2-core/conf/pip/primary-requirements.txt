@@ -9,7 +9,7 @@
 ################################################################################
 
 coverage
-django
+django==1.11.7
 django-cas-ng
 django-cors-headers
 django-debug-toolbar
