@@ -1,5 +1,7 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions
 from rest_framework_extensions.mixins import NestedViewSetMixin
+from drf_openapi.views import SchemaView
+
 
 from . import models, serializers
 
@@ -35,3 +37,7 @@ class ProjectSchemaViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
 class EntityViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
     queryset = models.Entity.objects.all()
     serializer_class = serializers.EntitySerializer
+
+
+class AetherSchemaView(SchemaView):
+    permission_classes = (permissions.AllowAny, )
