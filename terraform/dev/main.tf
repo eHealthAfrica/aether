@@ -17,12 +17,12 @@ module "odk" {
   domain = "ehealthafrica"
 }
 
-module "core" {
+module "kernel" {
   source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_service"
   environment = "${var.environment}"
   project = "${var.project}"
   database_hostname = "${module.rds.database_hostname}"
-  app = "core"
+  app = "kernel"
   application_memory = 512
   http_rule_priority = 31 
   domain = "ehealthafrica"
