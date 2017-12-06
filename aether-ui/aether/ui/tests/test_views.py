@@ -5,6 +5,8 @@ from django.contrib.auth import get_user_model
 from django.core.urlresolvers import reverse
 from django.test import TestCase, RequestFactory
 
+from rest_framework import status
+
 from ..views import TokenProxyView
 
 
@@ -252,3 +254,8 @@ class ViewsTest(TestCase):
                 'X-Method': 'GET',
             }
         )
+
+    def test__health_check(self):
+        response = self.client.get(reverse('health'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json(), {})
