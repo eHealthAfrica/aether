@@ -6,6 +6,7 @@ from django.views.generic import TemplateView
 
 from .views import TokenProxyView, tokens_required
 from aether.common.kernel.views import check_kernel
+from aether.common.kernel.views import health_check
 
 
 auth_urls = 'rest_framework.urls'
@@ -53,6 +54,7 @@ urlpatterns = [
     url(r'^surveys/(?P<action>\w+)/(?P<mapping_id>[0-9]+)?$',
         tokens_required(TemplateView.as_view(template_name='pages/surveys.html')),
         name='surveys'),
+    url(r'^health/', health_check, name='health'),
 
 ]
 
