@@ -38,36 +38,3 @@ module "ui" {
   http_rule_priority = 32
   domain = "ehealthafrica"
 }
-
-module "couchcb_sync" {
-  source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_service"
-  environment = "${var.environment}"
-  project = "${var.project}"
-  app = "couchdb-sync"
-  database_hostname = "${module.rds.database_hostname}"
-  application_memory = 512
-  http_rule_priority = 33
-  domain = "ehealthafrica"
-}
-
-module "couchcb" {
-  source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_data_service"
-  image_url = "couchdb"
-  environment = "${var.environment}"
-  project = "${var.project}"
-  service = "couchdb"
-  container_memory = 512
-  data_dir = "/var/lib/couchdb"
-  port = 5984
-}
-
-module "redis" {
-  source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_data_service"
-  environment = "${var.environment}"
-  project = "${var.project}"
-  image_url = "redis"
-  service = "redis"
-  container_memory = 512
-  port = 6379
-  data_dir = "/data"
-}
