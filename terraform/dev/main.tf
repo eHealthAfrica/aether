@@ -27,14 +27,3 @@ module "kernel" {
   http_rule_priority = 31
   domain = "ehealthafrica"
 }
-
-module "ui" {
-  source = "git@github.com:eHealthAfrica/ehealth-deployment.git//terraform//modules//generic_ecs_service"
-  environment = "${var.environment}"
-  project = "${var.project}"
-  database_hostname = "${module.rds.database_hostname}"
-  app = "ui"
-  application_memory = 512
-  http_rule_priority = 32
-  domain = "ehealthafrica"
-}
