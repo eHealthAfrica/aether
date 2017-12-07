@@ -123,7 +123,7 @@ class ModelsTests(ApiTestCase):
 
         # User has no access to db2
         user_db_req2 = api.get(db_name2, auth=user_auth)
-        self.assertEqual(user_db_req2.status_code, 401, user_db_req2.text)
+        self.assertEqual(user_db_req2.status_code, 403, user_db_req2.text)
 
         # Grant user access to db2
         creds = couchdb_helpers.create_or_update_user(user.email, device_id2)
