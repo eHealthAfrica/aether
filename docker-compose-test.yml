@@ -10,7 +10,7 @@ services:
         image: postgres:9.5.2
 
     couchdb-test:
-        image: couchdb:1.7.0
+        image: couchdb:1.7.1
         environment:
             COUCHDB_USER: admin
             COUCHDB_PASSWORD: secret
