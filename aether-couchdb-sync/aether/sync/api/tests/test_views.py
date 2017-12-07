@@ -134,7 +134,7 @@ class ViewsTests(ApiTestCase):
         self.assertEqual(test_creds2.status_code, 200, test_creds2.text)
 
         test_creds1vs2 = api.get(creds2['db'], auth=(creds['username'], creds['password']))
-        self.assertEqual(test_creds1vs2.status_code, 401, test_creds1vs2.text)
+        self.assertEqual(test_creds1vs2.status_code, 403, test_creds1vs2.text)
 
     @mock.patch('oauth2client.client.verify_id_token', side_effect=just_return)
     def test_no_token(self, valid_token_function):
