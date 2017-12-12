@@ -296,27 +296,3 @@ class ImportTestCase(TestCase):
         # check the written meta document
         status = get_meta_doc(device.db_name, self.example_doc['_id'])
         self.assertEqual(status['last_rev'][0], '2', 'updated meta document')
-
-    def test_document_not_validating(self):
-        device = DeviceDB(device_id=device_id)
-        device.save()
-        create_db(device_id)
-
-        # post document which is not validating
-        doc_url = '{}/{}'.format(device.db_name, self.example_doc['_id'])
-        non_validating_doc = self.example_doc.copy()
-        non_validating_doc.pop('firstname')  # remove required key
-        resp = couchdb.put(doc_url, json=non_validating_doc)
-        self.assertEqual(resp.status_code, 201, 'The example document got created')
-
-        import_synced_devices()
-        docs = get_aether_submissions(self.mapping_id)
-        self.assertEqual(len(docs), 0, 'doc did not get imported to aether')
-        status = get_meta_doc(device.db_name, self.example_doc['_id'])
-
-        self.assertTrue('error' in status, 'posts error key')
-        self.assertFalse('last_rev' in status, 'no last rev key')
-        self.assertFalse('aether_id' in status, 'no aether id key')
-
-        self.assertIn('validat', status['error'], 'saves error object')
-        self.assertNotIn('JSON serializable', status['error'], 'not error on posting error')
