@@ -13,7 +13,113 @@ from pygments.formatters import HtmlFormatter
 from pygments.lexers import JsonLexer
 from pygments.lexers.python import Python3Lexer
 
+from schema_salad import ref_resolver
+
 from . import models
+
+loader = ref_resolver.Loader({
+    "Any": "https://w3id.org/cwl/salad#Any",
+    "ArraySchema": "https://w3id.org/cwl/salad#ArraySchema",
+    "DocType": "https://w3id.org/cwl/salad#DocType",
+    "Documentation": "https://w3id.org/cwl/salad#Documentation",
+    "EnumSchema": "https://w3id.org/cwl/salad#EnumSchema",
+    "JsonldPredicate": "https://w3id.org/cwl/salad#JsonldPredicate",
+    "NamedType": "https://w3id.org/cwl/salad#NamedType",
+    "RecordField": "https://w3id.org/cwl/salad#RecordField",
+    "RecordSchema": "https://w3id.org/cwl/salad#RecordSchema",
+    "SaladEnumSchema": "https://w3id.org/cwl/salad#SaladEnumSchema",
+    "SaladRecordField": "https://w3id.org/cwl/salad#SaladRecordField",
+    "SaladRecordSchema": "https://w3id.org/cwl/salad#SaladRecordSchema",
+    "SchemaDefinedType": "https://w3id.org/cwl/salad#SchemaDefinedType",
+    "SpecializeDef": "https://w3id.org/cwl/salad#SpecializeDef",
+    "_container": "https://w3id.org/cwl/salad#JsonldPredicate/_container",
+    "_id": {
+        "@id": "https://w3id.org/cwl/salad#_id",
+        "@type": "@id",
+        "identity": True
+    },
+    "_type": "https://w3id.org/cwl/salad#JsonldPredicate/_type",
+    "abstract": "https://w3id.org/cwl/salad#SaladRecordSchema/abstract",
+    "array": "https://w3id.org/cwl/salad#array",
+    "boolean": "http://www.w3.org/2001/XMLSchema#boolean",
+    "dct": "http://purl.org/dc/terms/",
+    "doc": "sld:doc",
+    "docAfter": {
+        "@id": "https://w3id.org/cwl/salad#docAfter",
+        "@type": "@id"
+    },
+    "docChild": {
+        "@id": "https://w3id.org/cwl/salad#docChild",
+        "@type": "@id"
+    },
+    "docParent": {
+        "@id": "https://w3id.org/cwl/salad#docParent",
+        "@type": "@id"
+    },
+    "documentRoot": "https://w3id.org/cwl/salad#SchemaDefinedType/documentRoot",
+    "documentation": "https://w3id.org/cwl/salad#documentation",
+    "double": "http://www.w3.org/2001/XMLSchema#double",
+    "enum": "https://w3id.org/cwl/salad#enum",
+    "extends": {
+        "@id": "https://w3id.org/cwl/salad#extends",
+        "@type": "@id",
+        "refScope": 1
+    },
+    "fields": {
+        "@id": "https://w3id.org/cwl/salad#fields",
+        "mapPredicate": "type",
+        "mapSubject": "name"
+    },
+    "float": "http://www.w3.org/2001/XMLSchema#float",
+    "identity": "https://w3id.org/cwl/salad#JsonldPredicate/identity",
+    "int": "http://www.w3.org/2001/XMLSchema#int",
+    "items": {
+        "@id": "https://w3id.org/cwl/salad#items",
+        "@type": "@vocab",
+        "refScope": 2
+    },
+    "jsonldPredicate": "sld:jsonldPredicate",
+    "long": "http://www.w3.org/2001/XMLSchema#long",
+    "mapPredicate": "https://w3id.org/cwl/salad#JsonldPredicate/mapPredicate",
+    "mapSubject": "https://w3id.org/cwl/salad#JsonldPredicate/mapSubject",
+    "name": "@id",
+    "noLinkCheck": "https://w3id.org/cwl/salad#JsonldPredicate/noLinkCheck",
+    "null": "https://w3id.org/cwl/salad#null",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "record": "https://w3id.org/cwl/salad#record",
+    "refScope": "https://w3id.org/cwl/salad#JsonldPredicate/refScope",
+    "sld": "https://w3id.org/cwl/salad#",
+    "specialize": {
+        "@id": "https://w3id.org/cwl/salad#specialize",
+        "mapPredicate": "specializeTo",
+        "mapSubject": "specializeFrom"
+    },
+    "specializeFrom": {
+        "@id": "https://w3id.org/cwl/salad#specializeFrom",
+        "@type": "@id",
+        "refScope": 1
+    },
+    "specializeTo": {
+        "@id": "https://w3id.org/cwl/salad#specializeTo",
+        "@type": "@id",
+        "refScope": 1
+    },
+    "string": "http://www.w3.org/2001/XMLSchema#string",
+    "symbols": {
+        "@id": "https://w3id.org/cwl/salad#symbols",
+        "@type": "@id",
+        "identity": True
+    },
+    "type": {
+        "@id": "https://w3id.org/cwl/salad#type",
+        "@type": "@vocab",
+        "refScope": 2,
+        "typeDSL": True
+    },
+    "typeDSL": "https://w3id.org/cwl/salad#JsonldPredicate/typeDSL",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+})
 
 
 class EntityExtractionError(Exception):

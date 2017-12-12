@@ -8,7 +8,7 @@ from django.urls import reverse
 from rest_framework import status
 from .. import models
 
-from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA)
+from . import (EXAMPLE_SALAD_SCHEMA, EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA)
 
 
 class ViewsTest(TransactionTestCase):
@@ -24,9 +24,17 @@ class ViewsTest(TransactionTestCase):
         self.project = models.Project.objects.create(
             revision='rev 1',
             name='a project name',
-            salad_schema='a sample salad schema',
+            salad_schema=EXAMPLE_SALAD_SCHEMA,
             jsonld_context='sample context',
             rdf_definition='a sample rdf definition'
+        )
+
+        self.schema = models.Schema.objects.create(
+            name='schema1',
+            type='type schema 1',
+            definition={},
+            revision='a sample revision',
+            project=self.project
         )
 
         self.mapping = models.Mapping.objects.create(
@@ -42,12 +50,6 @@ class ViewsTest(TransactionTestCase):
             date=datetime.datetime.now(),
             payload={},
             mapping=self.mapping
-        )
-
-        self.schema = models.Schema.objects.create(
-            name='schema1',
-            definition={},
-            revision='a sample revision'
         )
 
         self.projectschema = models.ProjectSchema.objects.create(
@@ -82,7 +84,7 @@ class ViewsTest(TransactionTestCase):
         self.helper_create_object('project-list', {
             'name': 'Project name',
             'revision': 'Sample project revision',
-            'salad_schema': 'Sample project SALAD schema',
+            'salad_schema': EXAMPLE_SALAD_SCHEMA,
             'jsonld_context': 'Sample JSONLD context',
             'rdf_definition': 'Sample RDF definition',
         })
@@ -104,6 +106,7 @@ class ViewsTest(TransactionTestCase):
             'type': 'Type',
             'definition': EXAMPLE_SCHEMA,
             'revision': 'a sample revision',
+            'project': str(self.project.pk)
         })
         self.helper_create_object('projectschema-list', {
             'name': 'Project Schema name',
@@ -182,7 +185,7 @@ class ViewsTest(TransactionTestCase):
         self.helper_update_object_name('project-detail', {
             'name': 'Project name 2',
             'revision': 'Sample project revision',
-            'salad_schema': 'Sample project SALAD schema',
+            'salad_schema': {},
             'jsonld_context': 'Sample JSONLD context',
             'rdf_definition': 'Sample RDF definition'
         }, self.project)
@@ -191,6 +194,7 @@ class ViewsTest(TransactionTestCase):
             'type': 'Type',
             'definition': {},
             'revision': 'Sample schema revision',
+            'project': str(self.project.pk)
         }, self.schema)
         self.helper_update_object_name('projectschema-detail', {
             'name': 'Project Schema name 2',

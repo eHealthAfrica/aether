@@ -50,7 +50,8 @@ class ModelsTests(TransactionTestCase):
         schema = models.Schema.objects.create(
             name='sample schema',
             definition={},
-            revision='a sample revision'
+            revision='a sample revision',
+            project=project
         )
         self.assertEquals(str(schema), schema.name)
         self.assertNotEqual(models.Schema.objects.count(), 0)

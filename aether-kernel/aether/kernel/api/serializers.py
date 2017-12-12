@@ -4,6 +4,10 @@ from rest_framework import serializers
 from . import models
 from . import utils
 
+from six import StringIO
+import ruamel.yaml as yaml
+from schema_salad import schema
+
 
 class ProjectSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
@@ -23,6 +27,44 @@ class ProjectSerializer(serializers.ModelSerializer):
         lookup_url_kwarg='parent_lookup_project__name',
         lookup_field='name',
     )
+
+    def create(self, validated_data):
+        try:
+            project = models.Project(
+                revision=validated_data.pop('revision'),
+                name=validated_data.pop('name'),
+                salad_schema=validated_data.pop('salad_schema'),
+                jsonld_context=validated_data.pop('jsonld_context'),
+                rdf_definition=validated_data.pop('rdf_definition')
+            )
+            project.save()
+            text = str(project.salad_schema['$graph'])
+
+            if isinstance(text, bytes):
+                textIO = StringIO(text.decode('utf-8'))
+            else:
+                textIO = StringIO(text)
+            result = yaml.round_trip_load(textIO)
+
+            if isinstance(result, list):
+                (avsc_names, avsc_obj) = schema.make_avro_schema(result, utils.loader)
+            else:
+                raise TypeError('Schema must be a list')
+
+            for avro_schema in avsc_obj:
+                generated_schema = models.Schema(
+                    name=avro_schema['name'],
+                    type=avro_schema['type'],
+                    definition=avro_schema,
+                    project=project
+                )
+                generated_schema.save()
+
+            return project
+        except Exception as e:
+            raise serializers.ValidationError({
+                'description': 'Project validation failed with {}'.format(e)
+            })
 
     class Meta:
         model = models.Project

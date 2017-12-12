@@ -16,7 +16,7 @@ class Project(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     revision = models.TextField()
     name = models.CharField(max_length=50, db_index=True, unique=True)
-    salad_schema = models.TextField()
+    salad_schema = JSONField(blank=False, null=False)
     jsonld_context = models.TextField()
     rdf_definition = models.TextField()
 
@@ -57,10 +57,14 @@ class Submission(models.Model):
 
 class Schema(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=50, db_index=True, unique=True)
+    name = models.CharField(max_length=50, db_index=True)
     type = models.CharField(max_length=50)
     definition = JSONField(blank=False, null=False)
-    revision = models.TextField()
+    revision = models.TextField(default='1')
+    project = models.ForeignKey(Project, related_name='schemas')
+
+    class Meta:
+        unique_together = ('name', 'project',)
 
     @property
     def definition_prettified(self):
