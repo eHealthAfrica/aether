@@ -338,7 +338,10 @@ def xform_submission(request):
     try:
         response = requests.post(
             xform.aether_kernel_url,
-            json={'payload': data},
+            json={
+                'payload': data,
+                'mapping': str(xform.survey_id),
+            },
             headers=auth_header,
         )
         if response.status_code != 201:

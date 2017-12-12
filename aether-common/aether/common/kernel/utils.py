@@ -81,7 +81,7 @@ def get_mappings_url(mapping_id=''):
     )
 
 
-def get_mapping_submissions_url(mapping_id, submission_id=None):
+def get_submissions_url(mapping_id, submission_id=None):
     '''
     Returns Aether Kernel url to make mapping submissions
     '''
@@ -89,14 +89,12 @@ def get_mapping_submissions_url(mapping_id, submission_id=None):
         raise errors.SubmissionError('Cannot get submissions url without mapping!')
 
     if not submission_id:
-        return '{kernel_url}/mappings/{mapping_id}/submissions/'.format(
+        return '{kernel_url}/submissions/'.format(
             kernel_url=get_kernel_server_url(),
-            mapping_id=mapping_id,
         )
     else:
-        return '{kernel_url}/mappings/{mapping_id}/submissions/{submission_id}/'.format(
+        return '{kernel_url}/submissions/{submission_id}/'.format(
             kernel_url=get_kernel_server_url(),
-            mapping_id=mapping_id,
             submission_id=submission_id,
         )
 
@@ -132,11 +130,11 @@ def submit_to_kernel(submission, mapping_id, submission_id=None):
     if submission_id:
         # update existing doc
         method = requests.put
-        url = get_mapping_submissions_url(mapping_id, submission_id)
+        url = get_submissions_url(mapping_id, submission_id)
     else:
         # create new doc
         method = requests.post
-        url = get_mapping_submissions_url(mapping_id)
+        url = get_submissions_url(mapping_id)
 
     logger.debug('{method} to {url}'.format(method=method, url=url))
     return method(

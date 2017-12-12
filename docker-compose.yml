@@ -24,6 +24,8 @@ services:
     # ---------------------------------
 
     kernel:
+        stdin_open: true
+        tty: true
         build: aether-kernel
         image: kernel
         environment:

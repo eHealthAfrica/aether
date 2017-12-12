@@ -26,16 +26,16 @@ class UtilsTests(TestCase):
             'http://kernel-test/mappings/1'
         )
         self.assertEqual(
-            utils.get_mapping_submissions_url(1),
-            'http://kernel-test/mappings/1/submissions/'
+            utils.get_submissions_url(1),
+            'http://kernel-test/submissions/'
         )
         self.assertEqual(
-            utils.get_mapping_submissions_url(1, 2),
-            'http://kernel-test/mappings/1/submissions/2/'
+            utils.get_submissions_url(1, 2),
+            'http://kernel-test/submissions/2/'
         )
         self.assertRaises(
             Exception,
-            utils.get_mapping_submissions_url,
+            utils.get_submissions_url,
             mapping_id=None,
         )
 
@@ -51,16 +51,16 @@ class UtilsTests(TestCase):
             'http://kernel/mappings/1'
         )
         self.assertEqual(
-            utils.get_mapping_submissions_url(1),
-            'http://kernel/mappings/1/submissions/'
+            utils.get_submissions_url(1),
+            'http://kernel/submissions/'
         )
         self.assertEqual(
-            utils.get_mapping_submissions_url(1, 2),
-            'http://kernel/mappings/1/submissions/2/'
+            utils.get_submissions_url(1, 2),
+            'http://kernel/submissions/2/'
         )
         self.assertRaises(
             Exception,
-            utils.get_mapping_submissions_url,
+            utils.get_submissions_url,
             mapping_id=None,
         )
 

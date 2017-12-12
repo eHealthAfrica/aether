@@ -76,13 +76,13 @@ class PostSubmissionTests(CustomTestCase):
         self.assertTrue(kernel_utils.test_connection())
         self.KERNEL_HEADERS = kernel_utils.get_auth_header()
         project = requests.get(
-            'http://kernel-test:9000/projects/demo/',
+            'http://kernel-test:9000/projects/',
             headers=self.KERNEL_HEADERS,
-        ).json()
+        ).json()['results'][0]
         projectschema = requests.get(
-            'http://kernel-test:9000/projectschemas/Person/',
+            'http://kernel-test:9000/projectschemas/',
             headers=self.KERNEL_HEADERS,
-        ).json()
+        ).json()['results'][0]
         testing_survey = {
             'name': 'example',
             'revision': 1,
@@ -115,7 +115,7 @@ class PostSubmissionTests(CustomTestCase):
         data = response.json()
         mapping_id = data['id']
         self.MAPPING_URL = kernel_utils.get_mappings_url(mapping_id)
-        self.SUBMISSIONS_URL = kernel_utils.get_mapping_submissions_url(mapping_id)
+        self.SUBMISSIONS_URL = kernel_utils.get_submissions_url(mapping_id)
         # create xForm entry
         self.xform = self.helper_create_xform(surveyor=self.user, mapping_id=mapping_id)
         self.assertTrue(self.xform.is_surveyor(self.user))
