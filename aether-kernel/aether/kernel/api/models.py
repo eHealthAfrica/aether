@@ -20,6 +20,10 @@ class Project(models.Model):
     jsonld_context = models.TextField()
     rdf_definition = models.TextField()
 
+    @property
+    def definition_prettified(self):
+        return json_prettified(self.salad_schema)
+
     def __str__(self):
         return self.name
 
