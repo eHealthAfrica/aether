@@ -29,6 +29,7 @@ raven
 requests
 uwsgi
 jsonpath_ng
+schema_salad
 
 # this is used for pulling down secrets from S3
 awscli

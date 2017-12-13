@@ -13,6 +13,13 @@ router = ExtendedDefaultRouter()
 
 (
     router.register('projects', views.ProjectViewSet)
+          .register('schemas', views.SchemaViewSet,
+                    base_name='project_schema',
+                    parents_query_lookups=['project__name'])
+)
+
+(
+    router.register('projects', views.ProjectViewSet)
           .register('mappings', views.MappingViewSet,
                     base_name='project_mapping',
                     parents_query_lookups=['project__name'])

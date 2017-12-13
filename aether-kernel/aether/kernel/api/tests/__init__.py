@@ -4,6 +4,111 @@ SCHEMA_FILE_EMPTY = PATH_DIR + 'empty_schema.json'
 SCHEMA_FILE_SAMPLE = PATH_DIR + 'sample_schema.json'
 SCHEMA_FILE_ERROR = PATH_DIR + 'err_schema.json'
 
+EXAMPLE_SALAD_SCHEMA = {
+  "$base": "http://ehealthafrica.org/#",
+  "$namespaces": {
+    "eha": "http://ehealthafrica.org/#"
+  },
+  "$graph": [
+    {
+        "name": "DocModel",
+        "type": "record",
+        "fields": [
+            {"name": "id", "type": "string", "jsonldPredicate": "@id"},
+            {"name": "revision", "type": ["null", "string"]}
+        ]
+    },
+    {
+        "name": "Person",
+        "type": "record",
+        "extends": "DocModel",
+        "fields": [
+            {"name": "firstName", "type": ["null", "string"]},
+            {"name": "familyName", "type": ["null", "string"]},
+            {"name": "age", "type": ["null", "int"]},
+            {"name": "isAlive", "type": ["null", "boolean"]},
+            {
+                "name": "householdID",
+                "type": "string",
+                "jsonldPredicate": {
+                    "_type": "@id",
+                    "_id": "eha:Household"
+                }
+            }
+        ]
+    },
+    {
+        "name": "Section",
+        "type": "record",
+        "extends": "DocModel",
+        "fields": [
+            {"name": "placeName", "type": ["null", "string"]},
+            {
+                "name": "locationID",
+                "type": ["null", "string"],
+                "jsonldPredicate":{
+                    "_type": "@id",
+                    "_id": "eha:Location"
+                }
+            }
+        ]
+    },
+    {
+        "name": "Location",
+        "type": "record",
+        "extends": "DocModel",
+        "fields": [
+            {"name": "lat", "type": "float"},
+            {"name": "lng", "type": "float"}
+        ]
+    },
+    {
+        "name": "Household",
+        "type": "record",
+        "extends": "DocModel",
+        "fields": [
+            {
+                "name": "sectionID",
+                "type": ["null", "string"],
+                "jsonldPredicate":{
+                    "_type": "@id",
+                    "_id": "eha:Section"
+                }
+            },
+            {
+                "name": "locationID",
+                "type": ["null", "string"],
+                "jsonldPredicate":{
+                    "_type": "@id",
+                    "_id": "eha:Location"
+                }
+            },
+            {
+                "name": "headOfHouseHold",
+                "type": ["null", "string"],
+                "jsonldPredicate":{
+                    "_type": "@id",
+                    "_id": "eha:Person"
+                }
+            },
+            {
+              "name": "hasBedNets",
+              "type": ["null", "boolean"]
+            },
+            {
+              "name": "buildingType",
+              "type": ["null", "string"]
+            },
+            {
+              "name": "roofType",
+              "type": ["null", "string"]
+            }
+        ]
+    }
+  ]
+}
+
+
 EXAMPLE_MAPPING = {
     "entities": {
         "Person": 1

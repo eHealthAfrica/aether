@@ -4,6 +4,10 @@ from rest_framework import serializers
 from . import models
 from . import utils
 
+from six import StringIO
+import ruamel.yaml as yaml
+import schema_salad.schema as SchemaSaladSchema
+
 
 class ProjectSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
@@ -23,6 +27,46 @@ class ProjectSerializer(serializers.ModelSerializer):
         lookup_url_kwarg='parent_lookup_project__name',
         lookup_field='name',
     )
+
+    schemas_url = serializers.HyperlinkedIdentityField(
+        view_name='project_schema-list',
+        read_only=True,
+        lookup_url_kwarg='parent_lookup_project__name',
+        lookup_field='name',
+    )
+
+    def create(self, validated_data):
+        try:
+            project = models.Project(
+                revision=validated_data.pop('revision'),
+                name=validated_data.pop('name'),
+                salad_schema=validated_data.pop('salad_schema'),
+                jsonld_context=validated_data.pop('jsonld_context'),
+                rdf_definition=validated_data.pop('rdf_definition')
+            )
+            project.save()
+            if '$graph' in project.salad_schema:
+                text = str(project.salad_schema['$graph'])
+                textIO = StringIO(text)
+                result = yaml.round_trip_load(textIO)
+                avsc_obj = SchemaSaladSchema.make_avro_schema(result, utils.loader)[1]
+
+                for avro_schema in avsc_obj:
+                    generated_schema = models.Schema(
+                        name=avro_schema['name'],
+                        type=avro_schema['type'],
+                        definition=avro_schema,
+                        project=project
+                    )
+                    generated_schema.save()
+            else:
+                raise Exception('Invalid salad schema')
+
+            return project
+        except Exception as e:
+            raise serializers.ValidationError({
+                'description': 'Project validation failed: {}'.format(e)
+            })
 
     class Meta:
         model = models.Project
@@ -138,6 +182,12 @@ class SchemaSerializer(serializers.ModelSerializer):
         view_name='schema_projectschema-list',
         read_only=True,
         lookup_url_kwarg='parent_lookup_schema__name',
+        lookup_field='name',
+    )
+    project_url = serializers.HyperlinkedRelatedField(
+        view_name='project-detail',
+        source='project',
+        read_only=True,
         lookup_field='name',
     )
 
