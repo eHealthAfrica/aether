@@ -1,0 +1,39 @@
+{
+    "fields": [
+        {
+            "jsonldPredicate": "@id", 
+            "type": "string", 
+            "name": "id", 
+            "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel"
+        }, 
+        {
+            "type": [
+                "null", 
+                "string"
+            ], 
+            "name": "revision", 
+            "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel"
+        }, 
+        {
+            "type": [
+                "null", 
+                "string"
+            ], 
+            "name": "placeName"
+        }, 
+        {
+            "jsonldPredicate": {
+                "_type": "@id", 
+                "_id": "http://ehealthafrica.org/#Location"
+            }, 
+            "type": [
+                "null", 
+                "string"
+            ], 
+            "name": "locationID"
+        }
+    ], 
+    "extends": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel", 
+    "name": "Section", 
+    "type": "record"
+}

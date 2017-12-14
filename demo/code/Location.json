@@ -1,0 +1,16 @@
+    {
+    "name": "Location",
+    "type": "record",
+    "extends":"DocModel",
+    "fields": 
+      [
+        {
+          "name": "lat",
+          "type": "float"
+        },
+        {
+          "name": "lng",
+          "type": "float"
+        }
+      ]
+    }

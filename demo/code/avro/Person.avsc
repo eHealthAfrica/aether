@@ -1,0 +1,57 @@
+{
+    "fields": [
+        {
+            "jsonldPredicate": "@id", 
+            "type": "string", 
+            "name": "id", 
+            "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel"
+        }, 
+        {
+            "type": [
+                "null", 
+                "string"
+            ], 
+            "name": "revision", 
+            "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel"
+        }, 
+        {
+            "type": [
+                "null", 
+                "string"
+            ], 
+            "name": "firstName"
+        }, 
+        {
+            "type": [
+                "null", 
+                "string"
+            ], 
+            "name": "familyName"
+        }, 
+        {
+            "type": [
+                "null", 
+                "int"
+            ], 
+            "name": "age"
+        }, 
+        {
+            "type": [
+                "null", 
+                "boolean"
+            ], 
+            "name": "isAlive"
+        }, 
+        {
+            "jsonldPredicate": {
+                "_type": "@id", 
+                "_id": "http://ehealthafrica.org/#Household"
+            }, 
+            "type": "string", 
+            "name": "householdID"
+        }
+    ], 
+    "extends": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel", 
+    "name": "Person", 
+    "type": "record"
+}

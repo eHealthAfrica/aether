@@ -1,0 +1,8 @@
+{
+    "odk-url" : "http://odk.aether.local:8443",
+    "odk-pw" : "adminadmin",
+    "odk-usr" : "admin-odk",
+    "core-url" : "http://kernel.aether.local:8000",
+    "core-usr" : "admin-kernel",
+    "core-pw" : "adminadmin"
+}

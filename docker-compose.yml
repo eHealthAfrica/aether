@@ -20,11 +20,11 @@ services:
     redis:
         image: redis:3.2-alpine
 
-    kafka:
-        image: landoop/fast-data-dev
-        ports:
-            - "3030:3030"
-            - "8083:8083"
+#    kafka:
+#        image: landoop/fast-data-dev
+#        ports:
+#            - "3030:3030"
+#            - "8083:8083"
 
     # ---------------------------------
     # Aether Kernel container
@@ -51,7 +51,7 @@ services:
             - ./kafka/data-src:/aether
         depends_on:
             - db
-            - kafka
+#            - kafka
         ports:
             - "8000:8000"
         command: start_dev

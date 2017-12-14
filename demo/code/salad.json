@@ -1,0 +1,13 @@
+{
+  "$base": "http://ehealthafrica.org/#", 
+  "$namespaces": {
+    "eha": "http://ehealthafrica.org/#"
+  },
+  "$graph": [
+    {"$mixin":"DocModel.json"},
+    {"$mixin":"Person.json"},
+    {"$mixin":"Section.json"},
+    {"$mixin":"Location.json"},
+    {"$mixin":"Household.json"}
+  ]
+}

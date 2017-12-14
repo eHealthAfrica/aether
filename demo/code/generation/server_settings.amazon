@@ -1,0 +1,9 @@
+{
+    "odk-url" : "http://23.23.70.169:8443",
+    "odk-pw" : "adminadmin",
+    "odk-usr" : "admin-odk",
+    "core-url" : "http://23.23.70.169:8000",
+    "core-usr" : "admin-core",
+    "core-pw" : "adminadmin"
+}
+

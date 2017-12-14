@@ -1,0 +1,222 @@
+[
+    {
+        "fields": [
+            {
+                "jsonldPredicate": "@id",
+                "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
+                "type": "string",
+                "name": "id"
+            },
+            {
+                "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
+                "type": [
+                    "null",
+                    "string"
+                ],
+                "name": "revision"
+            }
+        ],
+        "name": "DocModel",
+        "type": "record"
+    },
+    {
+        "fields": [
+            {
+                "jsonldPredicate": "@id",
+                "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
+                "type": "string",
+                "name": "id"
+            },
+            {
+                "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
+                "type": [
+                    "null",
+                    "string"
+                ],
+                "name": "revision"
+            },
+            {
+                "type": [
+                    "null",
+                    "string"
+                ],
+                "name": "firstName"
+            },
+            {
+                "type": [
+                    "null",
+                    "string"
+                ],
+                "name": "familyName"
+            },
+            {
+                "type": [
+                    "null",
+                    "int"
+                ],
+                "name": "age"
+            },
+            {
+                "type": [
+                    "null",
+                    "boolean"
+                ],
+                "name": "isAlive"
+            },
+            {
+                "jsonldPredicate": {
+                    "_type": "@id",
+                    "_id": "http://ehealthafrica.org/#Household"
+                },
+                "type": "string",
+                "name": "householdID"
+            }
+        ],
+        "extends": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
+        "type": "record",
+        "name": "Person"
+    },
+    {
+        "fields": [
+            {
+                "jsonldPredicate": "@id",
+                "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
+                "type": "string",
+                "name": "id"
+            },
+            {
+                "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
+                "type": [
+                    "null",
+                    "string"
+                ],
+                "name": "revision"
+            },
+            {
+                "type": [
+                    "null",
+                    "string"
+                ],
+                "name": "placeName"
+            },
+            {
+                "jsonldPredicate": {
+                    "_type": "@id",
+                    "_id": "http://ehealthafrica.org/#Location"
+                },
+                "type": [
+                    "null",
+                    "string"
+                ],
+                "name": "locationID"
+            }
+        ],
+        "extends": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
+        "type": "record",
+        "name": "Section"
+    },
+    {
+        "fields": [
+            {
+                "jsonldPredicate": "@id",
+                "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
+                "type": "string",
+                "name": "id"
+            },
+            {
+                "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
+                "type": [
+                    "null",
+                    "string"
+                ],
+                "name": "revision"
+            },
+            {
+                "type": "float",
+                "name": "lat"
+            },
+            {
+                "type": "float",
+                "name": "lng"
+            }
+        ],
+        "extends": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
+        "type": "record",
+        "name": "Location"
+    },
+    {
+        "fields": [
+            {
+                "jsonldPredicate": "@id",
+                "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
+                "type": "string",
+                "name": "id"
+            },
+            {
+                "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
+                "type": [
+                    "null",
+                    "string"
+                ],
+                "name": "revision"
+            },
+            {
+                "jsonldPredicate": {
+                    "_type": "@id",
+                    "_id": "http://ehealthafrica.org/#Section"
+                },
+                "type": [
+                    "null",
+                    "string"
+                ],
+                "name": "sectionID"
+            },
+            {
+                "jsonldPredicate": {
+                    "_type": "@id",
+                    "_id": "http://ehealthafrica.org/#Location"
+                },
+                "type": [
+                    "null",
+                    "string"
+                ],
+                "name": "locationID"
+            },
+            {
+                "jsonldPredicate": {
+                    "_type": "@id",
+                    "_id": "http://ehealthafrica.org/#Person"
+                },
+                "type": [
+                    "null",
+                    "string"
+                ],
+                "name": "headOfHouseHold"
+            },
+            {
+                "type": [
+                    "null",
+                    "boolean"
+                ],
+                "name": "hasBedNets"
+            },
+            {
+                "type": [
+                    "null",
+                    "string"
+                ],
+                "name": "buildingType"
+            },
+            {
+                "type": [
+                    "null",
+                    "string"
+                ],
+                "name": "roofType"
+            }
+        ],
+        "extends": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
+        "type": "record",
+        "name": "Household"
+    }
+]

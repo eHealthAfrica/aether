@@ -1,0 +1,32 @@
+    {
+    "name": "Person",
+    "type": "record",
+    "extends":"DocModel",
+    "fields": 
+      [
+        {
+          "name": "firstName",
+          "type": ["null","string"]
+        },
+        {
+          "name": "familyName",
+          "type": ["null","string"]
+        },
+        {
+          "name": "age",
+          "type": ["null","int"]
+        },
+        {
+          "name": "isAlive",
+          "type": ["null", "boolean"]
+        },
+        {
+          "name": "householdID",
+          "type": "string",
+          "jsonldPredicate":{
+            "_type":"@id",
+            "_id": "eha:Household"
+          }
+        }
+      ]
+    }

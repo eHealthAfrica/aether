@@ -1,0 +1,20 @@
+{
+    "fields": [
+        {
+            "jsonldPredicate": "@id", 
+            "type": "string", 
+            "name": "_id", 
+            "inherited_from": "file:///home/sarwar/Desktop/Salad-Work/by-hand/nov-demo/salad.json#CouchDoc"
+        }, 
+        {
+            "type": [
+                "null", 
+                "string"
+            ], 
+            "name": "_rev", 
+            "inherited_from": "file:///home/sarwar/Desktop/Salad-Work/by-hand/nov-demo/salad.json#CouchDoc"
+        }
+    ], 
+    "type": "record", 
+    "name": "CouchDoc"
+}
