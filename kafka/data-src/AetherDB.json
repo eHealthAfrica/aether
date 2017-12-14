@@ -1,0 +1,11 @@
+{
+  "name": "AetherDB",
+  "config": {
+    "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+    "tasks.max": "1",
+    "connection.url": "jdbc:postgresql://db:5432/aether?user=postgres",
+    "topic.prefix": "aether_",
+    "mode": "bulk",
+    "query": "SELECT e.id, TO_TIMESTAMP( SUBSTRING(e.modified, 1, 26), 'YYYY-MM-DDTHH:MI:SS.US' ) as timestamp, e.modified as incrementing, e.revision, e.payload, s.name, s.revision from kernel_entity e inner join kernel_projectschema ps on e.projectschema_id = ps.id inner join kernel_schema s on ps.schema_id = s.id"
+  }
+}

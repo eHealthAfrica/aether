@@ -47,6 +47,17 @@ setup_db() {
     ./manage.py migrate --noinput
 }
 
+setup_kafka() {
+    if [ -e /aether/setKafkaConnectors.sh ]
+    then
+        chmod +x /aether/setKafkaConnectors.sh
+        nohup /aether/setKafkaConnectors.sh 90s &
+    else
+        echo "WARNING: setKafkaConnectors.sh not found"
+    fi
+}
+
+
 setup_initial_data() {
     # create initial superuser and its token
     ./manage.py loaddata /code/conf/extras/initial.json
@@ -135,6 +146,7 @@ case "$1" in
     start )
         setup_db
         setup_aws_requirements
+        setup_kafka
 
         ./manage.py collectstatic --noinput
         chmod -R 755 /var/www/static
@@ -145,6 +157,7 @@ case "$1" in
     start_dev )
         setup_db
         setup_initial_data
+        setup_kafka
 
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
