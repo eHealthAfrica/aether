@@ -1,8 +1,8 @@
 {
     "entities" : {
-        "Location" : UUID_LOC,
-        "Person" : UUID_PER,
-        "Household": UUID_HHLD
+        "Location" : 4,
+        "Person" : 2,
+        "Household": 5
     },
     "mapping" : [
         ["#!uuid","Location.id"],

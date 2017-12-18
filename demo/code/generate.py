@@ -4,6 +4,8 @@ import sys
 import os.path
 import requests
 
+from aether.client import KernelClient
+
 version = 3
 try:
     import urllib.request
@@ -11,7 +13,7 @@ except Exception:
     print ("REQUIRES PYTHON3, use pipenv --three")
     sys.exit(255)
     version = 2
-    
+
 
 from avro.io import Validate
 from avro.schema import Parse
@@ -28,6 +30,7 @@ LOC_GEN = None
 
 #const
 CREATION_MAX = 10000 # number of person entities to create
+PROJECT_NAME = "DecemberDemo"
 
 ODK_URL = None
 ODK_USR = None
@@ -36,7 +39,7 @@ BASE_URL = None
 CORE_USR = None
 CORE_PW = None
 
-with open("./server_settings.json") as f:
+with open("./project/conf/server_settings.json") as f:
     S = json.load(f)
     ODK_URL = S['odk-url']
     ODK_USR = S['odk-usr']
@@ -44,6 +47,10 @@ with open("./server_settings.json") as f:
     BASE_URL = S['core-url']
     CORE_USR = S['core-usr']
     CORE_PW = S['core-pw']
+
+#Aether API
+kernel = KernelClient(BASE_URL, **{"username": CORE_USR, "password": CORE_PW})
+
 
 SCHEMAS = {}
 PROJECT_SCHEMAS = {}
@@ -53,40 +60,35 @@ def postEntity(doc, entity_type):
     schema_id = PROJECT_SCHEMAS.get(entity_type)
     package = {
         "id": doc.get("id"),
-        "revision": "1", 
-        "payload": json.dumps(doc), 
-        "projectschema": schema_id, 
+        "revision": "1",
+        "payload": json.dumps(doc),
+        "projectschema": schema_id,
         "status":"Publishable"
     }
-    url = "%s/entities/" % (BASE_URL)
-    print("posting package: %s" % json.dumps(package, indent=2))
-    return post(url, package)
-
-
-def post(url, package):
-    auth = requests.auth.HTTPBasicAuth(CORE_USR,CORE_PW)
-    req = requests.post(url, auth=auth, data=package)
-    return json.loads(req.text)
-
+    try:
+        return kernel.Entity.get(entity_type).get(entity_type).submit(package)
+    except Exception as e:
+        print ("Could not submit data, there may be a problem with project setup")
+        raise e
 
 def loadSchemas():
-    cache_path = "./gen_cache.json"
-    if not os.path.isfile(cache_path):
-        return False
-    with open(cache_path, "r") as f:
-        cache = json.load(f)
+    try:
         global SCHEMAS, PROJECT_SCHEMAS, PROJECT_ID
-        SCHEMAS = cache.get("schemas")
-        PROJECT_SCHEMAS = cache.get("project_schemas")
-        PROJECT_ID = cache.get("project_id")    
-        print ("Loaded Cache")
+        PROJECT_ID = kernel.Resource.Project.get(PROJECT_NAME).id
+        for schema in kernel.Resource.Schema:
+            SCHEMAS[schema.name] = schema.id
+        for schema in kernel.Resource.ProjectSchema:
+            PROJECT_SCHEMAS[schema.name] = schema.id
         return True
+    except AttributeError as e:
+        print("Project setup incomplete, run setup_project first. Error: %s" % e)
+        return False
 
 #generator wrapper with DB interaction for entity gen
 def entityGenerator( name, gen_func ):
     db = None
     schema = None
-    with open("../all_schemas.json") as f:
+    with open("./project/salad/all_schemas.json") as f:
         schemas = json.load(f)
         for obj in schemas:
             if str(obj.get('name')) == name:
@@ -113,7 +115,7 @@ def validEntity(doc, schema):
 def baseDoc():
     doc = {"id": str(uuid4())}
     return doc
-    
+
 #household entity
 
 def genHousehold():
@@ -127,7 +129,7 @@ def genHousehold():
     for i in range(size):
         next(PERSON_GEN)
     return doc
-        
+
 
 #person entity
 def genPerson():
@@ -164,9 +166,9 @@ def getData():
             return json.loads(response.decode(encoding)).get("results")[0]
     else:
         response = urllib2.urlopen(url)
-        return json.load(response).get("results")[0]   
+        return json.load(response).get("results")[0]
 
-   
+
 
 #main generation loop
 def generate():
@@ -182,6 +184,8 @@ def generate():
 if __name__ == "__main__":
     if not loadSchemas():
         sys.exit("Schemas are not registered, run setup_project.py first")
+    else:
+        print(json.dumps(SCHEMAS))
     generate()
 
 
