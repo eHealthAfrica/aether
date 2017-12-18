@@ -1,222 +1,222 @@
 [
     {
+        "name": "DocModel",
+        "type": "record",
         "fields": [
             {
+                "inherited_from": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel",
                 "jsonldPredicate": "@id",
-                "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
-                "type": "string",
-                "name": "id"
+                "name": "id",
+                "type": "string"
             },
             {
-                "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
+                "inherited_from": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel",
+                "name": "revision",
                 "type": [
                     "null",
                     "string"
-                ],
-                "name": "revision"
+                ]
             }
-        ],
-        "name": "DocModel",
-        "type": "record"
+        ]
     },
     {
+        "name": "Person",
         "fields": [
             {
+                "inherited_from": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel",
                 "jsonldPredicate": "@id",
-                "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
-                "type": "string",
-                "name": "id"
+                "name": "id",
+                "type": "string"
             },
             {
-                "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
+                "inherited_from": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel",
+                "name": "revision",
                 "type": [
                     "null",
                     "string"
-                ],
-                "name": "revision"
+                ]
             },
             {
+                "name": "firstName",
                 "type": [
                     "null",
                     "string"
-                ],
-                "name": "firstName"
+                ]
             },
             {
+                "name": "familyName",
                 "type": [
                     "null",
                     "string"
-                ],
-                "name": "familyName"
+                ]
             },
             {
+                "name": "age",
                 "type": [
                     "null",
                     "int"
-                ],
-                "name": "age"
+                ]
             },
             {
+                "name": "isAlive",
                 "type": [
                     "null",
                     "boolean"
-                ],
-                "name": "isAlive"
+                ]
             },
             {
                 "jsonldPredicate": {
-                    "_type": "@id",
-                    "_id": "http://ehealthafrica.org/#Household"
+                    "_id": "http://ehealthafrica.org/#Household",
+                    "_type": "@id"
                 },
-                "type": "string",
-                "name": "householdID"
+                "name": "householdID",
+                "type": "string"
             }
         ],
-        "extends": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
         "type": "record",
-        "name": "Person"
+        "extends": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel"
     },
     {
+        "name": "Section",
         "fields": [
             {
+                "inherited_from": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel",
                 "jsonldPredicate": "@id",
-                "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
-                "type": "string",
-                "name": "id"
+                "name": "id",
+                "type": "string"
             },
             {
-                "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
+                "inherited_from": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel",
+                "name": "revision",
                 "type": [
                     "null",
                     "string"
-                ],
-                "name": "revision"
+                ]
             },
             {
+                "name": "placeName",
                 "type": [
                     "null",
                     "string"
-                ],
-                "name": "placeName"
+                ]
             },
             {
                 "jsonldPredicate": {
-                    "_type": "@id",
-                    "_id": "http://ehealthafrica.org/#Location"
+                    "_id": "http://ehealthafrica.org/#Location",
+                    "_type": "@id"
                 },
+                "name": "locationID",
                 "type": [
                     "null",
                     "string"
-                ],
-                "name": "locationID"
+                ]
             }
         ],
-        "extends": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
         "type": "record",
-        "name": "Section"
+        "extends": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel"
     },
     {
+        "name": "Location",
         "fields": [
             {
+                "inherited_from": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel",
                 "jsonldPredicate": "@id",
-                "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
-                "type": "string",
-                "name": "id"
+                "name": "id",
+                "type": "string"
             },
             {
-                "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
+                "inherited_from": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel",
+                "name": "revision",
                 "type": [
                     "null",
                     "string"
-                ],
-                "name": "revision"
+                ]
             },
             {
-                "type": "float",
-                "name": "lat"
+                "name": "lat",
+                "type": "float"
             },
             {
-                "type": "float",
-                "name": "lng"
+                "name": "lng",
+                "type": "float"
             }
         ],
-        "extends": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
         "type": "record",
-        "name": "Location"
+        "extends": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel"
     },
     {
+        "name": "Household",
         "fields": [
             {
+                "inherited_from": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel",
                 "jsonldPredicate": "@id",
-                "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
-                "type": "string",
-                "name": "id"
+                "name": "id",
+                "type": "string"
             },
             {
-                "inherited_from": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
+                "inherited_from": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel",
+                "name": "revision",
                 "type": [
                     "null",
                     "string"
-                ],
-                "name": "revision"
+                ]
             },
             {
                 "jsonldPredicate": {
-                    "_type": "@id",
-                    "_id": "http://ehealthafrica.org/#Section"
+                    "_id": "http://ehealthafrica.org/#Section",
+                    "_type": "@id"
                 },
+                "name": "sectionID",
                 "type": [
                     "null",
                     "string"
-                ],
-                "name": "sectionID"
+                ]
             },
             {
                 "jsonldPredicate": {
-                    "_type": "@id",
-                    "_id": "http://ehealthafrica.org/#Location"
+                    "_id": "http://ehealthafrica.org/#Location",
+                    "_type": "@id"
                 },
+                "name": "locationID",
                 "type": [
                     "null",
                     "string"
-                ],
-                "name": "locationID"
+                ]
             },
             {
                 "jsonldPredicate": {
-                    "_type": "@id",
-                    "_id": "http://ehealthafrica.org/#Person"
+                    "_id": "http://ehealthafrica.org/#Person",
+                    "_type": "@id"
                 },
+                "name": "headOfHouseHold",
                 "type": [
                     "null",
                     "string"
-                ],
-                "name": "headOfHouseHold"
+                ]
             },
             {
+                "name": "hasBedNets",
                 "type": [
                     "null",
                     "boolean"
-                ],
-                "name": "hasBedNets"
+                ]
             },
             {
+                "name": "buildingType",
                 "type": [
                     "null",
                     "string"
-                ],
-                "name": "buildingType"
+                ]
             },
             {
+                "name": "roofType",
                 "type": [
                     "null",
                     "string"
-                ],
-                "name": "roofType"
+                ]
             }
         ],
-        "extends": "file:///home/sarwar/Desktop/nov-demo/salad.json#DocModel",
         "type": "record",
-        "name": "Household"
+        "extends": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel"
     }
 ]

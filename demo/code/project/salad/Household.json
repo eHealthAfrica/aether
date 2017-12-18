@@ -1,0 +1,44 @@
+    {
+    "name": "Household",
+    "type": "record",
+    "extends":"DocModel",
+    "fields": 
+      [
+        {
+          "name": "sectionID",
+          "type": ["null","string"],
+          "jsonldPredicate":{
+            "_type":"@id",
+            "_id": "eha:Section"
+          }
+        },
+        {
+          "name": "locationID",
+          "type": ["null","string"],
+          "jsonldPredicate":{
+            "_type":"@id",
+            "_id": "eha:Location"
+          }
+        },
+        {
+          "name": "headOfHouseHold",
+          "type": ["null","string"],
+          "jsonldPredicate":{
+            "_type":"@id",
+            "_id": "eha:Person"
+          }
+        },
+        {
+          "name": "hasBedNets",
+          "type": ["null","boolean"]
+        },
+        {
+          "name": "buildingType",
+          "type": ["null","string"]
+        },
+        {
+          "name": "roofType",
+          "type": ["null","string"]
+        }
+      ]
+    }

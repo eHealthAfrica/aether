@@ -40,7 +40,7 @@ resource = kernel.Resource
 project_id = resource.Project.DecemberDemo.id
 
 #Register Schema
-schema_dir ="./project/schemas"
+schema_dir ="./project/avro"
 schema_files = os.listdir(schema_dir)
 for filename in schema_files:
     name = filename.split(".")[0]

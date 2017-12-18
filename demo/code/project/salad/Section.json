@@ -1,0 +1,20 @@
+    {
+    "name": "Section",
+    "type": "record",
+    "extends":"DocModel",
+    "fields": 
+      [
+        {
+          "name": "placeName",
+          "type": ["null","string"]
+        },
+        {
+          "name": "locationID",
+          "type": ["null","string"],
+          "jsonldPredicate":{
+            "_type":"@id",
+            "_id": "eha:Location"
+          }
+        }
+      ]
+    }
