@@ -1,9 +1,9 @@
 <h:html xmlns="http://www.w3.org/2002/xforms" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:h="http://www.w3.org/1999/xhtml" xmlns:jr="http://openrosa.org/javarosa" xmlns:orx="http://openrosa.org/xforms" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <h:head>
-    <h:title>aaa</h:title>
+    <h:title>microcensus_survey</h:title>
     <model>
       <instance>
-        <None id="aaa">
+        <None id="microcensus_survey">
           <sections/>
           <location/>
           <hoh>
