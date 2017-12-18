@@ -1,4 +1,4 @@
-from aether.client import KernelClient, ODKModuleClient
+from code.aether.client import KernelClient, ODKModuleClient
 import json
 import os
 
@@ -25,7 +25,7 @@ resource = kernel.Resource
 
 #Register Project
 project_name = "DecemberDemo"
-project_def = file_to_json("./project/salad/salad.json")
+project_def = file_to_json("./code/project/salad/salad.json")
 project_obj = {
     "revision": "1",
     "name": project_name,
@@ -40,7 +40,7 @@ resource = kernel.Resource
 project_id = resource.Project.DecemberDemo.id
 
 #Register Schema
-schema_dir ="./project/avro"
+schema_dir ="./code/project/avro"
 schema_files = os.listdir(schema_dir)
 for filename in schema_files:
     name = filename.split(".")[0]
@@ -78,7 +78,7 @@ project_schema_ids = {
     name : resource.ProjectSchema.get(name).id
     for name in schema_names
 }
-mapping_def = file_to_json("./project/mappings/form-mapping.json")
+mapping_def = file_to_json("./code/project/mappings/form-mapping.json")
 mapping_def["entities"] = project_schema_ids
 mapping_obj = {
     "name": "microcensus",
@@ -114,7 +114,7 @@ survey = odk.Resource.Survey.search({"mapping_id": mapping_id})[0]
 
 #Register XForm
 xml_data = None
-with open("./project/xform/form1.xml") as f:
+with open("./code/project/xform/form1.xml") as f:
     xml_data = f.read()
 xform_obj = {
     "surveyors": [user.id],

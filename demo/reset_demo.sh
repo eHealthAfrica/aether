@@ -29,8 +29,6 @@ echo "\nrecreating ES index aether-demo-2"
 echo "Setting up Project Data"
 
 pipenv --three --where install
-pushd code
 pipenv run python ./setup_project.py
-popd
 
 echo "You may now submit data to the server"

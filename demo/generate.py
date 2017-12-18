@@ -4,7 +4,7 @@ import sys
 import os.path
 import requests
 
-from aether.client import KernelClient
+from code.aether.client import KernelClient
 
 version = 3
 try:
@@ -39,7 +39,7 @@ BASE_URL = None
 CORE_USR = None
 CORE_PW = None
 
-with open("./project/conf/server_settings.json") as f:
+with open("./code/project/conf/server_settings.json") as f:
     S = json.load(f)
     ODK_URL = S['odk-url']
     ODK_USR = S['odk-usr']
@@ -88,7 +88,7 @@ def loadSchemas():
 def entityGenerator( name, gen_func ):
     db = None
     schema = None
-    with open("./project/salad/all_schemas.json") as f:
+    with open("./code/project/salad/all_schemas.json") as f:
         schemas = json.load(f)
         for obj in schemas:
             if str(obj.get('name')) == name:
