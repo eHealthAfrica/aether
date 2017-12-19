@@ -53,6 +53,8 @@ services:
     # ---------------------------------
 
     odk-importer:
+        stdin_open: true
+        tty: true
         build: aether-odk-importer
         image: odk-importer
         environment:
@@ -80,7 +82,14 @@ services:
         ports:
             - "8443:8443"
         command: start_dev
-
+        
+    enketo:
+      build: enketo
+      image: enketo
+      command: run_dev
+      ports:
+          - "8005:8005"
+          - "8085:8085"
 
     # ---------------------------------
     # Mobile Sync containers

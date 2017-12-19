@@ -371,3 +371,23 @@ def xform_submission(request):
         logger.error(str(e))
         # something went wrong... just send an 400 error
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+import requests
+
+@api_view(['GET'])
+@renderer_classes([TemplateHTMLRenderer])
+@authentication_classes([BasicAuthentication])
+@permission_classes([IsAuthenticated])
+def enketo(request):
+    # TODO:
+    # document enketo-core/enketo-transformer
+    # add tests
+    # add webpack to container entrypoint
+    # ./node_modules/.bin/webpack --entry ./index.js --output-filename ../aether/odk/static/out.js
+    return Response(
+        {
+            'test': 123,
+        },
+        template_name='enketo.html',
+        content_type='text/html',
+    )

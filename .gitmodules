@@ -1,0 +1,3 @@
+[submodule "enketo/enketo-transformer"]
+	path = enketo/enketo-transformer
+	url = https://github.com/enketo/enketo-transformer.git
