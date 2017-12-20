@@ -31,7 +31,7 @@ class Survey(models.Model):
 
     @property
     def aether_kernel_url(self):
-        return kernel_utils.get_submissions_url(mapping_id=self.pk)
+        return kernel_utils.get_submissions_url()
 
     def is_surveyor(self, user):
         '''

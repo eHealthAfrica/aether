@@ -22,7 +22,7 @@ def get_aether_mappings():
 
 
 def get_aether_submissions(mapping_id):
-    url = kernel_utils.get_submissions_url(mapping_id)
+    url = kernel_utils.get_submissions_url()
     return kernel_utils.get_all_docs(url)
 
 

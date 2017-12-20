@@ -115,7 +115,7 @@ class PostSubmissionTests(CustomTestCase):
         data = response.json()
         mapping_id = data['id']
         self.MAPPING_URL = kernel_utils.get_mappings_url(mapping_id)
-        self.SUBMISSIONS_URL = kernel_utils.get_submissions_url(mapping_id)
+        self.SUBMISSIONS_URL = kernel_utils.get_submissions_url()
         # create xForm entry
         self.xform = self.helper_create_xform(surveyor=self.user, mapping_id=mapping_id)
         self.assertTrue(self.xform.is_surveyor(self.user))
