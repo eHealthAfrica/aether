@@ -16,7 +16,7 @@ django-debug-toolbar
 django-filter
 django-reversion-compare
 django-ums-client
-djangorestframework==3.6.4
+djangorestframework
 djangorestframework-filters
 drf-dynamic-fields
 drf-extensions

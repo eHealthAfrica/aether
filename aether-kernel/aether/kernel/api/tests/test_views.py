@@ -128,20 +128,13 @@ class ViewsTest(TransactionTestCase):
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def helper_read_object_name(self, view_name, Obj):
-        url = reverse(view_name, kwargs={'name': Obj.name})
-        response = self.client.get(url, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_api_read_instance_name(self):
-        self.helper_read_object_name('project-detail', self.project)
-        self.helper_read_object_name('schema-detail', self.schema)
-        self.helper_read_object_name('projectschema-detail', self.projectschema)
-
     def test_api_read_instance(self):
         self.helper_read_object_id('mapping-detail', self.mapping)
         self.helper_read_object_id('submission-detail', self.submission)
         self.helper_read_object_id('entity-detail', self.entity)
+        self.helper_read_object_id('project-detail', self.project)
+        self.helper_read_object_id('schema-detail', self.schema)
+        self.helper_read_object_id('projectschema-detail', self.projectschema)
 
     # TEST UPDATE
 
@@ -171,28 +164,20 @@ class ViewsTest(TransactionTestCase):
             'status': 'Publishable',
             'projectschema': str(self.projectschema.pk),
         }, self.entity)
-
-    def helper_update_object_name(self, view_name, updated_data, Obj):
-        url = reverse(view_name, kwargs={'name': Obj.name})
-        updated_data = json.dumps(updated_data)
-        response = self.client.put(url, updated_data, content_type='application/json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_api_update_instance_name(self):
-        self.helper_update_object_name('project-detail', {
+        self.helper_update_object_id('project-detail', {
             'name': 'Project name 2',
             'revision': 'Sample project revision',
             'salad_schema': 'Sample project SALAD schema',
             'jsonld_context': 'Sample JSONLD context',
             'rdf_definition': 'Sample RDF definition'
         }, self.project)
-        self.helper_update_object_name('schema-detail', {
+        self.helper_update_object_id('schema-detail', {
             'name': 'Schema name 2',
             'type': 'Type',
             'definition': {},
             'revision': 'Sample schema revision',
         }, self.schema)
-        self.helper_update_object_name('projectschema-detail', {
+        self.helper_update_object_id('projectschema-detail', {
             'name': 'Project Schema name 2',
             'mandatory_fields': 'Sample projectschema mandatory fields updated',
             'transport_rule': 'Sample projectschema transport rule',
@@ -203,10 +188,6 @@ class ViewsTest(TransactionTestCase):
         }, self.projectschema)
 
     # TEST DELETE
-    def helper_delete_object(self, view_name, Obj):
-        url = reverse(view_name, kwargs={'name': Obj.name})
-        response = self.client.delete(url, format='json', follow=True)
-        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def helper_delete_object_pk(self, view_name, Obj):
         url = reverse(view_name, kwargs={'pk': Obj.pk})
@@ -214,13 +195,13 @@ class ViewsTest(TransactionTestCase):
         self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_api_delete_project(self):
-        self.helper_delete_object('project-detail', self.project)
+        self.helper_delete_object_pk('project-detail', self.project)
 
     def test_api_delete_schema(self):
-        self.helper_delete_object('schema-detail', self.schema)
+        self.helper_delete_object_pk('schema-detail', self.schema)
 
     def test_api_delete_projectschema(self):
-        self.helper_delete_object('projectschema-detail', self.projectschema)
+        self.helper_delete_object_pk('projectschema-detail', self.projectschema)
 
     def test_api_delete_mapping(self):
         self.helper_delete_object_pk('mapping-detail', self.mapping)

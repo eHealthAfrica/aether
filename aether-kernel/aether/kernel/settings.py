@@ -4,7 +4,6 @@
 from aether.common.conf.settings import *  # noqa
 from aether.common.conf.settings import INSTALLED_APPS, REST_FRAMEWORK
 
-
 # Kernel Configuration
 # ------------------------------------------------------------------------------
 

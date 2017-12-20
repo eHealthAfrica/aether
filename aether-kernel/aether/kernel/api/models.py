@@ -15,7 +15,7 @@ STATUS_CHOICES = (
 class Project(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     revision = models.TextField()
-    name = models.CharField(max_length=50, db_index=True, unique=True)
+    name = models.CharField(max_length=50)
     salad_schema = models.TextField()
     jsonld_context = models.TextField()
     rdf_definition = models.TextField()
@@ -26,7 +26,7 @@ class Project(models.Model):
 
 class Mapping(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=50, db_index=True, unique=True)
+    name = models.CharField(max_length=50)
     definition = JSONField(blank=False, null=False)
     revision = models.TextField()
     project = models.ForeignKey(Project, related_name='mappings')
@@ -57,7 +57,7 @@ class Submission(models.Model):
 
 class Schema(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=50, db_index=True, unique=True)
+    name = models.CharField(max_length=50)
     type = models.CharField(max_length=50)
     definition = JSONField(blank=False, null=False)
     revision = models.TextField()
@@ -72,7 +72,7 @@ class Schema(models.Model):
 
 class ProjectSchema(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=50, db_index=True, unique=True)
+    name = models.CharField(max_length=50)
     mandatory_fields = models.CharField(max_length=100)
     transport_rule = models.TextField()
     masked_fields = models.TextField()

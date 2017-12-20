@@ -1,42 +1,43 @@
 from rest_framework import viewsets, permissions
-from rest_framework_extensions.mixins import NestedViewSetMixin
 from drf_openapi.views import SchemaView
 
+from . import models, serializers, filters
 
-from . import models, serializers
 
-
-class ProjectViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
+class ProjectViewSet(viewsets.ModelViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectSerializer
-    lookup_field = 'name'
+    filter_class = filters.ProjectFilter
 
 
-class MappingViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
+class MappingViewSet(viewsets.ModelViewSet):
     queryset = models.Mapping.objects.all()
     serializer_class = serializers.MappingSerializer
+    filter_class = filters.MappingFilter
 
 
-class SubmissionViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
+class SubmissionViewSet(viewsets.ModelViewSet):
     queryset = models.Submission.objects.all()
     serializer_class = serializers.SubmissionSerializer
+    filter_class = filters.SubmissionFilter
 
 
-class SchemaViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
+class SchemaViewSet(viewsets.ModelViewSet):
     queryset = models.Schema.objects.all()
     serializer_class = serializers.SchemaSerializer
-    lookup_field = 'name'
+    filter_class = filters.SchemaFilter
 
 
-class ProjectSchemaViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
+class ProjectSchemaViewSet(viewsets.ModelViewSet):
     queryset = models.ProjectSchema.objects.all()
     serializer_class = serializers.ProjectSchemaSerializer
-    lookup_field = 'name'
+    filter_class = filters.ProjectSchemaFilter
 
 
-class EntityViewSet(NestedViewSetMixin, viewsets.ModelViewSet):
+class EntityViewSet(viewsets.ModelViewSet):
     queryset = models.Entity.objects.all()
     serializer_class = serializers.EntitySerializer
+    filter_class = filters.EntityFilter
 
 
 class AetherSchemaView(SchemaView):

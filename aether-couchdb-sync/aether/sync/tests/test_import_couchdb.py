@@ -22,7 +22,7 @@ def get_aether_mappings():
 
 
 def get_aether_submissions(mapping_id):
-    url = kernel_utils.get_mapping_submissions_url(mapping_id)
+    url = kernel_utils.get_submissions_url()
     return kernel_utils.get_all_docs(url)
 
 
@@ -52,13 +52,13 @@ class ImportTestCase(TestCase):
         # `/aether-kernel/aether/kernel/api/tests/fixtures/project.json` needs to
         # have been loaded into the kernel database.
         project = requests.get(
-            'http://kernel-test:9000/projects/demo/',
-            headers=headers_testing
-        ).json()
+            url='http://kernel-test:9000/projects/',
+            headers=headers_testing,
+        ).json()['results'][0]
         projectschema = requests.get(
-            'http://kernel-test:9000/projectschemas/Person/',
-            headers=headers_testing
-        ).json()
+            url='http://kernel-test:9000/projectschemas/',
+            headers=headers_testing,
+        ).json()['results'][0]
         # An example mapping, corresponding to the model
         # `aether.kernel.api.models.Mapping.
         self.example_mapping = {
