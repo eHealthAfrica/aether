@@ -1,4 +1,5 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions
+from drf_openapi.views import SchemaView
 
 from . import models, serializers, filters
 
@@ -37,3 +38,7 @@ class EntityViewSet(viewsets.ModelViewSet):
     queryset = models.Entity.objects.all()
     serializer_class = serializers.EntitySerializer
     filter_class = filters.EntityFilter
+
+
+class AetherSchemaView(SchemaView):
+    permission_classes = (permissions.AllowAny, )

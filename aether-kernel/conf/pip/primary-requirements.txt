@@ -20,6 +20,7 @@ djangorestframework
 djangorestframework-filters
 drf-dynamic-fields
 drf-extensions
+drf-openapi
 flake8
 jsonschema
 mock
