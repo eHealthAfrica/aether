@@ -13,7 +13,7 @@ if [ "${BRANCH}" == "develop" ]; then
   export CLUSTER_NAME="ehealth-africa"
 fi
 
-$(aws ecr get-login --region="${AWS_DEFAULT_REGION}")
+$(aws ecr get-login --region="${AWS_DEFAULT_REGION}" --no-include-email)
 for PREFIX in "${PREFIX[@]}"
 do
   for APP in "${APPS[@]}"
