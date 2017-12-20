@@ -348,8 +348,9 @@ def extract_entity(requirements, submission_data, entity_stubs):
                     # Find the matches and assign them
                     matches = parse(path).find(data)
                     if len(matches) == 0:
-                        msg = 'No matches found for path: "{}"'
-                        raise EntityExtractionError(msg.format(path))
+                        msg = 'Could not extract entity at path: "{}"'
+                        data["aether_errors"].append(msg.format(path))
+                        i += 1
                     elif len(matches) == 1:
                         # single value
                         entities[entity_type][i][field] = matches[0].value
