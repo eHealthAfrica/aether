@@ -197,7 +197,7 @@ services:
             - kernel
             - db
             - odk-importer
-            - webpack 
+            - webpack
         ports:
             - "8080:8080"
         command: start_dev
