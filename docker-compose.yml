@@ -197,13 +197,14 @@ services:
             - kernel
             - db
             - odk-importer
-            - webpack
+            - webpack 
         ports:
             - "8080:8080"
         command: start_dev
 
     webpack:
-        image: ui
+        build: aether-ui
+        image: ui 
         environment: *ui-environment
         volumes: *ui-volumes
         ports:
