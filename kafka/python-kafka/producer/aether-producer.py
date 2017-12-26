@@ -3,6 +3,7 @@ import psycopg2
 import avro.schema
 import io
 import ast
+import os
 
 from avro.io import DatumWriter
 from kafka import KafkaProducer
@@ -10,7 +11,9 @@ from aether.client import KernelClient
 from psycopg2.extras import DictCursor
 from time import sleep as Sleep
 
-OFFSET_PATH = "./offset.json"
+FILE_PATH = os.path.dirname(os.path.realpath(__file__))
+
+OFFSET_PATH = "%s/offset.json" % FILE_PATH
 KAFKA_SERVER = 'localhost:29092'
 
 jdbc_connection_string = "jdbc:postgresql://db:5432/aether?user=postgres"
@@ -36,8 +39,6 @@ postgres_connection_info = {
     "host" : "localhost"
 }
 
-def pprint(obj):
-    print(json.dumps(obj, indent=2))
 
 def set_offset_value(key, value):
     offsets = {}
@@ -54,6 +55,7 @@ def set_offset_value(key, value):
     with open (OFFSET_PATH, "w") as f:
         json.dump(offsets, f)
 
+
 def get_offset(key):
     try:
         with open(OFFSET_PATH) as f:
@@ -64,6 +66,7 @@ def get_offset(key):
                 None
     except IOError as ioe:
         return None
+
 
 def count_since(offset=None):
     if not offset:
@@ -78,6 +81,7 @@ def count_since(offset=None):
         cursor.execute(count_str);
         for row in cursor:
             return row.get("new_rows")
+
 
 def get_entities(offset = None):
     if not offset:
@@ -112,9 +116,10 @@ class KafkaStream(object):
         self.topic = topic
         self.kernel = kernel
         #connect to Server
-        self.producer = KafkaProducer(bootstrap_servers=KAFKA_SERVER, acks=1)
+        self.producer = KafkaProducer(bootstrap_servers=KAFKA_SERVER, acks=1, key_serializer=str.encode)
         self.get_avro()
         print ("Connected to stream for topic: %s" % self.topic)
+
 
     def send(self, row):
         msg = row.get("payload")
@@ -125,12 +130,20 @@ class KafkaStream(object):
             encoder = avro.io.BinaryEncoder(bytes_writer)
             writer.write(msg, encoder)
             raw_bytes = bytes_writer.getvalue()
-            self.producer.send(self.topic, key=msg.get("id"), value=raw_bytes)
+            future = self.producer.send(self.topic, key=msg.get("id"), value=raw_bytes)
+            try:
+                record_metadata = future.get(timeout=10)
+            except KafkaError as ke:
+                print ("Error submitting record")
+                raise ke
+            #block until it actually sends. We don't want offsets getting out of sync            
+            self.producer.flush()
             set_offset_value("entities", offset)
-
+        
         except Exception as e:
             print ("Issue with Topic %s : %s" % (self.topic, e))
             raise e
+
 
     def get_avro(self):
         #Gets avro schema used for encoding messages
@@ -138,16 +151,20 @@ class KafkaStream(object):
         definition = ast.literal_eval(str(self.kernel.Resource.Schema.get(self.topic).definition))
         self.schema = avro.schema.Parse(json.dumps(definition))
 
+
     def stop(self):
         self.producer.flush()
         self.producer.close()
 
+
 class StreamManager(object):
+
 
     def __init__(self, kernel):
         self.kernel = kernel
         self.streams = {}
         self.start()
+
 
     def start(self):
         self.kernel.refresh()
@@ -155,11 +172,13 @@ class StreamManager(object):
         for topic in topics:
             self.streams[topic.name] = KafkaStream(topic.name, self.kernel)
 
+
     def send(self, row_generator):
         for row in row_generator:
             topic = row.get("schema_name")
             self.streams[topic].send(row)
         print ("manager finished processing changes")
+
 
     def stop(self):
         for name, stream in self.streams.items():
@@ -167,6 +186,7 @@ class StreamManager(object):
             print ("released connection to topic: %s" % name)
         self.streams = {}
         print ("manager stopped")
+
 
 if __name__ == "__main__":
     manager = None

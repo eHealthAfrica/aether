@@ -74,7 +74,7 @@ if __name__ == "__main__":
 '''
 
 if __name__ == "__main__":
-    consumer = KafkaConsumer(group_id='test', bootstrap_servers='localhost:29092')
+    consumer = KafkaConsumer(bootstrap_servers='localhost:29092')
     print(consumer.topics())
     consumer.close()
 
@@ -82,7 +82,7 @@ if __name__ == "__main__":
                                  auto_offset_reset='earliest',
                                  consumer_timeout_ms=1000)
     #
-    consumer.subscribe(['Household'])
+    consumer.subscribe(['Household', "Person"])
 
     for message in consumer:
         print (message)
