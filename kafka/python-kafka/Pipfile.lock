@@ -1,0 +1,42 @@
+{
+    "_meta": {
+        "hash": {
+            "sha256": "43b02860f958d46d6d5c4abfbfb407eaf034cbfcd5b7bd8b713e0881f3b91abe"
+        },
+        "pipfile-spec": 1,
+        "requires": {},
+        "sources": [
+            {
+                "url": "https://pypi.python.org/simple",
+                "verify_ssl": true
+            }
+        ]
+    },
+    "default": {
+        "avro-python3": {
+            "version": "==1.8.2"
+        },
+        "certifi": {
+            "version": "==2017.11.5"
+        },
+        "chardet": {
+            "version": "==3.0.4"
+        },
+        "idna": {
+            "version": "==2.6"
+        },
+        "kafka": {
+            "version": "==1.3.5"
+        },
+        "psycopg2": {
+            "version": "==2.7.3.2"
+        },
+        "requests": {
+            "version": "==2.18.4"
+        },
+        "urllib3": {
+            "version": "==1.22"
+        }
+    },
+    "develop": {}
+}
