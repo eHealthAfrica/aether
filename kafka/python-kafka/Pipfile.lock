@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "43b02860f958d46d6d5c4abfbfb407eaf034cbfcd5b7bd8b713e0881f3b91abe"
+            "sha256": "a48c41e586aab152c4543fd0a37fa4175841af4ede44a8af9343c8ec45a4769c"
         },
         "pipfile-spec": 1,
         "requires": {},
@@ -22,6 +22,9 @@
         "chardet": {
             "version": "==3.0.4"
         },
+        "elasticsearch5": {
+            "version": "==5.5.1"
+        },
         "idna": {
             "version": "==2.6"
         },
@@ -35,7 +38,7 @@
             "version": "==2.18.4"
         },
         "urllib3": {
-            "version": "==1.22"
+            "version": "==1.21.1"
         }
     },
     "develop": {}
