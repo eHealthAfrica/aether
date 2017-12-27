@@ -95,11 +95,10 @@ class ESConsumerGroup(object):
             processor = ESItemProcessor(name, instr)
             self.consumers[processor.topic_name] = ESConsumer(self.name, processor)
             self.consumers[processor.topic_name].start()
-            self.consumers[processor.topic_name].stop() #TODO kill
 
     def stop(self):
-        for name, consumer in self.consumers.values():
-            consumer.stop()
+        for name in self.consumers.keys():
+            self.consumers[name].stop()
 
 class ESConsumer(threading.Thread):
     # A single consumer subscribed to topic, pushing to an index
@@ -109,9 +108,12 @@ class ESConsumer(threading.Thread):
         self.index = index
         self.es_type = processor.es_type
         self.topic = processor.topic_name
-        self.group_name = "elastic-%s-%s" % (index, self.es_type)
+        self.consumer_timeout = 10
+        self.group_name = "elastic_%s_%s" % (self.index, self.es_type)
         self.sleep_time = 10
-        self.consumer = KafkaConsumer(bootstrap_servers='localhost:29092',
+        print(self.group_name)
+        self.consumer = KafkaConsumer(bootstrap_servers=KAFKA_HOST,
+                                 group_id=self.group_name,
                                  auto_offset_reset='earliest',
                                  consumer_timeout_ms=1000)
         '''
@@ -125,29 +127,37 @@ class ESConsumer(threading.Thread):
 
     def run(self):
         self.consumer.subscribe([self.topic])
+        total_wait = 0
         while True:
-            print ("running | %s" % (self.topic))
-            #
-
-            for row in self.consumer:
-                print (row)
-                doc = self.processor.process(row)
-                pprint(doc)
-                break
-
+            last_offset = None
+            raw_rows = self.consumerReady()
+            if raw_rows:
+                total_wait = 0
+                for parition, messages in raw_rows.items():
+                    for row in messages:
+                        doc = self.processor.process(row)
+                        last_offset = row.offset
+                if last_offset:
+                    print("index: %s -> %s offset: %s" % (self.index, self.topic, last_offset))
+            else:
+                total_wait += self.consumer_timeout
+                print("consumer group %s not ready, waiting %s seconds." % (self.group_name, self.consumer_timeout))
+                print("waited %s seconds so far..." % total_wait)
             if self.stopped:
-                print ('stopping')
                 break
             else:
-                print ("Sleeping")
                 Sleep(self.sleep_time)
 
         print ("Shutting down consumer %s | %s" % (self.index, self.topic))
         self.consumer.close()
         return
 
+    def consumerReady(self):
+        res = self.consumer.poll(self.consumer_timeout)
+        return res
+
     def stop(self):
-        print ("caught stop signal")
+        print ("%s caught stop signal" % (self.group_name))
         self.stopped = True
 
 class ESItemProcessor(object):
@@ -207,28 +217,25 @@ class ESItemProcessor(object):
         fn = getattr(self, instr.get("function"))
         return fn(doc, **instr)
 
-    def _add_parent(self, doc, **kwargs):
-        #field_name
+    def _add_parent(self, doc, field_name=None, **kwargs):
         try:
             doc["_parent"] = self._get_doc_field(doc, field_name)
         except Exception as e:
             print ("Could not add parent to doc type %s. Error: %s" % (self.es_type, e))
         return doc
 
-    def _add_child(self, doc, **kwargs):
-        #field_name
+    def _add_child(self, doc, field_name=None, **kwargs):
         try:
             doc["_child"] = self._get_doc_field(doc, field_name)
         except Exception as e:
             print ("Could not add parent to doc type %s. Error: %s" % (self.es_type, e))
         return doc
 
-    def _add_geopoint(self, doc, **kwargs):
-        # field_name, lat, lon
+    def _add_geopoint(self, doc, field_name=None, lat=None, lon=None, **kwargs):
         geo = {}
         try:
-            loc["lat"] = self._get_doc_field(doc, lat)
-            loc["lon"] = self._get_doc_field(doc, lon)
+            geo["lat"] = self._get_doc_field(doc, lat)
+            geo["lon"] = self._get_doc_field(doc, lon)
             doc[field_name] = geo
         except Exception as e:
             print ("Could not add parent to doc type %s. Error: %s" % (self.es_type, e))
@@ -267,4 +274,15 @@ class ESItemProcessor(object):
 
 
 if __name__ == "__main__":
+
     manager = ESConsumerManager()
+    print ("Started!")
+    while True:
+        try:
+            pass
+            Sleep(10)
+        except KeyboardInterrupt as e:
+            print("\nTrying to stop gracefully")
+            manager.stop()
+            break
+
