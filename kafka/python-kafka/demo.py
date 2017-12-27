@@ -82,7 +82,7 @@ if __name__ == "__main__":
                                  auto_offset_reset='earliest',
                                  consumer_timeout_ms=1000)
     #
-    consumer.subscribe(['Household', "Person"])
+    consumer.subscribe(["Person"])
 
     for message in consumer:
         print (message)
