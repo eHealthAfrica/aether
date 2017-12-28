@@ -10,7 +10,7 @@ import avro.io
 from time import sleep as Sleep
 from aether.client import KernelClient
 from elasticsearch import Elasticsearch
-from elasticsearch.exceptions import TransportError
+from elasticsearch.exceptions import TransportError, ConflictError
 from kafka import KafkaConsumer
 
 FILE_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -109,7 +109,7 @@ class ESConsumer(threading.Thread):
         self.es_type = processor.es_type
         self.topic = processor.topic_name
         self.consumer_timeout = 10
-        self.group_name = "elastic_%s_%s" % (self.index, self.es_type)
+        self.group_name = "elastic_%s_%s_2" % (self.index, self.es_type)
         self.sleep_time = 10
         print(self.group_name)
         self.consumer = KafkaConsumer(bootstrap_servers=KAFKA_HOST,
@@ -139,6 +139,7 @@ class ESConsumer(threading.Thread):
                 for parition, messages in raw_rows.items():
                     for row in messages:
                         doc = self.processor.process(row)
+                        self.submit(doc)
                         last_offset = row.offset
                 if last_offset:
                     print("index: %s -> %s offset: %s" % (self.index, self.topic, last_offset))
@@ -154,6 +155,32 @@ class ESConsumer(threading.Thread):
         print ("Shutting down consumer %s | %s" % (self.index, self.topic))
         self.consumer.close()
         return
+
+    def submit(self, doc):
+        parent = doc.get("_parent", None)
+        if parent: #parent can only be in metadata apparently
+            del doc['_parent']
+        try:
+            es.create(
+                index = self.index,
+                doc_type = self.es_type,
+                id = doc.get('id'),
+                parent = parent,
+                body = doc
+            )
+        except Exception as ese:
+            print("Couldn't create doc because of error: %s\nAttempting update." % ese)
+            try:
+                es.update(
+                    index = self.index,
+                    doc_type = self.es_type,
+                    id = doc.get('id'),
+                    parent = parent,
+                    body = doc
+                )
+                print("Success!")
+            except TransportError as te:
+                print("conflict exists, ignoring document with id %s" % doc.get("id", "unknown"))
 
     def consumerReady(self):
         res = self.consumer.poll(self.consumer_timeout)
