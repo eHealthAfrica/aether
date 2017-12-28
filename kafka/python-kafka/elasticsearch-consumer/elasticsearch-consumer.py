@@ -114,8 +114,11 @@ class ESConsumer(threading.Thread):
         print(self.group_name)
         self.consumer = KafkaConsumer(bootstrap_servers=KAFKA_HOST,
                                  group_id=self.group_name,
+                                 heartbeat_interval_ms=1000,
+                                 session_timeout_ms=8000,
+                                 request_timeout_ms=9000,
                                  auto_offset_reset='earliest',
-                                 consumer_timeout_ms=1000)
+                                 consumer_timeout_ms=4000)
         '''
         self.consumer = KafkaConsumer(
                             group_id=self.group_name,
