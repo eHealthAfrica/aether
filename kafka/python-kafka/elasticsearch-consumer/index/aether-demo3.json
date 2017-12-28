@@ -1,0 +1,21 @@
+{
+    "mappings": {
+        "location": {
+	        "properties": {
+		        "location": {
+			        "type": "geo_point"
+		        }
+	        }
+        },
+        "household": {
+            "_parent": {
+		        "type": "location"
+	        }
+        },
+        "person": {
+	        "_parent": {
+		        "type": "household"
+	        }
+        }
+    }
+}
