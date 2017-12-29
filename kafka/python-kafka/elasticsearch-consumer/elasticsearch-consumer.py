@@ -4,6 +4,7 @@ import io
 import json
 import sys
 import threading
+import signal
 import avro.schema
 import avro.io
 
@@ -47,9 +48,11 @@ def pprint(obj):
 class ESConsumerManager(object):
 
     def __init__(self):
+        self.stopped = False
+        signal.signal(signal.SIGINT, self.stop) #SIGTERM should kill subprocess via manager.stop()
+        signal.signal(signal.SIGTERM, self.stop)
         self.consumer_groups = {} # index_name : consumer group
         self.load_indices()
-
 
     def load_indices(self):
         index_path = "%s/index" % FILE_PATH
@@ -78,7 +81,8 @@ class ESConsumerManager(object):
     def stop_group(self, index_name):
         self.consumer_groups[index_name].stop()
 
-    def stop(self):
+    def stop(self, *args, **kwargs):
+        self.stopped = True
         for key in self.consumer_groups.keys():
             self.stop_group(key)
 
@@ -109,27 +113,33 @@ class ESConsumer(threading.Thread):
         self.es_type = processor.es_type
         self.topic = processor.topic_name
         self.consumer_timeout = 10
-        self.group_name = "elastic_%s_%s_2" % (self.index, self.es_type)
+        self.group_name = "elastic_%s_%s" % (self.index, self.es_type)
         self.sleep_time = 10
-        print(self.group_name)
-        self.consumer = KafkaConsumer(bootstrap_servers=KAFKA_HOST,
-                                 group_id=self.group_name,
-                                 heartbeat_interval_ms=1000,
-                                 session_timeout_ms=8000,
-                                 request_timeout_ms=9000,
-                                 auto_offset_reset='earliest',
-                                 consumer_timeout_ms=4000)
-        '''
-        self.consumer = KafkaConsumer(
-                            group_id=self.group_name,
-                            auto_offset_reset='earliest',
-                            bootstrap_servers=[KAFKA_HOST]) #TODO kill auto_offset
-        '''
         self.stopped = False
+        self.consumer = None
         super(ESConsumer, self).__init__()
 
+    def connect(self):
+        try:
+            self.consumer = KafkaConsumer(bootstrap_servers=KAFKA_HOST,
+                                         group_id=self.group_name,
+                                         heartbeat_interval_ms=2500,
+                                         session_timeout_ms=18000,
+                                         request_timeout_ms=20000,
+                                         auto_offset_reset='latest',
+                                         consumer_timeout_ms=17000)
+            self.consumer.subscribe([self.topic])
+            return True
+        except Exception as ke:
+            print ("%s failed to subscibe to topic %s with error \n%s" % (self.index, self.topic, ke))
+            return False
     def run(self):
-        self.consumer.subscribe([self.topic])
+        while True:
+            if self.connect():
+                break
+            elif self.stopped:
+                return
+            Sleep(10)
         total_wait = 0
         while True:
             last_offset = None
@@ -310,7 +320,11 @@ if __name__ == "__main__":
     while True:
         try:
             pass
-            Sleep(10)
+            if not manager.stopped:
+                Sleep(10)
+            else:
+                print("Manager caught SIGTERM, exiting")
+                break
         except KeyboardInterrupt as e:
             print("\nTrying to stop gracefully")
             manager.stop()
