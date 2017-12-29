@@ -4,6 +4,7 @@ import avro.schema
 import io
 import ast
 import os
+import signal
 
 from avro.io import DatumWriter
 from kafka import KafkaProducer
@@ -131,15 +132,15 @@ class KafkaStream(object):
             writer.write(msg, encoder)
             raw_bytes = bytes_writer.getvalue()
             future = self.producer.send(self.topic, key=msg.get("id"), value=raw_bytes)
+            #block until it actually sends. We don't want offsets getting out of sync
             try:
                 record_metadata = future.get(timeout=10)
             except KafkaError as ke:
                 print ("Error submitting record")
                 raise ke
-            #block until it actually sends. We don't want offsets getting out of sync            
             self.producer.flush()
             set_offset_value("entities", offset)
-        
+
         except Exception as e:
             print ("Issue with Topic %s : %s" % (self.topic, e))
             raise e
@@ -161,9 +162,13 @@ class StreamManager(object):
 
 
     def __init__(self, kernel):
+        self.killed = False
+        signal.signal(signal.SIGINT, self.kill) #SIGTERM ends run
+        signal.signal(signal.SIGTERM, self.kill)
         self.kernel = kernel
         self.streams = {}
         self.start()
+
 
 
     def start(self):
@@ -175,6 +180,9 @@ class StreamManager(object):
 
     def send(self, row_generator):
         for row in row_generator:
+            if killed: #look for sigterm
+                print ("manager stopped in progress via signal")
+                return
             topic = row.get("schema_name")
             self.streams[topic].send(row)
         print ("manager finished processing changes")
@@ -186,6 +194,9 @@ class StreamManager(object):
             print ("released connection to topic: %s" % name)
         self.streams = {}
         print ("manager stopped")
+
+    def kill(self):
+        self.killed = True
 
 
 if __name__ == "__main__":
@@ -200,6 +211,9 @@ if __name__ == "__main__":
                 manager = StreamManager(kernel)
                 manager.send(entities)
                 manager.stop()
+                if manager.killed:
+                    print("processed stopped by SIGTERM")
+                    break
                 manager = None
             else:
                 print ("No new items. Offset is %s, sleeping for %s s" % (offset, SLEEP_TIME))
