@@ -9,14 +9,14 @@ cache:
   directories:
     - "$HOME/.cache/pip"
 
-install:
-  - pip install awscli ecs-deploy
-
 script:
   - ./scripts/test_all.sh
 
 after_script:
   - ./scripts/kill_all.sh
+
+before_deploy:
+  - pip install awscli ecs-deploy
 
 deploy:
   - provider: script
