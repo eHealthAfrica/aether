@@ -10,7 +10,7 @@ $DC_TEST run common-test build
 PCK_FILE=aether.common-0.0.0-py2.py3-none-any.whl
 
 # distribute within the containers
-containers=( kernel odk-importer couchdb-sync ui )
+containers=( kernel odk-importer couchdb-sync )
 for container in "${containers[@]}"
 do
   cp -r ./aether-common/dist/$PCK_FILE ./aether-$container/conf/pip/dependencies/

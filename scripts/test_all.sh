@@ -44,10 +44,6 @@ $DC_TEST up -d odk-importer-test
 # test a clean SYNC TEST container
 prepare_and_test_container couchdb-sync aether/kernel/api/tests/fixtures/project.json
 
-# FIXME: run ui tests
-# # test a clean UI TEST container
-# prepare_and_test_container ui
-
 # kill ALL containers
 echo "_____________________________________________ Killing auxiliary containers"
 $DC_TEST kill
