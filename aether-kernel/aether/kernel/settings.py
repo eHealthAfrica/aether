@@ -16,16 +16,15 @@ INSTALLED_APPS += [
     'rest_framework_filters',
     'reversion',
     'reversion_compare',
-    'aether.kernel',  # this enables signals
+    'aether.kernel',
     'drf_openapi',
 ]
 
 MIGRATION_MODULES = {
     'kernel': 'aether.kernel.api.migrations'
 }
+
 REST_FRAMEWORK['DEFAULT_VERSIONING_CLASS'] = 'rest_framework.versioning.URLPathVersioning'
 REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'] = (
     'rest_framework_filters.backends.DjangoFilterBackend',
-    'rest_framework.filters.SearchFilter',
-    'rest_framework.filters.OrderingFilter',
-)
+) + REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS']
