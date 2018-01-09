@@ -138,7 +138,7 @@ def submit_to_kernel(submission, mapping_id, submission_id=None):
         url,
         json={
             'payload': submission,
-            'mapping': mapping_id
+            'mapping': mapping_id,
         },
         headers=get_auth_header(),
     )

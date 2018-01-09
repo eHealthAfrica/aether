@@ -139,16 +139,3 @@ services:
             - couchdb-test
             - kernel-test
         command: start_dev
-
-
-    # ---------------------------------
-    # Aether Common module container
-    # ---------------------------------
-
-    common-test:
-        build: aether-common
-        environment:
-            TESTING: "true"
-        volumes:
-            - ./aether-common:/code
-        command: test

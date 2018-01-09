@@ -11,8 +11,6 @@ show_help() {
     eval          : eval shell command
     manage        : invoke django manage.py commands
 
-    pip_freeze    : freeze pip dependencies and write to requirements.txt
-
     test          : run tests
     test_lint     : run flake8 tests
     test_coverage : run tests with coverage output
@@ -33,7 +31,6 @@ test_coverage() {
     coverage run    --rcfile="$RCFILE" manage.py test "${@:1}"
     coverage report --rcfile="$RCFILE"
     coverage erase
-    rm -rf /code/.hypothesis
 
     cat /code/conf/extras/good_job.txt
 }
@@ -62,14 +59,6 @@ case "$1" in
         ./manage.py "${@:2}"
     ;;
 
-    pip_freeze )
-        rm -rf /tmp/env
-        pip install -r ./conf/pip/primary-requirements.txt --upgrade
-
-        cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
-        pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
-    ;;
-
     test)
         test_flake8
         test_coverage "${@:2}"
@@ -87,14 +76,13 @@ case "$1" in
         # test before building
         test_flake8
         test_coverage
-
         # remove previous build if needed
         rm -rf dist
         rm -rf build
         rm -rf aether.common.egg-info
 
         # create the distribution
-        python setup.py bdist_wheel
+        python setup.py bdist_wheel --universal
 
         # remove useless content
         rm -rf build

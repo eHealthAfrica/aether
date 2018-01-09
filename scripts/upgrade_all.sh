@@ -28,3 +28,5 @@ do
 
   echo "_____________________________________________ $container updated and rebuilt!"
 done
+
+./scripts/kill_all.sh

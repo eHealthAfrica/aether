@@ -1,0 +1,16 @@
+################################################################################
+#                                                                              #
+#                     Requirements to test with Django 2.x                     #
+#                                                                              #
+################################################################################
+
+coverage
+django-cors-headers
+django>=2<3
+djangorestframework
+djangorestframework-csv
+flake8
+flake8-quotes
+mock
+psycopg2
+requests

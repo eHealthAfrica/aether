@@ -23,8 +23,7 @@ DC_TEST="docker-compose -f docker-compose-test.yml"
 
 # make sure that there is nothing up before starting
 echo "_____________________________________________ Killing ALL containers"
-docker-compose kill
-$DC_TEST kill
+./scripts/kill_all.sh
 $DC_TEST down
 
 # start databases
@@ -46,6 +45,6 @@ $DC_TEST run "$container"-test test
 
 # kill auxiliary containers
 echo "_____________________________________________ Killing auxiliary containers"
-$DC_TEST kill
+./scripts/kill_all.sh
 
 echo "_____________________________________________ END"
