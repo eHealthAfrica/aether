@@ -201,8 +201,12 @@ class DeferrableAction(object):
 
 
 def action_none():
-    # Called via #!none acts as a dummy instruction when you need to the first
-    # entity to have a value but no others
+    # Called via #!none acts as a dummy instruction when you need to terminate
+    # a previously called instruction. For example:
+    # ["hoh_firstname","Person.firstName"] -- if hoh_firstname is one value, all
+    # subsequent instances of Person would receive that value. If we issue
+    # ["#!none","Person.firstName"] after the first instruction, only the first
+    # Person will receive that value as their firstName. All 2 -> n will get no value.
     return None
 
 
