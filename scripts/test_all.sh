@@ -21,8 +21,7 @@ echo "_____________________________________________ TESTING"
 
 # kill ALL containers and clean TEST ones
 echo "_____________________________________________ Killing ALL containers"
-docker-compose kill
-$DC_TEST kill
+./scripts/kill_all.sh
 $DC_TEST down
 
 # start databases
@@ -46,6 +45,6 @@ prepare_and_test_container couchdb-sync aether/kernel/api/tests/fixtures/project
 
 # kill ALL containers
 echo "_____________________________________________ Killing auxiliary containers"
-$DC_TEST kill
+./scripts/kill_all.sh
 
 echo "_____________________________________________ END"

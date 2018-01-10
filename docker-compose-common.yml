@@ -1,0 +1,53 @@
+version: "2"
+
+services:
+
+  # ---------------------------------
+  # Aether Common module containers
+
+  # ---------------------------------
+  # use this as a reference in update/build script
+  common:
+    build:
+      context: aether-common
+      args:
+        # Django 2 requirement
+        requirements: requirements-django-2.txt
+    environment:
+      TESTING: "true"
+    volumes:
+      - ./aether-common:/code
+    command: build
+  # ---------------------------------
+
+
+  # ---------------------------------
+  # Django 1.x tests
+  common-test-django-1:
+    build:
+      context: aether-common
+      args:
+        # Django 1 requirement
+        requirements: requirements-django-1.txt
+    environment:
+      TESTING: "true"
+    volumes:
+      - ./aether-common:/code
+    command: test
+  # ---------------------------------
+
+
+  # ---------------------------------
+  # Django 2.x tests
+  common-test-django-2:
+    build:
+      context: aether-common
+      args:
+        # Django 2 requirement
+        requirements: requirements-django-2.txt
+    environment:
+      TESTING: "true"
+    volumes:
+      - ./aether-common:/code
+    command: test
+  # ---------------------------------

@@ -1,12 +1,27 @@
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
 
 from ..renderers import CustomCSVRenderer
+
+factory = RequestFactory()
+EOF = b'\r\n'
 
 
 class PaginationTests(TestCase):
 
-    def setUp(self):
-        self.renderer = CustomCSVRenderer()
+    def helper__render(self, data, request=None):
+        if request is None:
+            request = factory.get('/')
+
+        return b''.join(CustomCSVRenderer().render(
+            data=data,
+            renderer_context={'request': request},
+        ))
+
+    def test_with_no_data(self):
+        self.assertEqual(
+            self.helper__render(None),
+            b''
+        )
 
     def test_with_paginated_results(self):
         data = {
@@ -22,8 +37,14 @@ class PaginationTests(TestCase):
         }
 
         self.assertEqual(
-            self.renderer.render(data),
-            b'a\r\n1\r\n2\r\n3\r\n4\r\n'
+            self.helper__render(data),
+            b''.join([
+                b'a', EOF,
+                b'1', EOF,
+                b'2', EOF,
+                b'3', EOF,
+                b'4', EOF,
+            ])
         )
 
     def test_without_pagination(self):
@@ -35,8 +56,14 @@ class PaginationTests(TestCase):
         ]
 
         self.assertEqual(
-            self.renderer.render(data),
-            b'a\r\n1\r\n2\r\n3\r\n4\r\n'
+            self.helper__render(data),
+            b''.join([
+                b'a', EOF,
+                b'1', EOF,
+                b'2', EOF,
+                b'3', EOF,
+                b'4', EOF,
+            ])
         )
 
     def test_simple_json(self):
@@ -48,8 +75,14 @@ class PaginationTests(TestCase):
         ]
 
         self.assertEqual(
-            self.renderer.render(data),
-            b'a,b,c,d\r\n1,1,,\r\n2,2,,\r\n3,,3,\r\n4,,,4\r\n',
+            self.helper__render(data),
+            b''.join([
+                b'a,b,c,d', EOF,
+                b'1,1,,', EOF,
+                b'2,2,,', EOF,
+                b'3,,3,', EOF,
+                b'4,,,4', EOF,
+            ]),
             'analyzes ALL results schema'
         )
 
@@ -62,8 +95,14 @@ class PaginationTests(TestCase):
         ]
 
         self.assertEqual(
-            self.renderer.render(data),
-            b'a,b,b.c,c,d\r\n1,,1,,\r\n2,2,,,\r\n3,,,3,\r\n4,,,,4\r\n',
+            self.helper__render(data),
+            b''.join([
+                b'a,b,b.c,c,d', EOF,
+                b'1,,1,,', EOF,
+                b'2,2,,,', EOF,
+                b'3,,,3,', EOF,
+                b'4,,,,4', EOF,
+            ]),
             'analyzes ALL results schema even with nested/repeated properties'
         )
 
@@ -76,7 +115,34 @@ class PaginationTests(TestCase):
         ]
 
         self.assertEqual(
-            self.renderer.render(data),
-            b'a,b.0,b.1,b.2\r\n1,3,,\r\n2,4,5,\r\n3,6,,\r\n4,7,8,9\r\n',
+            self.helper__render(data),
+            b''.join([
+                b'a,b.0,b.1,b.2', EOF,
+                b'1,3,,', EOF,
+                b'2,4,5,', EOF,
+                b'3,6,,', EOF,
+                b'4,7,8,9', EOF,
+            ]),
             'analyzes the array length'
+        )
+
+    def test_json_with_csv_headers(self):
+        data = [
+            {'a': 1, 'b': [3],       'c': {'d': {'e': 1}}},
+            {'a': 2, 'b': [4, 5],    'c': {'d': {'f': 2}}},
+            {'a': 3, 'b': [6],       'c': {'g': {'h': 3}}},
+            {'a': 4, 'b': [7, 8, 9], 'c': {'g': {'i': 4}}},
+        ]
+        request = factory.get('/', {'columns': 'a,b.0,b.1,c.d'})
+
+        self.assertEqual(
+            self.helper__render(data, request),
+            b''.join([
+                b'a,b.0,b.1,c.d.e,c.d.f', EOF,
+                b'1,3,,1,', EOF,
+                b'2,4,5,,2', EOF,
+                b'3,6,,,', EOF,
+                b'4,7,8,,', EOF,
+            ]),
+            'filters columns with the csv header'
         )

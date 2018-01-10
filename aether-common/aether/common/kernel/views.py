@@ -1,4 +1,5 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
+
 from .utils import check_connection
 
 
@@ -8,7 +9,3 @@ def check_kernel(*args, **kwargs):
     '''
 
     return HttpResponse(check_connection())
-
-
-def health_check(*args, **kwargs):
-    return JsonResponse({})
