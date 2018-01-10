@@ -2,9 +2,10 @@ import base64
 import uuid
 
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TransactionTestCase
 
-from ..models import Survey, XForm
+from ..models import Mapping, XForm, MediaFile
 from ..surveyors_utils import get_surveyor_group
 
 
@@ -31,14 +32,14 @@ XML_DATA = '''
         <h:title>xForm - Test</h:title>
         <model>
           <instance>
-            <None id="xform-id-test">
+            <Mapping id="xform-id-test" version="v1">
               <starttime/>
               <endtime/>
               <deviceid/>
               <meta>
                 <instanceID/>
               </meta>
-            </None>
+            </Mapping>
           </instance>
           <instance id="other-entry">
           </instance>
@@ -119,34 +120,34 @@ class CustomTestCase(TransactionTestCase):
         email = username + '@example.com'
         password = 'surveyorsurveyor'
         surveyor = UserModel.create_user(username, email, password)
-        surveyor.save()
         surveyor.groups.add(self.surveyor_group)
         surveyor.save()
         return surveyor
 
-    def helper_create_survey(self, surveyor=None, mapping_id=None):
+    def helper_create_mapping(self, mapping_id=None, surveyor=None):
         if mapping_id is None:
             mapping_id = uuid.uuid4()
-        survey, _ = Survey.objects.get_or_create(
+
+        mapping, _ = Mapping.objects.get_or_create(
             name='test',
             mapping_id=mapping_id,
         )
 
+        self.assertEqual(str(mapping), '{} - test'.format(mapping_id))
+
         if surveyor:
             if type(surveyor) is list:
-                survey.surveyors.set(surveyor)
+                mapping.surveyors.set(surveyor)
             else:
-                survey.surveyors.add(surveyor)
-            survey.save()
+                mapping.surveyors.add(surveyor)
+            mapping.save()
 
-        return survey
+        return mapping
 
-    def helper_create_xform(self, surveyor=None, mapping_id=None):
-        if mapping_id is None:
-            mapping_id = uuid.uuid4()
+    def helper_create_xform(self, mapping_id=None, surveyor=None, with_media=False):
         xform = XForm.objects.create(
             description='test',
-            survey=self.helper_create_survey(
+            mapping=self.helper_create_mapping(
                 surveyor=surveyor,
                 mapping_id=mapping_id,
             ),
@@ -159,5 +160,11 @@ class CustomTestCase(TransactionTestCase):
             else:
                 xform.surveyors.add(surveyor)
             xform.save()
+
+        if with_media:
+            MediaFile.objects.create(
+                xform=xform,
+                media_file=SimpleUploadedFile('sample.txt', b'abc'),
+            )
 
         return xform

@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 
-<None id="my-test-form">
+<Something_that_is_not_None id="my-test-form">
   <starttime>2017-07-14T16:37:08.966+02</starttime>
   <endtime>2017-07-14T16:38:47.151+02</endtime>
   <deviceid>355217062209730</deviceid>
@@ -28,4 +28,4 @@
   <meta>
     <instanceID>uuid:cef69d9d-ebd9-408f-8bc6-9d418bb083d9</instanceID>
   </meta>
-</None>
+</Something_that_is_not_None>

@@ -4,8 +4,9 @@ import requests
 from django.urls import reverse
 from rest_framework import status
 
-from . import CustomTestCase
 from aether.common.kernel import utils as kernel_utils
+
+from . import CustomTestCase
 
 
 class SubmissionTests(CustomTestCase):
@@ -58,58 +59,78 @@ class SubmissionTests(CustomTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
 
+    def test__submission__400(self):
+        # create xForm entry
+        self.helper_create_xform(surveyor=self.user)
+
+        # submit right response but server is not available yet
+        with open(self.samples['submission']['file-ok'], 'rb') as f:
+            response = self.client.post(
+                self.url,
+                {'xml_submission_file': f},
+                **self.headers_user
+            )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
 
 class PostSubmissionTests(CustomTestCase):
 
     def setUp(self):
-        """
-        Set up a basic Aether project. This assumes that the fixture in
-        `/aether-kernel/aether/kernel/api/tests/fixtures/project_empty_schame.json`
-        has been loaded into the kernel database. See `/scripts/test_all.sh` for
-        details.
-        """
+        '''
+        Set up a basic Aether project.
+
+        This assumes that the fixture in
+        `/aether-kernel/aether/kernel/api/tests/fixtures/project_empty_schema.json`
+        has been loaded into the kernel database.
+
+        See `/scripts/test_all.sh` for details.
+        '''
+
         super(PostSubmissionTests, self).setUp()
         self.helper_create_user()
         self.url = reverse('xform-submission')
 
-        # create survey in Kernel testing server
+        # create mapping in Kernel testing server
         self.assertTrue(kernel_utils.test_connection())
         self.KERNEL_HEADERS = kernel_utils.get_auth_header()
+
         project = requests.get(
-            'http://kernel-test:9000/projects/',
+            '{}/projects/'.format(kernel_utils.get_kernel_server_url()),
             headers=self.KERNEL_HEADERS,
         ).json()['results'][0]
         projectschema = requests.get(
-            'http://kernel-test:9000/projectschemas/',
+            '{}/projectschemas/'.format(kernel_utils.get_kernel_server_url()),
             headers=self.KERNEL_HEADERS,
         ).json()['results'][0]
-        testing_survey = {
+
+        testing_mapping = {
             'name': 'example',
             'revision': 1,
             'project': project['id'],
             'definition': {
-                "mapping": [
+                'mapping': [
                     [
-                        "#!uuid",
-                        "Person.id"
+                        '#!uuid',
+                        'Person.id'
                     ],
                     [
-                        "firstname",
-                        "Person.firstName"
+                        'firstname',
+                        'Person.firstName'
                     ],
                     [
-                        "lastname",
-                        "Person.familyName"
+                        'lastname',
+                        'Person.familyName'
                     ]
                 ],
-                "entities": {
-                    "Person": projectschema['id']
+                'entities': {
+                    'Person': projectschema['id']
                 }
             }
         }
-        # create survey in kernel testing server
+
+        # create mapping in kernel testing server
         response = requests.post(kernel_utils.get_mappings_url(),
-                                 json=testing_survey,
+                                 json=testing_mapping,
                                  headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.json())
         data = response.json()
@@ -122,7 +143,7 @@ class PostSubmissionTests(CustomTestCase):
 
     def tearDown(self):
         super(PostSubmissionTests, self).tearDown()
-        # delete ALL surveys in kernel testing server
+        # delete ALL mappings in kernel testing server
         requests.delete(self.MAPPING_URL, headers=self.KERNEL_HEADERS)
 
     @mock.patch('requests.post', return_value=mock.Mock(status_code=500))
@@ -142,8 +163,8 @@ class PostSubmissionTests(CustomTestCase):
 
     def test__submission__post__no_granted_surveyor(self):
         # remove user as granted surveyor
-        self.xform.survey.surveyors.clear()
-        self.xform.survey.save()
+        self.xform.mapping.surveyors.clear()
+        self.xform.mapping.save()
         self.xform.surveyors.clear()
         self.xform.surveyors.add(self.helper_create_surveyor())
         self.xform.save()
@@ -166,6 +187,7 @@ class PostSubmissionTests(CustomTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    # --------------------------------------------------------------------------
     # FIXME: The Attachment model used in Aether is absent from
     # Aether -- once bring that back, we can uncomment this test.
     # def test__submission__post__with_attachments(self):
@@ -178,7 +200,9 @@ class PostSubmissionTests(CustomTestCase):
     #                 **self.headers_user
     #             )
     #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+    # --------------------------------------------------------------------------
 
+    # --------------------------------------------------------------------------
     # FIXME: The Attachment model used in Aether is absent from
     # Aether -- once bring that back, we can uncomment this test.
     # @mock.patch('requests.post', side_effect=[mock.DEFAULT, mock.Mock(status_code=500)])
@@ -197,3 +221,4 @@ class PostSubmissionTests(CustomTestCase):
     #         json=mock.ANY,
     #     )
     #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+    # --------------------------------------------------------------------------

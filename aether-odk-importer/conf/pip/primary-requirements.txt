@@ -9,7 +9,7 @@
 ################################################################################
 
 coverage
-django==1.11.7
+django<2
 django-cas-ng
 django-cors-headers
 django-debug-toolbar
@@ -17,6 +17,7 @@ django-ums-client
 djangorestframework
 drf-dynamic-fields
 flake8
+flake8-quotes
 geojson
 mock
 psycopg2

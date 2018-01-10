@@ -1,82 +1,20 @@
 # -*- coding: utf-8 -*-
-from django import forms
 from django.contrib import admin
-from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.translation import ugettext as _
 
-from .api.models import Survey, XForm
-from .api.xform_utils import parse_file
-from .api.surveyors_utils import get_surveyors
+from .api.models import Mapping, XForm, MediaFile
+from .api.forms import MappingForm, XFormForm
 
 
-class SurveyForm(forms.ModelForm):
+class MappingAdmin(admin.ModelAdmin):
 
-    surveyors = forms.ModelMultipleChoiceField(
-        label=_('Surveyors'),
-        help_text=_('Only users with group "surveyor" appear in this list'),
-        queryset=get_surveyors(),
-        required=False,
-        widget=FilteredSelectMultiple(verbose_name=_('users'), is_stacked=False),
-    )
-
-    class Meta:
-        model = Survey
-        fields = (
-            'mapping_id',
-            'name',
-            'surveyors',
-        )
-
-
-class SurveyAdmin(admin.ModelAdmin):
-
-    form = SurveyForm
+    form = MappingForm
     list_display = (
         'mapping_id',
         'name',
     )
-
-
-class XFormForm(forms.ModelForm):
-
-    xml_file = forms.FileField(
-        label=_('XLS Form / XML File'),
-        help_text=_('Upload an XLS Form or an XML File'),
-        required=False,
-    )
-    surveyors = forms.ModelMultipleChoiceField(
-        label=_('Surveyors'),
-        help_text=_('Only users with group "surveyor" appear in this list'),
-        queryset=get_surveyors(),
-        required=False,
-        widget=FilteredSelectMultiple(verbose_name=_('users'), is_stacked=False),
-    )
-
-    def clean_xml_data(self):
-        if 'xml_file' in self.files:
-            return parse_file(
-                filename=str(self.files['xml_file']),
-                content=self.files['xml_file'].file,
-            )
-        return self.cleaned_data['xml_data']
-
-    def clean(self):
-        cleaned_data = super(XFormForm, self).clean()
-        xml_file = cleaned_data.get('xml_file')
-        xml_data = cleaned_data.get('xml_data')
-
-        if not (xml_file or xml_data):
-            raise forms.ValidationError(
-                _('Please upload an XLS Form or an XML File, or enter the XML data.')
-            )
-
-    class Meta:
-        model = XForm
-        fields = [
-            'id', 'survey',
-            'xml_file', 'xml_data',
-            'surveyors', 'description',
-        ]
+    search_fields = ('name',)
+    ordering = list_display
 
 
 class XFormAdmin(admin.ModelAdmin):
@@ -84,25 +22,28 @@ class XFormAdmin(admin.ModelAdmin):
     form = XFormForm
     list_display = (
         'id',
-        'survey',
+        'mapping',
         'title',
         'form_id',
         'description',
         'created_at',
+        'version',
     )
     list_filter = ('created_at',)
     date_hierarchy = 'created_at'
-    readonly_fields = ('title', 'form_id',)
+    readonly_fields = ('title', 'form_id', 'version',)
+    search_fields = ('mapping', 'title', 'form_id',)
+    ordering = list_display
 
     fieldsets = (
         (_('Aether Kernel'), {
-            'description': _('Please choose the Aether Kernel Survey.'),
-            'fields': ['survey', 'description', ]
+            'description': _('Please choose the Aether Kernel Mapping.'),
+            'fields': ['mapping', 'description', ]
         }),
 
         (_('xForm definition'), {
             'description': _('Please upload an XLS Form or an XML File, or enter the XML data.'),
-            'fields': ['xml_file', 'xml_data', 'title', 'form_id', ],
+            'fields': ['xml_file', 'xml_data', 'title', 'form_id', 'version', ],
         }),
 
         (_('Granted surveyors'), {
@@ -114,5 +55,19 @@ class XFormAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(Survey, SurveyAdmin)
+class MediaFileAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'xform',
+        'name',
+        'md5sum',
+        'media_file',
+    )
+    readonly_fields = ('md5sum',)
+    search_fields = ('xform', 'name',)
+    ordering = list_display
+
+
+admin.site.register(Mapping, MappingAdmin)
 admin.site.register(XForm, XFormAdmin)
+admin.site.register(MediaFile, MediaFileAdmin)

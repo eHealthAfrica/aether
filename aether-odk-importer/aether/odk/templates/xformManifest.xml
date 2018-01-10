@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+
+{# https://bitbucket.org/javarosa/javarosa/wiki/FormListAPI #}
+<manifest xmlns="http://openrosa.org/xforms/xformsManifest">
+  {% for media_file in media_files %}
+  <mediaFile>
+    <filename>{{ media_file.name }}</filename>
+    <hash>{{ media_file.hash }}</hash>
+    <downloadUrl>{{ host }}{{ media_file.media_file }}</downloadUrl>
+  </mediaFile>
+  {% endfor %}
+</manifest>

@@ -9,7 +9,7 @@ function prepare_and_test_container() {
   $DC_TEST run $container setuplocaldb
   if [[ $2 ]]
   then
-    docker-compose -f docker-compose-test.yml run kernel-test manage loaddata $2
+    $DC_TEST run kernel-test manage loaddata $2
   fi
   $DC_TEST run $container test --noinput
   echo "_____________________________________________ $1 tasks done"

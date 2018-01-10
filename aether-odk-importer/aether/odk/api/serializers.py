@@ -4,17 +4,26 @@ from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
-from .models import Survey, XForm
+from .models import Mapping, XForm, MediaFile
 from .xform_utils import parse_file
 from .surveyors_utils import get_surveyors, flag_as_surveyor
+
+
+class MediaFileSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+
+    name = serializers.CharField(allow_null=True, default=None)
+
+    class Meta:
+        model = MediaFile
+        fields = '__all__'
 
 
 class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     url = serializers.HyperlinkedIdentityField('xform-detail', read_only=True)
-    survey_url = serializers.HyperlinkedRelatedField(
-        'survey-detail',
-        source='survey',
+    mapping_url = serializers.HyperlinkedRelatedField(
+        'mapping-detail',
+        source='mapping',
         read_only=True
     )
 
@@ -34,6 +43,14 @@ class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         help_text=_('Upload an XLS Form or an XML File'),
     )
 
+    media_files = serializers.PrimaryKeyRelatedField(
+        label=_('Media files'),
+        many=True,
+        queryset=MediaFile.objects.all(),
+        allow_null=True,
+        default=[],
+    )
+
     def validate(self, value):
         if value['xml_file']:
             try:
@@ -47,6 +64,16 @@ class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         value.pop('xml_file')
 
         return super(XFormSerializer, self).validate(value)
+
+    def update(self, instance, validated_data):
+        # extract updated media files list
+        media_files = validated_data.pop('media_files')
+        # delete media files not present in the updated list
+        MediaFile.objects.filter(xform=instance.pk) \
+                         .exclude(pk__in=[mf.pk for mf in media_files]) \
+                         .delete()
+        # update xform as usual
+        return super(XFormSerializer, self).update(instance, validated_data)
 
     class Meta:
         model = XForm
@@ -89,14 +116,16 @@ class SurveyorSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 class XFormSimpleSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
+    media_files = MediaFileSerializer(many=True, read_only=True)
+
     class Meta:
         model = XForm
         fields = '__all__'
 
 
-class SurveySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
-    url = serializers.HyperlinkedIdentityField('survey-detail', read_only=True)
+    url = serializers.HyperlinkedIdentityField('mapping-detail', read_only=True)
     surveyors = serializers.PrimaryKeyRelatedField(
         label=_('Surveyors'),
         many=True,
@@ -108,5 +137,5 @@ class SurveySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     xforms = XFormSimpleSerializer(read_only=True, many=True)
 
     class Meta:
-        model = Survey
+        model = Mapping
         fields = '__all__'
