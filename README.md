@@ -13,7 +13,6 @@
     - [Aether Kernel](#aether-kernel)
     - [Aether ODK Importer](#aether-odk-importer)
     - [Aether Couchdb Sync](#aether-couchdb-sync)
-    - [Aether UI](#aether-ui)
 - [Usage](#usage)
   - [Users & Authentication](#users--authentication)
     - [UMS settings for local development](#ums-settings-for-local-development)
@@ -49,7 +48,7 @@ docker-compose build
 Include this entry in your `/etc/hosts` file:
 
 ```
-127.0.0.1    kernel.aether.local odk.aether.local sync.aether.local ui.aether.local
+127.0.0.1    kernel.aether.local odk.aether.local sync.aether.local
 ```
 
 *[Return to TOC](#table-of-contents)*
@@ -106,27 +105,10 @@ of the most common ones with non default values. For more info take a look at th
 - `GOOGLE_CLIENT_ID`: `search for it in lastpass` Token used to verify the device identity with Google.
 
 
-#### Aether UI
-
-- `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
-- `HOSTNAME`: `ui.aether.local` Used by UMS.
-- `RDS_DB_NAME`: `ui` Postgres database name.
-- `WEB_SERVER_PORT`: `8080` Web server port.
-- `AETHER_ORG_NAME`: `eHealth Africa` Text to be displayed as page title.
-- `AETHER_KERNEL_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24` Token to connect to kernel server.
-- `AETHER_KERNEL_URL`: `http://kernel:8000` Aether Kernel Server url.
-- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9000` Aether Kernel Testing Server url.
-- `AETHER_MODULES`: `odk-importer` Comma separated list with the available modules.
-  To avoid confusion, the values will match the container name, `odk-importer`, `couchdb-sync`.
-- `AETHER_ODK_TOKEN`: `d5184a044bb5acff89a76ec4e67d0fcddd5cd3a1` Token to connect to odk server.
-- `AETHER_ODK_URL`: `http://odk-importer:8443` Aether ODK Importer Server url.
-- `AETHER_ODK_URL_TEST`: `http://odk-importer-test:9443` Aether ODK Importer Testing Server url.
-
-
 **WARNING**
 
-Never run `odk-importer`, `couchdb-sync` or `ui` tests against any
-PRODUCTION server. The tests clean up will **DELETE ALL SURVEYS!!!**
+Never run `odk-importer` or `couchdb-sync` tests against any
+PRODUCTION server. The tests clean up will **DELETE ALL MAPPINGS!!!**
 
 *[Return to TOC](#table-of-contents)*
 
@@ -146,9 +128,6 @@ This will start:
 
 - **couchdb-sync** on `http://sync.aether.local:8666`
   and create a superuser `admin-sync`.
-
-- **ui** on `http://ui.aether.local:8080`
-  and create a superuser `admin-ui`.
 
 
 All the created superusers have password `adminadmin` in each container.
@@ -173,8 +152,6 @@ The client services are:
   - **Aether Kernel (local)** for `kernel.aether.local`.
   - **Aether ODK (local)**  for `odk.aether.local`.
   - **Aether Sync (local)** for `sync.aether.local`.
-  - **Aether UI (local)**   for `ui.aether.local`.
-
 
 Other options are to log in via token, via basic authentication or via the
 standard django authentication process in the admin section.
@@ -191,7 +168,7 @@ In the case of `aether-odk-importer` and `aether-couchdb-sync` there is a
 global token to connect to `aether-kernel` set in the **required** environment
 variable `AETHER_KERNEL_TOKEN`.
 
-In the case of `aether-ui` there are tokens per user. This means that every time
+In the case of `gather2-ui` there are tokens per user. This means that every time
 a logged in user tries to visit any page that requires to fetch data from any of
 the other apps, `aether-kernel` and/or `aether-odk-importer`, the system will verify
 that the user token for that app is valid or will request a new one using the
@@ -227,7 +204,7 @@ If the response is `Always Look on the Bright Side of Life!!!`
 it's not possible to connect, on the other hand if the message is
 `Brought to you by eHealth Africa - good tech for hard places` everything goes fine.
 
-This also applies for `aether-couchdb-sync` and `aether-ui`.
+This also applies for `aether-couchdb-sync` and `gather2-ui`.
 
 In the case of `aether-couchdb-sync` a valid `GOOGLE_CLIENT_ID`
 environment variable is necessary to verify the device credentials as well.
@@ -244,9 +221,6 @@ being done automatically on the following branches/environments:
 - branch `master` is deployed to `prod` environment.
   [![Build Status](https://travis-ci.com/eHealthAfrica/aether.svg?token=Rizk7xZxRNoTexqsQfXy&branch=master)](https://travis-ci.com/eHealthAfrica/aether)
 
-- branch `lake-chad-basin` is deployed to `lake chad basin` environment.
-  [![Build Status](https://travis-ci.com/eHealthAfrica/aether.svg?token=Rizk7xZxRNoTexqsQfXy&branch=lake-chad-basin)](https://travis-ci.com/eHealthAfrica/aether)
-
 *[Return to TOC](#table-of-contents)*
 
 
@@ -260,13 +234,11 @@ The list of the main containers:
 | db                | [PostgreSQL](https://www.postgresql.org/) database                      |
 | couchdb           | [CouchDB](http://couchdb.apache.org/) database for sync                 |
 | redis             | [Redis](https://redis.io/) for task queueing and task result storage    |
-| **kernel**          | Aether Kernel app                                                        |
-| **odk-importer**  | Aether ODK Collect Adapter app (imports data from ODK Collect)         |
-| **couchdb-sync**  | Aether Couchdb Sync app (imports data from Aether Mobile app)         |
-| **ui**            | Aether UI app                                                          |
+| **kernel**        | Aether Kernel app                                                       |
+| **odk-importer**  | Aether ODK Collect Adapter app (imports data from ODK Collect)          |
+| **couchdb-sync**  | Aether Couchdb Sync app (imports data from Aether Mobile app)           |
 | couchdb-sync-rq   | [RQ python](http://python-rq.org/) task runner to perform sync jobs     |
-| kernel-test         | Aether Kernel TESTING app (used only in e2e tests with other containers) |
-| common-test       | Aether Common module (only for tests)                                  |
+| kernel-test       | Aether Kernel TESTING app (used only in e2e tests by other containers)  |
 
 
 All of the containers definition for development can be found in the
@@ -312,7 +284,7 @@ docker-compose run <container-name> test_coverage
 The e2e tests are run against different containers, the config file used
 for them is [docker-compose-test.yml](docker-compose-test.yml).
 
-Before running `odk-importer`, `couchdb-sync` or `ui` you should start
+Before running `odk-importer` or `couchdb-sync` you should start
 the needed test containers.
 
 ```bash
@@ -328,8 +300,8 @@ in `odk-importer` or `couchdb-sync`.
 
 **WARNING**
 
-Never run `odk-importer`, `couchdb-sync` or `ui` tests against any
-PRODUCTION server. The tests clean up will **DELETE ALL SURVEYS!!!**
+Never run `odk-importer` or `couchdb-sync` tests against any
+PRODUCTION server. The tests clean up will **DELETE ALL MAPPINGS!!!**
 
 Look into [docker-compose.yml](docker-compose.yml) or
 [docker-compose-test.yml](docker-compose-test.yml), the variable
@@ -351,6 +323,7 @@ docker-compose run <container-name> eval pip list --outdated
 ```bash
 ./scripts/upgrade_all.sh
 ```
+
 This also rebuilds `aether.common` module and distributes it within the containers.
 Do not forget to include new containers in the file.
 
@@ -359,6 +332,7 @@ or
 ```bash
 docker-compose run <container-name> pip_freeze
 ```
+
 In this case `aether.common` is not rebuilt.
 
 *[Return to TOC](#table-of-contents)*

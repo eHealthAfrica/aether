@@ -1,20 +1,15 @@
 #!/usr/bin/env bash
 set -e
 
-containers=( kernel odk-importer couchdb-sync ui )
+containers=( kernel odk-importer couchdb-sync )
 
 # create the common module
-echo "_____________________________________________ Building aether.common module"
-docker-compose -f docker-compose-test.yml run common-test build
-PCK_FILE=aether.common-0.0.0-py2.py3-none-any.whl
+./scripts/build_common_and_distribute.sh
+
 
 for container in "${containers[@]}"
 do
   :
-
-  # copy the new common module into the container dependencies
-  echo "_____________________________________________ Copying aether.common module in $container"
-  cp -r ./aether-common/dist/$PCK_FILE ./aether-$container/conf/pip/dependencies/
 
   # replace `requirements.txt` file with `primary-requirements.txt` file
   cp ./aether-$container/conf/pip/primary-requirements.txt ./aether-$container/conf/pip/requirements.txt
@@ -26,5 +21,10 @@ do
   # upgrade pip dependencies
   echo "_____________________________________________ Updating $container"
   docker-compose run $container pip_freeze
-  echo "_____________________________________________ $container updated!"
+
+  echo "_____________________________________________ Rebuilding $container with updates"
+  # rebuild container
+  docker-compose build $container
+
+  echo "_____________________________________________ $container updated and rebuilt!"
 done
