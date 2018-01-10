@@ -27,7 +27,7 @@ services:
         stdin_open: true
         tty: true
         build: aether-kernel
-        image: aether/kernel
+        image: aether-kernel
         environment:
             CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
             CSRF_COOKIE_DOMAIN: .aether.local
@@ -56,7 +56,7 @@ services:
 
     odk-importer:
         build: aether-odk-importer
-        image: aether/odk-importer
+        image: aether-odk-importer
         environment:
             CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
             CSRF_COOKIE_DOMAIN: .aether.local
@@ -90,7 +90,7 @@ services:
 
     couchdb-sync:
         build: aether-couchdb-sync
-        image: aether/couchdb-sync
+        image: aether-couchdb-sync
         environment: &sync-environment
             CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
             CSRF_COOKIE_DOMAIN: .aether.local
@@ -131,7 +131,7 @@ services:
         command: start_dev
 
     couchdb-sync-rq:
-        image: aether/couchdb-sync
+        image: aether-couchdb-sync
         environment: *sync-environment
         volumes: *sync-volumes
         depends_on: *sync-dependencies
