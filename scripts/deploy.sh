@@ -25,8 +25,8 @@ do
     docker push "${IMAGE_REPO}/${AETHER_APP}-nginx-${ENV}:latest"
 
     echo "Building Docker image ${IMAGE_REPO}/${AETHER_APP}-${ENV}:${BRANCH}"
-    docker tag aether/$APP "${IMAGE_REPO}/${AETHER_APP}-${ENV}:${BRANCH}"
-    docker tag aether/$APP "${IMAGE_REPO}/${AETHER_APP}-${ENV}:${COMMIT}"
+    docker tag aether-$APP "${IMAGE_REPO}/${AETHER_APP}-${ENV}:${BRANCH}"
+    docker tag aether-$APP "${IMAGE_REPO}/${AETHER_APP}-${ENV}:${COMMIT}"
     echo "Pushing Docker image ${IMAGE_REPO}/${AETHER_APP}-${ENV}:${BRANCH}"
     docker push "${IMAGE_REPO}/${AETHER_APP}-${ENV}:${BRANCH}"
     docker push "${IMAGE_REPO}/${AETHER_APP}-${ENV}:${COMMIT}"
