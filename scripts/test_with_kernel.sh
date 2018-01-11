@@ -36,6 +36,19 @@ prepare_container kernel
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
 
+if [[ $container = "odk-importer" ]]
+then
+  fixture=aether/kernel/api/tests/fixtures/project_empty_schema.json
+else
+  fixture=aether/kernel/api/tests/fixtures/project.json
+fi
+
+if [[ $fixture ]]
+then
+  $DC_TEST run kernel-test manage loaddata $fixture
+fi
+echo "_____________________________________________ Loaded initial data in kernel"
+
 # build test container
 prepare_container $container
 

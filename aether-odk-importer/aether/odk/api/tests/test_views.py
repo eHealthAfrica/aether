@@ -11,33 +11,65 @@ class ViewsTests(CustomTestCase):
     def setUp(self):
         super(ViewsTests, self).setUp()
         self.helper_create_user()
-        self.xform = self.helper_create_xform()
-        self.formIdXml = '<formID>%s</formID>' % self.xform.id_string
-        self.url_get = reverse('xform-get-xml_data', kwargs={'pk': self.xform.id})
+        self.xform = self.helper_create_xform(with_media=True)
+        self.formIdXml = '<formID>%s</formID>' % self.xform.form_id
+        self.url_get_form = self.xform.download_url
+        self.url_get_media = self.xform.manifest_url
         self.url_list = reverse('xform-list-xml')
 
     def test__form_get__none(self):
-        url = reverse('xform-get-xml_data', kwargs={'pk': 0})
+        url = reverse('xform-get-download', kwargs={'pk': 0})
+        response = self.client.get(url, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        url = reverse('xform-get-manifest', kwargs={'pk': 0})
         response = self.client.get(url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test__form_get__no_surveyors(self):
-        response = self.client.get(self.url_get, **self.headers_user)
+        response = self.client.get(self.url_get_form, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.content.decode(), self.xform.xml_data)
+
+        response = self.client.get(self.url_get_media, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test__form_get__one_surveyor(self):
         self.xform.surveyors.add(self.helper_create_surveyor())
         self.xform.save()
-        response = self.client.get(self.url_get, **self.headers_user)
+
+        response = self.client.get(self.url_get_form, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        response = self.client.get(self.url_get_media, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test__form_get__as_surveyor(self):
         self.xform.surveyors.add(self.user)
         self.xform.save()
-        response = self.client.get(self.url_get, **self.headers_user)
+
+        self.assertEqual(self.xform.download_url, self.url_get_form)
+        self.assertEqual(self.xform.manifest_url, self.url_get_media)
+
+        response = self.client.get(self.url_get_form, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.content.decode(), self.xform.xml_data)
+
+        response = self.client.get(self.url_get_media, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # change xform version
+        self.xform.version = self.xform.version + '99'
+        self.xform.save()
+
+        self.assertNotEqual(self.xform.download_url, self.url_get_form)
+        self.assertNotEqual(self.xform.manifest_url, self.url_get_media)
+
+        # pretend to get an old version
+        response = self.client.get(self.url_get_form, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response = self.client.get(self.url_get_media, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test__form_get__as_superuser(self):
         self.helper_create_superuser()
@@ -45,13 +77,46 @@ class ViewsTests(CustomTestCase):
         self.xform.surveyors.add(self.helper_create_surveyor())
         self.xform.save()
 
-        response = self.client.get(self.url_get, **self.headers_admin)
+        response = self.client.get(self.url_get_form, **self.headers_admin)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.content.decode(), self.xform.xml_data)
+
+        response = self.client.get(self.url_get_media, **self.headers_admin)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test__form_list(self):
         response = self.client.get(self.url_list, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = response.content.decode()
+        self.assertIn(self.formIdXml, content, 'expect form in list')
+        self.assertIn('<manifestUrl>', content, 'expect manifest url with media files')
+        self.assertNotIn('<descriptionText>', content, 'expect no descriptions without verbose')
+
+        response = self.client.get(
+            self.url_list + '?verbose=true&formID=' + self.xform.form_id,
+            **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = response.content.decode()
+        self.assertIn(self.formIdXml, content, 'expect form in list with formID')
+        self.assertIn('<manifestUrl>', content, 'expect manifest url with media files')
+        self.assertIn('<descriptionText>', content, 'expect description with verbose')
+
+        self.xform.media_files.all().delete()
+        self.assertEqual(self.xform.media_files.count(), 0)
+        response = self.client.get(
+            self.url_list + '?formID=' + self.xform.form_id,
+            **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = response.content.decode()
+        self.assertIn(self.formIdXml, content, 'expect form in list with formID')
+        # without media files there is no manifest url
+        self.assertNotIn('<manifestUrl>', content, 'expect no manifest url without media files')
+
+        response = self.client.get(
+            self.url_list + '?formID=I_do_not_exist', **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = response.content.decode()
+        self.assertNotIn('<xform>', content, 'expect no forms in list')
 
     def test__form_list__no_surveyors(self):
         # if no granted surveyors...
@@ -150,7 +215,7 @@ class ViewsTests(CustomTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['count'], 0)
 
-    def test__surveyors__by_survey(self):
+    def test__surveyors__by_mapping(self):
         mapping_ids = {i: uuid.uuid4() for i in range(4)}
         # create surveyors
         a = self.helper_create_surveyor(username='a')
@@ -158,8 +223,8 @@ class ViewsTests(CustomTestCase):
         c = self.helper_create_surveyor(username='c')
         d = self.helper_create_surveyor(username='d')
 
-        # create forms with or without surveyors
-        self.xform.delete()  # remove default survey
+        # create xforms with or without surveyors
+        self.xform.delete()  # remove default xform
 
         response = self.client.get('/surveyors.json', **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
