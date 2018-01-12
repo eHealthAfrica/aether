@@ -31,7 +31,7 @@ class ViewsTest(TransactionTestCase):
 
         self.mapping = models.Mapping.objects.create(
             name='mapping1',
-            definition={"sample": "json schema"},
+            definition={'sample': 'json schema'},
             revision='a sample revision field',
             project=self.project
         )

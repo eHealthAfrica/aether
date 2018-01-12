@@ -21,7 +21,7 @@ class UtilsTests(TestCase):
         self.assertTrue(expected in pretty, pretty)
 
     def test_json_printable(self):
-        data = [{"dob": "2000-01-01", "name": "PersonA"}]
+        data = [{'dob': '2000-01-01', 'name': 'PersonA'}]
         expected = [{'dob': '2000-01-01', 'name': 'PersonA'}]
         printable = utils.json_printable(data)
         self.assertEquals(printable, expected)
@@ -63,16 +63,16 @@ class UtilsTests(TestCase):
         requirements = EXAMPLE_REQUIREMENTS
         source_data = EXAMPLE_SOURCE_DATA
         entity_definitions = EXAMPLE_ENTITY_DEFINITION
-        entity_name = "Person"
+        entity_name = 'Person'
         stub = utils.get_entity_stub(requirements, entity_definitions, entity_name, source_data)
-        self.assertEquals(len(stub.get("dob")), 3)
+        self.assertEquals(len(stub.get('dob')), 3)
 
     def test_resolve_source_reference__single_resolution(self):
         data = EXAMPLE_SOURCE_DATA
         requirements = EXAMPLE_REQUIREMENTS
         entities = EXAMPLE_ENTITY
-        entity_name = "Person"
-        field = "villageID"
+        entity_name = 'Person'
+        field = 'villageID'
         path = requirements.get(entity_name, {}).get(field)[0]
         resolved_count = utils.resolve_source_reference(path, entities, entity_name, 0, field, data)
         self.assertEquals(resolved_count, 1)
@@ -81,8 +81,8 @@ class UtilsTests(TestCase):
         data = EXAMPLE_SOURCE_DATA
         requirements = EXAMPLE_REQUIREMENTS
         entities = EXAMPLE_ENTITY
-        entity_name = "Person"
-        field = "dob"
+        entity_name = 'Person'
+        field = 'dob'
         path = requirements.get(entity_name, {}).get(field)[0]
         resolved_count = utils.resolve_source_reference(path, entities, entity_name, 0, field, data)
         self.assertEquals(resolved_count, 3)
@@ -100,8 +100,8 @@ class UtilsTests(TestCase):
         response_data = EXAMPLE_SOURCE_DATA
         entity_definitions = EXAMPLE_ENTITY_DEFINITION
         expected_entity = EXAMPLE_ENTITY
-        entities = {"Person": []}
-        entity_name = "Person"
+        entities = {'Person': []}
+        entity_name = 'Person'
         entity_stub = utils.get_entity_stub(
             requirements, entity_definitions, entity_name, response_data
         )

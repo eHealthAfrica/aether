@@ -10,7 +10,7 @@ import urllib
 
 
 class FilteredHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
-    """
+    '''
     This custom field does essentially the same thing as
     serializers.HyperlinkedRelatedField. The only difference is that the url of
     a foreign key relationship will be:
@@ -32,7 +32,7 @@ class FilteredHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
             ...
         }
 
-    """
+    '''
 
     def get_url(self, obj, view_name, request, format):
         lookup_field_value = obj.instance.pk
@@ -227,7 +227,7 @@ class EntitySerializer(serializers.ModelSerializer):
             status=validated_data.pop('status'),
             projectschema=validated_data.pop('projectschema'),
         )
-        if "submission" in validated_data:
+        if 'submission' in validated_data:
             entity.submission = validated_data.pop('submission')
         if 'id' in validated_data:
             entity.id = validated_data.pop('id')
