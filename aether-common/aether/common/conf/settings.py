@@ -30,7 +30,7 @@ STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/static/')
 MEDIA_URL = '/media/'
 MEDIA_BASIC_URL = '/media-basic/'
 MEDIA_INTERNAL_URL = '/media-internal/'
-MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/tmp/')
+MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/media/')
 
 
 # Django Basic Configuration
