@@ -1,21 +1,20 @@
 # ------------------------------------------------------------------------------
-# Config file for ALL containers:
+# Config file for only these containers:
 #
 #  * Aether Kernel
 #  * ODK Collect Adapter
-#  * Mobile CouchDB Sync
 # ------------------------------------------------------------------------------
 
 version: "2"
 
 networks:
-    internal:
+    internal-odk:
         driver: bridge
 
 services:
 
     # ---------------------------------
-    # Database containers
+    # Database container
     # ---------------------------------
 
     db:
@@ -23,21 +22,7 @@ services:
             file: docker-compose-base.yml
             service: postgres-base
         networks:
-            - internal
-
-    couchdb:
-        extends:
-            file: docker-compose-base.yml
-            service: couchdb-base
-        networks:
-            - internal
-
-    redis:
-        extends:
-            file: docker-compose-base.yml
-            service: redis-base
-        networks:
-            - internal
+            - internal-odk
 
 
     # ---------------------------------
@@ -51,7 +36,7 @@ services:
         depends_on:
             - db
         networks:
-            internal:
+            internal-odk:
                 aliases:
                     - kernel.aether.local
 
@@ -60,7 +45,7 @@ services:
     # ODK Adapter container
     # ---------------------------------
 
-    odk-importer:
+    odk:
         extends:
             file: docker-compose-base.yml
             service: odk-base
@@ -68,36 +53,9 @@ services:
             - db
             - kernel
         networks:
-            internal:
+            internal-odk:
                 aliases:
                     - odk.aether.local
-
-
-    # ---------------------------------
-    # Mobile Sync containers
-    # ---------------------------------
-
-    couchdb-sync:
-        extends:
-            file: docker-compose-base.yml
-            service: sync-base
-        depends_on: &sync-dependencies
-            - couchdb
-            - db
-            - kernel
-            - redis
-        networks:
-            internal:
-                aliases:
-                    - sync.aether.local
-
-    couchdb-sync-rq:
-        extends:
-            file: docker-compose-base.yml
-            service: rq-base
-        depends_on: *sync-dependencies
-        networks:
-            - internal
 
 
     # ---------------------------------
@@ -108,9 +66,11 @@ services:
         extends:
             file: docker-compose-base.yml
             service: nginx-base
+        volumes:
+            # override config file
+            - ./local-setup/nginx.conf.odk.local:/etc/nginx/conf.d/default.conf
         depends_on:
-            - couchdb-sync
             - kernel
-            - odk-importer
+            - odk
         networks:
-            - internal
+            - internal-odk

@@ -1,0 +1,57 @@
+# ------------------------------------------------------------------------------
+# Config file for only these containers:
+#
+#  * Aether Kernel
+# ------------------------------------------------------------------------------
+
+version: "2"
+
+networks:
+    internal-kernel:
+        driver: bridge
+
+services:
+
+    # ---------------------------------
+    # Database container
+    # ---------------------------------
+
+    db:
+        extends:
+            file: docker-compose-base.yml
+            service: postgres-base
+        networks:
+            - internal-kernel
+
+
+    # ---------------------------------
+    # Aether Kernel container
+    # ---------------------------------
+
+    kernel:
+        extends:
+            file: docker-compose-base.yml
+            service: kernel-base
+        depends_on:
+            - db
+        networks:
+            internal-kernel:
+                aliases:
+                    - kernel.aether.local
+
+
+    # ---------------------------------
+    # NGINX container
+    # ---------------------------------
+
+    nginx:
+        extends:
+            file: docker-compose-base.yml
+            service: nginx-base
+        volumes:
+            # override config file
+            - ./local-setup/nginx.conf.kernel.local:/etc/nginx/conf.d/default.conf
+        depends_on:
+            - kernel
+        networks:
+            - internal-kernel

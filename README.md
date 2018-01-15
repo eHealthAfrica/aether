@@ -242,7 +242,18 @@ The list of the main containers:
 
 
 All of the containers definition for development can be found in the
-[docker-compose.yml](docker-compose.yml) file.
+[docker-compose-base.yml](docker-compose-base.yml) file.
+
+There are docker-compose files per app:
+
+```bash
+docker-compose -f docker-compose-kernel.yml up  # starts kernel container and its dependencies
+
+docker-compose -f docker-compose-odk.yml up     # starts ODK container and its dependencies
+
+docker-compose -f docker-compose-sync.yml up    # starts CouchDB Sync container and its dependencies
+```
+
 
 *[Return to TOC](#table-of-contents)*
 
