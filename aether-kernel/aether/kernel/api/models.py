@@ -13,6 +13,40 @@ STATUS_CHOICES = (
 )
 
 
+'''
+
+Data model schema:
+
+
+    +------------------+          +------------------+       +------------------+       +---------------------+
+    | Project          |          | Mapping          |       | Submission       |       | Attachment          |
+    +==================+          +==================+       +==================+       +=====================+
+    | id               |<-----+   | id               |<--+   | id               |<--+   | id                  |
+    | revision         |      |   | revision         |   |   | revision         |   |   | name                |
+    | name             |      |   | name             |   |   | date             |   |   | attachment_file     |
+    | salad_schema     |      |   | definition       |   |   | payload          |   |   | md5sum              |
+    | jsonld_context   |      |   +::::::::::::::::::+   |   +::::::::::::::::::+   |   +:::::::::::::::::::::+
+    | rdf_definition   |      +--<| project          |   +--<| mapping          |   +--<| submission          |
+    +------------------+      |   +------------------+       | map_revision     |   |   | submission_revision |
+                              |                              +------------------+   |   +---------------------+
+                              |                                                     |
+    +------------------+      |   +------------------+       +------------------+   |
+    | Schema           |      |   | ProjectSchema    |       | Entity           |   |
+    +==================+      |   +==================+       +==================+   |
+    | id               |<--+  |   | id               |<--+   | id               |   |
+    | revision         |   |  |   | name             |   |   | revision         |   |
+    | name             |   |  |   | mandatory_fields |   |   | payload          |   |
+    | definiton        |   |  |   | transport_rule   |   |   | status           |   |
+    | type             |   |  |   | masked_fields    |   |   | modified         |   |
+    +------------------+   |  |   | is_encrypted     |   |   +::::::::::::::::::+   |
+                           |  |   +::::::::::::::::::+   |   | submission       |>--+
+                           |  +--<| project          |   +--<| projectschema    |
+                           +-----<| schema           |       +------------------+
+                                  +------------------+
+
+'''
+
+
 class Project(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     revision = models.TextField()
