@@ -77,6 +77,7 @@ class ViewsTest(TransactionTestCase):
         data = json.dumps(data)
         response = self.client.post(url, data, content_type='application/json')
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        return response
 
     def test_api_create_instance(self):
         self.helper_create_object('project-list', {
@@ -127,6 +128,7 @@ class ViewsTest(TransactionTestCase):
         url = reverse(view_name, kwargs={'pk': Obj.pk})
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        return response
 
     def test_api_read_instance(self):
         self.helper_read_object_id('mapping-detail', self.mapping)
@@ -143,6 +145,7 @@ class ViewsTest(TransactionTestCase):
         updated_data = json.dumps(updated_data)
         response = self.client.put(url, updated_data, content_type='application/json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        return response
 
     def test_api_update_instance_id(self):
         self.helper_update_object_id('mapping-detail', {
@@ -193,6 +196,7 @@ class ViewsTest(TransactionTestCase):
         url = reverse(view_name, kwargs={'pk': Obj.pk})
         response = self.client.delete(url, format='json', follow=True)
         self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+        return response
 
     def test_api_delete_project(self):
         self.helper_delete_object_pk('project-detail', self.project)
@@ -211,3 +215,26 @@ class ViewsTest(TransactionTestCase):
 
     def test_api_delete_entity(self):
         self.helper_delete_object_pk('entity-detail', self.entity)
+
+    def test_api_submission_with_empty_mapping(self):
+        mapping = {
+            'name': 'Empty mapping',
+            'definition': {},
+            'revision': 'Sample mapping revision',
+            'project': str(self.project.pk),
+        }
+        mapping_response = self.helper_create_object(
+            view_name='mapping-list',
+            data=mapping,
+        )
+        mapping_id = mapping_response.json()['id']
+        submission = {
+            'mapping': mapping_id,
+            'payload': {
+                'a': 1
+            }
+        }
+        submission_response = self.helper_create_object(
+            view_name='submission-list',
+            data=submission,
+        )
