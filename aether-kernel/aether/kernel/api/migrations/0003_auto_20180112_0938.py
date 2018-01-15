@@ -19,13 +19,13 @@ class Migration(migrations.Migration):
             name='Attachment',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('sub_revision', models.TextField()),
+                ('submission_revision', models.TextField()),
                 ('name', models.CharField(max_length=255)),
                 ('attachment_file', models.FileField(upload_to=aether.kernel.api.models.__attachment_path__)),
                 ('md5sum', models.CharField(blank=True, max_length=36)),
             ],
             options={
-                'ordering': ['submission', 'sub_revision', 'name'],
+                'ordering': ['submission', 'submission_revision', 'name'],
                 'default_related_name': 'attachments',
             },
         ),

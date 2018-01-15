@@ -75,7 +75,7 @@ def __attachment_path__(instance, filename):
     # file will be uploaded to MEDIA_ROOT/<submission_id>/{submission_revision}/filename
     return '{submission}/{revision}/{attachment}'.format(
         submission=instance.submission.id,
-        revision=instance.sub_revision,
+        revision=instance.submission_revision,
         attachment=filename,
     )
 
@@ -83,7 +83,7 @@ def __attachment_path__(instance, filename):
 class Attachment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     submission = models.ForeignKey(to=Submission, on_delete=models.CASCADE)
-    sub_revision = models.TextField()
+    submission_revision = models.TextField()
 
     # http://www.linfo.org/file_name.html
     # Modern Unix-like systems support long file names, usually up to 255 bytes in length.
@@ -103,8 +103,8 @@ class Attachment(models.Model):
         self.md5sum = md5hash.hexdigest()
 
         # assign current submission revision if missing
-        if not self.sub_revision:
-            self.sub_revision = self.submission.revision
+        if not self.submission_revision:
+            self.submission_revision = self.submission.revision
 
         # assign name if missing
         if not self.name:
@@ -115,7 +115,7 @@ class Attachment(models.Model):
     class Meta:
         app_label = 'kernel'
         default_related_name = 'attachments'
-        ordering = ['submission', 'sub_revision', 'name']
+        ordering = ['submission', 'submission_revision', 'name']
 
 
 class Schema(models.Model):
