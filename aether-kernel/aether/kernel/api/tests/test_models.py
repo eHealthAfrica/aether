@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TransactionTestCase
 import datetime
 
@@ -46,6 +47,27 @@ class ModelsTests(TransactionTestCase):
         self.assertEquals(str(submission), '{} - {}'.format(str(mapping), submission.id))
         self.assertNotEqual(models.Submission.objects.count(), 0)
         self.assertTrue(submission.payload_prettified is not None)
+
+        attachment = models.Attachment.objects.create(
+            submission=submission,
+            attachment_file=SimpleUploadedFile('sample.txt', b'abc')
+        )
+        self.assertEquals(str(attachment), attachment.name)
+        self.assertEquals(attachment.name, 'sample.txt')
+        self.assertEquals(attachment.md5sum, '900150983cd24fb0d6963f7d28e17f72')
+        self.assertEquals(attachment.sub_revision, submission.revision)
+
+        attachment_2 = models.Attachment.objects.create(
+            submission=submission,
+            sub_revision='next revision',
+            name='sample_2.txt',
+            attachment_file=SimpleUploadedFile('sample_12345678.txt', b'abcd')
+        )
+        self.assertEquals(str(attachment_2), attachment_2.name)
+        self.assertEquals(attachment_2.name, 'sample_2.txt')
+        self.assertEquals(attachment_2.md5sum, 'e2fc714c4727ee9395f324cd2e7f331f')
+        self.assertEquals(attachment_2.sub_revision, 'next revision')
+        self.assertNotEqual(attachment_2.sub_revision, submission.revision)
 
         schema = models.Schema.objects.create(
             name='sample schema',

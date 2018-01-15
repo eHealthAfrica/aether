@@ -1,6 +1,7 @@
 # encoding: utf-8
 import uuid
 from datetime import datetime
+from hashlib import md5
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 
@@ -23,13 +24,18 @@ class Project(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        app_label = 'kernel'
+        default_related_name = 'projects'
+        ordering = ['name', 'revision']
+
 
 class Mapping(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50)
     definition = JSONField(blank=False, null=False)
     revision = models.TextField()
-    project = models.ForeignKey(Project, related_name='mappings')
+    project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
 
     @property
     def definition_prettified(self):
@@ -38,6 +44,11 @@ class Mapping(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        app_label = 'kernel'
+        default_related_name = 'mappings'
+        ordering = ['name', 'revision']
+
 
 class Submission(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -45,7 +56,7 @@ class Submission(models.Model):
     map_revision = models.TextField(default='1')
     date = models.DateTimeField(auto_now_add=True, db_index=True)
     payload = JSONField(blank=False, null=False)
-    mapping = models.ForeignKey(Mapping, related_name='submissions', blank=True, null=True)
+    mapping = models.ForeignKey(to=Mapping, on_delete=models.CASCADE, blank=True, null=True)
 
     @property
     def payload_prettified(self):
@@ -53,6 +64,58 @@ class Submission(models.Model):
 
     def __str__(self):
         return '{} - {}'.format(str(self.mapping), self.id)
+
+    class Meta:
+        app_label = 'kernel'
+        default_related_name = 'submissions'
+        ordering = ['mapping', '-date']
+
+
+def __attachment_path__(instance, filename):
+    # file will be uploaded to MEDIA_ROOT/<submission_id>/{submission_revision}/filename
+    return '{submission}/{revision}/{attachment}'.format(
+        submission=instance.submission.id,
+        revision=instance.sub_revision,
+        attachment=filename,
+    )
+
+
+class Attachment(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    submission = models.ForeignKey(to=Submission, on_delete=models.CASCADE)
+    sub_revision = models.TextField()
+
+    # http://www.linfo.org/file_name.html
+    # Modern Unix-like systems support long file names, usually up to 255 bytes in length.
+    name = models.CharField(max_length=255)
+    attachment_file = models.FileField(upload_to=__attachment_path__)
+    # save attachment hash to check later if the file is not corrupted
+    md5sum = models.CharField(blank=True, max_length=36)
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        # calculate file hash
+        md5hash = md5()
+        for chunk in self.attachment_file.chunks():
+            md5hash.update(chunk)
+        self.md5sum = md5hash.hexdigest()
+
+        # assign current submission revision if missing
+        if not self.sub_revision:
+            self.sub_revision = self.submission.revision
+
+        # assign name if missing
+        if not self.name:
+            self.name = self.attachment_file.name
+
+        super(Attachment, self).save(*args, **kwargs)
+
+    class Meta:
+        app_label = 'kernel'
+        default_related_name = 'attachments'
+        ordering = ['submission', 'sub_revision', 'name']
 
 
 class Schema(models.Model):
@@ -69,6 +132,11 @@ class Schema(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        app_label = 'kernel'
+        default_related_name = 'schemas'
+        ordering = ['name', 'revision']
+
 
 class ProjectSchema(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -77,11 +145,15 @@ class ProjectSchema(models.Model):
     transport_rule = models.TextField()
     masked_fields = models.TextField()
     is_encrypted = models.BooleanField(default=False)
-    project = models.ForeignKey(Project, related_name='projectschemas')
-    schema = models.ForeignKey(Schema, related_name='projectschemas')
+    project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
+    schema = models.ForeignKey(to=Schema, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        app_label = 'kernel'
+        default_related_name = 'projectschemas'
 
 
 class Entity(models.Model):
@@ -89,8 +161,8 @@ class Entity(models.Model):
     revision = models.TextField(default='1')
     payload = JSONField(blank=False, null=False)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
-    projectschema = models.ForeignKey(ProjectSchema, related_name='entities')
-    submission = models.ForeignKey(Submission, related_name='entities', blank=True, null=True)
+    projectschema = models.ForeignKey(to=ProjectSchema, on_delete=models.CASCADE)
+    submission = models.ForeignKey(to=Submission, on_delete=models.CASCADE, blank=True, null=True)
     modified = models.CharField(max_length=100, editable=False)
 
     def save(self, **kwargs):
@@ -108,4 +180,6 @@ class Entity(models.Model):
         return 'Entity {}'.format(self.id)
 
     class Meta:
+        app_label = 'kernel'
+        default_related_name = 'entities'
         verbose_name_plural = 'entities'
