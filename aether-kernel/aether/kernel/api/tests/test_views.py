@@ -234,7 +234,7 @@ class ViewsTest(TransactionTestCase):
                 'a': 1
             }
         }
-        submission_response = self.helper_create_object(
+        self.helper_create_object(
             view_name='submission-list',
             data=submission,
         )
