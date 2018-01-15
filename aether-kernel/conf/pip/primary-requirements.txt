@@ -4,12 +4,12 @@
 #                                                                              #
 #                                 CHANGE ME !!!                                #
 #                                                                              #
-# Update me and then run 'docker-compose run kernel pip_freeze'                  #
+# Update me and then run 'docker-compose run kernel pip_freeze'                #
 #                                                                              #
 ################################################################################
 
 coverage
-django==1.11.7
+django<2
 django-cas-ng
 django-cors-headers
 django-debug-toolbar
@@ -22,6 +22,7 @@ drf-dynamic-fields
 drf-extensions
 drf-openapi
 flake8
+flake8-quotes
 jsonschema
 mock
 psycopg2

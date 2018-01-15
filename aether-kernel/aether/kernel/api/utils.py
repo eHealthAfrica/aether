@@ -68,7 +68,7 @@ custom_jsonpath_wildcard_regex = re.compile('(\$\.)?[a-zA-Z0-9_-]+\*')
 
 
 def find_by_jsonpath(obj, path):
-    """
+    '''
     This function wraps `jsonpath_ng.parse()` and
     `jsonpath_ng.jsonpath.Child.find()` in order to provide custom
     functionality as described in https://jira.ehealthafrica.org/browse/AET-38.
@@ -77,7 +77,7 @@ def find_by_jsonpath(obj, path):
     string, `find` will attempt to filter the results by that prefix.
 
     **NOTE**: this behavior is not part of jsonpath spec.
-    """
+    '''
 
     # Matches any string/jsonpath which starts with a sequence of characters
     # followed by an asterisk.
@@ -108,7 +108,7 @@ def find_by_jsonpath(obj, path):
 
 def get_field_mappings(mapping_definition):
     mapping_obj = mapping_definition
-    matches = parse("mapping[*]").find(mapping_obj)
+    matches = parse('mapping[*]').find(mapping_obj)
     mappings = [match.value for match in matches]
     return mappings
 
@@ -120,7 +120,7 @@ def JSP_get_basic_fields(avro_obj):
 
 def get_entity_definitions(mapping_definition, schemas):
     required_entities = {}
-    found_entities = parse("entities[*]").find(mapping_definition)
+    found_entities = parse('entities[*]').find(mapping_definition)
     entities = [match.value for match in found_entities][0]
     for entity_definition in entities.items():
         entity_type, file_name = entity_definition
@@ -134,9 +134,9 @@ def get_entity_requirements(entities, field_mappings):
         entity_requirements = {}
         # find mappings that start with the entity name
         # and return a list with the entity_type ( and dot ) removed from the destination
-        matching_mappings = [[src, dst.split(entity_type+".")[1]]
+        matching_mappings = [[src, dst.split(entity_type+'.')[1]]
                              for src, dst in field_mappings
-                             if dst.startswith(entity_type+".")]
+                             if dst.startswith(entity_type+'.')]
         for field in entity_definition:
             # filter again to find sources pertaining to this particular field in this entity
             field_sources = [src for src, dst in matching_mappings if dst == field]
@@ -153,7 +153,7 @@ def get_entity_stub(requirements, entity_definitions, entity_name, source_data):
     for field, paths in requirements.get(entity_name).items():
         for i, path in enumerate(paths):
             # if this is a json path, we'll resolve it to see how big the result is
-            if "#!" not in path:
+            if '#!' not in path:
                 matches = parse(path).find(source_data)
                 [entity_stub[field].append(match.value) for match in matches]
             else:
@@ -229,7 +229,7 @@ def resolve_entity_reference(
     # entity_jsonpath
     matches = parse(entity_jsonpath).find(constructed_entities)
     if len(matches) < 1:
-        raise ValueError("path %s has no matches; aborting" % entity_jsonpath)
+        raise ValueError('path %s has no matches; aborting' % entity_jsonpath)
     if len(matches) < 2:
         # single value
         return matches[0].value
@@ -262,7 +262,7 @@ def get_or_make_uuid(entity_type, field_name, instance_number, source_data):
     # Either uses a pre-created uuid present in source_data --or-- creates a new
     # uuid and saves it in source data make one uuid, we may not use it
     value = str(uuid.uuid4())
-    base = "aether_extractor_enrichment"
+    base = 'aether_extractor_enrichment'
     if source_data.get(base, {}).get(entity_type, {}).get(field_name):
         try:
             value = source_data.get(base, {}).get(entity_type).get(field_name)[instance_number]
@@ -287,7 +287,7 @@ def get_or_make_uuid(entity_type, field_name, instance_number, source_data):
 def resolve_action(source_path):
     # Take a path instruction (like #!uuid# or #!entity-reference#a.json[path])
     # and resolves the action and arguments
-    opts = source_path.split("#!")[1].split("#")
+    opts = source_path.split('#!')[1].split('#')
     # Action string is between #! and #
     action = opts[0]
     # If arguments are present we'll try and parse them
@@ -316,9 +316,9 @@ def extractor_action(
     # Takes an extractor action instruction (#!action#args) and dispatches it to
     # the proper function
     action, args = resolve_action(source_path)
-    if action == "uuid":
+    if action == 'uuid':
         return get_or_make_uuid(entity_type, field_name, instance_number, source_data)
-    elif action == "entity-reference":
+    elif action == 'entity-reference':
         return resolve_entity_reference(
             args,
             constructed_entities,
@@ -327,12 +327,12 @@ def extractor_action(
             instance_number,
             source_data,
         )
-    elif action == "none":
+    elif action == 'none':
         return action_none()
-    elif action == "constant":
+    elif action == 'constant':
         return action_constant(args)
     else:
-        raise ValueError("No action with name %s" % action)
+        raise ValueError('No action with name %s' % action)
 
 
 def extract_entity(entity_type, entities, requirements, data, entity_stub):
@@ -359,7 +359,7 @@ def extract_entity(entity_type, entities, requirements, data, entity_stub):
             # otherwise use the current path
             path = paths[-1] if len(paths) < (i + 1) else paths[i]
             # check to see if we need to use a special reference here
-            if "#!" not in path:
+            if '#!' not in path:
                 i = resolve_source_reference(path, entities, entity_type, i, field, data)
             else:
                 # Special action to be dispatched
@@ -380,7 +380,7 @@ def extract_entity(entity_type, entities, requirements, data, entity_stub):
 
 def extract_entities(requirements, response_data, entity_definitions):
     data = response_data if response_data else []
-    data["aether_errors"] = []
+    data['aether_errors'] = []
     # for output. Since we need to submit the extracted entities as different
     # types, it's helpful to seperate them here
     entities = {}
@@ -407,7 +407,7 @@ def extract_entities(requirements, response_data, entity_definitions):
             action.resolve(entities)
     # send a log of paths with errors to the user via saved response
     for action in failed_again:
-        data["aether_errors"].append("failed %s" % action.path)
+        data['aether_errors'].append('failed %s' % action.path)
     return data, entities
 
 
@@ -417,7 +417,7 @@ def extract_create_entities(submission):
 
     # Get the primary key of the projectschema
     # entity_pks = list(mapping_definition['entities'].values())
-    entity_ps_ids = mapping_definition.get("entities")
+    entity_ps_ids = mapping_definition.get('entities')
 
     # Save submission and exit early if mapping does not specify any entities.
     if not entity_ps_ids:

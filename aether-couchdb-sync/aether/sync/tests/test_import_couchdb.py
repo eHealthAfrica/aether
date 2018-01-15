@@ -33,11 +33,11 @@ device_id = 'test_import-from-couch'
 class ImportTestCase(TestCase):
 
     def setUp(self):
-        """
+        '''
         Set up a basic Aether project. This assumes that the fixture in
         `/aether-kernel/aether/kernel/api/tests/fixtures/project.json` has been
         loaded into the kernel database. See `/scripts/test_all.sh` for details.
-        """
+        '''
         clean_couch()
         # Check that we can connect to the kernel container.
         self.assertTrue(kernel_utils.test_connection())
@@ -66,22 +66,22 @@ class ImportTestCase(TestCase):
             'revision': 1,
             'project': project['id'],
             'definition': {
-                "mapping": [
+                'mapping': [
                     [
-                        "#!uuid",
-                        "Person.id"
+                        '#!uuid',
+                        'Person.id'
                     ],
                     [
-                        "firstname",
-                        "Person.firstName"
+                        'firstname',
+                        'Person.firstName'
                     ],
                     [
-                        "lastname",
-                        "Person.familyName"
+                        'lastname',
+                        'Person.familyName'
                     ],
                 ],
-                "entities": {
-                    "Person": projectschema['id'],
+                'entities': {
+                    'Person': projectschema['id'],
                 }
             }
         }
