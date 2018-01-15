@@ -419,6 +419,11 @@ def extract_create_entities(submission):
     # entity_pks = list(mapping_definition['entities'].values())
     entity_ps_ids = mapping_definition.get("entities")
 
+    # Save submission and exit early if mapping does not specify any entities.
+    if not entity_ps_ids:
+        submission.save()
+        return
+
     # Get the schema of the projectschema
     # project_schema = models.ProjectSchema.objects.get(pk=entity_pks[0])
     project_schemas = {
