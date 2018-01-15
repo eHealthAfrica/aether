@@ -1,4 +1,4 @@
-# import json
+import json
 import re
 import requests
 import xmltodict
@@ -23,7 +23,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import StaticHTMLRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
 
-from aether.common.kernel.utils import get_auth_header, get_submissions_url
+from aether.common.kernel.utils import get_auth_header, get_submissions_url, get_attachments_url
 
 from .models import Mapping, XForm, MediaFile
 from .serializers import (
@@ -35,6 +35,13 @@ from .serializers import (
 from .surveyors_utils import get_surveyors
 
 from ..settings import logger
+
+'''
+ODK Collect sends the Survey responses within an attachment file in XML format.
+
+Parameter name of the submission file:
+'''
+XML_SUBMISSION_PARAM = 'xml_submission_file'
 
 
 class MappingViewSet(viewsets.ModelViewSet):
@@ -410,9 +417,13 @@ def xform_submission(request):
     if request.method == 'HEAD':
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    file_param = 'xml_submission_file'
+    if not request.FILES or XML_SUBMISSION_PARAM not in request.FILES:
+        # missing submitted data
+        logger.warning('Missing submiited data')
+        return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
     try:
-        xml = request.FILES[file_param].read()
+        xml = request.FILES[XML_SUBMISSION_PARAM].read()
         data = xmltodict.parse(xml)
     except Exception as e:
         logger.warning('Unexpected error when handling file')
@@ -462,48 +473,60 @@ def xform_submission(request):
     walk(data, None, coerce_dict)  # modifies inplace
 
     try:
+        submission_id = None
         response = requests.post(
             get_submissions_url(),
             json={
-                'payload': data,
                 'mapping': str(xform.mapping.pk),
+                'payload': data,
             },
             headers=auth_header,
         )
-        content = response.content.decode('utf-8')
-        if response.status_code != 201:
+        submission_content = response.content.decode('utf-8')
+
+        if response.status_code != status.HTTP_201_CREATED:
             logger.warning(
-                'Unexpected response {} from Aether Kernel server when submiting xform "{}"'.format(
+                'Unexpected response {} from Aether Kernel server when submiting data "{}"'.format(
                     response.status_code, form_id,
                 )
             )
-            logger.warning(content)
+            logger.warning(submission_content)
             return Response(status=response.status_code)
 
-        # ----------------------------------------------------------------------
-        # FIXME: The Attachment model used in Aether is absent from
-        # Aether -- once bring that back, we can uncomment this.
-        # # if there is one field with non ascii characters,
-        # # the usual response.json() throws `UnicodeDecodeError`.
-        # attachment_url = json.loads(content).get('attachments_url')
-        #
-        # for name, f in request.FILES.items():
-        #     # submit possible attachments to the submission and ignore response
-        #     if name != file_param:
-        #         requests.post(
-        #             attachment_url,
-        #             data={'name': name},
-        #             files={'attachment_file': (f.name, f, f.content_type)},
-        #             headers=auth_header,
-        #         )
-        # ----------------------------------------------------------------------
+        # if there is one field with non ascii characters,
+        # the usual response.json() throws `UnicodeDecodeError`.
+        submission_id = json.loads(submission_content).get('id')
 
-        return Response(status=response.status_code)
+        for name, f in request.FILES.items():
+            # submit possible attachments to the submission
+            if name != XML_SUBMISSION_PARAM:
+                response = requests.post(
+                    get_attachments_url(),
+                    data={'submission': submission_id},
+                    files={'attachment_file': (f.name, f, f.content_type)},
+                    headers=auth_header,
+                )
+                if response.status_code != status.HTTP_201_CREATED:
+                    logger.warning(
+                        'Unexpected response {} '
+                        'from Aether Kernel server when submiting attachment "{}"'
+                        .format(response.status_code, form_id))
+                    logger.warning(response.content.decode('utf-8'))
 
-    except Exception as e:  # pragma: no cover  (remove pragma when attachments be enabled again)
+                    # delete previous submission and return error
+                    requests.delete(get_submissions_url(submission_id), headers=auth_header)
+                    return Response(status=response.status_code)
+
+        return Response(status=status.HTTP_201_CREATED)
+
+    except Exception as e:
         logger.warning(
-            'Unexpected error from Aether Kernel server when submiting xform "{}"'.format(form_id)
+            'Unexpected error from Aether Kernel server when submiting data "{}"'.format(form_id)
         )
         logger.error(str(e))
+
+        if submission_id:
+            # delete previous submission and ignore response
+            requests.delete(get_submissions_url(submission_id), headers=auth_header)
         # something went wrong... just send an 400 error
         return Response(status=status.HTTP_400_BAD_REQUEST)
