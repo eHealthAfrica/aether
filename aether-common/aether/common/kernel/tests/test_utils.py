@@ -23,7 +23,7 @@ class UtilsTests(TestCase):
         )
         self.assertEqual(
             utils.get_mappings_url(1),
-            'http://kernel-test/mappings/1'
+            'http://kernel-test/mappings/1/'
         )
         self.assertEqual(
             utils.get_submissions_url(),
@@ -32,6 +32,14 @@ class UtilsTests(TestCase):
         self.assertEqual(
             utils.get_submissions_url(1),
             'http://kernel-test/submissions/1/'
+        )
+        self.assertEqual(
+            utils.get_attachments_url(),
+            'http://kernel-test/attachments/'
+        )
+        self.assertEqual(
+            utils.get_attachments_url(1),
+            'http://kernel-test/attachments/1/'
         )
         self.assertRaises(
             Exception,
@@ -48,11 +56,15 @@ class UtilsTests(TestCase):
         )
         self.assertEqual(
             utils.get_mappings_url(1),
-            'http://kernel/mappings/1'
+            'http://kernel/mappings/1/'
         )
         self.assertEqual(
             utils.get_submissions_url(1),
             'http://kernel/submissions/1/'
+        )
+        self.assertEqual(
+            utils.get_attachments_url(1),
+            'http://kernel/attachments/1/'
         )
 
     @mock.patch('requests.head', return_value=mock.Mock(status_code=403))
