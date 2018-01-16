@@ -5,7 +5,7 @@
 #                               DO NOT CHANGE !!!                              #
 #                                                                              #
 # To update this first update 'primary-requirements.txt'                       #
-# then run 'docker-compose run odk-importer pip_freeze'                        #
+# then run 'docker-compose run odk pip_freeze'                                 #
 #                                                                              #
 ################################################################################
 
