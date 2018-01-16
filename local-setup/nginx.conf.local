@@ -75,6 +75,12 @@ server {
     alias /media/eather.ico;
   }
 
+  # Protected media
+  location /media-internal/ {
+    internal;  # Cannot be accessed from external calls
+    alias /media/sync/;
+  }
+
   location / {
     # use docker network alias (is used by UMS as service name)
     proxy_pass http://sync.aether.local:8666;

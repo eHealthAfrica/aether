@@ -37,9 +37,6 @@ $DC_TEST up -d kernel-test
 # test and start a clean ODK TEST container
 prepare_and_test_container odk aether/kernel/api/tests/fixtures/project_empty_schema.json
 
-echo "_____________________________________________ Starting odk"
-$DC_TEST up -d odk-test
-
 # test a clean SYNC TEST container
 prepare_and_test_container couchdb-sync aether/kernel/api/tests/fixtures/project.json
 
