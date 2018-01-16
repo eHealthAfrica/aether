@@ -98,7 +98,7 @@ class ViewsTest(TransactionTestCase):
             'map_revision': 'Sample map revision',
             'date': str(datetime.datetime.now()),
             'payload': EXAMPLE_SOURCE_DATA,
-            # 'mapping': self.mapping.pk TODO
+            'mapping': str(self.mapping.pk),
         })
         self.helper_create_object('schema-list', {
             'name': 'Schema name',
