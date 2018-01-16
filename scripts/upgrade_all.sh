@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-containers=( kernel odk-importer couchdb-sync )
+containers=( kernel odk couchdb-sync )
 
 # create the common module
 ./scripts/build_common_and_distribute.sh
@@ -11,8 +11,9 @@ for container in "${containers[@]}"
 do
   :
 
+  PIP_FOLDER=./aether-$container-module/conf/pip
   # replace `requirements.txt` file with `primary-requirements.txt` file
-  cp ./aether-$container/conf/pip/primary-requirements.txt ./aether-$container/conf/pip/requirements.txt
+  cp $PIP_FOLDER/primary-requirements.txt $PIP_FOLDER/requirements.txt
 
   echo "_____________________________________________ Building $container"
   # rebuild container

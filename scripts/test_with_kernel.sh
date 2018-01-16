@@ -11,7 +11,7 @@ function prepare_container() {
 
 if [ -n "$1" ];
 then
-  # take container name from argument, expected values `odk-importer` or `couchdb-sync`
+  # take container name from argument, expected values `odk` or `couchdb-sync`
   echo "Executing tests for $1 container"
   container=$1
 else
@@ -28,25 +28,22 @@ $DC_TEST down
 
 # start databases
 echo "_____________________________________________ Starting databases"
-$DC_TEST up -d db-test couchdb-test redis-test
+
+if [[ $container = "odk" ]]
+then
+  $DC_TEST up -d db-test
+  fixture=aether/kernel/api/tests/fixtures/project_empty_schema.json
+else
+  $DC_TEST up -d db-test couchdb-test redis-test
+  fixture=aether/kernel/api/tests/fixtures/project.json
+fi
 
 # prepare and start KERNEL container
 prepare_container kernel
 
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
-
-if [[ $container = "odk-importer" ]]
-then
-  fixture=aether/kernel/api/tests/fixtures/project_empty_schema.json
-else
-  fixture=aether/kernel/api/tests/fixtures/project.json
-fi
-
-if [[ $fixture ]]
-then
-  $DC_TEST run kernel-test manage loaddata $fixture
-fi
+$DC_TEST run kernel-test manage loaddata $fixture
 echo "_____________________________________________ Loaded initial data in kernel"
 
 # build test container

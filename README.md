@@ -11,8 +11,8 @@
   - [Common Module](#common-module)
   - [Environment Variables](#environment-variables)
     - [Aether Kernel](#aether-kernel)
-    - [Aether ODK Importer](#aether-odk-importer)
-    - [Aether Couchdb Sync](#aether-couchdb-sync)
+    - [Aether ODK](#aether-odk)
+    - [Aether CouchDB Sync](#aether-couchdb-sync)
 - [Usage](#usage)
   - [Users & Authentication](#users--authentication)
     - [UMS settings for local development](#ums-settings-for-local-development)
@@ -71,7 +71,7 @@ See more in [README](/aether-common/README.md).
 
 Most of the environment variables are set to default values. This is the short list
 of the most common ones with non default values. For more info take a look at the file
-[docker-compose.yml](docker-compose.yml)
+[docker-compose-base.yml](docker-compose-base.yml)
 
 
 #### Aether Kernel
@@ -82,22 +82,22 @@ of the most common ones with non default values. For more info take a look at th
 - `WEB_SERVER_PORT`: `8000` Web server port.
 
 
-#### Aether ODK Importer
+#### Aether ODK
 
 - `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
 - `HOSTNAME`: `odk.aether.local` Used by UMS.
-- `RDS_DB_NAME`: `odk_importer` Postgres database name.
+- `RDS_DB_NAME`: `odk` Postgres database name.
 - `WEB_SERVER_PORT`: `8443` Web server port.
 - `AETHER_KERNEL_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24` Token to connect to kernel server.
 - `AETHER_KERNEL_URL`: `http://kernel:8000` Aether Kernel Server url.
-- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9000` Aether Kernel Server url.
+- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9000` Aether Kernel Testing Server url.
 
 
-#### Aether Couchdb Sync
+#### Aether CouchDB Sync
 
 - `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
 - `HOSTNAME`: `sync.aether.local` Used by UMS.
-- `RDS_DB_NAME`: `couchdb_sync` Postgres database name.
+- `RDS_DB_NAME`: `couchdb-sync` Postgres database name.
 - `WEB_SERVER_PORT`: `8666` Web server port.
 - `AETHER_KERNEL_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24` Token to connect to kernel server.
 - `AETHER_KERNEL_URL`: `http://kernel:8000` Aether Kernel Server url.
@@ -107,8 +107,8 @@ of the most common ones with non default values. For more info take a look at th
 
 **WARNING**
 
-Never run `odk-importer` or `couchdb-sync` tests against any
-PRODUCTION server. The tests clean up will **DELETE ALL MAPPINGS!!!**
+Never run `odk` or `couchdb-sync` tests against any PRODUCTION server.
+The tests clean up will **DELETE ALL MAPPINGS!!!**
 
 *[Return to TOC](#table-of-contents)*
 
@@ -123,7 +123,7 @@ This will start:
 - **aether-kernel** on `http://kernel.aether.local:8000`
   and create a superuser `admin-kernel` with the needed TOKEN.
 
-- **odk-importer** on `http://odk.aether.local:8443`
+- **odk** on `http://odk.aether.local:8443`
   and create a superuser `admin-odk` with the needed TOKEN.
 
 - **couchdb-sync** on `http://sync.aether.local:8666`
@@ -164,13 +164,13 @@ The available options depend on each container.
 The communication between the containers is done via
 [token authentication](http://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication).
 
-In the case of `aether-odk-importer` and `aether-couchdb-sync` there is a
+In the case of `aether-odk` and `aether-couchdb-sync` there is a
 global token to connect to `aether-kernel` set in the **required** environment
 variable `AETHER_KERNEL_TOKEN`.
 
-In the case of `gather2-ui` there are tokens per user. This means that every time
+In the case of `gather` there are tokens per user. This means that every time
 a logged in user tries to visit any page that requires to fetch data from any of
-the other apps, `aether-kernel` and/or `aether-odk-importer`, the system will verify
+the other apps, `aether-kernel` and/or `aether-odk`, the system will verify
 that the user token for that app is valid or will request a new one using the
 global tokens, `AETHER_KERNEL_TOKEN` and/or `AETHER_ODK_TOKEN`; that's going to
 be used for all requests and will allow the system to better track the user actions.
@@ -181,7 +181,7 @@ be used for all requests and will allow the system to better track the user acti
 ## Development
 
 All development should be tested within the container, but developed in the host folder.
-Read the `docker-compose.yml` file to see how it's mounted.
+Read the [docker-compose-base.yml](docker-compose-base.yml) file to see how it's mounted.
 
 *[Return to TOC](#table-of-contents)*
 
@@ -192,8 +192,7 @@ Set the `HOSTNAME` and `CAS_SERVER_URL` environment variables if you want to
 activate the UMS integration in each container.
 
 Set the `AETHER_KERNEL_TOKEN` and `AETHER_KERNEL_URL` environment variables when
-starting the `aether-odk-importer` to have ODK Collect submissions posted to
-Aether Kernel.
+starting the `aether-odk` to have ODK Collect submissions posted to Aether Kernel.
 
 If a valid `AETHER_KERNEL_TOKEN` and `AETHER_KERNEL_URL` combination is not set,
 the server will still start, but ODK Collect submissions will fail.
@@ -204,7 +203,7 @@ If the response is `Always Look on the Bright Side of Life!!!`
 it's not possible to connect, on the other hand if the message is
 `Brought to you by eHealth Africa - good tech for hard places` everything goes fine.
 
-This also applies for `aether-couchdb-sync` and `gather2-ui`.
+This also applies for `aether-couchdb-sync` and `gather`.
 
 In the case of `aether-couchdb-sync` a valid `GOOGLE_CLIENT_ID`
 environment variable is necessary to verify the device credentials as well.
@@ -234,9 +233,9 @@ The list of the main containers:
 | db                | [PostgreSQL](https://www.postgresql.org/) database                      |
 | couchdb           | [CouchDB](http://couchdb.apache.org/) database for sync                 |
 | redis             | [Redis](https://redis.io/) for task queueing and task result storage    |
-| **kernel**        | Aether Kernel app                                                       |
-| **odk-importer**  | Aether ODK Collect Adapter app (imports data from ODK Collect)          |
-| **couchdb-sync**  | Aether Couchdb Sync app (imports data from Aether Mobile app)           |
+| **kernel**        | Aether Kernel module                                                    |
+| **odk**           | Aether ODK module (imports data from ODK Collect)                       |
+| **couchdb-sync**  | Aether CouchDB Sync module (imports data from Aether Mobile app)        |
 | couchdb-sync-rq   | [RQ python](http://python-rq.org/) task runner to perform sync jobs     |
 | kernel-test       | Aether Kernel TESTING app (used only in e2e tests by other containers)  |
 
@@ -247,11 +246,11 @@ All of the containers definition for development can be found in the
 There are docker-compose files per app:
 
 ```bash
-docker-compose -f docker-compose-kernel.yml up  # starts kernel container and its dependencies
+docker-compose -f docker-compose-kernel.yml up  # starts Kernel module and its dependencies
 
-docker-compose -f docker-compose-odk.yml up     # starts ODK container and its dependencies
+docker-compose -f docker-compose-odk.yml up     # starts ODK module and its dependencies
 
-docker-compose -f docker-compose-sync.yml up    # starts CouchDB Sync container and its dependencies
+docker-compose -f docker-compose-sync.yml up    # starts CouchDB Sync module and its dependencies
 ```
 
 
@@ -295,15 +294,14 @@ docker-compose run <container-name> test_coverage
 The e2e tests are run against different containers, the config file used
 for them is [docker-compose-test.yml](docker-compose-test.yml).
 
-Before running `odk-importer` or `couchdb-sync` you should start
-the needed test containers.
+Before running `odk` or `couchdb-sync` you should start the needed test containers.
 
 ```bash
 docker-compose -f docker-compose-test.yml up -d <container-name>-test
 ```
 
 This script will start the auxiliary containers and execute the tests
-in `odk-importer` or `couchdb-sync`.
+in `odk` or `couchdb-sync`.
 
 ```bash
 ./scripts/test_with_kernel.sh <container-name>
@@ -311,11 +309,10 @@ in `odk-importer` or `couchdb-sync`.
 
 **WARNING**
 
-Never run `odk-importer` or `couchdb-sync` tests against any
-PRODUCTION server. The tests clean up will **DELETE ALL MAPPINGS!!!**
+Never run `odk` or `couchdb-sync` tests against any PRODUCTION server.
+The tests clean up will **DELETE ALL MAPPINGS!!!**
 
-Look into [docker-compose.yml](docker-compose.yml) or
-[docker-compose-test.yml](docker-compose-test.yml), the variable
+Look into [docker-compose-base.yml](docker-compose-base.yml), the variable
 `AETHER_KERNEL_URL_TEST` indicates the Aether Kernel Server used in tests.
 
 *[Return to TOC](#table-of-contents)*

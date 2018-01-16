@@ -9,7 +9,7 @@ IMAGE_REPO="387526361725.dkr.ecr.eu-west-1.amazonaws.com"
 if [ "${BRANCH}" == "develop" ]; then
   export ENV="dev"
   export PREFIX="aether"
-  export APPS=( kernel odk-importer )
+  export APPS=( kernel odk )
   export CLUSTER_NAME="ehealth-africa"
 fi
 

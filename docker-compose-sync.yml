@@ -1,100 +1,100 @@
 # ------------------------------------------------------------------------------
 # Config file for only these containers:
 #
-#  * Aether Kernel
-#  * Mobile CouchDB Sync
+#  * Aether Kernel Module
+#  * CouchDB Sync Module
 # ------------------------------------------------------------------------------
 
 version: "2"
 
 networks:
-    internal-sync:
-        driver: bridge
+  internal-sync:
+    driver: bridge
 
 services:
 
-    # ---------------------------------
-    # Database containers
-    # ---------------------------------
+  # ---------------------------------
+  # Database containers
+  # ---------------------------------
 
-    db:
-        extends:
-            file: docker-compose-base.yml
-            service: postgres-base
-        networks:
-            - internal-sync
+  db:
+    extends:
+      file: docker-compose-base.yml
+      service: postgres-base
+    networks:
+      - internal-sync
 
-    couchdb:
-        extends:
-            file: docker-compose-base.yml
-            service: couchdb-base
-        networks:
-            - internal-sync
+  couchdb:
+    extends:
+      file: docker-compose-base.yml
+      service: couchdb-base
+    networks:
+      - internal-sync
 
-    redis:
-        extends:
-            file: docker-compose-base.yml
-            service: redis-base
-        networks:
-            - internal-sync
-
-
-    # ---------------------------------
-    # Aether Kernel container
-    # ---------------------------------
-
-    kernel:
-        extends:
-            file: docker-compose-base.yml
-            service: kernel-base
-        depends_on:
-            - db
-        networks:
-            internal-sync:
-                aliases:
-                    - kernel.aether.local
+  redis:
+    extends:
+      file: docker-compose-base.yml
+      service: redis-base
+    networks:
+      - internal-sync
 
 
-    # ---------------------------------
-    # Mobile Sync containers
-    # ---------------------------------
+  # ---------------------------------
+  # Aether Kernel module
+  # ---------------------------------
 
-    sync:
-        extends:
-            file: docker-compose-base.yml
-            service: couchdb-sync-base
-        depends_on: &sync-dependencies
-            - couchdb
-            - db
-            - kernel
-            - redis
-        networks:
-            internal-sync:
-                aliases:
-                    - sync.aether.local
-
-    rq:
-        extends:
-            file: docker-compose-base.yml
-            service: couchdb-sync-rq-base
-        depends_on: *sync-dependencies
-        networks:
-            - internal-sync
+  kernel:
+    extends:
+      file: docker-compose-base.yml
+      service: kernel-base
+    depends_on:
+      - db
+    networks:
+      internal-sync:
+        aliases:
+          - kernel.aether.local
 
 
-    # ---------------------------------
-    # NGINX container
-    # ---------------------------------
+  # ---------------------------------
+  # Mobile Sync module
+  # ---------------------------------
 
-    nginx:
-        extends:
-            file: docker-compose-base.yml
-            service: nginx-base
-        volumes:
-            # override config file
-            - ./local-setup/nginx.conf.sync.local:/etc/nginx/conf.d/default.conf
-        depends_on:
-            - kernel
-            - sync
-        networks:
-            - internal-sync
+  couchdb-sync:
+    extends:
+      file: docker-compose-base.yml
+      service: couchdb-sync-base
+    depends_on: &sync-dependencies
+      - couchdb
+      - db
+      - kernel
+      - redis
+    networks:
+      internal-sync:
+        aliases:
+          - sync.aether.local
+
+  couchdb-sync-rq:
+    extends:
+      file: docker-compose-base.yml
+      service: couchdb-sync-rq-base
+    depends_on: *sync-dependencies
+    networks:
+      - internal-sync
+
+
+  # ---------------------------------
+  # NGINX container
+  # ---------------------------------
+
+  nginx:
+    extends:
+      file: docker-compose-base.yml
+      service: nginx-base
+    volumes:
+      # override config file
+      - ./local-setup/nginx.conf.sync.local:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - kernel
+      - couchdb-sync
+    networks:
+      - internal-sync

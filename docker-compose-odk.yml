@@ -1,76 +1,76 @@
 # ------------------------------------------------------------------------------
 # Config file for only these containers:
 #
-#  * Aether Kernel
-#  * ODK Collect Adapter
+#  * Aether Kernel Module
+#  * ODK Module
 # ------------------------------------------------------------------------------
 
 version: "2"
 
 networks:
-    internal-odk:
-        driver: bridge
+  internal-odk:
+    driver: bridge
 
 services:
 
-    # ---------------------------------
-    # Database container
-    # ---------------------------------
+  # ---------------------------------
+  # Database container
+  # ---------------------------------
 
-    db:
-        extends:
-            file: docker-compose-base.yml
-            service: postgres-base
-        networks:
-            - internal-odk
-
-
-    # ---------------------------------
-    # Aether Kernel container
-    # ---------------------------------
-
-    kernel:
-        extends:
-            file: docker-compose-base.yml
-            service: kernel-base
-        depends_on:
-            - db
-        networks:
-            internal-odk:
-                aliases:
-                    - kernel.aether.local
+  db:
+    extends:
+      file: docker-compose-base.yml
+      service: postgres-base
+    networks:
+      - internal-odk
 
 
-    # ---------------------------------
-    # ODK Adapter container
-    # ---------------------------------
+  # ---------------------------------
+  # Aether Kernel module
+  # ---------------------------------
 
-    odk:
-        extends:
-            file: docker-compose-base.yml
-            service: odk-base
-        depends_on:
-            - db
-            - kernel
-        networks:
-            internal-odk:
-                aliases:
-                    - odk.aether.local
+  kernel:
+    extends:
+      file: docker-compose-base.yml
+      service: kernel-base
+    depends_on:
+      - db
+    networks:
+      internal-odk:
+        aliases:
+          - kernel.aether.local
 
 
-    # ---------------------------------
-    # NGINX container
-    # ---------------------------------
+  # ---------------------------------
+  # ODK module
+  # ---------------------------------
 
-    nginx:
-        extends:
-            file: docker-compose-base.yml
-            service: nginx-base
-        volumes:
-            # override config file
-            - ./local-setup/nginx.conf.odk.local:/etc/nginx/conf.d/default.conf
-        depends_on:
-            - kernel
-            - odk
-        networks:
-            - internal-odk
+  odk:
+    extends:
+      file: docker-compose-base.yml
+      service: odk-base
+    depends_on:
+      - db
+      - kernel
+    networks:
+      internal-odk:
+        aliases:
+          - odk.aether.local
+
+
+  # ---------------------------------
+  # NGINX container
+  # ---------------------------------
+
+  nginx:
+    extends:
+      file: docker-compose-base.yml
+      service: nginx-base
+    volumes:
+      # override config file
+      - ./local-setup/nginx.conf.odk.local:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - kernel
+      - odk
+    networks:
+      - internal-odk

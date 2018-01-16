@@ -1,102 +1,100 @@
 # ------------------------------------------------------------------------------
 # Config file for ALL TESTING containers:
 #
-#  * Aether Kernel
-#  * ODK Collect Adapter
-#  * Mobile CouchDB Sync
+#  * Aether Kernel Module
+#  * ODK Module
+#  * CouchDB Sync Module
 # ------------------------------------------------------------------------------
 
 version: "2"
 
 services:
 
-    # ---------------------------------
-    # Database containers
-    # ---------------------------------
+  # ---------------------------------
+  # Database containers
+  # ---------------------------------
 
-    db-test:
-        extends:
-            file: docker-compose-base.yml
-            service: postgres-base
+  db-test:
+    extends:
+      file: docker-compose-base.yml
+      service: postgres-base
 
-    couchdb-test:
-        extends:
-            file: docker-compose-base.yml
-            service: couchdb-base
+  couchdb-test:
+    extends:
+      file: docker-compose-base.yml
+      service: couchdb-base
 
-    redis-test:
-        extends:
-            file: docker-compose-base.yml
-            service: redis-base
-
-
-    # ---------------------------------
-    # Aether Kernel container
-    # ---------------------------------
-
-    kernel-test:
-        extends:
-            file: docker-compose-base.yml
-            service: kernel-base
-        environment:
-            TESTING: "true"
-            RDS_DB_NAME: kernel-test
-            RDS_HOSTNAME: db-test
-            WEB_SERVER_PORT: 9000
-        depends_on:
-            - db-test
-        ports:
-            - "9000:9000"
-        depends_on:
-            - db-test
+  redis-test:
+    extends:
+      file: docker-compose-base.yml
+      service: redis-base
 
 
-    # ---------------------------------
-    # ODK Adapter container
-    # ---------------------------------
+  # ---------------------------------
+  # Aether Kernel module
+  # ---------------------------------
 
-    odk-importer-test:
-        extends:
-            file: docker-compose-base.yml
-            service: odk-base
-        environment:
-            TESTING: "true"
-            AETHER_KERNEL_URL: http://kernel-test:9000
-            RDS_DB_NAME: odk-test
-            RDS_HOSTNAME: db-test
-            WEB_SERVER_PORT: 9443
-        volumes:
-            - ./aether-odk-importer:/code
-        depends_on:
-            - db-test
-            - kernel-test
-        ports:
-            - "9443:9443"
-        depends_on:
-            - db-test
-            - kernel-test
+  kernel-test:
+    extends:
+      file: docker-compose-base.yml
+      service: kernel-base
+    environment:
+      TESTING: "true"
+      RDS_DB_NAME: kernel-test
+      RDS_HOSTNAME: db-test
+      WEB_SERVER_PORT: 9000
+    depends_on:
+      - db-test
+    ports:
+      - "9000:9000"
+    depends_on:
+      - db-test
 
 
-    # ---------------------------------
-    # Mobile Sync container
-    # ---------------------------------
+  # ---------------------------------
+  # ODK module
+  # ---------------------------------
 
-    couchdb-sync-test:
-        extends:
-            file: docker-compose-base.yml
-            service: sync-base
-        environment:
-            TESTING: "true"
-            AETHER_KERNEL_URL: http://kernel-test:9000
-            COUCHDB_URL: http://couchdb-test:5984
-            RDS_DB_NAME: sync-test
-            RDS_HOSTNAME: db-test
-            REDIS_HOST: redis-test
-            WEB_SERVER_PORT: 9666
-        depends_on:
-            - couchdb-test
-            - db-test
-            - kernel-test
-            - redis-test
-        ports:
-            - "9666:9666"
+  odk-test:
+    extends:
+      file: docker-compose-base.yml
+      service: odk-base
+    environment:
+      TESTING: "true"
+      AETHER_KERNEL_URL: http://kernel-test:9000
+      RDS_DB_NAME: odk-test
+      RDS_HOSTNAME: db-test
+      WEB_SERVER_PORT: 9443
+    depends_on:
+      - db-test
+      - kernel-test
+    ports:
+      - "9443:9443"
+    depends_on:
+      - db-test
+      - kernel-test
+
+
+  # ---------------------------------
+  # CouchDB Sync module
+  # ---------------------------------
+
+  couchdb-sync-test:
+    extends:
+      file: docker-compose-base.yml
+      service: couchdb-sync-base
+    environment:
+      TESTING: "true"
+      AETHER_KERNEL_URL: http://kernel-test:9000
+      COUCHDB_URL: http://couchdb-test:5984
+      RDS_DB_NAME: couchdb-sync-test
+      RDS_HOSTNAME: db-test
+      REDIS_HOST: redis-test
+      WEB_SERVER_PORT: 9666
+    depends_on:
+      - couchdb-test
+      - db-test
+      - kernel-test
+      - redis-test
+    ports:
+      - "9666:9666"
