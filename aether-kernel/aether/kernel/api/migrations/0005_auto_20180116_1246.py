@@ -9,7 +9,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('kernel', '0003_submission_mapping_not_null'),
+        ('kernel', '0004_submission_mapping_not_null'),
     ]
 
     operations = [

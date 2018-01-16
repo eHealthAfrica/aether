@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from rest_framework import serializers
 from rest_framework.reverse import reverse
+from drf_dynamic_fields import DynamicFieldsMixin
 
 from . import models
 from . import utils
@@ -43,7 +44,7 @@ class FilteredHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
         return result
 
 
-class ProjectSerializer(serializers.ModelSerializer):
+class ProjectSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         read_only=True,
         view_name='project-detail',
@@ -66,7 +67,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class MappingSerializer(serializers.ModelSerializer):
+class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         read_only=True,
         view_name='mapping-detail',
@@ -88,7 +89,7 @@ class MappingSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SubmissionSerializer(serializers.ModelSerializer):
+class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name='submission-detail',
         read_only=True
@@ -103,6 +104,12 @@ class SubmissionSerializer(serializers.ModelSerializer):
         view_name='entity-list',
         read_only=True,
         source='entities',
+    )
+    attachments_url = FilteredHyperlinkedRelatedField(
+        lookup_field='submission',
+        view_name='attachment-list',
+        read_only=True,
+        source='attachments',
     )
 
     def create(self, validated_data):
@@ -166,7 +173,23 @@ class SubmissionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SchemaSerializer(serializers.ModelSerializer):
+class AttachmentSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+    name = serializers.CharField(allow_null=True, default=None)
+    submission_revision = serializers.CharField(allow_null=True, default=None)
+
+    url = serializers.HyperlinkedIdentityField('attachment-detail', read_only=True)
+    submission_url = serializers.HyperlinkedRelatedField(
+        'submission-detail',
+        source='submission',
+        read_only=True
+    )
+
+    class Meta:
+        model = models.Attachment
+        fields = '__all__'
+
+
+class SchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name='schema-detail',
         read_only=True,
@@ -183,7 +206,7 @@ class SchemaSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ProjectSchemaSerializer(serializers.ModelSerializer):
+class ProjectSchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         read_only=True,
         view_name='projectschema-detail',
@@ -210,7 +233,7 @@ class ProjectSchemaSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class EntitySerializer(serializers.ModelSerializer):
+class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name='entity-detail',
         read_only=True

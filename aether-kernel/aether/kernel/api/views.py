@@ -22,6 +22,12 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     filter_class = filters.SubmissionFilter
 
 
+class AttachmentViewSet(viewsets.ModelViewSet):
+    queryset = models.Attachment.objects.all()
+    serializer_class = serializers.AttachmentSerializer
+    filter_class = filters.AttachmentFilter
+
+
 class SchemaViewSet(viewsets.ModelViewSet):
     queryset = models.Schema.objects.all()
     serializer_class = serializers.SchemaSerializer

@@ -15,7 +15,7 @@ def remove_invalid_submissions(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('kernel', '0002_auto_20171218_0854'),
+        ('kernel', '0003_auto_20180112_0938'),
     ]
 
     operations = [

@@ -1,12 +1,26 @@
+import json
 import mock
 import requests
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from rest_framework import status
 
 from aether.common.kernel import utils as kernel_utils
 
 from . import CustomTestCase
+from ..views import XML_SUBMISSION_PARAM
+
+
+class MockResponse:
+    # used to mock responses and not make the  `xform_submission` method fail
+    def __init__(self, status_code, json_data=None):
+        self.json_data = json_data
+        self.status_code = status_code
+        self.content = json.dumps(json_data).encode('utf-8')
+
+    def json(self):
+        return self.json_data
 
 
 class SubmissionTests(CustomTestCase):
@@ -36,25 +50,21 @@ class SubmissionTests(CustomTestCase):
         with open(self.samples['submission']['file-ok'], 'rb') as f:
             response = self.client.post(
                 self.url,
-                {'xml_submission_file': f},
+                {XML_SUBMISSION_PARAM: f},
                 **self.headers_user
             )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test__submission__422(self):
         # submit without xml file
-        with open(self.samples['submission']['file-ok'], 'rb') as f:
-            response = self.client.post(
-                self.url,
-                {'xml_submission_file': ''},
-                **self.headers_user
-            )
+        response = self.client.post(self.url, {}, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+
         # submit wrong xml
         with open(self.samples['submission']['file-err'], 'rb') as f:
             response = self.client.post(
                 self.url,
-                {'xml_submission_file': f},
+                {XML_SUBMISSION_PARAM: f},
                 **self.headers_user
             )
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
@@ -67,7 +77,7 @@ class SubmissionTests(CustomTestCase):
         with open(self.samples['submission']['file-ok'], 'rb') as f:
             response = self.client.post(
                 self.url,
-                {'xml_submission_file': f},
+                {XML_SUBMISSION_PARAM: f},
                 **self.headers_user
             )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -137,6 +147,7 @@ class PostSubmissionTests(CustomTestCase):
         mapping_id = data['id']
         self.MAPPING_URL = kernel_utils.get_mappings_url(mapping_id)
         self.SUBMISSIONS_URL = kernel_utils.get_submissions_url()
+        self.ATTACHMENTS_URL = kernel_utils.get_attachments_url()
         # create xForm entry
         self.xform = self.helper_create_xform(surveyor=self.user, mapping_id=mapping_id)
         self.assertTrue(self.xform.is_surveyor(self.user))
@@ -146,20 +157,27 @@ class PostSubmissionTests(CustomTestCase):
         # delete ALL mappings in kernel testing server
         requests.delete(self.MAPPING_URL, headers=self.KERNEL_HEADERS)
 
-    @mock.patch('requests.post', return_value=mock.Mock(status_code=500))
-    def test__submission__post__with_kernel_error(self, mock_post):
-        with open(self.samples['submission']['file-ok'], 'rb') as f:
-            response = self.client.post(
-                self.url,
-                {'xml_submission_file': f},
-                **self.headers_user
-            )
-        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        mock_post.assert_called_once_with(
-            self.SUBMISSIONS_URL,
+    def helper_check_submission(self, succeed=True, attachments=0):
+        response = requests.get(
+            self.MAPPING_URL + '?fields=submissions_url',
             headers=self.KERNEL_HEADERS,
-            json=mock.ANY,
         )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = response.json()
+
+        # get submissions
+        response = requests.get(content['submissions_url'], headers=self.KERNEL_HEADERS)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = response.json()
+        self.assertEqual(content['count'], 1 if succeed else 0)
+
+        if succeed:
+            submission = content['results'][0]
+            # get attachments
+            response = requests.get(submission['attachments_url'], headers=self.KERNEL_HEADERS)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            content = response.json()
+            self.assertEqual(content['count'], attachments)
 
     def test__submission__post__no_granted_surveyor(self):
         # remove user as granted surveyor
@@ -173,52 +191,156 @@ class PostSubmissionTests(CustomTestCase):
         with open(self.samples['submission']['file-ok'], 'rb') as f:
             response = self.client.post(
                 self.url,
-                {'xml_submission_file': f},
+                {XML_SUBMISSION_PARAM: f},
                 **self.headers_user
             )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.helper_check_submission(succeed=False)
+
+    @mock.patch('requests.delete')
+    @mock.patch('requests.post', side_effect=Exception)
+    def test__submission__post__with_unexpected_error(self, mock_post, mock_delete):
+        # there is going to be an unexpected error during attachment post
+        with open(self.samples['submission']['file-ok'], 'rb') as f:
+            response = self.client.post(
+                self.url,
+                {XML_SUBMISSION_PARAM: f},
+                **self.headers_user
+            )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        mock_post.assert_called_once_with(
+            self.SUBMISSIONS_URL,
+            headers=self.KERNEL_HEADERS,
+            json=mock.ANY,
+        )
+        mock_delete.assert_not_called()
+        self.helper_check_submission(succeed=False)
+
+    @mock.patch('requests.delete')
+    @mock.patch('requests.post', return_value=mock.Mock(status_code=500))
+    def test__submission__post__with_kernel_error(self, mock_post, mock_delete):
+        with open(self.samples['submission']['file-ok'], 'rb') as f:
+            response = self.client.post(
+                self.url,
+                {XML_SUBMISSION_PARAM: f},
+                **self.headers_user
+            )
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        mock_post.assert_called_once_with(
+            self.SUBMISSIONS_URL,
+            headers=self.KERNEL_HEADERS,
+            json=mock.ANY,
+        )
+        mock_delete.assert_not_called()
+        self.helper_check_submission(succeed=False)
 
     def test__submission__post(self):
         with open(self.samples['submission']['file-ok'], 'rb') as f:
             response = self.client.post(
                 self.url,
-                {'xml_submission_file': f},
+                {XML_SUBMISSION_PARAM: f},
                 **self.headers_user
             )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.helper_check_submission()
 
-    # --------------------------------------------------------------------------
-    # FIXME: The Attachment model used in Aether is absent from
-    # Aether -- once bring that back, we can uncomment this test.
-    # def test__submission__post__with_attachments(self):
-    #     # submit response with itself as attachment
-    #     with open(self.samples['submission']['file-ok'], 'rb') as f:
-    #         with open(self.samples['submission']['file-ok'], 'rb') as f2:
-    #             response = self.client.post(
-    #                 self.url,
-    #                 {'xml_submission_file': f, 'attach': f2},
-    #                 **self.headers_user
-    #             )
-    #     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    # --------------------------------------------------------------------------
+    def test__submission__post__with_attachment(self):
+        # submit response with one attachment
+        with open(self.samples['submission']['file-ok'], 'rb') as f:
+            response = self.client.post(
+                self.url,
+                {
+                    XML_SUBMISSION_PARAM: f,
+                    'attach': SimpleUploadedFile('audio.wav', b'abc'),
+                },
+                **self.headers_user
+            )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content.decode())
 
-    # --------------------------------------------------------------------------
-    # FIXME: The Attachment model used in Aether is absent from
-    # Aether -- once bring that back, we can uncomment this test.
-    # @mock.patch('requests.post', side_effect=[mock.DEFAULT, mock.Mock(status_code=500)])
-    # def test__submission__post__with_attachments_error_400(self, mock_post):
-    #     # there is going to be an error during attachment post
-    #     with open(self.samples['submission']['file-ok'], 'rb') as f:
-    #         with open(self.samples['submission']['file-ok'], 'rb') as f2:
-    #             response = self.client.post(
-    #                 self.url,
-    #                 {'xml_submission_file': f, 'attach': f2},
-    #                 **self.headers_user
-    #             )
-    #     mock_post.assert_called_once_with(
-    #         self.SUBMISSIONS_URL,
-    #         headers=self.KERNEL_HEADERS,
-    #         json=mock.ANY,
-    #     )
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    # --------------------------------------------------------------------------
+        # check that submission was created with one attachment
+        self.helper_check_submission(attachments=1)
+
+    def test__submission__post__with_attachments(self):
+        # submit response with more than one attachment
+        with open(self.samples['submission']['file-ok'], 'rb') as f:
+            response = self.client.post(
+                self.url,
+                {
+                    XML_SUBMISSION_PARAM: f,
+                    'attach_1': SimpleUploadedFile('audio1.wav', b'abc'),
+                    'attach_2': SimpleUploadedFile('audio2.wav', b'abc'),
+                    'attach_3': SimpleUploadedFile('audio3.wav', b'abc'),
+                    'attach_4': SimpleUploadedFile('audio4.wav', b'abc'),
+                },
+                **self.headers_user
+            )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content.decode())
+
+        # check that submission was created with four attachments
+        self.helper_check_submission(attachments=4)
+
+    @mock.patch('requests.delete')
+    @mock.patch('requests.post',
+                side_effect=[
+                    MockResponse(status_code=201, json_data={'id': 'submission-id'}),
+                    MockResponse(status_code=404)
+                ])
+    def test__submission__post__with_attachments__with_kernel_error(self, mock_post, mock_delete):
+        # there is going to be an error during attachment post
+        with open(self.samples['submission']['file-ok'], 'rb') as f:
+            response = self.client.post(
+                self.url,
+                {
+                    XML_SUBMISSION_PARAM: f,
+                    'attach': SimpleUploadedFile('audio.wav', b'abc'),
+                },
+                **self.headers_user
+            )
+        mock_post.assert_any_call(
+            self.SUBMISSIONS_URL,
+            headers=self.KERNEL_HEADERS,
+            json=mock.ANY,
+        )
+        mock_post.assert_any_call(
+            self.ATTACHMENTS_URL,
+            headers=self.KERNEL_HEADERS,
+            data={'submission': 'submission-id'},
+            files=mock.ANY,
+        )
+        mock_delete.assert_called_once()
+
+        self.assertEqual(response.status_code, 404, 'returns the last status code')
+        self.helper_check_submission(succeed=False)
+
+    @mock.patch('requests.delete')
+    @mock.patch('requests.post',
+                side_effect=[
+                    MockResponse(status_code=201, json_data={'id': 'submission-id'}),
+                    Exception
+                ])
+    def test__submission__post__with_attachments__with_unexpected_error(self, mock_post, mock_del):
+        # there is going to be an unexpected error during attachment post
+        with open(self.samples['submission']['file-ok'], 'rb') as f:
+            response = self.client.post(
+                self.url,
+                {
+                    XML_SUBMISSION_PARAM: f,
+                    'attach': SimpleUploadedFile('audio.wav', b'abc'),
+                },
+                **self.headers_user
+            )
+        mock_post.assert_any_call(
+            self.SUBMISSIONS_URL,
+            headers=self.KERNEL_HEADERS,
+            json=mock.ANY,
+        )
+        mock_post.assert_any_call(
+            self.ATTACHMENTS_URL,
+            headers=self.KERNEL_HEADERS,
+            data={'submission': 'submission-id'},
+            files=mock.ANY,
+        )
+        mock_del.assert_called_once()
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.helper_check_submission(succeed=False)
