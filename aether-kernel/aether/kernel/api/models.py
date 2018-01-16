@@ -45,7 +45,7 @@ class Submission(models.Model):
     map_revision = models.TextField(default='1')
     date = models.DateTimeField(auto_now_add=True, db_index=True)
     payload = JSONField(blank=False, null=False)
-    mapping = models.ForeignKey(Mapping, related_name='submissions', blank=True, null=True)
+    mapping = models.ForeignKey(Mapping, related_name='submissions')
 
     @property
     def payload_prettified(self):
