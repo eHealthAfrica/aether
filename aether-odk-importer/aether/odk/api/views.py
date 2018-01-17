@@ -376,14 +376,14 @@ import requests
 
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer])
-@authentication_classes([BasicAuthentication])
-@permission_classes([IsAuthenticated])
+# @authentication_classes([BasicAuthentication])
 def enketo(request):
     # TODO:
     # document enketo-core/enketo-transformer
     # add tests
     # add webpack to container entrypoint
     # ./node_modules/.bin/webpack --entry ./index.js --output-filename ../aether/odk/static/out.js
+    # TODO: get xform and make request to transformer
     return Response(
         {
             'test': 123,

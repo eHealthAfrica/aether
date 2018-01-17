@@ -362,3 +362,39 @@ docker-compose run <container-name> pip_freeze
 In this case `aether.common` is not rebuilt.
 
 *[Return to TOC](#table-of-contents)*
+
+
+### Enketo setup
+
+First, start all containers:
+
+```
+docker-compose up --build
+```
+
+This will start an enketo transformer service running on port 8085. We can verify that this works by running:
+
+```
+curl -d "xform=<xform>x</xform>&theme=plain&media[myfile.png]=/path/to/somefile.png&media[this]=that" http://localhost:8085/transform
+```
+
+Note that the transform service is currently exposed to the world -- that's why the command above can be run from outside of the docker network.
+
+We now need to compile a minimal version of the Enketo app. This currently lives inside of the odk module, so we'll do:
+
+```
+cd aether-odk-importer/enketo
+npm i
+./node_modules/.bin/webpack --entry ./index.js --output-filename ../aether/odk/static/out.js
+```
+
+This will write a js file to a directory which gets picked up by django's static machinery. This file is included via the template `./aether-odk-importer/aether/odk/templates/enketo.html`, which is rendered by the `enketo` view function in `./aether-odk-importer/aether/odk/api/views.py`. 
+
+At this point, we should be able to view a rendered form at `http://kernel.aether.local:8443/enketo/`.
+
+Note: the app currently uses a hardcoded form- and model-string (see `./aether-odk-importer/enketo/index.js`) -- these two values is what the transformer returns when POSTed to (see above).
+
+TODO: in the `enketo` view function, fetch the XForm (by id) from the database, send it to the transformer endpoint and pass the response into jsfile as `modelStr` and `formStr` via the `enketo.html` template.
+
+TODO: stylesheets are currently not in place.
+
