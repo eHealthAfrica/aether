@@ -23,18 +23,6 @@ Includes the methods that allow:
 
 Include the view entry in the `urls.py` file.
 
-- Django 1.x
-
-  ```python
-  from django.conf.urls import url
-  from aether.common.auth.views import obtain_auth_token
-
-
-  urlpatterns = [
-      url(r'^get-token$', obtain_auth_token, name='token'),
-  ]
-  ```
-
 - Django 2.x
 
   ```python
@@ -47,18 +35,6 @@ Include the view entry in the `urls.py` file.
   ]
   ```
 
-- Compatibility with both Django 1.x and Django 2.x
-
-  ```python
-  from aether.common.conf.urls import url_pattern
-  from aether.common.auth.views import obtain_auth_token
-
-
-  urlpatterns = [
-      url_pattern(r'^get-token$', obtain_auth_token, name='token'),
-  ]
-  ```
-
 ### Health section
 
 Includes the methods that allow:
@@ -66,18 +42,6 @@ Includes the methods that allow:
 #### To check if the system is up.
 
 Include the view entry in the `urls.py` file.
-
-- Django 1.x
-
-  ```python
-  from django.conf.urls import url
-  from aether.common.health.views import health
-
-
-  urlpatterns = [
-      url(r'^health$', health, name='health'),
-  ]
-  ```
 
 - Django 2.x
 
@@ -91,18 +55,6 @@ Include the view entry in the `urls.py` file.
   ]
   ```
 
-- Compatibility with both Django 1.x and Django 2.x
-
-  ```python
-  from aether.common.conf.urls import url_pattern
-  from aether.common.health.views import health
-
-
-  urlpatterns = [
-      url_pattern(r'^health$', health, name='health'),
-  ]
-  ```
-
 ### Kernel section
 
 Includes the methods that allow:
@@ -110,18 +62,6 @@ Includes the methods that allow:
 #### To check connection to Aether Kernel Server.
 
 Include the view entry in the `urls.py` file.
-
-- Django 1.x
-
-  ```python
-  from django.conf.urls import url
-  from aether.common.kernel.views import check_kernel
-
-
-  urlpatterns = [
-      url(r'^check-kernel$', check_kernel, name='check-kernel'),
-  ]
-  ```
 
 - Django 2.x
 
@@ -132,18 +72,6 @@ Include the view entry in the `urls.py` file.
 
   urlpatterns = [
       path('check-kernel', check_kernel, name='check-kernel'),
-  ]
-  ```
-
-- Compatibility with both Django 1.x and Django 2.x
-
-  ```python
-  from aether.common.conf.urls import url_pattern
-  from aether.common.kernel.views import check_kernel
-
-
-  urlpatterns = [
-      url_pattern(r'^check_kernel$', check_kernel, name='check_kernel'),
   ]
   ```
 
@@ -176,40 +104,6 @@ from aether.common.conf.settings import *  # noqa
 ```
 
 #### URLs
-
-Provides two methods `url_pattern` and `include` that support Django 1.x and Django 2.x.
-
-```python
-from aether.common.conf.urls import include, url_pattern
-
-
-urlpatterns = [
-    url_pattern(r'^my-path', include('aether.my_module.urls', namespace='my-module')),
-]
-```
-
-Equivalent in Django 1.x to:
-
-    ```python
-    from django.conf.urls import include, url
-
-
-    urlpatterns = [
-        url(r'^my-path', include('aether.my_module.urls', namespace='my-module')),
-    ]
-    ```
-
-Equivalent in Django 2.x to:
-
-    ```python
-    from django.urls import include, re_path
-
-
-    urlpatterns = [
-        re_path(r'^my-path', include('aether.my_module.urls', namespace='my-module')),
-    ]
-    ```
-
 
 Include this snippet in the `urls.py` file to generate default `urlpatterns`
 based on the app settings.
@@ -259,9 +153,5 @@ python setup.py bdist_wheel --universal
 To ease the process the tests are run within a docker container.
 
 ```bash
-# checks django 1.x compatibility
-docker-compose -f docker-compose-common.yml run common-test-django-1 test
-
-# checks django 2.x compatibility
-docker-compose -f docker-compose-common.yml run common-test-django-2 test
+docker-compose -f docker-compose-common.yml run common test
 ```

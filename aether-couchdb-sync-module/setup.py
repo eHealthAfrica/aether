@@ -18,7 +18,7 @@ setup(
     packages=find_packages(),
     python_requires='>=2.7, <4',
     install_requires=[
-        'django>=1.11<2',
+        'django>=2<2.1',
         'djangorestframework>=3.6<4',
     ],
 
@@ -26,7 +26,7 @@ setup(
         'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',
         'Framework :: Django',
-        'Framework :: Django :: 1.11',
+        'Framework :: Django :: 2.0',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: OS Independent',
