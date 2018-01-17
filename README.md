@@ -392,9 +392,18 @@ This will write a js file to a directory which gets picked up by django's static
 
 At this point, we should be able to view a rendered form at `http://kernel.aether.local:8443/enketo/`.
 
+It's not pretty, so you'll need to compile the scss files. First `cd aether-odk-importer; npm i; cd ..`. Now create the build dir and compile the two files:
+
+```
+mkdir aether-odk-importer/aether/odk/static/build
+mkdir aether-odk-importer/aether/odk/static/build/css
+sass aether-odk-importer/aether/odk/assets/css/formhub/formhub.scss > aether-odk-importer/aether/odk/static/build/css/formhub.css
+sass aether-odk-importer/aether/odk/assets/css/formhub/formhub-print.scss > aether-odk-importer/aether/odk/static/build/css/formhub-print.css
+```
+
 Note: the app currently uses a hardcoded form- and model-string (see `./aether-odk-importer/enketo/index.js`) -- these two values is what the transformer returns when POSTed to (see above).
 
 TODO: in the `enketo` view function, fetch the XForm (by id) from the database, send it to the transformer endpoint and pass the response into jsfile as `modelStr` and `formStr` via the `enketo.html` template.
 
-TODO: stylesheets are currently not in place.
+TODO: rename the stylesheets and refine the build process.
 

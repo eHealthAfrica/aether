@@ -128,3 +128,5 @@ terraform.tfstate.backup
 
 # Webpack build files
 **/assets/bundles/
+.sass-cache/
+aether-odk-importer/package-lock.json
