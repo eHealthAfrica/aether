@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 # Config file for ALL TESTING containers:
 #
-#  * Aether Kernel Module
+#  * Aether Kernel
 #  * ODK Module
 #  * CouchDB Sync Module
 # ------------------------------------------------------------------------------
@@ -31,7 +31,7 @@ services:
 
 
   # ---------------------------------
-  # Aether Kernel module
+  # Aether Kernel
   # ---------------------------------
 
   kernel-test:

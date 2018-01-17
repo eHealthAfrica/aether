@@ -2,7 +2,7 @@
 # Base settings for these containers:
 #
 #  * Databases + NGINX containers (use same settings in all files)
-#  * Aether Kernel Module
+#  * Aether Kernel
 #  * ODK Module
 #  * CouchDB Sync Module
 #
@@ -54,12 +54,12 @@ services:
 
 
   # ---------------------------------
-  # Aether Kernel module
+  # Aether Kernel
   # ---------------------------------
 
   kernel-base:
-    build: aether-kernel-module
-    image: aether-kernel-module
+    build: aether-kernel
+    image: aether-kernel
     stdin_open: true
     tty: true
     environment:
@@ -76,7 +76,7 @@ services:
 
       WEB_SERVER_PORT: 8000
     volumes:
-      - ./aether-kernel-module:/code
+      - ./aether-kernel:/code
 
       # uncomment to speed up common module development and testing
       # - ./aether-common-module/aether/common:/code/aether/common

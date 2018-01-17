@@ -27,7 +27,13 @@ PCK_FILE=aether.common-0.0.0-py2.py3-none-any.whl
 containers=( kernel odk couchdb-sync )
 for container in "${containers[@]}"
 do
-  cp -r ./aether-common-module/dist/$PCK_FILE ./aether-$container-module/conf/pip/dependencies/
+  if [[ $container = "kernel" ]]
+  then
+    FOLDER=aether-$container
+  else
+    FOLDER=aether-$container-module
+  fi
+  cp -r ./aether-common-module/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
 done
 
 ./scripts/kill_all.sh

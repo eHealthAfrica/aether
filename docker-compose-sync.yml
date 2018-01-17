@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 # Config file for only these containers:
 #
-#  * Aether Kernel Module
+#  * Aether Kernel
 #  * CouchDB Sync Module
 # ------------------------------------------------------------------------------
 
@@ -40,7 +40,7 @@ services:
 
 
   # ---------------------------------
-  # Aether Kernel module
+  # Aether Kernel
   # ---------------------------------
 
   kernel:
@@ -56,7 +56,7 @@ services:
 
 
   # ---------------------------------
-  # Mobile Sync module
+  # CouchDB Sync module
   # ---------------------------------
 
   couchdb-sync:

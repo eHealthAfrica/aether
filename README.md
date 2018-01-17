@@ -11,8 +11,8 @@
   - [Common Module](#common-module)
   - [Environment Variables](#environment-variables)
     - [Aether Kernel](#aether-kernel)
-    - [Aether ODK](#aether-odk)
-    - [Aether CouchDB Sync](#aether-couchdb-sync)
+    - [Aether ODK Module](#aether-odk-module)
+    - [Aether CouchDB Sync Module](#aether-couchdb-sync-module)
 - [Usage](#usage)
   - [Users & Authentication](#users--authentication)
     - [UMS settings for local development](#ums-settings-for-local-development)
@@ -82,7 +82,7 @@ of the most common ones with non default values. For more info take a look at th
 - `WEB_SERVER_PORT`: `8000` Web server port.
 
 
-#### Aether ODK
+#### Aether ODK Module
 
 - `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
 - `HOSTNAME`: `odk.aether.local` Used by UMS.
@@ -93,7 +93,7 @@ of the most common ones with non default values. For more info take a look at th
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9000` Aether Kernel Testing Server url.
 
 
-#### Aether CouchDB Sync
+#### Aether CouchDB Sync Module
 
 - `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
 - `HOSTNAME`: `sync.aether.local` Used by UMS.
@@ -120,13 +120,13 @@ docker-compose up --build    # this will update the cointainers if needed
 
 This will start:
 
-- **aether-kernel** on `http://kernel.aether.local:8000`
+- **Aether Kernel** on `http://kernel.aether.local:8000`
   and create a superuser `admin-kernel` with the needed TOKEN.
 
-- **odk** on `http://odk.aether.local:8443`
+- **Aether ODK Module** on `http://odk.aether.local:8443`
   and create a superuser `admin-odk` with the needed TOKEN.
 
-- **couchdb-sync** on `http://sync.aether.local:8666`
+- **Aether CouchDB Sync Module** on `http://sync.aether.local:8666`
   and create a superuser `admin-sync`.
 
 
@@ -164,13 +164,13 @@ The available options depend on each container.
 The communication between the containers is done via
 [token authentication](http://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication).
 
-In the case of `aether-odk` and `aether-couchdb-sync` there is a
+In the case of `aether-odk-module` and `aether-couchdb-sync-module` there is a
 global token to connect to `aether-kernel` set in the **required** environment
 variable `AETHER_KERNEL_TOKEN`.
 
 In the case of `gather` there are tokens per user. This means that every time
 a logged in user tries to visit any page that requires to fetch data from any of
-the other apps, `aether-kernel` and/or `aether-odk`, the system will verify
+the other apps, `aether-kernel` and/or `aether-odk-module`, the system will verify
 that the user token for that app is valid or will request a new one using the
 global tokens, `AETHER_KERNEL_TOKEN` and/or `AETHER_ODK_TOKEN`; that's going to
 be used for all requests and will allow the system to better track the user actions.
@@ -192,7 +192,7 @@ Set the `HOSTNAME` and `CAS_SERVER_URL` environment variables if you want to
 activate the UMS integration in each container.
 
 Set the `AETHER_KERNEL_TOKEN` and `AETHER_KERNEL_URL` environment variables when
-starting the `aether-odk` to have ODK Collect submissions posted to Aether Kernel.
+starting the `aether-odk-module` to have ODK Collect submissions posted to Aether Kernel.
 
 If a valid `AETHER_KERNEL_TOKEN` and `AETHER_KERNEL_URL` combination is not set,
 the server will still start, but ODK Collect submissions will fail.
@@ -203,9 +203,9 @@ If the response is `Always Look on the Bright Side of Life!!!`
 it's not possible to connect, on the other hand if the message is
 `Brought to you by eHealth Africa - good tech for hard places` everything goes fine.
 
-This also applies for `aether-couchdb-sync` and `gather`.
+This also applies for `aether-couchdb-sync-module` and `gather`.
 
-In the case of `aether-couchdb-sync` a valid `GOOGLE_CLIENT_ID`
+In the case of `aether-couchdb-sync-module` a valid `GOOGLE_CLIENT_ID`
 environment variable is necessary to verify the device credentials as well.
 
 Infrastructure deployment is done with Terraform, which configuration
@@ -233,7 +233,7 @@ The list of the main containers:
 | db                | [PostgreSQL](https://www.postgresql.org/) database                      |
 | couchdb           | [CouchDB](http://couchdb.apache.org/) database for sync                 |
 | redis             | [Redis](https://redis.io/) for task queueing and task result storage    |
-| **kernel**        | Aether Kernel module                                                    |
+| **kernel**        | Aether Kernel                                                           |
 | **odk**           | Aether ODK module (imports data from ODK Collect)                       |
 | **couchdb-sync**  | Aether CouchDB Sync module (imports data from Aether Mobile app)        |
 | couchdb-sync-rq   | [RQ python](http://python-rq.org/) task runner to perform sync jobs     |
@@ -246,7 +246,7 @@ All of the containers definition for development can be found in the
 There are docker-compose files per app:
 
 ```bash
-docker-compose -f docker-compose-kernel.yml up  # starts Kernel module and its dependencies
+docker-compose -f docker-compose-kernel.yml up  # starts Kernel and its dependencies
 
 docker-compose -f docker-compose-odk.yml up     # starts ODK module and its dependencies
 

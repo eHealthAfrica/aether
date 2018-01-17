@@ -11,7 +11,13 @@ for container in "${containers[@]}"
 do
   :
 
-  PIP_FOLDER=./aether-$container-module/conf/pip
+  if [[ $container = "kernel" ]]
+  then
+    FOLDER=aether-$container
+  else
+    FOLDER=aether-$container-module
+  fi
+  PIP_FOLDER=./$FOLDER/conf/pip
   # replace `requirements.txt` file with `primary-requirements.txt` file
   cp $PIP_FOLDER/primary-requirements.txt $PIP_FOLDER/requirements.txt
 

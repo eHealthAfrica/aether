@@ -1,8 +1,8 @@
 # ------------------------------------------------------------------------------
 # Config file for ALL containers:
 #
-#  * Aether Kernel Module
-#  * ODK Collect Module
+#  * Aether Kernel
+#  * ODK Module
 #  * CouchDB Sync Module
 # ------------------------------------------------------------------------------
 
@@ -41,7 +41,7 @@ services:
 
 
   # ---------------------------------
-  # Aether Kernel module
+  # Aether Kernel
   # ---------------------------------
 
   kernel:
