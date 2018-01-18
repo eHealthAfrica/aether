@@ -3,10 +3,6 @@ branch = true
 source = /code/aether
 omit = *migrations*, *tests*
 
-[paths]
-source = /code/aether
-omit = *migrations*, *tests*
-
 [report]
 omit = *migrations*, *tests*, *wsgi.py
 show_missing = true
