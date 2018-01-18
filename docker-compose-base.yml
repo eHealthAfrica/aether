@@ -1,0 +1,183 @@
+# ------------------------------------------------------------------------------
+# Base settings for these containers:
+#
+#  * Databases + NGINX containers (use same settings in all files)
+#  * Aether Kernel
+#  * ODK Module
+#  * CouchDB Sync Module
+#
+# These container will be extended in the other DC files with dependencies and networks.
+# Volumes and environment variables can be overriden in those files too.
+# See more in: https://docs.docker.com/compose/extends/
+# ------------------------------------------------------------------------------
+
+version: "2"
+
+services:
+
+  # ---------------------------------
+  # Database + NGINX containers
+  # ---------------------------------
+
+  postgres-base:
+    image: postgres:9.5.2
+
+  couchdb-base:
+    image: couchdb:1.7.1
+    environment:
+      COUCHDB_USER: admin
+      COUCHDB_PASSWORD: secret
+    volumes:
+      # enable cors for mobile app in-browser development:
+      - ./aether-couchdb-sync-module/couchdb/conf/config.ini:/usr/local/etc/couchdb/local.ini
+    ports:
+      - "5984:5984"
+
+  redis-base:
+    image: redis:alpine
+
+  nginx-base:
+    image: nginx:alpine
+    volumes:
+      # config file
+      - ./local-setup/nginx.conf.local:/etc/nginx/conf.d/default.conf
+
+      # aether favicon
+      - ./local-setup/aether.ico:/media/eather.ico
+
+      # media folders per container
+      - ./tmp/kernel:/media/kernel
+      - ./tmp/odk:/media/odk
+      - ./tmp/sync:/media/sync
+    ports:
+      - "80:80"
+
+
+  # ---------------------------------
+  # Aether Kernel
+  # ---------------------------------
+
+  kernel-base:
+    build: aether-kernel
+    image: aether-kernel
+    stdin_open: true
+    tty: true
+    environment:
+      CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
+      CSRF_COOKIE_DOMAIN: .aether.local
+      DEBUG: "true"
+      HOSTNAME: kernel.aether.local
+
+      RDS_DB_NAME: aether
+      RDS_HOSTNAME: db
+      RDS_PASSWORD: ""
+      RDS_PORT: 5432
+      RDS_USERNAME: postgres
+
+      WEB_SERVER_PORT: 8000
+    volumes:
+      - ./aether-kernel:/code
+
+      # uncomment to speed up common module development and testing
+      # - ./aether-common-module/aether/common:/code/aether/common
+
+      # media folder
+      - ./tmp/kernel:/media
+    ports:
+      - "8000:8000"
+    command: start_dev
+
+
+  # ---------------------------------
+  # ODK module
+  # ---------------------------------
+
+  odk-base:
+    build: aether-odk-module
+    image: aether-odk-module
+    stdin_open: true
+    tty: true
+    environment:
+      CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
+      CSRF_COOKIE_DOMAIN: .aether.local
+      DEBUG: "true"
+      HOSTNAME: odk.aether.local
+
+      AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
+      AETHER_KERNEL_URL: http://kernel:8000
+      AETHER_KERNEL_URL_TEST: http://kernel-test:9000
+
+      RDS_DB_NAME: odk
+      RDS_HOSTNAME: db
+      RDS_PASSWORD: ""
+      RDS_PORT: 5432
+      RDS_USERNAME: postgres
+
+      WEB_SERVER_PORT: 8443
+    volumes:
+      - ./aether-odk-module:/code
+
+      # uncomment to speed up common module development and testing
+      # - ./aether-common-module/aether/common:/code/aether/common
+
+      # media folder
+      - ./tmp/odk:/media
+    ports:
+      - "8443:8443"
+    command: start_dev
+
+
+  # ---------------------------------
+  # CouchDB Sync module
+  # ---------------------------------
+
+  couchdb-sync-base:
+    build: aether-couchdb-sync-module
+    image: aether-couchdb-sync-module
+    stdin_open: true
+    tty: true
+    environment: &sync-environment
+      CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
+      CSRF_COOKIE_DOMAIN: .aether.local
+      DEBUG: "true"
+      HOSTNAME: sync.aether.local
+
+      COUCHDB_PASSWORD: secret
+      COUCHDB_URL: http://couchdb:5984
+      COUCHDB_USER: admin
+
+      AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
+      AETHER_KERNEL_URL: http://kernel:8000
+      AETHER_KERNEL_URL_TEST: http://kernel-test:9000
+
+      GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
+
+      RDS_DB_NAME: couchdb-sync
+      RDS_HOSTNAME: db
+      RDS_PASSWORD: ""
+      RDS_PORT: 5432
+      RDS_USERNAME: postgres
+
+      REDIS_DB: 0
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ""
+      REDIS_PORT: 6379
+
+      WEB_SERVER_PORT: 8666
+    volumes: &sync-volumes
+      - ./aether-couchdb-sync-module:/code
+
+      # uncomment to speed up common module development and testing
+      # - ./aether-common-module/aether/common:/code/aether/common
+
+      # media folder
+      - ./tmp/sync:/media
+    ports:
+      - "8666:8666"
+    command: start_dev
+
+  couchdb-sync-rq-base:
+    image: aether-couchdb-sync-module
+    environment: *sync-environment
+    volumes: *sync-volumes
+    command: start_rq

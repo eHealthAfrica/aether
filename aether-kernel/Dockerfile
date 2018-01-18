@@ -4,7 +4,7 @@ FROM python:3.6
 ## setup container
 ################################################################################
 
-COPY conf/docker/* /tmp/
+COPY ./conf/docker/* /tmp/
 RUN /tmp/setup.sh
 
 

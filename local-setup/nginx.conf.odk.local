@@ -59,31 +59,3 @@ server {
     include    /etc/nginx/uwsgi_params;
   }
 }
-
-# ------------------------------------------------------------------------------
-# CouchDB-Sync
-# ------------------------------------------------------------------------------
-
-server {
-  listen                    80;
-  charset                   utf-8;
-  server_name               sync.aether.local;
-  client_max_body_size      75M;
-
-  # http://sync.aether.local/favicon.ico
-  location /favicon.ico {
-    alias /media/eather.ico;
-  }
-
-  # Protected media
-  location /media-internal/ {
-    internal;  # Cannot be accessed from external calls
-    alias /media/sync/;
-  }
-
-  location / {
-    # use docker network alias (is used by UMS as service name)
-    proxy_pass http://sync.aether.local:8666;
-    include    /etc/nginx/uwsgi_params;
-  }
-}

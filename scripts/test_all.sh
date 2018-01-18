@@ -6,7 +6,7 @@ function prepare_and_test_container() {
 
   echo "_____________________________________________ Starting $1 tasks"
   $DC_TEST build $container
-  $DC_TEST run $container setuplocaldb
+  $DC_TEST run   $container setuplocaldb
   if [[ $2 ]]
   then
     $DC_TEST run kernel-test manage loaddata $2
@@ -35,10 +35,7 @@ echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
 
 # test and start a clean ODK TEST container
-prepare_and_test_container odk-importer aether/kernel/api/tests/fixtures/project_empty_schema.json
-
-echo "_____________________________________________ Starting odk-importer"
-$DC_TEST up -d odk-importer-test
+prepare_and_test_container odk aether/kernel/api/tests/fixtures/project_empty_schema.json
 
 # test a clean SYNC TEST container
 prepare_and_test_container couchdb-sync aether/kernel/api/tests/fixtures/project.json

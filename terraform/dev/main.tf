@@ -11,7 +11,7 @@ module "odk" {
   environment = "${var.environment}"
   project = "${var.project}"
   database_hostname = "${module.rds.database_hostname}"
-  app = "odk-importer"
+  app = "odk"
   application_memory = 512
   http_rule_priority = 30
   domain = "ehealthafrica"

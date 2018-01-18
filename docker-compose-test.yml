@@ -1,150 +1,103 @@
+# ------------------------------------------------------------------------------
+# Config file for ALL TESTING containers:
+#
+#  * Aether Kernel
+#  * ODK Module
+#  * CouchDB Sync Module
+# ------------------------------------------------------------------------------
+
 version: "2"
 
 services:
 
-    # ---------------------------------
-    # Databases containers
-    # ---------------------------------
+  # ---------------------------------
+  # Database containers
+  # ---------------------------------
 
-    db-test:
-        image: postgres:9.5.2
+  db-test:
+    extends:
+      file: docker-compose-base.yml
+      service: postgres-base
 
-    couchdb-test:
-        image: couchdb:1.7.1
-        environment:
-            COUCHDB_USER: admin
-            COUCHDB_PASSWORD: secret
-        volumes:
-            # enable cors for mobile app in-browser development:
-            - ./aether-couchdb-sync/couchdb/conf/config.ini:/usr/local/etc/couchdb/local.ini
-        ports:
-            - "5984:5984"
+  couchdb-test:
+    extends:
+      file: docker-compose-base.yml
+      service: couchdb-base
 
-    redis-test:
-        image: redis:3.2-alpine
+  redis-test:
+    extends:
+      file: docker-compose-base.yml
+      service: redis-base
 
 
-    # ---------------------------------
-    # Aether Kernel container
-    # ---------------------------------
+  # ---------------------------------
+  # Aether Kernel
+  # ---------------------------------
 
-    kernel-test:
-        build: aether-kernel
-        stdin_open: true
-        tty: true
-        environment:
-            CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
-            CSRF_COOKIE_DOMAIN: .aether.local
-            TESTING: "true"
-            HOSTNAME: kernel.aether.local
-
-            RDS_DB_NAME: kernel-test
-            RDS_HOSTNAME: db-test
-            RDS_PASSWORD: ""
-            RDS_PORT: 5432
-            RDS_USERNAME: postgres
-
-            # media folder
-            MEDIA_ROOT: /tmp/
-
-            WEB_SERVER_PORT: 9000
-        volumes:
-            - ./aether-kernel:/code
-        depends_on:
-            - db-test
-        ports:
-            - "9000:9000"
-        depends_on:
-            - db-test
-        command: start_dev
+  kernel-test:
+    extends:
+      file: docker-compose-base.yml
+      service: kernel-base
+    environment:
+      TESTING: "true"
+      MEDIA_ROOT: /tmp/
+      RDS_DB_NAME: kernel-test
+      RDS_HOSTNAME: db-test
+      WEB_SERVER_PORT: 9000
+    depends_on:
+      - db-test
+    ports:
+      - "9000:9000"
+    depends_on:
+      - db-test
 
 
-    # ---------------------------------
-    # ODK Adapter container
-    # ---------------------------------
+  # ---------------------------------
+  # ODK module
+  # ---------------------------------
 
-    odk-importer-test:
-        build: aether-odk-importer
-        environment:
-            CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
-            CSRF_COOKIE_DOMAIN: .aether.local
-            TESTING: "true"
-            HOSTNAME: odk.aether.local
-
-            AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
-            AETHER_KERNEL_URL_TEST: http://kernel-test:9000
-
-            RDS_DB_NAME: odk-importer-test
-            RDS_HOSTNAME: db-test
-            RDS_PASSWORD: ""
-            RDS_PORT: 5432
-            RDS_USERNAME: postgres
-
-            # media folder
-            MEDIA_ROOT: /tmp/
-
-            WEB_SERVER_PORT: 9443
-        volumes:
-            - ./aether-odk-importer:/code
-        depends_on:
-            - kernel-test
-            - db-test
-        ports:
-            - "9443:9443"
-        depends_on:
-            - db-test
-            - kernel-test
-        command: start_dev
+  odk-test:
+    extends:
+      file: docker-compose-base.yml
+      service: odk-base
+    environment:
+      TESTING: "true"
+      MEDIA_ROOT: /tmp/
+      AETHER_KERNEL_URL: http://kernel-test:9000
+      RDS_DB_NAME: odk-test
+      RDS_HOSTNAME: db-test
+      WEB_SERVER_PORT: 9443
+    depends_on:
+      - db-test
+      - kernel-test
+    ports:
+      - "9443:9443"
+    depends_on:
+      - db-test
+      - kernel-test
 
 
-    # ---------------------------------
-    # Mobile Sync container
-    # ---------------------------------
+  # ---------------------------------
+  # CouchDB Sync module
+  # ---------------------------------
 
-    couchdb-sync-test:
-        build: aether-couchdb-sync
-        environment:
-            CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
-            CSRF_COOKIE_DOMAIN: .aether.local
-            TESTING: "true"
-            HOSTNAME: sync.aether.local
-
-            COUCHDB_PASSWORD: secret
-            COUCHDB_URL: http://couchdb-test:5984
-            COUCHDB_USER: admin
-
-            AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
-            AETHER_KERNEL_URL_TEST: http://kernel-test:9000
-
-            GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
-
-            RDS_DB_NAME: couchdb-sync-test
-            RDS_HOSTNAME: db-test
-            RDS_PASSWORD: ""
-            RDS_PORT: 5432
-            RDS_USERNAME: postgres
-
-            REDIS_DB: 0
-            REDIS_HOST: redis-test
-            REDIS_PASSWORD: ""
-            REDIS_PORT: 6379
-
-            # media folder
-            MEDIA_ROOT: /tmp/
-
-            WEB_SERVER_PORT: 9666
-        volumes:
-            - ./aether-couchdb-sync:/code
-        depends_on:
-            - kernel-test
-            - couchdb-test
-            - db-test
-            - redis-test
-        ports:
-            - "9666:9666"
-        depends_on:
-            - db-test
-            - redis-test
-            - couchdb-test
-            - kernel-test
-        command: start_dev
+  couchdb-sync-test:
+    extends:
+      file: docker-compose-base.yml
+      service: couchdb-sync-base
+    environment:
+      TESTING: "true"
+      MEDIA_ROOT: /tmp/
+      AETHER_KERNEL_URL: http://kernel-test:9000
+      COUCHDB_URL: http://couchdb-test:5984
+      RDS_DB_NAME: couchdb-sync-test
+      RDS_HOSTNAME: db-test
+      REDIS_HOST: redis-test
+      WEB_SERVER_PORT: 9666
+    depends_on:
+      - couchdb-test
+      - db-test
+      - kernel-test
+      - redis-test
+    ports:
+      - "9666:9666"
