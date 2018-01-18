@@ -118,6 +118,12 @@ The tests clean up will **DELETE ALL MAPPINGS!!!**
 docker-compose up --build    # this will update the cointainers if needed
 ```
 
+or
+
+```bash
+./scripts/docker_start.sh    # starts all
+```
+
 This will start:
 
 - **Aether Kernel** on `http://kernel.aether.local:8000`
@@ -131,6 +137,17 @@ This will start:
 
 
 All the created superusers have password `adminadmin` in each container.
+
+
+To start any app/module separately:
+
+```bash
+./scripts/docker_start.sh kernel          # starts Aether Kernel app and its dependencies
+
+./scripts/docker_start.sh odk             # starts Aether ODK module and its dependencies
+
+./scripts/docker_start.sh couchdb-sync    # starts Aether CouchDB Sync module and its dependencies
+```
 
 *[Return to TOC](#table-of-contents)*
 
@@ -242,17 +259,6 @@ The list of the main containers:
 
 All of the containers definition for development can be found in the
 [docker-compose-base.yml](docker-compose-base.yml) file.
-
-There are docker-compose files per app:
-
-```bash
-docker-compose -f docker-compose-kernel.yml up  # starts Kernel and its dependencies
-
-docker-compose -f docker-compose-odk.yml up     # starts ODK module and its dependencies
-
-docker-compose -f docker-compose-sync.yml up    # starts CouchDB Sync module and its dependencies
-```
-
 
 *[Return to TOC](#table-of-contents)*
 

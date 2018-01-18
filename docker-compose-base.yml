@@ -39,8 +39,10 @@ services:
   nginx-base:
     image: nginx:alpine
     volumes:
-      # config file
-      - ./local-setup/nginx.conf.local:/etc/nginx/conf.d/default.conf
+      # local setup
+      - ./local-setup/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./local-setup/nginx/sites-enabled:/etc/nginx/sites-enabled
+      - ./tmp/nginx:/var/log/nginx/
 
       # aether favicon
       - ./local-setup/aether.ico:/media/eather.ico
