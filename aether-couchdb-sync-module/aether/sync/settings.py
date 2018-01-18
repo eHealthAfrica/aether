@@ -1,4 +1,5 @@
 import os
+import srvlookup
 
 # Common settings
 # ------------------------------------------------------------------------------
@@ -41,6 +42,36 @@ REDIS_HOST = os.environ.get('REDIS_HOST', 'redis')
 REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
 REDIS_DB = os.environ.get('REDIS_DB', 0)
 REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', None)
+
+
+# Used only in deployment
+current_environment = os.environ.get('ENV', '')
+if current_environment in ('dev', 'staging', 'prod'):  # pragma: no cover
+    domain = 'eha.{env}.local'.format(env=current_environment)
+    project = os.environ.get('PROJECT', 'aether')
+
+    try:
+        # get dynamic Redis host/port
+        redis = 'redis.{project}'.format(project=project)
+        redis_host = srvlookup.lookup(redis, domain=domain)
+        REDIS_HOST = redis_host[0][0]
+        REDIS_PORT = redis_host[0][1]
+    except Exception as e:
+        # use default values
+        pass
+
+    try:
+        # get dynamic CouchDB URL
+        couchdb = 'couchdb.{project}'.format(project=project)
+        couchdb_host = srvlookup.lookup(couchdb, domain=domain)
+        COUCHDB_URL = 'http://{host}:{port}'.format(
+            host=couchdb_host[0][0],
+            port=couchdb_host[0][1]
+        )
+    except Exception as e:
+        # use default value
+        pass
+
 
 RQ_QUEUES = {
     'default': {

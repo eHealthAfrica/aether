@@ -31,5 +31,8 @@ uwsgi
 # this is used for pulling down secrets from S3
 awscli
 
+# lookup SRV records
+srvlookup
+
 # Aether common module
 aether.common
