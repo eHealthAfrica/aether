@@ -77,10 +77,6 @@ services:
       WEB_SERVER_PORT: 8000
     volumes:
       - ./aether-kernel:/code
-
-      # uncomment to speed up common module development and testing
-      # - ./aether-common-module/aether/common:/code/aether/common
-
       # media folder
       - ./tmp/kernel:/media
     ports:
@@ -116,10 +112,6 @@ services:
       WEB_SERVER_PORT: 8443
     volumes:
       - ./aether-odk-module:/code
-
-      # uncomment to speed up common module development and testing
-      # - ./aether-common-module/aether/common:/code/aether/common
-
       # media folder
       - ./tmp/odk:/media
     ports:
@@ -166,10 +158,6 @@ services:
       WEB_SERVER_PORT: 8666
     volumes: &sync-volumes
       - ./aether-couchdb-sync-module:/code
-
-      # uncomment to speed up common module development and testing
-      # - ./aether-common-module/aether/common:/code/aether/common
-
       # media folder
       - ./tmp/sync:/media
     ports:
