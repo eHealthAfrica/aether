@@ -372,38 +372,8 @@ First, start all containers:
 docker-compose up --build
 ```
 
-This will start an enketo transformer service running on port 8085. We can verify that this works by running:
+This will start an enketo transformer service running on port 8085. It can be accessed via the `enketo` view on the ODK module, which takes an id of an xform that should be displayed. This view transforms the xform by posting it to the transfomer (which listens on port 8085), and then displays the result via a minimal version of the Enketo app, which is in `odk-importer/enketo/`.
 
-```
-curl -d "xform=<xform>x</xform>&theme=plain&media[myfile.png]=/path/to/somefile.png&media[this]=that" http://localhost:8085/transform
-```
-
-Note that the transform service is currently exposed to the world -- that's why the command above can be run from outside of the docker network.
-
-We now need to compile a minimal version of the Enketo app. This currently lives inside of the odk module, so we'll do:
-
-```
-cd aether-odk-importer/enketo
-npm i
-./node_modules/.bin/webpack --entry ./index.js --output-filename ../aether/odk/static/out.js
-```
-
-This will write a js file to a directory which gets picked up by django's static machinery. This file is included via the template `./aether-odk-importer/aether/odk/templates/enketo.html`, which is rendered by the `enketo` view function in `./aether-odk-importer/aether/odk/api/views.py`. 
-
-At this point, we should be able to view a rendered form at `http://kernel.aether.local:8443/enketo/`.
-
-It's not pretty, so you'll need to compile the scss files. First `cd aether-odk-importer; npm i; cd ..`. Now create the build dir and compile the two files:
-
-```
-mkdir aether-odk-importer/aether/odk/static/build
-mkdir aether-odk-importer/aether/odk/static/build/css
-sass aether-odk-importer/aether/odk/assets/css/formhub/formhub.scss > aether-odk-importer/aether/odk/static/build/css/formhub.css
-sass aether-odk-importer/aether/odk/assets/css/formhub/formhub-print.scss > aether-odk-importer/aether/odk/static/build/css/formhub-print.css
-```
-
-Note: the app currently uses a hardcoded form- and model-string (see `./aether-odk-importer/enketo/index.js`) -- these two values is what the transformer returns when POSTed to (see above).
-
-TODO: in the `enketo` view function, fetch the XForm (by id) from the database, send it to the transformer endpoint and pass the response into jsfile as `modelStr` and `formStr` via the `enketo.html` template.
-
-TODO: rename the stylesheets and refine the build process.
+TODO: make the build process work
+TODO: form validation and submission
 

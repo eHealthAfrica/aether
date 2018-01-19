@@ -22,6 +22,7 @@ show_help() {
 
     start         : start webserver behind nginx
     start_dev     : start webserver for development
+    start_webpack : start webpack server (only in DEV mode)
     """
 }
 
@@ -156,6 +157,10 @@ case "$1" in
         setup_initial_data
 
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
+    ;;
+
+    start_webpack )
+        npm run webpack-server
     ;;
 
     help)

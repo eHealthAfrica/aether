@@ -4,6 +4,7 @@ import xmltodict
 
 from dateutil import parser
 from geojson import Point
+from html.parser import HTMLParser
 
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -377,16 +378,29 @@ import requests
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer])
 # @authentication_classes([BasicAuthentication])
-def enketo(request):
+def enketo(request, pk):
     # TODO:
     # document enketo-core/enketo-transformer
     # add tests
     # add webpack to container entrypoint
     # ./node_modules/.bin/webpack --entry ./index.js --output-filename ../aether/odk/static/out.js
     # TODO: get xform and make request to transformer
+    enketo_url = 'http://enketo:8085/transform'
+    xform = get_object_or_404(XForm, pk=pk)
+    # if not xform.is_surveyor(request.user):
+    #     return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+    r = requests.post(
+        enketo_url,
+        data={'xform': xform.xml_data}
+    )
+
+    transformed = r.json()
+    h = HTMLParser()
     return Response(
         {
-            'test': 123,
+            'form': h.unescape(transformed.get('form')),
+            'model': h.unescape(transformed.get('model'))
         },
         template_name='enketo.html',
         content_type='text/html',
