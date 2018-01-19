@@ -117,9 +117,5 @@ services:
     extends:
       file: docker-compose-base.yml
       service: nginx-base
-    depends_on:
-      - couchdb-sync
-      - kernel
-      - odk
     networks:
       - internal
