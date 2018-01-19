@@ -26,6 +26,7 @@ django-rq==1.0.1
 django-ums-client==0.2.6
 djangorestframework==3.7.7
 djangorestframework-csv==2.0.0
+dnspython==1.15.0
 docutils==0.14
 flake8==3.5.0
 flake8-quotes==0.13.0
@@ -54,6 +55,7 @@ rsa==3.4.2
 s3transfer==0.1.12
 six==1.11.0
 sqlparse==0.2.4
+srvlookup==1.0.0
 unicodecsv==0.14.1
 urllib3==1.22
 uWSGI==2.0.15
