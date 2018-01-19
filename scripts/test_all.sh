@@ -15,6 +15,13 @@ function prepare_and_test_container() {
   echo "_____________________________________________ $1 tasks done"
 }
 
+function prepare_container() {
+  echo "_________________________________________________ Preparing $1 container"
+  $DC_TEST build "$1"-test
+  $DC_TEST run "$1"-test setuplocaldb
+  echo "_________________________________________________ $1 ready!"
+}
+
 DC_TEST="docker-compose -f docker-compose-test.yml"
 
 echo "_____________________________________________ TESTING"
@@ -33,6 +40,9 @@ prepare_and_test_container kernel
 
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
+
+# test a clean CLIENT TEST container
+prepare_and_test_container client
 
 # test and start a clean ODK TEST container
 prepare_and_test_container odk aether/kernel/api/tests/fixtures/project_empty_schema.json
