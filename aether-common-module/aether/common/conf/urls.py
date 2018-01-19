@@ -1,42 +1,12 @@
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.decorators import login_required
+from django.urls import include, path
 
 from aether.common.auth.views import obtain_auth_token
 from aether.common.conf.views import basic_serve, media_serve
 from aether.common.health.views import health
 from aether.common.kernel.views import check_kernel
-
-
-try:  # pragma: no cover
-    # Django 2.0+
-    from django.urls import include as django_include, re_path as django_path
-    django_version = 2
-
-except ImportError as e:  # pragma: no cover
-    # Django < 2.0
-    from django.conf.urls import include as django_include, url as django_path
-    django_version = 1
-
-
-def include(*args, **kwargs):
-    '''
-    Shortcut to `django.urls.include` in Django 2.x and `django.conf.urls.include` in Django 1.x.
-
-    Offers compatibility with Django 1.x and 2.x.
-    '''
-
-    return django_include(*args, **kwargs)
-
-
-def url_pattern(path_re, *args, **kwargs):
-    '''
-    Shortcut to `django.urls.re_path` in Django 2.x and `django.conf.urls.url` in Django 1.x.
-
-    Offers compatibility with Django 1.x and 2.x.
-    '''
-
-    return django_path(path_re, *args, **kwargs)
 
 
 def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
@@ -71,32 +41,27 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
     if settings.CAS_SERVER_URL:
         import django_cas_ng.views
 
-        auth_urls = [
-            url_pattern(r'^login/$', django_cas_ng.views.login, name='login'),
-            url_pattern(r'^logout/$', django_cas_ng.views.logout, name='logout'),
-        ]
-
-    if django_version == 1:
-        admin_urls = url_pattern(r'^admin/', include(admin.site.urls))
-    else:
-        admin_urls = url_pattern(r'^admin/', admin.site.urls)
+        auth_urls = ([
+            path('login/', django_cas_ng.views.login, name='login'),
+            path('logout/', django_cas_ng.views.logout, name='logout'),
+        ], 'rest_framework')
 
     urlpatterns = [
 
         # `health` endpoint
-        url_pattern(r'^health$', health, name='health'),
+        path('health', health, name='health'),
 
         # `admin` section
-        admin_urls,
+        path('admin/', admin.site.urls),
 
         # `accounts` management
-        url_pattern(r'^accounts/', include(auth_urls, namespace='rest_framework')),
+        path('accounts/', include(auth_urls, namespace='rest_framework')),
 
         # media files (protected)
-        url_pattern(r'^media/(?P<path>.*)$', login_required(media_serve), name='media'),
+        path('media/<path:path>', login_required(media_serve), name='media'),
 
         # media files (basic auth)
-        url_pattern(r'^media-basic/(?P<path>.*)$', basic_serve, name='media-basic'),
+        path('media-basic/<path:path>', basic_serve, name='media-basic'),
 
     ]
 
@@ -105,19 +70,19 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
             import debug_toolbar
 
             urlpatterns += [
-                url_pattern(r'^__debug__/', include(debug_toolbar.urls)),
+                path('__debug__/', include(debug_toolbar.urls)),
             ]
 
     if token:
         # generates users token
         urlpatterns += [
-            url_pattern(r'^accounts/token$', obtain_auth_token, name='token'),
+            path('accounts/token', obtain_auth_token, name='token'),
         ]
 
     if kernel:
         # checks if Core server is available
         urlpatterns += [
-            url_pattern(r'^check-kernel$', check_kernel, name='check-kernel'),
+            path('check-kernel', check_kernel, name='check-kernel'),
         ]
 
     return urlpatterns

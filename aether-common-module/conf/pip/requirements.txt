@@ -1,12 +1,12 @@
 ################################################################################
 #                                                                              #
-#                     Requirements to test with Django 2.x                     #
+#                           Requirements for testing                           #
 #                                                                              #
 ################################################################################
 
 coverage
 django-cors-headers
-django>=2<3
+django
 djangorestframework
 djangorestframework-csv
 flake8

@@ -16,8 +16,8 @@ certifi==2017.11.5
 chardet==3.0.4
 colorama==0.3.7
 coverage==4.4.2
-Django==1.11.9
-django-cas-ng==3.5.8
+Django==2.0.1
+django-cas-ng==3.5.9
 django-cors-headers==2.1.0
 django-debug-toolbar==1.9.1
 django-ums-client==0.2.6

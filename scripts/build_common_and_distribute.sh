@@ -7,16 +7,6 @@ DC_COMMON="docker-compose -f docker-compose-common.yml"
 ./scripts/kill_all.sh
 $DC_COMMON down
 
-# test common module with different options
-
-# Django 1.x compatibility
-$DC_COMMON build common-test-django-1
-$DC_COMMON run   common-test-django-1 test
-
-# Django 2.x compatibility
-$DC_COMMON build common-test-django-2
-$DC_COMMON run   common-test-django-2 test
-
 # create the distribution
 $DC_COMMON build common
 $DC_COMMON run   common build

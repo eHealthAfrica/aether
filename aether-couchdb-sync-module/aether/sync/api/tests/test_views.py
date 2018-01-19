@@ -1,5 +1,5 @@
-from django.core.urlresolvers import reverse
 from django.test import override_settings
+from django.urls import reverse
 from oauth2client.client import VerifyJwtTokenError
 from oauth2client.crypt import AppIdentityError
 
@@ -62,10 +62,10 @@ def http_error(token, client_id):
 @override_settings(GOOGLE_CLIENT_ID='test-client-id')
 class ViewsTests(ApiTestCase):
     fixtures = ['mobile_users.json']
+    url = reverse('sync:signin')
 
     def test_register_url(self):
-        url = reverse('sync:signin')
-        self.assertTrue(url, msg='The sync url is defined')
+        self.assertTrue(self.url, msg='The sync url is defined')
 
     def test_setup_fixtures(self):
         self.assertEqual(MobileUser.objects.count(), 2, msg='fixtures have been added')
@@ -76,8 +76,8 @@ class ViewsTests(ApiTestCase):
     @mock.patch('oauth2client.client.verify_id_token', side_effect=valid_token)
     def test_get_credentials(self, verify_token_function):
         '''happy path test, the user is in the MobileUsers pool '''
-        url = reverse('sync:signin')
-        response = self.client.post(url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
+        response = self.client.post(self.url,
+                                    {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
                                     format='json')
         self.assertEqual(response.status_code, 201)
         creds = response.data
@@ -93,13 +93,14 @@ class ViewsTests(ApiTestCase):
     @mock.patch('oauth2client.client.verify_id_token', side_effect=valid_token)
     def test_update_credentials(self, verify_token_function):
         '''happy path test, the user is in the MobileUsers pool '''
-        url = reverse('sync:signin')
-        response = self.client.post(url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
+        response = self.client.post(self.url,
+                                    {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
                                     format='json')
         self.assertEqual(response.status_code, 201)
         creds = response.data
 
-        response2 = self.client.post(url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
+        response2 = self.client.post(self.url,
+                                     {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
                                      format='json')
         self.assertEqual(response2.status_code, 201)
         creds2 = response2.data
@@ -112,14 +113,14 @@ class ViewsTests(ApiTestCase):
     @mock.patch('oauth2client.client.verify_id_token', side_effect=valid_token)
     def test_two_users_one_email(self, verify_token_function):
         '''should be able to create multiple users on one email address'''
-        url = reverse('sync:signin')
-
-        response = self.client.post(url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
+        response = self.client.post(self.url,
+                                    {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
                                     format='json')
         self.assertEqual(response.status_code, 201)
         creds = response.data
 
-        response2 = self.client.post(url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx2'},
+        response2 = self.client.post(self.url,
+                                     {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx2'},
                                      format='json')
         self.assertEqual(response2.status_code, 201)
         creds2 = response2.data
@@ -139,32 +140,32 @@ class ViewsTests(ApiTestCase):
     @mock.patch('oauth2client.client.verify_id_token', side_effect=just_return)
     def test_no_token(self, valid_token_function):
         '''what happens if no token is posted?'''
-        url = reverse('sync:signin')
-        response = self.client.post(url, {'idToken': '', 'deviceId': 'test_xxx'},
+        response = self.client.post(self.url,
+                                    {'idToken': '', 'deviceId': 'test_xxx'},
                                     format='json')
         self.assertEqual(response.status_code, 400, 'returns error when no token is passed')
 
     @mock.patch('oauth2client.client.verify_id_token', side_effect=valid_token)
     def test_no_device_id(self, valid_token_function):
         '''what happens if no device id is posted?'''
-        url = reverse('sync:signin')
-        response = self.client.post(url, {'idToken': 'Long JWT Token', 'deviceId': ''},
+        response = self.client.post(self.url,
+                                    {'idToken': 'Long JWT Token', 'deviceId': ''},
                                     format='json')
         self.assertEqual(response.status_code, 400, 'returns error when no device_id is passed')
 
     @mock.patch('oauth2client.client.verify_id_token', side_effect=identity_error)
     def test_invalid_token(self, valid_token_function):
         '''what happens if token can not be verified?'''
-        url = reverse('sync:signin')
-        response = self.client.post(url, {'idToken': 'invalid', 'deviceId': 'test_xxx'},
+        response = self.client.post(self.url,
+                                    {'idToken': 'invalid', 'deviceId': 'test_xxx'},
                                     format='json')
         self.assertEqual(response.status_code, 401, 'returns error when no token is passed')
 
     @mock.patch('oauth2client.client.verify_id_token', side_effect=wrong_email)
     def test_valid_token_no_access(self, valid_token_function):
         '''a token with an email not in the MobileUsers list'''
-        url = reverse('sync:signin')
-        response = self.client.post(url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
+        response = self.client.post(self.url,
+                                    {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
                                     format='json')
         self.assertEqual(
             response.status_code, 403,
@@ -173,8 +174,8 @@ class ViewsTests(ApiTestCase):
     @mock.patch('oauth2client.client.verify_id_token', side_effect=no_email)
     def test_weird_token_no_email(self, valid_token_function):
         '''somehow, the token has no email address'''
-        url = reverse('sync:signin')
-        response = self.client.post(url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
+        response = self.client.post(self.url,
+                                    {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
                                     format='json')
         self.assertEqual(response.status_code, 500, 'returns server error on no email')
 
@@ -182,15 +183,15 @@ class ViewsTests(ApiTestCase):
     @mock.patch('oauth2client.client.verify_id_token', side_effect=just_return)
     def test_no_client_id(self, valid_token_function):
         '''forgot to set GOOGLE_CLIENT_ID, this would open up for any google JW Token'''
-        url = reverse('sync:signin')
-        response = self.client.post(url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
+        response = self.client.post(self.url,
+                                    {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
                                     format='json')
         self.assertEqual(response.status_code, 500, 'returns server error on no email')
 
     @mock.patch('oauth2client.client.verify_id_token', side_effect=http_error)
     def test_no_google_certs(self, valid_token_function):
-        url = reverse('sync:signin')
-        response = self.client.post(url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
+        response = self.client.post(self.url,
+                                    {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
                                     format='json')
         self.assertEqual(response.status_code, 500, 'returns server error')
 
@@ -200,8 +201,8 @@ class ViewsTests(ApiTestCase):
                                          valid_token_function,
                                          create_or_update_user_function):
         '''somehow, the couchdb database does not respond'''
-        url = reverse('sync:signin')
-        response = self.client.post(url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
+        response = self.client.post(self.url,
+                                    {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
                                     format='json')
         self.assertEqual(response.status_code, 500, 'returns server error')
         create_or_update_user_function.assert_called_with(
@@ -213,8 +214,8 @@ class ViewsTests(ApiTestCase):
     @mock.patch('oauth2client.client.verify_id_token', side_effect=valid_token)
     def test_create_db_error(self, valid_token_function, create_db_function):
         '''somehow, the couchdb database does not respond'''
-        url = reverse('sync:signin')
-        response = self.client.post(url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
+        response = self.client.post(self.url,
+                                    {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
                                     format='json')
         self.assertEqual(response.status_code, 500, 'returns server error')
         create_db_function.assert_called_with('test_xxx',)

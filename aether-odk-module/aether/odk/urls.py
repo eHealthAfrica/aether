@@ -1,6 +1,8 @@
-from aether.common.conf.urls import generate_urlpatterns, include, url_pattern
+from django.urls import include, path
+
+from aether.common.conf.urls import generate_urlpatterns
 
 
 urlpatterns = generate_urlpatterns(token=True, kernel=True) + [
-    url_pattern(r'', include('aether.odk.api.urls')),
+    path('', include('aether.odk.api.urls')),
 ]
