@@ -23,17 +23,15 @@ Includes the methods that allow:
 
 Include the view entry in the `urls.py` file.
 
-- Django 2.x
-
-  ```python
-  from django.urls import path
-  from aether.common.auth.views import obtain_auth_token
+```python
+from django.urls import path
+from aether.common.auth.views import obtain_auth_token
 
 
-  urlpatterns = [
-      path('get-token', obtain_auth_token, name='token'),
-  ]
-  ```
+urlpatterns = [
+    path('get-token', obtain_auth_token, name='token'),
+]
+```
 
 ### Health section
 
@@ -43,17 +41,15 @@ Includes the methods that allow:
 
 Include the view entry in the `urls.py` file.
 
-- Django 2.x
-
-  ```python
-  from django.urls import path
-  from aether.common.health.views import health
+```python
+from django.urls import path
+from aether.common.health.views import health
 
 
-  urlpatterns = [
-      path('health', health, name='health'),
-  ]
-  ```
+urlpatterns = [
+    path('health', health, name='health'),
+]
+```
 
 ### Kernel section
 
@@ -63,17 +59,15 @@ Includes the methods that allow:
 
 Include the view entry in the `urls.py` file.
 
-- Django 2.x
-
-  ```python
-  from django.urls import path
-  from aether.common.kernel.views import check_kernel
+```python
+from django.urls import path
+from aether.common.kernel.views import check_kernel
 
 
-  urlpatterns = [
-      path('check-kernel', check_kernel, name='check-kernel'),
-  ]
-  ```
+urlpatterns = [
+    path('check-kernel', check_kernel, name='check-kernel'),
+]
+```
 
 Indicates if the app should have an URL that checks if
 Aether Kernel Server is reachable with the provided environment
