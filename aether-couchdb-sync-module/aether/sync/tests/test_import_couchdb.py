@@ -296,3 +296,37 @@ class ImportTestCase(TestCase):
         # check the written meta document
         status = get_meta_doc(device.db_name, self.example_doc['_id'])
         self.assertEqual(status['last_rev'][0], '2', 'updated meta document')
+
+    def test_document_with_aether_http_error(self):
+        class MockHTTPErrorResponse():
+            def __init__(self):
+                self.content = 'http-error'
+                self.text = 'http-error'
+
+            def raise_for_status(self):
+                raise requests.exceptions.HTTPError
+
+        # this creates a test couchdb
+        device = DeviceDB(device_id=device_id)
+        device.save()
+        create_db(device_id)
+
+        doc_url = '{}/{}'.format(device.db_name, self.example_doc['_id'])
+
+        resp = couchdb.put(doc_url, json=self.example_doc)
+        self.assertEqual(resp.status_code, 201, 'The example document got created')
+
+        # raise error sending docs to Aether Kernel
+        with mock.patch('aether.sync.import_couchdb.post_to_aether',
+                        return_value=MockHTTPErrorResponse()) as mock_post_to_aether:
+            import_synced_devices()
+            mock_post_to_aether.assert_called()
+
+        docs = get_aether_submissions(self.mapping_id)
+        self.assertEqual(len(docs), 0, 'doc did not get imported to aether')
+        status = get_meta_doc(device.db_name, self.example_doc['_id'])
+
+        self.assertIn('error', status, 'posts error key')
+        self.assertNotIn('last_rev', status, 'no last rev key')
+        self.assertNotIn('aether_id', status, 'no aether id key')
+        self.assertIn('http-error', status['error'], 'saves error object')

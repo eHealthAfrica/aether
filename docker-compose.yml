@@ -48,6 +48,9 @@ services:
     extends:
       file: docker-compose-base.yml
       service: kernel-base
+    # uncomment to speed up common module development
+    # volumes:
+    #   - ./aether-common-module/aether/common:/code/aether/common
     depends_on:
       - db
     networks:
@@ -64,6 +67,9 @@ services:
     extends:
       file: docker-compose-base.yml
       service: odk-base
+    # uncomment to speed up common module development
+    # volumes:
+    #   - ./aether-common-module/aether/common:/code/aether/common
     depends_on:
       - db
       - kernel
@@ -81,6 +87,9 @@ services:
     extends:
       file: docker-compose-base.yml
       service: couchdb-sync-base
+    # uncomment to speed up common module development
+    # volumes:
+    #   - ./aether-common-module/aether/common:/code/aether/common
     depends_on: &sync-dependencies
       - couchdb
       - db
