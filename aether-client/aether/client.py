@@ -3,9 +3,10 @@ import requests
 
 
 class GenericClient(object):
+    '''Base client type to be subclassed.
 
-    # Base client type to be subclassed.
-    # Holds access to http requests
+    Holds access to http requests
+    '''
     _default_url = None
     _resource_types = {}
     _type_lookup = {}
@@ -31,9 +32,16 @@ class GenericClient(object):
             resource[key] = ResourceCollection(name, self)
 
     def delete(self, url):
-        req = requests.delete(url, auth=self.auth)
-        ok = req.status_code in [requests.codes.ok, requests.codes.no_content]
-        return ok
+        req = None
+        try:
+            req = requests.delete(url, auth=self.auth)
+            ok = req.status_code in [requests.codes.ok, requests.codes.no_content]
+        except requests.exceptions.ConnectionError:
+            ok = False
+        return {
+            "ok": ok,
+            "result": req
+        }
 
     def get(self, url):
         req = requests.get(url, auth=self.auth)
@@ -55,8 +63,9 @@ class GenericClient(object):
 
 
 class KernelClient(GenericClient):
+    '''Kernel API client class
+    '''
 
-    # Kernel client class
     _default_url = "http://kernel.aether.local:8000"
     _resource_types = {
         "Project": "projects",
@@ -79,9 +88,10 @@ class KernelClient(GenericClient):
     }
 
     def refresh(self):
-        # Refreshes all Resource assets. Should be used sparingly.
-        # Better to call refresh on the asset directly instead of updating
-        # the entire tree.
+        ''' Refreshes all Resource assets. Should be used sparingly.
+        Better to call refresh on the asset directly instead of updating
+        the entire tree.
+        '''
         super(KernelClient, self).refresh()
         self.__dict__["Entity"] = EntityResolver(
             "resolver",
@@ -92,6 +102,11 @@ class KernelClient(GenericClient):
 
 
 class ODKModuleClient(GenericClient):
+    '''ODK Module API client class
+
+    Only has resouce types as the ODK module passes all entities
+    and submissions to the Kernel.
+    '''
 
     _default_url = "odk.aether.local:8443"
     _resource_types = {
@@ -102,6 +117,8 @@ class ODKModuleClient(GenericClient):
 
 
 class DottedDict(dict):
+    '''A simple way to add JSON like .write access to python dictionaries
+    '''
 
     def __setitem__(self, key, value):
         super(DottedDict, self).__setitem__(key, value)
@@ -132,8 +149,11 @@ class GenericCollection(object):
 
 
 class EntityResolver(GenericCollection):
-    # This class allows the generation of an EntityData endpoint that's limited by
-    # a group of entities relationships with another type.
+    '''Finds instance of entity based on a containing type.
+
+    This class allows the generation of an EntityData endpoint that's limited by
+    a group of entities relationships with another type.
+    '''
 
     def __init__(self, collection_name, client, tree=None):
         super(EntityResolver, self).__init__(collection_name, client)
@@ -205,6 +225,10 @@ class EntityResolver(GenericCollection):
 
 
 class SubmissionsCollection(GenericCollection):
+    '''A collection to hold and access submissions.
+
+    Submissions are keyed by the mapping they were submitted to.
+    '''
 
     def __init__(self, collection_name, client):
         super(SubmissionsCollection, self).__init__(collection_name, client)
@@ -252,6 +276,8 @@ class SubmissionsCollection(GenericCollection):
 
 
 class ResourceCollection(GenericCollection):
+    '''A collection type for 'Resources' types; [Project, Mapping, Schema, ProjectSchema]
+    '''
 
     def __init__(self, collection_name, client):
         super(ResourceCollection, self).__init__(collection_name, client)
@@ -332,7 +358,6 @@ class ResourceCollection(GenericCollection):
         _id = resource.get("id")
         if not _id:  # TODO TEST
             raise ValueError("Resource has no id field")
-
         uri = "%s%s" % (self.url, _id)
         response = self.client.delete(uri)
         self.load()
@@ -352,6 +377,8 @@ class ResourceCollection(GenericCollection):
 
 
 class Resource(object):
+    '''Object to hold and modify Resource types. in ResourceCollection
+    '''
 
     def __init__(self, raw, collection):
         self.data = raw
@@ -403,13 +430,19 @@ class Resource(object):
 
 
 class DataEndpoint(object):
+    '''A generic supertype for managing data elements [Submission, Entity]
+
+    Allows CRUD of data elements.
+    Allows lazy loading of paginiated results, search via filter_func and plucking by id
+    '''
 
     def __init__(self, client, url=None):
         self.client = client
         self.url = url
         self.valid = True
-        if not next(self.get_instances(self.url), None):
-            self.valid = False
+        if url:  # If instatiated with a search url, will flag invalid if there are no results.
+            if not next(self.get_instances(self.url), None):
+                self.valid = False
 
     def __iter__(self):
         return self.get_instances()
@@ -435,8 +468,11 @@ class DataEndpoint(object):
         return res
 
     def get_instances(self, url=None, filter_func=None):
-        # iterates over pages
-        # optional filter function
+        '''generated based method for getting instances from paginated results
+
+        Iterates continously over returned pages. Optionally filtering from
+        results with an aribrary passed function.
+        '''
         # TODO Add a skip or offset parameter
         if not url:
             url = self.url
@@ -466,6 +502,10 @@ class DataEndpoint(object):
 
 
 class EntityData(DataEndpoint):
+    '''DataEndpoint type for access and modification of Entities
+
+    Currently only explicitly supports Read, Write and Update
+    '''
 
     def __init__(self, name, url, client):
         self.client = client
@@ -510,6 +550,10 @@ class EntityData(DataEndpoint):
 
 
 class SubmissionData(DataEndpoint):
+    '''DataEndpoint type for access and modification of Submissions
+
+    Currently only explicitly supports Read and Write
+    '''
 
     def __init__(self, mapping_id, collection):
         self.collection = collection

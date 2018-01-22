@@ -14,8 +14,10 @@ from . import (
 )
 from .. import client
 
+
 def pprint(obj):
     print(json.dumps(obj, indent=2))
+
 
 class KernelClientCase(unittest.TestCase):
 
@@ -41,7 +43,7 @@ class KernelClientCase(unittest.TestCase):
             except KeyError:
                 pass
             try:
-                fake_credentials = {"missing":"values"}
+                fake_credentials = {"missing": "values"}
                 KernelClientCase.client = client.KernelClient(kernel_url, **fake_credentials)
             except KeyError:
                 pass
@@ -50,7 +52,7 @@ class KernelClientCase(unittest.TestCase):
                 print("Connected client to Aether on %s" % kernel_url)
             except Exception as e:
                 print(e)
-                self.fail("Could properly connect to Aether Kernel / setup client")
+                self.fail("Could not properly connect to Aether Kernel / setup client")
 
     def tearDown(self):
         # report success or failure
@@ -60,7 +62,6 @@ class KernelClientCase(unittest.TestCase):
             self.fail("Integration test failed with %s faults." % len(self.failures))
         else:
             print("Completed %s tasks without issue." % self.success)
-
 
     def _steps(self):
         # iterator to step through sequential test steps
@@ -73,8 +74,8 @@ class KernelClientCase(unittest.TestCase):
         for name, step in self._steps():
             try:
                 step()
-                self.success +=1
-                print(".")  # cheesey dot replicating normal unittest behavior
+                self.success += 1
+                sys.stdout.write(".")  # cheesey dot replicating normal unittest behavior
             except Exception as e:
                 print(traceback.format_exc())
                 exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -87,13 +88,13 @@ class KernelClientCase(unittest.TestCase):
         client.Resource.Project.add(project_obj)
         a_str = str(client.Resource['Project'])
         assert(a_str is not None)
-        assert(len([i for i in self.client.Resource.Project]) > 0) , "Couldn't iterate projects"
+        assert(len([i for i in self.client.Resource.Project]) > 0), "Couldn't iterate projects"
         project = self.client.Resource.Project.get(name)
         assert(len([i for i in project.info()]) > 0)
         assert(project.get())
         assert(project.info("id"))
         project_id = project.id
-        assert(project != None), "Project was not created"
+        assert(project is not None), "Project was not created"
         assert(name == project.name), "Project name not accessable by dot convention"
         assert(name == project.get("name")), "Project name not accessable by .get()"
         assert(str(project) is not None)
@@ -126,13 +127,12 @@ class KernelClientCase(unittest.TestCase):
             pass
         else:
             self.fail("missing attribue not caught")
+
         def wrong_name(obj):
             return obj.get("name") == "FAKE"+project_name
 
         matches = client.Resource.Project.search(wrong_name)
-        assert(len([i.name for i in matches]) == 0), "Search for missing value should fail, didn't."
-
-
+        assert(len([i.name for i in matches]) == 0), "Search for missing value should fail."
 
     def step2_schemas(self):
         if not KernelClientCase.project_id:
@@ -156,7 +156,7 @@ class KernelClientCase(unittest.TestCase):
         schemas = KernelClientCase.schema_ids
         for x, obj in enumerate(project_schema_objs):
             name = obj.get('name')
-            schema_id = [k for k,v in schemas.items() if v == "My"+name][0]
+            schema_id = [k for k, v in schemas.items() if v == "My"+name][0]
             assert(schema_id is not None)
             obj["schema"] = schema_id
             obj["project"] = project_id
@@ -165,11 +165,12 @@ class KernelClientCase(unittest.TestCase):
             assert(schema is not None), "ProjectSchema should be available immediately"
             _id = schema.id
             same_schema = client.Resource.ProjectSchema.get(_id)
-            if x ==0:
+            if x == 0:
                 same_schema['is_encrypted'] = True
                 client.Resource.ProjectSchema.update(same_schema)
                 same_schema = client.Resource.ProjectSchema.get(_id)
-                assert(same_schema['is_encrypted'] is not schema['is_encrypted']), "Schema didn't update"
+                assert(same_schema['is_encrypted'] is not schema['is_encrypted']), (
+                    "Schema didn't update")
             else:
                 assert(schema == same_schema), "Schema should match"
             assert(_id is not None)
@@ -181,7 +182,7 @@ class KernelClientCase(unittest.TestCase):
         client = KernelClientCase.client
         name = mapping_obj.get('name')
         # massaging mapping definition to add UUIDs from proper project schemas
-        ps_dict = {v:k for k,v in KernelClientCase.ps_ids.items()}
+        ps_dict = {v: k for k, v in KernelClientCase.ps_ids.items()}
         definition = mapping_obj['definition']
         definition['entities'] = ps_dict
         mapping_obj['definition'] = definition
@@ -196,13 +197,16 @@ class KernelClientCase(unittest.TestCase):
     def step5_submission(self):
         client = KernelClientCase.client
         mapping_id = KernelClientCase.mapping_id
+
         def ignore(obj):
             return False
+
         mapping = client.Resource.Mapping.get(mapping_id)
         submission = submission_obj
         endpoint = client.Submission.get(mapping.name)
         assert([i for i in client.Submission] is not []), "Should be iterable submissions"
-        assert(client.Submission[mapping.id] is not None), "Should be able to getattr from submissions collection"
+        assert(client.Submission[mapping.id] is not None), (
+            "Should be able to getattr from submissions collection")
         try:
             client.Submission["not_a real value"]
         except AttributeError:
@@ -211,10 +215,12 @@ class KernelClientCase(unittest.TestCase):
             self.fail("bad value should throw error")
         assert(len([1 for i in client.Submission.names()]) > 0)
         assert(len([1 for i in client.Submission.ids()]) > 0)
-        assert(endpoint is not None), "Could't get submissions endpoint for mapping id %s" % mapping.id
+        assert(endpoint is not None), (
+            "Could't get submissions endpoint for mapping id %s" % mapping.id)
         endpoint = client.Submission.get(mapping.id)
-        assert(endpoint is not None), "Could't get submissions endpoint for mapping name %s" % mapping.name
-        # submit the same data 100 times!
+        assert(endpoint is not None), (
+            "Could't get submissions endpoint for mapping name %s" % mapping.name)
+        # submit the same data 10 times!
         for x in range(10):
             res = endpoint.submit(submission)
         # make sure we made some entities
@@ -222,13 +228,12 @@ class KernelClientCase(unittest.TestCase):
         subs = endpoint.get(filter_func=ignore)
         assert(len([1 for i in subs]) == 0), "Filter didn't work"
         subs = endpoint.get(filter_func=None)
-        assert(len([1 for i in subs]) == 10), "Couldn't iterate over submission"
+        assert(len([1 for i in subs]) >= 10), "Couldn't iterate over submission"
         # Get a submission by id
         a_submission = next(endpoint.get())
         _id = a_submission.get("id")
         match = endpoint.get(id=_id)
         assert(match == a_submission)
-
 
     def step6_entities(self):
         client = KernelClientCase.client
@@ -238,6 +243,8 @@ class KernelClientCase(unittest.TestCase):
         assert(people.info() is not None), "Info should return basic information"
         try:
             x = people.missing_attribute
+            if x:
+                print(x)  # to appease the linter
         except AttributeError:
             pass
         else:
@@ -272,7 +279,7 @@ class KernelClientCase(unittest.TestCase):
         new_young_pop = sum([1 for person in young_people])
         assert(new_young_pop < young_pop)
         # test various patterns to access an entity
-        test_person  = next(people.get())
+        test_person = next(people.get())
         test_id = test_person.get('id')
         assert(test_person is not None), "Couldn't grab a person from the generator"
         # Entity
@@ -291,9 +298,12 @@ class KernelClientCase(unittest.TestCase):
         test_person = next(client.Entity.get("Person").get())
         other_person = client.Entity["Person"].get(id=test_person.get('id'))
         third_person = client.Entity.Person.get(id=test_person.get('id'))
-        assert(test_person == other_person == third_person), "These access methods should be the same"
+        assert(test_person == other_person == third_person), (
+            "These access methods should be the same")
         try:
             missing_person = client.Entity["MissingPerson"]
+            if missing_person:  # to appease the linter
+                pass
         except AttributeError as ae:
             pass
         else:
@@ -304,9 +314,16 @@ class KernelClientCase(unittest.TestCase):
         a_mapping_id = next(iter(client.Submission.get()))
         endpoint = client.Submission.get(a_mapping_id)
         a_submission = endpoint.get(id=personal_submission)
+        assert(a_submission is not None)
 
-
-        type_names = ["TestProject", "MyPerson", "Person", "MyHousehold", a_mapping_id, personal_submission]
+        type_names = [
+            "TestProject",
+            "MyPerson",
+            "Person",
+            "MyHousehold",
+            a_mapping_id,
+            personal_submission
+        ]
         ps = client.Resource.ProjectSchema
         for type_name in type_names:
             if type_name == type_names[0]:
@@ -325,9 +342,8 @@ class KernelClientCase(unittest.TestCase):
 
     def step7_generic_tests(self):
         client = KernelClientCase.client
-        bad_url = client.url_base +"/not_found"
-        assert(client.get(bad_url) == None)
-
+        bad_url = client.url_base + "/not_found"
+        assert(client.get(bad_url) is None)
 
     def step91_delete_mapping(self):
         client = KernelClientCase.client
@@ -335,11 +351,9 @@ class KernelClientCase(unittest.TestCase):
         mapping = client.Resource.Mapping.get(name)
         assert(mapping is not None)
         ok = mapping.delete()
-        assert(ok)
+        assert(ok.get('ok'))
         ok = mapping.delete()
-        assert(not ok)
-
-
+        assert(not ok.get('ok'))
 
     def step92_delete_project_schemas(self):
         client = KernelClientCase.client
@@ -348,9 +362,9 @@ class KernelClientCase(unittest.TestCase):
             schema = client.Resource.ProjectSchema.get(schema_id)
             assert(schema is not None), "Schema with id %s not found" % schema_id
             ok = schema.delete()
-            assert(ok)
+            assert(ok.get('ok'))
             ok = schema.delete()
-            assert(not ok)
+            assert(not ok.get('ok'))
 
     # deleting a schema kills associated project_schemas!
     def step93_delete_schemas(self):
@@ -360,9 +374,9 @@ class KernelClientCase(unittest.TestCase):
             schema = client.Resource.Schema.get(schema_id)
             assert(schema is not None), "Schema with id %s not found" % schema_id
             ok = schema.delete()
-            assert(ok)
+            assert(ok.get('ok'))
             ok = schema.delete()
-            assert(not ok)
+            assert(not ok.get('ok'))
 
     # deleting a project will delete all things directly referencing the project
     # including all project_schemas etc...
@@ -374,9 +388,9 @@ class KernelClientCase(unittest.TestCase):
             project_id = KernelClientCase.project_id
             project = client.Resource.Project.get(project_id)
             ok = project.delete()
-            assert(ok)
+            assert(ok.get('ok'))
             ok = project.delete()
-            assert(not ok)
+            assert(not ok.get('ok'))
 
 
 class ODKClientCase(unittest.TestCase):
@@ -386,8 +400,3 @@ class ODKClientCase(unittest.TestCase):
 
     def tearDown(self):
         pass
-
-'''
-if __name__ == "__main__":
-    unittest.main()
-'''
