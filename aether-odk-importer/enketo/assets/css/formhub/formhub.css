@@ -1618,12 +1618,12 @@ input[type=text].autocomplete {
   border-radius: 5px; }
 
 .leaflet-control-layers-toggle {
-  background-image: url(images/layers.png);
+  background-image: url('/static/images/layers.png');
   width: 36px;
   height: 36px; }
 
 .leaflet-retina .leaflet-control-layers-toggle {
-  background-image: url(images/layers-2x.png);
+  background-image: url('/static/images/layers-2x.png');
   background-size: 26px 26px; }
 
 .leaflet-touch .leaflet-control-layers-toggle {
@@ -1918,8 +1918,8 @@ table th[class*="col-"] {
 /*!
  * Timepicker
  *
- * Forked from https://github.com/jdewit/bootstrap-timepicker: 
- * 
+ * Forked from https://github.com/jdewit/bootstrap-timepicker:
+ *
  * Copyright 2013 Joris de Wit and timepicker contributors
  *
  * Contributors https://github.com/jdewit/bootstrap-timepicker/graphs/contributors
@@ -3443,7 +3443,7 @@ legend .btn-comment .icon, legend .btn-comment .enketo-geopoint-marker, legend .
  * Slider for Bootstrap
  *
  * Licensed under the Apache License v2.0
- * 
+ *
  * converted to SASS and extended by Martijn van de Rijdt @ Enketo LLC
  *
  */

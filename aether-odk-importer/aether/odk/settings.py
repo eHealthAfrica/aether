@@ -15,9 +15,18 @@ WSGI_APPLICATION = 'aether.odk.wsgi.application'
 CORS_URLS_REGEX = r'^/submission/.*$'
 
 INSTALLED_APPS += [
+    'webpack_loader',
     'aether.odk',
 ]
 
 MIGRATION_MODULES = {
     'odk': 'aether.odk.api.migrations',
+}
+
+# Javascript/CSS Files:
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'BUNDLE_DIR_NAME': '/',  # used in prod
+        'STATS_FILE': os.path.join(STATIC_ROOT, 'webpack-stats.json'),
+    },
 }

@@ -18,6 +18,12 @@ WORKDIR /code
 COPY ./conf/pip /code/conf/pip
 RUN pip install -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt
 
+
+COPY package.json /code/package.json
+RUN npm install --loglevel silent
+
+ENV PATH /code/node_modules/.bin:$PATH
+
 COPY ./ /code
 
 ################################################################################

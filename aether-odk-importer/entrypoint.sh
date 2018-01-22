@@ -146,7 +146,12 @@ case "$1" in
         setup_db
         setup_aws_requirements
 
+        # remove previous files
+        rm -r -f /code/enketo/assets/bundles/*
+        npm run webpack
+
         ./manage.py collectstatic --noinput
+        cp -r /code/enketo/assets/bundles/* /var/www/static/
         chmod -R 755 /var/www/static
 
         /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini

@@ -16,7 +16,7 @@ function getApps (hmr) {
     {
       name: 'styles',
       path: './assets/css/index.scss'
-    },
+    }
   ]
 
   apps.forEach(app => {
@@ -81,12 +81,16 @@ module.exports = function (custom) {
         jQuery: 'jquery'
       }),
 
+      // remove annoying error:
+      // Module build failed: Error: "extract-text-webpack-plugin" loader is used without the corresponding plugin
+      new ExtractTextPlugin('styles.css'),
+
       new BundleTracker({
         path: __dirname,
         filename: './assets/bundles/webpack-stats.json'
       }),
 
-      new webpack.EnvironmentPlugin(['AETHER_ORG_NAME', 'AETHER_MODULES']),
+      // new webpack.EnvironmentPlugin(['AETHER_ORG_NAME', 'AETHER_MODULES']),
       new webpack.DefinePlugin({
         'process.env': {
           'NODE_ENV': JSON.stringify(custom.production ? 'production' : 'development')

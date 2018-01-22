@@ -165,7 +165,7 @@ $input-button-border: 2px solid #aaaaaa;
         height: 34px;
 
         //padding-bottom: 4px;
-   
+
     }
 
     .btn[name="geodetect"] {
@@ -175,7 +175,7 @@ $input-button-border: 2px solid #aaaaaa;
         margin: 0 0 0 $separator-width;
 
         //width: $detect-width;
-   
+
     }
 
     .close-chain-btn {
@@ -419,7 +419,7 @@ $input-button-border: 2px solid #aaaaaa;
             display: block;
 
             //color: white;
-       
+
         }
     }
 
@@ -514,7 +514,7 @@ $input-button-border: 2px solid #aaaaaa;
             display: none;
 
             //padding: 0 25px 25px 25px;
-       
+
         }
     }
 
@@ -555,7 +555,7 @@ $input-button-border: 2px solid #aaaaaa;
             float: none;
 
             //margin: 5px 0 5px 20px;
-       
+
         }
 
         .btn-remove {
@@ -1003,13 +1003,13 @@ $input-button-border: 2px solid #aaaaaa;
 }
 
 .leaflet-control-layers-toggle {
-    background-image: url(images/layers.png);
+    background-image: url('/static/images/layers.png');
     width: 36px;
     height: 36px;
 }
 
 .leaflet-retina .leaflet-control-layers-toggle {
-    background-image: url(images/layers-2x.png);
+    background-image: url('/static/images/layers-2x.png');
     background-size: 26px 26px;
 }
 
