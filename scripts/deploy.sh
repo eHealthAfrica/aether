@@ -19,7 +19,6 @@ do
   for APP in "${APPS[@]}"
   do
     AETHER_APP="${PREFIX}-${APP}"
-    docker-compose build $APP
     # build nginx containers
     docker-compose -f docker-compose-nginx.yml build $APP-nginx 
     docker tag "${AETHER_APP}-nginx" "${IMAGE_REPO}/${AETHER_APP}-nginx-${ENV}:latest"
