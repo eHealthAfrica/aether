@@ -1,0 +1,75 @@
+{
+    "fields": [
+        {
+            "jsonldPredicate": "@id", 
+            "type": "string", 
+            "name": "id", 
+            "inherited_from": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel"
+        }, 
+        {
+            "type": [
+                "null", 
+                "string"
+            ], 
+            "name": "revision", 
+            "inherited_from": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel"
+        }, 
+        {
+            "jsonldPredicate": {
+                "_type": "@id", 
+                "_id": "http://ehealthafrica.org/#Section"
+            }, 
+            "type": [
+                "null", 
+                "string"
+            ], 
+            "name": "sectionID"
+        }, 
+        {
+            "jsonldPredicate": {
+                "_type": "@id", 
+                "_id": "http://ehealthafrica.org/#Location"
+            }, 
+            "type": [
+                "null", 
+                "string"
+            ], 
+            "name": "locationID"
+        }, 
+        {
+            "jsonldPredicate": {
+                "_type": "@id", 
+                "_id": "http://ehealthafrica.org/#Person"
+            }, 
+            "type": [
+                "null", 
+                "string"
+            ], 
+            "name": "headOfHouseHold"
+        }, 
+        {
+            "type": [
+                "null", 
+                "boolean"
+            ], 
+            "name": "hasBedNets"
+        }, 
+        {
+            "type": [
+                "null", 
+                "string"
+            ], 
+            "name": "buildingType"
+        }, 
+        {
+            "type": [
+                "null", 
+                "string"
+            ], 
+            "name": "roofType"
+        }
+    ], 
+    "type": "record", 
+    "name": "Household", 
+    "extends": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel"
+}
