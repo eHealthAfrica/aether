@@ -21,10 +21,12 @@ do
     AETHER_APP="${PREFIX}-${APP}"
     docker-compose build $APP
     # build nginx containers
-    docker build -t "${IMAGE_REPO}/${AETHER_APP}-nginx-${ENV}:latest" "aether-${APP}/nginx"
+    docker-compose -f docker-compose-nginx.yml build $APP-nginx 
+    docker tag $APP-nginx "${IMAGE_REPO}/${AETHER_APP}-nginx-${ENV}:latest"
     docker push "${IMAGE_REPO}/${AETHER_APP}-nginx-${ENV}:latest"
 
     echo "Building Docker image ${IMAGE_REPO}/${AETHER_APP}-${ENV}:${BRANCH}"
+    docker-compose build $APP
     docker tag aether-$APP "${IMAGE_REPO}/${AETHER_APP}-${ENV}:${BRANCH}"
     docker tag aether-$APP "${IMAGE_REPO}/${AETHER_APP}-${ENV}:${COMMIT}"
     echo "Pushing Docker image ${IMAGE_REPO}/${AETHER_APP}-${ENV}:${BRANCH}"
