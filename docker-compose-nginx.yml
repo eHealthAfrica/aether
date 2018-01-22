@@ -20,5 +20,5 @@ services:
 
   odk-nginx:
     image: aether-odk-nginx
-    build: ./aether-kernel/nginx
+    build: ./aether-odk-module/nginx
   
