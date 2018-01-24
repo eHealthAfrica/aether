@@ -92,7 +92,7 @@ services:
 
   odk-base:
     build: aether-odk-module
-    image: aether-odk-module
+    image: aether-odk
     stdin_open: true
     tty: true
     environment:
