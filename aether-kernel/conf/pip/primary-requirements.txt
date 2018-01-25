@@ -16,6 +16,7 @@ django-debug-toolbar
 django-filter
 django-reversion-compare
 django-ums-client
+django-model-utils
 djangorestframework
 djangorestframework-filters
 drf-dynamic-fields

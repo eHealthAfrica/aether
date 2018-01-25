@@ -4,6 +4,7 @@ from datetime import datetime
 from hashlib import md5
 from django.contrib.postgres.fields import JSONField
 from django.db import models
+from model_utils.models import TimeStampedModel
 
 from .utils import json_prettified
 
@@ -47,7 +48,7 @@ Data model schema:
 '''
 
 
-class Project(models.Model):
+class Project(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     revision = models.TextField()
     name = models.CharField(max_length=50)
@@ -64,7 +65,7 @@ class Project(models.Model):
         ordering = ['name', 'revision']
 
 
-class Mapping(models.Model):
+class Mapping(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50)
     definition = JSONField(blank=False, null=False)
@@ -84,7 +85,7 @@ class Mapping(models.Model):
         ordering = ['name', 'revision']
 
 
-class Submission(models.Model):
+class Submission(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     revision = models.TextField(default='1')
     map_revision = models.TextField(default='1')
@@ -114,7 +115,7 @@ def __attachment_path__(instance, filename):
     )
 
 
-class Attachment(models.Model):
+class Attachment(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     submission = models.ForeignKey(to=Submission, on_delete=models.CASCADE)
     submission_revision = models.TextField()
@@ -152,7 +153,7 @@ class Attachment(models.Model):
         ordering = ['submission', 'submission_revision', 'name']
 
 
-class Schema(models.Model):
+class Schema(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50)
     type = models.CharField(max_length=50)
@@ -172,7 +173,7 @@ class Schema(models.Model):
         ordering = ['name', 'revision']
 
 
-class ProjectSchema(models.Model):
+class ProjectSchema(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50)
     mandatory_fields = models.CharField(max_length=100)

@@ -408,6 +408,8 @@ def xform_submission(request):
                     lat, lng, altitude, accuracy = v.split()
                     # {"coordinates": [<<lat>>, <<lng>>], "type": "Point"}
                     obj[k] = Point((float(lat), float(lng)))
+            else:
+                obj[k] = None
 
     # first of all check if the connection is possible
     auth_header = get_auth_header()

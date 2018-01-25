@@ -1,0 +1,32 @@
+# -----------------------------------
+# Purely for building Nginx images
+# -----------------------------------
+
+version: "2"
+
+services:
+
+  # ---------------------------------
+  # Aether Kernel
+  # ---------------------------------
+
+  kernel-nginx:
+    image: aether-kernel-nginx
+    build: ./aether-kernel/nginx
+
+  # ---------------------------------
+  # ODK module
+  # ---------------------------------
+
+  odk-nginx:
+    image: aether-odk-nginx
+    build: ./aether-odk-module/nginx
+
+  # ---------------------------------
+  # CouchDB sync module
+  # ---------------------------------
+
+  couchdb-sync-nginx:
+    image: aether-couchdb-sync-nginx
+    build: ./aether-couchdb-sync-module/nginx
+  
