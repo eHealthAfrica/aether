@@ -1,217 +1,121 @@
+# ------------------------------------------------------------------------------
+# Config file for ALL containers:
+#
+#  * Aether Kernel
+#  * ODK Module
+#  * CouchDB Sync Module
+# ------------------------------------------------------------------------------
+
 version: "2"
 
 networks:
-    internal:
-        driver: bridge
+  internal:
+    driver: bridge
 
 services:
-    db:
-        image: postgres:9.5.2
-        networks:
-            - internal
 
-    couchdb:
-        image: couchdb:1.7.1
-        environment:
-            COUCHDB_USER: admin
-            COUCHDB_PASSWORD: secret
-        volumes:
-            # enable cors for mobile app in-browser development:
-            - ./aether-couchdb-sync/couchdb/conf/config.ini:/usr/local/etc/couchdb/local.ini
-        ports:
-            - "5984:5984"
-        networks:
-            - internal
+  # ---------------------------------
+  # Database containers
+  # ---------------------------------
 
-    redis:
-        image: redis:3.2-alpine
-        networks:
-            - internal
+  db:
+    extends:
+      file: docker-compose-base.yml
+      service: postgres-base
+    networks:
+      - internal
 
+  couchdb:
+    extends:
+      file: docker-compose-base.yml
+      service: couchdb-base
+    networks:
+      - internal
 
-    # ---------------------------------
-    # Aether Kernel container
-    # ---------------------------------
-
-    kernel:
-        stdin_open: true
-        tty: true
-        build: aether-kernel
-        image: aether-kernel
-        environment:
-            CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
-            CSRF_COOKIE_DOMAIN: .aether.local
-            DEBUG: "true"
-            HOSTNAME: kernel.aether.local
-
-            RDS_DB_NAME: aether
-            RDS_HOSTNAME: db
-            RDS_PASSWORD: ""
-            RDS_PORT: 5432
-            RDS_USERNAME: postgres
-
-            # media folder
-            MEDIA_ROOT: /tmp/
-
-            WEB_SERVER_PORT: 8000
-        volumes:
-            - ./aether-kernel:/code
-
-            # uncomment to speed up common module development and testing
-            # - ./aether-common/aether/common:/code/aether/common
-
-            # media folder
-            - ./tmp/kernel:/tmp
-        depends_on:
-            - db
-        ports:
-            - "8000:8000"
-        command: start_dev
-        networks:
-            internal:
-                aliases:
-                    - kernel.aether.local
+  redis:
+    extends:
+      file: docker-compose-base.yml
+      service: redis-base
+    networks:
+      - internal
 
 
-    # ---------------------------------
-    # ODK Adapter container
-    # ---------------------------------
+  # ---------------------------------
+  # Aether Kernel
+  # ---------------------------------
 
-    odk-importer:
-        build: aether-odk-importer
-        image: aether-odk-importer
-        environment:
-            CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
-            CSRF_COOKIE_DOMAIN: .aether.local
-            DEBUG: "true"
-            HOSTNAME: odk.aether.local
-
-            AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
-            AETHER_KERNEL_URL: http://kernel:8000
-            AETHER_KERNEL_URL_TEST: http://kernel-test:9000
-
-            RDS_DB_NAME: odk_importer
-            RDS_HOSTNAME: db
-            RDS_PASSWORD: ""
-            RDS_PORT: 5432
-            RDS_USERNAME: postgres
-
-            # media folder
-            MEDIA_ROOT: /tmp/
-
-            WEB_SERVER_PORT: 8443
-        volumes:
-            - ./aether-odk-importer:/code
-
-            # uncomment to speed up common module development and testing
-            # - ./aether-common/aether/common:/code/aether/common
-
-            # media folder
-            - ./tmp/odk:/tmp
-        depends_on:
-            - kernel
-            - db
-        ports:
-            - "8443:8443"
-        command: start_dev
-        networks:
-            internal:
-                aliases:
-                    - odk.aether.local
+  kernel:
+    extends:
+      file: docker-compose-base.yml
+      service: kernel-base
+    # uncomment to speed up common module development
+    # volumes:
+    #   - ./aether-common-module/aether/common:/code/aether/common
+    depends_on:
+      - db
+    networks:
+      internal:
+        aliases:
+          - kernel.aether.local
 
 
-    # ---------------------------------
-    # Mobile Sync containers
-    # ---------------------------------
+  # ---------------------------------
+  # ODK module
+  # ---------------------------------
 
-    couchdb-sync:
-        build: aether-couchdb-sync
-        image: aether-couchdb-sync
-        environment: &sync-environment
-            CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
-            CSRF_COOKIE_DOMAIN: .aether.local
-            DEBUG: "true"
-            HOSTNAME: sync.aether.local
-
-            COUCHDB_PASSWORD: secret
-            COUCHDB_URL: http://couchdb:5984
-            COUCHDB_USER: admin
-
-            AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
-            AETHER_KERNEL_URL: http://kernel:8000
-            AETHER_KERNEL_URL_TEST: http://kernel-test:9000
-
-            GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
-
-            RDS_DB_NAME: couchdb_sync
-            RDS_HOSTNAME: db
-            RDS_PASSWORD: ""
-            RDS_PORT: 5432
-            RDS_USERNAME: postgres
-
-            REDIS_DB: 0
-            REDIS_HOST: redis
-            REDIS_PASSWORD: ""
-            REDIS_PORT: 6379
-
-            # media folder
-            MEDIA_ROOT: /tmp/
-
-            WEB_SERVER_PORT: 8666
-        volumes: &sync-volumes
-            - ./aether-couchdb-sync:/code
-
-            # uncomment to speed up common module development and testing
-            # - ./aether-common/aether/common:/code/aether/common
-
-            # media folder
-            # - ./tmp/sync:/tmp
-        depends_on: &sync-dependencies
-            - kernel
-            - couchdb
-            - db
-            - redis
-        ports:
-            - "8666:8666"
-        command: start_dev
-        networks:
-        networks:
-            internal:
-                aliases:
-                    - sync.aether.local
-
-    couchdb-sync-rq:
-        image: aether-couchdb-sync
-        environment: *sync-environment
-        volumes: *sync-volumes
-        depends_on: *sync-dependencies
-        command: start_rq
-        networks:
-            - internal
+  odk:
+    extends:
+      file: docker-compose-base.yml
+      service: odk-base
+    # uncomment to speed up common module development
+    # volumes:
+    #   - ./aether-common-module/aether/common:/code/aether/common
+    depends_on:
+      - db
+      - kernel
+    networks:
+      internal:
+        aliases:
+          - odk.aether.local
 
 
-    # ---------------------------------
-    # NGINX container
-    # ---------------------------------
+  # ---------------------------------
+  # CouchDB Sync module
+  # ---------------------------------
 
-    nginx:
-        image: nginx:alpine
-        volumes:
-            # config file
-            - ./local-setup/nginx.conf.local:/etc/nginx/conf.d/default.conf
+  couchdb-sync:
+    extends:
+      file: docker-compose-base.yml
+      service: couchdb-sync-base
+    # uncomment to speed up common module development
+    # volumes:
+    #   - ./aether-common-module/aether/common:/code/aether/common
+    depends_on: &sync-dependencies
+      - couchdb
+      - db
+      - kernel
+      - redis
+    networks:
+      internal:
+        aliases:
+          - sync.aether.local
 
-            # aether favicon
-            - ./local-setup/aether.ico:/media/eather.ico
+  couchdb-sync-rq:
+    extends:
+      file: docker-compose-base.yml
+      service: couchdb-sync-rq-base
+    depends_on: *sync-dependencies
+    networks:
+      - internal
 
-            # media folders per container
-            - ./tmp/kernel:/media/kernel
-            - ./tmp/odk:/media/odk
-            # - ./tmp/sync:/media/sync
-        depends_on:
-            - kernel
-            - odk-importer
-            - couchdb-sync
-        ports:
-            - "80:80"
-        networks:
-            - internal
+
+  # ---------------------------------
+  # NGINX container
+  # ---------------------------------
+
+  nginx:
+    extends:
+      file: docker-compose-base.yml
+      service: nginx-base
+    networks:
+      - internal

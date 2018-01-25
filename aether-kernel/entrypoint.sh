@@ -52,10 +52,16 @@ setup_initial_data() {
     ./manage.py loaddata /code/conf/extras/initial.json
 }
 
+setup_prod() {
+  # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
+  ./manage.py setup_admin -p=$ADMIN_PASSWORD -t=$AETHER_KERNEL_TOKEN
+}
+
 setup_aws_requirements() {
     envsubst < /code/conf/aws_cli_setup.sh.tmpl > /code/conf/aws_cli_setup.sh
     chmod +x /code/conf/aws_cli_setup.sh
     /code/conf/aws_cli_setup.sh
+
     source ~/.bashrc
     envsubst < /code/conf/aws.sh.tmpl > /code/conf/aws.sh
     chmod +x /code/conf/aws.sh
@@ -133,9 +139,15 @@ case "$1" in
     ;;
 
     start )
-        setup_db
         setup_aws_requirements
+        source ~/.bashrc
+        setup_db
+        setup_prod
 
+        # media assets
+        chown aether: /media
+
+        # create static assets
         ./manage.py collectstatic --noinput
         chmod -R 755 /var/www/static
 

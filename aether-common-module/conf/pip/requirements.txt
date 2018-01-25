@@ -1,0 +1,16 @@
+################################################################################
+#                                                                              #
+#                           Requirements for testing                           #
+#                                                                              #
+################################################################################
+
+coverage
+django-cors-headers
+django
+djangorestframework
+djangorestframework-csv
+flake8
+flake8-quotes
+mock
+psycopg2
+requests

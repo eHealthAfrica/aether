@@ -21,6 +21,12 @@ class SubmissionFilter(filters.FilterSet):
         model = models.Submission
 
 
+class AttachmentFilter(filters.FilterSet):
+    class Meta:
+        exclude = ('attachment_file',)
+        model = models.Attachment
+
+
 class SchemaFilter(filters.FilterSet):
     class Meta:
         exclude = ('definition',)

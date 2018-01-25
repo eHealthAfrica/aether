@@ -6,13 +6,20 @@ function prepare_and_test_container() {
 
   echo "_____________________________________________ Starting $1 tasks"
   $DC_TEST build $container
-  $DC_TEST run $container setuplocaldb
+  $DC_TEST run   $container setuplocaldb
   if [[ $2 ]]
   then
     $DC_TEST run kernel-test manage loaddata $2
   fi
   $DC_TEST run $container test --noinput
   echo "_____________________________________________ $1 tasks done"
+}
+
+function prepare_container() {
+  echo "_________________________________________________ Preparing $1 container"
+  $DC_TEST build "$1"-test
+  $DC_TEST run "$1"-test setuplocaldb
+  echo "_________________________________________________ $1 ready!"
 }
 
 DC_TEST="docker-compose -f docker-compose-test.yml"
@@ -34,11 +41,11 @@ prepare_and_test_container kernel
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
 
-# test and start a clean ODK TEST container
-prepare_and_test_container odk-importer aether/kernel/api/tests/fixtures/project_empty_schema.json
+# test a clean CLIENT TEST container
+prepare_and_test_container client
 
-echo "_____________________________________________ Starting odk-importer"
-$DC_TEST up -d odk-importer-test
+# test and start a clean ODK TEST container
+prepare_and_test_container odk aether/kernel/api/tests/fixtures/project_empty_schema.json
 
 # test a clean SYNC TEST container
 prepare_and_test_container couchdb-sync aether/kernel/api/tests/fixtures/project.json

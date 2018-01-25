@@ -9,7 +9,7 @@ IMAGE_REPO="387526361725.dkr.ecr.eu-west-1.amazonaws.com"
 if [ "${BRANCH}" == "develop" ]; then
   export ENV="dev"
   export PREFIX="aether"
-  export APPS=( kernel odk-importer )
+  export APPS=( kernel odk )
   export CLUSTER_NAME="ehealth-africa"
 fi
 
@@ -19,12 +19,13 @@ do
   for APP in "${APPS[@]}"
   do
     AETHER_APP="${PREFIX}-${APP}"
-    docker-compose build $APP
     # build nginx containers
-    docker build -t "${IMAGE_REPO}/${AETHER_APP}-nginx-${ENV}:latest" "aether-${APP}/nginx"
+    docker-compose -f docker-compose-nginx.yml build $APP-nginx 
+    docker tag "${AETHER_APP}-nginx" "${IMAGE_REPO}/${AETHER_APP}-nginx-${ENV}:latest"
     docker push "${IMAGE_REPO}/${AETHER_APP}-nginx-${ENV}:latest"
 
     echo "Building Docker image ${IMAGE_REPO}/${AETHER_APP}-${ENV}:${BRANCH}"
+    docker-compose build $APP
     docker tag aether-$APP "${IMAGE_REPO}/${AETHER_APP}-${ENV}:${BRANCH}"
     docker tag aether-$APP "${IMAGE_REPO}/${AETHER_APP}-${ENV}:${COMMIT}"
     echo "Pushing Docker image ${IMAGE_REPO}/${AETHER_APP}-${ENV}:${BRANCH}"

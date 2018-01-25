@@ -9,17 +9,17 @@
 ################################################################################
 
 coverage
-django<2
+django
 django-cas-ng
 django-cors-headers
 django-debug-toolbar
 django-filter
 django-reversion-compare
 django-ums-client
+django-model-utils
 djangorestframework
 djangorestframework-filters
 drf-dynamic-fields
-drf-extensions
 drf-openapi
 flake8
 flake8-quotes

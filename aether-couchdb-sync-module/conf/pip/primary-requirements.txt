@@ -1,0 +1,35 @@
+################################################################################
+#                                                                              #
+#                             Primary requirements                             #
+#                                                                              #
+#                                 CHANGE ME !!!                                #
+#                                                                              #
+# Update me and then run 'docker-compose run couchdb-sync pip_freeze'          #
+#                                                                              #
+################################################################################
+
+coverage
+django
+django-cas-ng
+django-cors-headers
+django-debug-toolbar
+django-rq
+django-ums-client
+djangorestframework
+flake8
+flake8-quotes
+mock
+oauth2client
+psycopg2
+raven
+redis
+requests
+rq
+rq-scheduler
+uwsgi
+
+# this is used for pulling down secrets from S3
+awscli
+
+# Aether common module
+aether.common
