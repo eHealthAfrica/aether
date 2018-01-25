@@ -24,6 +24,7 @@ class MergeOptions(IntEnum):
     Left = 1,
     Right = 2
 
+
 def __prettified__(response, lexer):
     # Truncate the data. Alter as needed
     response = response[:5000]
@@ -481,6 +482,7 @@ def extract_create_entities(submission):
                 submission=submission
             )
             entity.save()
+
 
 def merge_objects(source, target, direction):
     # Merge 2 objects, Left > (Target to Source) Target takes primacy, Right

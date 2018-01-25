@@ -15,6 +15,7 @@ MERGE_CHOICES = (
     (2, 'Source to Target (Right)')
 )
 
+
 class FilteredHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
     '''
     This custom field does essentially the same thing as
@@ -268,7 +269,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
                 if 'merge' in validated_data:
                     merge_value = validated_data.pop('merge')
                     if merge_value:
-                        try:          
+                        try:
                             existing_entity = models.Entity.objects.get(pk=update_id_value)
                         except Exception as e:
                             raise serializers.ValidationError({
