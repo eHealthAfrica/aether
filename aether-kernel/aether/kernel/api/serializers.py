@@ -15,6 +15,8 @@ MERGE_CHOICES = (
     (utils.MergeOptions.perfer_existing.value, 'Prefer Existing (Source to Target)')
 )
 
+M_OPTIONS = utils.MergeOptions
+
 
 class FilteredHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
     '''
@@ -279,9 +281,10 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
                         if payload is None:
                             payload = {}
                         merge_value = validated_data.pop('merge')
-                        if merge_value == utils.MergeOptions.perfer_existing.value
-                        or merge_value == utils.MergeOptions.perfer_new.value:
-                            entity.payload = utils.merge_objects(payload, entity.payload, merge_value)                
+                        if (merge_value == M_OPTIONS.perfer_existing.value
+                                or merge_value == M_OPTIONS.perfer_new.value):
+                            entity.payload = \
+                                utils.merge_objects(payload, entity.payload, merge_value)
             entity.payload['_id'] = str(entity.id)
             entity.save()
             return entity
