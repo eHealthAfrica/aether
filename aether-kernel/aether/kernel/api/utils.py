@@ -19,6 +19,7 @@ from . import models
 class EntityExtractionError(Exception):
     pass
 
+
 class MergeOptions(IntEnum):
     No = 0
     Left = 1,
