@@ -92,7 +92,7 @@ services:
 
   odk-base:
     build: aether-odk-module
-    image: aether-odk-module
+    image: aether-odk
     stdin_open: true
     tty: true
     environment:
@@ -127,7 +127,7 @@ services:
 
   couchdb-sync-base:
     build: aether-couchdb-sync-module
-    image: aether-couchdb-sync-module
+    image: aether-couchdb-sync
     stdin_open: true
     tty: true
     environment: &sync-environment
@@ -167,7 +167,7 @@ services:
     command: start_dev
 
   couchdb-sync-rq-base:
-    image: aether-couchdb-sync-module
+    image: aether-couchdb-sync
     environment: *sync-environment
     volumes: *sync-volumes
     command: start_rq

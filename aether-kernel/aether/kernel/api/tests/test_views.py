@@ -1,5 +1,6 @@
 import json
 import datetime
+import dateutil.parser
 
 from django.contrib.auth import get_user_model
 from django.test import TransactionTestCase
@@ -69,6 +70,7 @@ class ViewsTest(TransactionTestCase):
         )
 
     def tearDown(self):
+        self.project.delete()
         self.client.logout()
 
     # TEST CREATE:
@@ -237,4 +239,25 @@ class ViewsTest(TransactionTestCase):
         self.helper_create_object(
             view_name='submission-list',
             data=submission,
+        )
+
+    def test_mapping_stats_view(self):
+        for _ in range(10):
+            self.helper_create_object('submission-list', {
+                'revision': 'Sample submission revision',
+                'map_revision': 'Sample map revision',
+                'date': str(datetime.datetime.now()),
+                'payload': EXAMPLE_SOURCE_DATA,
+                'mapping': str(self.mapping.pk),
+            })
+        url = reverse('mapping_stats-detail', kwargs={'pk': self.mapping.pk})
+        response = self.client.get(url, format='json')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        json = response.json()
+        self.assertEquals(json['id'], str(self.mapping.pk))
+        submission_count = models.Submission.objects.count()
+        self.assertEquals(json['submission_count'], submission_count)
+        self.assertLessEqual(
+            dateutil.parser.parse(json['first_submission']),
+            dateutil.parser.parse(json['last_submission']),
         )

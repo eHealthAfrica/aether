@@ -281,3 +281,16 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     class Meta:
         model = models.Entity
         fields = '__all__'
+
+
+class MappingStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+    first_submission = serializers.DateTimeField()
+    last_submission = serializers.DateTimeField()
+    submission_count = serializers.IntegerField()
+
+    class Meta:
+        model = models.Mapping
+        fields = (
+            'id', 'name', 'definition', 'created',
+            'first_submission', 'last_submission', 'submission_count',
+        )

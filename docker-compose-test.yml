@@ -101,3 +101,17 @@ services:
       - redis-test
     ports:
       - "9666:9666"
+
+  # ---------------------------------
+  # Aether Client container
+  # ---------------------------------
+  client-test:
+    build: aether-client
+    image: aether/client
+
+    volumes:
+      - ./aether-client:/code
+
+    depends_on:
+      - db-test
+      - kernel-test
