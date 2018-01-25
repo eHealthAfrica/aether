@@ -266,10 +266,8 @@ def get_salad(graph):
     }
     return body
 
-
 def pprint(obj):
     print(json.dumps(obj, indent=2))
-
 
 def simple_types(name=None):
     types = Property._flat_types
@@ -278,19 +276,22 @@ def simple_types(name=None):
     else:
         return types
 
-def load(path):
+def load_file(path)
     with open(path) as f:
         spec = json.load(f)
-        graph = []
-        properties = OrderedDict()
-        records = OrderedDict()
-        for name, property in spec['properties'].items():
-            prop = Property(property)
-            properties[prop.name] = prop
+        return load(spec)
 
-        for name, type in spec['types'].items():
-            record = Record(properties, type)
-            records[record.name] = record
+def load(obj):
+    graph = []
+    properties = OrderedDict()
+    records = OrderedDict()
+    for name, property in spec['properties'].items():
+        prop = Property(property)
+        properties[prop.name] = prop
+
+    for name, type in spec['types'].items():
+        record = Record(properties, type)
+        records[record.name] = record
 
     return properties, records
 

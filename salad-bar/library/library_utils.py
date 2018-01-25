@@ -2,6 +2,9 @@ import os
 import csv
 import json
 
+HERE = (os.path.dirname(os.path.realpath(__file__)))
+
+
 class GenericParser(object):
 
     def __init__(self, headers):
@@ -56,36 +59,61 @@ class TypeParser(GenericParser):
         ]
 
 
+def find_libraries():
+    libraries = []
+    settings_name = 'scrape.json'
+    for root, subFolders, files in os.walk(HERE+"/src"):
+        if settings_name in files:
+            with open("%s/%s" % (root, settings_name)) as f:
+                settings = json.load(f)
+                settings['path'] = root
+                libraries.append(settings)
+            if os.path.isfile("%s/%s" % (root, settings.get("output", None))):
+                settings['is_built'] = True
+            else:
+                settings['is_built'] = False
+    return libraries
+
 def pprint(obj):
     print(json.dumps(obj, indent=2))
 
-
-def main():
+def build_library(lib):
     schema = {}
-    here = os.path.dirname(__file__)
-    version = "3.3"
-    with open("%s/%s/all-layers-types.csv" % (here, version)) as f:
+    base_path = lib.get('path')
+    types_file = lib.get('types')
+    props_file = lib.get('properties')
+    out_file = lib.get('output')
+    # Parse Types
+    with open("%s/%s" % (base_path, types_file)) as f:
         types = {}
         reader = csv.DictReader(f)
         parser = TypeParser(reader.fieldnames)
         for row in reader:
             _id, line = parser.get(row)
             types[_id] = line
-
         schema['types'] = types
-
-    with open("%s/%s/all-layers-properties.csv" % (here, version)) as f:
-        types = {}
+    # Parse Properties
+    with open("%s/%s" % (base_path, props_file)) as f:
+        props = {}
         reader = csv.DictReader(f)
         parser = PropertyParser(reader.fieldnames)
         for row in reader:
             _id, line = parser.get(row)
-            types[_id] = line
-
-        schema['properties'] = types
-
-    with open("%s/../all_csv.json" % here, "w") as f:
+            props[_id] = line
+        schema['properties'] = props
+    # Write to file
+    with open("%s/%s" % (base_path, out_file), "w") as f:
         json.dump(schema, f, indent=2, sort_keys=True)
 
-if __name__ == "__main__":
-    main()
+def get_library(name):
+    libs = find_libraries()
+    names = [lib.get('name', None) for lib in libs]
+    if not name in names:
+        raise KeyError("Library named %s not found in available: %s" % (name, (names,)))
+    lib = [lib for lib in libs if lib.get("name") == name][0]
+    if not lib.get("is_built"):
+        build_library(lib)
+    path = lib.get('path')
+    res = lib.get('output')
+    with open("%s/%s" % (path, res)) as f:
+        return json.load(f)
