@@ -1,6 +1,9 @@
 {
     "name":"schema.org-v3.3",
-    "parser_type": "schema.org",
+    "namespaces": {
+        "sdo": "http://schema.org/"
+    },
+    "parser_type": "schemadotorg",
     "description":"Schema.org Schema Library. Version 3.3",
     "output":"library.json",
     "properties":"all-layers-properties.csv",

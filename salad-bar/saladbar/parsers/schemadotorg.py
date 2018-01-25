@@ -314,7 +314,7 @@ def write_salad(path, properties, records, document_model=None):
     output = get_salad(graph)
     write_json(path, output)
 
-def resolve_property_graph(name, records, properties, depth, max_depth, captured):
+def resolve_property_graph(name, records, properties, depth, max_depth, captured, selected_fields=None):
     if depth > max_depth:
         return captured
     current_depth = depth +1
@@ -324,29 +324,33 @@ def resolve_property_graph(name, records, properties, depth, max_depth, captured
     for i in sorted(prop.records.keys()):
         if not i in captured.get("records"):
             captured["records"].append(i)
-            captured = resolve_record_graph(i, records, properties, current_depth, max_depth, captured)
+            captured = resolve_record_graph(i, records, properties, current_depth, max_depth, captured, selected_fields)
 
     return captured
 
-def resolve_record_graph(name, records, properties, depth, max_depth, captured):
+def resolve_record_graph(name, records, properties, depth, max_depth, captured, selected_fields=None):
     current_depth = depth
     if not name in records.keys():
         return captured
     record = records[name]
     for i in sorted(record.topics):
+        print ("%s - %s - %s" % (name, i, selected_fields.get(name, [])))
+        if selected_fields and  i not in selected_fields.get(name, []):
+            print("skipping %s-%s" % (name, i))
+            continue
         if not i in captured.get("properties"):
             captured['properties'].append(i)
-            captured = resolve_property_graph(i, records, properties, current_depth, max_depth, captured)
+            captured = resolve_property_graph(i, records, properties, current_depth, max_depth, captured, selected_fields)
 
     return captured
 
-def make_graph(requirements, properties, records, max_property_depth=3):
+def make_graph(requirements, properties, records, max_property_depth=3, selected_fields=None):
     captured = {
         "records": [],
         "properties" : []
     }
     for name in sorted(requirements):
-        captured = resolve_record_graph(name, records, properties, 0, max_property_depth, captured)
+        captured = resolve_record_graph(name, records, properties, 0, max_property_depth, captured, selected_fields)
 
     properties = {name: properties[name] for name in captured["properties"]}
     records = {name: records[name] for name in captured["records"]}
@@ -358,7 +362,7 @@ def make_graph(requirements, properties, records, max_property_depth=3):
         ))
     return properties, records
 
-def make_dependency_graph(graphed_records, records):
+def make_dependency_graph(graphed_records, records, limited_properties={}):
     graph = {}
     for key in graphed_records:
         record = records[key]
@@ -367,26 +371,32 @@ def make_dependency_graph(graphed_records, records):
         parents = record.relationships.get("parents")
         children = record.relationships.get("children")
         graph[record.name] = {}
-        all_properties = [i for i in sorted(record.topics)]
+        restricted = set([i for val in limited_properties.values() for i in val])
+        if restricted:
+            all_properties = [i for i in sorted(record.topics) if i in restricted]
+        else:
+            all_properties = [i for i in sorted(record.topics)]
         #graph[record.name]['all_properties'] = all_properties
         if parents:
             lineage = get_lineage(key, "parents", records)
             graph[record.name]['parents'] = lineage
-            parental_properties = get_parental_properties(all_properties, lineage, records)
+            parental_properties = get_parental_properties(all_properties, lineage, records, limited_properties)
             graph[record.name]['properties'] = parental_properties
         else:
             graph[record.name]['properties'] = all_properties
 
     return graph
 
-def get_parental_properties(properties, lineage, all_records):
+def get_parental_properties(properties, lineage, all_records, limited_properties={}):
     output = {}
+    restricted = set([i for val in limited_properties.values() for i in val])
+    print(restricted)
     props = set(properties)
     for x, parent in enumerate(flatten(lineage[::-1])):
         if output.get(parent):
             continue #already got this one...
         parental_fields = sorted(all_records.get(parent).topics)
-        unique_fields = sorted([i for i in props if i in parental_fields])
+        unique_fields = sorted([i for i in props if i in parental_fields if i in restricted])
         output[parent] = unique_fields
         props = props.difference(unique_fields)
     return output

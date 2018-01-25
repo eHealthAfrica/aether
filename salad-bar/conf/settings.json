@@ -1,5 +1,15 @@
 {
-    "libraries":[
-        "schema.org-v3.3"
-    ]
+    "$base": "http://ehealthafrica.org/",
+    "namespaces":{
+        "eha": "http://ehealthafrica.org/"
+    },
+    "basetype_name": "BaseModel",
+    "libraries":{
+        "schema.org-v3.3":{
+            "requirements":[
+                "http://schema.org/Person"
+            ],
+            "depth": 0
+        }
+    }
 }

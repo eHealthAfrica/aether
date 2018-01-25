@@ -115,5 +115,10 @@ def get_library(name):
         build_library(lib)
     path = lib.get('path')
     res = lib.get('output')
+    data = None
     with open("%s/%s" % (path, res)) as f:
-        return json.load(f)
+        data = json.load(f)
+    return {
+        "info": lib,
+        "data" : data
+    }
