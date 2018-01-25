@@ -7,7 +7,7 @@ import jsonpath_ng
 from jsonpath_ng import parse
 
 from django.utils.safestring import mark_safe
-from enum import IntEnum
+from enum import Enum
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import JsonLexer
@@ -20,10 +20,10 @@ class EntityExtractionError(Exception):
     pass
 
 
-class MergeOptions(IntEnum):
-    No = 0
-    Left = 1,
-    Right = 2
+class MergeOptions(Enum):
+    overwrite = 'overwrite'
+    perfer_new = 'prefer_new'
+    perfer_existing = 'prefer_existing'
 
 
 def __prettified__(response, lexer):
@@ -486,13 +486,17 @@ def extract_create_entities(submission):
 
 
 def merge_objects(source, target, direction):
-    # Merge 2 objects, Left > (Target to Source) Target takes primacy, Right
-    # > (Source to Target) Source takes primacy
-    # Default merge operation is Left
+    # Merge 2 objects
+    #
+    # Default merge operation is prefer_new
     # Params <source='Original object'>, <target='New object'>,
-    # <direction='Direction of merge, determins primacy: use utils.MergeOptions.[Left,Right]'>
+    # <direction='Direction of merge, determins primacy:
+    # use utils.MergeOptions.[prefer_new, prefer_existing]'>
+    # # direction Options:
+    # prefer_new > (Target to Source) Target takes primacy,
+    # prefer_existing > (Source to Target) Source takes primacy
     result = {}
-    if direction and direction == MergeOptions.Right.value:
+    if direction and direction == MergeOptions.perfer_existing.value:
         for key in source:
             target[key] = source[key]
         result = target

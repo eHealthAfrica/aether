@@ -10,9 +10,9 @@ from . import utils
 import urllib
 
 MERGE_CHOICES = (
-    (0, 'Do not merge (Overwrite)'),
-    (1, 'Target to Source (Left)'),
-    (2, 'Source to Target (Right)')
+    (utils.MergeOptions.overwrite.value, 'Overwrite (Do not merge)'),
+    (utils.MergeOptions.perfer_new.value, 'Prefer New (Target to Source)'),
+    (utils.MergeOptions.perfer_existing.value, 'Prefer Existing (Source to Target)')
 )
 
 
@@ -250,25 +250,24 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='projectschema-detail',
     )
     update_id = serializers.CharField(allow_blank=True, default=None)
-    merge = serializers.ChoiceField(MERGE_CHOICES, default=0)
+    merge = serializers.ChoiceField(MERGE_CHOICES, default=utils.MergeOptions.overwrite.value)
 
     def create(self, validated_data):
-        entity = models.Entity(
-            payload=validated_data.pop('payload'),
-            status=validated_data.pop('status'),
-            projectschema=validated_data.pop('projectschema'),
-        )
-        if 'submission' in validated_data:
-            entity.submission = validated_data.pop('submission')
-        if 'id' in validated_data:
-            entity.id = validated_data.pop('id')
-            entity.payload['_id'] = str(entity.id)
-        if 'update_id' in validated_data:
-            update_id_value = validated_data.pop('update_id')
-            if update_id_value:
-                if 'merge' in validated_data:
-                    merge_value = validated_data.pop('merge')
-                    if merge_value:
+        try:
+            entity = models.Entity(
+                payload=validated_data.pop('payload'),
+                status=validated_data.pop('status'),
+                projectschema=validated_data.pop('projectschema'),
+            )
+            if 'submission' in validated_data:
+                entity.submission = validated_data.pop('submission')
+            if 'id' in validated_data:
+                entity.id = validated_data.pop('id')
+                entity.payload['_id'] = str(entity.id)
+            if 'update_id' in validated_data:
+                update_id_value = validated_data.pop('update_id')
+                if update_id_value:
+                    if 'merge' in validated_data:
                         try:
                             existing_entity = models.Entity.objects.get(pk=update_id_value)
                         except Exception as e:
@@ -276,13 +275,19 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
                                 'description': str(e)
                             })
                         payload = existing_entity.payload
+                        entity.id = update_id_value
                         if payload is None:
                             payload = {}
-                        entity.id = update_id_value
-                        entity.payload = utils.merge_objects(payload, entity.payload, merge_value)
-        entity.payload['_id'] = str(entity.id)
-        entity.save()
-        return entity
+                        merge_value = validated_data.pop('merge')
+                        if merge_value == utils.MergeOptions.perfer_existing.value or merge_value == utils.MergeOptions.perfer_new.value:
+                            entity.payload = utils.merge_objects(payload, entity.payload, merge_value)                            
+            entity.payload['_id'] = str(entity.id)
+            entity.save()
+            return entity
+        except Exception as e:
+            raise serializers.ValidationError({
+                'description': 'Submission validation failed'
+            })
 
     class Meta:
         model = models.Entity
