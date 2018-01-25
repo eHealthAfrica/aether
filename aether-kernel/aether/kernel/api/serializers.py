@@ -268,7 +268,12 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
                 if 'merge' in validated_data:
                     merge_value = validated_data.pop('merge')
                     if merge_value:
-                        existing_entity = models.Entity.objects.get(pk=update_id_value)
+                        try:          
+                            existing_entity = models.Entity.objects.get(pk=update_id_value)
+                        except Exception as e:
+                            raise serializers.ValidationError({
+                                'description': str(e)
+                            })
                         payload = existing_entity.payload
                         if payload is None:
                             payload = {}
