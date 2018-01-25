@@ -9,6 +9,11 @@ from . import utils
 
 import urllib
 
+MERGE_CHOICES = (
+    (0, 'Do not merge (Overwrite)'),
+    (1, 'Target to Source (Left)'),
+    (2, 'Source to Target (Right)')
+)
 
 class FilteredHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
     '''
@@ -243,6 +248,8 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         source='projectschema',
         view_name='projectschema-detail',
     )
+    update_id = serializers.CharField(allow_blank=True, default=None)
+    merge = serializers.ChoiceField(MERGE_CHOICES, default=0)
 
     def create(self, validated_data):
         entity = models.Entity(
@@ -254,6 +261,19 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
             entity.submission = validated_data.pop('submission')
         if 'id' in validated_data:
             entity.id = validated_data.pop('id')
+            entity.payload['_id'] = str(entity.id)
+        if 'update_id' in validated_data:
+            update_id_value = validated_data.pop('update_id')
+            if update_id_value:
+                if 'merge' in validated_data:
+                    merge_value = validated_data.pop('merge')
+                    if merge_value:
+                        existing_entity = models.Entity.objects.get(pk=update_id_value)
+                        payload = existing_entity.payload
+                        if payload is None:
+                            payload = {}
+                        entity.id = update_id_value
+                        entity.payload = utils.merge_objects(payload, entity.payload, merge_value)
         entity.payload['_id'] = str(entity.id)
         entity.save()
         return entity

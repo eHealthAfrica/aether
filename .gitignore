@@ -128,3 +128,6 @@ terraform.tfstate.backup
 
 # Webpack build files
 **/assets/bundles/
+
+# Visual Studio files
+.vs
