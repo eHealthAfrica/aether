@@ -165,7 +165,7 @@ class PaginationTests(TestCase):
                 b'3,6,,', EOF,
                 b'4,7,8,9', EOF,
             ]),
-            'filters columns with the csv header and parse header labels'
+            'parse header labels'
         )
 
     def test_json_with_csv_headers_and_labels(self):
