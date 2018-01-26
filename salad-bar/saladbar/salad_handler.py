@@ -73,9 +73,6 @@ class SaladHandler(object):
             if name in deps:
                 reqs = depends.get(name)
                 all_props = [i for j in reqs.get('properties').values() for i in j] # unpack nested values
-                # print(name)
-                # pprint(all_props)
-                # pprint([i in avsc_dict.keys() for i in all_props])
                 avro_item =  [avsc_dict.get(i) for i in all_props if i in avsc_dict.keys()]
                 avro_item.append(avsc_dict.get(name))
                 out[name] = avro_item

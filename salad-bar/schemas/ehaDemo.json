@@ -1,26 +1,26 @@
 {
   "$namespaces": {
     "eha": "http://demo.eha.org/"
-  },
-  "$base": "http://demo.eha.org",
+  }, 
   "$graph": [
     {
       "$import": "./2018-01-30-eha.demo.json"
-    },
+    }, 
     {
       "fields": [
         {
-          "jsonldPredicate": "@id",
-          "type": "string",
+          "jsonldPredicate": "@id", 
+          "type": "string", 
           "name": "id"
-        },
+        }, 
         {
-          "type": "string",
+          "type": "string", 
           "name": "rev"
         }
-      ],
-      "type": "record",
+      ], 
+      "type": "record", 
       "name": "http://demo.eha.org/BaseModel"
     }
-  ]
+  ], 
+  "$base": "http://demo.eha.org"
 }

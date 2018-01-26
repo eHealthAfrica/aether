@@ -2,10 +2,9 @@
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 
-[dev-packages]
-"-e ../aether-client" = "*"
-
 [packages]
 requests = "*"
-avro-python3 = "*"
 schema-salad = "*"
+
+[dev-packages]
+"-e ../aether-client" = "*"

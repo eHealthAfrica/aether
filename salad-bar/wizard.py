@@ -1,7 +1,7 @@
 import json
 import pkgutil
 
-from aether.client import KernelClient
+#from aether.client import KernelClient
 
 from library import library_utils
 import saladbar.parsers as Parsers
@@ -89,6 +89,9 @@ def main():
     salad_handler = salad.SaladHandler(project_file)
     avsc_dict = salad_handler.get_avro(all_depends)
     for k,v in avsc_dict.items():
+        filename = "%s%s.avsc" % (SCHEMAS, k.split(".org/")[1])
+        with open(filename, "w") as f:
+            json.dump(v, f, indent=2)
         print("name: " +k)
         pprint(all_depends.get(k))
         pprint(v)
