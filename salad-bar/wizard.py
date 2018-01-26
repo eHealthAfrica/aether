@@ -41,10 +41,10 @@ def load_libraries(settings):
         depth = lib_req.get("depth", 0)
         props, types = parser.make_graph(requests, all_props, all_types, depth)
         depends = parser.make_dependency_graph(types, all_types)
-        graph = parser.get_salad_graph(props, types, base_type)
         schema_file = lib_req.get("schema_file")
         graph_path = "%s%s" % (SCHEMAS, schema_file)
-        parser.write_salad(graph_path, base, namespaces, props, types, base_type)
+        graph = parser.write_salad(graph_path, base, namespaces, props, types, base_type)
+
         libraries[lib_name] = {
             "depends": depends,
             "graph": graph,
@@ -63,7 +63,7 @@ def make_base_salad_doc(imports, namespaces, project=None, base_type=None):
     with open("%s/base_model.json" % RES) as f:
         base_doc = json.load(f)
     base_doc['name'] = base_type
-    graph = [{"import": i} for i in imports]
+    graph = [{"$import": i} for i in imports]
     graph.append(base_doc)
     doc['$graph'] = graph
     project_file = "%s%s.json" % (SCHEMAS, project)
@@ -81,11 +81,19 @@ def main():
         imports.append(rel_path)
         for k,v in lib.get('namespaces', {}).items():
             namespaces[k] = v
+    all_depends = {k : v for key, lib in libraries.items() for k,v in lib.get('depends', {}).items()}
     project = settings.get("project")
     base_type = "%s%s" % (settings.get("$base"), settings.get("basetype_name"))
     make_base_salad_doc(imports, namespaces, project, base_type)
     project_file = "%s%s.json" % (SCHEMAS, project)
-    salad.SaladHandler(project_file)
+    salad_handler = salad.SaladHandler(project_file)
+    avsc_dict = salad_handler.get_avro(all_depends)
+    for k,v in avsc_dict.items():
+        print("name: " +k)
+        pprint(all_depends.get(k))
+        pprint(v)
+
+
 
 
 

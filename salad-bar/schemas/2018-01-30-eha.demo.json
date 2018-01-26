@@ -2,26 +2,9 @@
   "$namespaces": {
     "eha": "http://demo.eha.org/"
   },
+  "$base": "http://demo.eha.org/",
   "$graph": [
     {
-      "type": "record",
-      "fields": [
-        {
-          "type": [
-            "string?",
-            "string[]?"
-          ],
-          "jsonldPredicate": {
-            "_id": "http://demo.eha.org/GeoLocation",
-            "_type": "@id"
-          },
-          "name": "GeoLocation-id"
-        }
-      ],
-      "name": "http://demo.eha.org/location"
-    },
-    {
-      "type": "record",
       "fields": [
         {
           "type": [
@@ -37,16 +20,16 @@
             "string[]?"
           ],
           "jsonldPredicate": {
-            "_id": "http://demo.eha.org/Place",
-            "_type": "@id"
+            "_type": "@id",
+            "_id": "http://demo.eha.org/Place"
           },
           "name": "Place-id"
         }
       ],
+      "type": "record",
       "name": "http://demo.eha.org/home"
     },
     {
-      "type": "record",
       "fields": [
         {
           "type": [
@@ -54,16 +37,16 @@
             "string[]?"
           ],
           "jsonldPredicate": {
-            "_id": "http://demo.eha.org/Person",
-            "_type": "@id"
+            "_type": "@id",
+            "_id": "http://demo.eha.org/Person"
           },
           "name": "Person-id"
         }
       ],
+      "type": "record",
       "name": "http://demo.eha.org/children"
     },
     {
-      "type": "record",
       "fields": [
         {
           "type": [
@@ -71,207 +54,215 @@
             "string[]?"
           ],
           "jsonldPredicate": {
-            "_id": "http://demo.eha.org/Person",
-            "_type": "@id"
+            "_type": "@id",
+            "_id": "http://demo.eha.org/GeoLocation"
+          },
+          "name": "GeoLocation-id"
+        }
+      ],
+      "type": "record",
+      "name": "http://demo.eha.org/location"
+    },
+    {
+      "fields": [
+        {
+          "type": [
+            "string?",
+            "string[]?"
+          ],
+          "jsonldPredicate": {
+            "_type": "@id",
+            "_id": "http://demo.eha.org/GeoLocation"
+          },
+          "name": "GeoLocation-id"
+        }
+      ],
+      "type": "record",
+      "name": "http://demo.eha.org/centralPoint"
+    },
+    {
+      "fields": [
+        {
+          "type": [
+            "string?",
+            "string[]?"
+          ],
+          "jsonldPredicate": {
+            "_type": "@id",
+            "_id": "http://demo.eha.org/GeoLocation"
+          },
+          "name": "GeoLocation-id"
+        }
+      ],
+      "type": "record",
+      "name": "http://demo.eha.org/perimeter"
+    },
+    {
+      "fields": [
+        {
+          "type": [
+            "string?",
+            "string[]?"
+          ],
+          "jsonldPredicate": {
+            "_type": "@id",
+            "_id": "http://demo.eha.org/Person"
           },
           "name": "Person-id"
         }
       ],
+      "type": "record",
       "name": "http://demo.eha.org/parents"
     },
     {
-      "type": "record",
-      "fields": [
-        {
-          "type": [
-            "string?",
-            "string[]?"
-          ],
-          "jsonldPredicate": {
-            "_id": "http://demo.eha.org/GeoLocation",
-            "_type": "@id"
-          },
-          "name": "GeoLocation-id"
-        }
-      ],
-      "name": "http://demo.eha.org/perimeter"
-    },
-    {
-      "type": "record",
-      "fields": [
-        {
-          "type": [
-            "string?",
-            "string[]?"
-          ],
-          "jsonldPredicate": {
-            "_id": "http://demo.eha.org/GeoLocation",
-            "_type": "@id"
-          },
-          "name": "GeoLocation-id"
-        }
-      ],
-      "name": "http://demo.eha.org/centralPoint"
-    },
-    {
-      "type": "record",
-      "fields": [
-        {
-          "doc": "A description of the thing.",
-          "type": [
-            "string?",
-            "string[]?"
-          ],
-          "jsonldPredicate": "http://demo.eha.org/description",
-          "name": "description"
-        },
-        {
-          "type": [
-            "null",
-            "http://demo.eha.org/parents"
-          ],
-          "jsonldPredicate": "http://demo.eha.org/parents",
-          "name": "parents"
-        },
-        {
-          "doc": "ISO date as a string",
-          "type": [
-            "string?",
-            "string[]?"
-          ],
-          "jsonldPredicate": "http://demo.eha.org/dateOfBirth",
-          "name": "dateOfBirth"
-        },
-        {
-          "type": [
-            "null",
-            "http://demo.eha.org/children"
-          ],
-          "jsonldPredicate": "http://demo.eha.org/children",
-          "name": "children"
-        },
-        {
-          "doc": "A Name",
-          "type": [
-            "string?",
-            "string[]?"
-          ],
-          "jsonldPredicate": "http://demo.eha.org/name",
-          "name": "name"
-        },
-        {
-          "type": [
-            "null",
-            "http://demo.eha.org/home"
-          ],
-          "jsonldPredicate": "http://demo.eha.org/home",
-          "name": "home"
-        }
-      ],
-      "extends": [
-        "http://demo.eha.org/BaseModel",
-        "http://demo.eha.org/BaseModel"
-      ],
-      "name": "http://demo.eha.org/Person"
-    },
-    {
-      "type": "record",
+      "extends": "http://demo.eha.org/BaseModel",
       "fields": [
         {
           "doc": "A Name",
+          "jsonldPredicate": "http://demo.eha.org/name",
           "type": [
             "string?",
             "string[]?"
           ],
-          "jsonldPredicate": "http://demo.eha.org/name",
           "name": "name"
         },
         {
           "doc": "Longitude as float",
+          "jsonldPredicate": "http://demo.eha.org/longitude",
           "type": [
             "float?",
             "float[]?"
           ],
-          "jsonldPredicate": "http://demo.eha.org/longitude",
           "name": "longitude"
         },
         {
           "doc": "A description of the thing.",
+          "jsonldPredicate": "http://demo.eha.org/description",
           "type": [
             "string?",
             "string[]?"
           ],
-          "jsonldPredicate": "http://demo.eha.org/description",
           "name": "description"
         },
         {
           "doc": "Latitude as float",
+          "jsonldPredicate": "http://demo.eha.org/latitude",
           "type": [
             "float?",
             "float[]?"
           ],
-          "jsonldPredicate": "http://demo.eha.org/latitude",
           "name": "latitude"
         }
       ],
-      "extends": [
-        "http://demo.eha.org/BaseModel",
-        "http://demo.eha.org/BaseModel"
-      ],
+      "type": "record",
       "name": "http://demo.eha.org/GeoLocation"
     },
     {
-      "type": "record",
+      "extends": "http://demo.eha.org/BaseModel",
       "fields": [
         {
-          "type": [
-            "null",
-            "http://demo.eha.org/location"
-          ],
-          "jsonldPredicate": "http://demo.eha.org/location",
-          "name": "location"
-        },
-        {
-          "doc": "A Name",
-          "type": [
-            "string?",
-            "string[]?"
-          ],
-          "jsonldPredicate": "http://demo.eha.org/name",
-          "name": "name"
-        },
-        {
-          "doc": "A description of the thing.",
-          "type": [
-            "string?",
-            "string[]?"
-          ],
-          "jsonldPredicate": "http://demo.eha.org/description",
-          "name": "description"
-        },
-        {
+          "jsonldPredicate": "http://demo.eha.org/perimeter",
           "type": [
             "null",
             "http://demo.eha.org/perimeter"
           ],
-          "jsonldPredicate": "http://demo.eha.org/perimeter",
           "name": "perimeter"
         },
         {
+          "doc": "A Name",
+          "jsonldPredicate": "http://demo.eha.org/name",
+          "type": [
+            "string?",
+            "string[]?"
+          ],
+          "name": "name"
+        },
+        {
+          "jsonldPredicate": "http://demo.eha.org/centralPoint",
           "type": [
             "null",
             "http://demo.eha.org/centralPoint"
           ],
-          "jsonldPredicate": "http://demo.eha.org/centralPoint",
           "name": "centralPoint"
+        },
+        {
+          "jsonldPredicate": "http://demo.eha.org/location",
+          "type": [
+            "null",
+            "http://demo.eha.org/location"
+          ],
+          "name": "location"
+        },
+        {
+          "doc": "A description of the thing.",
+          "jsonldPredicate": "http://demo.eha.org/description",
+          "type": [
+            "string?",
+            "string[]?"
+          ],
+          "name": "description"
         }
       ],
-      "extends": [
-        "http://demo.eha.org/BaseModel",
-        "http://demo.eha.org/BaseModel"
-      ],
+      "type": "record",
       "name": "http://demo.eha.org/Place"
+    },
+    {
+      "extends": "http://demo.eha.org/BaseModel",
+      "fields": [
+        {
+          "jsonldPredicate": "http://demo.eha.org/home",
+          "type": [
+            "null",
+            "http://demo.eha.org/home"
+          ],
+          "name": "home"
+        },
+        {
+          "jsonldPredicate": "http://demo.eha.org/parents",
+          "type": [
+            "null",
+            "http://demo.eha.org/parents"
+          ],
+          "name": "parents"
+        },
+        {
+          "jsonldPredicate": "http://demo.eha.org/children",
+          "type": [
+            "null",
+            "http://demo.eha.org/children"
+          ],
+          "name": "children"
+        },
+        {
+          "doc": "A Name",
+          "jsonldPredicate": "http://demo.eha.org/name",
+          "type": [
+            "string?",
+            "string[]?"
+          ],
+          "name": "name"
+        },
+        {
+          "doc": "ISO date as a string",
+          "jsonldPredicate": "http://demo.eha.org/dateOfBirth",
+          "type": [
+            "string?",
+            "string[]?"
+          ],
+          "name": "dateOfBirth"
+        },
+        {
+          "doc": "A description of the thing.",
+          "jsonldPredicate": "http://demo.eha.org/description",
+          "type": [
+            "string?",
+            "string[]?"
+          ],
+          "name": "description"
+        }
+      ],
+      "type": "record",
+      "name": "http://demo.eha.org/Person"
     }
-  ],
-  "$base": "http://demo.eha.org/"
+  ]
 }

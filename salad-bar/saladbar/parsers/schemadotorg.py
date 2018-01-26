@@ -294,6 +294,7 @@ def load_file(path):
         return load(spec)
 
 def get_salad_graph(properties, records, document_model=None):
+    print(document_model)
     graph = []
     for key in properties.keys():
         prop = properties[key]
@@ -314,6 +315,7 @@ def write_salad(path, base, namespaces, properties, records, document_model=None
     graph = get_salad_graph(properties, records, document_model)
     output = get_salad(graph, namespaces, base)
     write_json(path, output)
+    return graph
 
 def resolve_property_graph(name, records, properties, depth, max_depth, captured, selected_fields=None):
     if depth > max_depth:

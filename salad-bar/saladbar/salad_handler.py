@@ -59,10 +59,24 @@ class SaladHandler(object):
         self.schema_ctx = schema_ctx
         print("Salad schema is valid and loaded")
 
-
-
-if __name__ == "__main__":
-    handler = SaladHandler("./extends.json")
-
-
-
+    def get_avro(self, depends=None):
+        avsc_names, avsc_obj = schema.make_avro_schema(self.schema_doc, self.document_loader)
+        pprint(avsc_obj)
+        if not depends:
+            return avsc_names, avsc_obj
+        avsc_dict = {i.get('name'): i for i in avsc_obj}
+        pprint([i for i in avsc_dict.keys()])
+        out = {}
+        deps = depends.keys()
+        for i in avsc_obj:
+            name = i.get('name')
+            if name in deps:
+                reqs = depends.get(name)
+                all_props = [i for j in reqs.get('properties').values() for i in j] # unpack nested values
+                # print(name)
+                # pprint(all_props)
+                # pprint([i in avsc_dict.keys() for i in all_props])
+                avro_item =  [avsc_dict.get(i) for i in all_props if i in avsc_dict.keys()]
+                avro_item.append(avsc_dict.get(name))
+                out[name] = avro_item
+        return out
