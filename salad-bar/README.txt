@@ -3,6 +3,9 @@ You'll need pipenv installed.
 To setup the env run `pipenv install`
 Whenver you want to work with the tools enter the environment with `pipenv shell`
 
+
+!#&!#&!#&!#&!#& THIS IS OUTDATED !#&!#&!#&!#&!#&
+
 Setup
 
 1) Turn the schema.org snapshot CSVs into combined json.
@@ -23,3 +26,4 @@ Setup
 5) Run schema-salad-tool against extends.json which imports from limited.json.
     `schema-salad-tool ./example.extends.json --print-avro` 
 
+!#&!#&!#&!#&!#& THIS IS OUTDATED !#&!#&!#&!#&!#&

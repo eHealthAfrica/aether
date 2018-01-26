@@ -4,7 +4,7 @@ import copy
 import json
 from collections import OrderedDict
 
-DOM = "http://schema.org/"
+DOM = ".org/" # TODO we need a way to handle multiple domains
 
 
 class Property(object):
@@ -255,13 +255,10 @@ class Record(object):
         record['fields'] = self.fields
         return record
 
-def get_salad(graph):
+def get_salad(graph, namespaces, base):
     body = {
-        "$base": "http://schema.org",
-        "$namespaces" : {
-            "sdo" : "http://schema.org/",
-            "xsd" : "http://www.w3.org/2001/XMLSchema#"
-        },
+        "$base": base,
+        "$namespaces" : namespaces,
         "$graph":graph
     }
     return body
@@ -296,7 +293,7 @@ def load_file(path):
         spec = json.load(f)
         return load(spec)
 
-def write_salad(path, properties, records, document_model=None):
+def get_salad_graph(properties, records, document_model=None):
     graph = []
     for key in properties.keys():
         prop = properties[key]
@@ -311,7 +308,11 @@ def write_salad(path, properties, records, document_model=None):
                 #inherit from document model
                 record.add_extension(document_model)
             graph.append(record.salad_definition)
-    output = get_salad(graph)
+    return graph
+
+def write_salad(path, base, namespaces, properties, records, document_model=None):
+    graph = get_salad_graph(properties, records, document_model)
+    output = get_salad(graph, namespaces, base)
     write_json(path, output)
 
 def resolve_property_graph(name, records, properties, depth, max_depth, captured, selected_fields=None):
@@ -334,9 +335,7 @@ def resolve_record_graph(name, records, properties, depth, max_depth, captured, 
         return captured
     record = records[name]
     for i in sorted(record.topics):
-        print ("%s - %s - %s" % (name, i, selected_fields.get(name, [])))
         if selected_fields and  i not in selected_fields.get(name, []):
-            print("skipping %s-%s" % (name, i))
             continue
         if not i in captured.get("properties"):
             captured['properties'].append(i)
@@ -371,12 +370,11 @@ def make_dependency_graph(graphed_records, records, limited_properties={}):
         parents = record.relationships.get("parents")
         children = record.relationships.get("children")
         graph[record.name] = {}
-        restricted = set([i for val in limited_properties.values() for i in val])
-        if restricted:
-            all_properties = [i for i in sorted(record.topics) if i in restricted]
+        permitted = set([i for val in limited_properties.values() for i in val])
+        if permitted:
+            all_properties = [i for i in sorted(record.topics) if i in permitted]
         else:
             all_properties = [i for i in sorted(record.topics)]
-        #graph[record.name]['all_properties'] = all_properties
         if parents:
             lineage = get_lineage(key, "parents", records)
             graph[record.name]['parents'] = lineage
@@ -389,14 +387,16 @@ def make_dependency_graph(graphed_records, records, limited_properties={}):
 
 def get_parental_properties(properties, lineage, all_records, limited_properties={}):
     output = {}
-    restricted = set([i for val in limited_properties.values() for i in val])
-    print(restricted)
+    permitted = set([i for val in limited_properties.values() for i in val])
     props = set(properties)
     for x, parent in enumerate(flatten(lineage[::-1])):
         if output.get(parent):
             continue #already got this one...
         parental_fields = sorted(all_records.get(parent).topics)
-        unique_fields = sorted([i for i in props if i in parental_fields if i in restricted])
+        if permitted:
+            unique_fields = sorted([i for i in props if i in parental_fields if i in permitted])
+        else:  # All properties are allowed
+            unique_fields = sorted([i for i in props if i in parental_fields])
         output[parent] = unique_fields
         props = props.difference(unique_fields)
     return output
@@ -436,10 +436,6 @@ def write_json(path, obj):
     with open(path, "w") as f2:
             json.dump(obj, f2, indent=2)
 
-
-def default():
-    properties, records = load("all_csv.json")
-    write_salad("schemadotorg3.3.json", properties, records)
 
 def test_graph():
     all_properties, all_records = load("all_csv.json")

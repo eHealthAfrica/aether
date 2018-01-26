@@ -15,8 +15,6 @@ class SaladHandler(object):
         self.load_salad(path, strict)
 
     def load_salad(self, path, strict=True):
-        with open(path) as f:
-            pass
 
         metaschema_names, metaschema_doc, metaschema_loader = schema.get_metaschema()
         schema_uri = file_uri(abspath(path))
