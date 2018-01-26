@@ -5,11 +5,14 @@ class CustomCSVRenderer(CSVStreamingRenderer):
     # https://github.com/mjumbewu/django-rest-framework-csv#pagination
     results_field = 'results'
 
+    values_sep_param = 'columns_sep'
+
     # use to filter out the csv columns
     headers_param = 'columns'
     headers_key = 'header'
 
     # use to generate custom header labels
+    labels_rule_sep_param = 'rule_sep'
     labels_param = 'parse_columns'
     labels_key = 'labels'
 
@@ -50,7 +53,11 @@ class CustomCSVRenderer(CSVStreamingRenderer):
             labels = {}
             for header in renderer_context[self.headers_key]:
                 # create entry for this header
-                labels[header] = apply_label_rules(label_rules, header)
+                labels[header] = apply_label_rules(
+                    rules=label_rules,
+                    value=header,
+                    rule_sep=request.GET.get(self.labels_rule_sep_param, ':'),
+                )
 
             # pass header labels to context
             renderer_context[self.labels_key] = labels
@@ -59,8 +66,9 @@ class CustomCSVRenderer(CSVStreamingRenderer):
             data, media_type, renderer_context, *args, **kwargs)
 
     def __get_param(self, request, param_name):
+        sep = request.GET.get(self.values_sep_param, ',') if request is not None else ','
         return (
-            request.GET[param_name].split(',')
+            request.GET.get(param_name).split(sep)
             if request is not None and param_name in request.GET else None)
 
     def __extract_headers(self, data):
@@ -74,19 +82,19 @@ class CustomCSVRenderer(CSVStreamingRenderer):
         return sorted(header_fields)
 
 
-def apply_label_rules(rules, value):
+def apply_label_rules(rules, value, rule_sep=':'):
     initial_value = value
     try:
         # transforms the value following the indicating rules in ORDER!!!
         for rule in rules:
-            value = apply_label_rule(rule, value)
+            value = apply_label_rule(rule, value, rule_sep)
         return value
     except Exception as e:
         # if one of the parsing rules fails return initial value
         return initial_value
 
 
-def apply_label_rule(rule, value):
+def apply_label_rule(rule, value, rule_sep=':'):
 
     if rule == 'lower':
         return value.lower()
@@ -100,26 +108,31 @@ def apply_label_rule(rule, value):
     if rule == 'capitalize':
         return value.capitalize()
 
-    if rule.startswith('remove-prefix:') and rule != 'remove-prefix:':
-        prefix = rule.split(':')[1]
+    rule_name = f'remove-prefix{rule_sep}'
+    if rule.startswith(rule_name) and rule != rule_name:
+        prefix = rule.split(rule_sep)[1]
         if value.startswith(prefix):
             return value[len(prefix):]
         return value
 
-    if rule.startswith('remove-suffix:') and rule != 'remove-suffix:':
-        suffix = rule.split(':')[1]
+    rule_name = f'remove-suffix{rule_sep}'
+    if rule.startswith(rule_name) and rule != rule_name:
+        suffix = rule.split(rule_sep)[1]
         if value.endswith(suffix):
             return value[:-len(suffix)]
         return value
 
-    if rule.startswith('replace:'):
-        old_sep = rule.split(':')[1]
-        new_sep = rule.split(':')[2]
+    rule_name = f'replace{rule_sep}'
+    if rule.startswith(rule_name) and rule != rule_name:
+        old_sep = rule.split(rule_sep)[1]
+        new_sep = rule.split(rule_sep)[2]
         return value.replace(old_sep, new_sep)
 
-    if rule.startswith('split:') and rule != 'split:':
+    rule_name = f'split{rule_sep}'
+    if rule.startswith(rule_name) and rule != rule_name:
         # replaces the separator with spaces
-        sep = rule.split(':')[1]
+        # shortcut of `replace:<sep>: `
+        sep = rule.split(rule_sep)[1]
         return value.replace(sep, ' ')
 
     return value
