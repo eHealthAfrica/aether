@@ -142,7 +142,7 @@ class Property(object):
             name = "%s-id" % (label)
             body = {
                 "name": name,
-                "type": ["string?","string[]?"],
+                "type": ["string","string[]"],  # ["string?","string[]?"],
                 "jsonldPredicate" : {
                     "_type": "@id",
                     "_id" : predicate_id
