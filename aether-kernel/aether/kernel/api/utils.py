@@ -22,8 +22,8 @@ class EntityExtractionError(Exception):
 
 class MergeOptions(Enum):
     overwrite = 'overwrite'
-    perfer_new = 'prefer_new'
-    perfer_existing = 'prefer_existing'
+    lww = 'last_write_wins'
+    fww = 'first_write_wins'
 
 
 def __prettified__(response, lexer):
@@ -496,7 +496,7 @@ def merge_objects(source, target, direction):
     # prefer_new > (Target to Source) Target takes primacy,
     # prefer_existing > (Source to Target) Source takes primacy
     result = {}
-    if direction and direction == MergeOptions.perfer_existing.value:
+    if direction and direction == MergeOptions.fww.value:
         for key in source:
             target[key] = source[key]
         result = target
