@@ -250,7 +250,7 @@ class ViewsTest(TransactionTestCase):
                 'payload': EXAMPLE_SOURCE_DATA,
                 'mapping': str(self.mapping.pk),
             })
-        url = reverse('mapping_stats-detail', kwargs={'pk': self.mapping.pk})
+        url = reverse('mappings_stats-detail', kwargs={'pk': self.mapping.pk})
         response = self.client.get(url, format='json')
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         json = response.json()
