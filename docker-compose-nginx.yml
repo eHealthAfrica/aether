@@ -21,4 +21,12 @@ services:
   odk-nginx:
     image: aether-odk-nginx
     build: ./aether-odk-module/nginx
+
+  # ---------------------------------
+  # CouchDB sync module
+  # ---------------------------------
+
+  couchdb-sync-nginx:
+    image: aether-couchdb-sync-nginx
+    build: ./aether-couchdb-sync-module/nginx
   
