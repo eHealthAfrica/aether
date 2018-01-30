@@ -32,8 +32,5 @@ requests
 uwsgi
 jsonpath_ng
 
-# this is used for pulling down secrets from S3
-awscli
-
 # Aether common module
 aether.common
