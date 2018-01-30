@@ -6,7 +6,7 @@
 
 coverage
 django-cors-headers
-django
+django==1.11.9
 djangorestframework
 djangorestframework-csv
 flake8

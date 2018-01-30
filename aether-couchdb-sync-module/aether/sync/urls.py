@@ -1,9 +1,9 @@
-from django.urls import include, path
+from django.conf.urls import include, url
 
 from aether.common.conf.urls import generate_urlpatterns
 
 
 urlpatterns = generate_urlpatterns(kernel=True) + [
-    path('rq/', include('django_rq.urls')),
-    path('sync/', include('aether.sync.api.urls', namespace='sync')),
+    url(r'^rq/', include('django_rq.urls')),
+    url(r'^sync/', include('aether.sync.api.urls', namespace='sync')),
 ]
