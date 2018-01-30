@@ -7,7 +7,7 @@ import jsonpath_ng
 from jsonpath_ng import parse
 
 from django.utils.safestring import mark_safe
-
+from enum import Enum
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import JsonLexer
@@ -18,6 +18,12 @@ from . import models
 
 class EntityExtractionError(Exception):
     pass
+
+
+class MergeOptions(Enum):
+    overwrite = 'overwrite'
+    lww = 'last_write_wins'
+    fww = 'first_write_wins'
 
 
 def __prettified__(response, lexer):
@@ -477,3 +483,25 @@ def extract_create_entities(submission):
                 submission=submission
             )
             entity.save()
+
+
+def merge_objects(source, target, direction):
+    # Merge 2 objects
+    #
+    # Default merge operation is prefer_new
+    # Params <source='Original object'>, <target='New object'>,
+    # <direction='Direction of merge, determins primacy:
+    # use utils.MergeOptions.[prefer_new, prefer_existing]'>
+    # # direction Options:
+    # prefer_new > (Target to Source) Target takes primacy,
+    # prefer_existing > (Source to Target) Source takes primacy
+    result = {}
+    if direction and direction == MergeOptions.fww.value:
+        for key in source:
+            target[key] = source[key]
+        result = target
+    else:
+        for key in target:
+            source[key] = target[key]
+        result = source
+    return result

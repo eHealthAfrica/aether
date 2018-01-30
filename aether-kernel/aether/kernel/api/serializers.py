@@ -9,6 +9,14 @@ from . import utils
 
 import urllib
 
+m_options = utils.MergeOptions
+
+MERGE_CHOICES = (
+    (m_options.overwrite.value, 'Overwrite (Do not merge)'),
+    (m_options.lww.value, 'Last Write Wins (Target to Source)'),
+    (m_options.fww.value, 'First Write Wins (Source to Target)')
+)
+
 
 class FilteredHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
     '''
@@ -234,6 +242,7 @@ class ProjectSchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 
 class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+    lookup_field = 'merge'
     url = serializers.HyperlinkedIdentityField(
         view_name='entity-detail',
         read_only=True
@@ -243,20 +252,56 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         source='projectschema',
         view_name='projectschema-detail',
     )
+    merge = serializers.ChoiceField(MERGE_CHOICES, default=m_options.overwrite.value)
 
     def create(self, validated_data):
-        entity = models.Entity(
-            payload=validated_data.pop('payload'),
-            status=validated_data.pop('status'),
-            projectschema=validated_data.pop('projectschema'),
-        )
-        if 'submission' in validated_data:
-            entity.submission = validated_data.pop('submission')
-        if 'id' in validated_data:
-            entity.id = validated_data.pop('id')
-        entity.payload['_id'] = str(entity.id)
-        entity.save()
-        return entity
+        try:
+            entity = models.Entity(
+                payload=validated_data.pop('payload'),
+                status=validated_data.pop('status'),
+                projectschema=validated_data.pop('projectschema'),
+            )
+            if 'submission' in validated_data:
+                entity.submission = validated_data.pop('submission')
+            if 'id' in validated_data:
+                entity.id = validated_data.pop('id')
+            entity.payload['_id'] = str(entity.id)
+            entity.save()
+            return entity
+        except Exception as e:
+            raise serializers.ValidationError({
+                'description': 'Submission validation failed'
+            })
+
+    def update(self, instance, validated_data):
+        try:
+            if 'submission' in validated_data and validated_data['submission'] is not None:
+                instance.submission = validated_data.pop('submission')
+            if 'status' in validated_data:
+                instance.status = validated_data.pop('status')
+            if 'projectschema' in validated_data and validated_data['projectschema'] is not None:
+                instance.projectschema = validated_data.pop('projectschema')
+            if 'payload' in validated_data:
+                target_payload = validated_data.pop('payload')
+            else:
+                target_payload = {}
+            merge_value = None
+            if 'merge' in self.context['request'].query_params:
+                merge_value = self.context['request'].query_params['merge']
+            elif 'merge' in validated_data:
+                merge_value = validated_data.pop('merge')
+            if (merge_value == m_options.fww.value
+                    or merge_value == m_options.lww.value):
+                instance.payload = \
+                    utils.merge_objects(instance.payload, target_payload, merge_value)
+            else:
+                instance.payload = target_payload
+            instance.save()
+            return instance
+        except Exception as e:
+            raise serializers.ValidationError({
+                'description': 'Submission validation failed >> ' + str(e)
+            })
 
     class Meta:
         model = models.Entity

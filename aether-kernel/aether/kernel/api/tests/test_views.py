@@ -14,6 +14,8 @@ from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA)
 
 class ViewsTest(TransactionTestCase):
 
+    enity_payload = {'firstname': 'test first name', 'lastname': 'test last name'}
+
     def setUp(self):
         username = 'test'
         email = 'test@example.com'
@@ -63,7 +65,7 @@ class ViewsTest(TransactionTestCase):
 
         self.entity = models.Entity.objects.create(
             revision='a sample revision',
-            payload={},
+            payload=self.enity_payload,
             status='a sample status',
             projectschema=self.projectschema,
             submission=self.submission
@@ -165,10 +167,18 @@ class ViewsTest(TransactionTestCase):
         }, self.submission)
         self.helper_update_object_id('entity-detail', {
             'revision': 'Sample entity revision updated',
-            'payload': {},
+            'payload': {'firstname': 'Test first name updated'},
             'status': 'Publishable',
             'projectschema': str(self.projectschema.pk),
         }, self.entity)
+        self.helper_update_object_id('entity-detail', {
+            'revision': 'Sample entity revision updated',
+            'payload': {'lastname': 'Test last name updated', 'new_prop': 'Test prop updated'},
+            'merge': 'first_write_wins',
+            'status': 'Publishable',
+            'projectschema': str(self.projectschema.pk),
+        }, self.entity)
+        self.assertEqual(self.enity_payload['lastname'], self.entity.payload['lastname'])
         self.helper_update_object_id('project-detail', {
             'name': 'Project name 2',
             'revision': 'Sample project revision',
