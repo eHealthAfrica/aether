@@ -57,17 +57,6 @@ setup_prod() {
   ./manage.py setup_admin -p=$ADMIN_PASSWORD -t=$AETHER_KERNEL_TOKEN
 }
 
-setup_aws_requirements() {
-    envsubst < /code/conf/aws_cli_setup.sh.tmpl > /code/conf/aws_cli_setup.sh
-    chmod +x /code/conf/aws_cli_setup.sh
-    /code/conf/aws_cli_setup.sh
-
-    source ~/.bashrc
-    envsubst < /code/conf/aws.sh.tmpl > /code/conf/aws.sh
-    chmod +x /code/conf/aws.sh
-    /code/conf/aws.sh
-}
-
 test_flake8() {
     flake8 /code/. --config=/code/conf/extras/flake8.cfg
 }
@@ -139,8 +128,6 @@ case "$1" in
     ;;
 
     start )
-        setup_aws_requirements
-        source ~/.bashrc
         setup_db
         setup_prod
 
