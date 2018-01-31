@@ -115,7 +115,7 @@ The tests clean up will **DELETE ALL MAPPINGS!!!**
 ## Usage
 
 ```bash
-docker-compose up --build    # this will update the cointainers if needed
+docker-compose up --build    # this will update the containers if needed
 ```
 
 or
