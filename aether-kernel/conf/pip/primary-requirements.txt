@@ -8,7 +8,6 @@
 #                                                                              #
 ################################################################################
 
-coverage
 django==1.11.9
 django-cas-ng
 django-cors-headers
@@ -21,12 +20,11 @@ djangorestframework
 djangorestframework-filters
 drf-dynamic-fields
 drf-openapi
-flake8
-flake8-quotes
 jsonschema
 mock
 psycopg2
 pygments
+python-dateutil
 raven
 requests
 uwsgi
@@ -34,3 +32,8 @@ jsonpath_ng
 
 # Aether common module
 aether.common
+
+# test libraries
+coverage
+flake8
+flake8-quotes

@@ -22,8 +22,8 @@ do
   cp $PIP_FOLDER/primary-requirements.txt $PIP_FOLDER/requirements.txt
 
   echo "_____________________________________________ Building $container"
-  # rebuild container
-  docker-compose build $container
+  # force rebuild container
+  docker-compose build --no-cache --force-rm $container
 
   # upgrade pip dependencies
   echo "_____________________________________________ Updating $container"
@@ -31,7 +31,7 @@ do
 
   echo "_____________________________________________ Rebuilding $container with updates"
   # rebuild container
-  docker-compose build $container
+  docker-compose build --no-cache $container
 
   echo "_____________________________________________ $container updated and rebuilt!"
 done
