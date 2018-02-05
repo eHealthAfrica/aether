@@ -66,10 +66,9 @@ class CustomCSVRenderer(CSVStreamingRenderer):
             data, media_type, renderer_context, *args, **kwargs)
 
     def __get_param(self, request, param_name):
-        sep = request.GET.get(self.values_sep_param, ',') if request is not None else ','
         return (
-            request.GET.get(param_name).split(sep)
-            if request is not None and param_name in request.GET else None)
+            request.GET.get(param_name).split(request.GET.get(self.values_sep_param, ','))
+            if param_name in request.GET else None)
 
     def __extract_headers(self, data):
         # First, flatten the data
