@@ -29,7 +29,7 @@ def parse_xmlform(fp):
     # check that the file content is a valid XML
     xmltodict.parse(content)
     # but return the untouched content if it does not raise an exception
-    return content
+    return content.decode('utf-8')
 
 
 def get_xml_title(data):
