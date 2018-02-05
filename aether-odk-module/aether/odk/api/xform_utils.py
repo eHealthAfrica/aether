@@ -25,7 +25,11 @@ def parse_xlsform(fp):
 
 
 def parse_xmlform(fp):
-    return xmltodict.unparse(xmltodict.parse(fp.read()), pretty=True)
+    content = fp.read()
+    # check that the file content is a valid XML
+    xmltodict.parse(content)
+    # but return the untouched content if it does not raise an exception
+    return content
 
 
 def get_xml_title(data):
