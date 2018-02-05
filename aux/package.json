@@ -1,0 +1,20 @@
+{
+  "name": "aux",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "standard && tap test/*.js --100"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "avsc": "^5.2.0",
+    "jsonpath": "^1.0.0",
+    "standard": "^10.0.3"
+  },
+  "devDependencies": {
+    "tap": "^11.1.0"
+  }
+}
