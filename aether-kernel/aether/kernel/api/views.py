@@ -13,19 +13,16 @@ def aether_retrieve(request, model, serializer, pk=None):
     if all_versions == 'true':
         queryset = model.objects.filter(_id=selected_record._id)\
             .order_by('-modified')
-        serializer_class = serializer(queryset,
-            many=True, context={'request': request})
+        serializer_class = serializer(queryset, many=True, context={'request': request})
         return Response(serializer_class.data, status=HTTPStatus.OK)
-    serializer_class = serializer(selected_record,
-        context={'request': request})
+    serializer_class = serializer(selected_record, context={'request': request})
     return Response(serializer_class.data, status=HTTPStatus.OK)
 
 
 def aether_list(request, model, serializer):
     queryset = model.objects.filter(deleted=False)\
         .order_by('_id', '-modified').distinct('_id')
-    serializer_class = serializer(queryset,
-        many=True, context={'request': request})
+    serializer_class = serializer(queryset, many=True, context={'request': request})
     return Response(serializer_class.data, status=HTTPStatus.OK)
 
 
@@ -51,7 +48,7 @@ class MappingViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, pk=None):
         return aether_retrieve(request, models.Mapping, serializers.MappingSerializer, pk)
-        
+
 
 class MappingStatsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Mapping \
