@@ -5,7 +5,6 @@ import uuid
 
 import jsonpath_ng
 from jsonpath_ng import parse
-from datetime import datetime
 
 from django.utils.safestring import mark_safe
 from enum import Enum
