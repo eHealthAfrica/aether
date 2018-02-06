@@ -75,12 +75,20 @@ class ViewsTest(TransactionTestCase):
         self.project.delete()
         self.client.logout()
 
+    def get_count(self, view_name):
+        url = reverse(view_name)
+        response = self.client.get(url)
+        return json.loads(response.content).get('count')
+
     # TEST CREATE:
     def helper_create_object(self, view_name, data):
         url = reverse(view_name)
+        pre_submission_count = self.get_count(view_name)
         data = json.dumps(data)
         response = self.client.post(url, data, content_type='application/json')
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        post_submission_count = self.get_count(view_name)
+        self.assertEquals(post_submission_count, pre_submission_count + 1)
         return response
 
     def test_api_create_instance(self):
