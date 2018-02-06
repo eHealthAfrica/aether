@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 from django.test import TestCase
 from .. import utils
 from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA,
@@ -40,7 +42,7 @@ class UtilsTests(TestCase):
 
     def test_JSP_get_basic_fields(self):
         avro_obj = EXAMPLE_SCHEMA
-        expected = ['_id', '_rev', 'name', 'dob', 'villageID']
+        expected = ['id', '_rev', 'name', 'dob', 'villageID']
         basic_fields = str(utils.JSP_get_basic_fields(avro_obj))
         self.assertTrue(str(expected) in basic_fields, basic_fields)
 
@@ -118,6 +120,9 @@ class UtilsTests(TestCase):
         expected_entity = EXAMPLE_ENTITY
         data, entities = utils.extract_entities(requirements, response_data, entity_stubs)
         self.assertEquals(len(expected_entity['Person']), len(entities['Person']))
+
+    # def test_extract_create_entities(self):
+    #     import pdb; pdb.set_trace()
 
     def test_is_not_custom_jsonpath(self):
         # Examples taken from https://github.com/json-path/JsonPath#path-examples

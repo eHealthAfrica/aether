@@ -1,6 +1,7 @@
-import string
+import collections
 import json
 import re
+import string
 import uuid
 
 import jsonpath_ng
@@ -417,19 +418,16 @@ def extract_entities(requirements, response_data, entity_definitions):
     return data, entities
 
 
-def extract_create_entities(submission):
+def serialize_submission(submission):
     # Get the mapping definition from the submission (submission.mapping.definition):
     mapping_definition = submission.mapping.definition
-
     # Get the primary key of the projectschema
     # entity_pks = list(mapping_definition['entities'].values())
     entity_ps_ids = mapping_definition.get('entities')
-
     # Save submission and exit early if mapping does not specify any entities.
     if not entity_ps_ids:
         submission.save()
         return
-
     # Get the schema of the projectschema
     # project_schema = models.ProjectSchema.objects.get(pk=entity_pks[0])
     project_schemas = {
@@ -437,6 +435,20 @@ def extract_create_entities(submission):
     }
     schemas = {name: ps.schema.definition for name, ps in project_schemas.items()}
     # schema = project_schema.schema.definition
+    result = extract_create_entities(
+        submission,
+        mapping_definition,
+        project_schemas,
+        schemas,
+    )
+    submission = result['submission']
+    submission.save()
+    for entity in result['entities']:
+        entity.submission = submission
+        entity.save()
+
+
+def extract_create_entities(submission, mapping_definition, project_schemas, schemas):
 
     # Get entity definitions
     entity_defs = get_entity_definitions(mapping_definition, schemas)
@@ -469,10 +481,8 @@ def extract_create_entities(submission):
                 'projectschema': project_schemas.get(name)
             }
             entity_list.append(obj)
-    # Save the submission to the db
-    submission.save()
-
     # If extraction was successful, create new entities
+    entities = []
     if entity_list:
         for e in entity_list:
             entity = models.Entity(
@@ -480,9 +490,13 @@ def extract_create_entities(submission):
                 payload=e['payload'],
                 status=e['status'],
                 projectschema=e['projectschema'],
-                submission=submission
             )
-            entity.save()
+            entities.append(entity)
+
+    return {
+        'submission': submission,
+        'entities': entities,
+    }
 
 
 def merge_objects(source, target, direction):

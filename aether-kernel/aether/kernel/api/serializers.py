@@ -136,7 +136,7 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
                         mapping=validated_data.pop('mapping')
                     )
 
-                utils.extract_create_entities(submission)
+                utils.serialize_submission(submission)
 
             elif 'parent_lookup_mapping' in self.context.get('request').parser_context['kwargs']:
                 kwargs = self.context.get('request').parser_context['kwargs']
@@ -155,7 +155,7 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
                         mapping=mapping
                     )
 
-                utils.extract_create_entities(submission)
+                utils.serialize_submission(submission)
             else:
                 if 'revision' and 'map_revision' in validated_data:
                     submission = models.Submission(

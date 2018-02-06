@@ -1,3 +1,4 @@
+import copy
 import json
 import datetime
 import dateutil.parser
@@ -10,6 +11,15 @@ from rest_framework import status
 from .. import models
 
 from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA)
+
+
+def assign_mapping_entities(mapping, projectschemas):
+    entities = {}
+    for projectschema in projectschemas:
+        entities[projectschema.schema.definition['name']] = str(projectschema.pk)
+    mapping_ = copy.deepcopy(mapping)
+    mapping_['entities'] = entities
+    return mapping_
 
 
 class ViewsTest(TransactionTestCase):
@@ -32,24 +42,9 @@ class ViewsTest(TransactionTestCase):
             rdf_definition='a sample rdf definition'
         )
 
-        self.mapping = models.Mapping.objects.create(
-            name='mapping1',
-            definition={'sample': 'json schema'},
-            revision='a sample revision field',
-            project=self.project
-        )
-
-        self.submission = models.Submission.objects.create(
-            revision='a sample revision',
-            map_revision='a sample map revision',
-            date=datetime.datetime.now(),
-            payload={},
-            mapping=self.mapping
-        )
-
         self.schema = models.Schema.objects.create(
             name='schema1',
-            definition={},
+            definition=EXAMPLE_SCHEMA,
             revision='a sample revision'
         )
 
@@ -61,6 +56,25 @@ class ViewsTest(TransactionTestCase):
             is_encrypted=False,
             project=self.project,
             schema=self.schema
+        )
+
+        mapping_definition = assign_mapping_entities(
+            mapping=EXAMPLE_MAPPING,
+            projectschemas=[self.projectschema],
+        )
+        self.mapping = models.Mapping.objects.create(
+            name='mapping1',
+            definition=mapping_definition,
+            revision='a sample revision field',
+            project=self.project
+        )
+
+        self.submission = models.Submission.objects.create(
+            revision='a sample revision',
+            map_revision='a sample map revision',
+            date=datetime.datetime.now(),
+            payload=EXAMPLE_SOURCE_DATA,
+            mapping=self.mapping
         )
 
         self.entity = models.Entity.objects.create(
