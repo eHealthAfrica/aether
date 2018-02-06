@@ -6,7 +6,7 @@ factory = RequestFactory()
 EOF = b'\r\n'
 
 
-class PaginationTests(TestCase):
+class CustomCSVRendererTests(TestCase):
 
     def helper__render(self, data, request=None):
         if request is None:
