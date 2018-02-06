@@ -48,6 +48,16 @@ Data model schema:
 '''
 
 
+def aetherSave(record, super, model, *args, **kwargs):
+    if not record.revision:
+        record.revision = str(record._id) + '+' + datetime.now().isoformat()
+        super(model, record).save(*args, **kwargs)
+    else:
+        record.revision = str(record._id) + '+' + datetime.now().isoformat()
+        record.id = None
+        super(model, record).save(force_insert=True, force_update=False, *args)
+
+
 class Project(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     _id = models.UUIDField(default=uuid.uuid4, editable=False)
@@ -67,13 +77,7 @@ class Project(TimeStampedModel):
         ordering = ['name', 'revision']
 
     def save(self, *args, **kwargs):
-        if not self.revision:
-            self.revision = str(self._id) + '+' + datetime.now().isoformat()
-            super(Project, self).save(**kwargs)
-        else:
-            self.revision = str(self._id) + '+' + datetime.now().isoformat()
-            self.id = None
-            super(Project, self).save(force_insert=True, force_update=False, *args, **kwargs)
+        aetherSave(self, super, Project, *args, **kwargs)
 
 
 class Mapping(TimeStampedModel):
@@ -98,13 +102,7 @@ class Mapping(TimeStampedModel):
         ordering = ['name', 'revision']
 
     def save(self, *args, **kwargs):
-        if not self.revision:
-            self.revision = str(self._id) + '+' + datetime.now().isoformat()
-            super(Mapping, self).save(**kwargs)
-        else:
-            self.revision = str(self._id) + '+' + datetime.now().isoformat()
-            self.id = None
-            super(Mapping, self).save(force_insert=True, force_update=False, *args, **kwargs)
+        aetherSave(self, super, Mapping, *args, **kwargs)
 
 
 class Submission(TimeStampedModel):
@@ -130,13 +128,7 @@ class Submission(TimeStampedModel):
         ordering = ['mapping', '-date']
 
     def save(self, *args, **kwargs):
-        if not self.revision:
-            self.revision = str(self._id) + '+' + datetime.now().isoformat()
-            super(Submission, self).save(**kwargs)
-        else:
-            self.revision = str(self._id) + '+' + datetime.now().isoformat()
-            self.id = None
-            super(Submission, self).save(force_insert=True, force_update=False, *args, **kwargs)
+        aetherSave(self, super, Submission, *args, **kwargs)
 
 
 def __attachment_path__(instance, filename):
@@ -159,7 +151,7 @@ class Attachment(TimeStampedModel):
     # http://www.linfo.org/file_name.html
     # Modern Unix-like systems support long file names, usually up to 255 bytes in length.
     name = models.CharField(max_length=255)
-    attachment_file = models.FileField(upload_to=__attachment_path__)
+    attachment_file = models.FileField(upload_to=__attachment_path__, max_length=500)
     # save attachment hash to check later if the file is not corrupted
     md5sum = models.CharField(blank=True, max_length=36)
 
@@ -181,13 +173,7 @@ class Attachment(TimeStampedModel):
         if not self.name:
             self.name = self.attachment_file.name
 
-        if not self.revision:
-            self.revision = str(self._id) + '+' + datetime.now().isoformat()
-            super(Attachment, self).save(**kwargs)
-        else:
-            self.revision = str(self._id) + '+' + datetime.now().isoformat()
-            self.id = None
-            super(Attachment, self).save(force_insert=True, force_update=False, *args, **kwargs)
+        aetherSave(self, super, Attachment, *args, **kwargs)
 
     class Meta:
         app_label = 'kernel'
@@ -217,13 +203,7 @@ class Schema(TimeStampedModel):
         ordering = ['name', 'revision']
 
     def save(self, *args, **kwargs):
-        if not self.revision:
-            self.revision = str(self._id) + '+' + datetime.now().isoformat()
-            super(Schema, self).save(**kwargs)
-        else:
-            self.revision = str(self._id) + '+' + datetime.now().isoformat()
-            self.id = None
-            super(Schema, self).save(force_insert=True, force_update=False, *args, **kwargs)
+        aetherSave(self, super, Schema, *args, **kwargs)
 
 
 class ProjectSchema(TimeStampedModel):
@@ -247,13 +227,7 @@ class ProjectSchema(TimeStampedModel):
         default_related_name = 'projectschemas'
 
     def save(self, *args, **kwargs):
-        if not self.revision:
-            self.revision = str(self._id) + '+' + datetime.now().isoformat()
-            super(ProjectSchema, self).save(**kwargs)
-        else:
-            self.revision = str(self._id) + '+' + datetime.now().isoformat()
-            self.id = None
-            super(ProjectSchema, self).save(force_insert=True, force_update=False, *args, **kwargs)
+        aetherSave(self, super, ProjectSchema, *args, **kwargs)
 
 
 class Entity(TimeStampedModel):
@@ -267,13 +241,7 @@ class Entity(TimeStampedModel):
     submission = models.ForeignKey(to=Submission, on_delete=models.CASCADE, blank=True, null=True)
 
     def save(self, *args, **kwargs):
-        if not self.revision:
-            self.revision = str(self._id) + '+' + datetime.now().isoformat()
-            super(Entity, self).save(**kwargs)
-        else:
-            self.revision = str(self._id) + '+' + datetime.now().isoformat()
-            self.id = None
-            super(Entity, self).save(force_insert=True, force_update=False, *args, **kwargs)
+        aetherSave(self, super, Entity, *args, **kwargs)
 
     @property
     def payload_prettified(self):

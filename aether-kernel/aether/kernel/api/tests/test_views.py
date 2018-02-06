@@ -25,7 +25,6 @@ class ViewsTest(TransactionTestCase):
 
         # Set up test model instances:
         self.project = models.Project.objects.create(
-            revision='rev 1',
             name='a project name',
             salad_schema='a sample salad schema',
             jsonld_context='sample context',
@@ -35,12 +34,10 @@ class ViewsTest(TransactionTestCase):
         self.mapping = models.Mapping.objects.create(
             name='mapping1',
             definition={'sample': 'json schema'},
-            revision='a sample revision field',
             project=self.project
         )
 
         self.submission = models.Submission.objects.create(
-            revision='a sample revision',
             map_revision='a sample map revision',
             date=datetime.datetime.now(),
             payload={},
@@ -49,8 +46,7 @@ class ViewsTest(TransactionTestCase):
 
         self.schema = models.Schema.objects.create(
             name='schema1',
-            definition={},
-            revision='a sample revision'
+            definition={}
         )
 
         self.projectschema = models.ProjectSchema.objects.create(
@@ -64,7 +60,6 @@ class ViewsTest(TransactionTestCase):
         )
 
         self.entity = models.Entity.objects.create(
-            revision='a sample revision',
             payload=self.enity_payload,
             status='a sample status',
             projectschema=self.projectschema,
@@ -86,21 +81,12 @@ class ViewsTest(TransactionTestCase):
     def test_api_create_instance(self):
         self.helper_create_object('project-list', {
             'name': 'Project name',
-            'revision': 'Sample project revision',
             'salad_schema': 'Sample project SALAD schema',
             'jsonld_context': 'Sample JSONLD context',
             'rdf_definition': 'Sample RDF definition',
         })
-        self.helper_create_object('mapping-list', {
-            'name': 'Mapping name',
-            'definition': EXAMPLE_MAPPING,
-            'revision': 'Sample mapping revision',
-            'project': str(self.project.pk),
-        })
         self.helper_create_object('submission-list', {
-            'revision': 'Sample submission revision',
             'map_revision': 'Sample map revision',
-            'date': str(datetime.datetime.now()),
             'payload': EXAMPLE_SOURCE_DATA,
             'mapping': str(self.mapping.pk),
         })
@@ -108,7 +94,6 @@ class ViewsTest(TransactionTestCase):
             'name': 'Schema name',
             'type': 'Type',
             'definition': EXAMPLE_SCHEMA,
-            'revision': 'a sample revision',
         })
         self.helper_create_object('projectschema-list', {
             'name': 'Project Schema name',
@@ -119,8 +104,14 @@ class ViewsTest(TransactionTestCase):
             'project': str(self.project.pk),
             'schema': str(self.schema.pk),
         })
+        example_mapping = EXAMPLE_MAPPING
+        example_mapping['entity'] = {'Person': str(self.projectschema.pk)}
+        self.helper_create_object('mapping-list', {
+            'name': 'Mapping name',
+            'definition': example_mapping,
+            'project': str(self.project.pk),
+        })
         self.helper_create_object('entity-list', {
-            'revision': 'Sample entity revision',
             'payload': {},
             'status': 'Publishable',
             'projectschema': str(self.projectschema.pk),
@@ -254,9 +245,7 @@ class ViewsTest(TransactionTestCase):
     def test_mapping_stats_view(self):
         for _ in range(10):
             self.helper_create_object('submission-list', {
-                'revision': 'Sample submission revision',
                 'map_revision': 'Sample map revision',
-                'date': str(datetime.datetime.now()),
                 'payload': EXAMPLE_SOURCE_DATA,
                 'mapping': str(self.mapping.pk),
             })
