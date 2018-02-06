@@ -1,6 +1,8 @@
 from django.db.models import Count, Min, Max
 from rest_framework import viewsets, permissions
 from drf_openapi.views import SchemaView
+from rest_framework.response import Response
+from http import HTTPStatus
 
 from . import models, serializers, filters
 
@@ -9,6 +11,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectSerializer
     filter_class = filters.ProjectFilter
+
+    def list(self, request):
+        queryset = models.Project.objects.filter(deleted=False)\
+            .order_by('_id', '-modified').distinct('_id')
+        serializer_class = serializers.ProjectSerializer(queryset,\
+            many=True, context={'request': request})
+        return Response(serializer_class.data, status=HTTPStatus.OK)
 
 
 class MappingViewSet(viewsets.ModelViewSet):

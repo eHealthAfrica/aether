@@ -50,11 +50,13 @@ Data model schema:
 
 class Project(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    revision = models.TextField()
+    _id = models.UUIDField(default=uuid.uuid4, editable=False)
+    revision = models.TextField(editable=False)
     name = models.CharField(max_length=50)
     salad_schema = models.TextField()
     jsonld_context = models.TextField()
     rdf_definition = models.TextField()
+    deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -64,12 +66,23 @@ class Project(TimeStampedModel):
         default_related_name = 'projects'
         ordering = ['name', 'revision']
 
+    def save(self, *args, **kwargs):
+        if not self.revision:
+            self.revision = str(self._id) + '+' + datetime.now().isoformat()
+            super(Project, self).save(**kwargs)
+        else:
+            self.revision = str(self._id) + '+' + datetime.now().isoformat()
+            self.id = None
+            super(Project, self).save(force_insert=True, force_update=False, *args, **kwargs)
+
 
 class Mapping(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    _id = models.UUIDField(default=uuid.uuid4, editable=False)
+    deleted = models.BooleanField(default=False)
+    revision = models.TextField(editable=False)
     name = models.CharField(max_length=50)
     definition = JSONField(blank=False, null=False)
-    revision = models.TextField()
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
 
     @property
@@ -84,10 +97,21 @@ class Mapping(TimeStampedModel):
         default_related_name = 'mappings'
         ordering = ['name', 'revision']
 
+    def save(self, *args, **kwargs):
+        if not self.revision:
+            self.revision = str(self._id) + '+' + datetime.now().isoformat()
+            super(Mapping, self).save(**kwargs)
+        else:
+            self.revision = str(self._id) + '+' + datetime.now().isoformat()
+            self.id = None
+            super(Mapping, self).save(force_insert=True, force_update=False, *args, **kwargs)
+
 
 class Submission(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    revision = models.TextField(default='1')
+    _id = models.UUIDField(default=uuid.uuid4, editable=False)
+    deleted = models.BooleanField(default=False)
+    revision = models.TextField(editable=False)
     map_revision = models.TextField(default='1')
     date = models.DateTimeField(auto_now_add=True, db_index=True)
     payload = JSONField(blank=False, null=False)
@@ -105,6 +129,15 @@ class Submission(TimeStampedModel):
         default_related_name = 'submissions'
         ordering = ['mapping', '-date']
 
+    def save(self, *args, **kwargs):
+        if not self.revision:
+            self.revision = str(self._id) + '+' + datetime.now().isoformat()
+            super(Submission, self).save(**kwargs)
+        else:
+            self.revision = str(self._id) + '+' + datetime.now().isoformat()
+            self.id = None
+            super(Submission, self).save(force_insert=True, force_update=False, *args, **kwargs)
+
 
 def __attachment_path__(instance, filename):
     # file will be uploaded to MEDIA_ROOT/<submission_id>/{submission_revision}/filename
@@ -117,6 +150,9 @@ def __attachment_path__(instance, filename):
 
 class Attachment(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    _id = models.UUIDField(default=uuid.uuid4, editable=False)
+    deleted = models.BooleanField(default=False)
+    revision = models.TextField(editable=False)
     submission = models.ForeignKey(to=Submission, on_delete=models.CASCADE)
     submission_revision = models.TextField()
 
@@ -145,7 +181,13 @@ class Attachment(TimeStampedModel):
         if not self.name:
             self.name = self.attachment_file.name
 
-        super(Attachment, self).save(*args, **kwargs)
+        if not self.revision:
+            self.revision = str(self._id) + '+' + datetime.now().isoformat()
+            super(Attachment, self).save(**kwargs)
+        else:
+            self.revision = str(self._id) + '+' + datetime.now().isoformat()
+            self.id = None
+            super(Attachment, self).save(force_insert=True, force_update=False, *args, **kwargs)
 
     class Meta:
         app_label = 'kernel'
@@ -158,7 +200,9 @@ class Schema(TimeStampedModel):
     name = models.CharField(max_length=50)
     type = models.CharField(max_length=50)
     definition = JSONField(blank=False, null=False)
-    revision = models.TextField()
+    _id = models.UUIDField(default=uuid.uuid4, editable=False)
+    deleted = models.BooleanField(default=False)
+    revision = models.TextField(editable=False)
 
     @property
     def definition_prettified(self):
@@ -172,9 +216,21 @@ class Schema(TimeStampedModel):
         default_related_name = 'schemas'
         ordering = ['name', 'revision']
 
+    def save(self, *args, **kwargs):
+        if not self.revision:
+            self.revision = str(self._id) + '+' + datetime.now().isoformat()
+            super(Schema, self).save(force_insert=False, **kwargs)
+        else:
+            self.revision = str(self._id) + '+' + datetime.now().isoformat()
+            self.id = None
+            super(Schema, self).save(force_insert=True, force_update=False, *args, **kwargs)
+
 
 class ProjectSchema(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    _id = models.UUIDField(default=uuid.uuid4, editable=False)
+    deleted = models.BooleanField(default=False)
+    revision = models.TextField(editable=False)
     name = models.CharField(max_length=50)
     mandatory_fields = models.CharField(max_length=100)
     transport_rule = models.TextField()
@@ -190,22 +246,34 @@ class ProjectSchema(TimeStampedModel):
         app_label = 'kernel'
         default_related_name = 'projectschemas'
 
+    def save(self, *args, **kwargs):
+        if not self.revision:
+            self.revision = str(self._id) + '+' + datetime.now().isoformat()
+            super(ProjectSchema, self).save(**kwargs)
+        else:
+            self.revision = str(self._id) + '+' + datetime.now().isoformat()
+            self.id = None
+            super(ProjectSchema, self).save(force_insert=True, force_update=False, *args, **kwargs)
 
-class Entity(models.Model):
+
+class Entity(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    revision = models.TextField(default='1')
+    _id = models.UUIDField(default=uuid.uuid4, editable=False)
+    deleted = models.BooleanField(default=False)
+    revision = models.TextField(editable=False)
     payload = JSONField(blank=False, null=False)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
     projectschema = models.ForeignKey(to=ProjectSchema, on_delete=models.CASCADE)
     submission = models.ForeignKey(to=Submission, on_delete=models.CASCADE, blank=True, null=True)
-    modified = models.CharField(max_length=100, editable=False)
 
-    def save(self, **kwargs):
-        if self.modified:
-            self.modified = '{}-{}'.format(datetime.now().isoformat(), self.modified[27:None])
+    def save(self, *args, **kwargs):
+        if not self.revision:
+            self.revision = str(self._id) + '+' + datetime.now().isoformat()
+            super(Entity, self).save(**kwargs)
         else:
-            self.modified = '{}-{}'.format(datetime.now().isoformat(), self.id)
-        super(Entity, self).save(**kwargs)
+            self.revision = str(self._id) + '+' + datetime.now().isoformat()
+            self.id = None
+            super(Entity, self).save(force_insert=True, force_update=False, *args, **kwargs)
 
     @property
     def payload_prettified(self):
