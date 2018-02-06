@@ -429,26 +429,34 @@ def serialize_submission(submission):
         submission.save()
         return
     # Get the schema of the projectschema
-    # project_schema = models.ProjectSchema.objects.get(pk=entity_pks[0])
     project_schemas = {
-        name: models.ProjectSchema.objects.get(pk=_id) for name, _id in entity_ps_ids.items()
+        name: models.ProjectSchema.objects.get(pk=_id) for name, _id in
+        entity_ps_ids.items()
     }
-    schemas = {name: ps.schema.definition for name, ps in project_schemas.items()}
-    # schema = project_schema.schema.definition
-    result = extract_create_entities(
-        submission,
-        mapping_definition,
-        project_schemas,
-        schemas,
+    schemas = {
+        name: ps.schema.definition for name, ps in
+        project_schemas.items()
+    }
+    entities = extract_create_entities(
+        submission_payload=submission.payload,
+        mapping_definition=mapping_definition,
+        schemas=schemas,
     )
-    submission = result['submission']
     submission.save()
-    for entity in result['entities']:
-        entity.submission = submission
-        entity.save()
+    for entity in entities:
+        projectschema_name = entity['projectschema_name']
+        projectschema = project_schemas[projectschema_name]
+        instance = models.Entity(
+            id=entity['id'],
+            payload=entity['payload'],
+            status=entity['status'],
+            projectschema=projectschema,
+            submission=submission,
+        )
+        instance.save()
 
 
-def extract_create_entities(submission, mapping_definition, project_schemas, schemas):
+def extract_create_entities(submission_payload, mapping_definition, schemas):
 
     # Get entity definitions
     entity_defs = get_entity_definitions(mapping_definition, schemas)
@@ -459,13 +467,11 @@ def extract_create_entities(submission, mapping_definition, project_schemas, sch
     # Get entity requirements
     requirements = get_entity_requirements(entity_defs, field_mappings)
 
-    submission_data = submission.payload
-
     # Only attempt entity extraction if requirements are present
     if any(requirements.values()):
         data, entity_types = extract_entities(
             requirements,
-            submission_data,
+            submission_payload,
             entity_defs,
         )
     else:
@@ -476,27 +482,12 @@ def extract_create_entities(submission, mapping_definition, project_schemas, sch
         for entity in entities:
             obj = {
                 'id': entity['id'],
+                'projectschema_name': name,
                 'payload': entity,
                 'status': 'Publishable',
-                'projectschema': project_schemas.get(name)
             }
             entity_list.append(obj)
-    # If extraction was successful, create new entities
-    entities = []
-    if entity_list:
-        for e in entity_list:
-            entity = models.Entity(
-                id=e['id'],
-                payload=e['payload'],
-                status=e['status'],
-                projectschema=e['projectschema'],
-            )
-            entities.append(entity)
-
-    return {
-        'submission': submission,
-        'entities': entities,
-    }
+    return entity_list
 
 
 def merge_objects(source, target, direction):
