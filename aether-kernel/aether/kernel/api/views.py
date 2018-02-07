@@ -2,6 +2,7 @@ from django.db.models import Count, Min, Max
 from rest_framework import viewsets, permissions
 from drf_openapi.views import SchemaView
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
 
 from . import models, serializers, filters
@@ -23,7 +24,11 @@ def aether_list(request, model, serializer):
     queryset = model.objects.filter(deleted=False)\
         .order_by('_id', '-modified').distinct('_id')
     serializer_class = serializer(queryset, many=True, context={'request': request})
-    return Response(serializer_class.data, status=HTTPStatus.OK)
+    result = {
+        "count": len(serializer_class.data),
+        "results": serializer_class.data
+    }
+    return Response(result, status=HTTPStatus.OK)
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
