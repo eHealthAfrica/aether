@@ -121,11 +121,10 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     )
 
     def create(self, validated_data):
-        try:
+        # try:
             if 'mapping' in validated_data:
-                if 'revision' and 'map_revision' in validated_data:
+                if 'map_revision' in validated_data:
                     submission = models.Submission(
-                        revision=validated_data.pop('revision'),
                         map_revision=validated_data.pop('map_revision'),
                         payload=validated_data.pop('payload'),
                         mapping=validated_data.pop('mapping')
@@ -142,9 +141,8 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
                 kwargs = self.context.get('request').parser_context['kwargs']
                 mapping_id = kwargs['parent_lookup_mapping']
                 mapping = models.Mapping.objects.get(pk=mapping_id)
-                if 'revision' and 'map_revision' in validated_data:
+                if 'map_revision' in validated_data:
                     submission = models.Submission(
-                        revision=validated_data.pop('revision'),
                         map_revision=validated_data.pop('map_revision'),
                         payload=validated_data.pop('payload'),
                         mapping=mapping_id
@@ -157,9 +155,8 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
                 utils.extract_create_entities(submission)
             else:
-                if 'revision' and 'map_revision' in validated_data:
+                if 'map_revision' in validated_data:
                     submission = models.Submission(
-                        revision=validated_data.pop('revision'),
                         map_revision=validated_data.pop('map_revision'),
                         payload=validated_data.pop('payload'),
                     )
@@ -171,10 +168,10 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
                 submission.save()
 
             return submission
-        except Exception as e:
-            raise serializers.ValidationError({
-                'description': 'Submission validation failed'
-            })
+        # except Exception as e:
+        #     raise serializers.ValidationError({
+        #         'description': 'Submission validation failed' + '>> ' + str(e)
+        #     })
 
     class Meta:
         model = models.Submission
@@ -242,7 +239,6 @@ class ProjectSchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 
 class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    lookup_field = 'merge'
     url = serializers.HyperlinkedIdentityField(
         view_name='entity-detail',
         read_only=True

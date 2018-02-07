@@ -273,7 +273,7 @@ class ImportTestCase(TestCase):
         import_synced_devices()
 
         docs = get_aether_submissions(self.mapping_id)
-        submission_id = docs[0]['id']
+        submission_id = docs[0]['_id']
 
         doc_to_update = couchdb.get(doc_url).json()
         doc_to_update['firstname'] = 'Rey'
@@ -284,7 +284,7 @@ class ImportTestCase(TestCase):
         import_synced_devices()
 
         updated = get_aether_submissions(self.mapping_id)[0]
-        self.assertEqual(updated['id'], submission_id, 'updated same doc')
+        self.assertEqual(updated['_id'], submission_id, 'updated same doc')
         self.assertEqual(
             updated['payload']['_id'],
             self.example_doc['_id'],

@@ -18,7 +18,6 @@ class ModelsTests(TransactionTestCase):
     def test_models(self):
 
         project = models.Project.objects.create(
-            revision='rev 1',
             name='a project name',
             salad_schema='a sample salad schema',
             jsonld_context='sample context',
