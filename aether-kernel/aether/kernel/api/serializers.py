@@ -172,7 +172,6 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
             return submission
         except Exception as e:
-            import pdb; pdb.set_trace()
             raise serializers.ValidationError({
                 'description': 'Submission validation failed'
             })

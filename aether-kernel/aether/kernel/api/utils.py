@@ -478,11 +478,11 @@ def extract_create_entities(submission_payload, mapping_definition, schemas):
         entity_types = {}
 
     entity_list = []
-    for name, entities in entity_types.items():
+    for projectschema_name, entities in entity_types.items():
         for entity in entities:
             obj = {
                 'id': entity['id'],
-                'projectschema_name': name,
+                'projectschema_name': projectschema_name,
                 'payload': entity,
                 'status': 'Publishable',
             }
