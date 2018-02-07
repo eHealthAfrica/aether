@@ -418,7 +418,7 @@ def extract_entities(requirements, response_data, entity_definitions):
     return data, entities
 
 
-def serialize_submission(submission):
+def run_entity_extraction(submission):
     # Get the mapping definition from the submission (submission.mapping.definition):
     mapping_definition = submission.mapping.definition
     # Get the primary key of the projectschema
@@ -446,14 +446,14 @@ def serialize_submission(submission):
     for entity in entities:
         projectschema_name = entity['projectschema_name']
         projectschema = project_schemas[projectschema_name]
-        instance = models.Entity(
+        entity_instance = models.Entity(
             id=entity['id'],
             payload=entity['payload'],
             status=entity['status'],
             projectschema=projectschema,
             submission=submission,
         )
-        instance.save()
+        entity_instance.save()
 
 
 def extract_create_entities(submission_payload, mapping_definition, schemas):
