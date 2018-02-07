@@ -135,12 +135,13 @@ class UtilsTests(TestCase):
     def test_extract_create_entities(self):
         submission_payload = EXAMPLE_SOURCE_DATA
         mapping_definition = EXAMPLE_MAPPING
-        schemas = EXAMPLE_SCHEMA
+        schemas = {'Person': EXAMPLE_SCHEMA}
         entities = utils.extract_create_entities(
             submission_payload,
             mapping_definition,
             schemas,
         )
+        self.assertTrue(len(entities) > 0)
         for entity in entities:
             self.assertEqual(entity['id'], entity['payload']['id'])
             self.assertIn(entity['projectschema_name'], schemas.keys())

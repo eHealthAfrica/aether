@@ -65,3 +65,24 @@ class EntityViewSet(viewsets.ModelViewSet):
 
 class AetherSchemaView(SchemaView):
     permission_classes = (permissions.AllowAny, )
+
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    renderer_classes,
+)
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from django.http import JsonResponse
+from rest_framework.response import Response
+
+from . import utils
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def test_entity_extraction(request):
+    import json
+    body = json.loads(request.body.decode('utf-8'))
+    result = utils.extract_create_entities(**body)
+    return JsonResponse({
+        'entities': result
+    })

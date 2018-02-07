@@ -293,3 +293,13 @@ class ViewsTest(TransactionTestCase):
             dateutil.parser.parse(json['first_submission']),
             dateutil.parser.parse(json['last_submission']),
         )
+
+    def test_example_entity_extraction(self):
+        url = reverse('entity-extraction-test')
+        data = json.dumps({
+            'submission_payload': EXAMPLE_SOURCE_DATA,
+            'mapping_definition': EXAMPLE_MAPPING,
+            'schemas': {'Person': EXAMPLE_SCHEMA},
+        })
+        response = self.client.post(url, data=data, content_type='application/json')
+        import pdb; pdb.set_trace()

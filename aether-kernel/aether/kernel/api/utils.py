@@ -418,6 +418,40 @@ def extract_entities(requirements, response_data, entity_definitions):
     return data, entities
 
 
+def extract_create_entities(submission_payload, mapping_definition, schemas):
+
+    # Get entity definitions
+    entity_defs = get_entity_definitions(mapping_definition, schemas)
+
+    # Get field mappings
+    field_mappings = get_field_mappings(mapping_definition)
+
+    # Get entity requirements
+    requirements = get_entity_requirements(entity_defs, field_mappings)
+
+    # Only attempt entity extraction if requirements are present
+    if any(requirements.values()):
+        data, entity_types = extract_entities(
+            requirements,
+            submission_payload,
+            entity_defs,
+        )
+    else:
+        entity_types = {}
+
+    entity_list = []
+    for projectschema_name, entities in entity_types.items():
+        for entity in entities:
+            obj = {
+                'id': entity['id'],
+                'projectschema_name': projectschema_name,
+                'payload': entity,
+                'status': 'Publishable',
+            }
+            entity_list.append(obj)
+    return entity_list
+
+
 def run_entity_extraction(submission):
     # Get the mapping definition from the submission (submission.mapping.definition):
     mapping_definition = submission.mapping.definition
@@ -454,40 +488,6 @@ def run_entity_extraction(submission):
             submission=submission,
         )
         entity_instance.save()
-
-
-def extract_create_entities(submission_payload, mapping_definition, schemas):
-
-    # Get entity definitions
-    entity_defs = get_entity_definitions(mapping_definition, schemas)
-
-    # Get field mappings
-    field_mappings = get_field_mappings(mapping_definition)
-
-    # Get entity requirements
-    requirements = get_entity_requirements(entity_defs, field_mappings)
-
-    # Only attempt entity extraction if requirements are present
-    if any(requirements.values()):
-        data, entity_types = extract_entities(
-            requirements,
-            submission_payload,
-            entity_defs,
-        )
-    else:
-        entity_types = {}
-
-    entity_list = []
-    for projectschema_name, entities in entity_types.items():
-        for entity in entities:
-            obj = {
-                'id': entity['id'],
-                'projectschema_name': projectschema_name,
-                'payload': entity,
-                'status': 'Publishable',
-            }
-            entity_list.append(obj)
-    return entity_list
 
 
 def merge_objects(source, target, direction):

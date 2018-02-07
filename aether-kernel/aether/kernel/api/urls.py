@@ -1,3 +1,4 @@
+from django.conf.urls import include, url
 from rest_framework.routers import DefaultRouter
 
 from . import views
@@ -14,4 +15,6 @@ router.register('attachments', views.AttachmentViewSet)
 router.register('entities', views.EntityViewSet)
 router.register('schemas', views.SchemaViewSet)
 
-urlpatterns = router.urls
+urlpatterns = router.urls + [
+    url(r'^entity-extraction-test/$', views.test_entity_extraction, name='entity-extraction-test')
+]
