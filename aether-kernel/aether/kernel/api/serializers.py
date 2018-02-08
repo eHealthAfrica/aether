@@ -74,16 +74,6 @@ class ProjectSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         model = models.Project
         fields = '__all__'
 
-    def create(self, validated_data):
-        if 'name' in validated_data:
-            try:
-                existing_name = models.Project.objects.get(name=validated_data['name'])
-                print('NAME', existing_name)
-            except models.Project.DoesNotExist:
-                raise serializers.ValidationError({
-                'description': 'Submission validation failed'
-                })
-
 
 class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
