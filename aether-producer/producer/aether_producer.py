@@ -9,7 +9,7 @@ import signal
 from avro.io import DatumWriter
 from avro.datafile import DataFileWriter
 from kafka import KafkaProducer
-from .aether.client import KernelClient
+from aether.client import KernelClient
 from psycopg2.extras import DictCursor
 from time import sleep as Sleep
 

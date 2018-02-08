@@ -21,7 +21,7 @@ COPY ./ /code
 
 WORKDIR /code
 
-RUN pip install -f /code/conf/pip/dependencies -r /code/conf/pip/primary-requirements.txt
+RUN pip install -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt
 
 
 

@@ -479,7 +479,7 @@ class DataEndpoint(object):
         while True:
             payload = self.client.get(url)
             if not payload:  # TODO TEST
-                return None
+                raise StopIteration
             results = payload.get('results')
             if not results:
                 raise StopIteration
@@ -540,7 +540,6 @@ class EntityData(DataEndpoint):
     def info(self, term=None):
         obj = {
             "type": "entity_endpoint",
-            "projectschema_name": self.name,
             "url": self.url
         }
 
