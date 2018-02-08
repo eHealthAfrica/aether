@@ -167,7 +167,7 @@ class EntityResolver(GenericCollection):
             self.client
         )
         if not resolver.valid:
-            return None
+            pass  # We may need to note this status somehow in the future
         return resolver
 
     def pluck(self, key):
