@@ -26,10 +26,13 @@ show_help() {
 }
 
 test_flake8() {
+    '''
     flake8 /code/. --config=/code/conf/extras/flake8.cfg
+    '''
 }
 
 test_coverage() {
+    '''
     export RCFILE=/code/conf/extras/coverage.rc
     export TESTING=true
     export DEBUG=false
@@ -37,7 +40,7 @@ test_coverage() {
     coverage run    --rcfile="$RCFILE" manage.py test "${@:1}"
     coverage report --rcfile="$RCFILE"
     coverage erase
-
+    '''
     cat /code/conf/extras/good_job.txt
 }
 
