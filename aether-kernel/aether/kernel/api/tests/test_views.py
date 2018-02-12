@@ -312,7 +312,6 @@ class ViewsTest(TransactionTestCase):
     def test_example_entity_extraction__failure(self):
         url = reverse('validate-mappings')
         data = json.dumps({
-            # assume this is always valid
             'submission_payload': EXAMPLE_SOURCE_DATA,
             'mapping_definition': {
                 'entities': {
@@ -326,7 +325,6 @@ class ViewsTest(TransactionTestCase):
                     ['data.village', 'Person.not_a_field'],
                 ],
             },
-            # assume this is always valid
             'schemas': {
                 'Person': EXAMPLE_SCHEMA,
             },
@@ -339,3 +337,26 @@ class ViewsTest(TransactionTestCase):
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data['entities']), 1)
         self.assertEqual(len(response_data['mapping_errors']), 2)
+
+    def test_example_entity_extraction__assert_raises(self):
+        url = reverse('validate-mappings')
+        data = json.dumps({
+            'mapping_definition': {
+                'entities': {
+                    'Person': 1,
+                },
+                'mapping': [
+                    ['#!uuid', 'Person.id'],
+                    # "person" is not a schema
+                    ['data.village', 'person.villageID'],
+                    # "not_a_field" is not a field of `Person`
+                    ['data.village', 'Person.not_a_field'],
+                ],
+            },
+        })
+        response = self.client.post(
+            url,
+            data=data,
+            content_type='application/json'
+        )
+        self.assertEquals(response.status_code, 400)

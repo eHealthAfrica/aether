@@ -9,6 +9,7 @@ from rest_framework.decorators import (
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
 
 from drf_openapi.views import SchemaView
 
@@ -87,16 +88,37 @@ class AetherSchemaView(SchemaView):
 @renderer_classes([JSONRenderer])
 @permission_classes([IsAuthenticated])
 def validate_mappings(request):
-    data = request.data
-    entities = utils.extract_create_entities(**data)
-    mapping_errors = mapping_validation.validate_mappings(
-        submission_payload=data['submission_payload'],
-        entity_list=entities,
-        mapping_definition=data['mapping_definition'],
-    )
-    return Response({
-        'entities': entities,
-        'mapping_errors': [
-            dict(error._asdict()) for error in mapping_errors
-        ],
-    })
+    '''
+    Given a `submission_payload`, a `mapping_definition` and a list of
+    `entities`, verify that each mapping function in `mapping_definition` can
+    extract a value from `submission_payload` and assign it to at least one
+    entity in `entities`.
+
+    This endpoint is useful for clients who are in the process of
+    developing an Aether solution but have not yet submitted any complete
+    Project; using this endpoint, it is possible to check the mapping functions
+    (jsonpaths) align with both the source (`submission_payload`) and the
+    target (`entity_list`).
+    '''
+
+    try:
+        data = request.data
+        entities = utils.extract_create_entities(**data)
+        mapping_errors = mapping_validation.validate_mappings(
+            submission_payload=data['submission_payload'],
+            entity_list=entities,
+            mapping_definition=data['mapping_definition'],
+        )
+        return Response({
+            'entities': [
+                entity.payload for entity in entities
+            ],
+            'mapping_errors': [
+                error._asdict() for error in mapping_errors
+            ],
+        })
+    except Exception as e:
+        return Response(
+            {'message': 'Entity extraction error'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
