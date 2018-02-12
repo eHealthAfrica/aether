@@ -3,13 +3,12 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 from drf_dynamic_fields import DynamicFieldsMixin
 
-from . import models
-from . import utils
-
+from . import models, utils, constants
 
 import urllib
 
-m_options = utils.MergeOptions
+
+m_options = constants.MergeOptions
 
 MERGE_CHOICES = (
     (m_options.overwrite.value, 'Overwrite (Do not merge)'),
