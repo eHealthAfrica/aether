@@ -51,7 +51,7 @@ Data model schema:
 class Project(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     revision = models.TextField()
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, null=False, unique=True)
     salad_schema = models.TextField()
     jsonld_context = models.TextField()
     rdf_definition = models.TextField()
@@ -67,7 +67,7 @@ class Project(TimeStampedModel):
 
 class Mapping(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, null=False, unique=True)
     definition = JSONField(blank=False, null=False)
     revision = models.TextField()
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
@@ -155,7 +155,7 @@ class Attachment(TimeStampedModel):
 
 class Schema(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, null=False, unique=True)
     type = models.CharField(max_length=50)
     definition = JSONField(blank=False, null=False)
     revision = models.TextField()
@@ -175,7 +175,7 @@ class Schema(TimeStampedModel):
 
 class ProjectSchema(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, null=False, unique=True)
     mandatory_fields = models.CharField(max_length=100)
     transport_rule = models.TextField()
     masked_fields = models.TextField()
