@@ -295,7 +295,7 @@ class ViewsTest(TransactionTestCase):
         )
 
     def test_example_entity_extraction__success(self):
-        url = reverse('entity-extraction-test')
+        url = reverse('validate-mappings')
         data = json.dumps({
             'submission_payload': EXAMPLE_SOURCE_DATA,
             'mapping_definition': EXAMPLE_MAPPING,
@@ -310,7 +310,7 @@ class ViewsTest(TransactionTestCase):
         self.assertEqual(len(response_data['mapping_errors']), 0)
 
     def test_example_entity_extraction__failure(self):
-        url = reverse('entity-extraction-test')
+        url = reverse('validate-mappings')
         data = json.dumps({
             # assume this is always valid
             'submission_payload': EXAMPLE_SOURCE_DATA,

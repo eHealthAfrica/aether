@@ -16,5 +16,7 @@ router.register('entities', views.EntityViewSet)
 router.register('schemas', views.SchemaViewSet)
 
 urlpatterns = router.urls + [
-    url(r'^entity-extraction-test/$', views.test_entity_extraction, name='entity-extraction-test')
+    url(r'^validate-mappings/$',
+        views.validate_mappings,
+        name='validate-mappings')
 ]
