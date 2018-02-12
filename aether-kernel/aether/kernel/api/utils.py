@@ -418,6 +418,12 @@ def extract_entities(requirements, response_data, entity_definitions):
     return data, entities
 
 
+Entity = collections.namedtuple(
+    'Entity',
+    ['id', 'payload', 'projectschema_name', 'status']
+)
+
+
 def extract_create_entities(submission_payload, mapping_definition, schemas):
 
     # Get entity definitions
@@ -442,13 +448,14 @@ def extract_create_entities(submission_payload, mapping_definition, schemas):
     entity_list = []
     for projectschema_name, entities in entity_types.items():
         for entity in entities:
-            obj = {
-                'id': entity['id'],
-                'projectschema_name': projectschema_name,
-                'payload': entity,
-                'status': 'Publishable',
-            }
+            obj = Entity(
+                id=entity['id'],
+                payload=entity,
+                projectschema_name=projectschema_name,
+                status='Publishable',
+            )
             entity_list.append(obj)
+
     return entity_list
 
 
@@ -478,12 +485,12 @@ def run_entity_extraction(submission):
     )
     submission.save()
     for entity in entities:
-        projectschema_name = entity['projectschema_name']
+        projectschema_name = entity.projectschema_name
         projectschema = project_schemas[projectschema_name]
         entity_instance = models.Entity(
-            id=entity['id'],
-            payload=entity['payload'],
-            status=entity['status'],
+            id=entity.id,
+            payload=entity.payload,
+            status=entity.status,
             projectschema=projectschema,
             submission=submission,
         )

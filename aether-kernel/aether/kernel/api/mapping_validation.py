@@ -43,9 +43,9 @@ def validate_mapping(submission_payload, entity_list, mapping):
     )
 
 
-def validate_mappings(submission_payload, entity_list, mappings):
+def validate_mappings(submission_payload, entity_list, mapping_definition):
     errors = []
-    for mapping in mappings:
+    for mapping in mapping_definition['mapping']:
         for result in validate_mapping(submission_payload, entity_list, mapping):
             if isinstance(result, Failure):
                 errors.append(result)

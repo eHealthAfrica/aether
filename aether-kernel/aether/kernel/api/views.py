@@ -1,8 +1,22 @@
 from django.db.models import Count, Min, Max
+from django.http import JsonResponse
+
 from rest_framework import viewsets, permissions
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+)
+from rest_framework.permissions import IsAuthenticated
+
 from drf_openapi.views import SchemaView
 
-from . import models, serializers, filters
+from . import (
+    filters,
+    mapping_validation,
+    models,
+    serializers,
+    utils,
+)
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -66,23 +80,21 @@ class EntityViewSet(viewsets.ModelViewSet):
 class AetherSchemaView(SchemaView):
     permission_classes = (permissions.AllowAny, )
 
-from rest_framework.decorators import (
-    api_view,
-    permission_classes,
-    renderer_classes,
-)
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from django.http import JsonResponse
-from rest_framework.response import Response
-
-from . import utils
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def test_entity_extraction(request):
     import json
     body = json.loads(request.body.decode('utf-8'))
-    result = utils.extract_create_entities(**body)
+    entities = utils.extract_create_entities(**body)
+    mapping_errors = mapping_validation.validate_mappings(
+        submission_payload=body['submission_payload'],
+        entity_list=entities,
+        mapping_definition=body['mapping_definition'],
+    )
     return JsonResponse({
-        'entities': result
+        'entities': entities,
+        'mapping_errors': [
+            error._asdict() for error in mapping_errors
+        ],
     })

@@ -1,11 +1,6 @@
-from collections import namedtuple
-
 from django.test import TestCase
 from .. import mapping_validation
 from .. import utils
-from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA,
-               EXAMPLE_REQUIREMENTS, EXAMPLE_ENTITY_DEFINITION,
-               EXAMPLE_FIELD_MAPPINGS, EXAMPLE_ENTITY)
 
 
 class TestMappingValidation(TestCase):
@@ -67,7 +62,7 @@ class TestMappingValidation(TestCase):
                 status='Publishable',
             ),
         ]
-        path = 'Test-3.a.b' # nonexistent project schema name "Test-3"
+        path = 'Test-3.a.b'  # nonexistent project schema name "Test-3"
         error_message = mapping_validation.MESSAGE_NO_MATCH
         expected = mapping_validation.Failure(path, error_message)
         result = mapping_validation.validate_setter(entity_list, path)
@@ -89,17 +84,19 @@ class TestMappingValidation(TestCase):
                 status='Publishable',
             ),
         ]
-        mappings = [
-            ('$.a.b', 'Test-1.a.b'),
-            ('$.c.d', 'Test-2.c.d'),
-        ]
+        mapping_definition = {
+            'mapping': [
+                ('$.a.b', 'Test-1.a.b'),
+                ('$.c.d', 'Test-2.c.d'),
+            ]
+        }
         expected = []
         result = mapping_validation.validate_mappings(
-            submission_payload, entity_list, mappings,
+            submission_payload, entity_list, mapping_definition,
         )
         self.assertEquals(expected, result)
 
-    def test_validate_mapping__success(self):
+    def test_validate_mapping__failure(self):
         submission_payload = {'a': {'b': 'x'}, 'c': {'d': 'y'}}
         entity_list = [
             utils.Entity(
@@ -115,21 +112,23 @@ class TestMappingValidation(TestCase):
                 status='Publishable',
             ),
         ]
-        mappings = [
-            ('$.a.b', 'Test-1.nonexistent'),
-            ('$.nonexistent', 'Test-2.c.d'),
-        ]
+        mapping_definition = {
+            'mapping': [
+                ('$.a.b', 'Test-1.nonexistent'),
+                ('$.nonexistent', 'Test-2.c.d'),
+            ]
+        }
         expected = [
             mapping_validation.Failure(
-                path=mappings[0][1],
+                path=mapping_definition['mapping'][0][1],
                 error_message=mapping_validation.MESSAGE_NO_MATCH,
             ),
             mapping_validation.Failure(
-                path=mappings[1][0],
+                path=mapping_definition['mapping'][1][0],
                 error_message=mapping_validation.MESSAGE_NO_MATCH,
             ),
         ]
         result = mapping_validation.validate_mappings(
-            submission_payload, entity_list, mappings,
+            submission_payload, entity_list, mapping_definition,
         )
         self.assertEquals(expected, result)

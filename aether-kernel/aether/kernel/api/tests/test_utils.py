@@ -1,5 +1,3 @@
-from collections import namedtuple
-
 from django.test import TestCase
 from .. import utils
 from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA,
@@ -143,9 +141,9 @@ class UtilsTests(TestCase):
         )
         self.assertTrue(len(entities) > 0)
         for entity in entities:
-            self.assertEqual(entity['id'], entity['payload']['id'])
-            self.assertIn(entity['projectschema_name'], schemas.keys())
-            self.assertEqual(entity['status'], 'Publishable')
+            self.assertEqual(entity.id, entity.payload['id'])
+            self.assertIn(entity.projectschema_name, schemas.keys())
+            self.assertEqual(entity.status, 'Publishable')
 
     def test_is_not_custom_jsonpath(self):
         # Examples taken from https://github.com/json-path/JsonPath#path-examples
