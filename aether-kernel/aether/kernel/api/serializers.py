@@ -252,6 +252,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='projectschema-detail',
     )
     merge = serializers.ChoiceField(MERGE_CHOICES, default=m_options.overwrite.value)
+    resolved = serializers.JSONField(default={})
 
     def create(self, validated_data):
         try:
