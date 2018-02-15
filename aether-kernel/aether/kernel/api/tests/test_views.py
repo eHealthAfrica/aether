@@ -16,7 +16,7 @@ from . import (EXAMPLE_MAPPING, EXAMPLE_SOURCE_DATA, EXAMPLE_GAMETOKEN_SCHEMA,
 
 class ViewsTest(TransactionTestCase):
 
-    enity_payload = {'firstname': 'test first name', 'lastname': 'test last name'}
+    entity_payload = {'name': 'Person name updated'}
     test_schema = None
     test_project_schema = None
 
@@ -70,7 +70,7 @@ class ViewsTest(TransactionTestCase):
 
         self.entity = models.Entity.objects.create(
             revision='a sample revision',
-            payload=self.enity_payload,
+            payload=self.entity_payload,
             status='a sample status',
             projectschema=self.projectschema,
             submission=self.submission
@@ -183,11 +183,14 @@ class ViewsTest(TransactionTestCase):
 
     # TEST UPDATE
 
-    def helper_update_object_id(self, view_name, updated_data, Obj):
+    def helper_update_object_id(self, view_name, updated_data, Obj, isNegative=False):
         url = reverse(view_name, kwargs={'pk': Obj.pk})
         updated_data = json.dumps(updated_data)
         response = self.client.put(url, updated_data, content_type='application/json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        if isNegative:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        else:
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
         return response
 
     def test_api_update_instance_id(self):
@@ -204,20 +207,47 @@ class ViewsTest(TransactionTestCase):
             'payload': {},
             'mapping': str(self.mapping.pk),
         }, self.submission)
+        updated_example_payload = EXAMPLE_SOURCE_DATA_ENTITY
+        updated_example_payload['name'] = 'Person name updated'
         self.helper_update_object_id('entity-detail', {
             'revision': 'Sample entity revision updated',
-            'payload': {'firstname': 'Test first name updated'},
+            'payload': updated_example_payload,
             'status': 'Publishable',
             'projectschema': str(self.projectschema.pk),
         }, self.entity)
+        updated_example_payload = EXAMPLE_SOURCE_DATA_ENTITY
+        updated_example_payload['name'] = 'Test last name updated'
+        updated_example_payload['new_prop'] = 'Test prop updated'
         self.helper_update_object_id('entity-detail', {
             'revision': 'Sample entity revision updated',
-            'payload': {'lastname': 'Test last name updated', 'new_prop': 'Test prop updated'},
+            'payload': updated_example_payload,
             'merge': 'first_write_wins',
             'status': 'Publishable',
             'projectschema': str(self.projectschema.pk),
         }, self.entity)
-        self.assertEqual(self.enity_payload['lastname'], self.entity.payload['lastname'])
+        returned_entity = models.Entity.objects.get(pk=self.entity.pk)
+        self.assertEqual(self.entity_payload['name'], returned_entity.payload['name'])
+        self.assertIsNotNone(returned_entity.payload['new_prop'])
+        updated_example_payload['name'] = 'Test last name updated'
+        updated_example_payload['new_prop2'] = 'Test prop updated'
+        self.helper_update_object_id('entity-detail', {
+            'revision': 'Sample entity revision updated',
+            'payload': updated_example_payload,
+            'merge': 'last_write_wins',
+            'status': 'Publishable',
+            'projectschema': str(self.projectschema.pk),
+        }, self.entity)
+        returned_entity = models.Entity.objects.get(pk=self.entity.pk)
+        self.assertNotEqual(self.entity_payload['name'], returned_entity.payload['name'])
+        self.assertIsNotNone(returned_entity.payload['new_prop2'])
+        invalid_example_payload = dict(EXAMPLE_SOURCE_DATA_ENTITY)
+        del invalid_example_payload['villageID']
+        self.helper_update_object_id('entity-detail', {
+            'revision': 'Sample entity revision updated',
+            'payload': invalid_example_payload,
+            'status': 'Publishable',
+            'projectschema': str(self.projectschema.pk),
+        }, self.entity, True)
         self.helper_update_object_id('project-detail', {
             'name': 'Project name 2',
             'revision': 'Sample project revision',
@@ -228,7 +258,7 @@ class ViewsTest(TransactionTestCase):
         self.helper_update_object_id('schema-detail', {
             'name': 'Schema name 2',
             'type': 'Type',
-            'definition': {},
+            'definition': EXAMPLE_SCHEMA,
             'revision': 'Sample schema revision',
         }, self.schema)
         self.helper_update_object_id('projectschema-detail', {

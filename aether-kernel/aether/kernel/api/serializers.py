@@ -300,6 +300,10 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
                     utils.merge_objects(instance.payload, target_payload, merge_value)
             else:
                 instance.payload = target_payload
+            try:
+                utils.validate_entity_payload(instance.projectschema, instance.payload)
+            except Exception as schemaError:
+                raise serializers.ValidationError(schemaError)
             instance.save()
             return instance
         except Exception as e:
