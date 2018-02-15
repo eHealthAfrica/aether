@@ -308,6 +308,23 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = '__all__'
 
 
+class EntityLDSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name='entity-detail',
+        read_only=True
+    )
+    projectschema_url = serializers.HyperlinkedRelatedField(
+        read_only=True,
+        source='projectschema',
+        view_name='projectschema-detail',
+    )
+    merge = serializers.ChoiceField(MERGE_CHOICES, default=m_options.overwrite.value)
+
+    class Meta:
+        model = models.Entity
+        fields = '__all__'
+
+
 class MappingStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     first_submission = serializers.DateTimeField()
     last_submission = serializers.DateTimeField()

@@ -20,7 +20,7 @@ def get_entity_linked_data(entity, request, resolved, depth, start_depth=0):
                     linked_entity_schema_name = linked_entity.projectschema.schema.name
                     if linked_entity_schema_name not in resolved:
                         resolved[linked_entity_schema_name] = {}
-                    resolved[linked_entity_schema_name][linked_data_ref] = serializers.EntitySerializer(
+                    resolved[linked_entity_schema_name][linked_data_ref] = serializers.EntityLDSerializer(
                         linked_entity, context={'request': request}).data
                     get_entity_linked_data(linked_entity, request, resolved, depth, start_depth)
             except Exception as e:
