@@ -9,12 +9,16 @@ from django.urls import reverse
 from rest_framework import status
 from .. import models
 
-from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA)
+from . import (EXAMPLE_MAPPING, EXAMPLE_SOURCE_DATA, EXAMPLE_GAMETOKEN_SCHEMA,
+               EXAMPLE_VALID_PAYLOAD, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA_ENTITY,
+               EXAMPLE_INVALID_PAYLOAD)
 
 
 class ViewsTest(TransactionTestCase):
 
     enity_payload = {'firstname': 'test first name', 'lastname': 'test last name'}
+    test_schema = None
+    test_project_schema = None
 
     def setUp(self):
         username = 'test'
@@ -49,7 +53,8 @@ class ViewsTest(TransactionTestCase):
 
         self.schema = models.Schema.objects.create(
             name='schema1',
-            definition={},
+            type='record',
+            definition=EXAMPLE_SCHEMA,
             revision='a sample revision'
         )
 
@@ -76,11 +81,14 @@ class ViewsTest(TransactionTestCase):
         self.client.logout()
 
     # TEST CREATE:
-    def helper_create_object(self, view_name, data):
+    def helper_create_object(self, view_name, data, isNegative=False):
         url = reverse(view_name)
         data = json.dumps(data)
         response = self.client.post(url, data, content_type='application/json')
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        if isNegative:
+            self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        else:
+            self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         return response
 
     def test_api_create_instance(self):
@@ -121,11 +129,42 @@ class ViewsTest(TransactionTestCase):
         })
         self.helper_create_object('entity-list', {
             'revision': 'Sample entity revision',
-            'payload': {},
+            'payload': EXAMPLE_SOURCE_DATA_ENTITY,
             'status': 'Publishable',
             'projectschema': str(self.projectschema.pk),
             'submission': str(self.submission.pk),
         })
+        test_schema_id = json.loads(self.helper_create_object('schema-list', {
+            'name': 'GameToken',
+            'type': 'record',
+            'definition': EXAMPLE_GAMETOKEN_SCHEMA,
+            'revision': '1',
+        }).content)['id']
+        self.test_schema = models.Schema.objects.get(pk=test_schema_id)
+        test_project_schema_id = json.loads(self.helper_create_object('projectschema-list', {
+            'name': 'Project Schema 2',
+            'mandatory_fields': 'Sample projectschema mandatory fields',
+            'transport_rule': 'Sample projectschema transport rule',
+            'masked_fields': 'Sample projectschema masked fields',
+            'isEncrypted': True,
+            'project': str(self.project.pk),
+            'schema': str(self.test_schema.pk),
+        }).content)['id']
+        self.test_project_schema = models.ProjectSchema.objects.get(pk=test_project_schema_id)
+        self.helper_create_object('entity-list', {
+            'revision': '1',
+            'payload': EXAMPLE_VALID_PAYLOAD,
+            'status': 'Publishable',
+            'projectschema': str(self.test_project_schema.pk),
+            'submission': str(self.submission.pk),
+        })
+        self.helper_create_object('entity-list', {
+            'revision': '1',
+            'payload': EXAMPLE_INVALID_PAYLOAD,
+            'status': 'Publishable',
+            'projectschema': str(self.test_project_schema.pk),
+            'submission': str(self.submission.pk),
+        }, True)
 
     # TEST READ
     def helper_read_object_id(self, view_name, Obj):

@@ -256,6 +256,10 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     def create(self, validated_data):
         try:
+            utils.validate_entity_payload(validated_data['projectschema'], validated_data['payload'])
+        except Exception as schemaError:
+            raise serializers.ValidationError(schemaError)
+        try:
             entity = models.Entity(
                 payload=validated_data.pop('payload'),
                 status=validated_data.pop('status'),
