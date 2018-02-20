@@ -140,6 +140,8 @@ case "$1" in
 
         # expose version number
         cp VERSION /var/www/VERSION
+        # add git revision 
+        cp /code/REVISION /var/www/REVISION 
 
         /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
     ;;
