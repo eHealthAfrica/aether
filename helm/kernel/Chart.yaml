@@ -1,0 +1,4 @@
+apiVersion: v1
+description: A Helm chart for Aether Kernel on Kubernetes
+name: kernel
+version: 0.1.0

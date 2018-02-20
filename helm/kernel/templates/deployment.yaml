@@ -1,0 +1,169 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "kernel.fullname" . }}
+  labels:
+    app: {{ template "kernel.name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "kernel.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.internalPort }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.service.internalPort }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.service.internalPort }}
+          env:
+          - name: CAS_SERVER_URL
+          value: https://{{ .Values.ums_url }}.ehealthafrica.org
+          - name: CSRF_COOKIE_DOMAIN
+            value: .{{ .Values.domain }}
+          - name: HOSTNAME
+            value: {{ .Values.url_prefix }}.gather2.org
+          - name: RDS_DB_NAME
+            value: {{ .Values.datbase_name }} 
+          - name: RDS_PORT
+            value: {{ .Values.database_port }} 
+          - name: WEB_SERVER_PORT
+            value: {{ .Values.web_server_port }} 
+          - name: AETHER_KERNEL_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.environment }}-{{ .Values.project }}-secrets
+                key: kernel_token 
+          - name: RDS_HOSTNAME
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.environment }}-database 
+                key: host 
+          - name: RDS_USERNAME 
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Value.environment }}-database 
+                key: user 
+          - name: RDS_PASSWORD 
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Value.environment }}-database 
+                key: password
+          volumeMounts:
+          - mountPath: /var/www/static
+            name: static-assets-volume
+          stdin: true
+          tty: true
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: /var/www/static
+          name: static-assets-volume    
+        - name: kernel-nginx-config 
+          mountPath: /etc/nginx/conf.d
+      imagePullSecrets:
+        - name: regsecret
+      volumes:
+        - name: static-assets-volume
+          emptyDir: {}
+        - name: kernel-nginx-config 
+          configMap:
+            name: kernel-nginx-config
+      restartPolicy: Always
+
+
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kernel
+  labels:
+    app: kernel
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: kernel
+    spec:
+      containers:
+      - name: kernel  
+        image: ehealthafrica/aether-kernel
+        args:
+        - start
+        ports:
+        - containerPort: 8000
+        env:
+        - name: CAS_SERVER_URL
+          value: https://ums-dev.ehealthafrica.org
+        - name: CSRF_COOKIE_DOMAIN
+          value: .gather2.org
+        - name: HOSTNAME
+          value: kernel-dev-goa.gather2.org
+        - name: RDS_DB_NAME
+          value: aether-kernel
+        - name: RDS_PORT
+          value: "5432"
+        - name: WEB_SERVER_PORT
+          value: "8001"
+        - name: AETHER_KERNEL_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: dev-goa-secrets
+              key: kernel_token 
+        - name: RDS_HOSTNAME
+          valueFrom:
+            secretKeyRef:
+              name: dev-database 
+              key: host 
+        - name: RDS_USERNAME 
+          valueFrom:
+            secretKeyRef:
+              name: dev-database 
+              key: user 
+        - name: RDS_PASSWORD 
+          valueFrom:
+            secretKeyRef:
+              name: dev-database 
+              key: password
+        volumeMounts:
+        - mountPath: /var/www/static
+          name: static-assets-volume
+        stdin: true
+        tty: true
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: /var/www/static
+          name: static-assets-volume    
+        - name: kernel-nginx-config 
+          mountPath: /etc/nginx/conf.d
+      imagePullSecrets:
+        - name: regsecret
+      volumes:
+        - name: static-assets-volume
+          emptyDir: {}
+        - name: kernel-nginx-config 
+          configMap:
+            name: kernel-nginx-config
+      restartPolicy: Always
