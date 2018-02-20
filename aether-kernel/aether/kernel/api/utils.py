@@ -4,7 +4,9 @@ import re
 import uuid
 
 import jsonpath_ng
+from avro import schema
 from jsonpath_ng import parse
+from avro.io import Validate, AvroTypeException
 
 from django.utils.safestring import mark_safe
 from pygments import highlight
@@ -498,3 +500,17 @@ def merge_objects(source, target, direction):
             source[key] = target[key]
         result = source
     return result
+
+
+def validate_entity_payload(project_Schema, payload):
+    # Use avro.io to validate payload against the linke schema
+    schema_str = ''
+    if type(project_Schema.schema.definition) == list:
+        project_Schema.schema.definition[0]['name'] = project_Schema.schema.name
+        schema_str = json.dumps(project_Schema.schema.definition[0])
+    else:
+        project_Schema.schema.definition['name'] = project_Schema.schema.name
+        schema_str = json.dumps(project_Schema.schema.definition)
+    avro_schema = schema.Parse(schema_str)
+    if not Validate(avro_schema, payload):
+        raise AvroTypeException(avro_schema, payload)

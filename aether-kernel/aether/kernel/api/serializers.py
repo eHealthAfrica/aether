@@ -256,6 +256,10 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     def create(self, validated_data):
         try:
+            utils.validate_entity_payload(validated_data['projectschema'], validated_data['payload'])
+        except Exception as schemaError:
+            raise serializers.ValidationError(schemaError)
+        try:
             entity = models.Entity(
                 payload=validated_data.pop('payload'),
                 status=validated_data.pop('status'),
@@ -296,6 +300,11 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
                     utils.merge_objects(instance.payload, target_payload, merge_value)
             else:
                 instance.payload = target_payload
+            if instance.projectschema:
+                try:
+                    utils.validate_entity_payload(instance.projectschema, instance.payload)
+                except Exception as schemaError:
+                    raise serializers.ValidationError(schemaError)
             instance.save()
             return instance
         except Exception as e:
