@@ -1,37 +1,32 @@
 #!/usr/bin/env bash
 set -e
 
-COMMIT="${TRAVIS_COMMIT}"
-BRANCH="${TRAVIS_BRANCH}"
-export AWS_DEFAULT_REGION="eu-west-1"
-IMAGE_REPO="387526361725.dkr.ecr.eu-west-1.amazonaws.com"
+VERSION=`cat VERSION`
+IMAGE_REPO='ehealthafrica'
 
-if [ "${BRANCH}" == "develop" ]; then
-  export ENV="dev"
-  export PREFIX="aether"
-  export APPS=( kernel odk )
-  export CLUSTER_NAME="ehealth-africa"
-fi
+export APPS=( kernel odk )
 
-$(aws ecr get-login --region="${AWS_DEFAULT_REGION}" --no-include-email)
-for PREFIX in "${PREFIX[@]}"
+for APP in "${APPS[@]}"
 do
-  for APP in "${APPS[@]}"
-  do
-    AETHER_APP="${PREFIX}-${APP}"
-    # build nginx containers
-    docker-compose -f docker-compose-nginx.yml build $APP-nginx 
-    docker tag "${AETHER_APP}-nginx" "${IMAGE_REPO}/${AETHER_APP}-nginx-${ENV}:latest"
-    docker push "${IMAGE_REPO}/${AETHER_APP}-nginx-${ENV}:latest"
+	VERSION=`cat $APP/VERSION`
+	echo "version: $version"
 
-    echo "Building Docker image ${IMAGE_REPO}/${AETHER_APP}-${ENV}:${BRANCH}"
-    docker-compose build $APP
-    docker tag aether-$APP "${IMAGE_REPO}/${AETHER_APP}-${ENV}:${BRANCH}"
-    docker tag aether-$APP "${IMAGE_REPO}/${AETHER_APP}-${ENV}:${COMMIT}"
-    echo "Pushing Docker image ${IMAGE_REPO}/${AETHER_APP}-${ENV}:${BRANCH}"
-    docker push "${IMAGE_REPO}/${AETHER_APP}-${ENV}:${BRANCH}"
-    docker push "${IMAGE_REPO}/${AETHER_APP}-${ENV}:${COMMIT}"
-    echo "Deploying ${APP} to ${ENV}"
-    ecs deploy --timeout 600 $CLUSTER_NAME-$ENV $AETHER_APP -i $APP "${IMAGE_REPO}/${AETHER_APP}-${ENV}:${COMMIT}"
-  done
+	if git rev-parse -q --verify "refs/tags/$VERSION" >/dev/null; then
+	    echo "Tag already exists..."
+	    exit 0
+	else
+		echo "Tag does not exist, creating tag..."
+		# tag the release 
+		git tag -a "$VERSION" -m "version $VERSION"
+		git push --tags
+
+	  AETHER_APP="aether-${APP}"
+	  echo "Building Docker image ${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
+	  docker-compose build --build-args GIT_REVISION=$TRAVIS_COMMIT $APP
+	  docker tag aether-$APP "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
+	  docker tag aether-$APP "${IMAGE_REPO}/${AETHER_APP}:latest"
+	  echo "Pushing Docker image ${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
+	  docker push "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
+	  docker push "${IMAGE_REPO}/${AETHER_APP}:latest"
+	fi
 done

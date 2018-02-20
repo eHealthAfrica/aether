@@ -138,6 +138,9 @@ case "$1" in
         ./manage.py collectstatic --noinput
         chmod -R 755 /var/www/static
 
+        # expose version number
+        cp VERSION /var/www/VERSION
+
         /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
     ;;
 
