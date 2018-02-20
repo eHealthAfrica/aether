@@ -15,12 +15,9 @@ script:
 after_script:
   - ./scripts/kill_all.sh
 
-before_deploy:
-  - pip install awscli ecs-deploy
-
 deploy:
   - provider: script
-    script: "./scripts/deploy.sh"
+    script: "./scripts/release.sh"
     skip_cleanup: true
     on:
       branch: develop
