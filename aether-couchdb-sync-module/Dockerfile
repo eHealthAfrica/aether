@@ -23,7 +23,8 @@ COPY ./ /code
 ################################################################################
 ## copy application version and create git revision 
 ################################################################################
-COPY VERSION . 
+ARG VERSION
+RUN echo $VERSION > VERSION
 ARG GIT_REVISION
 RUN echo $GIT_REVISION > REVISION 
 
