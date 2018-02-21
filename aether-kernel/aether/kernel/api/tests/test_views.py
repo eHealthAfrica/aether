@@ -400,6 +400,7 @@ class ViewsTest(TransactionTestCase):
         self.assertIsNotNone(
             json.loads(linked_entity.content)['resolved']
             [location_schema.name][location_entity.payload['id']])
+
     def test_api_no_cascade_delete_on_entity(self):
         self.helper_delete_object_pk('schema-detail', self.schema)
         modified_entity = models.Entity.objects.get(pk=self.entity.pk)
