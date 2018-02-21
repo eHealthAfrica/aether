@@ -285,6 +285,10 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
                 instance.status = validated_data.pop('status')
             if 'projectschema' in validated_data and validated_data['projectschema'] is not None:
                 instance.projectschema = validated_data.pop('projectschema')
+            else:
+                raise serializers.ValidationError({
+                    'description': 'Project schema must be specified'
+                })
             if 'payload' in validated_data:
                 target_payload = validated_data.pop('payload')
             else:
@@ -300,11 +304,10 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
                     utils.merge_objects(instance.payload, target_payload, merge_value)
             else:
                 instance.payload = target_payload
-            if instance.projectschema:
-                try:
-                    utils.validate_entity_payload(instance.projectschema, instance.payload)
-                except Exception as schemaError:
-                    raise serializers.ValidationError(schemaError)
+            try:
+                utils.validate_entity_payload(instance.projectschema, instance.payload)
+            except Exception as schemaError:
+                raise serializers.ValidationError(schemaError)
             instance.save()
             return instance
         except Exception as e:
