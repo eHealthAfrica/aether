@@ -21,6 +21,14 @@ RUN pip install -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.tx
 COPY ./ /code
 
 ################################################################################
+## copy application version and create git revision 
+################################################################################
+ARG VERSION
+RUN echo $VERSION > VERSION
+ARG GIT_REVISION
+RUN echo $GIT_REVISION > REVISION 
+
+################################################################################
 ## last setup steps
 ################################################################################
 
