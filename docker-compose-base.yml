@@ -37,7 +37,7 @@ services:
     image: redis:alpine
 
   nginx-base:
-    image: nginx:alpine
+    image: nginx:stable-alpine
     volumes:
       # local setup
       - ./local-setup/nginx/nginx.conf:/etc/nginx/nginx.conf
