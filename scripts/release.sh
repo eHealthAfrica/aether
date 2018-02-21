@@ -8,7 +8,6 @@ VERSION=`cat VERSION`
 for APP in "${APPS[@]}"
 do
   AETHER_APP="aether-${APP}"
-	VERSION=`cat $AETHER_APP/VERSION`
 	echo "version: $VERSION"
   echo "Building Docker image ${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
   docker-compose build --build-arg GIT_REVISION=$TRAVIS_COMMIT \
