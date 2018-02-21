@@ -196,8 +196,8 @@ class Entity(models.Model):
     revision = models.TextField(default='1')
     payload = JSONField(blank=False, null=False)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
-    projectschema = models.ForeignKey(to=ProjectSchema, on_delete=models.CASCADE)
-    submission = models.ForeignKey(to=Submission, on_delete=models.CASCADE, blank=True, null=True)
+    projectschema = models.ForeignKey(to=ProjectSchema, on_delete=models.SET_NULL, null=True)
+    submission = models.ForeignKey(to=Submission, on_delete=models.SET_NULL, blank=True, null=True)
     modified = models.CharField(max_length=100, editable=False)
 
     def save(self, **kwargs):
