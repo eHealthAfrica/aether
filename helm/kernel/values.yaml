@@ -6,21 +6,26 @@ image:
   repository: nginx
   tag: stable
   pullPolicy: IfNotPresent
+kernel:
+  repository: "ehealthafrica/kernel"
 service:
   name: nginx
-  type: ClusterIP
   externalPort: 80
   internalPort: 80
+environment: "dev"
+ums_url: ums-dev
+provider:
+  aws: true
 ingress:
-  enabled: false
+  enabled: true 
+
   # Used to create an Ingress record.
   hosts:
-    - chart-example.local
+    -  
   annotations:
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
-  tls:
-    # Secrets must be manually created in the namespace.
-    # - secretName: chart-example-tls
-    #   hosts:
-    #     - chart-example.local
+    alb.ingress.kubernetes.io/scheme: "internet-facing" 
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80,"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:eu-west-1:387526361725:certificate/dcd71c49-1b5b-4b19-bd2d-6de98a3f6477"

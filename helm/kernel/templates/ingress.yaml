@@ -1,4 +1,5 @@
 {{- if .Values.ingress.enabled -}}
+{{- if .Values.provider.aws -}}
 {{- $serviceName := include "kernel.fullname" . -}}
 {{- $servicePort := .Values.service.externalPort -}}
 apiVersion: extensions/v1beta1
@@ -25,8 +26,5 @@ spec:
               serviceName: {{ $serviceName }}
               servicePort: {{ $servicePort }}
     {{- end -}}
-  {{- if .Values.ingress.tls }}
-  tls:
-{{ toYaml .Values.ingress.tls | indent 4 }}
   {{- end -}}
 {{- end -}}

@@ -29,9 +29,59 @@ spec:
             httpGet:
               path: /
               port: {{ .Values.service.internalPort }}
-          resources:
-{{ toYaml .Values.resources | indent 12 }}
-    {{- if .Values.nodeSelector }}
-      nodeSelector:
-{{ toYaml .Values.nodeSelector | indent 8 }}
-    {{- end }}
+          env:
+          - name: CAS_SERVER_URL
+          value: https://{{ .Values.ums_url }}.ehealthafrica.org
+          - name: CSRF_COOKIE_DOMAIN
+            value: .{{ .Values.domain }}
+          - name: HOSTNAME
+            value: {{ .Values.url_prefix }}.gather2.org
+          - name: RDS_DB_NAME
+            value: {{ .Values.datbase_name }} 
+          - name: RDS_PORT
+            value: {{ .Values.database_port }} 
+          - name: WEB_SERVER_PORT
+            value: {{ .Values.web_server_port }} 
+          - name: AETHER_KERNEL_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.environment }}-{{ .Values.project }}-secrets
+                key: odk_token 
+          - name: RDS_HOSTNAME
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.environment }}-database 
+                key: host 
+          - name: RDS_USERNAME 
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Value.environment }}-database 
+                key: user 
+          - name: RDS_PASSWORD 
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Value.environment }}-database 
+                key: password
+          volumeMounts:
+          - mountPath: /var/www/static
+            name: static-assets-volume
+          stdin: true
+          tty: true
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: /var/www/static
+          name: static-assets-volume    
+        - name: odk-nginx-config 
+          mountPath: /etc/nginx/conf.d
+      imagePullSecrets:
+        - name: regsecret
+      volumes:
+        - name: static-assets-volume
+          emptyDir: {}
+        - name: odk-nginx-config 
+          configMap:
+            name: odk-nginx-config
+      restartPolicy: Always
