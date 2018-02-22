@@ -24,12 +24,12 @@ Includes the methods that allow:
 Include the view entry in the `urls.py` file.
 
 ```python
-from django.urls import path
+from django.conf.urls import url
 from aether.common.auth.views import obtain_auth_token
 
 
 urlpatterns = [
-    path('get-token', obtain_auth_token, name='token'),
+    url(r'^get-token$', obtain_auth_token, name='token'),
 ]
 ```
 
@@ -42,12 +42,12 @@ Includes the methods that allow:
 Include the view entry in the `urls.py` file.
 
 ```python
-from django.urls import path
+from django.conf.urls import url
 from aether.common.health.views import health
 
 
 urlpatterns = [
-    path('health', health, name='health'),
+    url('^health$', health, name='health'),
 ]
 ```
 
@@ -60,12 +60,12 @@ Includes the methods that allow:
 Include the view entry in the `urls.py` file.
 
 ```python
-from django.urls import path
+from django.conf.urls import url
 from aether.common.kernel.views import check_kernel
 
 
 urlpatterns = [
-    path('check-kernel', check_kernel, name='check-kernel'),
+    url(r'^check-kernel$', check_kernel, name='check-kernel'),
 ]
 ```
 
