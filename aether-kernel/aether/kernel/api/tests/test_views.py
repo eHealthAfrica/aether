@@ -7,11 +7,12 @@ from django.test import TransactionTestCase
 from django.urls import reverse
 
 from rest_framework import status
-from .. import models
+from .. import models, constants
 
-from . import (EXAMPLE_MAPPING, EXAMPLE_SOURCE_DATA, EXAMPLE_GAMETOKEN_SCHEMA,
-               EXAMPLE_VALID_PAYLOAD, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA_ENTITY,
-               EXAMPLE_INVALID_PAYLOAD)
+from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA,
+               SAMPLE_LOCATION_SCHEMA_DEFINITION, SAMPLE_HOUSEHOLD_SCHEMA_DEFINITION,
+               SAMPLE_LOCATION_DATA, SAMPLE_HOUSEHOLD_DATA, EXAMPLE_GAMETOKEN_SCHEMA,
+               EXAMPLE_VALID_PAYLOAD, EXAMPLE_SOURCE_DATA_ENTITY, EXAMPLE_INVALID_PAYLOAD)
 
 
 class ViewsTest(TransactionTestCase):
@@ -167,6 +168,7 @@ class ViewsTest(TransactionTestCase):
         }, True)
 
     # TEST READ
+
     def helper_read_object_id(self, view_name, Obj):
         url = reverse(view_name, kwargs={'pk': Obj.pk})
         response = self.client.get(url, format='json')
@@ -340,6 +342,64 @@ class ViewsTest(TransactionTestCase):
             dateutil.parser.parse(json['first_submission']),
             dateutil.parser.parse(json['last_submission']),
         )
+
+    # Test resolving linked entities
+    def helper_read_linked_data_entities(self, view_name, obj, depth):
+        url = reverse(view_name, kwargs={'pk': obj.pk}) + '?depth=' + str(depth)
+        response = self.client.get(url, format='json')
+        try:
+            int(depth)
+            if depth > constants.LINKED_DATA_MAX_DEPTH:
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            else:
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+        except Exception as e:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        return response
+
+    def test_read_linked_data(self):
+        location_schema = models.Schema.objects.create(
+            name='Location',
+            definition=SAMPLE_LOCATION_SCHEMA_DEFINITION,
+            revision='1'
+        )
+        household_schema = models.Schema.objects.create(
+            name='Household',
+            definition=SAMPLE_HOUSEHOLD_SCHEMA_DEFINITION,
+            revision='1'
+        )
+        location_projectschema = models.ProjectSchema.objects.create(
+            name='Location',
+            mandatory_fields=[],
+            transport_rule=[],
+            masked_fields=[],
+            is_encrypted=False,
+            project=self.project,
+            schema=location_schema
+        )
+        household_projectschema = models.ProjectSchema.objects.create(
+            name='Household',
+            mandatory_fields=[],
+            transport_rule=[],
+            masked_fields=[],
+            is_encrypted=False,
+            project=self.project,
+            schema=household_schema
+        )
+        location_entity = models.Entity.objects.create(
+            payload=SAMPLE_LOCATION_DATA,
+            projectschema=location_projectschema
+        )
+        household_entity = models.Entity.objects.create(
+            payload=SAMPLE_HOUSEHOLD_DATA,
+            projectschema=household_projectschema
+        )
+        linked_entity = self.helper_read_linked_data_entities('entity-detail', household_entity, 2)
+        self.helper_read_linked_data_entities('entity-detail', household_entity, 4)
+        self.helper_read_linked_data_entities('entity-detail', household_entity, 'two')
+        self.assertIsNotNone(
+            json.loads(linked_entity.content)['resolved']
+            [location_schema.name][location_entity.payload['id']])
 
     def test_api_no_cascade_delete_on_entity(self):
         self.helper_delete_object_pk('schema-detail', self.schema)

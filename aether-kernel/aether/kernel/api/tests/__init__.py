@@ -123,6 +123,73 @@ EXAMPLE_FIELD_MAPPINGS = [
     ['data.people[*].name', 'Person.name'],
     ['data.people[*].dob', 'Person.dob']]
 
+SAMPLE_LOCATION_SCHEMA_DEFINITION = {
+    'name': 'Location',
+    'type': 'record',
+    'fields': [
+        {
+            'name': 'id',
+            'type': 'string',
+            'jsonldPredicate': '@id'
+        },
+        {
+            'name': 'revision',
+            'type': [
+                'null',
+                'string'
+            ]
+        },
+        {
+            'name': 'lat',
+            'type': 'float'
+        },
+        {
+            'name': 'lng',
+            'type': 'float'
+        }
+    ]
+}
+
+SAMPLE_HOUSEHOLD_SCHEMA_DEFINITION = {
+    'name': 'Household',
+    'type': 'record',
+    'fields': [
+        {
+            'name': 'id',
+            'type': 'string',
+            'jsonldPredicate': '@id'
+        },
+        {
+            'name': 'revision',
+            'type': [
+                'null',
+                'string'
+            ]
+        },
+        {
+            'name': 'locationID',
+            'type': [
+                'null',
+                'string'
+            ],
+            'jsonldPredicate': {
+                '_id': 'http://ehealthafrica.org/#Location',
+                '_type': '@id'
+            }
+        }
+    ]
+}
+
+SAMPLE_LOCATION_DATA = {
+    'lat': 6.951801,
+    'lng': -2.7539059999999997,
+    'id': '00f3f1ae-abab-448b-b12f-f9c1839465ab'
+}
+
+SAMPLE_HOUSEHOLD_DATA = {
+    'locationID': '00f3f1ae-abab-448b-b12f-f9c1839465ab'
+}
+
 EXAMPLE_GAMETOKEN_SCHEMA = {
     'fields': [
       {

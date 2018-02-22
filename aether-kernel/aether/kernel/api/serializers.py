@@ -3,13 +3,12 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 from drf_dynamic_fields import DynamicFieldsMixin
 
-from . import models
-from . import utils
-
+from . import models, utils, constants
 
 import urllib
 
-m_options = utils.MergeOptions
+
+m_options = constants.MergeOptions
 
 MERGE_CHOICES = (
     (m_options.overwrite.value, 'Overwrite (Do not merge)'),
@@ -253,6 +252,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='projectschema-detail',
     )
     merge = serializers.ChoiceField(MERGE_CHOICES, default=m_options.overwrite.value)
+    resolved = serializers.JSONField(default={})
 
     def create(self, validated_data):
         try:
@@ -314,6 +314,23 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
             raise serializers.ValidationError({
                 'description': 'Submission validation failed >> ' + str(e)
             })
+
+    class Meta:
+        model = models.Entity
+        fields = '__all__'
+
+
+class EntityLDSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name='entity-detail',
+        read_only=True
+    )
+    projectschema_url = serializers.HyperlinkedRelatedField(
+        read_only=True,
+        source='projectschema',
+        view_name='projectschema-detail',
+    )
+    merge = serializers.ChoiceField(MERGE_CHOICES, default=m_options.overwrite.value)
 
     class Meta:
         model = models.Entity

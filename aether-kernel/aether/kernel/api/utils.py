@@ -9,23 +9,16 @@ from jsonpath_ng import parse
 from avro.io import Validate, AvroTypeException
 
 from django.utils.safestring import mark_safe
-from enum import Enum
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import JsonLexer
 from pygments.lexers.python import Python3Lexer
 
-from . import models
+from . import models, constants
 
 
 class EntityExtractionError(Exception):
     pass
-
-
-class MergeOptions(Enum):
-    overwrite = 'overwrite'
-    lww = 'last_write_wins'
-    fww = 'first_write_wins'
 
 
 def __prettified__(response, lexer):
@@ -493,12 +486,12 @@ def merge_objects(source, target, direction):
     # Default merge operation is prefer_new
     # Params <source='Original object'>, <target='New object'>,
     # <direction='Direction of merge, determins primacy:
-    # use utils.MergeOptions.[prefer_new, prefer_existing]'>
+    # use constants.MergeOptions.[prefer_new, prefer_existing]'>
     # # direction Options:
     # prefer_new > (Target to Source) Target takes primacy,
     # prefer_existing > (Source to Target) Source takes primacy
     result = {}
-    if direction and direction == MergeOptions.fww.value:
+    if direction and direction == constants.MergeOptions.fww.value:
         for key in source:
             target[key] = source[key]
         result = target
