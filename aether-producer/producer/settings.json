@@ -1,0 +1,18 @@
+{
+    "kafka_server": "kafka:29092",
+    "start_delay": 20,
+    "sleep_time": 10,
+    "jdbc_connection_string": "jdbc:postgresql://db:5432/aether?user=postgres",
+    "jdbc_user": "postgres",
+    "postgres_connection_info": {
+        "user" : "postgres",
+        "dbname" : "aether",
+        "port" : 5432,
+        "host" : "db"
+    },
+    "kernel_url": "http://kernel:8000",
+    "kernel_credentials": {
+        "username": "admin-kernel",
+        "password": "adminadmin"
+    }
+}
