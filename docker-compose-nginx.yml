@@ -2,7 +2,7 @@
 # Purely for building Nginx images
 # -----------------------------------
 
-version: "2"
+version: "2.1"
 
 services:
 
