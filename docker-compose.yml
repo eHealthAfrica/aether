@@ -23,7 +23,10 @@ services:
       file: docker-compose-base.yml
       service: postgres-base
     healthcheck:
-      test: "exit 0"
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - internal
 
@@ -41,8 +44,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    links:
-      - db:db
     networks:
       internal:
         aliases:
@@ -53,10 +54,10 @@ services:
       file: docker-compose-base.yml
       service: kong-base
     depends_on:
+      db:
+        condition: service_healthy
       kong-migration:
         condition: service_started
-    links:
-      - db:db
     networks:
       internal:
         aliases:
