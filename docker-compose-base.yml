@@ -23,7 +23,7 @@ services:
     image: postgres:9.6
     environment:
       - POSTGRES_USER=kong
-      - PSOTGRES_DB=kong
+      - POSTGRES_DB=kong
 
   kong-migration-base:
     image: kong
