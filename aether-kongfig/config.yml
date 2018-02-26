@@ -1,0 +1,23 @@
+---
+host: "kong:8001"
+apis:
+  - name: "kernel"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://kernel.aether.local:8000"
+      uris:
+        - "/aether/v1"
+
+  - name: "odk"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://odk.aether.local:8443"
+      uris:
+        - "/odk/v1"
+
+  - name: "couch-sync"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://sync.aether.local:8666"
+      uris:
+        - "/sync/v1"

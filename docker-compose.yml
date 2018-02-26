@@ -24,7 +24,7 @@ services:
       service: postgres-base
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 5
     networks:
@@ -45,14 +45,17 @@ services:
       db:
         condition: service_healthy
     networks:
-      internal:
-        aliases:
-          - kong.aether.local
+      - internal
 
   kong:
     extends:
       file: docker-compose-base.yml
       service: kong-base
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://kong:8001" ]
+      interval: 3s
+      timeout: 3s
+      retries: 5
     depends_on:
       db:
         condition: service_healthy
@@ -62,6 +65,15 @@ services:
       internal:
         aliases:
           - kong.aether.local
+
+  kongfig:
+    extends:
+      file: docker-compose-base.yml
+      service: kongfig
+    links:
+      - 'kong:kong'
+    networks:
+      - internal
 
   redis:
     extends:
@@ -85,6 +97,7 @@ services:
     depends_on:
       - db
       - kong
+      - kongfig
     networks:
       internal:
         aliases:
