@@ -21,3 +21,23 @@ apis:
       upstream_url: "http://sync.aether.local:8666"
       uris:
         - "/sync/v1"
+
+  - name: "ums"
+    ensure: "present"
+    attributes:
+      upstream_url: "https://ums-dev.ehealthafrica.org"
+      uris:
+        - "/ums/v1"
+plugins:
+  - name: key-auth
+    ensure: "present"
+    attributes:
+      config:
+        hide_credentials: true
+
+consumers:
+  - username: KONG_CONSUMER
+    credentials:
+      - name: key-auth
+        attributes:
+          key: KONG_APIKEY

@@ -24,12 +24,16 @@ services:
     environment:
       - POSTGRES_USER=kong
       - POSTGRES_DB=kong
+    env_file:
+      - kong.env
 
   kong-migration-base:
     image: kong
     environment:
       - KONG_DATABASE=postgres
       - KONG_PG_HOST=db
+    env_file:
+      - kong.env
     command: kong migrations up
 
   kong-base:
@@ -40,20 +44,26 @@ services:
       - 8001:8001
       - 80:80
     environment:
-      - KONG_DATABASE=postgres
-      - KONG_PG_HOST=db
       - KONG_ADMIN_LISTEN=0.0.0.0:8001
       - KONG_PROXY_LISTEN_SSL=0.0.0.0:8449
       - KONG_PROXY_LISTEN=0.0.0.0:80
+      - KONG_DATABASE=postgres
+      - KONG_PG_HOST=db
+    env_file:
+      - kong.env
 
   kongfig:
     image: mashupmill/kongfig
     volumes:
-        - './aether-kongfig/config.yml:/config.yml'
-    command: --path /config.yml --host kong:8001
+      - './aether-kongfig/config.yml:/config.yml'
+    env_file:
+      - kong.env
+    command: --path /config.yml --host kong:8001 --consumer $KONG_CONSUMER --key $KONG_APIKEY
 
   couchdb-base:
     image: couchdb:1.7.1
+    env_file:
+      - kong.env
     environment:
       COUCHDB_USER: admin
       COUCHDB_PASSWORD: secret
@@ -65,6 +75,8 @@ services:
 
   redis-base:
     image: redis:alpine
+    env_file:
+      - kong.env
 
   nginx-base:
     image: nginx:stable-alpine
@@ -89,6 +101,8 @@ services:
       - 8001
       - 8444
       - 80
+    env_file:
+      - kong.env
 
 
   # ---------------------------------
@@ -100,6 +114,8 @@ services:
     image: aether-kernel
     stdin_open: true
     tty: true
+    env_file:
+      - kong.env
     environment:
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
@@ -131,6 +147,8 @@ services:
     image: aether-odk
     stdin_open: true
     tty: true
+    env_file:
+      - kong.env
     environment:
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
@@ -166,6 +184,8 @@ services:
     image: aether-couchdb-sync
     stdin_open: true
     tty: true
+    env_file:
+      - kong.env
     environment: &sync-environment
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
@@ -204,6 +224,8 @@ services:
 
   couchdb-sync-rq-base:
     image: aether-couchdb-sync
+    env_file:
+      - kong.env
     environment: *sync-environment
     volumes: *sync-volumes
     command: start_rq
