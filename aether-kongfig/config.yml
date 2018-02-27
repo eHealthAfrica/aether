@@ -8,6 +8,13 @@ apis:
       uris:
         - "/aether/v1"
 
+  - name: "kernel-static"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://kernel.aether.local:8000/aether/v1/static"
+      uris:
+        - "/aether/v1/static"
+
   - name: "odk"
     ensure: "present"
     attributes:
