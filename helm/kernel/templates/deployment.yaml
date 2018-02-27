@@ -24,11 +24,11 @@ spec:
           livenessProbe:
             httpGet:
               path: /
-              port: {{ .Values.service.internalPort }}
+              port: {{ .Values.service.kernel.internalPort }}
           readinessProbe:
             httpGet:
               path: /
-              port: {{ .Values.service.internalPort }}
+              port: {{ .Values.service.kernal.internalPort }}
           env:
           - name: CAS_SERVER_URL
             value: https://{{ .Values.ums_url }}.ehealthafrica.org

@@ -4,7 +4,7 @@
 replicaCount: 1
 image:
   repository: nginx
-  tag: stable
+  tag: stable-alpine
   pullPolicy: IfNotPresent
 kernel:
   repository: "ehealthafrica/kernel"
@@ -23,8 +23,6 @@ ingress:
   hosts:
     -  
   annotations:
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
     alb.ingress.kubernetes.io/scheme: "internet-facing" 
     alb.ingress.kubernetes.io/healthcheck-path: /health
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80,"HTTPS": 443}]'

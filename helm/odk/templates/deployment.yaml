@@ -17,21 +17,21 @@ spec:
     spec:
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.odk.repository }}:{{ .Chart.Version }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.service.internalPort }}
           livenessProbe:
             httpGet:
               path: /
-              port: {{ .Values.service.internalPort }}
+              port: {{ .Values.service.odk.internalPort }}
           readinessProbe:
             httpGet:
               path: /
-              port: {{ .Values.service.internalPort }}
+              port: {{ .Values.service.kernal.internalPort }}
           env:
           - name: CAS_SERVER_URL
-          value: https://{{ .Values.ums_url }}.ehealthafrica.org
+            value: https://{{ .Values.ums_url }}.ehealthafrica.org
           - name: CSRF_COOKIE_DOMAIN
             value: .{{ .Values.domain }}
           - name: HOSTNAME
@@ -55,33 +55,31 @@ spec:
           - name: RDS_USERNAME 
             valueFrom:
               secretKeyRef:
-                name: {{ .Value.environment }}-database 
+                name: {{ .Values.environment }}-database 
                 key: user 
           - name: RDS_PASSWORD 
             valueFrom:
               secretKeyRef:
-                name: {{ .Value.environment }}-database 
+                name: {{ .Values.environment }}-database 
                 key: password
           volumeMounts:
           - mountPath: /var/www/static
             name: static-assets-volume
-          stdin: true
-          tty: true
-      - name: nginx
-        image: nginx:alpine
-        ports:
-        - containerPort: 80
-        volumeMounts:
-        - mountPath: /var/www/static
-          name: static-assets-volume    
-        - name: odk-nginx-config 
-          mountPath: /etc/nginx/conf.d
-      imagePullSecrets:
-        - name: regsecret
-      volumes:
-        - name: static-assets-volume
-          emptyDir: {}
-        - name: odk-nginx-config 
-          configMap:
+        - name: nginx
+          image: nginx:stable-alpine
+          ports:
+          - containerPort: 80
+          volumeMounts:
+          - mountPath: /var/www/static
+            name: static-assets-volume
+          - mountPath: /etc/nginx/conf.d
             name: odk-nginx-config
+      imagePullSecrets:
+      - name: regsecret
+      volumes:
+      - name: static-assets-volume
+        emptyDir: {}
+      - name: odk-nginx-config 
+        configMap:
+          name: odk-nginx-config
       restartPolicy: Always
