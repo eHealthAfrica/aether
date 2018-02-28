@@ -1,0 +1,32 @@
+// ************************************
+// third-party styles
+// ************************************
+
+$fa-font-path: '~font-awesome/fonts';
+@import '~font-awesome/scss/font-awesome';
+@import '~bootstrap/scss/bootstrap';
+
+// ************************************
+// custom styles
+// ************************************
+
+@import 'base/settings';
+@import 'base/mixins';
+@import 'base/global';
+@import 'base/nav-bar';
+@import 'base/logo';
+@import 'base/loading-spinner';
+@import 'base/alerts';
+@import 'base/modal';
+@import 'base/pagination';
+@import 'base/filter';
+@import 'base/help';
+
+// ************************************
+// app dependant styles
+// ************************************
+
+@import 'survey-list';
+@import 'survey-view';
+@import 'survey-edit';
+@import 'surveyor-list';

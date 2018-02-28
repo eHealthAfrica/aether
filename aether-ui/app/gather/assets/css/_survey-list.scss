@@ -1,0 +1,81 @@
+.surveys-list {
+  @extend .page-content;
+}
+
+.surveys-list-cards {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -1rem;
+}
+
+.card-block {
+  color: $text-color;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.card {
+  border: 0;
+  border-radius: 0;
+  margin: .3rem 0 1.5rem;
+  padding: 0 1rem;
+  width: 100%;
+
+  &:hover {
+    @include bg-gradient;
+
+    .card-header,
+    .card-header:first-child {
+      border-top-color: transparent;
+    }
+
+    .card-display {
+      color: $white;
+    }
+  }
+}
+
+.card-header,
+.card-header:first-child {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  border-top: 1px solid $text-color;
+  padding: .8rem 0;
+}
+
+.card-dates {
+  padding: .1rem 0;
+  display: inline-block;
+  margin-bottom: .2rem;
+}
+
+.card-dates:not(:last-child) {
+  border-right: 1px solid rgba($text-color, .3);
+  margin-right: .4rem;
+  padding-right: .2rem;
+}
+
+.card-display {
+  @include label;
+  font-weight: 500;
+  padding: 1rem 0;
+}
+
+.card-number {
+  display: block;
+  font-size: 5rem;
+  line-height: 5rem;
+}
+
+@media screen and (min-width: 992px) {
+  .card {
+    width: 50%;
+  }
+}
+@media screen and (min-width: 1200px) {
+  .card {
+    width: 33.3%;
+  }
+}

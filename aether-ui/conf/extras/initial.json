@@ -1,0 +1,24 @@
+[
+  {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$30000$YPvlO6vVjWwJ$BCI52unQsiNGLlUBe/TH+v9qkRBR/u4dFpQtnd2NGvs=",
+      "is_superuser": true,
+      "username": "admin-gather",
+      "first_name": "",
+      "last_name": "",
+      "email": "admin-gather@gather2.org",
+      "is_staff": true,
+      "is_active": true
+    }
+  },
+  {
+    "model": "gather.usertokens",
+    "pk": 1,
+    "fields": {
+      "kernel_token": "a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24",
+      "odk_token": "d5184a044bb5acff89a76ec4e67d0fcddd5cd3a1"
+    }
+  }
+]

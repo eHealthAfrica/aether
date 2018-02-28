@@ -1,0 +1,76 @@
+{% load i18n %}
+{% load ui_tags %}
+
+<div class="m-b-1">
+  <nav class="navbar navbar-expand-md">
+
+    <a class="navbar-brand" href="/" title="{{app_name}}">
+      <div class="logo-container">
+        <div class="flipper">
+          <div class="front"></div>
+          <div class="back"></div>
+        </div>
+      </div>
+      <span data-app-name="app-name">{{app_name}}</span>
+    </a>
+
+    <button type="button"
+      class="navbar-toggler navbar-toggler-right"
+      data-toggle="collapse"
+      data-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent"
+      aria-expanded="false"
+      aria-label="{% trans 'Toggle navigation' %}">
+      &#9776;
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      {% if request.user.is_authenticated %}
+
+        <ul class="nav navbar-nav">
+
+          {% for nav_item in navigation_list %}
+            <li class="nav-item">
+              <a
+                class="nav-link {% if request.resolver_match.view_name == nav_item %}active{% endif %}"
+                href="{% url nav_item action='list' %}">
+                {% trans nav_item %}
+              </a>
+            </li>
+          {% endfor %}
+
+        </ul>
+
+        <ul class="nav navbar-nav pull-right">
+          <li class="nav-item user-name">
+            <i class="fa fa-user-circle mr-1"></i>
+            <span
+              id="logged-in-user-info"
+              data-user-id="{{ request.user.id }}">
+              {{ request.user|get_fullname }}
+            </span>
+            <a class="logout" href="{% url 'rest_framework:logout' %}">
+              <i class="fa fa-sign-out" title="{% trans 'Sign Out' %}" aria-hidden="true"></i>
+            </a>
+          </li>
+        </ul>
+
+      {% else %}
+
+        <ul class="navbar-nav mr-auto mt-2 mt-lg-0"></ul>
+
+        <ul class="nav navbar-nav my-2 my-lg-0">
+          <li class="nav-item">
+            <a
+              id="log-in-link"
+              class="nav-link"
+              href="{% url 'rest_framework:login' %}">
+              {% trans 'Sign In' %}
+            </a>
+          </li>
+        </ul>
+
+      {% endif %}
+    </div>
+  </nav>
+</div>

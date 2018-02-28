@@ -1,0 +1,74 @@
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+.loading-spinner {
+  animation: spin 1.5s normal linear infinite;
+  border: 6px solid $action-color;
+  border-bottom-color: lighten($action-color, 10);
+  border-left-color: lighten($action-color, 10);
+  border-radius: 50%;
+  height: 24px;
+  position: relative;
+  top: .2rem;
+  width: 24px;
+
+  &::before {
+    content: '';
+    display: block;
+    width: 8px;
+    height: 8px;
+    margin: 2px;
+    border-radius: 50%;
+    background: $edit-color;
+    animation: pulse 1s normal ease-in-out infinite;
+    animation-direction: alternate;
+  }
+}
+
+/* creates an overlay that prevents interaction with other controls */
+.refreshing {
+  background-color: rgba($text-color, .7);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+
+  .loading-spinner {
+    width: 100px;
+    height: 100px;
+    border-width: 25px;
+    border-bottom-color: lighten($action-color, 7);
+    border-left-color: lighten($action-color, 7);
+    top: calc(50vh - 50px);
+    left: calc(50vw - 50px);
+
+    &::before {
+      content: '';
+      display: block;
+      width: 34px;
+      height: 34px;
+      margin: 8px;
+      border-radius: 50%;
+      background: $white;
+    }
+  }
+}

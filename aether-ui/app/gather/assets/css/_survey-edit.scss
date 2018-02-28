@@ -1,0 +1,151 @@
+.survey-edit {
+  background: $background-color;
+  min-height: calc(100vh - #{$navbar-height});
+  padding: 2rem 5vw;
+
+  .survey-name {
+    font-weight: 500;
+    color: $dark-grey;
+  }
+
+  .form-group {
+    margin-bottom: 3rem;
+  }
+}
+
+textarea.code {
+  font-family: monospace;
+}
+
+input.hidden-file {
+  width: .1px;
+  height: .1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
+.survey-section {
+  border-top: 1px solid $grey;
+  padding: 1.5rem 0;
+
+  label {
+    font-size: $font-size-l;
+    font-weight: 400;
+  }
+}
+
+.form-items {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.form-item {
+  display: inline-flex;
+  flex-wrap: wrap;
+  background: $white;
+  padding: 1rem;
+  border-radius: $border-radius;
+  box-shadow: 1px 1px 2px $shadow-color;
+  width: auto;
+  align-items: baseline;
+
+  &.expanded {
+    width: 100%;
+  }
+
+  .form-title {
+    align-items: baseline;
+    margin-bottom: .2rem;
+  }
+
+  .edit-form-item {
+    width: 100%;
+  }
+
+  .fa-file {
+    font-size: 1.3rem;
+  }
+
+  .btn-edit {
+    margin-left: auto;
+  }
+
+  small {
+    font-style: italic;
+  }
+
+  textarea,
+  textarea.form-control {
+    background: $bg-grey;
+
+    &:disabled {
+      background: $lighter-grey;
+      color: $light-grey;
+    }
+  }
+}
+
+.FilteredMultiSelect {
+  border-radius: $border-radius;
+  display: flex;
+  flex-direction: column;
+  background: $white;
+  box-shadow: 1px 1px 5px $shadow-color;
+
+  &::before {
+    content: '\f007';
+    font-family: $icon-font;
+    font-size: 1.3rem;
+    padding: .8rem;
+    color: $white;
+    margin-right: .4em;
+    position: absolute;
+  }
+
+  option {
+    font-family: $body-font-family;
+    padding: .4rem 1rem;
+    font-size: $font-size-s;
+    border-bottom: 1px solid $lighter-grey;
+    background: none;
+
+    &::before {
+      content: '\f007';
+      font-family: $icon-font;
+      margin-right: .4em;
+    }
+
+    &:last-child {
+      border: 0;
+    }
+  }
+
+  select {
+    border-radius: 0;
+    border: 0;
+    padding: .5rem 1rem 0;
+  }
+
+  input,
+  input:focus {
+    background: $edit-color;
+    border: 0;
+    box-shadow: none;
+    color: $white;
+    padding-left: 2.5rem;
+    border-top-left-radius: $border-radius;
+    border-top-right-radius: $border-radius;
+
+    &::placeholder {
+      color: rgba($white, .6);
+    }
+  }
+
+  .btn {
+    margin: 1rem;
+    width: auto;
+  }
+}

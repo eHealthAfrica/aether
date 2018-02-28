@@ -1,0 +1,43 @@
+language: python
+python:
+- '3.4'
+services:
+- docker
+cache:
+  directories:
+  - "$HOME/.cache/pip"
+before_script:
+- docker login -u ehealthafricadevops -p $DOCKER_HUB_PASSWORD
+script:
+- "./scripts/test_gather.sh"
+after_script:
+- "./scripts/kill_all.sh"
+before_deploy:
+- pip install awscli
+deploy:
+- provider: script
+  script: "./scripts/deploy.sh"
+  skip_cleanup: true
+  on:
+    branch: develop
+- provider: script
+  script: "./scripts/deploy.sh"
+  skip_cleanup: true
+  on:
+    branch: gather-on-aether
+- provider: script
+  script: "./scripts/deploy.sh"
+  skip_cleanup: true
+  on:
+    branch: staging
+- provider: script
+  script: "./scripts/deploy.sh"
+  skip_cleanup: true
+  on:
+    branch: master
+env:
+  global:
+  - secure: qrmkKRMrpQ3hqG+Q+w5f9Yd9mICPCnQ3J11hSepRCBvcSMyDdnjMjeTlAwdb48QQjAAe+/oF6Vi36Ob6M30NC9ECuHd86wUvbsDdtdJLv4IVrxERWk4u3ZUAJGWjLAhOMqPasHTFB+IJytjh0SaZD1AFiYW4X2SKigTd+XE25rw1psZMk+YNvBZlNytPNLnfFM4ieJZfjEdNShJ+XON7EmLbD2kbEZfgVvooXcrPEdkmIjvNkrOWVCW9QB2cImP3cqaVqr96OuS/Sqz4mriQ39yyDDbJYd3qviXVlLLh1kjSiHzoyJ/Te+eBjomWJXXjvTIbBSBCkw9UX5kgP4xUPorBUmMrO16D2OnxuxmceRKIxjVQamv4sNjbUQrKYVw2Ixvjs7l5FI5oTonbmjDQeZH5DdNaCLXR2KcEgqK3TcXqa2BnaUHD7W4VcQOtWn75HEinN3VH0eXXB+Kz215yHArZw35ZCB1l8EDDwqicUA0eMXo9/U7OkpgfelqmYCz/9IV30vGgoS0ghzFvPNfoGIc8qvYAkgF394kHokVURYFSvw7Pd/6Zr/RCbjOsKmPJyNiE8zeaanbikTMlyrqwqjdFvhhTZt3DNBp7fTR/8VkGY/rI6aXy5n6X1oXrOuZpercK4+uVPry3fydRlanpx/0RM46bAjbepsSiVnQVGmw=
+  - secure: GMPXsQxQkNuGBJ9LaLdnqheiSpMLNsQRrvr77YSnZK8bq5D+C5eyGOjJphcOmv2gI0D9LXR91NN69uVMGmpHAfJpk8deLm24/6m6iQLdK2Qc4Jj/FTcovlbVjiaz0h7e7j1iZiOQd1dRIKDjWZsFp3ZNhyseFCibfbTDSmn2E8Py5Fz7R17XVlh3O9yqNTxr5Dm2BVTWgA9EkRtVL/GGvLbjTrQZkiF7iRcnoBzsZl1A/rpvv8nC70+fdyMhkwvaW+nqP9d5kZd8slzt+fVaCZ0rIgRyIpXlw/gkIPPRzDbs64RHttRM5Fi0K0OeWscciKq0ThM9IG0i7z7zn2L8cpUcqO7gkZIEyeUPMiCwDQ+/j8KWwcAlW372UkSBAAfMISaLjwyfXjNS+ibnYyOcuTgD+IbJqtXEyMTI82GWi5/F8OweRtZZdZPGuYQU3mTuTbr/ev0C/C897z33k/C13Y07EHxgMWORmP85so9uVljOlDpyyjdq4Rj+3Jvo6cHjTE0LWcqvbdq6Z+yNwLXWWqsahAdXdTymrc67ecc+XfvHBqnQwRLsdX471DvoP0+0DdEJnS6NBHk8Khj2AHZpKV5TqbOQ9eqnCSRu/s0y/GO+g7C+0xiVO/3CKuYUNL+m/dH1BeUldbyp0NF/U3u0NocYnmWDoIILei3SKaiw/O8=
+  - secure: FT/M2UbT3Z3urarhXsD05KJ5buCE6AAQxuRPHzy0Kgx/R6HFP2dXYbSNcvXYZPpmJhF6eaYHdsNUGkbaDPKiXYEC4nqQ0tdpltALmYQPT1krGabZ72nYyiIrEYeWPbHA4cKqle2jWoQk3TQOclATMGMPKJsqusdvF2sPU01d9PgCaHQkxnPfB+d9+P9RyR/e/ZyozcBOm0fvWHwo0es0mQa/YtcZ/fojwleQHZJ2vHqv7//OB3GueX4cmIsxOvgQdHLRCErZBMGZoMbYT/Yz0eNK45+wdMpuFMxBg+s7GB8+Cs/PCtqjsp5EQHv1UTZN1OKZ57CnVhyHTJ+7VvLkr58t82A8Do+QXf6BmTO+48w0z9qBsoPZuCkryycuN2QUD9zMFCf7DCmDF1HtjoJ5QTxRfqbiCW2seF50qzbpMkLcmVk+xmvVsud3RIvQf0XqUhRMkXeszLtDZA328iVwSO8Ezh6hH9QPDzrUmBewqpgDfawXyfEsiooXpdRF27lXssemNii0TQ5/IRDbqKM7GQpGvNs6gbpuLLVoaKsbavfS4K+1s/833YbLepKgEwYi/crOAP9lLAeR97/PkX/52UBiKUghsZL+HeKslDUNR98m2NwOOxXAgT8TpMUuqi3Y2rRwGQvGskEFSrXyhDWjnzRws8y/fy7IpX7Q5TAs3e0=
+  - secure: QQct82H2rC/OZLR+oh+OfmT2mXznZQXKXvorTyogxp1XPNCvTfUw+If5PnHwCL0aingkasLPK6N9rkjUuECZ3cr8MMsqILWDw0pUkXuNJ1VHBEJPOhsWWpX5fzsUi+amFKDN483aCRP+Ywtlt7SEsErmN8EJ0/mGkxIeqq7/5WE09Il4rQ+uSZVaAG8U54o67vAzFVAiSfPBFTWztv1x5vMxTA/puZNb2Jx+pTcW9jT/l3RH0G71YeQ8Jx4xom5BeMz0wpP2bSuWEGAzcqoKZDNLP7kw+crVKlVUaRvzyBbDtnHppbHBt7vNvT4JEeLS03WTfnewQMBgj0DtwEeSVCH9kmGWl7V1o8mhnkz8Fn0lZm/M1kp64f3VD6awcmrBGB+hhWGw3c/tw84kxkKvYVopQSqF+lcTlfY5e7VCcecDb0LHsObLjuvdoXDo70AW9TuwU3wfVur0xWLo2uLknsc0gl8zDR+L3Ebrag9u9EU2XeVqMv1EH+CEVwseogUcxon7Y6OBMVacLTel7XIDGB71bc3eEY0EhH4az2Wq7gu4Ce+pLvkCVLfB7UA11gKG+Tw3siegFHAswCETK7zyY1cHnBdiWLghx4PI2roXAcnPfw70d6gf06MTETAYajpxA59IkQKmxAImgYQ0ICHLnI/tl5/H0OSElE1GUtOh3nE=

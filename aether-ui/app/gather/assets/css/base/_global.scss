@@ -1,0 +1,358 @@
+body,
+html {
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  color: $text-color;
+  font: 16px $body-font-family;
+  line-height: 1.3em;
+}
+
+a {
+  color: $action-color;
+
+  &:active,
+  &:focus,
+  &:hover {
+    color: $hover-color;
+    text-decoration: none;
+  }
+}
+
+.container-fluid {
+  padding: 0;
+}
+
+.btn,
+button {
+  @include label;
+  border: 0;
+  border-color: transparent;
+
+  &:active,
+  &:focus,
+  &:hover {
+    box-shadow: none;
+    cursor: pointer;
+    outline: none;
+  }
+}
+
+.btn {
+  background-color: $action-color;
+  color: $white;
+  padding: .5em 1em;
+  line-height: 1em;
+
+  &:active,
+  &:focus,
+  &:hover {
+    background-color: $hover-color;
+  }
+}
+
+.btn-sm {
+  padding: .2em .5em;
+}
+
+.btn-primary,
+a.btn-primary:not([href]) {
+  @include bg-gradient;
+  border-radius: 2px;
+  box-shadow: 1px 1px 1px rgba($text-color, .2), 1px 1px 0 rgba($white, .1) inset;
+  padding: .9em 1.5em;
+  transition: background 1s;
+
+  &:active,
+  &:focus,
+  &:hover {
+    background-color: $edit-color;
+    box-shadow: 1px 1px 1px rgba($text-color, .3), 1px 1px 0 rgba($white, .2) inset;
+    color: $white;
+  }
+}
+
+.btn-icon {
+  padding: .6em 1.5em .7em 1em;
+  display: flex;
+  align-items: center;
+
+  i {
+    font-size: 1.6em;
+    margin-right: .5em;
+    position: relative;
+  }
+
+  i.invert {
+    background: $white;
+    font-size: .9rem;
+    border-radius: 50%;
+    padding: 3px 2px 3px 3px;
+    width: 1.3rem;
+    height: 1.3rem;
+    color: $action-color;
+  }
+}
+
+.btn.icon-only {
+  border-radius: 50%;
+  font-size: .86rem;
+  width: 1.3rem;
+  height: 1.3rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-danger {
+  background: $red;
+  
+  &:active,
+  &:focus,
+  &:hover {
+    background-color: darken($red, 6);
+  }
+}
+
+.btn-cancel {
+  background: $grey;
+  border-radius: 2px;
+  color: $white;
+  padding: .9em 1.5em;
+
+  &:active,
+  &:focus,
+  &:hover {
+    background-color: darken($grey, 6);
+  }
+}
+
+.btn-delete {
+  background: $red;
+  border-radius: 2px;
+  color: $white;
+  padding: .9em 1.5em;
+
+  &:active,
+  &:focus,
+  &:hover {
+    background-color: darken($red, 6);
+  }
+}
+
+.btn-default {
+  background: none;
+  border: 0;
+  color: $edit-color;
+
+  &:hover {
+    color: $hover-color;
+    background: none;
+  }
+}
+
+.btn-secondary {
+  background: $edit-color;
+  border: 0;
+  color: $white;
+
+  &:hover {
+    background: $hover-color;
+    color: $white;
+  }
+
+  &:disabled,
+  &.disabled {
+    background-color: $grey;
+  }
+}
+
+.title {
+  font-size: $font-size-s;
+  font-style: italic;
+
+  .username {
+    font-family: $body-font-family;
+    font-weight: 500;
+  }
+
+  .fa-user {
+    font-size: .9rem;
+    color: $dark-grey;
+  }
+}
+
+.label {
+  font-size: $font-size-xs;
+  font-style: italic;
+}
+
+.small,
+small {
+  font-size: $font-size-s;
+}
+
+.badge {
+  background: $grey;
+  border-radius: 1rem;
+  padding: .3rem .6rem;
+  font-size: $font-size-s;
+
+  .icon-only {
+    margin-right: -.3rem;
+  }
+}
+
+.badge-default {
+  background: $lighter-grey;
+  font-weight: normal;
+  font-size: $font-size-xs;
+}
+
+input[type='password'],
+input[type='text'],
+textarea,
+textarea.form-control {
+  border: 0;
+  border-radius: 0;
+  box-shadow: 1px 1px 1px rgba($text-color, .3) inset;
+  font-family: $body-font-family;
+  padding: .8em;
+
+  &:disabled {
+    background: $lighter-grey;
+    color: $light-grey;
+  }
+}
+
+input,
+input:focus,
+input:active {
+  outline: 0;
+}
+
+.dropdown-menu {
+  border-radius: 0;
+  border: 0;
+  box-shadow: 0 2px 4px $dark-grey;
+  top: 120%;
+
+  &::before {
+    content: '';
+    display: block;
+    width: 12px;
+    height: 12px;
+    background: $white;
+    transform: rotate(45deg);
+    position: absolute;
+    left: 1.8rem;
+    top: -6px;
+  }
+}
+
+.dropdown-list {
+  max-height: 16rem;
+  overflow: auto;
+}
+
+.dropdown-item {
+  color: $action-color;
+}
+
+.page-header {
+  padding: 3rem 5vw 0;
+  font-family: $nav-font-family;
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+
+  h1 {
+    color: $light-grey;
+    font-size: $font-size-xxl;
+    font-weight: 400;
+    margin: 0;
+
+    .url-name {
+      display: block;
+      font-family: $body-font-family;
+      font-size: $font-size-s;
+      padding-top: .5rem;
+
+      a {
+        color: $action-color;
+      }
+    }
+  }
+}
+
+.page-title {
+  font: $font-size-s $nav-font-family;
+  font-weight: 700;
+  margin-bottom: 3rem;
+}
+
+.page-content {
+  padding: 1rem 5vw;
+}
+
+.actions {
+  padding: 2rem 0;
+  border-top: 1px solid $grey;
+  display: flex;
+  flex-wrap: wrap;
+
+  &>div {
+    margin-right: 1rem;
+    margin-bottom: .5rem;
+
+    &:last-child {
+      margin-left: auto;
+      margin-right: 0;
+    }
+  }
+}
+
+.big-input {
+  margin-bottom: 2rem;
+
+  .title {
+    font-size: $font-size-standard;
+  }
+
+  input[type='password'],
+  input[type='text'] {
+    font-size: 1.2rem;
+  }
+}
+
+pre {
+  background-color: $black;
+  font-family: monospace;
+  font-size: $font-size-xs;
+  color: $green;
+  max-height: 200px;
+  max-width: 500px;
+  overflow: auto;
+  white-space: pre;
+  padding: .5rem;
+}
+
+@media screen and (max-width: 576px) {
+
+  body,
+  html {
+    font-size: 14px;
+  }
+
+  .actions {
+
+    &>div:last-child {
+      width: 100%;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}

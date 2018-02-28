@@ -1,0 +1,47 @@
+.surveyors-list {
+  @extend .page-content;
+}
+
+.surveyors {
+  -webkit-column-count: 3;      /* Chrome, Safari, Opera */
+  -moz-column-count: 3;         /* Firefox */
+  column-count: 3;
+
+  -webkit-column-gap: 2rem;     /* Chrome, Safari, Opera */
+  -moz-column-gap: 2rem;        /* Firefox */
+  column-gap: 2rem;
+
+  -webkit-column-width: 25rem;  /* Chrome, Safari, Opera */
+  -moz-column-width: 25rem;     /* Firefox */
+  column-width: 25rem;
+
+  .surveyor-list-item {
+    border-top: 1px solid $light-grey;
+    display: inline-block;
+    width: 100%;
+
+    .fa-user {
+      font-size: .9rem;
+      color: $dark-grey;
+    }
+  }
+
+  .surveyor-header {
+    padding: .4rem;
+  }
+}
+
+.surveyor-edit {
+  background: $background-color;
+  min-height: calc(100vh - #{$navbar-height});
+  padding: 2rem 5vw;
+}
+
+@media screen and (min-width: 992px) {
+
+  .surveyor-edit {
+    form {
+      width: 80%;
+    }
+  }
+}

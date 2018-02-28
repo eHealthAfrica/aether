@@ -1,0 +1,102 @@
+.navbar {
+  background: $text-color;
+  box-shadow: 0 -2px 2px rgba($black, .4) inset;
+  font: .9rem $nav-font-family;
+  font-weight: 700;
+  padding: 0;
+}
+
+.navbar-nav {
+  align-items: stretch;
+  display: flex;
+  flex-direction: row;
+  margin-left: .5rem;
+}
+
+.navbar-nav.pull-right {
+  float: none;
+  margin-left: auto;
+}
+
+.nav-item {
+  @include label;
+  align-items: center;
+  color: rgba($white, .5);
+  display: flex;
+  padding: .2rem .6rem 0;
+
+  .btn:not(.btn-primary) {
+    color: $action-color;
+  }
+}
+
+.nav-link.active {
+  color: $action-color;
+}
+
+.user-name {
+  border-left: 1px solid rgba($white, .2);
+  text-transform: none;
+
+  .logout {
+    margin-left: .5rem;
+  }
+}
+
+.navbar-brand {
+  background: rgba($action-color, .3);
+  margin: 0;
+  padding: .6rem 1.5rem;
+  position: relative;
+  height: $navbar-height;
+
+  span {
+    display: inline-block;
+    margin-left: 36px;
+    padding: .1rem;
+  }
+}
+
+nav {
+  color: $white;
+
+  a {
+    color: $white;
+
+    &:hover {
+      color: $action-color;
+    }
+  }
+}
+
+.navbar-toggler {
+  color: $white;
+  padding: .75rem;
+  z-index: 2;
+}
+
+@media screen and (max-width: 767px) {
+  .nav-item {
+    padding: .3rem 1rem;
+    border-bottom: 1px solid rgba($white, .2);
+  }
+
+  .navbar-collapse {
+    border: 0;
+    padding-left: 0;
+  }
+
+  .navbar-nav {
+    margin: 0;
+    flex-direction: column;
+  }
+
+  .nav-link {
+    background: none;
+  }
+
+  .user-name {
+    border: 0;
+    padding: 1rem;
+  }
+}

@@ -1,0 +1,47 @@
+.modal {
+  background-color: rgba($text-color, .7);
+
+  // reset font-settings to override inherited styles from parent element
+  font-size: 1rem;
+  font-weight: normal;
+  text-align: left;
+  color: $text-color;
+  white-space: normal;
+
+  &.show {
+    display: block;
+  }
+
+  .modal-header {
+    align-items: flex-start;
+  }
+
+  .modal-dialog {
+    margin: 80px auto;
+  }
+
+  .modal-content {
+    box-shadow: 2px 2px 4px $darker-grey;
+    border: 0;
+    border-radius: $border-radius;
+  }
+
+  .close {
+    color: $action-color;
+    opacity: 1;
+    font-size: 2.5rem;
+    line-height: 1rem;
+    font-weight: 400;
+
+    &:hover {
+      color: $hover-color;
+    }
+  }
+}
+
+// This is the div that is wrapped around the confirmation button once the modal is triggered.
+// The modal is rendered within the button that triggered it.
+
+.confirmation-container {
+  display: inline-block;
+}

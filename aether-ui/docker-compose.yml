@@ -1,0 +1,93 @@
+version: "2"
+
+networks:
+    internal:
+        driver: bridge
+
+services:
+
+  # ---------------------------------
+  # Database container
+  # ---------------------------------
+
+  db:
+    extends:
+      file: docker-compose-base.yml
+      service: postgres-base
+    networks:
+      - internal
+
+  # ---------------------------------
+  # Aether kernel container
+  # ---------------------------------
+
+  kernel:
+    extends:
+      file: docker-compose-base.yml
+      service: kernel-base
+    depends_on:
+      - db
+    networks:
+      internal:
+        aliases:
+          - kernel.aether.local
+
+  # ---------------------------------
+  # ODK Adapter container
+  # ---------------------------------
+
+  odk:
+    extends:
+      file: docker-compose-base.yml
+      service: odk-base
+    depends_on:
+      - db
+      - kernel
+    networks:
+      internal:
+        aliases:
+          - odk.aether.local
+
+  # ---------------------------------
+  # Gather container
+  # ---------------------------------
+
+  gather:
+    extends:
+      file: docker-compose-base.yml
+      service: gather-base
+    depends_on:
+      - db
+      - kernel
+      - odk
+      - webpack
+    networks:
+      internal:
+        aliases:
+          - gather.local
+
+  # ---------------------------------
+  # Webpack container
+  # ---------------------------------
+
+  webpack:
+    extends:
+      file: docker-compose-base.yml
+      service: webpack-base
+    networks:
+      - internal
+
+  # ---------------------------------
+  # NGINX container
+  # ---------------------------------
+
+  nginx:
+    extends:
+      file: docker-compose-base.yml
+      service: nginx-base
+    depends_on:
+      - gather
+      - kernel
+      - odk
+    networks:
+      - internal

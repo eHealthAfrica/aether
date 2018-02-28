@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kernel-nginx-config 
+data:
+  default.conf: |
+    server {
+      location /health {
+        return 200;
+      }
+    }
+
+    server {
+      listen      80;
+      charset     utf-8;
+      server_name *.gather2.org;
+
+      # Max upload size
+      client_max_body_size 75M;   # adjust to taste
+
+      if ($http_x_forwarded_proto != 'https') {
+       return 301 https://$host$request_uri;
+      }
+
+      location /static/ {
+        alias /var/www/static/;
+      }
+
+      # Protected media
+      location /media-internal/ {
+        internal;  # Cannot be accessed from external calls
+        alias /media/;
+      }
+
+      # Finally, send all non-media requests to the Django server.
+      location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header        Host               $host;
+        proxy_set_header        X-Real-IP          $remote_addr;
+        proxy_set_header        X-Forwarded-For    $proxy_add_x_forwarded_for;
+        proxy_set_header        X-Forwarded-Host   $host:443;
+        proxy_set_header        X-Forwarded-Server $host;
+        proxy_set_header        X-Forwarded-Port   443;
+        proxy_set_header        X-Forwarded-Proto  https;
+        include    /etc/nginx/uwsgi_params; # or the uwsgi_params you installed manually
+      }
+    }

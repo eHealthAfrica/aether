@@ -1,0 +1,53 @@
+options:
+  max-warnings: 300
+
+files:
+  include:
+    - './gather/assets/css/*.scss'
+
+rules:
+  # ========================
+  # possible values:
+  #
+  # 0  --  disabled
+  # 1  --  warning
+  # 2  --  error
+  # ========================
+
+  indentation:
+    - 2
+    - size: 2
+
+  quotes:
+    - 2
+    - style: single  # values: single | double
+
+  border-zero:
+    - 2
+    - convention: 0  # values: 0 | none
+
+  hex-notation:
+    - 2
+    - style: lowercase  # values: lowercase | uppercase
+
+  nesting-depth:
+    - 1
+    - max-depth: 3
+
+  property-sort-order: 0
+
+  no-color-literals: 0
+  no-duplicate-properties: 2
+  no-important: 1
+  no-qualifying-elements: 0
+  no-trailing-whitespace: 2
+  no-vendor-prefixes: 0
+  no-css-comments: 0
+  no-transition-all: 0
+
+  force-attribute-nesting: 0
+  force-element-nesting: 0
+  force-pseudo-nesting: 0
+
+  class-name-format: 1
+  variable-name-format: 1

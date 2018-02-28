@@ -1,0 +1,21 @@
+@mixin label {
+  font-family: $nav-font-family;
+  font-size: .85rem;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+
+@mixin logo-gather {
+  background: url('/static/images/gather-icon.svg');
+}
+
+@mixin logo-eha {
+  background: url('/static/images/eHA-icon.svg');
+}
+
+@mixin bg-gradient {
+  background: $action-color;
+  background-image: linear-gradient(to right, transparent, $hover-color);
+  color: $white;
+}

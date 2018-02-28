@@ -1,0 +1,13 @@
+[
+  {
+    "fields": {
+      "rdf_definition": "[]",
+      "jsonld_context": "[]",
+      "salad_schema": "[]",
+      "name": "Aether Sample Project",
+      "revision": "1"
+    },
+    "pk": "d3ee41be-e696-424b-8b45-ab6a0d787f6a",
+    "model": "kernel.project"
+  }
+]
