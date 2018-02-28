@@ -43,7 +43,7 @@ $DC_TEST up -d db-test couchdb-test redis-test
 
 prepare_and_test_container aether-ui
 
-# # test and start a clean KERNEL TEST container
+# test and start a clean KERNEL TEST container
 # prepare_and_test_container kernel
 
 # echo "_____________________________________________ Starting kernel"

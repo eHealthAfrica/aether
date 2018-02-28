@@ -110,6 +110,10 @@ services:
     extends:
       file: docker-compose-base.yml
       service: aether-ui-base
+    environment:
+      TESTING: "true"
+      AETHER_KERNEL_URL: http://kernel-test:9000
+      RDS_HOSTNAME: db-test
     depends_on:
       - db-test
       - webpack-test

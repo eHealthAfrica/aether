@@ -1,12 +1,9 @@
-import uuid
 import requests
 
 from collections import namedtuple
 
 from django.contrib.auth import get_user_model
-from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from solo.models import SingletonModel
 
 
 from ..settings import AETHER_APPS

@@ -1,14 +1,10 @@
 import requests
 
-from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.views import View
 
-from rest_framework import viewsets
-from rest_framework.decorators import api_view
-
 from ..settings import AETHER_APPS
-from . import models, serializers
+from . import models
 
 
 class TokenProxyView(View):
