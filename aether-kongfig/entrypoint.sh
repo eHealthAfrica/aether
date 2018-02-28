@@ -14,14 +14,6 @@ do
             HOST=$2
             shift 2
             ;;
-        --consumer )
-            CONSUMER=$2
-            shift 2
-            ;;
-        --key )
-            APIKEY=$2
-            shift 2
-            ;;
         *)
             break
             ;;
