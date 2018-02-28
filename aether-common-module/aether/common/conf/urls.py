@@ -43,7 +43,7 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
 
         auth_urls = ([
             url(r'^login/$', django_cas_ng.views.login, name='login'),
-            url(r'^logout$/', django_cas_ng.views.logout, name='logout'),
+            url(r'^logout/$', django_cas_ng.views.logout, name='logout'),
         ], 'rest_framework')
 
     urlpatterns = [
