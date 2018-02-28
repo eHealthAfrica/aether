@@ -171,3 +171,75 @@ services:
     environment: *sync-environment
     volumes: *sync-volumes
     command: start_rq
+
+  # ---------------------------------
+  # Gather module
+  # ---------------------------------
+
+  gather-base:
+    image: gather
+    stdin_open: true
+    tty: true
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    environment: &gather-environment
+      CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
+      CSRF_COOKIE_DOMAIN: gather.local
+      DEBUG: "true"
+      HOSTNAME: gather.local
+      STATIC_ROOT: /code/gather/assets/bundles
+
+      AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
+      AETHER_KERNEL_URL: http://kernel:8000
+      AETHER_KERNEL_URL_TEST: http://kernel-test:9001
+
+      AETHER_MODULES: "kernel,odk,"
+
+      AETHER_ODK_TOKEN: d5184a044bb5acff89a76ec4e67d0fcddd5cd3a1
+      AETHER_ODK_URL: http://odk:8443
+      AETHER_ODK_URL_TEST: http://odk-test:9002
+
+      RDS_DB_NAME: gather
+      RDS_HOSTNAME: db
+      RDS_PASSWORD: ""
+      RDS_PORT: 5432
+      RDS_USERNAME: postgres
+
+      CSV_HEADER_RULES: replace;.;:;
+      CSV_HEADER_RULES_SEP: ;
+
+      WEB_SERVER_PORT: 8004
+    volumes: &gather-volumes
+      #################################################
+      #                    WARNING                    #
+      # do not include the root folder as volume or   #
+      # `node_modules` folder will not be available   #
+      #                                               #
+      # - ./:/code # DO NOT UNCOMMENT!!!              #
+      #################################################
+
+      - ./conf:/code/conf
+      - ./app/gather:/code/gather
+
+      - ./app/entrypoint.sh:/code/entrypoint.sh
+      - ./app/manage.py:/code/manage.py
+      - ./app/package.json:/code/package.json
+
+      # media folder
+      - ./tmp/gather:/media
+    ports:
+      - "8004:8004"
+    command: start_dev
+
+  # ---------------------------------
+  # Webpack container
+  # ---------------------------------
+
+  webpack-base:
+    image: gather
+    environment: *gather-environment
+    volumes: *gather-volumes
+    ports:
+      - "3000:3000"
+    command: start_webpack

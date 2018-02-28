@@ -108,6 +108,33 @@ services:
     networks:
       - internal
 
+  # ---------------------------------
+  # Gather container
+  # ---------------------------------
+
+  gather:
+    extends:
+      file: docker-compose-base.yml
+      service: gather-base
+    depends_on:
+      - db
+      - webpack
+    networks:
+      internal:
+        aliases:
+          - gather.local
+
+  # ---------------------------------
+  # Webpack container
+  # ---------------------------------
+
+  webpack:
+    extends:
+      file: docker-compose-base.yml
+      service: webpack-base
+    networks:
+      - internal
+
 
   # ---------------------------------
   # NGINX container
