@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.urls import include, path, re_path
+from django.conf.urls import include, url
 from django.views.generic import TemplateView
 
 from aether.common.conf.urls import generate_urlpatterns
@@ -15,31 +15,31 @@ urlpatterns = generate_urlpatterns(kernel=True) + [
 
     # ----------------------
     # API
-    path('', include('ui.api.urls', namespace='ui')),
-    path('v1/', include('ui.api.urls', namespace='v1')),
+    url(r'^/', include('ui.api.urls', namespace='ui')),
+    url(r'^v1/', include('ui.api.urls', namespace='v1')),
 
     # ----------------------
     # Welcome page
-    path('',
-         login_required(TemplateView.as_view(template_name='pages/index.html')),
-         name='index-page'),
+    url(r'^$',
+        login_required(TemplateView.as_view(template_name='pages/index.html')),
+        name='index-page'),
 
     # ----------------------
     # shows the current user app tokens
-    path('~tokens',
+    url(r'^~tokens$',
          login_required(TemplateView.as_view(template_name='pages/tokens.html')),
          name='tokens'),
     # to check if the user tokens are valid
-    path('check-tokens', login_required(tokens_required(empty)), name='check-tokens'),
+    url(r'^check-tokens$', login_required(tokens_required(empty)), name='check-tokens'),
 
-    re_path(r'^surveys/(?P<action>\w+)/(?P<survey_id>[0-9a-f-]+)?$',
-            login_required(tokens_required(TemplateView.as_view(template_name='pages/surveys.html'))),
+    url(r'^surveys/(?P<action>\w+)/(?P<survey_id>[0-9a-f-]+)?$',
+        login_required(tokens_required(TemplateView.as_view(template_name='pages/surveys.html'))),
             name='surveys'),
 ]
 
 if settings.AETHER_ODK:  # pragma: no cover
     urlpatterns += [
-        re_path(r'^surveyors/(?P<action>\w+)/(?P<surveyor_id>[0-9]+)?$',
-                login_required(tokens_required(TemplateView.as_view(template_name='pages/surveyors.html'))),
-                name='surveyors'),
+        url(r'^surveyors/(?P<action>\w+)/(?P<surveyor_id>[0-9]+)?$',
+            login_required(tokens_required(TemplateView.as_view(template_name='pages/surveyors.html'))),
+            name='surveyors'),
     ]
