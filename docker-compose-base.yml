@@ -40,11 +40,11 @@ services:
     ports:
       - 8449:8449
       - 8001:8001
-      - 80:80
+      - ${KONG_PORT}:${KONG_PORT}
     environment:
       - KONG_ADMIN_LISTEN=0.0.0.0:8001
       - KONG_PROXY_LISTEN_SSL=0.0.0.0:8449
-      - KONG_PROXY_LISTEN=0.0.0.0:80
+      - KONG_PROXY_LISTEN=0.0.0.0:${KONG_PORT}
       - KONG_DATABASE=postgres
       - KONG_PG_HOST=db
 
@@ -54,6 +54,7 @@ services:
       args:
         KONG_CONSUMER: ${KONG_CONSUMER}
         KONG_APIKEY: ${KONG_APIKEY}
+        PROJECT_API_URL: ${PROJECT_API_URL}
     image: mashupmill/kongfig
     command: --path /config.yml --host kong:8001
 
@@ -97,7 +98,7 @@ services:
       - 8449
       - 8001
       - 8444
-      - 80
+      - ${KONG_PORT}
 
 
   # ---------------------------------
@@ -113,9 +114,9 @@ services:
       - .env
     environment:
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
-      CSRF_COOKIE_DOMAIN: .aether.local
+      CSRF_COOKIE_DOMAIN: .${PROJECT_URL}
       DEBUG: "true"
-      HOSTNAME: kernel.aether.local
+      HOSTNAME: ${PROJECT_API_URL}/aether/v1
 
       RDS_DB_NAME: aether
       RDS_HOSTNAME: db
@@ -148,7 +149,7 @@ services:
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
-      HOSTNAME: odk.aether.local
+      HOSTNAME: ${PROJECT_API_URL}/odk/v1
 
       AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
       AETHER_KERNEL_URL: http://kernel:8000

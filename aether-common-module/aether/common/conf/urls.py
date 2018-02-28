@@ -41,9 +41,12 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
     if settings.CAS_SERVER_URL:
         import django_cas_ng.views
 
+        API_PREFIX = '^aether/(?P<version>v1)'
         auth_urls = ([
-            url(r'^login/$', django_cas_ng.views.login, name='login'),
-            url(r'^logout$/', django_cas_ng.views.logout, name='logout'),
+           url(f'{API_PREFIX}/', include([
+                url(r'^login/$', django_cas_ng.views.login, name='login'),
+                url(r'^logout$/', django_cas_ng.views.logout, name='logout'),
+           ]))
         ], 'rest_framework')
 
     urlpatterns = [

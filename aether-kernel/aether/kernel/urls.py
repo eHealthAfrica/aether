@@ -4,7 +4,7 @@ from aether.common.conf.urls import generate_urlpatterns
 from aether.kernel.api.views import AetherSchemaView
 
 
-API_PREFIX = '^(?P<version>v1)'
+API_PREFIX = '^aether/(?P<version>v1)'
 
 
 urlpatterns = generate_urlpatterns(token=True) + [

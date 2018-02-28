@@ -31,6 +31,7 @@ MEDIA_URL = '/media/'
 MEDIA_BASIC_URL = '/media-basic/'
 MEDIA_INTERNAL_URL = '/media-internal/'
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/media/')
+AETHER_VERSION = 'v1'
 
 
 # Django Basic Configuration

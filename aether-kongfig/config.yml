@@ -8,10 +8,17 @@ apis:
       uris:
         - "/aether/v1"
 
+  - name: "kernel-static"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://kernel.aether.local:8000/aether/v1/static"
+      uris:
+        - "/aether/v1/static"
+
   - name: "odk"
     ensure: "present"
     attributes:
-      upstream_url: "http://odk.aether.local:8443"
+      upstream_url: "https://odk.aether.local:8443"
       uris:
         - "/odk/v1"
 
@@ -33,6 +40,8 @@ plugins:
     ensure: "present"
     attributes:
       config:
+        key_names:
+          - apikey
         hide_credentials: true
 
 consumers:
