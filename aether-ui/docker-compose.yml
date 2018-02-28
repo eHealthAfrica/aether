@@ -18,37 +18,6 @@ services:
       - internal
 
   # ---------------------------------
-  # Aether kernel container
-  # ---------------------------------
-
-  kernel:
-    extends:
-      file: docker-compose-base.yml
-      service: kernel-base
-    depends_on:
-      - db
-    networks:
-      internal:
-        aliases:
-          - kernel.aether.local
-
-  # ---------------------------------
-  # ODK Adapter container
-  # ---------------------------------
-
-  odk:
-    extends:
-      file: docker-compose-base.yml
-      service: odk-base
-    depends_on:
-      - db
-      - kernel
-    networks:
-      internal:
-        aliases:
-          - odk.aether.local
-
-  # ---------------------------------
   # Gather container
   # ---------------------------------
 
@@ -58,8 +27,6 @@ services:
       service: gather-base
     depends_on:
       - db
-      - kernel
-      - odk
       - webpack
     networks:
       internal:
@@ -87,7 +54,7 @@ services:
       service: nginx-base
     depends_on:
       - gather
-      - kernel
-      - odk
+      # - kernel
+      # - odk
     networks:
       - internal

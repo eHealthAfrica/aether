@@ -107,7 +107,7 @@ services:
       STATIC_ROOT: /code/gather/assets/bundles
 
       AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
-      AETHER_KERNEL_URL: http://kernel:8001
+      AETHER_KERNEL_URL: http://kernel:8000
       AETHER_KERNEL_URL_TEST: http://kernel-test:9001
 
       AETHER_MODULES: "kernel,odk,"
@@ -125,7 +125,7 @@ services:
       CSV_HEADER_RULES: replace;.;:;
       CSV_HEADER_RULES_SEP: ;
 
-      WEB_SERVER_PORT: 8000
+      WEB_SERVER_PORT: 8004
     volumes: &gather-volumes
       #################################################
       #                    WARNING                    #
@@ -145,7 +145,7 @@ services:
       # media folder
       - ./tmp/gather:/media
     ports:
-      - "8000:8000"
+      - "8004:8004"
     command: start_dev
 
   # ---------------------------------

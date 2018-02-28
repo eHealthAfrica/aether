@@ -91,7 +91,7 @@ docker-compose up --build    # this will update the cointainers if needed
 
 This will start:
 
-- **gather** on `http://gather.local:8000`
+- **gather** on `http://gather.local:8004`
   and create a superuser `admin-gather`.
 
 - **aether-kernel** on `http://kernel.aether.local:8001`

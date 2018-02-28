@@ -16,7 +16,7 @@ server {
 
   location / {
     # use docker network alias (is used by UMS as service name)
-    proxy_pass http://gather.local:8000;
+    proxy_pass http://gather.local:8004;
     include    /etc/nginx/uwsgi_params;
   }
 }
