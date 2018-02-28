@@ -19,12 +19,12 @@ COPY ./conf/pip /code/conf/pip
 RUN pip install -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt
 
 
-COPY ./app/package.json /code/package.json
+COPY ./aether/package.json /code/package.json
 RUN npm install --loglevel silent
 
 ENV PATH /code/node_modules/.bin:$PATH
 
-COPY ./app /code
+COPY ./aether /code
 COPY ./conf /code/conf
 
 ################################################################################

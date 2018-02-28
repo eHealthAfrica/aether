@@ -109,20 +109,20 @@ services:
       - internal
 
   # ---------------------------------
-  # Gather container
+  # Aether UI container
   # ---------------------------------
 
-  gather:
+  aether-ui:
     extends:
       file: docker-compose-base.yml
-      service: gather-base
+      service: aether-ui-base
     depends_on:
       - db
       - webpack
     networks:
       internal:
         aliases:
-          - gather.local
+          - aether-ui.local
 
   # ---------------------------------
   # Webpack container

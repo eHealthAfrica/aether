@@ -176,16 +176,16 @@ services:
     command: start_rq
 
   # ---------------------------------
-  # Gather module
+  # Aether UI module
   # ---------------------------------
 
-  gather-base:
-    image: gather
+  aether-ui-base:
+    image: aether-ui
     stdin_open: true
     tty: true
     build:
       context: ./aether-ui
-      dockerfile: app/Dockerfile
+      dockerfile: aether/Dockerfile
     environment: &gather-environment
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: gather.local
@@ -225,11 +225,11 @@ services:
       #################################################
 
       - ./aether-ui/conf:/code/conf
-      - ./aether-ui/app/gather:/code/gather
+      - ./aether-ui/aether/ui:/code/ui
 
-      - ./aether-ui/app/entrypoint.sh:/code/entrypoint.sh
-      - ./aether-ui/app/manage.py:/code/manage.py
-      - ./aether-ui/app/package.json:/code/package.json
+      - ./aether-ui/aether/entrypoint.sh:/code/entrypoint.sh
+      - ./aether-ui/aether/manage.py:/code/manage.py
+      - ./aether-ui/aether/package.json:/code/package.json
 
       # media folder
       - ./tmp/gather:/media
