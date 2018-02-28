@@ -3,11 +3,11 @@ import requests
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 
-from gather.api.models import Project
+from ui.api.models import Project
 
 AETHER_PROJECT_DATA = {
     'revision': '1',
-    'name': 'Gather',
+    'name': 'Ui',
     'salad_schema': '[]',
     'jsonld_context': '[]',
     'rdf_definition': '[]',
@@ -19,7 +19,7 @@ class Command(BaseCommand):
     Create an Aether Project if it does not already exist.
 
     This command ensures that there exists an Aether project
-    with an id matching the singleton gather.api.models.Project.
+    with an id matching the singleton ui.api.models.Project.
     '''
 
     @property
@@ -59,7 +59,7 @@ class Command(BaseCommand):
         )
 
     def create_aether_project(self):
-        msg = 'No existing gather project, creating a new one'
+        msg = 'No existing ui project, creating a new one'
         self.stdout.write(msg)
         response = self.post_aether_project()
         response.raise_for_status()
@@ -70,13 +70,13 @@ class Command(BaseCommand):
             project_id=project_id,
             project_name=project_name,
         )
-        msg = 'Successfully created a Gather project with project id "{}"'
+        msg = 'Successfully created a Ui project with project id "{}"'
         self.stdout.write(msg.format(project_id))
 
-    def check_matching_aether_project(self, gather_project_id):
+    def check_matching_aether_project(self, ui_project_id):
         response = Command.get_aether_project(
             self,
-            project_id=gather_project_id,
+            project_id=ui_project_id,
         )
         if response.status_code == 200:
             msg = 'Found matching Aether project with id "{}"'
@@ -85,13 +85,13 @@ class Command(BaseCommand):
         else:
             msg = (
                 'Could not find an existing Aether project matching '
-                'gather project id "{}"'
+                'ui project id "{}"'
             )
-            raise CommandError(msg.format(gather_project_id))
+            raise CommandError(msg.format(ui_project_id))
 
     def handle(self, *args, **options):
-        gather_project = Project.objects.first()
-        if gather_project:
-            self.check_matching_aether_project(gather_project.project_id)
+        ui_project = Project.objects.first()
+        if ui_project:
+            self.check_matching_aether_project(ui_project.project_id)
         else:
             self.create_aether_project()

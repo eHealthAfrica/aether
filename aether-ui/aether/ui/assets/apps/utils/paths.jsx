@@ -1,15 +1,15 @@
 import jQuery from 'jquery'
-import { KERNEL_APP, ODK_APP, GATHER_APP } from './constants'
+import { KERNEL_APP, ODK_APP, UI_APP } from './constants'
 
 const API_PREFIX = ''
-const APPS = [ KERNEL_APP, ODK_APP, GATHER_APP ]
+const APPS = [ KERNEL_APP, ODK_APP, UI_APP ]
 
 /**
  * Returns the API url to get the Mappings/Surveys data
  *
- * Internally in Aether the concept is Mapping but in Gather it refers to Survey.
+ * Internally in Aether the concept is Mapping but in Ui it refers to Survey.
  *
- * @param {string}  app          - app source: `kernel` (default), `odk` or `gather`
+ * @param {string}  app          - app source: `kernel` (default), `odk` or `ui`
  * @param {number}  id           - mapping/survey id
  * @param {boolean} withStats    - include mapping/survey stats?
  * @param {object}  params       - query string parameters
@@ -28,7 +28,7 @@ export const getSurveysAPIPath = ({app, id, withStats, ...params}) => {
 }
 
 export const getProjectAPIPath = () => {
-  return '/gather/project/'
+  return '/ui/project/'
 }
 
 /**
@@ -78,7 +78,7 @@ export const getSubmissionsAPIPath = ({id, ...params}) => {
  * @param {object}  params      - query string parameters
  */
 export const getMasksAPIPath = ({id, ...params}) => {
-  return buildAPIPath(GATHER_APP, 'masks', id, params)
+  return buildAPIPath(UI_APP, 'masks', id, params)
 }
 
 /**
@@ -94,7 +94,7 @@ export const getMasksAPIPath = ({id, ...params}) => {
  * With    {id} -> {app}/{type}/{id}/details.{format}?{queryString}
  * Without {id} -> {app}/{type}/fetch.{format}?{queryString}
  *
- * @param {string}  app         - app source: `kernel`, `odk` or `gather`
+ * @param {string}  app         - app source: `kernel`, `odk` or `ui`
  * @param {string}  type        - item type
  * @param {number}  id          - item id
  * @param {string}  format      - response format

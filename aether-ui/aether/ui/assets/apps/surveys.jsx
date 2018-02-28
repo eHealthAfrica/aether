@@ -12,7 +12,7 @@ if (module.hot) {
 /*
 This is the surveys/surveys app.
 
-An Aether "Mapping" is equivalent to a Gather "Survey".
+An Aether "Mapping" is equivalent to a Ui "Survey".
 */
 
 const appElement = document.getElementById('surveys-app')

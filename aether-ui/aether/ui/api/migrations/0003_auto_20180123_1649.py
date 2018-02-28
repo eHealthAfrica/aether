@@ -7,7 +7,7 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('gather', '0002_project'),
+        ('ui', '0002_project'),
     ]
 
     operations = [

@@ -32,7 +32,7 @@ COPY ./conf /code/conf
 ################################################################################
 
 # create user to run container (avoid root user)
-RUN useradd -ms /bin/false gather
-RUN chown gather: /code
+RUN useradd -ms /bin/false ui
+RUN chown ui: /code
 
 ENTRYPOINT ["/code/entrypoint.sh"]

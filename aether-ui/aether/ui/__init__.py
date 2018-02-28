@@ -1,1 +1,1 @@
-default_app_config = 'gather.apps.Config'
+default_app_config = 'ui.apps.Config'

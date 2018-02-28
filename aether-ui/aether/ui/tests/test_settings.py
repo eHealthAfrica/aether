@@ -13,9 +13,9 @@ class SettingsTest(TestCase):
         self.assertFalse(settings.USE_X_FORWARDED_PORT)
         self.assertEqual(settings.SECURE_PROXY_SSL_HEADER, None)
 
-        self.assertEqual(settings.ROOT_URLCONF, 'gather.urls')
-        self.assertEqual(settings.WSGI_APPLICATION, 'gather.wsgi.application')
-        self.assertEqual(settings.APP_NAME, 'Gather')
+        self.assertEqual(settings.ROOT_URLCONF, 'ui.urls')
+        self.assertEqual(settings.WSGI_APPLICATION, 'ui.wsgi.application')
+        self.assertEqual(settings.APP_NAME, 'Ui')
         self.assertEqual(settings.AETHER_MODULES, ['kernel', 'odk'])
 
         self.assertIn('kernel', settings.AETHER_APPS)

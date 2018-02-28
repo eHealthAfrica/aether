@@ -15,8 +15,8 @@ router.register('surveys', views.SurveyViewSet, base_name='surveys')
 router.register('masks', views.MaskViewSet, base_name='masks')
 
 urlpatterns = [
-    path('gather/', include(router.urls)),
-    path('gather/project/', views.project_view, name='project-view'),
+    path('ui/', include(router.urls)),
+    path('ui/project/', views.project_view, name='project-view'),
 ]
 
 for app_name in settings.AETHER_APPS:

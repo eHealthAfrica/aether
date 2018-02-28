@@ -45,7 +45,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.TextField()),
                 ('columns', django.contrib.postgres.fields.ArrayField(base_field=models.TextField(), size=None)),
-                ('survey', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='masks', to='gather.Survey')),
+                ('survey', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='masks', to='ui.Survey')),
             ],
             options={
                 'default_related_name': 'masks',

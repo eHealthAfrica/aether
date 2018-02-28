@@ -10,10 +10,10 @@ from aether.common.conf.settings import INSTALLED_APPS, TEMPLATES, TESTING, STAT
 # UI Configuration
 # ------------------------------------------------------------------------------
 
-ROOT_URLCONF = 'gather.urls'
-WSGI_APPLICATION = 'gather.wsgi.application'
+ROOT_URLCONF = 'ui.urls'
+WSGI_APPLICATION = 'ui.wsgi.application'
 
-APP_NAME = 'Gather'
+APP_NAME = 'Ui'
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50MB
 
@@ -28,15 +28,15 @@ WEBPACK_LOADER = {
 INSTALLED_APPS += [
     'webpack_loader',
     'solo.apps.SoloAppConfig',
-    'gather',
+    'ui',
 ]
 
 TEMPLATES[0]['OPTIONS']['context_processors'] += [
-    'gather.context_processors.gather_context',
+    'ui.context_processors.ui_context',
 ]
 
 MIGRATION_MODULES = {
-    'gather': 'gather.api.migrations'
+    'ui': 'ui.api.migrations'
 }
 
 # Aether external modules

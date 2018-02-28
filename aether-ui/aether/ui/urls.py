@@ -15,8 +15,8 @@ urlpatterns = generate_urlpatterns(kernel=True) + [
 
     # ----------------------
     # API
-    path('', include('gather.api.urls', namespace='gather')),
-    path('v1/', include('gather.api.urls', namespace='v1')),
+    path('', include('ui.api.urls', namespace='ui')),
+    path('v1/', include('ui.api.urls', namespace='v1')),
 
     # ----------------------
     # Welcome page

@@ -145,7 +145,7 @@ module.exports = function (custom) {
 
     output: Object.assign({
       filename: '[name]-[hash].js',
-      library: ['gather', '[name]'],
+      library: ['ui', '[name]'],
       libraryTarget: 'var',
       path: path.resolve(__dirname, './assets/bundles')
     }, custom.output),

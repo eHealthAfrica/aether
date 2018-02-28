@@ -153,7 +153,7 @@ class UserTokens(models.Model):
         return UserAppToken(base_url=base_url, token=token)
 
     class Meta:
-        app_label = 'gather'
+        app_label = 'ui'
         default_related_name = 'app_tokens'
 
 
@@ -183,7 +183,7 @@ class Survey(models.Model):
         return self.name
 
     class Meta:
-        app_label = 'gather'
+        app_label = 'ui'
         default_related_name = 'surveys'
 
 
@@ -203,6 +203,6 @@ class Mask(models.Model):
         return '{} - {}'.format(str(self.survey), self.name)
 
     class Meta:
-        app_label = 'gather'
+        app_label = 'ui'
         default_related_name = 'masks'
         unique_together = ('survey', 'name')

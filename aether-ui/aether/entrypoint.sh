@@ -60,14 +60,14 @@ setup_projects() {
         >&2 echo 'Waiting for Aether kernel...'
         sleep 1
     done
-    # Set up Aether and Gather projects and ensure that they are in sync
+    # Set up Aether and Ui projects and ensure that they are in sync
     ./manage.py setup_aether_project
 }
 
 setup_prod() {
   # check if vars exist
   /code/conf/check_vars.sh
-  # arguments: -u=admin -p=secretsecret -e=admin@gather2.org -t=01234656789abcdefghij
+  # arguments: -u=admin -p=secretsecret -e=admin@ehealthafrica.org -t=01234656789abcdefghij
   ./manage.py setup_admin -p=$ADMIN_PASSWORD
 }
 
@@ -144,7 +144,7 @@ case "$1" in
         test_js
 
         # remove previous files
-        rm -r -f /code/gather/assets/bundles/*
+        rm -r -f /code/ui/assets/bundles/*
         npm run webpack
 
         test_coverage "${@:2}"
@@ -172,31 +172,31 @@ case "$1" in
         setup_projects
 
         # remove previous files
-        rm -r -f /code/gather/assets/bundles/*
+        rm -r -f /code/ui/assets/bundles/*
         npm run webpack
 
          # create static assets
         ./manage.py collectstatic --noinput
-        cp -r /code/gather/assets/bundles/* /var/www/static/
+        cp -r /code/ui/assets/bundles/* /var/www/static/
         chmod -R 755 /var/www/static
 
         # media assets
-        chown gather: /media
+        chown ui: /media
 
         /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
     ;;
 
     start_dev )
         setup_db
-        setup_initial_data
-        setup_projects
+        # setup_initial_data
+        # setup_projects
 
-        ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
+        # ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
 
     start_webpack )
         # remove previous files
-        rm -r -f /code/gather/assets/bundles/*
+        rm -r -f /code/ui/assets/bundles/*
         npm run webpack-server
     ;;
 

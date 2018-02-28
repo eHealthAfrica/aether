@@ -3,7 +3,7 @@ import { FormattedMessage } from 'react-intl'
 
 import { FetchUrlsContainer, PaginationContainer } from '../components'
 import { range } from '../utils'
-import { MAX_PAGE_SIZE, GATHER_APP } from '../utils/constants'
+import { MAX_PAGE_SIZE, UI_APP } from '../utils/constants'
 import { CSV_HEADER_RULES, CSV_HEADER_RULES_SEP } from '../utils/env'
 import { getSurveysPath, getSurveysAPIPath, getSubmissionsAPIPath } from '../utils/paths'
 import { postData } from '../utils/request'
@@ -234,9 +234,9 @@ export default class Survey extends Component {
     const urls = [
       {
         name: 'survey',
-        url: getSurveysAPIPath({ app: GATHER_APP, id: this.props.survey.id }),
+        url: getSurveysAPIPath({ app: UI_APP, id: this.props.survey.id }),
         force: {
-          url: getSurveysAPIPath({ app: GATHER_APP }),
+          url: getSurveysAPIPath({ app: UI_APP }),
           data: { mapping_id: this.props.survey.id, name: this.props.survey.name }
         }
       }
