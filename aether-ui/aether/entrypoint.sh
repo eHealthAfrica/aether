@@ -127,12 +127,6 @@ case "$1" in
     setuplocaldb )
         setup_db
         setup_initial_data
-        setup_projects
-    ;;
-
-    setuptestdb )
-        setup_db
-        setup_initial_data
     ;;
 
     setupproddb )

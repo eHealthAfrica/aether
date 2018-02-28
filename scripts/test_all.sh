@@ -33,31 +33,33 @@ echo "_____________________________________________ Killing ALL containers"
 $DC_TEST down
 
 echo "_____________________________________________ Testing common module"
-$DC_COMMON down
-$DC_COMMON build
-$DC_COMMON run common test
+# $DC_COMMON down
+# $DC_COMMON build
+# $DC_COMMON run common test
 
 # start databases
 echo "_____________________________________________ Starting databases"
 $DC_TEST up -d db-test couchdb-test redis-test
 
-# test and start a clean KERNEL TEST container
-prepare_and_test_container kernel
+prepare_and_test_container aether-ui
 
-echo "_____________________________________________ Starting kernel"
-$DC_TEST up -d kernel-test
+# # test and start a clean KERNEL TEST container
+# prepare_and_test_container kernel
 
-# test a clean CLIENT TEST container
-prepare_and_test_container client
+# echo "_____________________________________________ Starting kernel"
+# $DC_TEST up -d kernel-test
 
-# test and start a clean ODK TEST container
-prepare_and_test_container odk aether/kernel/api/tests/fixtures/project_empty_schema.json
+# # test a clean CLIENT TEST container
+# prepare_and_test_container client
 
-# test a clean SYNC TEST container
-prepare_and_test_container couchdb-sync aether/kernel/api/tests/fixtures/project.json
+# # test and start a clean ODK TEST container
+# prepare_and_test_container odk aether/kernel/api/tests/fixtures/project_empty_schema.json
 
-# kill ALL containers
-echo "_____________________________________________ Killing auxiliary containers"
-./scripts/kill_all.sh
+# # test a clean SYNC TEST container
+# prepare_and_test_container couchdb-sync aether/kernel/api/tests/fixtures/project.json
 
-echo "_____________________________________________ END"
+# # kill ALL containers
+# echo "_____________________________________________ Killing auxiliary containers"
+# ./scripts/kill_all.sh
+
+# echo "_____________________________________________ END"

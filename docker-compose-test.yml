@@ -103,6 +103,27 @@ services:
       - "9666:9666"
 
   # ---------------------------------
+  # Aether UI container
+  # ---------------------------------
+
+  aether-ui-test:
+    extends:
+      file: docker-compose-base.yml
+      service: aether-ui-base
+    depends_on:
+      - db-test
+      - webpack-test
+
+  # ---------------------------------
+  # Webpack container
+  # ---------------------------------
+
+  webpack-test:
+    extends:
+      file: docker-compose-base.yml
+      service: webpack-base
+
+  # ---------------------------------
   # Aether Client container
   # ---------------------------------
   client-test:

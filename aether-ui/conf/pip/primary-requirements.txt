@@ -4,14 +4,14 @@
 #                                                                              #
 #                                 CHANGE ME !!!                                #
 #                                                                              #
-# Update me and then run 'docker-compose run gather pip_freeze'                #
+# Update me and then run 'docker-compose run aether-ui pip_freeze'             #
 #                                                                              #
 ################################################################################
 
 
 # Main libraries
 aether.common   # Aether common module
-django
+django==1.11
 django-cas-ng
 django-cors-headers
 django-ums-client
