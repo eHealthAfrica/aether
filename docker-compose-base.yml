@@ -181,7 +181,7 @@ services:
     stdin_open: true
     tty: true
     build:
-      context: .
+      context: ./aether-ui
       dockerfile: app/Dockerfile
     environment: &gather-environment
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
