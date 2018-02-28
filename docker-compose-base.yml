@@ -219,12 +219,12 @@ services:
       # - ./:/code # DO NOT UNCOMMENT!!!              #
       #################################################
 
-      - ./conf:/code/conf
-      - ./app/gather:/code/gather
+      - ./aether-ui/conf:/code/conf
+      - ./aether-ui/app/gather:/code/gather
 
-      - ./app/entrypoint.sh:/code/entrypoint.sh
-      - ./app/manage.py:/code/manage.py
-      - ./app/package.json:/code/package.json
+      - ./aether-ui/app/entrypoint.sh:/code/entrypoint.sh
+      - ./aether-ui/app/manage.py:/code/manage.py
+      - ./aether-ui/app/package.json:/code/package.json
 
       # media folder
       - ./tmp/gather:/media
