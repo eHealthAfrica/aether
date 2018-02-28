@@ -76,7 +76,7 @@ services:
       RDS_PORT: 5432
       RDS_USERNAME: postgres
 
-      DJANGO_SECRET_KEY: asdfasdfasdfasdfasdfasdfasdfasdf
+      DJANGO_SECRET_KEY: secretly
       WEB_SERVER_PORT: 8000
     volumes:
       - ./aether-kernel:/code
@@ -112,7 +112,7 @@ services:
       RDS_PORT: 5432
       RDS_USERNAME: postgres
 
-      DJANGO_SECRET_KEY: asdfasdfasdfasdfasdfasdfasdfasdf
+      DJANGO_SECRET_KEY: secretly
       WEB_SERVER_PORT: 8443
     volumes:
       - ./aether-odk-module:/code
@@ -159,7 +159,7 @@ services:
       REDIS_PASSWORD: ""
       REDIS_PORT: 6379
 
-      DJANGO_SECRET_KEY: asdfasdfasdfasdfasdfasdfasdfasdf
+      DJANGO_SECRET_KEY: secretly
       WEB_SERVER_PORT: 8666
     volumes: &sync-volumes
       - ./aether-couchdb-sync-module:/code
@@ -212,7 +212,7 @@ services:
       CSV_HEADER_RULES: replace;.;:;
       CSV_HEADER_RULES_SEP: ;
 
-      DJANGO_SECRET_KEY: asdfasdfasdfasdfasdfasdfasdfasdf
+      DJANGO_SECRET_KEY: secretly
 
       WEB_SERVER_PORT: 8004
     volumes: &gather-volumes
