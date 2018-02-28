@@ -264,12 +264,3 @@ class ViewsTest(TestCase):
                 'X-Method': 'GET',
             }
         )
-
-    def test_project_view(self):
-        # Redirect to /dev/null in order to not clutter the test log.
-        out = open(os.devnull, 'w')
-        call_command('setup_aether_project', stdout=out)
-        url = reverse('ui:project-view')
-        self.client.login(username='test', password='testtest')
-        response = self.client.get(url, content_type='application/json')
-        self.assertEqual(response.status_code, 200)
