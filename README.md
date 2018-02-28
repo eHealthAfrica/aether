@@ -185,7 +185,7 @@ In the case of `aether-odk-module` and `aether-couchdb-sync-module` there is a
 global token to connect to `aether-kernel` set in the **required** environment
 variable `AETHER_KERNEL_TOKEN`.
 
-In the case of `ui` there are tokens per user. This means that every time
+In the case of `aether-ui` there are tokens per user. This means that every time
 a logged in user tries to visit any page that requires to fetch data from any of
 the other apps, `aether-kernel` and/or `aether-odk-module`, the system will verify
 that the user token for that app is valid or will request a new one using the

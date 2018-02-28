@@ -33,9 +33,9 @@ echo "_____________________________________________ Killing ALL containers"
 $DC_TEST down
 
 echo "_____________________________________________ Testing common module"
-# $DC_COMMON down
-# $DC_COMMON build
-# $DC_COMMON run common test
+$DC_COMMON down
+$DC_COMMON build
+$DC_COMMON run common test
 
 # start databases
 echo "_____________________________________________ Starting databases"
