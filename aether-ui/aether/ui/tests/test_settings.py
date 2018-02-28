@@ -15,12 +15,8 @@ class SettingsTest(TestCase):
 
         self.assertEqual(settings.ROOT_URLCONF, 'ui.urls')
         self.assertEqual(settings.WSGI_APPLICATION, 'ui.wsgi.application')
-        self.assertEqual(settings.APP_NAME, 'Aether Ui')
+        self.assertEqual(settings.APP_NAME, 'Aether UI')
         self.assertEqual(settings.AETHER_MODULES, ['kernel', 'odk'])
 
         self.assertIn('kernel', settings.AETHER_APPS)
-        self.assertEqual(settings.AETHER_APPS['kernel']['url'], 'http://kernel-test:9001')
-
-        self.assertTrue(settings.AETHER_ODK)
-        self.assertIn('odk', settings.AETHER_APPS)
-        self.assertEqual(settings.AETHER_APPS['odk']['url'], 'http://odk-test:9002')
+        self.assertEqual(settings.AETHER_APPS['kernel']['url'], 'http://kernel-test:9000')

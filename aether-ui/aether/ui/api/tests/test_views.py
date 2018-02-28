@@ -211,11 +211,10 @@ class ViewsTest(TestCase):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             # it checks every app in `ui.models.APPS`: `kernel` and `odk`
-            self.assertEqual(mock_get_app_token.call_count, 2)
+            self.assertEqual(mock_get_app_token.call_count, 1)
             self.assertEqual(mock_get_app_token.call_args_list,
                              [
                                  mock.call(self.user, 'kernel'),
-                                 mock.call(self.user, 'odk'),
                              ])
 
     @mock.patch('ui.api.models.UserTokens.get_or_create_user_app_token',

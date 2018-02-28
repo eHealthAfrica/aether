@@ -31,10 +31,6 @@ INSTALLED_APPS += [
     'ui',
 ]
 
-TEMPLATES[0]['OPTIONS']['context_processors'] += [
-    'ui.context_processors.ui_context',
-]
-
 MIGRATION_MODULES = {
     'ui': 'ui.api.migrations'
 }
