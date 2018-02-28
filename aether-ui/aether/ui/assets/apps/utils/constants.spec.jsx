@@ -1,4 +1,4 @@
-import { test, expect } from 'jest'
+/* global test, expect */
 import * as constants from './constants.jsx'
 
 test('constants', () => {

@@ -27,7 +27,6 @@ WEBPACK_LOADER = {
 
 INSTALLED_APPS += [
     'webpack_loader',
-    'solo.apps.SoloAppConfig',
     'ui',
 ]
 

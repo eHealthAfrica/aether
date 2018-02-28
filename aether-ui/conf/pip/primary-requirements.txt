@@ -16,7 +16,6 @@ django-cas-ng
 django-cors-headers
 django-ums-client
 djangorestframework
-django-solo
 psycopg2-binary
 requests
 uwsgi
