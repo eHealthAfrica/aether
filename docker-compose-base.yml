@@ -179,14 +179,14 @@ services:
   # Aether UI module
   # ---------------------------------
 
-  aether-ui-base:
-    image: aether-ui
+  ui-base:
+    image: ui
     stdin_open: true
     tty: true
     build:
       context: ./aether-ui
       dockerfile: aether/Dockerfile
-    environment: &aether-ui-environment
+    environment: &ui-environment
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
@@ -199,7 +199,7 @@ services:
 
       AETHER_MODULES: "kernel,odk,"
 
-      RDS_DB_NAME: aether-ui
+      RDS_DB_NAME: ui
       RDS_HOSTNAME: db
       RDS_PASSWORD: ""
       RDS_PORT: 5432
@@ -211,7 +211,7 @@ services:
       DJANGO_SECRET_KEY: secretly
 
       WEB_SERVER_PORT: 8004
-    volumes: &aether-ui-volumes
+    volumes: &ui-volumes
       #################################################
       #                    WARNING                    #
       # do not include the root folder as volume or   #
@@ -238,9 +238,9 @@ services:
   # ---------------------------------
 
   webpack-base:
-    image: aether-ui
-    environment: *aether-ui-environment
-    volumes: *aether-ui-volumes
+    image: ui
+    environment: *ui-environment
+    volumes: *ui-volumes
     ports:
       - "3000:3000"
     command: start_webpack

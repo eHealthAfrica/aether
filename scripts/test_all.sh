@@ -41,25 +41,24 @@ echo "_____________________________________________ Testing common module"
 echo "_____________________________________________ Starting databases"
 $DC_TEST up -d db-test couchdb-test redis-test
 
-prepare_and_test_container aether-ui
-
 # test and start a clean KERNEL TEST container
-# prepare_and_test_container kernel
+prepare_and_test_container kernel
 
-# echo "_____________________________________________ Starting kernel"
-# $DC_TEST up -d kernel-test
+echo "_____________________________________________ Starting kernel"
+$DC_TEST up -d kernel-test
 
-# # test a clean CLIENT TEST container
-# prepare_and_test_container client
+# test a clean CLIENT TEST container
+prepare_and_test_container client
 
-# # test and start a clean ODK TEST container
-# prepare_and_test_container odk aether/kernel/api/tests/fixtures/project_empty_schema.json
+# test and start a clean ODK TEST container
+prepare_and_test_container odk aether/kernel/api/tests/fixtures/project_empty_schema.json
 
-# # test a clean SYNC TEST container
-# prepare_and_test_container couchdb-sync aether/kernel/api/tests/fixtures/project.json
+# test a clean SYNC TEST container
+prepare_and_test_container couchdb-sync aether/kernel/api/tests/fixtures/project.json
 
-# # kill ALL containers
-# echo "_____________________________________________ Killing auxiliary containers"
-# ./scripts/kill_all.sh
+prepare_and_test_container ui
+# kill ALL containers
+echo "_____________________________________________ Killing auxiliary containers"
+./scripts/kill_all.sh
 
-# echo "_____________________________________________ END"
+echo "_____________________________________________ END"

@@ -4,7 +4,7 @@
 #                                                                              #
 #                                 CHANGE ME !!!                                #
 #                                                                              #
-# Update me and then run 'docker-compose run aether-ui pip_freeze'             #
+# Update me and then run 'docker-compose run ui pip_freeze'             #
 #                                                                              #
 ################################################################################
 

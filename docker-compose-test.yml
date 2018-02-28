@@ -106,10 +106,10 @@ services:
   # Aether UI container
   # ---------------------------------
 
-  aether-ui-test:
+  ui-test:
     extends:
       file: docker-compose-base.yml
-      service: aether-ui-base
+      service: ui-base
     environment:
       TESTING: "true"
       AETHER_KERNEL_URL: http://kernel-test:9000

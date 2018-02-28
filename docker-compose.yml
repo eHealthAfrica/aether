@@ -112,17 +112,17 @@ services:
   # Aether UI container
   # ---------------------------------
 
-  aether-ui:
+  ui:
     extends:
       file: docker-compose-base.yml
-      service: aether-ui-base
+      service: ui-base
     depends_on:
       - db
       - webpack
     networks:
       internal:
         aliases:
-          - aether-ui.local
+          - ui.local
 
   # ---------------------------------
   # Webpack container
