@@ -188,10 +188,10 @@ services:
       dockerfile: aether/Dockerfile
     environment: &gather-environment
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
-      CSRF_COOKIE_DOMAIN: gather.local
+      CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
-      HOSTNAME: gather.local
-      STATIC_ROOT: /code/gather/assets/bundles
+      HOSTNAME: ui.aether.local
+      STATIC_ROOT: /code/ui/assets/bundles
 
       AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
       AETHER_KERNEL_URL: http://kernel:8000

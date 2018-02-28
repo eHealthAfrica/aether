@@ -188,10 +188,9 @@ case "$1" in
 
     start_dev )
         setup_db
-        # setup_initial_data
-        # setup_projects
+        setup_initial_data
 
-        # ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
+        ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
 
     start_webpack )
