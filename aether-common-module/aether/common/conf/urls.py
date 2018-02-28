@@ -43,10 +43,15 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
 
         API_PREFIX = '^aether/(?P<version>v1)'
         auth_urls = ([
+<<<<<<< HEAD
            url(f'{API_PREFIX}/', include([
                 url(r'^login/$', django_cas_ng.views.login, name='login'),
                 url(r'^logout$/', django_cas_ng.views.logout, name='logout'),
            ]))
+=======
+            url(r'^login/$', django_cas_ng.views.login, name='login'),
+            url(r'^logout/$', django_cas_ng.views.logout, name='logout'),
+>>>>>>> f8752108a66f51aec1da2fa21e9fc277d09b054e
         ], 'rest_framework')
 
     urlpatterns = [

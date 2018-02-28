@@ -9,6 +9,8 @@ DEBUG = (os.environ.get('DEBUG', '').lower() == 'true')
 TESTING = (os.environ.get('TESTING', '').lower() == 'true')
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
+KONG_PREFIX = '/aether/v1/'
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -24,7 +26,7 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-STATIC_URL = '/static/'
+STATIC_URL = KONG_PREFIX + 'static/'
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/static/')
 
 MEDIA_URL = '/media/'
