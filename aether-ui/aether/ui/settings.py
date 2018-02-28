@@ -4,7 +4,7 @@ import os
 # ------------------------------------------------------------------------------
 
 from aether.common.conf.settings import *  # noqa
-from aether.common.conf.settings import INSTALLED_APPS, TEMPLATES, TESTING, STATIC_ROOT
+from aether.common.conf.settings import INSTALLED_APPS, TESTING, STATIC_ROOT
 
 
 # UI Configuration

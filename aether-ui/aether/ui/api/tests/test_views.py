@@ -1,11 +1,9 @@
 import mock
 import json
-import os
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.test import TestCase, RequestFactory
-from django.core.management import call_command
 
 from ..views import TokenProxyView
 
