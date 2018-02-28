@@ -3,8 +3,6 @@ from django.conf import settings
 
 def ui_context(request):
     navigation_list = ['surveys', ]
-    if settings.AETHER_ODK:
-        navigation_list.append('surveyors')
 
     context = {
         'dev_mode': settings.DEBUG,

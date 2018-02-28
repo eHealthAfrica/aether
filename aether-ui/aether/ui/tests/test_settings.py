@@ -15,7 +15,7 @@ class SettingsTest(TestCase):
 
         self.assertEqual(settings.ROOT_URLCONF, 'ui.urls')
         self.assertEqual(settings.WSGI_APPLICATION, 'ui.wsgi.application')
-        self.assertEqual(settings.APP_NAME, 'Ui')
+        self.assertEqual(settings.APP_NAME, 'Aether Ui')
         self.assertEqual(settings.AETHER_MODULES, ['kernel', 'odk'])
 
         self.assertIn('kernel', settings.AETHER_APPS)

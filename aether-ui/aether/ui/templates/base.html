@@ -36,11 +36,7 @@
   </head>
 
   <body>
-    {% include "navbar.html" %}
     {% csrf_token %}
-
-    {# FIXME: include project id as input hidden #}
-    <input data-qa="hidden-project-id" type="hidden" value="{{ project_id }}">
 
     <div class="container-fluid">
       {% block content %}

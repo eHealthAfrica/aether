@@ -20,14 +20,6 @@ function getApps (hmr) {
     {
       name: 'home',
       path: './assets/apps/home'
-    },
-    {
-      name: 'surveys',
-      path: './assets/apps/surveys'
-    },
-    {
-      name: 'surveyors',
-      path: './assets/apps/surveyors'
     }
   ]
 

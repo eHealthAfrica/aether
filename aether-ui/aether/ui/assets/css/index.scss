@@ -21,12 +21,3 @@ $fa-font-path: '~font-awesome/fonts';
 @import 'base/pagination';
 @import 'base/filter';
 @import 'base/help';
-
-// ************************************
-// app dependant styles
-// ************************************
-
-@import 'survey-list';
-@import 'survey-view';
-@import 'survey-edit';
-@import 'surveyor-list';

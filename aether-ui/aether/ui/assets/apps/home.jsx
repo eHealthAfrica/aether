@@ -1,12 +1,11 @@
-import { getSurveysPath } from './utils/paths'
+import React from 'react'
+import ReactDOM from 'react-dom'
+import { AppIntl } from './components'
 
-// Include this to enable HMR for this module
 if (module.hot) {
   module.hot.accept()
 }
 
-/*
-This is the home app -> skip welcome screen and go straight to list of surveys
-*/
+const appElement = document.getElementById('home-app')
 
-window.location = getSurveysPath({})
+ReactDOM.render(<div>Aether UI</div>, appElement)
