@@ -143,41 +143,9 @@ class TokenProxyView(View):
         return HttpResponse(response, status=response.status_code)
 
 
-class SurveyViewSet(viewsets.ModelViewSet):
-    '''
-    Handle Survey entries.
-    '''
-
-    queryset = models.Survey.objects.all()
-    serializer_class = serializers.SurveySerializer
-    search_fields = ('name',)
-    ordering = ('name',)
-
-
-class MaskViewSet(viewsets.ModelViewSet):
-    '''
-    Handle Survey Mask entries.
-    '''
-
-    queryset = models.Mask.objects.all()
-    serializer_class = serializers.MaskSerializer
-    search_fields = ('survey__name', 'name', 'columns',)
-    ordering = ('survey', 'name',)
-
-
 def empty(*args, **kwargs):
     '''
     Return empty JSON
     '''
 
     return JsonResponse({})
-
-
-@login_required
-@api_view(http_method_names=['GET'])
-def project_view(request):
-    project = models.Project.objects.first()
-    return JsonResponse({
-        'id': project.project_id,
-        'name': project.project_name,
-    })

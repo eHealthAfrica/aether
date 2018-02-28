@@ -10,20 +10,4 @@ class UserTokensAdmin(admin.ModelAdmin):
     ordering = list_display
 
 
-class SurveyAdmin(admin.ModelAdmin):
-
-    list_display = ('mapping_id', 'name',)
-    search_fields = ('name',)
-    ordering = list_display
-
-
-class MaskAdmin(admin.ModelAdmin):
-
-    list_display = ('survey', 'name', 'columns',)
-    search_fields = ('survey__name', 'name', 'columns',)
-    ordering = list_display
-
-
 admin.site.register(models.UserTokens, UserTokensAdmin)
-admin.site.register(models.Survey, SurveyAdmin)
-admin.site.register(models.Mask, MaskAdmin)

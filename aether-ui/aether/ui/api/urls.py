@@ -9,14 +9,8 @@ from . import views
 
 router = routers.DefaultRouter()
 
-# create `mappings` entry for concordance with aether
-router.register('mappings', views.SurveyViewSet, base_name='mappings')
-router.register('surveys', views.SurveyViewSet, base_name='surveys')
-router.register('masks', views.MaskViewSet, base_name='masks')
-
 urlpatterns = [
     path('ui/', include(router.urls)),
-    path('ui/project/', views.project_view, name='project-view'),
 ]
 
 for app_name in settings.AETHER_APPS:
