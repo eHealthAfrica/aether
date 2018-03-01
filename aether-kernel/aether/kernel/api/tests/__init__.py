@@ -16,7 +16,6 @@ EXAMPLE_MAPPING = {
     ]
 }
 
-
 EXAMPLE_SCHEMA = {
     'extends': 'http://ehealthafrica.org/#CouchDoc',
     'type': 'record',
@@ -31,13 +30,21 @@ EXAMPLE_SCHEMA = {
         {
             'type': [
                 'null',
-                'string'
-            ],
+                'string',
+
+                ],
             'name': '_rev',
             'inherited_from': 'http://ehealthafrica.org/#CouchDoc'
         },
         {
-            'type': 'string',
+            'type': [
+                'null',
+                'string',
+                {
+                    'type': 'array',
+                    'items': 'string'
+                }
+            ],
             'name': 'name'
         },
         {

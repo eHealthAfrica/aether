@@ -508,8 +508,8 @@ def validate_entity_payload(project_Schema, payload):
         # fastavro is primarily for (de)serialization. To test the schema compliance,
         # we can just try to serialze the data using the schema.
         with BytesIO() as file_obj:
-            avro.writer(file_obj, project_Schema.definition, [payload])
+            avro.writer(file_obj, project_Schema.schema.definition, [payload])
             # if we didn't get an exception, we're ok!
         return
-    except TypeError as te:
-        raise te
+    except Exception as err:
+        raise err
