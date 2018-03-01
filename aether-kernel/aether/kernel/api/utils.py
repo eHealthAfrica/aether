@@ -2,11 +2,11 @@ import string
 import json
 import re
 import uuid
+from io import BytesIO
 
+import fastavro as avro
 import jsonpath_ng
-from avro import schema
 from jsonpath_ng import parse
-from avro.io import Validate, AvroTypeException
 
 from django.utils.safestring import mark_safe
 from pygments import highlight
@@ -503,14 +503,13 @@ def merge_objects(source, target, direction):
 
 
 def validate_entity_payload(project_Schema, payload):
-    # Use avro.io to validate payload against the linke schema
-    schema_str = ''
-    if type(project_Schema.schema.definition) == list:
-        project_Schema.schema.definition[0]['name'] = project_Schema.schema.name
-        schema_str = json.dumps(project_Schema.schema.definition[0])
-    else:
-        project_Schema.schema.definition['name'] = project_Schema.schema.name
-        schema_str = json.dumps(project_Schema.schema.definition)
-    avro_schema = schema.Parse(schema_str)
-    if not Validate(avro_schema, payload):
-        raise AvroTypeException(avro_schema, payload)
+    # Use fastavro to validate payload against the linked schema
+    try:
+        # fastavro is primarily for (de)serialization. To test the schema compliance,
+        # we can just try to serialze the data using the schema.
+        with BytesIO() as file_obj:
+            avro.writer(file_obj, project_Schema.definition, [payload])
+            # if we didn't get an exception, we're ok!
+        return
+    except TypeError as te:
+        raise te
