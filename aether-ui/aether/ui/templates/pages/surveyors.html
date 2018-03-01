@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load render_bundle from webpack_loader %}
+
+
+{% block title %}{{ app_name }} - {% trans 'Surveyors' %}{% endblock title %}
+
+
+{% block content %}
+  {% if action == 'list' %}
+    <div class="page-header">
+      {# include the INSTANCE NAME within the LIST view #}
+      {% include "instance_name.html" %}
+
+      {# include the ADD NEW button within the LIST view #}
+      <a
+        href="{% url 'surveyors' action='add' %}"
+        role="button"
+        class="btn btn-primary btn-icon">
+        <i class="fa fa-plus-circle mr-3"></i>
+        {% trans 'New surveyor' %}
+      </a>
+    </div>
+  {% endif %}
+
+  <div
+    id="surveyors-app"
+    data-action="{{ action }}"
+    data-surveyor-id="{{ surveyor_id }}"></div>
+
+  {% render_bundle 'surveyors' %}
+{% endblock content %}

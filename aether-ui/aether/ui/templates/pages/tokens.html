@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load ui_tags %}
+
+
+{% block title %}{{ app_name }} - {% trans 'User tokens' %}{% endblock title %}
+
+
+{% block content %}
+
+  <div class="page-header">
+    <h1 data-qa='project-name'>
+      {{ project_name }}
+    </h1>
+  </div>
+
+  <div class="page-content">
+    <div class="page-title">
+      {% trans 'App tokens for' %}
+      <span class="username ml-2">
+        <i class='fa fa-user mr-1'></i>
+        {{ request.user|get_fullname }}
+      </span>
+    </div>
+
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th>{% trans 'Server' %}</th>
+          <th>{% trans 'Token' %}</th>
+          <th>{% trans 'URL' %}</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td>Aether Kernel</td>
+          <td>{{ request.user|get_token:'kernel' }}</td>
+          <td>
+            <span class="url-name">
+              <a href="{{ kernel_url }}" target="_blank">{{ kernel_url }}</a>
+            </span>
+          </td>
+        </tr>
+
+        {% if odk_url %}
+          <tr>
+            <td>Aether ODK</td>
+            <td>{{ request.user|get_token:'odk' }}</td>
+            <td>
+              <span class="url-name">
+                <a href="{{ odk_url }}" target="_blank">{{ odk_url }}</a>
+              </span>
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+
+  </div>
+{% endblock content %}

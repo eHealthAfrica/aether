@@ -103,6 +103,31 @@ services:
       - "9666:9666"
 
   # ---------------------------------
+  # Aether UI container
+  # ---------------------------------
+
+  ui-test:
+    extends:
+      file: docker-compose-base.yml
+      service: ui-base
+    environment:
+      TESTING: "true"
+      AETHER_KERNEL_URL: http://kernel-test:9000
+      RDS_HOSTNAME: db-test
+    depends_on:
+      - db-test
+      - webpack-test
+
+  # ---------------------------------
+  # Webpack container
+  # ---------------------------------
+
+  webpack-test:
+    extends:
+      file: docker-compose-base.yml
+      service: webpack-base
+
+  # ---------------------------------
   # Aether Client container
   # ---------------------------------
   client-test:

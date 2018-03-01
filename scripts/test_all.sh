@@ -56,6 +56,7 @@ prepare_and_test_container odk aether/kernel/api/tests/fixtures/project_empty_sc
 # test a clean SYNC TEST container
 prepare_and_test_container couchdb-sync aether/kernel/api/tests/fixtures/project.json
 
+prepare_and_test_container ui
 # kill ALL containers
 echo "_____________________________________________ Killing auxiliary containers"
 ./scripts/kill_all.sh

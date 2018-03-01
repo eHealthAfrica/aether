@@ -1,0 +1,13 @@
+{% load i18n %}
+
+<h1 data-qa='project-name'>
+  {{ project_name }}
+
+  {% if odk_url %}
+    {# Include the link to the Aether ODK Server #}
+    <span data-qa="odk-server" class="url-name">
+      {% trans 'ODK Server' %}
+      <a href="{{ odk_url }}" target="_blank">{{ odk_url }}</a>
+    </span>
+  {% endif %}
+</h1>

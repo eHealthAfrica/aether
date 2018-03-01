@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load render_bundle from webpack_loader %}
+
+
+{% block title %}{{ app_name }} - {% trans 'Welcome!' %}{% endblock title %}
+
+
+{% block content %}
+  <div id="home-app"></div>
+
+  {% render_bundle 'home' %}
+{% endblock content %}

@@ -1,0 +1,79 @@
+.alert {
+  align-items: baseline;
+  background: $background-color;
+  display: flex;
+  margin: 0;
+  padding: 1rem 2rem 1rem 4rem;
+  position: relative;
+  border-radius: 0;
+
+  .badge,
+  i {
+    margin: 0 .5em;
+  }
+
+  .badge {
+    display: block;
+    font-size: $font-size-s;
+    height: 1.7em;
+    line-height: 1.75em;
+    padding: 0;
+    text-align: center;
+    width: 1.7em;
+  }
+
+  .badge-danger {
+    background: $red;
+  }
+
+  .btn {
+    margin-left: auto;
+  }
+
+  p {
+    margin: 0;
+  }
+
+}
+
+.alert-info {
+  color: $dark-grey;
+  border: 0;
+}
+
+.alert-danger {
+  color: $red;
+  border: 0;
+}
+
+.form-warning,
+.form-error {
+  margin-top: .5rem;
+
+  p {
+    font-style: italic;
+    margin: 0;
+  }
+
+  .error {
+    font-size: $font-size-s;
+    color: darken($red, 10);
+  }
+
+  .warning {
+    font-size: $font-size-xs;
+    color: $dark-grey;
+  }
+}
+
+.error {
+  input,
+  input:focus,
+  textarea,
+  textarea:focus,
+  select,
+  select:focus {
+    background: $red;
+    color: $white;
+  }
+}

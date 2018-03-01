@@ -1,0 +1,124 @@
+.pagination-bar {
+  align-items: baseline;
+  background: $action-color;
+  border-radius: 0;
+  color: $text-color;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  font: $font-size-s $nav-font-family;
+  font-weight: 500;
+  margin: 0;
+  padding: .3rem 5vw;
+  box-shadow: 0 1px 2px rgba($text-color, .5);
+
+  .pagination {
+    margin: 0;
+    border-radius: 0;
+    display: flex;
+    align-items: baseline;
+    padding-left: .75rem;
+    border-left: 1px solid $white;
+
+    li {
+      display: inline;
+      margin: 0 .3rem;
+    }
+
+    li:last-child {
+      margin-right: 0;
+    }
+  }
+
+  .current-page {
+    color: $text-color;
+
+    &:hover input {
+      background: rgba($white, .6);
+    }
+
+    &.pending input {
+      background: $white;
+    }
+
+    input {
+      background: rgba($white, .3);
+      border-radius: 1rem;
+      margin: 0 .5rem;
+      padding: .3rem .5rem .2rem 1rem;
+      border: 0;
+      color: inherit;
+      font: $font-size-s $nav-font-family;
+      font-weight: 500;
+      text-align: right;
+    }
+
+    input[type='number']::-webkit-inner-spin-button {
+      width: 1rem;
+      height: 2rem;
+      position: relative;
+      left: .1rem;
+    }
+  }
+
+  .page-item .page-link {
+    @include label;
+    background: transparent;
+    border: 0;
+    border-radius: 1rem;
+    color: $white;
+    cursor: pointer;
+    font-weight: 700;
+    text-decoration: none;
+    text-transform: uppercase;
+    padding: .3rem .75rem;
+
+    &:hover {
+      color: $action-color;
+      background: $white;
+    }
+  }
+
+  .search {
+    display: flex;
+    align-items: baseline;
+    position: relative;
+
+    &::before {
+      content: '\f002';
+      display: inline-block;
+      font-family: $icon-font;
+      font-size: 1.3em;
+      color: $white;
+      position: absolute;
+      top: .4rem;
+      left: .3rem;
+    }
+
+    input {
+      border-bottom: 1px dotted $light-grey;
+      border: 0;
+      display: inline;
+      color: $white;
+      font-family: $body-font-family;
+      font-size: $font-size-standard;
+      padding: .3rem 1rem .3rem 1.8rem;
+      margin: .2rem 0;
+      background: none;
+      z-index: 2;
+      width: 0;
+      transition: width .5s;
+
+      &:focus,
+      &:hover,
+      &.value {
+        width: 150px;
+        background: rgba($white, .1);
+      }
+
+      &::placeholder {
+        color: rgba($white, .5);
+      }
+    }
+  }
+}

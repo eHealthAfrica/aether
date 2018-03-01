@@ -140,6 +140,33 @@ services:
     networks:
       - internal
 
+  # ---------------------------------
+  # Aether UI container
+  # ---------------------------------
+
+  ui:
+    extends:
+      file: docker-compose-base.yml
+      service: ui-base
+    depends_on:
+      - db
+      - webpack
+    networks:
+      internal:
+        aliases:
+          - ui.local
+
+  # ---------------------------------
+  # Webpack container
+  # ---------------------------------
+
+  webpack:
+    extends:
+      file: docker-compose-base.yml
+      service: webpack-base
+    networks:
+      - internal
+
 
   # ---------------------------------
   # NGINX container

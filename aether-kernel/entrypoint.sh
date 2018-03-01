@@ -77,12 +77,11 @@ test_coverage() {
 # set DJANGO_SECRET_KEY if needed
 if [ "$DJANGO_SECRET_KEY" = "" ]
 then
-   export DJANGO_SECRET_KEY=$(
+    export DJANGO_SECRET_KEY=$(
         cat /dev/urandom | tr -dc 'a-zA-Z0-9-_!@#$%^&*()_+{}|:<>?=' | fold -w 64 | head -n 4
     )
 fi
 # --------------------------------
-
 
 case "$1" in
     bash )
