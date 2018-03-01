@@ -1,7 +1,8 @@
+import os
 import json
 import pkgutil
 
-#from aether.client import KernelClient
+from aether.client import KernelClient
 
 from library import library_utils
 import saladbar.parsers as Parsers
@@ -44,7 +45,6 @@ def load_libraries(settings):
         schema_file = lib_req.get("schema_file")
         graph_path = "%s%s" % (SCHEMAS, schema_file)
         graph = parser.write_salad(graph_path, base, namespaces, props, types, base_type)
-
         libraries[lib_name] = {
             "depends": depends,
             "graph": graph,
@@ -52,6 +52,7 @@ def load_libraries(settings):
             "namespaces": namespaces
         }
     return libraries
+
 
 def make_base_salad_doc(imports, namespaces, project=None, base_type=None):
     doc = None
@@ -69,6 +70,58 @@ def make_base_salad_doc(imports, namespaces, project=None, base_type=None):
     project_file = "%s%s.json" % (SCHEMAS, project)
     with open(project_file, "w") as f:
         json.dump(doc, f, indent=2)
+
+def file_to_json(path):
+    with open(path) as f:
+        return json.load(f)
+
+def register_project(client, name):
+    path = "%s/%s.json" % (SCHEMAS, name)
+    project_def = file_to_json(path)
+    obj = {
+        "revision": "1",
+        "name": name,
+        "salad_schema": project_def,
+        "jsonld_context": "[]",
+        "rdf_definition": "[]"
+    }
+    client.Resource.Project.add(obj)
+
+def register_schemas(client, project):
+    loc = SCHEMAS+ "/%s"
+    files = os.listdir(SCHEMAS)
+    names = []
+    for f in files:
+        try:
+            if f.split(".")[1] == "avsc":
+                names.append([f.split(".")[0], f])
+        except Exception as e:
+            print("Error parsing %s" % f)
+    for name, fname in names:
+        path = "%s/%s" % (SCHEMAS, fname)
+        definition = file_to_json(path)
+        schema_obj = {
+            "name": name,
+            "type": "record",
+            "revision": "1",
+            "definition": definition
+        }
+        client.Resource.Schema.add(schema_obj)
+    project_id = client.Resource.Project.get(project).id
+    for schema in client.Resource.Schema:
+        name = schema.name
+        project_schema_obj = {
+            "revision": "1",
+            "name": "My"+name,
+            "masked_fields": "[]",
+            "transport_rule": "[]",
+            "mandatory_fields": "[]",
+            "schema": schema.id,
+            "project": project_id
+
+        }
+        client.Resource.ProjectSchema.add(project_schema_obj)
+
 
 
 def main():
@@ -89,21 +142,16 @@ def main():
     salad_handler = salad.SaladHandler(project_file)
     avsc_dict = salad_handler.get_avro(all_depends)
     for k,v in avsc_dict.items():
-        filename = "%s%s.avsc" % (SCHEMAS, k.split(".org/")[1])
+        filename = "%s%s.avsc" % (SCHEMAS, k.split(".org/")[1])  # Fix this .org nonsense...
         with open(filename, "w") as f:
             json.dump(v, f, indent=2)
-        print("name: " +k)
-        pprint(all_depends.get(k))
-        pprint(v)
-
-
-
-
-
-
-
-
-
+    kernel_url = settings.get("kernel_url")
+    kernel_user = settings.get("kernel_user")
+    kernel_pw = settings.get("kernel_pw")
+    kernel_credentials = {"username": kernel_user, "password": kernel_pw}
+    client = KernelClient(url= kernel_url, **kernel_credentials)
+    register_project(client, project)
+    register_schemas(client, project)
 
 
 if __name__ == "__main__":
