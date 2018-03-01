@@ -1,4 +1,4 @@
-from django.urls import path
+from django.conf.urls import url
 
 from . import views
 
@@ -6,5 +6,5 @@ from . import views
 app_name = 'sync'
 
 urlpatterns = [
-    path('signin', view=views.signin, name='signin'),
+    url(r'^signin$', view=views.signin, name='signin'),
 ]

@@ -1,10 +1,5 @@
 import json
-import re
 import requests
-import xmltodict
-
-from dateutil import parser
-from geojson import Point
 
 from django.conf import settings
 from django.db import transaction
@@ -33,6 +28,7 @@ from .serializers import (
     XFormSerializer,
 )
 from .surveyors_utils import get_surveyors
+from .xform_utils import extract_data_from_xml, parse_submission
 
 from ..settings import logger
 
@@ -383,34 +379,6 @@ def xform_submission(request):
 
     '''
 
-    def walk(obj, parent_keys, coerce_dict):
-        if not parent_keys:
-            parent_keys = []
-
-        for k, v in obj.items():
-            keys = parent_keys + [k]
-            if isinstance(v, dict):
-                walk(v, keys, coerce_dict)
-            elif isinstance(v, list):
-                for i in v:
-                    # indices are not important
-                    walk(i, keys, coerce_dict)
-            elif v is not None:
-                xpath = '/' + '/'.join(keys)
-                _type = coerce_dict.get(xpath)
-                if _type in ('int', 'integer'):
-                    obj[k] = int(v)
-                if _type == 'decimal':
-                    obj[k] = float(v)
-                if _type in ('date', 'dateTime'):
-                    obj[k] = parser.parse(v).isoformat()
-                if _type == 'geopoint':
-                    lat, lng, altitude, accuracy = v.split()
-                    # {"coordinates": [<<lat>>, <<lng>>], "type": "Point"}
-                    obj[k] = Point((float(lat), float(lng)))
-            else:
-                obj[k] = None
-
     # first of all check if the connection is possible
     auth_header = get_auth_header()
     if not auth_header:
@@ -421,20 +389,16 @@ def xform_submission(request):
 
     if not request.FILES or XML_SUBMISSION_PARAM not in request.FILES:
         # missing submitted data
-        logger.warning('Missing submiited data')
+        logger.warning('Missing submitted data')
         return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     try:
-        xml = request.FILES[XML_SUBMISSION_PARAM].read()
-        data = xmltodict.parse(xml)
+        xml = request.FILES[XML_SUBMISSION_PARAM]
+        data, form_id, version = extract_data_from_xml(xml)
     except Exception as e:
         logger.warning('Unexpected error when handling file')
         logger.error(str(e))
         return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-
-    instance = list(data.items())[0][1]  # TODO make more robust
-    form_id = instance['@id']
-    version = instance['@version'] if '@version' in instance else '0'
 
     # take the first xForm in which the current user is granted surveyor
     # TODO take the one that matches the version
@@ -459,20 +423,7 @@ def xform_submission(request):
             'Sending response to {} xform version, current is {}'.format(version, xform.version)
         )
 
-    coerce_dict = {}
-    # bind entries define the fields and its types or possible values (choices list)
-    for bind_entry in re.findall(r'<bind.*/>', xform.xml_data):
-        re_nodeset = re.findall(r'nodeset="([^"]*)"', bind_entry)
-        re_type = re.findall(r'type="([^"]*)"', bind_entry)
-
-        try:
-            coerce_dict[re_nodeset[0]] = re_type[0]
-        except Exception as e:
-            # ignore, sometimes there is no "type"
-            # <bind nodeset="/None/some_field" relevant=" /None/some_choice ='value'"/>
-            pass
-
-    walk(data, None, coerce_dict)  # modifies inplace
+    data = parse_submission(data, xform.xml_data)
 
     try:
         submission_id = None
@@ -488,7 +439,7 @@ def xform_submission(request):
 
         if response.status_code != status.HTTP_201_CREATED:
             logger.warning(
-                'Unexpected response {} from Aether Kernel server when submiting data "{}"'.format(
+                'Unexpected response {} from Aether Kernel server when submitting data "{}"'.format(
                     response.status_code, form_id,
                 )
             )
@@ -511,7 +462,7 @@ def xform_submission(request):
                 if response.status_code != status.HTTP_201_CREATED:
                     logger.warning(
                         'Unexpected response {} '
-                        'from Aether Kernel server when submiting attachment "{}"'
+                        'from Aether Kernel server when submitting attachment "{}"'
                         .format(response.status_code, form_id))
                     logger.warning(response.content.decode('utf-8'))
 
@@ -523,7 +474,7 @@ def xform_submission(request):
 
     except Exception as e:
         logger.warning(
-            'Unexpected error from Aether Kernel server when submiting data "{}"'.format(form_id)
+            'Unexpected error from Aether Kernel server when submitting data "{}"'.format(form_id)
         )
         logger.error(str(e))
 

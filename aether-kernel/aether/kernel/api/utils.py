@@ -4,16 +4,17 @@ import re
 import uuid
 
 import jsonpath_ng
+from avro import schema
 from jsonpath_ng import parse
+from avro.io import Validate, AvroTypeException
 
 from django.utils.safestring import mark_safe
-
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import JsonLexer
 from pygments.lexers.python import Python3Lexer
 
-from . import models
+from . import models, constants
 
 
 class EntityExtractionError(Exception):
@@ -477,3 +478,39 @@ def extract_create_entities(submission):
                 submission=submission
             )
             entity.save()
+
+
+def merge_objects(source, target, direction):
+    # Merge 2 objects
+    #
+    # Default merge operation is prefer_new
+    # Params <source='Original object'>, <target='New object'>,
+    # <direction='Direction of merge, determins primacy:
+    # use constants.MergeOptions.[prefer_new, prefer_existing]'>
+    # # direction Options:
+    # prefer_new > (Target to Source) Target takes primacy,
+    # prefer_existing > (Source to Target) Source takes primacy
+    result = {}
+    if direction and direction == constants.MergeOptions.fww.value:
+        for key in source:
+            target[key] = source[key]
+        result = target
+    else:
+        for key in target:
+            source[key] = target[key]
+        result = source
+    return result
+
+
+def validate_entity_payload(project_Schema, payload):
+    # Use avro.io to validate payload against the linke schema
+    schema_str = ''
+    if type(project_Schema.schema.definition) == list:
+        project_Schema.schema.definition[0]['name'] = project_Schema.schema.name
+        schema_str = json.dumps(project_Schema.schema.definition[0])
+    else:
+        project_Schema.schema.definition['name'] = project_Schema.schema.name
+        schema_str = json.dumps(project_Schema.schema.definition)
+    avro_schema = schema.Parse(schema_str)
+    if not Validate(avro_schema, payload):
+        raise AvroTypeException(avro_schema, payload)

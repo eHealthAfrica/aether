@@ -1,8 +1,13 @@
-from django.core.exceptions import ValidationError
+import re
+import xmltodict
+
+from dateutil import parser
+from geojson import Point
 
 from pyxform import xls2json, builder
 from pyxform.xls2json_backends import xls_to_dict
-import xmltodict
+
+from django.core.exceptions import ValidationError
 
 
 def parse_file(filename, content):
@@ -20,7 +25,11 @@ def parse_xlsform(fp):
 
 
 def parse_xmlform(fp):
-    return xmltodict.unparse(xmltodict.parse(fp.read()), pretty=True)
+    content = fp.read()
+    # check that the file content is a valid XML
+    xmltodict.parse(content)
+    # but return the untouched content if it does not raise an exception
+    return content.decode('utf-8')
 
 
 def get_xml_title(data):
@@ -123,3 +132,99 @@ def validate_xmldict(value):
 
     except Exception as e:
         raise ValidationError(e)
+
+
+def extract_data_from_xml(xml):
+    '''
+    Parses the XML submission file into a dictionary,
+    also extracts the form id and the form version.
+    '''
+
+    data = xmltodict.parse(xml.read())
+
+    instance = list(data.items())[0][1]  # TODO make more robust
+    form_id = instance['@id']
+    version = instance['@version'] if '@version' in instance else '0'
+
+    return data, form_id, version
+
+
+def parse_submission(data, xml_definition):
+    '''
+    Transforms and cleans the dictionary submission.
+
+    From:
+
+        {
+            'ZZZ': {
+                '@id': 'form-id',
+                '@version': 'v1,
+                ...
+                'choice_a': 'id_1',
+                'number_b': '1',
+                ...
+            }
+        }
+
+    Into:
+
+        {
+            '@id': 'form-id',
+            '@version': 'v1,
+            ...
+            'choice_a': 'value_1',
+            'number_b': 1,
+            ...
+        }
+    '''
+
+    def walk(obj, parent_keys, coerce_dict):
+        if not parent_keys:
+            parent_keys = []
+
+        for k, v in obj.items():
+            keys = parent_keys + [k]
+            if isinstance(v, dict):
+                walk(v, keys, coerce_dict)
+            elif isinstance(v, list):
+                for i in v:
+                    # indices are not important
+                    walk(i, keys, coerce_dict)
+            elif v is not None:
+                xpath = '/' + '/'.join(keys)
+                _type = coerce_dict.get(xpath)
+                if _type in ('int', 'integer'):
+                    obj[k] = int(v)
+                if _type == 'decimal':
+                    obj[k] = float(v)
+                if _type in ('date', 'dateTime'):
+                    obj[k] = parser.parse(v).isoformat()
+                if _type == 'geopoint':
+                    lat, lng, altitude, accuracy = v.split()
+                    # {"coordinates": [<<lat>>, <<lng>>], "type": "Point"}
+                    obj[k] = Point((float(lat), float(lng)))
+            else:
+                obj[k] = None
+
+    coerce_dict = {}
+    # bind entries define the fields and its types or possible values (choices list)
+    for bind_entry in re.findall(r'<bind.*/>', xml_definition):
+        re_nodeset = re.findall(r'nodeset="([^"]*)"', bind_entry)
+        re_type = re.findall(r'type="([^"]*)"', bind_entry)
+
+        try:
+            coerce_dict[re_nodeset[0]] = re_type[0]
+        except Exception as e:
+            # ignore, sometimes there is no "type"
+            # <bind nodeset="/ZZZ/some_field" relevant=" /ZZZ/some_choice ='value'"/>
+            pass
+
+    walk(data, None, coerce_dict)  # modifies inplace
+
+    # assumption: there is only one child that represents the form content
+    # usually: {'ZZZ': { ... }}
+    # remove this first level and return content
+    if len(list(data.keys())) == 1:  # pragma: no cover
+        data = data[list(data.keys())[0]]
+
+    return data

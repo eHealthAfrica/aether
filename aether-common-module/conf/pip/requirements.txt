@@ -4,13 +4,15 @@
 #                                                                              #
 ################################################################################
 
-coverage
+django<2
 django-cors-headers
-django
 djangorestframework
 djangorestframework-csv
+psycopg2-binary
+requests
+
+# test libraries
+coverage
 flake8
 flake8-quotes
 mock
-psycopg2
-requests

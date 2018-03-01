@@ -57,17 +57,6 @@ setup_prod() {
   ./manage.py setup_admin -p=$ADMIN_PASSWORD -t=$AETHER_ODK_TOKEN
 }
 
-setup_aws_requirements() {
-    envsubst < /code/conf/aws_cli_setup.sh.tmpl > /code/conf/aws_cli_setup.sh
-    chmod +x /code/conf/aws_cli_setup.sh
-    /code/conf/aws_cli_setup.sh
-
-    source ~/.bashrc
-    envsubst < /code/conf/aws.sh.tmpl > /code/conf/aws.sh
-    chmod +x /code/conf/aws.sh
-    /code/conf/aws.sh
-}
-
 test_flake8() {
     flake8 /code/. --config=/code/conf/extras/flake8.cfg
 }
@@ -140,8 +129,6 @@ case "$1" in
     ;;
 
     start )
-        setup_aws_requirements
-        source ~/.bashrc
         setup_db
         setup_prod
 
@@ -151,6 +138,11 @@ case "$1" in
         # create static assets
         ./manage.py collectstatic --noinput
         chmod -R 755 /var/www/static
+
+        # expose version number
+        cp /code/VERSION /var/www/VERSION
+        # add git revision 
+        cp /code/REVISION /var/www/REVISION 
 
         /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
     ;;

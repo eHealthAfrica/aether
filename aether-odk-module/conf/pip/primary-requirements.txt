@@ -8,18 +8,14 @@
 #                                                                              #
 ################################################################################
 
-coverage
-django
+django==1.11.9
 django-cas-ng
 django-cors-headers
 django-debug-toolbar
 django-ums-client
 djangorestframework
 drf-dynamic-fields
-flake8
-flake8-quotes
 geojson
-mock
 psycopg2
 python-dateutil
 pytz
@@ -29,8 +25,11 @@ requests
 uwsgi
 xmltodict
 
-# this is used for pulling down secrets from S3
-awscli
-
 # Aether common module
 aether.common
+
+# test libraries
+coverage
+flake8
+flake8-quotes
+mock

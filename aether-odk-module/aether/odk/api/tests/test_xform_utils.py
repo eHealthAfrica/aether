@@ -1,8 +1,14 @@
 from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from . import CustomTestCase
 
-from ..xform_utils import validate_xmldict
+from ..xform_utils import (
+    extract_data_from_xml,
+    parse_submission,
+    parse_xmlform,
+    validate_xmldict,
+)
 
 
 class XFormUtilsTests(CustomTestCase):
@@ -84,3 +90,22 @@ class XFormUtilsTests(CustomTestCase):
                 </h:html>
             '''
         )
+
+    def test__parse_xml(self):
+        # edge case, xml contains empty tags
+        xml_content = '<?xml version="1.0" ?> <tag1><tag attr="1"/>text<tag attr="2"/></tag1>'
+        xml_file = SimpleUploadedFile('xform.xml', bytes(xml_content, encoding='utf-8'))
+        self.assertEqual(parse_xmlform(xml_file), xml_content, 'it returns the same content')
+
+    def test__parse_submission(self):
+        with open(self.samples['submission']['file-ok'], 'rb') as xml:
+            data, form_id, version = extract_data_from_xml(xml)
+
+        self.assertEqual(form_id, 'my-test-form')
+        self.assertEqual(version, '0')
+        self.assertEqual(len(list(data.keys())), 1)
+        self.assertEqual(list(data.keys())[0], 'Something_that_is_not_None')
+
+        data = parse_submission(data, self.samples['xform']['raw-xml'])
+
+        self.assertNotEqual(list(data.keys())[0], 'Something_that_is_not_None')

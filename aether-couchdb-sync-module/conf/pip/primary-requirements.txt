@@ -8,17 +8,13 @@
 #                                                                              #
 ################################################################################
 
-coverage
-django
+django==1.11.9
 django-cas-ng
 django-cors-headers
 django-debug-toolbar
 django-rq
 django-ums-client
 djangorestframework
-flake8
-flake8-quotes
-mock
 oauth2client
 psycopg2
 raven
@@ -28,8 +24,11 @@ rq
 rq-scheduler
 uwsgi
 
-# this is used for pulling down secrets from S3
-awscli
-
 # Aether common module
 aether.common
+
+# test libraries
+coverage
+flake8
+flake8-quotes
+mock

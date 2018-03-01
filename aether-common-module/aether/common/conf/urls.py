@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.decorators import login_required
-from django.urls import include, path
+from django.conf.urls import include, url
 
 from aether.common.auth.views import obtain_auth_token
 from aether.common.conf.views import basic_serve, media_serve
@@ -42,26 +42,26 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
         import django_cas_ng.views
 
         auth_urls = ([
-            path('login/', django_cas_ng.views.login, name='login'),
-            path('logout/', django_cas_ng.views.logout, name='logout'),
+            url(r'^login/$', django_cas_ng.views.login, name='login'),
+            url(r'^logout/$', django_cas_ng.views.logout, name='logout'),
         ], 'rest_framework')
 
     urlpatterns = [
 
         # `health` endpoint
-        path('health', health, name='health'),
+        url(r'^health$', health, name='health'),
 
         # `admin` section
-        path('admin/', admin.site.urls),
+        url(r'^admin/', admin.site.urls),
 
         # `accounts` management
-        path('accounts/', include(auth_urls, namespace='rest_framework')),
+        url(r'^accounts/', include(auth_urls, namespace='rest_framework')),
 
         # media files (protected)
-        path('media/<path:path>', login_required(media_serve), name='media'),
+        url(r'^media/(?P<path>.*)$', login_required(media_serve), name='media'),
 
         # media files (basic auth)
-        path('media-basic/<path:path>', basic_serve, name='media-basic'),
+        url(r'^media-basic/(?P<path>.*)$', basic_serve, name='media-basic'),
 
     ]
 
@@ -70,19 +70,19 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
             import debug_toolbar
 
             urlpatterns += [
-                path('__debug__/', include(debug_toolbar.urls)),
+                url(r'^__debug__/', include(debug_toolbar.urls)),
             ]
 
     if token:
         # generates users token
         urlpatterns += [
-            path('accounts/token', obtain_auth_token, name='token'),
+            url('^accounts/token$', obtain_auth_token, name='token'),
         ]
 
     if kernel:
         # checks if Core server is available
         urlpatterns += [
-            path('check-kernel', check_kernel, name='check-kernel'),
+            url('^check-kernel$', check_kernel, name='check-kernel'),
         ]
 
     return urlpatterns

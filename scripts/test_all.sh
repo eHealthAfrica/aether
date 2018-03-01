@@ -23,6 +23,7 @@ function prepare_container() {
 }
 
 DC_TEST="docker-compose -f docker-compose-test.yml"
+DC_COMMON="docker-compose -f docker-compose-common.yml"
 
 echo "_____________________________________________ TESTING"
 
@@ -30,6 +31,11 @@ echo "_____________________________________________ TESTING"
 echo "_____________________________________________ Killing ALL containers"
 ./scripts/kill_all.sh
 $DC_TEST down
+
+echo "_____________________________________________ Testing common module"
+$DC_COMMON down
+$DC_COMMON build
+$DC_COMMON run common test
 
 # start databases
 echo "_____________________________________________ Starting databases"
