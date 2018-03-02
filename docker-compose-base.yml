@@ -38,11 +38,19 @@ services:
     ports:
       - 8449:8449
       - 8001:8001
+      - 80:80
     environment:
       - KONG_DATABASE=postgres
       - KONG_PG_HOST=db
       - KONG_ADMIN_LISTEN=0.0.0.0:8001
       - KONG_PROXY_LISTEN_SSL=0.0.0.0:8449
+      - KONG_PROXY_LISTEN=0.0.0.0:80
+
+  kongfig:
+    image: mashupmill/kongfig
+    volumes:
+        - './aether-kongfig/config.yml:/config.yml'
+    command: --path /config.yml --host kong:8001
 
   couchdb-base:
     image: couchdb:1.7.1
@@ -74,12 +82,13 @@ services:
       - ./tmp/odk:/media/odk
       - ./tmp/sync:/media/sync
     ports:
-      - "80:80"
+      - "8080:8080"
     expose:
       - 8000
       - 8449
       - 8001
       - 8444
+      - 80
 
 
   # ---------------------------------
