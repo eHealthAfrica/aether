@@ -31,7 +31,6 @@ EXAMPLE_SCHEMA = {
             'type': [
                 'null',
                 'string',
-
                 ],
             'name': '_rev',
             'inherited_from': 'http://ehealthafrica.org/#CouchDoc'
