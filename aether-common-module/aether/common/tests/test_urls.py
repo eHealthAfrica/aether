@@ -1,6 +1,8 @@
 from django.test import TestCase
 from django.urls import reverse
 
+from aether.common.conf import settings
+
 
 class UtilsTest(TestCase):
 
@@ -14,21 +16,21 @@ class UtilsTest(TestCase):
     def test__urls__accounts_login(self):
         self.assertEqual(
             reverse('rest_framework:login'),
-            '/accounts/login/',
+            settings.KONG_PREFIX + '/accounts/login/',
             'There is a "/accounts/login/" endpoint'
         )
 
     def test__urls__accounts_logout(self):
         self.assertEqual(
             reverse('rest_framework:logout'),
-            '/accounts/logout/',
+            settings.KONG_PREFIX + '/accounts/logout/',
             'There is a "/accounts/logout/" endpoint'
         )
 
     def test__urls__accounts_token(self):
         self.assertEqual(
             reverse('token'),
-            '/accounts/token',
+            settings.KONG_PREFIX + '/accounts/token',
             'There is a "/accounts/token" endpoint'
         )
 

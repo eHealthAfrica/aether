@@ -9,7 +9,7 @@ DEBUG = (os.environ.get('DEBUG', '').lower() == 'true')
 TESTING = (os.environ.get('TESTING', '').lower() == 'true')
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
-KONG_PREFIX = '/aether/v1/'
+KONG_PREFIX = '/aether/v1'
 
 
 logger = logging.getLogger(__name__)
@@ -26,14 +26,13 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-STATIC_URL = KONG_PREFIX + 'static/'
+STATIC_URL = KONG_PREFIX + '/static/'
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/static/')
 
 MEDIA_URL = '/media/'
 MEDIA_BASIC_URL = '/media-basic/'
 MEDIA_INTERNAL_URL = '/media-internal/'
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/media/')
-AETHER_VERSION = 'v1'
 
 
 # Django Basic Configuration

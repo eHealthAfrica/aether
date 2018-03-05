@@ -5,15 +5,41 @@ apis:
     ensure: "present"
     attributes:
       upstream_url: "http://kernel.aether.local:8000"
+      hosts:
+        - "PROJECT_API_URL"
       uris:
         - "/aether/v1"
+      preserve_host: true
+  
+  - name: "kernel-home"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://kernel.aether.local:8000"
+      hosts:
+        - "PROJECT_API_URL"
+      preserve_host: true
 
   - name: "kernel-static"
     ensure: "present"
     attributes:
-      upstream_url: "http://kernel.aether.local:8000/aether/v1/static"
+      upstream_url: "http://kernel.aether.local:8000"
+      hosts:
+        - "PROJECT_API_URL"
       uris:
         - "/aether/v1/static"
+      preserve_host: true
+      strip_uri: false
+
+  - name: "kernel-accounts"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://kernel.aether.local:8000"
+      hosts:
+        - "PROJECT_API_URL"
+      uris:
+        - "/aether/v1/accounts"
+      preserve_host: true
+      strip_uri: false
 
   - name: "odk"
     ensure: "present"
@@ -29,12 +55,6 @@ apis:
       uris:
         - "/sync/v1"
 
-  - name: "ums"
-    ensure: "present"
-    attributes:
-      upstream_url: "https://ums-dev.ehealthafrica.org"
-      uris:
-        - "/ums/v1"
 plugins:
   - name: key-auth
     ensure: "present"
