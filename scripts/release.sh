@@ -2,7 +2,7 @@
 set -e
 
 IMAGE_REPO='ehealthafrica'
-APPS=( kernel odk )
+APPS=( kernel odk couchdb-sync )
 VERSION=`cat VERSION`
 
 for APP in "${APPS[@]}"
