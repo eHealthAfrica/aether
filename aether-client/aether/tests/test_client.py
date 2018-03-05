@@ -73,6 +73,7 @@ class KernelClientCase(unittest.TestCase):
         # The entrypoint for the test functions.
         for name, step in self._steps():
             try:
+                print(name)
                 step()
                 self.success += 1
                 sys.stdout.write(".")  # cheesey dot replicating normal unittest behavior
@@ -251,10 +252,8 @@ class KernelClientCase(unittest.TestCase):
             self.fail("missing_attribute should throw an error")
 
         def age(obj):
-            payload = obj.get('payload')
-            if not payload:
-                return False
-            age = payload.get('age')
+            payload = obj.get('payload', {})
+            age = payload.get('age', None)
             if not age:
                 return False
             return int(age) < 40
@@ -265,8 +264,13 @@ class KernelClientCase(unittest.TestCase):
         assert(a_person == same_person)
 
         population = sum([1 for person in people])
+        ages = [person.get("payload", {}) for person in people]
+        # pprint(ages)  # TODO KILL
+        print("population: %s" % population)  # TODO kill
         young_people = people.get(filter_func=age)
         young_pop = sum([1 for person in young_people])
+        print("young_pop: %s" % young_pop)  # TODO kill
+        assert(young_pop > 0), "Filter didn't work, should be some young people."
         assert(young_pop < population), "Filter didn't work, should be fewer young people."
         # make one person old
         young_people = people.get(filter_func=age)
@@ -277,7 +281,8 @@ class KernelClientCase(unittest.TestCase):
             break
         young_people = people.get(filter_func=age)
         new_young_pop = sum([1 for person in young_people])
-        assert(new_young_pop < young_pop)
+        assert(new_young_pop < young_pop), \
+            "nyw: %s should be less than old_yp %s" % (new_young_pop, young_pop)
         # test various patterns to access an entity
         test_person = next(people.get())
         test_id = test_person.get('id')
@@ -307,7 +312,7 @@ class KernelClientCase(unittest.TestCase):
         except AttributeError as ae:
             pass
         else:
-            self.fail("Should have thrown an AttributeError")
+            self.fail("Should have thrown an AttributeError | person: %s" % missing_person)
 
         personal_submission = test_person.get('submission')
 
@@ -344,6 +349,14 @@ class KernelClientCase(unittest.TestCase):
         client = KernelClientCase.client
         bad_url = client.url_base + "/not_found"
         assert(client.get(bad_url) is None)
+
+    def step90_delete_entities(self):
+        client = KernelClientCase.client
+        for _id in client.Entity:
+            res = client.Entity.delete(_id)
+            print(res)
+        remaining_entities = sum([1 for i in client.Entity])
+        assert(remaining_entities == 0), "%s entities survived deletion" % remaining_entities
 
     def step91_delete_mapping(self):
         client = KernelClientCase.client
