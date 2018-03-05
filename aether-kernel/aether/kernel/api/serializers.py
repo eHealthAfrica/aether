@@ -3,13 +3,12 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 from drf_dynamic_fields import DynamicFieldsMixin
 
-from . import models
-from . import utils
-
+from . import models, utils, constants
 
 import urllib
 
-m_options = utils.MergeOptions
+
+m_options = constants.MergeOptions
 
 MERGE_CHOICES = (
     (m_options.overwrite.value, 'Overwrite (Do not merge)'),
@@ -207,8 +206,13 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='projectschema-detail',
     )
     merge = serializers.ChoiceField(MERGE_CHOICES, default=m_options.overwrite.value)
+    resolved = serializers.JSONField(default={})
 
     def create(self, validated_data):
+        try:
+            utils.validate_entity_payload(validated_data['projectschema'], validated_data['payload'])
+        except Exception as schemaError:
+            raise serializers.ValidationError(schemaError)
         try:
             entity = models.Entity(
                 payload=validated_data.pop('payload'),
@@ -235,6 +239,10 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
                 instance.status = validated_data.pop('status')
             if 'projectschema' in validated_data and validated_data['projectschema'] is not None:
                 instance.projectschema = validated_data.pop('projectschema')
+            else:
+                raise serializers.ValidationError({
+                    'description': 'Project schema must be specified'
+                })
             if 'payload' in validated_data:
                 target_payload = validated_data.pop('payload')
             else:
@@ -250,12 +258,33 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
                     utils.merge_objects(instance.payload, target_payload, merge_value)
             else:
                 instance.payload = target_payload
+            try:
+                utils.validate_entity_payload(instance.projectschema, instance.payload)
+            except Exception as schemaError:
+                raise serializers.ValidationError(schemaError)
             instance.save()
             return instance
         except Exception as e:
             raise serializers.ValidationError({
                 'description': 'Submission validation failed >> ' + str(e)
             })
+
+    class Meta:
+        model = models.Entity
+        fields = '__all__'
+
+
+class EntityLDSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name='entity-detail',
+        read_only=True
+    )
+    projectschema_url = serializers.HyperlinkedRelatedField(
+        read_only=True,
+        source='projectschema',
+        view_name='projectschema-detail',
+    )
+    merge = serializers.ChoiceField(MERGE_CHOICES, default=m_options.overwrite.value)
 
     class Meta:
         model = models.Entity

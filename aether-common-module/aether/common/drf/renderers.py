@@ -56,7 +56,7 @@ class CustomCSVRenderer(CSVStreamingRenderer):
                 labels[header] = apply_label_rules(
                     rules=label_rules,
                     value=header,
-                    rule_sep=request.GET.get(self.labels_rule_sep_param, ':'),
+                    rule_sep=self.__get(request, self.labels_rule_sep_param, ':'),
                 )
 
             # pass header labels to context
@@ -65,10 +65,13 @@ class CustomCSVRenderer(CSVStreamingRenderer):
         return super(CustomCSVRenderer, self).render(
             data, media_type, renderer_context, *args, **kwargs)
 
+    def __get(self, request, name, default=None):
+        return request.GET.get(name, request.POST.get(name, default))
+
     def __get_param(self, request, param_name):
         return (
-            request.GET.get(param_name).split(request.GET.get(self.values_sep_param, ','))
-            if param_name in request.GET else None)
+            self.__get(request, param_name).split(self.__get(request, self.values_sep_param, ','))
+            if self.__get(request, param_name) else None)
 
     def __extract_headers(self, data):
         # First, flatten the data
@@ -88,7 +91,7 @@ def apply_label_rules(rules, value, rule_sep=':'):
         for rule in rules:
             value = apply_label_rule(rule, value, rule_sep)
         return value
-    except Exception as e:
+    except Exception:
         # if one of the parsing rules fails return initial value
         return initial_value
 

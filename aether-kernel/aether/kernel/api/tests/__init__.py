@@ -30,13 +30,20 @@ EXAMPLE_SCHEMA = {
         {
             'type': [
                 'null',
-                'string'
-            ],
+                'string',
+                ],
             'name': '_rev',
             'inherited_from': 'http://ehealthafrica.org/#CouchDoc'
         },
         {
-            'type': 'string',
+            'type': [
+                'null',
+                'string',
+                {
+                    'type': 'array',
+                    'items': 'string'
+                }
+            ],
             'name': 'name'
         },
         {
@@ -72,6 +79,13 @@ EXAMPLE_SOURCE_DATA = {
             }
         ]
     }
+}
+
+EXAMPLE_SOURCE_DATA_ENTITY = {
+    'villageID': 'somevillageID',
+    'name': 'Person-Valid',
+    'dob': '2000-01-01',
+    'id': 'somerandomID'
 }
 
 EXAMPLE_REQUIREMENTS = {
@@ -114,3 +128,161 @@ EXAMPLE_FIELD_MAPPINGS = [
     ['data.village', 'Person.villageID'],
     ['data.people[*].name', 'Person.name'],
     ['data.people[*].dob', 'Person.dob']]
+
+SAMPLE_LOCATION_SCHEMA_DEFINITION = {
+    'name': 'Location',
+    'type': 'record',
+    'fields': [
+        {
+            'name': 'id',
+            'type': 'string',
+            'jsonldPredicate': '@id'
+        },
+        {
+            'name': 'revision',
+            'type': [
+                'null',
+                'string'
+            ]
+        },
+        {
+            'name': 'lat',
+            'type': 'float'
+        },
+        {
+            'name': 'lng',
+            'type': 'float'
+        }
+    ]
+}
+
+SAMPLE_HOUSEHOLD_SCHEMA_DEFINITION = {
+    'name': 'Household',
+    'type': 'record',
+    'fields': [
+        {
+            'name': 'id',
+            'type': 'string',
+            'jsonldPredicate': '@id'
+        },
+        {
+            'name': 'revision',
+            'type': [
+                'null',
+                'string'
+            ]
+        },
+        {
+            'name': 'locationID',
+            'type': [
+                'null',
+                'string'
+            ],
+            'jsonldPredicate': {
+                '_id': 'http://ehealthafrica.org/#Location',
+                '_type': '@id'
+            }
+        }
+    ]
+}
+
+SAMPLE_LOCATION_DATA = {
+    'lat': 6.951801,
+    'lng': -2.7539059999999997,
+    'id': '00f3f1ae-abab-448b-b12f-f9c1839465ab'
+}
+
+SAMPLE_HOUSEHOLD_DATA = {
+    'locationID': '00f3f1ae-abab-448b-b12f-f9c1839465ab'
+}
+
+EXAMPLE_GAMETOKEN_SCHEMA = {
+    'fields': [
+      {
+        'jsonldPredicate': '@id',
+        'type': 'string',
+        'name': 'id',
+        'inherited_from': 'http://game.eha.org/BaseModel'
+      },
+      {
+        'type': 'string',
+        'name': 'rev',
+        'inherited_from': 'http://game.eha.org/BaseModel'
+      },
+      {
+        'doc': 'A description of the thing.',
+        'jsonldPredicate': 'http://game.eha.org/description',
+        'type': [
+          'null',
+          'string',
+          {
+            'items': 'string',
+            'type': 'array'
+          }
+        ],
+        'name': 'description'
+      },
+      {
+        'doc': 'A token value, true for positive, false for negative',
+        'jsonldPredicate': 'http://game.eha.org/tokenValue',
+        'type': [
+          'null',
+          'boolean'
+        ],
+        'name': 'tokenValue'
+      },
+      {
+        'doc': 'The time something was created',
+        'jsonldPredicate': 'http://game.eha.org/generationTime',
+        'type': [
+          'null',
+          'string',
+          {
+            'items': 'string',
+            'type': 'array'
+          }
+        ],
+        'name': 'generationTime'
+      },
+      {
+        'doc': 'A hash to maintain the integrity of generated tokens.',
+        'jsonldPredicate': 'http://game.eha.org/securityHash',
+        'type': [
+          'null',
+          'string',
+          {
+            'items': 'string',
+            'type': 'array'
+          }
+        ],
+        'name': 'securityHash'
+      },
+      {
+        'doc': 'A common name for this entity.',
+        'jsonldPredicate': 'http://game.eha.org/name',
+        'type': [
+          'null',
+          'string',
+          {
+            'items': 'string',
+            'type': 'array'
+          }
+        ],
+        'name': 'name'
+      }
+    ],
+    'type': 'record',
+    'name': 'http://game.eha.org/GameToken',
+    'extends': 'http://game.eha.org/BaseModel'
+  }
+
+EXAMPLE_VALID_PAYLOAD = {
+    'id': 'bdc639fe-b142-4587-b2e9-4dc1a51f9a5d',
+    'rev': 'some1srevision'
+}
+
+EXAMPLE_INVALID_PAYLOAD = {
+    'id': 'bdc639fe-b142-4587-b2e9-4dc1a51f9a5c',
+    'rev': 'some1srevision',
+    'tokenValue': 'shouldhavebeenaboolean!'
+}

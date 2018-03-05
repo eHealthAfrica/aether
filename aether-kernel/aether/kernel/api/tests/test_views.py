@@ -8,9 +8,12 @@ from django.test import TransactionTestCase
 from django.urls import reverse
 
 from rest_framework import status
-from .. import models
+from .. import models, constants
 
-from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA)
+from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA,
+               SAMPLE_LOCATION_SCHEMA_DEFINITION, SAMPLE_HOUSEHOLD_SCHEMA_DEFINITION,
+               SAMPLE_LOCATION_DATA, SAMPLE_HOUSEHOLD_DATA, EXAMPLE_GAMETOKEN_SCHEMA,
+               EXAMPLE_VALID_PAYLOAD, EXAMPLE_SOURCE_DATA_ENTITY, EXAMPLE_INVALID_PAYLOAD)
 
 
 def assign_mapping_entities(mapping, projectschemas):
@@ -24,7 +27,9 @@ def assign_mapping_entities(mapping, projectschemas):
 
 class ViewsTest(TransactionTestCase):
 
-    entity_payload = {'firstname': 'test first name', 'lastname': 'test last name'}
+    entity_payload = {'name': 'Person name updated'}
+    test_schema = None
+    test_project_schema = None
 
     def setUp(self):
         username = 'test'
@@ -95,14 +100,14 @@ class ViewsTest(TransactionTestCase):
         return json.loads(response.content).get('count')
 
     # TEST CREATE:
-    def helper_create_object(self, view_name, data):
+    def helper_create_object(self, view_name, data, isNegative=False):
         url = reverse(view_name)
-        pre_submission_count = self.get_count(view_name)
         data = json.dumps(data)
         response = self.client.post(url, data, content_type='application/json')
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-        post_submission_count = self.get_count(view_name)
-        self.assertEquals(post_submission_count, pre_submission_count + 1)
+        if isNegative:
+            self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        else:
+            self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         return response
 
     def test_api_create_instance(self):
@@ -143,13 +148,45 @@ class ViewsTest(TransactionTestCase):
         })
         self.helper_create_object('entity-list', {
             'revision': 'Sample entity revision',
-            'payload': {},
+            'payload': EXAMPLE_SOURCE_DATA_ENTITY,
             'status': 'Publishable',
             'projectschema': str(self.projectschema.pk),
             'submission': str(self.submission.pk),
         })
+        test_schema_id = json.loads(self.helper_create_object('schema-list', {
+            'name': 'GameToken',
+            'type': 'record',
+            'definition': EXAMPLE_GAMETOKEN_SCHEMA,
+            'revision': '1',
+        }).content)['id']
+        self.test_schema = models.Schema.objects.get(pk=test_schema_id)
+        test_project_schema_id = json.loads(self.helper_create_object('projectschema-list', {
+            'name': 'Project Schema 2',
+            'mandatory_fields': 'Sample projectschema mandatory fields',
+            'transport_rule': 'Sample projectschema transport rule',
+            'masked_fields': 'Sample projectschema masked fields',
+            'isEncrypted': True,
+            'project': str(self.project.pk),
+            'schema': str(self.test_schema.pk),
+        }).content)['id']
+        self.test_project_schema = models.ProjectSchema.objects.get(pk=test_project_schema_id)
+        self.helper_create_object('entity-list', {
+            'revision': '1',
+            'payload': EXAMPLE_VALID_PAYLOAD,
+            'status': 'Publishable',
+            'projectschema': str(self.test_project_schema.pk),
+            'submission': str(self.submission.pk),
+        })
+        self.helper_create_object('entity-list', {
+            'revision': '1',
+            'payload': EXAMPLE_INVALID_PAYLOAD,
+            'status': 'Publishable',
+            'projectschema': str(self.test_project_schema.pk),
+            'submission': str(self.submission.pk),
+        }, True)
 
     # TEST READ
+
     def helper_read_object_id(self, view_name, Obj):
         url = reverse(view_name, kwargs={'pk': Obj.pk})
         response = self.client.get(url, format='json')
@@ -166,11 +203,14 @@ class ViewsTest(TransactionTestCase):
 
     # TEST UPDATE
 
-    def helper_update_object_id(self, view_name, updated_data, Obj):
+    def helper_update_object_id(self, view_name, updated_data, Obj, isNegative=False):
         url = reverse(view_name, kwargs={'pk': Obj.pk})
         updated_data = json.dumps(updated_data)
         response = self.client.put(url, updated_data, content_type='application/json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        if isNegative:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.status_code)
+        else:
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
         return response
 
     def test_api_update_instance_id(self):
@@ -187,20 +227,47 @@ class ViewsTest(TransactionTestCase):
             'payload': {},
             'mapping': str(self.mapping.pk),
         }, self.submission)
+        updated_example_payload = EXAMPLE_SOURCE_DATA_ENTITY
+        updated_example_payload['name'] = 'Person name updated'
         self.helper_update_object_id('entity-detail', {
             'revision': 'Sample entity revision updated',
-            'payload': {'firstname': 'Test first name updated'},
+            'payload': updated_example_payload,
             'status': 'Publishable',
             'projectschema': str(self.projectschema.pk),
         }, self.entity)
+        updated_example_payload = EXAMPLE_SOURCE_DATA_ENTITY
+        updated_example_payload['name'] = 'Test last name updated'
+        updated_example_payload['new_prop'] = 'Test prop updated'
         self.helper_update_object_id('entity-detail', {
             'revision': 'Sample entity revision updated',
-            'payload': {'lastname': 'Test last name updated', 'new_prop': 'Test prop updated'},
+            'payload': updated_example_payload,
             'merge': 'first_write_wins',
             'status': 'Publishable',
             'projectschema': str(self.projectschema.pk),
         }, self.entity)
-        self.assertEqual(self.entity_payload['lastname'], self.entity.payload['lastname'])
+        returned_entity = models.Entity.objects.get(pk=self.entity.pk)
+        self.assertEqual(self.entity_payload['name'], returned_entity.payload['name'])
+        self.assertIsNotNone(returned_entity.payload['new_prop'])
+        updated_example_payload['name'] = 'Test last name updated'
+        updated_example_payload['new_prop2'] = 'Test prop updated'
+        self.helper_update_object_id('entity-detail', {
+            'revision': 'Sample entity revision updated',
+            'payload': updated_example_payload,
+            'merge': 'last_write_wins',
+            'status': 'Publishable',
+            'projectschema': str(self.projectschema.pk),
+        }, self.entity)
+        returned_entity = models.Entity.objects.get(pk=self.entity.pk)
+        self.assertNotEqual(self.entity_payload['name'], returned_entity.payload['name'])
+        self.assertIsNotNone(returned_entity.payload['new_prop2'])
+        invalid_example_payload = dict(EXAMPLE_SOURCE_DATA_ENTITY)
+        del invalid_example_payload['villageID']
+        self.helper_update_object_id('entity-detail', {
+            'revision': 'Sample entity revision updated',
+            'payload': invalid_example_payload,
+            'status': 'Publishable',
+            'projectschema': str(self.projectschema.pk),
+        }, self.entity, True)
         self.helper_update_object_id('project-detail', {
             'name': 'Project name 2',
             'revision': 'Sample project revision',
@@ -211,7 +278,7 @@ class ViewsTest(TransactionTestCase):
         self.helper_update_object_id('schema-detail', {
             'name': 'Schema name 2',
             'type': 'Type',
-            'definition': {},
+            'definition': EXAMPLE_SCHEMA,
             'revision': 'Sample schema revision',
         }, self.schema)
         self.helper_update_object_id('projectschema-detail', {
@@ -360,3 +427,96 @@ class ViewsTest(TransactionTestCase):
             content_type='application/json'
         )
         self.assertEquals(response.status_code, 400)
+
+    # Test resolving linked entities
+    def helper_read_linked_data_entities(self, view_name, obj, depth):
+        url = reverse(view_name, kwargs={'pk': obj.pk}) + '?depth=' + str(depth)
+        response = self.client.get(url, format='json')
+        try:
+            int(depth)
+            if depth > constants.LINKED_DATA_MAX_DEPTH:
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            else:
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+        except Exception as e:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        return response
+
+    def test_read_linked_data(self):
+        location_schema = models.Schema.objects.create(
+            name='Location',
+            definition=SAMPLE_LOCATION_SCHEMA_DEFINITION,
+            revision='1'
+        )
+        household_schema = models.Schema.objects.create(
+            name='Household',
+            definition=SAMPLE_HOUSEHOLD_SCHEMA_DEFINITION,
+            revision='1'
+        )
+        location_projectschema = models.ProjectSchema.objects.create(
+            name='Location',
+            mandatory_fields=[],
+            transport_rule=[],
+            masked_fields=[],
+            is_encrypted=False,
+            project=self.project,
+            schema=location_schema
+        )
+        household_projectschema = models.ProjectSchema.objects.create(
+            name='Household',
+            mandatory_fields=[],
+            transport_rule=[],
+            masked_fields=[],
+            is_encrypted=False,
+            project=self.project,
+            schema=household_schema
+        )
+        location_entity = models.Entity.objects.create(
+            payload=SAMPLE_LOCATION_DATA,
+            projectschema=location_projectschema
+        )
+        household_entity = models.Entity.objects.create(
+            payload=SAMPLE_HOUSEHOLD_DATA,
+            projectschema=household_projectschema
+        )
+        linked_entity = self.helper_read_linked_data_entities('entity-detail', household_entity, 2)
+        self.helper_read_linked_data_entities('entity-detail', household_entity, 4)
+        self.helper_read_linked_data_entities('entity-detail', household_entity, 'two')
+        self.assertIsNotNone(
+            json.loads(linked_entity.content)['resolved']
+            [location_schema.name][location_entity.payload['id']])
+
+    def test_api_no_cascade_delete_on_entity(self):
+        self.helper_delete_object_pk('schema-detail', self.schema)
+        modified_entity = models.Entity.objects.get(pk=self.entity.pk)
+        self.assertIsNone(modified_entity.projectschema)
+        # Test updating entity without a projectschema
+        self.helper_update_object_id('entity-detail', {
+            'revision': modified_entity.revision,
+            'payload': modified_entity.payload,
+            'status': 'Publishable',
+            'projectschema': None
+        }, modified_entity, True)
+
+    def test_custom_viewset(self):
+        self.assertNotEqual(reverse('project-list'), reverse('project-fetch'))
+        self.assertEqual(reverse('project-fetch'), '/projects/fetch/')
+
+        self.assertNotEqual(reverse('project-detail', kwargs={'pk': 1}),
+                            reverse('project-details', kwargs={'pk': 1}))
+        self.assertEqual(reverse('project-details', kwargs={'pk': 1}), '/projects/1/details/')
+
+        project_id = str(self.project.pk)
+
+        response_get = self.client.get(reverse('project-list')).json()
+        response_post = self.client.post(reverse('project-fetch')).json()
+
+        self.assertEqual(response_get, response_post, 'same detail view')
+        self.assertEqual(len(response_get['results']), 1)
+        self.assertEqual(response_get['results'][0]['id'], project_id)
+
+        response_get = self.client.get(reverse('project-detail', kwargs={'pk': project_id})).json()
+        response_post = self.client.post(reverse('project-details', kwargs={'pk': project_id})).json()
+
+        self.assertEqual(response_get, response_post, 'same list view')
+        self.assertEqual(response_get['id'], project_id)
