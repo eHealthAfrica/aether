@@ -179,6 +179,49 @@ class EntityResolver(GenericCollection):
         )
         return resolver.pluck(url)
 
+    def _delete(self, key):
+        url = "%s/entities/%s/" % (self.client.url_base, key)
+        response = self.client.delete(url)
+        return response
+
+
+    def delete(self, key_or_resource=None, key=None, resource=None):
+        if key:
+            return self._delete(key)
+        if resource:
+            return self._delete(resource.get("id"))
+        if key_or_resource:
+            try:
+                return(self._delete(key_or_resource.get("id")))
+            except AttributeError as ae:
+                return(self._delete(key_or_resource))
+        raise AttributeError("No resource specified for deletion.")
+
+        _id = resource.get("id")
+        if not _id:  # TODO TEST
+            raise ValueError("Resource has no id field")
+
+    def __iter__(self):
+        return self.load_all()
+
+    def load_all(self, filter_func=None):
+        url = "%s/entities/" % (self.client.url_base)
+        while True:
+            payload = self.client.get(url)
+            results = payload.get('results', None)
+            if not results:
+                raise StopIteration
+            for item in results:
+                if filter_func:
+                    if filter_func(item):
+                        yield item
+                else:
+                    yield item
+            if payload.get("next") is not None:
+                url = payload.get("next")
+            else:
+                raise StopIteration
+
     def info(self):  # TODO TEST
         return {
             "type": self.name
@@ -463,7 +506,10 @@ class DataEndpoint(object):
 
     def pluck(self, url):
         res = self.client.get(url)
-        if res.get("detail") == "Not found.":
+        try:
+            if res.get("detail") == "Not found.":
+                return None
+        except AttributeError as ae:  # If the result is not a dict, we know the pluck failed.
             return None
         return res
 
