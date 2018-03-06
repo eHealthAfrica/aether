@@ -1,4 +1,5 @@
 import unittest
+import random
 import sys
 import traceback
 import json
@@ -40,12 +41,12 @@ class KernelClientCase(unittest.TestCase):
         except Exception as err:
             try:
                 KernelClientCase.client = client.KernelClient(kernel_url)
-            except KeyError:
+            except AttributeError:
                 pass
             try:
                 fake_credentials = {"missing": "values"}
                 KernelClientCase.client = client.KernelClient(kernel_url, **fake_credentials)
-            except KeyError:
+            except AttributeError:
                 pass
             try:
                 KernelClientCase.client = client.KernelClient(kernel_url, **kernel_credentials)
@@ -73,7 +74,6 @@ class KernelClientCase(unittest.TestCase):
         # The entrypoint for the test functions.
         for name, step in self._steps():
             try:
-                print(name)
                 step()
                 self.success += 1
                 sys.stdout.write(".")  # cheesey dot replicating normal unittest behavior
@@ -84,27 +84,32 @@ class KernelClientCase(unittest.TestCase):
                 print("Fault: {} failed ({}: {})".format(step, type(e), e))
 
     def step1_project(self):
+
         client = KernelClientCase.client
-        name = project_obj.get("name")
+
+        # Make a project and assert some things about its creation
         client.Resource.Project.add(project_obj)
+        name = project_obj.get("name")
         a_str = str(client.Resource['Project'])
-        assert(a_str is not None)
-        assert(len([i for i in self.client.Resource.Project]) > 0), "Couldn't iterate projects"
         project = self.client.Resource.Project.get(name)
-        assert(len([i for i in project.info()]) > 0)
+        project_id = project.id
+        assert(a_str is not None), "Couldn't stringify the project endpoint info"
+        assert(len([i for i in self.client.Resource.Project]) > 0), "Couldn't iterate projects"
+        assert(len([i for i in project.info()]) > 0), "Project info was missing"
         assert(project.get())
         assert(project.info("id"))
-        project_id = project.id
         assert(project is not None), "Project was not created"
         assert(name == project.name), "Project name not accessable by dot convention"
         assert(name == project.get("name")), "Project name not accessable by .get()"
         assert(str(project) is not None)
+
+        # Update the project and make sure it worked
         project.revision = "2"
         project.update()
-        assert(project.revision == "2")
+        assert(project.revision == "2"), "Version update didn't take"
         try:
             project.get("imaginary_value")
-        except KeyError:
+        except AttributeError:
             pass
         except Exception:
             self.fail("should not accept imaginary_value as a key")
@@ -112,9 +117,11 @@ class KernelClientCase(unittest.TestCase):
             self.fail("imaginary_value should raise an exception")
         KernelClientCase.project_id = project.get("id")
 
+        # create a function to pass as a search filter
         def name(obj):
             return obj.get("name") == project_name
 
+        # search for the created project using various methods
         matches = client.Resource.Project.search(name)
         assert(len([i.name for i in matches]) > 0), "Search for known project failed."
         match = client.Resource.Project[project_id]
@@ -128,22 +135,23 @@ class KernelClientCase(unittest.TestCase):
             pass
         else:
             self.fail("missing attribue not caught")
-
+        # Make a bad filter that should find nothing
         def wrong_name(obj):
             return obj.get("name") == "FAKE"+project_name
-
         matches = client.Resource.Project.search(wrong_name)
         assert(len([i.name for i in matches]) == 0), "Search for missing value should fail."
 
     def step2_schemas(self):
-        if not KernelClientCase.project_id:
-            self.fail("Prerequisite test failed. Stopping")
         client = KernelClientCase.client
+        # Create schemas from our definitions
         for obj in schema_objs:
             name = obj.get("name")
+            # Add the schema
             client.Resource.Schema.add(obj)
+            # Then retrieve it by name
             schema = client.Resource.Schema.get(name)
             _id = schema.id
+            # Then retrieve it by id
             same_schema = client.Resource.Schema.get(_id)
             assert(schema == same_schema), "Schema should be gettable by name or id"
             assert(_id is not None), "ID should be accessable by .id"
@@ -152,20 +160,27 @@ class KernelClientCase(unittest.TestCase):
             KernelClientCase.schema_ids[_id] = name
 
     def step3_project_schemas(self):
+        # Connect to Client and retreive previously created reference values
         client = KernelClientCase.client
         project_id = KernelClientCase.project_id
         schemas = KernelClientCase.schema_ids
+
         for x, obj in enumerate(project_schema_objs):
             name = obj.get('name')
             schema_id = [k for k, v in schemas.items() if v == "My"+name][0]
             assert(schema_id is not None)
             obj["schema"] = schema_id
             obj["project"] = project_id
+            # create a project schema based on a previously created schema
             client.Resource.ProjectSchema.add(obj)
+            # get retrieve by name
             schema = client.Resource.ProjectSchema.get(name)
             assert(schema is not None), "ProjectSchema should be available immediately"
+            # get an attribute by __getattr__
             _id = schema.id
+            # get retrieve by id
             same_schema = client.Resource.ProjectSchema.get(_id)
+            # for the first one, we update a value in the record
             if x == 0:
                 same_schema['is_encrypted'] = True
                 client.Resource.ProjectSchema.update(same_schema)
@@ -175,6 +190,7 @@ class KernelClientCase(unittest.TestCase):
             else:
                 assert(schema == same_schema), "Schema should match"
             assert(_id is not None)
+            # get an attribute by get
             _id = schema.get("id")
             assert(_id is not None)
             KernelClientCase.ps_ids[_id] = name
@@ -190,6 +206,7 @@ class KernelClientCase(unittest.TestCase):
         mapping_obj['project'] = KernelClientCase.project_id
         # all done! now submit it
         client.Resource.Mapping.add(mapping_obj)
+        # retrieve the mapping by name
         mapping = client.Resource.Mapping.get(name)
         assert(mapping is not None), "Couldn't add mapping"
         assert(len([i for i in client.Resource.Mapping]) > 0), "Couldn't iterate mappings"
@@ -198,14 +215,13 @@ class KernelClientCase(unittest.TestCase):
     def step5_submission(self):
         client = KernelClientCase.client
         mapping_id = KernelClientCase.mapping_id
-
-        def ignore(obj):
-            return False
-
         mapping = client.Resource.Mapping.get(mapping_id)
-        submission = submission_obj
+
+        # find the endpoint for submission for our mapping using various methods.
+        # get an endpoint for submission to the mapping we created by the mapping name
         endpoint = client.Submission.get(mapping.name)
-        assert([i for i in client.Submission] is not []), "Should be iterable submissions"
+        assert(len([1 for sub in endpoint]) == 0), "Should be 0 existing submissions"
+        assert([1 for ep in client.Submission] is not []), "Submissions endpoints are iterable"
         assert(client.Submission[mapping.id] is not None), (
             "Should be able to getattr from submissions collection")
         try:
@@ -217,89 +233,105 @@ class KernelClientCase(unittest.TestCase):
         assert(len([1 for i in client.Submission.names()]) > 0)
         assert(len([1 for i in client.Submission.ids()]) > 0)
         assert(endpoint is not None), (
-            "Could't get submissions endpoint for mapping id %s" % mapping.id)
+            "Could't get endpoint for mapping id %s" % mapping.id)
+        # get the same endpoint by mapping id
         endpoint = client.Submission.get(mapping.id)
         assert(endpoint is not None), (
-            "Could't get submissions endpoint for mapping name %s" % mapping.name)
+            "Could't get endpoint by mapping id %s" % mapping.id)
+
+        # Submit data to our submissions endpoint
+        res = None
         # submit the same data 10 times!
         for x in range(10):
-            res = endpoint.submit(submission)
-        # make sure we made some entities
+            res = endpoint.submit(submission_obj)  # our pre-created fake submission
+        # get same endpoint by mapping id
+        endpoint = client.Submission.get(mapping.id)
+        assert(len([1 for i in endpoint]) == 10), "Should be 10 existing submissions"
+
+        # make sure we made some entities (check last submission return value)
         assert(res.get("entities_url") is not None), "No entitites were created"
+        # make a filter function that ignores everything
+        def ignore(obj):
+            return False
         subs = endpoint.get(filter_func=ignore)
-        assert(len([1 for i in subs]) == 0), "Filter didn't work"
+        assert(len([1 for sub in subs]) == 0), "Filter didn't work"
         subs = endpoint.get(filter_func=None)
-        assert(len([1 for i in subs]) >= 10), "Couldn't iterate over submission"
-        # Get a submission by id
+        assert(len([1 for sub in subs]) == 10), "Couldn't iterate over submission"
+        # Get the first submission
         a_submission = next(endpoint.get())
         _id = a_submission.get("id")
+        # Get another copy of the submission by id
         match = endpoint.get(id=_id)
         assert(match == a_submission)
 
     def step6_entities(self):
         client = KernelClientCase.client
 
-        people = client.Entity.Person
+        # Get basic information about the endpoint (really just a name)
         assert (client.Entity.info() is not None), "Info should return basic information"
+
+        # Access all entities of a type "Person"
+        people = client.Entity.Person
         assert(people.info() is not None), "Info should return basic information"
+        # Try go get a missing person from the endpoint
         try:
-            x = people.missing_attribute
+            x = people.missing_person
             if x:
-                print(x)  # to appease the linter
+                raise KeyError(x)  # to appease the linter
         except AttributeError:
             pass
         else:
             self.fail("missing_attribute should throw an error")
 
-        def age(obj):
+        # Grab the first person from the endpoint
+        a_person = next(people.get())
+        _id = a_person.get('id')
+        # Get them from the entity endpoint by id and check for equality
+        same_person = client.Entity[_id]
+        assert(a_person == same_person)
+
+        # Make a filter that only returns people under 40
+        def youth_filter(obj):
             payload = obj.get('payload', {})
             age = payload.get('age', None)
             if not age:
                 return False
             return int(age) < 40
 
-        a_person = next(people.get())
-        _id = a_person.get('id')
-        same_person = client.Entity[_id]
-        assert(a_person == same_person)
-
-        population = sum([1 for person in people])
-        ages = [person.get("payload", {}) for person in people]
-        # pprint(ages)  # TODO KILL
-        print("population: %s" % population)  # TODO kill
-        young_people = people.get(filter_func=age)
+        # get all the young people
+        population = sum([1 for person in people.get()])
+        young_people = people.get(filter_func=youth_filter)
         young_pop = sum([1 for person in young_people])
-        print("young_pop: %s" % young_pop)  # TODO kill
         assert(young_pop > 0), "Filter didn't work, should be some young people."
         assert(young_pop < population), "Filter didn't work, should be fewer young people."
-        # make one person old
-        young_people = people.get(filter_func=age)
-        for person in young_people:
-            person['payload']['age'] = 45
-            res = people.update(person)
-            assert(res.get('url') is not None), "Couldn't post updated entity"
-            break
-        young_people = people.get(filter_func=age)
+
+        # make one young person very old & run tests on them
+        poor_sap = next(people.get(filter_func=youth_filter))
+        poor_sap['payload']['age'] = 110
+        res = people.update(poor_sap)
+        assert(res.get('url') is not None), "Couldn't post updated entity"
+        young_people = people.get(filter_func=youth_filter)
         new_young_pop = sum([1 for person in young_people])
         assert(new_young_pop < young_pop), \
             "nyw: %s should be less than old_yp %s" % (new_young_pop, young_pop)
+
         # test various patterns to access an entity
         test_person = next(people.get())
         test_id = test_person.get('id')
         assert(test_person is not None), "Couldn't grab a person from the generator"
-        # Entity
-        person = client.Entity.Person.get(id=test_id)
+        person = client.Entity.Person.get(id=test_id)  # using explicit id= filter
         assert(person == test_person)
-        person = client.Entity.Person.get(id="fake")
+        person = client.Entity.Person.get(id="fake")  # fail to get a person using a bad id
         assert(person is None), "A bad ID shouldn't return an entity"
         # ProjectSchema
-        person = client.Entity.MyPerson.get(id=test_id)
+        person = client.Entity.MyPerson.get(id=test_id)  # get an object with specific PS & id
         assert(person == test_person)
         # Project
-        person = client.Entity.get(project_name).get(id=test_id)
+        person = client.Entity.get(project_name).get(id=test_id) # get by project and id
         assert(person == test_person)
 
         # Mapping
+        # It starts to get silly in this section, but all the idioms should work.
         test_person = next(client.Entity.get("Person").get())
         other_person = client.Entity["Person"].get(id=test_person.get('id'))
         third_person = client.Entity.Person.get(id=test_person.get('id'))
@@ -314,12 +346,14 @@ class KernelClientCase(unittest.TestCase):
         else:
             self.fail("Should have thrown an AttributeError | person: %s" % missing_person)
 
-        personal_submission = test_person.get('submission')
+        # We use roundabout methods to find the submission that created one of our entities
+        personal_submission = test_person.get('submission')  # the submission that made it
+        submission_endpoint = next(client.Submission.get())  # There's only one endpoint/mapping
+        a_mapping_id = submission_endpoint.mapping_id        # We can get the mapping from it...
+        a_submission = submission_endpoint.get(id=personal_submission) # and our submission
+        assert(a_submission is not None), "We should get our submission by its id"
 
-        a_mapping_id = next(iter(client.Submission.get()))
-        endpoint = client.Submission.get(a_mapping_id)
-        a_submission = endpoint.get(id=personal_submission)
-        assert(a_submission is not None)
+        # Now we'll perform entity searches using lots of different parameter types
 
         type_names = [
             "TestProject",
@@ -352,11 +386,23 @@ class KernelClientCase(unittest.TestCase):
 
     def step90_delete_entities(self):
         client = KernelClientCase.client
-        for _id in client.Entity:
-            res = client.Entity.delete(_id)
-            print(res)
+        entity_ids = [i.get("id") for i in client.Entity]
         remaining_entities = sum([1 for i in client.Entity])
-        assert(remaining_entities == 0), "%s entities survived deletion" % remaining_entities
+        assert(len(entity_ids) == remaining_entities), "These should match!"
+        ids = []
+        # Gather the ids and then delete them. Don't do it inside the iterator.
+        # Pagination will get messed up and you'll miss some.
+        for x, _id in enumerate(entity_ids):
+            ids.append(_id)
+            method = random.choice([True, False])
+            if method:
+              entity = client.Entity[_id]
+              res = client.Entity.delete(entity)
+            else:
+              res = client.Entity.delete(_id)
+        assert(len(ids) == len(set(ids)))
+        remaining_entities = sum([1 for i in client.Entity])
+        assert(remaining_entities == 0), "Entities survived deletion : %s" % remaining_entities
 
     def step91_delete_mapping(self):
         client = KernelClientCase.client
