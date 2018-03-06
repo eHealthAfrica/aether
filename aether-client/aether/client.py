@@ -184,7 +184,6 @@ class EntityResolver(GenericCollection):
         response = self.client.delete(url)
         return response
 
-
     def delete(self, key_or_resource=None, key=None, resource=None):
         if key:
             return self._delete(key)
