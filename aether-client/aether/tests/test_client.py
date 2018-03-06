@@ -136,6 +136,7 @@ class KernelClientCase(unittest.TestCase):
         else:
             self.fail("missing attribue not caught")
         # Make a bad filter that should find nothing
+
         def wrong_name(obj):
             return obj.get("name") == "FAKE"+project_name
         matches = client.Resource.Project.search(wrong_name)
@@ -251,6 +252,7 @@ class KernelClientCase(unittest.TestCase):
         # make sure we made some entities (check last submission return value)
         assert(res.get("entities_url") is not None), "No entitites were created"
         # make a filter function that ignores everything
+
         def ignore(obj):
             return False
         subs = endpoint.get(filter_func=ignore)
@@ -327,7 +329,7 @@ class KernelClientCase(unittest.TestCase):
         person = client.Entity.MyPerson.get(id=test_id)  # get an object with specific PS & id
         assert(person == test_person)
         # Project
-        person = client.Entity.get(project_name).get(id=test_id) # get by project and id
+        person = client.Entity.get(project_name).get(id=test_id)  # get by project and id
         assert(person == test_person)
 
         # Mapping
@@ -350,7 +352,7 @@ class KernelClientCase(unittest.TestCase):
         personal_submission = test_person.get('submission')  # the submission that made it
         submission_endpoint = next(client.Submission.get())  # There's only one endpoint/mapping
         a_mapping_id = submission_endpoint.mapping_id        # We can get the mapping from it...
-        a_submission = submission_endpoint.get(id=personal_submission) # and our submission
+        a_submission = submission_endpoint.get(id=personal_submission)  # and our submission
         assert(a_submission is not None), "We should get our submission by its id"
 
         # Now we'll perform entity searches using lots of different parameter types
@@ -396,10 +398,10 @@ class KernelClientCase(unittest.TestCase):
             ids.append(_id)
             method = random.choice([True, False])
             if method:
-              entity = client.Entity[_id]
-              res = client.Entity.delete(entity)
+                entity = client.Entity[_id]
+                client.Entity.delete(entity)
             else:
-              res = client.Entity.delete(_id)
+                client.Entity.delete(_id)
         assert(len(ids) == len(set(ids)))
         remaining_entities = sum([1 for i in client.Entity])
         assert(remaining_entities == 0), "Entities survived deletion : %s" % remaining_entities
