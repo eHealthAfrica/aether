@@ -64,7 +64,7 @@ services:
     networks:
       internal:
         aliases:
-          - kong.aether.local
+          - ${PROJECT_API_URL}
 
   kongfig:
     extends:

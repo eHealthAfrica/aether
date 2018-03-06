@@ -7,6 +7,7 @@ from aether.common.auth.views import obtain_auth_token
 from aether.common.conf.views import basic_serve, media_serve
 from aether.common.health.views import health
 from aether.common.kernel.views import check_kernel
+from aether.common.conf import settings as app_settings
 
 
 def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
@@ -55,7 +56,7 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
         url(r'^admin/', admin.site.urls),
 
         # `accounts` management
-        url(r'^accounts/', include(auth_urls, namespace='rest_framework')),
+        url(r'^' + app_settings.KONG_PREFIX[1:] + '/accounts/', include(auth_urls, namespace='rest_framework')),
 
         # media files (protected)
         url(r'^media/(?P<path>.*)$', login_required(media_serve), name='media'),
@@ -76,7 +77,7 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
     if token:
         # generates users token
         urlpatterns += [
-            url('^accounts/token$', obtain_auth_token, name='token'),
+            url('^' + app_settings.KONG_PREFIX[1:] + '/accounts/token$', obtain_auth_token, name='token'),
         ]
 
     if kernel:
