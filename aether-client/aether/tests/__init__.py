@@ -1,7 +1,7 @@
 import json
 import os
 
-kernel_url = "http://kernel-test:9000/v1"
+kernel_url = "http://kernel-test:9000"
 
 kernel_credentials ={
     "username": "admin-kernel",
