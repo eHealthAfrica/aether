@@ -19,7 +19,7 @@ service:
 environment: "dev"
 ums_url: ums-dev
 domain: gather2.org
-trusted_origins: .ehealthafrica.org
+trusted_origins: .ehealthafrica.org,.gather2.org
 namespace:
   create: false
 application:
