@@ -10,6 +10,7 @@ services:
     build: aether-common-module
     environment:
       TESTING: "true"
+      DJANGO_SECRET_KEY: "secret"
     volumes:
       - ./aether-common-module:/code
     command: build

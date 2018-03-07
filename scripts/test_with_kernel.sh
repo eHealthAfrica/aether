@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -Eeuo pipefail
 
 function prepare_container() {
   echo "_________________________________________________ Preparing $1 container"

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -Eeuo pipefail
 
 IMAGE_REPO='ehealthafrica'
 APPS=( kernel odk couchdb-sync )
