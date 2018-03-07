@@ -9,8 +9,8 @@ image:
 odk:
   repository: "ehealthafrica/aether-odk"
 name: odk
-project: project
-release: odk-0.5.1
+project: aether 
+release: 0.5.1
 service:
   name: nginx
   type: NodePort

@@ -5,7 +5,7 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: {{ template "kernel.fullname" . }}
+  name: {{ template "kernel.name" . }}
   labels:
     app: {{ template "kernel.name" . }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
