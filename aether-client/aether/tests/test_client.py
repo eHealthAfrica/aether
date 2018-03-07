@@ -302,6 +302,7 @@ class KernelClientCase(unittest.TestCase):
 
         # get all the young people
         population = sum([1 for person in people.get()])
+        assert(population > 0), "Should be able to access whole population by list comprehension."
         young_people = people.get(filter_func=youth_filter)
         young_pop = sum([1 for person in young_people])
         assert(young_pop > 0), "Filter didn't work, should be some young people."
