@@ -1,79 +1,146 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: {{ template "odk.fullname" . }}
+  name: {{ .Chart.Name }}
   labels:
-    app: {{ template "odk.name" . }}
+    app: {{ .Chart.Name }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    release: {{ .Release.Name }}
+    release: {{ .Chart.Name }}
     heritage: {{ .Release.Service }}
 spec:
   replicas: {{ .Values.replicaCount }}
   template:
     metadata:
       labels:
-        app: {{ template "odk.name" . }}
-        release: {{ .Release.Name }}
+        app: {{ .Chart.Name }}
+        release: {{ .Chart.Version }}
     spec:
+      initContainers:
+      - name: init-db
+        image: postgres:9.3-alpine
+        command: ['bash', '-c', './scripts/db-init.sh']
+        env:
+        - name: PGHOST 
+          valueFrom :
+            secretKeyRef:
+              name: {{ .Values.database.secret }}
+              key: host 
+        - name: PGUSER 
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.database.secret }}
+              key: user 
+        - name: PGPASSWORD 
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.database.secret }}
+              key: password
+        - name: RDS_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: odk-database-user
+        - name: RDS_PASSWORD 
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: odk-database-password
+        - name: RDS_DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: odk-database-name
+        volumeMounts:
+        - mountPath: /scripts
+          name: odk-db-init
       containers:
-        - name: {{ .Chart.Name }}
-          image: "{{ .Values.odk.repository }}:{{ .Chart.Version }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - containerPort: {{ .Values.service.internalPort }}
-          livenessProbe:
-            httpGet:
-              path: /
-              port: {{ .Values.service.odk.internalPort }}
-          readinessProbe:
-            httpGet:
-              path: /
-              port: {{ .Values.service.kernal.internalPort }}
-          env:
-          - name: CAS_SERVER_URL
-            value: https://{{ .Values.ums_url }}.ehealthafrica.org
-          - name: CSRF_COOKIE_DOMAIN
-            value: .{{ .Values.domain }}
-          - name: HOSTNAME
-            value: {{ .Values.url_prefix }}.gather2.org
-          - name: RDS_DB_NAME
-            value: {{ .Values.datbase_name }} 
-          - name: RDS_PORT
-            value: {{ .Values.database_port }} 
-          - name: WEB_SERVER_PORT
-            value: {{ .Values.web_server_port }} 
-          - name: AETHER_KERNEL_TOKEN
-            valueFrom:
-              secretKeyRef:
-                name: {{ .Values.environment }}-{{ .Values.project }}-secrets
-                key: odk_token 
-          - name: RDS_HOSTNAME
-            valueFrom:
-              secretKeyRef:
-                name: {{ .Values.environment }}-database 
-                key: host 
-          - name: RDS_USERNAME 
-            valueFrom:
-              secretKeyRef:
-                name: {{ .Values.environment }}-database 
-                key: user 
-          - name: RDS_PASSWORD 
-            valueFrom:
-              secretKeyRef:
-                name: {{ .Values.environment }}-database 
-                key: password
-          volumeMounts:
-          - mountPath: /var/www/static
-            name: static-assets-volume
-        - name: nginx
-          image: nginx:stable-alpine
-          ports:
-          - containerPort: 80
-          volumeMounts:
-          - mountPath: /var/www/static
-            name: static-assets-volume
-          - mountPath: /etc/nginx/conf.d
-            name: odk-nginx-config
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.odk.repository }}:{{ .Chart.Version }}"
+        ports:
+        - containerPort: 8000        
+        args:
+        - start
+        livenessProbe:
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          httpGet:
+            path: /health
+            port: 8000
+            httpHeaders:
+            - name: X-Kubernetes-Health-Check
+              value: livenessProbe 
+            - name: Host
+              value: {{ .Values.url }}
+        readinessProbe:
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          httpGet:
+            path: /health
+            port: 8000
+            httpHeaders:
+            - name: X-Kubernetes-Health-Check
+              value: check
+            - name: Host
+              value: {{ .Values.url }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        - name: CAS_SERVER_URL
+          value: "https://{{ .Values.ums_url }}.ehealthafrica.org"
+        - name: CSRF_COOKIE_DOMAIN
+          value: {{ .Values.domain }}
+        - name: CSRF_TRUSTED_ORIGINS
+          value: {{ .Values.trusted_origins }}
+        - name: HOSTNAME
+          value: "{{ .Values.url_prefix }}.{{ .Values.domain }}"
+        - name: DJANGO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: odk-django-secret-key
+        - name: AETHER_ODK_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: odk-token 
+        - name: AETHER_KERNEL_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: kernel-token 
+        - name: RDS_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: odk-database-user
+        - name: RDS_PORT
+          value: "5432"
+        - name: RDS_HOSTNAME 
+          valueFrom :
+            secretKeyRef:
+              name: {{ .Values.database.secret }}
+              key: host
+        - name: RDS_PASSWORD 
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: odk-database-password
+        - name: RDS_DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: odk-database-name
+        volumeMounts:
+        - mountPath: /var/www/static
+          name: static-assets-volume
+      - name: nginx
+        image: nginx:stable-alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: /var/www/static
+          name: static-assets-volume
+        - mountPath: /etc/nginx/conf.d
+          name: odk-nginx-config
       imagePullSecrets:
       - name: regsecret
       volumes:
@@ -82,4 +149,8 @@ spec:
       - name: odk-nginx-config 
         configMap:
           name: odk-nginx-config
+      - name: odk-db-init 
+        configMap:
+          name: odk-db-init 
+          defaultMode: 0744
       restartPolicy: Always

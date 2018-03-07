@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: odk-db-init 
+data:
+  db-init.sh: |
+    #!/bin/bash
+
+    psql -c "CREATE DATABASE $RDS_DB_NAME;"
+    psql -c "CREATE USER $RDS_USERNAME WITH PASSWORD '$RDS_PASSWORD';"
+    psql -c "GRANT ALL PRIVILEGES ON DATABASE $RDS_DB_NAME TO $RDS_USERNAME;"

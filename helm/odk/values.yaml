@@ -7,23 +7,33 @@ image:
   tag: stable-alpine
   pullPolicy: IfNotPresent
 odk:
-  repository: "ehealthafrica/odk"
+  repository: "ehealthafrica/aether-odk"
+name: odk
+project: project
+release: odk-0.5.1
 service:
   name: nginx
+  type: NodePort
   externalPort: 80
   internalPort: 80
 environment: "dev"
 ums_url: ums-dev
+domain: gather2.org
+trusted_origins: .ehealthafrica.org
+namespace:
+  create: false
+application:
+  secret: secrets
+database:
+  secret: database-credentials
 provider:
-  aws: true
+  aws: false 
 ingress:
   enabled: true 
 
-  # Used to create an Ingress record.
-  hosts:
-    -  
   annotations:
     alb.ingress.kubernetes.io/scheme: "internet-facing" 
     alb.ingress.kubernetes.io/healthcheck-path: /health
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80,"HTTPS": 443}]'
     alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:eu-west-1:387526361725:certificate/dcd71c49-1b5b-4b19-bd2d-6de98a3f6477"
+    alb.ingress.kubernetes.io/security-groups: "alb-ingress-controller.dev.k8s.eha.to" 
