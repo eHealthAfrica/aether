@@ -39,7 +39,6 @@ services:
       file: docker-compose-base.yml
       service: kernel-base
     environment:
-      DJANGO_SECRET_KEY: "secret"
       MEDIA_ROOT: /tmp/
       RDS_DB_NAME: kernel-test
       RDS_HOSTNAME: db-test
@@ -63,7 +62,6 @@ services:
       service: odk-base
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9000
-      DJANGO_SECRET_KEY: "secret"
       MEDIA_ROOT: /tmp/
       RDS_DB_NAME: odk-test
       RDS_HOSTNAME: db-test
@@ -90,7 +88,6 @@ services:
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9000
       COUCHDB_URL: http://couchdb-test:5984
-      DJANGO_SECRET_KEY: "secret"
       MEDIA_ROOT: /tmp/
       RDS_DB_NAME: couchdb-sync-test
       RDS_HOSTNAME: db-test
