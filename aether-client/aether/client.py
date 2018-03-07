@@ -274,8 +274,9 @@ class SubmissionsCollection(GenericCollection):
         self.load()
 
     def __iter__(self):
+        # resources.values() has duplicates due to being accessible by id or name
+        # we only want unique resources for iteration over the set
         return iter(list(set(self.resources.values())))
-        # return iter(self.resources.keys())  # TODO TEST
 
     def load(self):
         self.resources, self.name_alias, self.order = ({}, {}, [])
