@@ -54,3 +54,10 @@ class UtilsTest(TestCase):
             '/media-basic/path/to/somewhere',
             'There is a "/media-basic" endpoint'
         )
+
+    def test__urls__api_pass(self):
+        self.assertEqual(
+            reverse('api-pass'),
+            '/api-pass',
+            'There is a "/api-pass" endpoint'
+        )

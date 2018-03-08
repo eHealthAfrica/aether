@@ -165,6 +165,10 @@ CAS_VERSION = 3
 CAS_LOGOUT_COMPLETELY = True
 CAS_SERVER_URL = os.environ.get('CAS_SERVER_URL', '')
 HOSTNAME = os.environ.get('HOSTNAME', '')
+PROJECT_API_URL = os.environ.get('PROJECT_API_URL', 'api.aether.local')
+KONG_OAUTH2_PROVISION_KEY = os.environ.get('KONG_OAUTH2_PROVISION_KEY', '')
+KONG_APIKEY = os.environ.get('KONG_APIKEY', '')
+KONG_CONSUMER = os.environ.get('KONG_CONSUMER', 'aether-internal')
 
 if CAS_SERVER_URL:  # pragma: no cover
     INSTALLED_APPS += [

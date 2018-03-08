@@ -10,14 +10,43 @@ apis:
       uris:
         - "/aether/v1"
       preserve_host: true
+    plugins:
+      - name: oauth2
+        attributes:
+          config:
+            scopes:
+              - "email,phone"
+            mandatory_scope: false
+            token_expiration: 86400
+            enable_authorization_code: true
+            enable_password_grant: true
+            hide_credentials: false
+            provision_key: KONG_OAUTH2_PROVISION_KEY
   
-  - name: "kernel-home"
+  # - name: "kernel-home"
+  #   ensure: "present"
+  #   attributes:
+  #     upstream_url: "http://kernel.aether.local:8000"
+  #     hosts:
+  #       - "PROJECT_API_URL"
+  #     preserve_host: true
+
+  - name: "Kong-pass-oauth2"
     ensure: "present"
     attributes:
       upstream_url: "http://kernel.aether.local:8000"
-      hosts:
-        - "PROJECT_API_URL"
+      uris:
+        - "/api-pass"
       preserve_host: true
+      strip_uri: false
+    plugins:        
+    - name: key-auth
+      ensure: "present"
+      attributes:
+        config:
+          key_names:
+            - apikey
+          hide_credentials: true
 
   - name: "kernel-static"
     ensure: "present"
@@ -47,6 +76,14 @@ apis:
       upstream_url: "https://odk.aether.local:8443"
       uris:
         - "/odk/v1"
+    plugins:        
+    - name: key-auth
+      ensure: "present"
+      attributes:
+        config:
+          key_names:
+            - apikey
+          hide_credentials: true
 
   - name: "couch-sync"
     ensure: "present"
@@ -55,18 +92,86 @@ apis:
       uris:
         - "/sync/v1"
 
-plugins:
-  - name: key-auth
-    ensure: "present"
-    attributes:
-      config:
-        key_names:
-          - apikey
-        hide_credentials: true
-
 consumers:
   - username: KONG_CONSUMER
     credentials:
       - name: key-auth
         attributes:
           key: KONG_APIKEY
+      - name: oauth2
+        attributes:
+          name: "Aux"
+          redirect_uri: "http://api.aether.local/aux/v1"
+          client_id: KONG_CONSUMER
+
+  - username: anonymous_user
+    credentials:
+      - name: oauth2
+        attributes:
+          name: "Aux"
+          redirect_uri: "http://api.aether.local/aux/v1"
+          client_id: "anonymous_user"
+
+certificates:
+  - ensure: present
+    cert: >-
+      -----BEGIN CERTIFICATE-----
+      MIIEIzCCAwugAwIBAgIJAJ+2vdJ5AK0fMA0GCSqGSIb3DQEBCwUAMIGnMQswCQYD
+      VQQGEwJORzEOMAwGA1UECAwFQWJ1amExDjAMBgNVBAcMBUFidWphMRcwFQYDVQQK
+      DA5lSGVhbHRoIEFmcmljYTEcMBoGA1UECwwTU29mdHdhcmUgRGVwYXJ0bWVudDEb
+      MBkGA1UEAwwSTG9yZC1NYWxsYW0gTnVnd2FuMSQwIgYJKoZIhvcNAQkBFhVsb3Jk
+      eTAwMjAwMEBnbWFpbC5jb20wHhcNMTgwMzA4MDg0MTUyWhcNMTkwMzA4MDg0MTUy
+      WjCBpzELMAkGA1UEBhMCTkcxDjAMBgNVBAgMBUFidWphMQ4wDAYDVQQHDAVBYnVq
+      YTEXMBUGA1UECgwOZUhlYWx0aCBBZnJpY2ExHDAaBgNVBAsME1NvZnR3YXJlIERl
+      cGFydG1lbnQxGzAZBgNVBAMMEkxvcmQtTWFsbGFtIE51Z3dhbjEkMCIGCSqGSIb3
+      DQEJARYVbG9yZHkwMDIwMDBAZ21haWwuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOC
+      AQ8AMIIBCgKCAQEAqePQJOB3jUNOBv+/LEYR+smn2PSoQ1De8JOGpXWoYk8jNUO2
+      kAJTlxY9k3D2+oXM/K0iXTLsHBemdoSL11VLvXfcK1a6G3pIiqzoRr4khplf3gsq
+      3LLckJTPrUrtXNzIJjONZDHcenSbvO3sYwZWU6JKQgH9S5zrOp8fDbz7w5kYFCYS
+      R+3oZTGd3LJ1zpGZV9my3Tea8MQTTlYaCtyvHBh0Gi4vOgT0J/8VRUaDWQzfSKs7
+      55rZpA+RNSoO2ADl3ultVLizaZbz2PX0WHBW17SqSdHU1nR+vOk3CowLmiu2Vzk7
+      beqYCCUvkkeNHM4HYA2OGUNU33OdNUiSPuTM/wIDAQABo1AwTjAdBgNVHQ4EFgQU
+      gRM53UDo9JG3hrZi+g5hdb+cW5YwHwYDVR0jBBgwFoAUgRM53UDo9JG3hrZi+g5h
+      db+cW5YwDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEABptEcgNxQSIF
+      3XhRs4ejfYhNWnDHFzaRa33iQFSyJq8pJeIdAscnSuItSZcFpd7lOM2AK880wfXW
+      mi+07k/X8HgL5E5t0NuEB2vGaw2DS6ySXEvUjb5rjfZWrjMcL2g328R85yb/6xqB
+      zbgtdl8EvQdw8Daiy4srD7K/K/AfCNvCfrZe+pg+J35U6oojm/bJszNhE8VbR8Dh
+      5c1mCYv0lPL0cfUHeGuRgch0foLYA/U99gXI/KM2vXnXrlrEu+3KHGSCn8piaSC/
+      hlBf3yQksImVuN9hvJvwn/lP4Y0v4U3IHCAtyB0j0JyTEvgd0ZvHinzEATLL2T11
+      h3KVY5Q0qg==
+      -----END CERTIFICATE-----
+    key: >-
+      -----BEGIN PRIVATE KEY-----
+      MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCp49Ak4HeNQ04G
+      /78sRhH6yafY9KhDUN7wk4aldahiTyM1Q7aQAlOXFj2TcPb6hcz8rSJdMuwcF6Z2
+      hIvXVUu9d9wrVrobekiKrOhGviSGmV/eCyrcstyQlM+tSu1c3MgmM41kMdx6dJu8
+      7exjBlZTokpCAf1LnOs6nx8NvPvDmRgUJhJH7ehlMZ3csnXOkZlX2bLdN5rwxBNO
+      VhoK3K8cGHQaLi86BPQn/xVFRoNZDN9IqzvnmtmkD5E1Kg7YAOXe6W1UuLNplvPY
+      9fRYcFbXtKpJ0dTWdH686TcKjAuaK7ZXOTtt6pgIJS+SR40czgdgDY4ZQ1Tfc501
+      SJI+5Mz/AgMBAAECggEAQ2Yt3XNv+osJGZ28qkPiPixieqAVYR9kUu00LdBPzTC4
+      Nxl2BAvoPbiFFUlrslgCyvuk9nSNV1fKoppTIEqmkbRLlKYDj4Mj5GBUhjxJIV0X
+      u2+SwZv0BSgEfCuNn5m3jfBF18owPiSk5H8/mMma1fM8opNHegf3Cnq2Ry0CdMZS
+      QuoqPrDgdOQ/8uJkTIm3Z/ukcR86VKU1uiCmmnuos+6KeVOMCXvK5V4aH9+viS8f
+      AuVVAn7bwIcZr1jILtPHfwRuKN3gXAJaMwlkoHXNc/aC+CK/JHHeGLJLOko4k/aH
+      GlN0ehfkTeJ0LyJL8chVgPZv23RSPnzdQucfiD1UgQKBgQDYJpRubqXHpX+zGyFw
+      sWgdaBNeSZlOAZPwc8j9jWmVuIdcPw38dQHNwxwwKBrMXgtQPxDHG0W86VIhieax
+      FMBTnXBSGITQ2RKdKf8WfCH6tHExcg7hCgbfGTj5zFy5IVZDi4wXFTHNS5Jtt3Ly
+      qEk5KTEIaT7ZsBwJ70sxNEgypQKBgQDJNeoMDVFGB1QiTAUOGqk1gAzJB4fROn71
+      9jcWjS5hi6rx+CHg4PogjcH5dNK2Gv/nFOdB1g/QA6b3Fq4aazpdc+zsybYUF4Au
+      dUUWejboQDYrqYvmVkOxfqm90/NFkl0jOvO7IpB6VcqpvFybhIuqXI2WXjbCNQWy
+      d+LjfVSj0wKBgQCrL+Lek0M4mxpH/3S8i8SphYPRaPjBjv5bsVe9eAHnUf3iUQ4C
+      o6iKDbyFZz3SHalYJJplFnRk6WTiqxTJqmWn00jhvAl0XncfgeNFK4q9w6riPjMK
+      h6ZpitBVBkVpWb24QQzyOxb2QKP3wRKInD9hxf3Pa4sbXR7Xv20NyxpjAQKBgFXn
+      WsFCfkxznIv4AMCAyXU58jtxp57AZqwELojGReMHijg8Q9qKsr9rRkGGit+Mr2yt
+      E/6bsayRopsjZ7mHxidX8vM1OzNgxS0QjCqIiyClKXuCq2PvuH7zIO0WrGorjvAX
+      ny9qFlzke93zuWX8NNTLJvfnyWEo2gHUBV4yiAxZAoGAEaZ/mRZFG5nHGAhl4t1x
+      Z5lsGGeyAYxDQCupUcpYfjb1yXC+N+VMBFw8UtTyAJ14POr+8k6CIcw/dWtEX2yx
+      FK0slksUg5TK6gTYxEnJc0o+c2Adxn5loTSXCyTM2QfkqUWUAN8y5j+PRdBC3ZKE
+      JVXC5MWFd2ozCmjDOedDw/g=
+      -----END PRIVATE KEY-----
+    snis:
+      - name: PROJECT_API_URL
+        ensure: present
+
+
+

@@ -19,3 +19,7 @@ class ViewsTest(TestCase):
                 response.content.decode(),
                 'Brought to you by eHealth Africa - good tech for hard places',
             )
+
+    def test_api_pass(self):
+        response = self.client.post('/api-pass', {'client_id': 'a_test_client_id'})
+        self.assertEqual(200, response.status_code)
