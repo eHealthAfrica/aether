@@ -84,6 +84,8 @@ spec:
               value: {{ .Values.url }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
+        - name: MEDIA_ROOT
+          value: {{ .Values.application.data_mount }}
         - name: CAS_SERVER_URL
           value: "https://{{ .Values.ums_url }}.ehealthafrica.org"
         - name: CSRF_COOKIE_DOMAIN
@@ -107,6 +109,8 @@ spec:
             secretKeyRef:
               name: {{ .Values.application.secret }}
               key: kernel-token 
+        - name: AETHER_KERNEL_URL
+          value: {{ .Values.kernel_url }}
         - name: RDS_USERNAME
           valueFrom:
             secretKeyRef:
@@ -132,6 +136,8 @@ spec:
         volumeMounts:
         - mountPath: /var/www/static
           name: static-assets-volume
+        - name: {{ .Chart.Name }}
+          mountPath: {{ .Values.application.data_mount }}
       - name: nginx
         image: nginx:stable-alpine
         ports:
@@ -144,6 +150,9 @@ spec:
       imagePullSecrets:
       - name: regsecret
       volumes:
+      - name: {{ .Chart.Name }}
+        persistentVolumeClaim:
+          claimName: {{ .Chart.Name }} 
       - name: static-assets-volume
         emptyDir: {}
       - name: odk-nginx-config 
