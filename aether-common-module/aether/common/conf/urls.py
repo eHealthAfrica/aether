@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.conf.urls import include, url
 
 from aether.common.auth.views import obtain_auth_token
-from aether.common.conf.views import basic_serve, media_serve, setup_kong_consumer
+from aether.common.conf.views import basic_serve, media_serve
 from aether.common.health.views import health
 from aether.common.kernel.views import check_kernel
 from aether.common.conf import settings as app_settings
@@ -51,9 +51,6 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
 
         # `health` endpoint
         url(r'^health$', health, name='health'),
-
-        # provision kong consumer credentials
-        url(r'^api-pass$', setup_kong_consumer, name='api-pass'),
 
         # `admin` section
         url(r'^admin/', admin.site.urls),
