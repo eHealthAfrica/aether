@@ -1,4 +1,5 @@
 from django.test import TestCase, RequestFactory
+from rest_framework.request import Request
 
 from ..renderers import CustomCSVRenderer, apply_label_rules
 
@@ -14,7 +15,7 @@ class CustomCSVRendererTests(TestCase):
 
         return b''.join(CustomCSVRenderer().render(
             data=data,
-            renderer_context={'request': request},
+            renderer_context={'request': Request(request)},
         ))
 
     def test_with_no_data(self):
