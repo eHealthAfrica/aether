@@ -66,7 +66,7 @@ class CustomCSVRenderer(CSVStreamingRenderer):
             data, media_type, renderer_context, *args, **kwargs)
 
     def __get(self, request, name, default=None):
-        return request.GET.get(name, request.POST.get(name, default))
+        return request.GET.get(name, dict(request.data).get(name, default))
 
     def __get_param(self, request, param_name):
         return (
