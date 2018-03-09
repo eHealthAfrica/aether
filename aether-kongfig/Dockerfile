@@ -8,11 +8,15 @@ ARG KONG_APIKEY
 
 ARG PROJECT_API_URL
 
+ARG KONG_OAUTH2_PROVISION_KEY
+
 RUN sed -i 's/KONG_CONSUMER/'"$KONG_CONSUMER"'/g' /config.yml
 
 RUN sed -i 's/KONG_APIKEY/'"$KONG_APIKEY"'/g' /config.yml
 
 RUN sed -i 's/PROJECT_API_URL/'"$PROJECT_API_URL"'/g' /config.yml
+
+RUN sed -i 's/KONG_OAUTH2_PROVISION_KEY/'"$KONG_OAUTH2_PROVISION_KEY"'/g' /config.yml
 
 WORKDIR /config
 
