@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: odk-init
 data:
-  db-init.sh: |
+  init.sh: |
     #!/bin/bash
 
     psql -c "CREATE DATABASE $RDS_DB_NAME;"
