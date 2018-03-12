@@ -6,9 +6,12 @@ ums_url: ums
 kernel_url: https://champs-kernel.gather2.org
 domain: gather2.org
 ingress:
-  hosts: 
-    - champs-odk.gather2.org 
-  annotations: 
+  hosts:
+    - champs-odk.gather2.org
+  annotations:
     alb.ingress.kubernetes.io/security-groups: "alb-ingress-controller.prod.k8s.eha.im"
 provider:
   aws: true
+extra_env_vars:
+  CSV_HEADER_RULES_SEP: ;
+  CSV_HEADER_RULES: replace;.;:;

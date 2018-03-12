@@ -5,7 +5,7 @@ metadata:
   labels:
     app: {{ .Chart.Name }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    release: {{ .Chart.Name }}
+    release: {{ .Chart.Version }}
     heritage: {{ .Release.Service }}
 spec:
   replicas: {{ .Values.replicaCount }}
@@ -16,21 +16,21 @@ spec:
         release: {{ .Chart.Version }}
     spec:
       initContainers:
-      - name: init-db
+      - name: init
         image: postgres:9.3-alpine
-        command: ['bash', '-c', './scripts/db-init.sh']
+        command: ['bash', '-c', './scripts/init.sh']
         env:
-        - name: PGHOST 
+        - name: PGHOST
           valueFrom :
             secretKeyRef:
               name: {{ .Values.database.secret }}
-              key: host 
-        - name: PGUSER 
+              key: host
+        - name: PGUSER
           valueFrom:
             secretKeyRef:
               name: {{ .Values.database.secret }}
-              key: user 
-        - name: PGPASSWORD 
+              key: user
+        - name: PGPASSWORD
           valueFrom:
             secretKeyRef:
               name: {{ .Values.database.secret }}
@@ -40,7 +40,7 @@ spec:
             secretKeyRef:
               name: {{ .Values.application.secret }}
               key: odk-database-user
-        - name: RDS_PASSWORD 
+        - name: RDS_PASSWORD
           valueFrom:
             secretKeyRef:
               name: {{ .Values.application.secret }}
@@ -52,12 +52,14 @@ spec:
               key: odk-database-name
         volumeMounts:
         - mountPath: /scripts
-          name: odk-db-init
+          name: odk-init
+        - name: {{ .Chart.Name }}
+          mountPath: {{ .Values.application.data_mount }}
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.odk.repository }}:{{ .Chart.Version }}"
         ports:
-        - containerPort: 8000        
+        - containerPort: 8000
         args:
         - start
         livenessProbe:
@@ -68,7 +70,7 @@ spec:
             port: 8000
             httpHeaders:
             - name: X-Kubernetes-Health-Check
-              value: livenessProbe 
+              value: livenessProbe
             - name: Host
               value: {{ .Values.url }}
         readinessProbe:
@@ -84,6 +86,12 @@ spec:
               value: {{ .Values.url }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
+        {{- if .Values.extra_env_vars -}}
+        {{- range $key, $value := .Values.extra_env_vars }}
+        - name: {{ $key }}
+          value: {{ . | quote }}
+        {{- end -}}
+        {{ end }}
         - name: MEDIA_ROOT
           value: {{ .Values.application.data_mount }}
         - name: CAS_SERVER_URL
@@ -103,12 +111,12 @@ spec:
           valueFrom:
             secretKeyRef:
               name: {{ .Values.application.secret }}
-              key: odk-token 
+              key: odk-token
         - name: AETHER_KERNEL_TOKEN
           valueFrom:
             secretKeyRef:
               name: {{ .Values.application.secret }}
-              key: kernel-token 
+              key: kernel-token
         - name: AETHER_KERNEL_URL
           value: {{ .Values.kernel_url }}
         - name: RDS_USERNAME
@@ -118,12 +126,12 @@ spec:
               key: odk-database-user
         - name: RDS_PORT
           value: "5432"
-        - name: RDS_HOSTNAME 
+        - name: RDS_HOSTNAME
           valueFrom :
             secretKeyRef:
               name: {{ .Values.database.secret }}
               key: host
-        - name: RDS_PASSWORD 
+        - name: RDS_PASSWORD
           valueFrom:
             secretKeyRef:
               name: {{ .Values.application.secret }}
@@ -147,19 +155,21 @@ spec:
           name: static-assets-volume
         - mountPath: /etc/nginx/conf.d
           name: odk-nginx-config
+        - name: {{ .Chart.Name }}
+          mountPath: {{ .Values.application.data_mount }}
       imagePullSecrets:
       - name: regsecret
       volumes:
       - name: {{ .Chart.Name }}
         persistentVolumeClaim:
-          claimName: {{ .Chart.Name }} 
+          claimName: {{ .Chart.Name }}
       - name: static-assets-volume
         emptyDir: {}
-      - name: odk-nginx-config 
+      - name: odk-nginx-config
         configMap:
           name: odk-nginx-config
-      - name: odk-db-init 
+      - name: odk-init
         configMap:
-          name: odk-db-init 
+          name: odk-init
           defaultMode: 0744
       restartPolicy: Always

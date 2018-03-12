@@ -16,21 +16,21 @@ spec:
         release: {{ .Chart.Version }}
     spec:
       initContainers:
-      - name: init-db
+      - name: init
         image: postgres:9.3-alpine
-        command: ['bash', '-c', './scripts/db-init.sh']
+        command: ['bash', '-c', './scripts/init.sh']
         env:
-        - name: PGHOST 
+        - name: PGHOST
           valueFrom :
             secretKeyRef:
               name: {{ .Values.database.secret }}
-              key: host 
-        - name: PGUSER 
+              key: host
+        - name: PGUSER
           valueFrom:
             secretKeyRef:
               name: {{ .Values.database.secret }}
-              key: user 
-        - name: PGPASSWORD 
+              key: user
+        - name: PGPASSWORD
           valueFrom:
             secretKeyRef:
               name: {{ .Values.database.secret }}
@@ -40,7 +40,7 @@ spec:
             secretKeyRef:
               name: {{ .Values.application.secret }}
               key: kernel-database-user
-        - name: RDS_PASSWORD 
+        - name: RDS_PASSWORD
           valueFrom:
             secretKeyRef:
               name: {{ .Values.application.secret }}
@@ -52,12 +52,14 @@ spec:
               key: kernel-database-name
         volumeMounts:
         - mountPath: /scripts
-          name: kernel-db-init
+          name: kernel-init
+        - name: {{ .Chart.Name }}
+          mountPath: {{ .Values.application.data_mount }}
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.kernel.repository }}:{{ .Chart.Version }}"
         ports:
-        - containerPort: 8000        
+        - containerPort: 8000
         args:
         - start
         livenessProbe:
@@ -68,7 +70,7 @@ spec:
             port: 8000
             httpHeaders:
             - name: X-Kubernetes-Health-Check
-              value: livenessProbe 
+              value: livenessProbe
             - name: Host
               value: {{ .Values.url }}
         readinessProbe:
@@ -101,7 +103,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: {{ .Values.application.secret }}
-              key: kernel-token 
+              key: kernel-token
         - name: RDS_USERNAME
           valueFrom:
             secretKeyRef:
@@ -109,12 +111,12 @@ spec:
               key: kernel-database-user
         - name: RDS_PORT
           value: "5432"
-        - name: RDS_HOSTNAME 
+        - name: RDS_HOSTNAME
           valueFrom:
             secretKeyRef:
               name: {{ .Values.database.secret }}
               key: host
-        - name: RDS_PASSWORD 
+        - name: RDS_PASSWORD
           valueFrom:
             secretKeyRef:
               name: {{ .Values.application.secret }}
@@ -127,6 +129,8 @@ spec:
         volumeMounts:
         - mountPath: /var/www/static
           name: static-assets-volume
+         - name: {{ .Chart.Name }}
+          mountPath: {{ .Values.application.data_mount }}
       - name: nginx
         image: nginx:stable-alpine
         ports:
@@ -136,16 +140,21 @@ spec:
           name: static-assets-volume
         - mountPath: /etc/nginx/conf.d
           name: kernel-nginx-config
+        - name: {{ .Chart.Name }}
+          mountPath: {{ .Values.application.data_mount }}
       imagePullSecrets:
       - name: regsecret
       volumes:
+      - name: {{ .Chart.Name }}
+        persistentVolumeClaim:
+          claimName: {{ .Chart.Name }}
       - name: static-assets-volume
         emptyDir: {}
-      - name: kernel-nginx-config 
+      - name: kernel-nginx-config
         configMap:
           name: kernel-nginx-config
-      - name: kernel-db-init 
+      - name: kernel-init
         configMap:
-          name: kernel-db-init 
+          name: kernel-init
           defaultMode: 0744
       restartPolicy: Always
