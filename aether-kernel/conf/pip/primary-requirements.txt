@@ -8,28 +8,28 @@
 #                                                                              #
 ################################################################################
 
-fastavro
+avro-python3
 django==1.11.9
 django-cas-ng
 django-cors-headers
 django-debug-toolbar
 django-filter
+django-model-utils
 django-reversion-compare
 django-ums-client
-django-model-utils
 djangorestframework
 djangorestframework-filters
 drf-dynamic-fields
 drf-openapi
+fastavro
+jsonpath_ng
 jsonschema
-mock
-psycopg2
+psycopg2-binary
 pygments
 python-dateutil
 raven
 requests
 uwsgi
-jsonpath_ng
 
 # Aether common module
 aether.common
@@ -38,3 +38,4 @@ aether.common
 coverage
 flake8
 flake8-quotes
+mock

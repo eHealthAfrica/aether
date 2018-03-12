@@ -16,7 +16,7 @@ django-ums-client
 djangorestframework
 drf-dynamic-fields
 geojson
-psycopg2
+psycopg2-binary
 python-dateutil
 pytz
 pyxform
