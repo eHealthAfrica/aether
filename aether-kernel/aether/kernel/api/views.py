@@ -113,7 +113,7 @@ class EntityViewSet(CustomViewSet):
     serializer_class = serializers.EntitySerializer
     filter_class = filters.EntityFilter
 
-    def retrieve(self, request, pk=None):
+    def retrieve(self, request, pk=None, *args, **kwargs):
         try:
             selected_record = models.Entity.objects.get(pk=pk)
         except Exception as e:

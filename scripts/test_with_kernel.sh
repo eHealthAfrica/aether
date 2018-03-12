@@ -43,7 +43,10 @@ prepare_container kernel
 
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
-$DC_TEST run kernel-test manage loaddata $fixture
+if [[ $container != "client" ]]
+then
+  $DC_TEST run kernel-test manage loaddata $fixture
+fi
 echo "_____________________________________________ Loaded initial data in kernel"
 
 # build test container
