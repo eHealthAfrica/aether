@@ -30,7 +30,8 @@ We specify which Libraries to use, and which schemas to import in salad-bar/conf
 
 Running:
 
-pipenv run python ./wizard.py
+from inside the pipenv (pipenv shell)
+run: python ./wizard.py
 Answering Y to all prompts will build the library as configured and register it.
 
 
