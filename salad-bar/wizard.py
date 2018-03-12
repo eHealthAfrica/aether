@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 import os
 import json
 import pkgutil
@@ -71,6 +73,23 @@ def make_base_salad_doc(imports, namespaces, project=None, base_type=None):
     with open(project_file, "w") as f:
         json.dump(doc, f, indent=2)
 
+def prompt_schema_clean(prompt, question):
+    contents = os.listdir(SCHEMAS)
+    if not contents:
+        return
+    print(prompt)
+    pprint(contents)
+    if ask(question):
+        clean_schemas_folder()
+
+def clean_schemas_folder():
+    contents = os.listdir(SCHEMAS)
+    if not contents:
+        return
+    for f in contents:
+        path = "%s/%s" % (SCHEMAS, f)
+        os.remove(path)
+
 def file_to_json(path):
     with open(path) as f:
         return json.load(f)
@@ -112,7 +131,7 @@ def register_schemas(client, project):
         name = schema.name
         project_schema_obj = {
             "revision": "1",
-            "name": "My"+name,
+            "name": name,
             "masked_fields": "[]",
             "transport_rule": "[]",
             "mandatory_fields": "[]",
@@ -122,9 +141,19 @@ def register_schemas(client, project):
         }
         client.Resource.ProjectSchema.add(project_schema_obj)
 
-
+def ask(question):
+    while True:
+        reply = str(raw_input(question+' (y/n): ')).lower().strip()
+        if reply[:1] == 'y':
+            return True
+        if reply[:1] == 'n':
+            return False
 
 def main():
+    prompt_schema_clean(
+        "These files already exist in the schemas folder",
+        "Delete existing schemas before building library?"
+    )
     settings = load_settings(SETTINGS)
     libraries = load_libraries(settings)
     imports = []
@@ -136,6 +165,9 @@ def main():
             namespaces[k] = v
     all_depends = {k : v for key, lib in libraries.items() for k,v in lib.get('depends', {}).items()}
     project = settings.get("project")
+    ok = ask("Continue with setup of project titled: %s" % (project))
+    if not ok:
+        return
     base_type = "%s%s" % (settings.get("$base"), settings.get("basetype_name"))
     make_base_salad_doc(imports, namespaces, project, base_type)
     project_file = "%s%s.json" % (SCHEMAS, project)
@@ -150,8 +182,20 @@ def main():
     kernel_pw = settings.get("kernel_pw")
     kernel_credentials = {"username": kernel_user, "password": kernel_pw}
     client = KernelClient(url= kernel_url, **kernel_credentials)
-    register_project(client, project)
-    register_schemas(client, project)
+    ok = ask("Setup of project titled: %s complete. Register generated schemas with Aether?" % (project))
+    if ok:
+        register_project(client, project)
+        register_schemas(client, project)
+        prompt_schema_clean(
+            "Setup Complete.",
+            "Delete local copy of generated schemas?"
+        )
+    else:
+        prompt_schema_clean(
+            "Artifacts generated but not registered.",
+            "Delete schema artifacts?"
+        )
+
 
 
 if __name__ == "__main__":

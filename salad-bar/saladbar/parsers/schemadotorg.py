@@ -355,11 +355,13 @@ def make_graph(requirements, properties, records, max_property_depth=3, selected
 
     properties = {name: properties[name] for name in captured["properties"]}
     records = {name: records[name] for name in captured["records"]}
-    print ("returning\n\t #%s records\n\t #%s properties\nfor requirements\n%s\n\t@ depth %s" % (
-            len(records.keys()),
-            len(properties),
+    print ("for requirements\n%s\n\t@ depth %s \nreturning\n#%s records\n%s\n#%s properties\n%s" % (
             json.dumps(requirements, indent=2),
-            max_property_depth
+            max_property_depth,
+            len(records.keys()),
+            json.dumps([i for i in records.keys()], indent=2),
+            len(properties),
+            [str(i) for i in properties.keys()],
         ))
     return properties, records
 

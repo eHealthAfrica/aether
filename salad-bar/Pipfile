@@ -1,10 +1,11 @@
 [[source]]
+
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 
+
 [packages]
+
 requests = "*"
 schema-salad = "*"
-
-[dev-packages]
-"-e ../aether-client" = "*"
+"aether" = {path = "./../aether-client", editable = true}
