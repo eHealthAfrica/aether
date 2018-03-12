@@ -129,7 +129,7 @@ spec:
         volumeMounts:
         - mountPath: /var/www/static
           name: static-assets-volume
-         - name: {{ .Chart.Name }}
+        - name: {{ .Chart.Name }}
           mountPath: {{ .Values.application.data_mount }}
       - name: nginx
         image: nginx:stable-alpine
