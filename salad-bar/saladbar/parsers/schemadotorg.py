@@ -4,7 +4,7 @@ import copy
 import json
 from collections import OrderedDict
 
-DOM = ".org/" # TODO we need a way to handle multiple domains
+DOM = ".org/"  # TODO we need a way to handle multiple domains
 
 
 class Property(object):
@@ -26,8 +26,8 @@ class Property(object):
             'type': [
                 'float?',
                 'float[]?'
-                ]
-            },
+            ]
+        },
         'http://schema.org/Integer': {
             'type': [
                 'int?',
@@ -59,6 +59,7 @@ class Property(object):
             ]
         }
     }
+
     def __init__(self, obj, simplify=True):
         self.json = obj
         self.name = obj['id']
@@ -72,10 +73,10 @@ class Property(object):
         self.simple = self.is_simple()
 
     def is_simple(self):
-        #whether or not this property can be reduced into simple avro types
+        # whether or not this property can be reduced into simple avro types
         if self.simple is not None:
             return self.simple
-        if len(self.records) == 0: #has no records, should not be included
+        if len(self.records) == 0:  # has no records, should not be included
             self.simple = True
             return self.simple
         try:
@@ -93,14 +94,13 @@ class Property(object):
         if self.json.get("subPropertyOf"):
             self.relationships['parents'] = self.json.get("subproperties")
 
-
-
     def get_simplified_types(self):
-        #returns the flattened structure for use by a parent property
+        # returns the flattened structure for use by a parent property
         defs = []
         for type_name in self.json.get("rangeIncludes"):
             try:
-                definition = Property._flat_types.get(type_name, None).get('type')
+                definition = Property._flat_types.get(
+                    type_name, None).get('type')
             except AttributeError as e:
                 raise TypeError("No type matching %s" % type_name)
             defs.extend(definition)
@@ -128,33 +128,36 @@ class Property(object):
             record["fields"] = fields
         except Exception as e:
             pass
-            #no fields, likely deprecated
+            # no fields, likely deprecated
         return record
 
     def build_ranges(self, super_type, range_obj):
         fields = []
         for type_name in range_obj:
             if not self.records.get(type_name):
-                self.records[type_name] = None # create a stub for the record type to fill later
+                # create a stub for the record type to fill later
+                self.records[type_name] = None
             predicate_id = "%s" % (type_name)
-            #these nested record requirements are annoying should just be type_name but it creates a predicate collision
+            # these nested record requirements are annoying should just be
+            # type_name but it creates a predicate collision
             label = type_name.split(DOM)[1]
             name = "%s-id" % (label)
             body = {
                 "name": name,
-                "type": ["string","string[]"],
-                "jsonldPredicate" : {
+                "type": ["string", "string[]"],
+                "jsonldPredicate": {
                     "_type": "@id",
-                    "_id" : predicate_id
+                    "_id": predicate_id
                 }
             }
             simple_type = simple_types(type_name)
             if simple_type:
                 body["name"] = type_name.split(DOM)[1]
                 body["type"] = simple_type
-                body ["jsonldPredicate"] = "%s:%s" % ("xsd", simple_type[0][:-1])
+                body["jsonldPredicate"] = "%s:%s" % (
+                    "xsd", simple_type[0][:-1])
             elif self.records.get(type_name):
-                #TODO check if record is simple
+                # TODO check if record is simple
                 pass
             fields.append(body)
         return fields
@@ -164,7 +167,8 @@ class Property(object):
             self.records[k] = records.get(k, None)
 
     def get_reference(self):
-        #returns full reference to this Property (if it requires one and is NOT simple)
+        # returns full reference to this Property (if it requires one and is
+        # NOT simple)
         return {
             "name": self.label,
             "jsonldPredicate": "%s" % (self.name),
@@ -175,7 +179,7 @@ class Property(object):
         }
 
     def get_salad_definition(self):
-        #returns Salad definition for this field or NONE if it's simple
+        # returns Salad definition for this field or NONE if it's simple
         return self.salad_definition
 
 
@@ -208,9 +212,8 @@ class Record(object):
             record_salad['extends'] = extends
         self.salad_definition = record_salad
 
-
     def is_simple(self):
-        if self.simple != None:
+        if self.simple is not None:
             return self.simple
         self.simple = False
         if self.name in Property._flat_types.keys():
@@ -233,8 +236,9 @@ class Record(object):
         }
         if obj.get("comment_plain"):
             record["doc"] = obj.get("comment")
-        field_topics = obj.get("properties", []) # this never returns []
-        field_topics = field_topics if field_topics else [] # no idea why this works instead
+        field_topics = obj.get("properties", [])  # this never returns []
+        # no idea why this works instead
+        field_topics = field_topics if field_topics else []
         specific_properties = obj.get("specific_properties", [])
         try:
             field_topics = list(set(field_topics + specific_properties))
@@ -255,11 +259,12 @@ class Record(object):
         record['fields'] = self.fields
         return record
 
+
 def get_salad(graph, namespaces, base):
     body = {
         "$base": base,
-        "$namespaces" : namespaces,
-        "$graph":graph
+        "$namespaces": namespaces,
+        "$graph": graph
     }
     return body
 
@@ -275,6 +280,7 @@ def simple_types(name=None):
     else:
         return types
 
+
 def load(obj):
     properties = OrderedDict()
     records = OrderedDict()
@@ -288,10 +294,12 @@ def load(obj):
 
     return properties, records
 
+
 def load_file(path):
     with open(path) as f:
         spec = json.load(f)
         return load(spec)
+
 
 def get_salad_graph(properties, records, document_model=None):
     print(document_model)
@@ -306,105 +314,165 @@ def get_salad_graph(properties, records, document_model=None):
         record = records[key]
         if not record.is_simple():
             if document_model:
-                #inherit from document model
+                # inherit from document model
                 record.add_extension(document_model)
             graph.append(record.salad_definition)
     return graph
 
-def write_salad(path, base, namespaces, properties, records, document_model=None):
+
+def write_salad(
+        path,
+        base,
+        namespaces,
+        properties,
+        records,
+        document_model=None):
     graph = get_salad_graph(properties, records, document_model)
     output = get_salad(graph, namespaces, base)
     write_json(path, output)
     return graph
 
-def resolve_property_graph(name, records, properties, depth, max_depth, captured, selected_fields=None):
+
+def resolve_property_graph(
+        name,
+        records,
+        properties,
+        depth,
+        max_depth,
+        captured,
+        selected_fields=None):
     if depth > max_depth:
         return captured
-    current_depth = depth +1
-    if not name in properties.keys():
+    current_depth = depth + 1
+    if name not in properties.keys():
         return captured
     prop = properties[name]
     for i in sorted(prop.records.keys()):
-        if not i in captured.get("records"):
+        if i not in captured.get("records"):
             captured["records"].append(i)
-            captured = resolve_record_graph(i, records, properties, current_depth, max_depth, captured, selected_fields)
+            captured = resolve_record_graph(
+                i,
+                records,
+                properties,
+                current_depth,
+                max_depth,
+                captured,
+                selected_fields)
 
     return captured
 
-def resolve_record_graph(name, records, properties, depth, max_depth, captured, selected_fields=None):
+
+def resolve_record_graph(
+        name,
+        records,
+        properties,
+        depth,
+        max_depth,
+        captured,
+        selected_fields=None):
     current_depth = depth
-    if not name in records.keys():
+    if name not in records.keys():
         return captured
     record = records[name]
     for i in sorted(record.topics):
-        if selected_fields and  i not in selected_fields.get(name, []):
+        if selected_fields and i not in selected_fields.get(name, []):
             continue
-        if not i in captured.get("properties"):
+        if i not in captured.get("properties"):
             captured['properties'].append(i)
-            captured = resolve_property_graph(i, records, properties, current_depth, max_depth, captured, selected_fields)
+            captured = resolve_property_graph(
+                i,
+                records,
+                properties,
+                current_depth,
+                max_depth,
+                captured,
+                selected_fields)
 
     return captured
 
-def make_graph(requirements, properties, records, max_property_depth=3, selected_fields=None):
+
+def make_graph(
+        requirements,
+        properties,
+        records,
+        max_property_depth=3,
+        selected_fields=None):
     captured = {
         "records": [],
-        "properties" : []
+        "properties": []
     }
     for name in sorted(requirements):
-        captured = resolve_record_graph(name, records, properties, 0, max_property_depth, captured, selected_fields)
+        captured = resolve_record_graph(
+            name,
+            records,
+            properties,
+            0,
+            max_property_depth,
+            captured,
+            selected_fields)
 
     properties = {name: properties[name] for name in captured["properties"]}
     records = {name: records[name] for name in captured["records"]}
-    print ("for requirements\n%s\n\t@ depth %s \nreturning\n#%s records\n%s\n#%s properties\n%s" % (
-            json.dumps(requirements, indent=2),
-            max_property_depth,
-            len(records.keys()),
-            json.dumps([i for i in records.keys()], indent=2),
-            len(properties),
-            [str(i) for i in properties.keys()],
-        ))
+    print (
+        "for requirements\n%s\n\t@ depth %s \nreturning\n#%s records\n%s\n#%s properties\n%s" %
+        (json.dumps(
+            requirements, indent=2), max_property_depth, len(
+            records.keys()), json.dumps(
+                [
+                    i for i in records.keys()], indent=2), len(properties), [
+                        str(i) for i in properties.keys()], ))
     return properties, records
+
 
 def make_dependency_graph(graphed_records, records, limited_properties={}):
     graph = {}
     for key in graphed_records:
         record = records[key]
         if record.is_simple():
-            continue # ignore
+            continue  # ignore
         parents = record.relationships.get("parents")
         children = record.relationships.get("children")
         graph[record.name] = {}
-        permitted = set([i for val in limited_properties.values() for i in val])
+        permitted = set([i for val in limited_properties.values()
+                         for i in val])
         if permitted:
-            all_properties = [i for i in sorted(record.topics) if i in permitted]
+            all_properties = [
+                i for i in sorted(
+                    record.topics) if i in permitted]
         else:
             all_properties = [i for i in sorted(record.topics)]
         if parents:
             lineage = get_lineage(key, "parents", records)
             graph[record.name]['parents'] = lineage
-            parental_properties = get_parental_properties(all_properties, lineage, records, limited_properties)
+            parental_properties = get_parental_properties(
+                all_properties, lineage, records, limited_properties)
             graph[record.name]['properties'] = parental_properties
         else:
             graph[record.name]['properties'] = all_properties
 
     return graph
 
-def get_parental_properties(properties, lineage, all_records, limited_properties={}):
+
+def get_parental_properties(
+        properties,
+        lineage,
+        all_records,
+        limited_properties={}):
     output = {}
     permitted = set([i for val in limited_properties.values() for i in val])
     props = set(properties)
     for x, parent in enumerate(flatten(lineage[::-1])):
         if output.get(parent):
-            continue #already got this one...
+            continue  # already got this one...
         parental_fields = sorted(all_records.get(parent).topics)
         if permitted:
-            unique_fields = sorted([i for i in props if i in parental_fields if i in permitted])
+            unique_fields = sorted(
+                [i for i in props if i in parental_fields if i in permitted])
         else:  # All properties are allowed
             unique_fields = sorted([i for i in props if i in parental_fields])
         output[parent] = unique_fields
         props = props.difference(unique_fields)
     return output
-
 
 
 def flatten(heirarchy):
@@ -424,7 +492,14 @@ def get_lineage(name, direction, records):
     output = []
     if rels:
         if len(rels) > 1:
-            output = [get_lineage(rel, direction, records) for rel in rels if get_lineage(rel, direction, records)]
+            output = [
+                get_lineage(
+                    rel,
+                    direction,
+                    records) for rel in rels if get_lineage(
+                    rel,
+                    direction,
+                    records)]
         elif len(rels) == 1:
             output = get_lineage(rels[0], direction, records)
         else:
@@ -434,11 +509,9 @@ def get_lineage(name, direction, records):
     return [record.name] + output
 
 
-
-
 def write_json(path, obj):
     with open(path, "w") as f2:
-            json.dump(obj, f2, indent=2)
+        json.dump(obj, f2, indent=2)
 
 
 def test_graph():
@@ -446,15 +519,14 @@ def test_graph():
     request = [
         "http://schema.org/Patient"
     ]
-    #a subset of records and properties base on the requested entities
+    # a subset of records and properties base on the requested entities
     properties, records = make_graph(request, all_properties, all_records, 0)
-    write_salad('limited.json', properties, records, document_model="http://ehealthafrica.org/BaseModel")
+    write_salad('limited.json', properties, records,
+                document_model="http://ehealthafrica.org/BaseModel")
 
     dependency_graph = make_dependency_graph(records, all_records)
-    #pprint(dependency_graph)
+    # pprint(dependency_graph)
     write_json("depends.json", dependency_graph)
-
-
 
 
 if __name__ == "__main__":

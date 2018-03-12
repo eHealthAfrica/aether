@@ -8,4 +8,9 @@ verify_ssl = true
 
 requests = "*"
 schema-salad = "*"
-"aether" = {path = "./../aether-client", editable = true}
+aether = {path = "./../aether-client", editable = true}
+
+
+[dev-packages]
+
+"autopep8" = "*"

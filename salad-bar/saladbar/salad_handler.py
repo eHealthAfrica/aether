@@ -5,6 +5,7 @@ from os.path import abspath
 from schema_salad import schema, validate, jsonld_context
 from schema_salad.ref_resolver import Loader, file_uri
 
+
 def pprint(obj):
     print(json.dumps(obj, indent=2))
 
@@ -20,14 +21,12 @@ class SaladHandler(object):
         schema_uri = file_uri(abspath(path))
         schema_raw_doc = metaschema_loader.fetch(schema_uri)
 
-        try: # parse the schema
+        try:  # parse the schema
             schema_doc, schema_metadata = metaschema_loader.resolve_all(
-                    schema_raw_doc, schema_uri)
+                schema_raw_doc, schema_uri)
         except (validate.ValidationException) as vale:
             print("Error loading schema %s" % vale)
             raise vale
-
-
 
         # Get the json-ld context and RDFS representation from the schema
         metactx = {}  # type: Dict[str, str]
@@ -60,7 +59,8 @@ class SaladHandler(object):
         print("Salad schema is valid and loaded")
 
     def get_avro(self, depends=None):
-        avsc_names, avsc_obj = schema.make_avro_schema(self.schema_doc, self.document_loader)
+        avsc_names, avsc_obj = schema.make_avro_schema(
+            self.schema_doc, self.document_loader)
         pprint(avsc_obj)
         if not depends:
             return avsc_names, avsc_obj
@@ -72,8 +72,11 @@ class SaladHandler(object):
             name = i.get('name')
             if name in deps:
                 reqs = depends.get(name)
-                all_props = [i for j in reqs.get('properties').values() for i in j] # unpack nested values
-                avro_item =  [avsc_dict.get(i) for i in all_props if i in avsc_dict.keys()]
+                # unpack nested values
+                all_props = [i for j in reqs.get(
+                    'properties').values() for i in j]
+                avro_item = [
+                    avsc_dict.get(i) for i in all_props if i in avsc_dict.keys()]
                 avro_item.append(avsc_dict.get(name))
                 out[name] = avro_item
         return out

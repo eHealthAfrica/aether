@@ -22,7 +22,7 @@ class GenericParser(object):
 
     def get_value(self, key, row):
         string_value = row.get(key)
-        if string_value and len(string_value) > 0 :
+        if string_value and len(string_value) > 0:
             return string_value
 
     def get_array(self, key, row):
@@ -62,7 +62,7 @@ class TypeParser(GenericParser):
 def find_libraries():
     libraries = []
     settings_name = 'scrape.json'
-    for root, subFolders, files in os.walk(HERE+"/src"):
+    for root, subFolders, files in os.walk(HERE + "/src"):
         if settings_name in files:
             with open("%s/%s" % (root, settings_name)) as f:
                 settings = json.load(f)
@@ -74,8 +74,10 @@ def find_libraries():
                 settings['is_built'] = False
     return libraries
 
+
 def pprint(obj):
     print(json.dumps(obj, indent=2))
+
 
 def build_library(lib):
     schema = {}
@@ -105,11 +107,14 @@ def build_library(lib):
     with open("%s/%s" % (base_path, out_file), "w") as f:
         json.dump(schema, f, indent=2, sort_keys=True)
 
+
 def get_library(name):
     libs = find_libraries()
     names = [lib.get('name', None) for lib in libs]
-    if not name in names:
-        raise KeyError("Library named %s not found in available: %s" % (name, (names,)))
+    if name not in names:
+        raise KeyError(
+            "Library named %s not found in available: %s" %
+            (name, (names,)))
     lib = [lib for lib in libs if lib.get("name") == name][0]
     if not lib.get("is_built"):
         build_library(lib)
@@ -120,5 +125,5 @@ def get_library(name):
         data = json.load(f)
     return {
         "info": lib,
-        "data" : data
+        "data": data
     }

@@ -15,30 +15,37 @@ RES = "wizard_resources"
 TMP = "%s/tmp" % RES
 SCHEMAS = "schemas/"
 
+
 def pprint(obj):
     print(json.dumps(obj, indent=2))
+
 
 def load_settings(path):
     with open(path) as f:
         return json.load(f)
 
+
 def load_libraries(settings):
     base_type = "%s%s" % (settings.get("$base"), settings.get("basetype_name"))
     libraries = {}
     for lib_name in settings.get("libraries", {}).keys():
-        lib_req = settings.get("libraries", {}).get(lib_name) # requested from this lib
-        library = library_utils.get_library(lib_name) # rendered lib
+        lib_req = settings.get("libraries", {}).get(
+            lib_name)  # requested from this lib
+        library = library_utils.get_library(lib_name)  # rendered lib
         info = library.get("info")
         namespaces = info.get("namespaces")
         base = info.get("base")
         parser_name = info.get('parser_type')
         parser = None
-        # dynamically import the right parser (filename(-.py) in parsers must match value in scrape.json for the lib)
+        # dynamically import the right parser (filename(-.py) in parsers must
+        # match value in scrape.json for the lib)
         for importer, modname, ispkg in pkgutil.iter_modules(Parsers.__path__):
             if modname == parser_name:
                 parser = importer.find_module(modname).load_module(modname)
         if not parser:
-            raise AttributeError("No valid parser found of type %s" % parser_name)
+            raise AttributeError(
+                "No valid parser found of type %s" %
+                parser_name)
         all_props, all_types = parser.load(library.get("data"))
         requests = lib_req.get("requirements", None)
         depth = lib_req.get("depth", 0)
@@ -46,7 +53,13 @@ def load_libraries(settings):
         depends = parser.make_dependency_graph(types, all_types)
         schema_file = lib_req.get("schema_file")
         graph_path = "%s%s" % (SCHEMAS, schema_file)
-        graph = parser.write_salad(graph_path, base, namespaces, props, types, base_type)
+        graph = parser.write_salad(
+            graph_path,
+            base,
+            namespaces,
+            props,
+            types,
+            base_type)
         libraries[lib_name] = {
             "depends": depends,
             "graph": graph,
@@ -73,6 +86,7 @@ def make_base_salad_doc(imports, namespaces, project=None, base_type=None):
     with open(project_file, "w") as f:
         json.dump(doc, f, indent=2)
 
+
 def prompt_schema_clean(prompt, question):
     contents = os.listdir(SCHEMAS)
     if not contents:
@@ -82,6 +96,7 @@ def prompt_schema_clean(prompt, question):
     if ask(question):
         clean_schemas_folder()
 
+
 def clean_schemas_folder():
     contents = os.listdir(SCHEMAS)
     if not contents:
@@ -90,9 +105,11 @@ def clean_schemas_folder():
         path = "%s/%s" % (SCHEMAS, f)
         os.remove(path)
 
+
 def file_to_json(path):
     with open(path) as f:
         return json.load(f)
+
 
 def register_project(client, name):
     path = "%s/%s.json" % (SCHEMAS, name)
@@ -106,8 +123,9 @@ def register_project(client, name):
     }
     client.Resource.Project.add(obj)
 
+
 def register_schemas(client, project):
-    loc = SCHEMAS+ "/%s"
+    loc = SCHEMAS + "/%s"
     files = os.listdir(SCHEMAS)
     names = []
     for f in files:
@@ -141,13 +159,15 @@ def register_schemas(client, project):
         }
         client.Resource.ProjectSchema.add(project_schema_obj)
 
+
 def ask(question):
     while True:
-        reply = str(raw_input(question+' (y/n): ')).lower().strip()
+        reply = str(raw_input(question + ' (y/n): ')).lower().strip()
         if reply[:1] == 'y':
             return True
         if reply[:1] == 'n':
             return False
+
 
 def main():
     prompt_schema_clean(
@@ -161,9 +181,10 @@ def main():
     for lib in libraries.values():
         rel_path = "./%s" % lib.get('graph_file')
         imports.append(rel_path)
-        for k,v in lib.get('namespaces', {}).items():
+        for k, v in lib.get('namespaces', {}).items():
             namespaces[k] = v
-    all_depends = {k : v for key, lib in libraries.items() for k,v in lib.get('depends', {}).items()}
+    all_depends = {k: v for key, lib in libraries.items()
+                   for k, v in lib.get('depends', {}).items()}
     project = settings.get("project")
     ok = ask("Continue with setup of project titled: %s" % (project))
     if not ok:
@@ -173,16 +194,19 @@ def main():
     project_file = "%s%s.json" % (SCHEMAS, project)
     salad_handler = salad.SaladHandler(project_file)
     avsc_dict = salad_handler.get_avro(all_depends)
-    for k,v in avsc_dict.items():
-        filename = "%s%s.avsc" % (SCHEMAS, k.split(".org/")[1])  # Fix this .org nonsense...
+    for k, v in avsc_dict.items():
+        # Fix this .org nonsense...
+        filename = "%s%s.avsc" % (SCHEMAS, k.split(".org/")[1])
         with open(filename, "w") as f:
             json.dump(v, f, indent=2)
     kernel_url = settings.get("kernel_url")
     kernel_user = settings.get("kernel_user")
     kernel_pw = settings.get("kernel_pw")
     kernel_credentials = {"username": kernel_user, "password": kernel_pw}
-    client = KernelClient(url= kernel_url, **kernel_credentials)
-    ok = ask("Setup of project titled: %s complete. Register generated schemas with Aether?" % (project))
+    client = KernelClient(url=kernel_url, **kernel_credentials)
+    ok = ask(
+        "Setup of project titled: %s complete. Register generated schemas with Aether?" %
+        (project))
     if ok:
         register_project(client, project)
         register_schemas(client, project)
@@ -195,7 +219,6 @@ def main():
             "Artifacts generated but not registered.",
             "Delete schema artifacts?"
         )
-
 
 
 if __name__ == "__main__":
