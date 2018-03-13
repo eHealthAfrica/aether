@@ -1,3 +1,4 @@
+import collections
 from collections import namedtuple
 import json
 from random import randint, uniform, choice, sample
@@ -33,6 +34,21 @@ class Generic(object):
     def uuid():
         return str(uuid4())
 
+    @staticmethod
+    def geo_lat():
+        return uniform(0.00000000000, 60.00000000000)
+
+    @staticmethod
+    def geo_lng():
+        return uniform(0.00000000000, 60.00000000000)
+
+def flatten(it):
+    for x in it:
+        if (isinstance(x, collections.Iterable) and
+            not isinstance(x, str)):
+            yield from flatten(x)
+        else:
+            yield x
 
 class DataMocker(object):
     '''
@@ -90,6 +106,7 @@ class DataMocker(object):
     def get_reference(self, exclude=None):
         # returns an ID, either of by registering a new instance
         # or by returning a value from created
+        '''
         if len(self.created) == 0:
             new_record = self.get()
             self.parent.register(self.name, new_record)
@@ -98,17 +115,18 @@ class DataMocker(object):
             _id = self.created[0]
         return _id
         '''
+
         count = len(self.created)
-        thresh =  0 # if count <= 80 else 80
+        print(self.name, count)
+        thresh = 0 if count <= 10 else 80
         new = (randint(0,100) >= thresh)
         if new:
             new_record = self.get()
             self.parent.register(self.name, new_record)
             _id = new_record.get("id")
         else:
-            _id = choice(self.created[:-40])
+            _id = choice(self.created[:-9])
         return _id
-        '''
 
     def get(self, record_type="default"):
         # Creates a mock instance.
@@ -123,7 +141,7 @@ class DataMocker(object):
             raise ValueError("No instuctions for type %s" % name)
         body = {}
         for name, fn in instructions:
-            print("\n%s*** ||| %s" % (name, fn))
+            # print("\n%s*** ||| %s" % (name, fn))
             body[name] = fn()
         self.created.append(body.get('id'))
         return body
@@ -149,7 +167,7 @@ class DataMocker(object):
         if name in self.required:
             types = [i for i in types if i != "null"]
         _type = choice(types)
-        print("%s ---> %s" % (types, _type))
+        # print("%s ---> %s" % (types, _type))
         fn = None
         if isinstance(_type, dict):
             if _type.get("type", None) != "array":
@@ -165,7 +183,7 @@ class DataMocker(object):
             fn = self.gen_complex(_type)
         else:
             fn = self.gen(_type)
-        print(fn)
+        # print(fn)
         return fn()
 
     def _gen_array(self, fn):
@@ -225,7 +243,6 @@ class DataMocker(object):
             types = field.get('type')
             return (name, self.gen_reference(name, ref_type, types))  # This is a reference property  # TODO THIS MIGHT WANT TO BE sub_type
         except Exception as err:
-            print(err)
             pass  # This is simpler than checking to see if this is a dictionary?
         if name in self.property_methods.keys():
             return (name, self.property_methods.get(name))  # We have an explicit method for this
@@ -290,7 +307,8 @@ class MockingManager(object):
         return self.types.get(_type).get_reference()
 
     def register(self, name, payload):
-        pprint(payload)
+        # pprint(payload)
+        pass
 
     def load(self):
         for schema in self.client.Resource.Schema:
