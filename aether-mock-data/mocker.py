@@ -7,25 +7,6 @@ from uuid import uuid4
 
 from aether.client import KernelClient
 
-class Recurse(Exception):
-    def __init__(self, *args, **kwargs):
-        self.args = args
-        self.kwargs = kwargs
-
-def recurse(*args, **kwargs):
-    raise Recurse(*args, **kwargs)
-
-def tail_recursive(f):
-    def decorated(*args, **kwargs):
-        while True:
-            try:
-                return f(*args, **kwargs)
-            except Recurse as r:
-                args = r.args
-                kwargs = r.kwargs
-                continue
-    return decorated
-
 class Generic(object):
 
     @staticmethod
@@ -59,7 +40,7 @@ class Generic(object):
 
     @staticmethod
     def geo_lng():
-        return uniform(0.00000000000, 60.00000000000)
+        return uniform(0.00000000000, 180.00000000000)
 
 class DataMocker(object):
     '''
@@ -72,7 +53,7 @@ class DataMocker(object):
 
     def __init__(self, name, schema, parent):
 
-        self.MAX_ARRAY_SIZE = 6
+        self.MAX_ARRAY_SIZE = 4
 
         self.name = name
         self.raw_schema = schema
@@ -94,6 +75,7 @@ class DataMocker(object):
             for primative in self.primative_types
         }
         self.created = []
+        self.count = 0
         self.property_methods = {}
         self.required = []
         self.ignored_properties = []
@@ -117,17 +99,22 @@ class DataMocker(object):
     def get_reference(self, exclude=None):
         # returns an ID, either of by registering a new instance
         # or by returning a value from created
-
-        count = len(self.created)
-        print(self.name, count)
-        thresh = 0 if count <= 5 else 90
+        self.count +=1
+        print(self.name, self.count)
+        thresh = 0 if self.count <= 2 else 80
         new = (randint(0,100) >= thresh)
         if new:
             new_record = self.get()
             self.parent.register(self.name, new_record)
             _id = new_record.get("id")
         else:
-            _id = choice(self.created[:-5])
+            items = self.created[:-4]
+            if items:
+                _id = choice(items)
+            else:
+                new_record = self.get()
+                self.parent.register(self.name, new_record)
+                _id = new_record.get("id")
         return _id
 
     def get(self, record_type="default"):
@@ -279,7 +266,6 @@ class MockFn(namedtuple("MockFn", ("fn", "args"))):
         this = super(MockFn, cls).__new__(cls, fn, args)
         return this
 
-    @tail_recursive
     def __call__(self):
         if self.args and not isinstance(self.args, list):
             return self.fn(self.args)
