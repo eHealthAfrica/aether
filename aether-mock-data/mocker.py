@@ -61,14 +61,6 @@ class Generic(object):
     def geo_lng():
         return uniform(0.00000000000, 60.00000000000)
 
-def flatten(it):
-    for x in it:
-        if (isinstance(x, collections.Iterable) and
-            not isinstance(x, str)):
-            yield from flatten(x)
-        else:
-            yield x
-
 class DataMocker(object):
     '''
     An extensible tool that consumes an Avro Schema and creates junk data that matches it.
