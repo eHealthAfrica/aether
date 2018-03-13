@@ -7,6 +7,25 @@ from uuid import uuid4
 
 from aether.client import KernelClient
 
+class Recurse(Exception):
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
+def recurse(*args, **kwargs):
+    raise Recurse(*args, **kwargs)
+
+def tail_recursive(f):
+    def decorated(*args, **kwargs):
+        while True:
+            try:
+                return f(*args, **kwargs)
+            except Recurse as r:
+                args = r.args
+                kwargs = r.kwargs
+                continue
+    return decorated
+
 class Generic(object):
 
     @staticmethod
@@ -106,32 +125,26 @@ class DataMocker(object):
     def get_reference(self, exclude=None):
         # returns an ID, either of by registering a new instance
         # or by returning a value from created
-        '''
-        if len(self.created) == 0:
-            new_record = self.get()
-            self.parent.register(self.name, new_record)
-            _id = new_record.get("id")
-        else:
-            _id = self.created[0]
-        return _id
-        '''
 
         count = len(self.created)
         print(self.name, count)
-        thresh = 0 if count <= 10 else 80
+        thresh = 0 if count <= 5 else 90
         new = (randint(0,100) >= thresh)
         if new:
             new_record = self.get()
             self.parent.register(self.name, new_record)
             _id = new_record.get("id")
         else:
-            _id = choice(self.created[:-9])
+            _id = choice(self.created[:-5])
         return _id
 
     def get(self, record_type="default"):
         # Creates a mock instance.
         if record_type is "default":
-            return self._get(self.name)
+            body = self._get(self.name)
+            self.created.append(body.get('id'))
+            return body
+
         else:
             return self._get(record_type)
 
@@ -143,7 +156,6 @@ class DataMocker(object):
         for name, fn in instructions:
             # print("\n%s*** ||| %s" % (name, fn))
             body[name] = fn()
-        self.created.append(body.get('id'))
         return body
 
     def _dispatch_complex(self, name):
@@ -270,10 +282,12 @@ class DataMocker(object):
 
 class MockFn(namedtuple("MockFn", ("fn", "args"))):
     # Function wrapper class containing fn and args
+
     def __new__(cls, fn, args=None):
         this = super(MockFn, cls).__new__(cls, fn, args)
         return this
 
+    @tail_recursive
     def __call__(self):
         if self.args and not isinstance(self.args, list):
             return self.fn(self.args)
