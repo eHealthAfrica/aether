@@ -119,6 +119,13 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         source='attachments',
     )
 
+    # this will return all linked attachment file paths in one request call
+    attachments = serializers.SlugRelatedField(
+        many=True,
+        read_only=True,
+        slug_field='attachment_path',
+    )
+
     def create(self, validated_data):
         try:
             if 'mapping' in validated_data:

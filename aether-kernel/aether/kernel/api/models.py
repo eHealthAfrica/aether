@@ -127,6 +127,10 @@ class Attachment(TimeStampedModel):
     # save attachment hash to check later if the file is not corrupted
     md5sum = models.CharField(blank=True, max_length=36)
 
+    @property
+    def attachment_path(self):
+        return self.attachment_file.path
+
     def __str__(self):
         return self.name
 
