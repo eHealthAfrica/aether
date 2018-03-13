@@ -48,17 +48,6 @@ services:
       - KONG_DATABASE=postgres
       - KONG_PG_HOST=db
 
-  kongfig:
-    build:
-      context: aether-kongfig
-      args:
-        KONG_CONSUMER: ${KONG_CONSUMER}
-        KONG_APIKEY: ${KONG_APIKEY}
-        PROJECT_API_URL: ${PROJECT_API_URL}
-        KONG_OAUTH2_PROVISION_KEY: ${KONG_OAUTH2_PROVISION_KEY}
-    image: mashupmill/kongfig
-    command: --path /config.yml --host kong:8001
-
   couchdb-base:
     image: couchdb:1.7.1
     env_file:
@@ -107,7 +96,13 @@ services:
   # ---------------------------------
 
   kernel-base:
-    build: aether-kernel
+    build:
+      context: aether-kernel
+      args:
+        KONG_CONSUMER: ${KONG_CONSUMER}
+        KONG_APIKEY: ${KONG_APIKEY}
+        PROJECT_API_URL: ${PROJECT_API_URL}
+        KONG_OAUTH2_PROVISION_KEY: ${KONG_OAUTH2_PROVISION_KEY}
     image: aether-kernel
     stdin_open: true
     tty: true
@@ -140,7 +135,13 @@ services:
   # ---------------------------------
 
   odk-base:
-    build: aether-odk-module
+    build: 
+      context: aether-odk-module
+      args:
+        KONG_CONSUMER: ${KONG_CONSUMER}
+        KONG_APIKEY: ${KONG_APIKEY}
+        PROJECT_API_URL: ${PROJECT_API_URL}
+        KONG_OAUTH2_PROVISION_KEY: ${KONG_OAUTH2_PROVISION_KEY}
     image: aether-odk
     stdin_open: true
     tty: true
@@ -177,7 +178,13 @@ services:
   # ---------------------------------
 
   couchdb-sync-base:
-    build: aether-couchdb-sync-module
+    build:
+      context: aether-couchdb-sync-module
+      args:
+        KONG_CONSUMER: ${KONG_CONSUMER}
+        KONG_APIKEY: ${KONG_APIKEY}
+        PROJECT_API_URL: ${PROJECT_API_URL}
+        KONG_OAUTH2_PROVISION_KEY: ${KONG_OAUTH2_PROVISION_KEY}
     image: aether-couchdb-sync
     stdin_open: true
     tty: true
