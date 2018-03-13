@@ -8,6 +8,7 @@ from ..xform_utils import (
     parse_submission,
     parse_xmlform,
     validate_xmldict,
+    get_instance_id,
 )
 
 
@@ -109,3 +110,12 @@ class XFormUtilsTests(CustomTestCase):
         data = parse_submission(data, self.samples['xform']['raw-xml'])
 
         self.assertNotEqual(list(data.keys())[0], 'Something_that_is_not_None')
+
+    def test__get_instance_id(self):
+        instance_id = 'abc'
+        valid_data = {'meta': {'instanceID': instance_id}}
+        result = get_instance_id(valid_data)
+        self.assertEqual(result, instance_id)
+        invalid_data = {}
+        result = get_instance_id(invalid_data)
+        self.assertIsNone(result)
