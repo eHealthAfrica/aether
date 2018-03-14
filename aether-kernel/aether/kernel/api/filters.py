@@ -16,6 +16,11 @@ class MappingFilter(filters.FilterSet):
 
 
 class SubmissionFilter(filters.FilterSet):
+    instanceID = filters.CharFilter(
+        name='payload__meta__instanceID',
+        lookup_expr='exact',
+    )
+
     class Meta:
         exclude = ('payload',)
         model = models.Submission
