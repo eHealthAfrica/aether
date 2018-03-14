@@ -291,6 +291,8 @@ def xform_submission(request):
         #   2. The instance id is globally unique.
         #   3. The form data in the submission is identical for all
         #      POST requests with the same instance id.
+        #
+        # These assumptions match the OpenRosa spec linked to above.
         instance_id = get_instance_id(data)
         if not instance_id:
             logger.warning('Instance id is missing in submission')
