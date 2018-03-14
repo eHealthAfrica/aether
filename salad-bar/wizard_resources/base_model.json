@@ -1,0 +1,16 @@
+{
+    "name": null,
+    "type": "record",
+    "fields": [
+        {
+            "name": "id",
+            "jsonldPredicate": "@id",
+            "type": "string"
+        },
+        {
+            "name": "rev",
+            "type": "string"
+        }
+    ]
+
+}

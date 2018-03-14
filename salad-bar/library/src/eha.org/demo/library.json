@@ -1,0 +1,393 @@
+{
+  "properties": {
+    "http://demo.eha.org/centralPoint": {
+      "comment": "A central point of a large object",
+      "domainIncludes": null,
+      "equivalentProperty": null,
+      "id": "http://demo.eha.org/centralPoint",
+      "inversOf": null,
+      "isPartOf": null,
+      "label": "centralPoint",
+      "rangeIncludes": [
+        "http://demo.eha.org/GeoLocation"
+      ],
+      "subPropertyOf": null,
+      "subproperties": null,
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://demo.eha.org/children": {
+      "comment": "Chidren as people",
+      "domainIncludes": null,
+      "equivalentProperty": null,
+      "id": "http://demo.eha.org/children",
+      "inversOf": null,
+      "isPartOf": null,
+      "label": "children",
+      "rangeIncludes": [
+        "http://demo.eha.org/Person"
+      ],
+      "subPropertyOf": null,
+      "subproperties": null,
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://demo.eha.org/dateOfBirth": {
+      "comment": "ISO date as a string",
+      "domainIncludes": null,
+      "equivalentProperty": null,
+      "id": "http://demo.eha.org/dateOfBirth",
+      "inversOf": null,
+      "isPartOf": null,
+      "label": "dateOfBirth",
+      "rangeIncludes": [
+        "http://schema.org/Text"
+      ],
+      "subPropertyOf": null,
+      "subproperties": null,
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://demo.eha.org/description": {
+      "comment": "A description of the thing.",
+      "domainIncludes": null,
+      "equivalentProperty": null,
+      "id": "http://demo.eha.org/description",
+      "inversOf": null,
+      "isPartOf": null,
+      "label": "description",
+      "rangeIncludes": [
+        "http://schema.org/Text"
+      ],
+      "subPropertyOf": null,
+      "subproperties": null,
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://demo.eha.org/home": {
+      "comment": "Descriptor of home or Place",
+      "domainIncludes": null,
+      "equivalentProperty": null,
+      "id": "http://demo.eha.org/home",
+      "inversOf": null,
+      "isPartOf": null,
+      "label": "home",
+      "rangeIncludes": [
+        "http://schema.org/Text",
+        "http://demo.eha.org/Place"
+      ],
+      "subPropertyOf": null,
+      "subproperties": null,
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://demo.eha.org/latitude": {
+      "comment": "Latitude as float",
+      "domainIncludes": null,
+      "equivalentProperty": null,
+      "id": "http://demo.eha.org/latitude",
+      "inversOf": null,
+      "isPartOf": null,
+      "label": "latitude",
+      "rangeIncludes": [
+        "http://schema.org/Float"
+      ],
+      "subPropertyOf": null,
+      "subproperties": null,
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://demo.eha.org/location": {
+      "comment": "GeoLocation",
+      "domainIncludes": null,
+      "equivalentProperty": null,
+      "id": "http://demo.eha.org/location",
+      "inversOf": null,
+      "isPartOf": null,
+      "label": "location",
+      "rangeIncludes": [
+        "http://demo.eha.org/GeoLocation"
+      ],
+      "subPropertyOf": null,
+      "subproperties": null,
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://demo.eha.org/longitude": {
+      "comment": "Longitude as float",
+      "domainIncludes": null,
+      "equivalentProperty": null,
+      "id": "http://demo.eha.org/longitude",
+      "inversOf": null,
+      "isPartOf": null,
+      "label": "longitude",
+      "rangeIncludes": [
+        "http://schema.org/Float"
+      ],
+      "subPropertyOf": null,
+      "subproperties": null,
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://demo.eha.org/name": {
+      "comment": "A Name",
+      "domainIncludes": null,
+      "equivalentProperty": null,
+      "id": "http://demo.eha.org/name",
+      "inversOf": null,
+      "isPartOf": null,
+      "label": "name",
+      "rangeIncludes": [
+        "http://schema.org/Text"
+      ],
+      "subPropertyOf": null,
+      "subproperties": null,
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://demo.eha.org/parents": {
+      "comment": "Parents as people",
+      "domainIncludes": null,
+      "equivalentProperty": null,
+      "id": "http://demo.eha.org/parents",
+      "inversOf": null,
+      "isPartOf": null,
+      "label": "parents",
+      "rangeIncludes": [
+        "http://demo.eha.org/Person"
+      ],
+      "subPropertyOf": null,
+      "subproperties": null,
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://demo.eha.org/perimeter": {
+      "comment": "A series of coordinates forming an outline",
+      "domainIncludes": null,
+      "equivalentProperty": null,
+      "id": "http://demo.eha.org/perimeter",
+      "inversOf": null,
+      "isPartOf": null,
+      "label": "perimeter",
+      "rangeIncludes": [
+        "http://demo.eha.org/GeoLocation"
+      ],
+      "subPropertyOf": null,
+      "subproperties": null,
+      "supersededBy": null,
+      "supersedes": null
+    }
+  },
+  "types": {
+    "http://demo.eha.org/Child": {
+      "comment": "A child",
+      "equivalentClass": null,
+      "id": "http://demo.eha.org/Child",
+      "isPartOf": null,
+      "label": "Child",
+      "properties": [
+        "http://demo.eha.org/name",
+        "http://demo.eha.org/description",
+        "http://demo.eha.org/dateOfBirth",
+        "http://demo.eha.org/children",
+        "http://demo.eha.org/parents",
+        "http://demo.eha.org/home"
+      ],
+      "subTypeOf": [
+        "http://demo.eha.org/Person"
+      ],
+      "subTypes": null,
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://demo.eha.org/GeoLocation": {
+      "comment": "A lat,lon",
+      "equivalentClass": null,
+      "id": "http://demo.eha.org/GeoLocation",
+      "isPartOf": null,
+      "label": "GeoLocation",
+      "properties": [
+        "http://demo.eha.org/name",
+        "http://demo.eha.org/description",
+        "http://demo.eha.org/latitude",
+        "http://demo.eha.org/longitude"
+      ],
+      "subTypeOf": [
+        "http://demo.eha.org/Thing"
+      ],
+      "subTypes": null,
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://demo.eha.org/Person": {
+      "comment": "A simple Person Type",
+      "equivalentClass": null,
+      "id": "http://demo.eha.org/Person",
+      "isPartOf": null,
+      "label": "Person",
+      "properties": [
+        "http://demo.eha.org/name",
+        "http://demo.eha.org/description",
+        "http://demo.eha.org/dateOfBirth",
+        "http://demo.eha.org/children",
+        "http://demo.eha.org/parents",
+        "http://demo.eha.org/home"
+      ],
+      "subTypeOf": [
+        "http://demo.eha.org/Thing"
+      ],
+      "subTypes": [
+        "http://demo.eha.org/Child"
+      ],
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://demo.eha.org/Place": {
+      "comment": "A simple Place Type",
+      "equivalentClass": null,
+      "id": "http://demo.eha.org/Place",
+      "isPartOf": null,
+      "label": "Place",
+      "properties": [
+        "http://demo.eha.org/name",
+        "http://demo.eha.org/description",
+        "http://demo.eha.org/location",
+        "http://demo.eha.org/perimeter",
+        "http://demo.eha.org/centralPoint"
+      ],
+      "subTypeOf": [
+        "http://demo.eha.org/Thing"
+      ],
+      "subTypes": null,
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://demo.eha.org/Thing": {
+      "comment": "Base Complex Type",
+      "equivalentClass": null,
+      "id": "http://demo.eha.org/Thing",
+      "isPartOf": null,
+      "label": "Thing",
+      "properties": [
+        "http://demo.eha.org/name",
+        "http://demo.eha.org/description"
+      ],
+      "subTypeOf": null,
+      "subTypes": [
+        "http://demo.eha.org/Person",
+        "http://demo.eha.org/Place",
+        "http://demo.eha.org/GeoLocation"
+      ],
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://schema.org/Boolean": {
+      "comment": "Boolean Field",
+      "equivalentClass": null,
+      "id": "http://schema.org/Boolean",
+      "isPartOf": null,
+      "label": "Boolean",
+      "properties": null,
+      "subTypeOf": null,
+      "subTypes": null,
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://schema.org/Date": {
+      "comment": "String of Date",
+      "equivalentClass": null,
+      "id": "http://schema.org/Date",
+      "isPartOf": null,
+      "label": "Date",
+      "properties": null,
+      "subTypeOf": null,
+      "subTypes": null,
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://schema.org/DateTime": {
+      "comment": "String of DateTime",
+      "equivalentClass": null,
+      "id": "http://schema.org/DateTime",
+      "isPartOf": null,
+      "label": "DateTime",
+      "properties": null,
+      "subTypeOf": null,
+      "subTypes": null,
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://schema.org/Float": {
+      "comment": "Float Field",
+      "equivalentClass": null,
+      "id": "http://schema.org/Float",
+      "isPartOf": null,
+      "label": "Float",
+      "properties": null,
+      "subTypeOf": null,
+      "subTypes": null,
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://schema.org/Integer": {
+      "comment": "Integer Field",
+      "equivalentClass": null,
+      "id": "http://schema.org/Integer",
+      "isPartOf": null,
+      "label": "Integer",
+      "properties": null,
+      "subTypeOf": null,
+      "subTypes": null,
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://schema.org/Number": {
+      "comment": "Integer Field",
+      "equivalentClass": null,
+      "id": "http://schema.org/Number",
+      "isPartOf": null,
+      "label": "Number",
+      "properties": null,
+      "subTypeOf": null,
+      "subTypes": null,
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://schema.org/Text": {
+      "comment": "Text Field",
+      "equivalentClass": null,
+      "id": "http://schema.org/Text",
+      "isPartOf": null,
+      "label": "Text",
+      "properties": null,
+      "subTypeOf": null,
+      "subTypes": null,
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://schema.org/Time": {
+      "comment": "Time as String",
+      "equivalentClass": null,
+      "id": "http://schema.org/Time",
+      "isPartOf": null,
+      "label": "Time",
+      "properties": null,
+      "subTypeOf": null,
+      "subTypes": null,
+      "supersededBy": null,
+      "supersedes": null
+    },
+    "http://schema.org/URL": {
+      "comment": "Url as String",
+      "equivalentClass": null,
+      "id": "http://schema.org/URL",
+      "isPartOf": null,
+      "label": "URL",
+      "properties": null,
+      "subTypeOf": null,
+      "subTypes": null,
+      "supersededBy": null,
+      "supersedes": null
+    }
+  }
+}
