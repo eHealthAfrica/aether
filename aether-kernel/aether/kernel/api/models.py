@@ -62,7 +62,7 @@ class Project(TimeStampedModel):
     class Meta:
         app_label = 'kernel'
         default_related_name = 'projects'
-        ordering = ['name', 'revision']
+        ordering = ('modified',)
 
 
 class Mapping(TimeStampedModel):
@@ -82,7 +82,7 @@ class Mapping(TimeStampedModel):
     class Meta:
         app_label = 'kernel'
         default_related_name = 'mappings'
-        ordering = ['name', 'revision']
+        ordering = ('modified',)
 
 
 class Submission(TimeStampedModel):
@@ -103,7 +103,7 @@ class Submission(TimeStampedModel):
     class Meta:
         app_label = 'kernel'
         default_related_name = 'submissions'
-        ordering = ['mapping', '-date']
+        ordering = ('modified',)
 
 
 def __attachment_path__(instance, filename):
@@ -126,6 +126,10 @@ class Attachment(TimeStampedModel):
     attachment_file = models.FileField(upload_to=__attachment_path__)
     # save attachment hash to check later if the file is not corrupted
     md5sum = models.CharField(blank=True, max_length=36)
+
+    @property
+    def attachment_path(self):
+        return self.attachment_file.path
 
     def __str__(self):
         return self.name
@@ -170,7 +174,7 @@ class Schema(TimeStampedModel):
     class Meta:
         app_label = 'kernel'
         default_related_name = 'schemas'
-        ordering = ['name', 'revision']
+        ordering = ('modified',)
 
 
 class ProjectSchema(TimeStampedModel):
@@ -189,6 +193,7 @@ class ProjectSchema(TimeStampedModel):
     class Meta:
         app_label = 'kernel'
         default_related_name = 'projectschemas'
+        ordering = ('modified',)
 
 
 class Entity(models.Model):
@@ -218,3 +223,4 @@ class Entity(models.Model):
         app_label = 'kernel'
         default_related_name = 'entities'
         verbose_name_plural = 'entities'
+        ordering = ('modified',)
