@@ -98,6 +98,18 @@ class DataMocker(object):
         self.override_property("id", MockFn(Generic.uuid))
         self.load()
 
+    def _default(self, primative):
+        if primative in ["int", "long"]:
+            return Generic.int
+        if primative in ["float", "double"]:
+            return Generic.float
+        if primative is "null":
+            return Generic.null
+        if primative is "string":
+            return Generic.string
+        if primative is "boolean":
+            return Generic.boolean
+
     def kill(self):
         self.killed = True
 
@@ -121,19 +133,8 @@ class DataMocker(object):
             except Exception as err:
                 raise err
 
-    def _default(self, primative):
-        if primative in ["int", "long"]:
-            return Generic.int
-        if primative in ["float", "double"]:
-            return Generic.float
-        if primative is "null":
-            return Generic.null
-        if primative is "string":
-            return Generic.string
-        if primative is "boolean":
-            return Generic.boolean
-
     def get_reference(self, exclude=None):
+        # called from other types to generate this one (lazily)
         # returns an ID, either of by registering a new instance
         # or by returning a value from created
         self.count += 1
@@ -150,12 +151,9 @@ class DataMocker(object):
                 _id = self.quick_reference()
         return _id
 
-    def fullfill_reference(self, _id):
-        new_record = self.get(set_id=_id)
-        self.parent.register(self.name, new_record)
-        return _id
-
     def quick_reference(self):
+        # generates an id for this type
+        # queues a job to actually make the instance
         _id = None
         if self.property_methods.get('id'):
             fn = self.property_methods.get('id')
@@ -170,8 +168,15 @@ class DataMocker(object):
         self._queue.put(deffered_generation)
         return _id
 
+    def fullfill_reference(self, _id):
+        # the method called from the queue to create an instance
+        new_record = self.get(set_id=_id)
+        self.parent.register(self.name, new_record)
+        return _id
+
     def get(self, record_type="default", set_id=None):
-        # Creates a mock instance.
+        # Creates a mock instance of this type
+        # wraps _get
         if record_type is "default":
             body = self._get(self.name)
             if set_id:
@@ -183,6 +188,7 @@ class DataMocker(object):
             return self._get(record_type)
 
     def _get(self, name):
+        # actually compiles the instruction set for this type and returns the body
         instructions = self.instructions.get(name)
         if not instructions:
             raise ValueError("No instuctions for type %s" % name)
@@ -191,19 +197,18 @@ class DataMocker(object):
             body[name] = fn()
         return body
 
-    def _dispatch_complex(self, name):
-        try:
-            return self._get(name)
-        except ValueError as verr:
-            fn = self.gen("null")
-            return fn()
-
     def gen(self, _type):
+        # generation of avro types
         return self.type_methods.get(_type)
 
     def gen_array(self, _type):
+        # generation of an array of any type
         fn = self.gen(_type)
         return MockFn(self._gen_array, [fn])
+
+    def _gen_array(self, fn):
+        size = choice(range(2, self.MAX_ARRAY_SIZE))
+        return [fn() for i in range(size)]
 
     def gen_random_type(self, name=None, _types=[]):
         return MockFn(self._gen_random_type, [name, _types])
@@ -230,14 +235,20 @@ class DataMocker(object):
             fn = self.gen(_type)
         return fn()
 
-    def _gen_array(self, fn):
-        size = choice(range(2, self.MAX_ARRAY_SIZE))
-        return [fn() for i in range(size)]
-
     def gen_complex(self, _type):
-        return MockFn(self._dispatch_complex, _type)
+        return MockFn(self._gen_complex, _type)
+
+    def _gen_complex(self, name):
+        # handles generation of associated types
+        try:
+            return self._get(name)
+        except ValueError as verr:
+            fn = self.gen("null")
+            return fn()
 
     def gen_reference(self, name, _type, types):
+        # gets a reference to a foreign type
+        # usually triggers creation via the other types get_reference()
         return MockFn(self._gen_reference, [name, _type, types])
 
     def _gen_reference(self, name, _type, types):
@@ -255,14 +266,20 @@ class DataMocker(object):
         self.ignored_properties.append(property_name)
 
     def override_type(self, type_name, fn):
+        # provide an override method for an avro type
+        # fn is a MockFn object
         self.type_methods[type_name] = fn
         self.load()
 
     def override_property(self, property_name, fn):
+        # overrides a property in this type by name with a new function
+        # for example instead of returning a random string for the name field, pick for a list
+        # fn is a MockFn object
         self.property_methods[property_name] = fn
         self.load()
 
     def load(self):
+        # loads schema definition for this type
         self.schema = json.loads(self.raw_schema)
         for obj in self.schema:
             self.parse(obj)
@@ -279,6 +296,7 @@ class DataMocker(object):
         self.instructions[name] = instructions
 
     def _comprehend_field(self, field):
+        # picks apart an avro definition of a field and builds mocking functions
         name = field.get("name")
         if name in self.ignored_properties:
             return (name, self.gen("null"))  # Return null function and get out
@@ -367,10 +385,11 @@ class MockingManager(object):
             mocker.kill()
 
     def register(self, name, payload=None):
+        # register an entity of type 'name'
+        # if no payload is passed, an appropriate one will be created
         count = self.type_count.get(name, 0)
         count += 1
         self.type_count[name] = count
-
         if not payload:
             payload = self.types[name].get()
         type_name = self.alias.get(name)
@@ -381,6 +400,7 @@ class MockingManager(object):
         print("%s -> #%s" % (name, self.type_count[name]))
 
     def payload_to_data(self, ps_id, payload):
+        # wraps data in expected aether jargon for submission
         data = {
             "id": payload['id'],
             "payload": payload,
@@ -391,6 +411,7 @@ class MockingManager(object):
         return data
 
     def load(self):
+        # loads schemas and project schemas from aether client
         for schema in self.client.Resource.Schema:
             name = schema.get("name")
             _id = schema.get('id')
@@ -410,7 +431,3 @@ class MockingManager(object):
             _id = ps.get('id')
             self.project_schema[schema_id] = _id
             self.project_schema[_id] = schema_id
-
-
-def pprint(obj):
-    print(json.dumps(obj, indent=2))
