@@ -1,13 +1,13 @@
 [run]
 branch = true
 source = /code/aether
-omit = *migrations*, *tests*, *management*
+omit = *migrations*, *tests*
 
 [paths]
 source = /code/aether
-omit = *migrations*, *tests*, *management*
+omit = *migrations*, *tests*
 
 [report]
-omit = *migrations*, *tests*, *management*
+omit = *migrations*, *tests*
 show_missing = true
 fail_under = 100
