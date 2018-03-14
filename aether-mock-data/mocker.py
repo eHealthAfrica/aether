@@ -1,11 +1,11 @@
 import collections
 from collections import namedtuple
 import json
-import multiprocessing
 from random import randint, uniform, choice, sample
-from queue import Queue
+from queue import Queue, Empty
 import signal
 import string
+from threading import Thread
 from time import sleep
 from uuid import uuid4
 
@@ -58,7 +58,8 @@ class DataMocker(object):
     def __init__(self, name, schema, parent):
 
         self.MAX_ARRAY_SIZE = 4
-        self.QUEUE_WORKERS = 20
+        self.QUEUE_WORKERS = 10
+        self.REUSE_COEFFICIENT = 0.85
 
         self.name = name
         self.raw_schema = schema
@@ -79,8 +80,9 @@ class DataMocker(object):
             primative : MockFn(self._default(primative))
             for primative in self.primative_types
         }
-        self.created = []
-        self.count = 0
+        self.created = []  # ids of created entities
+        self.reuse = 0  # number of recycled entity ids
+        self.count = 0  # number of entity references to this type
         self.property_methods = {}
         self.required = []
         self.ignored_properties = []
@@ -97,28 +99,23 @@ class DataMocker(object):
 
     def __start_queue_process(self):
         for x in range(self.QUEUE_WORKERS):
-            worker = multiprocessing.Process(target=self.__reference_runner)
+            worker = Thread(target=self.__reference_runner, args=[])
             worker.daemon = False
             worker.start()
 
     def __reference_runner(self):
         while True:
             if self.killed:
-                print('caught1')
                 break
             try:
                 fn = self._queue.get(block=True, timeout=1)
-                if self.killed:
-                    print('caught2')
-                    break
                 fn()
-            except Exception as err:
-                print(err)
+            except Empty as emp:
                 if self.killed:
-                    print('caught3')
                     break
                 sleep(1)
-        print("finished!")
+            except Exception as err:
+                raise err
 
     def _default(self, primative):
         if primative in ["int", "long"]:
@@ -136,22 +133,23 @@ class DataMocker(object):
         # returns an ID, either of by registering a new instance
         # or by returning a value from created
         self.count +=1
-        print(self.name, self.count)
-        thresh = 0 if self.count <= 100 else 75
+        thresh = 0 if self.count <= 100 else (100 * self.REUSE_COEFFICIENT)
         new = (randint(0,100) >= thresh)
         if new:
             _id = self.quick_reference()
         else:
             items = self.created[:-4]
             if items:
+                self.reuse +=1
                 _id = choice(items)
             else:
                 _id = self.quick_reference()
         return _id
 
-    def fullfil_reference(self, _id):
+    def fullfill_reference(self, _id):
         new_record = self.get(set_id=_id)
         self.parent.register(self.name, new_record)
+        return _id
 
     def quick_reference(self):
         _id = None
@@ -163,7 +161,7 @@ class DataMocker(object):
             if not fn:
                 raise ValueError("Couldn't find id function")
             _id = fn[0]()
-        deffered_generation = MockFn(self.fullfil_reference, [_id])
+        deffered_generation = MockFn(self.fullfill_reference, [_id])
         self._queue.put(deffered_generation)
         return _id
 
@@ -207,10 +205,10 @@ class DataMocker(object):
         return MockFn(self._gen_random_type, [name, _types])
 
     def _gen_random_type(self, name, types):
+        # picks on of the valid types available for the field and completes it
         if name in self.required:
             types = [i for i in types if i != "null"]
         _type = choice(types)
-        # print("%s ---> %s" % (types, _type))
         fn = None
         if isinstance(_type, dict):
             if _type.get("type", None) != "array":
@@ -226,7 +224,6 @@ class DataMocker(object):
             fn = self.gen_complex(_type)
         else:
             fn = self.gen(_type)
-        # print(fn)
         return fn()
 
     def _gen_array(self, fn):
@@ -338,6 +335,11 @@ class MockingManager(object):
         }
         self.client = KernelClient(kernel_url, **kernel_credentials)
         self.types = {}
+        self.alias = {}
+        self.project_schema = {}
+        self.schema_id = {}
+        self.type_client = {}
+        self.type_count = {}
         self.load()
         signal.signal(signal.SIGTERM, self.kill)
         signal.signal(signal.SIGINT, self.kill)
@@ -352,21 +354,54 @@ class MockingManager(object):
             raise KeyError("No schema for type %s" % (_type))
         return self.types.get(_type).get_reference()
 
-    def kill(self):
+    def kill(self, *args, **kwargs):
         for name, mocker in self.types.items():
             print("stopping %s" % (name))
             mocker.kill()
 
-    def register(self, name, payload):
-        # pprint(payload)
-        pass
+    def register(self, name, payload=None):
+        count = self.type_count.get(name, 0)
+        count += 1
+        self.type_count[name] = count
+
+        if not payload:
+            payload = self.types[name].get()
+        type_name = self.alias.get(name)
+        type_id = self.schema_id.get(name)
+        ps_id = self.project_schema.get(type_id)
+        data = self.payload_to_data(ps_id, payload)
+        res = self.type_client[type_name].submit(data)
+        print("%s -> #%s" % (name, self.type_count[name]))
+
+    def payload_to_data(self, ps_id, payload):
+        data = {
+            "id" : payload['id'],
+            "payload": payload,
+            "projectschema": ps_id,
+            "revision": 1,
+            "status": "Publishable"
+        }
+        return data
 
     def load(self):
         for schema in self.client.Resource.Schema:
             name = schema.get("name")
+            _id = schema.get('id')
             definition = schema.get('definition')
             full_name = [obj.get("name") for obj in definition if obj.get('name').endswith(name)][0]
             self.types[full_name] = DataMocker(full_name, json.dumps(definition), self)
+            self.alias[full_name] = name
+            self.alias[name] = full_name
+            self.schema_id[name] = _id
+            self.schema_id[full_name] = _id
+            self.schema_id[_id] = name
+            self.type_client[name] = self.client.Entity[name]
+        for ps in self.client.Resource.ProjectSchema:
+            schema_id = ps.get('schema')
+            _id = ps.get('id')
+            self.project_schema[schema_id] = _id
+            self.project_schema[_id] = schema_id
+
 
 def pprint(obj):
     print(json.dumps(obj, indent=2))

@@ -463,7 +463,10 @@ class DataEndpoint(object):
 
     def pluck(self, url):
         res = self.client.get(url)
-        if res.get("detail") == "Not found.":
+        try:
+            if res.get("detail") == "Not found.":
+                return None
+        except AttributeError as err:
             return None
         return res
 
