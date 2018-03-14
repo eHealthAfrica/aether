@@ -96,6 +96,16 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = '__all__'
 
 
+class AttachmentSerializerNested(DynamicFieldsMixin, serializers.ModelSerializer):
+
+    name = serializers.CharField(read_only=True)
+    url = serializers.CharField(read_only=True, source='attachment_path')
+
+    class Meta:
+        model = models.Attachment
+        fields = ('name', 'url')
+
+
 class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name='submission-detail',
@@ -119,12 +129,8 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         source='attachments',
     )
 
-    # this will return all linked attachment file paths in one request call
-    attachments = serializers.SlugRelatedField(
-        many=True,
-        read_only=True,
-        slug_field='attachment_path',
-    )
+    # this will return all linked attachment file (name, relative url) in one request call
+    attachments = AttachmentSerializerNested(many=True, read_only=True)
 
     def create(self, validated_data):
         try:
