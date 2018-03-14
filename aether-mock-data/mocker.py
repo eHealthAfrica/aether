@@ -11,8 +11,11 @@ from uuid import uuid4
 
 from aether.client import KernelClient
 
-class Generic(object):
 
+class Generic(object):
+    '''
+    We keep our default mocking functions for each type here as generic
+    '''
     @staticmethod
     def boolean():
         return choice([True, False])
@@ -23,7 +26,7 @@ class Generic(object):
 
     @staticmethod
     def int():
-        return randint(1,99999)
+        return randint(1, 99999)
 
     @staticmethod
     def null():
@@ -31,7 +34,7 @@ class Generic(object):
 
     @staticmethod
     def string():
-        size = choice(range(3,12))
+        size = choice(range(3, 12))
         return "".join(sample(string.ascii_lowercase, size))
 
     @staticmethod
@@ -45,6 +48,7 @@ class Generic(object):
     @staticmethod
     def geo_lng():
         return uniform(0.00000000000, 180.00000000000)
+
 
 class DataMocker(object):
     '''
@@ -74,10 +78,10 @@ class DataMocker(object):
             "double",
             "bytes",
             "string"
-            ]
+        ]
 
         self.type_methods = {
-            primative : MockFn(self._default(primative))
+            primative: MockFn(self._default(primative))
             for primative in self.primative_types
         }
         self.created = []  # ids of created entities
@@ -132,15 +136,15 @@ class DataMocker(object):
     def get_reference(self, exclude=None):
         # returns an ID, either of by registering a new instance
         # or by returning a value from created
-        self.count +=1
+        self.count += 1
         thresh = 0 if self.count <= 100 else (100 * self.REUSE_COEFFICIENT)
-        new = (randint(0,100) >= thresh)
+        new = (randint(0, 100) >= thresh)
         if new:
             _id = self.quick_reference()
         else:
             items = self.created[:-4]
             if items:
-                self.reuse +=1
+                self.reuse += 1
                 _id = choice(items)
             else:
                 _id = self.quick_reference()
@@ -157,14 +161,14 @@ class DataMocker(object):
             fn = self.property_methods.get('id')
             _id = fn()
         else:
-            fn = [fn for name, fn in self.instuctions.get(self.name) if name == 'id']
+            fn = [fn for name, fn in self.instuctions.get(
+                self.name) if name == 'id']
             if not fn:
                 raise ValueError("Couldn't find id function")
             _id = fn[0]()
         deffered_generation = MockFn(self.fullfill_reference, [_id])
         self._queue.put(deffered_generation)
         return _id
-
 
     def get(self, record_type="default", set_id=None):
         # Creates a mock instance.
@@ -227,7 +231,7 @@ class DataMocker(object):
         return fn()
 
     def _gen_array(self, fn):
-        size = choice(range(2,self.MAX_ARRAY_SIZE))
+        size = choice(range(2, self.MAX_ARRAY_SIZE))
         return [fn() for i in range(size)]
 
     def gen_complex(self, _type):
@@ -281,16 +285,19 @@ class DataMocker(object):
         try:
             ref_type = field.get("jsonldPredicate").get("_id")
             types = field.get('type')
-            return (name, self.gen_reference(name, ref_type, types))  # This is a reference property  # TODO THIS MIGHT WANT TO BE sub_type
+            # This is a reference property  # TODO THIS MIGHT WANT TO BE sub_type
+            return (name, self.gen_reference(name, ref_type, types))
         except Exception as err:
             pass  # This is simpler than checking to see if this is a dictionary?
         if name in self.property_methods.keys():
-            return (name, self.property_methods.get(name))  # We have an explicit method for this
+            # We have an explicit method for this
+            return (name, self.property_methods.get(name))
         types = field.get("type")
         if isinstance(types, str):
             return (name, self.gen(types))  # Single type for this field
         if name in self.restricted_types.keys():  # we've limited the types we want to mock
-            types = list(set(types).union(set(self.restricted_types.get(name))))
+            types = list(set(types).union(
+                set(self.restricted_types.get(name))))
         return tuple([name, self.gen_random_type(name, types)])
 
     def require(self, *property):
@@ -299,7 +306,6 @@ class DataMocker(object):
             self.required.extend(property)
         else:
             self.required.append(property)
-
 
     def restrict_type(self, property_name, allowable_types=[]):
         # some properties can be completed by multiple types of properties
@@ -323,13 +329,14 @@ class MockFn(namedtuple("MockFn", ("fn", "args"))):
         except TypeError as terr:
             return self.fn(self.args)
 
+
 class MockingManager(object):
 
     def __init__(self):
         # connects to Aether and gets available schemas.
         # constructs a DataMocker for each type
         kernel_url = "http://kernel.aether.local:8000/v1"
-        kernel_credentials ={
+        kernel_credentials = {
             "username": "admin-kernel",
             "password": "adminadmin",
         }
@@ -375,7 +382,7 @@ class MockingManager(object):
 
     def payload_to_data(self, ps_id, payload):
         data = {
-            "id" : payload['id'],
+            "id": payload['id'],
             "payload": payload,
             "projectschema": ps_id,
             "revision": 1,
@@ -388,8 +395,10 @@ class MockingManager(object):
             name = schema.get("name")
             _id = schema.get('id')
             definition = schema.get('definition')
-            full_name = [obj.get("name") for obj in definition if obj.get('name').endswith(name)][0]
-            self.types[full_name] = DataMocker(full_name, json.dumps(definition), self)
+            full_name = [obj.get("name") for obj in definition if obj.get(
+                'name').endswith(name)][0]
+            self.types[full_name] = DataMocker(
+                full_name, json.dumps(definition), self)
             self.alias[full_name] = name
             self.alias[name] = full_name
             self.schema_id[name] = _id
