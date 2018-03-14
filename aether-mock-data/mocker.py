@@ -1,8 +1,12 @@
 import collections
 from collections import namedtuple
 import json
+import multiprocessing
 from random import randint, uniform, choice, sample
+from queue import Queue
+import signal
 import string
+from time import sleep
 from uuid import uuid4
 
 from aether.client import KernelClient
@@ -54,6 +58,7 @@ class DataMocker(object):
     def __init__(self, name, schema, parent):
 
         self.MAX_ARRAY_SIZE = 4
+        self.QUEUE_WORKERS = 20
 
         self.name = name
         self.raw_schema = schema
@@ -81,8 +86,39 @@ class DataMocker(object):
         self.ignored_properties = []
         self.restricted_types = {}
         self.instructions = {}
+        self.killed = False
+        self._queue = Queue()
+        self.__start_queue_process()
         self.override_property("id", MockFn(Generic.uuid))
         self.load()
+
+    def kill(self):
+        self.killed = True
+
+    def __start_queue_process(self):
+        for x in range(self.QUEUE_WORKERS):
+            worker = multiprocessing.Process(target=self.__reference_runner)
+            worker.daemon = False
+            worker.start()
+
+    def __reference_runner(self):
+        while True:
+            if self.killed:
+                print('caught1')
+                break
+            try:
+                fn = self._queue.get(block=True, timeout=1)
+                if self.killed:
+                    print('caught2')
+                    break
+                fn()
+            except Exception as err:
+                print(err)
+                if self.killed:
+                    print('caught3')
+                    break
+                sleep(1)
+        print("finished!")
 
     def _default(self, primative):
         if primative in ["int", "long"]:
@@ -101,26 +137,43 @@ class DataMocker(object):
         # or by returning a value from created
         self.count +=1
         print(self.name, self.count)
-        thresh = 0 if self.count <= 2 else 80
+        thresh = 0 if self.count <= 100 else 75
         new = (randint(0,100) >= thresh)
         if new:
-            new_record = self.get()
-            self.parent.register(self.name, new_record)
-            _id = new_record.get("id")
+            _id = self.quick_reference()
         else:
             items = self.created[:-4]
             if items:
                 _id = choice(items)
             else:
-                new_record = self.get()
-                self.parent.register(self.name, new_record)
-                _id = new_record.get("id")
+                _id = self.quick_reference()
         return _id
 
-    def get(self, record_type="default"):
+    def fullfil_reference(self, _id):
+        new_record = self.get(set_id=_id)
+        self.parent.register(self.name, new_record)
+
+    def quick_reference(self):
+        _id = None
+        if self.property_methods.get('id'):
+            fn = self.property_methods.get('id')
+            _id = fn()
+        else:
+            fn = [fn for name, fn in self.instuctions.get(self.name) if name == 'id']
+            if not fn:
+                raise ValueError("Couldn't find id function")
+            _id = fn[0]()
+        deffered_generation = MockFn(self.fullfil_reference, [_id])
+        self._queue.put(deffered_generation)
+        return _id
+
+
+    def get(self, record_type="default", set_id=None):
         # Creates a mock instance.
         if record_type is "default":
             body = self._get(self.name)
+            if set_id:
+                body['id'] = set_id
             self.created.append(body.get('id'))
             return body
 
@@ -133,7 +186,6 @@ class DataMocker(object):
             raise ValueError("No instuctions for type %s" % name)
         body = {}
         for name, fn in instructions:
-            # print("\n%s*** ||| %s" % (name, fn))
             body[name] = fn()
         return body
 
@@ -287,6 +339,8 @@ class MockingManager(object):
         self.client = KernelClient(kernel_url, **kernel_credentials)
         self.types = {}
         self.load()
+        signal.signal(signal.SIGTERM, self.kill)
+        signal.signal(signal.SIGINT, self.kill)
 
     def get(self, _type):
         if not _type in self.types.keys():
@@ -297,6 +351,11 @@ class MockingManager(object):
         if not _type in self.types.keys():
             raise KeyError("No schema for type %s" % (_type))
         return self.types.get(_type).get_reference()
+
+    def kill(self):
+        for name, mocker in self.types.items():
+            print("stopping %s" % (name))
+            mocker.kill()
 
     def register(self, name, payload):
         # pprint(payload)
