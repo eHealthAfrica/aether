@@ -18,6 +18,11 @@ services:
     extends:
       file: docker-compose-base.yml
       service: postgres-base
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   couchdb-test:
     extends:
@@ -29,6 +34,32 @@ services:
       file: docker-compose-base.yml
       service: redis-base
 
+  kong-migration-test:
+    extends:
+      file: docker-compose-base.yml
+      service: kong-migration-base
+    environment:
+      - KONG_PG_HOST=db-test
+    depends_on:
+      db-test:
+        condition: service_healthy
+
+  kong:
+    extends:
+      file: docker-compose-base.yml
+      service: kong-base
+    environment:
+      - KONG_PG_HOST=db-test
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://kong:8001" ]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+    depends_on:
+      db-test:
+        condition: service_healthy
+      kong-migration-test:
+        condition: service_started
 
   # ---------------------------------
   # Aether Kernel
@@ -46,10 +77,9 @@ services:
       WEB_SERVER_PORT: 9000
     depends_on:
       - db-test
+      - kong
     ports:
       - "9000:9000"
-    depends_on:
-      - db-test
 
 
   # ---------------------------------
@@ -72,9 +102,6 @@ services:
       - kernel-test
     ports:
       - "9443:9443"
-    depends_on:
-      - db-test
-      - kernel-test
 
 
   # ---------------------------------
