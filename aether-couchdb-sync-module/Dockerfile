@@ -26,7 +26,21 @@ COPY ./ /code
 ARG VERSION
 RUN echo $VERSION > VERSION
 ARG GIT_REVISION
-RUN echo $GIT_REVISION > REVISION 
+RUN echo $GIT_REVISION > REVISION
+
+################################################################################
+## Config kong apis using kongfig 
+################################################################################
+COPY ./kongfig.yml /kongfig.yml
+ARG KONG_CONSUMER
+ARG KONG_APIKEY
+ARG PROJECT_API_URL
+ARG KONG_OAUTH2_PROVISION_KEY
+RUN sed -i 's/KONG_CONSUMER/'"$KONG_CONSUMER"'/g' /kongfig.yml
+RUN sed -i 's/KONG_APIKEY/'"$KONG_APIKEY"'/g' /kongfig.yml
+RUN sed -i 's/PROJECT_API_URL/'"$PROJECT_API_URL"'/g' /kongfig.yml
+RUN sed -i 's/KONG_OAUTH2_PROVISION_KEY/'"$KONG_OAUTH2_PROVISION_KEY"'/g' /kongfig.yml
+RUN npm install kongfig -g --loglevel error
 
 ################################################################################
 ## last setup steps

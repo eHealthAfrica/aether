@@ -66,15 +66,6 @@ services:
         aliases:
           - ${PROJECT_API_URL}
 
-  kongfig:
-    extends:
-      file: docker-compose-base.yml
-      service: kongfig
-    links:
-      - 'kong:kong'
-    networks:
-      - internal
-
   redis:
     extends:
       file: docker-compose-base.yml
@@ -97,7 +88,6 @@ services:
     depends_on:
       - db
       - kong
-      - kongfig
     networks:
       internal:
         aliases:

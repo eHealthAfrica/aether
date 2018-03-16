@@ -62,28 +62,6 @@ apis:
       preserve_host: true
       strip_uri: false
 
-  - name: "odk"
-    ensure: "present"
-    attributes:
-      upstream_url: "https://odk.aether.local:8443"
-      uris:
-        - "/odk/v1"
-    plugins:        
-    - name: key-auth
-      ensure: "present"
-      attributes:
-        config:
-          key_names:
-            - apikey
-          hide_credentials: true
-
-  - name: "couch-sync"
-    ensure: "present"
-    attributes:
-      upstream_url: "http://sync.aether.local:8666"
-      uris:
-        - "/sync/v1"
-
 consumers:
   - username: KONG_CONSUMER
     credentials:
