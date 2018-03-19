@@ -84,8 +84,22 @@ case "$1" in
         test_coverage "${@:2}"
     ;;
 
+    build)
+        # remove previous build if needed
+        rm -rf dist
+        rm -rf build
+        rm -rf aether.common.egg-info
+
+        # create the distribution
+        python setup.py bdist_wheel --universal
+
+        # remove useless content
+        rm -rf build
+        rm -rf aether.common.egg-info
+    ;;
+
     start )
-        echo 'start'        
+        echo 'start'
     ;;
 
     start_dev )
