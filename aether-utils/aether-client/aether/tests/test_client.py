@@ -307,7 +307,7 @@ class KernelClientCase(unittest.TestCase):
         except AttributeError as ae:
             pass
         else:
-            self.fail("Should have thrown an AttributeError")
+            self.fail("Should have been missing and thrown an AttributeError: %s" % missing_person)
 
         personal_submission = test_person.get('submission')
 

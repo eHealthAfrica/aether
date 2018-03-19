@@ -520,6 +520,8 @@ class EntityData(DataEndpoint):
             self.url = url
         self.name = name
         super(EntityData, self).__init__(self.client, self.url)
+        if not self.valid:
+            raise AttributeError("Invalid url %s" % self.url)  # entity endpoints must be valid
 
     def get(self, id=None, filter_func=None):
         if not id:
