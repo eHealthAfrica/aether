@@ -106,11 +106,11 @@ services:
   # Aether Client container
   # ---------------------------------
   client-test:
-    build: aether-client
+    build: aether-utils/aether-client
     image: aether/client
 
     volumes:
-      - ./aether-client:/code
+      - ./aether-utils/aether-client:/code
 
     depends_on:
       - db-test

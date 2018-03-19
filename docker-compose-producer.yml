@@ -12,7 +12,7 @@ services:
     stdin_open: true
     volumes:
      - ./aether-producer:/code
-     - ./aether-client:/code/aether-client
+     - ./aether-utils/aether-client:/code/aether-client
     environment:
      - PYTHONUNBUFFERED=1
     links:
