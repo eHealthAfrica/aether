@@ -1,0 +1,10 @@
+KONG_CONSUMER=aether-internal
+KONG_APIKEY=4B8B75459CA357BE4DB676A38822F23A59C1464B59AEE538F88697A75A
+KONG_PORT=80
+KONG_OAUTH2_PROVISION_KEY=PdhiiYf9vehQHMipH6waEBdVo749Hjx3
+
+# Project domain
+PROJECT_URL=aether.local
+
+# Add this value to /etc/hosts >> e.g 127.0.0.1 api.aether.local
+PROJECT_API_URL=api.aether.local

@@ -6,7 +6,7 @@
 #  * CouchDB Sync Module
 # ------------------------------------------------------------------------------
 
-version: "2"
+version: "2.1"
 
 networks:
   internal:
@@ -22,6 +22,11 @@ services:
     extends:
       file: docker-compose-base.yml
       service: postgres-base
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - internal
 
@@ -29,6 +34,44 @@ services:
     extends:
       file: docker-compose-base.yml
       service: couchdb-base
+    networks:
+      - internal
+
+  kong-migration:
+    extends:
+      file: docker-compose-base.yml
+      service: kong-migration-base
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - internal
+
+  kong:
+    extends:
+      file: docker-compose-base.yml
+      service: kong-base
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://kong:8001" ]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+    depends_on:
+      db:
+        condition: service_healthy
+      kong-migration:
+        condition: service_started
+    networks:
+      internal:
+        aliases:
+          - ${PROJECT_API_URL}
+
+  kongfig:
+    extends:
+      file: docker-compose-base.yml
+      service: kongfig
+    links:
+      - 'kong:kong'
     networks:
       - internal
 
@@ -53,6 +96,8 @@ services:
     #   - ./aether-common-module/aether/common:/code/aether/common
     depends_on:
       - db
+      - kong
+      - kongfig
     networks:
       internal:
         aliases:
