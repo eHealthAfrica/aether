@@ -206,6 +206,8 @@ services:
       CSV_HEADER_RULES_SEP: ;
 
       WEB_SERVER_PORT: 8004
+
+      REACT_ENV: 'development'
     volumes: &ui-volumes
       #################################################
       #                    WARNING                    #

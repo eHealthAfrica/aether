@@ -118,11 +118,12 @@ services:
       service: ui-base
     depends_on:
       - db
+      - kernel
       - webpack
     networks:
       internal:
         aliases:
-          - ui.local
+          - ui.aether.local
 
   # ---------------------------------
   # Webpack container
