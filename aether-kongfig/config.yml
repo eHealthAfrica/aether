@@ -8,8 +8,7 @@ apis:
       hosts:
         - "PROJECT_API_URL"
       uris:
-        - "/aether/v1/ext"
-      preserve_host: true
+        - "/ext/aether"
     plugins:
       - name: oauth2
         attributes:
@@ -27,11 +26,8 @@ apis:
     ensure: "present"
     attributes:
       upstream_url: "http://kernel:8000"
-      hosts:
-        - "PROJECT_API_URL"
       uris:
-        - "/aether/v1"
-      preserve_host: true
+        - "/aether"
     plugins:        
     - name: key-auth
       ensure: "present"
@@ -47,7 +43,6 @@ apis:
       upstream_url: "http://kernel:8000"
       uris:
         - "/token"
-      preserve_host: true
       strip_uri: false
     plugins:        
     - name: key-auth
@@ -86,7 +81,7 @@ apis:
       hosts:
         - "PROJECT_API_URL"
       uris:
-        - "/aether/v1/accounts/token"
+        - "/aether/accounts/token"
       preserve_host: true
 
   - name: "odk"
@@ -94,7 +89,7 @@ apis:
     attributes:
       upstream_url: "https://odk:8443"
       uris:
-        - "/odk/v1"
+        - "/odk"
     plugins:        
     - name: key-auth
       ensure: "present"
@@ -109,7 +104,7 @@ apis:
     attributes:
       upstream_url: "http://sync:8666"
       uris:
-        - "/sync/v1"
+        - "/sync"
 
 consumers:
   - username: KONG_CONSUMER
@@ -120,7 +115,7 @@ consumers:
       - name: oauth2
         attributes:
           name: "Aux"
-          redirect_uri: "http://api.aether.local/aux/v1"
+          redirect_uri: "http://api.aether.local/v1/ui"
           client_id: KONG_CONSUMER
 
   - username: anonymous_user
@@ -128,5 +123,5 @@ consumers:
       - name: oauth2
         attributes:
           name: "Aux"
-          redirect_uri: "http://api.aether.local/aux/v1"
+          redirect_uri: "http://api.aether.local/v1/ui"
           client_id: "anonymous_user"

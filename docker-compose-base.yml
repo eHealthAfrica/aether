@@ -117,7 +117,7 @@ services:
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .${PROJECT_URL}
       DEBUG: "true"
-      HOSTNAME: ${PROJECT_API_URL}/aether/v1
+      HOSTNAME: ${PROJECT_API_URL}/aether
       KONG_OAUTH2_PROVISION_KEY: ${KONG_OAUTH2_PROVISION_KEY}
       RDS_DB_NAME: aether
       RDS_HOSTNAME: db
@@ -150,7 +150,7 @@ services:
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
-      HOSTNAME: ${PROJECT_API_URL}/odk/v1
+      HOSTNAME: ${PROJECT_API_URL}/odk
 
       AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
       AETHER_KERNEL_URL: http://kernel:8000
@@ -248,7 +248,7 @@ services:
       STATIC_ROOT: /code/ui/assets/bundles
 
       AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
-      AETHER_KERNEL_URL: http://api.aether.local/aether/v1
+      AETHER_KERNEL_URL: http://api.aether.local/aether
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000
 
       AETHER_MODULES: "kernel,odk,"
