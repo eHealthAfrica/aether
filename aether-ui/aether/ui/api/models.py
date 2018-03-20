@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.db import models
 
 
-from ..settings import AETHER_APPS
+from ..settings import AETHER_APPS, kernel
 
 
 '''
@@ -97,7 +97,7 @@ class UserTokens(models.Model):
         response = requests.post(
             '{}/accounts/token'.format(base_url),
             data={'username': self.user.username},
-            headers={'Authorization': 'Token {token}'.format(token=auxiliary_token)},
+            headers={'Authorization': 'Token {token}'.format(token=auxiliary_token), 'apikey': kernel['kongApiKey']},
         )
 
         if response.status_code == 200:
@@ -119,7 +119,7 @@ class UserTokens(models.Model):
 
         response = requests.get(
             base_url,
-            headers={'Authorization': 'Token {token}'.format(token=token)},
+            headers={'Authorization': 'Token {token}'.format(token=token), 'apikey': kernel['kongApiKey']},
         )
         return response.status_code == 200
 

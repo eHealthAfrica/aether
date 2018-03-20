@@ -238,6 +238,8 @@ services:
     build:
       context: ./aether-ui
       dockerfile: aether/Dockerfile
+    env_file:
+      - .env
     environment: &ui-environment
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
@@ -246,7 +248,7 @@ services:
       STATIC_ROOT: /code/ui/assets/bundles
 
       AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
-      AETHER_KERNEL_URL: http://kernel:8000
+      AETHER_KERNEL_URL: http://api.aether.local/aether/v1
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000
 
       AETHER_MODULES: "kernel,odk,"

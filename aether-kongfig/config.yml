@@ -1,14 +1,14 @@
 ---
 host: "kong:8001"
 apis:
-  - name: "kernel"
+  - name: "kernel-external"
     ensure: "present"
     attributes:
-      upstream_url: "http://kernel.aether.local:8000"
+      upstream_url: "http://kernel:8000"
       hosts:
         - "PROJECT_API_URL"
       uris:
-        - "/aether/v1"
+        - "/aether/v1/ext"
       preserve_host: true
     plugins:
       - name: oauth2
@@ -23,10 +23,28 @@ apis:
             hide_credentials: false
             provision_key: KONG_OAUTH2_PROVISION_KEY
   
+  - name: "kernel-internal"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://kernel:8000"
+      hosts:
+        - "PROJECT_API_URL"
+      uris:
+        - "/aether/v1"
+      preserve_host: true
+    plugins:        
+    - name: key-auth
+      ensure: "present"
+      attributes:
+        config:
+          key_names:
+            - apikey
+          hide_credentials: true
+  
   - name: "Kong-pass-oauth2"
     ensure: "present"
     attributes:
-      upstream_url: "http://kernel.aether.local:8000"
+      upstream_url: "http://kernel:8000"
       uris:
         - "/token"
       preserve_host: true
@@ -43,29 +61,38 @@ apis:
   - name: "kernel-static"
     ensure: "present"
     attributes:
-      upstream_url: "http://kernel.aether.local:8000"
+      upstream_url: "http://kernel:8000/static"
       hosts:
         - "PROJECT_API_URL"
       uris:
-        - "/aether/v1/static"
+        - "/static"
       preserve_host: true
-      strip_uri: false
 
   - name: "kernel-accounts"
     ensure: "present"
     attributes:
-      upstream_url: "http://kernel.aether.local:8000"
+      upstream_url: "http://kernel:8000"
       hosts:
         - "PROJECT_API_URL"
       uris:
-        - "/aether/v1/accounts"
+        - "/accounts"
       preserve_host: true
       strip_uri: false
+  
+  - name: "kernel-token"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://kernel:8000/accounts/token"
+      hosts:
+        - "PROJECT_API_URL"
+      uris:
+        - "/aether/v1/accounts/token"
+      preserve_host: true
 
   - name: "odk"
     ensure: "present"
     attributes:
-      upstream_url: "https://odk.aether.local:8443"
+      upstream_url: "https://odk:8443"
       uris:
         - "/odk/v1"
     plugins:        
@@ -80,7 +107,7 @@ apis:
   - name: "couch-sync"
     ensure: "present"
     attributes:
-      upstream_url: "http://sync.aether.local:8666"
+      upstream_url: "http://sync:8666"
       uris:
         - "/sync/v1"
 

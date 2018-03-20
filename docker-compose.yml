@@ -99,10 +99,7 @@ services:
       - kong
       - kongfig
     networks:
-      internal:
-        aliases:
-          - kernel.aether.local
-
+      - internal
 
   # ---------------------------------
   # ODK module

@@ -51,6 +51,7 @@ AETHER_MODULES = [
 kernel = {
     'token': os.environ.get('AETHER_KERNEL_TOKEN', ''),
     'url': os.environ.get('AETHER_KERNEL_URL', ''),
+    'kongApiKey': os.environ.get('KONG_APIKEY', ''),
 }
 if TESTING:  # pragma: no cover
     kernel['url'] = os.environ.get('AETHER_KERNEL_URL_TEST', '')
