@@ -63,7 +63,8 @@ class ViewsTest(TestCase):
             method='DELETE',
             url='http://test/to-delete',
             data=None,
-            headers={'Cookie': '', 'Authorization': 'Token ABCDEFGH'}
+            headers={'Cookie': '', 'Authorization': 'Token ABCDEFGH',
+                     'Apikey': '4B8B75459CA357BE4DB676A38822F23A59C1464B59AEE538F88697A75A'}
         )
 
     @mock.patch('ui.api.models.UserTokens.get_or_create_user_app_token',
@@ -80,7 +81,8 @@ class ViewsTest(TestCase):
             method='GET',
             url='http://test/to-get',
             data=None,
-            headers={'Cookie': '', 'Authorization': 'Token ABCDEFGH'}
+            headers={'Cookie': '', 'Authorization': 'Token ABCDEFGH',
+                     'Apikey': '4B8B75459CA357BE4DB676A38822F23A59C1464B59AEE538F88697A75A'}
         )
 
     @mock.patch('ui.api.models.UserTokens.get_or_create_user_app_token',
@@ -97,7 +99,8 @@ class ViewsTest(TestCase):
             method='HEAD',
             url='http://test/proxy',
             data=None,
-            headers={'Cookie': '', 'Authorization': 'Token ABCDEFGH'}
+            headers={'Cookie': '', 'Authorization': 'Token ABCDEFGH',
+                     'Apikey': '4B8B75459CA357BE4DB676A38822F23A59C1464B59AEE538F88697A75A'}
         )
 
     @mock.patch('ui.api.models.UserTokens.get_or_create_user_app_token',
@@ -114,7 +117,8 @@ class ViewsTest(TestCase):
             method='OPTIONS',
             url='http://test/to-options',
             data=None,
-            headers={'Cookie': '', 'Authorization': 'Token ABCDEFGH'}
+            headers={'Cookie': '', 'Authorization': 'Token ABCDEFGH',
+                     'Apikey': '4B8B75459CA357BE4DB676A38822F23A59C1464B59AEE538F88697A75A'}
         )
 
     @mock.patch('ui.api.models.UserTokens.get_or_create_user_app_token',
@@ -131,7 +135,8 @@ class ViewsTest(TestCase):
             method='PATCH',
             url='http://test/to-patch',
             data=None,
-            headers={'Cookie': '', 'Authorization': 'Token ABCDEFGH'}
+            headers={'Cookie': '', 'Authorization': 'Token ABCDEFGH',
+                     'Apikey': '4B8B75459CA357BE4DB676A38822F23A59C1464B59AEE538F88697A75A'}
         )
 
     @mock.patch('ui.api.models.UserTokens.get_or_create_user_app_token',
@@ -154,6 +159,7 @@ class ViewsTest(TestCase):
                 'Cookie': '',
                 'Authorization': 'Token ABCDEFGH',
                 'Content-Type': 'application/json',
+                'Apikey': '4B8B75459CA357BE4DB676A38822F23A59C1464B59AEE538F88697A75A',
             }
         )
 
@@ -175,6 +181,7 @@ class ViewsTest(TestCase):
                 'Cookie': '',
                 'Authorization': 'Token ABCDEFGH',
                 'Content-Type': 'application/octet-stream',
+                'Apikey': '4B8B75459CA357BE4DB676A38822F23A59C1464B59AEE538F88697A75A',
             }
         )
 
@@ -235,6 +242,7 @@ class ViewsTest(TestCase):
                 'Authorization': 'Token ABCDEFGH',
                 'Content-Type': 'application/octet-stream',
                 'X-Method': 'POST',
+                'Apikey': '4B8B75459CA357BE4DB676A38822F23A59C1464B59AEE538F88697A75A',
             }
         )
 
@@ -259,5 +267,6 @@ class ViewsTest(TestCase):
                 'Authorization': 'Token ABCDEFGH',
                 'Content-Type': 'application/octet-stream',
                 'X-Method': 'GET',
+                'Apikey': '4B8B75459CA357BE4DB676A38822F23A59C1464B59AEE538F88697A75A',
             }
         )
