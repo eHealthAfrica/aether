@@ -1,10 +1,18 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
-
-if (module.hot) {
-  module.hot.accept()
-}
+import { render } from 'react-dom'
+import { Provider } from 'react-redux'
+import createStore from './redux/store'
+import App from './components/layouts'
 
 const appElement = document.getElementById('home-app')
 
-ReactDOM.render(<div>Aether UI</div>, appElement)
+const store = createStore()
+
+render(
+  <Provider store={store}>
+    <div>
+      <App />
+    </div>
+  </Provider>,
+  appElement
+)

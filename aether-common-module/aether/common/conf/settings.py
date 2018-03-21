@@ -9,6 +9,8 @@ DEBUG = (os.environ.get('DEBUG', '').lower() == 'true')
 TESTING = (os.environ.get('TESTING', '').lower() == 'true')
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
+KONG_PREFIX = '/aether'
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -163,6 +165,11 @@ CAS_VERSION = 3
 CAS_LOGOUT_COMPLETELY = True
 CAS_SERVER_URL = os.environ.get('CAS_SERVER_URL', '')
 HOSTNAME = os.environ.get('HOSTNAME', '')
+PROJECT_API_URL = os.environ.get('PROJECT_API_URL', 'api.aether.local')
+KONG_OAUTH2_PROVISION_KEY = os.environ.get('KONG_OAUTH2_PROVISION_KEY', '')
+KONG_APIKEY = os.environ.get('KONG_APIKEY', '')
+KONG_CONSUMER = os.environ.get('KONG_CONSUMER', 'aether-internal')
+OAUTH2_TOKEN_URL = 'https://' + PROJECT_API_URL + ':8449/aether/v1/oauth2/token'
 
 if CAS_SERVER_URL:  # pragma: no cover
     INSTALLED_APPS += [

@@ -38,6 +38,7 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
     '''
 
     auth_urls = 'rest_framework.urls'
+
     if settings.CAS_SERVER_URL:
         import django_cas_ng.views
 
@@ -76,7 +77,8 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
     if token:
         # generates users token
         urlpatterns += [
-            url('^accounts/token$', obtain_auth_token, name='token'),
+            url(r'^accounts/token$',
+                obtain_auth_token, name='token'),
         ]
 
     if kernel:

@@ -3,7 +3,7 @@ import requests
 from django.http import HttpResponse, JsonResponse
 from django.views import View
 
-from ..settings import AETHER_APPS
+from ..settings import AETHER_APPS, kernel
 from . import models
 
 
@@ -27,7 +27,7 @@ class TokenProxyView(View):
 
         app_token = models.UserTokens.get_or_create_user_app_token(request.user, self.app_name)
         if app_token is None:
-            raise RuntimeError('User "{}" cannot conenct to app "{}"'
+            raise RuntimeError('User "{}" cannot connect to app "{}"'
                                .format(request.user, self.app_name))
 
         self.path = path
@@ -42,6 +42,7 @@ class TokenProxyView(View):
         request.path_info = url
         request.META['PATH_INFO'] = url
         request.META['HTTP_AUTHORIZATION'] = 'Token {token}'.format(token=app_token.token)
+        request.META['HTTP_APIKEY'] = kernel['kongApiKey']
 
         return super(TokenProxyView, self).dispatch(request, *args, **kwargs)
 
