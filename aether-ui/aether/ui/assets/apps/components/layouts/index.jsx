@@ -1,8 +1,13 @@
-import React from 'react';
+import React from 'react'
+import { HashRouter, Switch, Route } from 'react-router-dom'
 import AppLayout from './app_layout'
 
 const App = () => (
-    <AppLayout />
-);
+  <HashRouter>
+    <Switch>
+      <Route path='/' component={AppLayout} />
+    </Switch>
+  </HashRouter>
+)
 
-export default App;
+export default App
