@@ -3,37 +3,32 @@
 // ************************************
 
 $white: #fff;
-$mint-green: #64e1ac;
 $black: #000;
-$pink: #f2dede;
-$dark-pink: #eed3d7;
 
 $red: #e87979;
 $orange: #e8a835;
 $green: #5cb85c;
 
-$text-color: #4a4a4a;
-$background-color: #f4f7f9;
+$text-color: #2d3146;
+$background-color: #faf9fc;
 
-$grey: #b2becb;
-$dark-grey: #979797;
-$darker-grey: #4a4a4a;
-$light-grey: #c8c6c9;
-$lighter-grey: #eaeaea;
-$bg-grey: #f6fafa;
+$dark-blue: #32415d;
+$purple: #7175Dd;
+
+$grey: #aea8b4;
+$light-grey: #ede9f2;
 
 $shadow-color: rgba($text-color, .2);
 
-$action-color: #5eb1f2;
+$action-color: #0093ff;
+$action-color-b:#50aef3;
 $hover-color: #49b1cf;
-$edit-color: #02d0ac;
 
 // ************************************
 // Fonts
 // ************************************
 
-$body-font-family: 'Asap', Arial, sans-serif;
-$nav-font-family: 'Quicksand', sans-serif;
+$body-font-family: 'Open Sans', Arial, sans-serif;
 $icon-font: FontAwesome;
 
 $font-size-xs: .8rem;
@@ -49,9 +44,4 @@ $font-size-xxl: 3rem;
 // ************************************
 
 $padding-unit: 4rem;
-$border-radius: .25rem;
-
-$navbar-height: 2.9rem;
-
-$toolbar-height: 70px;
-$toolbar-height-mobile: 90px;
+$border-radius: 4px;

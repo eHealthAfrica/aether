@@ -1,5 +1,4 @@
 @mixin label {
-  font-family: $nav-font-family;
   font-size: .85rem;
   font-weight: 700;
   letter-spacing: .03em;
@@ -16,6 +15,6 @@
 
 @mixin bg-gradient {
   background: $action-color;
-  background-image: linear-gradient(to right, transparent, $hover-color);
+  background-image: linear-gradient(to right, transparent, $hpurple);
   color: $white;
 }

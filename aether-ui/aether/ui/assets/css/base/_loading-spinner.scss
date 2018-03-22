@@ -36,7 +36,7 @@
     height: 8px;
     margin: 2px;
     border-radius: 50%;
-    background: $edit-color;
+    background: $purple;
     animation: pulse 1s normal ease-in-out infinite;
     animation-direction: alternate;
   }
@@ -51,24 +51,4 @@
   width: 100vw;
   height: 100vh;
   z-index: 9999;
-
-  .loading-spinner {
-    width: 100px;
-    height: 100px;
-    border-width: 25px;
-    border-bottom-color: lighten($action-color, 7);
-    border-left-color: lighten($action-color, 7);
-    top: calc(50vh - 50px);
-    left: calc(50vw - 50px);
-
-    &::before {
-      content: '';
-      display: block;
-      width: 34px;
-      height: 34px;
-      margin: 8px;
-      border-radius: 50%;
-      background: $white;
-    }
-  }
 }

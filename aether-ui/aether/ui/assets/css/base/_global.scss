@@ -65,7 +65,7 @@ a.btn-primary:not([href]) {
   &:active,
   &:focus,
   &:hover {
-    background-color: $edit-color;
+    background-color: $action-color;
     box-shadow: 1px 1px 1px rgba($text-color, .3), 1px 1px 0 rgba($white, .2) inset;
     color: $white;
   }
@@ -143,7 +143,7 @@ a.btn-primary:not([href]) {
 .btn-default {
   background: none;
   border: 0;
-  color: $edit-color;
+  color: $action-color;
 
   &:hover {
     color: $hover-color;
@@ -152,7 +152,7 @@ a.btn-primary:not([href]) {
 }
 
 .btn-secondary {
-  background: $edit-color;
+  background: $action-color;
   border: 0;
   color: $white;
 
@@ -178,7 +178,7 @@ a.btn-primary:not([href]) {
 
   .fa-user {
     font-size: .9rem;
-    color: $dark-grey;
+    color: $grey;
   }
 }
 
@@ -204,7 +204,7 @@ small {
 }
 
 .badge-default {
-  background: $lighter-grey;
+  background: $light-grey;
   font-weight: normal;
   font-size: $font-size-xs;
 }
@@ -220,8 +220,8 @@ textarea.form-control {
   padding: .8em;
 
   &:disabled {
-    background: $lighter-grey;
-    color: $light-grey;
+    background: $light-grey;
+    color: $grey;
   }
 }
 
@@ -234,7 +234,7 @@ input:active {
 .dropdown-menu {
   border-radius: 0;
   border: 0;
-  box-shadow: 0 2px 4px $dark-grey;
+  box-shadow: 0 2px 4px $text-color;
   top: 120%;
 
   &::before {
@@ -259,72 +259,6 @@ input:active {
   color: $action-color;
 }
 
-.page-header {
-  padding: 3rem 5vw 0;
-  font-family: $nav-font-family;
-  align-items: flex-start;
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 2rem;
-
-  h1 {
-    color: $light-grey;
-    font-size: $font-size-xxl;
-    font-weight: 400;
-    margin: 0;
-
-    .url-name {
-      display: block;
-      font-family: $body-font-family;
-      font-size: $font-size-s;
-      padding-top: .5rem;
-
-      a {
-        color: $action-color;
-      }
-    }
-  }
-}
-
-.page-title {
-  font: $font-size-s $nav-font-family;
-  font-weight: 700;
-  margin-bottom: 3rem;
-}
-
-.page-content {
-  padding: 1rem 5vw;
-}
-
-.actions {
-  padding: 2rem 0;
-  border-top: 1px solid $grey;
-  display: flex;
-  flex-wrap: wrap;
-
-  &>div {
-    margin-right: 1rem;
-    margin-bottom: .5rem;
-
-    &:last-child {
-      margin-left: auto;
-      margin-right: 0;
-    }
-  }
-}
-
-.big-input {
-  margin-bottom: 2rem;
-
-  .title {
-    font-size: $font-size-standard;
-  }
-
-  input[type='password'],
-  input[type='text'] {
-    font-size: 1.2rem;
-  }
-}
 
 pre {
   background-color: $black;
@@ -343,16 +277,5 @@ pre {
   body,
   html {
     font-size: 14px;
-  }
-
-  .actions {
-
-    &>div:last-child {
-      width: 100%;
-
-      button {
-        width: 100%;
-      }
-    }
   }
 }
