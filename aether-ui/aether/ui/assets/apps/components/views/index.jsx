@@ -6,9 +6,9 @@ import PipeLines from './pipelines/index'
 class Home extends Component {
   render () {
     return (
-      <div>
-        <div className='navbar'>
-          <a className='navbar-brand' href='/' title='aether'>
+      <div className='pipelines-container'>
+        <div className='navbar top-nav'>
+          <a className='top-nav-logo' href='/' title='aether'>
             <div className='logo-container'>
               <div className='flipper'>
                 <div className='front'>
@@ -17,9 +17,9 @@ class Home extends Component {
                 </div>
               </div>
             </div>
-            <span data-app-name='app-name'>Aether</span>
+            <span data-app-name='app-name'><b>ae</b>ther</span>
           </a>
-          <div className='nav-link user'>
+          <div className='top-nav-user'>
             <span
               id='logged-in-user-info'>
               User name
@@ -29,8 +29,8 @@ class Home extends Component {
             </span>
           </div>
         </div>
-        <div>
-          <h1>Project Name</h1>
+        <div className='pipelines'>
+          <h1 className='pipelines-heading'>Project Name</h1>
           <Link to='/new-pipeline'>New Pipeline</Link>
           <PipeLines></PipeLines>
         </div>

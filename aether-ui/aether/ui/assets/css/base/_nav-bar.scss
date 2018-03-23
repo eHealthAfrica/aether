@@ -1,38 +1,34 @@
-.navbar {
-  background: $text-color;
-  box-shadow: 0 -2px 2px rgba($black, .4) inset;
-  font-weight: 700;
-  padding: 0;
+.top-nav {
+  padding: 2rem;
 }
 
 
-.user-name {
-  border-left: 1px solid rgba($white, .2);
-  text-transform: none;
+.top-nav-user {
+  @include label;
 
   .logout {
-    margin-left: .5rem;
+    margin-left: .7rem;
+    font-size: $font-size-standard;
   }
 }
 
-.navbar-brand {
-  background: rgba($action-color, .3);
+.top-nav-logo {
   margin: 0;
-  padding: .6rem 1.5rem;
   position: relative;
-  height: $navbar-height;
 
   span {
     display: inline-block;
-    margin-left: 36px;
-    padding: .1rem;
+    font-weight: 300;
+    font-size: $font-size-l;
+    margin-left: 50px;
+    padding: 10px;
+
+    b {
+      font-weight: 600;
+    }
   }
 }
 
 @media screen and (max-width: 767px) {
 
-  .user-name {
-    border: 0;
-    padding: 1rem;
-  }
 }

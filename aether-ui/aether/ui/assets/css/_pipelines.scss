@@ -1,0 +1,109 @@
+.pipelines-container {
+  @include bg-gradient;
+  color: $white;
+
+  &::before {
+    content: '';
+    display: block;
+    position: fixed;
+    bottom: -80vw;
+    left: 25vw;
+    width: 110vw;
+    height: 110vw;
+    border-radius: 100%;
+    border: 1vw solid rgba($white, .1);
+    border-right: 6vw solid rgba($white, .1);
+    border-top: 4vw solid rgba($white, .1);
+  }
+
+  &::after {
+    content: '';
+    display: block;
+    position: fixed;
+    bottom: -20vw;
+    left: 60vw;
+    width: 70vw;
+    height: 70vw;
+    border-radius: 100%;
+    border: .5vw solid rgba($white, .1);
+    border-right: 5vw solid rgba($white, .1);
+    border-top: 3vw solid rgba($white, .1);
+  }
+
+  a {
+    color: $white;
+  }
+
+  min-height: 100vh;
+}
+
+.pipelines {
+  padding: 3rem 8vw;
+}
+
+.pipelines-heading {
+  font-weight: 300;
+  font-size: $font-size-xxl;
+}
+
+.pipeline-previews {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -1rem;
+}
+
+.pipeline-preview {
+  @include card;
+  position: relative;
+  width: 30%;
+  min-width: 300px;
+  max-width: 400px;
+  margin: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  transition: box-shadow .5s;
+
+  &:hover {
+    cursor: pointer;
+    box-shadow: 3px 3px 5px rgba($text-color, .4), -1px -1px 1px $light-grey inset;
+
+    .preview-heading {
+      color: darken($hover-color, 10);
+    }
+  }
+}
+
+.preview-heading {
+  color: $action-color;
+  font-weight: 300;
+  font-size: $font-size-xl;
+  padding-bottom: .3rem;
+  margin-bottom: auto;
+  transition: color .3s;
+}
+
+.summary-entity-types {
+  margin: 1rem;
+  margin-bottom: 0;
+  font-size: $font-size-m;
+  font-weight: 300;
+
+  .badge {
+    color: $action-color;
+  }
+}
+
+.summary-errors {
+  margin: 1rem;
+  margin-bottom: 0;
+  font-size: $font-size-m;
+  font-weight: 300;
+
+  .badge {
+    color: $green;
+  }
+  &.error .badge {
+    color: $red;
+  }
+}

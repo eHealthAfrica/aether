@@ -3,7 +3,7 @@ html {
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   color: $text-color;
-  font: 16px $body-font-family;
+  font: 15px $body-font-family;
   line-height: 1.3em;
 }
 
@@ -167,46 +167,28 @@ a.btn-primary:not([href]) {
   }
 }
 
-.title {
-  font-size: $font-size-s;
-  font-style: italic;
-
-  .username {
-    font-family: $body-font-family;
-    font-weight: 500;
-  }
-
-  .fa-user {
-    font-size: .9rem;
-    color: $grey;
-  }
-}
-
-.label {
-  font-size: $font-size-xs;
-  font-style: italic;
-}
-
 .small,
 small {
   font-size: $font-size-s;
 }
 
 .badge {
-  background: $grey;
-  border-radius: 1rem;
+  background: rgba($grey, .1);
+  border-radius: $font-size-standard;
   padding: .3rem .6rem;
-  font-size: $font-size-s;
-
-  .icon-only {
-    margin-right: -.3rem;
-  }
+  font-weight: 300;
+  font-size: $font-size-standard;
+  margin: 0 .4em;
 }
 
-.badge-default {
-  background: $light-grey;
-  font-weight: normal;
-  font-size: $font-size-xs;
+.badge-big {
+  font-size: $font-size-l;
+  border-radius: $font-size-l;
+  padding: .6rem .9rem;
+}
+
+.badge-b {
+  box-shadow: 0 1px 1px $shadow-color inset;
 }
 
 input[type='password'],
