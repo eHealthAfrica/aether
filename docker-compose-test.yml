@@ -119,7 +119,7 @@ services:
   # ---------------------------------
   # Aether Integration Tests
   # ---------------------------------
-  client-test:
+  integration-test:
     build: test-aether-integration-module
     image: aether/integration
 
