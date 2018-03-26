@@ -13,7 +13,6 @@ class Home extends Component {
               <div className='flipper'>
                 <div className='front' />
                 <div className='back' />
-                </div>
               </div>
             </div>
             <span data-app-name='app-name'><b>ae</b>ther</span>
