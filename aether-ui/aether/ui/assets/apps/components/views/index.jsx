@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { Link } from 'react-router-dom'
 import PipeLines from './pipelines/index'
 import NewPipeLine from './pipelines/new_pipeline'
 
@@ -12,9 +11,8 @@ class Home extends Component {
           <a className='top-nav-logo' href='/' title='aether'>
             <div className='logo-container'>
               <div className='flipper'>
-                <div className='front'>
-                </div>
-                <div className='back'>
+                <div className='front' />
+                <div className='back' />
                 </div>
               </div>
             </div>
@@ -26,14 +24,14 @@ class Home extends Component {
               User name
             </span>
             <span className='logout'>
-              <a href='#'><i className='fa fa-sign-out' title='Sign Out' aria-hidden='true' ></i></a>
+              <a href='#'><i className='fa fa-sign-out' title='Sign Out' aria-hidden='true' /></a>
             </span>
           </div>
         </div>
         <div className='pipelines'>
           <h1 className='pipelines-heading'>Project Name//Pipelines</h1>
-          <NewPipeLine></NewPipeLine>
-          <PipeLines></PipeLines>
+          <NewPipeLine />
+          <PipeLines />
         </div>
       </div>
     )
