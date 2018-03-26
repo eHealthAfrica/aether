@@ -13,7 +13,7 @@ class NewPipeLine extends Component {
     return (
       <div className='pipeline-new'>
 
-        { this.state.view === 'button'  &&
+        { this.state.view === 'button' &&
           <button
             type='button'
             className='btn btn-d btn-big'
@@ -22,7 +22,7 @@ class NewPipeLine extends Component {
           </button>
         }
 
-        { this.state.view === 'form'  &&
+        { this.state.view === 'form' &&
           <div className='pipeline-form'>
             <div className='form-group'>
               <input

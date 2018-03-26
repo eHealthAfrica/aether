@@ -5,17 +5,17 @@ class PipeLines extends Component {
   render () {
     return (
       <div className='pipeline-previews'>
-      	<div className='pipeline-preview'>
-      		<h2 className='preview-heading'>Name of pipeline</h2>
-      		<div className='summary-entity-types'>
-      			<span className='badge badge-b badge-big'>5</span>
+        <div className='pipeline-preview'>
+          <h2 className='preview-heading'>Name of pipeline</h2>
+          <div className='summary-entity-types'>
+            <span className='badge badge-b badge-big'>5</span>
             Entity-Types
-      		</div>
+          </div>
           <div className='summary-errors'>
             <span className='badge badge-b badge-big'>0</span>
             Errors
           </div>
-      	</div>
+        </div>
         <div className='pipeline-preview'>
           <h2 className='preview-heading'>longer name of pipeline</h2>
           <div className='summary-entity-types'>
