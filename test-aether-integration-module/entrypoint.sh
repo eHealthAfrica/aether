@@ -56,10 +56,16 @@ case "$1" in
 
     pip_freeze )
         rm -rf /tmp/env
-        pip install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
+        pip2 install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.py2.txt --upgrade
 
-        cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
-        pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
+        cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.py2.txt
+        pip2 freeze --local | grep -v appdir | tee -a conf/pip/requirements.py2.txt
+
+        rm -rf /tmp/env
+        pip3 install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.py3.txt --upgrade
+
+        cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.py3.txt
+        pip3 freeze --local | grep -v appdir | tee -a conf/pip/requirements.py3.txt
     ;;
 
     setuplocaldb )

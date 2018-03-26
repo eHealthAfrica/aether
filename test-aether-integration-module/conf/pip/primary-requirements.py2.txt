@@ -1,0 +1,17 @@
+#################################################################################################################
+#                                                                              					#
+#                             Primary requirements                             					#
+#                                                                              					#
+#                                 CHANGE ME !!!                                					#
+#                                                                              					#
+# Update me and then run 'docker-compose -f docker-compose-test.yml run integration-test pip_freeze'            #
+#                                                                              					#
+#################################################################################################################
+
+aether.client
+aether_saladbar
+coverage
+flake8
+mock
+requests
+
