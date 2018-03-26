@@ -1,0 +1,15 @@
+################################################################################
+#                                                                              #
+#                             Primary requirements                             #
+#                                                                              #
+#                                 CHANGE ME !!!                                #
+#                                                                              #
+# Update me and then run 'docker-compose run kernel pip_freeze'                #
+#                                                                              #
+################################################################################
+
+coverage
+flake8
+mock
+requests
+

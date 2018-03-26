@@ -115,3 +115,17 @@ services:
     depends_on:
       - db-test
       - kernel-test
+
+  # ---------------------------------
+  # Aether Integration Tests
+  # ---------------------------------
+  client-test:
+    build: test-aether-integration-module
+    image: aether/integration
+
+    volumes:
+      - ./test-aether-integration-module:/code
+
+    depends_on:
+      - db-test
+      - kernel-test
