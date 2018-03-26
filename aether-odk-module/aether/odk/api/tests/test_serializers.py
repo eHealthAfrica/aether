@@ -76,43 +76,21 @@ class SerializersTests(CustomTestCase):
         self.assertNotEqual(xform.data['version'], '0', 'no default version number')
         self.assertIn('<h:head>', xform.data['xml_data'])
 
-    def test_xform_serializer__with_media_files(self):
-        mapping_id = uuid.uuid4()
-        xform = self.helper_create_xform(mapping_id=mapping_id)
+    def test_xform_serializer__with_wrong_file(self):
+        content = SimpleUploadedFile('xform.xls', b'abcd')
 
-        # create media file
-        media_file = MediaFileSerializer(
+        mapping_id = uuid.uuid4()
+        self.helper_create_mapping(mapping_id=mapping_id)
+        xform = XFormSerializer(
             data={
-                'xform': xform.pk,
-                'media_file': SimpleUploadedFile('sample.txt', b'abc'),
+                'mapping': mapping_id,
+                'description': 'test wrong file',
+                'xml_file': content,
             },
             context={'request': self.request},
         )
-        self.assertTrue(media_file.is_valid(), media_file.errors)
-        media_file.save()
-        self.assertEqual(xform.media_files.count(), 1)
 
-        # save serialized xform with the media file
-        xform_serialized = XFormSerializer(
-            xform,
-            data={'mapping': mapping_id, 'media_files': [media_file.data['id']]},
-            context={'request': self.request},
-        )
-        self.assertTrue(xform_serialized.is_valid(), xform_serialized.errors)
-        xform_serialized.save()
-        self.assertEqual(len(xform_serialized.data['media_files']), 1)
-        self.assertEqual(xform.media_files.count(), 1)
-
-        # save again xform without the media file
-        xform_serialized = XFormSerializer(
-            xform,
-            data={'mapping': mapping_id, 'media_files': []},
-            context={'request': self.request},
-        )
-        self.assertTrue(xform_serialized.is_valid(), xform_serialized.errors)
-        xform_serialized.save()
-        self.assertEqual(len(xform_serialized.data['media_files']), 0)
-        self.assertEqual(xform.media_files.count(), 0)
+        self.assertFalse(xform.is_valid(), xform.errors)
 
     def test_media_file_serializer__no_name(self):
         mapping_id = uuid.uuid4()

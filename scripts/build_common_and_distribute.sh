@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -Eeuo pipefail
 
 DC_COMMON="docker-compose -f docker-compose-common.yml"
 

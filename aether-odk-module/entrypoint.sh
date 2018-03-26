@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -Eeuo pipefail
 
 
 # Define help message
@@ -72,17 +72,6 @@ test_coverage() {
 
     cat /code/conf/extras/good_job.txt
 }
-
-
-# --------------------------------
-# set DJANGO_SECRET_KEY if needed
-if [ "$DJANGO_SECRET_KEY" = "" ]
-then
-   export DJANGO_SECRET_KEY=$(
-        cat /dev/urandom | tr -dc 'a-zA-Z0-9-_!@#$%^&*()_+{}|:<>?=' | fold -w 64 | head -n 4
-    )
-fi
-# --------------------------------
 
 
 case "$1" in
