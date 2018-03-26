@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kernel-init
+data:
+  init.sh: |
+    #!/bin/bash
+
+    psql -c "CREATE DATABASE $RDS_DB_NAME;"
+    psql -c "CREATE USER $RDS_USERNAME WITH PASSWORD '$RDS_PASSWORD';"
+    psql -c "GRANT ALL PRIVILEGES ON DATABASE $RDS_DB_NAME TO $RDS_USERNAME;"
+
+    # Fix EFS mount permissions
+    chmod -R 775 /media
+    chown -R 1000:101 /media
