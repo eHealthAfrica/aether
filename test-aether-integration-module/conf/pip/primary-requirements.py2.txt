@@ -13,5 +13,7 @@ aether_saladbar
 coverage
 flake8
 mock
+pytest
+pytest-runner
 requests
 

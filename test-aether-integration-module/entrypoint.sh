@@ -26,18 +26,21 @@ show_help() {
 }
 
 test_flake8() {
-    flake8 /code/. --config=/code/conf/extras/flake8.cfg
+    flake8 /code/. --config=/code/setup.cfg
 }
 
 test_coverage() {
-    export RCFILE=/code/conf/extras/coverage.rc
-    export TESTING=true
-    export DEBUG=false
-    coverage run    --rcfile="$RCFILE" manage.py test "${@:1}"
-    coverage report --rcfile="$RCFILE"
-    coverage erase
+    # Python2 Tests !!Must run first as we rely on the schema generation
+    python2 setup.py -q test "${@:1}"
 
     cat /code/conf/extras/good_job.txt
+
+    # Python3 Tests
+    python3 setup.py test "${@:1}"
+
+    cat /code/conf/extras/good_job.txt
+    rm -R ./*.egg*
+    rm -R .pytest_cache
 }
 
 

@@ -14,5 +14,7 @@ aether.mocker
 coverage
 flake8
 mock
+pytest
+pytest-runner
 requests
 
