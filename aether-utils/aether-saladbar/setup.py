@@ -12,7 +12,7 @@ setup(
     name='aether-saladbar',
     version='0.0.0',
     install_requires=[
-        "aether-client"
+	"schema-salad"
     ],
     include_package_data=True,
     packages=find_packages(),

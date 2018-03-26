@@ -10,10 +10,11 @@ from library import library_utils
 import saladbar.parsers as Parsers
 from saladbar import salad_handler as salad
 
-SETTINGS = "conf/settings.json"
-RES = "wizard_resources"
+HERE = (os.path.dirname(os.path.realpath(__file__)))
+SETTINGS = "%s/conf/settings.json" % HERE
+RES = "%s/wizard_resources" % HERE
 TMP = "%s/tmp" % RES
-SCHEMAS = "schemas/"
+SCHEMAS = "%s/schemas/" % HERE
 
 
 def pprint(obj):
