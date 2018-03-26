@@ -28,6 +28,7 @@
     border: .5vw solid rgba($white, .1);
     border-right: 5vw solid rgba($white, .1);
     border-top: 3vw solid rgba($white, .1);
+    z-index: 0;
   }
 
   a {
@@ -39,25 +40,25 @@
 
 .pipelines {
   padding: 3rem 8vw;
+  position: relative;
+  z-index: 1;
 }
 
 .pipelines-heading {
   font-weight: 300;
   font-size: $font-size-xxl;
+  margin-bottom: 4rem;
 }
 
 .pipeline-previews {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto auto auto;
   margin: 0 -1rem;
 }
 
 .pipeline-preview {
   @include card;
   position: relative;
-  width: 30%;
-  min-width: 300px;
-  max-width: 400px;
   margin: 1rem;
   display: flex;
   flex-direction: column;
@@ -103,7 +104,118 @@
   .badge {
     color: $green;
   }
+
   &.error .badge {
     color: $red;
+  }
+}
+
+.pipeline-new {
+  margin: 1rem 0;
+}
+
+@keyframes show {
+  0% {max-height: 0; padding: 0; opacity: 0}
+  100% {max-height: 200px; padding: 2rem 0 3rem; opacity: 1}
+}
+
+.pipeline-form {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px dashed rgba($white, .2);
+  padding: 2rem 0 3rem;
+  animation: show .5s;
+  overflow: hidden;
+
+  .form-group {
+    flex: 3 1 0%;
+    position: relative;
+    margin: 0;
+  }
+
+  .form-label {
+    position: absolute;
+    top: -2rem;
+    opacity: 0;
+    transition: opacity .3s;
+  }
+
+  .text-input {
+    font-size: $font-size-xl;
+    font-weight: 300;
+    color: $white;
+    width: 100%;
+  }
+
+  .text-input::Placeholder{
+    color: rgba($white, .4);
+    line-height: 1.3em;
+  }
+
+  .text-input:valid + .form-label {
+    opacity: 1;
+  }
+
+  .btn {
+    margin-left: 1.5rem;
+  }
+}
+
+@media screen and (max-width: 920px) {
+
+  .pipeline-previews {
+    grid-template-columns: auto auto;
+  }
+
+  .pipeline-form {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+
+    .form-group {
+      flex: 3 1 100%;
+      position: relative;
+      margin-bottom: 2rem;
+    }
+
+    .form-label {
+      position: absolute;
+      top: -2rem;
+      opacity: 0;
+      transition: opacity .3s;
+    }
+
+    .text-input {
+      font-size: $font-size-xl;
+      font-weight: 300;
+      color: $white;
+      width: 100%;
+    }
+
+    .text-input::Placeholder{
+      color: rgba($white, .4);
+    }
+
+    .text-input:valid + .form-label {
+      opacity: 1;
+    }
+
+    .btn {
+      margin-left: 1.5rem;
+    }
+  }
+
+}
+
+@media screen and (max-width: 576px) {
+
+  .pipeline-previews {
+    grid-template-columns: auto;
+  }
+}
+
+@media screen and (min-width: 1800px) {
+
+  .pipeline-previews {
+    grid-template-columns: auto auto auto auto;
   }
 }
