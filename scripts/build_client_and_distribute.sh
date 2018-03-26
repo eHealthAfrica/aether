@@ -14,14 +14,14 @@ $DC_CLIENT run client build
 PCK_FILE=aether.client-0.0.0-py2.py3-none-any.whl
 
 # distribute within the containers
-containers=( producer, test-aether-integration )
+containers=( producer test-aether-integration )
 for container in "${containers[@]}"
 do
   if [[ $container = "producer" ]]
   then
     FOLDER=aether-$container
   else
-    FOLDER=aether-$container-module
+    FOLDER=$container-module
   fi
   cp -r ./aether-utils/aether-client/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
 done
@@ -40,7 +40,7 @@ do
   then
     FOLDER=aether-$container
   else
-    FOLDER=aether-$container-module
+    FOLDER=$container-module
   fi
   cp -r ./aether-utils/aether-mock-data/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
 done
@@ -49,7 +49,7 @@ done
 $DC_CLIENT build saladbar
 $DC_CLIENT run saladbar build
 
-PCK_FILE=saladbar-0.0.0-py2.py3-none-any.whl
+PCK_FILE=aether_saladbar-0.0.0-py2.py3-none-any.whl
 
 # distribute within the containers
 containers=( test-aether-integration )
@@ -59,7 +59,7 @@ do
   then
     FOLDER=aether-$container
   else
-    FOLDER=aether-$container-module
+    FOLDER=$container-module
   fi
   cp -r ./aether-utils/aether-saladbar/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
 done
