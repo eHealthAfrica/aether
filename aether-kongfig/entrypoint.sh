@@ -1,46 +1,13 @@
 #!/bin/bash
-
-SEARCH_TEXT=${SEARCH_TEXT:-kong}
-
-ARGUMENTS=( "$@" )
-while :
-do
-    case "$1" in
-        --path )
-            CONFIG_FILE=$2
-            shift 2
-            ;;
-        --host )
-            HOST=$2
-            shift 2
-            ;;
-        *)
-            break
-            ;;
-    esac
-done
-
-if [ -n "$CONFIG" ]; then
-    echo "Writing $CONFIG_FILE from the \$CONFIG environment variable"
-    echo "$CONFIG" > "$CONFIG_FILE"
-
-    if [ "true" == "$DEBUG" ]; then
-        cat "$CONFIG_FILE"
-    fi
-fi
-
-COUNTER=0
-echo -n "waiting for $HOST to start up..."
-trap 'exit' INT
-while [  $COUNTER -lt ${CHECK_ATTEMPTS} ]; do
-    let COUNTER=COUNTER+1
-    if `curl -s $HOST | grep -q -i "$SEARCH_TEXT"`; then
-        echo "started"
-        sleep ${POST_START_DELAY}
-        kongfig "${ARGUMENTS[@]}"
-        exit $?
-    else
-        echo -n "."
-    fi
-    sleep ${BETWEEN_CHECK_DELAY}
+echo "Starting kongfig push to kong..."
+mkdir -p ../kongfig-files
+cp -R ./* ../kongfig-files/
+cd ../kongfig-files
+for file in ./*; do
+    echo "Applying ${file##*/}"
+    sed -i 's/KONG_CONSUMER/'"${KONG_CONSUMER}"'/g' ./${file##*/}
+    sed -i 's/KONG_APIKEY/'"${KONG_APIKEY}"'/g' ./${file##*/}
+    sed -i 's/PROJECT_API_URL/'"${PROJECT_API_URL}"'/g' ./${file##*/}
+    sed -i 's/KONG_OAUTH2_PROVISION_KEY/'"${KONG_OAUTH2_PROVISION_KEY}"'/g' ./${file##*/}
+    kongfig apply --path ./${file##*/} --host kong:8001
 done

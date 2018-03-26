@@ -1,0 +1,17 @@
+---
+host: "kong:8001"
+apis:
+  - name: "odk"
+    ensure: "present"
+    attributes:
+      upstream_url: "https://odk.aether.local:8443"
+      uris:
+        - "/odk/v1"
+    plugins:        
+    - name: key-auth
+      ensure: "present"
+      attributes:
+        config:
+          key_names:
+            - apikey
+          hide_credentials: true
