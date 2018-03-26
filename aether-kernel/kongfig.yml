@@ -1,15 +1,58 @@
 ---
 host: "kong:8001"
 apis:
-  - name: "kernel"
+# Whitelist localhost for development purposes.
+# With this, no authentication is required to access api endpoint while on localhost
+
+  - name: "kernel-localhost"
     ensure: "present"
     attributes:
-      upstream_url: "http://kernel.aether.local:8000"
+      upstream_url: "http://kernel:8000"
+      hosts:
+        - "kernel.aether.local"
+
+  - name: "kernel-localhost-static"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://kernel:8000"
+      hosts:
+        - "kernel.aether.local"
+      uris:
+        - "/static"
+        - "/accounts"
+      strip_uri: false
+      preserve_host: true
+
+  - name: "odk-localhost"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://odk:8443"
+      hosts:
+        - "localhost"
+      uris:
+        - "/odk"
+
+  - name: "sync-localhost"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://sync:8666"
+      hosts:
+        - "localhost"
+      uris:
+        - "/sync"
+
+# Kernel api access from frontend apps, requirers the request contains an OAuth2 token for kong passage
+# Token can be gotten from Kong-pass-oauth2 `/token`
+# Accessible via `http://{KONG_HOST}/ext/aether`
+
+  - name: "kernel-external"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://kernel:8000"
       hosts:
         - "PROJECT_API_URL"
       uris:
-        - "/aether/v1"
-      preserve_host: true
+        - "/ext/aether"
     plugins:
       - name: oauth2
         attributes:
@@ -23,13 +66,34 @@ apis:
             hide_credentials: false
             provision_key: KONG_OAUTH2_PROVISION_KEY
   
+# Kernel api for app level communication, requires an auth-key be included in all request headers as `apikey`
+# Accessible via `http://{KONG_HOST}/aether`
+
+  - name: "kernel-internal"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://kernel:8000"
+      uris:
+        - "/aether"
+    plugins:        
+    - name: key-auth
+      ensure: "present"
+      attributes:
+        config:
+          key_names:
+            - apikey
+          hide_credentials: true
+
+# Generates OAuth2 tokens for kong passage from a 3rd party frontend app
+# Supply `username, password, grant_type=password, authenticated_userid(Optional),
+# authourization token if available from 3rd party authentication service` and get a token in exchange
+
   - name: "Kong-pass-oauth2"
     ensure: "present"
     attributes:
-      upstream_url: "http://kernel.aether.local:8000"
+      upstream_url: "http://kernel:8000"
       uris:
         - "/token"
-      preserve_host: true
       strip_uri: false
     plugins:        
     - name: key-auth
@@ -40,27 +104,33 @@ apis:
             - apikey
           hide_credentials: true
 
+# Kernel apis for retriving django static files
+
   - name: "kernel-static"
     ensure: "present"
     attributes:
-      upstream_url: "http://kernel.aether.local:8000"
+      upstream_url: "http://kernel:8000/static"
       hosts:
         - "PROJECT_API_URL"
       uris:
-        - "/aether/v1/static"
+        - "/static"
       preserve_host: true
-      strip_uri: false
+
+# Kernel apis for django accounts related endpoints (login/logout)
 
   - name: "kernel-accounts"
     ensure: "present"
     attributes:
-      upstream_url: "http://kernel.aether.local:8000"
+      upstream_url: "http://kernel:8000"
       hosts:
         - "PROJECT_API_URL"
       uris:
-        - "/aether/v1/accounts"
+        - "/accounts"
       preserve_host: true
       strip_uri: false
+
+# Kong consumer associated with internal app level communications
+# subscribed to OAuth2 and Auth-Key authorization
 
 consumers:
   - username: KONG_CONSUMER
@@ -71,13 +141,15 @@ consumers:
       - name: oauth2
         attributes:
           name: "Aux"
-          redirect_uri: "http://api.aether.local/aux/v1"
+          redirect_uri: "http://ui.aether.local:8004"
           client_id: KONG_CONSUMER
 
+# Kong anonymous consumer, available for anonymous access to endpoints that should be publicly accessible
+ 
   - username: anonymous_user
     credentials:
       - name: oauth2
         attributes:
           name: "Aux"
-          redirect_uri: "http://api.aether.local/aux/v1"
+          redirect_uri: "http://ui.aether.local:8004"
           client_id: "anonymous_user"

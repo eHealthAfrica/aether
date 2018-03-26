@@ -1,12 +1,15 @@
 ---
 host: "kong:8001"
 apis:
+# Couch-Sync api for app level communication, requires an auth-key be included in all request headers as `apikey`
+# Accessible via `http://{KONG_HOST}/sync`
+
   - name: "couch-sync"
     ensure: "present"
     attributes:
-      upstream_url: "http://sync.aether.local:8666"
+      upstream_url: "http://sync:8666"
       uris:
-        - "/sync/v1"
+        - "/sync"
     plugins:        
     - name: key-auth
       ensure: "present"

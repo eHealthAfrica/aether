@@ -1,12 +1,15 @@
 ---
 host: "kong:8001"
-apis:
+apis:  
+# ODK api for app level communication, requires an auth-key be included in all request headers as `apikey`
+# Accessible via `http://{KONG_HOST}/odk`
+
   - name: "odk"
     ensure: "present"
     attributes:
-      upstream_url: "https://odk.aether.local:8443"
+      upstream_url: "https://odk:8443"
       uris:
-        - "/odk/v1"
+        - "/odk"
     plugins:        
     - name: key-auth
       ensure: "present"
