@@ -1,11 +1,21 @@
 from django.db.models import Count, Min, Max
+
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import detail_route, list_route
 from drf_openapi.views import SchemaView
 from rest_framework.response import Response
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    renderer_classes,
+)
+from rest_framework.renderers import JSONRenderer
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+
 from http import HTTPStatus
 
-from . import models, serializers, filters, constants
+from . import models, serializers, filters, constants, utils, mapping_validation
 
 
 def get_entity_linked_data(entity, request, resolved, depth, start_depth=0):
@@ -130,3 +140,43 @@ class EntityViewSet(CustomViewSet):
 
 class AetherSchemaView(SchemaView):
     permission_classes = (permissions.AllowAny, )
+
+
+@api_view(['POST'])
+@renderer_classes([JSONRenderer])
+@permission_classes([IsAuthenticated])
+def validate_mappings(request):
+    '''
+    Given a `submission_payload`, a `mapping_definition` and a list of
+    `entities`, verify that each mapping function in `mapping_definition` can
+    extract a value from `submission_payload` and assign it to at least one
+    entity in `entities`.
+
+    This endpoint is useful for clients who are in the process of
+    developing an Aether solution but have not yet submitted any complete
+    Project; using this endpoint, it is possible to check the mapping functions
+    (jsonpaths) align with both the source (`submission_payload`) and the
+    target (`entity_list`).
+    '''
+
+    try:
+        data = request.data
+        entities = utils.extract_create_entities(**data)
+        mapping_errors = mapping_validation.validate_mappings(
+            submission_payload=data['submission_payload'],
+            entity_list=entities,
+            mapping_definition=data['mapping_definition'],
+        )
+        return Response({
+            'entities': [
+                entity.payload for entity in entities
+            ],
+            'mapping_errors': [
+                error._asdict() for error in mapping_errors
+            ],
+        })
+    except Exception as e:
+        return Response(
+            {'message': 'Entity extraction error'},
+            status=status.HTTP_400_BAD_REQUEST
+        )

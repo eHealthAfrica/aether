@@ -1,12 +1,13 @@
-import string
+import collections
 import json
 import re
+import string
 import uuid
+from io import BytesIO
 
+import fastavro as avro
 import jsonpath_ng
-from avro import schema
 from jsonpath_ng import parse
-from avro.io import Validate, AvroTypeException
 
 from django.utils.safestring import mark_safe
 from pygments import highlight
@@ -412,26 +413,13 @@ def extract_entities(requirements, response_data, entity_definitions):
     return data, entities
 
 
-def extract_create_entities(submission):
-    # Get the mapping definition from the submission (submission.mapping.definition):
-    mapping_definition = submission.mapping.definition
+Entity = collections.namedtuple(
+    'Entity',
+    ['id', 'payload', 'projectschema_name', 'status']
+)
 
-    # Get the primary key of the projectschema
-    # entity_pks = list(mapping_definition['entities'].values())
-    entity_ps_ids = mapping_definition.get('entities')
 
-    # Save submission and exit early if mapping does not specify any entities.
-    if not entity_ps_ids:
-        submission.save()
-        return
-
-    # Get the schema of the projectschema
-    # project_schema = models.ProjectSchema.objects.get(pk=entity_pks[0])
-    project_schemas = {
-        name: models.ProjectSchema.objects.get(pk=_id) for name, _id in entity_ps_ids.items()
-    }
-    schemas = {name: ps.schema.definition for name, ps in project_schemas.items()}
-    # schema = project_schema.schema.definition
+def extract_create_entities(submission_payload, mapping_definition, schemas):
 
     # Get entity definitions
     entity_defs = get_entity_definitions(mapping_definition, schemas)
@@ -442,42 +430,66 @@ def extract_create_entities(submission):
     # Get entity requirements
     requirements = get_entity_requirements(entity_defs, field_mappings)
 
-    submission_data = submission.payload
-
     # Only attempt entity extraction if requirements are present
     if any(requirements.values()):
         data, entity_types = extract_entities(
             requirements,
-            submission_data,
+            submission_payload,
             entity_defs,
         )
     else:
         entity_types = {}
 
     entity_list = []
-    for name, entities in entity_types.items():
+    for projectschema_name, entities in entity_types.items():
         for entity in entities:
-            obj = {
-                'id': entity['id'],
-                'payload': entity,
-                'status': 'Publishable',
-                'projectschema': project_schemas.get(name)
-            }
-            entity_list.append(obj)
-    # Save the submission to the db
-    submission.save()
-
-    # If extraction was successful, create new entities
-    if entity_list:
-        for e in entity_list:
-            entity = models.Entity(
-                id=e['id'],
-                payload=e['payload'],
-                status=e['status'],
-                projectschema=e['projectschema'],
-                submission=submission
+            obj = Entity(
+                id=entity['id'],
+                payload=entity,
+                projectschema_name=projectschema_name,
+                status='Publishable',
             )
-            entity.save()
+            entity_list.append(obj)
+
+    return entity_list
+
+
+def run_entity_extraction(submission):
+    # Get the mapping definition from the submission (submission.mapping.definition):
+    mapping_definition = submission.mapping.definition
+    # Get the primary key of the projectschema
+    # entity_pks = list(mapping_definition['entities'].values())
+    entity_ps_ids = mapping_definition.get('entities')
+    # Save submission and exit early if mapping does not specify any entities.
+    if not entity_ps_ids:
+        submission.save()
+        return
+    # Get the schema of the projectschema
+    project_schemas = {
+        name: models.ProjectSchema.objects.get(pk=_id) for name, _id in
+        entity_ps_ids.items()
+    }
+    schemas = {
+        name: ps.schema.definition for name, ps in
+        project_schemas.items()
+    }
+    entities = extract_create_entities(
+        submission_payload=submission.payload,
+        mapping_definition=mapping_definition,
+        schemas=schemas,
+    )
+    submission.save()
+    for entity in entities:
+        projectschema_name = entity.projectschema_name
+        projectschema = project_schemas[projectschema_name]
+        entity_instance = models.Entity(
+            id=entity.id,
+            payload=entity.payload,
+            status=entity.status,
+            projectschema=projectschema,
+            submission=submission,
+        )
+        entity_instance.save()
 
 
 def merge_objects(source, target, direction):
@@ -503,14 +515,13 @@ def merge_objects(source, target, direction):
 
 
 def validate_entity_payload(project_Schema, payload):
-    # Use avro.io to validate payload against the linke schema
-    schema_str = ''
-    if type(project_Schema.schema.definition) == list:
-        project_Schema.schema.definition[0]['name'] = project_Schema.schema.name
-        schema_str = json.dumps(project_Schema.schema.definition[0])
-    else:
-        project_Schema.schema.definition['name'] = project_Schema.schema.name
-        schema_str = json.dumps(project_Schema.schema.definition)
-    avro_schema = schema.Parse(schema_str)
-    if not Validate(avro_schema, payload):
-        raise AvroTypeException(avro_schema, payload)
+    # Use fastavro to validate payload against the linked schema
+    try:
+        # fastavro is primarily for (de)serialization. To test the schema compliance,
+        # we can just try to serialze the data using the schema.
+        with BytesIO() as file_obj:
+            avro.writer(file_obj, project_Schema.schema.definition, [payload])
+            # if we didn't get an exception, we're ok!
+        return
+    except Exception as err:
+        raise err
