@@ -25,50 +25,37 @@ a {
 .btn,
 button {
   @include label;
+  border-radius: $border-radius;
+  background: rgba($grey, .1);
   border: 0;
   border-color: transparent;
+  padding: .4em 1em;
+  box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 $shadow-color inset;
+  transition: background .3s;
 
   &:active,
   &:focus,
   &:hover {
-    box-shadow: none;
+    // box-shadow: none;
     cursor: pointer;
     outline: none;
+    background: $action-color;
   }
 }
 
-.btn {
-  background-color: $action-color;
+.btn-d {
   color: $white;
-  padding: .5em 1em;
-  line-height: 1em;
+  background: rgba($white, .15);
+  box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .3) inset;
+}
 
-  &:active,
-  &:focus,
-  &:hover {
-    background-color: $hover-color;
-  }
+.btn-big {
+  padding: 1em 3em;
+  font-size: $font-size-standard;
 }
 
 .btn-sm {
   padding: .2em .5em;
-}
-
-.btn-primary,
-a.btn-primary:not([href]) {
-  @include bg-gradient;
-  border-radius: 2px;
-  box-shadow: 1px 1px 1px rgba($text-color, .2), 1px 1px 0 rgba($white, .1) inset;
-  padding: .9em 1.5em;
-  transition: background 1s;
-
-  &:active,
-  &:focus,
-  &:hover {
-    background-color: $action-color;
-    box-shadow: 1px 1px 1px rgba($text-color, .3), 1px 1px 0 rgba($white, .2) inset;
-    color: $white;
-  }
 }
 
 .btn-icon {
@@ -93,17 +80,6 @@ a.btn-primary:not([href]) {
   }
 }
 
-.btn.icon-only {
-  border-radius: 50%;
-  font-size: .86rem;
-  width: 1.3rem;
-  height: 1.3rem;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .btn-danger {
   background: $red;
   
@@ -115,15 +91,12 @@ a.btn-primary:not([href]) {
 }
 
 .btn-cancel {
-  background: $grey;
-  border-radius: 2px;
-  color: $white;
-  padding: .9em 1.5em;
+  background: none;
 
   &:active,
   &:focus,
   &:hover {
-    background-color: darken($grey, 6);
+    background-color: rgba($dark-blue, .1);
   }
 }
 
@@ -137,33 +110,6 @@ a.btn-primary:not([href]) {
   &:focus,
   &:hover {
     background-color: darken($red, 6);
-  }
-}
-
-.btn-default {
-  background: none;
-  border: 0;
-  color: $action-color;
-
-  &:hover {
-    color: $hover-color;
-    background: none;
-  }
-}
-
-.btn-secondary {
-  background: $action-color;
-  border: 0;
-  color: $white;
-
-  &:hover {
-    background: $hover-color;
-    color: $white;
-  }
-
-  &:disabled,
-  &.disabled {
-    background-color: $grey;
   }
 }
 
@@ -191,13 +137,20 @@ small {
   box-shadow: 0 1px 1px $shadow-color inset;
 }
 
+.form-label {
+  display: block;
+  font-weight: 300;
+  letter-spacing: .04em;
+  font-size: $font-size-m;
+}
+
 input[type='password'],
 input[type='text'],
-textarea,
-textarea.form-control {
+textarea {
   border: 0;
-  border-radius: 0;
-  box-shadow: 1px 1px 1px rgba($text-color, .3) inset;
+  border-radius: $border-radius;
+  background: rgba($text-color, .1);
+  box-shadow: 1px 1px 1px rgba($text-color, .3) inset, 1px 1px 0 rgba($white, .1);
   font-family: $body-font-family;
   padding: .8em;
 
@@ -232,16 +185,6 @@ input:active {
   }
 }
 
-.dropdown-list {
-  max-height: 16rem;
-  overflow: auto;
-}
-
-.dropdown-item {
-  color: $action-color;
-}
-
-
 pre {
   background-color: $black;
   font-family: monospace;
@@ -254,10 +197,10 @@ pre {
   padding: .5rem;
 }
 
-@media screen and (max-width: 576px) {
+@media screen and (max-width: 786px) {
 
   body,
   html {
-    font-size: 14px;
+    font-size: 13px;
   }
 }

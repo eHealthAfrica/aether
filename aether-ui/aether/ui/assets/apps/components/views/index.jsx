@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { Link } from 'react-router-dom'
 import PipeLines from './pipelines/index'
+import NewPipeLine from './pipelines/new_pipeline'
 
 class Home extends Component {
   render () {
@@ -30,8 +31,8 @@ class Home extends Component {
           </div>
         </div>
         <div className='pipelines'>
-          <h1 className='pipelines-heading'>Project Name</h1>
-          <Link to='/new-pipeline'>New Pipeline</Link>
+          <h1 className='pipelines-heading'>Project Name//Pipelines</h1>
+          <NewPipeLine></NewPipeLine>
           <PipeLines></PipeLines>
         </div>
       </div>
