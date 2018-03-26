@@ -88,14 +88,14 @@ case "$1" in
         # remove previous build if needed
         rm -rf dist
         rm -rf build
-        rm -rf aether.common.egg-info
+        rm -rf aether.client.egg-info
 
         # create the distribution
         python setup.py bdist_wheel --universal
 
         # remove useless content
         rm -rf build
-        rm -rf aether.common.egg-info
+        rm -rf aether.client.egg-info
     ;;
 
     start )

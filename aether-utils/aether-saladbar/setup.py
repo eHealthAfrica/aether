@@ -9,7 +9,7 @@ if sys.version_info > (3,0):
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
-    name='saladbar',
+    name='aether-saladbar',
     version='0.0.0',
     install_requires=[
         "aether-client"

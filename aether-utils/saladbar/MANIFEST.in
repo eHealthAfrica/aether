@@ -1,6 +1,0 @@
-include conf/*
-include library/*
-include saladbar/*
-include wizard_resource/*
-include Pipfile
-include README.txt
