@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -Eeuo pipefail
 
 docker-compose down
 docker-compose -f docker-compose-base.yml   down
