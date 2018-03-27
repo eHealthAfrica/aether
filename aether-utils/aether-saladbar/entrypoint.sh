@@ -95,7 +95,7 @@ case "$1" in
 
         # remove useless content
         rm -rf build
-        rm -rf saladbar.egg-info
+        rm -rf aether_saladbar.egg-info
     ;;
 
     start )
