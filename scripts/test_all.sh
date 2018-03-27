@@ -60,4 +60,22 @@ prepare_and_test_container couchdb-sync aether/kernel/api/tests/fixtures/project
 echo "_____________________________________________ Killing auxiliary containers"
 ./scripts/kill_all.sh
 
+# start databases
+echo "_____________________________________________ Starting database"
+$DC_TEST up -d db-test
+
+# start a clean KERNEL TEST container
+prepare_container kernel
+
+echo "_____________________________________________ Starting kernel"
+$DC_TEST up -d kernel-test
+
+# test a clean INGEGRATION TEST container
+prepare_container integration
+$DC_TEST run integration-test test
+
+# kill ALL containers
+echo "_____________________________________________ Killing auxiliary containers"
+./scripts/kill_all.sh
+
 echo "_____________________________________________ END"
