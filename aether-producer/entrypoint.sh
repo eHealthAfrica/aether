@@ -98,6 +98,14 @@ case "$1" in
         ./manage.py # runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
 
+    start_test )
+        #setup_db
+        #setup_initial_data
+
+        ./manage.py test # runserver 0.0.0.0:$WEB_SERVER_PORT
+    ;;
+
+
     help)
         show_help
     ;;

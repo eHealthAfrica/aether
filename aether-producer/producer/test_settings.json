@@ -1,17 +1,17 @@
 {
-    "kafka_server": "kafka:29092",
+    "kafka_server": "kafka-test:29092",
     "start_delay": 20,
     "sleep_time": 10,
-    "jdbc_connection_string": "jdbc:postgresql://db:5432/aether?user=postgres",
+    "jdbc_connection_string": "jdbc:postgresql://db-test:5432/aether?user=postgres",
     "jdbc_user": "postgres",
-    "offset_file": "offset.json",
+    "offset_file": "test-offset.json",
     "postgres_connection_info": {
         "user" : "postgres",
-        "dbname" : "aether",
+        "dbname" : "kernel-test",
         "port" : 5432,
         "host" : "db"
     },
-    "kernel_url": "http://kernel:8000",
+    "kernel_url": "http://kernel-test:9000",
     "kernel_credentials": {
         "username": "admin-kernel",
         "password": "adminadmin"

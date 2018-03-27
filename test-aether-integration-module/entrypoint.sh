@@ -105,6 +105,7 @@ case "$1" in
         # remove useless content
         rm -rf build
         rm -rf aether.client.egg-info
+        rm -rf __pycache__
     ;;
 
     start )

@@ -129,3 +129,39 @@ services:
     depends_on:
       - db-test
       - kernel-test
+      - kafka-test
+      - producer-test
+
+  # ---------------------------------
+  # Aether Kafka Containers
+  # ---------------------------------
+
+  zookeeper-test:
+    extends:
+      file: docker-compose-base.yml
+      service: zookeeper-base
+    restart: on-failure
+
+  kafka-test:
+    extends:
+      file: docker-compose-base.yml
+      service: kafka-base
+    restart: on-failure
+    depends_on:
+      - zookeeper-test
+    links:
+      - zookeeper-test
+
+  # ---------------------------------
+  # Aether Kafka Producer
+  # ---------------------------------
+
+  producer-test:
+    extends:
+      file: docker-compose-base.yml
+      service: aether-producer-base
+    restart: on-failure
+    links:
+      - kafka-test
+      - zookeeper-test
+    command: start_dev
