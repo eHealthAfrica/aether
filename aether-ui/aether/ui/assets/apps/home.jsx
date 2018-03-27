@@ -11,6 +11,10 @@ const appElement = document.getElementById('home-app')
 
 const store = createStore()
 
+if (module.hot) {
+  module.hot.accept()
+}
+
 render(
   <Provider store={store}>
     <div>
