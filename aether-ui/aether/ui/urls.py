@@ -12,8 +12,7 @@ from .api.views import empty
 
 urlpatterns = generate_urlpatterns(kernel=True) + [
     # API
-    url(r'^/', include('ui.api.urls', namespace='ui')),
-    url(r'^v1/', include('ui.api.urls', namespace='v1')),
+    url(r'^', include('ui.api.urls', namespace='ui')),
     # Welcome page
     url(r'^$',
         login_required(TemplateView.as_view(template_name='pages/index.html')),

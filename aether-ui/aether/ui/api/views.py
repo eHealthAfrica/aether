@@ -2,9 +2,16 @@ import requests
 
 from django.http import HttpResponse, JsonResponse
 from django.views import View
+from rest_framework import viewsets
 
 from ..settings import AETHER_APPS
-from . import models
+from . import models, serializers
+
+
+class PipelineViewSet(viewsets.ModelViewSet):
+    queryset = models.Pipeline.objects.all()
+    serializer_class = serializers.PipelineSerializer
+    ordering = ('name',)
 
 
 class TokenProxyView(View):
