@@ -1,0 +1,17 @@
+@keyframes slide-up {
+  0% {top: 100vh}
+  100% {top: 10px}
+}
+
+.pipeline {
+  background: $white;
+  box-shadow: 0 -1px 3px rgba($text-color, .3);
+  position: fixed;
+  top: 10px;
+  bottom: 0;
+  width: 100vw;
+  overflow: hidden;
+  transition: top .2s;
+  animation: slide-up .6s;
+}
+
