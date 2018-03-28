@@ -1,10 +1,10 @@
 import requests
+import uuid
 
 from collections import namedtuple
-
 from django.contrib.auth import get_user_model
 from django.db import models
-
+from model_utils.models import TimeStampedModel
 
 from ..settings import AETHER_APPS
 
@@ -152,3 +152,8 @@ class UserTokens(models.Model):
     class Meta:
         app_label = 'ui'
         default_related_name = 'app_tokens'
+
+
+class Pipeline(TimeStampedModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100, null=False, blank=False)

@@ -9,6 +9,8 @@ from . import views
 
 router = routers.DefaultRouter()
 
+router.register('pipelines', views.PipelineViewSet)
+
 urlpatterns = [
     url(r'^ui/', include(router.urls)),
 ]

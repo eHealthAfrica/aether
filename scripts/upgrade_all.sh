@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-containers=( kernel odk couchdb-sync )
+containers=( kernel odk couchdb-sync ui )
 
 # create the common module
 ./scripts/build_common_and_distribute.sh
@@ -10,8 +10,10 @@ containers=( kernel odk couchdb-sync )
 for container in "${containers[@]}"
 do
   :
-
-  if [[ $container = "kernel" ]]
+  # FIXME: we need a better strategy for this. As soon as all aether modules are
+  # named in a consistent way (e.g. "aether-<module-name>"), the below
+  # conditionals can be removed.
+  if [[ $container = "kernel" || container = "ui" ]]
   then
     FOLDER=aether-$container
   else

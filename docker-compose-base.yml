@@ -65,6 +65,8 @@ services:
     stdin_open: true
     tty: true
     environment:
+      AETHER_KERNEL_URL: http://kernel:8000
+      AETHER_KERNEL_URL_TEST: http://kernel-test:9000
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
@@ -176,30 +178,23 @@ services:
       context: ./aether-ui
       dockerfile: aether/Dockerfile
     environment: &ui-environment
-      CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
-      CSRF_COOKIE_DOMAIN: .aether.local
-      DEBUG: "true"
-      HOSTNAME: ui.aether.local
-      STATIC_ROOT: /code/ui/assets/bundles
-
       AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
       AETHER_KERNEL_URL: http://kernel:8000
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000
-
       AETHER_MODULES: "kernel,odk,"
-
+      CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
+      CSRF_COOKIE_DOMAIN: .aether.local
+      DEBUG: "true"
+      DJANGO_SECRET_KEY: "secret"
+      HOSTNAME: ui.aether.local
       RDS_DB_NAME: ui
       RDS_HOSTNAME: db
       RDS_PASSWORD: ""
       RDS_PORT: 5432
       RDS_USERNAME: postgres
-
-      CSV_HEADER_RULES: replace;.;:;
-      CSV_HEADER_RULES_SEP: ;
-
-      WEB_SERVER_PORT: 8004
-
       REACT_ENV: 'development'
+      STATIC_ROOT: /code/ui/assets/bundles
+      WEB_SERVER_PORT: 8004
     volumes: &ui-volumes
       #################################################
       #                    WARNING                    #
