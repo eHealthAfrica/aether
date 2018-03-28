@@ -1,11 +1,9 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import PipeLines from './pipelines/index'
 import NewPipeLine from './pipelines/new_pipeline'
 import PipeLine from './pipelines/pipeline'
 
 class Home extends Component {
-
   constructor (props) {
     super(props)
     this.state = {
@@ -27,7 +25,7 @@ class Home extends Component {
           </a>
           { this.state.view === 'show-pipeline' &&
             <div className='top-nav-breadcrumb'>
-              <a 
+              <a
                 href='#'
                 onClick={() => { this.setState({ view: 'show-index' }) }}>
                 Pipelines
@@ -62,10 +60,10 @@ class Home extends Component {
     )
   }
 
-  renderPipelinePreviews() {
+  renderPipelinePreviews () {
     return (
       <div className='pipeline-previews'>
-        <div 
+        <div
           onClick={() => { this.setState({ view: 'show-pipeline' }) }}
           className='pipeline-preview'>
           <h2 className='preview-heading'>Name of pipeline</h2>
@@ -78,7 +76,7 @@ class Home extends Component {
             Errors
           </div>
         </div>
-        <div 
+        <div
           onClick={() => { this.setState({ view: 'show-pipeline' }) }}
           className='pipeline-preview'>
           <h2 className='preview-heading'>longer name of pipeline</h2>
@@ -93,7 +91,6 @@ class Home extends Component {
         </div>
       </div>
     )
-
   }
 }
 

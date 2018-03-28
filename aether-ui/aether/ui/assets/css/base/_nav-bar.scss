@@ -17,6 +17,13 @@
 .top-nav-breadcrumb {
   margin-left: 5%;
   animation: fade-in .6s;
+  letter-spacing: .06em;
+  font-size: $font-size-s;
+
+  a {
+    text-transform: uppercase;
+    font-weight: 600;
+  }
 }
 
 
