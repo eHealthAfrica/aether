@@ -15,3 +15,126 @@
   animation: slide-up .6s;
 }
 
+.pipeline-nav {
+  display: flex;
+  position: absolute;
+  width: 100vw;
+  align-items: baseline;
+  justify-content: flex-end;
+}
+
+div[class^="pipeline-nav-item__"] {
+  @include label;
+  color: $action-color;
+  padding: .6rem;
+  transition: all 1s;
+
+  .badge {
+    color: $white;
+    font-weight: 600;
+    background: $grey;
+    width: 1.8rem;
+    height: 1.8rem;
+    padding: .4rem 0;
+    opacity: .4;
+    margin: 0 .8rem 0 0;
+  }
+}
+
+div.pipeline-nav-item__output {
+
+  text-align: right;
+  padding-right: 2rem;
+
+  .output-toggle {
+    width: 0; 
+    height: 0; 
+    border-top: .4rem solid transparent;
+    border-bottom: .4rem solid transparent;
+    border-left: .6rem solid $action-color;
+
+    position: absolute;
+    top: 1.1rem;
+    right: .6rem;
+  }
+}
+
+.pipeline-sections {
+  color: $text-color;
+  display: flex;
+}
+
+div[class^="pipeline-section__"] {
+  width: 0;
+  border-left: 1px solid $purple;
+  padding-top: 3rem;
+  transition: all 1s;
+}
+
+// STATES
+
+// INPUT
+
+.pipeline--input {
+
+  div.pipeline-nav-item__input {
+    width: 25%;
+    margin-right: 50%;
+  }
+
+  div.pipeline-section__input {
+    width: 100%;
+  }
+}
+
+// ENTITY TYPES
+
+.pipeline--entityTypes {
+
+  div.pipeline-nav-item__input {
+    width: 25%;
+  }
+
+  div.pipeline-section__input {
+    width: 25%;
+  }
+
+  div.pipeline-nav-item__entityTypes {
+    width: 25%;
+    margin-right: auto;
+  }
+
+  div.pipeline-section__entityTypes {
+    width: 75%;
+  }
+}
+
+// MAPPING
+
+.pipeline--mapping {
+
+  div.pipeline-nav-item__input {
+    width: 25%;
+  }
+
+  div.pipeline-section__input {
+    width: 25%;
+  }
+
+  div.pipeline-nav-item__entityTypes {
+    width: 25%;
+  }
+
+  div.pipeline-section__entityTypes {
+    width: 25%;
+  }
+
+  div.pipeline-nav-item__mapping {
+    width: 25%;
+    margin-right: auto;
+  }
+
+  div.pipeline-section_mapping {
+    width: 50%;
+  }
+}
