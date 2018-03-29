@@ -10,17 +10,6 @@ apis:
       upstream_url: "http://kernel:8000"
       hosts:
         - "kernel.aether.local"
-
-  - name: "kernel-localhost-static"
-    ensure: "present"
-    attributes:
-      upstream_url: "http://kernel:8000"
-      hosts:
-        - "kernel.aether.local"
-      uris:
-        - "/static"
-        - "/accounts"
-      strip_uri: false
       preserve_host: true
 
   - name: "odk-localhost"
@@ -28,18 +17,20 @@ apis:
     attributes:
       upstream_url: "http://odk:8443"
       hosts:
-        - "localhost"
+        - "odk.aether.local"
       uris:
         - "/odk"
+      preserve_host: true
 
   - name: "sync-localhost"
     ensure: "present"
     attributes:
       upstream_url: "http://sync:8666"
       hosts:
-        - "localhost"
+        - "sync.aether.local"
       uris:
         - "/sync"
+      preserve_host: true
 
 # Kernel api access from frontend apps, requirers the request contains an OAuth2 token for kong passage
 # Token can be gotten from Kong-pass-oauth2 `/token`
@@ -53,6 +44,7 @@ apis:
         - "PROJECT_API_URL"
       uris:
         - "/ext/aether"
+      preserve_host: true
     plugins:
       - name: oauth2
         attributes:
@@ -75,6 +67,27 @@ apis:
       upstream_url: "http://kernel:8000"
       uris:
         - "/aether"
+      preserve_host: true
+      hosts:
+        - "PROJECT_API_URL"
+    plugins:        
+    - name: key-auth
+      ensure: "present"
+      attributes:
+        config:
+          key_names:
+            - apikey
+          hide_credentials: true
+
+  - name: "kernel-internal-fallback"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://kernel:8000"
+      uris:
+        - "/"
+      preserve_host: true
+      hosts:
+        - "PROJECT_API_URL"
     plugins:        
     - name: key-auth
       ensure: "present"
@@ -104,27 +117,16 @@ apis:
             - apikey
           hide_credentials: true
 
-# Kernel apis for retriving django static files
+# Kernel apis for retriving django static files and accounts urls
 
   - name: "kernel-static"
-    ensure: "present"
-    attributes:
-      upstream_url: "http://kernel:8000/static"
-      hosts:
-        - "PROJECT_API_URL"
-      uris:
-        - "/static"
-      preserve_host: true
-
-# Kernel apis for django accounts related endpoints (login/logout)
-
-  - name: "kernel-accounts"
     ensure: "present"
     attributes:
       upstream_url: "http://kernel:8000"
       hosts:
         - "PROJECT_API_URL"
       uris:
+        - "/static"
         - "/accounts"
       preserve_host: true
       strip_uri: false
