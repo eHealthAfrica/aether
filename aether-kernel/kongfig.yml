@@ -12,26 +12,6 @@ apis:
         - "kernel.aether.local"
       preserve_host: true
 
-  - name: "odk-localhost"
-    ensure: "present"
-    attributes:
-      upstream_url: "http://odk:8443"
-      hosts:
-        - "odk.aether.local"
-      uris:
-        - "/odk"
-      preserve_host: true
-
-  - name: "sync-localhost"
-    ensure: "present"
-    attributes:
-      upstream_url: "http://sync:8666"
-      hosts:
-        - "sync.aether.local"
-      uris:
-        - "/sync"
-      preserve_host: true
-
 # Kernel api access from frontend apps, requirers the request contains an OAuth2 token for kong passage
 # Token can be gotten from Kong-pass-oauth2 `/token`
 # Accessible via `http://{KONG_HOST}/ext/aether`

@@ -10,6 +10,7 @@ apis:
       upstream_url: "http://sync:8666"
       uris:
         - "/sync"
+      preserve_host: true
     plugins:        
     - name: key-auth
       ensure: "present"
@@ -17,4 +18,12 @@ apis:
         config:
           key_names:
             - apikey
-          hide_credentials: true
+          hide_credentials: true  
+
+  - name: "sync-localhost"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://sync:8666"
+      hosts:
+        - "sync.aether.local"
+      preserve_host: true

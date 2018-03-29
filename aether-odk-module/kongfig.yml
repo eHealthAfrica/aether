@@ -10,6 +10,7 @@ apis:
       upstream_url: "https://odk:8443"
       uris:
         - "/odk"
+      preserve_host: true
     plugins:        
     - name: key-auth
       ensure: "present"
@@ -17,4 +18,12 @@ apis:
         config:
           key_names:
             - apikey
-          hide_credentials: true
+          hide_credentials: true 
+
+  - name: "odk-localhost"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://odk:8443"
+      hosts:
+        - "odk.aether.local"
+      preserve_host: true
