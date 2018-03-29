@@ -3,7 +3,8 @@
   100% {top: 10px}
 }
 
-$column-width: 25%;
+$column-width: 25vw;
+$transition-speed: .6s;
 
 $input-nav-width: 90px;
 $entityTypes-nav-width: 170px;
@@ -14,12 +15,14 @@ $output-nav-width: 100px;
   background: $white;
   box-shadow: 0 -1px 3px rgba($text-color, .3);
   position: fixed;
+  display: flex;
   top: 10px;
   bottom: 0;
   width: 100vw;
   overflow: hidden;
   transition: top .2s;
   animation: slide-up .6s;
+  z-index: 2;
 }
 
 .pipeline-nav {
@@ -30,11 +33,19 @@ $output-nav-width: 100px;
   justify-content: space-between;
 }
 
+.pipeline-nav-items {
+  display: flex;
+  width: calc(100% - #{$output-nav-width});
+  align-items: baseline;
+  justify-content: space-between;
+}
+
 div[class^="pipeline-nav-item__"] {
   @include label;
   color: $action-color;
   padding: .6rem;
-  transition: all 1s;
+  transition: all $transition-speed;
+  cursor: pointer;
 
   .badge {
     color: $white;
@@ -65,6 +76,7 @@ div.pipeline-nav-item__output {
   text-align: right;
   padding-right: 2rem;
   width: $output-nav-width;
+  position: relative;
 
   .output-toggle {
     width: 0; 
@@ -74,31 +86,46 @@ div.pipeline-nav-item__output {
     border-left: .6rem solid $action-color;
 
     position: absolute;
-    top: 1.1rem;
+    top: .8rem;
     right: .6rem;
+
+    transition: right $transition-speed;
   }
 }
 
 .pipeline-sections {
   color: $text-color;
   display: flex;
+  width: 100%;
+  transition: width $transition-speed;
 }
 
-div[class^="pipeline-section__"] {
+div[class^="pipeline-section__"],
+.pipeline-output {
   width: 0;
+  height: 100vh;
   border-left: 1px solid $purple;
   padding-top: 3rem;
-  transition: all 1s;
+  transition: width $transition-speed;
 }
 
 // STATES
+
+@mixin selected {
+  .badge {
+    @include bg-gradient;
+    opacity: 1;
+  }
+}
 
 // INPUT
 
 .pipeline--input {
 
   div.pipeline-nav-item__input {
-    width: calc(100% - (#{$entityTypes-nav-width} + #{$mapping-nav-width} + #{$output-nav-width}));
+    width: calc(100% - (#{$entityTypes-nav-width} + #{$mapping-nav-width}));
+    color: $text-color;
+    @include selected;
   }
 
   div.pipeline-section__input {
@@ -119,7 +146,9 @@ div[class^="pipeline-section__"] {
   }
 
   div.pipeline-nav-item__entityTypes {
-    width: calc(100% - #{$column-width} - (#{$mapping-nav-width} + #{$output-nav-width}));
+    width: calc(100% - #{$column-width} - (#{$mapping-nav-width}));
+    color: $text-color;
+    @include selected;
   }
 
   div.pipeline-section__entityTypes {
@@ -148,10 +177,35 @@ div[class^="pipeline-section__"] {
   }
 
   div.pipeline-nav-item__mapping {
-    width: calc(100% - #{$column-width}*2 - #{$output-nav-width});
+    width: calc(100% - #{$column-width}*2);
+    color: $text-color;
+    @include selected;
   }
 
   div.pipeline-section_mapping {
     width: calc(100% - #{$column-width}*2);
+  }
+}
+
+//OUTPUT
+
+.show-output {
+
+  .pipeline-nav-items {
+    width: 75%;
+  }
+
+  div.pipeline-nav-item__output {
+    width: 25%;
+
+    .output-toggle {
+      right: calc(100% - 1.6rem);
+    }
+  }
+  .pipeline-sections {
+    width: 75%;
+  }
+  .pipeline-output {
+    width: 25%;
   }
 }
