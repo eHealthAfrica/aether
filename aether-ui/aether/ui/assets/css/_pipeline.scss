@@ -33,6 +33,19 @@ $output-nav-width: 100px;
   justify-content: space-between;
 }
 
+.fullscreen-toggle {
+  display: none;
+  margin: 0 1rem;
+  color: $white;
+  position: absolute;
+  right: calc(100% - 300px);
+  transition: right $transition-speed;
+}
+
+.fullscreen .fullscreen-toggle {
+  right: 1rem;
+}
+
 .pipeline-nav-items {
   display: flex;
   width: calc(100% - #{$output-nav-width});
@@ -44,9 +57,14 @@ $output-nav-width: 100px;
 div[class^='pipeline-nav-item__'] {
   @include label;
   color: $action-color;
-  padding: .6rem;
+  padding: .6rem 0;
   transition: all $transition-speed;
   cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  align-items: baseline;
+  display: flex;
 
   .badge {
     color: $white;
@@ -56,7 +74,7 @@ div[class^='pipeline-nav-item__'] {
     height: 1.8rem;
     padding: .4rem 0;
     opacity: .4;
-    margin: 0 .8rem 0 0;
+    margin: 0 .8rem;
   }
 }
 
@@ -75,6 +93,7 @@ div.pipeline-nav-item__mapping {
 div.pipeline-nav-item__output {
 
   text-align: right;
+  justify-content: flex-end;
   padding-right: 2rem;
   width: $output-nav-width;
   position: relative;
@@ -138,6 +157,10 @@ div[class^='pipeline-section__'],
     @include bg-gradient;
     opacity: 1;
   }
+
+  .fullscreen-toggle {
+    display: inline-block;
+  }
 }
 
 // INPUT
@@ -178,6 +201,26 @@ div[class^='pipeline-section__'],
   }
 }
 
+.pipeline--entityTypes.fullscreen {
+
+  div.pipeline-nav-item__input,
+  div.pipeline-nav-item__mapping {
+    width: 0;
+  }
+
+  div.pipeline-section__input {
+    width: 0;
+  }
+
+  div.pipeline-nav-item__entityTypes {
+    width: 100%;
+  }
+
+  div.pipeline-section__entityTypes {
+    width: 100%;
+  }
+}
+
 // MAPPING
 
 .pipeline--mapping {
@@ -208,6 +251,28 @@ div[class^='pipeline-section__'],
     width: calc(100% - #{$column-width}*2);
   }
 }
+
+.pipeline--mapping.fullscreen {
+
+  div.pipeline-nav-item__input,
+  div.pipeline-nav-item__entityTypes {
+    width: 0;
+  }
+
+  div.pipeline-section__input,
+  div.pipeline-section__entityTypes {
+    width: 0;
+  }
+
+  div.pipeline-nav-item__mapping {
+    width: 100%;
+  }
+
+  div.pipeline-section__mapping {
+    width: 100%;
+  }
+}
+
 
 //OUTPUT
 

@@ -10,13 +10,14 @@ class PipeLine extends Component {
     super(props)
     this.state = {
       pipelineView: 'input',
-      showOutput: false
+      showOutput: false,
+      fullscreen: false
     }
   }
 
   render () {
     return (
-      <div className={`pipeline pipeline--${this.state.pipelineView} ${this.state.showOutput ? 'show-output' : ''}`}>
+      <div className={`pipeline pipeline--${this.state.pipelineView} ${this.state.showOutput ? 'show-output' : ''} ${this.state.fullscreen ? 'fullscreen' : ''}`}>
         <div className='pipeline-nav'>
           <div className='pipeline-nav-items'>
             <div
@@ -30,12 +31,18 @@ class PipeLine extends Component {
               onClick={() => this.setState({ pipelineView: 'entityTypes' })}>
               <div className='badge'>2</div>
               Entity Types
+              <button
+                className='btn-icon fullscreen-toggle'
+                onClick={() => this.toggleFullscreen()}>{this.state.fullscreen ? 'close' : 'fullscreen'}</button>
             </div>
             <div
               className='pipeline-nav-item__mapping'
               onClick={() => this.setState({ pipelineView: 'mapping' })}>
               <div className='badge'>3</div>
               mapping
+              <button
+                className='btn-icon fullscreen-toggle'
+                onClick={() => this.toggleFullscreen()}>{this.state.fullscreen ? 'close' : 'fullscreen'}</button>
             </div>
           </div>
           <div
@@ -70,6 +77,13 @@ class PipeLine extends Component {
       this.setState({ showOutput: true })
     } else {
       this.setState({ showOutput: false })
+    }
+  }
+  toggleFullscreen () {
+    if (!this.state.fullscreen) {
+      this.setState({ fullscreen: true })
+    } else {
+      this.setState({ fullscreen: false })
     }
   }
 }

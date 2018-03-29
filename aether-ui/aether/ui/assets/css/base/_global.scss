@@ -59,24 +59,16 @@ button {
 }
 
 .btn-icon {
-  padding: .6em 1.5em .7em 1em;
+  background: none;
+  box-shadow: none;
+  padding: 0;
   display: flex;
   align-items: center;
 
-  i {
-    font-size: 1.6em;
-    margin-right: .5em;
-    position: relative;
-  }
-
-  i.invert {
-    background: $white;
-    font-size: .9rem;
-    border-radius: 50%;
-    padding: 3px 2px 3px 3px;
-    width: 1.3rem;
-    height: 1.3rem;
-    color: $action-color;
+  &:active,
+  &:focus,
+  &:hover {
+    background: none;
   }
 }
 
