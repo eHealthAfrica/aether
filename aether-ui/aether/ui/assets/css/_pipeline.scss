@@ -3,6 +3,13 @@
   100% {top: 10px}
 }
 
+$column-width: 25%;
+
+$input-nav-width: 90px;
+$entityTypes-nav-width: 170px;
+$mapping-nav-width: 140px;
+$output-nav-width: 100px;
+
 .pipeline {
   background: $white;
   box-shadow: 0 -1px 3px rgba($text-color, .3);
@@ -20,7 +27,7 @@
   position: absolute;
   width: 100vw;
   align-items: baseline;
-  justify-content: flex-end;
+  justify-content: space-between;
 }
 
 div[class^="pipeline-nav-item__"] {
@@ -41,10 +48,23 @@ div[class^="pipeline-nav-item__"] {
   }
 }
 
+div.pipeline-nav-item__input {
+  width: $input-nav-width;
+}
+
+div.pipeline-nav-item__entityTypes {
+  width: $entityTypes-nav-width;
+}
+
+div.pipeline-nav-item__mapping {
+  width: $mapping-nav-width;
+}
+
 div.pipeline-nav-item__output {
 
   text-align: right;
   padding-right: 2rem;
+  width: $output-nav-width;
 
   .output-toggle {
     width: 0; 
@@ -78,8 +98,7 @@ div[class^="pipeline-section__"] {
 .pipeline--input {
 
   div.pipeline-nav-item__input {
-    width: 25%;
-    margin-right: 50%;
+    width: calc(100% - (#{$entityTypes-nav-width} + #{$mapping-nav-width} + #{$output-nav-width}));
   }
 
   div.pipeline-section__input {
@@ -92,20 +111,19 @@ div[class^="pipeline-section__"] {
 .pipeline--entityTypes {
 
   div.pipeline-nav-item__input {
-    width: 25%;
+    width: $column-width;
   }
 
   div.pipeline-section__input {
-    width: 25%;
+    width: $column-width;
   }
 
   div.pipeline-nav-item__entityTypes {
-    width: 25%;
-    margin-right: auto;
+    width: calc(100% - #{$column-width} - (#{$mapping-nav-width} + #{$output-nav-width}));
   }
 
   div.pipeline-section__entityTypes {
-    width: 75%;
+    width: calc(100% - #{$column-width});
   }
 }
 
@@ -114,27 +132,26 @@ div[class^="pipeline-section__"] {
 .pipeline--mapping {
 
   div.pipeline-nav-item__input {
-    width: 25%;
+    width: $column-width;
   }
 
   div.pipeline-section__input {
-    width: 25%;
+    width: $column-width;
   }
 
   div.pipeline-nav-item__entityTypes {
-    width: 25%;
+    width: $column-width;
   }
 
   div.pipeline-section__entityTypes {
-    width: 25%;
+    width: $column-width;
   }
 
   div.pipeline-nav-item__mapping {
-    width: 25%;
-    margin-right: auto;
+    width: calc(100% - #{$column-width}*2 - #{$output-nav-width});
   }
 
   div.pipeline-section_mapping {
-    width: 50%;
+    width: calc(100% - #{$column-width}*2);
   }
 }
