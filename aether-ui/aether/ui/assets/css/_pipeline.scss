@@ -3,7 +3,7 @@
   100% {top: 10px}
 }
 
-$column-width: 25vw;
+$column-width: 20vw;
 $transition-speed: .6s;
 
 $input-nav-width: 90px;
@@ -104,9 +104,23 @@ div[class^="pipeline-section__"],
 .pipeline-output {
   width: 0;
   height: 100vh;
-  border-left: 1px solid $purple;
   padding-top: 3rem;
   transition: width $transition-speed;
+}
+
+.pipeline-output {
+  background: $text-color;
+  color: $white;
+}
+
+.pipeline-section__entityTypes {
+  background: lighten($dark-blue, 5);
+  color: $white;
+}
+
+.pipeline-section__mapping {
+  background: $dark-blue;
+  color: $white;
 }
 
 // STATES
@@ -147,7 +161,7 @@ div[class^="pipeline-section__"],
 
   div.pipeline-nav-item__entityTypes {
     width: calc(100% - #{$column-width} - (#{$mapping-nav-width}));
-    color: $text-color;
+    color: $white;
     @include selected;
   }
 
@@ -178,11 +192,11 @@ div[class^="pipeline-section__"],
 
   div.pipeline-nav-item__mapping {
     width: calc(100% - #{$column-width}*2);
-    color: $text-color;
+    color: $white;
     @include selected;
   }
 
-  div.pipeline-section_mapping {
+  div.pipeline-section__mapping {
     width: calc(100% - #{$column-width}*2);
   }
 }
