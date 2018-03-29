@@ -55,7 +55,7 @@ class PipeLine extends Component {
 
   toggleOutput () {
     console.log(this.state.showOutput)
-     if (!this.state.showOutput) {
+    if (!this.state.showOutput) {
       this.setState({ showOutput: true })
     } else {
       this.setState({ showOutput: false })
