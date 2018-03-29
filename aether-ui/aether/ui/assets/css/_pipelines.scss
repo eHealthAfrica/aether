@@ -1,6 +1,7 @@
 .pipelines-container {
   @include bg-gradient;
   color: $white;
+  min-height: 100vh;
 
   &::before {
     content: '';
@@ -34,8 +35,6 @@
   a {
     color: $white;
   }
-
-  min-height: 100vh;
 }
 
 .pipelines {
@@ -115,8 +114,18 @@
 }
 
 @keyframes show {
-  0% {max-height: 0; padding: 0; opacity: 0}
-  100% {max-height: 200px; padding: 2rem 0 3rem; opacity: 1}
+
+  0% {
+    max-height: 0;
+    padding: 0;
+    opacity: 0
+  }
+
+  100% {
+    max-height: 200px;
+    padding: 2rem 0 3rem;
+    opacity: 1
+  }
 }
 
 .pipeline-form {
@@ -147,7 +156,7 @@
     width: 100%;
   }
 
-  .text-input::Placeholder{
+  .text-input::Placeholder {
     color: rgba($white, .4);
     line-height: 1.3em;
   }
@@ -191,7 +200,7 @@
       width: 100%;
     }
 
-    .text-input::Placeholder{
+    .text-input::Placeholder {
       color: rgba($white, .4);
     }
 

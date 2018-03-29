@@ -1,5 +1,9 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
+import Input from '../sections/input'
+import EntityTypes from '../sections/entityTypes'
+import Mapping from '../sections/mapping'
+import Output from '../sections/output'
 
 class PipeLine extends Component {
   constructor (props) {
@@ -44,17 +48,24 @@ class PipeLine extends Component {
         </div>
 
         <div className='pipeline-sections'>
-          <div className='pipeline-section__input'>input</div>
-          <div className='pipeline-section__entityTypes'>entity types</div>
-          <div className='pipeline-section__mapping'>mapping</div>
+          <div className='pipeline-section__input'>
+            <Input />
+          </div>
+          <div className='pipeline-section__entityTypes'>
+            <EntityTypes />
+          </div>
+          <div className='pipeline-section__mapping'>
+            <Mapping />
+          </div>
         </div>
-        <div className='pipeline-output'>output</div>
+        <div className='pipeline-output'>
+          <Output />
+        </div>
       </div>
     )
   }
 
   toggleOutput () {
-    console.log(this.state.showOutput)
     if (!this.state.showOutput) {
       this.setState({ showOutput: true })
     } else {

@@ -3,8 +3,9 @@
   100% {top: 10px}
 }
 
-$column-width: 20vw;
 $transition-speed: .6s;
+
+$pipeline-nav-height: 3rem;
 
 $input-nav-width: 90px;
 $entityTypes-nav-width: 170px;
@@ -19,7 +20,6 @@ $output-nav-width: 100px;
   top: 10px;
   bottom: 0;
   width: 100vw;
-  overflow: hidden;
   transition: top .2s;
   animation: slide-up .6s;
   z-index: 2;
@@ -28,7 +28,7 @@ $output-nav-width: 100px;
 .pipeline-nav {
   display: flex;
   position: absolute;
-  width: 100vw;
+  width: 100%;
   align-items: baseline;
   justify-content: space-between;
 }
@@ -38,9 +38,10 @@ $output-nav-width: 100px;
   width: calc(100% - #{$output-nav-width});
   align-items: baseline;
   justify-content: space-between;
+  transition: width $transition-speed;
 }
 
-div[class^="pipeline-nav-item__"] {
+div[class^='pipeline-nav-item__'] {
   @include label;
   color: $action-color;
   padding: .6rem;
@@ -79,8 +80,8 @@ div.pipeline-nav-item__output {
   position: relative;
 
   .output-toggle {
-    width: 0; 
-    height: 0; 
+    width: 0;
+    height: 0;
     border-top: .4rem solid transparent;
     border-bottom: .4rem solid transparent;
     border-left: .6rem solid $action-color;
@@ -100,11 +101,18 @@ div.pipeline-nav-item__output {
   transition: width $transition-speed;
 }
 
-div[class^="pipeline-section__"],
+.section-body {
+  width: 100%;
+  height: calc(100vh - 10px - #{$pipeline-nav-height});
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+div[class^='pipeline-section__'],
 .pipeline-output {
   width: 0;
-  height: 100vh;
-  padding-top: 3rem;
+  height: calc(100vh - 10px);
+  padding-top: $pipeline-nav-height;
   transition: width $transition-speed;
 }
 
@@ -137,9 +145,9 @@ div[class^="pipeline-section__"],
 .pipeline--input {
 
   div.pipeline-nav-item__input {
+    @include selected;
     width: calc(100% - (#{$entityTypes-nav-width} + #{$mapping-nav-width}));
     color: $text-color;
-    @include selected;
   }
 
   div.pipeline-section__input {
@@ -160,9 +168,9 @@ div[class^="pipeline-section__"],
   }
 
   div.pipeline-nav-item__entityTypes {
+    @include selected;
     width: calc(100% - #{$column-width} - (#{$mapping-nav-width}));
     color: $white;
-    @include selected;
   }
 
   div.pipeline-section__entityTypes {
@@ -191,9 +199,9 @@ div[class^="pipeline-section__"],
   }
 
   div.pipeline-nav-item__mapping {
+    @include selected;
     width: calc(100% - #{$column-width}*2);
     color: $white;
-    @include selected;
   }
 
   div.pipeline-section__mapping {
@@ -206,20 +214,22 @@ div[class^="pipeline-section__"],
 .show-output {
 
   .pipeline-nav-items {
-    width: 75%;
+    width: calc(100vw - #{$output-width});
   }
 
   div.pipeline-nav-item__output {
-    width: 25%;
+    width: $output-width;
 
     .output-toggle {
       right: calc(100% - 1.6rem);
     }
   }
+
   .pipeline-sections {
-    width: 75%;
+    width: calc(100vw - #{$output-width});
   }
+
   .pipeline-output {
-    width: 25%;
+    width: $output-width;
   }
 }
