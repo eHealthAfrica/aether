@@ -113,7 +113,7 @@
   margin: 1rem 0;
 }
 
-@keyframes show {
+@keyframes show-form {
 
   0% {
     max-height: 0;
@@ -133,7 +133,7 @@
   align-items: center;
   border-bottom: 1px dashed rgba($white, .2);
   padding: 2rem 0 3rem;
-  animation: show .5s;
+  animation: show-form .5s;
   overflow: hidden;
 
   .form-group {
