@@ -1,6 +1,6 @@
 .pipeline-output {
-  box-shadow: -1px 0 0 rgba(black, .2), 1px 0 1px rgba($white, .3) inset;
-  border-left: 1px solid rgba(black, .5);
+  box-shadow: -1px 0 0 rgba($black, .2), 1px 0 1px rgba($white, .3) inset;
+  border-left: 1px solid rgba($black, .5);
 
   .section-body {
     min-width: $output-width;

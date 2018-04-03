@@ -43,26 +43,24 @@ $output-nav-width: 7rem;
   display: none;
 
   &::before {
+    @include shadow-flat-dark;
     content: '';
     display: block;
     position: absolute;
     top: 0;
     left: 0;
-    @include shadow-flat-dark;
     width: 1.8rem;
     height: 1.8rem;
     border-radius: 50%;
     background: url('/static/images/fullscreen-icon.svg') center center no-repeat;
-    
   }
 
   &::after {
+    @include shadow-flat-dark;
     content: '';
-    display: block;
     position: absolute;
     top: 0;
     right: 1rem;
-    @include shadow-flat-dark;
     width: 1.8rem;
     height: 1.8rem;
     border-radius: 50%;
@@ -90,11 +88,13 @@ $output-nav-width: 7rem;
 }
 
 .fullscreen .fullscreen-toggle {
-  margin-left: calc(100% - 18rem);
+  margin-left: calc(100% - 19rem);
   border-right: 1px solid $grey;
+
   &::before {
     display: none;
   }
+
   &::after {
     display: block;
   }
@@ -126,6 +126,7 @@ div[class^='pipeline-nav-item__'] {
     font-weight: 600;
     background: $grey;
     width: 1.8rem;
+    min-width: 1.8rem;
     height: 1.8rem;
     padding: .4rem 0;
     opacity: .4;
