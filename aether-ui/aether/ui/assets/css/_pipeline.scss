@@ -7,10 +7,10 @@ $transition-speed: .6s;
 
 $pipeline-nav-height: 4rem;
 
-$input-nav-width: 90px;
-$entityTypes-nav-width: 170px;
-$mapping-nav-width: 140px;
-$output-nav-width: 100px;
+$input-nav-width: 6rem;
+$entityTypes-nav-width: 11rem;
+$mapping-nav-width: 9rem;
+$output-nav-width: 7rem;
 
 .pipeline {
   background: $white;
@@ -34,17 +34,69 @@ $output-nav-width: 100px;
 }
 
 .fullscreen-toggle {
-  display: none;
+  height: 1.8rem;
+  position: relative;
+  margin-left: 1rem;
+  align-items: center;
   transition: margin-left $transition-speed;
-  background: $dark-blue url('/static/images/fullscreen-icon.svg') center center no-repeat;
+  color: $action-color;
+  display: none;
+
+  &::before {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    @include shadow-flat-dark;
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 50%;
+    background: url('/static/images/fullscreen-icon.svg') center center no-repeat;
+    
+  }
+
+  &::after {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 1rem;
+    @include shadow-flat-dark;
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 50%;
+    background: url('/static/images/fullscreen-exit-icon.svg') center center no-repeat;
+    display: none;
+  }
+
+  span {
+    padding: 0 3.2rem 0 2.3rem;
+    opacity: 0;
+    transition: opacity .2s;
+  }
+
+  &:focus,
+  &:hover {
+    &::before,
+    &::after {
+      background-color: rgba($action-color-b, .2);
+    }
+
+    span {
+      opacity: 1;
+    }
+  }
 }
 
 .fullscreen .fullscreen-toggle {
-  margin-left: calc(100% - 16rem);
-  background-image: url('/static/images/fullscreen-exit-icon.svg');
-
-  span {
-    opacity: 1;
+  margin-left: calc(100% - 18rem);
+  border-right: 1px solid $grey;
+  &::before {
+    display: none;
+  }
+  &::after {
+    display: block;
   }
 }
 
@@ -66,6 +118,7 @@ div[class^='pipeline-nav-item__'] {
   white-space: nowrap;
   position: relative;
   align-items: baseline;
+  justify-content: flex-start;
   display: flex;
 
   .badge {

@@ -58,34 +58,6 @@ button {
   padding: .2em .5em;
 }
 
-.btn-icon {
-  @include shadow-flat-dark;
-  width: 1.8rem;
-  height: 1.8rem;
-  border-radius: 50%;
-  background: url('/static/images/fullscreen-icon.svg') center center no-repeat;
-  color: $white;
-  display: flex;
-  align-items: center;
-  margin-left: 2rem;
-
-  span {
-    padding-left: 2.2rem;
-    opacity: 0;
-    transition: opacity .2s;
-  }
-
-  &:focus,
-  &:hover {
-    background-color: rgba($action-color-b, .2);
-    color: $action-color;
-
-    span {
-      opacity: 1;
-    }
-  }
-}
-
 .btn-danger {
   background: $red;
   
