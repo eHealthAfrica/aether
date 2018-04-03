@@ -1,7 +1,10 @@
 .pipeline-section__mapping {
 
   .section-body {
-    min-width: $column-width;
+    display: flex;
+  }
+
+  .rules {
     padding: 1.2rem;
   }
 }

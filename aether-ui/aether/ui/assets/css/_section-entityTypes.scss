@@ -1,7 +1,39 @@
 .pipeline-section__entityTypes {
 
   .section-body {
+    display: flex;
+    padding: 2rem 0;
+  }
+
+  .section-left {
+  	width: $column-width;
     min-width: $column-width;
     padding: 1.2rem;
   }
+
+  .section-right {
+    display: none;
+    padding: 1.2rem;
+    border-left: 1px dashed rgba($light-grey, .4);
+    box-shadow: -1px 0 0 rgba($black, .3);
+  }
+}
+
+@keyframes show {
+  0% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+.pipeline--entityTypes .pipeline-section__entityTypes .section-right {
+  display: block;
+  animation: show 1s;
 }
