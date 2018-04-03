@@ -43,29 +43,29 @@ spec:
         ports:
         - containerPort: 8000
         args:
-        - start
-        livenessProbe:
-          initialDelaySeconds: 15
-          periodSeconds: 10
-          httpGet:
-            path: /health
-            port: 8000
-            httpHeaders:
-            - name: X-Kubernetes-Health-Check
-              value: livenessProbe
-            - name: Host
-              value: {{ .Values.url }}
-        readinessProbe:
-          initialDelaySeconds: 15
-          periodSeconds: 10
-          httpGet:
-            path: /health
-            port: 8000
-            httpHeaders:
-            - name: X-Kubernetes-Health-Check
-              value: check
-            - name: Host
-              value: {{ .Values.url }}
+        - start_dev
+        # livenessProbe:
+        #   initialDelaySeconds: 15
+        #   periodSeconds: 10
+        #   httpGet:
+        #     path: /health
+        #     port: 8000
+        #     httpHeaders:
+        #     - name: X-Kubernetes-Health-Check
+        #       value: livenessProbe
+        #     - name: Host
+        #       value: {{ .Values.url }}
+        # readinessProbe:
+        #   initialDelaySeconds: 15
+        #   periodSeconds: 10
+        #   httpGet:
+        #     path: /health
+        #     port: 8000
+        #     httpHeaders:
+        #     - name: X-Kubernetes-Health-Check
+        #       value: check
+        #     - name: Host
+        #       value: {{ .Values.url }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
         - name: CAS_SERVER_URL
@@ -90,11 +90,18 @@ spec:
           value: {{ .Values.RDS_PASSWORD }}
         - name: RDS_DB_NAME
           value: {{ .Values.RDS_DB_NAME }}
+        - name: WEB_SERVER_PORT
+          value: {{ .Values.WEB_SERVER_PORT }}
         volumeMounts:
         - mountPath: /var/www/static
           name: static-assets-volume
         - name: {{ .Chart.Name }}
           mountPath: {{ .Values.application.data_mount }}
+      - name: db
+        image: postgres:9.6
+        ports:
+        - containerPort: 5432
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
       - name: nginx
         image: nginx:stable-alpine
         ports:
