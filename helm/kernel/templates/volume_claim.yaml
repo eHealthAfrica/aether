@@ -1,15 +1,13 @@
-{{- if .Values.provider.aws -}}
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: {{ .Chart.Name }} 
-  annotations:
-    volume.beta.kubernetes.io/storage-class: "aws-efs-gp"
 spec:
   accessModes:
     - ReadWriteMany
+  local:
+    path: /tmp/test
   resources:
     requests:
       # This is not used by the provisioner, but is required by the PVC.
       storage: 1Mi
-{{- end -}}

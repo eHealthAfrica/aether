@@ -21,35 +21,17 @@ spec:
         command: ['bash', '-c', './scripts/init.sh']
         env:
         - name: PGHOST
-          valueFrom :
-            secretKeyRef:
-              name: {{ .Values.database.secret }}
-              key: host
+          value: {{ .Values.RDS_HOSTNAME }}
         - name: PGUSER
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.database.secret }}
-              key: user
+          value: {{ .Values.RDS_USERNAME }}
         - name: PGPASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.database.secret }}
-              key: password
+          value: {{ .Values.RDS_PASSWORD }}
         - name: RDS_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.application.secret }}
-              key: kernel-database-user
+          value: {{ .Values.RDS_USERNAME }}
         - name: RDS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.application.secret }}
-              key: kernel-database-password
+          value: {{ .Values.RDS_PASSWORD }}
         - name: RDS_DB_NAME
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.application.secret }}
-              key: kernel-database-name
+          value: {{ .Values.RDS_DB_NAME }}
         volumeMounts:
         - mountPath: /scripts
           name: kernel-init
@@ -57,7 +39,7 @@ spec:
           mountPath: {{ .Values.application.data_mount }}
       containers:
       - name: {{ .Chart.Name }}
-        image: "{{ .Values.kernel.repository }}:{{ .Chart.Version }}"
+        image: "aether-kernel"
         ports:
         - containerPort: 8000
         args:
@@ -95,37 +77,19 @@ spec:
         - name: HOSTNAME
           value: "{{ .Values.url_prefix }}.{{ .Values.domain }}"
         - name: DJANGO_SECRET_KEY
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.application.secret }}
-              key: kernel-django-secret-key
+          value: {{ .Values.DJANGO_SECRET_KEY }}
         - name: AETHER_KERNEL_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.application.secret }}
-              key: kernel-token
+          value: {{ .Values.AETHER_KERNEL_TOKEN }}
         - name: RDS_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.application.secret }}
-              key: kernel-database-user
+          value: {{ .Values.RDS_USERNAME }}
         - name: RDS_PORT
-          value: "5432"
+          value: {{ .Values.RDS_PORT }}
         - name: RDS_HOSTNAME
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.database.secret }}
-              key: host
+          value: {{ .Values.RDS_HOSTNAME }}
         - name: RDS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.application.secret }}
-              key: kernel-database-password
+          value: {{ .Values.RDS_PASSWORD }}
         - name: RDS_DB_NAME
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.application.secret }}
-              key: kernel-database-name
+          value: {{ .Values.RDS_DB_NAME }}
         volumeMounts:
         - mountPath: /var/www/static
           name: static-assets-volume
