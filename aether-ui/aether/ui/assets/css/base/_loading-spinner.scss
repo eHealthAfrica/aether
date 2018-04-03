@@ -1,54 +1,78 @@
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes pulse {
-  0% {
-    opacity: 0;
-  }
-
-  100% {
-    opacity: 1;
-  }
-}
+$duration: 1.6s;
 
 .loading-spinner {
-  animation: spin 1.5s normal linear infinite;
-  border: 6px solid $action-color;
-  border-bottom-color: lighten($action-color, 10);
-  border-left-color: lighten($action-color, 10);
-  border-radius: 50%;
-  height: 24px;
   position: relative;
-  top: .2rem;
-  width: 24px;
+}
+
+@keyframes dot {
+  0%   {opacity: 0; top:20px;background: $purple;}
+  10%  {opacity: 1;}
+  30%  {opacity: 1; top:5px;background: $action-color;}
+  100% {opacity: 0; top:5px;background: $action-color;}
+}
+
+.dot1,
+.dot2,
+.dot3,
+.dot4,
+.dot5,
+.dot6 {
+  width: 50px;
+  height: 50px;
+  position: absolute;
 
   &::before {
-    content: '';
+    content: "";
     display: block;
+    position: absolute;
+    border-radius: 100%;
+    background: $action-color;
     width: 8px;
     height: 8px;
-    margin: 2px;
-    border-radius: 50%;
-    background: $purple;
-    animation: pulse 1s normal ease-in-out infinite;
-    animation-direction: alternate;
+    left: 22px;
+    top: 22px;
+    opacity: 0;
+    animation: dot $duration infinite;
+  }
+
+}
+
+.dot2 {
+  transform: rotate(60deg);
+
+  &::before {
+    animation-delay: $duration/6;
   }
 }
 
-/* creates an overlay that prevents interaction with other controls */
-.refreshing {
-  background-color: rgba($text-color, .7);
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 9999;
+.dot3 {
+  transform: rotate(120deg);
+
+  &::before {
+    animation-delay: $duration/6*2;
+  }
+}
+
+.dot4 {
+  transform: rotate(180deg);
+
+  &::before {
+    animation-delay: $duration/6*3;
+  }
+}
+
+.dot5 {
+  transform: rotate(240deg);
+
+  &::before {
+    animation-delay: $duration/6*4;
+  }
+}
+
+.dot6 {
+  transform: rotate(300deg);
+
+  &::before {
+    animation-delay: $duration/6*5;
+  }
 }

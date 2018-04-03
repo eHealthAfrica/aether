@@ -6,8 +6,8 @@ class EntityTypes extends Component {
     return (
       <div className='section-body'>
         <div className='section-left'>
-          <div className='hint hint-b'>
-            No Entity Types added to your pipeline yet. 
+          <div className='hint'>
+            No Entity Types added to your pipeline yet.
           </div>
         </div>
         <div className='section-right'>

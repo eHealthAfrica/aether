@@ -10,13 +10,20 @@ import { FormattedMessage } from 'react-intl'
 export default class LoadingSpinner extends Component {
   render () {
     return (
-      <div data-qa='data-loading' className='container-fluid'>
-        <p className='alert alert-info'>
-          <i className='loading-spinner mr-2' />
+      <div data-qa='data-loading' className='loading-container'>
+        <div className='loading-info'>
+          <div className='loading-spinner'>
+          <div className='dot1' />
+          <div className='dot2' />
+          <div className='dot3' />
+          <div className='dot4' />
+          <div className='dot5' />
+          <div className='dot6' />
+          </div>
           <FormattedMessage
             id='alert.loading'
             defaultMessage='Loading data from server…' />
-        </p>
+        </div>
       </div>
     )
   }
