@@ -35,15 +35,17 @@ $output-nav-width: 100px;
 
 .fullscreen-toggle {
   display: none;
-  margin: 0 1rem;
-  color: $white;
-  position: absolute;
-  right: calc(100% - 300px);
-  transition: right $transition-speed;
+  transition: margin-left $transition-speed;
+  background: $dark-blue url('/static/images/fullscreen-icon.svg') center center no-repeat;
 }
 
 .fullscreen .fullscreen-toggle {
-  right: 1rem;
+  margin-left: calc(100% - 16rem);
+  background-image: url('/static/images/fullscreen-exit-icon.svg');
+
+  span {
+    opacity: 1;
+  }
 }
 
 .pipeline-nav-items {
@@ -159,7 +161,7 @@ div[class^='pipeline-section__'],
   }
 
   .fullscreen-toggle {
-    display: inline-block;
+    display: flex;
   }
 }
 

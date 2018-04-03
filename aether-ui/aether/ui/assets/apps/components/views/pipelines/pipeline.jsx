@@ -31,18 +31,22 @@ class PipeLine extends Component {
               onClick={() => this.setState({ pipelineView: 'entityTypes' })}>
               <div className='badge'>2</div>
               Entity Types
-              <button
+              <div
                 className='btn-icon fullscreen-toggle'
-                onClick={() => this.toggleFullscreen()}>{this.state.fullscreen ? 'close' : 'fullscreen'}</button>
+                onClick={() => this.toggleFullscreen()}>
+                <span>{this.state.fullscreen ? 'close' : 'fullscreen'}</span>
+              </div>
             </div>
             <div
               className='pipeline-nav-item__mapping'
               onClick={() => this.setState({ pipelineView: 'mapping' })}>
               <div className='badge'>3</div>
               mapping
-              <button
+              <div
                 className='btn-icon fullscreen-toggle'
-                onClick={() => this.toggleFullscreen()}>{this.state.fullscreen ? 'close' : 'fullscreen'}</button>
+                onClick={() => this.toggleFullscreen()}>
+                <span>{this.state.fullscreen ? 'close' : 'fullscreen'}</span>
+              </div>
             </div>
           </div>
           <div
