@@ -51,13 +51,14 @@ services:
   kongfig:
     build:
       context: aether-kongfig
-      args:
-        KONG_CONSUMER: ${KONG_CONSUMER}
-        KONG_APIKEY: ${KONG_APIKEY}
-        PROJECT_API_URL: ${PROJECT_API_URL}
-        KONG_OAUTH2_PROVISION_KEY: ${KONG_OAUTH2_PROVISION_KEY}
     image: mashupmill/kongfig
-    command: --path /config.yml --host kong:8001
+    env_file:
+      - .env
+    volumes:
+    # Register all modular kongfig files as volumes to have them pushed to kong
+      - ./aether-kernel/kongfig.yml:/config/_kernel-kongfig.yml
+      - ./aether-odk-module/kongfig.yml:/config/odk-kongfig.yml
+      - ./aether-couchdb-sync-module/kongfig.yml:/config/sync-kongfig.yml
 
   couchdb-base:
     image: couchdb:1.7.1
