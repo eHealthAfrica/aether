@@ -119,6 +119,7 @@ case "$1" in
 
     start )
         setup_db
+        # FIXME: workaround for local development?
         # setup_prod
 
         # media assets
@@ -128,10 +129,10 @@ case "$1" in
         ./manage.py collectstatic --noinput
         chmod -R 755 /var/www/static
 
-        # expose version number
-        cp VERSION /var/www/VERSION
-        # add git revision 
-        cp /code/REVISION /var/www/REVISION 
+        # # expose version number
+        # cp VERSION /var/www/VERSION
+        # # add git revision 
+        # cp /code/REVISION /var/www/REVISION 
 
         /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
     ;;

@@ -23,6 +23,7 @@ COPY ./ /code
 ################################################################################
 ## copy application version and create git revision 
 ################################################################################
+# FIXME: reactivate
 ARG VERSION
 RUN echo $VERSION > VERSION
 ARG GIT_REVISION

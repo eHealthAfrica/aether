@@ -2,11 +2,13 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: {{ .Chart.Name }} 
+  # name: pv0001
 spec:
   accessModes:
     - ReadWriteMany
   hostPath:
     path: /data/test
+    # path: /data/pv0001
   resources:
     requests:
       # This is not used by the provisioner, but is required by the PVC.
