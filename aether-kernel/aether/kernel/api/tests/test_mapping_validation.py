@@ -6,7 +6,6 @@ from .. import utils
 class TestMappingValidation(TestCase):
 
     def test_validate_getter__success_1(self):
-        self.assertEquals(1, 2)
         submission_payload = {'a': {'b': 'x'}}
         path = '#!uuid'
         expected = mapping_validation.Success(path, [])

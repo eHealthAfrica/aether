@@ -101,8 +101,8 @@ spec:
           name: static-assets-volume
         - name: {{ .Chart.Name }}
           mountPath: {{ .Values.application.data_mount }}
-        - name: code
-          mountPath: /code
+        # - name: code
+        #   mountPath: /code
       - name: db
         image: postgres:9.6
         ports:
@@ -134,10 +134,8 @@ spec:
         configMap:
           name: kernel-init
           defaultMode: 0744
-      # FIXME: remove
-      - name: asdf
-        value: oi
-      - name: code
-        hostPath:
-          path: /hosthome/fred/work/eha/repos/aether/aether-kernel
+      # # FIXME: remove
+      # - name: code
+      #   hostPath:
+      #     path: /hosthome/fred/work/eha/repos/aether/aether-kernel
       restartPolicy: Always

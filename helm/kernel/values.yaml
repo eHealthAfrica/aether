@@ -28,7 +28,7 @@ namespace:
 CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
 CSRF_COOKIE_DOMAIN: .aether.local
 DEBUG: "true"
-DJANGO_SECRET_KEY: "secret"
+DJANGO_SECRET_KEY: "secret_"
 HOSTNAME: kernel.aether.local
 RDS_DB_NAME: aether
 RDS_HOSTNAME: localhost
@@ -38,7 +38,7 @@ RDS_PORT: "!!string 5432"
 RDS_USERNAME: postgres
 WEB_SERVER_PORT: "!!string 8000"
 # FIXME: override via --set?
-TESTING: "!!boolean true"
+TESTING: "!!boolean false"
 application:
   secret: secrets
   data_mount: /media
