@@ -1,6 +1,8 @@
 build/
 dist/
 aether_saladbar.egg-info/
-schemas/*
-!schemas/.gitignore
+saladbar/schemas/*
+saladbar/test-schemas/*
+!saladbar/test-schemas/.gitignore
+!saladbar/schemas/.gitignore
 Pipfile.lock

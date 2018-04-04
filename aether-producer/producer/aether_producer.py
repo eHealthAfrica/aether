@@ -16,7 +16,7 @@ from time import sleep as Sleep
 
 FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 SETTINGS_FILE = "%s/settings.json" % FILE_PATH
-TEST_SETTINGS_FILE = "%s/test-settings.json" % FILE_PATH
+TEST_SETTINGS_FILE = "%s/test_settings.json" % FILE_PATH
 
 
 class Settings(object):
@@ -225,7 +225,7 @@ def main_loop(test=False):
             kernel = connect()
             break
         except Exception as err:
-            Sleep(SETTINGS.get("start_delay", 5))
+            Sleep(_settings.start_delay)
     if not kernel:
         sys.exit(1)
     print("Producer Connected to Aether.")
@@ -244,6 +244,7 @@ def main_loop(test=False):
                     break
                 manager = None
             else:
+                print("Sleeping for %s" % (_settings.sleep_time))
                 Sleep(_settings.sleep_time)
     except KeyboardInterrupt as ek:
         print ("Caught Keyboard interrupt")

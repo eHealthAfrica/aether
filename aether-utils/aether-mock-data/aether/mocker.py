@@ -350,14 +350,16 @@ class MockFn(namedtuple("MockFn", ("fn", "args"))):
 
 class MockingManager(object):
 
-    def __init__(self):
+    def __init__(self, kernel_url=None, kernel_credentials=None):
         # connects to Aether and gets available schemas.
         # constructs a DataMocker for each type
-        kernel_url = "http://kernel.aether.local:8000/v1"
-        kernel_credentials = {
-            "username": "admin-kernel",
-            "password": "adminadmin",
-        }
+        if not kernel_url:
+            kernel_url = "http://kernel.aether.local:8000/v1"
+        if not kernel_credentials:
+            kernel_credentials = {
+                "username": "admin-kernel",
+                "password": "adminadmin",
+            }
         self.client = KernelClient(kernel_url, **kernel_credentials)
         self.types = {}
         self.alias = {}
@@ -398,6 +400,8 @@ class MockingManager(object):
         data = self.payload_to_data(ps_id, payload)
         res = self.type_client[type_name].submit(data)
         print("%s -> #%s" % (name, self.type_count[name]))
+        return data
+
 
     def payload_to_data(self, ps_id, payload):
         # wraps data in expected aether jargon for submission
@@ -426,6 +430,7 @@ class MockingManager(object):
             self.schema_id[full_name] = _id
             self.schema_id[_id] = name
             self.type_client[name] = self.client.Entity[name]
+
         for ps in self.client.Resource.ProjectSchema:
             schema_id = ps.get('schema')
             _id = ps.get('id')

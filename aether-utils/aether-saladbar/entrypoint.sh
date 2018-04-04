@@ -99,7 +99,11 @@ case "$1" in
     ;;
 
     start )
-        echo 'start'
+        ./saladbar/wizard.py
+    ;;
+
+    start_test )
+        ./saladbar/wizard.py test
     ;;
 
     start_dev )

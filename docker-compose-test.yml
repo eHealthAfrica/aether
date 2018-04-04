@@ -51,6 +51,9 @@ services:
     depends_on:
       - db-test
 
+    command: start_dev
+
+
 
   # ---------------------------------
   # ODK module
@@ -140,17 +143,20 @@ services:
     extends:
       file: docker-compose-base.yml
       service: zookeeper-base
-    restart: on-failure
 
   kafka-test:
     extends:
       file: docker-compose-base.yml
       service: kafka-base
-    restart: on-failure
     depends_on:
       - zookeeper-test
     links:
       - zookeeper-test
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-test:32181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-test:29092
+      ADVERTISED_HOST_NAME: kafka-test
 
   # ---------------------------------
   # Aether Kafka Producer
@@ -160,8 +166,7 @@ services:
     extends:
       file: docker-compose-base.yml
       service: aether-producer-base
-    restart: on-failure
     links:
       - kafka-test
       - zookeeper-test
-    command: start_dev
+    command: start_test

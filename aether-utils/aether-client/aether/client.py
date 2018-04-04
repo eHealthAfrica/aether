@@ -164,7 +164,8 @@ class EntityResolver(GenericCollection):
         resolver = EntityData(
             self.name,
             entity_url,
-            self.client
+            self.client,
+            strict=False
         )
         if not resolver.valid:
             pass  # We may need to note this status somehow in the future
@@ -174,7 +175,7 @@ class EntityResolver(GenericCollection):
         url = "%s/entities/%s/" % (self.client.url_base, key)
         resolver = EntityData(
             self.name,
-            None,
+            url,
             self.client
         )
         return resolver.pluck(url)
@@ -194,9 +195,12 @@ class EntityResolver(GenericCollection):
         raise AttributeError("No attribute %s" % key)
 
     def get(self, key=None, filter_func=None, search_type=None):
-        result = self.pluck(key)
-        if result:
-            return result  # TODO TEST
+        try:
+            result = self.pluck(key)
+            if result:
+                return result  # TODO TEST
+        except AttributeError:
+            pass
         alt_keys = self.get_alternative_keys(key=key, search_type=search_type)
         for alt_key in alt_keys:
             result = self.resolve(alt_key, filter_func)
@@ -481,7 +485,7 @@ class DataEndpoint(object):
             url = self.url
         while True:
             payload = self.client.get(url)
-            if not payload:  # TODO TEST
+            if not payload or isinstance(payload, str):  # TODO TEST
                 raise StopIteration
             results = payload.get('results')
             if not results:
@@ -510,7 +514,7 @@ class EntityData(DataEndpoint):
     Currently only explicitly supports Read, Write and Update
     '''
 
-    def __init__(self, name, url, client):
+    def __init__(self, name, url, client, strict=True):
         self.client = client
         self.post_url = "%s/entities/" % self.client.url_base
         self.pluck_url = self.post_url+"%s/"
@@ -520,8 +524,9 @@ class EntityData(DataEndpoint):
             self.url = url
         self.name = name
         super(EntityData, self).__init__(self.client, self.url)
-        if not self.valid:
-            raise AttributeError("Invalid url %s" % self.url)  # entity endpoints must be valid
+        if strict and not self.valid:
+            raise AttributeError("Invalid url %s / submitted url: %s" % (self.url, url))
+            # entity endpoints must be valid
 
     def get(self, id=None, filter_func=None):
         if not id:

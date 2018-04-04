@@ -30,7 +30,7 @@ mercurial==3.1.2
 mistune==0.7.4
 mock==2.0.0
 more-itertools==4.1.0
-pbr==3.1.1
+pbr==4.0.1
 pluggy==0.6.0
 py==1.5.3
 pycodestyle==2.3.1

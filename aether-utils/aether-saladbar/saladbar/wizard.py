@@ -3,6 +3,7 @@
 import os
 import json
 import pkgutil
+import sys
 
 from aether.client import KernelClient
 
@@ -12,9 +13,11 @@ from saladbar import salad_handler as salad
 
 HERE = (os.path.dirname(os.path.realpath(__file__)))
 SETTINGS = "%s/conf/settings.json" % HERE
+TEST_SETTINGS = "%s/conf/test_settings.json" % HERE
 RES = "%s/wizard_resources" % HERE
 TMP = "%s/tmp" % RES
 SCHEMAS = "%s/schemas/" % HERE
+TEST_SCHEMAS = "%s/test-schemas/" % HERE
 
 
 def pprint(obj):
@@ -26,7 +29,7 @@ def load_settings(path):
         return json.load(f)
 
 
-def load_libraries(settings):
+def load_libraries(settings, schema_path=SCHEMAS):
     base_type = "%s%s" % (settings.get("$base"), settings.get("basetype_name"))
     libraries = {}
     for lib_name in settings.get("libraries", {}).keys():
@@ -53,7 +56,7 @@ def load_libraries(settings):
         props, types = parser.make_graph(requests, all_props, all_types, depth)
         depends = parser.make_dependency_graph(types, all_types)
         schema_file = lib_req.get("schema_file")
-        graph_path = "%s%s" % (SCHEMAS, schema_file)
+        graph_path = "%s%s" % (schema_path, schema_file)
         graph = parser.write_salad(
             graph_path,
             base,
@@ -70,7 +73,7 @@ def load_libraries(settings):
     return libraries
 
 
-def make_base_salad_doc(imports, namespaces, project=None, base_type=None):
+def make_base_salad_doc(imports, namespaces, project=None, base_type=None, schema_path=SCHEMAS):
     doc = None
     with open("%s/base_salad.json" % RES) as f:
         doc = json.load(f)
@@ -83,13 +86,13 @@ def make_base_salad_doc(imports, namespaces, project=None, base_type=None):
     graph = [{"$import": i} for i in imports]
     graph.append(base_doc)
     doc['$graph'] = graph
-    project_file = "%s%s.json" % (SCHEMAS, project)
+    project_file = "%s%s.json" % (schema_path, project)
     with open(project_file, "w") as f:
         json.dump(doc, f, indent=2)
 
 
-def prompt_schema_clean(prompt, question):
-    contents = os.listdir(SCHEMAS)
+def prompt_schema_clean(prompt, question, schema_path=SCHEMAS):
+    contents = os.listdir(schema_path)
     if not contents:
         return
     print(prompt)
@@ -98,12 +101,12 @@ def prompt_schema_clean(prompt, question):
         clean_schemas_folder()
 
 
-def clean_schemas_folder():
-    contents = os.listdir(SCHEMAS)
+def clean_schemas_folder(schema_path=SCHEMAS):
+    contents = os.listdir(schema_path)
     if not contents:
         return
     for f in contents:
-        path = "%s/%s" % (SCHEMAS, f)
+        path = "%s/%s" % (schema_path, f)
         os.remove(path)
 
 
@@ -112,8 +115,8 @@ def file_to_json(path):
         return json.load(f)
 
 
-def register_project(client, name):
-    path = "%s/%s.json" % (SCHEMAS, name)
+def register_project(client, name, schema_path=SCHEMAS):
+    path = "%s/%s.json" % (schema_path, name)
     project_def = file_to_json(path)
     obj = {
         "revision": "1",
@@ -125,9 +128,9 @@ def register_project(client, name):
     client.Resource.Project.add(obj)
 
 
-def register_schemas(client, project):
+def register_schemas(client, project, schema_path=SCHEMAS):
     loc = SCHEMAS + "/%s"
-    files = os.listdir(SCHEMAS)
+    files = os.listdir(schema_path)
     names = []
     for f in files:
         try:
@@ -136,7 +139,7 @@ def register_schemas(client, project):
         except Exception as e:
             print("Error parsing %s" % f)
     for name, fname in names:
-        path = "%s/%s" % (SCHEMAS, fname)
+        path = "%s/%s" % (schema_path, fname)
         definition = file_to_json(path)
         schema_obj = {
             "name": name,
@@ -169,6 +172,41 @@ def ask(question):
         if reply[:1] == 'n':
             return False
 
+def test_setup():
+    try:
+        os.mkdir(TEST_SCHEMAS)
+    except OSError as err:
+        pass
+    settings = load_settings(TEST_SETTINGS)
+    libraries = load_libraries(settings, schema_path=TEST_SCHEMAS)
+    imports = []
+    namespaces = {}
+    for lib in libraries.values():
+        rel_path = "./%s" % lib.get('graph_file')
+        imports.append(rel_path)
+        for k, v in lib.get('namespaces', {}).items():
+            namespaces[k] = v
+    all_depends = {k: v for key, lib in libraries.items()
+                   for k, v in lib.get('depends', {}).items()}
+    project = settings.get("project")
+    base_type = "%s%s" % (settings.get("$base"), settings.get("basetype_name"))
+    make_base_salad_doc(imports, namespaces, project, base_type, schema_path=TEST_SCHEMAS)
+    project_file = "%s%s.json" % (TEST_SCHEMAS, project)
+    salad_handler = salad.SaladHandler(project_file)
+    avsc_dict = salad_handler.get_avro(all_depends)
+    for k, v in avsc_dict.items():
+        # Fix this .org nonsense...
+        filename = "%s%s.avsc" % (TEST_SCHEMAS, k.split(".org/")[1])
+        with open(filename, "w") as f:
+            json.dump(v, f, indent=2)
+    kernel_url = settings.get("kernel_url")
+    kernel_user = settings.get("kernel_user")
+    kernel_pw = settings.get("kernel_pw")
+    kernel_credentials = {"username": kernel_user, "password": kernel_pw}
+    client = KernelClient(url=kernel_url, **kernel_credentials)
+    register_project(client, project, schema_path=TEST_SCHEMAS)
+    register_schemas(client, project, schema_path=TEST_SCHEMAS)
+    clean_schemas_folder(schema_path=TEST_SCHEMAS)
 
 def main():
     prompt_schema_clean(
@@ -223,4 +261,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "test":
+            test_setup()
+        else:
+            print("Invalid argument: %s" % sys.argv[1])
+    else:
+        main()

@@ -1,12 +1,11 @@
-import pytest
-from . import py2
-
-
-@pytest.fixture(scope='module')
-def info():
-    return "hi"
+from . import *
 
 
 @py2
-def test_1(info):
-    assert info is not None
+def test_1_register_schemas(schema_registration):
+    assert(schema_registration)  # Try to use the test mode of the wizard
+
+
+@py2
+def test_2_check_schemas(existing_schemas):
+    assert(len(existing_schemas) > 0)
