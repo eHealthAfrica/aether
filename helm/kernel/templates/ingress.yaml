@@ -1,7 +1,3 @@
-{{- if .Values.ingress.enabled -}}
-{{- if .Values.provider.aws -}}
-{{- $serviceName := include "kernel.name" . -}}
-{{- $servicePort := .Values.service.externalPort -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -17,14 +13,11 @@ metadata:
     {{- end }}
 spec:
   rules:
-    {{- range $host := .Values.ingress.hosts }}
-    - host: {{ $host }}
+    # FIXME: make this configurable again
+    - host:
       http:
         paths:
           - path: /
             backend:
-              serviceName: {{ $serviceName }}
-              servicePort: {{ $servicePort }}
-    {{- end -}}
-  {{- end -}}
-{{- end -}}
+              serviceName: kernel
+              servicePort: 80

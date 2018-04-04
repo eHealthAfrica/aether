@@ -18,8 +18,11 @@ service:
   internalPort: 80
 environment: "dev"
 ums_url: ums-dev
-domain: gather2.org
-trusted_origins: .ehealthafrica.org,.gather2.org
+# FIXME: this goes into nginx
+domain: aether.local
+# FIXME: check these
+# trusted_origins: .ehealthafrica.org,.gather2.org
+trusted_origins: .aether.local
 namespace:
   create: false
 CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
@@ -30,9 +33,12 @@ HOSTNAME: kernel.aether.local
 RDS_DB_NAME: aether
 RDS_HOSTNAME: localhost
 RDS_PASSWORD: ""
+# FIXME: can these be less verbose?
 RDS_PORT: "!!string 5432"
 RDS_USERNAME: postgres
 WEB_SERVER_PORT: "!!string 8000"
+# FIXME: override via --set?
+TESTING: "!!boolean true"
 application:
   secret: secrets
   data_mount: /media
@@ -42,9 +48,9 @@ provider:
   aws: false
 ingress:
   enabled: true
-  annotations:
-    alb.ingress.kubernetes.io/scheme: "internet-facing"
-    alb.ingress.kubernetes.io/healthcheck-path: /health
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80,"HTTPS": 443}]'
-    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:eu-west-1:387526361725:certificate/dcd71c49-1b5b-4b19-bd2d-6de98a3f6477"
-    alb.ingress.kubernetes.io/security-groups: "alb-ingress-controller.dev.k8s.eha.to"
+  # annotations:
+  #   alb.ingress.kubernetes.io/scheme: "internet-facing"
+  #   alb.ingress.kubernetes.io/healthcheck-path: /health
+  #   alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80,"HTTPS": 443}]'
+    # alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:eu-west-1:387526361725:certificate/dcd71c49-1b5b-4b19-bd2d-6de98a3f6477"
+    # alb.ingress.kubernetes.io/security-groups: "alb-ingress-controller.dev.k8s.eha.to"

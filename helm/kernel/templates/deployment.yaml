@@ -43,7 +43,7 @@ spec:
         ports:
         - containerPort: 8000
         args:
-        - start_dev
+        - start
         # livenessProbe:
         #   initialDelaySeconds: 15
         #   periodSeconds: 10
@@ -68,6 +68,8 @@ spec:
         #       value: {{ .Values.url }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
+        - name: TESTING
+          value: {{ .Values.TESTING }}
         - name: CAS_SERVER_URL
           value: "https://{{ .Values.ums_url }}.ehealthafrica.org"
         - name: CSRF_COOKIE_DOMAIN

@@ -119,7 +119,7 @@ case "$1" in
 
     start )
         setup_db
-        setup_prod
+        # setup_prod
 
         # media assets
         chown aether: /media

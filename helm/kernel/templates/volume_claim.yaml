@@ -5,8 +5,8 @@ metadata:
 spec:
   accessModes:
     - ReadWriteMany
-  local:
-    path: /tmp/test
+  hostPath:
+    path: /data/test
   resources:
     requests:
       # This is not used by the provisioner, but is required by the PVC.
