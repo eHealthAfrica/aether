@@ -40,7 +40,7 @@ class UtilsTests(TestCase):
 
     def test_JSP_get_basic_fields(self):
         avro_obj = EXAMPLE_SCHEMA
-        expected = ['_id', '_rev', 'name', 'dob', 'villageID']
+        expected = ['id', '_rev', 'name', 'dob', 'villageID']
         basic_fields = str(utils.JSP_get_basic_fields(avro_obj))
         self.assertTrue(str(expected) in basic_fields, basic_fields)
 
@@ -118,6 +118,32 @@ class UtilsTests(TestCase):
         expected_entity = EXAMPLE_ENTITY
         data, entities = utils.extract_entities(requirements, response_data, entity_stubs)
         self.assertEquals(len(expected_entity['Person']), len(entities['Person']))
+
+    def test_extract_create_entities__no_requirements(self):
+        submission_payload = EXAMPLE_SOURCE_DATA
+        mapping_definition = {'mapping': [], 'entities': {}}
+        schemas = {}
+        entities = utils.extract_create_entities(
+            submission_payload,
+            mapping_definition,
+            schemas,
+        )
+        self.assertEqual(len(entities), 0)
+
+    def test_extract_create_entities(self):
+        submission_payload = EXAMPLE_SOURCE_DATA
+        mapping_definition = EXAMPLE_MAPPING
+        schemas = {'Person': EXAMPLE_SCHEMA}
+        entities = utils.extract_create_entities(
+            submission_payload,
+            mapping_definition,
+            schemas,
+        )
+        self.assertTrue(len(entities) > 0)
+        for entity in entities:
+            self.assertEqual(entity.id, entity.payload['id'])
+            self.assertIn(entity.projectschema_name, schemas.keys())
+            self.assertEqual(entity.status, 'Publishable')
 
     def test_is_not_custom_jsonpath(self):
         # Examples taken from https://github.com/json-path/JsonPath#path-examples

@@ -1,3 +1,4 @@
+from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 
 from . import views
@@ -14,4 +15,8 @@ router.register('attachments', views.AttachmentViewSet)
 router.register('entities', views.EntityViewSet)
 router.register('schemas', views.SchemaViewSet)
 
-urlpatterns = router.urls
+urlpatterns = router.urls + [
+    url(r'^validate-mappings/$',
+        views.validate_mappings,
+        name='validate-mappings')
+]

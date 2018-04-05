@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
-set -e
+set -Eeuo pipefail
 
 IMAGE_REPO='ehealthafrica'
 APPS=( kernel odk couchdb-sync )
 VERSION=`cat VERSION`
+
+if [ -z "$TRAVIS_TAG" ];
+then
+  VERSION=${VERSION}-rc
+fi
 
 for APP in "${APPS[@]}"
 do

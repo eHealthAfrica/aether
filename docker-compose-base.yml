@@ -68,14 +68,13 @@ services:
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
+      DJANGO_SECRET_KEY: "secret"
       HOSTNAME: kernel.aether.local
-
       RDS_DB_NAME: aether
       RDS_HOSTNAME: db
       RDS_PASSWORD: ""
       RDS_PORT: 5432
       RDS_USERNAME: postgres
-
       WEB_SERVER_PORT: 8000
     volumes:
       - ./aether-kernel:/code
@@ -96,21 +95,19 @@ services:
     stdin_open: true
     tty: true
     environment:
-      CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
-      CSRF_COOKIE_DOMAIN: .aether.local
-      DEBUG: "true"
-      HOSTNAME: odk.aether.local
-
       AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
       AETHER_KERNEL_URL: http://kernel:8000
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000
-
+      CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
+      CSRF_COOKIE_DOMAIN: .aether.local
+      DEBUG: "true"
+      DJANGO_SECRET_KEY: "secret"
+      HOSTNAME: odk.aether.local
       RDS_DB_NAME: odk
       RDS_HOSTNAME: db
       RDS_PASSWORD: ""
       RDS_PORT: 5432
       RDS_USERNAME: postgres
-
       WEB_SERVER_PORT: 8443
     volumes:
       - ./aether-odk-module:/code
@@ -131,32 +128,27 @@ services:
     stdin_open: true
     tty: true
     environment: &sync-environment
-      CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
-      CSRF_COOKIE_DOMAIN: .aether.local
-      DEBUG: "true"
-      HOSTNAME: sync.aether.local
-
-      COUCHDB_PASSWORD: secret
-      COUCHDB_URL: http://couchdb:5984
-      COUCHDB_USER: admin
-
       AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
       AETHER_KERNEL_URL: http://kernel:8000
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000
-
+      CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
+      COUCHDB_PASSWORD: secret
+      COUCHDB_URL: http://couchdb:5984
+      COUCHDB_USER: admin
+      CSRF_COOKIE_DOMAIN: .aether.local
+      DEBUG: "true"
+      DJANGO_SECRET_KEY: "secret"
       GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
-
+      HOSTNAME: sync.aether.local
       RDS_DB_NAME: couchdb-sync
       RDS_HOSTNAME: db
       RDS_PASSWORD: ""
       RDS_PORT: 5432
       RDS_USERNAME: postgres
-
       REDIS_DB: 0
       REDIS_HOST: redis
       REDIS_PASSWORD: ""
       REDIS_PORT: 6379
-
       WEB_SERVER_PORT: 8666
     volumes: &sync-volumes
       - ./aether-couchdb-sync-module:/code

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -Eeuo pipefail
 
 function prepare_container() {
   echo "_________________________________________________ Preparing $1 container"
@@ -45,7 +45,7 @@ echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
 if [[ $container != "client" ]]
 then
-    $DC_TEST run kernel-test manage loaddata $fixture
+  $DC_TEST run kernel-test manage loaddata $fixture
 fi
 echo "_____________________________________________ Loaded initial data in kernel"
 

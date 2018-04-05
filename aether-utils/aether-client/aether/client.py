@@ -16,10 +16,10 @@ class GenericClient(object):
     def __init__(self, url=None, **credentials):
         self.url_base = url
         if not credentials:
-            raise KeyError("No credentials passed!")
+            raise AttributeError("No credentials passed!")
         creds = credentials.keys()
         if 'username' not in creds or 'password' not in creds:
-            raise KeyError("Credentials 'username' and 'password' required")
+            raise AttributeError("Credentials 'username' and 'password' required")
         self.auth = requests.auth.HTTPBasicAuth(
             credentials.get('username'),
             credentials.get('password'))
@@ -168,7 +168,7 @@ class EntityResolver(GenericCollection):
             strict=strict
         )
         if strict and not resolver.valid:
-            raise AttributeError  # We may need to note this status somehow in the future
+            raise AttributeError("No resource matches %s" % value)  # We may need to note this status somehow in the future
         return resolver
 
     def pluck(self, key):
@@ -180,7 +180,45 @@ class EntityResolver(GenericCollection):
         )
         return resolver.pluck(url)
 
-    def info(self):  # TODO TEST
+    def _delete(self, key):
+        url = "%s/entities/%s/" % (self.client.url_base, key)
+        response = self.client.delete(url)
+        return response
+
+    def delete(self, key_or_resource=None, key=None, resource=None):
+        if key:
+            return self._delete(key)
+        if resource:
+            return self._delete(resource.get("id"))
+        if key_or_resource:
+            try:
+                return(self._delete(key_or_resource.get("id")))
+            except AttributeError as ae:
+                return(self._delete(key_or_resource))
+        raise AttributeError("No resource specified for deletion.")
+
+    def __iter__(self):
+        return self.load_all()
+
+    def load_all(self, filter_func=None):
+        url = "%s/entities/" % (self.client.url_base)
+        while True:
+            payload = self.client.get(url)
+            results = payload.get('results', None)
+            if not results:
+                raise StopIteration
+            for item in results:
+                if filter_func:
+                    if filter_func(item):
+                        yield item
+                else:
+                    yield item
+            if payload.get("next") is not None:
+                url = payload.get("next")
+            else:
+                raise StopIteration
+
+    def info(self):
         return {
             "type": self.name
         }
@@ -240,7 +278,9 @@ class SubmissionsCollection(GenericCollection):
         self.load()
 
     def __iter__(self):
-        return iter(self.resources.keys())  # TODO TEST
+        # resources.values() has duplicates due to being accessible by id or name
+        # we only want unique resources for iteration over the set
+        return iter(list(set(self.resources.values())))
 
     def load(self):
         self.resources, self.name_alias, self.order = ({}, {}, [])
@@ -265,7 +305,7 @@ class SubmissionsCollection(GenericCollection):
 
     def get(self, key=None):
         if not key:
-            return self.resources
+            return self.__iter__()
         value = self.resources.get(key)
         if not value:
             alias = self.name_alias.get(key)
@@ -361,7 +401,7 @@ class ResourceCollection(GenericCollection):
     def delete(self, resource):
         _id = resource.get("id")
         if not _id:  # TODO TEST
-            raise ValueError("Resource has no id field")
+            raise AttributeError("Resource has no id field")
         uri = "%s%s" % (self.url, _id)
         response = self.client.delete(uri)
         self.load()
@@ -392,7 +432,7 @@ class Resource(object):
         if key == "collection":  # TODO TEST
             return self.collection
         if key not in self.data.keys():
-            raise KeyError
+            raise AttributeError("Not attribute: %s" % (key))
         return self.data.get(key)
 
     def __getitem__(self, key):
@@ -574,6 +614,7 @@ class SubmissionData(DataEndpoint):
         self.collection = collection
         self.client = self.collection.client
         self.mapping = self.client.Resource.Mapping.get(mapping_id)
+        self.mapping_id = mapping_id
         self._url_pattern = "/submissions/?mapping=%s"
         self.url = self.client.url_base+"/submissions/"
         self.pluck_url = self.url+"%s/"
@@ -599,9 +640,12 @@ class SubmissionData(DataEndpoint):
         return json.dumps(self.info(), indent=2)
 
     def info(self, term=None):
-        return {
+        data = {
             "type": "submission_endpoint",
             "mapping_id": self.mapping_id,
             "mapping_name": self.collection.name_alias.get(self.mapping_id),
             "url": self.url
         }
+        if term in data.keys():
+            return data[term]
+        return data
