@@ -1,6 +1,5 @@
 #!/bin/bash
-set -e
-set -x
+set -Eeuox pipefail
 
 
 ################################################################################
@@ -9,10 +8,6 @@ set -x
 
 # Do not buffer stdout so we see log output immediatly
 export PYTHONUNBUFFERED=true
-
-# https://nodejs.org
-export NPM_CONFIG_LOGLEVEL=info
-export NODE_VERSION=6.12.3
 
 
 ################################################################################
@@ -27,31 +22,17 @@ apt-get update -qq
 cat /tmp/apt-packages.txt | xargs apt-get -qq --yes --force-yes install
 
 
+# upgrade pip
+pip install --upgrade pip
+
+
 ################################################################################
-# install nodejs, taken from the official docker nodejs Dockerfile
+# create NODE symbolic links
+################################################################################
 
-# gpg keys listed at https://github.com/nodejs/node#release-team
-for key in \
-    56730D5401028683275BD23C23EFEFE93C4CFFFE \
-    71DCFD284A79C3B38668286BC97EC7A07EDE3FC1 \
-    94AE36675C464D64BAFA68DD7434390BDBE9B9C5 \
-    9554F04D7259F04124DE6B476D5A82AC7E37093B \
-    B9AE9905FFD7803F25714661B63B535A4C206CA9 \
-    C4F0DFFF4E8C1A8236409D08E73BC641CC11F4C8 \
-    DD8F2338BAE7501E3DD5AC78C273792F7D83545D \
-    FD3A5288F042B6850C66B31F09FE44734EB7990E \
-  ; do \
-    gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key" || \
-    gpg --keyserver pgp.mit.edu                --recv-keys "$key" || \
-    gpg --keyserver keyserver.pgp.com          --recv-keys "$key" ; \
-  done
-
-curl -SLO "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz"
-curl -SLO "https://nodejs.org/dist/v${NODE_VERSION}/SHASUMS256.txt.asc"
-gpg --batch --decrypt --output SHASUMS256.txt SHASUMS256.txt.asc
-grep " node-v${NODE_VERSION}-linux-x64.tar.xz\$" SHASUMS256.txt | sha256sum -c -
-tar -xJf "node-v${NODE_VERSION}-linux-x64.tar.xz" -C /usr/local --strip-components=1
-rm "node-v${NODE_VERSION}-linux-x64.tar.xz" SHASUMS256.txt.asc SHASUMS256.txt
+ln -s /usr/local/bin/nodejs                            /usr/local/bin/node
+ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js   /usr/local/bin/npm
+ln -s /usr/local/lib/node_modules/npm/bin/npx-cli.js   /usr/local/bin/npx
 
 
 ################################################################################
