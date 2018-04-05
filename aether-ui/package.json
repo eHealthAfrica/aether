@@ -73,6 +73,18 @@
     "whatwg-fetch": "~2.0.0"
   },
 
+  "standard": {
+    "globals": [
+      "afterAll",
+      "afterEach",
+      "beforeAll",
+      "beforeEach",
+      "describe",
+      "expect",
+      "it"
+    ],
+    "verbose": true
+  },
   "babel": {
     "presets": ["env", "react"],
     "plugins": [
@@ -84,6 +96,8 @@
     "coverageDirectory": "<rootDir>/bundles/.coverage",
     "rootDir": "./aether/ui/assets",
     "setupFiles": ["<rootDir>/tests/jest.setup.jsx"],
+    "testEnvironment": "<rootDir>/tests/ui-tests-environment",
+    "testURL": "http://localhost/",
     "verbose": true
   }
 }
