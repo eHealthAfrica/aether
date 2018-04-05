@@ -22,7 +22,7 @@ class ViewsTest(TestCase):
         self.user = get_user_model().objects.create_user(username, email, password)
         self.view = TokenProxyView.as_view(app_name='kernel')
 
-    @mock.patch('ui.api.models.UserTokens.get_or_create_user_app_token')
+    @mock.patch('aether.ui.api.models.UserTokens.get_or_create_user_app_token')
     def test_proxy_view_without_valid_app(self, mock_test_conn):
         request = RequestFactory().get('/go_to_proxy')
         request.user = self.user
@@ -36,7 +36,7 @@ class ViewsTest(TestCase):
         )
         mock_test_conn.assert_not_called()
 
-    @mock.patch('ui.api.models.UserTokens.get_or_create_user_app_token', return_value=None)
+    @mock.patch('aether.ui.api.models.UserTokens.get_or_create_user_app_token', return_value=None)
     def test_proxy_view_without_valid_token(self, mock_test_conn):
         request = RequestFactory().get('/go_to_proxy')
         request.user = self.user
@@ -49,7 +49,7 @@ class ViewsTest(TestCase):
         )
         mock_test_conn.assert_called_once()
 
-    @mock.patch('ui.api.models.UserTokens.get_or_create_user_app_token',
+    @mock.patch('aether.ui.api.models.UserTokens.get_or_create_user_app_token',
                 return_value=APP_TOKEN_MOCK)
     @mock.patch('requests.request', return_value=RESPONSE_MOCK)
     def test_proxy_view_delete(self, mock_request, mock_test_conn):
@@ -66,7 +66,7 @@ class ViewsTest(TestCase):
             headers={'Cookie': '', 'Authorization': 'Token ABCDEFGH'}
         )
 
-    @mock.patch('ui.api.models.UserTokens.get_or_create_user_app_token',
+    @mock.patch('aether.ui.api.models.UserTokens.get_or_create_user_app_token',
                 return_value=APP_TOKEN_MOCK)
     @mock.patch('requests.request', return_value=RESPONSE_MOCK)
     def test_proxy_view_get(self, mock_request, mock_test_conn):
@@ -83,7 +83,7 @@ class ViewsTest(TestCase):
             headers={'Cookie': '', 'Authorization': 'Token ABCDEFGH'}
         )
 
-    @mock.patch('ui.api.models.UserTokens.get_or_create_user_app_token',
+    @mock.patch('aether.ui.api.models.UserTokens.get_or_create_user_app_token',
                 return_value=APP_TOKEN_MOCK)
     @mock.patch('requests.request', return_value=RESPONSE_MOCK)
     def test_proxy_view_head(self, mock_request, mock_test_conn):
@@ -100,7 +100,7 @@ class ViewsTest(TestCase):
             headers={'Cookie': '', 'Authorization': 'Token ABCDEFGH'}
         )
 
-    @mock.patch('ui.api.models.UserTokens.get_or_create_user_app_token',
+    @mock.patch('aether.ui.api.models.UserTokens.get_or_create_user_app_token',
                 return_value=APP_TOKEN_MOCK)
     @mock.patch('requests.request', return_value=RESPONSE_MOCK)
     def test_proxy_view_options(self, mock_request, mock_test_conn):
@@ -117,7 +117,7 @@ class ViewsTest(TestCase):
             headers={'Cookie': '', 'Authorization': 'Token ABCDEFGH'}
         )
 
-    @mock.patch('ui.api.models.UserTokens.get_or_create_user_app_token',
+    @mock.patch('aether.ui.api.models.UserTokens.get_or_create_user_app_token',
                 return_value=APP_TOKEN_MOCK)
     @mock.patch('requests.request', return_value=RESPONSE_MOCK)
     def test_proxy_view_patch(self, mock_request, mock_test_conn):
@@ -134,7 +134,7 @@ class ViewsTest(TestCase):
             headers={'Cookie': '', 'Authorization': 'Token ABCDEFGH'}
         )
 
-    @mock.patch('ui.api.models.UserTokens.get_or_create_user_app_token',
+    @mock.patch('aether.ui.api.models.UserTokens.get_or_create_user_app_token',
                 return_value=APP_TOKEN_MOCK)
     @mock.patch('requests.request', return_value=RESPONSE_MOCK)
     def test_proxy_view_post(self, mock_request, mock_test_conn):
@@ -157,7 +157,7 @@ class ViewsTest(TestCase):
             }
         )
 
-    @mock.patch('ui.api.models.UserTokens.get_or_create_user_app_token',
+    @mock.patch('aether.ui.api.models.UserTokens.get_or_create_user_app_token',
                 return_value=APP_TOKEN_MOCK)
     @mock.patch('requests.request', return_value=RESPONSE_MOCK)
     def test_proxy_view_put(self, mock_request, mock_test_conn):
@@ -190,21 +190,21 @@ class ViewsTest(TestCase):
         self.assertTrue(self.client.login(username='test', password='testtest'))
 
         # redirects to `tokens` url if something unexpected happens
-        with mock.patch('ui.api.models.UserTokens.get_or_create_user_app_token',
+        with mock.patch('aether.ui.api.models.UserTokens.get_or_create_user_app_token',
                         side_effect=RuntimeError):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.url, tokens_page)
 
         # redirects to `tokens` url if the tokens are not valid
-        with mock.patch('ui.api.models.UserTokens.get_or_create_user_app_token',
+        with mock.patch('aether.ui.api.models.UserTokens.get_or_create_user_app_token',
                         return_value=None):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.url, tokens_page)
 
         # with valid tokens it does not redirect
-        with mock.patch('ui.api.models.UserTokens.get_or_create_user_app_token',
+        with mock.patch('aether.ui.api.models.UserTokens.get_or_create_user_app_token',
                         return_value=APP_TOKEN_MOCK) as mock_get_app_token:
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
@@ -214,7 +214,7 @@ class ViewsTest(TestCase):
                                  mock.call(self.user, 'kernel'),
                              ])
 
-    @mock.patch('ui.api.models.UserTokens.get_or_create_user_app_token',
+    @mock.patch('aether.ui.api.models.UserTokens.get_or_create_user_app_token',
                 return_value=APP_TOKEN_MOCK)
     @mock.patch('requests.request', return_value=RESPONSE_MOCK)
     def test_proxy_view_put_but_post(self, mock_request, mock_test_conn):
@@ -238,7 +238,7 @@ class ViewsTest(TestCase):
             }
         )
 
-    @mock.patch('ui.api.models.UserTokens.get_or_create_user_app_token',
+    @mock.patch('aether.ui.api.models.UserTokens.get_or_create_user_app_token',
                 return_value=APP_TOKEN_MOCK)
     @mock.patch('requests.request', return_value=RESPONSE_MOCK)
     def test_proxy_view_put_but_other(self, mock_request, mock_test_conn):

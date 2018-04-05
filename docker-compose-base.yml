@@ -175,14 +175,12 @@ services:
     image: ui
     stdin_open: true
     tty: true
-    build:
-      context: ./aether-ui
-      dockerfile: aether/Dockerfile
+    build: aether-ui
     environment: &ui-environment
       AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
       AETHER_KERNEL_URL: http://kernel:8000
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000
-      AETHER_MODULES: "kernel,odk,"
+      AETHER_MODULES: "kernel,"
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
@@ -194,7 +192,7 @@ services:
       RDS_PORT: 5432
       RDS_USERNAME: postgres
       REACT_ENV: 'development'
-      STATIC_ROOT: /code/ui/assets/bundles
+      STATIC_ROOT: /code/aether/ui/assets/bundles
       WEB_SERVER_PORT: 8004
     volumes: &ui-volumes
       #################################################
@@ -206,11 +204,12 @@ services:
       #################################################
 
       - ./aether-ui/conf:/code/conf
-      - ./aether-ui/aether/ui:/code/ui
+      - ./aether-ui/aether:/code/aether
 
-      - ./aether-ui/aether/entrypoint.sh:/code/entrypoint.sh
-      - ./aether-ui/aether/manage.py:/code/manage.py
-      - ./aether-ui/aether/package.json:/code/package.json
+      - ./aether-ui/entrypoint.sh:/code/entrypoint.sh
+      - ./aether-ui/manage.py:/code/manage.py
+      - ./aether-ui/setup.py:/code/setup.py
+      - ./aether-ui/package.json:/code/package.json
 
       # media folder
       - ./tmp/ui:/media

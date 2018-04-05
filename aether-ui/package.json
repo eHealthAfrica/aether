@@ -1,7 +1,7 @@
 {
-  "name": "ui",
+  "name": "aether-ui",
   "version": "0.0.0",
-  "license": "Apache-2",
+  "license": "Apache-2.0",
 
   "author": {
     "name": "eHealth Africa",
@@ -15,13 +15,13 @@
   },
 
   "scripts": {
-    "lint-js": "standard './ui/assets/apps/**/*.jsx'",
+    "lint-js": "standard './aether/ui/assets/apps/**/*.jsx'",
     "lint-scss": "sass-lint --config ./conf/extras/sass-lint.yml --verbose",
     "lint": "npm run lint-js && npm run lint-scss",
     "test-js": "jest",
     "test": "npm run lint && npm run test-js",
-    "webpack": "webpack --config ./ui/webpack.prod.js",
-    "webpack-server": "node ./ui/webpack.server.js"
+    "webpack": "webpack --config ./aether/ui/webpack.prod.js",
+    "webpack-server": "node ./aether/ui/webpack.server.js"
   },
 
   "dependencies": {
@@ -50,7 +50,7 @@
     "bootstrap": "~4.0.0",
     "css-loader": "~0.28.0",
     "extract-text-webpack-plugin": "~3.0.0",
-    "file-loader": "~1.1.0",    
+    "file-loader": "~1.1.0",
     "html5shiv": "~3.7.0",
     "jest": "~22.4.0",
     "nock": "~9.1.0",
@@ -82,7 +82,7 @@
   "jest": {
     "collectCoverage": true,
     "coverageDirectory": "<rootDir>/bundles/.coverage",
-    "rootDir": "./ui/assets",
+    "rootDir": "./aether/ui/assets",
     "setupFiles": ["<rootDir>/tests/jest.setup.jsx"],
     "verbose": true
   }

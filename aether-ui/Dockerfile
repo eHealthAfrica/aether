@@ -19,7 +19,7 @@ WORKDIR /code/
 ## React app
 ################################################################################
 
-COPY ./aether/package.json /code/package.json
+COPY ./package.json /code/package.json
 RUN npm install --loglevel warn
 
 
@@ -57,9 +57,8 @@ RUN pip install -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.tx
 ## last setup steps
 ################################################################################
 
-COPY --from=ui_node /code/node_modules  /code/node_modules
-COPY ./aether /code
-COPY ./conf /code/conf
+COPY --from=ui_node /code/node_modules /code/node_modules
+COPY ./ /code
 
 # create user to run container (avoid root user)
 RUN useradd -ms /bin/false aether

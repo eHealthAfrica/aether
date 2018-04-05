@@ -139,7 +139,7 @@ case "$1" in
         test_js
 
         # remove previous files
-        rm -r -f /code/ui/assets/bundles/*
+        rm -r -f /code/aether/ui/assets/bundles/*
         npm run webpack
 
         test_coverage "${@:2}"
@@ -167,16 +167,16 @@ case "$1" in
         setup_projects
 
         # remove previous files
-        rm -r -f /code/ui/assets/bundles/*
+        rm -r -f /code/aether/ui/assets/bundles/*
         npm run webpack
 
          # create static assets
         ./manage.py collectstatic --noinput
-        cp -r /code/ui/assets/bundles/* /var/www/static/
+        cp -r /code/aether/ui/assets/bundles/* /var/www/static/
         chmod -R 755 /var/www/static
 
         # media assets
-        chown ui: /media
+        chown aether: /media
 
         /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
     ;;
@@ -189,7 +189,7 @@ case "$1" in
 
     start_webpack )
         # remove previous files
-        rm -r -f /code/ui/assets/bundles/*
+        rm -r -f /code/aether/ui/assets/bundles/*
         npm run webpack-server
     ;;
 
