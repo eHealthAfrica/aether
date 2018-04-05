@@ -25,20 +25,24 @@
   },
 
   "dependencies": {
+    "bootstrap": "~4.0.0",
+    "html5shiv": "~3.7.0",
     "jquery": "~3.3.0",
-    "jsdom": "~11.6.0",
-    "moment": "~2.20.0",
-    "prop-types": "^15.6.1",
-    "react": "~16.2.0",
-    "react-cookie": "^2.1.4",
-    "react-dom": "~16.2.0",
-    "react-router-dom": "^4.2.2",
+    "moment": "~2.22.0",
+    "popper.js": "~1.14.0",
+    "react": "~16.3.0",
+    "react-cookie": "~2.1.0",
+    "react-dom": "~16.3.0",
     "react-filtered-multiselect": "~0.5.0",
-    "react-redux": "^5.0.7",
-    "redux-thunk": "^2.2.0",
-    "redux": "^3.7.2",
-    "superagent": "^3.6.0"
+    "react-intl": "~2.4.0",
+    "react-redux": "~5.0.0",
+    "react-router-dom": "~4.2.0",
+    "redux": "~3.7.0",
+    "redux-thunk": "~2.2.0",
+    "superagent": "~3.8.0",
+    "whatwg-fetch": "~2.0.0"
   },
+
   "devDependencies": {
     "babel-core": "~6.26.0",
     "babel-jest": "~22.4.0",
@@ -46,20 +50,15 @@
     "babel-plugin-transform-object-rest-spread": "~6.26.0",
     "babel-preset-env": "~1.6.0",
     "babel-preset-react": "~6.24.0",
-    "bootstrap": "~4.0.0",
     "css-loader": "~0.28.0",
     "extract-text-webpack-plugin": "~3.0.0",
     "file-loader": "~1.1.0",
-    "html5shiv": "~3.7.0",
     "jest": "~22.4.0",
-    "nock": "~9.1.0",
-    "node-fetch": "~2.0.0",
-    "node-sass": "~4.7.0",
-    "popper.js": "~1.12.0",
+    "nock": "~9.2.0",
+    "node-fetch": "~2.1.0",
+    "node-sass": "~4.8.0",
     "react-hot-loader": "~3.1.0",
-    "react-intl": "~2.4.0",
-    "react-test-renderer": "~16.2.0",
-    "redux-devtools-extension": "^2.13.2",
+    "redux-devtools-extension": "~2.13.0",
     "regenerator-runtime": "~0.11.0",
     "sass-lint": "~1.12.0",
     "sass-loader": "~6.0.0",
@@ -68,10 +67,16 @@
     "url-loader": "~0.6.0",
     "webpack": "~3.11.0",
     "webpack-bundle-tracker": "~0.2.0",
-    "webpack-dev-server": "~2.11.0",
-    "whatwg-fetch": "~2.0.0"
+    "webpack-dev-server": "~2.11.0"
   },
 
+  "babel": {
+    "presets": ["env", "react"],
+    "plugins": [
+      "babel-plugin-transform-object-rest-spread",
+      "react-hot-loader/babel"
+    ]
+  },
   "standard": {
     "globals": [
       "afterAll",
@@ -83,12 +88,6 @@
       "it"
     ],
     "verbose": true
-  },
-  "babel": {
-    "presets": ["env", "react"],
-    "plugins": [
-      "babel-plugin-transform-object-rest-spread"
-    ]
   },
   "jest": {
     "collectCoverage": true,
