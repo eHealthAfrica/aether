@@ -168,8 +168,8 @@ class EntityResolver(GenericCollection):
             strict=strict
         )
         if strict and not resolver.valid:
-            raise AttributeError("No resource matches %s" % value)  # We may need to note this status somehow in the future
-        return resolver
+            raise AttributeError("No resource matches %s" % value)  # We may need to note this
+        return resolver                                         # status somehow in the future
 
     def pluck(self, key):
         url = "%s/entities/%s/" % (self.client.url_base, key)
