@@ -159,16 +159,16 @@ class EntityResolver(GenericCollection):
         super(EntityResolver, self).__init__(collection_name, client)
         self.tree = tree
 
-    def resolve(self, value=None, filter_func=None):
+    def resolve(self, value=None, filter_func=None, strict=False):
         entity_url = "%s/entities/%s" % (self.client.url_base, value)
         resolver = EntityData(
             self.name,
             entity_url,
             self.client,
-            strict=False
+            strict=strict
         )
-        if not resolver.valid:
-            pass  # We may need to note this status somehow in the future
+        if strict and not resolver.valid:
+            raise AttributeError  # We may need to note this status somehow in the future
         return resolver
 
     def pluck(self, key):
@@ -203,10 +203,10 @@ class EntityResolver(GenericCollection):
             pass
         alt_keys = self.get_alternative_keys(key=key, search_type=search_type)
         for alt_key in alt_keys:
-            result = self.resolve(alt_key, filter_func)
+            result = self.resolve(alt_key, filter_func, strict=True)
             if result:
                 return result
-        return None  # TODO TEST
+        raise AttributeError  # TODO TEST
 
     def get_alternative_keys(self, key, search_type=None):
         names = [name for name in self.tree]
@@ -475,6 +475,7 @@ class DataEndpoint(object):
         return res
 
     def get_instances(self, url=None, filter_func=None):
+
         '''generated based method for getting instances from paginated results
 
         Iterates continously over returned pages. Optionally filtering from
@@ -485,10 +486,15 @@ class DataEndpoint(object):
             url = self.url
         while True:
             payload = self.client.get(url)
-            if not payload or isinstance(payload, str):  # TODO TEST
+            if not payload:  # TODO TEST
+                raise StopIteration
+            if isinstance(payload, str):  # Should be an error message that slipped through
                 raise StopIteration
             results = payload.get('results')
-            if not results:
+            if not results and "count" not in payload.keys():
+                yield payload  # is a dict but only a single
+                raise StopIteration
+            elif not results:  # is an empty result
                 raise StopIteration
             for item in results:
                 if filter_func:

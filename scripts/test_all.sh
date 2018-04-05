@@ -65,6 +65,7 @@ prepare_and_test_container couchdb-sync aether/kernel/api/tests/fixtures/project
 # kill ALL containers
 echo "_____________________________________________ Killing auxiliary containers"
 ./scripts/kill_all.sh
+$DC_TEST down
 
 # start databases
 echo "_____________________________________________ Starting database"
