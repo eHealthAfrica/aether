@@ -1,4 +1,5 @@
 curl
 gettext-base
 postgresql-client-9.6
+sudo
 vim

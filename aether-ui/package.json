@@ -15,12 +15,12 @@
   },
 
   "scripts": {
-    "lint-js": "standard './aether/ui/assets/apps/**/*.jsx'",
-    "lint-scss": "sass-lint --config ./conf/extras/sass-lint.yml --verbose",
-    "lint": "npm run lint-js && npm run lint-scss",
+    "test-lint-js": "standard './aether/ui/assets/apps/**/*.jsx'",
+    "test-lint-scss": "sass-lint --config ./conf/extras/sass-lint.yml --verbose",
+    "test-lint": "npm run test-lint-js && npm run test-lint-scss",
     "test-js": "jest --expand",
     "test-js-verbose": "TERM=dumb && jest --expand --colors --maxWorkers=1",
-    "test": "npm run lint && npm run test-js",
+    "test": "npm run test-lint && npm run test-js",
     "webpack": "webpack --config ./aether/ui/webpack.prod.js",
     "webpack-server": "node ./aether/ui/webpack.server.js"
   },
