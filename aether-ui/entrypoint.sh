@@ -16,11 +16,11 @@ show_help() {
     setupproddb   : create/migrate database for production
     setuplocaldb  : create/migrate database for development (creates superuser)
 
-    test          : run tests
-    test_lint     : run flake8 tests
+    test          : run ALL tests
+    test_lint     : run flake8, standardjs and sass lint tests
     test_coverage : run python tests with coverage output
     test_py       : alias of test_coverage
-    test_js       : run js tests
+    test_js       : run js tests with enzyme and jest
 
     start         : start webserver behind nginx
     start_dev     : start webserver for development
@@ -52,7 +52,7 @@ setup_db() {
 
 setup_initial_data() {
     # create initial superuser
-    ./manage.py loaddata /code/conf/extras/initial.json
+    ./manage.py loaddata ./conf/extras/initial.json
 }
 
 setup_projects() {
@@ -67,29 +67,29 @@ setup_projects() {
 
 setup_prod() {
   # check if vars exist
-  /code/conf/check_vars.sh
+  ./conf/check_vars.sh
   # arguments: -u=admin -p=secretsecret -e=admin@ehealthafrica.org -t=01234656789abcdefghij
   ./manage.py setup_admin -p=$ADMIN_PASSWORD
 }
 
 test_lint() {
     npm run lint
-    flake8 /code/. --config=/code/conf/extras/flake8.cfg
+    flake8 /code/. --config=./conf/extras/flake8.cfg
 }
 
 test_coverage() {
-    export RCFILE=/code/conf/extras/coverage.rc
+    export RCFILE=./conf/extras/coverage.rc
     export TESTING=true
 
     coverage run    --rcfile="$RCFILE" manage.py test "${@:1}"
     coverage report --rcfile="$RCFILE"
     coverage erase
 
-    cat /code/conf/extras/good_job.txt
+    cat ./conf/extras/good_job.txt
 }
 
 test_js() {
-    npm run test-js
+    npm run test-js "${@:1}"
 }
 
 
@@ -102,6 +102,9 @@ then
     )
 fi
 # --------------------------------
+
+export STATIC_DIR=/var/www/static/
+export BUNDLES_DIR=./aether/ui/assets/bundles/*
 
 
 case "$1" in
@@ -121,7 +124,7 @@ case "$1" in
         rm -rf /tmp/env
         pip install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
 
-        cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
+        cat ./conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
         pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
     ;;
 
@@ -137,12 +140,14 @@ case "$1" in
     test)
         test_lint
         test_js
+        test_coverage
 
         # remove previous files
-        rm -r -f /code/aether/ui/assets/bundles/*
+        rm -r -f ${BUNDLES_DIR}
         npm run webpack
 
-        test_coverage "${@:2}"
+        # collect static assets
+        ./manage.py collectstatic --noinput --dry-run
     ;;
 
     test_lint)
@@ -158,7 +163,7 @@ case "$1" in
     ;;
 
     test_js)
-        test_js
+        test_js "${@:2}"
     ;;
 
     start )
@@ -167,18 +172,18 @@ case "$1" in
         setup_projects
 
         # remove previous files
-        rm -r -f /code/aether/ui/assets/bundles/*
+        rm -r -f ${BUNDLES_DIR}
         npm run webpack
 
          # create static assets
-        ./manage.py collectstatic --noinput
-        cp -r /code/aether/ui/assets/bundles/* /var/www/static/
-        chmod -R 755 /var/www/static
+        ./manage.py collectstatic --noinput --clear
+        cp -r ${BUNDLES_DIR} ${STATIC_DIR}
+        chmod -R 755 ${STATIC_DIR}
 
         # media assets
         chown aether: /media
 
-        /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
+        /usr/local/bin/uwsgi --ini ./conf/uwsgi.ini
     ;;
 
     start_dev )
@@ -189,7 +194,7 @@ case "$1" in
 
     start_webpack )
         # remove previous files
-        rm -r -f /code/aether/ui/assets/bundles/*
+        rm -r -f ${BUNDLES_DIR}
         npm run webpack-server
     ;;
 
