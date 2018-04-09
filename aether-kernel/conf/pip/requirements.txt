@@ -29,14 +29,14 @@ django-rest-swagger==2.1.2
 django-reversion==2.0.13
 django-reversion-compare==0.8.4
 django-ums-client==0.2.6
-djangorestframework==3.8.1
+djangorestframework==3.8.2
 djangorestframework-csv==2.1.0
 djangorestframework-filters==0.10.2
 drf-dynamic-fields==0.3.0
 drf-openapi==1.3.0
 fastavro==0.17.10
 flake8==3.5.0
-flake8-quotes==0.14.1
+flake8-quotes==1.0.0
 idna==2.6
 itypes==1.1.0
 Jinja2==2.10
