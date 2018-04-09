@@ -15,7 +15,7 @@
   },
 
   "scripts": {
-    "test-lint-js": "standard './aether/ui/assets/apps/**/*.jsx'",
+    "test-lint-js": "standard './aether/ui/assets/apps/**/*.js*'",
     "test-lint-scss": "sass-lint --verbose",
     "test-lint": "npm run test-lint-scss && npm run test-lint-js",
     "test-js": "jest --expand",
