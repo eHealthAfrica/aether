@@ -6,5 +6,4 @@ export const MAX_PAGE_SIZE = 1048575
 
 // app names (match container names)
 export const KERNEL_APP = 'kernel'
-export const ODK_APP = 'odk'
 export const UI_APP = 'ui'

@@ -4,14 +4,14 @@ import os
 # ------------------------------------------------------------------------------
 
 from aether.common.conf.settings import *  # noqa
-from aether.common.conf.settings import INSTALLED_APPS, TESTING, STATIC_ROOT
+from aether.common.conf.settings import INSTALLED_APPS, TEMPLATES, TESTING, STATIC_ROOT
 
 
 # UI Configuration
 # ------------------------------------------------------------------------------
 
-ROOT_URLCONF = 'ui.urls'
-WSGI_APPLICATION = 'ui.wsgi.application'
+ROOT_URLCONF = 'aether.ui.urls'
+WSGI_APPLICATION = 'aether.ui.wsgi.application'
 
 APP_NAME = 'Aether UI'
 
@@ -27,11 +27,15 @@ WEBPACK_LOADER = {
 
 INSTALLED_APPS += [
     'webpack_loader',
-    'ui',
+    'aether.ui',
+]
+
+TEMPLATES[0]['OPTIONS']['context_processors'] += [
+    'aether.ui.context_processors.ui_context',
 ]
 
 MIGRATION_MODULES = {
-    'ui': 'ui.api.migrations'
+    'ui': 'aether.ui.api.migrations'
 }
 
 # Aether external modules
@@ -57,18 +61,3 @@ if TESTING:  # pragma: no cover
 
 if kernel['url'].strip() and kernel['token'].strip():  # pragma: no cover
     AETHER_APPS['kernel'] = kernel
-
-
-# check if ODK is available in this instance
-AETHER_ODK = False
-if 'odk' in AETHER_MODULES:  # pragma: no cover
-    odk = {
-        'token': os.environ.get('AETHER_ODK_TOKEN', ''),
-        'url': os.environ.get('AETHER_ODK_URL', ''),
-    }
-    if TESTING:
-        odk['url'] = os.environ.get('AETHER_ODK_URL_TEST', '')
-
-    if odk['url'].strip() and odk['token'].strip():
-        AETHER_APPS['odk'] = odk
-        AETHER_ODK = True

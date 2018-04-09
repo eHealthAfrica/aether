@@ -39,7 +39,7 @@ class Home extends Component {
               User name
             </span>
             <span className='logout'>
-              <a href='#'><i className='fa fa-sign-out' title='Sign Out' aria-hidden='true' /></a>
+              <a href='#'><i className='fas fa-sign-out-alt' title='Sign Out' aria-hidden='true' /></a>
             </span>
           </div>
         </div>

@@ -13,7 +13,7 @@ export default class FetchErrorAlert extends Component {
     return (
       <div data-qa='data-erred' className='container-fluid'>
         <p className='alert alert-danger'>
-          <i className='fa fa-warning mr-1' />
+          <i className='fas fa-exclamation-triangle mr-1' />
           <FormattedMessage
             id='alert.error.fetch'
             defaultMessage={`

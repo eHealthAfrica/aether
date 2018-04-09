@@ -5,10 +5,10 @@ $duration: 1.6s;
 }
 
 @keyframes dot {
-  0%   {opacity: 0; top:20px;background: $purple;}
-  10%  {opacity: 1;}
-  30%  {opacity: 1; top:5px;background: $action-color;}
-  100% {opacity: 0; top:5px;background: $action-color;}
+  0%   { opacity: 0; top: 20px; background: $purple; }
+  10%  { opacity: 1; }
+  30%  { opacity: 1; top: 5px; background: $action-color; }
+  100% { opacity: 0; top: 5px; background: $action-color; }
 }
 
 .dot1,
@@ -22,7 +22,7 @@ $duration: 1.6s;
   position: absolute;
 
   &::before {
-    content: "";
+    content: '';
     display: block;
     position: absolute;
     border-radius: 100%;
@@ -49,7 +49,7 @@ $duration: 1.6s;
   transform: rotate(120deg);
 
   &::before {
-    animation-delay: $duration/6*2;
+    animation-delay: $duration / 6 * 2;
   }
 }
 
@@ -57,7 +57,7 @@ $duration: 1.6s;
   transform: rotate(180deg);
 
   &::before {
-    animation-delay: $duration/6*3;
+    animation-delay: $duration / 6 * 3;
   }
 }
 
@@ -65,7 +65,7 @@ $duration: 1.6s;
   transform: rotate(240deg);
 
   &::before {
-    animation-delay: $duration/6*4;
+    animation-delay: $duration / 6 * 4;
   }
 }
 
@@ -73,6 +73,6 @@ $duration: 1.6s;
   transform: rotate(300deg);
 
   &::before {
-    animation-delay: $duration/6*5;
+    animation-delay: $duration / 6 * 5;
   }
 }

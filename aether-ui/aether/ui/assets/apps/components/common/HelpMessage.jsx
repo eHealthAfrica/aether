@@ -17,7 +17,7 @@ export default class HelpMessage extends Component {
           className='btn btn-sm btn-info rounded-circle float-right'
           data-toggle='collapse'
           data-target={'#' + randomId}>
-          <i className='fa fa-question' />
+          <i className='fas fa-question' />
         </button>
         <div className='collapse' id={randomId}>
           <div className='help-container'>

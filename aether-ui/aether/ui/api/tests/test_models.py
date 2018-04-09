@@ -48,7 +48,6 @@ class ModelsTests(TestCase):
     def test__user_tokens__unknown_app(self):
         user_tokens, _ = UserTokens.objects.get_or_create(user=self.user)
         self.assertEqual(user_tokens.kernel_token, None)
-        self.assertEqual(user_tokens.odk_token, None)
 
         app_name = 'unknown'
 
@@ -64,7 +63,6 @@ class ModelsTests(TestCase):
 
         user_tokens.save_app_token(app_name, '9876543210')
         self.assertEqual(user_tokens.kernel_token, None)
-        self.assertEqual(user_tokens.odk_token, None)
 
     def helper__test_user_tokens__default_values(self, user_tokens, app_name, app_property):
         self.assertNotEqual(user_tokens.get_app_url(app_name), None)
@@ -108,7 +106,7 @@ class ModelsTests(TestCase):
             self.assertTrue(user_tokens.validates_app_token(app_name))
 
         # what happens if the base_url or the token for the APP was not set
-        with mock.patch('ui.api.models.AETHER_APPS', new={}):
+        with mock.patch('aether.ui.api.models.AETHER_APPS', new={}):
             self.assertFalse(user_tokens.validates_app_token(app_name))
 
         # None tokens are always not valid
@@ -127,7 +125,7 @@ class ModelsTests(TestCase):
             mock_post.assert_called_once()
 
         # what happens if the base_url or the token for the APP was not set
-        with mock.patch('ui.api.models.AETHER_APPS', new={}):
+        with mock.patch('aether.ui.api.models.AETHER_APPS', new={}):
             self.assertEqual(user_tokens.obtain_app_token(app_name), None)
 
         # with an error on the other side
@@ -150,24 +148,24 @@ class ModelsTests(TestCase):
     def test_get_or_create_user_app_token__unknown_app(self):
         self.assertEqual(get_or_create_user_app_token(self.user, 'other'), None)
 
-    @mock.patch('ui.api.models.AETHER_APPS', new={})
+    @mock.patch('aether.ui.api.models.AETHER_APPS', new={})
     def test_get_or_create_user_app_token__not_base_url(self):
         for app in MODULES:
             self.assertEqual(get_or_create_user_app_token(self.user, app), None)
 
-    @mock.patch('ui.api.models.UserTokens.create_app_token', new=mock_return_none)
-    @mock.patch('ui.api.models.UserTokens.validates_app_token', new=mock_return_false)
+    @mock.patch('aether.ui.api.models.UserTokens.create_app_token', new=mock_return_none)
+    @mock.patch('aether.ui.api.models.UserTokens.validates_app_token', new=mock_return_false)
     def test_get_or_create_user_app_token__not_valid_token(self):
         for app in MODULES:
             self.assertEqual(get_or_create_user_app_token(self.user, app), None)
 
-    @mock.patch('ui.api.models.UserTokens.get_app_token', new=mock_return_none)
-    @mock.patch('ui.api.models.UserTokens.validates_app_token', new=mock_return_true)
+    @mock.patch('aether.ui.api.models.UserTokens.get_app_token', new=mock_return_none)
+    @mock.patch('aether.ui.api.models.UserTokens.validates_app_token', new=mock_return_true)
     def test_get_or_create_user_app_token__none_token(self):
         for app in MODULES:
             self.assertEqual(get_or_create_user_app_token(self.user, app), None)
 
-    @mock.patch('ui.api.models.UserTokens.validates_app_token', new=mock_return_true)
+    @mock.patch('aether.ui.api.models.UserTokens.validates_app_token', new=mock_return_true)
     def test_get_or_create_user_app_token__valid_token(self):
         user_tokens, _ = UserTokens.objects.get_or_create(user=self.user)
         for app in MODULES:

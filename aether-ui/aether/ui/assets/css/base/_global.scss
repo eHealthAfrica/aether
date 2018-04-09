@@ -60,7 +60,7 @@ button {
 
 .btn-danger {
   background: $red;
-  
+
   &:active,
   &:focus,
   &:hover {
@@ -173,7 +173,7 @@ input:active {
 
 pre {
   background-color: $black;
-  font-family: monospace;
+  font-family: $code-font-family;
   font-size: $font-size-xs;
   color: $green;
   max-height: 200px;

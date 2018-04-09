@@ -5,7 +5,7 @@ from .api import models
 
 class UserTokensAdmin(admin.ModelAdmin):
 
-    list_display = ('user', 'kernel_token', 'odk_token',)
+    list_display = ('user', 'kernel_token',)
     search_fields = ('user',)
     ordering = list_display
 

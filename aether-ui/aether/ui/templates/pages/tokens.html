@@ -7,13 +7,6 @@
 
 
 {% block content %}
-
-  <div class="page-header">
-    <h1 data-qa='project-name'>
-      {{ project_name }}
-    </h1>
-  </div>
-
   <div class="page-content">
     <div class="page-title">
       {% trans 'App tokens for' %}
@@ -42,18 +35,6 @@
             </span>
           </td>
         </tr>
-
-        {% if odk_url %}
-          <tr>
-            <td>Aether ODK</td>
-            <td>{{ request.user|get_token:'odk' }}</td>
-            <td>
-              <span class="url-name">
-                <a href="{{ odk_url }}" target="_blank">{{ odk_url }}</a>
-              </span>
-            </td>
-          </tr>
-        {% endif %}
       </tbody>
     </table>
 

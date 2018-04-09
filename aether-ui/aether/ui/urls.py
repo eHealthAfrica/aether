@@ -12,7 +12,7 @@ from .api.views import empty
 
 urlpatterns = generate_urlpatterns(kernel=True) + [
     # API
-    url(r'^', include('ui.api.urls', namespace='ui')),
+    url(r'^', include('aether.ui.api.urls', namespace='ui')),
     # Welcome page
     url(r'^$',
         login_required(TemplateView.as_view(template_name='pages/index.html')),
