@@ -1,0 +1,21 @@
+# Adds Nifi to Aether Network
+version: "2.1"
+
+  # ---------------------------------
+  # Apache Nifi
+  # ---------------------------------
+
+services:
+
+  nifi:
+    image: apache/nifi:latest
+    ports:
+      - "8080:8080"
+      - "5446:5446"
+    networks:
+      - aether
+
+networks:
+  aether:
+    external:
+      name: aether_internal

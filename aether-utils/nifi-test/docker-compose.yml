@@ -1,0 +1,14 @@
+version: "2.1"
+services:
+  hello-nifi:
+    build: ./hello-nifi
+    stdin_open: true
+    environment:
+     - PYTHONUNBUFFERED=1
+    networks:
+      - aether
+
+networks:
+  aether:
+    external:
+      name: aether_internal
