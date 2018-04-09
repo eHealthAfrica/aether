@@ -17,20 +17,6 @@ if DEBUG:  # pragma: no cover
 if TESTING:  # pragma: no cover
     logger.setLevel(logging.CRITICAL)
 
-# `aether.common.kernel.utils.get_kernel_server_url()` returns different values
-# depending on the value of `settings.TESTING`. Without these assertions, a
-# deployment configuration missing e.g. `AETHER_KERNEL_URL` will seem to be in
-# order until `get_kernel_server_url()` is called.
-# FIXME: come up with a better solution -- in order to make things more
-# predictable, no lookups on `os.environ` should be done outside of the
-# settings file.
-if TESTING:  # pragma: nocover
-    msg = 'Environment variable "AETHER_KERNEL_URL_TEST" is not set'
-    assert os.environ['AETHER_KERNEL_URL_TEST'], msg
-else:  # pragma: nocover
-    msg = 'Environment variable "AETHER_KERNEL_URL" is not set'
-    assert os.environ['AETHER_KERNEL_URL'], msg
-
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
