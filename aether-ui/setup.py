@@ -16,10 +16,10 @@ setup(
     license='Apache2 License',
 
     packages=find_packages(),
-    python_requires='>=2.7, <4',
+    python_requires='>=3, <4',
     install_requires=[
         'django<2',
-        'djangorestframework>=3.6<4',
+        'djangorestframework>=3.8<4',
         'djangorestframework-csv>=2.0.0<3',
         'django-cors-headers>=2.0.0<3',
     ],
@@ -36,7 +36,6 @@ setup(
         'Operating System :: OS Independent',
 
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
@@ -46,5 +45,6 @@ setup(
         'Topic :: Software Development :: Libraries',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Software Development :: Libraries :: Django Modules',
+        'Topic :: Software Development :: Libraries :: REST-Framework App',
     ],
 )
