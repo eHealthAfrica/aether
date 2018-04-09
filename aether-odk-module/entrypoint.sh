@@ -118,20 +118,20 @@ case "$1" in
     ;;
 
     start )
-        setup_db
-        setup_prod
+        # setup_db
+        # setup_prod
 
-        # media assets
-        chown aether: /media
+        # # media assets
+        # chown aether: /media
 
-        # create static assets
-        ./manage.py collectstatic --noinput
-        chmod -R 755 /var/www/static
+        # # create static assets
+        # ./manage.py collectstatic --noinput
+        # chmod -R 755 /var/www/static
 
-        # expose version number
-        cp /code/VERSION /var/www/VERSION
-        # add git revision 
-        cp /code/REVISION /var/www/REVISION 
+        # # expose version number
+        # cp /code/VERSION /var/www/VERSION
+        # # add git revision 
+        # cp /code/REVISION /var/www/REVISION 
 
         /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
     ;;
