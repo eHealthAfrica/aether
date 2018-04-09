@@ -35,7 +35,6 @@ setup_db() {
 
   until pg_isready -q; do
     >&2 echo "Waiting for postgres..."
-    >&2 echo $A
     sleep 1
   done
 
