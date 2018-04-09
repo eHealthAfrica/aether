@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -Eeuox pipefail
 
 
 # Define help message
