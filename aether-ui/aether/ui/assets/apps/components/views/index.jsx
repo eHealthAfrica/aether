@@ -1,7 +1,9 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
+import { PROJECT_NAME } from '../../utils/constants'
 import NewPipeLine from './pipelines/new_pipeline'
-import PipeLine from './pipelines/pipeline'
+import { selectedPipelineChanged } from '../../redux/modules/pipeline'
+import PipelineCard from './pipelines/cards'
 
 class Home extends Component {
   constructor (props) {
@@ -10,6 +12,31 @@ class Home extends Component {
       view: 'show-index'
     }
   }
+
+  startPipeline (selectedPipeline) {
+    this.props.selectedPipelineChanged(selectedPipeline)
+    this.props.history.push('/pipeline')
+  }
+
+  getPipelineCards () {
+    const cards = []
+    this.props.pipelineList.forEach(pipeline => {
+      if (pipeline) {
+        cards.push(
+          <PipelineCard
+            pipeline={pipeline}
+            onSelect={() => {
+              this.props.selectedPipelineChanged(pipeline)
+              this.props.history.push('/pipeline')
+            }}
+            key={pipeline.id}
+          />
+        )
+      }
+    })
+    return cards
+  }
+
   render () {
     return (
       <div className={`pipelines-container ${this.state.view}`}>
@@ -23,16 +50,6 @@ class Home extends Component {
             </div>
             <span data-app-name='app-name'><b>ae</b>ther</span>
           </a>
-          { this.state.view === 'show-pipeline' &&
-            <div className='top-nav-breadcrumb'>
-              <a
-                href='#'
-                onClick={() => { this.setState({ view: 'show-index' }) }}>
-                Pipelines
-              </a>
-              <span> // Name of pipeline</span>
-            </div>
-          }
           <div className='top-nav-user'>
             <span
               id='logged-in-user-info'>
@@ -43,50 +60,11 @@ class Home extends Component {
             </span>
           </div>
         </div>
-
-        { this.state.view === 'show-index' &&
-          <div className='pipelines'>
-            <h1 className='pipelines-heading'>Project Name//Pipelines</h1>
-            <NewPipeLine />
-            { this.renderPipelinePreviews() }
-          </div>
-        }
-
-        { this.state.view === 'show-pipeline' &&
-          <PipeLine />
-        }
-
-      </div>
-    )
-  }
-
-  renderPipelinePreviews () {
-    return (
-      <div className='pipeline-previews'>
-        <div
-          onClick={() => { this.setState({ view: 'show-pipeline' }) }}
-          className='pipeline-preview'>
-          <h2 className='preview-heading'>Name of pipeline</h2>
-          <div className='summary-entity-types'>
-            <span className='badge badge-b badge-big'>5</span>
-            Entity-Types
-          </div>
-          <div className='summary-errors'>
-            <span className='badge badge-b badge-big'>0</span>
-            Errors
-          </div>
-        </div>
-        <div
-          onClick={() => { this.setState({ view: 'show-pipeline' }) }}
-          className='pipeline-preview'>
-          <h2 className='preview-heading'>longer name of pipeline</h2>
-          <div className='summary-entity-types'>
-            <span className='badge badge-b badge-big'>3</span>
-            Entity-Types
-          </div>
-          <div className='summary-errors error'>
-            <span className='badge badge-b badge-big'>2</span>
-            Errors
+        <div className='pipelines'>
+          <h1 className='pipelines-heading'>{PROJECT_NAME}//Pipelines</h1>
+          <NewPipeLine onStartPipeline={this.startPipeline.bind(this)} />
+          <div className='pipeline-previews'>
+            { this.getPipelineCards() }
           </div>
         </div>
       </div>
@@ -94,6 +72,8 @@ class Home extends Component {
   }
 }
 
-const mapStateToProps = () => ({ })
+const mapStateToProps = ({ pipelines }) => ({
+  pipelineList: pipelines.pipelineList
+})
 
-export default connect(mapStateToProps, {})(Home)
+export default connect(mapStateToProps, { selectedPipelineChanged })(Home)

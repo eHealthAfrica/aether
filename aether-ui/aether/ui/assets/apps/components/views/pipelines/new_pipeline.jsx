@@ -1,11 +1,27 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
+import { addPipeline, selectedPipelineChanged } from '../../../redux/modules/pipeline'
+import { generateGUID } from '../../../utils/index'
 
 class NewPipeLine extends Component {
   constructor (props) {
     super(props)
     this.state = {
-      view: 'button'
+      view: 'button',
+      newPipelineName: ''
+    }
+  }
+
+  startPipeline () {
+    if (this.state.newPipelineName) {
+      const newPipeline = {
+        name: this.state.newPipelineName,
+        id: generateGUID(),
+        entityTypes: 0,
+        errors: 0
+      }
+      this.props.addPipeline(newPipeline)
+      this.props.onStartPipeline(newPipeline)
     }
   }
 
@@ -31,6 +47,8 @@ class NewPipeLine extends Component {
                 name='name'
                 className='text-input'
                 placeholder='Name of new pipeline'
+                value={this.state.newPipelineName}
+                onChange={event => this.setState({newPipelineName: event.target.value})}
               />
               <label className='form-label'>
                 Name of new pipeline
@@ -45,7 +63,7 @@ class NewPipeLine extends Component {
             <button
               type='button'
               className='btn btn-d btn-big'
-              onClick={() => this.setState({ view: 'button' })}>
+              onClick={this.startPipeline.bind(this)}>
               <span className='details-title'>Start Pipeline</span>
             </button>
           </div>
@@ -58,4 +76,7 @@ class NewPipeLine extends Component {
 
 const mapStateToProps = () => ({ })
 
-export default connect(mapStateToProps, {})(NewPipeLine)
+export default connect(mapStateToProps, {
+  addPipeline,
+  selectedPipelineChanged
+})(NewPipeLine)

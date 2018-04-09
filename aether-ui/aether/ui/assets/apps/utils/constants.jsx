@@ -8,3 +8,4 @@ export const MAX_PAGE_SIZE = 1048575
 export const KERNEL_APP = 'kernel'
 export const ODK_APP = 'odk'
 export const UI_APP = 'ui'
+export const PROJECT_NAME = 'AUX'
