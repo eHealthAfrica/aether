@@ -7,9 +7,9 @@ from ..conf.settings import logger
 
 def get_kernel_server_url():
     if os.environ.get('TESTING', '').lower() == 'true':
-        return os.environ.get('AETHER_KERNEL_URL_TEST', '')
+        return os.environ.get('AETHER_KERNEL_URL_TEST')
     else:
-        return os.environ.get('AETHER_KERNEL_URL', '')
+        return os.environ.get('AETHER_KERNEL_URL')
 
 
 def get_auth_header():
@@ -47,11 +47,11 @@ def test_connection():
 
                 return True  # it's possible to connect with kernel :D
 
-            except Exception as eg:
+            except Exception:
                 logger.warning(
                     'Aether Kernel token is not valid for Aether Kernel server ({url})'
                     .format(url=url))
-        except Exception as eh:
+        except Exception:
             logger.warning(
                 'Aether Kernel server ({url}) is not available.'
                 .format(url=url))

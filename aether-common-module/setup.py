@@ -19,7 +19,7 @@ setup(
     python_requires='>=2.7, <4',
     install_requires=[
         'django<2',
-        'djangorestframework>=3.6<4',
+        'djangorestframework>=3.8<4',
         'djangorestframework-csv>=2.0.0<3',
         'django-cors-headers>=2.0.0<3',
     ],
@@ -46,5 +46,6 @@ setup(
         'Topic :: Software Development :: Libraries',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Software Development :: Libraries :: Django Modules',
+        'Topic :: Software Development :: Libraries :: REST-Framework Modules',
     ],
 )
