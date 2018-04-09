@@ -1,7 +1,7 @@
 from django.db.models import Count, Min, Max
 
 from rest_framework import viewsets, permissions
-from rest_framework.decorators import detail_route, list_route
+from rest_framework.decorators import action
 from drf_openapi.views import SchemaView
 from rest_framework.response import Response
 from rest_framework.decorators import (
@@ -41,7 +41,7 @@ def get_entity_linked_data(entity, request, resolved, depth, start_depth=0):
 
 class CustomViewSet(viewsets.ModelViewSet):
 
-    @detail_route(methods=['get', 'post'])
+    @action(detail=True, methods=['get', 'post'])
     def details(self, request, pk=None, *args, **kwargs):
         '''
         Allow to retrieve data from a POST request.
@@ -50,7 +50,7 @@ class CustomViewSet(viewsets.ModelViewSet):
 
         return self.retrieve(request, pk, *args, **kwargs)
 
-    @list_route(methods=['get', 'post'])
+    @action(detail=False, methods=['get', 'post'])
     def fetch(self, request, *args, **kwargs):
         '''
         Allow to list data from a POST request.

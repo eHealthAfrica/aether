@@ -1,6 +1,6 @@
 [run]
 branch = true
-source = /code/ui
+source = /code/aether/ui
 omit = *migrations*, *tests*
 
 [report]

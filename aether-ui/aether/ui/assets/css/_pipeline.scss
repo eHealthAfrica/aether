@@ -1,6 +1,6 @@
 @keyframes slide-up {
-  0% {top: 100vh}
-  100% {top: 10px}
+  0%   { top: 100vh; }
+  100% { top: 10px; }
 }
 
 $transition-speed: .6s;
@@ -330,7 +330,7 @@ div[class^='pipeline-section__'],
 }
 
 
-//OUTPUT
+// OUTPUT
 
 .show-output {
 

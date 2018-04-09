@@ -1,1 +1,1 @@
-default_app_config = 'ui.apps.Config'
+default_app_config = 'aether.ui.apps.Config'

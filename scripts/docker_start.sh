@@ -108,6 +108,18 @@ case $container in
     docker-compose up db couchdb redis kernel couchdb-sync couchdb-sync-rq nginx
   ;;
 
+  ui)
+    echo "**********************************************************************"
+    echo "**** Starting PostgreSQL                                          ****"
+    echo "**** Starting NGINX                                               ****"
+    echo "**** Starting Kernel app                                          ****"
+    echo "**** Starting UI module                                           ****"
+    echo "**** Starting webpack                                             ****"
+    echo "**********************************************************************"
+
+    docker-compose up db kernel ui webpack nginx
+  ;;
+
   *)
     echo "**********************************************************************"
     echo "**** Starting PostgreSQL                                          ****"

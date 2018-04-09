@@ -29,4 +29,11 @@ services:
   couchdb-sync-nginx:
     image: aether-couchdb-sync-nginx
     build: ./aether-couchdb-sync-module/nginx
-  
+
+  # ---------------------------------
+  # UI module
+  # ---------------------------------
+
+  ui-nginx:
+    image: aether-ui-nginx
+    build: ./aether-ui/nginx

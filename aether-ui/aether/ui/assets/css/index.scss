@@ -2,14 +2,14 @@
 // third-party styles
 // ************************************
 
-$fa-font-path: '~font-awesome/fonts';
-@import '~font-awesome/scss/font-awesome';
 @import '~bootstrap/scss/bootstrap';
+
 
 // ************************************
 // custom styles
 // ************************************
 
+@import 'base/fonts';
 @import 'base/settings';
 @import 'base/mixins';
 @import 'base/global';

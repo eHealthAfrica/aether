@@ -23,7 +23,6 @@ class UserTokens(models.Model):
     user = models.OneToOneField(to=get_user_model(), primary_key=True, on_delete=models.CASCADE)
 
     kernel_token = models.CharField(max_length=40, null=True, blank=True)
-    odk_token = models.CharField(max_length=40, null=True, blank=True)
 
     def get_app_url(self, app_name):
         '''
