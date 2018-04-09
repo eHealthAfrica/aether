@@ -15,9 +15,9 @@
   },
 
   "scripts": {
-    "test-lint-js": "standard './aether/ui/assets/apps/**/*.jsx'",
-    "test-lint-scss": "sass-lint --config ./conf/extras/sass-lint.yml --verbose",
-    "test-lint": "npm run test-lint-js && npm run test-lint-scss",
+    "test-lint-js": "standard './aether/ui/assets/apps/**/*.js*'",
+    "test-lint-scss": "sass-lint --verbose",
+    "test-lint": "npm run test-lint-scss && npm run test-lint-js",
     "test-js": "jest --expand",
     "test-js-verbose": "TERM=dumb && jest --expand --colors --maxWorkers=1",
     "test": "npm run test-lint && npm run test-js",
@@ -81,6 +81,7 @@
       "react-hot-loader/babel"
     ]
   },
+  "sasslintConfig": "./conf/extras/sass-lint.yml",
   "standard": {
     "globals": [
       "afterAll",
