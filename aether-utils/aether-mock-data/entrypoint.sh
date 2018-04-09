@@ -1,6 +1,5 @@
 #!/bin/bash
-set -e
-
+set -Eeuo pipefail
 
 # Define help message
 show_help() {
@@ -8,20 +7,16 @@ show_help() {
     Commands
     ----------------------------------------------------------------------------
     bash          : run bash
+    build         : build python wheel of library in /dist
     eval          : eval shell command
     manage        : invoke django manage.py commands
 
     pip_freeze    : freeze pip dependencies and write to requirements.txt
 
-    setupproddb   : create/migrate database for production
-    setuplocaldb  : create/migrate database for development (creates superuser and token)
-
     test          : run tests
     test_lint     : run flake8 tests
     test_coverage : run tests with coverage output
 
-    start         : start webserver behind nginx
-    start_dev     : start webserver for development
     """
 }
 
@@ -62,15 +57,6 @@ case "$1" in
         pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
     ;;
 
-    setuplocaldb )
-        #setup_db
-        #setup_initial_data
-    ;;
-
-    setupproddb )
-        setup_db
-    ;;
-
     test)
         test_flake8
         test_coverage "${@:2}"
@@ -96,14 +82,6 @@ case "$1" in
         # remove useless content
         rm -rf build
         rm -rf aether.mocker.egg-info
-    ;;
-
-    start )
-        echo 'start'
-    ;;
-
-    start_dev )
-        echo 'start_dev'
     ;;
 
     help)

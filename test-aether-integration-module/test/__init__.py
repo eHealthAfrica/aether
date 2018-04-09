@@ -77,15 +77,23 @@ def generate_entities(aether_client, existing_schemas, existing_projectschemas):
     from aether.mocker import MockingManager, MockFn, Generic
     person = "http://demo.eha.org/Person"
     location = "http://demo.eha.org/GeoLocation"
-    manager = MockingManager(kernel_url=KERNEL_URL)
-    manager.types[location].override_property(
-        "latitude", MockFn(Generic.geo_lat))
-    manager.types[location].override_property(
-        "longitude", MockFn(Generic.geo_lng))
-    for x in range(SEED_ENTITIES):
-        entity = manager.register(person)
-        entities.append(entity)
-    manager.kill()
+    try:
+        manager = MockingManager(kernel_url=KERNEL_URL)
+        manager.types[location].override_property(
+            "latitude", MockFn(Generic.geo_lat))
+        manager.types[location].override_property(
+            "longitude", MockFn(Generic.geo_lng))
+        for x in range(SEED_ENTITIES):
+            entity = manager.register(person)
+            entities.append(entity)
+    except Exception as err:
+        raise(err)
+    finally:
+        try:
+            if manager:
+                manager.kill()
+        except Exception as oos:
+            raise(oos)
     return entities
 
 

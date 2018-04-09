@@ -232,7 +232,7 @@ class EntityResolver(GenericCollection):
             return res
         raise AttributeError("No attribute %s" % key)
 
-    def get(self, key=None, filter_func=None, search_type=None):
+    def get(self, key=None, filter_func=None, search_type=None, strict=True):
         try:
             result = self.pluck(key)
             if result:
@@ -241,7 +241,7 @@ class EntityResolver(GenericCollection):
             pass
         alt_keys = self.get_alternative_keys(key=key, search_type=search_type)
         for alt_key in alt_keys:
-            result = self.resolve(alt_key, filter_func, strict=True)
+            result = self.resolve(alt_key, filter_func, strict=strict)
             if result:
                 return result
         raise AttributeError  # TODO TEST

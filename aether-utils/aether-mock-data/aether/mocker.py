@@ -367,9 +367,10 @@ class MockingManager(object):
         self.schema_id = {}
         self.type_client = {}
         self.type_count = {}
-        self.load()
         signal.signal(signal.SIGTERM, self.kill)
         signal.signal(signal.SIGINT, self.kill)
+        self.load()
+
 
     def get(self, _type):
         if not _type in self.types.keys():
@@ -429,7 +430,7 @@ class MockingManager(object):
             self.schema_id[name] = _id
             self.schema_id[full_name] = _id
             self.schema_id[_id] = name
-            self.type_client[name] = self.client.Entity[name]
+            self.type_client[name] = self.client.Entity.get(name, strict=False)
 
         for ps in self.client.Resource.ProjectSchema:
             schema_id = ps.get('schema')

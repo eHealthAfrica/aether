@@ -36,7 +36,7 @@ test_coverage() {
     cat /code/conf/extras/good_job.txt
 
     # Python3 Tests
-    python3 setup.py test "${@:1}"
+    python3 setup.py -q test "${@:1}"
 
     cat /code/conf/extras/good_job.txt
     rm -R ./*.egg*
@@ -91,29 +91,6 @@ case "$1" in
 
     test_coverage)
         test_coverage "${@:2}"
-    ;;
-
-    build)
-        # remove previous build if needed
-        rm -rf dist
-        rm -rf build
-        rm -rf aether.client.egg-info
-
-        # create the distribution
-        python setup.py bdist_wheel --universal
-
-        # remove useless content
-        rm -rf build
-        rm -rf aether.client.egg-info
-        rm -rf __pycache__
-    ;;
-
-    start )
-        echo 'start'
-    ;;
-
-    start_dev )
-        echo 'start_dev'
     ;;
 
     help)
