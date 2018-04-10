@@ -1,6 +1,7 @@
 /* global describe, it, expect */
 
 import React from 'react'
+import { MemoryRouter } from 'react-router'
 
 import { mountWithIntl } from '../../../tests/test-react-intl'
 import NavBar from './NavBar'
@@ -13,7 +14,11 @@ describe('NavBar', () => {
   })
 
   it('should include the breadcrumb', () => {
-    const component = mountWithIntl(<NavBar showBreadcrumb />, {context: { intl: [] }})
+    const component = mountWithIntl(
+      <MemoryRouter>
+        <NavBar showBreadcrumb />
+      </MemoryRouter>
+    )
     const breadcrumb = component.find('[data-qa="navbar-breadcrumb"]')
     expect(breadcrumb.exists()).toBeTruthy()
     expect(breadcrumb.html()).toContain('PIPELINES')
@@ -21,7 +26,11 @@ describe('NavBar', () => {
   })
 
   it('should include the breadcrumb and the pipeline name', () => {
-    const component = mountWithIntl(<NavBar showBreadcrumb selectedPipeline={{name: 'test'}} />)
+    const component = mountWithIntl(
+      <MemoryRouter>
+        <NavBar showBreadcrumb selectedPipeline={{name: 'test'}} />
+      </MemoryRouter>
+    )
     const breadcrumb = component.find('[data-qa="navbar-breadcrumb"]')
     expect(breadcrumb.exists()).toBeTruthy()
     expect(breadcrumb.html()).toContain('PIPELINES')

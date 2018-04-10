@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
+import { Link } from 'react-router-dom'
 
 class NavBar extends Component {
   render () {
@@ -40,9 +41,9 @@ class NavBar extends Component {
 
     return (
       <div data-qa='navbar-breadcrumb' className='top-nav-breadcrumb'>
-        <a href='/'>
+        <Link to='/'>
           <FormattedMessage id='navbar.pipelines' defaultMessage='PIPELINES' />
-        </a>
+        </Link>
         <span> // {label}</span>
       </div>
     )
