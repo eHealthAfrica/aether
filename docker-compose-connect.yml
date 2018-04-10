@@ -41,7 +41,7 @@ services:
       - zookeeper
     networks:
       - aether
-    command: start_dev
+    command: start
 
 networks:
   aether:
