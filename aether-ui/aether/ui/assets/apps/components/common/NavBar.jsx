@@ -15,12 +15,12 @@ class NavBar extends Component {
           </div>
           <span data-app-name='app-name'><b>ae</b>ther</span>
         </a>
-        {this.props.showBreadcrumb && 
+        {this.props.showBreadcrumb &&
           <div className='top-nav-breadcrumb'>
             <Link to='/'>
-            <FormattedMessage
-              id='navbar.piplines'
-              defaultMessage='PIPELINES' />
+              <FormattedMessage
+                id='navbar.piplines'
+                defaultMessage='PIPELINES' />
             </Link>
             <span> // {this.props.selectedPipeline ? this.props.selectedPipeline.name : 'Select a pipeline'}</span>
           </div>

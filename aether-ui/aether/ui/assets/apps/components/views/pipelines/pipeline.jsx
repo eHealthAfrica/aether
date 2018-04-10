@@ -25,7 +25,7 @@ class PipeLine extends Component {
   render () {
     return (
       <div className={'pipelines-container show-pipeline'}>
-        <NavBar selectedPipeline={this.props.selectedPipeline} showBreadcrumb/>
+        <NavBar selectedPipeline={this.props.selectedPipeline} showBreadcrumb />
         <div className={`pipeline pipeline--${this.state.pipelineView} ${this.state.showOutput ? 'show-output' : ''} ${this.state.fullscreen ? 'fullscreen' : ''}`}>
           <div className='pipeline-nav'>
             <div className='pipeline-nav-items'>
