@@ -4,6 +4,7 @@ import { PROJECT_NAME } from '../../utils/constants'
 import NewPipeLine from './pipelines/new_pipeline'
 import { selectedPipelineChanged } from '../../redux/modules/pipeline'
 import PipelineCard from './pipelines/cards'
+import { NavBar } from '../common'
 
 class Home extends Component {
   constructor (props) {
@@ -40,26 +41,7 @@ class Home extends Component {
   render () {
     return (
       <div className={`pipelines-container ${this.state.view}`}>
-        <div className='navbar top-nav'>
-          <a className='top-nav-logo' href='/' title='aether'>
-            <div className='logo-container'>
-              <div className='flipper'>
-                <div className='front' />
-                <div className='back' />
-              </div>
-            </div>
-            <span data-app-name='app-name'><b>ae</b>ther</span>
-          </a>
-          <div className='top-nav-user'>
-            <span
-              id='logged-in-user-info'>
-              User name
-            </span>
-            <span className='logout'>
-              <a href='#'><i className='fas fa-sign-out-alt' title='Sign Out' aria-hidden='true' /></a>
-            </span>
-          </div>
-        </div>
+        <NavBar />
         <div className='pipelines'>
           <h1 className='pipelines-heading'>{PROJECT_NAME}//Pipelines</h1>
           <NewPipeLine onStartPipeline={this.startPipeline.bind(this)} />

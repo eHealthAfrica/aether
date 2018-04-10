@@ -1,10 +1,10 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { Link } from 'react-router-dom'
 import Input from '../sections/input'
 import EntityTypes from '../sections/entityTypes'
 import Mapping from '../sections/mapping'
 import Output from '../sections/output'
+import { NavBar } from '../../common'
 
 class PipeLine extends Component {
   constructor (props) {
@@ -25,32 +25,7 @@ class PipeLine extends Component {
   render () {
     return (
       <div className={'pipelines-container show-pipeline'}>
-        <div className='navbar top-nav'>
-          <a className='top-nav-logo' href='/' title='aether'>
-            <div className='logo-container'>
-              <div className='flipper'>
-                <div className='front' />
-                <div className='back' />
-              </div>
-            </div>
-            <span data-app-name='app-name'><b>ae</b>ther</span>
-          </a>
-          <div className='top-nav-breadcrumb'>
-            <Link to='/'>
-              <span>PIPELINES</span>
-            </Link>
-            <span> // {this.props.selectedPipeline ? this.props.selectedPipeline.name : 'Select a pipeline'}</span>
-          </div>
-          <div className='top-nav-user'>
-            <span
-              id='logged-in-user-info'>
-              User name
-            </span>
-            <span className='logout'>
-              <a href='#'><i className='fa fa-sign-out' title='Sign Out' aria-hidden='true' /></a>
-            </span>
-          </div>
-        </div>
+        <NavBar selectedPipeline={this.props.selectedPipeline} showBreadcrumb/>
         <div className={`pipeline pipeline--${this.state.pipelineView} ${this.state.showOutput ? 'show-output' : ''} ${this.state.fullscreen ? 'fullscreen' : ''}`}>
           <div className='pipeline-nav'>
             <div className='pipeline-nav-items'>
