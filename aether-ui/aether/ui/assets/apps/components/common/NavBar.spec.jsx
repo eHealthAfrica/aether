@@ -8,7 +8,11 @@ import NavBar from './NavBar'
 
 describe('NavBar', () => {
   it('should render the nav bar', () => {
-    const component = mountWithIntl(<NavBar />)
+    const component = mountWithIntl(
+      <MemoryRouter>
+        <NavBar />
+      </MemoryRouter>
+    )
     expect(component.find('[data-qa="navbar"]').exists()).toBeTruthy()
     expect(component.find('[data-qa="navbar-breadcrumb"]').exists()).toBeFalsy()
   })
