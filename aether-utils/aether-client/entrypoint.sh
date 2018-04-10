@@ -8,35 +8,34 @@ show_help() {
     Commands
     ----------------------------------------------------------------------------
     bash          : run bash
+    build         : build python wheel of library in /dist
     eval          : eval shell command
-    manage        : invoke manage.py commands
+    manage        : invoke django manage.py commands
 
     pip_freeze    : freeze pip dependencies and write to requirements.txt
 
-    start         : start in normal mode
-    start_dev     : start for test/dev
-    start_test     : start for test/dev
+    test          : run tests
+    test_lint     : run flake8 tests
+    test_coverage : run tests with coverage output
+
     """
 }
 
 test_flake8() {
-    '''
     flake8 /code/. --config=/code/conf/extras/flake8.cfg
-    '''
 }
 
 test_coverage() {
-    '''
     export RCFILE=/code/conf/extras/coverage.rc
     export TESTING=true
     export DEBUG=false
-
     coverage run    --rcfile="$RCFILE" manage.py test "${@:1}"
     coverage report --rcfile="$RCFILE"
     coverage erase
-    '''
+
     cat /code/conf/extras/good_job.txt
 }
+
 
 case "$1" in
     bash )
@@ -59,21 +58,32 @@ case "$1" in
         pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
     ;;
 
-
-    start )
-        ./manage.py
+    test)
+        test_flake8
+        test_coverage "${@:2}"
     ;;
 
-    start_dev )
-
-        ./manage.py test
+    test_lint)
+        test_flake8
     ;;
 
-    start_test )
-
-        ./manage.py test
+    test_coverage)
+        test_coverage "${@:2}"
     ;;
 
+    build)
+        # remove previous build if needed
+        rm -rf dist
+        rm -rf build
+        rm -rf aether.client.egg-info
+
+        # create the distribution
+        python setup.py bdist_wheel --universal
+
+        # remove useless content
+        rm -rf build
+        rm -rf aether.client.egg-info
+    ;;
 
     help)
         show_help
