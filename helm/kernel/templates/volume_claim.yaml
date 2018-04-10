@@ -13,3 +13,18 @@ spec:
     requests:
       # This is not used by the provisioner, but is required by the PVC.
       storage: 1Mi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: postgres-data
+  # name: pv0001
+spec:
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: /data/pv0001
+  resources:
+    requests:
+      # This is not used by the provisioner, but is required by the PVC.
+      storage: 1Mi

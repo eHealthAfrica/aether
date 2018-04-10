@@ -108,6 +108,9 @@ spec:
         ports:
         - containerPort: 5432
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: postgres-data
       - name: nginx
         image: nginx:stable-alpine
         ports:
@@ -125,6 +128,9 @@ spec:
       - name: {{ .Chart.Name }}
         persistentVolumeClaim:
           claimName: {{ .Chart.Name }}
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: postgres-data
       - name: static-assets-volume
         emptyDir: {}
       - name: kernel-nginx-config
