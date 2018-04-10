@@ -1,3 +1,5 @@
+/* global describe, it, expect */
+
 import React from 'react'
 
 import { mountWithIntl } from '../../../tests/test-react-intl'
