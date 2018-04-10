@@ -21,17 +21,35 @@ spec:
         command: ['bash', '-c', './scripts/init.sh']
         env:
         - name: PGHOST
-          value: {{ .Values.RDS_HOSTNAME }}
+          valueFrom :
+            secretKeyRef:
+              name: {{ .Values.database.secret }}
+              key: host
         - name: PGUSER
-          value: {{ .Values.RDS_USERNAME }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.database.secret }}
+              key: user
         - name: PGPASSWORD
-          value: {{ .Values.RDS_PASSWORD }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.database.secret }}
+              key: password
         - name: RDS_USERNAME
-          value: {{ .Values.RDS_USERNAME }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: kernel-database-user
         - name: RDS_PASSWORD
-          value: {{ .Values.RDS_PASSWORD }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: kernel-database-password
         - name: RDS_DB_NAME
-          value: {{ .Values.RDS_DB_NAME }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: kernel-database-name
         volumeMounts:
         - mountPath: /scripts
           name: kernel-init
@@ -39,41 +57,37 @@ spec:
           mountPath: {{ .Values.application.data_mount }}
       containers:
       - name: {{ .Chart.Name }}
-        image: "aether-kernel"
+        image: "{{ .Values.kernel.repository }}:{{ .Values.release }}"
         ports:
         - containerPort: 8000
         args:
         - start
-        # livenessProbe:
-        #   initialDelaySeconds: 15
-        #   periodSeconds: 10
-        #   httpGet:
-        #     path: /health
-        #     port: 8000
-        #     httpHeaders:
-        #     - name: X-Kubernetes-Health-Check
-        #       value: livenessProbe
-        #     - name: Host
-        #       value: {{ .Values.url }}
-        # readinessProbe:
-        #   initialDelaySeconds: 15
-        #   periodSeconds: 10
-        #   httpGet:
-        #     path: /health
-        #     port: 8000
-        #     httpHeaders:
-        #     - name: X-Kubernetes-Health-Check
-        #       value: check
-        #     - name: Host
-        #       value: {{ .Values.url }}
+        livenessProbe:
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          httpGet:
+            path: /health
+            port: 8000
+            httpHeaders:
+            - name: X-Kubernetes-Health-Check
+              value: livenessProbe
+            - name: Host
+              value: {{ .Values.url }}
+        readinessProbe:
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          httpGet:
+            path: /health
+            port: 8000
+            httpHeaders:
+            - name: X-Kubernetes-Health-Check
+              value: check
+            - name: Host
+              value: {{ .Values.url }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
-        - name: TESTING
-          value: {{ .Values.TESTING }}
         - name: CAS_SERVER_URL
           value: "https://{{ .Values.ums_url }}.ehealthafrica.org"
-        - name: touch
-          value: "true"
         - name: CSRF_COOKIE_DOMAIN
           value: {{ .Values.domain }}
         - name: CSRF_TRUSTED_ORIGINS
@@ -81,21 +95,37 @@ spec:
         - name: HOSTNAME
           value: "{{ .Values.url_prefix }}.{{ .Values.domain }}"
         - name: DJANGO_SECRET_KEY
-          value: {{ .Values.DJANGO_SECRET_KEY }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: kernel-django-secret-key
         - name: AETHER_KERNEL_TOKEN
-          value: {{ .Values.AETHER_KERNEL_TOKEN }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: kernel-token
         - name: RDS_USERNAME
-          value: {{ .Values.RDS_USERNAME }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: kernel-database-user
         - name: RDS_PORT
-          value: {{ .Values.RDS_PORT }}
+          value: "5432"
         - name: RDS_HOSTNAME
-          value: {{ .Values.RDS_HOSTNAME }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.database.secret }}
+              key: host
         - name: RDS_PASSWORD
-          value: {{ .Values.RDS_PASSWORD }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: kernel-database-password
         - name: RDS_DB_NAME
-          value: {{ .Values.RDS_DB_NAME }}
-        - name: WEB_SERVER_PORT
-          value: {{ .Values.WEB_SERVER_PORT }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: kernel-database-name
         volumeMounts:
         - mountPath: /var/www/static
           name: static-assets-volume
@@ -128,9 +158,6 @@ spec:
       - name: {{ .Chart.Name }}
         persistentVolumeClaim:
           claimName: {{ .Chart.Name }}
-      - name: postgres-data
-        persistentVolumeClaim:
-          claimName: postgres-data
       - name: static-assets-volume
         emptyDir: {}
       - name: kernel-nginx-config
@@ -140,7 +167,10 @@ spec:
         configMap:
           name: kernel-init
           defaultMode: 0744
-      # # FIXME: remove
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: postgres-data
+      # TODO: make generic
       - name: code
         hostPath:
           path: /hosthome/fred/work/eha/repos/aether/aether-kernel
