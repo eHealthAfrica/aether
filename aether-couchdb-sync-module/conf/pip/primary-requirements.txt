@@ -8,7 +8,7 @@
 #                                                                              #
 ################################################################################
 
-django==1.11.9
+django<2
 django-cas-ng
 django-cors-headers
 django-debug-toolbar
