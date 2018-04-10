@@ -9,6 +9,7 @@ import LoadingSpinner from './LoadingSpinner'
 import MultiSelect from './MultiSelect'
 import RefreshSpinner from './RefreshSpinner'
 import WarningAlert from './WarningAlert'
+import NavBar from './NavBar'
 
 // export all components
 export {
@@ -21,5 +22,6 @@ export {
   LoadingSpinner,
   MultiSelect,
   RefreshSpinner,
-  WarningAlert
+  WarningAlert,
+  NavBar
 }

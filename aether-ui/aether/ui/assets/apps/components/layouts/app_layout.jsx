@@ -9,7 +9,7 @@ class AppLayout extends Component {
       <Route render={props => (
         <div>
           <Route exact path='/' component={Home} />
-          <Route path='/pipelines' component={Pipelines} />
+          <Route path='/pipeline' component={Pipelines} />
           <Route path='/new-pipeline' component={NewPipeLine} />
         </div>
       )} />

@@ -7,3 +7,4 @@ export const MAX_PAGE_SIZE = 1048575
 // app names (match container names)
 export const KERNEL_APP = 'kernel'
 export const UI_APP = 'ui'
+export const PROJECT_NAME = 'AUX'
