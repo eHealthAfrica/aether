@@ -15,7 +15,7 @@ class SettingsTest(TestCase):
 
         self.assertEqual(settings.ROOT_URLCONF, 'aether.ui.urls')
         self.assertEqual(settings.WSGI_APPLICATION, 'aether.ui.wsgi.application')
-        self.assertEqual(settings.APP_NAME, 'Aether UI')
+        self.assertEqual(settings.APP_NAME, 'aether')
         self.assertEqual(settings.AETHER_MODULES, ['kernel'])
 
         self.assertIn('kernel', settings.AETHER_APPS)

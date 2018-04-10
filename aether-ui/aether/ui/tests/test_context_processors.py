@@ -10,6 +10,6 @@ class ContextProcessorsTests(TestCase):
 
         self.assertEqual(ui_context(request), {
             'dev_mode': False,
-            'app_name': 'Aether UI',
+            'app_name': 'aether',
             'kernel_url': 'http://kernel-test:9000',
         })
