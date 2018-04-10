@@ -1,11 +1,10 @@
 import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
-import { Link } from 'react-router-dom'
 
 class NavBar extends Component {
   render () {
     return (
-      <div className='navbar top-nav'>
+      <div data-qa='navbar' className='navbar top-nav'>
         <a className='top-nav-logo' href='/' title='aether'>
           <div className='logo-container'>
             <div className='flipper'>
@@ -15,25 +14,36 @@ class NavBar extends Component {
           </div>
           <span data-app-name='app-name'><b>ae</b>ther</span>
         </a>
-        {this.props.showBreadcrumb &&
-          <div className='top-nav-breadcrumb'>
-            <Link to='/'>
-              <FormattedMessage
-                id='navbar.piplines'
-                defaultMessage='PIPELINES' />
-            </Link>
-            <span> // {this.props.selectedPipeline ? this.props.selectedPipeline.name : 'Select a pipeline'}</span>
-          </div>
-        }
-        <div className='top-nav-user'>
+
+        { this.props.showBreadcrumb && this.renderBreadcrumb() }
+
+        <div data-qa='navbar-user' className='top-nav-user'>
           <span
             id='logged-in-user-info'>
             {this.props.username || 'Username'}
           </span>
           <span className='logout'>
-            <a href='#'><i className='fa fa-sign-out' title='Sign Out' aria-hidden='true' /></a>
+            <a href='/logout'>
+              <i className='fas fa-sign-out-alt' title='Sign Out' aria-hidden='true' />
+            </a>
           </span>
         </div>
+      </div>
+    )
+  }
+
+  renderBreadcrumb () {
+    const {selectedPipeline} = this.props
+    const label = selectedPipeline
+      ? selectedPipeline.name
+      : <FormattedMessage id='navbar.select.pipeline' defaultMessage='Select a pipeline' />
+
+    return (
+      <div data-qa='navbar-breadcrumb' className='top-nav-breadcrumb'>
+        <a href='/'>
+          <FormattedMessage id='navbar.pipelines' defaultMessage='PIPELINES' />
+        </a>
+        <span> // {label}</span>
       </div>
     )
   }
