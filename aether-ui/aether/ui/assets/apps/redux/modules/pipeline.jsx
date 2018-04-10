@@ -1,7 +1,7 @@
 // Combines types, actions and reducers for a specific
 // module in one file for easy redux management
 
-import { cloneDeep } from 'lodash'
+import { clone } from '../../utils'
 
 const types = {
   PIPELINE_UPDATE: 'pipeline_update',
@@ -31,7 +31,7 @@ const INITIAL_PIPELINE = {
 }
 
 const pipelines = (state = INITIAL_PIPELINE, action) => {
-  let newPipelineList = cloneDeep(state.pipelineList)
+  let newPipelineList = clone(state.pipelineList)
   const findIndex = arr => arr.findIndex(x => x.id === action.payload.id)
 
   switch (action.type) {

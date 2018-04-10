@@ -1,3 +1,13 @@
+/**
+ * Clones object.
+ *
+ * @param {*} x -- the object
+ */
+export const clone = (x) => JSON.parse(JSON.stringify(x))
+
+/**
+ * Generates random UUID
+ */
 export const generateGUID = () => {
   const s4 = () => {
     return Math.floor((1 + Math.random()) * 0x10000)
