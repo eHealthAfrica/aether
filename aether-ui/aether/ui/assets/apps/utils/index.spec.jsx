@@ -1,6 +1,6 @@
 /* global describe, it, expect */
 
-import { clone, generateGUID } from './index'
+import { clone, generateGUID, getLoggedInUser } from './index'
 
 describe('utils', () => {
   describe('clone', () => {
@@ -23,6 +23,18 @@ describe('utils', () => {
       expect(uuid.charAt(13)).toEqual('-')
       expect(uuid.charAt(18)).toEqual('-')
       expect(uuid.charAt(23)).toEqual('-')
+    })
+  })
+
+  describe('getLoggedInUserId', () => {
+    it('should take logged in user from document', () => {
+      const element = document.createElement('div')
+      element.id = 'logged-in-user-info'
+      element.setAttribute('data-user-id', '1')
+      element.setAttribute('data-user-name', 'user')
+      document.body.appendChild(element)
+
+      expect(getLoggedInUser()).toEqual({id: 1, name: 'user'})
     })
   })
 })

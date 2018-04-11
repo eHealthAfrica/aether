@@ -1,9 +1,20 @@
 import React, { Component } from 'react'
-import { FormattedMessage } from 'react-intl'
+import { defineMessages, injectIntl, FormattedMessage } from 'react-intl'
 import { Link } from 'react-router-dom'
+
+import { getLoggedInUser } from '../../utils'
+
+const MESSAGES = defineMessages({
+  logout: {
+    defaultMessage: 'Sign Out',
+    id: 'navbar.logout'
+  }
+})
 
 class NavBar extends Component {
   render () {
+    const {formatMessage} = this.props.intl
+
     return (
       <div data-qa='navbar' className='navbar top-nav'>
         <Link className='top-nav-logo' to='/' title='aether'>
@@ -19,14 +30,10 @@ class NavBar extends Component {
         { this.props.showBreadcrumb && this.renderBreadcrumb() }
 
         <div data-qa='navbar-user' className='top-nav-user'>
-          {/* FIXME!!! take username from Django */}
-          <span
-            id='logged-in-user-info'>
-            {this.props.username || 'Username'}
-          </span>
+          { getLoggedInUser().name }
           <span className='logout'>
             <a href='/accounts/logout'>
-              <i className='fas fa-sign-out-alt' title='Sign Out' aria-hidden='true' />
+              <i className='fas fa-sign-out-alt' title={formatMessage(MESSAGES.logout)} />
             </a>
           </span>
         </div>
@@ -43,7 +50,7 @@ class NavBar extends Component {
     return (
       <div data-qa='navbar-breadcrumb' className='top-nav-breadcrumb'>
         <Link to='/'>
-          <FormattedMessage id='navbar.pipelines' defaultMessage='PIPELINES' />
+          <FormattedMessage id='navbar.pipelines' defaultMessage='Pipelines' />
         </Link>
         <span> // {label}</span>
       </div>
@@ -51,4 +58,4 @@ class NavBar extends Component {
   }
 }
 
-export default NavBar
+export default injectIntl(NavBar)
