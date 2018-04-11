@@ -13,7 +13,7 @@ from aether.common.conf.settings import INSTALLED_APPS, TEMPLATES, TESTING, STAT
 ROOT_URLCONF = 'aether.ui.urls'
 WSGI_APPLICATION = 'aether.ui.wsgi.application'
 
-APP_NAME = 'Aether UI'
+APP_NAME = 'aether'
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50MB
 

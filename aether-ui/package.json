@@ -83,15 +83,6 @@
   },
   "sasslintConfig": "./conf/extras/sass-lint.yml",
   "standard": {
-    "globals": [
-      "afterAll",
-      "afterEach",
-      "beforeAll",
-      "beforeEach",
-      "describe",
-      "expect",
-      "it"
-    ],
     "verbose": true
   },
   "jest": {
