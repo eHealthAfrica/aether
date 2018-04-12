@@ -6,7 +6,7 @@ import { PROJECT_NAME } from '../utils/constants'
 import { NavBar } from '../components'
 
 import NewPipeline from './NewPipeline'
-import { selectedPipelineChanged } from './redux'
+import { addPipeline, selectedPipelineChanged } from './redux'
 
 class PipelineList extends Component {
   constructor (props) {
@@ -32,7 +32,7 @@ class PipelineList extends Component {
           </h1>
 
           <NewPipeline
-            onStartPipeline={(pipeline) => { this.onSelectPipeline(pipeline) }}
+            onStartPipeline={newPipeline => { this.onStartPipeline(newPipeline) }}
           />
 
           <div className='pipeline-previews'>
@@ -70,8 +70,13 @@ class PipelineList extends Component {
     ))
   }
 
+  onStartPipeline (newPipeline) {
+    this.props.dispatch(addPipeline(newPipeline))
+    this.onSelectPipeline(newPipeline)
+  }
+
   onSelectPipeline (pipeline) {
-    this.props.selectedPipelineChanged(pipeline)
+    this.props.dispatch(selectedPipelineChanged(pipeline))
     this.props.history.push('/pipeline')
   }
 }
@@ -80,4 +85,4 @@ const mapStateToProps = ({ pipelines }) => ({
   pipelineList: pipelines.pipelineList
 })
 
-export default connect(mapStateToProps, { selectedPipelineChanged })(PipelineList)
+export default connect(mapStateToProps)(PipelineList)

@@ -20,6 +20,4 @@ class PipelineApp extends Component {
   }
 }
 
-const mapStateToProps = () => ({ })
-
-export default connect(mapStateToProps, {})(PipelineApp)
+export default connect()(PipelineApp)

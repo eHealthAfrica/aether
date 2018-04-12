@@ -10,6 +10,11 @@ const types = {
   SELECTED_PIPELINE_CHANGED: 'selected_pipeline_changed'
 }
 
+const INITIAL_PIPELINE = {
+  pipelineList: [],
+  selectedPipeline: null
+}
+
 export const addPipeline = newPipeline => ({
   // TODO: Change 3rd param to action on request failure when ui endpoints are available
   // types: ['', types.PIPELINE_ADD, types.PIPELINE_ADD],
@@ -25,12 +30,7 @@ export const selectedPipelineChanged = selectedPipeline => ({
   payload: selectedPipeline
 })
 
-const INITIAL_PIPELINE = {
-  pipelineList: [],
-  selectedPipeline: null
-}
-
-const pipelines = (state = INITIAL_PIPELINE, action) => {
+const reducer = (state = INITIAL_PIPELINE, action = {}) => {
   const newPipelineList = clone(state.pipelineList)
   const findIndex = arr => arr.findIndex(x => x.id === action.payload.id)
 
@@ -55,4 +55,4 @@ const pipelines = (state = INITIAL_PIPELINE, action) => {
   }
 }
 
-export default pipelines
+export default reducer

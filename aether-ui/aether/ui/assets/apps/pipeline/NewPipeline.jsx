@@ -2,7 +2,6 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { defineMessages, injectIntl, FormattedMessage } from 'react-intl'
 
-import { addPipeline } from './redux'
 import { generateGUID } from '../utils'
 
 const MESSAGES = defineMessages({
@@ -56,7 +55,6 @@ class NewPipeline extends Component {
           entityTypes: 0,
           errors: 0
         }
-        this.props.addPipeline(newPipeline)
         this.props.onStartPipeline(newPipeline)
       }
     }
@@ -107,6 +105,4 @@ class NewPipeline extends Component {
   }
 }
 
-const mapStateToProps = () => ({ })
-
-export default connect(mapStateToProps, { addPipeline })(injectIntl(NewPipeline))
+export default connect()(injectIntl(NewPipeline))
