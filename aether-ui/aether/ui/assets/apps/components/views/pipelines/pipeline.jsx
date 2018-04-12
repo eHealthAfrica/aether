@@ -5,6 +5,8 @@ import EntityTypes from '../sections/entityTypes'
 import Mapping from '../sections/mapping'
 import Output from '../sections/output'
 import { NavBar } from '../../common'
+import { schemaToMarkup } from '../../../utils'
+import MockInputSchema from '../../../mock/schema_input.mock'
 
 class PipeLine extends Component {
   constructor (props) {
@@ -18,8 +20,9 @@ class PipeLine extends Component {
 
   componentWillMount () {
     if (!this.props.selectedPipeline) {
-      this.props.history.replace('/')
+      // this.props.history.replace('/')
     }
+    schemaToMarkup(MockInputSchema)
   }
 
   render () {
