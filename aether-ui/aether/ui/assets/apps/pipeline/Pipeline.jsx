@@ -10,8 +10,8 @@ import Input from './sections/input'
 import EntityTypes from './sections/entityTypes'
 import Mapping from './sections/mapping'
 import Output from './sections/output'
-import { schemaToMarkup } from '../../../utils'
-import MockInputSchema from '../../../mock/schema_input.mock'
+import { schemaToMarkup } from '../utils'
+import MockInputSchema from '../mock/schema_input.mock'
 
 class Pipeline extends Component {
   constructor (props) {
@@ -53,7 +53,7 @@ class Pipeline extends Component {
             />
           </Link>
           <span> // </span>
-          { this.props.selectedPipeline.name }
+          { this.props.selectedPipeline ? this.props.selectedPipeline.name : 'Select a pipeline' }
         </NavBar>
 
         <div className={`pipeline pipeline--${this.state.pipelineView} ${this.state.showOutput ? 'show-output' : ''} ${this.state.fullscreen ? 'fullscreen' : ''}`}>
@@ -111,7 +111,7 @@ class Pipeline extends Component {
 
           <div className='pipeline-sections'>
             <div className='pipeline-section__input'>
-              <Input schema={this.state.inputSchema}/>
+              <Input schema={this.state.inputSchema} />
             </div>
             <div className='pipeline-section__entityTypes'>
               <EntityTypes />

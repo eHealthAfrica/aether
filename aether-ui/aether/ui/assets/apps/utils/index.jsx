@@ -43,15 +43,15 @@ export const schemaToMarkup = schema => {
           {schema.fields.map(field => (schemaToMarkup(field)))}
         </ul>
       </li>
-      </ul>)
+    </ul>)
   } else if (typeof schema.type !== 'string') {
     schema.type.name = schema.name
     children.push(schemaToMarkup(schema.type))
   } else {
     children.push(<li key={schema.name}>
-        <span>{schema.name}</span>&nbsp;&nbsp;
-        <span>{schema.type}</span>
-      </li>)
+      <span>{schema.name}</span>&nbsp;&nbsp;
+      <span>{schema.type}</span>
+    </li>)
   }
   return children
 }

@@ -7,8 +7,7 @@ class Input extends Component {
       <div className='section-body'>
         <div className='section-left'>
           {
-            this.props.schema ? this.props.schema :  
-            (<div className='hint'>          
+            this.props.schema ? this.props.schema : (<div className='hint'>
               Your schema for this pipeline will be displayed here once you have added an AVRO schema.
             </div>)
           }
