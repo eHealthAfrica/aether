@@ -1,14 +1,19 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import Input from '../sections/input'
-import EntityTypes from '../sections/entityTypes'
-import Mapping from '../sections/mapping'
-import Output from '../sections/output'
-import { NavBar } from '../../common'
+import { FormattedMessage } from 'react-intl'
+import { Link } from 'react-router-dom'
 
-class PipeLine extends Component {
+import { NavBar } from '../components'
+
+import Input from './sections/input'
+import EntityTypes from './sections/entityTypes'
+import Mapping from './sections/mapping'
+import Output from './sections/output'
+
+class Pipeline extends Component {
   constructor (props) {
     super(props)
+
     this.state = {
       pipelineView: 'input',
       showOutput: false,
@@ -25,7 +30,17 @@ class PipeLine extends Component {
   render () {
     return (
       <div className={'pipelines-container show-pipeline'}>
-        <NavBar selectedPipeline={this.props.selectedPipeline} showBreadcrumb />
+        <NavBar showBreadcrumb>
+          <Link to='/'>
+            <FormattedMessage
+              id='pipeline.navbar.breadcrumb.pipelines'
+              defaultMessage='Pipelines'
+            />
+          </Link>
+          <span> // </span>
+          { this.props.selectedPipeline.name }
+        </NavBar>
+
         <div className={`pipeline pipeline--${this.state.pipelineView} ${this.state.showOutput ? 'show-output' : ''} ${this.state.fullscreen ? 'fullscreen' : ''}`}>
           <div className='pipeline-nav'>
             <div className='pipeline-nav-items'>
@@ -33,13 +48,19 @@ class PipeLine extends Component {
                 className='pipeline-nav-item__input'
                 onClick={() => this.setState({ pipelineView: 'input' })}>
                 <div className='badge'>1</div>
-                Input
+                <FormattedMessage
+                  id='pipeline.navbar.input'
+                  defaultMessage='Input'
+                />
               </div>
               <div
                 className='pipeline-nav-item__entityTypes'
                 onClick={() => this.setState({ pipelineView: 'entityTypes' })}>
                 <div className='badge'>2</div>
-                Entity Types
+                <FormattedMessage
+                  id='pipeline.navbar.entity.types'
+                  defaultMessage='Entity Types'
+                />
                 <div
                   className='btn-icon fullscreen-toggle'
                   onClick={() => this.toggleFullscreen()}>
@@ -50,7 +71,10 @@ class PipeLine extends Component {
                 className='pipeline-nav-item__mapping'
                 onClick={() => this.setState({ pipelineView: 'mapping' })}>
                 <div className='badge'>3</div>
-                mapping
+                <FormattedMessage
+                  id='pipeline.navbar.mapping'
+                  defaultMessage='Mapping'
+                />
                 <div
                   className='btn-icon fullscreen-toggle'
                   onClick={() => this.toggleFullscreen()}>
@@ -62,7 +86,10 @@ class PipeLine extends Component {
               className='pipeline-nav-item__output'
               onClick={() => this.toggleOutput()}>
               <div className='badge badge-small' />
-              output
+              <FormattedMessage
+                id='pipeline.navbar.output'
+                defaultMessage='Output'
+              />
               <div className='output-toggle' />
             </div>
           </div>
@@ -93,6 +120,7 @@ class PipeLine extends Component {
       this.setState({ showOutput: false })
     }
   }
+
   toggleFullscreen () {
     if (!this.state.fullscreen) {
       this.setState({ fullscreen: true })
@@ -106,4 +134,4 @@ const mapStateToProps = ({ pipelines }) => ({
   selectedPipeline: pipelines.selectedPipeline
 })
 
-export default connect(mapStateToProps, {})(PipeLine)
+export default connect(mapStateToProps, {})(Pipeline)

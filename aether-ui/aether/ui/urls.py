@@ -13,14 +13,15 @@ from .api.views import empty
 urlpatterns = generate_urlpatterns(kernel=True) + [
     # API
     url(r'^', include('aether.ui.api.urls', namespace='ui')),
-    # Welcome page
-    url(r'^$',
-        login_required(TemplateView.as_view(template_name='pages/index.html')),
-        name='index-page'),
     # shows the current user app tokens
     url(r'^~tokens$',
         login_required(TemplateView.as_view(template_name='pages/tokens.html')),
         name='tokens'),
     # to check if the user tokens are valid
     url(r'^check-tokens$', login_required(tokens_required(empty)), name='check-tokens'),
+
+    # Pipeline builder app
+    url(r'^$',
+        login_required(TemplateView.as_view(template_name='pages/pipeline.html')),
+        name='pipeline-app'),
 ]

@@ -5,8 +5,8 @@ const apps = [
     path: './assets/css/index.scss'
   },
   {
-    name: 'home',
-    path: './assets/apps/home'
+    name: 'pipeline',
+    path: './assets/apps/pipeline'
   }
 ]
 
