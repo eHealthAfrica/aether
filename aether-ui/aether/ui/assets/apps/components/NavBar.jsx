@@ -1,8 +1,8 @@
 import React, { Component } from 'react'
-import { defineMessages, injectIntl, FormattedMessage } from 'react-intl'
+import { defineMessages, injectIntl } from 'react-intl'
 import { Link } from 'react-router-dom'
 
-import { getLoggedInUser } from '../../utils'
+import { getLoggedInUser } from '../utils'
 
 const MESSAGES = defineMessages({
   logout: {
@@ -27,7 +27,11 @@ class NavBar extends Component {
           <span data-app-name='app-name'><b>ae</b>ther</span>
         </Link>
 
-        { this.props.showBreadcrumb && this.renderBreadcrumb() }
+        { this.props.showBreadcrumb &&
+          <div data-qa='navbar-breadcrumb' className='top-nav-breadcrumb'>
+            { this.props.children }
+          </div>
+        }
 
         <div data-qa='navbar-user' className='top-nav-user'>
           { getLoggedInUser().name }
@@ -37,22 +41,6 @@ class NavBar extends Component {
             </a>
           </span>
         </div>
-      </div>
-    )
-  }
-
-  renderBreadcrumb () {
-    const {selectedPipeline} = this.props
-    const label = selectedPipeline
-      ? selectedPipeline.name
-      : <FormattedMessage id='navbar.select.pipeline' defaultMessage='Select a pipeline' />
-
-    return (
-      <div data-qa='navbar-breadcrumb' className='top-nav-breadcrumb'>
-        <Link to='/'>
-          <FormattedMessage id='navbar.pipelines' defaultMessage='Pipelines' />
-        </Link>
-        <span> // {label}</span>
       </div>
     )
   }

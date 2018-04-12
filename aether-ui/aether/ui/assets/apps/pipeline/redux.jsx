@@ -1,13 +1,18 @@
 // Combines types, actions and reducers for a specific
 // module in one file for easy redux management
 
-import { clone } from '../../utils'
+import { clone } from '../utils'
 
 const types = {
   PIPELINE_UPDATE: 'pipeline_update',
   PIPELINE_ADD: 'pipeline_add',
   PIPELINE_LIST_CHANGED: 'pipeline_list_changed',
   SELECTED_PIPELINE_CHANGED: 'selected_pipeline_changed'
+}
+
+const INITIAL_PIPELINE = {
+  pipelineList: [],
+  selectedPipeline: null
 }
 
 export const addPipeline = newPipeline => ({
@@ -25,13 +30,8 @@ export const selectedPipelineChanged = selectedPipeline => ({
   payload: selectedPipeline
 })
 
-const INITIAL_PIPELINE = {
-  pipelineList: [],
-  selectedPipeline: null
-}
-
-const pipelines = (state = INITIAL_PIPELINE, action) => {
-  let newPipelineList = clone(state.pipelineList)
+const reducer = (state = INITIAL_PIPELINE, action = {}) => {
+  const newPipelineList = clone(state.pipelineList)
   const findIndex = arr => arr.findIndex(x => x.id === action.payload.id)
 
   switch (action.type) {
@@ -39,17 +39,20 @@ const pipelines = (state = INITIAL_PIPELINE, action) => {
       newPipelineList.unshift(action.payload)
       return { ...state, pipelineList: newPipelineList }
     }
+
     case types.PIPELINE_UPDATE: {
       const index = findIndex(newPipelineList)
       newPipelineList[index] = action.payload
       return { ...state, pipelineList: newPipelineList }
     }
+
     case types.SELECTED_PIPELINE_CHANGED: {
       return { ...state, selectedPipeline: action.payload }
     }
+
     default:
       return state
   }
 }
 
-export default pipelines
+export default reducer

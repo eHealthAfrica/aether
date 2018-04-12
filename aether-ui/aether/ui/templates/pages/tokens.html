@@ -7,12 +7,11 @@
 
 
 {% block content %}
-  <div class="page-content">
-    <div class="page-title">
+  <div class="page-content p-5">
+    <div class="page-title mb-4">
       {% trans 'App tokens for' %}
       <span class="username ml-2">
-        <i class='fa fa-user mr-1'></i>
-        {{ request.user|get_fullname }}
+        <b>{{ request.user|get_fullname }}</b>
       </span>
     </div>
 
