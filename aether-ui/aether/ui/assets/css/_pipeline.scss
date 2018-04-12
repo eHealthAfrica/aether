@@ -176,6 +176,10 @@ div.pipeline-nav-item__output {
   transition: width $transition-speed;
 }
 
+.pipeline-sections ul {
+  padding-left: 10px;
+}
+
 .section-body {
   width: 100%;
   height: calc(100vh - 10px - #{$pipeline-nav-height});

@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
+import avro from 'avro-js'
 import Input from '../sections/input'
 import EntityTypes from '../sections/entityTypes'
 import Mapping from '../sections/mapping'
@@ -14,15 +15,26 @@ class PipeLine extends Component {
     this.state = {
       pipelineView: 'input',
       showOutput: false,
-      fullscreen: false
+      fullscreen: false,
+      inputSchema: null
     }
   }
 
   componentWillMount () {
-    if (!this.props.selectedPipeline) {
-      // this.props.history.replace('/')
+    // Uncomment this to check for selected pipelines to configure
+    // if (!this.props.selectedPipeline) {
+    //   this.props.history.replace('/')
+    // }
+    try {
+      avro.parse(MockInputSchema)
+      this.setState({
+        inputSchema: schemaToMarkup(MockInputSchema)
+      })
+    } catch (error) {
+      this.setState({
+        inputSchema: null
+      })
     }
-    schemaToMarkup(MockInputSchema)
   }
 
   render () {
@@ -72,7 +84,7 @@ class PipeLine extends Component {
 
           <div className='pipeline-sections'>
             <div className='pipeline-section__input'>
-              <Input />
+              <Input schema={this.state.inputSchema}/>
             </div>
             <div className='pipeline-section__entityTypes'>
               <EntityTypes />

@@ -1,4 +1,4 @@
-import avro from 'avro-js'
+import React from 'react'
 
 /**
  * Clones object.
@@ -34,37 +34,24 @@ export const getLoggedInUser = () => {
  * Parse avro schema to nested markup
  */
 export const schemaToMarkup = schema => {
-  const unknown = '--'
-  const hasNestedObject = schemaObject.type && typeof schemaObject.type === 'object'
-  const groupList = <div><div>{schema.name}</div><ul>{}</ul></div>
-  const itemMarkUp = (<li><span>{ schemaObject.name || unknown }</span>
-      {hasNestedObject ? mapSchemaObject() : ''}</li>)
-  const mapSchemaObject = schemaObject => {
-    if (schemaObject.fields) {
-      schemaObject.fields.forEach(field => {
-        schemaToMarkup(field)
-      })
-    } else {
-
-    }
+  const children = []
+  if (schema.fields && schema.fields.length) {
+    children.push(<ul key={schema.name}>
+      <li>{schema.name}</li>
+      <li>
+        <ul key={schema.name}>
+          {schema.fields.map(field => (schemaToMarkup(field)))}
+        </ul>
+      </li>
+      </ul>)
+  } else if (typeof schema.type !== 'string') {
+    schema.type.name = schema.name
+    children.push(schemaToMarkup(schema.type))
+  } else {
+    children.push(<li key={schema.name}>
+        <span>{schema.name}</span>&nbsp;&nbsp;
+        <span>{schema.type}</span>
+      </li>)
   }
-  try {
-    const validatedSchema = avro.parse(schema)
-
-  } catch (error) {
-    throw 'Invalid Schema'
-  }
-}
-
-const test = schema => {
-  const getChildren = () => {
-    if (schema.fields.length) {
-
-    } else if (typeof schema.type !== 'string') {
-
-    } else {
-      return (<li><span>{schema.name}</span><span>{schema.type}</span></li>)
-    }
-  }
-  const rootObject = (<div><div>{ schema.name }</div><ul>{ getChildren() }</ul></div>)
+  return children
 }

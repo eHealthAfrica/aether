@@ -3,7 +3,7 @@ const inputSchema = {
   "name": "hat",
   "namespace": "org.ehealthafrica",
   "fields": [{
-    "namex": "person",
+    "name": "person",
     "type": {
       "type": "record",
       "name": "person",
