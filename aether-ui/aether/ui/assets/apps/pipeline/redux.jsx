@@ -1,7 +1,7 @@
 // Combines types, actions and reducers for a specific
 // module in one file for easy redux management
 
-import { clone } from '../../utils'
+import { clone } from '../utils'
 
 const types = {
   PIPELINE_UPDATE: 'pipeline_update',
@@ -31,7 +31,7 @@ const INITIAL_PIPELINE = {
 }
 
 const pipelines = (state = INITIAL_PIPELINE, action) => {
-  let newPipelineList = clone(state.pipelineList)
+  const newPipelineList = clone(state.pipelineList)
   const findIndex = arr => arr.findIndex(x => x.id === action.payload.id)
 
   switch (action.type) {
@@ -39,14 +39,17 @@ const pipelines = (state = INITIAL_PIPELINE, action) => {
       newPipelineList.unshift(action.payload)
       return { ...state, pipelineList: newPipelineList }
     }
+
     case types.PIPELINE_UPDATE: {
       const index = findIndex(newPipelineList)
       newPipelineList[index] = action.payload
       return { ...state, pipelineList: newPipelineList }
     }
+
     case types.SELECTED_PIPELINE_CHANGED: {
       return { ...state, selectedPipeline: action.payload }
     }
+
     default:
       return state
   }

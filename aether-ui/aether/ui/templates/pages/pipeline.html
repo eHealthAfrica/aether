@@ -15,7 +15,8 @@
     data-user-name="{{ request.user|get_fullname }}"
     class="invisible"></span>
 
-  <div id="home-app"></div>
-  {% render_bundle 'home' %}
+  <div id="pipeline-app"></div>
+
+  {% render_bundle 'pipeline' %}
 
 {% endblock content %}

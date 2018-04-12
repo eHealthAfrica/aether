@@ -9,6 +9,7 @@
 
 import React from 'react'
 import { IntlProvider, intlShape } from 'react-intl'
+import { MemoryRouter } from 'react-router'
 import { mount, shallow, render } from 'enzyme'
 
 // You can pass your messages to the IntlProvider. Optional: remove if unneeded.
@@ -20,11 +21,20 @@ const { intl } = intlProvider.getChildContext()
 
 /**
  * When using React-Intl `injectIntl` on components, props.intl is required.
+ *
+ * Also wrapped by MemoryRouter to simplify test with `Link` and ` Router` components.
  */
-const nodeWithIntlProp = (node) => React.cloneElement(<IntlProvider>{node}</IntlProvider>, { intl })
+const nodeWithIntlPropAndRouter = (node) => React.cloneElement(
+  <IntlProvider>
+    <MemoryRouter>
+      {node}
+    </MemoryRouter>
+  </IntlProvider>,
+  { intl }
+)
 
 export const shallowWithIntl = (node, { context, ...additionalOptions } = {}) => shallow(
-  nodeWithIntlProp(node),
+  nodeWithIntlPropAndRouter(node),
   {
     context: Object.assign({}, context, { intl }),
     ...additionalOptions
@@ -32,7 +42,7 @@ export const shallowWithIntl = (node, { context, ...additionalOptions } = {}) =>
 )
 
 export const mountWithIntl = (node, { context, childContextTypes, ...additionalOptions } = {}) => mount(
-  nodeWithIntlProp(node),
+  nodeWithIntlPropAndRouter(node),
   {
     context: Object.assign({}, context, { intl }),
     childContextTypes: Object.assign({}, { intl: intlShape }, childContextTypes),
@@ -41,7 +51,7 @@ export const mountWithIntl = (node, { context, childContextTypes, ...additionalO
 )
 
 export const renderWithIntl = (node, { context, childContextTypes, ...additionalOptions } = {}) => render(
-  nodeWithIntlProp(node),
+  nodeWithIntlPropAndRouter(node),
   {
     context: Object.assign({}, context, { intl }),
     childContextTypes: Object.assign({}, { intl: intlShape }, childContextTypes),

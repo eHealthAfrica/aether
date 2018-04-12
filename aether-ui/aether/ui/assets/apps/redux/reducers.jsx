@@ -1,8 +1,7 @@
 import { combineReducers } from 'redux'
-import samples from './modules/sample_reducer'
-import pipelines from './modules/pipeline'
+
+import pipelines from '../pipeline/redux'
 
 export default combineReducers({
-  samples,
   pipelines
 })

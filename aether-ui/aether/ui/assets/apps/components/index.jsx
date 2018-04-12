@@ -1,3 +1,9 @@
-export { default as Home } from '../components/views'
-export { default as Pipelines } from '../components/views/pipelines/pipeline'
-export { default as NewPipeLine } from '../components/views/pipelines/new_pipeline'
+// import all components
+import AppLayout from './AppLayout'
+import NavBar from './NavBar'
+
+// export all components
+export {
+  AppLayout,
+  NavBar
+}
