@@ -6,7 +6,7 @@ import { PROJECT_NAME } from '../utils/constants'
 import { NavBar } from '../components'
 
 import NewPipeline from './NewPipeline'
-import { addPipeline, selectedPipelineChanged } from './redux'
+import { pipelineActions } from './redux'
 
 class PipelineList extends Component {
   constructor (props) {
@@ -71,12 +71,12 @@ class PipelineList extends Component {
   }
 
   onStartPipeline (newPipeline) {
-    this.props.dispatch(addPipeline(newPipeline))
+    this.props.dispatch(pipelineActions.addPipeline(newPipeline))
     this.onSelectPipeline(newPipeline)
   }
 
   onSelectPipeline (pipeline) {
-    this.props.dispatch(selectedPipelineChanged(pipeline))
+    this.props.dispatch(pipelineActions.selectedPipelineChanged(pipeline))
     this.props.history.push('/pipeline')
   }
 }
