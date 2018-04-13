@@ -9,7 +9,7 @@ class AvroSchemaViewer extends Component {
       children.push(<ul key={schema.name} className='group'>
         <li data-qa={`group-title-${schema.name}`} className='group-title'>{schema.name}</li>
         <li>
-          <ul key={schema.name}>
+          <ul key={schema.name} className='group-list'>
             {schema.fields.map(field => (this.schemaToMarkup(field)))}
           </ul>
         </li>
