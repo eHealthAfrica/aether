@@ -20,7 +20,7 @@ class AvroSchemaViewer extends Component {
     } else {
       children.push(<li data-qa={`no-children-${schema.name}`} key={schema.name}>
         <span className='name'>{schema.name}</span>
-        <span className='type'>{schema.type}</span>
+        <span className='type'> {schema.type}</span>
       </li>)
     }
     return children
