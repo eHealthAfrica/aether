@@ -6,8 +6,8 @@ class AvroSchemaViewer extends Component {
   schemaToMarkup (schema) {
     const children = []
     if (schema.fields && schema.fields.length) {
-      children.push(<ul key={schema.name}>
-        <li data-qa={`group-title-${schema.name}`}>{schema.name}</li>
+      children.push(<ul key={schema.name} className='group'>
+        <li data-qa={`group-title-${schema.name}`} className='group-title'>{schema.name}</li>
         <li>
           <ul key={schema.name}>
             {schema.fields.map(field => (this.schemaToMarkup(field)))}
@@ -19,8 +19,8 @@ class AvroSchemaViewer extends Component {
       children.push(this.schemaToMarkup(schema.type))
     } else {
       children.push(<li data-qa={`no-children-${schema.name}`} key={schema.name}>
-        <span>{schema.name}</span>&nbsp;&nbsp;
-        <span>{schema.type}</span>
+        <span className='name'>{schema.name}</span>
+        <span className='type'>{schema.type}</span>
       </li>)
     }
     return children
@@ -37,7 +37,12 @@ class AvroSchemaViewer extends Component {
     }
     try {
       avro.parse(this.props.schema)
-      return (this.schemaToMarkup(this.props.schema))
+      return (
+        <div className='input-schema'>
+          { this.schemaToMarkup(this.props.schema) }
+        </div>
+        
+      )
     } catch (error) {
       return (<div className='hint'>
         <FormattedMessage

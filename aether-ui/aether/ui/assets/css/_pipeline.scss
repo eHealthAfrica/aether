@@ -31,6 +31,7 @@ $output-nav-width: 7rem;
   width: 100%;
   align-items: baseline;
   justify-content: space-between;
+  z-index: 3;
 }
 
 .fullscreen-toggle {
@@ -176,10 +177,6 @@ div.pipeline-nav-item__output {
   transition: width $transition-speed;
 }
 
-.pipeline-sections ul {
-  padding-left: 10px;
-}
-
 .section-body {
   width: 100%;
   height: calc(100vh - 10px - #{$pipeline-nav-height});
@@ -193,6 +190,7 @@ div[class^='pipeline-section__'],
   height: calc(100vh - 10px);
   padding-top: $pipeline-nav-height;
   transition: width $transition-speed;
+  position: relative;
 }
 
 .pipeline-output {
