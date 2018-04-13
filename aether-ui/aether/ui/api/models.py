@@ -3,6 +3,7 @@ import uuid
 
 from collections import namedtuple
 from django.contrib.auth import get_user_model
+from django.contrib.postgres.fields import JSONField
 from django.db import models
 from model_utils.models import TimeStampedModel
 
@@ -153,6 +154,104 @@ class UserTokens(models.Model):
         default_related_name = 'app_tokens'
 
 
+'''
+
+Data model schema:
+
+
+    +------------------+             +------------------+
+    | Pipeline         |             | Entity Type      |
+    +==================+             +==================+
+    | id               |<-----+      | id               |
+    | name             |      |      | name             |
+    | input            |      |      | payload          |
+    | mapping          |      |      +::::::::::::::::::+
+    | mapping_errors   |      +-----<| pipeline         |
+    +------------------+             +------------------+
+
+'''
+
 class Pipeline(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100, null=False, blank=False)
+    name = models.CharField(max_length=100, null=False, blank=False, unique=True)
+
+    input = JSONField(blank=True, null=True)
+
+    # this represents the list of mapping rules
+    # {
+    #    "mapping": [
+    #      ['xpath-input-1', 'xpath-entity-type-1'],
+    #      ['xpath-input-2', 'xpath-entity-type-2'],
+    #      ...
+    #      ['xpath-input-n', 'xpath-entity-type-n'],
+    #    ]
+    # }
+    mapping = JSONField(blank=True, null=True)
+
+    # this represents the list of errors return by the `validate_mapping` method in kernel.
+    # {
+    #    "mapping_errors": [
+    #      {"path": 'xpath-input-a', "error_message": 'No match for path'},
+    #      {"path": 'xpath-entity-type-b', "error_message": 'No match for path'},
+    #      ...
+    #    ]
+    # }
+    mapping_errors = JSONField(blank=True, null=True)
+
+    @property
+    def input_prettified(self):
+        return json_prettified(self.input)
+
+    @property
+    def mapping_rules_prettified(self):
+        return json_prettified(self.mapping_rules)
+
+    @property
+    def errors_prettified(self):
+        return json_prettified(self.errors)
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if self.mapping:
+            # in kernel: validate_mapping(submission_payload, entity_list, mapping)
+            self.mapping_errors = validate_mapping(
+                submission_payload=self.input,
+                entity_list=self.entity_types.all(),
+                mapping=self.mapping,
+            )
+        else:
+            self.mapping_errors = None
+
+        super(Pipeline, self).save(*args, **kwargs)
+
+    class Meta:
+        app_label = 'ui'
+        default_related_name = 'pipelines'
+        ordering = ('name',)
+
+
+class EntityType(TimeStampedModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=50, null=False)
+    payload = JSONField(blank=False, null=False)
+    pipeline = models.ForeignKey(to=Pipeline, on_delete=models.CASCADE)
+
+    @property
+    def payload_prettified(self):
+        return json_prettified(self.payload)
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        super(EntityType, self).save(*args, **kwargs)
+        # recheck pipeline errors
+        self.pipeline.save()
+
+    class Meta:
+        app_label = 'ui'
+        default_related_name = 'entity_types'
+        ordering = ('pipeline', 'name',)
+        unique_together = ('pipeline', 'name',)
