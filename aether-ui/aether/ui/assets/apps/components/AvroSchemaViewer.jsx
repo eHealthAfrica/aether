@@ -41,7 +41,6 @@ class AvroSchemaViewer extends Component {
         <div className='input-schema'>
           { this.schemaToMarkup(this.props.schema) }
         </div>
-        
       )
     } catch (error) {
       return (<div className='hint'>
