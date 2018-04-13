@@ -1,10 +1,9 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import avro from 'avro-js'
 import { FormattedMessage } from 'react-intl'
 import { Link } from 'react-router-dom'
 
-import { NavBar, Common } from '../components'
+import { NavBar, AvroSchemaViewer } from '../components'
 
 import Input from './sections/input'
 import EntityTypes from './sections/entityTypes'
@@ -19,8 +18,7 @@ class Pipeline extends Component {
     this.state = {
       pipelineView: 'input',
       showOutput: false,
-      fullscreen: false,
-      inputSchema: null
+      fullscreen: false
     }
   }
 
@@ -29,16 +27,7 @@ class Pipeline extends Component {
     // if (!this.props.selectedPipeline) {
     //   this.props.history.replace('/')
     // }
-    try {
-      avro.parse(MockInputSchema)
-      this.setState({
-        inputSchema: Common.schemaToMarkup(MockInputSchema)
-      })
-    } catch (error) {
-      this.setState({
-        inputSchema: null
-      })
-    }
+    console.log(<AvroSchemaViewer schema={MockInputSchema} />)
   }
 
   render () {
@@ -111,7 +100,9 @@ class Pipeline extends Component {
 
           <div className='pipeline-sections'>
             <div className='pipeline-section__input'>
-              <Input schema={this.state.inputSchema} />
+              <Input>
+                <AvroSchemaViewer schema={MockInputSchema} />
+              </Input>
             </div>
             <div className='pipeline-section__entityTypes'>
               <EntityTypes />

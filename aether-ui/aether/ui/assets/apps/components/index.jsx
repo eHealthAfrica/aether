@@ -1,11 +1,11 @@
 // import all components
 import AppLayout from './AppLayout'
 import NavBar from './NavBar'
-import * as Common from './common'
+import AvroSchemaViewer from './AvroSchemaViewer'
 
 // export all components
 export {
   AppLayout,
   NavBar,
-  Common
+  AvroSchemaViewer
 }
