@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
+import { FormattedMessage } from 'react-intl'
 
 class Input extends Component {
   render () {
@@ -8,7 +9,10 @@ class Input extends Component {
         <div className='section-left'>
           {
             this.props.schema ? this.props.schema : (<div className='hint'>
-              Your schema for this pipeline will be displayed here once you have added an AVRO schema.
+              <FormattedMessage
+                id='pipeline.input.empty.message'
+                defaultMessage='Your schema for this pipeline will be displayed here once you have added an AVRO schema.'
+              />
             </div>)
           }
         </div>

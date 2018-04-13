@@ -4,13 +4,12 @@ import avro from 'avro-js'
 import { FormattedMessage } from 'react-intl'
 import { Link } from 'react-router-dom'
 
-import { NavBar } from '../components'
+import { NavBar, Common } from '../components'
 
 import Input from './sections/input'
 import EntityTypes from './sections/entityTypes'
 import Mapping from './sections/mapping'
 import Output from './sections/output'
-import { schemaToMarkup } from '../utils'
 import MockInputSchema from '../mock/schema_input.mock'
 
 class Pipeline extends Component {
@@ -33,7 +32,7 @@ class Pipeline extends Component {
     try {
       avro.parse(MockInputSchema)
       this.setState({
-        inputSchema: schemaToMarkup(MockInputSchema)
+        inputSchema: Common.schemaToMarkup(MockInputSchema)
       })
     } catch (error) {
       this.setState({
@@ -53,6 +52,7 @@ class Pipeline extends Component {
             />
           </Link>
           <span> // </span>
+          {/* TODO: Revert to { this.props.selectedPipeline.name } to enforce normal workflow; Linked to comments in ComponentWillMount() */}
           { this.props.selectedPipeline ? this.props.selectedPipeline.name : 'Select a pipeline' }
         </NavBar>
 
