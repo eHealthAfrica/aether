@@ -45,7 +45,7 @@ $indent: 1rem;
   }
 
   .group,
-  .group ul {
+  .group-list {
     padding: 0;
     list-style: none;
     font-size: $font-size-xs;
@@ -57,7 +57,7 @@ $indent: 1rem;
       padding: 0;
     }
 
-    &>li>ul>li,
+    .group-list>li,
     .group-title {
       border-bottom: 1px solid $light-grey;
       padding-top: .2rem;
@@ -66,13 +66,13 @@ $indent: 1rem;
   }
 }
 
-.input-schema>ul>.group-title {
+.input-schema>.group>.group-title {
   color: $grey;
   font-size: $font-size-standard;
   border-bottom: 3px solid $light-grey;
 }
 
-.input-schema>ul .group {
+.input-schema>.group .group {
 
   li li {
     padding-left: $indent;
@@ -90,15 +90,15 @@ $indent: 1rem;
     padding-left: $indent * 4;
   }
 
-  ul ul ul:not(.group) {
+  .group-list .group-list {
     margin-left: $indent * -1;
   }
 
-  ul ul ul ul:not(.group) {
+  .group-list .group-list .group-list {
     margin-left: $indent * -2;
   }
 
-  ul ul ul ul ul:not(.group) {
+  .group-list .group-list .group-list .group-list {
     margin-left: $indent * -3;
   }
 }
