@@ -86,7 +86,7 @@ $indent: 1rem;
     padding-left: $indent * 3;
   }
 
-  li li li li {
+  li li li li li {
     padding-left: $indent * 4;
   }
 
@@ -95,11 +95,11 @@ $indent: 1rem;
   }
 
   ul ul ul ul:not(.group) {
-    margin-left:$indent * -2;
+    margin-left: $indent * -2;
   }
 
   ul ul ul ul ul:not(.group) {
-    margin-left:$indent * -3;
+    margin-left: $indent * -3;
   }
 }
 
