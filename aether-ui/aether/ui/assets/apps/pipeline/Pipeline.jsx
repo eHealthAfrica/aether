@@ -27,7 +27,6 @@ class Pipeline extends Component {
     // if (!this.props.selectedPipeline) {
     //   this.props.history.replace('/')
     // }
-    console.log(<AvroSchemaViewer schema={MockInputSchema} />)
   }
 
   render () {
