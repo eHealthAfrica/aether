@@ -52,10 +52,11 @@ setup_initial_data() {
     ./manage.py loaddata /code/conf/extras/initial.json
 }
 
-setup_prod() {
-  # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
-  ./manage.py setup_admin -p=$ADMIN_PASSWORD -t=$AETHER_ODK_TOKEN
-}
+# FIXME: supply admin password
+# setup_prod() {
+#   # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
+#   # ./manage.py setup_admin -p=$ADMIN_PASSWORD -t=$AETHER_ODK_TOKEN
+# }
 
 test_flake8() {
     flake8 /code/. --config=/code/conf/extras/flake8.cfg
@@ -118,20 +119,20 @@ case "$1" in
     ;;
 
     start )
-        # setup_db
+        setup_db
         # setup_prod
 
-        # # media assets
-        # chown aether: /media
+        # media assets
+        chown aether: /media
 
-        # # create static assets
-        # ./manage.py collectstatic --noinput
-        # chmod -R 755 /var/www/static
+        # create static assets
+        ./manage.py collectstatic --noinput
+        chmod -R 755 /var/www/static
 
-        # # expose version number
-        # cp /code/VERSION /var/www/VERSION
-        # # add git revision 
-        # cp /code/REVISION /var/www/REVISION 
+        # expose version number
+        cp /code/VERSION /var/www/VERSION
+        # add git revision 
+        cp /code/REVISION /var/www/REVISION 
 
         /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
     ;;

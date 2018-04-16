@@ -64,28 +64,28 @@ spec:
         - containerPort: 8000
         args:
         - start
-        livenessProbe:
-          initialDelaySeconds: 15
-          periodSeconds: 10
-          httpGet:
-            path: /health
-            port: 8000
-            httpHeaders:
-            - name: X-Kubernetes-Health-Check
-              value: livenessProbe
-            - name: Host
-              value: {{ .Values.url }}
-        readinessProbe:
-          initialDelaySeconds: 15
-          periodSeconds: 10
-          httpGet:
-            path: /health
-            port: 8000
-            httpHeaders:
-            - name: X-Kubernetes-Health-Check
-              value: check
-            - name: Host
-              value: {{ .Values.url }}
+        # livenessProbe:
+        #   initialDelaySeconds: 15
+        #   periodSeconds: 10
+        #   httpGet:
+        #     path: /health
+        #     port: 8000
+        #     httpHeaders:
+        #     - name: X-Kubernetes-Health-Check
+        #       value: livenessProbe
+        #     - name: Host
+        #       value: {{ .Values.url }}
+        # readinessProbe:
+        #   initialDelaySeconds: 15
+        #   periodSeconds: 10
+        #   httpGet:
+        #     path: /health
+        #     port: 8000
+        #     httpHeaders:
+        #     - name: X-Kubernetes-Health-Check
+        #       value: check
+        #     - name: Host
+        #       value: {{ .Values.url }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
         {{- if .Values.extra_env_vars -}}

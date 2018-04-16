@@ -19,7 +19,8 @@ service:
 environment: "dev"
 ums_url: ums-dev
 kernel_url: kernel.aether.local
-domain: gather2.org
+# FIXME: configurable
+domain: aether.local
 trusted_origins: .ehealthafrica.org,.gather2.org
 namespace:
   create: false

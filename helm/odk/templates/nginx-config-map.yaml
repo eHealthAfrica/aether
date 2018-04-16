@@ -13,6 +13,20 @@ data:
     server {
       listen      80;
       charset     utf-8;
+      server_name odk;
+
+      # Max upload size
+      client_max_body_size 75M;   # adjust to taste
+
+      # Finally, send all non-media requests to the Django server.
+      location / {
+        proxy_pass http://127.0.0.1:8000;
+      }
+    }
+
+    server {
+      listen      80;
+      charset     utf-8;
       server_name *.{{ .Values.domain }};
 
       # Max upload size

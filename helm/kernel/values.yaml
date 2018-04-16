@@ -22,7 +22,7 @@ service:
   internalPort: 80
 environment: "dev"
 ums_url: ums-dev
-# FIXME: this goes into nginx
+# FIXME: configurable
 domain: aether.local
 # FIXME: check these
 # trusted_origins: .ehealthafrica.org,.gather2.org
