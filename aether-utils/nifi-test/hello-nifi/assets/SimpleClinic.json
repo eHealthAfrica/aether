@@ -30,7 +30,10 @@
         "name": "last_updated"
       },
       {
-        "type": "string",
+        "type": [
+          "null",
+          "string"
+        ],
         "name": "rev"
       },
       {

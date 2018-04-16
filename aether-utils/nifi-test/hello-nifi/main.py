@@ -2,6 +2,7 @@ import json
 import requests
 from aether.client import KernelClient
 
+from post import url, data, send
 from assets import project_obj, mapping_obj, project_schema_obj, schema_obj, kernel_url, kernel_credentials
 
 
@@ -22,6 +23,7 @@ def register():
     mapping_obj["project"] = project_id
     mapping = client.Resource.Mapping.add(mapping_obj)
     pprint(mapping)
+    return mapping.get("id")
 
 def post_test():
     client = KernelClient(kernel_url, **kernel_credentials)
@@ -38,5 +40,6 @@ def post_test():
 
 
 if __name__ == "__main__":
-    register()
-    post_test()
+    _id = register()
+    data["mapping"] = _id
+    send(url, data)

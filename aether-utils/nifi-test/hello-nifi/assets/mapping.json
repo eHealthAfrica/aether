@@ -4,8 +4,8 @@
     },
     "mapping" : [
         ["id","Clinic.id"],
-        ["geometry.coordinates[0]", "Clinic.lat"],
-        ["geometry.coordinates[1]", "Clinic.lng"],
+        ["geometry.coordinates[1]", "Clinic.lat"],
+        ["geometry.coordinates[0]", "Clinic.lng"],
         ["properties.name","Clinic.name"],
         ["properties.last_updated","Clinic.last_updated"]
     ]

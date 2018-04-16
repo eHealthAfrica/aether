@@ -7,6 +7,7 @@ import os
 import signal
 import sys
 
+from kafka.errors import NoBrokersAvailable
 from avro.io import DatumWriter
 from avro.datafile import DataFileWriter
 from kafka import KafkaProducer
@@ -234,17 +235,27 @@ def main_loop(test=False):
             offset = get_offset("entities")
             new_items = count_since(offset)
             if new_items:
-                print ("Found %s new items, processing" % new_items)
-                entities = get_entities(offset)
-                manager = StreamManager(kernel)
-                manager.send(entities)
-                manager.stop()
-                if manager.killed:
-                    print("processed stopped by SIGTERM")
-                    break
-                manager = None
+                for x in range(3):
+                    try:
+                        print ("Found %s new items, processing" % new_items)
+                        entities = get_entities(offset)
+                        manager = StreamManager(kernel)
+                        manager.send(entities)
+                        manager.stop()
+                        if manager.killed:
+                            print("processed stopped by SIGTERM")
+                            break
+                        manager = None
+                        break
+                    except NoBrokersAvailable as nbe:
+                        if x < 2:
+                            print("Error connecting to Kafka, retrying...")
+                            Sleep(_settings.start_delay)
+                        else:
+                            print("Error connecting to Kafka, out of retries; quitting.")
+                            raise(nbe)
+
             else:
-                print("Sleeping for %s" % (_settings.sleep_time))
                 Sleep(_settings.sleep_time)
     except KeyboardInterrupt as ek:
         print ("Caught Keyboard interrupt")
@@ -255,6 +266,7 @@ def main_loop(test=False):
         print(e)
         if manager:
             manager.stop()
+        raise(e)
 
 if __name__ == "__main__":
     main_loop()

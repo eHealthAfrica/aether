@@ -1,0 +1,12 @@
+
+{
+    "mappings": {
+        "Clinic": {
+                "properties": {
+                        "location": {
+                                "type": "geo_point"
+                        }
+                }
+        }
+    }
+}

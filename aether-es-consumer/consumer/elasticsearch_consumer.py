@@ -5,11 +5,11 @@ import json
 import sys
 import threading
 import signal
-import avro.schema
-import avro.io
+import spavro.schema
+import spavro.io
 
-from avro.datafile import DataFileReader
-from avro.io import DatumReader
+from spavro.datafile import DataFileReader
+from spavro.io import DatumReader
 
 from time import sleep as Sleep
 from aether.client import KernelClient
@@ -295,19 +295,23 @@ class ESItemProcessor(object):
 
     def deserialize(self, doc):
         bytes_reader = io.BytesIO(doc.value)
-        decoder = avro.io.BinaryDecoder(bytes_reader)
-        reader = avro.io.DatumReader(self.schema)
+        decoder = spavro.io.BinaryDecoder(bytes_reader)
+        reader = spavro.io.DatumReader(self.schema)
         doc = reader.read(decoder)
         return doc
 
     def load_avro(self, schema_obj):
         try:
-            self.schema = avro.schema.parse(schema_obj)
+            self.schema = spavro.schema.parse(schema_obj)
             self.schema_obj = json.loads(str(schema_obj))
             self.schema_obj_all = json.loads(str(schema_obj))
-            self.schema_obj = [schema for schema in self.schema_obj if schema.get("name").endswith(self.es_type)][0]
+            if isinstance(schema_obj, list):
+                self.schema_obj = [schema for schema in self.schema_obj if schema.get("name").endswith(self.es_type)][0]
+            else:
+                self.schema_obj = json.loads(schema_obj)
         except Exception as ave:
             print ("Error parsing Avro schema for type %s" % self.es_type)
+            print(schema_obj)
             raise ave
 
     def get_avro(self):
@@ -319,7 +323,7 @@ class ESItemProcessor(object):
                 try:
                     definition = ast.literal_eval(str(schema.definition))
                     self.schema_obj = definition
-                    self.schema = avro.schema.Parse(json.dumps(definition))
+                    self.schema = spavro.schema.Parse(json.dumps(definition))
                 except Exception as ave:
                     print ("Error parsing Avro schema for type %s" % self.es_type)
                     raise ave
