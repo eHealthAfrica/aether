@@ -1,0 +1,719 @@
+{
+  "properties": {
+    "http://vaxtrac.eha.org/administeredDoses": {
+      "comment": "Reference to VaccineDose", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/administeredDoses", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "administeredDoses", 
+      "rangeIncludes": [
+        "http://vaxtrac.eha.org/VaccineDose"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/callbackDate": {
+      "comment": "Date when the patient should return", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/callbackDate", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "callbackDate", 
+      "rangeIncludes": [
+        "http://schema.org/Date"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/centralPoint": {
+      "comment": "A central point of a large object", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/centralPoint", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "centralPoint", 
+      "rangeIncludes": [
+        "http://vaxtrac.eha.org/GeoLocation"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/children": {
+      "comment": "Chidren as people", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/children", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "children", 
+      "rangeIncludes": [
+        "http://vaxtrac.eha.org/Person"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/clinicID": {
+      "comment": "ID of clinic", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/clinicID", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "clinicID", 
+      "rangeIncludes": [
+        "http://schema.org/Text"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/date": {
+      "comment": "Date of Event", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/date", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "date", 
+      "rangeIncludes": [
+        "http://schema.org/Date"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/dateOfBirth": {
+      "comment": "ISO date as a string", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/dateOfBirth", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "dateOfBirth", 
+      "rangeIncludes": [
+        "http://schema.org/Text"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/description": {
+      "comment": "A description of the thing.", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/description", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "description", 
+      "rangeIncludes": [
+        "http://schema.org/Text"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/deviceID": {
+      "comment": "Metadata of device", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/deviceID", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "deviceID", 
+      "rangeIncludes": [
+        "http://schema.org/Text"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/dosesReceived": {
+      "comment": "Number of doses received", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/dosesReceived", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "dosesReceived", 
+      "rangeIncludes": [
+        "http://schema.org/Integer"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/guardians": {
+      "comment": "Parents as people", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/guardians", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "guardians", 
+      "rangeIncludes": [
+        "http://vaxtrac.eha.org/Person"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/home": {
+      "comment": "Descriptor of home or Place", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/home", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "home", 
+      "rangeIncludes": [
+        "http://schema.org/Text", 
+        "http://vaxtrac.eha.org/Place"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/instanceID": {
+      "comment": "Instance ID from form", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/instanceID", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "instanceID", 
+      "rangeIncludes": [
+        "http://schema.org/Text"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/latitude": {
+      "comment": "Latitude as float", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/latitude", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "latitude", 
+      "rangeIncludes": [
+        "http://schema.org/Float"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/location": {
+      "comment": "GeoLocation", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/location", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "location", 
+      "rangeIncludes": [
+        "http://vaxtrac.eha.org/GeoLocation"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/longitude": {
+      "comment": "Longitude as float", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/longitude", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "longitude", 
+      "rangeIncludes": [
+        "http://schema.org/Float"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/name": {
+      "comment": "A Name", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/name", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "name", 
+      "rangeIncludes": [
+        "http://schema.org/Text"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/patient": {
+      "comment": "Reference to Patient", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/patient", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "patient", 
+      "rangeIncludes": [
+        "http://vaxtrac.eha.org/Child"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/patientAge": {
+      "comment": "Age in days at event", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/patientAge", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "patientAge", 
+      "rangeIncludes": [
+        "http://schema.org/Integer"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/perimeter": {
+      "comment": "A series of coordinates forming an outline", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/perimeter", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "perimeter", 
+      "rangeIncludes": [
+        "http://vaxtrac.eha.org/GeoLocation"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/series": {
+      "comment": "dose number in series", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/series", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "series", 
+      "rangeIncludes": [
+        "http://schema.org/Integer"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/sessionType": {
+      "comment": "Type of Session", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/sessionType", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "sessionType", 
+      "rangeIncludes": [
+        "http://schema.org/Text"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/timeEnd": {
+      "comment": "Stop time of interaction", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/timeEnd", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "timeEnd", 
+      "rangeIncludes": [
+        "http://schema.org/DateTime"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/timeStart": {
+      "comment": "Start time of Interaction", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/timeStart", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "timeStart", 
+      "rangeIncludes": [
+        "http://schema.org/DateTime"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/username": {
+      "comment": "System username", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/username", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "username", 
+      "rangeIncludes": [
+        "http://schema.org/Text"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/vaccinationSession": {
+      "comment": "reference to VaccinationSession", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/vaccinationSession", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "vaccinationSession", 
+      "rangeIncludes": [
+        "http://vaxtrac.eha.org/VaccinationSession"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/vaccineName": {
+      "comment": "Name of vaccine", 
+      "domainIncludes": null, 
+      "equivalentProperty": null, 
+      "id": "http://vaxtrac.eha.org/vaccineName", 
+      "inversOf": null, 
+      "isPartOf": null, 
+      "label": "vaccineName", 
+      "rangeIncludes": [
+        "http://schema.org/Text"
+      ], 
+      "subPropertyOf": null, 
+      "subproperties": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }
+  }, 
+  "types": {
+    "http://schema.org/Boolean": {
+      "comment": "Boolean Field", 
+      "equivalentClass": null, 
+      "id": "http://schema.org/Boolean", 
+      "isPartOf": null, 
+      "label": "Boolean", 
+      "properties": null, 
+      "subTypeOf": null, 
+      "subTypes": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://schema.org/Date": {
+      "comment": "String of Date", 
+      "equivalentClass": null, 
+      "id": "http://schema.org/Date", 
+      "isPartOf": null, 
+      "label": "Date", 
+      "properties": null, 
+      "subTypeOf": null, 
+      "subTypes": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://schema.org/DateTime": {
+      "comment": "String of DateTime", 
+      "equivalentClass": null, 
+      "id": "http://schema.org/DateTime", 
+      "isPartOf": null, 
+      "label": "DateTime", 
+      "properties": null, 
+      "subTypeOf": null, 
+      "subTypes": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://schema.org/Float": {
+      "comment": "Float Field", 
+      "equivalentClass": null, 
+      "id": "http://schema.org/Float", 
+      "isPartOf": null, 
+      "label": "Float", 
+      "properties": null, 
+      "subTypeOf": null, 
+      "subTypes": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://schema.org/Integer": {
+      "comment": "Integer Field", 
+      "equivalentClass": null, 
+      "id": "http://schema.org/Integer", 
+      "isPartOf": null, 
+      "label": "Integer", 
+      "properties": null, 
+      "subTypeOf": null, 
+      "subTypes": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://schema.org/Number": {
+      "comment": "Integer Field", 
+      "equivalentClass": null, 
+      "id": "http://schema.org/Number", 
+      "isPartOf": null, 
+      "label": "Number", 
+      "properties": null, 
+      "subTypeOf": null, 
+      "subTypes": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://schema.org/Text": {
+      "comment": "Text Field", 
+      "equivalentClass": null, 
+      "id": "http://schema.org/Text", 
+      "isPartOf": null, 
+      "label": "Text", 
+      "properties": null, 
+      "subTypeOf": null, 
+      "subTypes": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://schema.org/Time": {
+      "comment": "Time as String", 
+      "equivalentClass": null, 
+      "id": "http://schema.org/Time", 
+      "isPartOf": null, 
+      "label": "Time", 
+      "properties": null, 
+      "subTypeOf": null, 
+      "subTypes": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://schema.org/URL": {
+      "comment": "Url as String", 
+      "equivalentClass": null, 
+      "id": "http://schema.org/URL", 
+      "isPartOf": null, 
+      "label": "URL", 
+      "properties": null, 
+      "subTypeOf": null, 
+      "subTypes": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/Child": {
+      "comment": "A child", 
+      "equivalentClass": null, 
+      "id": "http://vaxtrac.eha.org/Child", 
+      "isPartOf": null, 
+      "label": "Child", 
+      "properties": [
+        "http://vaxtrac.eha.org/name", 
+        "http://vaxtrac.eha.org/description", 
+        "http://vaxtrac.eha.org/dateOfBirth", 
+        "http://vaxtrac.eha.org/children", 
+        "http://vaxtrac.eha.org/guardians", 
+        "http://vaxtrac.eha.org/home", 
+        "http://vaxtrac.eha.org/administeredDoses", 
+        "http://vaxtrac.eha.org/vaccinationSession"
+      ], 
+      "subTypeOf": [
+        "http://vaxtrac.eha.org/Person"
+      ], 
+      "subTypes": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/GeoLocation": {
+      "comment": "A lat,lon", 
+      "equivalentClass": null, 
+      "id": "http://vaxtrac.eha.org/GeoLocation", 
+      "isPartOf": null, 
+      "label": "GeoLocation", 
+      "properties": [
+        "http://vaxtrac.eha.org/name", 
+        "http://vaxtrac.eha.org/description", 
+        "http://vaxtrac.eha.org/latitude", 
+        "http://vaxtrac.eha.org/longitude"
+      ], 
+      "subTypeOf": [
+        "http://vaxtrac.eha.org/Thing"
+      ], 
+      "subTypes": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/Guardian": {
+      "comment": null, 
+      "equivalentClass": null, 
+      "id": "http://vaxtrac.eha.org/Guardian", 
+      "isPartOf": null, 
+      "label": "Guardian", 
+      "properties": [
+        "http://vaxtrac.eha.org/name", 
+        "http://vaxtrac.eha.org/description", 
+        "http://vaxtrac.eha.org/dateOfBirth", 
+        "http://vaxtrac.eha.org/children", 
+        "http://vaxtrac.eha.org/guardians"
+      ], 
+      "subTypeOf": [
+        "http://vaxtrac.eha.org/Person"
+      ], 
+      "subTypes": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/Person": {
+      "comment": "A simple Person Type", 
+      "equivalentClass": null, 
+      "id": "http://vaxtrac.eha.org/Person", 
+      "isPartOf": null, 
+      "label": "Person", 
+      "properties": [
+        "http://vaxtrac.eha.org/name", 
+        "http://vaxtrac.eha.org/description", 
+        "http://vaxtrac.eha.org/dateOfBirth", 
+        "http://vaxtrac.eha.org/children", 
+        "http://vaxtrac.eha.org/guardians", 
+        "http://vaxtrac.eha.org/home"
+      ], 
+      "subTypeOf": [
+        "http://vaxtrac.eha.org/Thing"
+      ], 
+      "subTypes": [
+        "http://vaxtrac.eha.org/Child"
+      ], 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/Place": {
+      "comment": "A simple Place Type", 
+      "equivalentClass": null, 
+      "id": "http://vaxtrac.eha.org/Place", 
+      "isPartOf": null, 
+      "label": "Place", 
+      "properties": [
+        "http://vaxtrac.eha.org/name", 
+        "http://vaxtrac.eha.org/description", 
+        "http://vaxtrac.eha.org/location", 
+        "http://vaxtrac.eha.org/perimeter", 
+        "http://vaxtrac.eha.org/centralPoint"
+      ], 
+      "subTypeOf": [
+        "http://vaxtrac.eha.org/Thing"
+      ], 
+      "subTypes": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/Thing": {
+      "comment": "Base Complex Type", 
+      "equivalentClass": null, 
+      "id": "http://vaxtrac.eha.org/Thing", 
+      "isPartOf": null, 
+      "label": "Thing", 
+      "properties": [
+        "http://vaxtrac.eha.org/name", 
+        "http://vaxtrac.eha.org/description"
+      ], 
+      "subTypeOf": null, 
+      "subTypes": [
+        "http://vaxtrac.eha.org/Person", 
+        "http://vaxtrac.eha.org/Place", 
+        "http://vaxtrac.eha.org/GeoLocation"
+      ], 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/VaccinationSession": {
+      "comment": null, 
+      "equivalentClass": null, 
+      "id": "http://vaxtrac.eha.org/VaccinationSession", 
+      "isPartOf": null, 
+      "label": "VaccinationSession", 
+      "properties": [
+        "http://vaxtrac.eha.org/instanceID", 
+        "http://vaxtrac.eha.org/username", 
+        "http://vaxtrac.eha.org/timeStart", 
+        "http://vaxtrac.eha.org/timeEnd", 
+        "http://vaxtrac.eha.org/deviceID", 
+        "http://vaxtrac.eha.org/sessionType", 
+        "http://vaxtrac.eha.org/clinicID", 
+        "http://vaxtrac.eha.org/patient", 
+        "http://vaxtrac.eha.org/callbackDate", 
+        "http://vaxtrac.eha.org/administeredDoses", 
+        "http://vaxtrac.eha.org/dosesReceived", 
+        "http://vaxtrac.eha.org/location"
+      ], 
+      "subTypeOf": [
+        "http://vaxtrac.eha.org/Thing"
+      ], 
+      "subTypes": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }, 
+    "http://vaxtrac.eha.org/VaccineDose": {
+      "comment": null, 
+      "equivalentClass": null, 
+      "id": "http://vaxtrac.eha.org/VaccineDose", 
+      "isPartOf": null, 
+      "label": "VaccineDose", 
+      "properties": [
+        "http://vaxtrac.eha.org/vaccinationSession", 
+        "http://vaxtrac.eha.org/patient", 
+        "http://vaxtrac.eha.org/date", 
+        "http://vaxtrac.eha.org/vaccineName", 
+        "http://vaxtrac.eha.org/patientAge", 
+        "http://vaxtrac.eha.org/series"
+      ], 
+      "subTypeOf": [
+        "http://vaxtrac.eha.org/Thing"
+      ], 
+      "subTypes": null, 
+      "supersededBy": null, 
+      "supersedes": null
+    }
+  }
+}

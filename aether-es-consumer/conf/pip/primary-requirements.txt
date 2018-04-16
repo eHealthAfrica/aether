@@ -1,0 +1,20 @@
+################################################################################
+#                                                                              #
+#                             Primary requirements                             #
+#                                                                              #
+#                                 CHANGE ME !!!                                #
+#                                                                              #
+# Update me and then run 'docker-compose run kernel pip_freeze'                #
+#                                                                              #
+################################################################################
+
+aether.client
+coverage
+elasticsearch
+flake8
+flake8-quotes
+mock
+requests
+kafka
+avro
+

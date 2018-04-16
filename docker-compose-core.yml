@@ -1,0 +1,55 @@
+# ------------------------------------------------------------------------------
+# Config file for ALL containers:
+#
+#  * Aether Kernel
+#  * ODK Module
+#  * CouchDB Sync Module
+# ------------------------------------------------------------------------------
+
+version: "2.1"
+
+networks:
+  internal:
+    driver: bridge
+
+services:
+
+  # ---------------------------------
+  # Database containers
+  # ---------------------------------
+
+  db:
+    extends:
+      file: docker-compose-base.yml
+      service: postgres-base
+    networks:
+      - internal
+
+  # ---------------------------------
+  # Aether Kernel
+  # ---------------------------------
+
+  kernel:
+    extends:
+      file: docker-compose-base.yml
+      service: kernel-base
+    # uncomment to speed up common module development
+    # volumes:
+    #   - ./aether-common-module/aether/common:/code/aether/common
+    depends_on:
+      - db
+    networks:
+      internal:
+        aliases:
+          - kernel.aether.local
+
+  # ---------------------------------
+  # NGINX container
+  # ---------------------------------
+
+  nginx:
+    extends:
+      file: docker-compose-base.yml
+      service: nginx-base
+    networks:
+      - internal

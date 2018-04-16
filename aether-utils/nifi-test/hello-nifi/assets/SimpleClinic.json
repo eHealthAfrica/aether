@@ -1,0 +1,44 @@
+  {
+    "fields": [
+      {
+        "type": [
+          "null",
+          "float"
+        ],
+        "name": "lat"
+      },
+      {
+        "type": [
+          "null",
+          "float"
+        ],
+        "name": "lng"
+      },
+      {
+        "type": [
+          "null",
+          "string"
+        ],
+        "aetherExportMasking":"@sensitive",
+        "name": "name"
+      },
+      {
+        "type": [
+          "null",
+          "string"
+        ],
+        "name": "last_updated"
+      },
+      {
+        "type": "string",
+        "name": "rev"
+      },
+      {
+        "jsonldPredicate": "@id",
+        "type": "string",
+        "name": "id"
+      }
+    ],
+    "type": "record",
+    "name": "http://demo.eha.org/SimpleClinic"
+  }

@@ -1,0 +1,12 @@
+{
+    "name":"eha.vaxtrac.demo.2018.04",
+    "namespaces": {
+        "eha": "http://vaxtrac.eha.org/"
+    },
+    "base": "http://vaxtrac.eha.org/",
+    "parser_type": "schemadotorg",
+    "description":"eHA VaxTrac Demo Schema Library",
+    "output":"library.json",
+    "properties":"properties.csv",
+    "types":"types.csv"
+}

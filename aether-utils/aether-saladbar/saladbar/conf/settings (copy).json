@@ -1,0 +1,23 @@
+{
+    "project": "vaxtracDemo",
+    "$base": "http://vaxtrac.eha.org/",
+    "kernel_url": "http://kernel.aether.local:8000/v1",
+    "kernel_user": "admin-kernel",
+    "kernel_pw": "adminadmin",
+    "namespaces":{
+        "eha": "http://vaxtrac.eha.org/"
+    },
+    "basetype_name": "BaseModel",
+    "libraries":{
+        "eha.vaxtrac.demo.2018.04":{
+            "schema_file": "eha.vaxtrac.demo.2018.04.json",
+            "requirements":[
+                "http://vaxtrac.eha.org/Person",
+                "http://vaxtrac.eha.org/Guardian",
+                "http://vaxtrac.eha.org/Child",
+                "http://vaxtrac.eha.org/Thing"
+            ],
+            "depth": 3
+        }
+    }
+}
