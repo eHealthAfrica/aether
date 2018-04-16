@@ -17,7 +17,7 @@ const PropertyList = props => {
       } else {
         let fieldType = ''
         if (typeof field.type === 'object') {
-          fieldType = `[${field.type.symbols ? field.type.symbols.toString() : field.type.name}]`
+          fieldType = field.type.symbols ? `[${field.type.symbols.toString()}]` : field.type.type
         } else {
           fieldType = field.type
         }
