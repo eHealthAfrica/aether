@@ -7,14 +7,24 @@ metadata:
     chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
-  annotations:
-    {{- range $key, $value := .Values.ingress.annotations }}
-      {{ $key }}: {{ $value | quote }}
-    {{- end }}
+    # FIXME: remove
+  # annotations:
+  #   {{- range $key, $value := .Values.ingress.annotations }}
+  #     {{ $key }}: {{ $value | quote }}
+  #   {{- end }}
+  # annotations:
+  #   # nginx.kubernetes.io/rewrite-target: /
+  #   # kubernetes.io/rewrite-target: /
+  #   nginx.ingress.kubernetes.io/ingress.class: "nginx"
+  #   nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  #   nginx.ingress.kubernetes.io/ssl-passthrough: "false"
 spec:
+  tls:
+  - hosts:
+      - kernel.aether.local
   rules:
     # FIXME: make this configurable again
-    - host:
+    - host: kernel.aether.local
       http:
         paths:
           - path: /
