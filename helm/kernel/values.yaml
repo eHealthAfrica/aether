@@ -35,8 +35,8 @@ DEBUG: "true"
 DJANGO_SECRET_KEY: "secret"
 HOSTNAME: kernel.aether.local
 RDS_DB_NAME: aether
-RDS_HOSTNAME: localhost
-RDS_PASSWORD: ""
+RDS_HOSTNAME: db
+RDS_PASSWORD: "secret"
 # FIXME: can these be less verbose?
 RDS_PORT: "!!string 5432"
 RDS_USERNAME: postgres
