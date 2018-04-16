@@ -1,24 +1,32 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
+import { EntityTypeViewer } from '../../components'
+import MockEntitytypesSchema from '../../mock/schema_entityTypes.mock'
 
 class EntityTypes extends Component {
+  constructor (props) {
+    super(props)
+
+    this.state = {
+      entityTypesSchema: JSON.stringify(MockEntitytypesSchema)
+    }
+  }
+
+  onSchemaTextChanged (event) {
+    this.setState({
+      entityTypesSchema: event.target.value
+    })
+  }
+
   render () {
     return (
       <div className='section-body'>
         <div className='section-left'>
-          <div className='hint'>
-            No Entity Types added to your pipeline yet.
-          </div>
+          <EntityTypeViewer schema={this.state.entityTypesSchema} />
         </div>
         <div className='section-right'>
-          <p>here is body text</p>
-          <p>here is body text</p>
-          <p>here is body text</p>
-          <p>here is body text</p>
-          <p>here is body text</p>
-          <p>here is body text</p>
-          <p>here is body text</p>
-          <p>here is body text</p>
+          <textarea type='text' value={this.state.entityTypesSchema} onChange={this.onSchemaTextChanged.bind(this)} placeholder='Enter your schema'
+            rows='10' />
         </div>
       </div>
     )
