@@ -3,13 +3,12 @@ import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 import { Link } from 'react-router-dom'
 
-import { NavBar, AvroSchemaViewer } from '../components'
+import { NavBar } from '../components'
 
 import Input from './sections/input'
 import EntityTypes from './sections/entityTypes'
 import Mapping from './sections/mapping'
 import Output from './sections/output'
-import MockInputSchema from '../mock/schema_input.mock'
 
 class Pipeline extends Component {
   constructor (props) {
@@ -99,9 +98,7 @@ class Pipeline extends Component {
 
           <div className='pipeline-sections'>
             <div className='pipeline-section__input'>
-              <Input>
-                <AvroSchemaViewer schema={MockInputSchema} />
-              </Input>
+              <Input />
             </div>
             <div className='pipeline-section__entityTypes'>
               <EntityTypes />

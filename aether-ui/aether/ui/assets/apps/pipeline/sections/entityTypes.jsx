@@ -22,7 +22,6 @@ class EntityTypes extends Component {
     return (
       <div className='section-body'>
         <div className='section-left'>
-          {console.log(<EntityTypeViewer schema={this.state.entityTypesSchema} />)}
           <EntityTypeViewer schema={this.state.entityTypesSchema} />
         </div>
         <div className='section-right'>

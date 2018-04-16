@@ -36,10 +36,11 @@ class AvroSchemaViewer extends Component {
       </div>)
     }
     try {
-      avro.parse(this.props.schema)
+      const schemaObject = JSON.parse(this.props.schema)
+      avro.parse(schemaObject)
       return (
         <div className='input-schema'>
-          { this.schemaToMarkup(this.props.schema) }
+          { this.schemaToMarkup(schemaObject) }
         </div>
       )
     } catch (error) {

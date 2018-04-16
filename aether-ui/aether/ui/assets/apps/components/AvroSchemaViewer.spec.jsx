@@ -7,14 +7,14 @@ import { mountWithIntl } from '../../tests/test-react-intl'
 
 describe('AvroSchemaViewer', () => {
   it('should take a valid avro schema and render an avro visualizer', () => {
-    const component = mountWithIntl(<AvroSchemaViewer schema={mockAvroSchema} />)
+    const component = mountWithIntl(<AvroSchemaViewer schema={JSON.stringify(mockAvroSchema)} />)
     expect(component.find('[data-qa^="group-title-"]').length).toEqual(9)
     expect(component.find('[data-qa="no-children-surname"]').html()).toContain('<span class="name">surname</span>')
   })
 
   it('should take a invalid avro schema and render an invalid error message', () => {
     delete mockAvroSchema['name']
-    const component = mountWithIntl(<AvroSchemaViewer schema={mockAvroSchema} />)
+    const component = mountWithIntl(<AvroSchemaViewer schema={JSON.stringify(mockAvroSchema)} />)
     expect(component.html()).toContain('You have provided an invalid AVRO schema.')
   })
 
