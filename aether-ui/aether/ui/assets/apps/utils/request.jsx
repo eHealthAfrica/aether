@@ -2,9 +2,9 @@ import 'whatwg-fetch'
 import jQuery from 'jquery'
 
 /*
-* Given a Blob or File object, triggers a file download by creating
-* a link object and simulating a click event.
-*/
+ * Given a Blob or File object, triggers a file download by creating
+ * a link object and simulating a click event.
+ */
 const download = (fileName, url, content) => {
   const a = document.createElement('a')
   document.body.appendChild(a)
@@ -16,10 +16,10 @@ const download = (fileName, url, content) => {
 }
 
 /*
-* Takes a URL string and an { name: value } mapping of query parameters,
-* and appends the parameters to the URL => https://localhost/?name=value
-* Respects existing query parameters in the URL string.
-*/
+ * Takes a URL string and an { name: value } mapping of query parameters,
+ * and appends the parameters to the URL => https://localhost/?name=value
+ * Respects existing query parameters in the URL string.
+ */
 const appendParams = (url, params) => {
   if (!params || Object.keys(params).length === 0) {
     return url
