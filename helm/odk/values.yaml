@@ -18,7 +18,7 @@ service:
   internalPort: 80
 environment: "dev"
 ums_url: ums-dev
-kernel_url: kernel.aether.local
+kernel_url: http://kernel
 # FIXME: configurable
 domain: aether.local
 trusted_origins: .ehealthafrica.org,.gather2.org

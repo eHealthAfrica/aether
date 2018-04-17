@@ -50,7 +50,6 @@ class FilteredHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
         )
         return result
 
-print('oiijsdfoijsdoifj')
 
 class ProjectSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(

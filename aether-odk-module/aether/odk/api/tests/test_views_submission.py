@@ -107,6 +107,12 @@ class PostSubmissionTests(CustomTestCase):
         project = requests.get(
             '{}/projects/'.format(kernel_utils.get_kernel_server_url()),
             headers=self.KERNEL_HEADERS,
+        )
+        # TODO: attach to container
+        import pdb; pdb.set_trace()
+        project = requests.get(
+            '{}/projects/'.format(kernel_utils.get_kernel_server_url()),
+            headers=self.KERNEL_HEADERS,
         ).json()['results'][0]
         projectschema = requests.get(
             '{}/projectschemas/'.format(kernel_utils.get_kernel_server_url()),

@@ -52,10 +52,10 @@ setup_initial_data() {
     ./manage.py loaddata /code/conf/extras/initial.json
 }
 
-# FIXME: supply admin password
+# # FIXME: supply admin password
 # setup_prod() {
 #   # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
-#   # ./manage.py setup_admin -p=$ADMIN_PASSWORD -t=$AETHER_ODK_TOKEN
+#   ./manage.py setup_admin -p=$ADMIN_PASSWORD -t=$AETHER_ODK_TOKEN
 # }
 
 test_flake8() {
@@ -120,7 +120,9 @@ case "$1" in
 
     start )
         setup_db
+        # FIXME: two versions; dev and prod
         # setup_prod
+        setup_initial_data
 
         # media assets
         chown aether: /media
