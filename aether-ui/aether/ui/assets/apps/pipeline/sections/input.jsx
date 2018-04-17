@@ -25,7 +25,8 @@ class Input extends Component {
           <AvroSchemaViewer schema={this.state.inputSchema} />
         </div>
         <div className='section-right'>
-          <textarea type='text' value={this.state.inputSchema} onChange={this.onSchemaTextChanged.bind(this)} placeholder='Enter your schema'
+          <label className='form-label'>Paste AVRO Schema</label>
+          <textarea type='text' className='monospace' value={this.state.inputSchema} onChange={this.onSchemaTextChanged.bind(this)} placeholder='Enter your schema'
             rows='10' />
         </div>
       </div>

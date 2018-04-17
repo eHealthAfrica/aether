@@ -13,8 +13,9 @@
   }
 
   .section-right {
+    flex: 1;
     display: none;
-    padding: 1.2rem;
+    padding: 1.2rem 2rem;
     border-left: 1px dashed $light-grey;
   }
 
@@ -28,6 +29,14 @@
     left: 0;
     pointer-events: none;
     background-image: linear-gradient($white, transparent);
+  }
+
+  textarea {
+    background: $background-color;
+    color: $dark-blue;
+    box-shadow: 1px 1px 1px rgba($text-color, .1) inset, 1px 1px 0 rgba($white, .1);
+    width: 100%;
+    height: 100%;
   }
 }
 

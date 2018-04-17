@@ -25,7 +25,8 @@ class EntityTypes extends Component {
           <EntityTypeViewer schema={this.state.entityTypesSchema} />
         </div>
         <div className='section-right'>
-          <textarea type='text' value={this.state.entityTypesSchema} onChange={this.onSchemaTextChanged.bind(this)} placeholder='Enter your schema'
+          <label className='form-label'>paste Entity Type definitions</label>
+          <textarea type='text' className='monospace' value={this.state.entityTypesSchema} onChange={this.onSchemaTextChanged.bind(this)} placeholder='Enter your schema'
             rows='10' />
         </div>
       </div>

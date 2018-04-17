@@ -132,6 +132,7 @@ small {
   font-weight: 300;
   letter-spacing: .04em;
   font-size: $font-size-m;
+  margin-bottom: 1.2rem;
 }
 
 input[type='password'],
@@ -173,6 +174,11 @@ input:active {
     left: 1.8rem;
     top: -6px;
   }
+}
+
+.monospace {
+  font: $font-size-xs $code-font-family;
+  line-height: 1.4em;
 }
 
 pre {
