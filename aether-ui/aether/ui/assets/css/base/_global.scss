@@ -153,7 +153,9 @@ textarea {
 
 input,
 input:focus,
-input:active {
+input:active,
+textarea:focus,
+textarea:active {
   outline: 0;
 }
 
