@@ -36,7 +36,7 @@ export const selectedPipelineChanged = selectedPipeline => ({
 
 export const getAPICALL = () => ({
   types: ['', types.TEST_API_CALL, types.TEST_API_FAILED],
-  promise: client => client.get(urls.SAMPLE_URL, 'application/json')
+  promise: client => client.get(urls.SAMPLE_URL, {'Content-Type' : 'application/json'})
 })
 
 const reducer = (state = INITIAL_PIPELINE, action = {}) => {
