@@ -3,10 +3,11 @@ import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
 import { PROJECT_NAME } from '../utils/constants'
-import { NavBar } from '../components'
+import { NavBar, PaginationContainer } from '../components'
 
 import NewPipeline from './NewPipeline'
 import { pipelineActions } from './redux'
+import { PIPELINES_URL } from './api'
 
 class PipelineList extends Component {
   constructor (props) {
@@ -14,6 +15,10 @@ class PipelineList extends Component {
     this.state = {
       view: 'show-index'
     }
+  }
+
+  componentWillReceiveProps (nextProps) {
+    pipelineActions.setPipelines(nextProps.list)
   }
 
   render () {
@@ -31,9 +36,7 @@ class PipelineList extends Component {
             />
           </h1>
 
-          <NewPipeline
-            onStartPipeline={newPipeline => { this.onStartPipeline(newPipeline) }}
-          />
+          <NewPipeline onAdd={pipeline => { this.onStartNewPipeline(pipeline) }} />
 
           <div className='pipeline-previews'>
             { this.renderPipelineCards() }
@@ -44,7 +47,7 @@ class PipelineList extends Component {
   }
 
   renderPipelineCards () {
-    return this.props.pipelineList.map(pipeline => (
+    return this.props.list.map(pipeline => (
       <div
         key={pipeline.id}
         className='pipeline-preview'
@@ -70,19 +73,28 @@ class PipelineList extends Component {
     ))
   }
 
-  onStartPipeline (newPipeline) {
+  onStartNewPipeline (newPipeline) {
     this.props.dispatch(pipelineActions.addPipeline(newPipeline))
     this.onSelectPipeline(newPipeline)
   }
 
   onSelectPipeline (pipeline) {
     this.props.dispatch(pipelineActions.selectedPipelineChanged(pipeline))
-    this.props.history.push('/pipeline')
+    this.props.history.push(`/${pipeline.id}`)
   }
 }
 
-const mapStateToProps = ({ pipelines }) => ({
-  pipelineList: pipelines.pipelineList
-})
+class PipelineListContainer extends Component {
+  render () {
+    return (
+      <PaginationContainer
+        extras={this.props}
+        url={PIPELINES_URL}
+        listComponent={PipelineList}
+        pageSize={100}
+      />
+    )
+  }
+}
 
-export default connect(mapStateToProps)(PipelineList)
+export default connect()(PipelineListContainer)
