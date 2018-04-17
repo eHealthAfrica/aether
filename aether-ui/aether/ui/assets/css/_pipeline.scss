@@ -193,21 +193,6 @@ div[class^='pipeline-section__'],
   position: relative;
 }
 
-.pipeline-output {
-  background: $text-color;
-  color: $white;
-}
-
-.pipeline-section__entityTypes {
-  background: lighten($dark-blue, 5);
-  color: $white;
-}
-
-.pipeline-section__mapping {
-  background: $dark-blue;
-  color: $white;
-}
-
 // STATES
 
 @mixin selected {

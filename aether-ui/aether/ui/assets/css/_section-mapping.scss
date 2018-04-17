@@ -1,10 +1,12 @@
 .pipeline-section__mapping {
+  background: $dark-blue;
+  color: $white;
 
   .section-body {
     display: flex;
   }
 
   .rules {
-    padding: 1.2rem;
+    padding: $unit $unit-xl;
   }
 }

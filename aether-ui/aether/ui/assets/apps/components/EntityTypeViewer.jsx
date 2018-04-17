@@ -22,12 +22,12 @@ const PropertyList = props => {
           fieldType = field.type
         }
         if (props.parent) {
-          result.push(<div key={`${props.parent}.${field.name}`}><span>{`${props.parent}.${field.name}`}</span>&nbsp;&nbsp;
-            <span>{fieldType}</span></div>)
+          result.push(<li key={`${props.parent}.${field.name}`}><span className='name'>{`${props.parent}.${field.name}`}</span>
+            <span className='type'> {fieldType}</span></li>)
         } else {
-          result.push(<div key={field.name}><span>{field.name}</span>&nbsp;&nbsp;
-            <span>{fieldType}</span>
-          </div>)
+          result.push(<li key={field.name}><span className='name'>{field.name}</span>
+            <span className='type'> {fieldType}</span>
+          </li>)
         }
       }
     })
@@ -41,9 +41,11 @@ const PropertyList = props => {
 }
 
 const EntityTypeView = props => {
-  return (<div>
-    <h2>{props.name}</h2>
-    <PropertyList fields={props.fields} />
+  return (<div className='entity-type'>
+    <h2 className='title'>{props.name}</h2>
+    <ul className='properties'>
+      <PropertyList fields={props.fields} />
+    </ul>
   </div>)
 }
 
