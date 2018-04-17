@@ -1,0 +1,19 @@
+#################################################################################################################
+#                                                                              					#
+#                             Primary requirements                             					#
+#                                                                              					#
+#                                 CHANGE ME !!!                                					#
+#                                                                              					#
+# Update me and then run 'docker-compose -f docker-compose-test.yml run integration-test pip_freeze'            #
+#                                                                              					#
+#################################################################################################################
+
+coverage
+flake8
+jsonpath_ng
+kafka
+mock
+pytest
+pytest-runner
+requests
+spavro
