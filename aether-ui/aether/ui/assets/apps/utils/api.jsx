@@ -1,5 +1,4 @@
 import superagent from 'superagent'
-import cookie from 'react-cookie'
 
 const methods = ['get', 'post', 'put', 'patch', 'del']
 
@@ -13,21 +12,22 @@ export default class ApiClient {
           if (header) {
             request.set('Accept', header)
           }
-          if (cookie.load('accessToken')) {
-            request.set('Authorization', `Bearer ${cookie.load('accessToken')}`)
-          }
+
           if (params) {
             request.query(params)
-          }
-
-          if (req && req.get('cookie')) {
-            request.set('cookie', req.get('cookie'))
           }
 
           if (data) {
             request.send(data)
           }
-          request.end((err, { body } = {}) => (err ? reject(body || err) : resolve(body)))
+          request.end((err, res) => {
+            console.log('REQ2', res)
+            const accept = res.req.header['Accept']
+            if (accept === 'application/json') {
+              return res.json()
+            }
+            return err ? reject(res.body || err) : resolve(res.text())
+          })
         })
     })
   }

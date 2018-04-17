@@ -10,6 +10,8 @@ import EntityTypes from './sections/entityTypes'
 import Mapping from './sections/mapping'
 import Output from './sections/output'
 
+import { getAPICALL } from '../pipeline/redux'
+
 class Pipeline extends Component {
   constructor (props) {
     super(props)
@@ -26,6 +28,11 @@ class Pipeline extends Component {
     // if (!this.props.selectedPipeline) {
     //   this.props.history.replace('/')
     // }
+    this.props.getAPICALL()
+  }
+
+  componentWillReceiveProps (nextProps) {
+    console.log('REDUX', nextProps.test)
   }
 
   render () {
@@ -133,7 +140,8 @@ class Pipeline extends Component {
 }
 
 const mapStateToProps = ({ pipelines }) => ({
-  selectedPipeline: pipelines.selectedPipeline
+  selectedPipeline: pipelines.selectedPipeline,
+  test: pipelines.test
 })
 
-export default connect(mapStateToProps, {})(Pipeline)
+export default connect(mapStateToProps, { getAPICALL })(Pipeline)

@@ -13,8 +13,8 @@ export default () => next => action => {
   const actionPromise = promise(apiClient)
   actionPromise
     .then(
-      result => {
-        next({ ...rest, result, type: SUCCESS })
+      payload => {
+        next({ ...rest, payload, type: SUCCESS })
       },
       error => {
         next({ ...rest, error, type: FAILURE })
