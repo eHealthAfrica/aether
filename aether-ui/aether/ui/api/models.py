@@ -8,6 +8,7 @@ from django.db import models
 from model_utils.models import TimeStampedModel
 
 from ..settings import AETHER_APPS
+from .utils import validate_pipeline
 
 
 '''
@@ -165,9 +166,11 @@ Data model schema:
     | id               |<-----+      | id               |
     | name             |      |      | name             |
     | input            |      |      | payload          |
-    | mapping          |      |      +::::::::::::::::::+
-    | mapping_errors   |      +-----<| pipeline         |
-    +------------------+             +------------------+
+    | schema           |      |      +::::::::::::::::::+
+    | mapping          |      +-----<| pipeline         |
+    | mapping_errors   |             +------------------+
+    | output           |
+    +------------------+
 
 '''
 
@@ -175,7 +178,10 @@ class Pipeline(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, null=False, blank=False, unique=True)
 
+    # this is an example of the submission payload
     input = JSONField(blank=True, null=True)
+    # this is the avro schema
+    schema = JSONField(blank=True, null=True)
 
     # this represents the list of mapping rules
     # {
@@ -188,41 +194,29 @@ class Pipeline(TimeStampedModel):
     # }
     mapping = JSONField(blank=True, null=True)
 
-    # this represents the list of errors return by the `validate_mapping` method in kernel.
+    # these represent the list of entities and errors returned by the
+    # `validate_mapping` method in kernel.
     # {
+    #    "entities": [
+    #      {...},
+    #      {...},
+    #    ],
     #    "mapping_errors": [
     #      {"path": 'xpath-input-a', "error_message": 'No match for path'},
     #      {"path": 'xpath-entity-type-b', "error_message": 'No match for path'},
     #      ...
     #    ]
     # }
-    mapping_errors = JSONField(blank=True, null=True)
-
-    @property
-    def input_prettified(self):
-        return json_prettified(self.input)
-
-    @property
-    def mapping_rules_prettified(self):
-        return json_prettified(self.mapping_rules)
-
-    @property
-    def errors_prettified(self):
-        return json_prettified(self.errors)
+    mapping_errors = JSONField(blank=True, null=True, editable=False)
+    output = JSONField(blank=True, null=True, editable=False)
 
     def __str__(self):
         return self.name
 
     def save(self, *args, **kwargs):
-        if self.mapping:
-            # in kernel: validate_mapping(submission_payload, entity_list, mapping)
-            self.mapping_errors = validate_mapping(
-                submission_payload=self.input,
-                entity_list=self.entity_types.all(),
-                mapping=self.mapping,
-            )
-        else:
-            self.mapping_errors = None
+        errors, output = validate_pipeline(self)
+        self.mapping_errors = errors
+        self.output = output
 
         super(Pipeline, self).save(*args, **kwargs)
 
@@ -238,16 +232,17 @@ class EntityType(TimeStampedModel):
     payload = JSONField(blank=False, null=False)
     pipeline = models.ForeignKey(to=Pipeline, on_delete=models.CASCADE)
 
-    @property
-    def payload_prettified(self):
-        return json_prettified(self.payload)
-
     def __str__(self):
         return self.name
 
     def save(self, *args, **kwargs):
         super(EntityType, self).save(*args, **kwargs)
-        # recheck pipeline errors
+        # recheck pipeline
+        self.pipeline.save()
+
+    def delete(self, *args, **kwargs):
+        super(EntityType, self).delete(*args, **kwargs)
+        # recheck pipeline
         self.pipeline.save()
 
     class Meta:

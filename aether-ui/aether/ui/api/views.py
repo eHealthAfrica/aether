@@ -14,6 +14,12 @@ class PipelineViewSet(viewsets.ModelViewSet):
     ordering = ('name',)
 
 
+class EntityTypeViewSet(viewsets.ModelViewSet):
+    queryset = models.EntityType.objects.all()
+    serializer_class = serializers.EntityTypeSerializer
+    ordering = ('pipeline', 'name',)
+
+
 class TokenProxyView(View):
     '''
     This view will proxy any request to the indicated app with the user auth token.

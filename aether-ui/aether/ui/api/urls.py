@@ -10,6 +10,7 @@ from . import views
 router = routers.DefaultRouter()
 
 router.register('pipelines', views.PipelineViewSet)
+router.register('entity-types', views.EntityTypeViewSet)
 
 urlpatterns = [
     url(r'^ui/', include(router.urls)),
