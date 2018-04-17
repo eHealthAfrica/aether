@@ -2,16 +2,18 @@
 // Color Codes
 // ************************************
 
-$colors-list: #6ed7c2 #6ebcd7 #cfd76e #d7b46e #d79a6e #d76e89 #d76ec2 #a5b990 #88B5ac #bcb297;
+$colors-list: #6ed7c2 #6ebcd7 #cfd76e #d7b46e #d79a6e #d76e89 #d76ec2 #a5b990 #88b5ac #bcb297;
 @each $current-color in $colors-list {
-    $i: index($colors-list, $current-color);
-    .entity-type:nth-child(#{$i}) {
-      .title {
-        color: $current-color;
-      }
-      li:hover {
-      	background-color: rgba($current-color, .2);
-      }
+  $i: index($colors-list, $current-color);
+
+  .entity-type:nth-child(#{$i}) {
+    .title {
+      color: $current-color;
     }
+
+    li:hover {
+      background-color: rgba($current-color, .2);
+    }
+  }
 }
 
