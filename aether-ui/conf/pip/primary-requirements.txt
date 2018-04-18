@@ -10,7 +10,6 @@
 
 
 # Main libraries
-
 # Aether common module, will also install:
 #   django                   < 2
 #   djangorestframework     >= 3.8   < 4
@@ -20,6 +19,7 @@ aether.common
 
 
 django-model-utils
+drf-dynamic-fields
 psycopg2-binary
 requests
 uwsgi

@@ -1,1 +1,1 @@
-export const PIPELINES_URL = '/ui/pipelines.json'
+export const PIPELINES_URL = '/api/ui/pipelines.json'
