@@ -22,10 +22,22 @@ echo "_____________________________________________ Starting Kafka"
 $DC_TEST up -d zookeeper-test kafka-test
 
 # test a clean INGEGRATION TEST container
-echo "_____________________________________________ Starting Tests"
+echo "_____________________________________________ Starting Python2 Tests"
 
 build_container consumer-sdk-py2
 $DC_TEST run consumer-sdk-py2-test test
+
+echo "_____________________________________________ Finished Test"
+
+
+kill_all
+build_container kafka
+build_container zookeeper
+echo "_____________________________________________ Starting Kafka"
+$DC_TEST up -d zookeeper-test kafka-test
+
+echo "_____________________________________________ Starting Python3 Tests"
+
 build_container consumer-sdk
 $DC_TEST run consumer-sdk-test test
 

@@ -1,15 +1,13 @@
 import ast
 import io
+import json
 
+import kafka
 import spavro.schema
 import spavro.io
-
 from spavro.datafile import DataFileReader
 from spavro.io import DatumReader
 
-import kafka
-
-# from kafka import KafkaConsumer as KPYConsumer
 from jsonpath_ng import jsonpath, parse
 
 
@@ -26,17 +24,27 @@ class KafkaConsumer(kafka.KafkaConsumer):
     }
 
     def __init__(self, *topics, **configs):
-
         # Add to DEFAULT_CONFIG
-        print (KafkaConsumer.DEFAULT_CONFIG)
         for k, v in KafkaConsumer.ADDITIONAL_CONFIG.items():
             KafkaConsumer.DEFAULT_CONFIG[k] = v
         # Items not in either default or additional config raise KafkaConfigurationError on super
-        print (KafkaConsumer.DEFAULT_CONFIG)
         super(KafkaConsumer, self).__init__(*topics, **configs)
 
     def get_approval_filter(self, schema):
-        return lambda x: True
+        check_condition_path = self.config.get("aether_emit_flag_field_path")
+        pass_conditions = self.config.get("aether_emit_flag_values")
+        check = None
+        if isinstance(pass_conditions, list):
+            check = lambda x : x in pass_conditions
+        else:
+            check = lambda x: x is pass_conditions
+        expr = parse(check_condition_path)
+        def approval_filter(msg):
+            values = [match.value for match in expr.find(msg)]
+            if not values:
+                return False
+            return check(values[0])  # We only check the first matching path/ value
+        return approval_filter
 
     def get_mask_from_schema(self, schema):
         return None

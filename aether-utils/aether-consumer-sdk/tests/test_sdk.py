@@ -10,6 +10,8 @@ def test_boolean_pass(messages_test_boolean_pass):
     assert(len(messages) == topic_size), "Should have generated the right number of messages"
     consumer_kwargs = {
         "aether_masking_schema_annotation" : "aetherMaskingLevel",
+        "aether_emit_flag_field_path": "$.publish",
+        "aether_emit_flag_values": [True, False],
         "aether_masking_schema_levels" : [1,2,3,4,5],
         "bootstrap_servers" : kafka_server,
         "heartbeat_interval_ms" : 2500,
@@ -30,9 +32,9 @@ def test_boolean_pass(messages_test_boolean_pass):
                 schema = package.get("schema")
                 for msg in package.get("messages"):
                     count += 1
-                    print(partition)
-                    pprint(msg)
-        print(count)
+                    # print(partition)
+                    # pprint(msg)
+        assert(count == topic_size), "All messages should pass"
         consumer.close()
 
 
