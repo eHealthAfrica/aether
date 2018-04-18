@@ -31,6 +31,7 @@ $output-nav-width: 7rem;
   width: 100%;
   align-items: baseline;
   justify-content: space-between;
+  z-index: 3;
 }
 
 .fullscreen-toggle {
@@ -189,21 +190,7 @@ div[class^='pipeline-section__'],
   height: calc(100vh - 10px);
   padding-top: $pipeline-nav-height;
   transition: width $transition-speed;
-}
-
-.pipeline-output {
-  background: $text-color;
-  color: $white;
-}
-
-.pipeline-section__entityTypes {
-  background: lighten($dark-blue, 5);
-  color: $white;
-}
-
-.pipeline-section__mapping {
-  background: $dark-blue;
-  color: $white;
+  position: relative;
 }
 
 // STATES

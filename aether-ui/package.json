@@ -26,6 +26,7 @@
   },
 
   "dependencies": {
+    "avro-js":"~1.8.2",
     "bootstrap": "~4.1.0",
     "html5shiv": "~3.7.0",
     "jquery": "~3.3.0",

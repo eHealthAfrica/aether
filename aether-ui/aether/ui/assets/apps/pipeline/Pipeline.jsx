@@ -5,10 +5,10 @@ import { Link } from 'react-router-dom'
 
 import { NavBar } from '../components'
 
-import Input from './sections/input'
-import EntityTypes from './sections/entityTypes'
-import Mapping from './sections/mapping'
-import Output from './sections/output'
+import Input from './sections/Input'
+import EntityTypes from './sections/EntityTypes'
+import Mapping from './sections/Mapping'
+import Output from './sections/Output'
 
 class Pipeline extends Component {
   constructor (props) {
@@ -22,9 +22,10 @@ class Pipeline extends Component {
   }
 
   componentWillMount () {
-    if (!this.props.selectedPipeline) {
-      this.props.history.replace('/')
-    }
+    // Uncomment this to check for selected pipelines to configure
+    // if (!this.props.selectedPipeline) {
+    //   this.props.history.replace('/')
+    //  }
   }
 
   render () {
@@ -38,7 +39,8 @@ class Pipeline extends Component {
             />
           </Link>
           <span> // </span>
-          { this.props.selectedPipeline.name }
+          {/* TODO: Revert to { this.props.selectedPipeline.name } to enforce normal workflow; Linked to comments in ComponentWillMount() */}
+          { this.props.selectedPipeline ? this.props.selectedPipeline.name : 'Select a pipeline' }
         </NavBar>
 
         <div className={`pipeline pipeline--${this.state.pipelineView} ${this.state.showOutput ? 'show-output' : ''} ${this.state.fullscreen ? 'fullscreen' : ''}`}>
