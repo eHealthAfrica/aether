@@ -26,8 +26,8 @@ test_flake8() {
 }
 
 test_coverage() {
-    # Python2 Tests !!Must run first as we rely on the schema generation
-    python2 setup.py -q test "${@:1}"
+    # Python2 Tests
+    python setup.py -q test
 
     cat /code/conf/extras/good_job.txt
 
@@ -55,7 +55,7 @@ case "$1" in
         pip install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.py2.txt --upgrade
 
         cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.py2.txt
-        pip3 freeze --local | grep -v appdir | tee -a conf/pip/requirements.py2.txt
+        pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.py2.txt
     ;;
 
     test)

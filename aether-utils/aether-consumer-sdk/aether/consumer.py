@@ -5,11 +5,13 @@ import spavro.io
 from spavro.datafile import DataFileReader
 from spavro.io import DatumReader
 
-from kafka import KafkaConsumer as KPYConsumer
+import kafka
+
+# from kafka import KafkaConsumer as KPYConsumer
 from jsonpath_ng import jsonpath, parse
 
 
-class KafkaConsumer(KPYConsumer):
+class KafkaConsumer(kafka.KafkaConsumer):
 
     # Adding these key/ value pairs to those handled by vanilla KAfkaConsumer
     ADDITIONAL_CONFIG = {

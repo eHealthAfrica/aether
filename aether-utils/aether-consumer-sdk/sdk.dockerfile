@@ -7,9 +7,6 @@ FROM python:3.6
 #install pip2
 RUN wget https://bootstrap.pypa.io/get-pip.py -O - | python2
 
-RUN pip2 --version
-RUN pip3 --version
-
 ################################################################################
 ## install app
 ## copy files one by one and split commands to use docker cache

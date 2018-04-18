@@ -13,7 +13,7 @@ WORKDIR /code
 
 COPY ./conf/pip /code/conf/pip
 
-RUN pip2 install -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.py2.txt
+RUN pip install -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.py2.txt
 
 COPY ./ /code
 
