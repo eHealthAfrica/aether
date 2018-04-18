@@ -52,14 +52,14 @@ case "$1" in
     pip_freeze )
 
         rm -rf /tmp/env
-        pip3 install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.py2.txt --upgrade
+        pip install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.py2.txt --upgrade
 
         cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.py2.txt
         pip3 freeze --local | grep -v appdir | tee -a conf/pip/requirements.py2.txt
     ;;
 
     test)
-        test_flake8
+        # test_flake8
         test_coverage "${@:2}"
     ;;
 

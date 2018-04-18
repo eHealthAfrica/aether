@@ -23,6 +23,9 @@ $DC_TEST up -d zookeeper-test kafka-test
 
 # test a clean INGEGRATION TEST container
 echo "_____________________________________________ Starting Tests"
+
+build_container consumer-sdk-py2
+$DC_TEST run consumer-sdk-py2-test test
 build_container consumer-sdk
 $DC_TEST run consumer-sdk-test test
 

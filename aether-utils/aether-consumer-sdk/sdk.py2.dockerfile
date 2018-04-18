@@ -25,4 +25,4 @@ COPY ./ /code
 RUN useradd -ms /bin/false aether
 RUN chown -R aether: /code
 
-ENTRYPOINT ["/code/entrypoint.sh"]
+ENTRYPOINT ["/code/entrypoint_py2.sh"]
