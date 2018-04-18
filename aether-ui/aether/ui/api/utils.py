@@ -36,13 +36,13 @@ def validate_pipeline(pipeline):
 
     '''
 
-    if not pipeline.input or not pipeline.mapping or pipeline.entity_types.count() == 0:
+    if not pipeline.input or not pipeline.mapping or not pipeline.entity_types:
         return [], []
 
     # check kernel connection
     if not utils.test_connection():
         return (
-            [['*', 'It was not possible to connect to Aether Kernel Server.']],
+            [{'error_message': 'It was not possible to connect to Aether Kernel Server.'}],
             [],
         )
 
@@ -76,9 +76,11 @@ def validate_pipeline(pipeline):
 
     entities = {}
     schemas = {}
-    for entity in pipeline.entity_types.all():
-        entities[entity.name] = None
-        schemas[entity.name] = entity.payload
+    for entity_type in pipeline.entity_types:
+        name = entity_type['name']
+        entities[name] = None
+        schemas[name] = entity_type
+
     payload = {
         'submission_payload': pipeline.input,
         'mapping_definition': {
@@ -104,6 +106,6 @@ def validate_pipeline(pipeline):
 
     except Exception as e:
         return (
-            [['*', f'It was not possible to validate the pipeline: {str(e)}']],
+            [{'error_message': f'It was not possible to validate the pipeline: {str(e)}'}],
             []
         )

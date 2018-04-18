@@ -1,8 +1,12 @@
 import mock
 
+from django.conf import settings
 from django.test import TestCase
 
-from ..models import Pipeline, EntityType
+from ..models import Pipeline
+
+KERNEL_URL = settings.AETHER_APPS['kernel']['url'] + '/validate-mappings/'
+KERNEL_HEADER = {'Authorization': 'Token ' + settings.AETHER_APPS['kernel']['token']}
 
 INPUT_SAMPLE = {
     'name': 'John',
@@ -55,30 +59,35 @@ class ModelsPipelineTests(TestCase):
         )
         self.assertEqual(str(pipeline), 'Pipeline test')
 
-        entity_type = EntityType.objects.create(
-            pipeline=pipeline,
-            name='Person',
-            payload=ENTITY_SAMPLE,
-        )
-        self.assertEqual(str(entity_type), 'Person')
-
     def test__pipeline__save__missing_requirements(self):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
         )
 
+        # default
+        self.assertEqual(pipeline.mapping_errors, [])
+        self.assertEqual(pipeline.output, [])
+
         # no input
+        pipeline.input = {}
+        pipeline.mapping = [['#!uuid', 'Person.id']]
+        pipeline.entity_types = [ENTITY_SAMPLE]
+        pipeline.save()
         self.assertEqual(pipeline.mapping_errors, [])
         self.assertEqual(pipeline.output, [])
 
         # no mapping rules
         pipeline.input = INPUT_SAMPLE
+        pipeline.mapping = []
+        pipeline.entity_types = [ENTITY_SAMPLE]
         pipeline.save()
         self.assertEqual(pipeline.mapping_errors, [])
         self.assertEqual(pipeline.output, [])
 
         # no entity types
+        pipeline.input = INPUT_SAMPLE
         pipeline.mapping = [['#!uuid', 'Person.id']]
+        pipeline.entity_types = []
         pipeline.save()
         self.assertEqual(pipeline.mapping_errors, [])
         self.assertEqual(pipeline.output, [])
@@ -88,140 +97,131 @@ class ModelsPipelineTests(TestCase):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
             input=INPUT_SAMPLE,
-        )
-        EntityType.objects.create(
-            pipeline=pipeline,
-            name='Person',
-            payload=ENTITY_SAMPLE,
+            entity_types=[ENTITY_SAMPLE],
+            mapping=[['#!uuid', 'Person.id']],
         )
 
-        # no mapping rules
-        self.assertEqual(pipeline.mapping_errors, [])
-        self.assertEqual(pipeline.output, [])
-
-        # first mapping rule
-        pipeline.mapping = [
-            ['#!uuid', 'Person.id']
-        ]
-        pipeline.save()
         self.assertEqual(
             pipeline.mapping_errors,
-            [['*', 'It was not possible to connect to Aether Kernel Server.']]
+            [{'error_message': 'It was not possible to connect to Aether Kernel Server.'}]
         )
         self.assertEqual(pipeline.output, [])
 
     @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
-    def test__pipeline__save__with_errors(self):
+    @mock.patch('requests.post', return_value=MockResponse({}, 500))
+    def test__pipeline__save__with_server_error(self, mock_post):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
             input=INPUT_SAMPLE,
+            entity_types=[ENTITY_SAMPLE],
+            mapping=[['#!uuid', 'Person.id']],
         )
-        EntityType.objects.create(
-            pipeline=pipeline,
-            name='Person',
-            payload=ENTITY_SAMPLE,
+        self.assertEqual(
+            pipeline.mapping_errors,
+            [{'error_message': f'It was not possible to validate the pipeline: 500'}]
         )
-
-        pipeline.mapping = [
-            ['#!uuid', 'Person.id'],
-            ['$.firstName', 'Person.firstName'],
-        ]
-
-        # with error
-        response = MockResponse({}, 500)
-        with mock.patch('requests.post', return_value=response):
-            pipeline.save()
-            self.assertEqual(
-                pipeline.mapping_errors,
-                [['*', f'It was not possible to validate the pipeline: 500']]
-            )
-            self.assertEqual(pipeline.output, [])
-
-        # with another response without the expected keys
-        response = MockResponse({
-            'entities_2': 'something',
-            'mapping_errors_2': 'something else',
-        }, 200)
-        with mock.patch('requests.post', return_value=response):
-            pipeline.save()
-            self.assertEqual(pipeline.mapping_errors, [])
-            self.assertEqual(pipeline.output, [])
+        self.assertEqual(pipeline.output, [])
+        mock_post.assert_called_once()
+        mock_post.assert_called_once_with(
+            url=KERNEL_URL,
+            headers=KERNEL_HEADER,
+            json={
+                'submission_payload': INPUT_SAMPLE,
+                'mapping_definition': {
+                    'entities': {
+                        'Person': None,
+                    },
+                    'mapping': [
+                        ['#!uuid', 'Person.id'],
+                    ],
+                },
+                'schemas': {
+                    'Person': ENTITY_SAMPLE,
+                },
+            },
+        )
 
     @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
-    def test__pipeline__save__validated(self):
+    @mock.patch('requests.post',
+                return_value=MockResponse({
+                    'entities_2': 'something',
+                    'mapping_errors_2': 'something else',
+                }, 200))
+    def test__pipeline__save__with_wrong_response(self, mock_post):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
             input=INPUT_SAMPLE,
+            entity_types=[ENTITY_SAMPLE],
+            mapping=[['#!uuid', 'Person.id']],
+        )
+        self.assertEqual(pipeline.mapping_errors, [])
+        self.assertEqual(pipeline.output, [])
+        mock_post.assert_called_once()
+        mock_post.assert_called_once_with(
+            url=KERNEL_URL,
+            headers=KERNEL_HEADER,
+            json={
+                'submission_payload': INPUT_SAMPLE,
+                'mapping_definition': {
+                    'entities': {
+                        'Person': None,
+                    },
+                    'mapping': [
+                        ['#!uuid', 'Person.id'],
+                    ],
+                },
+                'schemas': {
+                    'Person': ENTITY_SAMPLE,
+                },
+            },
+        )
+
+    @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
+    @mock.patch('requests.post',
+                return_value=MockResponse({
+                    'entities': 'something',
+                    'mapping_errors': 'something else',
+                }, 200))
+    def test__pipeline__save__validated(self, mock_post):
+        pipeline = Pipeline.objects.create(
+            name='Pipeline test',
+            input=INPUT_SAMPLE,
+            entity_types=[ENTITY_SAMPLE],
             mapping=[
                 ['#!uuid', 'Person.id'],
                 ['$.firstName', 'Person.firstName'],
             ],
         )
 
-        # creating an entity type triggers the validation
-        response = MockResponse({
-            'entities': 'something',
-            'mapping_errors': 'something else',
-        }, 200)
-        with mock.patch('requests.post', return_value=response):
-            entity_type = EntityType.objects.create(
-                pipeline=pipeline,
-                name='Person',
-                payload=ENTITY_SAMPLE,
-            )
-            self.assertEqual(pipeline.mapping_errors, 'something else')
-            self.assertEqual(pipeline.output, 'something')
-
-        # saving entity triggers validation
-        response = MockResponse({
-            'entities': 'nothing',
-            'mapping_errors': 'nothing else',
-        }, 200)
-        with mock.patch('requests.post', return_value=response):
-            entity_type.save()
-            self.assertEqual(pipeline.mapping_errors, 'nothing else')
-            self.assertEqual(pipeline.output, 'nothing')
-
-        # delete the entity type also triggers the validation
-        entity_type.delete()
-        self.assertEqual(pipeline.mapping_errors, [])
-        self.assertEqual(pipeline.output, [])
-
-    def test__pipeline_workflow__with_kernel__missing_id(self):
-        pipeline = Pipeline.objects.create(
-            name='Pipeline test',
-            input=INPUT_SAMPLE,
-            mapping=[],
+        self.assertEqual(pipeline.mapping_errors, 'something else')
+        self.assertEqual(pipeline.output, 'something')
+        mock_post.assert_called_once()
+        mock_post.assert_called_once_with(
+            url=KERNEL_URL,
+            headers=KERNEL_HEADER,
+            json={
+                'submission_payload': INPUT_SAMPLE,
+                'mapping_definition': {
+                    'entities': {
+                        'Person': None,
+                    },
+                    'mapping': [
+                        ['#!uuid', 'Person.id'],
+                        ['$.firstName', 'Person.firstName'],
+                    ],
+                },
+                'schemas': {
+                    'Person': ENTITY_SAMPLE,
+                },
+            },
         )
-        EntityType.objects.create(
-            pipeline=pipeline,
-            name='Person',
-            payload=ENTITY_SAMPLE,
-        )
-
-        pipeline.mapping = [['$.surname', 'Person.firstName']]
-        pipeline.save()
-        # weird error when there is no id rule for the entity
-        self.assertEqual(pipeline.mapping_errors, [
-            [
-                '*',
-                'It was not possible to validate the pipeline: '
-                '400 Client Error: Bad Request '
-                'for url: http://kernel-test:9000/validate-mappings/'
-            ]
-        ])
-        self.assertEqual(pipeline.output, [])
 
     def test__pipeline_workflow__with_kernel(self):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
             input=INPUT_SAMPLE,
+            entity_types=[ENTITY_SAMPLE],
             mapping=[],
-        )
-        EntityType.objects.create(
-            pipeline=pipeline,
-            name='Person',
-            payload=ENTITY_SAMPLE,
         )
 
         pipeline.mapping = [
@@ -245,3 +245,20 @@ class ModelsPipelineTests(TestCase):
         self.assertNotEqual(pipeline.output, [])
         self.assertIsNotNone(pipeline.output[0]['id'], 'Generated id!')
         self.assertEqual(pipeline.output[0]['firstName'], 'Smith')
+
+    def test__pipeline_workflow__with_kernel__missing_id(self):
+        pipeline = Pipeline.objects.create(
+            name='Pipeline test',
+            input=INPUT_SAMPLE,
+            entity_types=[ENTITY_SAMPLE],
+            mapping=[['$.surname', 'Person.firstName']],
+        )
+
+        # weird error when there is no id rule for the entity
+        self.assertEqual(
+            pipeline.mapping_errors[0]['error_message'],
+            'It was not possible to validate the pipeline: '
+            '400 Client Error: Bad Request '
+            f'for url: {KERNEL_URL}'
+        )
+        self.assertEqual(pipeline.output, [])

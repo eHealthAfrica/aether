@@ -1,6 +1,6 @@
 import requests
 
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.views import View
 from rest_framework import viewsets
 
@@ -12,12 +12,6 @@ class PipelineViewSet(viewsets.ModelViewSet):
     queryset = models.Pipeline.objects.all()
     serializer_class = serializers.PipelineSerializer
     ordering = ('name',)
-
-
-class EntityTypeViewSet(viewsets.ModelViewSet):
-    queryset = models.EntityType.objects.all()
-    serializer_class = serializers.EntityTypeSerializer
-    ordering = ('pipeline', 'name',)
 
 
 class TokenProxyView(View):
@@ -150,11 +144,3 @@ class TokenProxyView(View):
                                     *args,
                                     **kwargs)
         return HttpResponse(response, status=response.status_code)
-
-
-def empty(*args, **kwargs):
-    '''
-    Return empty JSON
-    '''
-
-    return JsonResponse({})

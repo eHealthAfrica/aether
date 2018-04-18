@@ -155,34 +155,18 @@ class UserTokens(models.Model):
         default_related_name = 'app_tokens'
 
 
-'''
-
-Data model schema:
-
-
-    +------------------+             +------------------+
-    | Pipeline         |             | Entity Type      |
-    +==================+             +==================+
-    | id               |<-----+      | id               |
-    | name             |      |      | name             |
-    | input            |      |      | payload          |
-    | schema           |      |      +::::::::::::::::::+
-    | mapping          |      +-----<| pipeline         |
-    | mapping_errors   |             +------------------+
-    | output           |
-    +------------------+
-
-'''
-
-
 class Pipeline(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, null=False, blank=False, unique=True)
 
-    # this is an example of the submission payload
-    input = JSONField(blank=True, null=True)
     # this is the avro schema
-    schema = JSONField(blank=True, null=True)
+    schema = JSONField(blank=True, null=True, default={})
+
+    # this is an example of the data using the avro schema
+    input = JSONField(blank=True, null=True, default={})
+
+    # the list of available entity types (avro schemas)
+    entity_types = JSONField(blank=True, null=True, default=[])
 
     # this represents the list of mapping rules
     # {
@@ -193,10 +177,10 @@ class Pipeline(TimeStampedModel):
     #      ['jsonpath-input-n', 'jsonpath-entity-type-n'],
     #    ]
     # }
-    mapping = JSONField(blank=True, null=True)
+    mapping = JSONField(blank=True, null=True, default=[])
 
     # these represent the list of entities and errors returned by the
-    # `validate_mapping` method in kernel.
+    # `validate-mapping` endpoint in kernel.
     # {
     #    "entities": [
     #      {...},
@@ -225,29 +209,3 @@ class Pipeline(TimeStampedModel):
         app_label = 'ui'
         default_related_name = 'pipelines'
         ordering = ('name',)
-
-
-class EntityType(TimeStampedModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=50, null=False)
-    payload = JSONField(blank=False, null=False)
-    pipeline = models.ForeignKey(to=Pipeline, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.name
-
-    def save(self, *args, **kwargs):
-        super(EntityType, self).save(*args, **kwargs)
-        # recheck pipeline
-        self.pipeline.save()
-
-    def delete(self, *args, **kwargs):
-        super(EntityType, self).delete(*args, **kwargs)
-        # recheck pipeline
-        self.pipeline.save()
-
-    class Meta:
-        app_label = 'ui'
-        default_related_name = 'entity_types'
-        ordering = ('pipeline', 'name',)
-        unique_together = ('pipeline', 'name',)
