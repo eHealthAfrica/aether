@@ -46,7 +46,7 @@ export default class ApiClient {
               return { error: res.statusText, status: res.status }
             }
           })
-          .catch(err => (err))
+          .catch(err => ({ error: err.message, status: err.errno }))
       }
     })
   }
