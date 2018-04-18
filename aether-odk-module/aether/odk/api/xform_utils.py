@@ -228,3 +228,10 @@ def parse_submission(data, xml_definition):
         data = data[list(data.keys())[0]]
 
     return data
+
+
+def get_instance_id(data):
+    try:
+        return data['meta']['instanceID']
+    except Exception:
+        return None
