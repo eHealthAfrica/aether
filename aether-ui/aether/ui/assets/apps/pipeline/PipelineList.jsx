@@ -6,13 +6,25 @@ import { PROJECT_NAME } from '../utils/constants'
 import { NavBar } from '../components'
 
 import NewPipeline from './NewPipeline'
-import { addPipeline, selectedPipelineChanged } from './redux'
+import { addPipeline, selectedPipelineChanged, getPipelines } from './redux'
+import client from '../redux/middleware/client'
 
 class PipelineList extends Component {
   constructor (props) {
     super(props)
     this.state = {
       view: 'show-index'
+    }
+  }
+
+  componentWillMount () {
+    this.props.getPipelines()
+    console.log(client)
+  }
+
+  componentWillReceiveProps (nextProps) {
+    if (nextProps.error !== this.props.error) {
+      // TODO: handle errors
     }
   }
 
@@ -71,18 +83,19 @@ class PipelineList extends Component {
   }
 
   onStartPipeline (newPipeline) {
-    this.props.dispatch(addPipeline(newPipeline))
+    this.props.addPipeline(newPipeline)
     this.onSelectPipeline(newPipeline)
   }
 
   onSelectPipeline (pipeline) {
-    this.props.dispatch(selectedPipelineChanged(pipeline))
+    this.props.selectedPipelineChanged(pipeline)
     this.props.history.push('/pipeline')
   }
 }
 
 const mapStateToProps = ({ pipelines }) => ({
-  pipelineList: pipelines.pipelineList
+  pipelineList: pipelines.pipelineList,
+  error: pipelines.error
 })
 
-export default connect(mapStateToProps)(PipelineList)
+export default connect(mapStateToProps, { getPipelines, selectedPipelineChanged, addPipeline })(PipelineList)

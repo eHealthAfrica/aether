@@ -1,43 +1,50 @@
-import superagent from 'superagent'
-
+/* global fetch, jQuery */
 const methods = ['get', 'post', 'put', 'patch', 'del']
 
 export default class ApiClient {
   constructor (req) {
     methods.forEach(method => {
-      this[method] = (path, header, { params, data } = {}) =>
+      this[method] = (path, headers, { params, data } = {}) =>
         new Promise((resolve, reject) => {
-          fetch(path, {
-            body: JSON.stringify(data),
-            method: method,
-            headers: header
-          })
-          .then(res => {
-            console.log(res)
-            resolve(res)
-          })
-          .catch(err => reject(err))
-          // const request = superagent[method](path)
+          const csrfToken = jQuery('[name=csrfmiddlewaretoken]').val()
+          const appendParams = (path, params) => {
+            if (!params || Object.keys(params).length === 0) {
+              return path
+            }
 
-          // if (header) {
-          //   request.set('Accept', header)
-          // }
+            const queryString = Object.keys(params)
+              .filter(key => (
+                params[key] !== undefined &&
+                params[key] !== null &&
+                params[key].toString().trim() !== ''
+              ))
+              .map(key => [encodeURIComponent(key), encodeURIComponent(params[key])])
+              .map(([name, value]) => `${name}=${value}`)
+              .join('&')
 
-          // if (params) {
-          //   request.query(params)
-          // }
+            if (queryString === '') {
+              return path
+            }
 
-          // if (data) {
-          //   request.send(data)
-          // }
-          // request.end((err, res) => {
-          //   console.log('REQ2', res)
-          //   const accept = res.req.header['Accept']
-          //   if (accept === 'application/json') {
-          //     return res.json()
-          //   }
-          //   return err ? reject(res.body || err) : resolve(res.text())
-          // })
+            return path + (path.includes('?') ? '&' : '?') + queryString
+          }
+
+          const options = {
+            method,
+            credentials: 'same-origin',
+            headers: Object.assign({
+              'X-CSRFToken': csrfToken,
+              'X-METHOD': method
+            }, headers),
+            body: JSON.stringify(data)
+          }
+          path = appendParams(path, params)
+          fetch(path, options)
+            .then(res => res.json()) // Should be extended to cater for other content-types or than json
+            .then(res => {
+              resolve(res)
+            })
+            .catch(err => reject(err))
         })
     })
   }
