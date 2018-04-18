@@ -186,3 +186,62 @@ class ModelsPipelineTests(TestCase):
         entity_type.delete()
         self.assertEqual(pipeline.mapping_errors, [])
         self.assertEqual(pipeline.output, [])
+
+    def test__pipeline_workflow__with_kernel__missing_id(self):
+        pipeline = Pipeline.objects.create(
+            name='Pipeline test',
+            input=INPUT_SAMPLE,
+            mapping=[],
+        )
+        EntityType.objects.create(
+            pipeline=pipeline,
+            name='Person',
+            payload=ENTITY_SAMPLE,
+        )
+
+        pipeline.mapping = [['$.surname', 'Person.firstName']]
+        pipeline.save()
+        # weird error when there is no id rule for the entity
+        self.assertEqual(pipeline.mapping_errors, [
+            [
+                '*',
+                'It was not possible to validate the pipeline: '
+                '400 Client Error: Bad Request '
+                'for url: http://kernel-test:9000/validate-mappings/'
+            ]
+        ])
+        self.assertEqual(pipeline.output, [])
+
+    def test__pipeline_workflow__with_kernel(self):
+        pipeline = Pipeline.objects.create(
+            name='Pipeline test',
+            input=INPUT_SAMPLE,
+            mapping=[],
+        )
+        EntityType.objects.create(
+            pipeline=pipeline,
+            name='Person',
+            payload=ENTITY_SAMPLE,
+        )
+
+        pipeline.mapping = [
+            ['#!uuid', 'Person.id'],
+            ['$.not_a_real_key', 'Person.firstName'],
+        ]
+        pipeline.save()
+        self.assertEqual(pipeline.mapping_errors, [
+            {'path': '$.not_a_real_key', 'error_message': 'No match for path'}
+        ])
+        self.assertIsNotNone(pipeline.output[0]['id'], 'Generated id!')
+        self.assertIsNone(pipeline.output[0]['firstName'],
+                          'Wrong jsonpaths return None values')
+
+        pipeline.mapping = [
+            ['#!uuid', 'Person.id'],
+            ['$.surname', 'Person.firstName'],
+        ]
+        pipeline.save()
+        self.assertEqual(pipeline.mapping_errors, [])
+        self.assertNotEqual(pipeline.output, [])
+        self.assertIsNotNone(pipeline.output[0]['id'], 'Generated id!')
+        self.assertEqual(pipeline.output[0]['firstName'], 'Smith')
