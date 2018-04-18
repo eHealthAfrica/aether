@@ -36,7 +36,7 @@ def validate_pipeline(pipeline):
 
     '''
 
-    if not pipeline.mapping or not pipeline.input:
+    if not pipeline.input or not pipeline.mapping or pipeline.entity_types.count() == 0:
         return [], []
 
     # check kernel connection
