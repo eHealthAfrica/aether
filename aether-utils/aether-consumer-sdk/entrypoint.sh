@@ -27,7 +27,7 @@ test_flake8() {
 
 test_coverage() {
     # Python3 Tests
-    python3 setup.py -q test "${@:1}"
+    python3 setup.py test
 
     cat /code/conf/extras/good_job.txt
     rm -R ./*.egg*

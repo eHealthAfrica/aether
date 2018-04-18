@@ -27,7 +27,7 @@ test_flake8() {
 
 test_coverage() {
     # Python2 Tests
-    python setup.py -q test
+    python setup.py test
 
     cat /code/conf/extras/good_job.txt
 

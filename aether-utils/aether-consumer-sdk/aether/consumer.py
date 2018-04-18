@@ -1,4 +1,6 @@
 import ast
+import io
+
 import spavro.schema
 import spavro.io
 
@@ -26,10 +28,12 @@ class KafkaConsumer(kafka.KafkaConsumer):
     def __init__(self, *topics, **configs):
 
         # Add to DEFAULT_CONFIG
-        for k, v in ADDITIONAL_CONFIG.items():
-            DEFAULT_CONFIG[k] = v
+        print (KafkaConsumer.DEFAULT_CONFIG)
+        for k, v in KafkaConsumer.ADDITIONAL_CONFIG.items():
+            KafkaConsumer.DEFAULT_CONFIG[k] = v
         # Items not in either default or additional config raise KafkaConfigurationError on super
-        super(KPYConsumer, self).__init__(topics, configs)
+        print (KafkaConsumer.DEFAULT_CONFIG)
+        super(KafkaConsumer, self).__init__(*topics, **configs)
 
     def get_approval_filter(self, schema):
         return lambda x: True
@@ -75,7 +79,8 @@ class KafkaConsumer(kafka.KafkaConsumer):
                         # prepare mask and filter
                         approval_filter = self.get_approval_filter(schema)
                         mask = self.get_mask_from_schema(schema)
-
+                    else:
+                        package_result["schema"] = last_schema
                     for x, msg in enumerate(reader):
                         # do something with the individual messages
                         processed_message = self.mask_message(msg, mask)
@@ -85,7 +90,10 @@ class KafkaConsumer(kafka.KafkaConsumer):
                     obj.close()  # don't forget to close your open IO object.
                     if package_result.get("schema") or len(package_result["messages"]) > 0:
                         partition_result.append(package_result)
-                if len(parition_result) > 0:
+                if len(partition_result) > 0:
                     result[part] = partition_result
-        else:
-            return result
+        return result
+
+    def seek_to_beginning(self):
+        self.poll(timeout_ms=100, max_records=1)
+        super(KafkaConsumer, self).seek_to_beginning()
