@@ -25,7 +25,7 @@ class Pipeline extends Component {
     // Uncomment this to check for selected pipelines to configure
     // if (!this.props.selectedPipeline) {
     //   this.props.history.replace('/')
-    // }
+    //  }
   }
 
   render () {
