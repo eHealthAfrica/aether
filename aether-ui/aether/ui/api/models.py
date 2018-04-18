@@ -187,10 +187,10 @@ class Pipeline(TimeStampedModel):
     # this represents the list of mapping rules
     # {
     #    "mapping": [
-    #      ['xpath-input-1', 'xpath-entity-type-1'],
-    #      ['xpath-input-2', 'xpath-entity-type-2'],
+    #      ['jsonpath-input-1', 'jsonpath-entity-type-1'],
+    #      ['jsonpath-input-2', 'jsonpath-entity-type-2'],
     #      ...
-    #      ['xpath-input-n', 'xpath-entity-type-n'],
+    #      ['jsonpath-input-n', 'jsonpath-entity-type-n'],
     #    ]
     # }
     mapping = JSONField(blank=True, null=True)
@@ -203,8 +203,8 @@ class Pipeline(TimeStampedModel):
     #      {...},
     #    ],
     #    "mapping_errors": [
-    #      {"path": 'xpath-input-a', "error_message": 'No match for path'},
-    #      {"path": 'xpath-entity-type-b', "error_message": 'No match for path'},
+    #      {"path": 'jsonpath-input-a', "error_message": 'No match for path'},
+    #      {"path": 'jsonpath-entity-type-b', "error_message": 'No match for path'},
     #      ...
     #    ]
     # }

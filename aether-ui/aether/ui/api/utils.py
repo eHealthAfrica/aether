@@ -12,17 +12,17 @@ def validate_pipeline(pipeline):
     The expected return format is a list with two values, the first one is
     the list of errors and the second one the list of generated entities.
 
-    The list of errors is also compounded as another list of two values, the
-    first one is the wrong xpath included in any of the mapping rules, and the
-    second one is the error message.
+    The list of errors is a list of objects with two keys:
+    - `path`, the wrong jsonpath included in any of the mapping rules,
+    - `error_message` is the explanation.
 
     ::
 
         (
             [
-                ['xpath.wrong.1', 'reason 1'],
-                ['xpath.wrong.2', 'reason 2'],
-                ['xpath.wrong.3', 'reason 3'],
+                {'path': 'jsonpath.wrong.1', 'error_message': 'Reason 1'},
+                {'path': 'jsonpath.wrong.2', 'error_message': 'Reason 2'},
+                {'path': 'jsonpath.wrong.3', 'error_message': 'Reason 3'},
                 # ...
             ],
 
@@ -59,10 +59,10 @@ def validate_pipeline(pipeline):
     #        ...
     #      },
     #      "mapping": [
-    #        ["#!uuid", "xpath-entity-type-1-id"],
-    #        ["xpath-input-1", "xpath-entity-type-1"],
-    #        ["#!uuid", "xpath-entity-type-2-id"],
-    #        ["xpath-input-2", "xpath-entity-type-2"],
+    #        ["#!uuid", "jsonpath-entity-type-1-id"],
+    #        ["jsonpath-input-1", "jsonpath-entity-type-1"],
+    #        ["#!uuid", "jsonpath-entity-type-2-id"],
+    #        ["jsonpath-input-2", "jsonpath-entity-type-2"],
     #        ...
     #      ],
     #    },
