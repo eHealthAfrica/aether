@@ -10,16 +10,24 @@
 
 
 # Main libraries
-aether.common   # Aether common module
-django==1.11
-django-cas-ng
-django-cors-headers
+# Aether common module, will also install:
+#   django                   < 2
+#   djangorestframework     >= 3.8   < 4
+#   djangorestframework-csv >= 2.0.0 < 3
+#   django-cors-headers     >= 2.0.0 < 3
+aether.common
+
+
 django-model-utils
-django-ums-client
-djangorestframework
+drf-dynamic-fields
 psycopg2-binary
 requests
 uwsgi
+
+
+# UMS libraries
+django-cas-ng
+django-ums-client
 
 
 # Development

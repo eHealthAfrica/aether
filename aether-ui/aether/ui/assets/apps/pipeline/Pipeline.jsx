@@ -5,10 +5,10 @@ import { Link } from 'react-router-dom'
 
 import { NavBar } from '../components'
 
-import Input from './sections/input'
-import EntityTypes from './sections/entityTypes'
-import Mapping from './sections/mapping'
-import Output from './sections/output'
+import Input from './sections/Input'
+import EntityTypes from './sections/EntityTypes'
+import Mapping from './sections/Mapping'
+import Output from './sections/Output'
 
 class Pipeline extends Component {
   constructor (props) {
@@ -25,7 +25,7 @@ class Pipeline extends Component {
     // Uncomment this to check for selected pipelines to configure
     // if (!this.props.selectedPipeline) {
     //   this.props.history.replace('/')
-    // }
+    //  }
   }
 
   render () {

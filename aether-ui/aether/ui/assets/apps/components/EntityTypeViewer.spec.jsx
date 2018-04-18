@@ -54,8 +54,8 @@ describe('EntityTypeViewer', () => {
     })
     const component = mountWithIntl(<EntityTypeViewer schema={JSON.stringify(entityTypeWithoutSymbols)} />)
     // TODO: Updates when styles are added to rendered components
-    expect(component.html()).toContain('<span>enum</span>')
-    expect(component.html()).toContain('<span>building</span>')
+    expect(component.html()).toContain('<span class="type"> enum</span>')
+    expect(component.html()).toContain('<span class="name">building</span>')
   })
 
   it('should take schema JSON with a min depth of 3', () => {

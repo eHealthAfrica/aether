@@ -9,12 +9,13 @@
   .section-left {
     width: $column-width;
     min-width: $column-width;
-    padding: 1.2rem;
+    padding: $unit;
   }
 
   .section-right {
+    flex: 1;
     display: none;
-    padding: 1.2rem;
+    padding: $unit $unit-xl;
     border-left: 1px dashed $light-grey;
   }
 
@@ -29,9 +30,15 @@
     pointer-events: none;
     background-image: linear-gradient($white, transparent);
   }
-}
 
-$indent: 1rem;
+  textarea {
+    background: $background-color;
+    color: $dark-blue;
+    box-shadow: 1px 1px 1px rgba($text-color, .1) inset, 1px 1px 0 rgba($white, .1);
+    width: 100%;
+    height: 90%;
+  }
+}
 
 .input-schema {
 
@@ -120,4 +127,11 @@ $indent: 1rem;
 .pipeline--input .pipeline-section__input .section-right {
   display: block;
   animation: show 1s;
+}
+
+@media screen and (min-width: 1200px) {
+
+  .pipeline-section__input .section-left {
+    padding: $unit $unit-xl;
+  }
 }

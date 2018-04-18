@@ -18,7 +18,7 @@ $purple:             #7175dd;
 $grey:               #aea8b4;
 $light-grey:         #ede9f2;
 
-$shadow-color:       rgba($text-color, .2);
+$shadow-color:       rgba($text-color, .3);
 
 $action-color:       #0093ff;
 $action-color-b:     #50aef3;
@@ -44,8 +44,11 @@ $font-size-xxl:      3.2rem;
 // Sizes
 // ************************************
 
-$padding-unit: 4rem;
+$unit: 1.2rem;
+$unit-xl: 2rem;
 $border-radius: 4px;
 
 $column-width: 20vw;
 $output-width: 25vw;
+
+$indent: 1rem;

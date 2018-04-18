@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { EntityTypeViewer } from '../../components'
+import { FormattedMessage } from 'react-intl'
 import MockEntitytypesSchema from '../../mock/schema_entityTypes.mock'
 
 class EntityTypes extends Component {
@@ -25,8 +26,16 @@ class EntityTypes extends Component {
           <EntityTypeViewer schema={this.state.entityTypesSchema} />
         </div>
         <div className='section-right'>
-          <textarea type='text' value={this.state.entityTypesSchema} onChange={this.onSchemaTextChanged.bind(this)} placeholder='Enter your schema'
-            rows='10' />
+          <label className='form-label'>
+            <FormattedMessage
+              id='entitytype.empty.message'
+              defaultMessage='Paste Entity Type definitions'
+            />
+          </label>
+          <FormattedMessage id='entityTypeSchema.placeholder' defaultMessage='Enter your schema'>
+            {message => (<textarea type='text' className='monospace' value={this.state.entityTypesSchema}
+              onChange={this.onSchemaTextChanged.bind(this)} placeholder={message} rows='10' />)}
+          </FormattedMessage>
         </div>
       </div>
     )
