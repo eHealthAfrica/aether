@@ -26,14 +26,13 @@ test_flake8() {
 }
 
 test_coverage() {
-    # Python3 Tests
-    python3 setup.py -q test "${@:1}"
+    # Python2 Tests !!Must run first as we rely on the schema generation
+    python2 setup.py -q test "${@:1}"
 
     cat /code/conf/extras/good_job.txt
+
     rm -R ./*.egg*
     rm -R .pytest_cache
-    rm -rf .eggs
-    rm -rf tests/__pycache__
 }
 
 
@@ -53,14 +52,14 @@ case "$1" in
     pip_freeze )
 
         rm -rf /tmp/env
-        pip3 install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.py3.txt --upgrade
+        pip3 install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.py2.txt --upgrade
 
-        cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.py3.txt
-        pip3 freeze --local | grep -v appdir | tee -a conf/pip/requirements.py3.txt
+        cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.py2.txt
+        pip3 freeze --local | grep -v appdir | tee -a conf/pip/requirements.py2.txt
     ;;
 
     test)
-        # test_flake8
+        test_flake8
         test_coverage "${@:2}"
     ;;
 
@@ -73,18 +72,7 @@ case "$1" in
     ;;
 
     build)
-        # remove previous build if needed
-        rm -rf dist
-        rm -rf build
-        rm -rf .eggs
-        rm -rf aether.kafka.egg-info
-
-        # create the distribution
-        python setup.py bdist_wheel --universal
-
-        # remove useless content
-        rm -rf build
-        rm -rf aether.kafka.egg-info
+        echo "Please Build from the Python3 Container."
     ;;
 
     help)
