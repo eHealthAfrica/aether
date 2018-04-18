@@ -14,12 +14,12 @@ export default () => next => action => {
   actionPromise
     .then(
       payload => {
-        next({ ...rest, payload, type: SUCCESS })
-      },
-      error => {
-        next({ ...rest, error, type: FAILURE })
-      }
-    )
+        if (payload.error) {
+          next({ ...rest, error: payload, type: FAILURE })
+        } else {
+          next({ ...rest, payload, type: SUCCESS })
+        }
+      })
     .catch(error => {
       next({ ...rest, error, type: FAILURE })
     })

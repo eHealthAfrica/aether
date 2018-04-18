@@ -10,25 +10,23 @@ export const types = {
   PIPELINE_LIST_CHANGED: 'pipeline_list_changed',
   SELECTED_PIPELINE_CHANGED: 'selected_pipeline_changed',
   GET_ALL: 'pipeline_get_all',
-  GET_ALL_FAILED: 'pipeline_get_all_failed',
-  TEST_API_CALL: 'test_api_call',
-  TEST_API_FAILED: 'test_api_failed'
+  GET_ALL_FAILED: 'pipeline_get_all_failed'
 }
 
-const INITIAL_PIPELINE = {
+export const INITIAL_PIPELINE = {
   pipelineList: [],
   selectedPipeline: null,
   error: null
 }
 
 export const addPipeline = newPipeline => ({
-  // TODO: Change 3rd param to action on request failure when ui endpoints are available
-  // types: ['', types.PIPELINE_ADD, types.PIPELINE_ADD],
-  // promise: client => client.post(urls.PIPELINE_URL, 'application/x-www-form-urlencoded', {
-  //   data: newPipeline
-  // })
   type: types.PIPELINE_ADD,
   payload: newPipeline
+})
+
+export const updatePipeline = pipeline => ({
+  type: types.PIPELINE_UPDATE,
+  payload: pipeline
 })
 
 export const selectedPipelineChanged = selectedPipeline => ({

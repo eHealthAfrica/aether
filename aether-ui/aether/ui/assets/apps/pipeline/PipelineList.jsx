@@ -7,7 +7,6 @@ import { NavBar } from '../components'
 
 import NewPipeline from './NewPipeline'
 import { addPipeline, selectedPipelineChanged, getPipelines } from './redux'
-import client from '../redux/middleware/client'
 
 class PipelineList extends Component {
   constructor (props) {
@@ -19,7 +18,6 @@ class PipelineList extends Component {
 
   componentWillMount () {
     this.props.getPipelines()
-    console.log(client)
   }
 
   componentWillReceiveProps (nextProps) {
