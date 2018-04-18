@@ -3,10 +3,12 @@ import uuid
 
 from collections import namedtuple
 from django.contrib.auth import get_user_model
+from django.contrib.postgres.fields import JSONField
 from django.db import models
 from model_utils.models import TimeStampedModel
 
 from ..settings import AETHER_APPS
+from .utils import validate_pipeline
 
 
 '''
@@ -155,4 +157,55 @@ class UserTokens(models.Model):
 
 class Pipeline(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100, null=False, blank=False)
+    name = models.CharField(max_length=100, null=False, blank=False, unique=True)
+
+    # this is the avro schema
+    schema = JSONField(blank=True, null=True, default={})
+
+    # this is an example of the data using the avro schema
+    input = JSONField(blank=True, null=True, default={})
+
+    # the list of available entity types (avro schemas)
+    entity_types = JSONField(blank=True, null=True, default=[])
+
+    # this represents the list of mapping rules
+    # {
+    #    "mapping": [
+    #      ['jsonpath-input-1', 'jsonpath-entity-type-1'],
+    #      ['jsonpath-input-2', 'jsonpath-entity-type-2'],
+    #      ...
+    #      ['jsonpath-input-n', 'jsonpath-entity-type-n'],
+    #    ]
+    # }
+    mapping = JSONField(blank=True, null=True, default=[])
+
+    # these represent the list of entities and errors returned by the
+    # `validate-mapping` endpoint in kernel.
+    # {
+    #    "entities": [
+    #      {...},
+    #      {...},
+    #    ],
+    #    "mapping_errors": [
+    #      {"path": 'jsonpath-input-a', "error_message": 'No match for path'},
+    #      {"path": 'jsonpath-entity-type-b', "error_message": 'No match for path'},
+    #      ...
+    #    ]
+    # }
+    mapping_errors = JSONField(blank=True, null=True, editable=False)
+    output = JSONField(blank=True, null=True, editable=False)
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        errors, output = validate_pipeline(self)
+        self.mapping_errors = errors
+        self.output = output
+
+        super(Pipeline, self).save(*args, **kwargs)
+
+    class Meta:
+        app_label = 'ui'
+        default_related_name = 'pipelines'
+        ordering = ('name',)

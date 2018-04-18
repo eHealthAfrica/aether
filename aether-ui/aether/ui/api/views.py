@@ -1,6 +1,6 @@
 import requests
 
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.views import View
 from rest_framework import viewsets
 
@@ -144,11 +144,3 @@ class TokenProxyView(View):
                                     *args,
                                     **kwargs)
         return HttpResponse(response, status=response.status_code)
-
-
-def empty(*args, **kwargs):
-    '''
-    Return empty JSON
-    '''
-
-    return JsonResponse({})

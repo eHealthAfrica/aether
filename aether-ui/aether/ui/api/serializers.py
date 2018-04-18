@@ -1,9 +1,10 @@
+from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
 from . import models
 
 
-class PipelineSerializer(serializers.ModelSerializer):
+class PipelineSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         read_only=True,
         view_name='ui:pipeline-detail',
