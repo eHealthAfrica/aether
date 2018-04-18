@@ -78,7 +78,7 @@ describe('Pipeline actions', () => {
   ))
 
   it('should fail on getting all pipelines and store error', () => {
-    const NotFoundUrl = 'http://localhost:8004/static/mock/nojson.json'
+    const NotFoundUrl = 'http://ui:8004/static/mock/nojson.json'
     const action = () => ({
       types: ['', types.GET_ALL, types.GET_ALL_FAILED],
       promise: client => client.get(NotFoundUrl)
