@@ -2,7 +2,7 @@
 # Purely for building Nginx images
 # -----------------------------------
 
-version: "2"
+version: "2.1"
 
 services:
 
@@ -29,4 +29,4 @@ services:
   couchdb-sync-nginx:
     image: aether-couchdb-sync-nginx
     build: ./aether-couchdb-sync-module/nginx
-  
+

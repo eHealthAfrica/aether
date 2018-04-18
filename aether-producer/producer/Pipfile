@@ -9,4 +9,4 @@ requests = "*"
 avro-python3 = "*"
 
 [dev-packages]
-"-e /aether-client" = "*"
+"-e /aether-utils/aether-client" = "*"

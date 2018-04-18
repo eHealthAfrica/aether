@@ -1,6 +1,5 @@
 #!/bin/bash
-set -e
-set -x
+set -Eeuox pipefail
 
 
 ################################################################################
@@ -21,6 +20,9 @@ wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key a
 
 apt-get update -qq
 cat /tmp/apt-packages.txt | xargs apt-get -qq --yes --force-yes install
+
+# upgrade pip
+pip install --upgrade pip
 
 
 ################################################################################

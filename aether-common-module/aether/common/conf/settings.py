@@ -17,7 +17,6 @@ if DEBUG:  # pragma: no cover
 if TESTING:  # pragma: no cover
     logger.setLevel(logging.CRITICAL)
 
-
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True

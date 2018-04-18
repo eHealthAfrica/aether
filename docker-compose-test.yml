@@ -6,7 +6,7 @@
 #  * CouchDB Sync Module
 # ------------------------------------------------------------------------------
 
-version: "2"
+version: "2.1"
 
 services:
 
@@ -39,10 +39,10 @@ services:
       file: docker-compose-base.yml
       service: kernel-base
     environment:
-      TESTING: "true"
       MEDIA_ROOT: /tmp/
       RDS_DB_NAME: kernel-test
       RDS_HOSTNAME: db-test
+      TESTING: "true"
       WEB_SERVER_PORT: 9000
     depends_on:
       - db-test
@@ -50,6 +50,9 @@ services:
       - "9000:9000"
     depends_on:
       - db-test
+
+    command: start_dev
+
 
 
   # ---------------------------------
@@ -61,11 +64,11 @@ services:
       file: docker-compose-base.yml
       service: odk-base
     environment:
-      TESTING: "true"
-      MEDIA_ROOT: /tmp/
       AETHER_KERNEL_URL: http://kernel-test:9000
+      MEDIA_ROOT: /tmp/
       RDS_DB_NAME: odk-test
       RDS_HOSTNAME: db-test
+      TESTING: "true"
       WEB_SERVER_PORT: 9443
     depends_on:
       - db-test
@@ -86,13 +89,13 @@ services:
       file: docker-compose-base.yml
       service: couchdb-sync-base
     environment:
-      TESTING: "true"
-      MEDIA_ROOT: /tmp/
       AETHER_KERNEL_URL: http://kernel-test:9000
       COUCHDB_URL: http://couchdb-test:5984
+      MEDIA_ROOT: /tmp/
       RDS_DB_NAME: couchdb-sync-test
       RDS_HOSTNAME: db-test
       REDIS_HOST: redis-test
+      TESTING: "true"
       WEB_SERVER_PORT: 9666
     depends_on:
       - couchdb-test
@@ -106,12 +109,64 @@ services:
   # Aether Client container
   # ---------------------------------
   client-test:
-    build: aether-client
+    build: aether-utils/aether-client
     image: aether/client
 
     volumes:
-      - ./aether-client:/code
+      - ./aether-utils/aether-client:/code
 
     depends_on:
       - db-test
       - kernel-test
+
+  # ---------------------------------
+  # Aether Integration Tests
+  # ---------------------------------
+  integration-test:
+    build: test-aether-integration-module
+    image: aether/integration
+
+    volumes:
+      - ./test-aether-integration-module:/code
+
+    depends_on:
+      - db-test
+      - kernel-test
+      - kafka-test
+      - producer-test
+
+  # ---------------------------------
+  # Aether Kafka Containers
+  # ---------------------------------
+
+  zookeeper-test:
+    extends:
+      file: docker-compose-base.yml
+      service: zookeeper-base
+
+  kafka-test:
+    extends:
+      file: docker-compose-base.yml
+      service: kafka-base
+    depends_on:
+      - zookeeper-test
+    links:
+      - zookeeper-test
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-test:32181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-test:29092
+      ADVERTISED_HOST_NAME: kafka-test
+
+  # ---------------------------------
+  # Aether Kafka Producer
+  # ---------------------------------
+
+  producer-test:
+    extends:
+      file: docker-compose-base.yml
+      service: aether-producer-base
+    links:
+      - kafka-test
+      - zookeeper-test
+    command: start_test
