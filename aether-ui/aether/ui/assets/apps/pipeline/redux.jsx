@@ -30,7 +30,24 @@ export const selectedPipelineChanged = selectedPipeline => ({
   payload: selectedPipeline
 })
 
-const reducer = (state = INITIAL_PIPELINE, action = {}) => {
+export const setPipelines = pipelines => ({
+  type: types.PIPELINE_LIST_CHANGED,
+  payload: pipelines
+})
+
+/**
+ * Actions
+ */
+export const pipelineActions = {
+  addPipeline,
+  setPipelines,
+  selectedPipelineChanged
+}
+
+/**
+ * Reducer
+ */
+export const pipelineReducer = (state = INITIAL_PIPELINE, action = {}) => {
   const newPipelineList = clone(state.pipelineList)
   const findIndex = arr => arr.findIndex(x => x.id === action.payload.id)
 
@@ -50,9 +67,11 @@ const reducer = (state = INITIAL_PIPELINE, action = {}) => {
       return { ...state, selectedPipeline: action.payload }
     }
 
+    case types.PIPELINE_LIST_CHANGED: {
+      return { ...state, pipelineList: action.payload }
+    }
+
     default:
       return state
   }
 }
-
-export default reducer

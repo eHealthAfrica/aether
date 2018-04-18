@@ -4,8 +4,11 @@
 #                                                                              #
 #                               DO NOT CHANGE !!!                              #
 #                                                                              #
-# To update this first update 'primary-requirements.txt'                       #
-# then run 'docker-compose run ui pip_freeze'                                  #
+# To check the outdated dependencies run                                       #
+#     'docker-compose run ui eval pip list --outdated'                         #
+#                                                                              #
+# To update this first update 'primary-requirements.txt' then run              #
+#     'docker-compose run ui pip_freeze'                                       #
 #                                                                              #
 ################################################################################
 
@@ -42,7 +45,7 @@ python-cas==1.2.0
 python-dateutil==2.6.1
 pytz==2018.4
 PyYAML==3.12
-raven==6.6.0
+raven==6.7.0
 requests==2.18.4
 rsa==3.4.2
 s3transfer==0.1.13
