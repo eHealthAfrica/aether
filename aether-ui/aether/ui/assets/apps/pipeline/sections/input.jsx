@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { AvroSchemaViewer } from '../../components'
+import { FormattedMessage } from 'react-intl'
 import MockInputSchema from '../../mock/schema_input.mock'
 
 class Input extends Component {
@@ -25,9 +26,18 @@ class Input extends Component {
           <AvroSchemaViewer schema={this.state.inputSchema} />
         </div>
         <div className='section-right'>
-          <label className='form-label'>Paste AVRO Schema</label>
-          <textarea type='text' className='monospace' value={this.state.inputSchema} onChange={this.onSchemaTextChanged.bind(this)} placeholder='Enter your schema'
-            rows='10' />
+          <label className='form-label'>
+            <FormattedMessage
+              id='input.empty.message'
+              defaultMessage='Paste AVRO Schema'
+            />
+          </label>
+          <FormattedMessage id='input.schema.placeholder' defaultMessage='Enter your schema'>
+            {msg => (
+              <textarea type='text' className='monospace' value={this.state.inputSchema}
+                onChange={this.onSchemaTextChanged.bind(this)} placeholder={msg} rows='10' />
+            )}
+          </FormattedMessage>
         </div>
       </div>
     )
