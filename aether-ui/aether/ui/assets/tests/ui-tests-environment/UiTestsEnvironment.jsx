@@ -6,6 +6,7 @@
 const JSDOMEnvironment = require('jest-environment-jsdom')
 const fetch = require('node-fetch')
 const testURL = 'http://localhost'
+const $ = require('jquery')
 
 class UiTestsEnvironment extends JSDOMEnvironment {
   async setup () {
@@ -26,6 +27,7 @@ class UiTestsEnvironment extends JSDOMEnvironment {
     this.global.window.fetch = (url, opts) => (
       fetch(url.indexOf('/') === 0 ? testURL + url : url, opts)
     )
+    this.global.window.$ = $(this.global.window)
   }
 
   async teardown () {
