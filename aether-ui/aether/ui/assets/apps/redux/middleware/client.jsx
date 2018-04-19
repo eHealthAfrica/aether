@@ -13,13 +13,13 @@ export default () => next => action => {
   const actionPromise = promise(apiClient)
   actionPromise
     .then(
-      result => {
-        next({ ...rest, result, type: SUCCESS })
-      },
-      error => {
-        next({ ...rest, error, type: FAILURE })
-      }
-    )
+      payload => {
+        if (payload.error) {
+          next({ ...rest, error: payload, type: FAILURE })
+        } else {
+          next({ ...rest, payload, type: SUCCESS })
+        }
+      })
     .catch(error => {
       next({ ...rest, error, type: FAILURE })
     })

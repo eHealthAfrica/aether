@@ -1,34 +1,53 @@
-import superagent from 'superagent'
-import cookie from 'react-cookie'
-
+/* global fetch, jQuery */
 const methods = ['get', 'post', 'put', 'patch', 'del']
 
 export default class ApiClient {
   constructor (req) {
     methods.forEach(method => {
-      this[method] = (path, header, { params, data } = {}) =>
-        new Promise((resolve, reject) => {
-          const request = superagent[method](path)
-
-          if (header) {
-            request.set('Accept', header)
-          }
-          if (cookie.load('accessToken')) {
-            request.set('Authorization', `Bearer ${cookie.load('accessToken')}`)
-          }
-          if (params) {
-            request.query(params)
+      this[method] = (path, headers, { params, data } = {}) => {
+        const csrfToken = jQuery('[name=csrfmiddlewaretoken]').val()
+        const appendParams = (path, params) => {
+          if (!params || Object.keys(params).length === 0) {
+            return path
           }
 
-          if (req && req.get('cookie')) {
-            request.set('cookie', req.get('cookie'))
+          const queryString = Object.keys(params)
+            .filter(key => (
+              params[key] !== undefined &&
+              params[key] !== null &&
+              params[key].toString().trim() !== ''
+            ))
+            .map(key => [encodeURIComponent(key), encodeURIComponent(params[key])])
+            .map(([name, value]) => `${name}=${value}`)
+            .join('&')
+
+          if (queryString === '') {
+            return path
           }
 
-          if (data) {
-            request.send(data)
-          }
-          request.end((err, { body } = {}) => (err ? reject(body || err) : resolve(body)))
-        })
+          return path + (path.includes('?') ? '&' : '?') + queryString
+        }
+
+        const options = {
+          method,
+          credentials: 'same-origin',
+          headers: Object.assign({
+            'X-CSRFToken': csrfToken,
+            'X-METHOD': method
+          }, headers),
+          body: JSON.stringify(data)
+        }
+        path = appendParams(path, params)
+        return fetch(path, options)
+          .then(res => {
+            if (res.status >= 200 && res.status < 300) {
+              return res.json() // Should be extended to cater for other content-types or than json
+            } else {
+              return { error: res.statusText, status: res.status }
+            }
+          })
+          .catch(err => ({ error: err.message, status: err.errno }))
+      }
     })
   }
 }
