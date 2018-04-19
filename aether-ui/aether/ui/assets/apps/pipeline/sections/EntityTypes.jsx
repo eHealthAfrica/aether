@@ -68,7 +68,7 @@ class EntityTypes extends Component {
                   value={this.state.entityTypesSchema}
                   onChange={this.onSchemaTextChanged.bind(this)}
                   placeholder={message}
-                  rows='50'
+                  rows='10'
                 />
               )}
             </FormattedMessage>
@@ -86,11 +86,11 @@ class EntityTypes extends Component {
               </div>
             }
 
-            <button type='submit' className='btn btn-d btn-big mt-2'>
+            <button type='submit' className='btn btn-d btn-primary mt-3'>
               <span className='details-title'>
                 <FormattedMessage
                   id='entitytype.button.ok'
-                  defaultMessage='Apply Entity Type definitions to pipeline'
+                  defaultMessage='Add to pipeline'
                 />
               </span>
             </button>

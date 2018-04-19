@@ -69,7 +69,7 @@ class Input extends Component {
                   value={this.state.inputSchema}
                   onChange={this.onSchemaTextChanged.bind(this)}
                   placeholder={msg}
-                  rows='50'
+                  rows='10'
                 />
               )}
             </FormattedMessage>
@@ -87,11 +87,11 @@ class Input extends Component {
               </div>
             }
 
-            <button type='submit' className='btn btn-d btn-big mt-2'>
+            <button type='submit' className='btn btn-w btn-primary mt-3'>
               <span className='details-title'>
                 <FormattedMessage
                   id='mapping.rule.button.ok'
-                  defaultMessage='Apply Avro schema to pipeline'
+                  defaultMessage='Add to pipeline'
                 />
               </span>
             </button>
