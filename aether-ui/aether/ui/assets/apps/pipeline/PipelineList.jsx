@@ -72,7 +72,7 @@ class PipelineList extends Component {
 
   onStartPipeline (newPipeline) {
     this.props.dispatch(addPipeline(newPipeline))
-    this.onSelectPipeline(newPipeline)
+    this.props.history.push('/pipeline')
   }
 
   onSelectPipeline (pipeline) {

@@ -10,8 +10,6 @@ import EntityTypes from './sections/EntityTypes'
 import Mapping from './sections/Mapping'
 import Output from './sections/Output'
 
-import { updatePipeline, selectedPipelineChanged } from './redux'
-
 class Pipeline extends Component {
   constructor (props) {
     super(props)
@@ -109,19 +107,13 @@ class Pipeline extends Component {
 
           <div className='pipeline-sections'>
             <div className='pipeline-section__input'>
-              <Input
-                onChange={newInputSchema => this.onChangePipeline('schema', newInputSchema)}
-              />
+              <Input />
             </div>
             <div className='pipeline-section__entityTypes'>
-              <EntityTypes
-                onChange={newEntityTypes => this.onChangePipeline('entity_types', newEntityTypes)}
-              />
+              <EntityTypes />
             </div>
             <div className='pipeline-section__mapping'>
-              <Mapping
-                onChange={newMappingRules => this.onChangePipeline('mapping', newMappingRules)}
-              />
+              <Mapping />
             </div>
           </div>
           <div className='pipeline-output'>
@@ -146,16 +138,6 @@ class Pipeline extends Component {
     } else {
       this.setState({ fullscreen: false })
     }
-  }
-
-  onChangePipeline (propertyKey, propertyValue) {
-    const pipeline = {
-      ...this.props.selectedPipeline,
-      [propertyKey]: propertyValue
-    }
-
-    this.props.dispatch(updatePipeline(pipeline))
-    this.props.dispatch(selectedPipelineChanged(pipeline))
   }
 }
 
