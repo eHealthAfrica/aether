@@ -25,6 +25,11 @@ export const addPipeline = newPipeline => ({
   payload: newPipeline
 })
 
+export const updatePipeline = updatedPipeline => ({
+  type: types.PIPELINE_UPDATE,
+  payload: updatedPipeline
+})
+
 export const selectedPipelineChanged = selectedPipeline => ({
   type: types.SELECTED_PIPELINE_CHANGED,
   payload: selectedPipeline

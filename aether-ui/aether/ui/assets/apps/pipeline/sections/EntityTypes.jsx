@@ -1,22 +1,32 @@
 import React, { Component } from 'react'
+import { FormattedMessage } from 'react-intl'
 import { connect } from 'react-redux'
 import { EntityTypeViewer } from '../../components'
-import { FormattedMessage } from 'react-intl'
-import MockEntitytypesSchema from '../../mock/schema_entityTypes.mock'
 
 class EntityTypes extends Component {
   constructor (props) {
     super(props)
 
     this.state = {
-      entityTypesSchema: JSON.stringify(MockEntitytypesSchema)
+      entityTypesSchema: JSON.stringify(this.props.entityTypes, 0, 2)
     }
+  }
+
+  componentWillReceiveProps (nextProps) {
+    this.setState({
+      entityTypesSchema: JSON.stringify(nextProps.entityTypes, 0, 2)
+    })
   }
 
   onSchemaTextChanged (event) {
     this.setState({
       entityTypesSchema: event.target.value
     })
+  }
+
+  notifyChange (event) {
+    const newEntityTypes = JSON.parse(this.state.entityTypesSchema)
+    this.props.onChange(newEntityTypes)
   }
 
   render () {
@@ -33,8 +43,16 @@ class EntityTypes extends Component {
             />
           </label>
           <FormattedMessage id='entityTypeSchema.placeholder' defaultMessage='Enter your schema'>
-            {message => (<textarea type='text' className='monospace' value={this.state.entityTypesSchema}
-              onChange={this.onSchemaTextChanged.bind(this)} placeholder={message} rows='10' />)}
+            {message => (
+              <textarea
+                className='monospace'
+                value={this.state.entityTypesSchema}
+                onChange={this.onSchemaTextChanged.bind(this)}
+                onBlur={this.notifyChange.bind(this)}
+                placeholder={message}
+                rows='10'
+              />
+            )}
           </FormattedMessage>
         </div>
       </div>
@@ -42,6 +60,4 @@ class EntityTypes extends Component {
   }
 }
 
-const mapStateToProps = () => ({ })
-
-export default connect(mapStateToProps, {})(EntityTypes)
+export default connect()(EntityTypes)

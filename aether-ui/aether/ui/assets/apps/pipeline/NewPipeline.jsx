@@ -3,6 +3,7 @@ import { connect } from 'react-redux'
 import { defineMessages, injectIntl, FormattedMessage } from 'react-intl'
 
 import { generateGUID } from '../utils'
+import { entityTypes, inputSchema } from '../mock'
 
 const MESSAGES = defineMessages({
   placeholder: {
@@ -47,20 +48,27 @@ class NewPipeline extends Component {
 
   renderForm () {
     const {formatMessage} = this.props.intl
-    const startPipeline = () => {
-      if (this.state.newPipelineName) {
-        const newPipeline = {
-          name: this.state.newPipelineName,
-          id: generateGUID(),
-          entityTypes: 0,
-          errors: 0
-        }
-        this.props.onStartPipeline(newPipeline)
+    const onSubmit = (event) => {
+      event.preventDefault()
+
+      // TODO: make api call
+      const newPipeline = {
+        name: this.state.newPipelineName,
+        id: generateGUID(),
+
+        // include mock data in the new pipeline
+        schema: inputSchema,
+        entity_types: entityTypes,
+        mapping: [],
+        mapping_errors: [],
+        output: []
       }
+
+      this.props.onStartPipeline(newPipeline)
     }
 
     return (
-      <div className='pipeline-form'>
+      <form className='pipeline-form' onSubmit={onSubmit}>
         <div className='form-group'>
           <input
             type='text'
@@ -90,9 +98,8 @@ class NewPipeline extends Component {
           </span>
         </button>
         <button
-          type='button'
-          className='btn btn-d btn-big'
-          onClick={startPipeline}>
+          type='submit'
+          className='btn btn-d btn-big'>
           <span className='details-title'>
             <FormattedMessage
               id='pipeline.new.button.ok'
@@ -100,7 +107,7 @@ class NewPipeline extends Component {
             />
           </span>
         </button>
-      </div>
+      </form>
     )
   }
 }

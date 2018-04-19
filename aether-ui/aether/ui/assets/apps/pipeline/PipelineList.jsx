@@ -52,7 +52,7 @@ class PipelineList extends Component {
         <h2 className='preview-heading'>{pipeline.name}</h2>
 
         <div className='summary-entity-types'>
-          <span className='badge badge-b badge-big'>{pipeline.entityTypes}</span>
+          <span className='badge badge-b badge-big'>{pipeline.entity_types.length}</span>
           <FormattedMessage
             id='pipeline.list.entity.types'
             defaultMessage='Entity-Types'
@@ -60,7 +60,7 @@ class PipelineList extends Component {
         </div>
 
         <div className='summary-errors'>
-          <span className='badge badge-b badge-big'>{pipeline.errors}</span>
+          <span className='badge badge-b badge-big'>{pipeline.mapping_errors.length}</span>
           <FormattedMessage
             id='pipeline.list.errors'
             defaultMessage='Errors'

@@ -10,6 +10,8 @@ import EntityTypes from './sections/EntityTypes'
 import Mapping from './sections/Mapping'
 import Output from './sections/Output'
 
+import { updatePipeline, selectedPipelineChanged } from './redux'
+
 class Pipeline extends Component {
   constructor (props) {
     super(props)
@@ -21,14 +23,15 @@ class Pipeline extends Component {
     }
   }
 
-  componentWillMount () {
-    // Uncomment this to check for selected pipelines to configure
-    // if (!this.props.selectedPipeline) {
-    //   this.props.history.replace('/')
-    //  }
+  componentWillReceiveProps (nextProps) {
+    if (!nextProps.selectedPipeline) {
+      this.props.history.replace('/')
+    }
   }
 
   render () {
+    const {selectedPipeline} = this.props
+
     return (
       <div className={'pipelines-container show-pipeline'}>
         <NavBar showBreadcrumb>
@@ -39,8 +42,7 @@ class Pipeline extends Component {
             />
           </Link>
           <span> // </span>
-          {/* TODO: Revert to { this.props.selectedPipeline.name } to enforce normal workflow; Linked to comments in ComponentWillMount() */}
-          { this.props.selectedPipeline ? this.props.selectedPipeline.name : 'Select a pipeline' }
+          { selectedPipeline.name }
         </NavBar>
 
         <div className={`pipeline pipeline--${this.state.pipelineView} ${this.state.showOutput ? 'show-output' : ''} ${this.state.fullscreen ? 'fullscreen' : ''}`}>
@@ -98,17 +100,27 @@ class Pipeline extends Component {
 
           <div className='pipeline-sections'>
             <div className='pipeline-section__input'>
-              <Input />
+              <Input
+                schema={selectedPipeline.schema}
+                onChange={newInputSchema => this.onChangePipeline('schema', newInputSchema)}
+              />
             </div>
             <div className='pipeline-section__entityTypes'>
-              <EntityTypes />
+              <EntityTypes
+                entityTypes={selectedPipeline.entity_types}
+                onChange={newEntityTypes => this.onChangePipeline('entity_types', newEntityTypes)}
+              />
             </div>
             <div className='pipeline-section__mapping'>
-              <Mapping />
+              <Mapping
+                mapping={selectedPipeline.mapping}
+                errors={selectedPipeline.mapping_errors}
+                onChange={newMappingRules => this.onChangePipeline('mapping', newMappingRules)}
+              />
             </div>
           </div>
           <div className='pipeline-output'>
-            <Output />
+            <Output output={selectedPipeline.output} />
           </div>
         </div>
       </div>
@@ -130,10 +142,22 @@ class Pipeline extends Component {
       this.setState({ fullscreen: false })
     }
   }
+
+  onChangePipeline (propertyKey, propertyValue) {
+    const pipeline = {
+      ...this.props.selectedPipeline,
+      [propertyKey]: propertyValue
+    }
+    console.log(propertyKey, propertyValue)
+    console.log(pipeline)
+
+    this.props.dispatch(updatePipeline(pipeline))
+    this.props.dispatch(selectedPipelineChanged(pipeline))
+  }
 }
 
 const mapStateToProps = ({ pipelines }) => ({
   selectedPipeline: pipelines.selectedPipeline
 })
 
-export default connect(mapStateToProps, {})(Pipeline)
+export default connect(mapStateToProps)(Pipeline)

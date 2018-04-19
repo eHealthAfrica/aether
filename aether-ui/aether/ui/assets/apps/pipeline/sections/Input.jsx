@@ -1,22 +1,32 @@
 import React, { Component } from 'react'
+import { FormattedMessage } from 'react-intl'
 import { connect } from 'react-redux'
 import { AvroSchemaViewer } from '../../components'
-import { FormattedMessage } from 'react-intl'
-import MockInputSchema from '../../mock/schema_input.mock'
 
 class Input extends Component {
   constructor (props) {
     super(props)
 
     this.state = {
-      inputSchema: JSON.stringify(MockInputSchema)
+      inputSchema: JSON.stringify(this.props.schema, 0, 2)
     }
+  }
+
+  componentWillReceiveProps (nextProps) {
+    this.setState({
+      inputSchema: JSON.stringify(this.props.schema, 0, 2)
+    })
   }
 
   onSchemaTextChanged (event) {
     this.setState({
       inputSchema: event.target.value
     })
+  }
+
+  notifyChange (event) {
+    const newSchema = JSON.parse(this.state.inputSchema)
+    this.props.onChange(newSchema)
   }
 
   render () {
@@ -34,8 +44,14 @@ class Input extends Component {
           </label>
           <FormattedMessage id='input.schema.placeholder' defaultMessage='Enter your schema'>
             {msg => (
-              <textarea type='text' className='monospace' value={this.state.inputSchema}
-                onChange={this.onSchemaTextChanged.bind(this)} placeholder={msg} rows='10' />
+              <textarea
+                className='monospace'
+                value={this.state.inputSchema}
+                onChange={this.onSchemaTextChanged.bind(this)}
+                onBlur={this.notifyChange.bind(this)}
+                placeholder={msg}
+                rows='10'
+              />
             )}
           </FormattedMessage>
         </div>
@@ -44,6 +60,4 @@ class Input extends Component {
   }
 }
 
-const mapStateToProps = () => ({ })
-
-export default connect(mapStateToProps, {})(Input)
+export default connect()(Input)
