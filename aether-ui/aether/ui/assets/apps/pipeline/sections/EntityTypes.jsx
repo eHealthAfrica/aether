@@ -4,6 +4,8 @@ import { connect } from 'react-redux'
 import avro from 'avro-js'
 
 import { EntityTypeViewer } from '../../components'
+import { deepEqual } from '../../utils'
+import { updatePipeline } from '../redux'
 
 class EntityTypes extends Component {
   constructor (props) {
@@ -37,12 +39,22 @@ class EntityTypes extends Component {
 
     try {
       // validate schemas
-      const newEntityTypes = JSON.parse(this.state.entityTypesSchema)
-      newEntityTypes.forEach(et => { avro.parse(et) })
+      const schemas = JSON.parse(this.state.entityTypesSchema)
+      // generate sample output with new enity types (TO BE REMOVED!!!)
+      const output = schemas.map(et => avro.parse(et).random())
 
-      this.props.onChange(newEntityTypes)
+      this.props.updatePipeline({ entity_types: schemas, output })
     } catch (error) {
       this.setState({ error: error.message })
+    }
+  }
+
+  hasChanged () {
+    try {
+      const schemas = JSON.parse(this.state.entityTypesSchema)
+      return !deepEqual(schemas, this.props.selectedPipeline.entity_types)
+    } catch (e) {
+      return true
     }
   }
 
@@ -86,7 +98,7 @@ class EntityTypes extends Component {
               </div>
             }
 
-            <button type='submit' className='btn btn-d btn-big mt-2'>
+            <button type='submit' className='btn btn-d btn-big mt-2' disabled={!this.hasChanged()}>
               <span className='details-title'>
                 <FormattedMessage
                   id='entitytype.button.ok'
@@ -105,4 +117,4 @@ const mapStateToProps = ({ pipelines }) => ({
   selectedPipeline: pipelines.selectedPipeline
 })
 
-export default connect(mapStateToProps)(EntityTypes)
+export default connect(mapStateToProps, { updatePipeline })(EntityTypes)

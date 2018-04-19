@@ -4,6 +4,8 @@ import { connect } from 'react-redux'
 import avro from 'avro-js'
 
 import { AvroSchemaViewer } from '../../components'
+import { deepEqual } from '../../utils'
+import { updatePipeline } from '../redux'
 
 class Input extends Component {
   constructor (props) {
@@ -37,12 +39,23 @@ class Input extends Component {
 
     try {
       // validate schema
-      const newSchema = JSON.parse(this.state.inputSchema)
-      avro.parse(newSchema)
+      const schema = JSON.parse(this.state.inputSchema)
+      const type = avro.parse(schema)
+      // generate a new input sample
+      const input = type.random()
 
-      this.props.onChange(newSchema)
+      this.props.updatePipeline({ schema, input })
     } catch (error) {
       this.setState({ error: error.message })
+    }
+  }
+
+  hasChanged () {
+    try {
+      const schema = JSON.parse(this.state.inputSchema)
+      return !deepEqual(schema, this.props.selectedPipeline.schema)
+    } catch (e) {
+      return true
     }
   }
 
@@ -87,11 +100,11 @@ class Input extends Component {
               </div>
             }
 
-            <button type='submit' className='btn btn-d btn-big mt-2'>
+            <button type='submit' className='btn btn-d btn-big mt-2' disabled={!this.hasChanged()}>
               <span className='details-title'>
                 <FormattedMessage
                   id='mapping.rule.button.ok'
-                  defaultMessage='Apply Avro schema to pipeline'
+                  defaultMessage='Apply AVRO schema to pipeline'
                 />
               </span>
             </button>
@@ -106,4 +119,4 @@ const mapStateToProps = ({ pipelines }) => ({
   selectedPipeline: pipelines.selectedPipeline
 })
 
-export default connect(mapStateToProps)(Input)
+export default connect(mapStateToProps, { updatePipeline })(Input)

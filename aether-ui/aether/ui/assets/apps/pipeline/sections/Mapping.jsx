@@ -1,7 +1,9 @@
 import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 import { connect } from 'react-redux'
-import { generateGUID } from '../../utils'
+
+import { generateGUID, deepEqual } from '../../utils'
+import { updatePipeline } from '../redux'
 
 class Mapping extends Component {
   constructor (props) {
@@ -24,7 +26,11 @@ class Mapping extends Component {
 
   notifyChange (event) {
     event.preventDefault()
-    this.props.onChange(this.state.mappingRules)
+    this.props.updatePipeline({ mapping: this.state.mappingRules })
+  }
+
+  hasChanged () {
+    return !deepEqual(this.state.mappingRules, this.props.selectedPipeline.mapping)
   }
 
   render () {
@@ -36,7 +42,7 @@ class Mapping extends Component {
           <form onSubmit={this.notifyChange.bind(this)}>
             { this.state.mappingRules.map(this.renderRule.bind(this)) }
 
-            <button type='submit' className='btn btn-d btn-big mt-2'>
+            <button type='submit' className='btn btn-d btn-big mt-2' disabled={!this.hasChanged()}>
               <span className='details-title'>
                 <FormattedMessage
                   id='mapping.rules.button.ok'
@@ -164,4 +170,4 @@ const mapStateToProps = ({ pipelines }) => ({
   selectedPipeline: pipelines.selectedPipeline
 })
 
-export default connect(mapStateToProps)(Mapping)
+export default connect(mapStateToProps, { updatePipeline })(Mapping)
