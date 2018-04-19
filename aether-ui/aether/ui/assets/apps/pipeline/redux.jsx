@@ -60,7 +60,7 @@ const reducer = (state = INITIAL_PIPELINE, action = {}) => {
     }
 
     case types.GET_ALL: {
-      return { ...state, pipelineList: action.payload, error: null }
+      return { ...state, pipelineList: action.payload || [], error: null }
     }
 
     case types.GET_ALL_FAILED: {

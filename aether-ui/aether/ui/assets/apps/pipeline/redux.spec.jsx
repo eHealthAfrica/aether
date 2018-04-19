@@ -2,6 +2,7 @@
 import reducer, { types, selectedPipelineChanged,
   addPipeline, getPipelines, updatePipeline, INITIAL_PIPELINE } from './redux'
 import { createStore, applyMiddleware } from 'redux'
+import nock from 'nock'
 import middleware from '../redux/middleware'
 import mockPipelines from '../../../static/mock/pipelines.mock.json'
 
@@ -58,6 +59,9 @@ describe('Pipeline actions', () => {
       type: types.PIPELINE_UPDATE,
       payload: pipeline
     }
+    nock('http://localhost')
+      .get('/static/mock/pipelines.mock.json')
+      .reply(200, mockPipelines)
     expect(updatePipeline(pipeline)).toEqual(expectedAction)
     return store.dispatch(getPipelines())
       .then(() => {
@@ -68,17 +72,23 @@ describe('Pipeline actions', () => {
       })
   })
 
-  it('should successfully get all pipelines and add to store', () => (
-    store.dispatch(getPipelines())
+  it('should successfully get all pipelines and add to store', () => {
+    nock('http://localhost')
+      .get('/static/mock/pipelines.mock.json')
+      .reply(200, mockPipelines)
+    return store.dispatch(getPipelines())
       .then(() => {
         expect(store.getState().pipelineList).toEqual(
           mockPipelines
         )
       })
-  ))
+  })
 
   it('should fail on getting all pipelines and store error', () => {
-    const NotFoundUrl = 'http://ui:8004/static/mock/nojson.json'
+    nock('http://localhost')
+      .get('/static/mock/nojson.json')
+      .reply(404)
+    const NotFoundUrl = 'http://localhost/static/mock/nojson.json'
     const action = () => ({
       types: ['', types.GET_ALL, types.GET_ALL_FAILED],
       promise: client => client.get(NotFoundUrl)
