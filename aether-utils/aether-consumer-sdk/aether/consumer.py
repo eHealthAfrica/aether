@@ -2,7 +2,7 @@ import ast
 import io
 import json
 
-import kafka
+from kafka import KafkaConsumer as VanillaConsumer
 import spavro.schema
 import spavro.io
 from spavro.datafile import DataFileReader
@@ -11,16 +11,15 @@ from spavro.io import DatumReader
 from jsonpath_ng import jsonpath, parse
 
 
-class KafkaConsumer(kafka.KafkaConsumer):
+class KafkaConsumer(VanillaConsumer):
 
-    # Adding these key/ value pairs to those handled by vanilla KAfkaConsumer
+    # Adding these key/ value pairs to those handled by vanilla KafkaConsumer
     ADDITIONAL_CONFIG = {
         "aether_masking_schema_annotation" : "aetherMaskingLevel",
         "aether_masking_schema_levels" : [0,1,2,3,4],
         "aether_masking_schema_emit_level" : 0,
         "aether_emit_flag_field_path": "$.approved",
         "aether_emit_flag_values": [True]
-
     }
 
     def __init__(self, *topics, **configs):
@@ -30,7 +29,7 @@ class KafkaConsumer(kafka.KafkaConsumer):
         # Items not in either default or additional config raise KafkaConfigurationError on super
         super(KafkaConsumer, self).__init__(*topics, **configs)
 
-    def get_approval_filter(self, schema):
+    def get_approval_filter(self):
         check_condition_path = self.config.get("aether_emit_flag_field_path")
         pass_conditions = self.config.get("aether_emit_flag_values")
         check = None
@@ -41,7 +40,8 @@ class KafkaConsumer(kafka.KafkaConsumer):
         expr = parse(check_condition_path)
         def approval_filter(msg):
             values = [match.value for match in expr.find(msg)]
-            if not values:
+            print(values, msg)
+            if not len(values) > 0:
                 return False
             return check(values[0])  # We only check the first matching path/ value
         return approval_filter
@@ -85,7 +85,7 @@ class KafkaConsumer(kafka.KafkaConsumer):
                         last_schema = schema
                         package_result["schema"] = schema
                         # prepare mask and filter
-                        approval_filter = self.get_approval_filter(schema)
+                        approval_filter = self.get_approval_filter()
                         mask = self.get_mask_from_schema(schema)
                     else:
                         package_result["schema"] = last_schema

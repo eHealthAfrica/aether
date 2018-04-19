@@ -1,14 +1,18 @@
 import io
 import json
+import mock
 import pytest
 import sys
-
+import types
+from time import sleep
+from copy import deepcopy
 from kafka import KafkaProducer
 from kafka.errors import NoBrokersAvailable
 from spavro.datafile import DataFileWriter
 from spavro.io import DatumWriter
 from spavro.schema import parse as ParseSchema
-from time import sleep
+
+from aether.consumer import KafkaConsumer
 
 from .assets.schemas import test_schemas
 
@@ -18,6 +22,9 @@ kafka_server = "kafka-test:29092"
 kafka_connection_retry = 10
 kafka_connection_retry_wait = 6
 topic_size = 100
+
+def pprint(obj):
+    print(json.dumps(obj, indent=2))
 
 def send_messages(producer, name, schema, messages):
     bytes_writer = io.BytesIO()
@@ -52,13 +59,34 @@ def write_to_topic(schema_name):
     producer.close()
     return messages
 
-
+@pytest.mark.integration
 @pytest.fixture(scope="session")
 def messages_test_boolean_pass():
     messages = write_to_topic("TestBooleanPass")
     return messages
 
+@pytest.mark.integration
 @pytest.fixture(scope="session")
 def messages_test_enum_pass():
     messages = write_to_topic("TestEnumPass")
     return messages
+
+@pytest.mark.unit
+@pytest.fixture(scope="function")
+def offline_consumer():
+    consumer = None
+    def set_config(self, new_configs):
+        self.config = new_configs
+    def add_config(self, pairs):
+        for k, v in pairs.items():
+            self.config[k] = v
+    # Mock up a usable KafkaConsumer that doesn't use Kafka...
+    with mock.patch('aether.consumer.VanillaConsumer.__init__') as MKafka:
+        MKafka.return_value = None
+        consumer = KafkaConsumer()
+    consumer._set_config = set_config.__get__(consumer)
+    consumer._add_config = add_config.__get__(consumer)
+    # somehow the ADDITIONAL_CONFIG changes if you pass it directly. Leave this deepcopy
+    consumer._set_config(deepcopy(KafkaConsumer.ADDITIONAL_CONFIG))
+    return consumer
+

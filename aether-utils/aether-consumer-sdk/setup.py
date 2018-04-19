@@ -4,7 +4,7 @@ setup(
     name='aether.consumer',
     version='0.0.0',
     setup_requires=['pytest-runner'],
-    tests_require=['pytest'],
+    tests_require=['pytest', 'mock'],
     install_requires=[
         "kafka",
         "jsonpath_ng",
