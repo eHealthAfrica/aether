@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 import { connect } from 'react-redux'
+import avro from 'avro-js'
+
 import { AvroSchemaViewer } from '../../components'
 
 class Input extends Component {
@@ -8,14 +10,20 @@ class Input extends Component {
     super(props)
 
     this.state = {
-      inputSchema: JSON.stringify(this.props.schema, 0, 2)
+      inputSchema: this.parseProps(props),
+      error: null
     }
   }
 
   componentWillReceiveProps (nextProps) {
     this.setState({
-      inputSchema: JSON.stringify(this.props.schema, 0, 2)
+      inputSchema: this.parseProps(nextProps),
+      error: null
     })
+  }
+
+  parseProps (props) {
+    return JSON.stringify(props.selectedPipeline.schema, 0, 2)
   }
 
   onSchemaTextChanged (event) {
@@ -25,39 +33,77 @@ class Input extends Component {
   }
 
   notifyChange (event) {
-    const newSchema = JSON.parse(this.state.inputSchema)
-    this.props.onChange(newSchema)
+    event.preventDefault()
+
+    try {
+      // validate schema
+      const newSchema = JSON.parse(this.state.inputSchema)
+      avro.parse(newSchema)
+
+      this.props.onChange(newSchema)
+    } catch (error) {
+      this.setState({ error: error.message })
+    }
   }
 
   render () {
     return (
       <div className='section-body'>
         <div className='section-left'>
-          <AvroSchemaViewer schema={this.state.inputSchema} />
+          <AvroSchemaViewer schema={this.props.selectedPipeline.schema} />
         </div>
+
         <div className='section-right'>
-          <label className='form-label'>
-            <FormattedMessage
-              id='input.empty.message'
-              defaultMessage='Paste AVRO Schema'
-            />
-          </label>
-          <FormattedMessage id='input.schema.placeholder' defaultMessage='Enter your schema'>
-            {msg => (
-              <textarea
-                className='monospace'
-                value={this.state.inputSchema}
-                onChange={this.onSchemaTextChanged.bind(this)}
-                onBlur={this.notifyChange.bind(this)}
-                placeholder={msg}
-                rows='10'
+          <form onSubmit={this.notifyChange.bind(this)}>
+            <label className='form-label'>
+              <FormattedMessage
+                id='input.empty.message'
+                defaultMessage='Paste AVRO Schema'
               />
-            )}
-          </FormattedMessage>
+            </label>
+            <FormattedMessage id='input.schema.placeholder' defaultMessage='Enter your schema'>
+              {msg => (
+                <textarea
+                  className='monospace'
+                  required
+                  value={this.state.inputSchema}
+                  onChange={this.onSchemaTextChanged.bind(this)}
+                  placeholder={msg}
+                  rows='50'
+                />
+              )}
+            </FormattedMessage>
+
+            { this.state.error &&
+              <div className='hint'>
+                <h4>
+                  <FormattedMessage
+                    id='pipeline.input.invalid.message'
+                    defaultMessage='You have provided an invalid AVRO schema.'
+                  />
+                </h4>
+                <br />
+                { this.state.error }
+              </div>
+            }
+
+            <button type='submit' className='btn btn-d btn-big mt-2'>
+              <span className='details-title'>
+                <FormattedMessage
+                  id='mapping.rule.button.ok'
+                  defaultMessage='Apply Avro schema to pipeline'
+                />
+              </span>
+            </button>
+          </form>
         </div>
       </div>
     )
   }
 }
 
-export default connect()(Input)
+const mapStateToProps = ({ pipelines }) => ({
+  selectedPipeline: pipelines.selectedPipeline
+})
+
+export default connect(mapStateToProps)(Input)

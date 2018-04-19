@@ -23,6 +23,12 @@ class Pipeline extends Component {
     }
   }
 
+  componentWillUpdate () {
+    if (!this.props.selectedPipeline) {
+      this.props.history.replace('/')
+    }
+  }
+
   componentWillReceiveProps (nextProps) {
     if (!nextProps.selectedPipeline) {
       this.props.history.replace('/')
@@ -31,6 +37,9 @@ class Pipeline extends Component {
 
   render () {
     const {selectedPipeline} = this.props
+    if (!selectedPipeline) {
+      return ''
+    }
 
     return (
       <div className={'pipelines-container show-pipeline'}>
@@ -101,26 +110,22 @@ class Pipeline extends Component {
           <div className='pipeline-sections'>
             <div className='pipeline-section__input'>
               <Input
-                schema={selectedPipeline.schema}
                 onChange={newInputSchema => this.onChangePipeline('schema', newInputSchema)}
               />
             </div>
             <div className='pipeline-section__entityTypes'>
               <EntityTypes
-                entityTypes={selectedPipeline.entity_types}
                 onChange={newEntityTypes => this.onChangePipeline('entity_types', newEntityTypes)}
               />
             </div>
             <div className='pipeline-section__mapping'>
               <Mapping
-                mapping={selectedPipeline.mapping}
-                errors={selectedPipeline.mapping_errors}
                 onChange={newMappingRules => this.onChangePipeline('mapping', newMappingRules)}
               />
             </div>
           </div>
           <div className='pipeline-output'>
-            <Output output={selectedPipeline.output} />
+            <Output />
           </div>
         </div>
       </div>
@@ -148,8 +153,6 @@ class Pipeline extends Component {
       ...this.props.selectedPipeline,
       [propertyKey]: propertyValue
     }
-    console.log(propertyKey, propertyValue)
-    console.log(pipeline)
 
     this.props.dispatch(updatePipeline(pipeline))
     this.props.dispatch(selectedPipelineChanged(pipeline))

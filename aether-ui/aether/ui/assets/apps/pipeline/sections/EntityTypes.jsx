@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 import { connect } from 'react-redux'
+import avro from 'avro-js'
+
 import { EntityTypeViewer } from '../../components'
 
 class EntityTypes extends Component {
@@ -8,14 +10,20 @@ class EntityTypes extends Component {
     super(props)
 
     this.state = {
-      entityTypesSchema: JSON.stringify(this.props.entityTypes, 0, 2)
+      entityTypesSchema: this.parseProps(props),
+      error: null
     }
   }
 
   componentWillReceiveProps (nextProps) {
     this.setState({
-      entityTypesSchema: JSON.stringify(nextProps.entityTypes, 0, 2)
+      entityTypesSchema: this.parseProps(nextProps),
+      error: null
     })
+  }
+
+  parseProps (props) {
+    return JSON.stringify(props.selectedPipeline.entity_types, 0, 2)
   }
 
   onSchemaTextChanged (event) {
@@ -25,39 +33,76 @@ class EntityTypes extends Component {
   }
 
   notifyChange (event) {
-    const newEntityTypes = JSON.parse(this.state.entityTypesSchema)
-    this.props.onChange(newEntityTypes)
+    event.preventDefault()
+
+    try {
+      // validate schemas
+      const newEntityTypes = JSON.parse(this.state.entityTypesSchema)
+      newEntityTypes.forEach(et => { avro.parse(et) })
+
+      this.props.onChange(newEntityTypes)
+    } catch (error) {
+      this.setState({ error: error.message })
+    }
   }
 
   render () {
     return (
       <div className='section-body'>
         <div className='section-left'>
-          <EntityTypeViewer schema={this.state.entityTypesSchema} />
+          <EntityTypeViewer schema={this.props.selectedPipeline.entity_types} />
         </div>
+
         <div className='section-right'>
-          <label className='form-label'>
-            <FormattedMessage
-              id='entitytype.empty.message'
-              defaultMessage='Paste Entity Type definitions'
-            />
-          </label>
-          <FormattedMessage id='entityTypeSchema.placeholder' defaultMessage='Enter your schema'>
-            {message => (
-              <textarea
-                className='monospace'
-                value={this.state.entityTypesSchema}
-                onChange={this.onSchemaTextChanged.bind(this)}
-                onBlur={this.notifyChange.bind(this)}
-                placeholder={message}
-                rows='10'
+          <form onSubmit={this.notifyChange.bind(this)}>
+            <label className='form-label'>
+              <FormattedMessage
+                id='entitytype.empty.message'
+                defaultMessage='Paste Entity Type definitions'
               />
-            )}
-          </FormattedMessage>
+            </label>
+            <FormattedMessage id='entityTypeSchema.placeholder' defaultMessage='Enter your schemas'>
+              {message => (
+                <textarea
+                  className='monospace'
+                  value={this.state.entityTypesSchema}
+                  onChange={this.onSchemaTextChanged.bind(this)}
+                  placeholder={message}
+                  rows='50'
+                />
+              )}
+            </FormattedMessage>
+
+            { this.state.error &&
+              <div className='hint'>
+                <h4>
+                  <FormattedMessage
+                    id='entitytype.invalid.message'
+                    defaultMessage='You have provided invalid AVRO schemas.'
+                  />
+                </h4>
+                <br />
+                { this.state.error }
+              </div>
+            }
+
+            <button type='submit' className='btn btn-d btn-big mt-2'>
+              <span className='details-title'>
+                <FormattedMessage
+                  id='entitytype.button.ok'
+                  defaultMessage='Apply Entity Type definitions to pipeline'
+                />
+              </span>
+            </button>
+          </form>
         </div>
       </div>
     )
   }
 }
 
-export default connect()(EntityTypes)
+const mapStateToProps = ({ pipelines }) => ({
+  selectedPipeline: pipelines.selectedPipeline
+})
+
+export default connect(mapStateToProps)(EntityTypes)

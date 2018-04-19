@@ -6,11 +6,15 @@ class Output extends Component {
     return (
       <div className='section-body'>
         <code>
-          { JSON.stringify(this.props.output || [], 0, 2) }
+          { JSON.stringify(this.props.selectedPipeline.output || [], 0, 2) }
         </code>
       </div>
     )
   }
 }
 
-export default connect()(Output)
+const mapStateToProps = ({ pipelines }) => ({
+  selectedPipeline: pipelines.selectedPipeline
+})
+
+export default connect(mapStateToProps)(Output)
