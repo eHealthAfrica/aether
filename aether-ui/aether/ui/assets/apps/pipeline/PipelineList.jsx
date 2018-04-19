@@ -17,7 +17,9 @@ class PipelineList extends Component {
   }
 
   componentWillMount () {
-    this.props.getPipelines()
+    if (!this.props.pipelineList.length) {
+      this.props.getPipelines()
+    }
   }
 
   componentWillReceiveProps (nextProps) {
@@ -62,7 +64,7 @@ class PipelineList extends Component {
         <h2 className='preview-heading'>{pipeline.name}</h2>
 
         <div className='summary-entity-types'>
-          <span className='badge badge-b badge-big'>{pipeline.entityTypes}</span>
+          <span className='badge badge-b badge-big'>{pipeline.entity_types ? pipeline.entity_types.length : 0}</span>
           <FormattedMessage
             id='pipeline.list.entity.types'
             defaultMessage='Entity-Types'
@@ -70,7 +72,7 @@ class PipelineList extends Component {
         </div>
 
         <div className='summary-errors'>
-          <span className='badge badge-b badge-big'>{pipeline.errors}</span>
+          <span className='badge badge-b badge-big'>{pipeline.mapping_errors ? pipeline.mapping_errors.length : 0}</span>
           <FormattedMessage
             id='pipeline.list.errors'
             defaultMessage='Errors'

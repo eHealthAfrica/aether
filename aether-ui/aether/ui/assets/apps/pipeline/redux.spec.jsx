@@ -1,10 +1,10 @@
 /* global describe, it, expect, beforeEach */
 import reducer, { types, selectedPipelineChanged,
-  addPipeline, getPipelines, updatePipeline, INITIAL_PIPELINE } from './redux'
+  addPipeline, getPipelines, updatePipeline, INITIAL_PIPELINE, getPipelineById } from './redux'
 import { createStore, applyMiddleware } from 'redux'
 import nock from 'nock'
 import middleware from '../redux/middleware'
-import mockPipelines from '../../../static/mock/pipelines.mock.json'
+import mockPipelines from '../mock/pipelines.mock'
 
 describe('Pipeline actions', () => {
   let store
@@ -60,7 +60,7 @@ describe('Pipeline actions', () => {
       payload: pipeline
     }
     nock('http://localhost')
-      .get('/static/mock/pipelines.mock.json')
+      .get('/api/ui/pipelines.json')
       .reply(200, mockPipelines)
     expect(updatePipeline(pipeline)).toEqual(expectedAction)
     return store.dispatch(getPipelines())
@@ -74,21 +74,23 @@ describe('Pipeline actions', () => {
 
   it('should successfully get all pipelines and add to store', () => {
     nock('http://localhost')
-      .get('/static/mock/pipelines.mock.json')
+      .get('/api/ui/pipelines.json')
       .reply(200, mockPipelines)
     return store.dispatch(getPipelines())
       .then(() => {
         expect(store.getState().pipelineList).toEqual(
-          mockPipelines
+          mockPipelines.results
         )
+        store.dispatch({type: types.GET_ALL, payload: {}})
+        expect(store.getState().pipelineList).toEqual([])
       })
   })
 
   it('should fail on getting all pipelines and store error', () => {
     nock('http://localhost')
-      .get('/static/mock/nojson.json')
+      .get('/api/ui/nojson.json')
       .reply(404)
-    const NotFoundUrl = 'http://localhost/static/mock/nojson.json'
+    const NotFoundUrl = 'http://localhost/api/ui/nojson.json'
     const action = () => ({
       types: ['', types.GET_ALL, types.GET_ALL_FAILED],
       promise: client => client.get(NotFoundUrl)
@@ -101,6 +103,25 @@ describe('Pipeline actions', () => {
     return store.dispatch(action())
       .then(() => {
         expect(store.getState()).toEqual(expectedStoreData)
+      })
+  })
+
+  it('should dispatch an action to get pipeline by id and set it as selected pipeline in the redux store', () => {
+    const pipelineId = 1
+    const expectedAction = {
+      type: types.GET_BY_ID,
+      payload: pipelineId
+    }
+    nock('http://localhost')
+      .get('/api/ui/pipelines.json')
+      .reply(200, mockPipelines)
+    expect(getPipelineById(pipelineId)).toEqual(expectedAction)
+    return store.dispatch(getPipelines())
+      .then(() => {
+        store.dispatch(getPipelineById(pipelineId))
+        expect(store.getState().selectedPipeline).toEqual(
+          mockPipelines.results.filter(pipeline => (pipeline.id === pipelineId))[0]
+        )
       })
   })
 })

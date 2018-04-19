@@ -52,8 +52,12 @@ class NewPipeline extends Component {
         const newPipeline = {
           name: this.state.newPipelineName,
           id: generateGUID(),
-          entityTypes: 0,
-          errors: 0
+          entity_types: null,
+          mapping_errors: null,
+          input: null,
+          mapping: null,
+          output: null,
+          schema: null
         }
         this.props.onStartPipeline(newPipeline)
       }

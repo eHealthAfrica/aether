@@ -2,14 +2,12 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { AvroSchemaViewer } from '../../components'
 import { FormattedMessage } from 'react-intl'
-import MockInputSchema from '../../mock/schema_input.mock'
 
 class Input extends Component {
   constructor (props) {
     super(props)
-
     this.state = {
-      inputSchema: JSON.stringify(MockInputSchema)
+      inputSchema: props.data ? JSON.stringify(props.data) : ''
     }
   }
 

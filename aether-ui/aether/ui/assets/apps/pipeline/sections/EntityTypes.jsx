@@ -2,14 +2,13 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { EntityTypeViewer } from '../../components'
 import { FormattedMessage } from 'react-intl'
-import MockEntitytypesSchema from '../../mock/schema_entityTypes.mock'
 
 class EntityTypes extends Component {
   constructor (props) {
     super(props)
 
     this.state = {
-      entityTypesSchema: JSON.stringify(MockEntitytypesSchema)
+      entityTypesSchema: props.data ? JSON.stringify(props.data) : ''
     }
   }
 

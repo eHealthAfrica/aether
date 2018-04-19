@@ -10,7 +10,8 @@ export const types = {
   PIPELINE_LIST_CHANGED: 'pipeline_list_changed',
   SELECTED_PIPELINE_CHANGED: 'selected_pipeline_changed',
   GET_ALL: 'pipeline_get_all',
-  GET_ALL_FAILED: 'pipeline_get_all_failed'
+  GET_ALL_FAILED: 'pipeline_get_all_failed',
+  GET_BY_ID: 'pipeline_get_by_id'
 }
 
 export const INITIAL_PIPELINE = {
@@ -22,6 +23,11 @@ export const INITIAL_PIPELINE = {
 export const addPipeline = newPipeline => ({
   type: types.PIPELINE_ADD,
   payload: newPipeline
+})
+
+export const getPipelineById = id => ({
+  type: types.GET_BY_ID,
+  payload: id
 })
 
 export const updatePipeline = pipeline => ({
@@ -60,11 +66,17 @@ const reducer = (state = INITIAL_PIPELINE, action = {}) => {
     }
 
     case types.GET_ALL: {
-      return { ...state, pipelineList: action.payload || [], error: null }
+      return { ...state, pipelineList: action.payload.results || [], error: null }
     }
 
     case types.GET_ALL_FAILED: {
       return { ...state, error: action.error }
+    }
+
+    case types.GET_BY_ID: {
+      let foundPipeline = state.pipelineList.filter(pipeline => (pipeline.id === action.payload))
+      foundPipeline = foundPipeline.length && foundPipeline[0]
+      return { ...state, selectedPipeline: foundPipeline }
     }
 
     default:

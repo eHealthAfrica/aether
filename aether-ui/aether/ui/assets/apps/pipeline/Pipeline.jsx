@@ -9,6 +9,7 @@ import Input from './sections/Input'
 import EntityTypes from './sections/EntityTypes'
 import Mapping from './sections/Mapping'
 import Output from './sections/Output'
+import { getPipelineById, getPipelines } from './redux'
 
 class Pipeline extends Component {
   constructor (props) {
@@ -22,10 +23,9 @@ class Pipeline extends Component {
   }
 
   componentWillMount () {
-    // Uncomment this to check for selected pipelines to configure
-    // if (!this.props.selectedPipeline) {
-    //   this.props.history.replace('/')
-    //  }
+    if (!this.props.selectedPipeline) {
+      this.props.history.replace('/')
+    }
   }
 
   render () {
@@ -39,8 +39,7 @@ class Pipeline extends Component {
             />
           </Link>
           <span> // </span>
-          {/* TODO: Revert to { this.props.selectedPipeline.name } to enforce normal workflow; Linked to comments in ComponentWillMount() */}
-          { this.props.selectedPipeline ? this.props.selectedPipeline.name : 'Select a pipeline' }
+          { this.props.selectedPipeline && this.props.selectedPipeline.name }
         </NavBar>
 
         <div className={`pipeline pipeline--${this.state.pipelineView} ${this.state.showOutput ? 'show-output' : ''} ${this.state.fullscreen ? 'fullscreen' : ''}`}>
@@ -98,10 +97,10 @@ class Pipeline extends Component {
 
           <div className='pipeline-sections'>
             <div className='pipeline-section__input'>
-              <Input />
+              <Input data={this.props.selectedPipeline && this.props.selectedPipeline.schema} />
             </div>
             <div className='pipeline-section__entityTypes'>
-              <EntityTypes />
+              <EntityTypes data={this.props.selectedPipeline && this.props.selectedPipeline.entity_types} />
             </div>
             <div className='pipeline-section__mapping'>
               <Mapping />
@@ -136,4 +135,4 @@ const mapStateToProps = ({ pipelines }) => ({
   selectedPipeline: pipelines.selectedPipeline
 })
 
-export default connect(mapStateToProps)(Pipeline)
+export default connect(mapStateToProps, { getPipelineById, getPipelines })(Pipeline)

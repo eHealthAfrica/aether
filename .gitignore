@@ -132,3 +132,4 @@ terraform.tfstate.backup
 # Visual Studio files
 .vs
 demo
+aether-ui/aether/ui/fixtures/ui.json
