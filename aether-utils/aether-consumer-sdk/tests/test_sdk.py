@@ -47,37 +47,59 @@ def test_enum_pass(messages_test_enum_pass):
     messages = messages_test_enum_pass
     assert(len(messages) == topic_size), "Should have generated the right number of messages"
 
-@pytest.mark.unit
-def test_publish(offline_consumer):
-    consumer = offline_consumer
-    assert(len(consumer.config.keys()) > 2)
 
 @pytest.mark.unit
-def test_get_approval_filter_default(offline_consumer):
-    default_filter = offline_consumer.get_approval_filter()
-    pass_msg = {"approved": True}
-    fail_msg = {"approved": False}
-    assert(default_filter(pass_msg))
-    assert(default_filter(fail_msg) is not True)
+@pytest.mark.parametrize("field_path,field_value,pass_msg,fail_msg", [
+    (None , None , {"approved": True}, {"approved": False}),
+    ("$.checked", None, {"checked": True}, {"checked": False}),
+    (None , [False] , {"approved": False}, {"approved": True}),
+    (None , ["yes", "maybe"] , {"approved": "yes"}, {"approved": "no"}),
+    (None , ["yes", "maybe"] , {"approved": "maybe"}, {"approved": "no"}),
+    (None , ["yes", "maybe"] , {"approved": "maybe"}, {"checked": "maybe"})
+])
+def test_get_approval_filter(offline_consumer, field_path, field_value, pass_msg, fail_msg):
+    if field_path:
+        offline_consumer._add_config({"aether_emit_flag_field_path":field_path})
+    if field_value:
+        offline_consumer._add_config({"aether_emit_flag_values": field_value})
+    _filter = offline_consumer.get_approval_filter()
+    assert(_filter(pass_msg))
+    assert(_filter(fail_msg) is not True)
 
 @pytest.mark.unit
-def test_get_approval_filter_new_watch_word(offline_consumer):
-    offline_consumer._add_config({
-        "aether_emit_flag_field_path": "$.checked"
-    })
-    new_filter = offline_consumer.get_approval_filter()
-    pass_msg = {"checked": True}
-    fail_msg = {"checked": False}
-    assert(new_filter(pass_msg))
-    assert(new_filter(fail_msg) is not True)
+@pytest.mark.parametrize("emit_level", [
+    (0),
+    (1),
+    (2),
+    (3),
+    (4),
+    (5)
+])
+@pytest.mark.unit
+def test_msk_msg_default_map(offline_consumer, sample_schema, sample_message, emit_level):
+    offline_consumer._add_config({"aether_masking_schema_emit_level":emit_level})
+    mask = offline_consumer.get_mask_from_schema(sample_schema)
+    masked = mask(sample_message)
+    assert(len(masked.keys()) == (emit_level + 2)), ("%s %s" % (emit_level, masked))
 
 @pytest.mark.unit
-def test_get_approval_filter_new_watch_condition(offline_consumer):
-    offline_consumer._add_config({
-        "aether_emit_flag_values": [False]
-    })
-    new_filter = offline_consumer.get_approval_filter()
-    pass_msg = {"approved": False}
-    fail_msg = {"approved": True}
-    assert(new_filter(pass_msg))
-    assert(new_filter(fail_msg) is not True)
+@pytest.mark.parametrize("emit_level,expected_count", [
+    ("public", 3),
+    ("confidential", 4),
+    ("secret", 5),
+    ("top secret", 6),
+    ("ufos", 7)
+])
+@pytest.mark.parametrize("possible_levels", [([
+    "public",
+    "confidential",
+    "secret",
+    "top secret",
+    "ufos"
+])])
+def test_msk_msg_custom_map(offline_consumer, sample_schema_top_secret, sample_message_top_secret, emit_level, possible_levels, expected_count):
+    offline_consumer._add_config({"aether_masking_schema_emit_level":emit_level})
+    offline_consumer._add_config({"aether_masking_schema_levels" : possible_levels})
+    mask = offline_consumer.get_mask_from_schema(sample_schema_top_secret)
+    masked = mask(sample_message_top_secret)
+    assert(len(masked.keys()) == (expected_count)), ("%s %s" % (emit_level, masked))

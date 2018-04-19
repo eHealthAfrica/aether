@@ -10,13 +10,15 @@ from spavro.io import DatumReader
 
 from jsonpath_ng import jsonpath, parse
 
+def pprint(obj):
+    print(json.dumps(obj, indent=2))
 
 class KafkaConsumer(VanillaConsumer):
 
     # Adding these key/ value pairs to those handled by vanilla KafkaConsumer
     ADDITIONAL_CONFIG = {
         "aether_masking_schema_annotation" : "aetherMaskingLevel",
-        "aether_masking_schema_levels" : [0,1,2,3,4],
+        "aether_masking_schema_levels" : [0,1,2,3,4,5],
         "aether_masking_schema_emit_level" : 0,
         "aether_emit_flag_field_path": "$.approved",
         "aether_emit_flag_values": [True]
@@ -40,14 +42,32 @@ class KafkaConsumer(VanillaConsumer):
         expr = parse(check_condition_path)
         def approval_filter(msg):
             values = [match.value for match in expr.find(msg)]
-            print(values, msg)
             if not len(values) > 0:
                 return False
             return check(values[0])  # We only check the first matching path/ value
         return approval_filter
 
     def get_mask_from_schema(self, schema):
-        return None
+        mask_query = self.config.get("aether_masking_schema_annotation")
+        mask_levels = self.config.get("aether_masking_schema_levels")
+        emit_level = self.config.get("aether_masking_schema_emit_level")
+        try:
+            emit_index = mask_levels.index(emit_level)
+        except ValueError as ier:
+            raise ValueError("emit_level %s it not a value in range of restrictions: %s" %
+                             (emit_level, mask_levels))
+        query_string = "$.fields.[*].%s.`parent`" % mask_query
+        expr = parse(query_string)
+        restricted_fields = [(match.value) for match in expr.find(schema)]
+        restriction_map = [[obj.get("name"), obj.get(mask_query)] for obj in restricted_fields]
+        failing_values = [i[1] for i in restriction_map if mask_levels.index(i[1]) > emit_index]
+        def mask(msg):
+            for name, x in restriction_map:
+                if msg.get(name, None):
+                    if x in failing_values:
+                        msg.pop(name, None)
+            return msg
+        return mask
 
     def mask_message(self, msg, mask=None):
         if not mask:

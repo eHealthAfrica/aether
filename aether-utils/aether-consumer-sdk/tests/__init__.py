@@ -72,6 +72,33 @@ def messages_test_enum_pass():
     return messages
 
 @pytest.mark.unit
+@pytest.fixture(scope="session")
+def sample_schema():
+    assets = test_schemas.get("TestBooleanPass")
+    return assets.get("schema")
+
+@pytest.mark.unit
+@pytest.fixture(scope="function")
+def sample_message():
+    assets = test_schemas.get("TestBooleanPass")
+    mocker = assets.get("mocker")
+    yield mocker()[0]
+
+@pytest.mark.unit
+@pytest.fixture(scope="session")
+def sample_schema_top_secret():
+    assets = test_schemas.get("TestTopSecret")
+    return assets.get("schema")
+
+@pytest.mark.unit
+@pytest.fixture(scope="function")
+def sample_message_top_secret():
+    assets = test_schemas.get("TestTopSecret")
+    mocker = assets.get("mocker")
+    yield mocker()[0]
+
+
+@pytest.mark.unit
 @pytest.fixture(scope="function")
 def offline_consumer():
     consumer = None
@@ -82,7 +109,7 @@ def offline_consumer():
             self.config[k] = v
     # Mock up a usable KafkaConsumer that doesn't use Kafka...
     with mock.patch('aether.consumer.VanillaConsumer.__init__') as MKafka:
-        MKafka.return_value = None
+        MKafka.return_value = None  # we need to ignore the call to super in __init__
         consumer = KafkaConsumer()
     consumer._set_config = set_config.__get__(consumer)
     consumer._add_config = add_config.__get__(consumer)

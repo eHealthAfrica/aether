@@ -116,6 +116,66 @@ schema_enum_pass = {
     "name": "TestEnumPass"
 }
 
+schema_top_secret = {
+    "fields": [
+        {
+            "jsonldPredicate": "@id",
+            "type": "string",
+            "name": "id"
+        },
+        {
+            "type": [
+                "null",
+                "boolean"
+            ],
+            "name": "publish",
+        },
+        {
+            "type": [
+                "null",
+                "string"
+            ],
+            "name": "field1",
+            "aetherMaskingLevel": "public"
+        },
+        {
+            "type": [
+                "null",
+                "string"
+            ],
+            "name": "field2",
+            "aetherMaskingLevel": "confidential"
+        },
+        {
+            "type": [
+                "null",
+                "string"
+            ],
+            "name": "field3",
+            "aetherMaskingLevel": "secret"
+        },
+        {
+            "type": [
+                "null",
+                "string"
+            ],
+            "name": "field4",
+            "aetherMaskingLevel": "top secret"
+        },
+        {
+            "type": [
+                "null",
+                "string"
+            ],
+            "name": "field5",
+            "aetherMaskingLevel": "ufos"
+        },
+    ],
+    "type": "record",
+    "name": "TestTopSecret"
+}
+
+
 def mock_message_schema_boolean_pass(count=10, *args, **kwargs):
     from uuid import uuid4
     messages = []
@@ -153,5 +213,9 @@ test_schemas = {
     "TestEnumPass": {
         "schema": schema_enum_pass,
         "mocker": mock_message_schema_enum_pass
+    },
+    "TestTopSecret":{
+        "schema" : schema_top_secret,
+        "mocker": mock_message_schema_boolean_pass
     }
 }
