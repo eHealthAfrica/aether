@@ -22,13 +22,24 @@ class Pipeline extends Component {
     }
   }
 
-  componentWillMount () {
+  componentWillUpdate () {
     if (!this.props.selectedPipeline) {
       this.props.history.replace('/')
     }
   }
 
+  componentWillReceiveProps (nextProps) {
+    if (!nextProps.selectedPipeline) {
+      this.props.history.replace('/')
+    }
+  }
+
   render () {
+    const {selectedPipeline} = this.props
+    if (!selectedPipeline) {
+      return ''
+    }
+
     return (
       <div className={'pipelines-container show-pipeline'}>
         <NavBar showBreadcrumb>
@@ -39,7 +50,7 @@ class Pipeline extends Component {
             />
           </Link>
           <span> // </span>
-          { this.props.selectedPipeline && this.props.selectedPipeline.name }
+          { selectedPipeline.name }
         </NavBar>
 
         <div className={`pipeline pipeline--${this.state.pipelineView} ${this.state.showOutput ? 'show-output' : ''} ${this.state.fullscreen ? 'fullscreen' : ''}`}>

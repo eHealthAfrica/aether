@@ -8,7 +8,7 @@ import { EntityTypeViewer } from '../components'
 
 describe('EntityTypeViewer', () => {
   it('should take a valid json list of schemas and render entity visualizers', () => {
-    const component = mountWithIntl(<EntityTypeViewer schema={JSON.stringify(mockEntityTypesSchema)} />)
+    const component = mountWithIntl(<EntityTypeViewer schema={mockEntityTypesSchema} />)
     expect(component.find('div.entity-types-schema').children().length).toEqual(2)
     expect(component.html()).not.toContain('Invalid JSON')
     expect(component.html()).not.toContain('Invalid entity type')
@@ -17,14 +17,14 @@ describe('EntityTypeViewer', () => {
 
   it('should take a valid json with empty entities', () => {
     const validJSONWithEmptyObjects = [{}, {}, {}]
-    const component = mountWithIntl(<EntityTypeViewer schema={JSON.stringify(validJSONWithEmptyObjects)} />)
+    const component = mountWithIntl(<EntityTypeViewer schema={validJSONWithEmptyObjects} />)
     expect(component.find('div.entity-types-schema').children().length).toEqual(3)
     expect(component.html()).toContain('Invalid entity type')
   })
 
   it('should take an invalid schema and render error', () => {
     const inValidSchema = []
-    const component = mountWithIntl(<EntityTypeViewer schema={JSON.stringify(inValidSchema)} />)
+    const component = mountWithIntl(<EntityTypeViewer schema={inValidSchema} />)
     expect(component.html()).toContain('Invalid schema')
   })
 
@@ -35,7 +35,7 @@ describe('EntityTypeViewer', () => {
 
   it('should take entity type without fields', () => {
     const entityTypeWithoutProperties = [{name: 'test-name', type: 'record', fields: []}]
-    const component = mountWithIntl(<EntityTypeViewer schema={JSON.stringify(entityTypeWithoutProperties)} />)
+    const component = mountWithIntl(<EntityTypeViewer schema={entityTypeWithoutProperties} />)
     expect(component.html()).toContain('Entity has no properties')
   })
 
@@ -53,7 +53,7 @@ describe('EntityTypeViewer', () => {
         'name': 'Building'
       }
     })
-    const component = mountWithIntl(<EntityTypeViewer schema={JSON.stringify(entityTypeWithoutSymbols)} />)
+    const component = mountWithIntl(<EntityTypeViewer schema={entityTypeWithoutSymbols} />)
     // TODO: Updates when styles are added to rendered components
     expect(component.html()).toContain('<span class="type"> enum</span>')
     expect(component.html()).toContain('<span class="name">building</span>')
@@ -61,9 +61,18 @@ describe('EntityTypeViewer', () => {
 
   it('should take schema JSON with a min depth of 3', () => {
     const entityTypeDepth3 = [...mockEntityTypesSchema]
-    entityTypeDepth3[1]['fields'][2]['type']['fields'].push({name: 'cordinates',
-      type: {type: 'record', name: 'coordinates', fields: [{name: 'Y', type: 'string'}, {name: 'X', type: 'int'}]}})
-    const component = mountWithIntl(<EntityTypeViewer schema={JSON.stringify(entityTypeDepth3)} />)
+    entityTypeDepth3[1]['fields'][2]['type']['fields'].push({
+      name: 'cordinates',
+      type: {
+        type: 'record',
+        name: 'coordinates',
+        fields: [
+          {name: 'Y', type: 'string'},
+          {name: 'X', type: 'int'}
+        ]
+      }
+    })
+    const component = mountWithIntl(<EntityTypeViewer schema={entityTypeDepth3} />)
     expect(component.html()).toContain('location.cordinates.Y')
   })
 })

@@ -3,10 +3,27 @@
   color: $white;
 
   .section-body {
-    display: flex;
+    display: block;
   }
 
   .rules {
     padding: $unit $unit-xl;
+    flex-grow: 1;
+
+    input {
+      background: $grey;
+      color: $dark-blue;
+    }
+  }
+
+  .definition {
+    padding: $unit $unit-xl;
+    margin-top: auto;
+  }
+
+  code {
+    color: $light-grey;
+    font: $font-size-xs $code-font-family;
+    white-space: pre;
   }
 }

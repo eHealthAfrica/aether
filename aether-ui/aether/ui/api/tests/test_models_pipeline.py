@@ -70,7 +70,7 @@ class ModelsPipelineTests(TestCase):
 
         # no input
         pipeline.input = {}
-        pipeline.mapping = [['#!uuid', 'Person.id']]
+        pipeline.mapping = [{'source': '#!uuid', 'destination': 'Person.id'}]
         pipeline.entity_types = [ENTITY_SAMPLE]
         pipeline.save()
         self.assertEqual(pipeline.mapping_errors, [])
@@ -86,7 +86,7 @@ class ModelsPipelineTests(TestCase):
 
         # no entity types
         pipeline.input = INPUT_SAMPLE
-        pipeline.mapping = [['#!uuid', 'Person.id']]
+        pipeline.mapping = [{'source': '#!uuid', 'destination': 'Person.id'}]
         pipeline.entity_types = []
         pipeline.save()
         self.assertEqual(pipeline.mapping_errors, [])
@@ -98,7 +98,7 @@ class ModelsPipelineTests(TestCase):
             name='Pipeline test',
             input=INPUT_SAMPLE,
             entity_types=[ENTITY_SAMPLE],
-            mapping=[['#!uuid', 'Person.id']],
+            mapping=[{'source': '#!uuid', 'destination': 'Person.id'}],
         )
 
         self.assertEqual(
@@ -114,7 +114,7 @@ class ModelsPipelineTests(TestCase):
             name='Pipeline test',
             input=INPUT_SAMPLE,
             entity_types=[ENTITY_SAMPLE],
-            mapping=[['#!uuid', 'Person.id']],
+            mapping=[{'source': '#!uuid', 'destination': 'Person.id'}],
         )
         self.assertEqual(
             pipeline.mapping_errors,
@@ -152,7 +152,7 @@ class ModelsPipelineTests(TestCase):
             name='Pipeline test',
             input=INPUT_SAMPLE,
             entity_types=[ENTITY_SAMPLE],
-            mapping=[['#!uuid', 'Person.id']],
+            mapping=[{'source': '#!uuid', 'destination': 'Person.id'}],
         )
         self.assertEqual(pipeline.mapping_errors, [])
         self.assertEqual(pipeline.output, [])
@@ -188,8 +188,8 @@ class ModelsPipelineTests(TestCase):
             input=INPUT_SAMPLE,
             entity_types=[ENTITY_SAMPLE],
             mapping=[
-                ['#!uuid', 'Person.id'],
-                ['$.firstName', 'Person.firstName'],
+                {'source': '#!uuid', 'destination': 'Person.id'},
+                {'source': '$.firstName', 'destination': 'Person.firstName'},
             ],
         )
 
@@ -225,8 +225,8 @@ class ModelsPipelineTests(TestCase):
         )
 
         pipeline.mapping = [
-            ['#!uuid', 'Person.id'],
-            ['$.not_a_real_key', 'Person.firstName'],
+            {'source': '#!uuid', 'destination': 'Person.id'},
+            {'source': '$.not_a_real_key', 'destination': 'Person.firstName'},
         ]
         pipeline.save()
         self.assertEqual(pipeline.mapping_errors, [
@@ -237,8 +237,8 @@ class ModelsPipelineTests(TestCase):
                           'Wrong jsonpaths return None values')
 
         pipeline.mapping = [
-            ['#!uuid', 'Person.id'],
-            ['$.surname', 'Person.firstName'],
+            {'source': '#!uuid', 'destination': 'Person.id'},
+            {'source': '$.surname', 'destination': 'Person.firstName'},
         ]
         pipeline.save()
         self.assertEqual(pipeline.mapping_errors, [])
@@ -251,7 +251,7 @@ class ModelsPipelineTests(TestCase):
             name='Pipeline test',
             input=INPUT_SAMPLE,
             entity_types=[ENTITY_SAMPLE],
-            mapping=[['$.surname', 'Person.firstName']],
+            mapping=[{'source': '$.surname', 'destination': 'Person.firstName'}],
         )
 
         # weird error when there is no id rule for the entity

@@ -81,11 +81,16 @@ def validate_pipeline(pipeline):
         entities[name] = None
         schemas[name] = entity_type
 
+    mapping = [
+        [rule['source'], rule['destination']]
+        for rule in pipeline.mapping
+    ]
+
     payload = {
         'submission_payload': pipeline.input,
         'mapping_definition': {
             'entities': entities,
-            'mapping': pipeline.mapping,
+            'mapping': mapping,
         },
         'schemas': schemas,
     }
