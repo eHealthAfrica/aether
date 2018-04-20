@@ -1,9 +1,12 @@
 /* global describe, it, expect, beforeEach */
 
 import React from 'react'
+import { mountWithIntl } from 'enzyme-react-intl'
+import { MemoryRouter } from 'react-router'
 
-import { mountWithIntl } from '../../tests/test-react-intl'
 import NavBar from './NavBar'
+
+const mountWithRouter = (node) => mountWithIntl(<MemoryRouter>{node}</MemoryRouter>)
 
 describe('NavBar', () => {
   beforeEach(() => {
@@ -15,7 +18,7 @@ describe('NavBar', () => {
   })
 
   it('should render the nav bar', () => {
-    const component = mountWithIntl(<NavBar />)
+    const component = mountWithRouter(<NavBar />)
     expect(component.find('[data-qa="navbar"]').exists()).toBeTruthy()
     expect(component.find('[data-qa="navbar-user"]').exists()).toBeTruthy()
     expect(component.find('[data-qa="navbar-user"]').html()).toContain('user test')
@@ -23,13 +26,13 @@ describe('NavBar', () => {
   })
 
   it('should include the breadcrumb', () => {
-    const component = mountWithIntl(<NavBar showBreadcrumb />)
+    const component = mountWithRouter(<NavBar showBreadcrumb />)
     const breadcrumb = component.find('[data-qa="navbar-breadcrumb"]')
     expect(breadcrumb.exists()).toBeTruthy()
   })
 
   it('should include the breadcrumb and the children', () => {
-    const component = mountWithIntl(
+    const component = mountWithRouter(
       <NavBar showBreadcrumb>
         breadcrumb...
       </NavBar>

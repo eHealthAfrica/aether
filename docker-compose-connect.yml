@@ -1,0 +1,49 @@
+# Adds Kafka and Aether Producer
+version: "2.1"
+
+  # ---------------------------------
+  # Aether Kafka Containers
+  # ---------------------------------
+
+services:
+
+  zookeeper:
+    extends:
+      file: docker-compose-base.yml
+      service: zookeeper-base
+    restart: on-failure
+    networks:
+      - aether
+
+  kafka:
+    extends:
+      file: docker-compose-base.yml
+      service: kafka-base
+    restart: on-failure
+    depends_on:
+      - zookeeper
+    links:
+      - zookeeper
+    networks:
+      - aether
+
+  # ---------------------------------
+  # Aether Kafka Producer
+  # ---------------------------------
+
+  aether-producer:
+    extends:
+      file: docker-compose-base.yml
+      service: aether-producer-base
+    restart: on-failure
+    links:
+      - kafka
+      - zookeeper
+    networks:
+      - aether
+    command: start
+
+networks:
+  aether:
+    external:
+      name: aether_internal

@@ -10,7 +10,7 @@ kernel:
   repository: "ehealthafrica/aether-kernel"
 name: kernel
 project: aether
-release: 0.5.2
+release: 0.6.0
 service:
   name: nginx
   type: NodePort

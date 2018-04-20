@@ -4,6 +4,7 @@
     "sleep_time": 10,
     "jdbc_connection_string": "jdbc:postgresql://db:5432/aether?user=postgres",
     "jdbc_user": "postgres",
+    "offset_file": "offset.json",
     "postgres_connection_info": {
         "user" : "postgres",
         "dbname" : "aether",
