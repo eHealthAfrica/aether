@@ -13,7 +13,7 @@
   }
 
   .rule {
-    display:flex;
+    display: flex;
     flex-wrap: wrap;
     margin: .6rem 0;
     justify-content: space-between;
@@ -58,7 +58,7 @@
   }
 
   .rule-input.source {
-    border-radius: $border-radius*2 0 0 $border-radius*2;
+    border-radius: $border-radius * 2 0 0 $border-radius * 2;
     z-index: 1;
 
     &::before {
@@ -70,7 +70,7 @@
   }
 
   .rule-input.destination {
-    border-radius: 0 $border-radius*2 $border-radius*2 0;
+    border-radius: 0 $border-radius * 2 $border-radius * 2 0;
 
     input {
       padding-left: 1.6rem;
