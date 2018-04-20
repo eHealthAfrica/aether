@@ -88,7 +88,7 @@ class EntityTypes extends Component {
             <FormattedMessage id='entityTypeSchema.placeholder' defaultMessage='Enter your schemas'>
               {message => (
                 <textarea
-                  className='monospace'
+                  className='input-d monospace'
                   value={this.state.entityTypesSchema}
                   onChange={this.onSchemaTextChanged.bind(this)}
                   placeholder={message}

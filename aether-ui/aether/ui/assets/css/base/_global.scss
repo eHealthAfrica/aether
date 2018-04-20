@@ -177,6 +177,11 @@ textarea {
     background: $light-grey;
     color: $grey;
   }
+
+  &.input-d {
+    background: rgba($text-color, .3);
+    box-shadow: 1px 1px 1px rgba($black, .2) inset, 1px 1px 0 rgba($white, .1);
+  }
 }
 
 input,

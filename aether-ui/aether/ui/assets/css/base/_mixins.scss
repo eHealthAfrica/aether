@@ -28,5 +28,5 @@
 }
 
 @mixin shadow-flat-dark {
-  box-shadow: -1px -1px 0 rgba($black, .2), 1px 1px 0 rgba($white, .2) inset, 1px 1px 0 rgba($black, .2) inset, 1px 1px 0 rgba($white, .2);
+  box-shadow: -1px -1px 0 rgba($black, .2), 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($black, .2) inset, 1px 1px 0 rgba($white, .1);
 }

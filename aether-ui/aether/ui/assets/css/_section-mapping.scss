@@ -3,27 +3,55 @@
   color: $white;
 
   .section-body {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    padding: 2rem 0;
   }
 
   .rules {
     padding: $unit $unit-xl;
-    flex-grow: 1;
+  }
+
+  .rule {
+    display:flex;
+    flex-wrap: wrap;
+    margin: .8rem 0;
+  }
+
+  input {
+    color: $white;
+    padding: .4rem .8rem;
+
+    &::Placeholder {
+      color: rgba($white, .4);
+    }
+  }
+
+  .rule-source {
+    margin-right: .4rem;
 
     input {
-      background: $grey;
-      color: $dark-blue;
+      border-radius: $border-radius*2 0 0 $border-radius*2;
+    }
+
+  }
+
+  .rule-destination {
+    margin-right: 1rem;
+
+    input {
+      border-radius: 0 $border-radius*2 $border-radius*2 0;
     }
   }
 
   .definition {
     padding: $unit $unit-xl;
     margin-top: auto;
-  }
 
-  code {
-    color: $light-grey;
-    font: $font-size-xs $code-font-family;
-    white-space: pre;
+    .definition-code {
+      @include shadow-flat-dark;
+      padding: 1rem;
+      border-radius: $border-radius;
+    }
   }
 }
