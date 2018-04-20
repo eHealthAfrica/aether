@@ -1,3 +1,5 @@
+/* global describe, it, expect, afterEach */
+
 import nock from 'nock'
 
 describe('test environment', () => {
@@ -5,6 +7,12 @@ describe('test environment', () => {
     expect(global.jsdom).toBeTruthy()
     expect(global.range).toBeTruthy()
     expect(global.window.fetch).toBeTruthy()
+  })
+
+  it('should set the third party global variables', () => {
+    expect(global.window.$).toBeTruthy()
+    expect(global.window.jQuery).toBeTruthy()
+    expect(global.window.Popper).toBeTruthy()
   })
 
   it('should set the default URL to http://localhost', () => {

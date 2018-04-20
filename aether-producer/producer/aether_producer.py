@@ -5,6 +5,7 @@ import io
 import ast
 import os
 import signal
+import sys
 
 from avro.io import DatumWriter
 from avro.datafile import DataFileWriter
@@ -15,28 +16,41 @@ from time import sleep as Sleep
 
 FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 SETTINGS_FILE = "%s/settings.json" % FILE_PATH
-OFFSET_PATH = "%s/offset.json" % FILE_PATH
+TEST_SETTINGS_FILE = "%s/test_settings.json" % FILE_PATH
 
 
-def load_settings(path):
-    with open(path) as f:
-        return json.load(f)
+class Settings(object):
 
+    def __init__(self, test=False):
+        if test:
+            self.load(TEST_SETTINGS_FILE)
+        else:
+            self.load(SETTINGS_FILE)
+    def load(self, path):
+        with open(path) as f:
+            obj = json.load(f)
+            for k in obj:
+                setattr(self, k, obj.get(k))
+            self.offset_path = "%s/%s" % (FILE_PATH, self.offset_file)
+
+
+'''
 SETTINGS = load_settings(SETTINGS_FILE)
 
-Sleep(SETTINGS.get("start_delay", 5))
-KAFKA_SERVER = SETTINGS.get('kafka_server')
-jdbc_connection_string = SETTINGS.get('jdbc_connection_string')
-jdbc_user = SETTINGS.get('jdbc_user')
-SLEEP_TIME = SETTINGS.get('sleep_time')  # seconds between looking for changes
-kernel_url = SETTINGS.get("kernel_url")
-kernel_credentials = SETTINGS.get('kernel_credentials')
-postgres_connection_info = SETTINGS.get('postgres_connection_info')
-
+def init_settings(SETTINGS):
+    global
+    KAFKA_SERVER = SETTINGS.get('kafka_server')
+    jdbc_connection_string = SETTINGS.get('jdbc_connection_string')
+    jdbc_user = SETTINGS.get('jdbc_user')
+    SLEEP_TIME = SETTINGS.get('sleep_time')  # seconds between looking for changes
+    kernel_url = SETTINGS.get("kernel_url")
+    kernel_credentials = SETTINGS.get('kernel_credentials')
+    postgres_connection_info = SETTINGS.get('postgres_connection_info')
+'''
 
 def connect():
     try:
-        kernel = KernelClient(url=kernel_url, **kernel_credentials)
+        kernel = KernelClient(url=_settings.kernel_url, **_settings.kernel_credentials)
         return kernel
     except Exception as e:
         kernel = None
@@ -47,7 +61,7 @@ def connect():
 def set_offset_value(key, value):
     offsets = {}
     try:
-        with open(OFFSET_PATH) as f:
+        with open(_settings.offset_path) as f:
             offsets = json.load(f)
             try:
                 offsets[key] = value
@@ -55,13 +69,13 @@ def set_offset_value(key, value):
                 offsets = {key: value}
     except IOError as ioe:
         offsets = {key: value}
-    with open (OFFSET_PATH, "w") as f:
+    with open (_settings.offset_path, "w") as f:
         json.dump(offsets, f)
 
 
 def get_offset(key):
     try:
-        with open(OFFSET_PATH) as f:
+        with open(_settings.offset_path) as f:
             offsets = json.load(f)
             try:
                 return offsets[key]
@@ -74,7 +88,7 @@ def get_offset(key):
 def count_since(offset=None):
     if not offset:
         offset = ""
-    with psycopg2.connect(**postgres_connection_info) as conn:
+    with psycopg2.connect(**_settings.postgres_connection_info) as conn:
         cursor = conn.cursor(cursor_factory=DictCursor)
         count_str = '''
             SELECT
@@ -89,7 +103,7 @@ def count_since(offset=None):
 def get_entities(offset = None):
     if not offset:
         offset = ""
-    conn = psycopg2.connect(**postgres_connection_info)
+    conn = psycopg2.connect(**_settings.postgres_connection_info)
     cursor = conn.cursor(cursor_factory=DictCursor)
     query_str = '''
         SELECT
@@ -119,7 +133,7 @@ class KafkaStream(object):
         self.topic = topic
         self.kernel = kernel
         #connect to Server
-        self.producer = KafkaProducer(bootstrap_servers=KAFKA_SERVER, acks=1, key_serializer=str.encode)
+        self.producer = KafkaProducer(bootstrap_servers=_settings.kafka_server, acks=1, key_serializer=str.encode)
         self.get_avro()
         print ("Connected to stream for topic: %s" % self.topic)
 
@@ -201,9 +215,19 @@ class StreamManager(object):
     def kill(self):
         self.killed = True
 
-def main_loop():
+def main_loop(test=False):
+    global _settings
+    _settings = Settings(test)
     manager = None
-    kernel = connect()
+    kernel = None
+    for x in range(3):
+        try:
+            kernel = connect()
+            break
+        except Exception as err:
+            Sleep(_settings.start_delay)
+    if not kernel:
+        sys.exit(1)
     print("Producer Connected to Aether.")
     try:
         while True:
@@ -220,8 +244,8 @@ def main_loop():
                     break
                 manager = None
             else:
-                # print ("No new items. Offset is %s, sleeping for %s s" % (offset, SLEEP_TIME))
-                Sleep(SLEEP_TIME)
+                print("Sleeping for %s" % (_settings.sleep_time))
+                Sleep(_settings.sleep_time)
     except KeyboardInterrupt as ek:
         print ("Caught Keyboard interrupt")
         if manager:
