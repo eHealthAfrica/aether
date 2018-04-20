@@ -13,10 +13,7 @@ from spavro.io import DatumWriter
 from spavro.schema import parse as ParseSchema
 
 from aether.consumer import KafkaConsumer
-
 from .assets.schemas import test_schemas
-
-print(test_schemas)
 
 kafka_server = "kafka-test:29092"
 kafka_connection_retry = 10
@@ -113,7 +110,8 @@ def offline_consumer():
         consumer = KafkaConsumer()
     consumer._set_config = set_config.__get__(consumer)
     consumer._add_config = add_config.__get__(consumer)
-    # somehow the ADDITIONAL_CONFIG changes if you pass it directly. Leave this deepcopy
+    # somehow the ADDITIONAL_CONFIG changes if you pass it directly.
+    # Leave this deepcopy
     consumer._set_config(deepcopy(KafkaConsumer.ADDITIONAL_CONFIG))
     return consumer
 

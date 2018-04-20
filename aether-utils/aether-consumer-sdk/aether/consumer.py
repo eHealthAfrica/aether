@@ -10,9 +10,6 @@ from spavro.io import DatumReader
 
 from jsonpath_ng import jsonpath, parse
 
-def pprint(obj):
-    print(json.dumps(obj, indent=2))
-
 class KafkaConsumer(VanillaConsumer):
 
     # Adding these key/ value pairs to those handled by vanilla KafkaConsumer
@@ -25,7 +22,7 @@ class KafkaConsumer(VanillaConsumer):
     }
 
     def __init__(self, *topics, **configs):
-        # Add to DEFAULT_CONFIG
+        # Add to inherited DEFAULT_CONFIG
         for k, v in KafkaConsumer.ADDITIONAL_CONFIG.items():
             KafkaConsumer.DEFAULT_CONFIG[k] = v
         # Items not in either default or additional config raise KafkaConfigurationError on super
@@ -48,31 +45,42 @@ class KafkaConsumer(VanillaConsumer):
         return approval_filter
 
     def get_mask_from_schema(self, schema):
-        mask_query = self.config.get("aether_masking_schema_annotation")
-        mask_levels = self.config.get("aether_masking_schema_levels")
-        emit_level = self.config.get("aether_masking_schema_emit_level")
+        # This creates a masking function that will be applied to all messages emitted
+        # in poll_and_deserialize. Fields that may need to be masked must have in their
+        # schema a signifier of their classification level. The jsonpath of that classifier
+        # (mask_query) should be the same for all fields in a schema. Within the the message,
+        # any field requiring classification should have a value associated with its field
+        # level classification. That classification should match one of the levels passes to
+        # the consumer (mask_levels). Fields over the approved classification (emit_level) as
+        # ordered in (mask_levels) will be removed from the message before being emitted.
+
+        mask_query = self.config.get("aether_masking_schema_annotation")  # classifier jsonpath
+        mask_levels = self.config.get("aether_masking_schema_levels")     # classifier levels
+        emit_level = self.config.get("aether_masking_schema_emit_level")  # chosen level
         try:
             emit_index = mask_levels.index(emit_level)
         except ValueError as ier:
             raise ValueError("emit_level %s it not a value in range of restrictions: %s" %
                              (emit_level, mask_levels))
-        query_string = "$.fields.[*].%s.`parent`" % mask_query
+        query_string = "$.fields.[*].%s.`parent`" % mask_query  # parent node of matching field
         expr = parse(query_string)
         restricted_fields = [(match.value) for match in expr.find(schema)]
         restriction_map = [[obj.get("name"), obj.get(mask_query)] for obj in restricted_fields]
         failing_values = [i[1] for i in restriction_map if mask_levels.index(i[1]) > emit_index]
         def mask(msg):
-            for name, x in restriction_map:
-                if msg.get(name, None):
-                    if x in failing_values:
+            for name, field_level in restriction_map:
+                if msg.get(name, None):  # message has a field with classification
+                    if field_level in failing_values: # classification is above threshold
                         msg.pop(name, None)
             return msg
         return mask
 
     def mask_message(self, msg, mask=None):
+        # this applied a mask created from get_mask_from_schema()
         if not mask:
             return msg
-        pass
+        else:
+            return mask(msg)
 
     def poll_and_deserialize(self, timeout_ms=0, max_records=None):
         result = {}
@@ -110,10 +118,13 @@ class KafkaConsumer(VanillaConsumer):
                     else:
                         package_result["schema"] = last_schema
                     for x, msg in enumerate(reader):
-                        # do something with the individual messages
-                        processed_message = self.mask_message(msg, mask)
-                        if approval_filter(processed_message):
+                        # is message is ready for consumption, process it
+                        if approval_filter(msg):
+                            # apply masking
+                            processed_message = self.mask_message(msg, mask)
                             package_result["messages"].append(processed_message)
+
+
 
                     obj.close()  # don't forget to close your open IO object.
                     if package_result.get("schema") or len(package_result["messages"]) > 0:
