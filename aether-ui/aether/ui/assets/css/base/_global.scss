@@ -40,7 +40,6 @@ button {
   &:active,
   &:focus,
   &:hover {
-    box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 $shadow-color inset;
     cursor: pointer;
     outline: none;
     background: $action-color;
@@ -51,15 +50,28 @@ button {
     color: $grey;
     box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .1) inset;
     cursor: default;
+    pointer-events: none;
   }
+}
+
+// button on colored background
+
+.btn-c {
+  color: $white;
+  background: rgba($white, .15);
+  box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .3) inset;
 }
 
 // button on dark background
 
 .btn-d {
-  color: $white;
-  background: rgba($white, .15);
-  box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .3) inset;
+  color: $action-color-b;
+  background: rgba($action-color-b, .15);
+  box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .3) inset, 0 0 4px rgba($text-color, .4);
+
+  &:hover {
+    color: $white;
+  }
 }
 
 // button on white background
@@ -67,6 +79,10 @@ button {
 .btn-w {
   color: $action-color;
   box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .3) inset;
+}
+
+.btn-flat {
+  box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .3) inset, 1px 1px 0 rgba($white, .1), -1px -1px 0 rgba($text-color, .3);
 }
 
 .btn-primary {
@@ -205,6 +221,12 @@ pre {
   overflow: auto;
   white-space: pre;
   padding: .5rem;
+}
+
+code {
+  color: $light-grey;
+  font: $font-size-xs $code-font-family;
+  white-space: pre-wrap;
 }
 
 @media screen and (max-width: 768px) {

@@ -35,7 +35,7 @@ class NewPipeline extends Component {
     return (
       <button
         type='button'
-        className='btn btn-d btn-big'
+        className='btn btn-c btn-big'
         onClick={() => this.setState({ view: 'form' })}>
         <span className='details-title'>
           <FormattedMessage
@@ -92,7 +92,7 @@ class NewPipeline extends Component {
         </div>
         <button
           type='button'
-          className='btn btn-d btn-big btn-cancel'
+          className='btn btn-c btn-big btn-cancel'
           onClick={() => this.setState({ view: 'button', newPipelineName: '' })}>
           <span className='details-title'>
             <FormattedMessage
@@ -103,7 +103,7 @@ class NewPipeline extends Component {
         </button>
         <button
           type='submit'
-          className='btn btn-d btn-big'>
+          className='btn btn-c btn-big'>
           <span className='details-title'>
             <FormattedMessage
               id='pipeline.new.button.ok'

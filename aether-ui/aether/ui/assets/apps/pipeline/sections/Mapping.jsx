@@ -42,7 +42,7 @@ class Mapping extends Component {
           <form onSubmit={this.notifyChange.bind(this)}>
             { this.state.mappingRules.map(this.renderRule.bind(this)) }
 
-            <button type='submit' className='btn btn-d btn-big mt-2' disabled={!this.hasChanged()}>
+            <button type='submit' className='btn btn-d mt-2' disabled={!this.hasChanged()}>
               <span className='details-title'>
                 <FormattedMessage
                   id='mapping.rules.button.ok'
@@ -74,7 +74,7 @@ class Mapping extends Component {
     }
 
     return (
-      <button type='button' className='btn btn-d btn-big mb-4' onClick={addNewRule}>
+      <button type='button' className='btn btn-d btn-primary mb-4' onClick={addNewRule}>
         <FormattedMessage id='mapping.button.add' defaultMessage='Add rule' />
       </button>
     )
@@ -132,7 +132,7 @@ class Mapping extends Component {
 
         <button
           type='button'
-          className='btn btn-d btn-cancel'
+          className='btn btn-d btn-flat btn-cancel'
           onClick={removeRule}>
           <span className='details-title'>
             <FormattedMessage
