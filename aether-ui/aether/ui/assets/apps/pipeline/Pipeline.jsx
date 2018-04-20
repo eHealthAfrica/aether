@@ -136,4 +136,4 @@ const mapStateToProps = ({ pipelines }) => ({
   selectedPipeline: pipelines.selectedPipeline
 })
 
-export default connect(mapStateToProps, {})(Pipeline)
+export default connect(mapStateToProps)(Pipeline)
