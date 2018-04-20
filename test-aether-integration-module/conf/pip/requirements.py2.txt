@@ -1,0 +1,49 @@
+#########################################################################################
+#                                                                              		#
+#                              Frozen requirements                             		#
+#                                                                              		#
+#                               DO NOT CHANGE !!!                              		#
+#                                                                              		#
+# To update this first update 'primary-requirements.txt'                       		#
+# then run 'docker-compose -f docker-compose-test.yml run integration-test pip_freeze'	#
+#                                                                              		#
+#########################################################################################
+aether-saladbar==0.0.0
+aether.client==0.0.0
+attrs==17.4.0
+avro==1.8.1
+bzr==2.7.0.dev1
+CacheControl==0.11.7
+certifi==2018.1.18
+chardet==3.0.4
+configobj==5.0.6
+configparser==3.5.0
+coverage==4.5.1
+enum34==1.1.6
+flake8==3.5.0
+funcsigs==1.0.2
+idna==2.6
+isodate==0.6.0
+lockfile==0.12.2
+mccabe==0.6.1
+mercurial==3.1.2
+mistune==0.7.4
+mock==2.0.0
+more-itertools==4.1.0
+pbr==4.0.1
+pluggy==0.6.0
+py==1.5.3
+pycodestyle==2.3.1
+pyflakes==1.6.0
+pyparsing==2.2.0
+pytest==3.5.0
+pytest-runner==4.2
+rdflib==4.2.2
+rdflib-jsonld==0.4.0
+requests==2.18.4
+ruamel.ordereddict==0.4.13
+ruamel.yaml==0.14.12
+schema-salad==2.7.20180322174040
+six==1.11.0
+typing==3.6.4
+urllib3==1.22
