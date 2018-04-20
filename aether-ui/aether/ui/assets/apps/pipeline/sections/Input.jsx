@@ -74,6 +74,18 @@ class Input extends Component {
                 defaultMessage='Paste AVRO Schema'
               />
             </label>
+
+            { this.state.error &&
+              <div className='hint error-message'>
+                <h4 className='hint-title'>
+                  <FormattedMessage
+                    id='pipeline.input.invalid.message'
+                    defaultMessage='You have provided an invalid AVRO schema.'
+                  />
+                </h4>
+                { this.state.error }
+              </div>
+            }
             <FormattedMessage id='input.schema.placeholder' defaultMessage='Enter your schema'>
               {msg => (
                 <textarea
@@ -86,19 +98,6 @@ class Input extends Component {
                 />
               )}
             </FormattedMessage>
-
-            { this.state.error &&
-              <div className='hint'>
-                <h4>
-                  <FormattedMessage
-                    id='pipeline.input.invalid.message'
-                    defaultMessage='You have provided an invalid AVRO schema.'
-                  />
-                </h4>
-                <br />
-                { this.state.error }
-              </div>
-            }
 
             <button type='submit' className='btn btn-w btn-primary mt-3' disabled={!this.hasChanged()}>
               <span className='details-title'>

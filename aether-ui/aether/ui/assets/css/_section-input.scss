@@ -13,10 +13,22 @@
   }
 
   .section-right {
-    flex: 1;
     display: none;
+    width: 100%;
     padding: $unit $unit-xl;
     border-left: 1px dashed $light-grey;
+  }
+
+
+  form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: calc(100vh - 7rem - #{$unit}*2);
+    min-height: 40rem;
+    position: relative;
+    justify-content: space-between;
+    align-items: flex-start;
   }
 
   &::after {
@@ -36,8 +48,9 @@
     color: $dark-blue;
     box-shadow: 1px 1px 1px rgba($text-color, .1) inset, 1px 1px 0 rgba($white, .1);
     width: 100%;
-    min-height: 20rem;
-    height: calc(100vh - 16rem);
+    flex: 1 1 auto;
+    // min-height: 20rem;
+    // height: calc(100vh - 16rem);
   }
 }
 

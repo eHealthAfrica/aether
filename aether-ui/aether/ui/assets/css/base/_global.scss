@@ -40,10 +40,17 @@ button {
   &:active,
   &:focus,
   &:hover {
-    // box-shadow: none;
+    box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 $shadow-color inset;
     cursor: pointer;
     outline: none;
     background: $action-color;
+  }
+
+  &:disabled {
+    background: rgba($grey, .1);
+    color: $grey;
+    box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .1) inset;
+    cursor: default;
   }
 }
 
