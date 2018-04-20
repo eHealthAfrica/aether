@@ -160,7 +160,7 @@ class Mapping extends Component {
     return (
       <div className='definition'>
         <h3 className='form-label'>
-          <FormattedMessage id='mapping.definitions' defaultMessage='Rule definitions'/>
+          <FormattedMessage id='mapping.definitions' defaultMessage='Rule definitions' />
         </h3>
         <div className='definition-code'>
           <code>
