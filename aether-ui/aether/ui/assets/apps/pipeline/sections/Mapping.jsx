@@ -74,7 +74,7 @@ class Mapping extends Component {
     }
 
     return (
-      <button type='button' className='btn btn-d btn-primary mb-4' onClick={addNewRule}>
+      <button type='button' className='btn btn-d btn-primary mb-2' onClick={addNewRule}>
         <FormattedMessage id='mapping.button.add' defaultMessage='Add rule' />
       </button>
     )
@@ -102,7 +102,7 @@ class Mapping extends Component {
 
     return (
       <div key={rule.id} className='rule'>
-        <div className='rule-source'>
+        <div className='rule-input source'>
           <FormattedMessage id='mapping.rule.source.placeholder' defaultMessage='define source'>
             {message => (
               <input
@@ -118,7 +118,7 @@ class Mapping extends Component {
           </FormattedMessage>
         </div>
 
-        <div className='rule-destination'>
+        <div className='rule-input destination'>
           <FormattedMessage id='mapping.rule.destination.placeholder' defaultMessage='define destination'>
             {message => (
               <input
