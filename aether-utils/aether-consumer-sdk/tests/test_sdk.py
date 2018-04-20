@@ -13,14 +13,15 @@ from aether.consumer import KafkaConsumer
 @pytest.mark.integration
 def test_masking_boolean_pass(messages_test_boolean_pass, emit_level, unmasked_fields):
     topic = "TestBooleanPass"
-    assert(len(messages_test_boolean_pass) == topic_size), "Should have generated the right number of messages"
+    assert(len(messages_test_boolean_pass) ==
+           topic_size), "Should have generated the right number of messages"
     # set configs
     consumer_kwargs = {
         "aether_masking_schema_annotation": "aetherMaskingLevel",
         "aether_emit_flag_field_path": "$.publish",
         "aether_emit_flag_values": [True, False],
         "aether_masking_schema_levels": [0, 1, 2, 3, 4, 5],
-        "aether_masking_schema_emit_level" : emit_level,  # set by test params
+        "aether_masking_schema_emit_level": emit_level,  # set by test params
         "bootstrap_servers": kafka_server,
         "heartbeat_interval_ms": 2500,
         "session_timeout_ms": 18000,
@@ -44,23 +45,24 @@ def test_masking_boolean_pass(messages_test_boolean_pass, emit_level, unmasked_f
 
 
 @pytest.mark.parametrize("publish_on, expected_count", [
-    ([True], int(topic_size/2)),
-    ([False], int(topic_size/2)),
+    ([True], int(topic_size / 2)),
+    ([False], int(topic_size / 2)),
     ([True, False], topic_size),
-    (True, int(topic_size/2)),
-    (False, int(topic_size/2))
+    (True, int(topic_size / 2)),
+    (False, int(topic_size / 2))
 ])
 @pytest.mark.integration
 def test_publishing_boolean_pass(messages_test_boolean_pass, publish_on, expected_count):
     topic = "TestBooleanPass"
-    assert(len(messages_test_boolean_pass) == topic_size), "Should have generated the right number of messages"
+    assert(len(messages_test_boolean_pass) ==
+           topic_size), "Should have generated the right number of messages"
     # set configs
     consumer_kwargs = {
         "aether_masking_schema_annotation": "aetherMaskingLevel",
         "aether_emit_flag_field_path": "$.publish",
         "aether_emit_flag_values": publish_on,
         "aether_masking_schema_levels": [0, 1, 2, 3, 4, 5],
-        "aether_masking_schema_emit_level" : 5,
+        "aether_masking_schema_emit_level": 5,
         "bootstrap_servers": kafka_server,
         "heartbeat_interval_ms": 2500,
         "session_timeout_ms": 18000,
@@ -80,7 +82,7 @@ def test_publishing_boolean_pass(messages_test_boolean_pass, publish_on, expecte
         for package in packages:
             schema = package.get("schema")
             for msg in package.get("messages"):
-                count +=1
+                count += 1
     assert(count == expected_count), "unexpected # of messages published"
 
 
