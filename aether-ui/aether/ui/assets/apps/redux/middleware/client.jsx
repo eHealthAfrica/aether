@@ -10,18 +10,15 @@ export default () => next => action => {
 
   const [REQUEST, SUCCESS, FAILURE] = types
   next({ ...rest, type: REQUEST })
-  const actionPromise = promise(apiClient)
-  actionPromise
-    .then(
-      result => {
-        next({ ...rest, result, type: SUCCESS })
-      },
-      error => {
-        next({ ...rest, error, type: FAILURE })
+  return promise(apiClient)
+    .then(payload => {
+      if (payload.error) {
+        next({ ...rest, error: payload, type: FAILURE })
+      } else {
+        next({ ...rest, payload, type: SUCCESS })
       }
-    )
+    })
     .catch(error => {
       next({ ...rest, error, type: FAILURE })
     })
-  return actionPromise
 }

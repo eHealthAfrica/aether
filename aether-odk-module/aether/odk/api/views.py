@@ -26,7 +26,7 @@ from .serializers import (
     XFormSerializer,
 )
 from .surveyors_utils import get_surveyors
-from .xform_utils import extract_data_from_xml, parse_submission
+from .xform_utils import extract_data_from_xml, parse_submission, get_instance_id
 
 from ..settings import logger
 
@@ -281,32 +281,63 @@ def xform_submission(request):
     data = parse_submission(data, xform.xml_data)
 
     try:
-        submission_id = None
-        response = requests.post(
+        # When handling submissions containing multiple attachments, ODK
+        # Collect will split the submission into multiple POST requests. Using
+        # the instance id of the submission, we can assign the attached files
+        # to the correct submission.
+        #
+        # The code in this block makes some assumptions:
+        #   1. The submission has an instance id, accessible at `data['meta']['instanceID']`.
+        #   2. The instance id is globally unique.
+        #   3. The form data in the submission is identical for all
+        #      POST requests with the same instance id.
+        #
+        # These assumptions match the OpenRosa spec linked to above.
+        instance_id = get_instance_id(data)
+        if not instance_id:
+            logger.warning('Instance id is missing in submission')
+            return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        previous_submissions_response = requests.get(
             get_submissions_url(),
-            json={
-                'mapping': str(xform.mapping.pk),
-                'payload': data,
-            },
             headers=auth_header,
+            params={'instanceID': instance_id},
         )
-        submission_content = response.content.decode('utf-8')
-
-        if response.status_code != status.HTTP_201_CREATED:
-            logger.warning(
-                'Unexpected response {} from Aether Kernel server when submitting data "{}"'.format(
-                    response.status_code, form_id,
-                )
+        previous_submissions = json.loads(previous_submissions_response.content.decode('utf-8'))
+        previous_submissions_count = previous_submissions['count']
+        # If there are no previous submissions with the same instance id as
+        # the current submission, save this submission and assign its id to
+        # `submission_id`.
+        if previous_submissions_count == 0:
+            submission_id = None
+            response = requests.post(
+                get_submissions_url(),
+                json={
+                    'mapping': str(xform.mapping.pk),
+                    'payload': data,
+                },
+                headers=auth_header,
             )
-            logger.warning(submission_content)
-            return Response(status=response.status_code)
+            submission_content = response.content.decode('utf-8')
 
-        # if there is one field with non ascii characters,
-        # the usual response.json() throws `UnicodeDecodeError`.
-        submission_id = json.loads(submission_content).get('id')
+            if response.status_code != status.HTTP_201_CREATED:
+                logger.warning(
+                    'Unexpected response {} from Aether Kernel server when submitting data "{}"'.format(
+                        response.status_code, form_id,
+                    )
+                )
+                logger.warning(submission_content)
+                return Response(status=response.status_code)
+            # If there is one field with non ascii characters, the usual
+            # response.json() will throw a `UnicodeDecodeError`.
+            submission_id = json.loads(submission_content).get('id')
+        # If there already exists a submission with for this instance id, we
+        # need to retrieve its submission id in order to be able to associate
+        # attachments with it.
+        else:
+            submission_id = previous_submissions['results'][0]['id']
 
+        # Submit attachments (if any) to the submission.
         for name, f in request.FILES.items():
-            # submit possible attachments to the submission
             if name != XML_SUBMISSION_PARAM:
                 response = requests.post(
                     get_attachments_url(),

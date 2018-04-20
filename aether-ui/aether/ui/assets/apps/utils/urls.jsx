@@ -1,6 +1,6 @@
 const baseUrl = process.env.HOSTNAME
 
 export default {
-  SAMPLE_URL: `${baseUrl}/sample`,
+  MOCK_PIPELINES_URL: '/static/mock/pipelines.mock.json',
   PIPELINE_URL: `${baseUrl}/pipeline`
 }

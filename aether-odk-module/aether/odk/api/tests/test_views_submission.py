@@ -279,6 +279,39 @@ class PostSubmissionTests(CustomTestCase):
         # check that submission was created with four attachments
         self.helper_check_submission(attachments=4)
 
+    def test__submission__post__with_attachments__multiple_requests(self):
+        # An ODK Collect submission containing several large attachments will be
+        # split up into several POST requests. The form data in all these
+        # requests is identical, but the attachments differ. In this test, we
+        # check that all attachments belonging to e.g. one ODK Collect submission
+        # get associated with that submission -- even if they arrive at different
+        # times.
+        count = 3
+        for _ in range(count):
+            with open(self.samples['submission']['file-ok'], 'rb') as f:
+                response = self.client.post(
+                    self.url,
+                    {
+                        XML_SUBMISSION_PARAM: f,
+                        'attach': SimpleUploadedFile('audio.wav', b'abc'),
+                    },
+                    **self.headers_user
+                )
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content.decode())
+        self.helper_check_submission(attachments=count)
+
+    def test__submission__post__no_instance_id(self):
+        with open(self.samples['submission']['file-err-missing-instance-id'], 'rb') as f:
+            response = self.client.post(
+                self.url,
+                {
+                    XML_SUBMISSION_PARAM: f,
+                    'attach': SimpleUploadedFile('audio.wav', b'abc'),
+                },
+                **self.headers_user
+            )
+            self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+
     @mock.patch('requests.delete')
     @mock.patch('requests.post',
                 side_effect=[
