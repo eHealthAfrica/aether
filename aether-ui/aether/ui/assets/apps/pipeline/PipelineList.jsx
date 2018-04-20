@@ -82,12 +82,12 @@ class PipelineList extends Component {
 
   onStartPipeline (newPipeline) {
     this.props.addPipeline(newPipeline)
-    this.props.history.push('/pipeline')
+    this.props.history.push(`/${newPipeline.id}`)
   }
 
   onSelectPipeline (pipeline) {
     this.props.selectedPipelineChanged(pipeline)
-    this.props.history.push('/pipeline')
+    this.props.history.push(`/${pipeline.id}`)
   }
 }
 
