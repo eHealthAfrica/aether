@@ -50,9 +50,8 @@ const EntityTypeView = props => {
 }
 
 class EntityTypeViewer extends Component {
-  iterateTypes (entityTypesText) {
+  iterateTypes (entityTypes) {
     try {
-      const entityTypes = JSON.parse(entityTypesText)
       const result = []
       if (entityTypes && entityTypes.length) {
         entityTypes.forEach(entityType => {

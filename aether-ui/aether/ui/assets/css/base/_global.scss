@@ -33,24 +33,44 @@ button {
   background: rgba($grey, .1);
   border: 0;
   border-color: transparent;
-  padding: .4em 1em;
+  padding: .4em 2em;
   box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 $shadow-color inset;
   transition: background .3s;
 
   &:active,
   &:focus,
   &:hover {
-    // box-shadow: none;
+    box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 $shadow-color inset;
     cursor: pointer;
     outline: none;
     background: $action-color;
   }
+
+  &:disabled {
+    background: rgba($grey, .1);
+    color: $grey;
+    box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .1) inset;
+    cursor: default;
+  }
 }
+
+// button on dark background
 
 .btn-d {
   color: $white;
   background: rgba($white, .15);
   box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .3) inset;
+}
+
+// button on white background
+
+.btn-w {
+  color: $action-color;
+  box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .3) inset;
+}
+
+.btn-primary {
+  @include bg-gradient;
 }
 
 .btn-big {

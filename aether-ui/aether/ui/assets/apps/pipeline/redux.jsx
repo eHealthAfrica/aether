@@ -5,8 +5,9 @@ import { clone } from '../utils'
 import urls from '../utils/urls'
 
 export const types = {
-  PIPELINE_UPDATE: 'pipeline_update',
   PIPELINE_ADD: 'pipeline_add',
+  PIPELINE_UPDATE: 'pipeline_update',
+
   PIPELINE_LIST_CHANGED: 'pipeline_list_changed',
   SELECTED_PIPELINE_CHANGED: 'selected_pipeline_changed',
   GET_ALL: 'pipeline_get_all',
@@ -41,22 +42,25 @@ export const getPipelines = () => ({
 
 const reducer = (state = INITIAL_PIPELINE, action = {}) => {
   const newPipelineList = clone(state.pipelineList)
-  const findIndex = arr => arr.findIndex(x => x.id === action.payload.id)
 
   switch (action.type) {
     case types.PIPELINE_ADD: {
-      newPipelineList.unshift(action.payload)
-      return { ...state, pipelineList: newPipelineList }
+      const newPipeline = clone(action.payload)
+      newPipelineList.unshift(newPipeline)
+
+      return { ...state, pipelineList: newPipelineList, selectedPipeline: newPipeline }
     }
 
     case types.PIPELINE_UPDATE: {
-      const index = findIndex(newPipelineList)
-      newPipelineList[index] = action.payload
-      return { ...state, pipelineList: newPipelineList }
+      const updatedPipeline = clone({ ...state.selectedPipeline, ...action.payload })
+      const index = newPipelineList.findIndex(x => x.id === updatedPipeline.id)
+      newPipelineList[index] = updatedPipeline
+
+      return { ...state, pipelineList: newPipelineList, selectedPipeline: updatedPipeline }
     }
 
     case types.SELECTED_PIPELINE_CHANGED: {
-      return { ...state, selectedPipeline: action.payload }
+      return { ...state, selectedPipeline: clone(action.payload) }
     }
 
     case types.GET_ALL: {

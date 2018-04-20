@@ -171,10 +171,10 @@ class Pipeline(TimeStampedModel):
     # this represents the list of mapping rules
     # {
     #    "mapping": [
-    #      ['jsonpath-input-1', 'jsonpath-entity-type-1'],
-    #      ['jsonpath-input-2', 'jsonpath-entity-type-2'],
+    #      {'id': ###, 'source': 'jsonpath-input-1', 'destination: 'jsonpath-entity-type-1'},
+    #      {'id': ###, 'source': 'jsonpath-input-2', 'destination: 'jsonpath-entity-type-2'},
     #      ...
-    #      ['jsonpath-input-n', 'jsonpath-entity-type-n'],
+    #      {'id': ###, 'source': 'jsonpath-input-n', 'destination: 'jsonpath-entity-type-n'},
     #    ]
     # }
     mapping = JSONField(blank=True, null=True, default=[])

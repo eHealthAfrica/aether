@@ -1,16 +1,31 @@
 import React, { Component } from 'react'
-import { connect } from 'react-redux'
-import { AvroSchemaViewer } from '../../components'
 import { FormattedMessage } from 'react-intl'
-import MockInputSchema from '../../mock/schema_input.mock'
+import { connect } from 'react-redux'
+import avro from 'avro-js'
+
+import { AvroSchemaViewer } from '../../components'
+import { deepEqual } from '../../utils'
+import { updatePipeline } from '../redux'
 
 class Input extends Component {
   constructor (props) {
     super(props)
 
     this.state = {
-      inputSchema: JSON.stringify(MockInputSchema)
+      inputSchema: this.parseProps(props),
+      error: null
     }
+  }
+
+  componentWillReceiveProps (nextProps) {
+    this.setState({
+      inputSchema: this.parseProps(nextProps),
+      error: null
+    })
+  }
+
+  parseProps (props) {
+    return JSON.stringify(props.selectedPipeline.schema, 0, 2)
   }
 
   onSchemaTextChanged (event) {
@@ -19,31 +34,88 @@ class Input extends Component {
     })
   }
 
+  notifyChange (event) {
+    event.preventDefault()
+
+    try {
+      // validate schema
+      const schema = JSON.parse(this.state.inputSchema)
+      const type = avro.parse(schema)
+      // generate a new input sample
+      const input = type.random()
+
+      this.props.updatePipeline({ schema, input })
+    } catch (error) {
+      this.setState({ error: error.message })
+    }
+  }
+
+  hasChanged () {
+    try {
+      const schema = JSON.parse(this.state.inputSchema)
+      return !deepEqual(schema, this.props.selectedPipeline.schema)
+    } catch (e) {
+      return true
+    }
+  }
+
   render () {
     return (
       <div className='section-body'>
         <div className='section-left'>
-          <AvroSchemaViewer schema={this.state.inputSchema} />
+          <AvroSchemaViewer schema={this.props.selectedPipeline.schema} />
         </div>
+
         <div className='section-right'>
-          <label className='form-label'>
-            <FormattedMessage
-              id='input.empty.message'
-              defaultMessage='Paste AVRO Schema'
-            />
-          </label>
-          <FormattedMessage id='input.schema.placeholder' defaultMessage='Enter your schema'>
-            {msg => (
-              <textarea type='text' className='monospace' value={this.state.inputSchema}
-                onChange={this.onSchemaTextChanged.bind(this)} placeholder={msg} rows='10' />
-            )}
-          </FormattedMessage>
+          <form onSubmit={this.notifyChange.bind(this)}>
+            <label className='form-label'>
+              <FormattedMessage
+                id='input.empty.message'
+                defaultMessage='Paste AVRO Schema'
+              />
+            </label>
+
+            { this.state.error &&
+              <div className='hint error-message'>
+                <h4 className='hint-title'>
+                  <FormattedMessage
+                    id='pipeline.input.invalid.message'
+                    defaultMessage='You have provided an invalid AVRO schema.'
+                  />
+                </h4>
+                { this.state.error }
+              </div>
+            }
+            <FormattedMessage id='input.schema.placeholder' defaultMessage='Enter your schema'>
+              {msg => (
+                <textarea
+                  className='monospace'
+                  required
+                  value={this.state.inputSchema}
+                  onChange={this.onSchemaTextChanged.bind(this)}
+                  placeholder={msg}
+                  rows='10'
+                />
+              )}
+            </FormattedMessage>
+
+            <button type='submit' className='btn btn-w btn-primary mt-3' disabled={!this.hasChanged()}>
+              <span className='details-title'>
+                <FormattedMessage
+                  id='mapping.rule.button.ok'
+                  defaultMessage='Add to pipeline'
+                />
+              </span>
+            </button>
+          </form>
         </div>
       </div>
     )
   }
 }
 
-const mapStateToProps = () => ({ })
+const mapStateToProps = ({ pipelines }) => ({
+  selectedPipeline: pipelines.selectedPipeline
+})
 
-export default connect(mapStateToProps, {})(Input)
+export default connect(mapStateToProps, { updatePipeline })(Input)

@@ -12,5 +12,6 @@
   code {
     color: $light-grey;
     font: $font-size-xs $code-font-family;
+    white-space: pre;
   }
 }
