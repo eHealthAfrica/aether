@@ -1,4 +1,6 @@
-/* global fetch, jQuery */
+/* global jQuery */
+import 'whatwg-fetch'
+
 const methods = ['get', 'post', 'put', 'patch', 'del']
 
 export default class ApiClient {
@@ -31,16 +33,13 @@ export default class ApiClient {
         const options = {
           method,
           credentials: 'same-origin',
-          headers: Object.assign({
-            'X-CSRFToken': csrfToken,
-            'X-METHOD': method
-          }, headers),
+          headers: Object.assign({ 'X-CSRFToken': csrfToken }, headers),
           body: JSON.stringify(data)
         }
         path = appendParams(path, params)
-        return fetch(path, options)
+        return window.fetch(path, options)
           .then(res => {
-            if (res.status >= 200 && res.status < 300) {
+            if (res.status >= 200 && res.status < 400) {
               return res.json() // Should be extended to cater for other content-types or than json
             } else {
               return { error: res.statusText, status: res.status }

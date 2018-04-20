@@ -33,14 +33,12 @@
     "moment": "~2.22.0",
     "popper.js": "~1.14.0",
     "react": "~16.3.0",
-    "react-cookie": "~2.1.0",
     "react-dom": "~16.3.0",
     "react-intl": "~2.4.0",
     "react-redux": "~5.0.0",
     "react-router-dom": "~4.2.0",
     "redux": "~4.0.0",
     "redux-thunk": "~2.2.0",
-    "superagent": "~3.8.0",
     "whatwg-fetch": "~2.0.0"
   },
 
