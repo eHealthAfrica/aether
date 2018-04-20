@@ -1,9 +1,10 @@
 /* global describe, it, expect */
 
 import React from 'react'
+import { mountWithIntl } from 'enzyme-react-intl'
+
 import mockEntityTypesSchema from '../mock/schema_entityTypes.mock'
 import { EntityTypeViewer } from '../components'
-import { mountWithIntl } from '../../tests/test-react-intl'
 
 describe('EntityTypeViewer', () => {
   it('should take a valid json list of schemas and render entity visualizers', () => {

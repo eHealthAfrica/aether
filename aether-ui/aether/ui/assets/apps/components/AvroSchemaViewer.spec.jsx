@@ -1,9 +1,10 @@
 /* global describe, it, expect */
 
 import React from 'react'
+import { mountWithIntl } from 'enzyme-react-intl'
+
 import mockAvroSchema from '../mock/schema_input.mock'
 import { AvroSchemaViewer } from '../components'
-import { mountWithIntl } from '../../tests/test-react-intl'
 
 describe('AvroSchemaViewer', () => {
   it('should take a valid avro schema and render an avro visualizer', () => {

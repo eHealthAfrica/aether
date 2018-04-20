@@ -4,7 +4,6 @@ import { Route } from 'react-router-dom'
 
 import PipelineList from './PipelineList'
 import Pipeline from './Pipeline'
-import NewPipeline from './NewPipeline'
 
 class PipelineApp extends Component {
   render () {
@@ -12,8 +11,7 @@ class PipelineApp extends Component {
       <Route render={props => (
         <React.Fragment>
           <Route exact path='/' component={PipelineList} />
-          <Route path='/pipeline' component={Pipeline} />
-          <Route path='/new-pipeline' component={NewPipeline} />
+          <Route path='/:id' component={Pipeline} />
         </React.Fragment>
       )} />
     )
