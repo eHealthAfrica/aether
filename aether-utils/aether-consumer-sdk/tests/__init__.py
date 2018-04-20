@@ -20,8 +20,10 @@ kafka_connection_retry = 10
 kafka_connection_retry_wait = 6
 topic_size = 100
 
+
 def pprint(obj):
     print(json.dumps(obj, indent=2))
+
 
 def send_messages(producer, name, schema, messages):
     bytes_writer = io.BytesIO()
@@ -32,15 +34,17 @@ def send_messages(producer, name, schema, messages):
     raw_bytes = bytes_writer.getvalue()
     writer.close()
     future = producer.send(name, key=str(msg.get("id")), value=raw_bytes)
-    #block until it actually sends.
+    # block until it actually sends.
     record_metadata = future.get(timeout=10)
     producer.flush()
+
 
 def write_to_topic(schema_name):
     producer = None
     for x in range(kafka_connection_retry):
         try:
-            producer = KafkaProducer(bootstrap_servers=kafka_server, acks=1, key_serializer=str.encode)
+            producer = KafkaProducer(bootstrap_servers=kafka_server,
+                                     acks=1, key_serializer=str.encode)
             break
         except NoBrokersAvailable:
             sleep(kafka_connection_retry_wait)
@@ -56,11 +60,13 @@ def write_to_topic(schema_name):
     producer.close()
     return messages
 
+
 @pytest.mark.integration
 @pytest.fixture(scope="session")
 def messages_test_boolean_pass():
     messages = write_to_topic("TestBooleanPass")
     return messages
+
 
 @pytest.mark.integration
 @pytest.fixture(scope="session")
@@ -68,11 +74,13 @@ def messages_test_enum_pass():
     messages = write_to_topic("TestEnumPass")
     return messages
 
+
 @pytest.mark.unit
 @pytest.fixture(scope="session")
 def sample_schema():
     assets = test_schemas.get("TestBooleanPass")
     return assets.get("schema")
+
 
 @pytest.mark.unit
 @pytest.fixture(scope="function")
@@ -81,11 +89,13 @@ def sample_message():
     mocker = assets.get("mocker")
     yield mocker()[0]
 
+
 @pytest.mark.unit
 @pytest.fixture(scope="session")
 def sample_schema_top_secret():
     assets = test_schemas.get("TestTopSecret")
     return assets.get("schema")
+
 
 @pytest.mark.unit
 @pytest.fixture(scope="function")
@@ -99,8 +109,10 @@ def sample_message_top_secret():
 @pytest.fixture(scope="function")
 def offline_consumer():
     consumer = None
+
     def set_config(self, new_configs):
         self.config = new_configs
+
     def add_config(self, pairs):
         for k, v in pairs.items():
             self.config[k] = v
@@ -114,4 +126,3 @@ def offline_consumer():
     # Leave this deepcopy
     consumer._set_config(deepcopy(KafkaConsumer.ADDITIONAL_CONFIG))
     return consumer
-

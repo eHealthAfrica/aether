@@ -10,13 +10,14 @@ from spavro.io import DatumReader
 
 from jsonpath_ng import jsonpath, parse
 
+
 class KafkaConsumer(VanillaConsumer):
 
     # Adding these key/ value pairs to those handled by vanilla KafkaConsumer
     ADDITIONAL_CONFIG = {
-        "aether_masking_schema_annotation" : "aetherMaskingLevel",
-        "aether_masking_schema_levels" : [0,1,2,3,4,5],
-        "aether_masking_schema_emit_level" : 0,
+        "aether_masking_schema_annotation": "aetherMaskingLevel",
+        "aether_masking_schema_levels": [0, 1, 2, 3, 4, 5],
+        "aether_masking_schema_emit_level": 0,
         "aether_emit_flag_field_path": "$.approved",
         "aether_emit_flag_values": [True]
     }
@@ -33,10 +34,11 @@ class KafkaConsumer(VanillaConsumer):
         pass_conditions = self.config.get("aether_emit_flag_values")
         check = None
         if isinstance(pass_conditions, list):
-            check = lambda x : x in pass_conditions
+            def check(x): return x in pass_conditions
         else:
-            check = lambda x: x is pass_conditions
+            def check(x): return x is pass_conditions
         expr = parse(check_condition_path)
+
         def approval_filter(msg):
             values = [match.value for match in expr.find(msg)]
             if not len(values) > 0:
@@ -67,10 +69,11 @@ class KafkaConsumer(VanillaConsumer):
         restricted_fields = [(match.value) for match in expr.find(schema)]
         restriction_map = [[obj.get("name"), obj.get(mask_query)] for obj in restricted_fields]
         failing_values = [i[1] for i in restriction_map if mask_levels.index(i[1]) > emit_index]
+
         def mask(msg):
             for name, field_level in restriction_map:
                 if msg.get(name, None):  # message has a field with classification
-                    if field_level in failing_values: # classification is above threshold
+                    if field_level in failing_values:  # classification is above threshold
                         msg.pop(name, None)
             return msg
         return mask
@@ -86,15 +89,16 @@ class KafkaConsumer(VanillaConsumer):
         result = {}
         last_schema = None
         mask = None
-        approval_filter = lambda x : True
+
+        def approval_filter(x): return True
         partitioned_messages = self.poll(timeout_ms, max_records)
         if partitioned_messages:
             for part, packages in partitioned_messages.items():  # we don't worry about the partitions for now
                 partition_result = []
-                for package in packages: # a package can contain multiple messages serialzed with the same schema
+                for package in packages:  # a package can contain multiple messages serialzed with the same schema
                     package_result = {
                         "schema": None,
-                        "messages" : []
+                        "messages": []
                     }
                     schema = None
                     obj = io.BytesIO()
@@ -108,7 +112,8 @@ class KafkaConsumer(VanillaConsumer):
                     if not schema:
                         last_schema = None
                         mask = None
-                        approval_filter = lambda x : True
+
+                        def approval_filter(x): return True
                     if schema != last_schema:
                         last_schema = schema
                         package_result["schema"] = schema
@@ -123,8 +128,6 @@ class KafkaConsumer(VanillaConsumer):
                             # apply masking
                             processed_message = self.mask_message(msg, mask)
                             package_result["messages"].append(processed_message)
-
-
 
                     obj.close()  # don't forget to close your open IO object.
                     if package_result.get("schema") or len(package_result["messages"]) > 0:

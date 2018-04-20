@@ -1,7 +1,7 @@
 Artifacts
     Schema1
         _id
-        annotation_name #1
+        annotation_name  # 1
         5 masking elements
             Different Masking Levels on each element
         publish_flag - 1 - pass on True
@@ -9,7 +9,7 @@ Artifacts
 
     Schema2
         _id
-        annotation_name #2
+        annotation_name  # 2
         5 masking elements
             Different Masking Levels on each element
         publish_flag - 2 - pass on value "yes"
@@ -22,11 +22,10 @@ Test Requires:
 
     Run Tests on Consumer
 
-        schema-1
-            Masking levels 0-5
+        schema - 1
+            Masking levels 0 - 5
             publish flag check
 
         schema_2
-            Masking levels 0-5
+            Masking levels 0 - 5
             publish flag check
-
