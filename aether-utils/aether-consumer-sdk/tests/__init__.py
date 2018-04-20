@@ -18,11 +18,9 @@ from .assets.schemas import test_schemas
 kafka_server = "kafka-test:29092"
 kafka_connection_retry = 10
 kafka_connection_retry_wait = 6
-topic_size = 100
-
-
-def pprint(obj):
-    print(json.dumps(obj, indent=2))
+# increasing topic_size may cause poll to be unable to get all the messages in one call.
+# needs to be even an if > 100 a multiple of 100.
+topic_size = 500
 
 
 def send_messages(producer, name, schema, messages):
@@ -35,7 +33,7 @@ def send_messages(producer, name, schema, messages):
     writer.close()
     future = producer.send(name, key=str(msg.get("id")), value=raw_bytes)
     # block until it actually sends.
-    record_metadata = future.get(timeout=10)
+    record_metadata = future.get(timeout=100)
     producer.flush()
 
 
@@ -53,10 +51,19 @@ def write_to_topic(schema_name):
                                  (kafka_connection_retry * kafka_connection_retry_wait))
     assets = test_schemas.get(schema_name)
     schema = assets.get("schema")
-    schema = ParseSchema(json.dumps(schema))
+    schema = ParseSchema(json.dumps(schema, indent=2))
     mocker = assets.get("mocker")
-    messages = mocker(count=topic_size)
-    send_messages(producer, schema_name, schema, messages)
+    messages = []
+    # the parcel gets large if you stick too many messages in it.
+    # 100 serialzed together effectively minimizes the impact of passing the schema.
+    if topic_size > 100:
+        for x in range(0, topic_size, 100):
+            batch = mocker(count=100)
+            messages.extend(batch)
+            send_messages(producer, schema_name, schema, batch)
+    else:
+        messages = mocker(count=topic_size)
+        send_messages(producer, schema_name, schema, messages)
     producer.close()
     return messages
 

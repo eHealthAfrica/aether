@@ -194,6 +194,7 @@ def mock_message_schema_boolean_pass(count=10, *args, **kwargs):
         messages[x]["publish"] = True
     return messages
 
+
 def mock_message_schema_enum_pass(count=10, *args, **kwargs):
     messages = mock_message_schema_boolean_pass(count=count)
     for x, msg in enumerate(messages):
@@ -204,6 +205,7 @@ def mock_message_schema_enum_pass(count=10, *args, **kwargs):
         else:
             msg["publish"] = "no"
     return messages
+
 
 test_schemas = {
     "TestBooleanPass": {

@@ -108,7 +108,7 @@ class KafkaConsumer(VanillaConsumer):
                     # We can get the schema directly from the reader.
                     # we get a mess of unicode that can't be json parsed so we need ast
                     raw_schema = ast.literal_eval(str(reader.meta))
-                    schema = raw_schema.get("avro.schema")
+                    schema = json.loads(raw_schema.get("avro.schema"))
                     if not schema:
                         last_schema = None
                         mask = None
@@ -133,7 +133,8 @@ class KafkaConsumer(VanillaConsumer):
                     if package_result.get("schema") or len(package_result["messages"]) > 0:
                         partition_result.append(package_result)
                 if len(partition_result) > 0:
-                    result[part] = partition_result
+                    name = "topic:%s-partition:%s" % (part.topic, part.partition)
+                    result[name] = partition_result
         return result
 
     def seek_to_beginning(self):
