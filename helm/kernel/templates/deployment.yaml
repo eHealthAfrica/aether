@@ -126,6 +126,8 @@ spec:
             secretKeyRef:
               name: {{ .Values.application.secret }}
               key: kernel-database-name
+        - name: TESTING
+          value: {{ .Values.TESTING }}
         volumeMounts:
         - mountPath: /var/www/static
           name: static-assets-volume
@@ -167,9 +169,9 @@ spec:
         configMap:
           name: kernel-init
           defaultMode: 0744
-      - name: postgres-data
-        persistentVolumeClaim:
-          claimName: postgres-data
+      # - name: postgres-data
+      #   persistentVolumeClaim:
+      #     claimName: postgres-data
       # TODO: make generic
       - name: code
         hostPath:

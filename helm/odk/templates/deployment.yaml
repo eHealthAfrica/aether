@@ -121,6 +121,8 @@ spec:
               key: kernel-token
         - name: AETHER_KERNEL_URL
           value: {{ .Values.kernel_url }}
+        - name: TESTING
+          value: {{ .Values.TESTING }}
         - name: RDS_USERNAME
           valueFrom:
             secretKeyRef:

@@ -97,6 +97,15 @@ class PostSubmissionTests(CustomTestCase):
         '''
 
         super(PostSubmissionTests, self).setUp()
+
+        # FIXME: move or remove
+        # delete ALL mappings in kernel testing server
+        self.MAPPING_URL = kernel_utils.get_mappings_url()
+        self.KERNEL_HEADERS = kernel_utils.get_auth_header()
+        mappings = requests.get(self.MAPPING_URL, headers=self.KERNEL_HEADERS).json()['results']
+        for mapping in mappings:
+            resp = requests.delete(mapping['url'], headers=self.KERNEL_HEADERS)
+
         self.helper_create_user()
         self.url = reverse('xform-submission')
 
@@ -104,12 +113,6 @@ class PostSubmissionTests(CustomTestCase):
         self.assertTrue(kernel_utils.test_connection())
         self.KERNEL_HEADERS = kernel_utils.get_auth_header()
 
-        project = requests.get(
-            '{}/projects/'.format(kernel_utils.get_kernel_server_url()),
-            headers=self.KERNEL_HEADERS,
-        )
-        # TODO: attach to container
-        import pdb; pdb.set_trace()
         project = requests.get(
             '{}/projects/'.format(kernel_utils.get_kernel_server_url()),
             headers=self.KERNEL_HEADERS,
@@ -173,6 +176,7 @@ class PostSubmissionTests(CustomTestCase):
 
         # get submissions
         response = requests.get(content['submissions_url'], headers=self.KERNEL_HEADERS)
+        from aether.common.kernel.utils import get_kernel_server_url
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = response.json()
         self.assertEqual(content['count'], 1 if succeed else 0)

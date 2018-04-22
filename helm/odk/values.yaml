@@ -21,6 +21,7 @@ ums_url: ums-dev
 kernel_url: http://kernel
 # FIXME: configurable
 domain: aether.local
+TESTING: "!!boolean false"
 trusted_origins: .ehealthafrica.org,.gather2.org
 namespace:
   create: false
