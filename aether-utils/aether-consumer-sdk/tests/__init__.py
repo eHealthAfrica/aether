@@ -69,6 +69,24 @@ def write_to_topic(schema_name):
 
 
 @pytest.mark.integration
+@pytest.fixture(scope="function")
+def default_consumer_args():
+    return deepcopy({
+        "aether_masking_schema_annotation": "aetherMaskingLevel",
+        "aether_emit_flag_field_path": "$.publish",
+        "aether_emit_flag_values": [True, False],
+        "aether_masking_schema_levels": [0, 1, 2, 3, 4, 5],
+        "aether_masking_schema_emit_level": 0,
+        "bootstrap_servers": kafka_server,
+        "heartbeat_interval_ms": 2500,
+        "session_timeout_ms": 18000,
+        "request_timeout_ms": 20000,
+        "auto_offset_reset": 'latest',
+        "consumer_timeout_ms": 17000
+    })
+
+
+@pytest.mark.integration
 @pytest.fixture(scope="session")
 def messages_test_boolean_pass():
     messages = write_to_topic("TestBooleanPass")
@@ -79,6 +97,13 @@ def messages_test_boolean_pass():
 @pytest.fixture(scope="session")
 def messages_test_enum_pass():
     messages = write_to_topic("TestEnumPass")
+    return messages
+
+
+@pytest.mark.integration
+@pytest.fixture(scope="session")
+def messages_test_secret_pass():
+    messages = write_to_topic("TestTopSecret")
     return messages
 
 

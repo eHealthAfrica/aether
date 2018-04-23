@@ -197,7 +197,7 @@ def mock_message_schema_boolean_pass(count=10, *args, **kwargs):
 
 def mock_message_schema_enum_pass(count=10, *args, **kwargs):
     messages = mock_message_schema_boolean_pass(count=count)
-    for x, msg in enumerate(messages):
+    for x, msg in enumerate(messages, 0):
         if x % 3 == 0:
             msg["publish"] = "maybe"
         elif x % 2 == 0:

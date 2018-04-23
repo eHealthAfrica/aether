@@ -25,26 +25,56 @@ from aether.consumer import KafkaConsumer
     (4, 6),
     (5, 7),
 ])
-def test_masking_boolean_pass(messages_test_boolean_pass, emit_level, unmasked_fields):
+def test_masking_boolean_pass(default_consumer_args,
+                              messages_test_boolean_pass,
+                              emit_level,
+                              unmasked_fields):
     topic = "TestBooleanPass"
     assert(len(messages_test_boolean_pass) ==
            topic_size), "Should have generated the right number of messages"
     # set configs
-    consumer_kwargs = {
-        "aether_masking_schema_annotation": "aetherMaskingLevel",
-        "aether_emit_flag_field_path": "$.publish",
-        "aether_emit_flag_values": [True, False],
-        "aether_masking_schema_levels": [0, 1, 2, 3, 4, 5],
-        "aether_masking_schema_emit_level": emit_level,  # set by test param emit_level
-        "bootstrap_servers": kafka_server,
-        "heartbeat_interval_ms": 2500,
-        "session_timeout_ms": 18000,
-        "request_timeout_ms": 20000,
-        "auto_offset_reset": 'latest',
-        "consumer_timeout_ms": 17000
-    }
+    consumer_kwargs = default_consumer_args
+    consumer_kwargs["aether_masking_schema_emit_level"] = emit_level
     # get messages for this emit level
-    iter_consumer = KafkaConsumer(**deepcopy(consumer_kwargs))
+    iter_consumer = KafkaConsumer(**consumer_kwargs)
+    iter_consumer.subscribe(topic)
+    iter_consumer.seek_to_beginning()
+    messages = iter_consumer.poll_and_deserialize(timeout_ms=10000, max_records=1000)
+    iter_consumer.close()
+    # read messages and check masking
+    for partition, packages in messages.items():
+        for package in packages:
+            for msg in package.get("messages"):
+                assert(len(msg.keys()) ==
+                       unmasked_fields), "%s fields should be unmasked" % unmasked_fields
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("emit_level,unmasked_fields", [
+    ("uncategorized", 2),
+    ("public", 3),
+    ("confidential", 4),
+    ("secret", 5),
+    ("top secret", 6),
+    ("ufos", 7),
+])
+@pytest.mark.parametrize("masking_taxonomy", [
+    (["public", "confidential", "secret", "top secret", "ufos"])
+])
+def test_masking_category_pass(default_consumer_args,
+                               messages_test_secret_pass,
+                               emit_level,
+                               masking_taxonomy,
+                               unmasked_fields):
+    topic = "TestTopSecret"
+    assert(len(messages_test_secret_pass) ==
+           topic_size), "Should have generated the right number of messages"
+    # set configs
+    consumer_kwargs = default_consumer_args
+    consumer_kwargs["aether_masking_schema_emit_level"] = emit_level
+    consumer_kwargs["aether_masking_schema_levels"] = masking_taxonomy
+    # get messages for this emit level
+    iter_consumer = KafkaConsumer(**consumer_kwargs)
     iter_consumer.subscribe(topic)
     iter_consumer.seek_to_beginning()
     messages = iter_consumer.poll_and_deserialize(timeout_ms=10000, max_records=1000)
@@ -65,26 +95,18 @@ def test_masking_boolean_pass(messages_test_boolean_pass, emit_level, unmasked_f
     (True, int(topic_size / 2)),
     (False, int(topic_size / 2))
 ])
-def test_publishing_boolean_pass(messages_test_boolean_pass, publish_on, expected_count):
+def test_publishing_boolean_pass(default_consumer_args,
+                                 messages_test_boolean_pass,
+                                 publish_on,
+                                 expected_count):
     topic = "TestBooleanPass"
     assert(len(messages_test_boolean_pass) ==
            topic_size), "Should have generated the right number of messages"
     # set configs
-    consumer_kwargs = {
-        "aether_masking_schema_annotation": "aetherMaskingLevel",
-        "aether_emit_flag_field_path": "$.publish",
-        "aether_emit_flag_values": publish_on,
-        "aether_masking_schema_levels": [0, 1, 2, 3, 4, 5],
-        "aether_masking_schema_emit_level": 5,
-        "bootstrap_servers": kafka_server,
-        "heartbeat_interval_ms": 2500,
-        "session_timeout_ms": 18000,
-        "request_timeout_ms": 20000,
-        "auto_offset_reset": 'latest',
-        "consumer_timeout_ms": 17000
-    }
+    consumer_kwargs = default_consumer_args
+    consumer_kwargs["aether_emit_flag_values"] = publish_on
     # get messages for this emit level
-    iter_consumer = KafkaConsumer(**deepcopy(consumer_kwargs))
+    iter_consumer = KafkaConsumer(**consumer_kwargs)
     iter_consumer.subscribe(topic)
     iter_consumer.seek_to_beginning()
     messages = iter_consumer.poll_and_deserialize(timeout_ms=10000, max_records=1000)
@@ -96,6 +118,35 @@ def test_publishing_boolean_pass(messages_test_boolean_pass, publish_on, expecte
             for msg in package.get("messages"):
                 count += 1
     assert(count == expected_count), "unexpected # of messages published"
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("publish_on, expected_values", [
+    (["yes"], ["yes"]),
+    (["yes", "maybe"], ["yes", "maybe"]),
+    ("yes", ["yes"])
+])
+def test_publishing_enum_pass(default_consumer_args,
+                              messages_test_enum_pass,
+                              publish_on,
+                              expected_values):
+    topic = "TestEnumPass"
+    assert(len(messages_test_enum_pass) ==
+           topic_size), "Should have generated the right number of messages"
+    # set configs
+    consumer_kwargs = default_consumer_args
+    consumer_kwargs["aether_emit_flag_values"] = publish_on
+    # get messages for this emit level
+    iter_consumer = KafkaConsumer(**consumer_kwargs)
+    iter_consumer.subscribe(topic)
+    iter_consumer.seek_to_beginning()
+    messages = iter_consumer.poll_and_deserialize(timeout_ms=10000, max_records=1000)
+    iter_consumer.close()
+    # read messages and check masking
+    for partition, packages in messages.items():
+        for package in packages:
+            for msg in package.get("messages"):
+                assert(msg.get("publish") in expected_values)
 
 #####################
 #    Unit Tests     #
@@ -140,6 +191,7 @@ def test_msk_msg_default_map(offline_consumer, sample_schema, sample_message, em
 
 @pytest.mark.unit
 @pytest.mark.parametrize("emit_level,expected_count", [
+    ("no matching taxonomy", 2),
     ("public", 3),
     ("confidential", 4),
     ("secret", 5),

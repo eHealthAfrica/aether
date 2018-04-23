@@ -28,6 +28,12 @@ class KafkaConsumer(VanillaConsumer):
         super(KafkaConsumer, self).__init__(*topics, **configs)
 
     def get_approval_filter(self):
+        # An approval filter is a flag set in the body of each message and found at path
+        # {aether_emit_flag_field_path} that controls whether a message is published or not. If the
+        # value found at path {aether_emit_flag_field_path} is not a member of the set configured
+        # at {aether_emit_flag_values}, then the message will not be published. If the value is in
+        # the set {aether_emit_flag_values}, it will be published. These rules resolve to a simple
+        # boolean filter which is returned by this function.
         check_condition_path = self.config.get("aether_emit_flag_field_path")
         pass_conditions = self.config.get("aether_emit_flag_values")
         check = None
@@ -36,7 +42,7 @@ class KafkaConsumer(VanillaConsumer):
                 return x in pass_conditions
         else:
             def check(x):
-                return x is pass_conditions
+                return x == pass_conditions
         expr = parse(check_condition_path)
 
         def approval_filter(msg):
@@ -62,8 +68,7 @@ class KafkaConsumer(VanillaConsumer):
         try:
             emit_index = mask_levels.index(emit_level)
         except ValueError:
-            raise ValueError("emit_level %s it not a value in range of restrictions: %s" %
-                             (emit_level, mask_levels))
+            emit_index = -1  # emit level is off the scale, so we don't emit any classified data
         query_string = "$.fields.[*].%s.`parent`" % mask_query  # parent node of matching field
         expr = parse(query_string)
         restricted_fields = [(match.value) for match in expr.find(schema)]
@@ -86,6 +91,12 @@ class KafkaConsumer(VanillaConsumer):
             return mask(msg)
 
     def poll_and_deserialize(self, timeout_ms=0, max_records=None):
+        # None of the methods in the Python Kafka library deserialize messages, which is a
+        # required step in order to filter fields which may be masked, or to only publish
+        # messages which meet a certain condition. For this reason, we extend the poll() method
+        # from the Kafka library to handle deserialzation in a fast and reliable way. We also
+        # implement masking and field filtering in this method, based on the consumer configuration
+        # passed in __init__ and the schema of each message.
         result = {}
         last_schema = None
         mask = None
@@ -144,5 +155,7 @@ class KafkaConsumer(VanillaConsumer):
         return result
 
     def seek_to_beginning(self):
+        # We override this method to allow for seeking before any messages have been consumed
+        # as poll consumes a message. Since we're going to change offset, we don't care.
         self.poll(timeout_ms=100, max_records=1)
         super(KafkaConsumer, self).seek_to_beginning()
