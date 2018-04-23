@@ -19,6 +19,10 @@ TMP = "%s/tmp" % RES
 SCHEMAS = "%s/schemas/" % HERE
 TEST_SCHEMAS = "%s/test-schemas/" % HERE
 
+# alais raw_input for python3
+if sys.version_info >= (3, 0):
+    def raw_input(prompt):
+        return input(prompt)
 
 def pprint(obj):
     print(json.dumps(obj, indent=2))
