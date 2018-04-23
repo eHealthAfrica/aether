@@ -43,7 +43,7 @@ export const selectedPipelineChanged = selectedPipeline => ({
 
 export const getPipelines = () => ({
   types: ['', types.GET_ALL, types.GET_ALL_FAILED],
-  promise: client => client.get(urls.MOCK_PIPELINES_URL, { 'Content-Type': 'application/json' })
+  promise: client => client.get(urls.PIPELINES_URL, { 'Content-Type': 'application/json' })
 })
 
 const reducer = (state = INITIAL_PIPELINE, action = {}) => {
