@@ -43,6 +43,8 @@ RDS_USERNAME: postgres
 WEB_SERVER_PORT: "!!string 8000"
 # FIXME: override via --set?
 TESTING: "!!boolean true"
+liveEdit:
+  enabled: true
 application:
   secret: secrets
   data_mount: /media

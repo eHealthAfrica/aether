@@ -133,16 +133,10 @@ spec:
           name: static-assets-volume
         - name: {{ .Chart.Name }}
           mountPath: {{ .Values.application.data_mount }}
-        # - name: code
-        #   mountPath: /code
-      # - name: db
-      #   image: postgres:9.6
-      #   ports:
-      #   - containerPort: 5432
-      #   imagePullPolicy: {{ .Values.image.pullPolicy }}
-      #   volumeMounts:
-      #   - mountPath: /var/lib/postgresql/data
-      #     name: postgres-data
+        {{ if .Values.liveEdit.enabled }}
+        - name: code
+          mountPath: /code
+        {{ end }}
       - name: nginx
         image: nginx:stable-alpine
         ports:
@@ -169,11 +163,9 @@ spec:
         configMap:
           name: kernel-init
           defaultMode: 0744
-      # - name: postgres-data
-      #   persistentVolumeClaim:
-      #     claimName: postgres-data
-      # TODO: make generic
-      # - name: code
-      #   hostPath:
-      #     path: /hosthome/fred/work/eha/repos/aether/aether-kernel
+      {{ if .Values.liveEdit.enabled }}
+      - name: code
+        hostPath:
+          path: /aether/aether-kernel
+      {{ end }}
       restartPolicy: Always
