@@ -93,7 +93,7 @@ build_container producer
 echo "_____________________________________________ Starting Producer"
 $DC_TEST up -d producer-test
 
-# test a clean INGEGRATION TEST container
+# test a clean INTEGRATION TEST container
 echo "_____________________________________________ Starting Integration Tests"
 build_container integration
 $DC_TEST run integration-test test
@@ -101,5 +101,8 @@ $DC_TEST run integration-test test
 # kill ALL containers
 echo "_____________________________________________ Killing auxiliary containers"
 ./scripts/kill_all.sh
+
+# Testing Consumer Library
+./scripts/test_consumer_lib.sh
 
 echo "_____________________________________________ END"
