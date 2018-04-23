@@ -150,8 +150,8 @@ spec:
           name: static-assets-volume
         - name: {{ .Chart.Name }}
           mountPath: {{ .Values.application.data_mount }}
-        - name: code
-          mountPath: /code
+        # - name: code
+        #   mountPath: /code
       - name: nginx
         image: nginx:stable-alpine
         ports:
@@ -178,8 +178,8 @@ spec:
         configMap:
           name: odk-init
           defaultMode: 0744
-      # TODO: make generic
-      - name: code
-        hostPath:
-          path: /hosthome/fred/work/eha/repos/aether/aether-odk-module
+      # # TODO: make generic
+      # - name: code
+      #   hostPath:
+      #     path: /hosthome/fred/work/eha/repos/aether/aether-odk-module
       restartPolicy: Always

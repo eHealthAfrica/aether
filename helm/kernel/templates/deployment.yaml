@@ -62,28 +62,28 @@ spec:
         - containerPort: 8000
         args:
         - start
-        # livenessProbe:
-        #   initialDelaySeconds: 15
-        #   periodSeconds: 10
-        #   httpGet:
-        #     path: /health
-        #     port: 8000
-        #     httpHeaders:
-        #     - name: X-Kubernetes-Health-Check
-        #       value: livenessProbe
-        #     - name: Host
-        #       value: {{ .Values.url }}
-        # readinessProbe:
-        #   initialDelaySeconds: 15
-        #   periodSeconds: 10
-        #   httpGet:
-        #     path: /health
-        #     port: 8000
-        #     httpHeaders:
-        #     - name: X-Kubernetes-Health-Check
-        #       value: check
-        #     - name: Host
-        #       value: {{ .Values.url }}
+        livenessProbe:
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          httpGet:
+            path: /health
+            port: 8000
+            httpHeaders:
+            - name: X-Kubernetes-Health-Check
+              value: livenessProbe
+            - name: Host
+              value: {{ .Values.url }}
+        readinessProbe:
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          httpGet:
+            path: /health
+            port: 8000
+            httpHeaders:
+            - name: X-Kubernetes-Health-Check
+              value: check
+            - name: Host
+              value: {{ .Values.url }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
         - name: CAS_SERVER_URL
@@ -133,8 +133,8 @@ spec:
           name: static-assets-volume
         - name: {{ .Chart.Name }}
           mountPath: {{ .Values.application.data_mount }}
-        - name: code
-          mountPath: /code
+        # - name: code
+        #   mountPath: /code
       # - name: db
       #   image: postgres:9.6
       #   ports:
@@ -173,7 +173,7 @@ spec:
       #   persistentVolumeClaim:
       #     claimName: postgres-data
       # TODO: make generic
-      - name: code
-        hostPath:
-          path: /hosthome/fred/work/eha/repos/aether/aether-kernel
+      # - name: code
+      #   hostPath:
+      #     path: /hosthome/fred/work/eha/repos/aether/aether-kernel
       restartPolicy: Always

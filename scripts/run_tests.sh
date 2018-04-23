@@ -1,41 +1,31 @@
-# kubectl exec -it $(kubectl get pods | grep kernel | awk '{print $1}') --container kernel -- bash /code/entrypoint.sh test_coverage
-
-# set -Eeux
-
-# kubectl create namespace test
-
-# kubectl exec --namespace=test -it $(kubectl get pods | grep kernel | awk '{print $1}') --container kernel -- bash /code/entrypoint.sh setuplocaldb
-
-# kubectl exec --namespace=test -it $(kubectl get pods | grep kernel | awk '{print $1}') --container kernel -- bash /code/entrypoint.sh test_coverage
-
 set -x
 
-helm upgrade kernel helm/kernel --recreate-pods
-helm upgrade odk helm/odk --recreate-pods
+docker-compose build kernel
 
+NAMESPACE=test
+kubectl create namespace $NAMESPACE
+kubectl config set-context $(kubectl config current-context) --namespace=$NAMESPACE
+
+# helm del --purge db
+# helm del --purge kernel
+# helm del --purge odk
+
+# kubectl delete --all pods --namespace=$NAMESPACE
+# kubectl delete --all deployments --namespace=$NAMESPACE
+# kubectl delete --all services --namespace=$NAMESPACE
+# kubectl delete --all secrets --namespace=$NAMESPACE
+# kubectl delete --all persistentvolumeclaims --namespace=$NAMESPACE
+# kubectl delete --all persistentvolumes --namespace=$NAMESPACE
+
+kubectl create -f ./helm/dev-secrets/secrets.yaml
+kubectl create -f ./helm/dev-secrets/database-secrets.yaml
+
+helm install stable/postgresql --name db --set imageTag=9.6.3,persistence.enabled=false,fullnameOverride=db,postgresPassword=secret,postgresUser=postgres
+kubectl rollout status deployment db
+
+helm install --name kernel helm/kernel
 kubectl rollout status deployment kernel
-kubectl rollout status deployment odk
 
-# DC_COMMON="docker-compose -f docker-compose-common.yml"
-# $DC_COMMON down
-# $DC_COMMON build
-# $DC_COMMON run common test
+kubectl exec --namespace=$NAMESPACE -it $(kubectl get pods | grep kernel | awk '{print $1}') --container kernel -- bash /code/entrypoint.sh setuplocaldb
 
-# getRunningPod () {
-#     APPLABEL=$1
-#     JQ_EXPR='.items [] | select(.status.phase=="Running") | select(.metadata.labels.app=="$APPLABEL").metadata.labels.app'
-#     kubectl get pods -o json | jq '.items [] | select(.status.phase=="Running") | select(.metadata.labels.app=="$APPLABEL").metadata.labels.app'
-# }
-
-# echo $(getRunningPod kernel)
-
-# kubectl get pods -o json | jq '.items [] | select(.status.phase=="Running") | select(.metadata.labels.app=="kernel").metadata.name'
-
-# kubectl exec -it $(kubectl get pods | grep kernel | awk '{print $1}') --container kernel -- bash /code/entrypoint.sh manage loaddata aether/kernel/api/tests/fixtures/project_empty_schema.json
-
-# kubectl exec -it $(kubectl get pods | grep odk | awk '{print $1}') --container odk -- bash /code/entrypoint.sh manage test aether.odk.api.tests.test_views_submission.PostSubmissionTests.test__submission__post
-
-# kubectl exec -it $(kubectl get pods | grep odk | awk '{print $1}') --container odk -- bash /code/entrypoint.sh manage test
-
-# kubectl exec -it $(kubectl get pods | grep odk | awk '{print $1}') --container odk -- bash /code/entrypoint.sh manage test
-
+kubectl exec --namespace=$NAMESPACE -it $(kubectl get pods | grep kernel | awk '{print $1}') --container kernel -- bash /code/entrypoint.sh test_coverage
