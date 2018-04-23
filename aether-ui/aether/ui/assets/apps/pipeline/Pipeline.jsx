@@ -120,10 +120,10 @@ class Pipeline extends Component {
 
           <div className='pipeline-sections'>
             <div className='pipeline-section__input'>
-              <Input data={this.props.selectedPipeline && this.props.selectedPipeline.schema} />
+              <Input />
             </div>
             <div className='pipeline-section__entityTypes'>
-              <EntityTypes data={this.props.selectedPipeline && this.props.selectedPipeline.entity_types} />
+              <EntityTypes />
             </div>
             <div className='pipeline-section__mapping'>
               <Mapping />
