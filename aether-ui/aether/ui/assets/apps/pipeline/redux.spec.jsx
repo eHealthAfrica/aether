@@ -51,9 +51,13 @@ describe('Pipeline actions', () => {
   it('should dispatch an update action and update redux store', () => {
     const pipeline = {
       'id': 2,
-      'name': 'Pipeline Mock 2 updated',
-      'errors': 0,
-      'entityTypes': 3
+      'name': 'Pipeline Mock 2 UPDATED',
+      'mapping_errors': null,
+      'mapping': [],
+      'output': null,
+      'entity_types': [],
+      'schema': null,
+      'input': null
     }
     const expectedAction = {
       type: types.PIPELINE_UPDATE,

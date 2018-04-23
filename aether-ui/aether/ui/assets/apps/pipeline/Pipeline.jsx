@@ -22,14 +22,26 @@ class Pipeline extends Component {
     }
   }
 
-  componentWillUpdate () {
-    if (!this.props.selectedPipeline) {
-      this.props.history.replace('/')
+  componentWillMount () {
+    if (this.props.match && this.props.match.params && this.props.match.params.id) {
+      if (!this.props.selectedPipeline) {
+        if (this.props.pipelineList.length) {
+          this.props.getPipelineById(this.props.match.params.id)
+        } else {
+          this.props.getPipelines()
+        }
+      }
     }
   }
 
   componentWillReceiveProps (nextProps) {
-    if (!nextProps.selectedPipeline) {
+    if (nextProps.pipelineList !== this.props.pipelineList && !this.props.selectedPipeline) {
+      this.props.getPipelineById(this.props.match.params.id)
+    }
+    if (!nextProps.selectedPipeline && this.props.pipelineList.length) {
+      this.props.history.replace('/')
+    }
+    if (!this.props.pipelineList.length && !nextProps.pipelineList.length) {
       this.props.history.replace('/')
     }
   }
@@ -143,7 +155,8 @@ class Pipeline extends Component {
 }
 
 const mapStateToProps = ({ pipelines }) => ({
-  selectedPipeline: pipelines.selectedPipeline
+  selectedPipeline: pipelines.selectedPipeline,
+  pipelineList: pipelines.pipelineList
 })
 
 export default connect(mapStateToProps, { getPipelineById, getPipelines })(Pipeline)

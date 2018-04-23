@@ -3,20 +3,32 @@ const mockPipelines = {
     {
       'id': 1,
       'name': 'Pipeline Mock 1',
-      'errors': 2,
-      'entityTypes': 5
+      'mapping_errors': null,
+      'mapping': [],
+      'output': null,
+      'entity_types': [],
+      'schema': null,
+      'input': null
     },
     {
       'id': 2,
       'name': 'Pipeline Mock 2',
-      'errors': 1,
-      'entityTypes': 2
+      'mapping_errors': null,
+      'mapping': [],
+      'output': null,
+      'entity_types': [],
+      'schema': null,
+      'input': null
     },
     {
       'id': 3,
       'name': 'Pipeline Mock 3',
-      'errors': 0,
-      'entityTypes': 3
+      'mapping_errors': null,
+      'mapping': [],
+      'output': null,
+      'entity_types': [],
+      'schema': null,
+      'input': null
     }
   ]
 }
