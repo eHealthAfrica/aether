@@ -1,19 +1,12 @@
-# Default values for kernel.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
 replicaCount: 1
 image:
   repository: nginx
   tag: stable-alpine
   pullPolicy: IfNotPresent
 kernel:
-  # TODO: develop
-  # repository: "ehealthafrica/aether-kernel"
   repository: "aether-kernel"
 name: kernel
 project: aether
-# release: 0.5.2
-# TODO: develop
 release: latest
 service:
   name: nginx
@@ -22,27 +15,12 @@ service:
   internalPort: 80
 environment: "dev"
 ums_url: ums-dev
-# FIXME: configurable
 domain: aether.local
-# FIXME: check these
-# trusted_origins: .ehealthafrica.org,.gather2.org
 trusted_origins: .aether.local
 namespace:
   create: false
-CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
-CSRF_COOKIE_DOMAIN: .aether.local
-DEBUG: "true"
-DJANGO_SECRET_KEY: "secret"
-HOSTNAME: kernel.aether.local
-RDS_DB_NAME: aether
-RDS_HOSTNAME: db
-RDS_PASSWORD: "secret"
-# FIXME: can these be less verbose?
-RDS_PORT: "!!string 5432"
-RDS_USERNAME: postgres
-WEB_SERVER_PORT: "!!string 8000"
-# FIXME: override via --set?
-TESTING: "!!boolean true"
+debug: true
+testing: true
 liveEdit:
   enabled: true
 application:
@@ -54,9 +32,5 @@ provider:
   aws: false
 ingress:
   enabled: true
-  # annotations:
-  #   alb.ingress.kubernetes.io/scheme: "internet-facing"
-  #   alb.ingress.kubernetes.io/healthcheck-path: /health
-  #   alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80,"HTTPS": 443}]'
-    # alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:eu-west-1:387526361725:certificate/dcd71c49-1b5b-4b19-bd2d-6de98a3f6477"
-    # alb.ingress.kubernetes.io/security-groups: "alb-ingress-controller.dev.k8s.eha.to"
+  annotations:
+    nginx.ingress.kubernetes.io/ingress.class: "nginx"

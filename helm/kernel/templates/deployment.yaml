@@ -86,6 +86,8 @@ spec:
               value: {{ .Values.url }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
+        - name: DEBUG
+          value:  {{ quote .Values.debug }}
         - name: CAS_SERVER_URL
           value: "https://{{ .Values.ums_url }}.ehealthafrica.org"
         - name: CSRF_COOKIE_DOMAIN
@@ -127,7 +129,7 @@ spec:
               name: {{ .Values.application.secret }}
               key: kernel-database-name
         - name: TESTING
-          value: {{ .Values.TESTING }}
+          value: {{ quote .Values.testing }}
         volumeMounts:
         - mountPath: /var/www/static
           name: static-assets-volume
