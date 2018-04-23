@@ -120,7 +120,7 @@ case "$1" in
 
     start )
         setup_db
-        # FIXME: two versions; dev and prod
+        # FIXME: two versions; dev and prod. e.g. dev doesn't need VERSION
         # setup_prod
         setup_initial_data
 
@@ -133,8 +133,8 @@ case "$1" in
 
         # # expose version number
         # cp VERSION /var/www/VERSION
-        # # add git revision 
-        # cp /code/REVISION /var/www/REVISION 
+        # # add git revision
+        # cp /code/REVISION /var/www/REVISION
 
         /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
     ;;

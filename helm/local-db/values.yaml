@@ -1,0 +1,6 @@
+imageTag: 9.6.3
+persistence:
+  enabled: false
+fullnameOverride: db
+postgresPassword: secret
+postgresUser: postgres
