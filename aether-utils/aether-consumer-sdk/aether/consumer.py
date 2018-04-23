@@ -3,12 +3,10 @@ import io
 import json
 
 from kafka import KafkaConsumer as VanillaConsumer
-import spavro.schema
-import spavro.io
 from spavro.datafile import DataFileReader
 from spavro.io import DatumReader
 
-from jsonpath_ng import jsonpath, parse
+from jsonpath_ng import parse
 
 
 class KafkaConsumer(VanillaConsumer):
@@ -34,9 +32,11 @@ class KafkaConsumer(VanillaConsumer):
         pass_conditions = self.config.get("aether_emit_flag_values")
         check = None
         if isinstance(pass_conditions, list):
-            def check(x): return x in pass_conditions
+            def check(x):
+                return x in pass_conditions
         else:
-            def check(x): return x is pass_conditions
+            def check(x):
+                return x is pass_conditions
         expr = parse(check_condition_path)
 
         def approval_filter(msg):
@@ -61,7 +61,7 @@ class KafkaConsumer(VanillaConsumer):
         emit_level = self.config.get("aether_masking_schema_emit_level")  # chosen level
         try:
             emit_index = mask_levels.index(emit_level)
-        except ValueError as ier:
+        except ValueError:
             raise ValueError("emit_level %s it not a value in range of restrictions: %s" %
                              (emit_level, mask_levels))
         query_string = "$.fields.[*].%s.`parent`" % mask_query  # parent node of matching field
@@ -89,13 +89,18 @@ class KafkaConsumer(VanillaConsumer):
         result = {}
         last_schema = None
         mask = None
-
-        def approval_filter(x): return True
+        approval_filter = None
+        '''
+        def approval_filter(x):
+            return True
+        '''
         partitioned_messages = self.poll(timeout_ms, max_records)
         if partitioned_messages:
-            for part, packages in partitioned_messages.items():  # we don't worry about the partitions for now
+            for part, packages in partitioned_messages.items():
+                # we don't worry about the partitions for now
                 partition_result = []
-                for package in packages:  # a package can contain multiple messages serialzed with the same schema
+                # a package can contain multiple messages serialzed with the same schema
+                for package in packages:
                     package_result = {
                         "schema": None,
                         "messages": []
@@ -113,8 +118,9 @@ class KafkaConsumer(VanillaConsumer):
                         last_schema = None
                         mask = None
 
-                        def approval_filter(x): return True
-                    if schema != last_schema:
+                        def approval_filter(x):
+                            return True
+                    elif schema != last_schema:
                         last_schema = schema
                         package_result["schema"] = schema
                         # prepare mask and filter

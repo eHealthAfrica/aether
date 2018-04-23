@@ -38,7 +38,6 @@ def test_masking_boolean_pass(messages_test_boolean_pass, emit_level, unmasked_f
     # read messages and check masking
     for partition, packages in messages.items():
         for package in packages:
-            schema = package.get("schema")
             for msg in package.get("messages"):
                 assert(len(msg.keys()) ==
                        unmasked_fields), "%s fields should be unmasked" % unmasked_fields
@@ -80,17 +79,9 @@ def test_publishing_boolean_pass(messages_test_boolean_pass, publish_on, expecte
     count = 0
     for partition, packages in messages.items():
         for package in packages:
-            schema = package.get("schema")
             for msg in package.get("messages"):
                 count += 1
     assert(count == expected_count), "unexpected # of messages published"
-
-
-@pytest.mark.integration
-def test_enum_pass(messages_test_enum_pass):
-    topic = "TestEnumPass"
-    messages = messages_test_enum_pass
-    assert(len(messages) == topic_size), "Should have generated the right number of messages"
 
 
 @pytest.mark.unit
@@ -144,7 +135,12 @@ def test_msk_msg_default_map(offline_consumer, sample_schema, sample_message, em
     "top secret",
     "ufos"
 ])])
-def test_msk_msg_custom_map(offline_consumer, sample_schema_top_secret, sample_message_top_secret, emit_level, possible_levels, expected_count):
+def test_msk_msg_custom_map(offline_consumer,
+                            sample_schema_top_secret,
+                            sample_message_top_secret,
+                            emit_level,
+                            possible_levels,
+                            expected_count):
     offline_consumer._add_config({"aether_masking_schema_emit_level": emit_level})
     offline_consumer._add_config({"aether_masking_schema_levels": possible_levels})
     mask = offline_consumer.get_mask_from_schema(sample_schema_top_secret)

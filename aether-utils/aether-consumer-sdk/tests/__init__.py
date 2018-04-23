@@ -2,8 +2,6 @@ import io
 import json
 import mock
 import pytest
-import sys
-import types
 from time import sleep
 from copy import deepcopy
 from kafka import KafkaProducer
@@ -34,6 +32,8 @@ def send_messages(producer, name, schema, messages):
     future = producer.send(name, key=str(msg.get("id")), value=raw_bytes)
     # block until it actually sends.
     record_metadata = future.get(timeout=100)
+    if not record_metadata:
+        pass  # we may want to check the metadata in the future
     producer.flush()
 
 

@@ -181,16 +181,16 @@ def mock_message_schema_boolean_pass(count=10, *args, **kwargs):
     messages = []
     for x in range(count):
         msg = {
-            "id" : str(uuid4()),
-            "publish" : False
+            "id": str(uuid4()),
+            "publish": False
         }
-        for x in range(1,6):
+        for x in range(1, 6):
             msg["field%s" % x] = str(uuid4())
         messages.append(msg)
-    if not count % 2 ==0:
+    if not count % 2 == 0:
         raise ValueError("Count needs to be even")
 
-    for x in range(int(count/2)):
+    for x in range(int(count / 2)):
         messages[x]["publish"] = True
     return messages
 
@@ -216,8 +216,8 @@ test_schemas = {
         "schema": schema_enum_pass,
         "mocker": mock_message_schema_enum_pass
     },
-    "TestTopSecret":{
-        "schema" : schema_top_secret,
+    "TestTopSecret": {
+        "schema": schema_top_secret,
         "mocker": mock_message_schema_boolean_pass
     }
 }
