@@ -1,7 +1,22 @@
 from . import *
 from aether.consumer import KafkaConsumer
 
+# Test Suite contains both unit and integration tests
+# Unit tests can be run on their own from the root directory
+# enter the bash environment for the version of python you want to test
+# for example for python 3
+# `docker-compose run consumer-sdk-test bash`
+# then start the unit tests with
+# `pytest -m unit`
+# to run integration tests / all tests run the test_all.sh script from the /tests directory.
 
+
+#####################
+# Integration Tests #
+#####################
+
+
+@pytest.mark.integration
 @pytest.mark.parametrize("emit_level,unmasked_fields", [
     (0, 2),
     (1, 3),
@@ -10,7 +25,6 @@ from aether.consumer import KafkaConsumer
     (4, 6),
     (5, 7),
 ])
-@pytest.mark.integration
 def test_masking_boolean_pass(messages_test_boolean_pass, emit_level, unmasked_fields):
     topic = "TestBooleanPass"
     assert(len(messages_test_boolean_pass) ==
@@ -21,7 +35,7 @@ def test_masking_boolean_pass(messages_test_boolean_pass, emit_level, unmasked_f
         "aether_emit_flag_field_path": "$.publish",
         "aether_emit_flag_values": [True, False],
         "aether_masking_schema_levels": [0, 1, 2, 3, 4, 5],
-        "aether_masking_schema_emit_level": emit_level,  # set by test params
+        "aether_masking_schema_emit_level": emit_level,  # set by test param emit_level
         "bootstrap_servers": kafka_server,
         "heartbeat_interval_ms": 2500,
         "session_timeout_ms": 18000,
@@ -43,6 +57,7 @@ def test_masking_boolean_pass(messages_test_boolean_pass, emit_level, unmasked_f
                        unmasked_fields), "%s fields should be unmasked" % unmasked_fields
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize("publish_on, expected_count", [
     ([True], int(topic_size / 2)),
     ([False], int(topic_size / 2)),
@@ -50,7 +65,6 @@ def test_masking_boolean_pass(messages_test_boolean_pass, emit_level, unmasked_f
     (True, int(topic_size / 2)),
     (False, int(topic_size / 2))
 ])
-@pytest.mark.integration
 def test_publishing_boolean_pass(messages_test_boolean_pass, publish_on, expected_count):
     topic = "TestBooleanPass"
     assert(len(messages_test_boolean_pass) ==
@@ -82,6 +96,10 @@ def test_publishing_boolean_pass(messages_test_boolean_pass, publish_on, expecte
             for msg in package.get("messages"):
                 count += 1
     assert(count == expected_count), "unexpected # of messages published"
+
+#####################
+#    Unit Tests     #
+#####################
 
 
 @pytest.mark.unit
@@ -128,7 +146,7 @@ def test_msk_msg_default_map(offline_consumer, sample_schema, sample_message, em
     ("top secret", 6),
     ("ufos", 7)
 ])
-@pytest.mark.parametrize("possible_levels", [([
+@pytest.mark.parametrize("possible_levels", [([  # Single parameter for all tests
     "public",
     "confidential",
     "secret",
