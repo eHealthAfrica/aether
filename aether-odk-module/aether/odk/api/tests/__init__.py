@@ -18,6 +18,7 @@ XFORM_XML_FILE = PATH_DIR + 'demo-xform.xml'
 
 XML_DATA_FILE = PATH_DIR + 'demo-data.xml'
 XML_DATA_FILE_ERR = PATH_DIR + 'demo-data--error.xml'
+XML_DATA_FILE_ERR_MISSING_INSTANCE_ID = PATH_DIR + 'demo-data--error--missing-instance-id.xml'
 
 XML_DATA = '''
     <h:html
@@ -76,6 +77,7 @@ class CustomTestCase(TransactionTestCase):
             'submission': {
                 'file-ok': XML_DATA_FILE,
                 'file-err': XML_DATA_FILE_ERR,
+                'file-err-missing-instance-id': XML_DATA_FILE_ERR_MISSING_INSTANCE_ID,
             },
 
             # sample collection for xForm objects
