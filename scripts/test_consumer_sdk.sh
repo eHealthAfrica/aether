@@ -12,7 +12,7 @@ function kill_all(){
   $DC_TEST down
 }
 
-DC_TEST="docker-compose -f aether-utils/aether-consumer-sdk/docker-compose.yml"
+DC_TEST="docker-compose -f aether-utils/aether-consumer/docker-compose.yml"
 
 echo "_____________________________________________ TESTING"
 kill_all
