@@ -1,5 +1,6 @@
 /* global jQuery */
 import 'whatwg-fetch'
+import { NotFoundError } from './errors'
 
 const methods = ['get', 'post', 'put', 'patch', 'del']
 
@@ -37,15 +38,23 @@ export default class ApiClient {
           body: JSON.stringify(data)
         }
         path = appendParams(path, params)
-        return window.fetch(path, options)
-          .then(res => {
-            if (res.status >= 200 && res.status < 400) {
-              return res.json() // Should be extended to cater for other content-types or than json
-            } else {
-              return { error: res.statusText, status: res.status }
-            }
-          })
-          .catch(err => ({ error: err.message, status: err.errno }))
+        return new Promise((resolve, reject) => {
+          window.fetch(path, options)
+            .then(res => {
+              if (res.status >= 200 && res.status < 400) {
+                res.json().then(res => resolve(res)).catch(err => reject(err)) // Should be extended to cater for other content-types or than json
+              } else {
+                if (res.status === 404) {
+                  reject(new NotFoundError())
+                } else {
+                  resolve({ error: res.statusText, status: res.status })
+                }
+              }
+            })
+            .catch(err => {
+              reject(err)
+            })
+        })
       }
     })
   }

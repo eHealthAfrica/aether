@@ -3,7 +3,6 @@
 
 import { clone } from '../utils'
 import urls from '../utils/urls'
-import ApiClient from '../utils/api';
 
 export const types = {
   PIPELINE_ADD: 'pipeline_add',
@@ -22,52 +21,25 @@ export const INITIAL_PIPELINE = {
   error: null
 }
 
-export const addPipeline = newPipeline => dispatch => {
-  const client = new ApiClient()
-  client.post(
-    urls.PIPELINES_URL,
+export const addPipeline = newPipeline => ({
+  types: ['', types.PIPELINE_ADD, types.PIPELINE_ERROR],
+  promise: client => client.post(`${urls.PIPELINES_URL}`,
     { 'Content-Type': 'application/json' },
-    { data: {name: newPipeline.name} }
-  )
-  .then(res => {
-    dispatch({
-      type: types.PIPELINE_ADD,
-      payload: res
-    })
-  })
-  .catch(error => {
-    dispatch({
-      type: types.PIPELINE_ERROR,
-      payload: error
-    })
-  })
-}
+    { data: { name: newPipeline.name } })
+})
 
 export const getPipelineById = id => ({
   type: types.GET_BY_ID,
   payload: id
 })
 
-export const updatePipeline = pipeline => dispatch => {
-  const client = new ApiClient()
-  client.put(
-    `${urls.PIPELINES_URL}${pipeline.id}/`,
+export const updatePipeline = pipeline => ({
+  types: ['', types.PIPELINE_UPDATE, types.PIPELINE_ERROR],
+  promise: client => client.put(`${urls.PIPELINES_URL}${pipeline.id}/`,
     { 'Content-Type': 'application/json' },
     { data: pipeline }
   )
-  .then(res => {
-    dispatch({
-      type: types.PIPELINE_UPDATE,
-      payload: res
-    })
-  })
-  .catch(error => {
-    dispatch({
-      type: types.PIPELINE_ERROR,
-      payload: error
-    })
-  })
-}
+})
 
 export const selectedPipelineChanged = selectedPipeline => ({
   type: types.SELECTED_PIPELINE_CHANGED,
@@ -79,14 +51,13 @@ export const getPipelines = () => ({
   promise: client => client.get(`${urls.PIPELINES_URL}?limit=5000`, { 'Content-Type': 'application/json' }) // limit query_string used instead of pagination (temporary)
 })
 
-const reducer = (state = INITIAL_PIPELINE, action = {}) => {
+const reducer = (state = INITIAL_PIPELINE, action) => {
   const newPipelineList = clone(state.pipelineList)
 
   switch (action.type) {
     case types.PIPELINE_ADD: {
       const newPipeline = clone(action.payload)
       newPipelineList.unshift(newPipeline)
-
       return { ...state, pipelineList: newPipelineList, selectedPipeline: newPipeline, error: null }
     }
 

@@ -18,7 +18,8 @@ export default () => next => action => {
         next({ ...rest, payload, type: SUCCESS })
       }
     })
-    .catch(error => {
+    .catch(err => {
+      const error = { error: err.error, status: err.status }
       next({ ...rest, error, type: FAILURE })
     })
 }
