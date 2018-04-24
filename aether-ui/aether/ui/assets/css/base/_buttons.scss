@@ -97,8 +97,8 @@ button {
   &:not(:disabled):not(.disabled):active,
   &:not(:disabled):not(.disabled):active:focus,
   &:hover {
-    background: $action-color-b;
     @include shadow-emboss-dark;
+    background: $action-color-b;
   }
 }
 

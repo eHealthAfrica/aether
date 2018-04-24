@@ -47,7 +47,7 @@ $colors: (
 
   .container.dark-blue {
     background: $dark-blue;
-    color: white;
+    color: $white;
   }
 
   .container.gradient {
@@ -65,7 +65,8 @@ $colors: (
     margin-bottom: 3rem;
   }
 
-  .color-sample, .entity-color-sample {
+  .color-sample,
+  .entity-color-sample {
     padding: 10px;
     font-size: $font-size-s;
     flex: 1;
@@ -75,8 +76,9 @@ $colors: (
   .button-samples {
     display: flex;
     flex-wrap: wrap;
+
     .container {
-      flex:1;
+      flex: 1;
       border: 0;
     }
   }
@@ -98,19 +100,19 @@ $colors: (
   }
 
   @each $current-color in $colors-list {
-  $i: index($colors-list, $current-color);
+    $i: index($colors-list, $current-color);
 
-  .entity-color-sample:nth-child(#{$i}) {
+    .entity-color-sample:nth-child(#{$i}) {
 
-    div {
-      background-color: $current-color;
-      height: 80px;
-      width: 100%;
-    }
+      div {
+        background-color: $current-color;
+        height: 80px;
+        width: 100%;
+      }
 
-    &::after {
-      content: '#{$current-color}';
+      &::after {
+        content: '#{$current-color}';
+      }
     }
   }
-}
 }

@@ -47,7 +47,7 @@ small {
 }
 
 .badge-b {
-  box-shadow: 0 1px 1px $shadow-color inset;
+  @include shadow-cutout-white;
 }
 
 .form-label {
@@ -74,8 +74,8 @@ textarea {
   }
 
   &.input-d {
-    background: rgba($text-color, .3);
     @include shadow-cutout-dark;
+    background: rgba($text-color, .3);
     color: $white;
   }
 }
