@@ -57,35 +57,33 @@ spec:
           mountPath: {{ .Values.application.data_mount }}
       containers:
       - name: {{ .Chart.Name }}
-        # image: "{{ .Values.odk.repository }}:{{ .Chart.Version }}"
-        # FIXME: local image?
-        image: aether-odk
+        image: "{{ .Values.odk.repository }}:{{ .Values.release }}"
         ports:
         - containerPort: 8000
         args:
         - start
-        # livenessProbe:
-        #   initialDelaySeconds: 15
-        #   periodSeconds: 10
-        #   httpGet:
-        #     path: /health
-        #     port: 8000
-        #     httpHeaders:
-        #     - name: X-Kubernetes-Health-Check
-        #       value: livenessProbe
-        #     - name: Host
-        #       value: {{ .Values.url }}
-        # readinessProbe:
-        #   initialDelaySeconds: 15
-        #   periodSeconds: 10
-        #   httpGet:
-        #     path: /health
-        #     port: 8000
-        #     httpHeaders:
-        #     - name: X-Kubernetes-Health-Check
-        #       value: check
-        #     - name: Host
-        #       value: {{ .Values.url }}
+        livenessProbe:
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          httpGet:
+            path: /health
+            port: 8000
+            httpHeaders:
+            - name: X-Kubernetes-Health-Check
+              value: livenessProbe
+            - name: Host
+              value: {{ .Values.url }}
+        readinessProbe:
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          httpGet:
+            path: /health
+            port: 8000
+            httpHeaders:
+            - name: X-Kubernetes-Health-Check
+              value: check
+            - name: Host
+              value: {{ .Values.url }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
         {{- if .Values.extra_env_vars -}}
@@ -121,8 +119,10 @@ spec:
               key: kernel-token
         - name: AETHER_KERNEL_URL
           value: {{ .Values.kernel_url }}
+        - name: AETHER_KERNEL_URL_TEST
+          value: {{ .Values.kernel_url_test }}
         - name: TESTING
-          value: {{ .Values.TESTING }}
+          value: {{ quote .Values.testing }}
         - name: RDS_USERNAME
           valueFrom:
             secretKeyRef:

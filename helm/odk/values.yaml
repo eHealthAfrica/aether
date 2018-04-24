@@ -7,10 +7,10 @@ image:
   tag: stable-alpine
   pullPolicy: IfNotPresent
 odk:
-  repository: "ehealthafrica/aether-odk"
+  repository: "aether-odk"
 name: odk
 project: aether
-release: 0.5.2
+release: latest
 service:
   name: nginx
   type: NodePort
@@ -19,10 +19,13 @@ service:
 environment: "dev"
 ums_url: ums-dev
 kernel_url: http://kernel
-# FIXME: configurable
+# TODO: document
+kernel_url_test: http://kernel
 domain: aether.local
-TESTING: "!!boolean false"
-trusted_origins: .ehealthafrica.org,.gather2.org
+trusted_origins: .aether.local
+testing: true
+liveEdit:
+  enabled: true
 namespace:
   create: false
 application:
@@ -34,10 +37,5 @@ provider:
   aws: false
 ingress:
   enabled: true
-
   annotations:
-    alb.ingress.kubernetes.io/scheme: "internet-facing"
-    alb.ingress.kubernetes.io/healthcheck-path: /health
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80,"HTTPS": 443}]'
-    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:eu-west-1:387526361725:certificate/dcd71c49-1b5b-4b19-bd2d-6de98a3f6477"
-    alb.ingress.kubernetes.io/security-groups: "alb-ingress-controller.dev.k8s.eha.to"
+    nginx.ingress.kubernetes.io/ingress.class: "nginx"

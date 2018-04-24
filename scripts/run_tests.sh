@@ -12,6 +12,8 @@ getRecent () {
 
 kubectl exec --namespace=$NAMESPACE -it $(getRecent kernel) --container kernel -- bash /code/entrypoint.sh setuplocaldb
 
-kubectl exec --namespace=$NAMESPACE -it $(getRecent kernel) --container kernel -- bash /code/entrypoint.sh test_coverage
+kubectl exec --namespace=$NAMESPACE -it $(getRecent kernel) --container kernel -- bash /code/entrypoint.sh test
 
-# kubectl exec -it $(kubectl get pods | grep kernel | awk '{print $1}') --container kernel -- bash /code/entrypoint.sh manage loaddata aether/kernel/api/tests/fixtures/project_empty_schema.json
+kubectl exec -it $(getRecent kernel) --container kernel -- bash /code/entrypoint.sh manage loaddata aether/kernel/api/tests/fixtures/project_empty_schema.json
+
+kubectl exec --namespace=$NAMESPACE -it $(getRecent odk) --container odk -- bash /code/entrypoint.sh test

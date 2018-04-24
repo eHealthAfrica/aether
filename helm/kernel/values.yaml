@@ -22,7 +22,7 @@ namespace:
 debug: true
 testing: true
 liveEdit:
-  enabled: true
+  enabled: false
 application:
   secret: secrets
   data_mount: /media

@@ -24,3 +24,6 @@ kubectl rollout status deployment db
 
 helm install --name kernel helm/kernel
 kubectl rollout status deployment kernel
+
+helm install --name odk helm/odk
+kubectl rollout status deployment odk
