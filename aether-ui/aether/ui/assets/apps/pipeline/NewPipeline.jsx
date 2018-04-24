@@ -92,7 +92,7 @@ class NewPipeline extends Component {
         </div>
         <button
           type='button'
-          className='btn btn-c btn-big btn-cancel'
+          className='btn btn-c btn-big btn-transparent'
           onClick={() => this.setState({ view: 'button', newPipelineName: '' })}>
           <span className='details-title'>
             <FormattedMessage

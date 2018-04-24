@@ -136,7 +136,7 @@ class Mapping extends Component {
 
         <button
           type='button'
-          className='btn btn-d btn-flat btn-cancel'
+          className='btn btn-d btn-flat btn-transparent'
           onClick={removeRule}>
           <span className='details-title'>
             <FormattedMessage

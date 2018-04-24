@@ -61,10 +61,10 @@ small {
 input[type='password'],
 input[type='text'],
 textarea {
+  @include shadow-cutout-white;
   border: 0;
   border-radius: $border-radius;
-  background: rgba($text-color, .1);
-  box-shadow: 1px 1px 1px rgba($text-color, .3) inset, 1px 1px 0 rgba($white, .1);
+  background: $background-color;
   font-family: $body-font-family;
   padding: .8em;
 
@@ -75,7 +75,8 @@ textarea {
 
   &.input-d {
     background: rgba($text-color, .3);
-    box-shadow: 1px 1px 1px rgba($black, .2) inset, 1px 1px 0 rgba($white, .1);
+    @include shadow-cutout-dark;
+    color: $white;
   }
 }
 

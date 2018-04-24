@@ -42,8 +42,16 @@ $colors: (
 
   .container {
     border-bottom: 1px dotted #4a4a4a;
-    padding-bottom: 2rem;
-    padding-left: 2rem;
+    padding: 2rem;
+  }
+
+  .container.dark-blue {
+    background: $dark-blue;
+    color: white;
+  }
+
+  .container.gradient {
+    @include bg-gradient;
   }
 
   .section-header {
@@ -57,11 +65,20 @@ $colors: (
     margin-bottom: 3rem;
   }
 
-  .color-sample {
+  .color-sample, .entity-color-sample {
     padding: 10px;
     font-size: $font-size-s;
     flex: 1;
     min-width: 150px;
+  }
+
+  .button-samples {
+    display: flex;
+    flex-wrap: wrap;
+    .container {
+      flex:1;
+      border: 0;
+    }
   }
 
   @each $name, $size in $font-sizes {
@@ -79,4 +96,21 @@ $colors: (
       width: 100%;
     }
   }
+
+  @each $current-color in $colors-list {
+  $i: index($colors-list, $current-color);
+
+  .entity-color-sample:nth-child(#{$i}) {
+
+    div {
+      background-color: $current-color;
+      height: 80px;
+      width: 100%;
+    }
+
+    &::after {
+      content: '#{$current-color}';
+    }
+  }
+}
 }
