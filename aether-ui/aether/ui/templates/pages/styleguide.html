@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="styleguide">
+  <div class="container mt-5">
+    <label class="section-header form-label">Typography</label>
+  </div>
+
+  <div class="container mt-3">
+    <label class="section-header form-label">Font sizes</label>
+
+    <div class="font-sample-xs">lorem ipsum dolor sit amet - size: XS</div>
+    <div class="font-sample-s">lorem ipsum dolor sit amet - size: S</div>
+    <div class="font-sample-standard">lorem ipsum dolor sit amet - size: Standard</div>
+    <div class="font-sample-m">lorem ipsum dolor sit amet - size: M</div>
+    <div class="font-sample-l">lorem ipsum dolor sit amet - size: L</div>
+    <div class="font-sample-xl">lorem ipsum dolor sit amet - size: XL</div>
+    <div class="font-sample-xxl">lorem ipsum dolor sit amet - size: XXL</div>
+  </div>
+
+  <div class="container mt-3">
+    <label class="section-header form-label">Colors</label>
+    <div class="form-label">Primary colors</div>
+    <div class="color-samples">
+      <div class="color-sample"><div class="color-sample-text-color"></div>text-color</div>
+      <div class="color-sample"><div class="color-sample-action-color"></div>action-color</div>
+      <div class="color-sample"><div class="color-sample-action-color-b"></div>brighter action color (on dark backgrounds)</div>
+      <div class="color-sample"><div class="color-sample-hover-color"></div>hover-color (purple)</div>
+    </div>
+    <div class="form-label">Secondary colors</div>
+    <div class="color-samples">
+      <div class="color-sample"><div class="color-sample-dark-blue"></div>dark blue</div>
+      <div class="color-sample"><div class="color-sample-purple"></div>purple</div>
+      <div class="color-sample"><div class="color-sample-light-grey"></div>light-grey</div>
+      <div class="color-sample"><div class="color-sample-grey"></div>grey</div>
+      <div class="color-sample"><div class="color-sample-shadow-color"></div>shadow-color (20% text-color)</div>
+    </div>
+    <div class="form-label">Alert colors</div>
+    <div class="color-samples">
+      <div class="color-sample"><div class="color-sample-red"></div>red</div>
+      <div class="color-sample"><div class="color-sample-orange"></div>orange</div>
+      <div class="color-sample"><div class="color-sample-green"></div>green</div>
+      <div class="color-sample"><div class="color-sample-mint-green"></div>mint-green</div>
+    </div>
+  </div>
+  <div class="container mt-3">
+    <label class="section-header form-label">Buttons</label>
+
+    <div>
+      <p><div class="btn">btn</div></p>
+      <p><div class="btn btn-default">btn-default</div></p>
+      <p><div class="btn btn-primary">btn-primary</div></p>
+      <p><div class="btn btn-danger">btn-danger</div></p>
+    </div>
+  </div>
+
+  <div class="container mt-3">
+    <label class="section-header form-label">Badges</label>
+
+    <p><div class="badge">badge</div></p>
+    <p><div class="badge badge-big">badge-big</div></p>
+    <p><div class="badge badge-b">badge-b</div></p>
+  </div>
+
+  <div class="container mt-3">
+    <label class="section-header form-label">Form elements</label>
+
+    <div class="form-toggle"><input type="checkbox" name="published" id="published" value="on"><label for="published">TOGGLE</label></div>
+    <div class="form-group">
+      <label class="form-label">text input</label>
+      <input type="text"></input>
+    </div>
+    <div class="form-group">
+      <label class="form-label">text area</label>
+      <div class="textarea-container">
+        <textarea></textarea>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock content %}

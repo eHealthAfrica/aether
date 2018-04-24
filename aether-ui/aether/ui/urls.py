@@ -26,4 +26,9 @@ urlpatterns = generate_urlpatterns(kernel=True) + [
     url(r'^$',
         login_required(TemplateView.as_view(template_name='pages/pipeline.html')),
         name='pipeline-app'),
+
+    # styleguide
+    url(r'^styleguide/',
+         login_required(TemplateView.as_view(template_name='pages/styleguide.html')),
+         name='styleguide'),
 ]
