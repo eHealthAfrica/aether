@@ -76,7 +76,7 @@ export const selectedPipelineChanged = selectedPipeline => ({
 
 export const getPipelines = () => ({
   types: ['', types.GET_ALL, types.PIPELINE_ERROR],
-  promise: client => client.get(urls.PIPELINES_URL, { 'Content-Type': 'application/json' })
+  promise: client => client.get(`${urls.PIPELINES_URL}?limit=5000`, { 'Content-Type': 'application/json' }) // limit query_string used instead of pagination (temporary)
 })
 
 const reducer = (state = INITIAL_PIPELINE, action = {}) => {
