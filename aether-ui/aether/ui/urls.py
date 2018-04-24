@@ -29,6 +29,6 @@ urlpatterns = generate_urlpatterns(kernel=True) + [
 
     # styleguide
     url(r'^styleguide/',
-         login_required(TemplateView.as_view(template_name='pages/styleguide.html')),
-         name='styleguide'),
+        login_required(TemplateView.as_view(template_name='pages/styleguide.html')),
+        name='styleguide'),
 ]
