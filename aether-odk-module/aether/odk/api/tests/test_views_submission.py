@@ -104,7 +104,7 @@ class PostSubmissionTests(CustomTestCase):
         self.KERNEL_HEADERS = kernel_utils.get_auth_header()
         mappings = requests.get(self.MAPPING_URL, headers=self.KERNEL_HEADERS).json()['results']
         for mapping in mappings:
-            resp = requests.delete(mapping['url'], headers=self.KERNEL_HEADERS)
+            requests.delete(mapping['url'], headers=self.KERNEL_HEADERS)
 
         self.helper_create_user()
         self.url = reverse('xform-submission')
@@ -176,7 +176,6 @@ class PostSubmissionTests(CustomTestCase):
 
         # get submissions
         response = requests.get(content['submissions_url'], headers=self.KERNEL_HEADERS)
-        from aether.common.kernel.utils import get_kernel_server_url
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = response.json()
         self.assertEqual(content['count'], 1 if succeed else 0)
@@ -288,6 +287,39 @@ class PostSubmissionTests(CustomTestCase):
 
         # check that submission was created with four attachments
         self.helper_check_submission(attachments=4)
+
+    def test__submission__post__with_attachments__multiple_requests(self):
+        # An ODK Collect submission containing several large attachments will be
+        # split up into several POST requests. The form data in all these
+        # requests is identical, but the attachments differ. In this test, we
+        # check that all attachments belonging to e.g. one ODK Collect submission
+        # get associated with that submission -- even if they arrive at different
+        # times.
+        count = 3
+        for _ in range(count):
+            with open(self.samples['submission']['file-ok'], 'rb') as f:
+                response = self.client.post(
+                    self.url,
+                    {
+                        XML_SUBMISSION_PARAM: f,
+                        'attach': SimpleUploadedFile('audio.wav', b'abc'),
+                    },
+                    **self.headers_user
+                )
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content.decode())
+        self.helper_check_submission(attachments=count)
+
+    def test__submission__post__no_instance_id(self):
+        with open(self.samples['submission']['file-err-missing-instance-id'], 'rb') as f:
+            response = self.client.post(
+                self.url,
+                {
+                    XML_SUBMISSION_PARAM: f,
+                    'attach': SimpleUploadedFile('audio.wav', b'abc'),
+                },
+                **self.headers_user
+            )
+            self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     @mock.patch('requests.delete')
     @mock.patch('requests.post',

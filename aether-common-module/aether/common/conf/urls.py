@@ -7,6 +7,7 @@ from aether.common.auth.views import obtain_auth_token
 from aether.common.conf.views import basic_serve, media_serve
 from aether.common.health.views import health
 from aether.common.kernel.views import check_kernel
+from aether.common.kernel.utils import get_kernel_server_url
 
 
 def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
@@ -80,9 +81,19 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
         ]
 
     if kernel:
-        # checks if Core server is available
+        # checks if Kernel server is available
         urlpatterns += [
             url('^check-kernel$', check_kernel, name='check-kernel'),
         ]
+
+        # `aether.common.kernel.utils.get_kernel_server_url()` returns different
+        #  values depending on the value of `settings.TESTING`. Without these
+        # assertions, a deployment configuration missing e.g. `AETHER_KERNEL_URL`
+        # will seem to be in order until `get_kernel_server_url()` is called.
+        if settings.TESTING:
+            msg = 'Environment variable "AETHER_KERNEL_URL_TEST" is not set'
+        else:
+            msg = 'Environment variable "AETHER_KERNEL_URL" is not set'
+        assert get_kernel_server_url(), msg
 
     return urlpatterns

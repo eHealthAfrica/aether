@@ -6,7 +6,7 @@
 #  * CouchDB Sync Module
 # ------------------------------------------------------------------------------
 
-version: "2"
+version: "2.1"
 
 services:
 
@@ -50,6 +50,9 @@ services:
       - "9000:9000"
     depends_on:
       - db-test
+
+    command: start_dev
+
 
 
   # ---------------------------------
@@ -106,12 +109,64 @@ services:
   # Aether Client container
   # ---------------------------------
   client-test:
-    build: aether-client
+    build: aether-utils/aether-client
     image: aether/client
 
     volumes:
-      - ./aether-client:/code
+      - ./aether-utils/aether-client:/code
 
     depends_on:
       - db-test
       - kernel-test
+
+  # ---------------------------------
+  # Aether Integration Tests
+  # ---------------------------------
+  integration-test:
+    build: test-aether-integration-module
+    image: aether/integration
+
+    volumes:
+      - ./test-aether-integration-module:/code
+
+    depends_on:
+      - db-test
+      - kernel-test
+      - kafka-test
+      - producer-test
+
+  # ---------------------------------
+  # Aether Kafka Containers
+  # ---------------------------------
+
+  zookeeper-test:
+    extends:
+      file: docker-compose-base.yml
+      service: zookeeper-base
+
+  kafka-test:
+    extends:
+      file: docker-compose-base.yml
+      service: kafka-base
+    depends_on:
+      - zookeeper-test
+    links:
+      - zookeeper-test
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-test:32181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-test:29092
+      ADVERTISED_HOST_NAME: kafka-test
+
+  # ---------------------------------
+  # Aether Kafka Producer
+  # ---------------------------------
+
+  producer-test:
+    extends:
+      file: docker-compose-base.yml
+      service: aether-producer-base
+    links:
+      - kafka-test
+      - zookeeper-test
+    command: start_test
