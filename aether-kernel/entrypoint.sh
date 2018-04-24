@@ -136,7 +136,8 @@ case "$1" in
         # # add git revision
         # cp /code/REVISION /var/www/REVISION
 
-        /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
+        # FIXME: only in local
+        /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini --py-autoreload=3
     ;;
 
     start_dev )
