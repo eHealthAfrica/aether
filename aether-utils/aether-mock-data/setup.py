@@ -12,7 +12,7 @@ setup(
     name='aether.mocker',
     version='0.0.0',
     install_requires=[
-        "aether-client"
+        "aether.client"
     ],
     packages=find_packages(),
     namespace_packages=['aether']

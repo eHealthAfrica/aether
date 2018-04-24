@@ -8,7 +8,7 @@ import sys
 from aether.client import KernelClient
 
 from library import library_utils
-import saladbar.parsers as Parsers
+from saladbar import parsers as Parsers
 from saladbar import salad_handler as salad
 
 HERE = (os.path.dirname(os.path.realpath(__file__)))

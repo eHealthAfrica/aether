@@ -9,7 +9,7 @@
 ################################################################################
 
 aether.client
-avro
+spavro
 kafka
 psycopg2-binary
 requests

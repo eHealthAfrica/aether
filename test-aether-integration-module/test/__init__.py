@@ -1,7 +1,10 @@
-from aether.client import KernelClient
 import pytest
-import sys
 from time import sleep
+
+from aether.client import KernelClient
+from saladbar import wizard
+
+from .consumer import get_consumer, read
 
 KERNEL_URL = "http://kernel-test:9000/v1"
 
@@ -10,14 +13,11 @@ kernel_credentials = {
     "password": "adminadmin",
 }
 
-kernel_retry = 3
-kernel_retry_time = 5
+kernel_retry = 15
+kernel_retry_time = 1
 
 SEED_ENTITIES = 10
 SEED_TYPE = "Person"
-
-py2 = pytest.mark.skipif(sys.version_info >= (3, 0), reason="Test only required for python2")
-py3 = pytest.mark.skipif(sys.version_info <= (3, 0), reason="Test only required for python3")
 
 
 @pytest.fixture(scope="session")
@@ -36,7 +36,6 @@ def aether_client():
 
 @pytest.fixture(scope="session")
 def schema_registration():
-    from saladbar import wizard  # we have to import this locally so it only gets into @py2 scopes
     try:
         wizard.test_setup()
         return True
@@ -99,7 +98,6 @@ def generate_entities(aether_client, existing_schemas, existing_projectschemas):
 
 @pytest.fixture(scope="function")
 def read_people():
-    from .consumer import get_consumer, read
     consumer = get_consumer(SEED_TYPE)
     messages = read(consumer, start="FIRST", verbose=True, timeout_ms=500)
     consumer.close()  # leaving consumers open can slow down zookeeper, try to stay tidy

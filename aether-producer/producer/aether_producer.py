@@ -1,15 +1,15 @@
 import json
 import psycopg2
-import avro.schema
+import spavro.schema
 import io
 import ast
 import os
 import signal
 import sys
 
-from avro.io import DatumWriter
-from avro.datafile import DataFileWriter
-from kafka import KafkaProducer
+from spavro.io import DatumWriter
+from spavro.datafile import DataFileWriter
+from kafka import KafkaProducer, KafkaConsumer
 from aether.client import KernelClient
 from psycopg2.extras import DictCursor
 from time import sleep as Sleep
@@ -34,32 +34,33 @@ class Settings(object):
             self.offset_path = "%s/%s" % (FILE_PATH, self.offset_file)
 
 
-'''
-SETTINGS = load_settings(SETTINGS_FILE)
-
-def init_settings(SETTINGS):
-    global
-    KAFKA_SERVER = SETTINGS.get('kafka_server')
-    jdbc_connection_string = SETTINGS.get('jdbc_connection_string')
-    jdbc_user = SETTINGS.get('jdbc_user')
-    SLEEP_TIME = SETTINGS.get('sleep_time')  # seconds between looking for changes
-    kernel_url = SETTINGS.get("kernel_url")
-    kernel_credentials = SETTINGS.get('kernel_credentials')
-    postgres_connection_info = SETTINGS.get('postgres_connection_info')
-'''
-
-def connect():
-    try:
-        kernel = KernelClient(url=_settings.kernel_url, **_settings.kernel_credentials)
-        return kernel
-    except Exception as e:
-        kernel = None
-        print ("Error initializing connection to Aether: %s" % e)
-        raise e
+def connect(_settings, retry=3):
+    kernel = None
+    consumer = None
+    for x in range(retry):
+        try:
+            kernel = KernelClient(url=_settings.kernel_url, **_settings.kernel_credentials)
+            break
+        except Exception as e:
+            Sleep(_settings.start_delay)
+    if not kernel:
+        print("No connection to AetherKernel")
+        sys.exit(1)
+    for x in range(retry):
+        try:
+            consumer = KafkaConsumer(bootstrap_servers=_settings.kafka_server)
+            break
+        except Exception as err:
+            Sleep(_settings.start_delay)
+    if not consumer:
+        print("No connection to Kafka")
+        sys.exit(1)
+    return kernel
 
 
 def set_offset_value(key, value):
     offsets = {}
+    print("set", key, value)
     try:
         with open(_settings.offset_path) as f:
             offsets = json.load(f)
@@ -78,6 +79,7 @@ def get_offset(key):
         with open(_settings.offset_path) as f:
             offsets = json.load(f)
             try:
+                print(offsets[key])
                 return offsets[key]
             except ValueError as e:
                 None
@@ -85,47 +87,66 @@ def get_offset(key):
         return None
 
 
-def count_since(offset=None):
+def count_since(offset=None, topic=None):
     if not offset:
         offset = ""
     with psycopg2.connect(**_settings.postgres_connection_info) as conn:
         cursor = conn.cursor(cursor_factory=DictCursor)
         count_str = '''
             SELECT
-                count(CASE WHEN e.modified > '%s' THEN 1 END) as new_rows
-            FROM kernel_entity e;
+                e.id,
+                e.modified,
+                ps.name as project_schema_name,
+                ps.id as project_schema_id,
+                s.name as schema_name,
+                s.id as schema_id
+                    FROM kernel_entity e
+            inner join kernel_projectschema ps on e.projectschema_id = ps.id
+            inner join kernel_schema s on ps.schema_id = s.id
+            WHERE e.modified > '%s'
         ''' % (offset)
+        if topic:
+            count_str += '''AND ps.name = '%s'
+            ORDER BY e.modified ASC;''' % topic
+        else:
+            count_str += '''ORDER BY e.modified ASC;'''
+        print(count_str)
         cursor.execute(count_str);
-        for row in cursor:
-            return row.get("new_rows")
+        return sum([1 for row in cursor])
 
 
-def get_entities(offset = None):
+
+
+def get_entities(offset = None, max_size=100):
     if not offset:
         offset = ""
-    conn = psycopg2.connect(**_settings.postgres_connection_info)
-    cursor = conn.cursor(cursor_factory=DictCursor)
-    query_str = '''
-        SELECT
-            e.id,
-            e.revision,
-            e.payload,
-            e.modified,
-            e.status,
-            ps.id as project_schema_id,
-            ps.name as project_schema_name,
-            s.name as schema_name,
-            s.id as schema_id,
-            s.revision as schema_revision
-                from kernel_entity e
-        inner join kernel_projectschema ps on e.projectschema_id = ps.id
-        inner join kernel_schema s on ps.schema_id = s.id
-        WHERE e.modified > '%s'
-        ORDER BY e.modified ASC;
-    '''  % (offset)
-    cursor.execute(query_str)
-    for row in cursor:
-        yield {key : row[key] for key in row.keys()}
+    with psycopg2.connect(**_settings.postgres_connection_info) as conn:
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        query_str = '''
+            SELECT
+                e.id,
+                e.revision,
+                e.payload,
+                e.modified,
+                e.status,
+                ps.id as project_schema_id,
+                ps.name as project_schema_name,
+                s.name as schema_name,
+                s.id as schema_id,
+                s.revision as schema_revision
+                    from kernel_entity e
+            inner join kernel_projectschema ps on e.projectschema_id = ps.id
+            inner join kernel_schema s on ps.schema_id = s.id
+            WHERE e.modified > '%s'
+            ORDER BY e.modified ASC;
+        '''  % (offset)
+        cursor.execute(query_str)
+
+        for x, row in enumerate(cursor):
+            if x >= max_size+1:
+                raise StopIteration
+            yield {key : row[key] for key in row.keys()}
+
 
 
 class KafkaStream(object):
@@ -152,6 +173,7 @@ class KafkaStream(object):
             #block until it actually sends. We don't want offsets getting out of sync
             try:
                 record_metadata = future.get(timeout=10)
+                print(record_metadata)
             except Exception as ke:
                 print ("Error submitting record")
                 raise ke
@@ -167,7 +189,7 @@ class KafkaStream(object):
         #Gets avro schema used for encoding messages
         #TODO Fix issue with json coming from API Client being single quoted
         definition = ast.literal_eval(str(self.kernel.Resource.Schema.get(self.topic).definition))
-        self.schema = avro.schema.parse(json.dumps(definition))
+        self.schema = spavro.schema.parse(json.dumps(definition))
 
 
     def stop(self):
@@ -187,7 +209,6 @@ class StreamManager(object):
         self.start()
 
 
-
     def start(self):
         self.kernel.refresh()
         topics = self.kernel.Resource.Schema
@@ -196,11 +217,13 @@ class StreamManager(object):
 
 
     def send(self, row_generator):
+        print("sending from manager")
         for row in row_generator:
             if self.killed: #look for sigterm
                 print ("manager stopped in progress via signal")
                 return
             topic = row.get("schema_name")
+            print("shoot row")
             self.streams[topic].send(row)
         print ("manager finished processing changes")
 
@@ -219,16 +242,7 @@ def main_loop(test=False):
     global _settings
     _settings = Settings(test)
     manager = None
-    kernel = None
-    for x in range(3):
-        try:
-            kernel = connect()
-            break
-        except Exception as err:
-            Sleep(_settings.start_delay)
-    if not kernel:
-        sys.exit(1)
-    print("Producer Connected to Aether.")
+    kernel = connect(_settings, retry=3)
     try:
         while True:
             offset = get_offset("entities")

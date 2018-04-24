@@ -1,5 +1,5 @@
 import json
-from mocker import MockFn, DataMocker, Generic, MockingManager
+from aether.mocker import MockFn, DataMocker, Generic, MockingManager
 
 
 def pprint(obj):
