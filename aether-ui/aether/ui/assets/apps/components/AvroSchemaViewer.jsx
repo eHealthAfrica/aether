@@ -27,7 +27,7 @@ class AvroSchemaViewer extends Component {
   }
 
   render () {
-    if (!this.props.schema) {
+    if (!this.props.schema || !Object.keys(this.props.schema).length) {
       return (<div className='hint'>
         <FormattedMessage
           id='pipeline.input.empty.message'

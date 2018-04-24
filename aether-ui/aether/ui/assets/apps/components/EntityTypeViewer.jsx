@@ -86,7 +86,7 @@ class EntityTypeViewer extends Component {
   }
 
   render () {
-    if (!this.props.schema) {
+    if (!this.props.schema || !this.props.schema.length) {
       return (<div className='hint'>
         <FormattedMessage
           id='entityTypes.entity.empty.message'

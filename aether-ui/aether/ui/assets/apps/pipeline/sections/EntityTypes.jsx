@@ -25,7 +25,8 @@ class EntityTypes extends Component {
   }
 
   parseProps (props) {
-    return JSON.stringify(props.selectedPipeline.entity_types, 0, 2)
+    const { entity_types } = props.selectedPipeline
+    return entity_types.length ? JSON.stringify(entity_types, 0, 2) : ''
   }
 
   onSchemaTextChanged (event) {

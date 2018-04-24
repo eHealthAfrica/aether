@@ -1,3 +1,3 @@
 export default {
-  PIPELINES_URL: '/api/ui/pipelines.json'
+  PIPELINES_URL: '/api/ui/pipelines/'
 }
