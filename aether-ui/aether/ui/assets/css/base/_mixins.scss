@@ -28,5 +28,29 @@
 }
 
 @mixin shadow-flat-dark {
-  box-shadow: -1px -1px 0 rgba($black, .2), 1px 1px 0 rgba($white, .2) inset, 1px 1px 0 rgba($black, .2) inset, 1px 1px 0 rgba($white, .2);
+  box-shadow: -1px -1px 0 rgba($black, .2), 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($black, .2) inset, 1px 1px 0 rgba($white, .1);
+}
+
+@mixin shadow-emboss-dark {
+  box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($black, .2) inset, 0 0 4px rgba($black, .3);
+}
+
+@mixin shadow-cutout-dark {
+  box-shadow: 1px 1px 1px rgba($black, .2) inset, 1px 1px 0 rgba($white, .1);
+}
+
+@mixin shadow-flat-white {
+  box-shadow: -1px -1px 0 rgba($text-color, .1), 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .1) inset, 1px 1px 0 rgba($white, .1);
+}
+
+@mixin shadow-emboss-white {
+  box-shadow: 1px 1px 0 rgba($white, .2) inset, -1px -1px 0 rgba($text-color, .2) inset, 0 0 2px rgba($text-color, .1);
+}
+
+@mixin shadow-cutout-white {
+  box-shadow: 1px 1px 1px rgba($text-color, .1) inset, 1px 1px 0 rgba($white, .1);
+}
+
+@mixin shadow-emboss-color {
+  box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .3) inset, 0 0 4px rgba($text-color, .1);
 }

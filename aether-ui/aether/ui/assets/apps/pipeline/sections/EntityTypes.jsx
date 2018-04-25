@@ -73,10 +73,22 @@ class EntityTypes extends Component {
                 defaultMessage='Paste Entity Type definitions'
               />
             </label>
+            { this.state.error &&
+              <div className='hint error-message'>
+                <h4 className='hint-title'>
+                  <FormattedMessage
+                    id='entitytype.invalid.message'
+                    defaultMessage='You have provided invalid AVRO schemas.'
+                  />
+                </h4>
+                { this.state.error }
+              </div>
+            }
+
             <FormattedMessage id='entityTypeSchema.placeholder' defaultMessage='Enter your schemas'>
               {message => (
                 <textarea
-                  className='monospace'
+                  className='input-d monospace'
                   value={this.state.entityTypesSchema}
                   onChange={this.onSchemaTextChanged.bind(this)}
                   placeholder={message}
@@ -84,19 +96,6 @@ class EntityTypes extends Component {
                 />
               )}
             </FormattedMessage>
-
-            { this.state.error &&
-              <div className='hint'>
-                <h4>
-                  <FormattedMessage
-                    id='entitytype.invalid.message'
-                    defaultMessage='You have provided invalid AVRO schemas.'
-                  />
-                </h4>
-                <br />
-                { this.state.error }
-              </div>
-            }
 
             <button type='submit' className='btn btn-d btn-primary mt-3' disabled={!this.hasChanged()}>
               <span className='details-title'>

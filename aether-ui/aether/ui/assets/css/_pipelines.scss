@@ -151,6 +151,7 @@
 
   .text-input {
     font-size: $font-size-xl;
+    background: rgba($text-color, .1);
     font-weight: 300;
     color: $white;
     width: 100%;

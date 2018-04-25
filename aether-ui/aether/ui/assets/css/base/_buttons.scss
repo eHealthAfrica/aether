@@ -1,0 +1,134 @@
+.btn,
+button {
+  @include label;
+  border-radius: $border-radius;
+  background: rgba($grey, .1);
+  border: 0;
+  border-color: transparent;
+  padding: .4em 2em;
+  transition: background .3s;
+  color: $action-color;
+
+  &:active,
+  &:focus,
+  &:hover {
+    cursor: pointer;
+    outline: none;
+    background: $action-color;
+    color: $white;
+  }
+
+  &:disabled {
+    background: rgba($grey, .1);
+    color: $grey;
+    box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .1) inset;
+    cursor: default;
+    pointer-events: none;
+  }
+}
+
+// button on colored background
+
+.btn-c {
+  @include shadow-emboss-color;
+  color: $white;
+  background: rgba($white, .15);
+
+  &:active,
+  &:focus,
+  &:hover {
+    @include shadow-emboss-color;
+  }
+
+  &:disabled {
+    color: rgba($white, .5);
+    box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($black, .2) inset;
+  }
+}
+
+.btn-c.btn-flat {
+  @include shadow-flat-white;
+}
+
+// button on dark background
+
+.btn-d {
+  @include shadow-emboss-dark;
+  color: $action-color-b;
+  background: rgba($action-color-b, .15);
+
+  &:active,
+  &:focus,
+  &:hover {
+    @include shadow-emboss-dark;
+  }
+
+  &:disabled {
+    box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($black, .2) inset;
+  }
+}
+
+.btn-d.btn-flat {
+  @include shadow-flat-dark;
+}
+
+// button on white background
+
+.btn-w {
+  @include shadow-emboss-white;
+  color: $action-color;
+
+  &:active,
+  &:focus,
+  &:hover {
+    @include shadow-emboss-white;
+  }
+}
+
+.btn-w.btn-flat {
+  @include shadow-flat-white;
+}
+
+.btn-primary {
+  @include bg-gradient;
+
+  &:active,
+  &:focus,
+  &:not(:disabled):not(.disabled):active,
+  &:not(:disabled):not(.disabled):active:focus,
+  &:hover {
+    @include shadow-emboss-dark;
+    background: $action-color-b;
+  }
+}
+
+.btn-red {
+  background: $red;
+  color: $white;
+
+  &:active,
+  &:focus,
+  &:hover {
+    background-color: darken($red, 6);
+  }
+}
+
+.btn-transparent {
+  background: none;
+
+  &:active,
+  &:focus,
+  &:hover {
+    background-color: rgba($dark-blue, .1);
+    color: inherit;
+  }
+}
+
+.btn-big {
+  padding: 1em 3em;
+  font-size: $font-size-standard;
+}
+
+.btn-sm {
+  padding: .2em .5em;
+}

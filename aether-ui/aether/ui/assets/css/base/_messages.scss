@@ -1,0 +1,19 @@
+.hint {
+  font-size: $font-size-m;
+  font-weight: 300;
+  color: $grey;
+  line-height: 1.4em;
+  padding: 1.2rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.hint.error-message {
+  width: 100%;
+  border-radius: $border-radius * 4;
+  background: rgba($red, .1);
+  color: $red;
+}
+
+form .error-message+textarea {
+  background: rgba($red, .1);
+}

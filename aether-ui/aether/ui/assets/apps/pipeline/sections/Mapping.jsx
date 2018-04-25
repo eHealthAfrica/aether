@@ -42,7 +42,7 @@ class Mapping extends Component {
           <form onSubmit={this.notifyChange.bind(this)}>
             { this.state.mappingRules.map(this.renderRule.bind(this)) }
 
-            <button type='submit' className='btn btn-d btn-big mt-2' disabled={!this.hasChanged()}>
+            <button type='submit' className='btn btn-d mt-2' disabled={!this.hasChanged()}>
               <span className='details-title'>
                 <FormattedMessage
                   id='mapping.rules.button.ok'
@@ -74,7 +74,7 @@ class Mapping extends Component {
     }
 
     return (
-      <button type='button' className='btn btn-d btn-big mb-4' onClick={addNewRule}>
+      <button type='button' className='btn btn-d btn-primary mb-2' onClick={addNewRule}>
         <FormattedMessage id='mapping.button.add' defaultMessage='Add rule' />
       </button>
     )
@@ -101,38 +101,42 @@ class Mapping extends Component {
     }
 
     return (
-      <div key={rule.id} className='m-2'>
-        <FormattedMessage id='mapping.rule.source.placeholder' defaultMessage='define source'>
-          {message => (
-            <input
-              type='text'
-              required
-              className='monospace'
-              name='source'
-              value={rule.source}
-              onChange={onChangeInput}
-              placeholder={message}
-            />
-          )}
-        </FormattedMessage>
+      <div key={rule.id} className='rule'>
+        <div className='rule-input source'>
+          <FormattedMessage id='mapping.rule.source.placeholder' defaultMessage='define source'>
+            {message => (
+              <input
+                type='text'
+                required
+                className='input-d'
+                name='source'
+                value={rule.source}
+                onChange={onChangeInput}
+                placeholder={message}
+              />
+            )}
+          </FormattedMessage>
+        </div>
 
-        <FormattedMessage id='mapping.rule.destination.placeholder' defaultMessage='define destination'>
-          {message => (
-            <input
-              type='text'
-              required
-              className='monospace'
-              name='destination'
-              value={rule.destination}
-              onChange={onChangeInput}
-              placeholder={message}
-            />
-          )}
-        </FormattedMessage>
+        <div className='rule-input destination'>
+          <FormattedMessage id='mapping.rule.destination.placeholder' defaultMessage='define destination'>
+            {message => (
+              <input
+                type='text'
+                required
+                className='input-d'
+                name='destination'
+                value={rule.destination}
+                onChange={onChangeInput}
+                placeholder={message}
+              />
+            )}
+          </FormattedMessage>
+        </div>
 
         <button
           type='button'
-          className='btn btn-d btn-cancel'
+          className='btn btn-d btn-flat btn-transparent'
           onClick={removeRule}>
           <span className='details-title'>
             <FormattedMessage
@@ -155,12 +159,14 @@ class Mapping extends Component {
 
     return (
       <div className='definition'>
-        <h3>
+        <h3 className='form-label'>
           <FormattedMessage id='mapping.definitions' defaultMessage='Rule definitions' />
         </h3>
-        <code>
-          { JSON.stringify(definition, 0, 2) }
-        </code>
+        <div className='definition-code'>
+          <code>
+            { JSON.stringify(definition, 0, 2) }
+          </code>
+        </div>
       </div>
     )
   }

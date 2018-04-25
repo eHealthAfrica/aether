@@ -26,95 +26,6 @@ ul {
   padding: 0;
 }
 
-.btn,
-button {
-  @include label;
-  border-radius: $border-radius;
-  background: rgba($grey, .1);
-  border: 0;
-  border-color: transparent;
-  padding: .4em 2em;
-  box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 $shadow-color inset;
-  transition: background .3s;
-
-  &:active,
-  &:focus,
-  &:hover {
-    box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 $shadow-color inset;
-    cursor: pointer;
-    outline: none;
-    background: $action-color;
-  }
-
-  &:disabled {
-    background: rgba($grey, .1);
-    color: $grey;
-    box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .1) inset;
-    cursor: default;
-  }
-}
-
-// button on dark background
-
-.btn-d {
-  color: $white;
-  background: rgba($white, .15);
-  box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .3) inset;
-}
-
-// button on white background
-
-.btn-w {
-  color: $action-color;
-  box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .3) inset;
-}
-
-.btn-primary {
-  @include bg-gradient;
-}
-
-.btn-big {
-  padding: 1em 3em;
-  font-size: $font-size-standard;
-}
-
-.btn-sm {
-  padding: .2em .5em;
-}
-
-.btn-danger {
-  background: $red;
-
-  &:active,
-  &:focus,
-  &:hover {
-    background-color: darken($red, 6);
-  }
-}
-
-.btn-cancel {
-  background: none;
-
-  &:active,
-  &:focus,
-  &:hover {
-    background-color: rgba($dark-blue, .1);
-  }
-}
-
-.btn-delete {
-  background: $red;
-  border-radius: 2px;
-  color: $white;
-  padding: .9em 1.5em;
-
-  &:active,
-  &:focus,
-  &:hover {
-    background-color: darken($red, 6);
-  }
-}
-
 .small,
 small {
   font-size: $font-size-s;
@@ -136,15 +47,7 @@ small {
 }
 
 .badge-b {
-  box-shadow: 0 1px 1px $shadow-color inset;
-}
-
-.hint {
-  font-size: $font-size-m;
-  font-weight: 300;
-  color: $grey;
-  line-height: 1.4em;
-  margin: 2rem 1rem;
+  @include shadow-cutout-white;
 }
 
 .form-label {
@@ -158,16 +61,22 @@ small {
 input[type='password'],
 input[type='text'],
 textarea {
+  @include shadow-cutout-white;
   border: 0;
   border-radius: $border-radius;
-  background: rgba($text-color, .1);
-  box-shadow: 1px 1px 1px rgba($text-color, .3) inset, 1px 1px 0 rgba($white, .1);
+  background: $background-color;
   font-family: $body-font-family;
   padding: .8em;
 
   &:disabled {
     background: $light-grey;
     color: $grey;
+  }
+
+  &.input-d {
+    @include shadow-cutout-dark;
+    background: rgba($text-color, .3);
+    color: $white;
   }
 }
 
@@ -213,6 +122,12 @@ pre {
   overflow: auto;
   white-space: pre;
   padding: .5rem;
+}
+
+code {
+  color: $light-grey;
+  font: $font-size-xs $code-font-family;
+  white-space: pre-wrap;
 }
 
 @media screen and (max-width: 768px) {
