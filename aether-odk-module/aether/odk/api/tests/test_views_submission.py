@@ -98,14 +98,6 @@ class PostSubmissionTests(CustomTestCase):
 
         super(PostSubmissionTests, self).setUp()
 
-        # FIXME: move or remove
-        # delete ALL mappings in kernel testing server
-        self.MAPPING_URL = kernel_utils.get_mappings_url()
-        self.KERNEL_HEADERS = kernel_utils.get_auth_header()
-        mappings = requests.get(self.MAPPING_URL, headers=self.KERNEL_HEADERS).json()['results']
-        for mapping in mappings:
-            requests.delete(mapping['url'], headers=self.KERNEL_HEADERS)
-
         self.helper_create_user()
         self.url = reverse('xform-submission')
 

@@ -134,7 +134,7 @@ case "$1" in
         ./manage.py collectstatic --noinput
         chmod -R 755 /var/www/static
 
-        # TODO: document reload
+        # start the web server with code reloading enabled
         /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini --py-autoreload=3
     ;;
 

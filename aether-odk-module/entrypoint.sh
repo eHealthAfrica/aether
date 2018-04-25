@@ -49,11 +49,10 @@ setup_initial_data() {
     ./manage.py loaddata /code/conf/extras/initial.json
 }
 
-# # FIXME: supply admin password
-# setup_prod() {
-#   # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
-#   ./manage.py setup_admin -p=$ADMIN_PASSWORD -t=$AETHER_ODK_TOKEN
-# }
+setup_prod() {
+  # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
+  ./manage.py setup_admin -p=$ADMIN_PASSWORD -t=$AETHER_ODK_TOKEN
+}
 
 test_flake8() {
     flake8 /code/. --config=/code/conf/extras/flake8.cfg
@@ -136,15 +135,8 @@ case "$1" in
         ./manage.py collectstatic --noinput
         chmod -R 755 /var/www/static
 
-        # TODO: document reload
+        # start the web server with code reloading enabled
         /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini --py-autoreload=3
-    ;;
-
-    start_dev )
-        setup_db
-        setup_initial_data
-
-        ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
 
     help)

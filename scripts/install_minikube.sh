@@ -1,7 +1,3 @@
-set -Eeuox
-
-export CHANGE_MINIKUBE_NONE_USER=true
-
 install_bin() {
     local exe=${1:?}
     test -n "${TRAVIS}" && sudo install -v ${exe} /usr/local/bin || install ${exe} ${GOPATH:?}/bin
