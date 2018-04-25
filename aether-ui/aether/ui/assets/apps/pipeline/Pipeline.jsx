@@ -22,7 +22,7 @@ class Pipeline extends Component {
     }
   }
 
-  componentWillMount () {
+  componentDidMount () {
     if (this.props.match && this.props.match.params && this.props.match.params.id) {
       if (!this.props.selectedPipeline) {
         if (this.props.pipelineList.length) {
@@ -35,6 +35,9 @@ class Pipeline extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
+    if (this.props.match.params.id !== nextProps.match.params.id) {
+      this.props.getPipelineById(nextProps.match.params.id)
+    }
     if (nextProps.pipelineList !== this.props.pipelineList && !this.props.selectedPipeline) {
       this.props.getPipelineById(this.props.match.params.id)
     }

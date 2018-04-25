@@ -12,13 +12,15 @@ export const types = {
   SELECTED_PIPELINE_CHANGED: 'selected_pipeline_changed',
   GET_ALL: 'pipeline_get_all',
   PIPELINE_ERROR: 'pipeline_error',
-  GET_BY_ID: 'pipeline_get_by_id'
+  GET_BY_ID: 'pipeline_get_by_id',
+  PIPELINE_NOT_FOUND: 'pipeline_not_found'
 }
 
 export const INITIAL_PIPELINE = {
   pipelineList: [],
   selectedPipeline: null,
-  error: null
+  error: null,
+  notFound: null
 }
 
 export const addPipeline = newPipeline => ({
@@ -29,8 +31,10 @@ export const addPipeline = newPipeline => ({
 })
 
 export const getPipelineById = id => ({
-  type: types.GET_BY_ID,
-  payload: id
+  types: ['', types.PIPELINE_UPDATE, types.PIPELINE_NOT_FOUND],
+  promise: client => client.get(`${urls.PIPELINES_URL}${id}/`,
+    { 'Content-Type': 'application/json' }
+  )
 })
 
 export const updatePipeline = pipeline => ({
@@ -81,10 +85,8 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
       return { ...state, error: action.error }
     }
 
-    case types.GET_BY_ID: {
-      let foundPipeline = state.pipelineList.filter(pipeline => (pipeline.id === action.payload))
-      foundPipeline = foundPipeline.length && foundPipeline[0]
-      return { ...state, selectedPipeline: foundPipeline, error: null }
+    case types.PIPELINE_NOT_FOUND: {
+      return { ...state, notFound: action.error, selectedPipeline: null }
     }
 
     default:

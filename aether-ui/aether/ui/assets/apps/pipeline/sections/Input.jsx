@@ -44,7 +44,7 @@ class Input extends Component {
       // generate a new input sample
       const input = type.random()
 
-      this.props.updatePipeline(Object.assign(this.props.selectedPipeline, { schema, input }))
+      this.props.updatePipeline({ ...this.props.selectedPipeline, schema, input })
     } catch (error) {
       this.setState({ error: error.message })
     }

@@ -135,7 +135,8 @@ describe('Pipeline actions', () => {
     const expectedStoreData = {
       pipelineList: [],
       selectedPipeline: null,
-      error: { error: 'Not Found', status: 404 }
+      error: { error: 'Not Found', status: 404 },
+      notFound: null
     }
     return store.dispatch(action())
       .then(() => {
@@ -144,21 +145,31 @@ describe('Pipeline actions', () => {
   })
 
   it('should dispatch an action to get pipeline by id and set it as selected pipeline in the redux store', () => {
-    const pipelineId = 1
-    const expectedAction = {
-      type: types.GET_BY_ID,
-      payload: pipelineId
+    const pipeline = {
+      'id': 1,
+      'name': 'Pipeline Mock 1 From API',
+      'mapping_errors': null,
+      'mapping': [],
+      'output': null,
+      'entity_types': [],
+      'schema': null,
+      'input': null
     }
     nock('http://localhost')
       .get('/api/ui/pipelines/?limit=5000')
       .reply(200, mockPipelines)
-    expect(getPipelineById(pipelineId)).toEqual(expectedAction)
+    nock('http://localhost')
+      .get(`/api/ui/pipelines/${pipeline.id}/`)
+      .reply(200, pipeline)
+    expect(typeof getPipelineById(pipeline.id)).toEqual('object')
     return store.dispatch(getPipelines())
       .then(() => {
-        store.dispatch(getPipelineById(pipelineId))
-        expect(store.getState().selectedPipeline).toEqual(
-          mockPipelines.results.filter(pipeline => (pipeline.id === pipelineId))[0]
-        )
+        return store.dispatch(getPipelineById(pipeline.id))
+          .then(() => {
+            expect(store.getState().selectedPipeline).toEqual(
+              pipeline
+            )
+          })
       })
   })
 })
