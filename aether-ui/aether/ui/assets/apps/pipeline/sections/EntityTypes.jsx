@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 import { connect } from 'react-redux'
+import avro from 'avro-js'
 
 import { EntityTypeViewer } from '../../components'
 import { deepEqual } from '../../utils'
@@ -40,6 +41,7 @@ class EntityTypes extends Component {
     try {
       // validate schemas
       const schemas = JSON.parse(this.state.entityTypesSchema)
+      schemas.forEach(schema => { avro.parse(schema) })
       this.props.updatePipeline({ ...this.props.selectedPipeline, entity_types: schemas })
     } catch (error) {
       this.setState({ error: error.message })
