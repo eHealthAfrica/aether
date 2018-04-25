@@ -150,7 +150,7 @@ class Mapping extends Component {
       // include mapping rules as expected in kernel
       mapping: (this.props.selectedPipeline.mapping || [])
         .map(rule => ([rule.source, rule.destination])),
-      mapping_errors: this.props.selectedPipeline.errors || []
+      mapping_errors: this.props.selectedPipeline.mapping_errors || []
     }
 
     return (
