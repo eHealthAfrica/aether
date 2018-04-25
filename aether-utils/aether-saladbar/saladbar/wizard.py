@@ -76,6 +76,55 @@ def load_libraries(settings, schema_path=SCHEMAS):
         }
     return libraries
 
+##################################################################################
+#             Utility functions to make namespaces Avro Compliant
+##################################################################################
+
+def replace_url(test):
+    if not isinstance(test, str):
+        return test
+    flag = "http://"
+    if not flag in test:
+        return test
+    test = test.replace(flag, "")  # cut out http://
+    parts = test.split("/")
+    if not parts:
+        # just namespace
+        try:
+            parts = test.split(".")
+            return ".".join([i for i in parts[::-1]])
+        except Exception:
+            return test
+    namespace = parts[0]
+    path = None
+    if parts[-1] != namespace:
+        path = ".".join(parts[1:])
+    # reverse namespace
+    parts = namespace.split(".")
+    if len(parts) > 1:
+        if parts[0] not in ["org", "com", "net", "gov"]:
+            namespace = ".".join([i for i in parts[::-1]])
+    return ".".join([namespace,path])
+
+
+
+#we recurse until the object is just replaced strings or ignored items
+def re_namespace(obj):
+    if isinstance(obj, str):
+        return replace_url(obj)
+    if isinstance(obj, list):
+        return [re_namespace(i) for i in obj]
+    if isinstance(obj, dict):
+        return {re_namespace(k): re_namespace(v) for k, v in obj.items()}
+    return obj
+
+
+def check_namespace(fn):
+    def wrapper(*args, **kwargs):
+        out = fn(*args, **kwargs)
+        return re_namespace(out)
+    return wrapper
+
 
 def make_base_salad_doc(imports, namespaces, project=None, base_type=None, schema_path=SCHEMAS):
     doc = None
@@ -198,9 +247,9 @@ def test_setup():
     project_file = "%s%s.json" % (TEST_SCHEMAS, project)
     salad_handler = salad.SaladHandler(project_file)
     avsc_dict = salad_handler.get_avro(all_depends)
+    avsc_dict = re_namespace(avsc_dict)
     for k, v in avsc_dict.items():
-        # Fix this .org nonsense...
-        filename = "%s%s.avsc" % (TEST_SCHEMAS, k.split(".org/")[1])
+        filename = "%s%s.avsc" % (TEST_SCHEMAS, k.split(".")[-1])
         with open(filename, "w") as f:
             json.dump(v, f, indent=2)
     kernel_url = settings.get("kernel_url")
@@ -237,9 +286,10 @@ def main():
     project_file = "%s%s.json" % (SCHEMAS, project)
     salad_handler = salad.SaladHandler(project_file)
     avsc_dict = salad_handler.get_avro(all_depends)
+    avsc_dict = re_namespace(avsc_dict)
     for k, v in avsc_dict.items():
         # Fix this .org nonsense...
-        filename = "%s%s.avsc" % (SCHEMAS, k.split(".org/")[1])
+        filename = "%s%s.avsc" % (SCHEMAS, k.split(".")[-1])
         with open(filename, "w") as f:
             json.dump(v, f, indent=2)
     kernel_url = settings.get("kernel_url")
