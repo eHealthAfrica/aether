@@ -10,7 +10,7 @@ cache:
 before_script:
 - docker login -u ehealthafricadevops -p $DOCKER_HUB_PASSWORD
 script:
-- "./scripts/run_travis.sh"
+- "./scripts/kubernetes/run_travis.sh"
 deploy:
 - provider: script
   script: "./scripts/release.sh"
