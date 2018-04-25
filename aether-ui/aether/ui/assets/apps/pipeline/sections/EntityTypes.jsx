@@ -41,9 +41,6 @@ class EntityTypes extends Component {
     try {
       // validate schemas
       const schemas = JSON.parse(this.state.entityTypesSchema)
-      // generate sample output with new enity types (TO BE REMOVED!!!)
-      const output = schemas.map(et => avro.parse(et).random())
-
       this.props.updatePipeline({ ...this.props.selectedPipeline, entity_types: schemas })
     } catch (error) {
       this.setState({ error: error.message })
