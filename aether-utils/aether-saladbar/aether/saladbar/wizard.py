@@ -7,9 +7,12 @@ import sys
 
 from aether.client import KernelClient
 
-from library import library_utils
-from saladbar import parsers as Parsers
-from saladbar import salad_handler as salad
+import aether.saladbar.library.library_utils as library_utils
+# from library import library_utils
+import aether.saladbar.saladbar.parsers as Parsers
+# from saladbar import parsers as Parsers
+# from saladbar import salad_handler as salad
+import aether.saladbar.saladbar.salad_handler as salad
 
 HERE = (os.path.dirname(os.path.realpath(__file__)))
 SETTINGS = "%s/conf/settings.json" % HERE

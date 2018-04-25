@@ -49,7 +49,7 @@ done
 $DC_CLIENT build saladbar
 $DC_CLIENT run saladbar build
 
-PCK_FILE=aether_saladbar-0.0.0-py2.py3-none-any.whl
+PCK_FILE=aether.saladbar-0.0.0-py2.py3-none-any.whl
 
 # distribute within the containers
 containers=( test-aether-integration )

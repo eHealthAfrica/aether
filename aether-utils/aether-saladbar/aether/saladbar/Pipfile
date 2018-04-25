@@ -8,8 +8,8 @@ verify_ssl = true
 
 requests = "*"
 schema-salad = "*"
-aether.mocker = {path = ".", editable = true}
-aether.client = {path = "./../../aether-client", editable = true}
+"aether.saladbar" = {path = "../..", editable = true}
+"aether.client" = {path = "../../../aether-client", editable = true}
 
 
 

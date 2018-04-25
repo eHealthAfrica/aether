@@ -2,7 +2,7 @@ import pytest
 from time import sleep
 
 from aether.client import KernelClient
-from saladbar import wizard
+import aether.saladbar.wizard as wizard
 
 from .consumer import get_consumer, read
 
@@ -40,6 +40,7 @@ def schema_registration():
         wizard.test_setup()
         return True
     except Exception as err:
+        raise(err)
         print("Schema registration failed with: %s" % err)
         return False
 
@@ -74,8 +75,8 @@ def generate_entities(aether_client, existing_schemas, existing_projectschemas):
     entities = []
     manager = None
     from aether.mocker import MockingManager, MockFn, Generic
-    person = "http://demo.eha.org/Person"
-    location = "http://demo.eha.org/GeoLocation"
+    person = "org.eha.demo.Person"
+    location = "org.eha.demo.GeoLocation"
     try:
         manager = MockingManager(kernel_url=KERNEL_URL)
         manager.types[location].override_property(

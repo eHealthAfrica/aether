@@ -11,7 +11,7 @@
 
 aether.client
 aether.mocker
-aether_saladbar
+aether.saladbar
 coverage
 flake8
 kafka

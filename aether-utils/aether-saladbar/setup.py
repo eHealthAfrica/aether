@@ -6,11 +6,12 @@ import sys
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
-    name='aether-saladbar',
+    name='aether.saladbar',
     version='0.0.0',
     install_requires=[
 	"schema-salad"
     ],
     include_package_data=True,
     packages=find_packages(),
+    namespace_packages=['aether']
 )
