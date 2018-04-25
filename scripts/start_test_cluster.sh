@@ -1,5 +1,7 @@
 set -x
 
+docker-compose build kernel odk
+
 NAMESPACE=test
 kubectl create namespace $NAMESPACE
 kubectl config set-context $(kubectl config current-context) --namespace=$NAMESPACE

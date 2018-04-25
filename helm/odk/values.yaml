@@ -25,7 +25,7 @@ domain: aether.local
 trusted_origins: .aether.local
 testing: true
 liveEdit:
-  enabled: true
+  enabled: false
 namespace:
   create: false
 application:
