@@ -2,10 +2,6 @@
 
 set -x
 
-NAMESPACE=test
-
-kubectl config set-context $(kubectl config current-context) --namespace=$NAMESPACE
-
 getRecent() {
     kubectl get pods --sort-by=.status.startTime -l app=$1 --no-headers \
         | tail -n 1 \

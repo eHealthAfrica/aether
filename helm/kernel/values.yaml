@@ -19,8 +19,8 @@ domain: aether.local
 trusted_origins: .aether.local
 namespace:
   create: false
-debug: true
-testing: true
+debug: false
+testing: false
 liveEdit:
   enabled: false
 application:

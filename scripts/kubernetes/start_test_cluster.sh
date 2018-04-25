@@ -2,22 +2,18 @@
 
 set -x
 
-NAMESPACE=test
-
 docker-compose build kernel odk
-
-kubectl create namespace $NAMESPACE
-
-kubectl config set-context $(kubectl config current-context) --namespace=$NAMESPACE
 
 kubectl create -f ./helm/dev-secrets/secrets.yaml
 kubectl create -f ./helm/dev-secrets/database-secrets.yaml
 
-helm install stable/postgresql --name db --values=./helm/local-db/values.yaml
+VALUES_DIR=$1
+
+helm install stable/postgresql --name db --values=./helm/overrides/db.yaml
 kubectl rollout status deployment db
 
-helm install --name kernel helm/kernel
+helm install --name kernel helm/kernel --values=$VALUES_DIR/kernel.yaml
 kubectl rollout status deployment kernel
 
-helm install --name odk helm/odk
+helm install --name odk helm/odk --values=$VALUES_DIR/odk.yaml
 kubectl rollout status deployment odk
