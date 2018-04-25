@@ -44,7 +44,7 @@ class EntityTypes extends Component {
       // generate sample output with new enity types (TO BE REMOVED!!!)
       const output = schemas.map(et => avro.parse(et).random())
 
-      this.props.updatePipeline({ entity_types: schemas, output })
+      this.props.updatePipeline({ ...this.props.selectedPipeline, entity_types: schemas, output })
     } catch (error) {
       this.setState({ error: error.message })
     }
