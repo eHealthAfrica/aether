@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ./scripts/kubernetes/install_minikube.sh
 ./scripts/kubernetes/install_helm.sh

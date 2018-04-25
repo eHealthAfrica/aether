@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 export CHANGE_MINIKUBE_NONE_USER=true
 

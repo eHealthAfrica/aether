@@ -1,4 +1,3 @@
-{{- if .Values.provider.aws -}}
 {{- $serviceName := include "odk.name" . -}}
 {{- $servicePort := .Values.service.externalPort -}}
 apiVersion: extensions/v1beta1
@@ -15,6 +14,11 @@ metadata:
       {{ $key }}: {{ $value | quote }}
     {{- end }}
 spec:
+  tls:
+  - hosts:
+    {{- range .Values.ingress.hosts }}
+    - {{ . }}
+    {{- end }}
   rules:
     {{- range $host := .Values.ingress.hosts }}
     - host: {{ $host }}
@@ -25,30 +29,3 @@ spec:
               serviceName: {{ $serviceName }}
               servicePort: {{ $servicePort }}
     {{- end -}}
-{{- else -}}
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: {{ template "odk.name" . }}
-  labels:
-    app: {{ template "odk.name" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-  annotations:
-    {{- range $key, $value := .Values.ingress.annotations }}
-      {{ $key }}: {{ $value | quote }}
-    {{- end }}
-spec:
-  tls:
-  - hosts:
-      - odk.aether.local
-  rules:
-    - host: odk.aether.local
-      http:
-        paths:
-          - path: /
-            backend:
-              serviceName: odk
-              servicePort: 80
-{{- end -}}
