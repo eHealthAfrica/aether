@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 import { connect } from 'react-redux'
-import avro from 'avro-js'
 
 import { EntityTypeViewer } from '../../components'
 import { deepEqual } from '../../utils'
