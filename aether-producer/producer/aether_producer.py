@@ -60,7 +60,6 @@ def connect(_settings, retry=3):
 
 def set_offset_value(key, value):
     offsets = {}
-    print("set", key, value)
     try:
         with open(_settings.offset_path) as f:
             offsets = json.load(f)
@@ -79,7 +78,6 @@ def get_offset(key):
         with open(_settings.offset_path) as f:
             offsets = json.load(f)
             try:
-                print(offsets[key])
                 return offsets[key]
             except ValueError as e:
                 None
@@ -110,14 +108,13 @@ def count_since(offset=None, topic=None):
             ORDER BY e.modified ASC;''' % topic
         else:
             count_str += '''ORDER BY e.modified ASC;'''
-        print(count_str)
         cursor.execute(count_str);
         return sum([1 for row in cursor])
 
 
 
 
-def get_entities(offset = None, max_size=100):
+def get_entities(offset = None, max_size=100):  # TODO implement batch pull by topic in Stream
     if not offset:
         offset = ""
     with psycopg2.connect(**_settings.postgres_connection_info) as conn:
@@ -143,7 +140,7 @@ def get_entities(offset = None, max_size=100):
         cursor.execute(query_str)
 
         for x, row in enumerate(cursor):
-            if x >= max_size+1:
+            if x >= max_size - 1:
                 raise StopIteration
             yield {key : row[key] for key in row.keys()}
 
@@ -173,7 +170,6 @@ class KafkaStream(object):
             #block until it actually sends. We don't want offsets getting out of sync
             try:
                 record_metadata = future.get(timeout=10)
-                print(record_metadata)
             except Exception as ke:
                 print ("Error submitting record")
                 raise ke
@@ -217,7 +213,6 @@ class StreamManager(object):
 
 
     def send(self, row_generator):
-        print("sending from manager")
         for row in row_generator:
             if self.killed: #look for sigterm
                 print ("manager stopped in progress via signal")
