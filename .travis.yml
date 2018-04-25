@@ -13,6 +13,7 @@ before_script:
 script:
 - "./scripts/start_test_cluster.sh"
 - "./scripts/run_tests.sh"
+after_script:
 # after_script:
 # - "./scripts/kill_all.sh"
 deploy:

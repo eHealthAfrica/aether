@@ -1,10 +1,12 @@
 set -x
 
+eval $(minikube docker-env)
+
 docker-compose build kernel odk
 
 NAMESPACE=test
-kubectl create namespace $NAMESPACE
 kubectl config set-context $(kubectl config current-context) --namespace=$NAMESPACE
+kubectl create namespace $NAMESPACE
 
 helm del --purge db
 helm del --purge kernel

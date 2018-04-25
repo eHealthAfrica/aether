@@ -13,9 +13,6 @@ show_help() {
 
     pip_freeze    : freeze pip dependencies and write to requirements.txt
 
-    setupproddb   : create/migrate database for production
-    setuplocaldb  : create/migrate database for development (creates superuser and token)
-
     test          : run tests
     test_lint     : run flake8 tests
     test_coverage : run tests with coverage output
@@ -52,11 +49,10 @@ setup_initial_data() {
     ./manage.py loaddata /code/conf/extras/initial.json
 }
 
-# FIXME: supply admin password, reactivate
-# setup_prod() {
-#   # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
-#   ./manage.py setup_admin -p=$ADMIN_PASSWORD -t=$AETHER_KERNEL_TOKEN
-# }
+setup_prod() {
+  # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
+  ./manage.py setup_admin -p=$ADMIN_PASSWORD -t=$AETHER_KERNEL_TOKEN
+}
 
 test_flake8() {
     flake8 /code/. --config=/code/conf/extras/flake8.cfg
@@ -95,17 +91,7 @@ case "$1" in
         pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
     ;;
 
-    setuplocaldb )
-        setup_db
-        setup_initial_data
-    ;;
-
-    setupproddb )
-        setup_db
-    ;;
-
     test)
-
         test_flake8
         test_coverage "${@:2}"
     ;;
@@ -120,8 +106,25 @@ case "$1" in
 
     start )
         setup_db
-        # FIXME: two versions; dev and prod. e.g. dev doesn't need VERSION
-        # setup_prod
+        setup_prod
+
+        # media assets
+        chown aether: /media
+
+        # create static assets
+        ./manage.py collectstatic --noinput
+        chmod -R 755 /var/www/static
+
+        # expose version number
+        cp VERSION /var/www/VERSION
+        # add git revision
+        cp /code/REVISION /var/www/REVISION
+
+        /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
+    ;;
+
+    start_dev )
+        setup_db
         setup_initial_data
 
         # media assets
@@ -131,20 +134,8 @@ case "$1" in
         ./manage.py collectstatic --noinput
         chmod -R 755 /var/www/static
 
-        # # expose version number
-        # cp VERSION /var/www/VERSION
-        # # add git revision
-        # cp /code/REVISION /var/www/REVISION
-
-        # FIXME: only in local
+        # TODO: document reload
         /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini --py-autoreload=3
-    ;;
-
-    start_dev )
-        setup_db
-        setup_initial_data
-
-        ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
 
     help)

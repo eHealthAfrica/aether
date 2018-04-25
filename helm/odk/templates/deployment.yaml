@@ -61,7 +61,7 @@ spec:
         ports:
         - containerPort: 8000
         args:
-        - start
+        - {{ .Values.application.command }}
         livenessProbe:
           initialDelaySeconds: 5
           periodSeconds: 10
