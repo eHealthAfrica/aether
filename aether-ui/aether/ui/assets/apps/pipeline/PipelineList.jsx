@@ -17,7 +17,9 @@ class PipelineList extends Component {
   }
 
   componentWillMount () {
-    this.props.getPipelines()
+    if (!this.props.pipelineList.length) {
+      this.props.getPipelines()
+    }
   }
 
   componentWillReceiveProps (nextProps) {

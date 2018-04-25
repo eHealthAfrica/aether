@@ -25,7 +25,8 @@ class EntityTypes extends Component {
   }
 
   parseProps (props) {
-    return JSON.stringify(props.selectedPipeline.entity_types, 0, 2)
+    const { entity_types: entityTypes } = props.selectedPipeline
+    return entityTypes.length ? JSON.stringify(entityTypes, 0, 2) : ''
   }
 
   onSchemaTextChanged (event) {
@@ -40,10 +41,8 @@ class EntityTypes extends Component {
     try {
       // validate schemas
       const schemas = JSON.parse(this.state.entityTypesSchema)
-      // generate sample output with new enity types (TO BE REMOVED!!!)
-      const output = schemas.map(et => avro.parse(et).random())
-
-      this.props.updatePipeline({ entity_types: schemas, output })
+      schemas.forEach(schema => { avro.parse(schema) })
+      this.props.updatePipeline({ ...this.props.selectedPipeline, entity_types: schemas })
     } catch (error) {
       this.setState({ error: error.message })
     }

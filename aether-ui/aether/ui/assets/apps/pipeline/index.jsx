@@ -7,7 +7,6 @@ import PipelineApp from './PipelineApp'
 
 const appElement = document.getElementById('pipeline-app')
 const component = <AppLayout app={PipelineApp} />
-
 render(component, appElement)
 
 // Include this to enable HMR for this module

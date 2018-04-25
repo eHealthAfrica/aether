@@ -9,6 +9,7 @@ import Input from './sections/Input'
 import EntityTypes from './sections/EntityTypes'
 import Mapping from './sections/Mapping'
 import Output from './sections/Output'
+import { getPipelineById, getPipelines } from './redux'
 
 class Pipeline extends Component {
   constructor (props) {
@@ -21,14 +22,29 @@ class Pipeline extends Component {
     }
   }
 
-  componentWillUpdate () {
-    if (!this.props.selectedPipeline) {
-      this.props.history.replace('/')
+  componentDidMount () {
+    if (this.props.match && this.props.match.params && this.props.match.params.id) {
+      if (!this.props.selectedPipeline) {
+        if (this.props.pipelineList.length) {
+          this.props.getPipelineById(this.props.match.params.id)
+        } else {
+          this.props.getPipelines()
+        }
+      }
     }
   }
 
   componentWillReceiveProps (nextProps) {
-    if (!nextProps.selectedPipeline) {
+    if (this.props.match.params.id !== nextProps.match.params.id) {
+      this.props.getPipelineById(nextProps.match.params.id)
+    }
+    if (nextProps.pipelineList !== this.props.pipelineList && !this.props.selectedPipeline) {
+      this.props.getPipelineById(this.props.match.params.id)
+    }
+    if (!nextProps.selectedPipeline && this.props.pipelineList.length) {
+      this.props.history.replace('/')
+    }
+    if (!this.props.pipelineList.length && !nextProps.pipelineList.length) {
       this.props.history.replace('/')
     }
   }
@@ -142,7 +158,8 @@ class Pipeline extends Component {
 }
 
 const mapStateToProps = ({ pipelines }) => ({
-  selectedPipeline: pipelines.selectedPipeline
+  selectedPipeline: pipelines.selectedPipeline,
+  pipelineList: pipelines.pipelineList
 })
 
-export default connect(mapStateToProps)(Pipeline)
+export default connect(mapStateToProps, { getPipelineById, getPipelines })(Pipeline)

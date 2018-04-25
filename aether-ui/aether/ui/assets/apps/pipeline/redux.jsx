@@ -11,23 +11,38 @@ export const types = {
   PIPELINE_LIST_CHANGED: 'pipeline_list_changed',
   SELECTED_PIPELINE_CHANGED: 'selected_pipeline_changed',
   GET_ALL: 'pipeline_get_all',
-  GET_ALL_FAILED: 'pipeline_get_all_failed'
+  PIPELINE_ERROR: 'pipeline_error',
+  GET_BY_ID: 'pipeline_get_by_id',
+  PIPELINE_NOT_FOUND: 'pipeline_not_found'
 }
 
 export const INITIAL_PIPELINE = {
   pipelineList: [],
   selectedPipeline: null,
-  error: null
+  error: null,
+  notFound: null
 }
 
 export const addPipeline = newPipeline => ({
-  type: types.PIPELINE_ADD,
-  payload: newPipeline
+  types: ['', types.PIPELINE_ADD, types.PIPELINE_ERROR],
+  promise: client => client.post(`${urls.PIPELINES_URL}`,
+    { 'Content-Type': 'application/json' },
+    { data: { name: newPipeline.name } })
+})
+
+export const getPipelineById = id => ({
+  types: ['', types.PIPELINE_UPDATE, types.PIPELINE_NOT_FOUND],
+  promise: client => client.get(`${urls.PIPELINES_URL}${id}/`,
+    { 'Content-Type': 'application/json' }
+  )
 })
 
 export const updatePipeline = pipeline => ({
-  type: types.PIPELINE_UPDATE,
-  payload: pipeline
+  types: ['', types.PIPELINE_UPDATE, types.PIPELINE_ERROR],
+  promise: client => client.put(`${urls.PIPELINES_URL}${pipeline.id}/`,
+    { 'Content-Type': 'application/json' },
+    { data: pipeline }
+  )
 })
 
 export const selectedPipelineChanged = selectedPipeline => ({
@@ -36,19 +51,18 @@ export const selectedPipelineChanged = selectedPipeline => ({
 })
 
 export const getPipelines = () => ({
-  types: ['', types.GET_ALL, types.GET_ALL_FAILED],
-  promise: client => client.get(urls.MOCK_PIPELINES_URL, { 'Content-Type': 'application/json' })
+  types: ['', types.GET_ALL, types.PIPELINE_ERROR],
+  promise: client => client.get(`${urls.PIPELINES_URL}?limit=5000`, { 'Content-Type': 'application/json' }) // limit query_string used instead of pagination (temporary)
 })
 
-const reducer = (state = INITIAL_PIPELINE, action = {}) => {
+const reducer = (state = INITIAL_PIPELINE, action) => {
   const newPipelineList = clone(state.pipelineList)
 
   switch (action.type) {
     case types.PIPELINE_ADD: {
       const newPipeline = clone(action.payload)
       newPipelineList.unshift(newPipeline)
-
-      return { ...state, pipelineList: newPipelineList, selectedPipeline: newPipeline }
+      return { ...state, pipelineList: newPipelineList, selectedPipeline: newPipeline, error: null }
     }
 
     case types.PIPELINE_UPDATE: {
@@ -56,19 +70,23 @@ const reducer = (state = INITIAL_PIPELINE, action = {}) => {
       const index = newPipelineList.findIndex(x => x.id === updatedPipeline.id)
       newPipelineList[index] = updatedPipeline
 
-      return { ...state, pipelineList: newPipelineList, selectedPipeline: updatedPipeline }
+      return { ...state, pipelineList: newPipelineList, selectedPipeline: updatedPipeline, error: null }
     }
 
     case types.SELECTED_PIPELINE_CHANGED: {
-      return { ...state, selectedPipeline: clone(action.payload) }
+      return { ...state, selectedPipeline: clone(action.payload), error: null }
     }
 
     case types.GET_ALL: {
-      return { ...state, pipelineList: action.payload || [], error: null }
+      return { ...state, pipelineList: action.payload.results || [], error: null }
     }
 
-    case types.GET_ALL_FAILED: {
+    case types.PIPELINE_ERROR: {
       return { ...state, error: action.error }
+    }
+
+    case types.PIPELINE_NOT_FOUND: {
+      return { ...state, notFound: action.error, selectedPipeline: null }
     }
 
     default:

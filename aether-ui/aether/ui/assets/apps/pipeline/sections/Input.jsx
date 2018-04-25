@@ -10,7 +10,6 @@ import { updatePipeline } from '../redux'
 class Input extends Component {
   constructor (props) {
     super(props)
-
     this.state = {
       inputSchema: this.parseProps(props),
       error: null
@@ -25,7 +24,8 @@ class Input extends Component {
   }
 
   parseProps (props) {
-    return JSON.stringify(props.selectedPipeline.schema, 0, 2)
+    const { schema } = props.selectedPipeline
+    return Object.keys(schema).length ? JSON.stringify(schema, 0, 2) : ''
   }
 
   onSchemaTextChanged (event) {
@@ -44,7 +44,7 @@ class Input extends Component {
       // generate a new input sample
       const input = type.random()
 
-      this.props.updatePipeline({ schema, input })
+      this.props.updatePipeline({ ...this.props.selectedPipeline, schema, input })
     } catch (error) {
       this.setState({ error: error.message })
     }
@@ -74,7 +74,6 @@ class Input extends Component {
                 defaultMessage='Paste AVRO Schema'
               />
             </label>
-
             { this.state.error &&
               <div className='hint error-message'>
                 <h4 className='hint-title'>

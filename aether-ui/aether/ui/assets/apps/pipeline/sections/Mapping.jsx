@@ -26,7 +26,7 @@ class Mapping extends Component {
 
   notifyChange (event) {
     event.preventDefault()
-    this.props.updatePipeline({ mapping: this.state.mappingRules })
+    this.props.updatePipeline({ ...this.props.selectedPipeline, mapping: this.state.mappingRules })
   }
 
   hasChanged () {
@@ -154,7 +154,7 @@ class Mapping extends Component {
       // include mapping rules as expected in kernel
       mapping: (this.props.selectedPipeline.mapping || [])
         .map(rule => ([rule.source, rule.destination])),
-      mapping_errors: this.props.selectedPipeline.errors || []
+      mapping_errors: this.props.selectedPipeline.mapping_errors || []
     }
 
     return (

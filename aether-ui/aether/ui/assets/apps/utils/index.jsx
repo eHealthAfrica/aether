@@ -66,7 +66,7 @@ export const deepEqual = (a, b, ignoreNull = false) => {
 export const getLoggedInUser = () => {
   const loggedInUserElement = document.getElementById('logged-in-user-info')
   return {
-    id: parseInt(loggedInUserElement.getAttribute('data-user-id'), 10),
-    name: loggedInUserElement.getAttribute('data-user-name')
+    id: parseInt(loggedInUserElement ? loggedInUserElement.getAttribute('data-user-id') : null, 10),
+    name: loggedInUserElement ? loggedInUserElement.getAttribute('data-user-name') : ''
   }
 }
