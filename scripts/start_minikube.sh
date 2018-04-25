@@ -1,3 +1,5 @@
+#!/bin/bash
+
 export CHANGE_MINIKUBE_NONE_USER=true
 
 # Start Minikube

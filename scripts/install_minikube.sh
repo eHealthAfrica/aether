@@ -1,3 +1,5 @@
+#!/bin/bash
+
 install_bin() {
     local exe=${1:?}
     test -n "${TRAVIS}" && sudo install -v ${exe} /usr/local/bin || install ${exe} ${GOPATH:?}/bin
