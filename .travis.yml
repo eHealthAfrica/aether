@@ -9,11 +9,12 @@ cache:
   - "$HOME/.cache/pip"
 before_script:
 - docker login -u ehealthafricadevops -p $DOCKER_HUB_PASSWORD
+- "./scripts/install_minikube.sh"
+- "./scripts/install_helm.sh"
 - "./scripts/start_minikube.sh"
-script:
 - "./scripts/start_test_cluster.sh"
-- "./scripts/run_tests.sh"
-after_script:
+script:
+- "./scripts/run_tests.sh test_all"
 # after_script:
 # - "./scripts/kill_all.sh"
 deploy:
