@@ -1,6 +1,6 @@
 @keyframes slide-up {
   0%   { top: 100vh; }
-  100% { top: 10px; }
+  100% { top: $navbar-height-xs; }
 }
 
 $transition-speed: .6s;
@@ -17,7 +17,7 @@ $output-nav-width: 7rem;
   box-shadow: 0 -1px 3px rgba($text-color, .3);
   position: fixed;
   display: flex;
-  top: 10px;
+  top: $navbar-height-xs;
   bottom: 0;
   width: 100vw;
   transition: top .2s;
