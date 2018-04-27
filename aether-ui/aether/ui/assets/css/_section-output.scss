@@ -8,4 +8,14 @@
     min-width: $output-width;
     padding: 1.2rem;
   }
+
+	.pipeline-errors {
+    code {
+      color: $red;
+    }
+	}
+
+  .pipeline-data {
+    margin-top: 2rem;
+  }
 }
