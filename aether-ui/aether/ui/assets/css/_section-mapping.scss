@@ -12,6 +12,17 @@
     padding: $unit $unit-xl;
   }
 
+  .rules-buttons {
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+
+    .btn {
+      margin-top: 1rem;
+    }
+  }
+
   .rule {
     display: flex;
     flex-wrap: wrap;
