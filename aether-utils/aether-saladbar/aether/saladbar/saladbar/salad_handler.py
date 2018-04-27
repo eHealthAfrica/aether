@@ -9,6 +9,55 @@ from schema_salad.ref_resolver import Loader, file_uri
 def pprint(obj):
     print(json.dumps(obj, indent=2))
 
+##################################################################################
+#             Utility functions to make namespaces Avro Compliant
+##################################################################################
+
+def replace_url(test):
+    if not isinstance(test, str):
+        return test
+    flag = "http://"
+    if not flag in test:
+        return test
+    test = test.replace(flag, "")  # cut out http://
+    parts = test.split("/")
+    if not parts:
+        # just namespace
+        try:
+            parts = test.split(".")
+            return ".".join([i for i in parts[::-1]])
+        except Exception:
+            return test
+    namespace = parts[0]
+    path = None
+    if parts[-1] != namespace:
+        path = ".".join(parts[1:])
+    # reverse namespace
+    parts = namespace.split(".")
+    if len(parts) > 1:
+        if parts[0] not in ["org", "com", "net", "gov"]:
+            namespace = ".".join([i for i in parts[::-1]])
+    return ".".join([namespace,path])
+
+
+
+#we recurse until the object is just replaced strings or ignored items
+def re_namespace(obj):
+    if isinstance(obj, str):
+        return replace_url(obj)
+    if isinstance(obj, list):
+        return [re_namespace(i) for i in obj]
+    if isinstance(obj, dict):
+        return {re_namespace(k): re_namespace(v) for k, v in obj.items()}
+    return obj
+
+
+def check_namespace(fn):
+    def wrapper(*args, **kwargs):
+        out = fn(*args, **kwargs)
+        return re_namespace(out)
+    return wrapper
+
 
 class SaladHandler(object):
 
@@ -75,8 +124,26 @@ class SaladHandler(object):
                 # unpack nested values
                 all_props = [i for j in reqs.get(
                     'properties').values() for i in j]
-                avro_item = [
+                items = [
                     avsc_dict.get(i) for i in all_props if i in avsc_dict.keys()]
-                avro_item.append(avsc_dict.get(name))
+                # split names and namespaces
+                prime = avsc_dict.get(name)
+                del prime['extends']
+                prime['aetherBaseSchema'] = True
+                # del avro_item['extends']
+                items.insert(0, prime)
+                avro_item = []
+                for i in items:
+                    i = re_namespace(i)
+                    parts = i.get('name').split(".")
+                    print(parts)
+                    i['label'] = parts[-1]
+                    i['name'] = ".".join(parts)
+                    i['namespace'] = ".".join(parts[:-1])
+                    if i.get('aetherBaseSchema') is True:
+                        name = i.get('label')
+                    avro_item.append(i)
+
+
                 out[name] = avro_item
         return out

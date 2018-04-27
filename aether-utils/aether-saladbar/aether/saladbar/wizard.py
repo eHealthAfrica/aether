@@ -79,55 +79,6 @@ def load_libraries(settings, schema_path=SCHEMAS):
         }
     return libraries
 
-##################################################################################
-#             Utility functions to make namespaces Avro Compliant
-##################################################################################
-
-def replace_url(test):
-    if not isinstance(test, str):
-        return test
-    flag = "http://"
-    if not flag in test:
-        return test
-    test = test.replace(flag, "")  # cut out http://
-    parts = test.split("/")
-    if not parts:
-        # just namespace
-        try:
-            parts = test.split(".")
-            return ".".join([i for i in parts[::-1]])
-        except Exception:
-            return test
-    namespace = parts[0]
-    path = None
-    if parts[-1] != namespace:
-        path = ".".join(parts[1:])
-    # reverse namespace
-    parts = namespace.split(".")
-    if len(parts) > 1:
-        if parts[0] not in ["org", "com", "net", "gov"]:
-            namespace = ".".join([i for i in parts[::-1]])
-    return ".".join([namespace,path])
-
-
-
-#we recurse until the object is just replaced strings or ignored items
-def re_namespace(obj):
-    if isinstance(obj, str):
-        return replace_url(obj)
-    if isinstance(obj, list):
-        return [re_namespace(i) for i in obj]
-    if isinstance(obj, dict):
-        return {re_namespace(k): re_namespace(v) for k, v in obj.items()}
-    return obj
-
-
-def check_namespace(fn):
-    def wrapper(*args, **kwargs):
-        out = fn(*args, **kwargs)
-        return re_namespace(out)
-    return wrapper
-
 
 def make_base_salad_doc(imports, namespaces, project=None, base_type=None, schema_path=SCHEMAS):
     doc = None
@@ -142,6 +93,7 @@ def make_base_salad_doc(imports, namespaces, project=None, base_type=None, schem
     graph = [{"$import": i} for i in imports]
     graph.append(base_doc)
     doc['$graph'] = graph
+    pprint(graph)
     project_file = "%s%s.json" % (schema_path, project)
     with open(project_file, "w") as f:
         json.dump(doc, f, indent=2)
@@ -249,8 +201,11 @@ def test_setup():
     make_base_salad_doc(imports, namespaces, project, base_type, schema_path=TEST_SCHEMAS)
     project_file = "%s%s.json" % (TEST_SCHEMAS, project)
     salad_handler = salad.SaladHandler(project_file)
+    salad_doc = salad_handler.schema_doc
+    salad_file = "%s%s.salad" % (TEST_SCHEMAS, project)
+    with open(salad_file, "w") as f:
+            json.dump(salad_doc, f, indent=2)
     avsc_dict = salad_handler.get_avro(all_depends)
-    avsc_dict = re_namespace(avsc_dict)
     for k, v in avsc_dict.items():
         filename = "%s%s.avsc" % (TEST_SCHEMAS, k.split(".")[-1])
         with open(filename, "w") as f:
@@ -288,22 +243,27 @@ def main():
     make_base_salad_doc(imports, namespaces, project, base_type)
     project_file = "%s%s.json" % (SCHEMAS, project)
     salad_handler = salad.SaladHandler(project_file)
+    salad_doc = salad_handler.schema_doc
+    salad_file = "%s%s.salad" % (SCHEMAS, project)
+    with open(salad_file, "w") as f:
+            json.dump(salad_doc, f, indent=2)
     avsc_dict = salad_handler.get_avro(all_depends)
-    avsc_dict = re_namespace(avsc_dict)
+    pprint(avsc_dict)
     for k, v in avsc_dict.items():
         # Fix this .org nonsense...
-        filename = "%s%s.avsc" % (SCHEMAS, k.split(".")[-1])
+        filename = "%s%s.avsc" % (SCHEMAS, k)
         with open(filename, "w") as f:
             json.dump(v, f, indent=2)
-    kernel_url = settings.get("kernel_url")
-    kernel_user = settings.get("kernel_user")
-    kernel_pw = settings.get("kernel_pw")
-    kernel_credentials = {"username": kernel_user, "password": kernel_pw}
-    client = KernelClient(url=kernel_url, **kernel_credentials)
     ok = ask(
         "Setup of project titled: %s complete. Register generated schemas with Aether?" %
         (project))
+
     if ok:
+        kernel_url = settings.get("kernel_url")
+        kernel_user = settings.get("kernel_user")
+        kernel_pw = settings.get("kernel_pw")
+        kernel_credentials = {"username": kernel_user, "password": kernel_pw}
+        client = KernelClient(url=kernel_url, **kernel_credentials)
         register_project(client, project)
         register_schemas(client, project)
         prompt_schema_clean(
