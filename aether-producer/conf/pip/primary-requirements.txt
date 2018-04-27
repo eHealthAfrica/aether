@@ -9,10 +9,10 @@
 ################################################################################
 
 aether.client
-spavro
 kafka
 psycopg2-binary
 requests
+spavro
 
 # test libraries
 coverage

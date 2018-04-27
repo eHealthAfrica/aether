@@ -19,6 +19,9 @@ SETTINGS_FILE = "%s/settings.json" % FILE_PATH
 TEST_SETTINGS_FILE = "%s/test_settings.json" % FILE_PATH
 
 
+def pprint(obj):
+    print(json.dumps(obj, indent=2))
+
 class Settings(object):
 
     def __init__(self, test=False):

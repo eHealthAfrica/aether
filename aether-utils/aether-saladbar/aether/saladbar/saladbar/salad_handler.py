@@ -59,6 +59,22 @@ def check_namespace(fn):
     return wrapper
 
 
+# for some reason the schema salad lib is adding an empty name field to array objects.
+# It's useless so we to delete them.
+def handle_empty_fields(obj):
+    if isinstance(obj, str):
+        return
+    if isinstance(obj, list):
+        return [handle_empty_fields(i) for i in obj]
+    if isinstance(obj, dict):
+        for k in list(obj.keys()):
+            v = obj[k]
+            if not v:
+                del obj[k]
+            else:
+                handle_empty_fields(v)
+
+
 class SaladHandler(object):
 
     def __init__(self, path, strict=True):
@@ -114,6 +130,7 @@ class SaladHandler(object):
         if not depends:
             return avsc_names, avsc_obj
         avsc_dict = {i.get('name'): i for i in avsc_obj}
+        handle_empty_fields(avsc_dict)
         pprint([i for i in avsc_dict.keys()])
         out = {}
         deps = depends.keys()
@@ -131,7 +148,7 @@ class SaladHandler(object):
                 del prime['extends']
                 prime['aetherBaseSchema'] = True
                 # del avro_item['extends']
-                items.insert(0, prime)
+                items.append(prime)
                 avro_item = []
                 for i in items:
                     i = re_namespace(i)
