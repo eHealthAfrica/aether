@@ -13,7 +13,9 @@ check_or_build_nsenter() {
     install_bin /tmp/out/usr/bin/nsenter
 }
 
-# `nsenter` might not be installed but minikube needs it. `install_bin` and `check_or_build_nsenter` were lifted from https://github.com/kubeless/kubeless/blob/master/script/cluster-up-minikube.sh
+# `nsenter` might not be installed but minikube needs it. `install_bin` and
+# `check_or_build_nsenter` were lifted from
+# https://github.com/kubeless/kubeless/blob/master/script/cluster-up-minikube.sh
 check_or_build_nsenter
 
 # Download kubectl, which is a requirement for using minikube

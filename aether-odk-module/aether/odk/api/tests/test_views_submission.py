@@ -97,7 +97,6 @@ class PostSubmissionTests(CustomTestCase):
         '''
 
         super(PostSubmissionTests, self).setUp()
-
         self.helper_create_user()
         self.url = reverse('xform-submission')
 
