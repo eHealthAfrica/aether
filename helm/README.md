@@ -5,11 +5,11 @@ We are in the process of switching from docker-compose to kubernetes for local d
 ## Setup
 
 ### Dependencies
-- minikube [Installation instructions](https://kubernetes.io/docs/tasks/tools/install-minikube/)
-- helm [Installation instructions](https://github.com/kubernetes/helm/blob/master/docs/install.md)
+- minikube ([installation instructions](https://kubernetes.io/docs/tasks/tools/install-minikube/))
+- helm ([installation instructions](https://github.com/kubernetes/helm/blob/master/docs/install.md))
 
 ### Installation
-If you are using ubuntu, you can probably make use of the installation we use for Travis CI.
+If you are using ubuntu, you can probably make use of the installation process we use for Travis CI.
 
 To install minikube on ubuntu, run:
 ```
@@ -17,7 +17,7 @@ sudo ./scripts/kubernetes/install_minikube.sh
 ```
 To install helm on ubuntu, run:
 ```
-sudo ./scripts/kubernetes/install_helm.sh
+sudo ./scripts/kubernetes/install_helm.sh --version v2.8.1
 ```
 
 ## Running a local kubernetes cluster
@@ -32,7 +32,7 @@ This process needs to keep running in order for our mount to work, so start it i
 
 Once the mount process is running, we can do:
 ```
-./scripts/kubernetes/install_secrets.sh && ./scripts/kubernetes/start_cluster.sh ./helm/overrides/test
+./scripts/kubernetes/install_secrets.sh && ./scripts/kubernetes/start_cluster.sh ./helm/overrides/local
 ```
 This will bring up both applications with auto-reloading of django code enabled. 
 
@@ -50,7 +50,7 @@ NAME      HOSTS                 ADDRESS          PORTS     AGE
 kernel    kernel.aether.local   192.168.99.100   80, 443   28m
 odk       odk.aether.local      192.168.99.100   80, 443   28m
 ```
-For each entry copy, add the address and the hostname to your `/etc/hosts` file:
+For each entry, add the address and the hostname to your `/etc/hosts` file:
 ```
 # /etc/hosts
 ...
@@ -60,3 +60,19 @@ For each entry copy, add the address and the hostname to your `/etc/hosts` file:
 ```
 
 ## Running the tests
+If you have already have kernel and odk running, do:
+```
+./scripts/kubernetes/run_tests.sh test_all
+```
+To test a single module, use `./run_tests.sh test_<module-name>`. For example:
+```
+./scripts/kubernetes/run_tests.sh test_kernel
+./scripts/kubernetes/run_tests.sh test_odk
+```
+To delete everything in the cluster, bring it back up and then run the tests, do:
+```
+./scripts/kubernetes/delete_all.sh && \
+    ./scripts/kubernetes/install_secrets.sh && \
+    ./scripts/kubernetes/start_cluster.sh ./helm/overrides/local && \
+    ./scripts/kubernetes/run_tests.sh test_all
+```
