@@ -1,2 +1,6 @@
+debug: true
 liveEdit:
   enabled: true
+odk:
+  repository: aether-odk
+release: latest

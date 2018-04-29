@@ -38,8 +38,4 @@ case "$1" in
         test_kernel
         test_odk
     ;;
-
-    *)
-        show_help
-    ;;
 esac

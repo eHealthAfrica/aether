@@ -4,10 +4,10 @@ image:
   tag: stable-alpine
   pullPolicy: IfNotPresent
 kernel:
-  repository: "aether-kernel"
+  repository: "ehealthafrica/aether-kernel"
 name: kernel
 project: aether
-release: latest
+release: 0.6.0
 service:
   name: nginx
   type: NodePort

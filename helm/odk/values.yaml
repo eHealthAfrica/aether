@@ -7,10 +7,10 @@ image:
   tag: stable-alpine
   pullPolicy: IfNotPresent
 odk:
-  repository: "aether-odk"
+  repository: "ehealthafrica/aether-odk"
 name: odk
 project: aether
-release: latest
+release: 0.6.0
 service:
   name: nginx
   type: NodePort

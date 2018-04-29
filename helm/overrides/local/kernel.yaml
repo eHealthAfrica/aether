@@ -1,2 +1,4 @@
-liveEdit:
-  enabled: true
+debug: true
+kernel:
+  repository: aether-kernel
+release: latest

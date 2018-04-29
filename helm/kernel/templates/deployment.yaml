@@ -63,7 +63,7 @@ spec:
         args:
         - {{ .Values.application.command }}
         livenessProbe:
-          initialDelaySeconds: 15
+          initialDelaySeconds: 5
           periodSeconds: 10
           httpGet:
             path: /health
