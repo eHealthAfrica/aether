@@ -19,4 +19,4 @@ until kubectl get nodes -o jsonpath="$JSONPATH" 2>&1 | grep -q "Ready=True"; do
     sleep 1;
 done
 
-printf "done.\n"
+printf "Kubernetes has started successfully.\n"

@@ -23,14 +23,18 @@ sudo ./scripts/kubernetes/install_helm.sh
 ## Running a local kubernetes cluster
 
 ### Environments
-To start the `kernel` and `odk` modules in a local minikube cluster, do:
+To start the `kernel` and `odk` modules in a local minikube cluster with code reloading enabled, we need to mount our aether repository in minikube:
+
+```
+minikube mount $(realpath .):/aether
+```
+This process needs to keep running in order for our mount to work, so start it in a separate terminal tab or background it in your current one.
+
+Once the mount process is running, we can do:
 ```
 ./scripts/kubernetes/install_secrets.sh && ./scripts/kubernetes/start_cluster.sh ./helm/overrides/test
 ```
-This will bring 
-
-### Code reloading
-When developing locally, 
+This will bring up both applications with auto-reloading of django code enabled. 
 
 ### Accessing the aether APIs from the host
 
