@@ -23,6 +23,7 @@ kernel_url_test: http://kernel
 domain: aether.local
 trusted_origins: .aether.local
 testing: true
+webserverPort: 8000
 liveEdit:
   enabled: false
 namespace:

@@ -145,6 +145,12 @@ spec:
             secretKeyRef:
               name: {{ .Values.application.secret }}
               key: odk-database-name
+        # `WEB_SERVER_PORT` is kept around for compatibility with the old tests,
+        # which are using different ports in different environments. Once all
+        # tests have been updated to run inside the cluster, `WEB_SERVER_PORT`
+        # can be removed.
+        - name: WEB_SERVER_PORT
+          value: {{ quote .Values.webserverPort }}
         volumeMounts:
         - mountPath: /var/www/static
           name: static-assets-volume

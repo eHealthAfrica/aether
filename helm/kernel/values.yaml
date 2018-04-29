@@ -21,6 +21,7 @@ namespace:
   create: false
 debug: false
 testing: false
+webserverPort: 8000
 liveEdit:
   enabled: false
 application:

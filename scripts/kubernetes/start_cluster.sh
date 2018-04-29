@@ -8,7 +8,7 @@ set -x
 VALUES_DIR=$1
 
 # Rebuild all images to make sure that are using the most recent versions.
-docker-compose build kernel odk
+docker-compose build kernel
 
 # Install the database.
 # `name` is not a required parameter, but having named releases is very helpful
@@ -26,9 +26,9 @@ helm install helm/kernel \
 # Wait for the deployment to reach a "Running" state.
 kubectl rollout status deployment kernel
 
-# Install odk
-helm install helm/odk \
-     --name odk \
-     --values=$VALUES_DIR/odk.yaml
-# Wait for the deployment to reach a "Running" state.
-kubectl rollout status deployment odk
+# # Install odk
+# helm install helm/odk \
+#      --name odk \
+#      --values=$VALUES_DIR/odk.yaml
+# # Wait for the deployment to reach a "Running" state.
+# kubectl rollout status deployment odk

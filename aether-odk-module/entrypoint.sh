@@ -92,6 +92,11 @@ case "$1" in
         pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
     ;;
 
+    setuplocaldb)
+        setup_db
+        setup_initial_data
+    ;;
+
     test)
         test_flake8
         test_coverage "${@:2}"
@@ -121,7 +126,9 @@ case "$1" in
         # add git revision
         cp /code/REVISION /var/www/REVISION
 
-        /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
+        /usr/local/bin/uwsgi \
+            --ini /code/conf/uwsgi.ini \
+            --http "0.0.0.0:$WEB_SERVER_PORT"
     ;;
 
     start_dev )
@@ -136,7 +143,10 @@ case "$1" in
         chmod -R 755 /var/www/static
 
         # start the web server with code reloading enabled
-        /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini --py-autoreload=3
+        /usr/local/bin/uwsgi \
+            --ini /code/conf/uwsgi.ini \
+            --http "0.0.0.0:$WEB_SERVER_PORT" \
+            --py-autoreload 3
     ;;
 
     help)
