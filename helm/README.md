@@ -13,17 +13,24 @@ If you are using ubuntu, you can probably make use of the installation we use fo
 
 To install minikube on ubuntu, run:
 ```
-./scripts/kubernetes/install_minikube.sh
+sudo ./scripts/kubernetes/install_minikube.sh
 ```
 To install helm on ubuntu, run:
 ```
-./scripts/kubernetes/install_helm.sh
+sudo ./scripts/kubernetes/install_helm.sh
 ```
 
 ## Running a local kubernetes cluster
 
+### Environments
+To start the `kernel` and `odk` modules in a local minikube cluster, do:
+```
+./scripts/kubernetes/install_secrets.sh && ./scripts/kubernetes/start_cluster.sh ./helm/overrides/test
+```
+This will bring 
+
 ### Code reloading
-mounting
+When developing locally, 
 
 ### Accessing the aether APIs from the host
 

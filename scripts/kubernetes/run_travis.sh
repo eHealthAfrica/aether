@@ -4,5 +4,6 @@
 ./scripts/kubernetes/install_helm.sh
 ./scripts/kubernetes/start_minikube.sh
 ./scripts/kubernetes/start_helm.sh
-./scripts/kubernetes/start_test_cluster.sh ./helm/overrides/test
+./scripts/kubernetes/install_secrets.sh
+./scripts/kubernetes/start_cluster.sh ./helm/overrides/test
 ./scripts/kubernetes/run_tests.sh test_all

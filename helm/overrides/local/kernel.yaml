@@ -1,4 +1,6 @@
 debug: true
+liveEdit:
+  enabled: true
 kernel:
   repository: aether-kernel
 release: latest
