@@ -13,6 +13,8 @@ show_help() {
 
     pip_freeze    : freeze pip dependencies and write to requirements.txt
 
+    setuplocaldb  : create/migrate database for development (creates superuser and token)
+
     test          : run tests
     test_lint     : run flake8 tests
     test_coverage : run tests with coverage output
@@ -125,9 +127,7 @@ case "$1" in
         # add git revision
         cp /code/REVISION /var/www/REVISION
 
-        /usr/local/bin/uwsgi \
-            --ini /code/conf/uwsgi.ini \
-            --http "0.0.0.0:$WEB_SERVER_PORT"
+        /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
     ;;
 
     start_dev )
@@ -141,10 +141,7 @@ case "$1" in
         ./manage.py collectstatic --noinput
         chmod -R 755 /var/www/static
 
-        # start the web server with code reloading enabled
-        /usr/local/bin/uwsgi \
-            --ini /code/conf/uwsgi.ini \
-            --http "0.0.0.0:$WEB_SERVER_PORT"
+        ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
 
     help)
