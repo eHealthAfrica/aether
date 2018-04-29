@@ -10,7 +10,12 @@ cache:
 before_script:
 - docker login -u ehealthafricadevops -p $DOCKER_HUB_PASSWORD
 script:
+# This runs the kernel and odk tests in a minikube cluster
 - "./scripts/kubernetes/run_travis.sh"
+# Run all tests with docker-compose
+- "./scripts/test_all.sh"
+after_script:
+- "./scripts/kill_all.sh"
 deploy:
 - provider: script
   script: "./scripts/release.sh"

@@ -60,7 +60,7 @@ For each entry, add the address and the hostname to your `/etc/hosts` file:
 ```
 
 ## Running the tests
-If you have already have kernel and odk running, do:
+If you already have kernel and odk running, do:
 ```
 ./scripts/kubernetes/run_tests.sh test_all
 ```

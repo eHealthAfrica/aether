@@ -7,3 +7,4 @@
 ./scripts/kubernetes/install_secrets.sh
 ./scripts/kubernetes/start_cluster.sh ./helm/overrides/test
 ./scripts/kubernetes/run_tests.sh test_all
+minikube stop
