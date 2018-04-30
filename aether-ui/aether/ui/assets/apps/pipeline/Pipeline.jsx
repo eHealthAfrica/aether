@@ -68,8 +68,11 @@ class Pipeline extends Component {
             <span> // </span>
             { selectedPipeline.name }
           </div>
-           <button type='submit' className='btn btn-c btn-publish'>
-            Publish pipeline
+          <button type='submit' className='btn btn-c btn-publish'>
+            <FormattedMessage
+              id='pipeline.navbar.breadcrumb.publish'
+              defaultMessage='Publish pipeline'
+            />
           </button>
         </NavBar>
 
