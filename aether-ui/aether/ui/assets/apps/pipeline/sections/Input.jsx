@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 import { connect } from 'react-redux'
-import avro from 'avro-js'
+import avro from 'avsc'
 
 import { AvroSchemaViewer } from '../../components'
 import { deepEqual } from '../../utils'
@@ -40,7 +40,7 @@ class Input extends Component {
     try {
       // validate schema
       const schema = JSON.parse(this.state.inputSchema)
-      const type = avro.parse(schema)
+      const type = avro.parse(schema, { noAnonymousTypes: true })
       // generate a new input sample
       const input = type.random()
 
