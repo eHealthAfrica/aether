@@ -3,11 +3,11 @@ import json
 import re
 import string
 import uuid
-from io import BytesIO
 
-import fastavro as avro
 import jsonpath_ng
 from jsonpath_ng import parse
+from spavro.schema import parse as parse_schema
+from spavro.io import validate
 
 from django.utils.safestring import mark_safe
 from pygments import highlight
@@ -515,13 +515,12 @@ def merge_objects(source, target, direction):
 
 
 def validate_entity_payload(project_Schema, payload):
-    # Use fastavro to validate payload against the linked schema
+    # Use spavro to validate payload against the linked schema
     try:
-        # fastavro is primarily for (de)serialization. To test the schema compliance,
-        # we can just try to serialze the data using the schema.
-        with BytesIO() as file_obj:
-            avro.writer(file_obj, project_Schema.schema.definition, [payload])
-            # if we didn't get an exception, we're ok!
-        return
+        avro_schema = parse_schema(json.dumps(project_Schema.schema.definition, indent=2))
+        valid = validate(avro_schema, payload)
+        if not valid:
+            raise TypeError('Record did not conform to registered schema.')
+        return True
     except Exception as err:
         raise err
