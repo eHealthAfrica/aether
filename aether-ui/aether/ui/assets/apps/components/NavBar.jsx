@@ -34,7 +34,9 @@ class NavBar extends Component {
         }
 
         <div data-qa='navbar-user' className='top-nav-user'>
-          { getLoggedInUser().name }
+          <span class='user-name'>
+            { getLoggedInUser().name }
+          </span>
           <span className='logout'>
             <a href='/accounts/logout'>
               <i className='fas fa-sign-out-alt' title={formatMessage(MESSAGES.logout)} />
