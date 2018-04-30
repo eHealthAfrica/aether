@@ -12,9 +12,6 @@ from uuid import uuid4
 from aether.client import KernelClient
 
 
-def pprint(obj):
-    print(json.dumps(obj, indent=2))
-
 class Generic(object):
     '''
     We keep our default mocking functions for each type here as generic
@@ -403,7 +400,6 @@ class MockingManager(object):
         ps_id = self.project_schema.get(type_id)
         data = self.payload_to_data(ps_id, payload)
         res = self.type_client[type_name].submit(data)
-        pprint([res, data])
         print("%s -> #%s" % (name, self.type_count[name]))
         return data
 
