@@ -2,18 +2,15 @@
   "name": "aether-ui",
   "version": "0.0.0",
   "license": "Apache-2.0",
-
   "author": {
     "name": "eHealth Africa",
     "email": "info@ehealthafrica.org",
     "url": "https://ehealthafrica.org"
   },
-
   "engines": {
     "node": ">=6.0.0",
     "npm": ">=3.0.0"
   },
-
   "scripts": {
     "test-lint-js": "standard './aether/ui/assets/apps/**/*.js*'",
     "test-lint-scss": "sass-lint --verbose",
@@ -24,9 +21,8 @@
     "webpack": "webpack --config ./aether/ui/webpack.prod.js",
     "webpack-server": "node ./aether/ui/webpack.server.js"
   },
-
   "dependencies": {
-    "avro-js":"~1.8.2",
+    "avsc": "^5.2.3",
     "bootstrap": "~4.1.0",
     "html5shiv": "~3.7.0",
     "jquery": "~3.3.0",
@@ -41,7 +37,6 @@
     "redux-thunk": "~2.2.0",
     "whatwg-fetch": "~2.0.0"
   },
-
   "devDependencies": {
     "babel-core": "~6.26.0",
     "babel-jest": "~22.4.0",
@@ -69,9 +64,11 @@
     "webpack-cli": "~2.0.0",
     "webpack-dev-server": "~3.1.0"
   },
-
   "babel": {
-    "presets": ["env", "react"],
+    "presets": [
+      "env",
+      "react"
+    ],
     "plugins": [
       "babel-plugin-transform-object-rest-spread",
       "react-hot-loader/babel"
@@ -85,7 +82,9 @@
     "collectCoverage": true,
     "coverageDirectory": "<rootDir>/bundles/.coverage",
     "rootDir": "./aether/ui/assets",
-    "setupFiles": ["<rootDir>/tests/jest.setup.jsx"],
+    "setupFiles": [
+      "<rootDir>/tests/jest.setup.jsx"
+    ],
     "testEnvironment": "<rootDir>/tests/ui-tests-environment",
     "testURL": "http://localhost/",
     "verbose": true

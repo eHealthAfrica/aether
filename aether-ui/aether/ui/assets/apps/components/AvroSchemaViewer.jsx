@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
-import avro from 'avro-js'
+import avro from 'avsc'
 
 class AvroSchemaViewer extends Component {
   schemaToMarkup (schema) {
@@ -37,7 +37,7 @@ class AvroSchemaViewer extends Component {
     }
 
     try {
-      avro.parse(this.props.schema)
+      avro.parse(this.props.schema, { noAnonymousTypes: true })
       return (
         <div className='input-schema'>
           { this.schemaToMarkup(this.props.schema) }

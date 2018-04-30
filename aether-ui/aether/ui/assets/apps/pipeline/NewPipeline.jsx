@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { defineMessages, injectIntl, FormattedMessage } from 'react-intl'
 
-import avro from 'avro-js'
+import avro from 'avsc'
 import { generateGUID } from '../utils'
 import { entityTypes, inputSchema } from '../mock'
 
@@ -59,13 +59,13 @@ class NewPipeline extends Component {
 
         // include mock data in the new pipeline
         schema: inputSchema,
-        input: avro.parse(inputSchema).random(),
+        input: avro.parse(inputSchema, { noAnonymousTypes: true }).random(),
         entity_types: entityTypes,
         mapping: [],
         mapping_errors: [],
 
         // random data to display output component
-        output: entityTypes.map(schema => avro.parse(schema).random())
+        output: entityTypes.map(schema => avro.parse(schema, { noAnonymousTypes: true }).random())
       }
 
       this.props.onStartPipeline(newPipeline)
