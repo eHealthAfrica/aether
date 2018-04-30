@@ -3,7 +3,6 @@ import { connect } from 'react-redux'
 
 class Output extends Component {
   render () {
-
     return (
       <div className='section-body'>
         <div className='pipeline-errors'>
