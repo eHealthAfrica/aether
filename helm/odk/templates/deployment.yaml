@@ -57,13 +57,13 @@ spec:
           mountPath: {{ .Values.application.data_mount }}
       containers:
       - name: {{ .Chart.Name }}
-        image: "{{ .Values.odk.repository }}:{{ .Chart.Version }}"
+        image: "{{ .Values.odk.repository }}:{{ .Values.release }}"
         ports:
         - containerPort: 8000
         args:
-        - start
+        - {{ .Values.application.command }}
         livenessProbe:
-          initialDelaySeconds: 15
+          initialDelaySeconds: 5
           periodSeconds: 10
           httpGet:
             path: /health
@@ -74,7 +74,7 @@ spec:
             - name: Host
               value: {{ .Values.url }}
         readinessProbe:
-          initialDelaySeconds: 15
+          initialDelaySeconds: 5
           periodSeconds: 10
           httpGet:
             path: /health
@@ -119,6 +119,10 @@ spec:
               key: kernel-token
         - name: AETHER_KERNEL_URL
           value: {{ .Values.kernel_url }}
+        - name: AETHER_KERNEL_URL_TEST
+          value: {{ .Values.kernel_url_test }}
+        - name: TESTING
+          value: {{ quote .Values.testing }}
         - name: RDS_USERNAME
           valueFrom:
             secretKeyRef:
@@ -141,11 +145,21 @@ spec:
             secretKeyRef:
               name: {{ .Values.application.secret }}
               key: odk-database-name
+        # `WEB_SERVER_PORT` is kept around for compatibility with the old tests,
+        # which are using different ports in different environments. Once all
+        # tests have been updated to run inside the cluster, `WEB_SERVER_PORT`
+        # can be removed.
+        - name: WEB_SERVER_PORT
+          value: {{ quote .Values.webserverPort }}
         volumeMounts:
         - mountPath: /var/www/static
           name: static-assets-volume
         - name: {{ .Chart.Name }}
           mountPath: {{ .Values.application.data_mount }}
+        {{ if .Values.liveEdit.enabled }}
+        - name: code
+          mountPath: /code
+        {{ end }}
       - name: nginx
         image: nginx:stable-alpine
         ports:
@@ -172,4 +186,9 @@ spec:
         configMap:
           name: odk-init
           defaultMode: 0744
+      {{ if .Values.liveEdit.enabled }}
+      - name: code
+        hostPath:
+          path: /aether/aether-odk-module
+      {{ end }}
       restartPolicy: Always
