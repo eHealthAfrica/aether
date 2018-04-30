@@ -1,12 +1,12 @@
 .top-nav {
   padding: 2rem;
   transition: padding .2s;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: baseline;
 }
 
 .top-nav:hover + .pipeline {
-  top: 54px;
+  top: 60px;
 }
 
 @keyframes fade-in {
@@ -30,11 +30,25 @@
   }
 }
 
+.btn-publish {
+  margin-left: auto;
+  transition: all .4s;
+  padding: .3em 1.2em;
+}
+
+.top-nav:not(:hover) .btn-publish {
+  padding: .2em 1.2em;
+  line-height: 1.3em;
+}
+
 
 .top-nav-user {
   @include label;
-  margin-left: auto;
   transition: opacity .4s;
+
+  .user-name {
+    display: inline;
+  }
 
   .logout {
     margin-left: .7rem;
@@ -88,8 +102,16 @@
     width: 24px;
   }
 
-  .top-nav-user,
   .top-nav-logo {
     opacity: 0;
+  }
+
+  .top-nav-user {
+    border-left: 1px solid rgba($white, .2);
+    margin-left: 1rem;
+  }
+
+  .user-name {
+    display: none;
   }
 }
