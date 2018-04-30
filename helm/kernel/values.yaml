@@ -1,6 +1,3 @@
-# Default values for kernel.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
 replicaCount: 1
 image:
   repository: nginx
@@ -18,11 +15,17 @@ service:
   internalPort: 80
 environment: "dev"
 ums_url: ums-dev
-domain: gather2.org
-trusted_origins: .ehealthafrica.org,.gather2.org
+domain: aether.local
+trusted_origins: .aether.local
 namespace:
   create: false
+debug: false
+testing: false
+webserverPort: 8000
+liveEdit:
+  enabled: false
 application:
+  command: start_dev
   secret: secrets
   data_mount: /media
 database:
@@ -31,9 +34,7 @@ provider:
   aws: false
 ingress:
   enabled: true
+  hosts:
+    - kernel.aether.local
   annotations:
-    alb.ingress.kubernetes.io/scheme: "internet-facing"
-    alb.ingress.kubernetes.io/healthcheck-path: /health
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80,"HTTPS": 443}]'
-    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:eu-west-1:387526361725:certificate/dcd71c49-1b5b-4b19-bd2d-6de98a3f6477"
-    alb.ingress.kubernetes.io/security-groups: "alb-ingress-controller.dev.k8s.eha.to"
+    nginx.ingress.kubernetes.io/ingress.class: "nginx"

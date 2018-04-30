@@ -32,8 +32,7 @@ show_help() {
 
     pip_freeze    : freeze pip dependencies and write to requirements.txt
 
-    setupproddb   : create/migrate database for production
-    setuplocaldb  : create/migrate database for development (creates superuser)
+    setuplocaldb  : create/migrate database for development (creates superuser and token)
 
     test          : run tests
     test_lint     : run flake8 tests
@@ -114,13 +113,9 @@ case "$1" in
         pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
     ;;
 
-    setuplocaldb )
+    setuplocaldb)
         setup_db
         setup_initial_data
-    ;;
-
-    setupproddb )
-        setup_db
     ;;
 
     test)
@@ -148,9 +143,9 @@ case "$1" in
         chmod -R 755 /var/www/static
 
         # expose version number
-        cp /code/VERSION /var/www/VERSION
-        # add git revision 
-        cp /code/REVISION /var/www/REVISION 
+        cp VERSION /var/www/VERSION
+        # add git revision
+        cp /code/REVISION /var/www/REVISION
 
         /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
     ;;
@@ -158,6 +153,13 @@ case "$1" in
     start_dev )
         setup_db
         setup_initial_data
+
+        # media assets
+        chown aether: /media
+
+        # create static assets
+        ./manage.py collectstatic --noinput
+        chmod -R 755 /var/www/static
 
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
