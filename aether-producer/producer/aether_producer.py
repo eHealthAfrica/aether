@@ -270,12 +270,7 @@ def main_loop(test=False):
     finally:
         if manager:
             manager.stop()
-    '''
-    except Exception as e:
-        print(e)
-        if manager:
-            manager.stop()
-    '''
+
 
 if __name__ == "__main__":
     main_loop()
