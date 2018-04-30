@@ -2,7 +2,7 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: {{ .Chart.Name }} 
+  name: {{ .Chart.Name }}
   annotations:
     volume.beta.kubernetes.io/storage-class: "aws-efs-gp"
 spec:
@@ -11,5 +11,18 @@ spec:
   resources:
     requests:
       # This is not used by the provisioner, but is required by the PVC.
+      storage: 1Mi
+{{- else -}}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ .Chart.Name }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: /data/pv0001
+  resources:
+    requests:
       storage: 1Mi
 {{- end -}}
