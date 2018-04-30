@@ -1,7 +1,7 @@
 .top-nav {
   padding: 2rem;
   transition: padding .2s;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: baseline;
 }
 
@@ -19,6 +19,9 @@
   letter-spacing: .06em;
   font-size: $font-size-s;
   opacity: .6;
+  display: flex;
+  align-items: baseline;
+  flex: 1 1 auto;
 
   a {
     text-transform: uppercase;
@@ -45,6 +48,7 @@
 .top-nav-user {
   @include label;
   transition: opacity .4s;
+  margin-left: auto;
 
   .user-name {
     display: inline;

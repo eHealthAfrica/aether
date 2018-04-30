@@ -33,12 +33,6 @@ class NavBar extends Component {
           </div>
         }
 
-        { this.props.showButton &&
-          <button type='submit' className='btn btn-c btn-publish'>
-            Publish pipeline
-          </button>
-        }
-
         <div data-qa='navbar-user' className='top-nav-user'>
           <span class='user-name'>
             { getLoggedInUser().name }

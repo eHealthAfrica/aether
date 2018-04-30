@@ -58,14 +58,19 @@ class Pipeline extends Component {
     return (
       <div className={'pipelines-container show-pipeline'}>
         <NavBar showBreadcrumb showButton>
-          <Link to='/'>
-            <FormattedMessage
-              id='pipeline.navbar.breadcrumb.pipelines'
-              defaultMessage='Pipelines'
-            />
-          </Link>
-          <span> // </span>
-          { selectedPipeline.name }
+          <div classname='breadcrumb-links'>
+            <Link to='/'>
+              <FormattedMessage
+                id='pipeline.navbar.breadcrumb.pipelines'
+                defaultMessage='Pipelines'
+              />
+            </Link>
+            <span> // </span>
+            { selectedPipeline.name }
+          </div>
+           <button type='submit' className='btn btn-c btn-publish'>
+            Publish pipeline
+          </button>
         </NavBar>
 
         <div className={`pipeline pipeline--${this.state.pipelineView} ${this.state.showOutput ? 'show-output' : ''} ${this.state.fullscreen ? 'fullscreen' : ''}`}>
