@@ -1,14 +1,17 @@
 import json
 import psycopg2
-import spavro.schema
+import avro.schema
 import io
 import ast
 import os
 import signal
 import sys
 
-from spavro.io import DatumWriter
-from spavro.datafile import DataFileWriter
+from avro.io import Validate
+from avro.io import DatumWriter
+from avro.datafile import DataFileWriter
+
+
 from kafka import KafkaProducer, KafkaConsumer
 from aether.client import KernelClient
 from psycopg2.extras import DictCursor
@@ -18,9 +21,6 @@ FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 SETTINGS_FILE = "%s/settings.json" % FILE_PATH
 TEST_SETTINGS_FILE = "%s/test_settings.json" % FILE_PATH
 
-
-def pprint(obj):
-    print(json.dumps(obj, indent=2))
 
 class Settings(object):
 
@@ -117,7 +117,7 @@ def count_since(offset=None, topic=None):
 
 
 
-def get_entities(offset = None, max_size=100):  # TODO implement batch pull by topic in Stream
+def get_entities(offset = None, max_size=1000):  # TODO implement batch pull by topic in Stream
     if not offset:
         offset = ""
     with psycopg2.connect(**_settings.postgres_connection_info) as conn:
@@ -162,6 +162,10 @@ class KafkaStream(object):
     def send(self, row):
         msg = row.get("payload")
         offset = row.get("modified")
+        bytes_writer = io.BytesIO()
+        valid = Validate(self.schema, msg)
+        if not valid:
+            raise ValueError("message doesn't adhere to schema \n%s\n%s" % (json.dumps(self.schema), json.dumps(msg)))
         try:
             bytes_writer = io.BytesIO()
             writer = DataFileWriter(bytes_writer, DatumWriter(), self.schema, codec='deflate')
@@ -188,7 +192,8 @@ class KafkaStream(object):
         #Gets avro schema used for encoding messages
         #TODO Fix issue with json coming from API Client being single quoted
         definition = ast.literal_eval(str(self.kernel.Resource.Schema.get(self.topic).definition))
-        self.schema = spavro.schema.parse(json.dumps(definition))
+        #self.schema = spavro.schema.parse(json.dumps(definition))
+        self.schema = avro.schema.Parse(json.dumps(definition))
 
 
     def stop(self):
@@ -221,7 +226,6 @@ class StreamManager(object):
                 print ("manager stopped in progress via signal")
                 return
             topic = row.get("schema_name")
-            print("shoot row")
             self.streams[topic].send(row)
         print ("manager finished processing changes")
 
@@ -233,7 +237,7 @@ class StreamManager(object):
         self.streams = {}
         print ("manager stopped")
 
-    def kill(self):
+    def kill(self, *args, **kwargs):
         self.killed = True
 
 def main_loop(test=False):
@@ -256,17 +260,22 @@ def main_loop(test=False):
                     break
                 manager = None
             else:
-                print("Sleeping for %s" % (_settings.sleep_time))
+                # print("Sleeping for %s" % (_settings.sleep_time))
                 Sleep(_settings.sleep_time)
     except KeyboardInterrupt as ek:
         print ("Caught Keyboard interrupt")
         if manager:
             print ("Trying to kill manager")
             manager.stop()
+    finally:
+        if manager:
+            manager.stop()
+    '''
     except Exception as e:
         print(e)
         if manager:
             manager.stop()
+    '''
 
 if __name__ == "__main__":
     main_loop()

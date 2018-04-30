@@ -65,7 +65,7 @@ def existing_entities(aether_client, existing_projectschemas):
     entities = {}
     for ps in existing_projectschemas:
         name = ps.get("name")
-        endpoint = aether_client.Entity.get(name)
+        endpoint = aether_client.Entity.get(name, strict=False)
         entities[name] = [i for i in endpoint]
     return entities
 

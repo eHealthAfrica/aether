@@ -8,7 +8,6 @@
 # then run 'docker-compose -f docker-compose-test.yml run integration-test pip_freeze'	#
 #                                                                              		#
 #########################################################################################
-aether-saladbar==0.0.0
 aether.client==0.0.0
 aether.mocker==0.0.0
 aether.saladbar==0.0.0
