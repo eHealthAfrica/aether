@@ -4,9 +4,6 @@ FROM python:3.6
 ## setup container
 ################################################################################
 
-#install pip2
-RUN wget https://bootstrap.pypa.io/get-pip.py -O - | python2
-
 ################################################################################
 ## install app
 ## copy files one by one and split commands to use docker cache
@@ -28,4 +25,4 @@ COPY ./ /code
 RUN useradd -ms /bin/false aether
 RUN chown -R aether: /code
 
-ENTRYPOINT ["/code/entrypoint.sh"]
+ENTRYPOINT ["/code/entrypoint_py3.sh"]

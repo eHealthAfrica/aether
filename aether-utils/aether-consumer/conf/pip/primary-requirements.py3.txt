@@ -4,7 +4,7 @@
 #                                                                              					#
 #                                 CHANGE ME !!!                                					#
 #                                                                              					#
-# Update me and then run 'docker-compose -f docker-compose-test.yml run integration-test pip_freeze'            #
+# Update me and then run 'docker-compose run consumer-sdk{-py2 / -py3}-test pip_freeze'         #
 #                                                                              					#
 #################################################################################################################
 
@@ -14,5 +14,4 @@ kafka
 mock
 pytest
 pytest-runner
-requests
 spavro

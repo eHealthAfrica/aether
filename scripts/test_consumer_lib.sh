@@ -38,8 +38,8 @@ $DC_TEST up -d zookeeper-test kafka-test
 
 echo "_____________________________________________ Starting Python3 Tests"
 
-build_container consumer-sdk
-$DC_TEST run consumer-sdk-test test
+build_container consumer-sdk-py3
+$DC_TEST run consumer-sdk-py3-test test
 
 echo "_____________________________________________ Finished Test"
 

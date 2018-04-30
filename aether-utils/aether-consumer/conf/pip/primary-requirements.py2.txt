@@ -4,16 +4,14 @@
 #                                                                              					#
 #                                 CHANGE ME !!!                                					#
 #                                                                              					#
-# Update me and then run 'docker-compose -f docker-compose-test.yml run integration-test pip_freeze'            #
+# Update me and then run 'docker-compose run consumer-sdk{-py2 / -py3}-test pip_freeze'         #
 #                                                                              					#
 #################################################################################################################
 
+flake8
 jsonpath_ng
 kafka
-flake8
 mock
 pytest
 pytest-runner
 spavro
-
-

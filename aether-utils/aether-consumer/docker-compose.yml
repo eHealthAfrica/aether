@@ -37,10 +37,10 @@ services:
   # Aether Kafka SDK
   # ---------------------------------
 
-  consumer-sdk-test:
+  consumer-sdk-py3-test:
     build:
       context: .
-      dockerfile: sdk.dockerfile
+      dockerfile: sdk.py3.dockerfile
 
     volumes:
       - .:/code

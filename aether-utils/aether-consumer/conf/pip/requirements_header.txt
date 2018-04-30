@@ -5,6 +5,6 @@
 #                               DO NOT CHANGE !!!                              		    #
 #                                                                              		    #
 # To update this first update 'primary-requirements.txt'                       		    #
-# then run 'docker-compose run consumer-sdk{-py2}-test pip_freeze'	                    #
+# then run 'docker-compose run consumer-sdk{-py2 / -py3}-test pip_freeze'               #
 #                                                                              		    #
 #########################################################################################
