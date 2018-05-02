@@ -232,13 +232,17 @@ class Input extends Component {
             />
           </h3>
           <div className='input-toggles'>
-            <button className='btn btn-w' onClick={() => this.setState({ view: SCHEMA_VIEW })}>
+            <button 
+              className={`btn btn-w ${this.state.view === SCHEMA_VIEW ? 'selected' : ''}`} 
+              onClick={() => this.setState({ view: SCHEMA_VIEW })}>
               <FormattedMessage
                 id='pipeline.input.toggle.schema'
                 defaultMessage='Avro schema'
               />
             </button>
-            <button className='btn btn-w' onClick={() => this.setState({ view: DATA_VIEW })}>
+            <button 
+              className={`btn btn-w ${this.state.view === DATA_VIEW ? 'selected' : ''}`} 
+              onClick={() => this.setState({ view: DATA_VIEW })}>
               <FormattedMessage
                 id='pipeline.input.toggle.data'
                 defaultMessage='Data (JSON)'

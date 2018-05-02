@@ -19,7 +19,6 @@
     border-left: 1px dashed $light-grey;
     height: calc(100vh - 6.8rem - #{$navbar-height-xs});
     position: relative;
-    display: flex;
     flex-direction: column;
   }
 
