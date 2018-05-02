@@ -8,6 +8,12 @@ import { deepEqual } from '../../utils'
 import { generateSchemaName } from '../../utils/generateSchemaName'
 import { updatePipeline } from '../redux'
 
+// The input section has two subviews `SCHEMA_VIEW` and `DATA_VIEW`.
+// In the schema view, the user enters an avro schema representing their input.
+// Sample data is derived from that schema and displayed in the `DataInput`
+// component.
+// In the data view, the user enters sample data representing a submission. An
+// avro schema is derived from this sample and displayed in the `SchemaInput`.
 const SCHEMA_VIEW = 'SCHEMA_VIEW'
 const DATA_VIEW = 'DATA_VIEW'
 
@@ -48,7 +54,6 @@ class SchemaInput extends Component {
       const type = avro.parse(schema, { noAnonymousTypes: true })
       // generate a new input sample
       const input = type.random()
-
       this.props.updatePipeline({ ...this.props.selectedPipeline, schema, input })
     } catch (error) {
       this.setState({ error: error.message })
@@ -131,7 +136,7 @@ class DataInput extends Component {
     return Object.keys(input).length ? JSON.stringify(input, 0, 2) : ''
   }
 
-  onSchemaTextChanged (event) {
+  onDataChanged (event) {
     this.setState({
       inputData: event.target.value
     })
@@ -178,7 +183,7 @@ class DataInput extends Component {
             <h4 className='hint-title'>
               <FormattedMessage
                 id='pipeline.input.data.invalid.message'
-                defaultMessage='You have provided an invalid AVRO schema.'
+                defaultMessage='Not a valid JSON document.'
               />
             </h4>
             {this.state.error}
@@ -190,7 +195,7 @@ class DataInput extends Component {
               className='monospace'
               required
               value={this.state.inputData}
-              onChange={this.onSchemaTextChanged.bind(this)}
+              onChange={this.onDataChanged.bind(this)}
               placeholder={msg}
               rows='10'
             />
@@ -218,6 +223,14 @@ class Input extends Component {
     }
   }
 
+  toggleInputView () {
+    if (this.state.view === DATA_VIEW) {
+      this.setState({ view: SCHEMA_VIEW })
+    } else {
+      this.setState({ view: DATA_VIEW })
+    }
+  }
+
   render () {
     return (
       <div className='section-body'>
@@ -234,7 +247,7 @@ class Input extends Component {
           <div className='input-toggles'>
             <button
               className={`btn btn-w ${this.state.view === SCHEMA_VIEW ? 'selected' : ''}`}
-              onClick={() => this.setState({ view: SCHEMA_VIEW })}>
+              onClick={this.toggleInputView.bind(this)}>
               <FormattedMessage
                 id='pipeline.input.toggle.schema'
                 defaultMessage='Avro schema'
@@ -242,14 +255,13 @@ class Input extends Component {
             </button>
             <button
               className={`btn btn-w ${this.state.view === DATA_VIEW ? 'selected' : ''}`}
-              onClick={() => this.setState({ view: DATA_VIEW })}>
+              onClick={this.toggleInputView.bind(this)}>
               <FormattedMessage
                 id='pipeline.input.toggle.data'
                 defaultMessage='Data (JSON)'
               />
             </button>
           </div>
-
           {this.state.view === SCHEMA_VIEW && <SchemaInput {...this.props} />}
           {this.state.view === DATA_VIEW && <DataInput {...this.props} />}
         </div>

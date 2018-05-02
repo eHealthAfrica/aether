@@ -21,6 +21,6 @@ describe('AvroSchemaViewer', () => {
 
   it('should render an empty avro schema viewer', () => {
     const component = mountWithIntl(<AvroSchemaViewer />)
-    expect(component.html()).toContain('Your schema for this pipeline will be displayed here once you have added an AVRO schema.')
+    expect(component.html()).toContain('Your schema for this pipeline will be displayed here once you have added a valid source')
   })
 })
