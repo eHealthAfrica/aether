@@ -1,5 +1,6 @@
 import json
 import requests
+import ast
 
 from aether.common.kernel import utils
 
@@ -114,3 +115,73 @@ def validate_pipeline(pipeline):
             [{'error_message': f'It was not possible to validate the pipeline: {str(e)}'}],
             []
         )
+
+def kernel_data_request(url, method, data={}):
+    '''
+    Handle post requests to the kernel server
+    '''
+    kernerl_url = utils.get_kernel_server_url()
+    res = requests.request(method=method,
+        url=f'{kernerl_url}/{url.lower()}/',
+        headers=utils.get_auth_header(),
+        json=data)
+    if res.status_code >= 200 and res.status_code < 400:
+        return res.json()
+    else:
+        raise Exception(res.json())
+
+def create_new_kernel_object(object_name, pipeline, data={}, project_name='Aux', entity_name=None):
+    try:
+        res = kernel_data_request(f'{object_name}s', 'post', data)
+    except Exception as e:
+        error = ast.literal_eval(str(e))
+        error['object_name'] = data['name']
+        raise Exception(error)
+    if 'id' in res:
+        if not pipeline.kernel_refs:
+            pipeline.kernel_refs = {}
+        if object_name is 'schema' or object_name is 'projectSchema':
+            if object_name not in pipeline.kernel_refs:
+                pipeline.kernel_refs[object_name] = {}
+            pipeline.kernel_refs[object_name][entity_name if entity_name is not None else data['name']] = res['id']
+            pipeline.save()
+            if object_name is 'schema':
+                try:
+                    project_schema_data = {
+                        'name': '{}-{}'.format(project_name, data['name']),
+                        'mandatory_fields': '[]',
+                        'transport_rule': '[]',
+                        'masked_fields':'[]',
+                        'is_encrypted': False,
+                        'project':pipeline.kernel_refs['project'],
+                        'schema': res['id']
+                    }
+                    if is_object_linked(pipeline.kernel_refs, 'projectSchema', data['name']):
+                        # Notify user of existing object, and confirm override
+                        pass
+                    else:
+                        create_new_kernel_object('projectSchema', pipeline, project_schema_data, entity_name=data['name'])
+                except Exception as e:
+                    error = ast.literal_eval(str(e))
+                    error['object_name'] = '{}-{}-{}'.format(project_name, pipeline.name, data['name'])
+                    raise Exception(error)
+        else:
+            pipeline.kernel_refs[object_name] = res['id']
+            pipeline.save()
+
+def is_object_linked(kernel_refs, object_name, entity_type_name=''):
+    if kernel_refs and object_name in kernel_refs:
+        try:
+            if object_name is 'schema' or object_name is 'projectSchema':
+                if entity_type_name in kernel_refs[object_name]:
+                    url = f'{object_name}s/{kernel_refs[object_name][entity_type_name]}'
+                else:
+                    return False
+            else:
+                url = f'{object_name}s/{kernel_refs[object_name]}'
+            kernel_data_request(url, 'get')
+            return True
+        except:
+            return False
+    else:
+        return False

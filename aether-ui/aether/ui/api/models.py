@@ -194,6 +194,7 @@ class Pipeline(TimeStampedModel):
     # }
     mapping_errors = JSONField(blank=True, null=True, editable=False)
     output = JSONField(blank=True, null=True, editable=False)
+    kernel_refs = JSONField(blank=True, null=True, editable=False)
 
     def __str__(self):
         return self.name

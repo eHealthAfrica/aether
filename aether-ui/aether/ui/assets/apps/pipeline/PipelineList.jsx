@@ -6,7 +6,7 @@ import { PROJECT_NAME } from '../utils/constants'
 import { NavBar } from '../components'
 
 import NewPipeline from './NewPipeline'
-import { addPipeline, selectedPipelineChanged, getPipelines } from './redux'
+import { addPipeline, selectedPipelineChanged, getPipelines, publishPipeline } from './redux'
 
 class PipelineList extends Component {
   constructor (props) {
@@ -42,7 +42,6 @@ class PipelineList extends Component {
               defaultMessage='Pipelines'
             />
           </h1>
-
           <NewPipeline
             onStartPipeline={newPipeline => { this.onStartPipeline(newPipeline) }}
           />
@@ -102,4 +101,4 @@ const mapStateToProps = ({ pipelines }) => ({
   error: pipelines.error
 })
 
-export default connect(mapStateToProps, { getPipelines, selectedPipelineChanged, addPipeline })(PipelineList)
+export default connect(mapStateToProps, { getPipelines, selectedPipelineChanged, addPipeline, publishPipeline })(PipelineList)

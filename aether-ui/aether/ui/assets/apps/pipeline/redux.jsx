@@ -3,11 +3,13 @@
 
 import { clone } from '../utils'
 import urls from '../utils/urls'
+import { PROJECT_NAME } from '../utils/constants'
 
 export const types = {
   PIPELINE_ADD: 'pipeline_add',
   PIPELINE_UPDATE: 'pipeline_update',
-
+  PIPELINE_PUBLISH_SUCCESS: 'pipeline_publish_success',
+  PIPELINE_PUBLISH_ERROR: 'pipeline_publish_error',
   PIPELINE_LIST_CHANGED: 'pipeline_list_changed',
   SELECTED_PIPELINE_CHANGED: 'selected_pipeline_changed',
   GET_ALL: 'pipeline_get_all',
@@ -42,6 +44,13 @@ export const updatePipeline = pipeline => ({
   promise: client => client.put(`${urls.PIPELINES_URL}${pipeline.id}/`,
     { 'Content-Type': 'application/json' },
     { data: pipeline }
+  )
+})
+
+export const publishPipeline = id => ({
+  types: ['', types.PIPELINE_PUBLISH_SUCCESS, types.PIPELINE_PUBLISH_ERROR],
+  promise: client => client.get(`${urls.PIPELINE_PUBLISH_URL}${id}/${PROJECT_NAME}/`,
+    { 'Content-Type': 'application/json' }
   )
 })
 

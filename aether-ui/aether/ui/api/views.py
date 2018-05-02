@@ -1,11 +1,15 @@
 import requests
+import uuid
+import json
 
-from django.http import HttpResponse
+from django.http import (HttpResponse, JsonResponse)
 from django.views import View
 from rest_framework import viewsets
+from aether.common.kernel import utils
+
 
 from ..settings import AETHER_APPS
-from . import models, serializers
+from . import models, serializers, utils as ui_utils
 
 
 class PipelineViewSet(viewsets.ModelViewSet):
@@ -144,3 +148,67 @@ class TokenProxyView(View):
                                     *args,
                                     **kwargs)
         return HttpResponse(response, status=response.status_code)
+
+
+def PublishPipeline(requests, pipelineid, projectname):
+    '''
+    This view transform the supplied pipeline to kernal models, publish and update the pipeline with related kernel model ids.
+    '''
+    # check kernel connection
+    if not utils.test_connection():
+        return JsonResponse(json.dumps({'error_message': 'It was not possible to connect to Aether Kernel Server.'}), status=404)
+    try:
+        pipeline = models.Pipeline.objects.get(pk=pipelineid)
+        project_data = {
+            'revision': str(uuid.uuid4()),
+            'name': '{}-{}'.format(projectname, pipeline.name),
+            'salad_schema': '[]',
+            'jsonld_context': '[]',
+            'rdf_definition': '[]'
+        }
+
+        # check if pipeline references existing kernel records (update if exists)
+        if ui_utils.is_object_linked(pipeline.kernel_refs, 'project'):
+            # Notify user of existing object, and confirm override
+            pass
+        else:
+            ui_utils.create_new_kernel_object('project', pipeline, project_data, projectname)
+
+        for entity_type in pipeline.entity_types:
+            schema_data = {
+                'revision': str(uuid.uuid4()),
+                'name': entity_type['name'],
+                'type': entity_type['type'],
+                'definition': entity_type
+            }
+            if ui_utils.is_object_linked(pipeline.kernel_refs, 'schema', entity_type['name']):
+                # Notify user of existing object, and confirm override
+                pass
+            else:
+                ui_utils.create_new_kernel_object('schema', pipeline, schema_data, projectname) 
+        
+        mapping = [
+            [rule['source'], rule['destination']]
+            for rule in pipeline.mapping
+        ]
+        mapping_data = {
+            'name': '{}-{}'.format(projectname, pipeline.name),
+            'definition': {
+                'entities': pipeline.kernel_refs['projectSchema'],
+                'mapping': mapping
+                },
+            'revision': str(uuid.uuid4()),
+            'project': pipeline.kernel_refs['project']
+        }
+        if pipeline.kernel_refs and 'mapping' in pipeline.kernel_refs:
+            try:
+                ui_utils.kernel_data_request(f'mappings/{pipeline.kernel_refs["mapping"]}', 'get')
+                # Notify user of existing object, and confirm override
+            except Exception as e:
+                ui_utils.create_new_kernel_object('mapping', pipeline, mapping_data, projectname)
+        else:
+            ui_utils.create_new_kernel_object('mapping', pipeline, mapping_data, projectname)
+
+        return JsonResponse(pipeline.kernel_refs, status=200, safe=False)
+    except Exception as e:
+        return JsonResponse({'message': str(e), 'error': 'Bad request'}, status=400)
