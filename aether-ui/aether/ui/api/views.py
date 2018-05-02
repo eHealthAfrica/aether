@@ -152,11 +152,14 @@ class TokenProxyView(View):
 
 def PublishPipeline(requests, pipelineid, projectname):
     '''
-    This view transform the supplied pipeline to kernal models, publish and update the pipeline with related kernel model ids.
+    This view transform the supplied pipeline to kernal models,
+    publish and update the pipeline with related kernel model ids.
     '''
     # check kernel connection
     if not utils.test_connection():
-        return JsonResponse(json.dumps({'error_message': 'It was not possible to connect to Aether Kernel Server.'}), status=404)
+        return JsonResponse(json.dumps(
+                {'error_message': 'It was not possible to connect to Aether Kernel Server.'}
+            ), status=404)
     try:
         pipeline = models.Pipeline.objects.get(pk=pipelineid)
         project_data = {
@@ -185,8 +188,8 @@ def PublishPipeline(requests, pipelineid, projectname):
                 # Notify user of existing object, and confirm override
                 pass
             else:
-                ui_utils.create_new_kernel_object('schema', pipeline, schema_data, projectname) 
-        
+                ui_utils.create_new_kernel_object('schema', pipeline, schema_data, projectname)
+
         mapping = [
             [rule['source'], rule['destination']]
             for rule in pipeline.mapping

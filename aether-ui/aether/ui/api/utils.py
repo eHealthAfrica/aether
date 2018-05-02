@@ -116,19 +116,22 @@ def validate_pipeline(pipeline):
             []
         )
 
+
 def kernel_data_request(url, method, data={}):
     '''
     Handle post requests to the kernel server
     '''
     kernerl_url = utils.get_kernel_server_url()
     res = requests.request(method=method,
-        url=f'{kernerl_url}/{url.lower()}/',
-        headers=utils.get_auth_header(),
-        json=data)
+                           url=f'{kernerl_url}/{url.lower()}/',
+                           headers=utils.get_auth_header(),
+                           json=data
+                           )
     if res.status_code >= 200 and res.status_code < 400:
         return res.json()
     else:
         raise Exception(res.json())
+
 
 def create_new_kernel_object(object_name, pipeline, data={}, project_name='Aux', entity_name=None):
     try:
@@ -151,16 +154,17 @@ def create_new_kernel_object(object_name, pipeline, data={}, project_name='Aux',
                         'name': '{}-{}'.format(project_name, data['name']),
                         'mandatory_fields': '[]',
                         'transport_rule': '[]',
-                        'masked_fields':'[]',
+                        'masked_fields': '[]',
                         'is_encrypted': False,
-                        'project':pipeline.kernel_refs['project'],
+                        'project': pipeline.kernel_refs['project'],
                         'schema': res['id']
                     }
                     if is_object_linked(pipeline.kernel_refs, 'projectSchema', data['name']):
                         # Notify user of existing object, and confirm override
                         pass
                     else:
-                        create_new_kernel_object('projectSchema', pipeline, project_schema_data, entity_name=data['name'])
+                        create_new_kernel_object('projectSchema',
+                                                 pipeline, project_schema_data, entity_name=data['name'])
                 except Exception as e:
                     error = ast.literal_eval(str(e))
                     error['object_name'] = '{}-{}-{}'.format(project_name, pipeline.name, data['name'])
@@ -168,6 +172,7 @@ def create_new_kernel_object(object_name, pipeline, data={}, project_name='Aux',
         else:
             pipeline.kernel_refs[object_name] = res['id']
             pipeline.save()
+
 
 def is_object_linked(kernel_refs, object_name, entity_type_name=''):
     if kernel_refs and object_name in kernel_refs:
@@ -181,7 +186,7 @@ def is_object_linked(kernel_refs, object_name, entity_type_name=''):
                 url = f'{object_name}s/{kernel_refs[object_name]}'
             kernel_data_request(url, 'get')
             return True
-        except:
+        except Exception:
             return False
     else:
         return False
