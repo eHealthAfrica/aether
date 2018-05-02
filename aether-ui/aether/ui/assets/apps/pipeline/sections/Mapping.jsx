@@ -37,7 +37,9 @@ class Mapping extends Component {
     return (
       <div className='section-body'>
         <div className='rules'>
-          <h3 className='title-medium'>Mapping rules</h3>
+          <h3 className='title-medium'>
+            <FormattedMessage id='mapping.rules' defaultMessage='Mapping rules' />
+          </h3>
           <form onSubmit={this.notifyChange.bind(this)}>
             { this.state.mappingRules.map(this.renderRule.bind(this)) }
 
