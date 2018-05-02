@@ -16,6 +16,7 @@ class SchemaInput extends Component {
     super(props)
     this.state = {
       inputSchema: this.parseProps(props),
+      view: SCHEMA_VIEW,
       error: null
     }
   }
@@ -65,56 +66,46 @@ class SchemaInput extends Component {
 
   render () {
     return (
-      <div className='section-body'>
-        <div className='section-left'>
-          <AvroSchemaViewer schema={this.props.selectedPipeline.schema} />
-        </div>
-
-        <div className='section-right'>
-
-          <form onSubmit={this.notifyChange.bind(this)}>
-            <label className='form-label'>
+      <form onSubmit={this.notifyChange.bind(this)}>
+        <label className='form-label'>
+          <FormattedMessage
+            id='pipeline.input.schema.empty.message'
+            defaultMessage='Paste AVRO Schema'
+          />
+        </label>
+        {this.state.error &&
+          <div className='hint error-message'>
+            <h4 className='hint-title'>
               <FormattedMessage
-                id='pipeline.input.schema.empty.message'
-                defaultMessage='Paste AVRO Schema'
+                id='pipeline.input.schema.invalid.message'
+                defaultMessage='You have provided an invalid AVRO schema.'
               />
-            </label>
-            {this.state.error &&
-              <div className='hint error-message'>
-                <h4 className='hint-title'>
-                  <FormattedMessage
-                    id='pipeline.input.schema.invalid.message'
-                    defaultMessage='You have provided an invalid AVRO schema.'
-                  />
-                </h4>
-                {this.state.error}
-              </div>
-            }
-            <FormattedMessage id='pipeline.input.schema.placeholder' defaultMessage='Enter your schema'>
-              {msg => (
-                <textarea
-                  className='monospace'
-                  required
-                  value={this.state.inputSchema}
-                  onChange={this.onSchemaTextChanged.bind(this)}
-                  placeholder={msg}
-                  rows='10'
-                />
-              )}
-            </FormattedMessage>
+            </h4>
+            {this.state.error}
+          </div>
+        }
+        <FormattedMessage id='pipeline.input.schema.placeholder' defaultMessage='Enter your schema'>
+          {msg => (
+            <textarea
+              className='monospace'
+              required
+              value={this.state.inputSchema}
+              onChange={this.onSchemaTextChanged.bind(this)}
+              placeholder={msg}
+              rows='10'
+            />
+          )}
+        </FormattedMessage>
 
-            <button type='submit' className='btn btn-w btn-primary mt-3' disabled={!this.hasChanged()}>
-              <span className='details-title'>
-                <FormattedMessage
-                  id='pipeline.input.schema.button.add'
-                  defaultMessage='Add to pipeline'
-                />
-              </span>
-            </button>
-          </form>
-
-        </div>
-      </div>
+        <button type='submit' className='btn btn-w btn-primary mt-3' disabled={!this.hasChanged()}>
+          <span className='details-title'>
+            <FormattedMessage
+              id='pipeline.input.schema.button.add'
+              defaultMessage='Add to pipeline'
+            />
+          </span>
+        </button>
+      </form>
     )
   }
 }
@@ -175,56 +166,46 @@ class DataInput extends Component {
 
   render () {
     return (
-      <div className='section-body'>
-        <div className='section-left'>
-          <AvroSchemaViewer schema={this.props.selectedPipeline.schema} />
-        </div>
-
-        <div className='section-right'>
-
-          <form onSubmit={this.notifyChange.bind(this)}>
-            <label className='form-label'>
+      <form onSubmit={this.notifyChange.bind(this)}>
+        <label className='form-label'>
+          <FormattedMessage
+            id='pipeline.input.data.empty.message'
+            defaultMessage='Please paste data in JSON format. We will automatically derive an AVRO schema for you'
+          />
+        </label>
+        {this.state.error &&
+          <div className='hint error-message'>
+            <h4 className='hint-title'>
               <FormattedMessage
-                id='pipeline.input.data.empty.message'
-                defaultMessage='Please paste data in JSON format. We will automatically derive an AVRO schema for you'
+                id='pipeline.input.data.invalid.message'
+                defaultMessage='You have provided an invalid AVRO schema.'
               />
-            </label>
-            {this.state.error &&
-              <div className='hint error-message'>
-                <h4 className='hint-title'>
-                  <FormattedMessage
-                    id='pipeline.input.data.invalid.message'
-                    defaultMessage='You have provided an invalid AVRO schema.'
-                  />
-                </h4>
-                {this.state.error}
-              </div>
-            }
-            <FormattedMessage id='pipeline.input.data.placeholder' defaultMessage='Enter your data'>
-              {msg => (
-                <textarea
-                  className='monospace'
-                  required
-                  value={this.state.inputData}
-                  onChange={this.onSchemaTextChanged.bind(this)}
-                  placeholder={msg}
-                  rows='10'
-                />
-              )}
-            </FormattedMessage>
+            </h4>
+            {this.state.error}
+          </div>
+        }
+        <FormattedMessage id='pipeline.input.data.placeholder' defaultMessage='Enter your data'>
+          {msg => (
+            <textarea
+              className='monospace'
+              required
+              value={this.state.inputData}
+              onChange={this.onSchemaTextChanged.bind(this)}
+              placeholder={msg}
+              rows='10'
+            />
+          )}
+        </FormattedMessage>
 
-            <button type='submit' className='btn btn-w btn-primary mt-3' disabled={!this.hasChanged()}>
-              <span className='details-title'>
-                <FormattedMessage
-                  id='pipeline.input.data.button.add'
-                  defaultMessage='Add to pipeline'
-                />
-              </span>
-            </button>
-          </form>
-
-        </div>
-      </div>
+        <button type='submit' className='btn btn-w btn-primary mt-3' disabled={!this.hasChanged()}>
+          <span className='details-title'>
+            <FormattedMessage
+              id='pipeline.input.data.button.add'
+              defaultMessage='Add to pipeline'
+            />
+          </span>
+        </button>
+      </form>
     )
   }
 }
@@ -239,21 +220,35 @@ class Input extends Component {
 
   render () {
     return (
-      <div>
-        <button onClick={() => this.setState({ view: SCHEMA_VIEW })}>
-          <FormattedMessage
-            id='pipeline.input.toggle.schema'
-            defaultMessage='Avro schema'
-          />
-        </button>
-        <button onClick={() => this.setState({ view: DATA_VIEW })}>
-          <FormattedMessage
-            id='pipeline.input.toggle.data'
-            defaultMessage='Data (JSON)'
-          />
-        </button>
-        {this.state.view === SCHEMA_VIEW && <SchemaInput {...this.props} />}
-        {this.state.view === DATA_VIEW && <DataInput {...this.props} />}
+      <div className='section-body'>
+        <div className='section-left'>
+          <AvroSchemaViewer schema={this.props.selectedPipeline.schema} />
+        </div>
+        <div className='section-right'>
+          <h3 className='title-large'>
+            <FormattedMessage
+              id='pipeline.input.title'
+              defaultMessage='Define the source for your pipeline'
+            />
+          </h3>
+          <div className='input-toggles'>
+            <button className='btn btn-w' onClick={() => this.setState({ view: SCHEMA_VIEW })}>
+              <FormattedMessage
+                id='pipeline.input.toggle.schema'
+                defaultMessage='Avro schema'
+              />
+            </button>
+            <button className='btn btn-w' onClick={() => this.setState({ view: DATA_VIEW })}>
+              <FormattedMessage
+                id='pipeline.input.toggle.data'
+                defaultMessage='Data (JSON)'
+              />
+            </button>
+          </div>
+
+          {this.state.view === SCHEMA_VIEW && <SchemaInput {...this.props} />}
+          {this.state.view === DATA_VIEW && <DataInput {...this.props} />}
+        </div>
       </div>
     )
   }
