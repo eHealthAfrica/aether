@@ -12,6 +12,17 @@
     padding: $unit $unit-xl;
   }
 
+  .rules-buttons {
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+
+    .btn {
+      margin-top: 1rem;
+    }
+  }
+
   .rule {
     display: flex;
     flex-wrap: wrap;
@@ -39,7 +50,7 @@
 
   .rule-input {
     flex: 1 1 auto;
-    margin: .2rem 1rem .2rem 0;
+    margin: .2rem .6rem .2rem 0;
     background-color: darken($dark-blue, 5);
     box-shadow: 1px 1px 1px rgba($black, .2) inset, 1px 1px 0 rgba($white, .1);
     height: 32px;
