@@ -195,7 +195,8 @@ class PostSubmissionTests(CustomTestCase):
             response = requests.get(submission['attachments_url'], headers=self.KERNEL_HEADERS)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             content = response.json()
-            self.assertEqual(content['count'], attachments)
+            # there is always one more attachment, the original submission content itself
+            self.assertEqual(content['count'], attachments + 1)
 
     def test__submission__post__no_granted_surveyor(self):
         # remove user as granted surveyor
@@ -259,7 +260,7 @@ class PostSubmissionTests(CustomTestCase):
                 {XML_SUBMISSION_PARAM: f},
                 **self.headers_user
             )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content.decode())
         self.helper_check_submission()
 
     def test__submission__post__with_attachment(self):
@@ -393,5 +394,5 @@ class PostSubmissionTests(CustomTestCase):
         )
         mock_del.assert_called_once()
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.content.decode())
         self.helper_check_submission(succeed=False)
