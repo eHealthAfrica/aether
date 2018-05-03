@@ -15,7 +15,6 @@ django-debug-toolbar
 django-ums-client
 djangorestframework
 drf-dynamic-fields
-geojson
 psycopg2-binary
 python-dateutil
 pytz
