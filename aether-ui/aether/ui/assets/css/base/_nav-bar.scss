@@ -89,7 +89,6 @@
     padding: 1rem;
 
     .top-nav-breadcrumb,
-    .top-nav-user,
     .top-nav-logo {
       opacity: 1;
     }
@@ -111,11 +110,6 @@
   }
 
   .top-nav-user {
-    border-left: 1px solid rgba($white, .2);
-    margin-left: 1rem;
-  }
-
-  .user-name {
     display: none;
   }
 }
