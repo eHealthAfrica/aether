@@ -23,7 +23,7 @@
 
 @mixin bg-gradient {
   background: $action-color-b;
-  background-image: linear-gradient(to right, transparent, $purple);
+  background-image: linear-gradient(to right, rgba($purple, 0), $purple);
   color: $white;
 }
 
