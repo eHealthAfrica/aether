@@ -25,6 +25,9 @@
   <iterate>
     <index>3</index>
   </iterate>
+  <iterate_one>
+    <index>one</index>
+  </iterate_one>
   <meta>
     <instanceID>uuid:cef69d9d-ebd9-408f-8bc6-9d418bb083d9</instanceID>
   </meta>
