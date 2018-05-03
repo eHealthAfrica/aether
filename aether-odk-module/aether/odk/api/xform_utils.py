@@ -215,8 +215,8 @@ def parse_submission(data, xml_definition):
             xpath = '/' + '/'.join(keys)
             _type = coerce_dict.get(xpath)
 
-            if _type == 'list' and isinstance(v, dict):
-                # list of one item but presented as a dict
+            if _type == 'list' and not isinstance(v, list):
+                # list of one item but not presented as a list
                 # transform it back into a list
                 obj[k] = [v]
 
