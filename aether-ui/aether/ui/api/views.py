@@ -1,11 +1,9 @@
 import requests
 import uuid
-import json
 
 from django.http import (HttpResponse, JsonResponse)
 from django.views import View
 from rest_framework import viewsets
-from aether.common.kernel import utils
 
 
 from ..settings import AETHER_APPS
@@ -155,11 +153,6 @@ def PublishPipeline(requests, pipelineid, projectname):
     This view transform the supplied pipeline to kernal models,
     publish and update the pipeline with related kernel model ids.
     '''
-    # check kernel connection
-    if not utils.test_connection():
-        return JsonResponse(json.dumps(
-                {'error_message': 'It was not possible to connect to Aether Kernel Server.'}
-            ), status=404)
     try:
         pipeline = models.Pipeline.objects.get(pk=pipelineid)
         project_data = {
@@ -203,15 +196,13 @@ def PublishPipeline(requests, pipelineid, projectname):
             'revision': str(uuid.uuid4()),
             'project': pipeline.kernel_refs['project']
         }
-        if pipeline.kernel_refs and 'mapping' in pipeline.kernel_refs:
-            try:
-                ui_utils.kernel_data_request(f'mappings/{pipeline.kernel_refs["mapping"]}', 'get')
-                # Notify user of existing object, and confirm override
-            except Exception as e:
-                ui_utils.create_new_kernel_object('mapping', pipeline, mapping_data, projectname)
+        if ui_utils.is_object_linked(pipeline.kernel_refs, 'mapping'):
+            # Notify user of existing object, and confirm override
+            pass
         else:
             ui_utils.create_new_kernel_object('mapping', pipeline, mapping_data, projectname)
 
-        return JsonResponse(pipeline.kernel_refs, status=200, safe=False)
+        return JsonResponse(serializers.PipelineSerializer(pipeline, context={'request': requests}).data,
+                            status=200, safe=False)
     except Exception as e:
         return JsonResponse({'message': str(e), 'error': 'Bad request'}, status=400)

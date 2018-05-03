@@ -138,40 +138,21 @@ def create_new_kernel_object(object_name, pipeline, data={}, project_name='Aux',
         res = kernel_data_request(f'{object_name}s', 'post', data)
     except Exception as e:
         error = ast.literal_eval(str(e))
-        error['object_name'] = data['name']
+        error['object_name'] = data['name'] if 'name' in data else 'unknown'
         raise Exception(error)
-    if 'id' in res:
-        if not pipeline.kernel_refs:
-            pipeline.kernel_refs = {}
-        if object_name is 'schema' or object_name is 'projectSchema':
-            if object_name not in pipeline.kernel_refs:
-                pipeline.kernel_refs[object_name] = {}
-            pipeline.kernel_refs[object_name][entity_name if entity_name is not None else data['name']] = res['id']
-            pipeline.save()
-            if object_name is 'schema':
-                try:
-                    project_schema_data = {
-                        'name': '{}-{}'.format(project_name, data['name']),
-                        'mandatory_fields': '[]',
-                        'transport_rule': '[]',
-                        'masked_fields': '[]',
-                        'is_encrypted': False,
-                        'project': pipeline.kernel_refs['project'],
-                        'schema': res['id']
-                    }
-                    if is_object_linked(pipeline.kernel_refs, 'projectSchema', data['name']):
-                        # Notify user of existing object, and confirm override
-                        pass
-                    else:
-                        create_new_kernel_object('projectSchema',
-                                                 pipeline, project_schema_data, entity_name=data['name'])
-                except Exception as e:
-                    error = ast.literal_eval(str(e))
-                    error['object_name'] = '{}-{}-{}'.format(project_name, pipeline.name, data['name'])
-                    raise Exception(error)
-        else:
-            pipeline.kernel_refs[object_name] = res['id']
-            pipeline.save()
+    if not pipeline.kernel_refs:
+        pipeline.kernel_refs = {}
+    if object_name is 'schema' or object_name is 'projectSchema':
+        if object_name not in pipeline.kernel_refs:
+            pipeline.kernel_refs[object_name] = {}
+        pipeline.kernel_refs[object_name][entity_name if entity_name is not None else data['name']] = res['id']
+        pipeline.save()
+        if object_name is 'schema':
+            create_project_schema_object('{}-{}'.format(project_name, data['name']),
+                                         pipeline, res['id'], data['name'])
+    else:
+        pipeline.kernel_refs[object_name] = res['id']
+        pipeline.save()
 
 
 def is_object_linked(kernel_refs, object_name, entity_type_name=''):
@@ -190,3 +171,18 @@ def is_object_linked(kernel_refs, object_name, entity_type_name=''):
             return False
     else:
         return False
+
+
+def create_project_schema_object(name, pipeline, schema_id, entity_name):
+    project_schema_data = {
+                            'name': name,
+                            'mandatory_fields': '[]',
+                            'transport_rule': '[]',
+                            'masked_fields': '[]',
+                            'is_encrypted': False,
+                            'project': pipeline.kernel_refs['project'],
+                            'schema': schema_id
+                        }
+    if not is_object_linked(pipeline.kernel_refs, 'projectSchema', entity_name):
+        create_new_kernel_object('projectSchema',
+                                 pipeline, project_schema_data, entity_name=entity_name)
