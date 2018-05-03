@@ -20,7 +20,6 @@ import re
 import xmltodict
 
 from dateutil import parser
-from geojson import Point
 
 from pyxform import xls2json, builder
 from pyxform.xls2json_backends import xls_to_dict
@@ -68,7 +67,7 @@ def get_xml_title(data):
     try:
         # data is an `OrderedDict` object
         return data['h:html']['h:head']['h:title']
-    except Exception as e:
+    except Exception:
         return None
 
 
@@ -124,7 +123,7 @@ def get_xml_instance_attr(data, attr):
             key = list(instance.keys())[0]
             return instance[key][attr]
 
-    except Exception as e:
+    except Exception:
         pass
 
     return None
@@ -167,6 +166,17 @@ def extract_data_from_xml(xml):
     return data, form_id, version
 
 
+def get_instance_id(data):
+    '''
+    Extracts device instance id from xml data
+    '''
+
+    try:
+        return data['meta']['instanceID']
+    except Exception:
+        return None
+
+
 def parse_submission(data, xml_definition):
     '''
     Transforms and cleans the dictionary submission.
@@ -202,25 +212,42 @@ def parse_submission(data, xml_definition):
 
         for k, v in obj.items():
             keys = parent_keys + [k]
+            xpath = '/' + '/'.join(keys)
+            _type = coerce_dict.get(xpath)
+
+            if _type == 'list' and not isinstance(v, list):
+                # list of one item but not presented as a list
+                # transform it back into a list
+                obj[k] = [v]
+
             if isinstance(v, dict):
                 walk(v, keys, coerce_dict)
+
             elif isinstance(v, list):
                 for i in v:
                     # indices are not important
                     walk(i, keys, coerce_dict)
+
             elif v is not None:
-                xpath = '/' + '/'.join(keys)
-                _type = coerce_dict.get(xpath)
+
                 if _type in ('int', 'integer'):
                     obj[k] = int(v)
+
                 if _type == 'decimal':
                     obj[k] = float(v)
+
                 if _type in ('date', 'dateTime'):
                     obj[k] = parser.parse(v).isoformat()
+
                 if _type == 'geopoint':
                     lat, lng, altitude, accuracy = v.split()
-                    # {"coordinates": [<<lat>>, <<lng>>], "type": "Point"}
-                    obj[k] = Point((float(lat), float(lng)))
+                    obj[k] = {
+                        'coordinates': [float(lat), float(lng)],
+                        'altitude': float(altitude),
+                        'accuracy': float(accuracy),
+                        'type': 'Point',
+                    }
+
             else:
                 obj[k] = None
 
@@ -232,10 +259,15 @@ def parse_submission(data, xml_definition):
 
         try:
             coerce_dict[re_nodeset[0]] = re_type[0]
-        except Exception as e:
+        except Exception:
             # ignore, sometimes there is no "type"
             # <bind nodeset="/ZZZ/some_field" relevant=" /ZZZ/some_choice ='value'"/>
             pass
+
+    # repeat entries define the "list" fields
+    for repeat_entry in re.findall(r'<repeat.*>', xml_definition):
+        re_nodeset = re.findall(r'nodeset="([^"]*)"', repeat_entry)
+        coerce_dict[re_nodeset[0]] = 'list'
 
     walk(data, None, coerce_dict)  # modifies inplace
 
@@ -246,10 +278,3 @@ def parse_submission(data, xml_definition):
         data = data[list(data.keys())[0]]
 
     return data
-
-
-def get_instance_id(data):
-    try:
-        return data['meta']['instanceID']
-    except Exception:
-        return None
