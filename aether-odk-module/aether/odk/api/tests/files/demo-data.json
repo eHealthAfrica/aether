@@ -34,9 +34,11 @@
       "index": "3"
     }
   ],
-  "iterate_one": {
-    "index": "one"
-  },
+  "iterate_one": [
+    {
+      "index": "one"
+    }
+  ],
   "meta": {
     "instanceID": "uuid:cef69d9d-ebd9-408f-8bc6-9d418bb083d9"
   }

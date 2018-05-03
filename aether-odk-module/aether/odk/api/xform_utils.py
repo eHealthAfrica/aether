@@ -212,6 +212,14 @@ def parse_submission(data, xml_definition):
 
         for k, v in obj.items():
             keys = parent_keys + [k]
+            xpath = '/' + '/'.join(keys)
+            _type = coerce_dict.get(xpath)
+
+            if _type == 'list' and isinstance(v, dict):
+                # list of one item but presented as a dict
+                # transform it back into a list
+                obj[k] = [v]
+
             if isinstance(v, dict):
                 walk(v, keys, coerce_dict)
 
@@ -256,6 +264,11 @@ def parse_submission(data, xml_definition):
             # ignore, sometimes there is no "type"
             # <bind nodeset="/ZZZ/some_field" relevant=" /ZZZ/some_choice ='value'"/>
             pass
+
+    # repeat entries define the "list" fields
+    for repeat_entry in re.findall(r'<repeat.*>', xml_definition):
+        re_nodeset = re.findall(r'nodeset="([^"]*)"', repeat_entry)
+        coerce_dict[re_nodeset[0]] = 'list'
 
     walk(data, None, coerce_dict)  # modifies inplace
 
