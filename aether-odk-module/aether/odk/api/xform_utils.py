@@ -229,8 +229,6 @@ def parse_submission(data, xml_definition):
                     walk(i, keys, coerce_dict)
 
             elif v is not None:
-                xpath = '/' + '/'.join(keys)
-                _type = coerce_dict.get(xpath)
 
                 if _type in ('int', 'integer'):
                     obj[k] = int(v)
@@ -249,6 +247,7 @@ def parse_submission(data, xml_definition):
                         'accuracy': float(accuracy),
                         'type': 'Point',
                     }
+
             else:
                 obj[k] = None
 
