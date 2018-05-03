@@ -46,7 +46,7 @@ class Mapping extends Component {
             <div className='rules-buttons'>
               { this.renderAddNewRuleButton() }
 
-              <button type='submit' className='btn btn-d' disabled={!this.hasChanged()}>
+              <button type='submit' className='btn btn-d btn-primary' disabled={!this.hasChanged()}>
                 <span className='details-title'>
                   <FormattedMessage
                     id='mapping.rules.button.ok'
