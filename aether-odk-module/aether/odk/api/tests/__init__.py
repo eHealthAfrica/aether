@@ -38,6 +38,8 @@ XML_DATA_FILE = PATH_DIR + 'demo-data.xml'
 XML_DATA_FILE_ERR = PATH_DIR + 'demo-data--error.xml'
 XML_DATA_FILE_ERR_MISSING_INSTANCE_ID = PATH_DIR + 'demo-data--error--missing-instance-id.xml'
 
+JSON_DATA_FILE = PATH_DIR + 'demo-data.json'
+
 XML_DATA = '''
     <h:html
         xmlns="http://www.w3.org/2002/xforms"
@@ -96,6 +98,7 @@ class CustomTestCase(TransactionTestCase):
                 'file-ok': XML_DATA_FILE,
                 'file-err': XML_DATA_FILE_ERR,
                 'file-err-missing-instance-id': XML_DATA_FILE_ERR_MISSING_INSTANCE_ID,
+                'file-ok-json': JSON_DATA_FILE,
             },
 
             # sample collection for xForm objects
