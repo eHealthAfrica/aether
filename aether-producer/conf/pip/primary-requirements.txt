@@ -12,7 +12,6 @@ aether.client
 kafka
 psycopg2-binary
 requests
-spavro
 
 # test libraries
 coverage

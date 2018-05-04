@@ -16,18 +16,18 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
-import psycopg2
-import avro.schema
-import io
 import ast
+import io
+import json
 import os
+import psycopg2
 import signal
+import avro.schema
 import sys
 
-from avro.io import Validate
-from avro.io import DatumWriter
 from avro.datafile import DataFileWriter
+from avro.io import DatumWriter
+from avro.io import Validate
 
 
 from kafka import KafkaProducer, KafkaConsumer
@@ -111,6 +111,9 @@ def count_since(offset=None, topic=None):
         offset = ""
     with psycopg2.connect(**_settings.postgres_connection_info) as conn:
         cursor = conn.cursor(cursor_factory=DictCursor)
+        # We'd originally used a 'count(CASE WHEN e.modified >'
+        # That broke mysteriously and borked everything so we're using a less optimal call.
+        # Benchmarks show it good enough for now but probably should be fixed  # TODO
         count_str = '''
             SELECT
                 e.id,
@@ -119,7 +122,7 @@ def count_since(offset=None, topic=None):
                 ps.id as project_schema_id,
                 s.name as schema_name,
                 s.id as schema_id
-                    FROM kernel_entity e
+            FROM kernel_entity e
             inner join kernel_projectschema ps on e.projectschema_id = ps.id
             inner join kernel_schema s on ps.schema_id = s.id
             WHERE e.modified > '%s'
@@ -131,8 +134,6 @@ def count_since(offset=None, topic=None):
             count_str += '''ORDER BY e.modified ASC;'''
         cursor.execute(count_str);
         return sum([1 for row in cursor])
-
-
 
 
 def get_entities(offset = None, max_size=1000):  # TODO implement batch pull by topic in Stream
@@ -152,19 +153,16 @@ def get_entities(offset = None, max_size=1000):  # TODO implement batch pull by 
                 s.name as schema_name,
                 s.id as schema_id,
                 s.revision as schema_revision
-                    from kernel_entity e
+            FROM kernel_entity e
             inner join kernel_projectschema ps on e.projectschema_id = ps.id
             inner join kernel_schema s on ps.schema_id = s.id
             WHERE e.modified > '%s'
-            ORDER BY e.modified ASC;
-        '''  % (offset)
+            ORDER BY e.modified ASC
+            LIMIT %d;
+        '''  % (offset, max_size)
         cursor.execute(query_str)
-
-        for x, row in enumerate(cursor):
-            if x >= max_size - 1:
-                raise StopIteration
+        for row in cursor:
             yield {key : row[key] for key in row.keys()}
-
 
 
 class KafkaStream(object):
@@ -210,7 +208,6 @@ class KafkaStream(object):
         #Gets avro schema used for encoding messages
         #TODO Fix issue with json coming from API Client being single quoted
         definition = ast.literal_eval(str(self.kernel.Resource.Schema.get(self.topic).definition))
-        #self.schema = spavro.schema.parse(json.dumps(definition))
         self.schema = avro.schema.Parse(json.dumps(definition))
 
 
