@@ -247,7 +247,7 @@ PIPELINE_EXAMPLE = {
   },
   'entity_types': [
     {
-      'name': 'Person',
+      'name': 'PersonY',
       'type': 'record',
       'fields': [
         {
