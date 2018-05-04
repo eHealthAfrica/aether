@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 import { connect } from 'react-redux'
 
-import { generateGUID, deepEqual } from '../../utils'
+import { generateGUID, deepEqual, applyStyle, removeStyle } from '../../utils'
 import { updatePipeline } from '../redux'
 
 class Mapping extends Component {
@@ -12,11 +12,32 @@ class Mapping extends Component {
     this.state = {
       mappingRules: this.parseProps(props)
     }
+    this.setMappingStyles()
   }
 
   componentWillReceiveProps (nextProps) {
+    if (nextProps.selectedPipeline.mapping !== this.props.selectedPipeline.mapping) {
+      this.clearMappingStyles(this.props.selectedPipeline.mapping)
+    }
     this.setState({
       mappingRules: this.parseProps(nextProps)
+    })
+    this.setMappingStyles()
+  }
+
+  setMappingStyles () {
+    Object.keys(this.state.mappingRules).forEach(mapping => {
+      const mappingData = this.state.mappingRules[mapping]
+      applyStyle(`input_${mappingData.source}`, 'input-mapped')
+      applyStyle(`entityType_${mappingData.destination}`, 'entityType-mapped')
+    })
+  }
+
+  clearMappingStyles (mappings) {
+    Object.keys(mappings).forEach(mapping => {
+      const mappingData = mappings[mapping]
+      removeStyle(`input_${mappingData.source}`, 'input-mapped')
+      removeStyle(`entityType_${mappingData.destination}`, 'entityType-mapped')
     })
   }
 
@@ -88,6 +109,8 @@ class Mapping extends Component {
     }
 
     const removeRule = () => {
+      removeStyle(`input_${rule.source}`, 'input-mapped')
+      removeStyle(`entityType_${rule.destination}`, 'entityType-mapped')
       this.setState({
         mappingRules: this.state.mappingRules.filter(r => r.id !== rule.id)
       })

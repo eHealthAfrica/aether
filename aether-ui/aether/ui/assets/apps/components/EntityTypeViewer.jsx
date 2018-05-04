@@ -13,7 +13,7 @@ const PropertyList = props => {
         } else {
           parent = field.name
         }
-        result.push(PropertyList({fields: field.type.fields, parent: parent}))
+        result.push(PropertyList({fields: field.type.fields, parent: parent, name: props.name}))
       } else {
         let fieldType = ''
         if (typeof field.type === 'object') {
@@ -22,10 +22,11 @@ const PropertyList = props => {
           fieldType = field.type
         }
         if (props.parent) {
-          result.push(<li key={`${props.parent}.${field.name}`}><span className='name'>{`${props.parent}.${field.name}`}</span>
+          result.push(<li key={`${props.parent}.${field.name}`} id={`entityType_${props.name}.${props.parent}.${field.name}`}>
+            <span className='name'>{`${props.parent}.${field.name}`}</span>
             <span className='type'> {fieldType}</span></li>)
         } else {
-          result.push(<li key={field.name}><span className='name'>{field.name}</span>
+          result.push(<li key={field.name} id={`entityType_${props.name}.${field.name}`}><span className='name'>{field.name}</span>
             <span className='type'> {fieldType}</span>
           </li>)
         }
@@ -44,7 +45,7 @@ const EntityTypeView = props => {
   return (<div className='entity-type'>
     <h2 className='title'>{props.name}</h2>
     <ul className='properties'>
-      <PropertyList fields={props.fields} />
+      <PropertyList fields={props.fields} name={props.name} />
     </ul>
   </div>)
 }

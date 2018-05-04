@@ -70,3 +70,23 @@ export const getLoggedInUser = () => {
     name: loggedInUserElement ? loggedInUserElement.getAttribute('data-user-name') : ''
   }
 }
+
+/**
+ * Applies supplied class to an element by id in the DOM
+ */
+export const applyStyle = (id, className) => {
+  const element = document.getElementById(id)
+  if (element) {
+    element.classList.add(className)
+  }
+}
+
+/**
+ * Removes supplied class from an element by id in the DOM
+ */
+export const removeStyle = (id, className) => {
+  const element = document.getElementById(id)
+  if (element) {
+    element.classList.remove(className)
+  }
+}
