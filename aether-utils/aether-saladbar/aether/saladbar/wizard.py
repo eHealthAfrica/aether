@@ -26,9 +26,9 @@ import sys
 
 from aether.client import KernelClient
 
-from library import library_utils
-import saladbar.parsers as Parsers
-from saladbar import salad_handler as salad
+import aether.saladbar.library.library_utils as library_utils
+import aether.saladbar.saladbar.parsers as Parsers
+import aether.saladbar.saladbar.salad_handler as salad
 
 HERE = (os.path.dirname(os.path.realpath(__file__)))
 SETTINGS = "%s/conf/settings.json" % HERE
@@ -38,6 +38,10 @@ TMP = "%s/tmp" % RES
 SCHEMAS = "%s/schemas/" % HERE
 TEST_SCHEMAS = "%s/test-schemas/" % HERE
 
+# alais raw_input for python3
+if sys.version_info >= (3, 0):
+    def raw_input(prompt):
+        return input(prompt)
 
 def pprint(obj):
     print(json.dumps(obj, indent=2))
@@ -105,6 +109,7 @@ def make_base_salad_doc(imports, namespaces, project=None, base_type=None, schem
     graph = [{"$import": i} for i in imports]
     graph.append(base_doc)
     doc['$graph'] = graph
+    pprint(graph)
     project_file = "%s%s.json" % (schema_path, project)
     with open(project_file, "w") as f:
         json.dump(doc, f, indent=2)
@@ -212,10 +217,13 @@ def test_setup():
     make_base_salad_doc(imports, namespaces, project, base_type, schema_path=TEST_SCHEMAS)
     project_file = "%s%s.json" % (TEST_SCHEMAS, project)
     salad_handler = salad.SaladHandler(project_file)
+    salad_doc = salad_handler.schema_doc
+    salad_file = "%s%s.salad" % (TEST_SCHEMAS, project)
+    with open(salad_file, "w") as f:
+            json.dump(salad_doc, f, indent=2)
     avsc_dict = salad_handler.get_avro(all_depends)
     for k, v in avsc_dict.items():
-        # Fix this .org nonsense...
-        filename = "%s%s.avsc" % (TEST_SCHEMAS, k.split(".org/")[1])
+        filename = "%s%s.avsc" % (TEST_SCHEMAS, k.split(".")[-1])
         with open(filename, "w") as f:
             json.dump(v, f, indent=2)
     kernel_url = settings.get("kernel_url")
@@ -251,21 +259,27 @@ def main():
     make_base_salad_doc(imports, namespaces, project, base_type)
     project_file = "%s%s.json" % (SCHEMAS, project)
     salad_handler = salad.SaladHandler(project_file)
+    salad_doc = salad_handler.schema_doc
+    salad_file = "%s%s.salad" % (SCHEMAS, project)
+    with open(salad_file, "w") as f:
+            json.dump(salad_doc, f, indent=2)
     avsc_dict = salad_handler.get_avro(all_depends)
+    pprint(avsc_dict)
     for k, v in avsc_dict.items():
         # Fix this .org nonsense...
-        filename = "%s%s.avsc" % (SCHEMAS, k.split(".org/")[1])
+        filename = "%s%s.avsc" % (SCHEMAS, k)
         with open(filename, "w") as f:
             json.dump(v, f, indent=2)
-    kernel_url = settings.get("kernel_url")
-    kernel_user = settings.get("kernel_user")
-    kernel_pw = settings.get("kernel_pw")
-    kernel_credentials = {"username": kernel_user, "password": kernel_pw}
-    client = KernelClient(url=kernel_url, **kernel_credentials)
     ok = ask(
         "Setup of project titled: %s complete. Register generated schemas with Aether?" %
         (project))
+
     if ok:
+        kernel_url = settings.get("kernel_url")
+        kernel_user = settings.get("kernel_user")
+        kernel_pw = settings.get("kernel_pw")
+        kernel_credentials = {"username": kernel_user, "password": kernel_pw}
+        client = KernelClient(url=kernel_url, **kernel_credentials)
         register_project(client, project)
         register_schemas(client, project)
         prompt_schema_clean(

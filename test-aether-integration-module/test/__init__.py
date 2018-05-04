@@ -16,10 +16,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from aether.client import KernelClient
 import pytest
-import sys
 from time import sleep
+
+from aether.client import KernelClient
+import aether.saladbar.wizard as wizard
+
+from .consumer import get_consumer, read
 
 KERNEL_URL = "http://kernel-test:9000/v1"
 
@@ -28,14 +31,11 @@ kernel_credentials = {
     "password": "adminadmin",
 }
 
-kernel_retry = 3
-kernel_retry_time = 5
+kernel_retry = 15
+kernel_retry_time = 1
 
 SEED_ENTITIES = 10
 SEED_TYPE = "Person"
-
-py2 = pytest.mark.skipif(sys.version_info >= (3, 0), reason="Test only required for python2")
-py3 = pytest.mark.skipif(sys.version_info <= (3, 0), reason="Test only required for python3")
 
 
 @pytest.fixture(scope="session")
@@ -54,11 +54,11 @@ def aether_client():
 
 @pytest.fixture(scope="session")
 def schema_registration():
-    from saladbar import wizard  # we have to import this locally so it only gets into @py2 scopes
     try:
         wizard.test_setup()
         return True
     except Exception as err:
+        raise(err)
         print("Schema registration failed with: %s" % err)
         return False
 
@@ -83,7 +83,7 @@ def existing_entities(aether_client, existing_projectschemas):
     entities = {}
     for ps in existing_projectschemas:
         name = ps.get("name")
-        endpoint = aether_client.Entity.get(name)
+        endpoint = aether_client.Entity.get(name, strict=False)
         entities[name] = [i for i in endpoint]
     return entities
 
@@ -93,8 +93,8 @@ def generate_entities(aether_client, existing_schemas, existing_projectschemas):
     entities = []
     manager = None
     from aether.mocker import MockingManager, MockFn, Generic
-    person = "http://demo.eha.org/Person"
-    location = "http://demo.eha.org/GeoLocation"
+    person = "org.eha.demo.Person"
+    location = "org.eha.demo.GeoLocation"
     try:
         manager = MockingManager(kernel_url=KERNEL_URL)
         manager.types[location].override_property(
@@ -117,7 +117,6 @@ def generate_entities(aether_client, existing_schemas, existing_projectschemas):
 
 @pytest.fixture(scope="function")
 def read_people():
-    from .consumer import get_consumer, read
     consumer = get_consumer(SEED_TYPE)
     messages = read(consumer, start="FIRST", verbose=True, timeout_ms=500)
     consumer.close()  # leaving consumers open can slow down zookeeper, try to stay tidy

@@ -6,7 +6,8 @@ verify_ssl = true
 
 [packages]
 
-aether = {path = "./../aether-client", editable = true}
+"aether.client" = {path = "./../aether-client", editable = true}
+"aether.mocker" = {path = ".", editable = true}
 
 
 [dev-packages]

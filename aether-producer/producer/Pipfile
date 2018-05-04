@@ -4,9 +4,9 @@ url = "https://pypi.python.org/simple"
 
 [packages]
 kafka = "*"
-py3-psycopg2 = "*"
+psycopg2-binary = "*"
 requests = "*"
-avro-python3 = "*"
+spavro = "*"
 
 [dev-packages]
 "-e /aether-utils/aether-client" = "*"

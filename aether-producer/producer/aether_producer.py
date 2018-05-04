@@ -16,18 +16,21 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
-import psycopg2
-import avro.schema
-import io
 import ast
+import io
+import json
 import os
+import psycopg2
 import signal
+import avro.schema
 import sys
 
-from avro.io import DatumWriter
 from avro.datafile import DataFileWriter
-from kafka import KafkaProducer
+from avro.io import DatumWriter
+from avro.io import Validate
+
+
+from kafka import KafkaProducer, KafkaConsumer
 from aether.client import KernelClient
 from psycopg2.extras import DictCursor
 from time import sleep as Sleep
@@ -52,28 +55,28 @@ class Settings(object):
             self.offset_path = "%s/%s" % (FILE_PATH, self.offset_file)
 
 
-'''
-SETTINGS = load_settings(SETTINGS_FILE)
-
-def init_settings(SETTINGS):
-    global
-    KAFKA_SERVER = SETTINGS.get('kafka_server')
-    jdbc_connection_string = SETTINGS.get('jdbc_connection_string')
-    jdbc_user = SETTINGS.get('jdbc_user')
-    SLEEP_TIME = SETTINGS.get('sleep_time')  # seconds between looking for changes
-    kernel_url = SETTINGS.get("kernel_url")
-    kernel_credentials = SETTINGS.get('kernel_credentials')
-    postgres_connection_info = SETTINGS.get('postgres_connection_info')
-'''
-
-def connect():
-    try:
-        kernel = KernelClient(url=_settings.kernel_url, **_settings.kernel_credentials)
-        return kernel
-    except Exception as e:
-        kernel = None
-        print ("Error initializing connection to Aether: %s" % e)
-        raise e
+def connect(_settings, retry=3):
+    kernel = None
+    consumer = None
+    for x in range(retry):
+        try:
+            kernel = KernelClient(url=_settings.kernel_url, **_settings.kernel_credentials)
+            break
+        except Exception as e:
+            Sleep(_settings.start_delay)
+    if not kernel:
+        print("No connection to AetherKernel")
+        sys.exit(1)
+    for x in range(retry):
+        try:
+            consumer = KafkaConsumer(bootstrap_servers=_settings.kafka_server)
+            break
+        except Exception as err:
+            Sleep(_settings.start_delay)
+    if not consumer:
+        print("No connection to Kafka")
+        sys.exit(1)
+    return kernel
 
 
 def set_offset_value(key, value):
@@ -103,47 +106,63 @@ def get_offset(key):
         return None
 
 
-def count_since(offset=None):
+def count_since(offset=None, topic=None):
     if not offset:
         offset = ""
     with psycopg2.connect(**_settings.postgres_connection_info) as conn:
         cursor = conn.cursor(cursor_factory=DictCursor)
+        # We'd originally used a 'count(CASE WHEN e.modified >'
+        # That broke mysteriously and borked everything so we're using a less optimal call.
+        # Benchmarks show it good enough for now but probably should be fixed  # TODO
         count_str = '''
             SELECT
-                count(CASE WHEN e.modified > '%s' THEN 1 END) as new_rows
-            FROM kernel_entity e;
+                e.id,
+                e.modified,
+                ps.name as project_schema_name,
+                ps.id as project_schema_id,
+                s.name as schema_name,
+                s.id as schema_id
+            FROM kernel_entity e
+            inner join kernel_projectschema ps on e.projectschema_id = ps.id
+            inner join kernel_schema s on ps.schema_id = s.id
+            WHERE e.modified > '%s'
         ''' % (offset)
+        if topic:
+            count_str += '''AND ps.name = '%s'
+            ORDER BY e.modified ASC;''' % topic
+        else:
+            count_str += '''ORDER BY e.modified ASC;'''
         cursor.execute(count_str);
-        for row in cursor:
-            return row.get("new_rows")
+        return sum([1 for row in cursor])
 
 
-def get_entities(offset = None):
+def get_entities(offset = None, max_size=1000):  # TODO implement batch pull by topic in Stream
     if not offset:
         offset = ""
-    conn = psycopg2.connect(**_settings.postgres_connection_info)
-    cursor = conn.cursor(cursor_factory=DictCursor)
-    query_str = '''
-        SELECT
-            e.id,
-            e.revision,
-            e.payload,
-            e.modified,
-            e.status,
-            ps.id as project_schema_id,
-            ps.name as project_schema_name,
-            s.name as schema_name,
-            s.id as schema_id,
-            s.revision as schema_revision
-                from kernel_entity e
-        inner join kernel_projectschema ps on e.projectschema_id = ps.id
-        inner join kernel_schema s on ps.schema_id = s.id
-        WHERE e.modified > '%s'
-        ORDER BY e.modified ASC;
-    '''  % (offset)
-    cursor.execute(query_str)
-    for row in cursor:
-        yield {key : row[key] for key in row.keys()}
+    with psycopg2.connect(**_settings.postgres_connection_info) as conn:
+        cursor = conn.cursor(cursor_factory=DictCursor)
+        query_str = '''
+            SELECT
+                e.id,
+                e.revision,
+                e.payload,
+                e.modified,
+                e.status,
+                ps.id as project_schema_id,
+                ps.name as project_schema_name,
+                s.name as schema_name,
+                s.id as schema_id,
+                s.revision as schema_revision
+            FROM kernel_entity e
+            inner join kernel_projectschema ps on e.projectschema_id = ps.id
+            inner join kernel_schema s on ps.schema_id = s.id
+            WHERE e.modified > '%s'
+            ORDER BY e.modified ASC
+            LIMIT %d;
+        '''  % (offset, max_size)
+        cursor.execute(query_str)
+        for row in cursor:
+            yield {key : row[key] for key in row.keys()}
 
 
 class KafkaStream(object):
@@ -159,6 +178,10 @@ class KafkaStream(object):
     def send(self, row):
         msg = row.get("payload")
         offset = row.get("modified")
+        bytes_writer = io.BytesIO()
+        valid = Validate(self.schema, msg)
+        if not valid:
+            raise ValueError("message doesn't adhere to schema \n%s\n%s" % (json.dumps(self.schema), json.dumps(msg)))
         try:
             bytes_writer = io.BytesIO()
             writer = DataFileWriter(bytes_writer, DatumWriter(), self.schema, codec='deflate')
@@ -185,7 +208,7 @@ class KafkaStream(object):
         #Gets avro schema used for encoding messages
         #TODO Fix issue with json coming from API Client being single quoted
         definition = ast.literal_eval(str(self.kernel.Resource.Schema.get(self.topic).definition))
-        self.schema = avro.schema.parse(json.dumps(definition))
+        self.schema = avro.schema.Parse(json.dumps(definition))
 
 
     def stop(self):
@@ -203,7 +226,6 @@ class StreamManager(object):
         self.kernel = kernel
         self.streams = {}
         self.start()
-
 
 
     def start(self):
@@ -230,23 +252,14 @@ class StreamManager(object):
         self.streams = {}
         print ("manager stopped")
 
-    def kill(self):
+    def kill(self, *args, **kwargs):
         self.killed = True
 
 def main_loop(test=False):
     global _settings
     _settings = Settings(test)
     manager = None
-    kernel = None
-    for x in range(3):
-        try:
-            kernel = connect()
-            break
-        except Exception as err:
-            Sleep(_settings.start_delay)
-    if not kernel:
-        sys.exit(1)
-    print("Producer Connected to Aether.")
+    kernel = connect(_settings, retry=3)
     try:
         while True:
             offset = get_offset("entities")
@@ -262,17 +275,17 @@ def main_loop(test=False):
                     break
                 manager = None
             else:
-                print("Sleeping for %s" % (_settings.sleep_time))
+                # print("Sleeping for %s" % (_settings.sleep_time))
                 Sleep(_settings.sleep_time)
     except KeyboardInterrupt as ek:
         print ("Caught Keyboard interrupt")
         if manager:
             print ("Trying to kill manager")
             manager.stop()
-    except Exception as e:
-        print(e)
+    finally:
         if manager:
             manager.stop()
+
 
 if __name__ == "__main__":
     main_loop()
