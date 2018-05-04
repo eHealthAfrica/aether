@@ -437,6 +437,7 @@ class MockingManager(object):
         # loads schemas and project schemas from aether client
         for schema in self.client.Resource.Schema:
             name = schema.get("name")
+            print("Load %s" % name)
             _id = schema.get('id')
             definition = schema.get('definition')
             full_name = [obj.get("name") for obj in definition if obj.get(
