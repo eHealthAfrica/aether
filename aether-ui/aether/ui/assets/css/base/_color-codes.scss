@@ -11,8 +11,12 @@ $colors-list: #6ed7c2 #6ebcd7 #cfd76e #d7b46e #d79a6e #d76e89 #d76ec2 #a5b990 #8
       color: $current-color;
     }
 
-    li:hover {
+    li:hover, .entityType-mapped {
       background-color: rgba($current-color, .2);
+    }
+
+    .entityType-mapped:hover {
+    	background-color: $current-color;
     }
   }
 }
