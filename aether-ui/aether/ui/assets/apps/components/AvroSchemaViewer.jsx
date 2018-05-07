@@ -31,7 +31,7 @@ class AvroSchemaViewer extends Component {
       return (<div className='hint'>
         <FormattedMessage
           id='pipeline.input.empty.message'
-          defaultMessage='Your schema for this pipeline will be displayed here once you have added an AVRO schema.'
+          defaultMessage='Your schema for this pipeline will be displayed here once you have added a valid source.'
         />
       </div>)
     }

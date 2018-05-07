@@ -34,7 +34,7 @@ class NavBar extends Component {
         }
 
         <div data-qa='navbar-user' className='top-nav-user'>
-          <span class='user-name'>
+          <span className='user-name'>
             { getLoggedInUser().name }
           </span>
           <span className='logout'>

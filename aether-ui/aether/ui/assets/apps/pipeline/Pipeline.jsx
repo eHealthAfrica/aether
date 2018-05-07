@@ -58,7 +58,7 @@ class Pipeline extends Component {
     return (
       <div className={'pipelines-container show-pipeline'}>
         <NavBar showBreadcrumb>
-          <div classname='breadcrumb-links'>
+          <div className='breadcrumb-links'>
             <Link to='/'>
               <FormattedMessage
                 id='pipeline.navbar.breadcrumb.pipelines'

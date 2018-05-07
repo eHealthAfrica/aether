@@ -11,7 +11,8 @@ button {
 
   &:active,
   &:focus,
-  &:hover {
+  &:hover,
+  &.selected {
     cursor: pointer;
     outline: none;
     background: $action-color;
@@ -25,6 +26,16 @@ button {
     cursor: default;
     pointer-events: none;
   }
+
+  &.selected::before {
+    content: '\f00c';
+    font-family: $icon-font;
+    font-size: 1rem;
+    margin: 0 .7em 0 -.7em;
+    display: inline-block;
+    line-height: 1.3rem;
+  }
+
 }
 
 // button on colored background
