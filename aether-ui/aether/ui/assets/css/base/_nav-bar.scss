@@ -3,6 +3,7 @@
   transition: padding .2s;
   justify-content: flex-start;
   align-items: baseline;
+  z-index: 1;
 }
 
 .top-nav:hover + .pipeline {
