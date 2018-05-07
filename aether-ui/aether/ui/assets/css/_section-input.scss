@@ -17,6 +17,17 @@
     width: 100%;
     padding: $unit $unit-xl;
     border-left: 1px dashed $light-grey;
+    height: calc(100vh - 6.8rem - #{$navbar-height-xs});
+    position: relative;
+    flex-direction: column;
+  }
+
+  .input-toggles {
+    margin-bottom: 2rem;
+
+    .btn {
+      margin-right: 1rem;
+    }
   }
 
 
@@ -24,8 +35,8 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    height: calc(100vh - 7rem - #{$unit}*2);
-    min-height: 40rem;
+    height: 100%;
+    min-height: 30rem;
     position: relative;
     justify-content: space-between;
     align-items: flex-start;
@@ -40,7 +51,7 @@
     top: 4rem;
     left: 0;
     pointer-events: none;
-    background-image: linear-gradient($white, transparent);
+    background-image: linear-gradient($white, rgba($white, 0));
   }
 
   textarea {
@@ -135,7 +146,7 @@
 }
 
 .pipeline--input .pipeline-section__input .section-right {
-  display: block;
+  display: flex;
   animation: show 1s;
 }
 

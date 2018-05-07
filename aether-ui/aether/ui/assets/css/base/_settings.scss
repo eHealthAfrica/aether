@@ -14,6 +14,7 @@ $background-color:   #faf9fc;
 
 $dark-blue:          #32415d;
 $purple:             #7175dd;
+$mid-blue:           lighten($dark-blue, 5);
 
 $grey:               #aea8b4;
 $light-grey:         #ede9f2;
@@ -50,5 +51,6 @@ $border-radius: 4px;
 
 $column-width: 20vw;
 $output-width: 25vw;
+$navbar-height-xs: 32px;
 
 $indent: 1rem;

@@ -1,12 +1,12 @@
 .top-nav {
   padding: 2rem;
-  transition: padding .4s;
+  transition: padding .2s;
   justify-content: flex-start;
   align-items: baseline;
 }
 
 .top-nav:hover + .pipeline {
-  top: 54px;
+  top: 60px;
 }
 
 @keyframes fade-in {
@@ -15,21 +15,44 @@
 }
 
 .top-nav-breadcrumb {
-  margin-left: 5%;
   animation: fade-in .6s;
   letter-spacing: .06em;
   font-size: $font-size-s;
+  opacity: .6;
+  display: flex;
+  align-items: baseline;
+  flex: 1 1 auto;
 
   a {
     text-transform: uppercase;
     font-weight: 600;
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
+}
+
+.btn-publish {
+  margin-left: auto;
+  transition: all .4s;
+  padding: .3em 1.2em;
+}
+
+.top-nav:not(:hover) .btn-publish {
+  padding: .2em 1.2em;
+  line-height: 1.3em;
 }
 
 
 .top-nav-user {
   @include label;
+  transition: opacity .4s;
   margin-left: auto;
+
+  .user-name {
+    display: inline;
+  }
 
   .logout {
     margin-left: .7rem;
@@ -40,7 +63,9 @@
 .top-nav-logo {
   margin: 0;
   position: relative;
-
+  width: 2.4rem;
+  height: 1.2rem;
+  transition: opacity .4s;
 
   span {
     display: inline-block;
@@ -57,18 +82,34 @@
 
 .show-pipeline {
   .top-nav {
-    padding: .8rem 1.4rem;
+    padding: .2rem 1rem;
+  }
+
+  .top-nav:hover {
+    padding: 1rem;
+
+    .top-nav-breadcrumb,
+    .top-nav-logo {
+      opacity: 1;
+    }
   }
 
   .top-nav-logo span {
-    font-size: 20px;
-    margin: 4px 42px;
+    display: none;
   }
 
   .back,
   .front,
   .logo-container {
-    height: 32px;
-    width: 32px;
+    height: 24px;
+    width: 24px;
+  }
+
+  .top-nav-logo {
+    opacity: 0;
+  }
+
+  .top-nav-user {
+    display: none;
   }
 }
