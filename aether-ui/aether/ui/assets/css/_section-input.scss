@@ -82,10 +82,19 @@
     }
 
     .input-mapped {
-      margin-left: -.5rem;
-      padding-left: .5rem;
-      border-radius: .5rem 0 0 .5rem;
       position: relative;
+
+      &:before {
+        content: '';
+        display: block;
+        position: absolute;
+        top: -1px;
+        left: -.6rem;
+        width: .6rem;
+        height: calc(100% + 2px);
+        border-radius: .5rem 0 0 .5rem;
+        background: $light-grey;
+      }
 
       &::after {
         content: '';
