@@ -80,6 +80,26 @@
       padding-top: .2rem;
       padding-bottom: .2rem;
     }
+
+    .input-mapped {
+      margin-left: -.5rem;
+      padding-left: .5rem;
+      border-radius: .5rem 0 0 .5rem;
+      position: relative;
+
+      &::after {
+        content: '';
+        display: block;
+        position: absolute;
+        top: 0;
+        right: -.6rem;
+        width: 0;
+        height: 0;
+        border-top: $font-size-xs solid transparent;
+        border-bottom: $font-size-xs solid transparent;
+        border-left: .6rem solid $light-grey;
+      }
+    }
   }
 }
 
