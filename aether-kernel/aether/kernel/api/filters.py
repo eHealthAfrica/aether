@@ -63,6 +63,11 @@ class ProjectSchemaFilter(filters.FilterSet):
 
 
 class EntityFilter(filters.FilterSet):
+    project = filters.CharFilter(
+        name='projectschema__project',
+        lookup_expr='exact',
+    )
+
     class Meta:
         exclude = ('payload',)
         model = models.Entity
