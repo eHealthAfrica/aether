@@ -20,7 +20,11 @@
 #
 set -Eeuo pipefail
 
-docker-compose down
-docker-compose -f docker-compose-base.yml   down
-docker-compose -f docker-compose-common.yml down
-docker-compose -f docker-compose-test.yml   down
+
+for dc_file in $(find docker-compose*.yml 2> /dev/null)
+do
+  :
+
+  echo "Stopping and removing $dc_file containers"
+  docker-compose -f $dc_file down
+done
