@@ -13,7 +13,6 @@ router.register('pipelines', views.PipelineViewSet)
 
 urlpatterns = [
     url(r'^ui/', include(router.urls)),
-    url(r'^ui/publish/(?P<pipelineid>[^/]+)/(?P<projectname>[^/]+)/$', views.PublishPipeline, name='pipeline-publish'),
 ]
 
 for app_name in settings.AETHER_APPS:

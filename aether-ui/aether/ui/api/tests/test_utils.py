@@ -48,11 +48,9 @@ class ViewsTest(TestCase):
                         'type': entity_type['type'],
                         'definition': entity_type
                       }
-        try:
-            create_new_kernel_object('project', pipeline, project_data)
-            create_new_kernel_object('schema', pipeline, schema_data)
-        except Exception:
-            pass
+        # must run on an empty kernel db
+        create_new_kernel_object('project', pipeline, project_data)
+        create_new_kernel_object('schema', pipeline, schema_data)
         pipeline = Pipeline.objects.get(pk=pipeline.id)
         self.assertIn('PersonX', pipeline.kernel_refs['schema'])
         create_project_schema_object('Test-Schema-Project', pipeline,

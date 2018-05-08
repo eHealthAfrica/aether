@@ -1,9 +1,9 @@
 import requests
-import uuid
 
-from django.http import (HttpResponse, JsonResponse)
+from django.http import HttpResponse
 from django.views import View
 from rest_framework import viewsets
+from rest_framework.decorators import action
 
 
 from ..settings import AETHER_APPS
@@ -14,6 +14,15 @@ class PipelineViewSet(viewsets.ModelViewSet):
     queryset = models.Pipeline.objects.all()
     serializer_class = serializers.PipelineSerializer
     ordering = ('name',)
+
+    @action(methods=['post'], detail=True)
+    def publish(self, request, pk=None):
+        '''
+        This view transform the supplied pipeline to kernal models,
+        publish and update the pipeline with related kernel model ids.
+        '''
+        project_name = request.data['project_name'] if 'project_name' in request.data else 'Aux'
+        return ui_utils.publishPipeline(request, pk, project_name)
 
 
 class TokenProxyView(View):
@@ -146,63 +155,3 @@ class TokenProxyView(View):
                                     *args,
                                     **kwargs)
         return HttpResponse(response, status=response.status_code)
-
-
-def PublishPipeline(requests, pipelineid, projectname):
-    '''
-    This view transform the supplied pipeline to kernal models,
-    publish and update the pipeline with related kernel model ids.
-    '''
-    try:
-        pipeline = models.Pipeline.objects.get(pk=pipelineid)
-        project_data = {
-            'revision': str(uuid.uuid4()),
-            'name': '{}-{}'.format(projectname, pipeline.name),
-            'salad_schema': '[]',
-            'jsonld_context': '[]',
-            'rdf_definition': '[]'
-        }
-
-        # check if pipeline references existing kernel records (update if exists)
-        if ui_utils.is_object_linked(pipeline.kernel_refs, 'project'):
-            # Notify user of existing object, and confirm override
-            pass
-        else:
-            ui_utils.create_new_kernel_object('project', pipeline, project_data, projectname)
-
-        for entity_type in pipeline.entity_types:
-            schema_data = {
-                'revision': str(uuid.uuid4()),
-                'name': entity_type['name'],
-                'type': entity_type['type'],
-                'definition': entity_type
-            }
-            if ui_utils.is_object_linked(pipeline.kernel_refs, 'schema', entity_type['name']):
-                # Notify user of existing object, and confirm override
-                pass
-            else:
-                ui_utils.create_new_kernel_object('schema', pipeline, schema_data, projectname)
-
-        mapping = [
-            [rule['source'], rule['destination']]
-            for rule in pipeline.mapping
-        ]
-        mapping_data = {
-            'name': '{}-{}'.format(projectname, pipeline.name),
-            'definition': {
-                'entities': pipeline.kernel_refs['projectSchema'],
-                'mapping': mapping
-                },
-            'revision': str(uuid.uuid4()),
-            'project': pipeline.kernel_refs['project']
-        }
-        if ui_utils.is_object_linked(pipeline.kernel_refs, 'mapping'):
-            # Notify user of existing object, and confirm override
-            pass
-        else:
-            ui_utils.create_new_kernel_object('mapping', pipeline, mapping_data, projectname)
-
-        return JsonResponse(serializers.PipelineSerializer(pipeline, context={'request': requests}).data,
-                            status=200, safe=False)
-    except Exception as e:
-        return JsonResponse({'message': str(e), 'error': 'Bad request'}, status=400)

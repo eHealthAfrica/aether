@@ -274,8 +274,8 @@ class ViewsTest(TestCase):
         response_data = json.loads(response.content)
         pipeline_id = response_data['id']
         self.assertEqual(response_data['name'], 'Pipeline Mock 1')
-        url = reverse('ui:pipeline-publish', kwargs={'pipelineid': pipeline_id, 'projectname': 'Aux-Test'})
-        response = self.client.get(url)
+        url = reverse('ui:pipeline-publish', args=[pipeline_id])
+        response = self.client.post(url, {'project_name': 'Aux'})
         response_data = json.loads(response.content)
         # make sure kernel db is clean for this to pass
         self.assertEqual(response.status_code, 200)
@@ -283,12 +283,7 @@ class ViewsTest(TestCase):
         self.assertNotEqual(pipeline.kernel_refs, None)
         self.assertEqual(len(pipeline.kernel_refs['schema']), 2)
 
-        response = self.client.get(url)
+        response = self.client.post(url, {'project_name': 'Aux'})
         self.assertEqual(response.status_code, 200)
         pipeline = Pipeline.objects.get(pk=pipeline_id)
         self.assertEqual(len(pipeline.kernel_refs), 4)
-
-        url = reverse('ui:pipeline-publish',
-                      kwargs={'pipelineid': f'{pipeline_id}-extra-data', 'projectname': 'Aux-Test'})
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 400)

@@ -1,8 +1,12 @@
 import json
 import requests
 import ast
+import uuid
 
 from aether.common.kernel import utils
+from django.http import JsonResponse
+
+from . import models
 
 
 def validate_pipeline(pipeline):
@@ -137,8 +141,11 @@ def create_new_kernel_object(object_name, pipeline, data={}, project_name='Aux',
     try:
         res = kernel_data_request(f'{object_name}s', 'post', data)
     except Exception as e:
-        error = ast.literal_eval(str(e))
-        error['object_name'] = data['name'] if 'name' in data else 'unknown'
+        try:
+            error = ast.literal_eval(str(e))
+            error['object_name'] = data['name'] if 'name' in data else 'unknown'
+        except Exception:
+            error = e
         raise Exception(error)
     if not pipeline.kernel_refs:
         pipeline.kernel_refs = {}
@@ -186,3 +193,85 @@ def create_project_schema_object(name, pipeline, schema_id, entity_name):
     if not is_object_linked(pipeline.kernel_refs, 'projectSchema', entity_name):
         create_new_kernel_object('projectSchema',
                                  pipeline, project_schema_data, entity_name=entity_name)
+
+
+def publishPipeline(requests, pipelineid, projectname):
+    '''
+    Transform pipeline to kernel data and publish
+    '''
+    outcome = {
+        'successful': [],
+        'failed': [],
+        'exists': []
+    }
+    try:
+        pipeline = models.Pipeline.objects.get(pk=pipelineid)
+        if pipeline.mapping_errors:
+            outcome['failed'].append({'message': 'Mappings have errors', 'status': 'Bad Request'})
+            return JsonResponse({'links': None, 'info': outcome}, status=400)
+        else:
+            project_data = {
+                'revision': str(uuid.uuid4()),
+                'name': '{}'.format(projectname),
+                'salad_schema': '[]',
+                'jsonld_context': '[]',
+                'rdf_definition': '[]'
+            }
+
+            # check if pipeline references existing kernel records (update if exists)
+            if not is_object_linked(pipeline.kernel_refs, 'project'):
+                create_new_kernel_object('project', pipeline, project_data, projectname)
+                outcome['successful'].append({'message': '{} project created'.format(projectname),
+                                             'status': 'Ok'})
+
+            for entity_type in pipeline.entity_types:
+                schema_data = {
+                    'revision': str(uuid.uuid4()),
+                    'name': entity_type['name'],
+                    'type': entity_type['type'],
+                    'definition': entity_type
+                }
+                if is_object_linked(pipeline.kernel_refs, 'schema', entity_type['name']):
+                    # Notify user of existing object, and confirm override
+                    outcome['exists'].append(
+                                            {'message': '{} schema with id {} exists'.format(
+                                                entity_type['name'],
+                                                pipeline.kernel_refs['schema'][entity_type['name']]),
+                                                'status': 'Ok'}
+                                            )
+                else:
+                    try:
+                        create_new_kernel_object('schema', pipeline, schema_data, projectname)
+                        outcome['successful'].append({'message': '{} schema created'.format(
+                            entity_type['name']), 'status': 'Ok'})
+                    except Exception as e:
+                        outcome['failed'].append({'message': str(e), 'status': 'Bad Request'})
+
+            if not len(outcome['failed']) and not len(outcome['exists']):
+                mapping = [
+                    [rule['source'], rule['destination']]
+                    for rule in pipeline.mapping
+                ]
+                mapping_data = {
+                    'name': '{}-{}'.format(projectname, pipeline.name),
+                    'definition': {
+                        'entities': pipeline.kernel_refs['projectSchema'],
+                        'mapping': mapping
+                        },
+                    'revision': str(uuid.uuid4()),
+                    'project': pipeline.kernel_refs['project']
+                }
+                if is_object_linked(pipeline.kernel_refs, 'mapping'):
+                    # Notify user of existing object, and confirm override
+                    outcome['exists'].append({'message': 'Mapping with id {} exists'.format(
+                                        pipeline.kernel_refs['mapping']), 'error': ''})
+                else:
+                    create_new_kernel_object('mapping', pipeline, mapping_data, projectname)
+                    outcome['successful'].append({'message': '{} mapping created'.format(mapping_data['name']),
+                                                 'status': 'Ok'})
+
+            return JsonResponse({'links': pipeline.kernel_refs, 'info': outcome},
+                                status=200)
+    except Exception as e:
+        outcome['failed'].append({'message': str(e), 'status': 'Bad request'})
+        return JsonResponse({'links': None, 'info': outcome}, status=400)

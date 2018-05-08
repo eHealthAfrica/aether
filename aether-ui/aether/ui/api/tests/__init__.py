@@ -1,8 +1,4 @@
 PIPELINE_EXAMPLE = {
-  'id': '26aba171-fac3-487c-a9aa-696b2f552ad7',
-  'url': 'http://ui.aether.local:8004/api/ui/pipelines/26aba171-fac3-487c-a9aa-696b2f552ad7/',
-  'created': '2018-05-02T14:00:33.582535Z',
-  'modified': '2018-05-02T14:01:26.219304Z',
   'name': 'Pipeline Mock 1',
   'schema': {
     'name': 'hat',
@@ -218,32 +214,7 @@ PIPELINE_EXAMPLE = {
       },
       'birthYear': 1972,
       'mothersForename': 'Fokdsh'
-    },
-    'dateCreated': '2016-04-08T05:20:43.804Z',
-    'participant': {
-      'hatId': 'JHFNJDT1982M',
-      'version': 3,
-      'memberType': 'resident',
-      'screenings': {
-        'maect': {
-          'group': '2016-04-08T05:17:24.338Z',
-          'result': 'negative',
-          'sessionType': 'doorToDoor'
-        }
-      },
-      'geoLocation': {
-        'accuracy': 3,
-        'latitude': -4.7555159,
-        'longitude': 18.0578531,
-        'timestamp': 1460092843080
-      },
-      'screeningLocation': {
-        'area': 'muluma',
-        'zone': 'mosango',
-        'village': 'kisala-lupa'
-      }
-    },
-    'dateModified': '2016-04-08T06:53:31.706Z'
+    }
   },
   'entity_types': [
     {
@@ -335,68 +306,19 @@ PIPELINE_EXAMPLE = {
   ],
   'mapping': [
     {
-      'id': 'a469a7b3-fbd4-25c1-649d-73cf14d34945',
       'source': '#!uuid',
-      'destination': 'Person.id'
+      'destination': 'PersonY.id'
     },
     {
-      'id': '58082cd0-548e-59e1-9fc7-748bb7f764c6',
       'source': 'person.forename',
-      'destination': 'Person.firstName'
-    },
-    {
-      'id': '2dec3021-ddec-323a-1ef8-0f529f380087',
-      'source': 'person.surname',
-      'destination': 'Person.lastName'
-    },
-    {
-      'id': '063d4763-85be-81f3-a036-dddb68eddff4',
-      'source': 'person.age.years',
-      'destination': 'Person.age'
-    },
-    {
-      'id': '827dd4fa-4fb7-2780-9198-5d83af7a1893',
-      'source': 'person.gender',
-      'destination': 'Person.gender'
-    },
-    {
-      'id': 'ea9e4bbf-3491-08f8-4cf0-2fa846306abb',
-      'source': '#!uuid',
-      'destination': 'Screening.id'
-    },
-    {
-      'id': '57473e7c-aa45-dce5-fa70-cdaa0a93fdf8',
-      'source': 'participant.screenings',
-      'destination': 'Screening'
-    },
-    {
-      'id': 'ea064db4-ecd6-956a-9192-09881b6f885c',
-      'source': 'participant.geoLocation.latitude',
-      'destination': 'Screening.location.latitude'
-    },
-    {
-      'id': '60ccb09d-66bc-cce9-419e-a43437b387e2',
-      'source': 'participant.screenings.maect.result',
-      'destination': 'Screening.result'
+      'destination': 'PersonY.firstName'
     }
   ],
-  'mapping_errors': [
-    {
-      'path': 'Screening.location.latitude',
-      'error_message': 'No match for path'
-    }
-  ],
+  'mapping_errors': [],
   'output': [
     {
       'id': '0d8aebf3-50d0-4e77-a5ee-1045ffa5f29f',
-      'age': '43',
-      'gender': 'Male',
-      'lastName': 'Lfdjk',
       'firstName': 'Sejflsd Dljljkf'
-    },
-    {
-      'id': '5c40d8bb-7d3e-48cb-a008-7a55b97950de',
-      'result': 'negative'
     }
   ]
 }
@@ -812,12 +734,7 @@ PIPELINE_EXAMPLE_1 = {
       'destination': 'Screening.result'
     }
   ],
-  'mapping_errors': [
-    {
-      'path': 'Screening.location.latitude',
-      'error_message': 'No match for path'
-    }
-  ],
+  'mapping_errors': [],
   'output': [
     {
       'id': '0d8aebf3-50d0-4e77-a5ee-1045ffa5f29f',

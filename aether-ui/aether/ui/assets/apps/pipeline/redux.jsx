@@ -22,7 +22,9 @@ export const INITIAL_PIPELINE = {
   pipelineList: [],
   selectedPipeline: null,
   error: null,
-  notFound: null
+  notFound: null,
+  publishError: null,
+  publishSuccess: null
 }
 
 export const addPipeline = newPipeline => ({
@@ -47,10 +49,11 @@ export const updatePipeline = pipeline => ({
   )
 })
 
-export const publishPipeline = id => ({
+export const publishPipeline = (id, projectName = PROJECT_NAME) => ({
   types: ['', types.PIPELINE_PUBLISH_SUCCESS, types.PIPELINE_PUBLISH_ERROR],
-  promise: client => client.get(`${urls.PIPELINE_PUBLISH_URL}${id}/${PROJECT_NAME}/`,
-    { 'Content-Type': 'application/json' }
+  promise: client => client.post(`${urls.PIPELINES_URL}${id}/publish/`,
+    { 'Content-Type': 'application/json' },
+    { data: { project_name: projectName } }
   )
 })
 
@@ -96,6 +99,14 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
 
     case types.PIPELINE_NOT_FOUND: {
       return { ...state, notFound: action.error, selectedPipeline: null }
+    }
+
+    case types.PIPELINE_PUBLISH_SUCCESS: {
+      return { ...state, publishSuccess: action.payload, publishError: null }
+    }
+
+    case types.PIPELINE_PUBLISH_ERROR: {
+      return { ...state, publishSuccess: null, publishError: action.error }
     }
 
     default:
