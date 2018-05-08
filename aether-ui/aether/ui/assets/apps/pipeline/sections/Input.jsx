@@ -72,7 +72,7 @@ class SchemaInput extends Component {
   render () {
     return (
       <form onSubmit={this.notifyChange.bind(this)}>
-        <div className='toggleable-content-header'>
+        <div className='textarea-header'>
           {this.state.error &&
             <div className='hint error-message'>
               <h4 className='hint-title'>
@@ -88,7 +88,7 @@ class SchemaInput extends Component {
         <FormattedMessage id='pipeline.input.schema.placeholder' defaultMessage='Paste an AVRO Schema and Sample Data will be generated for your convenience to use in the pipeline.'>
           {msg => (
             <textarea
-              className='monospace'
+              className={`monospace ${this.state.error ? 'error' : ''}`}
               required
               value={this.state.inputSchema}
               onChange={this.onSchemaTextChanged.bind(this)}
@@ -168,7 +168,7 @@ class DataInput extends Component {
   render () {
     return (
       <form onSubmit={this.notifyChange.bind(this)}>
-        <div className='toggleable-content-header'>
+        <div className='textarea-header'>
           {this.state.error &&
             <div className='hint error-message'>
               <h4 className='hint-title'>
@@ -184,7 +184,7 @@ class DataInput extends Component {
         <FormattedMessage id='pipeline.input.data.placeholder' defaultMessage='We will generate some sample data for you, once you have added a schema. Or, Add data in JSON Format and Aether will derive an AVRO schema for you.'>
           {msg => (
             <textarea
-              className='monospace'
+              className={`monospace ${this.state.error ? 'error' : ''}`}
               required
               value={this.state.inputData}
               onChange={this.onDataChanged.bind(this)}

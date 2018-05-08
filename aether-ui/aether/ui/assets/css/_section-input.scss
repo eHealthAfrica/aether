@@ -27,10 +27,6 @@
     display: flex;
     flex-direction: column;
     margin-top: 1rem;
-
-    textarea {
-      border-radius: 0 0 $border-radius $border-radius;
-    }
   }
 
   .tabs {
@@ -41,7 +37,7 @@
     .tab {
       margin-right: 1rem;
       background: none;
-      border: none;
+      border: 0;
       padding: 1rem 6rem 1rem 2rem;
       font-size: $font-size-m;
       font-weight: 300;
@@ -63,7 +59,7 @@
     }
   }
 
-  .toggleable-content-header {
+  .textarea-header {
     @include shadow-cutout-white;
     background: $light-grey;
     border-radius: $border-radius $border-radius 0 0;
@@ -72,6 +68,20 @@
     margin-bottom: -$border-radius;
     position: relative;
     z-index: 0;
+
+    .hint {
+      margin: 1rem;
+    }
+  }
+
+  .textarea-header+textarea {
+    border-radius: 0 0 $border-radius $border-radius;
+  }
+
+  textarea { 
+    color: $dark-blue;
+    width: 100%;
+    flex: 1 1 auto;
   }
 
   form {
@@ -95,12 +105,6 @@
     left: 0;
     pointer-events: none;
     background-image: linear-gradient($white, rgba($white, 0));
-  }
-
-  textarea {
-    color: $dark-blue;
-    width: 100%;
-    flex: 1 1 auto;
   }
 }
 

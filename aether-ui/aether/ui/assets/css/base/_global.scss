@@ -87,6 +87,10 @@ textarea {
     background: rgba($text-color, .3);
     color: $white;
   }
+
+  &.error {
+    background: rgba($red, .1);
+  }
 }
 
 input,
