@@ -9,6 +9,7 @@
 ################################################################################
 
 django<2
+django-autofixture
 django-cas-ng
 django-cors-headers
 django-debug-toolbar
