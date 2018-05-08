@@ -8,7 +8,9 @@ verify_ssl = true
 
 requests = "*"
 schema-salad = "*"
-aether = {path = "./../../aether-client", editable = true}
+"aether.saladbar" = {path = "../..", editable = true}
+"aether.client" = {path = "../../../aether-client", editable = true}
+
 
 
 [dev-packages]

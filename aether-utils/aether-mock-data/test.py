@@ -17,7 +17,7 @@
 # under the License.
 
 import json
-from mocker import MockFn, DataMocker, Generic, MockingManager
+from aether.mocker import MockFn, DataMocker, Generic, MockingManager
 
 
 def pprint(obj):
@@ -43,8 +43,8 @@ def show_mockfn():
 
 def main():
 
-    person = "http://demo.eha.org/Person"
-    location = "http://demo.eha.org/GeoLocation"
+    person = "org.eha.demo.Person"
+    location = "org.eha.demo.GeoLocation"
 
     manager = MockingManager()
     manager.types[location].override_property(

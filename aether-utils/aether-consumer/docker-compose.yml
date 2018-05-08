@@ -1,0 +1,54 @@
+version: "2.1"
+services:
+
+  # ---------------------------------
+  # Aether Kafka Containers
+  # ---------------------------------
+
+
+  zookeeper-test:
+    image: confluentinc/cp-zookeeper:latest
+    restart: on-failure
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 32181
+      ZOOKEEPER_TICK_TIME: 2000
+    extra_hosts:
+      - "moby:127.0.0.1"
+
+  kafka-test:
+    image: confluentinc/cp-kafka:latest
+    restart: on-failure
+    ports:
+      - "29092:29092"
+    depends_on:
+      - zookeeper-test
+    links:
+      - zookeeper-test
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-test:32181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-test:29092
+      ADVERTISED_HOST_NAME: kafka-test
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    extra_hosts:
+      - "moby:127.0.0.1"
+
+  # ---------------------------------
+  # Aether Kafka SDK
+  # ---------------------------------
+
+  consumer-sdk-py3-test:
+    build:
+      context: .
+      dockerfile: sdk.py3.dockerfile
+
+    volumes:
+      - .:/code
+
+  consumer-sdk-py2-test:
+    build:
+      context: .
+      dockerfile: sdk.py2.dockerfile
+
+    volumes:
+      - .:/code

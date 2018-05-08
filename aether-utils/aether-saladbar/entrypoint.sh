@@ -106,11 +106,11 @@ case "$1" in
     ;;
 
     start )
-        ./saladbar/wizard.py
+        ./aether/saladbar/wizard.py
     ;;
 
     start_test )
-        ./saladbar/wizard.py test
+        ./aether/saladbar/wizard.py test
     ;;
 
     help)
