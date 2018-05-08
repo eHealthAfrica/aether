@@ -101,6 +101,25 @@ textarea:active {
   outline: 0;
 }
 
+.textarea-header {
+  @include shadow-cutout-white;
+  background: $light-grey;
+  border-radius: $border-radius $border-radius 0 0;
+  width: 100%;
+  min-height: .6rem;
+  margin-bottom: -$border-radius;
+  position: relative;
+  z-index: 0;
+
+  .hint {
+    margin: 1rem;
+  }
+}
+
+.textarea-header+textarea {
+  border-radius: 0 0 $border-radius $border-radius;
+}
+
 .dropdown-menu {
   border-radius: 0;
   border: 0;
