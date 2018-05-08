@@ -151,13 +151,13 @@ def validate_xmldict(value):
         raise ValidationError(e)
 
 
-def extract_data_from_xml(xml):
+def extract_data_from_xml(xml_content):
     '''
-    Parses the XML submission file into a dictionary,
+    Parses the XML submission into a dictionary,
     also extracts the form id and the form version.
     '''
 
-    data = xmltodict.parse(xml.read())
+    data = xmltodict.parse(xml_content)
 
     instance = list(data.items())[0][1]  # TODO make more robust
     form_id = instance['@id']

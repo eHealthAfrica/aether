@@ -267,7 +267,8 @@ def xform_submission(request):
 
     try:
         xml = request.FILES[XML_SUBMISSION_PARAM]
-        data, form_id, version = extract_data_from_xml(xml)
+        xml_content = xml.read()  # the content will be sent as an attachment
+        data, form_id, version = extract_data_from_xml(xml_content)
     except Exception as e:
         logger.warning('Unexpected error when handling file')
         logger.error(str(e))
@@ -297,6 +298,7 @@ def xform_submission(request):
         )
 
     data = parse_submission(data, xform.xml_data)
+    submissions_url = get_submissions_url()
 
     try:
         # When handling submissions containing multiple attachments, ODK
@@ -316,7 +318,7 @@ def xform_submission(request):
             logger.warning('Instance id is missing in submission')
             return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
         previous_submissions_response = requests.get(
-            get_submissions_url(),
+            submissions_url,
             headers=auth_header,
             params={'instanceID': instance_id},
         )
@@ -328,7 +330,7 @@ def xform_submission(request):
         if previous_submissions_count == 0:
             submission_id = None
             response = requests.post(
-                get_submissions_url(),
+                submissions_url,
                 json={
                     'mapping': str(xform.mapping.pk),
                     'payload': data,
@@ -355,12 +357,19 @@ def xform_submission(request):
             submission_id = previous_submissions['results'][0]['id']
 
         # Submit attachments (if any) to the submission.
+        attachments_url = get_attachments_url()
         for name, f in request.FILES.items():
-            if name != XML_SUBMISSION_PARAM:
+            # submit the XML file as an attachment but only for the first time
+            if name != XML_SUBMISSION_PARAM or previous_submissions_count == 0:
+                if name == XML_SUBMISSION_PARAM:
+                    file_content = xml_content
+                else:
+                    file_content = f
+
                 response = requests.post(
-                    get_attachments_url(),
+                    attachments_url,
                     data={'submission': submission_id},
-                    files={'attachment_file': (f.name, f, f.content_type)},
+                    files={'attachment_file': (f.name, file_content, f.content_type)},
                     headers=auth_header,
                 )
                 if response.status_code != status.HTTP_201_CREATED:
