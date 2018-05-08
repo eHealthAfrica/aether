@@ -44,6 +44,17 @@ show_help() {
     """
 }
 
+pip_freeze() {
+    pip install virtualenv
+    rm -rf /tmp/env
+
+    virtualenv -p python3 /tmp/env/
+    /tmp/env/bin/pip install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
+
+    cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
+    /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
+}
+
 setup_db() {
     export PGPASSWORD=$RDS_PASSWORD
     export PGHOST=$RDS_HOSTNAME
@@ -113,11 +124,7 @@ case "$1" in
     ;;
 
     pip_freeze )
-        rm -rf /tmp/env
-        pip install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
-
-        cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
-        pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
+        pip_freeze
     ;;
 
     setuplocaldb )
@@ -155,8 +162,8 @@ case "$1" in
 
         # expose version number
         cp /code/VERSION /var/www/VERSION
-        # add git revision 
-        cp /code/REVISION /var/www/REVISION 
+        # add git revision
+        cp /code/REVISION /var/www/REVISION
 
         /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
     ;;
