@@ -30,20 +30,6 @@ for container in "${containers[@]}"
 do
   :
 
-  if [[ $container = "kernel" ]]
-  then
-    FOLDER=aether-$container
-  else
-    FOLDER=aether-$container-module
-  fi
-  PIP_FOLDER=./$FOLDER/conf/pip
-  # replace `requirements.txt` file with `primary-requirements.txt` file
-  cp $PIP_FOLDER/primary-requirements.txt $PIP_FOLDER/requirements.txt
-
-  echo "_____________________________________________ Building $container"
-  # force rebuild container
-  docker-compose build --no-cache --force-rm $container
-
   # upgrade pip dependencies
   echo "_____________________________________________ Updating $container"
   docker-compose run $container pip_freeze
