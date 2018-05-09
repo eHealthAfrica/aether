@@ -175,7 +175,7 @@ describe('Pipeline actions', () => {
       })
   })
 
-  it('should dispatch an publish pipeline action and save respose in the redux store', () => {
+  it('should dispatch a publish pipeline action and save response in the redux store', () => {
     const expected = {
       links: {},
       info: {}
@@ -195,7 +195,7 @@ describe('Pipeline actions', () => {
       })
   })
 
-  it('should dispatch a wrong publish pipeline action and save respose in the redux store', () => {
+  it('should dispatch a wrong publish pipeline action and save response in the redux store', () => {
     const returnedData = {
       links: {},
       info: {}

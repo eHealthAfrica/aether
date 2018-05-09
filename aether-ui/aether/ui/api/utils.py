@@ -192,7 +192,7 @@ def create_project_schema_object(name, pipeline, schema_id, entity_name):
                                  pipeline, project_schema_data, entity_name=entity_name)
 
 
-def publishPipeline(requests, pipelineid, projectname):
+def publishPipeline(pipelineid, projectname):
     '''
     Transform pipeline to kernel data and publish
     '''
