@@ -84,7 +84,8 @@ def json_printable(obj):
         return obj
 
 
-custom_jsonpath_wildcard_regex = re.compile('(\$\.)?[a-zA-Z0-9_-]+\*')
+custom_jsonpath_wildcard_regex = re.compile('(\$\.)*([a-zA-Z0-9_-]+\.)*?[a-zA-Z0-9_-]+\*')
+incomplete_json_path_regex = re.compile('[a-zA-Z0-9_-]+\*')
 
 
 def find_by_jsonpath(obj, path):
@@ -93,8 +94,10 @@ def find_by_jsonpath(obj, path):
     `jsonpath_ng.jsonpath.Child.find()` in order to provide custom
     functionality as described in https://jira.ehealthafrica.org/browse/AET-38.
 
-    If the first element in `path` is a wildcard match prefixed by an arbitrary
-    string, `find` will attempt to filter the results by that prefix.
+    If the any single element in `path` is a wildcard match prefixed by an arbitrary
+    string, `find` will attempt to filter the results by that prefix. We then replace
+    that section of the path with a singel wildcard which becomes a valid jsonpath.
+    We filter matches on their adherence to the partial path.
 
     **NOTE**: this behavior is not part of jsonpath spec.
     '''
@@ -110,9 +113,12 @@ def find_by_jsonpath(obj, path):
         #
         #     prefix = 'dose-'
         #     standard_jsonpath = '*.id'
+
         split_pos = match.end() - 1
         prefix = path[:split_pos].replace('$.', '')
-        standard_jsonpath = path[split_pos:]
+        illegal = incomplete_json_path_regex.search(path)
+        standard_jsonpath = path[:illegal.start()] + '*' + path[illegal.end():]
+
         # Perform an standard jsonpath search.
         result = []
         for datum in jsonpath_ng.parse(standard_jsonpath).find(obj):
@@ -247,7 +253,8 @@ def resolve_entity_reference(
     # Called via #!entity-reference#jsonpath looks inside of the entities to be
     # exported as currently constructed returns the value(s) found at
     # entity_jsonpath
-    matches = parse(entity_jsonpath).find(constructed_entities)
+    matches = find_by_jsonpath(constructed_entities, entity_jsonpath)
+    # matches = parse(entity_jsonpath).find(constructed_entities)  # TODO KILL
     if len(matches) < 1:
         raise ValueError('path %s has no matches; aborting' % entity_jsonpath)
     if len(matches) < 2:
@@ -262,7 +269,7 @@ def resolve_source_reference(path, entities, entity_name, i, field, data):
     # called via normal jsonpath as source
     # is NOT defferable as all source data should be present at extractor start
     # assignes values directly to entities within function and return new offset value (i)
-    matches = parse(path).find(data)
+    matches = find_by_jsonpath(data, path)  # matches = parse(path).find(data)  # TODO KILL
     if not matches:
         entities[entity_name][i][field] = None
         i += 1

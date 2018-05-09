@@ -105,6 +105,15 @@ class UtilsTests(TestCase):
         resolved_count = utils.resolve_source_reference(path, entities, entity_name, 0, field, data)
         self.assertEquals(resolved_count, 3)
 
+    def test_resolve_source_reference__wildcard_resolutions(self):
+        data = EXAMPLE_SOURCE_DATA
+        entities = EXAMPLE_ENTITY
+        entity_name = 'Person'
+        field = 'dob'
+        path = 'data.pe*[*].dob'
+        resolved_count = utils.resolve_source_reference(path, entities, entity_name, 0, field, data)
+        self.assertEquals(resolved_count, 3)
+
     def test_get_or_make_uuid(self):
         entity_type = 'Person'
         field_name = '_id'
@@ -202,6 +211,25 @@ class UtilsTests(TestCase):
         }
         expected = set([1, 2])
         path = '$.dose-*.id'
+        result = set([x.value for x in utils.find_by_jsonpath(obj, path)])
+        self.assertEquals(expected, result)
+
+    def test_find_by_jsonpath__filter_by_prefix_nested_base(self):
+        obj = {
+            'data': {
+                'dose-1': {
+                    'id': 1,
+                },
+                'dose-2': {
+                    'id': 2,
+                },
+                'person-1': {
+                    'id': 3,
+                },
+            }
+        }
+        expected = set([1, 2])
+        path = '$.data.dose-*.id'
         result = set([x.value for x in utils.find_by_jsonpath(obj, path)])
         self.assertEquals(expected, result)
 
