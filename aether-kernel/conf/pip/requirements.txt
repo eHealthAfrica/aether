@@ -18,6 +18,7 @@ coreschema==0.0.4
 coverage==4.5.1
 decorator==4.3.0
 Django==1.11.13
+django-autofixture==0.12.1
 django-cas-ng==3.5.9
 django-cors-headers==2.2.0
 django-debug-toolbar==1.9.1
