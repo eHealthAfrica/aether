@@ -58,6 +58,15 @@ small {
   margin-bottom: 1.2rem;
 }
 
+.title-medium {
+  @extend .form-label;
+}
+
+.title-large {
+  @extend .form-label;
+  font-size: $font-size-l;
+}
+
 input[type='password'],
 input[type='text'],
 textarea {

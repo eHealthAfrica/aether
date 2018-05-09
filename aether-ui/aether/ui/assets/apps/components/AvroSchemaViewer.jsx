@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
-import avro from 'avro-js'
+import avro from 'avsc'
 
 class AvroSchemaViewer extends Component {
   schemaToMarkup (schema, parent) {
@@ -33,13 +33,13 @@ class AvroSchemaViewer extends Component {
       return (<div className='hint'>
         <FormattedMessage
           id='pipeline.input.empty.message'
-          defaultMessage='Your schema for this pipeline will be displayed here once you have added an AVRO schema.'
+          defaultMessage='Your schema for this pipeline will be displayed here once you have added a valid source.'
         />
       </div>)
     }
 
     try {
-      avro.parse(this.props.schema)
+      avro.parse(this.props.schema, { noAnonymousTypes: true })
       return (
         <div className='input-schema'>
           { this.schemaToMarkup(this.props.schema) }

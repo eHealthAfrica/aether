@@ -58,19 +58,24 @@ class Mapping extends Component {
     return (
       <div className='section-body'>
         <div className='rules'>
-          { this.renderAddNewRuleButton() }
-
+          <h3 className='title-medium'>
+            <FormattedMessage id='mapping.rules' defaultMessage='Mapping rules' />
+          </h3>
           <form onSubmit={this.notifyChange.bind(this)}>
             { this.state.mappingRules.map(this.renderRule.bind(this)) }
 
-            <button type='submit' className='btn btn-d mt-2' disabled={!this.hasChanged()}>
-              <span className='details-title'>
-                <FormattedMessage
-                  id='mapping.rules.button.ok'
-                  defaultMessage='Apply mapping rules to pipeline'
-                />
-              </span>
-            </button>
+            <div className='rules-buttons'>
+              { this.renderAddNewRuleButton() }
+
+              <button type='submit' className='btn btn-d btn-primary' disabled={!this.hasChanged()}>
+                <span className='details-title'>
+                  <FormattedMessage
+                    id='mapping.rules.button.ok'
+                    defaultMessage='Apply mapping rules to pipeline'
+                  />
+                </span>
+              </button>
+            </div>
           </form>
         </div>
 
@@ -95,7 +100,7 @@ class Mapping extends Component {
     }
 
     return (
-      <button type='button' className='btn btn-d btn-primary mb-2' onClick={addNewRule}>
+      <button type='button' className='btn btn-d btn-primary' onClick={addNewRule}>
         <FormattedMessage id='mapping.button.add' defaultMessage='Add rule' />
       </button>
     )
@@ -176,13 +181,12 @@ class Mapping extends Component {
     const definition = {
       // include mapping rules as expected in kernel
       mapping: (this.props.selectedPipeline.mapping || [])
-        .map(rule => ([rule.source, rule.destination])),
-      mapping_errors: this.props.selectedPipeline.mapping_errors || []
+        .map(rule => ([rule.source, rule.destination]))
     }
 
     return (
       <div className='definition'>
-        <h3 className='form-label'>
+        <h3 className='title-medium'>
           <FormattedMessage id='mapping.definitions' defaultMessage='Rule definitions' />
         </h3>
         <div className='definition-code'>
