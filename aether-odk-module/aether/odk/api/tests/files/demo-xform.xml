@@ -71,6 +71,10 @@
           <iterate jr:template="">
             <index/>
           </iterate>
+          <iterate_one_count/>
+          <iterate_one jr:template="">
+            <index/>
+          </iterate_one>
           <meta>
             <instanceID/>
           </meta>
@@ -178,6 +182,8 @@
       <bind nodeset="/Something_that_is_not_None/lang" type="select"/>
       <bind calculate="3" nodeset="/Something_that_is_not_None/iterate_count" readonly="true()" type="string"/>
       <bind nodeset="/Something_that_is_not_None/iterate/index" type="string"/>
+      <bind calculate="1" nodeset="/Something_that_is_not_None/iterate_one_count" readonly="true()" type="string"/>
+      <bind nodeset="/Something_that_is_not_None/iterate_one/index" type="string"/>
       <bind
             calculate="concat('uuid:', uuid())"
             nodeset="/Something_that_is_not_None/meta/instanceID"
@@ -267,6 +273,14 @@
       <label></label>
       <repeat jr:count=" /Something_that_is_not_None/iterate_count " nodeset="/Something_that_is_not_None/iterate">
         <input ref="/Something_that_is_not_None/iterate/index">
+          <label>Index</label>
+        </input>
+      </repeat>
+    </group>
+    <group ref="/Something_that_is_not_None/iterate_one">
+      <label></label>
+      <repeat jr:count=" /Something_that_is_not_None/iterate_one_count " nodeset="/Something_that_is_not_None/iterate_one">
+        <input ref="/Something_that_is_not_None/iterate_one/index">
           <label>Index</label>
         </input>
       </repeat>

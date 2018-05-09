@@ -1,3 +1,5 @@
+import json
+
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 
@@ -102,14 +104,18 @@ class XFormUtilsTests(CustomTestCase):
         with open(self.samples['submission']['file-ok'], 'rb') as xml:
             data, form_id, version = extract_data_from_xml(xml)
 
+        with open(self.samples['submission']['file-ok-json'], 'rb') as content:
+            expected = json.load(content)
+
         self.assertEqual(form_id, 'my-test-form')
         self.assertEqual(version, '0')
         self.assertEqual(len(list(data.keys())), 1)
         self.assertEqual(list(data.keys())[0], 'Something_that_is_not_None')
 
         data = parse_submission(data, self.samples['xform']['raw-xml'])
-
         self.assertNotEqual(list(data.keys())[0], 'Something_that_is_not_None')
+
+        self.assertEqual(data, expected)
 
     def test__get_instance_id(self):
         instance_id = 'abc'
