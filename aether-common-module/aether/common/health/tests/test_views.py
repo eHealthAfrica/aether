@@ -16,6 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import mock
+
 from django.urls import reverse
 from django.test import TestCase
 
@@ -24,7 +26,18 @@ from rest_framework import status
 
 class ViewsTest(TestCase):
 
-    def test__health(self):
+    def test__health(self, *args):
         response = self.client.get(reverse('health'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json(), {})
+
+    @mock.patch('aether.common.health.views.test_db_connection', return_value=True)
+    def test__check_db_ok(self, *args):
+        response = self.client.get(reverse('check-db'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {})
+
+    @mock.patch('aether.common.health.views.test_db_connection', return_value=False)
+    def test__check_db_down(self, *args):
+        response = self.client.get(reverse('check-db'))
+        self.assertEqual(response.status_code, 500)
