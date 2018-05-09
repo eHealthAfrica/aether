@@ -23,7 +23,7 @@ from django.conf.urls import include, url
 
 from aether.common.auth.views import obtain_auth_token
 from aether.common.conf.views import basic_serve, media_serve
-from aether.common.health.views import health
+from aether.common.health.views import health, check_db
 from aether.common.kernel.views import check_kernel
 from aether.common.kernel.utils import get_kernel_server_url
 
@@ -67,8 +67,9 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
 
     urlpatterns = [
 
-        # `health` endpoint
+        # `health` endpoints
         url(r'^health$', health, name='health'),
+        url(r'^check-db$', check_db, name='check-db'),
 
         # `admin` section
         url(r'^admin/', admin.site.urls),
