@@ -10,7 +10,7 @@ from aether.common.kernel.views import check_kernel
 
 
 def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
-    '''
+    """
     Generates the most common url patterns in the apps.
 
     Default URLs included:
@@ -35,7 +35,7 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
                     variables `AETHER_KERNEL_URL` and `AETHER_KERNEL_TOKEN`.
                     The url endpoint is `/check-kernel`.
 
-    '''
+    """
 
     auth_urls = 'rest_framework.urls'
     if settings.CAS_SERVER_URL:

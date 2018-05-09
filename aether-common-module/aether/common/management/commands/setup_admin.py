@@ -50,9 +50,9 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        '''
+        """
         Creates an admin user and sets his auth token
-        '''
+        """
         username = options['username']
         password = options['password']
         email = options['email']
