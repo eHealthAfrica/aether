@@ -138,7 +138,7 @@ class XForm(models.Model):
     def save(self, *args, **kwargs):
         try:
             validate_xmldict(self.xml_data)
-        except ValidationError as ve:
+        except ValidationError:
             raise IntegrityError('xml_data not valid')
 
         data = xmltodict.parse(self.xml_data)

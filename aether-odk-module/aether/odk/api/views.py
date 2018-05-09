@@ -135,7 +135,7 @@ class SurveyorViewSet(viewsets.ModelViewSet):
             for item in items:
                 try:
                     surveyors = surveyors.union(item)
-                except Exception as e:
+                except Exception:
                     surveyors.add(item)
             # filter by these surveyors
             queryset = queryset.filter(id__in=surveyors)
