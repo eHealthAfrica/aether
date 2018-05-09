@@ -96,7 +96,7 @@ def find_by_jsonpath(obj, path):
 
     If the any single element in `path` is a wildcard match prefixed by an arbitrary
     string, `find` will attempt to filter the results by that prefix. We then replace
-    that section of the path with a singel wildcard which becomes a valid jsonpath.
+    that section of the path with a single wildcard which becomes a valid jsonpath.
     We filter matches on their adherence to the partial path.
 
     **NOTE**: this behavior is not part of jsonpath spec.
@@ -254,7 +254,6 @@ def resolve_entity_reference(
     # exported as currently constructed returns the value(s) found at
     # entity_jsonpath
     matches = find_by_jsonpath(constructed_entities, entity_jsonpath)
-    # matches = parse(entity_jsonpath).find(constructed_entities)  # TODO KILL
     if len(matches) < 1:
         raise ValueError('path %s has no matches; aborting' % entity_jsonpath)
     if len(matches) < 2:
@@ -269,7 +268,7 @@ def resolve_source_reference(path, entities, entity_name, i, field, data):
     # called via normal jsonpath as source
     # is NOT defferable as all source data should be present at extractor start
     # assignes values directly to entities within function and return new offset value (i)
-    matches = find_by_jsonpath(data, path)  # matches = parse(path).find(data)  # TODO KILL
+    matches = find_by_jsonpath(data, path)
     if not matches:
         entities[entity_name][i][field] = None
         i += 1
