@@ -13,9 +13,9 @@ def get_kernel_server_url():
 
 
 def get_auth_header():
-    '''
+    """
     Returns the Authorization Header if connection to Aether Kernel is possible
-    '''
+    """
 
     if test_connection():
         token = os.environ.get('AETHER_KERNEL_TOKEN', '')
@@ -24,9 +24,9 @@ def get_auth_header():
 
 
 def test_connection():
-    '''
+    """
     Checks possible connection with Aether Kernel
-    '''
+    """
 
     url = get_kernel_server_url()
     token = os.environ.get('AETHER_KERNEL_TOKEN', '')
@@ -62,9 +62,9 @@ def test_connection():
 
 
 def check_connection():
-    '''
+    """
     Check if the connection with Kernel server is possible
-    '''
+    """
 
     if not test_connection():
         return 'Always Look on the Bright Side of Life!!!'
@@ -72,30 +72,30 @@ def check_connection():
 
 
 def get_mappings_url(mapping_id=''):
-    '''
+    """
     Returns Aether Kernel url for the given mapping
-    '''
+    """
     return __get_type_url('mappings', mapping_id)
 
 
 def get_submissions_url(submission_id=None):
-    '''
-    Returns Aether Kernel url for submissions
-    '''
+    """
+    Returns Aether Kernel url for submissions.
+    """
     return __get_type_url('submissions', submission_id)
 
 
 def get_attachments_url(attachment_id=None):
-    '''
+    """
     Returns Aether Kernel url for submission attachments
-    '''
+    """
     return __get_type_url('attachments', attachment_id)
 
 
 def __get_type_url(model_type, id=None):
-    '''
-    Returns Aether Kernel url for type "XXX"
-    '''
+    """
+    Returns Aether Kernel url for type 'XXX'
+    """
     if not id:
         return '{kernel_url}/{type}/'.format(
             kernel_url=get_kernel_server_url(),
@@ -110,9 +110,9 @@ def __get_type_url(model_type, id=None):
 
 
 def get_all_docs(url):
-    '''
+    """
     Returns all documents linked to an url, even with pagination
-    '''
+    """
     def get_data(url):
         resp = requests.get(url, headers=get_auth_header())
         resp.raise_for_status()
@@ -128,9 +128,9 @@ def get_all_docs(url):
 
 
 def submit_to_kernel(submission, mapping_id, submission_id=None):
-    '''
+    """
     Make the submission to Aether Kernel mapping
-    '''
+    """
     if mapping_id is None:
         raise errors.SubmissionError('Cannot make submission without mapping!')
 
