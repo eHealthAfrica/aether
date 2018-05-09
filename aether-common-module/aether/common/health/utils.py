@@ -16,26 +16,15 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.http import JsonResponse
-
-from aether.common.health.utils import test_db_connection
-
-
-def health(*args, **kwargs):
-    '''
-    Simple view to check if the system is up.
-    '''
-
-    return JsonResponse({})
+from django.db import connections
+from django.db.utils import OperationalError
 
 
-def check_db(*args, **kwargs):
-    '''
-    Health check for the default DB connection.
-    '''
+def test_db_connection():  # pragma: no cover
+    db_conn = connections['default']
+    try:
+        db_conn.cursor()
+    except OperationalError:
+        return False
 
-    db_reachable = test_db_connection()
-    if not db_reachable:
-        return JsonResponse({}, status=500)
-
-    return JsonResponse({})
+    return True
