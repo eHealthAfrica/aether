@@ -5,7 +5,8 @@ from django.test import TestCase
 
 from . import PIPELINE_EXAMPLE_1
 from ..models import Pipeline
-from ..utils import (kernel_data_request, create_new_kernel_object, is_object_linked, create_project_schema_object)
+from ..utils import (kernel_data_request, create_new_kernel_object, is_object_linked,
+                     create_project_schema_object)
 
 
 class ViewsTest(TestCase):
@@ -30,7 +31,6 @@ class ViewsTest(TestCase):
           input=PIPELINE_EXAMPLE_1['input'],
           entity_types=PIPELINE_EXAMPLE_1['entity_types'],
           mapping=PIPELINE_EXAMPLE_1['mapping'],
-          mapping_errors=PIPELINE_EXAMPLE_1['mapping_errors'],
           output=PIPELINE_EXAMPLE_1['output'],
           kernel_refs=PIPELINE_EXAMPLE_1['kernel_refs']
         )

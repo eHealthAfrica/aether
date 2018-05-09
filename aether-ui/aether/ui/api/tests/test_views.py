@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.test import TestCase, RequestFactory
 
 from ..views import TokenProxyView
-from . import PIPELINE_EXAMPLE
+from . import (PIPELINE_EXAMPLE, PIPELINE_EXAMPLE_WITH_MAPPING_ERRORS)
 from ..models import Pipeline
 
 
@@ -277,13 +277,84 @@ class ViewsTest(TestCase):
         url = reverse('ui:pipeline-publish', args=[pipeline_id])
         response = self.client.post(url, {'project_name': 'Aux'})
         response_data = json.loads(response.content)
+
         # make sure kernel db is clean for this to pass
         self.assertEqual(response.status_code, 200)
         pipeline = Pipeline.objects.get(pk=pipeline_id)
-        self.assertNotEqual(pipeline.kernel_refs, None)
+        self.assertEqual(len(pipeline.kernel_refs), 4)
         self.assertEqual(len(pipeline.kernel_refs['schema']), 2)
 
-        response = self.client.post(url, {'project_name': 'Aux'})
-        self.assertEqual(response.status_code, 200)
-        pipeline = Pipeline.objects.get(pk=pipeline_id)
-        self.assertEqual(len(pipeline.kernel_refs), 4)
+        url = reverse('ui:pipeline-list')
+        data = json.dumps(PIPELINE_EXAMPLE_WITH_MAPPING_ERRORS)
+        response = self.client.post(url, data=data, content_type='application/json')
+        response_data = json.loads(response.content)
+        pipeline_id = response_data['id']
+        url = reverse('ui:pipeline-publish', args=[pipeline_id])
+        response = self.client.post(url)
+        response_data = json.loads(response.content)
+        self.assertIn(response_data['info']['failed'][0]['message'],
+                      'Mappings have errors')
+
+        url = reverse('ui:pipeline-list')
+        data = json.dumps({
+            'name': 'pipeline 1'
+        })
+        response = self.client.post(url, data=data, content_type='application/json')
+        response_data = json.loads(response.content)
+        pipeline_id = response_data['id']
+        pipeline2 = Pipeline.objects.get(pk=pipeline_id)
+        pipeline2.kernel_refs = pipeline.kernel_refs
+        pipeline2.save()
+        url = reverse('ui:pipeline-publish', args=[pipeline_id])
+        response = self.client.post(url, {'project_name': 'Aux 1'})
+        response_data = json.loads(response.content)
+        self.assertGreater(len(response_data['info']['exists']), 0)
+        self.assertIn(response_data['info']['exists'][0]['message'],
+                      'Mapping with id {} exists'.format(pipeline.kernel_refs['mapping']))
+
+        url = reverse('ui:pipeline-list')
+        data = json.dumps({
+            'name': 'pipeline 2',
+            'entity_types': [{'name': 'Screening', 'type': 'record', 'fields':
+                             [
+                                {'name': 'id', 'type': 'string'},
+                                {'name': 'firstName', 'type': 'string'}
+                             ]
+                        }]
+        })
+        response = self.client.post(url, data=data, content_type='application/json')
+        response_data = json.loads(response.content)
+        pipeline_id = response_data['id']
+        pipeline2 = Pipeline.objects.get(pk=pipeline_id)
+        pipeline2.kernel_refs = pipeline.kernel_refs
+        pipeline2.save()
+        url = reverse('ui:pipeline-publish', args=[pipeline_id])
+        response = self.client.post(url, {'project_name': 'Aux 1'})
+        response_data = json.loads(response.content)
+        self.assertGreater(len(response_data['info']['exists']), 0)
+        self.assertIn(response_data['info']['exists'][0]['message'],
+                      '{} schema with id {} exists'.format('Screening',
+                                                           pipeline.kernel_refs['schema']['Screening']))
+
+        url = reverse('ui:pipeline-list')
+        data = json.dumps({
+            'name': 'pipeline 3',
+            'entity_types': [{'name': 'Screening', 'type': 'record', 'fields':
+                             [
+                                {'name': 'id', 'type': 'string'},
+                                {'name': 'firstName', 'type': 'string'}
+                             ]
+                        }]
+        })
+        response = self.client.post(url, data=data, content_type='application/json')
+        response_data = json.loads(response.content)
+        pipeline_id = response_data['id']
+        pipeline2 = Pipeline.objects.get(pk=pipeline_id)
+        url = reverse('ui:pipeline-publish', args=[pipeline_id])
+        response = self.client.post(url, {'project_name': 'Aux 1'})
+        response_data = json.loads(response.content)
+        self.assertGreater(len(response_data['info']['failed']), 0)
+
+        url = reverse('ui:pipeline-publish', args=[str(pipeline_id) + 'wrong'])
+        response = self.client.post(url, {'project_name': 'Aux 1'})
+        response_data = json.loads(response.content)

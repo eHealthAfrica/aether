@@ -141,11 +141,8 @@ def create_new_kernel_object(object_name, pipeline, data={}, project_name='Aux',
     try:
         res = kernel_data_request(f'{object_name}s', 'post', data)
     except Exception as e:
-        try:
-            error = ast.literal_eval(str(e))
-            error['object_name'] = data['name'] if 'name' in data else 'unknown'
-        except Exception:
-            error = e
+        error = ast.literal_eval(str(e))
+        error['object_name'] = data['name'] if 'name' in data else 'unknown'
         raise Exception(error)
     if not pipeline.kernel_refs:
         pipeline.kernel_refs = {}
