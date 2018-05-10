@@ -12,6 +12,9 @@ class Mapping extends Component {
     this.state = {
       mappingRules: this.parseProps(props)
     }
+  }
+
+  componentDidMount () {
     this.setMappingStyles()
   }
 
@@ -26,9 +29,16 @@ class Mapping extends Component {
   }
 
   setMappingStyles () {
+    const elementColors = this.getElementOrderAndColorCode()
     Object.keys(this.state.mappingRules).forEach(mapping => {
       const mappingData = this.state.mappingRules[mapping]
-      applyStyle(`input_${mappingData.source}`, 'input-mapped')
+      const sMap = mappingData.destination.split('.')
+      const elementColor = elementColors[sMap[0]]
+      if (elementColor) {
+        applyStyle(`input_${mappingData.source}`, 'input-mapped', elementColor)
+      } else {
+        applyStyle(`input_${mappingData.source}`, 'input-mapped')
+      }
       applyStyle(`entityType_${mappingData.destination}`, 'entityType-mapped')
     })
   }
@@ -39,6 +49,20 @@ class Mapping extends Component {
       removeStyle(`input_${mappingData.source}`, 'input-mapped')
       removeStyle(`entityType_${mappingData.destination}`, 'entityType-mapped')
     })
+  }
+
+  getElementOrderAndColorCode () {
+    const colors = ['#6ed7c2', '#d76e89', '#6ebcd7', '#cfd76e', '#d7b46e', '#d79a6e', '#d76ec2', '#a5b990', '#88b5ac', '#bcb297']
+    const selector = document.getElementsByClassName('entity-type')
+    const elementColors = {}
+    for (let i = 0; i <= selector.length; i++) {
+      const entityType = selector[i]
+      if (entityType) {
+        const name = entityType.getElementsByTagName('h2')[0].innerHTML
+        elementColors[name] = colors[i]
+      }
+    }
+    return elementColors
   }
 
   parseProps (props) {

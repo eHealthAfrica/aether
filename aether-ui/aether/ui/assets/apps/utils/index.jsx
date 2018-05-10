@@ -74,10 +74,15 @@ export const getLoggedInUser = () => {
 /**
  * Applies supplied class to an element by id in the DOM
  */
-export const applyStyle = (id, className) => {
+export const applyStyle = (id, className, color) => {
   const element = document.getElementById(id)
   if (element) {
     element.classList.add(className)
+    if (color) {
+      element.setAttribute('style', `background-color: ${color};`);
+      element.pseudoStyle('before', 'background', color)
+      element.pseudoStyle('after', 'border-left', `0.6rem solid ${color}`)
+    }
   }
 }
 
@@ -88,5 +93,29 @@ export const removeStyle = (id, className) => {
   const element = document.getElementById(id)
   if (element) {
     element.classList.remove(className)
+    element.style.backgroundColor = null
   }
+}
+
+const UID = {
+	_current: 0,
+	getNew: function () {
+		this._current++
+		return this._current
+	}
+}
+
+HTMLElement.prototype.pseudoStyle = function (element, prop, value) {
+	const _this = this
+	const _sheetId = 'pseudoStyles'
+	const _head = document.head || document.getElementsByTagName('head')[0]
+	const _sheet = document.getElementById(_sheetId) || document.createElement('style')
+	_sheet.id = _sheetId
+	const className = `pseudoStyle${UID.getNew()}`
+	
+	_this.className +=  ` ${className}`
+	
+	_sheet.innerHTML += ` .${className}:${element}{${prop}:${value}}`
+	_head.appendChild(_sheet)
+	return this
 }
