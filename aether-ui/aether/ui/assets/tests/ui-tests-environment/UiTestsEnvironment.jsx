@@ -34,6 +34,7 @@ class UiTestsEnvironment extends JSDOMEnvironment {
     this.global.window.$ = $(this.global.window)
     this.global.window.jQuery = this.global.window.$
     this.global.window.Popper = popper
+    this.global.HTMLElement = this.global.window.HTMLElement
   }
 
   async teardown () {
