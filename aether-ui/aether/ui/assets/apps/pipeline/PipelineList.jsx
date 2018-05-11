@@ -43,7 +43,6 @@ class PipelineList extends Component {
               defaultMessage='Pipelines'
             />
           </h1>
-
           <NewPipeline
             onStartPipeline={newPipeline => { this.onStartPipeline(newPipeline) }}
           />

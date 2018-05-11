@@ -22,6 +22,14 @@ class PipelineViewSet(viewsets.ModelViewSet):
         pipelines = ui_utils.kernel_to_pipeline()
         return HttpResponse(pipelines, status=200)
 
+    @action(methods=['post'], detail=True)
+    def publish(self, request, pk=None):
+        '''
+        This view transform the supplied pipeline to kernal models,
+        publish and update the pipeline with related kernel model ids.
+        '''
+        project_name = request.data['project_name'] if 'project_name' in request.data else 'Aux'
+        return ui_utils.publishPipeline(pk, project_name)
 
 
 class TokenProxyView(View):
