@@ -272,11 +272,42 @@ def publishPipeline(pipelineid, projectname):
         return JsonResponse({'links': None, 'info': outcome}, status=400)
 
 def is_linked_to_pipeline(object_name, id):
-    pass
+    kwargs = {
+        '{0}__{1}'.format('kernel_refs', object_name): id
+    }
+    linked_pipeline = models.Pipeline.objects.filter(**kwargs)
+    return True if len(linked_pipeline) else False
+
+def convertMappings(mapping_from_kernel):
+    result = []
+    for mapping in mapping_from_kernel:
+        result.append({'source': mapping[0], 'destination': mapping[1]})
+    return result
+
+def convertEntityTypes(entities_from_kernel):
+    result = []
+    for entity in entities_from_kernel:
+        schema = kernel_data_request(f'/schemas/{entities_from_kernel[entity]}')
+        result.append(schema['definition'])
+    return result
+
+def generate_sample_input_from_mapping(mapping):
+    
+
+def create_new_pipeline_from_kernel(entry, kernel_object):
+    if entry is 'mapping':
+        models.Pipeline.create(
+            name=kernel_object['name'],
+            input=generate_sample_input_from_mapping(kernel_object['definition']),
+            entity_types=convertEntityTypes(kernel_object['entities']),
+            mapping=convertMappings(kernel_object['definition']),
+            kernel_refs=PIPELINE_EXAMPLE_1['kernel_refs']
+        )
 
 def kernel_to_pipeline():
     mappings = kernel_data_request('mappings')['results']
     for mapping in mappings:
-        is_linked_to_pipeline('mapping', mapping['id'])
+        if not is_linked_to_pipeline('mapping', mapping['id']):
+            create_new_pipeline_from_kernel('mapping', mapping)
     print(mappings)
     return []
