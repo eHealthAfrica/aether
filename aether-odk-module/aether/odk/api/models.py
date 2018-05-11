@@ -16,7 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import xmltodict
 import uuid
 
 from hashlib import md5
@@ -27,7 +26,12 @@ from django.urls import reverse
 from django.db import models, IntegrityError
 from django.utils import timezone
 
-from .xform_utils import get_xml_title, get_xml_form_id, get_xml_version, validate_xmldict
+from .xform_utils import (
+    get_xml_form_id,
+    get_xml_title,
+    get_xml_version,
+    parse_xml,
+)
 
 
 class Mapping(models.Model):
@@ -73,6 +77,45 @@ class Mapping(models.Model):
         ordering = ['name']
 
 
+def __validate_xml_data__(value, return_values=False):
+    '''
+    Validates xml definition:
+
+    1. parses xml
+    2. checks if title is valid
+    3. checks if form id is valid
+
+    If indicated returns the following extracted values:
+
+    - xForm title
+    - xForm form_id
+    - xForm version
+
+    '''
+
+    try:
+        data = parse_xml(value)
+
+        title = get_xml_title(data)
+        form_id = get_xml_form_id(data)
+        version = get_xml_version(data)
+
+        if not title and not form_id:
+            raise ValidationError('missing title and form_id')
+
+        if not title:
+            raise ValidationError('missing title')
+
+        if not form_id:
+            raise ValidationError('missing form_id')
+
+    except Exception as e:
+        raise ValidationError(e)
+
+    if return_values:
+        return title, form_id, version
+
+
 class XForm(models.Model):
     '''
     Database representation of an XForm
@@ -89,7 +132,7 @@ class XForm(models.Model):
     surveyors = models.ManyToManyField(to=get_user_model(), blank=True)
 
     # here comes the extracted data from an xForm file
-    xml_data = models.TextField(blank=True, validators=[validate_xmldict])
+    xml_data = models.TextField(blank=True, validators=[__validate_xml_data__])
 
     # taken from xml_data
     title = models.TextField(default='', editable=False)
@@ -137,15 +180,12 @@ class XForm(models.Model):
 
     def save(self, *args, **kwargs):
         try:
-            validate_xmldict(self.xml_data)
-        except ValidationError:
-            raise IntegrityError('xml_data not valid')
+            title, form_id, version = __validate_xml_data__(self.xml_data, return_values=True)
+        except ValidationError as ve:
+            raise IntegrityError(ve)
 
-        data = xmltodict.parse(self.xml_data)
-        self.title = get_xml_title(data)
-        self.form_id = get_xml_form_id(data)
-
-        version = get_xml_version(data)
+        self.title = title
+        self.form_id = form_id
         if version:
             # set version from xml data
             self.version = version

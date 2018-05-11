@@ -24,8 +24,6 @@ from dateutil import parser
 from pyxform import xls2json, builder
 from pyxform.xls2json_backends import xls_to_dict
 
-from django.core.exceptions import ValidationError
-
 
 def parse_file(filename, content):
     if filename.endswith('.xml'):
@@ -47,6 +45,10 @@ def parse_xmlform(fp):
     xmltodict.parse(content)
     # but return the untouched content if it does not raise an exception
     return content.decode('utf-8')
+
+
+def parse_xml(xml_content):
+    return xmltodict.parse(xml_content)
 
 
 def get_xml_title(data):
@@ -129,35 +131,13 @@ def get_xml_instance_attr(data, attr):
     return None
 
 
-def validate_xmldict(value):
-    '''
-    Validates xml definition:
-
-    1. parses xml
-    2. checks if title is valid
-    3. checks if form id is valid
-
-    '''
-
-    try:
-        data = xmltodict.parse(value)
-
-        if not get_xml_title(data):
-            raise ValidationError('missing title')
-        if not get_xml_form_id(data):
-            raise ValidationError('missing form_id')
-
-    except Exception as e:
-        raise ValidationError(e)
-
-
 def extract_data_from_xml(xml_content):
     '''
     Parses the XML submission into a dictionary,
     also extracts the form id and the form version.
     '''
 
-    data = xmltodict.parse(xml_content)
+    data = parse_xml(xml_content)
 
     instance = list(data.items())[0][1]  # TODO make more robust
     form_id = instance['@id']
