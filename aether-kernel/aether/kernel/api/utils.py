@@ -23,7 +23,6 @@ import string
 import uuid
 
 import jsonpath_ng
-from jsonpath_ng import parse
 from spavro.schema import parse as parse_schema
 from spavro.io import validate
 
@@ -133,20 +132,18 @@ def find_by_jsonpath(obj, path):
 
 
 def get_field_mappings(mapping_definition):
-    mapping_obj = mapping_definition
-    matches = parse('mapping[*]').find(mapping_obj)
+    matches = find_by_jsonpath(mapping_definition, 'mapping[*]')
     mappings = [match.value for match in matches]
     return mappings
 
 
 def JSP_get_basic_fields(avro_obj):
-    jsonpath_expr = parse('fields[*].name')
-    return [match.value for match in jsonpath_expr.find(avro_obj)]
+    return [match.value for match in find_by_jsonpath(avro_obj, 'fields[*].name')]
 
 
 def get_entity_definitions(mapping_definition, schemas):
     required_entities = {}
-    found_entities = parse('entities[*]').find(mapping_definition)
+    found_entities = find_by_jsonpath(mapping_definition, 'entities[*]')
     entities = [match.value for match in found_entities][0]
     for entity_definition in entities.items():
         entity_type, file_name = entity_definition
@@ -180,7 +177,7 @@ def get_entity_stub(requirements, entity_definitions, entity_name, source_data):
         for i, path in enumerate(paths):
             # if this is a json path, we'll resolve it to see how big the result is
             if '#!' not in path:
-                matches = parse(path).find(source_data)
+                matches = find_by_jsonpath(source_data, path)
                 [entity_stub[field].append(match.value) for match in matches]
             else:
                 entity_stub[field].append(path)
