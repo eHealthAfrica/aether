@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 import { connect } from 'react-redux'
 
-import { generateGUID, deepEqual, applyStyle, removeStyle } from '../../utils'
+import { generateGUID, deepEqual } from '../../utils'
 import { updatePipeline } from '../redux'
 
 class Mapping extends Component {
@@ -10,63 +10,14 @@ class Mapping extends Component {
     super(props)
 
     this.state = {
-      mappingRules: this.parseProps(props)
+      mappingRules: props.selectedPipeline.mapping || []
     }
-  }
-
-  componentDidMount () {
-    this.setMappingStyles()
   }
 
   componentWillReceiveProps (nextProps) {
-    if (nextProps.selectedPipeline.mapping !== this.props.selectedPipeline.mapping) {
-      this.clearMappingStyles(this.props.selectedPipeline.mapping)
-    }
     this.setState({
-      mappingRules: this.parseProps(nextProps)
+      mappingRules: nextProps.selectedPipeline.mapping || []
     })
-    this.setMappingStyles()
-  }
-
-  setMappingStyles () {
-    const elementColors = this.getElementOrderAndColorCode()
-    Object.keys(this.state.mappingRules).forEach(mapping => {
-      const mappingData = this.state.mappingRules[mapping]
-      const sMap = mappingData.destination.split('.')
-      const elementColor = elementColors[sMap[0]]
-      if (elementColor) {
-        applyStyle(`input_${mappingData.source}`, 'input-mapped', elementColor)
-      } else {
-        applyStyle(`input_${mappingData.source}`, 'input-mapped')
-      }
-      applyStyle(`entityType_${mappingData.destination}`, 'entityType-mapped')
-    })
-  }
-
-  clearMappingStyles (mappings) {
-    Object.keys(mappings).forEach(mapping => {
-      const mappingData = mappings[mapping]
-      removeStyle(`input_${mappingData.source}`, 'input-mapped')
-      removeStyle(`entityType_${mappingData.destination}`, 'entityType-mapped')
-    })
-  }
-
-  getElementOrderAndColorCode () {
-    const colors = ['#6ed7c2', '#d76e89', '#6ebcd7', '#cfd76e', '#d7b46e', '#d79a6e', '#d76ec2', '#a5b990', '#88b5ac', '#bcb297']
-    const selector = document.getElementsByClassName('entity-type')
-    const elementColors = {}
-    for (let i = 0; i <= selector.length; i++) {
-      const entityType = selector[i]
-      if (entityType) {
-        const name = entityType.getElementsByTagName('h2')[0].innerHTML
-        elementColors[name] = colors[i]
-      }
-    }
-    return elementColors
-  }
-
-  parseProps (props) {
-    return props.selectedPipeline.mapping || []
   }
 
   notifyChange (event) {
@@ -138,8 +89,6 @@ class Mapping extends Component {
     }
 
     const removeRule = () => {
-      removeStyle(`input_${rule.source}`, 'input-mapped')
-      removeStyle(`entityType_${rule.destination}`, 'entityType-mapped')
       this.setState({
         mappingRules: this.state.mappingRules.filter(r => r.id !== rule.id)
       })

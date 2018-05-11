@@ -2,7 +2,19 @@
 // Color Codes
 // ************************************
 
-$colors-list: #6ed7c2 #d76e89 #6ebcd7 #cfd76e #d7b46e #d79a6e #d76ec2 #a5b990 #88b5ac #bcb297;
+$colors-list: (
+  #6ed7c2
+  #d76e89
+  #6ebcd7
+  #cfd76e
+  #d7b46e
+  #d79a6e
+  #d76ec2
+  #a5b990
+  #88b5ac
+  #bcb297
+);
+
 @each $current-color in $colors-list {
   $i: index($colors-list, $current-color);
 
@@ -20,9 +32,24 @@ $colors-list: #6ed7c2 #d76e89 #6ebcd7 #cfd76e #d7b46e #d79a6e #d76ec2 #a5b990 #8
       background-color: $current-color;
     }
   }
+
+  .input-mapped-#{$i} {
+    background-color: rgba($current-color, .2);
+
+    &:hover {
+      background-color: $current-color;
+    }
+
+    &::before {
+      background-color: rgba($current-color, .2);
+    }
+
+    &::after {
+      border-left: 0.6rem solid $current-color;
+    }
+  }
 }
 
 .input-mapped {
   background-color: $light-grey;
 }
-
