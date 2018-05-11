@@ -35,6 +35,7 @@ aether.common
 
 # test libraries
 coverage
+django-autofixture
 flake8
 flake8-quotes
 mock
