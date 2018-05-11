@@ -291,8 +291,10 @@ def convertEntityTypes(entities_from_kernel):
         result.append(schema['definition'])
     return result
 
-def generate_sample_input_from_mapping(mapping):
-    
+def generate_sample_input_from_mapping(mappings):
+    for mapping in mappings:
+        source = mapping[0]
+        
 
 def create_new_pipeline_from_kernel(entry, kernel_object):
     if entry is 'mapping':
