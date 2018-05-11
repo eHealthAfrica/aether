@@ -114,3 +114,28 @@ def validate_pipeline(pipeline):
             [{'error_message': f'It was not possible to validate the pipeline: {str(e)}'}],
             []
         )
+
+def kernel_data_request(url='', method='get', data={}):
+    '''
+    Handle requests to the kernel server
+    '''
+    kernerl_url = utils.get_kernel_server_url()
+    res = requests.request(method=method,
+                           url=f'{kernerl_url}/{url.lower()}/',
+                           headers=utils.get_auth_header(),
+                           json=data
+                           )
+    if res.status_code >= 200 and res.status_code < 400:
+        return res.json()
+    else:
+        raise Exception(res.json())
+
+def is_linked_to_pipeline(object_name, id):
+    pass
+
+def kernel_to_pipeline():
+    mappings = kernel_data_request('mappings')['results']
+    for mapping in mappings:
+        is_linked_to_pipeline('mapping', mapping['id'])
+    print(mappings)
+    return []

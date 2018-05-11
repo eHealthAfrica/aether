@@ -3,15 +3,25 @@ import requests
 from django.http import HttpResponse
 from django.views import View
 from rest_framework import viewsets
+from rest_framework.decorators import action
 
 from ..settings import AETHER_APPS
-from . import models, serializers
+from . import models, serializers, utils as ui_utils
 
 
 class PipelineViewSet(viewsets.ModelViewSet):
     queryset = models.Pipeline.objects.all()
     serializer_class = serializers.PipelineSerializer
     ordering = ('name',)
+
+    @action(methods=['get'], detail=False)
+    def fetch(self, request):
+        '''
+        This view gets kernel objects, transforms and loads into a pipeline
+        '''
+        pipelines = ui_utils.kernel_to_pipeline()
+        return HttpResponse(pipelines, status=200)
+
 
 
 class TokenProxyView(View):

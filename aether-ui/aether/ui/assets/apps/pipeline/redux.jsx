@@ -13,7 +13,9 @@ export const types = {
   GET_ALL: 'pipeline_get_all',
   PIPELINE_ERROR: 'pipeline_error',
   GET_BY_ID: 'pipeline_get_by_id',
-  PIPELINE_NOT_FOUND: 'pipeline_not_found'
+  PIPELINE_NOT_FOUND: 'pipeline_not_found',
+  GET_FROM_KERNEL: 'get_from_kernel',
+  GET_FROM_KERNEL_ERROR: 'get_from_kernel_error'
 }
 
 export const INITIAL_PIPELINE = {
@@ -53,6 +55,11 @@ export const selectedPipelineChanged = selectedPipeline => ({
 export const getPipelines = () => ({
   types: ['', types.GET_ALL, types.PIPELINE_ERROR],
   promise: client => client.get(`${urls.PIPELINES_URL}?limit=5000`, { 'Content-Type': 'application/json' }) // limit query_string used instead of pagination (temporary)
+})
+
+export const fetchPipelines = () => ({
+  types: ['', types.GET_FROM_KERNEL, types.GET_FROM_KERNEL_ERROR],
+  promise: client => client.get(`${urls.PIPELINES_URL}fetch/?limit=5000`, { 'Content-Type': 'application/json' })
 })
 
 const reducer = (state = INITIAL_PIPELINE, action) => {
