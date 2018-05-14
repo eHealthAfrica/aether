@@ -35,7 +35,6 @@ class Pipeline extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
-    console.log(this.props.selectedPipeline)
     if (this.props.match.params.id !== nextProps.match.params.id) {
       this.props.getPipelineById(nextProps.match.params.id)
     }
