@@ -116,6 +116,10 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
       return { ...state, publishSuccess: null, publishError: action.error }
     }
 
+    case types.GET_FROM_KERNEL: {
+      return { ...state, pipelineList: action.payload }
+    }
+
     default:
       return state
   }

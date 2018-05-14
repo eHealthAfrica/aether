@@ -1,6 +1,6 @@
 import requests
 
-from django.http import HttpResponse
+from django.http import (HttpResponse, JsonResponse)
 from django.views import View
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -19,8 +19,10 @@ class PipelineViewSet(viewsets.ModelViewSet):
         '''
         This view gets kernel objects, transforms and loads into a pipeline
         '''
-        pipelines = ui_utils.kernel_to_pipeline()
-        return HttpResponse(pipelines, status=200)
+        ui_utils.kernel_to_pipeline()
+        pipelines = models.Pipeline.objects.all()
+        serialized_data = serializers.PipelineSerializer(pipelines, context={'request': request}, many=True).data
+        return JsonResponse(serialized_data, status=200, safe=False)
 
     @action(methods=['post'], detail=True)
     def publish(self, request, pk=None):
