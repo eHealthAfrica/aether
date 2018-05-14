@@ -1,3 +1,21 @@
+# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+#
+# See the NOTICE file distributed with this work for additional information
+# regarding copyright ownership.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on anx
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password as validate_pwd
 from django.utils.translation import ugettext as _
@@ -43,13 +61,8 @@ class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         help_text=_('Upload an XLS Form or an XML File'),
     )
 
-    media_files = serializers.PrimaryKeyRelatedField(
-        label=_('Media files'),
-        many=True,
-        queryset=MediaFile.objects.all(),
-        allow_null=True,
-        default=[],
-    )
+    # this will return all media files in one request call
+    media_files = MediaFileSerializer(many=True, read_only=True)
 
     def validate(self, value):
         if value['xml_file']:
@@ -64,16 +77,6 @@ class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         value.pop('xml_file')
 
         return super(XFormSerializer, self).validate(value)
-
-    def update(self, instance, validated_data):
-        # extract updated media files list
-        media_files = validated_data.pop('media_files')
-        # delete media files not present in the updated list
-        MediaFile.objects.filter(xform=instance.pk) \
-                         .exclude(pk__in=[mf.pk for mf in media_files]) \
-                         .delete()
-        # update xform as usual
-        return super(XFormSerializer, self).update(instance, validated_data)
 
     class Meta:
         model = XForm
@@ -114,15 +117,6 @@ class SurveyorSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = ('id', 'username', 'password', )
 
 
-class XFormSimpleSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-
-    media_files = MediaFileSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = XForm
-        fields = '__all__'
-
-
 class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     url = serializers.HyperlinkedIdentityField('mapping-detail', read_only=True)
@@ -133,8 +127,8 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         allow_null=True,
         default=[],
     )
-    # this will return all linked xForms in one request call
-    xforms = XFormSimpleSerializer(read_only=True, many=True)
+    # this will return all linked xForms with media files in one request call
+    xforms = XFormSerializer(read_only=True, many=True)
 
     class Meta:
         model = Mapping

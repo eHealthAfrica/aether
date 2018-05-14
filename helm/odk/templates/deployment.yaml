@@ -1,0 +1,194 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    app: {{ .Chart.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+        release: {{ .Chart.Version }}
+    spec:
+      initContainers:
+      - name: init
+        image: postgres:9.3-alpine
+        command: ['bash', '-c', './scripts/init.sh']
+        env:
+        - name: PGHOST
+          valueFrom :
+            secretKeyRef:
+              name: {{ .Values.database.secret }}
+              key: host
+        - name: PGUSER
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.database.secret }}
+              key: user
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.database.secret }}
+              key: password
+        - name: RDS_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: odk-database-user
+        - name: RDS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: odk-database-password
+        - name: RDS_DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: odk-database-name
+        volumeMounts:
+        - mountPath: /scripts
+          name: odk-init
+        - name: {{ .Chart.Name }}
+          mountPath: {{ .Values.application.data_mount }}
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.odk.repository }}:{{ .Values.release }}"
+        ports:
+        - containerPort: 8000
+        args:
+        - {{ .Values.application.command }}
+        livenessProbe:
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          httpGet:
+            path: /health
+            port: 8000
+            httpHeaders:
+            - name: X-Kubernetes-Health-Check
+              value: livenessProbe
+            - name: Host
+              value: {{ .Values.url }}
+        readinessProbe:
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          httpGet:
+            path: /health
+            port: 8000
+            httpHeaders:
+            - name: X-Kubernetes-Health-Check
+              value: check
+            - name: Host
+              value: {{ .Values.url }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        {{- if .Values.extra_env_vars -}}
+        {{- range $key, $value := .Values.extra_env_vars }}
+        - name: {{ $key }}
+          value: {{ . | quote }}
+        {{- end -}}
+        {{ end }}
+        - name: MEDIA_ROOT
+          value: {{ .Values.application.data_mount }}
+        - name: CAS_SERVER_URL
+          value: "https://{{ .Values.ums_url }}.ehealthafrica.org"
+        - name: CSRF_COOKIE_DOMAIN
+          value: {{ .Values.domain }}
+        - name: CSRF_TRUSTED_ORIGINS
+          value: {{ .Values.trusted_origins }}
+        - name: HOSTNAME
+          value: "{{ .Values.url_prefix }}.{{ .Values.domain }}"
+        - name: DJANGO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: odk-django-secret-key
+        - name: AETHER_ODK_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: odk-token
+        - name: AETHER_KERNEL_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: kernel-token
+        - name: AETHER_KERNEL_URL
+          value: {{ .Values.kernel_url }}
+        - name: AETHER_KERNEL_URL_TEST
+          value: {{ .Values.kernel_url_test }}
+        - name: TESTING
+          value: {{ quote .Values.testing }}
+        - name: RDS_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: odk-database-user
+        - name: RDS_PORT
+          value: "5432"
+        - name: RDS_HOSTNAME
+          valueFrom :
+            secretKeyRef:
+              name: {{ .Values.database.secret }}
+              key: host
+        - name: RDS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: odk-database-password
+        - name: RDS_DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: odk-database-name
+        # `WEB_SERVER_PORT` is kept around for compatibility with the old tests,
+        # which are using different ports in different environments. Once all
+        # tests have been updated to run inside the cluster, `WEB_SERVER_PORT`
+        # can be removed.
+        - name: WEB_SERVER_PORT
+          value: {{ quote .Values.webserverPort }}
+        volumeMounts:
+        - mountPath: /var/www/static
+          name: static-assets-volume
+        - name: {{ .Chart.Name }}
+          mountPath: {{ .Values.application.data_mount }}
+        {{ if .Values.liveEdit.enabled }}
+        - name: code
+          mountPath: /code
+        {{ end }}
+      - name: nginx
+        image: nginx:stable-alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: /var/www/static
+          name: static-assets-volume
+        - mountPath: /etc/nginx/conf.d
+          name: odk-nginx-config
+        - name: {{ .Chart.Name }}
+          mountPath: {{ .Values.application.data_mount }}
+      imagePullSecrets:
+      - name: regsecret
+      volumes:
+      - name: {{ .Chart.Name }}
+        persistentVolumeClaim:
+          claimName: {{ .Chart.Name }}
+      - name: static-assets-volume
+        emptyDir: {}
+      - name: odk-nginx-config
+        configMap:
+          name: odk-nginx-config
+      - name: odk-init
+        configMap:
+          name: odk-init
+          defaultMode: 0744
+      {{ if .Values.liveEdit.enabled }}
+      - name: code
+        hostPath:
+          path: /aether/aether-odk-module
+      {{ end }}
+      restartPolicy: Always

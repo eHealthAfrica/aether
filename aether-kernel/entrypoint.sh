@@ -1,6 +1,25 @@
 #!/bin/bash
-set -e
+#
+# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+#
+# See the NOTICE file distributed with this work for additional information
+# regarding copyright ownership.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on anx
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
 
+set -Eeuo pipefail
 
 # Define help message
 show_help() {
@@ -13,7 +32,6 @@ show_help() {
 
     pip_freeze    : freeze pip dependencies and write to requirements.txt
 
-    setupproddb   : create/migrate database for production
     setuplocaldb  : create/migrate database for development (creates superuser and token)
 
     test          : run tests
@@ -23,6 +41,17 @@ show_help() {
     start         : start webserver behind nginx
     start_dev     : start webserver for development
     """
+}
+
+pip_freeze() {
+    pip install virtualenv
+    rm -rf /tmp/env
+
+    virtualenv -p python3 /tmp/env/
+    /tmp/env/bin/pip install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
+
+    cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
+    /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
 }
 
 setup_db() {
@@ -73,16 +102,6 @@ test_coverage() {
     cat /code/conf/extras/good_job.txt
 }
 
-# --------------------------------
-# set DJANGO_SECRET_KEY if needed
-if [ "$DJANGO_SECRET_KEY" = "" ]
-then
-   export DJANGO_SECRET_KEY=$(
-        cat /dev/urandom | tr -dc 'a-zA-Z0-9-_!@#$%^&*()_+{}|:<>?=' | fold -w 64 | head -n 4
-    )
-fi
-# --------------------------------
-
 
 case "$1" in
     bash )
@@ -98,20 +117,12 @@ case "$1" in
     ;;
 
     pip_freeze )
-        rm -rf /tmp/env
-        pip install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
-
-        cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
-        pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
+        pip_freeze
     ;;
 
-    setuplocaldb )
+    setuplocaldb)
         setup_db
         setup_initial_data
-    ;;
-
-    setupproddb )
-        setup_db
     ;;
 
     test)
@@ -140,8 +151,8 @@ case "$1" in
 
         # expose version number
         cp VERSION /var/www/VERSION
-        # add git revision 
-        cp /code/REVISION /var/www/REVISION 
+        # add git revision
+        cp /code/REVISION /var/www/REVISION
 
         /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
     ;;
@@ -149,6 +160,13 @@ case "$1" in
     start_dev )
         setup_db
         setup_initial_data
+
+        # media assets
+        chown aether: /media
+
+        # create static assets
+        ./manage.py collectstatic --noinput
+        chmod -R 755 /var/www/static
 
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;

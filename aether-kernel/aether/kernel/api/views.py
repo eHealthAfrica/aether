@@ -1,17 +1,45 @@
+# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+#
+# See the NOTICE file distributed with this work for additional information
+# regarding copyright ownership.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on anx
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
 import requests
 import json
 
 from django.db.models import Count, Min, Max
+
 from rest_framework import viewsets, permissions
-from rest_framework.decorators import detail_route, list_route, api_view, authentication_classes, permission_classes
+from rest_framework.decorators import (
+    action,
+    api_view,
+    authentication_classes,
+    permission_classes,
+    renderer_classes,
+)
 from drf_openapi.views import SchemaView
 from rest_framework.response import Response
+from rest_framework.renderers import JSONRenderer
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+
 from http import HTTPStatus
 from django.http import HttpResponse
 
 from aether.common.conf import settings as app_settings
 
-from . import models, serializers, filters, constants
+from . import models, serializers, filters, constants, utils, mapping_validation
 
 
 def get_entity_linked_data(entity, request, resolved, depth, start_depth=0):
@@ -37,7 +65,7 @@ def get_entity_linked_data(entity, request, resolved, depth, start_depth=0):
 
 class CustomViewSet(viewsets.ModelViewSet):
 
-    @detail_route(methods=['get', 'post'])
+    @action(detail=True, methods=['get', 'post'])
     def details(self, request, pk=None, *args, **kwargs):
         '''
         Allow to retrieve data from a POST request.
@@ -46,7 +74,7 @@ class CustomViewSet(viewsets.ModelViewSet):
 
         return self.retrieve(request, pk, *args, **kwargs)
 
-    @list_route(methods=['get', 'post'])
+    @action(detail=False, methods=['get', 'post'])
     def fetch(self, request, *args, **kwargs):
         '''
         Allow to list data from a POST request.
@@ -113,7 +141,7 @@ class EntityViewSet(CustomViewSet):
     serializer_class = serializers.EntitySerializer
     filter_class = filters.EntityFilter
 
-    def retrieve(self, request, pk=None):
+    def retrieve(self, request, pk=None, *args, **kwargs):
         try:
             selected_record = models.Entity.objects.get(pk=pk)
         except Exception as e:
@@ -195,3 +223,43 @@ def setup_kong_consumer(request, *args, **kwargs):
                                content_type='application/json')
         results.status_code = 400
         return results
+
+
+@api_view(['POST'])
+@renderer_classes([JSONRenderer])
+@permission_classes([IsAuthenticated])
+def validate_mappings(request):
+    '''
+    Given a `submission_payload`, a `mapping_definition` and a list of
+    `entities`, verify that each mapping function in `mapping_definition` can
+    extract a value from `submission_payload` and assign it to at least one
+    entity in `entities`.
+
+    This endpoint is useful for clients who are in the process of
+    developing an Aether solution but have not yet submitted any complete
+    Project; using this endpoint, it is possible to check the mapping functions
+    (jsonpaths) align with both the source (`submission_payload`) and the
+    target (`entity_list`).
+    '''
+
+    try:
+        data = request.data
+        entities = utils.extract_create_entities(**data)
+        mapping_errors = mapping_validation.validate_mappings(
+            submission_payload=data['submission_payload'],
+            entity_list=entities,
+            mapping_definition=data['mapping_definition'],
+        )
+        return Response({
+            'entities': [
+                entity.payload for entity in entities
+            ],
+            'mapping_errors': [
+                error._asdict() for error in mapping_errors
+            ],
+        })
+    except Exception as e:
+        return Response(
+            {'message': 'Entity extraction error'},
+            status=status.HTTP_400_BAD_REQUEST
+        )

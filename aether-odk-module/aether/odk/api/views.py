@@ -1,10 +1,26 @@
+# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+#
+# See the NOTICE file distributed with this work for additional information
+# regarding copyright ownership.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on anx
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
 import json
 import requests
 
 from django.conf import settings
-from django.db import transaction
 from django.shortcuts import get_object_or_404
-from django.utils.translation import ugettext as _
 
 from rest_framework import viewsets, status
 from rest_framework.authentication import BasicAuthentication
@@ -28,7 +44,7 @@ from .serializers import (
     XFormSerializer,
 )
 from .surveyors_utils import get_surveyors
-from .xform_utils import extract_data_from_xml, parse_submission
+from .xform_utils import extract_data_from_xml, parse_submission, get_instance_id
 
 from ..settings import logger
 
@@ -48,149 +64,6 @@ class MappingViewSet(viewsets.ModelViewSet):
     queryset = Mapping.objects.order_by('name')
     serializer_class = MappingSerializer
     search_fields = ('name',)
-
-    def partial_update(self, request, pk, *args, **kwargs):
-        '''
-        We are posting the xForms in only one call, to update them all together.
-
-        There are two options:
-        - JSON format
-        - Multipart format
-
-        The first case will be straight forward, the second one will imply FILES.
-        This means that only a list with the xform id and the file will be sent.
-        The xforms will be created or updated with this info.
-
-        '''
-
-        instance = get_object_or_404(Mapping, pk=pk)
-        data = request.data
-
-        if request.FILES or 'files' in data:
-            return self.partial_update_with_files(request, instance)
-
-        if 'xforms' not in data:
-            return Response(
-                data={'xforms': [_('This field is required')]},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        return self.partial_update_without_files(request, instance, data['xforms'])
-
-    @transaction.atomic
-    def partial_update_with_files(self, request, mapping):
-        '''
-        Updates or creates xForms or MediaFiles with file content.
-
-        Expected format:
-        - `files`: number of files to upload
-            For each # in length range:
-                - `id_#`: xform id or 0 for new entries
-                - `file_#`: file content
-                - `type_#`: indicates if the file is an xForm or a Media file
-
-        '''
-
-        for index in range(int(request.data['files'])):
-            xform_id = int(request.data['id_' + str(index)])
-            type_id = 'type_' + str(index)
-            if type_id in request.data:
-                file_type = request.data[type_id]
-            else:
-                file_type = 'xform'
-
-            if file_type == 'media':
-                data = {
-                    'xform': xform_id,
-                    'media_file': request.data['file_' + str(index)],
-                }
-                serializer = MediaFileSerializer(
-                    data=data,
-                    context={'request': request},
-                )
-
-                if serializer.is_valid():
-                    serializer.save()
-                else:
-                    return Response(
-                        data=serializer.errors,
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
-            else:
-                data = {
-                    'mapping': mapping.pk,
-                    'xml_file': request.data['file_' + str(index)],
-                }
-
-                if xform_id > 0:
-                    data['id'] = xform_id
-                    serializer = XFormSerializer(
-                        XForm.objects.get(pk=xform_id),
-                        data=data,
-                        context={'request': request},
-                    )
-                else:
-                    serializer = XFormSerializer(
-                        data=data,
-                        context={'request': request},
-                    )
-
-                if serializer.is_valid():
-                    serializer.save()
-                else:
-                    return Response(
-                        data=serializer.errors,
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
-        return Response(
-            data=self.serializer_class(mapping, context={'request': request}).data,
-            status=status.HTTP_200_OK,
-        )
-
-    @transaction.atomic
-    def partial_update_without_files(self, request, mapping, xforms):
-        '''
-        Every time that a Mapping is partially updated all its xForms are also
-        created, updated or even deleted if they are not longer in use.
-
-        '''
-
-        xform_ids = []
-        for xform in xforms:
-            xform['mapping'] = mapping.pk
-
-            if 'id' in xform and xform['id']:
-                serializer_xform = XFormSerializer(
-                    XForm.objects.get(pk=xform['id']),
-                    data=xform,
-                    context={'request': request},
-                )
-            else:
-                serializer_xform = XFormSerializer(
-                    data=xform,
-                    context={'request': request},
-                )
-
-            if serializer_xform.is_valid():
-                serializer_xform.save()
-                xform_ids.append(serializer_xform.data['id'])
-            else:
-                return Response(
-                    data=serializer_xform.errors,
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-        # remove orphan xforms of mapping
-        XForm.objects \
-             .filter(mapping=mapping) \
-             .exclude(id__in=xform_ids) \
-             .delete()
-
-        return Response(
-            data=self.serializer_class(mapping, context={'request': request}).data,
-            status=status.HTTP_200_OK,
-        )
 
 
 class XFormViewSet(viewsets.ModelViewSet):
@@ -394,7 +267,8 @@ def xform_submission(request):
 
     try:
         xml = request.FILES[XML_SUBMISSION_PARAM]
-        data, form_id, version = extract_data_from_xml(xml)
+        xml_content = xml.read()  # the content will be sent as an attachment
+        data, form_id, version = extract_data_from_xml(xml_content)
     except Exception as e:
         logger.warning('Unexpected error when handling file')
         logger.error(str(e))
@@ -424,39 +298,78 @@ def xform_submission(request):
         )
 
     data = parse_submission(data, xform.xml_data)
+    submissions_url = get_submissions_url()
 
     try:
-        submission_id = None
-        response = requests.post(
-            get_submissions_url(),
-            json={
-                'mapping': str(xform.mapping.pk),
-                'payload': data,
-            },
+        # When handling submissions containing multiple attachments, ODK
+        # Collect will split the submission into multiple POST requests. Using
+        # the instance id of the submission, we can assign the attached files
+        # to the correct submission.
+        #
+        # The code in this block makes some assumptions:
+        #   1. The submission has an instance id, accessible at `data['meta']['instanceID']`.
+        #   2. The instance id is globally unique.
+        #   3. The form data in the submission is identical for all
+        #      POST requests with the same instance id.
+        #
+        # These assumptions match the OpenRosa spec linked to above.
+        instance_id = get_instance_id(data)
+        if not instance_id:
+            logger.warning('Instance id is missing in submission')
+            return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        previous_submissions_response = requests.get(
+            submissions_url,
             headers=auth_header,
+            params={'instanceID': instance_id},
         )
-        submission_content = response.content.decode('utf-8')
-
-        if response.status_code != status.HTTP_201_CREATED:
-            logger.warning(
-                'Unexpected response {} from Aether Kernel server when submitting data "{}"'.format(
-                    response.status_code, form_id,
-                )
+        previous_submissions = json.loads(previous_submissions_response.content.decode('utf-8'))
+        previous_submissions_count = previous_submissions['count']
+        # If there are no previous submissions with the same instance id as
+        # the current submission, save this submission and assign its id to
+        # `submission_id`.
+        if previous_submissions_count == 0:
+            submission_id = None
+            response = requests.post(
+                submissions_url,
+                json={
+                    'mapping': str(xform.mapping.pk),
+                    'payload': data,
+                },
+                headers=auth_header,
             )
-            logger.warning(submission_content)
-            return Response(status=response.status_code)
+            submission_content = response.content.decode('utf-8')
 
-        # if there is one field with non ascii characters,
-        # the usual response.json() throws `UnicodeDecodeError`.
-        submission_id = json.loads(submission_content).get('id')
+            if response.status_code != status.HTTP_201_CREATED:
+                logger.warning(
+                    'Unexpected response {} from Aether Kernel server when submitting data "{}"'.format(
+                        response.status_code, form_id,
+                    )
+                )
+                logger.warning(submission_content)
+                return Response(status=response.status_code)
+            # If there is one field with non ascii characters, the usual
+            # response.json() will throw a `UnicodeDecodeError`.
+            submission_id = json.loads(submission_content).get('id')
+        # If there already exists a submission with for this instance id, we
+        # need to retrieve its submission id in order to be able to associate
+        # attachments with it.
+        else:
+            submission_id = previous_submissions['results'][0]['id']
 
+        # Submit attachments (if any) to the submission.
+        attachments_url = get_attachments_url()
         for name, f in request.FILES.items():
-            # submit possible attachments to the submission
-            if name != XML_SUBMISSION_PARAM:
+            # submit the XML file as an attachment but only for the first time
+            if name != XML_SUBMISSION_PARAM or previous_submissions_count == 0:
+                if name == XML_SUBMISSION_PARAM:
+                    file_content = xml_content
+                else:
+                    file_content = f
+
                 response = requests.post(
-                    get_attachments_url(),
+                    attachments_url,
                     data={'submission': submission_id},
-                    files={'attachment_file': (f.name, f, f.content_type)},
+                    files={'attachment_file': (f.name, file_content, f.content_type)},
                     headers=auth_header,
                 )
                 if response.status_code != status.HTTP_201_CREATED:

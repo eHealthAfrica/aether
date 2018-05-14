@@ -1,0 +1,11 @@
+{
+    "name":"schema.org-v3.3",
+    "namespaces": {
+        "sdo": "http://schema.org/"
+    },
+    "parser_type": "schemadotorg",
+    "description":"Schema.org Schema Library. Version 3.3",
+    "output":"library.json",
+    "properties":"all-layers-properties.csv",
+    "types":"all-layers-types.csv"
+}

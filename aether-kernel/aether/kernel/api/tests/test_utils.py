@@ -1,3 +1,21 @@
+# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+#
+# See the NOTICE file distributed with this work for additional information
+# regarding copyright ownership.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on anx
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
 from django.test import TestCase
 from .. import utils
 from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA,
@@ -40,7 +58,7 @@ class UtilsTests(TestCase):
 
     def test_JSP_get_basic_fields(self):
         avro_obj = EXAMPLE_SCHEMA
-        expected = ['_id', '_rev', 'name', 'dob', 'villageID']
+        expected = ['id', '_rev', 'name', 'dob', 'villageID']
         basic_fields = str(utils.JSP_get_basic_fields(avro_obj))
         self.assertTrue(str(expected) in basic_fields, basic_fields)
 
@@ -87,6 +105,15 @@ class UtilsTests(TestCase):
         resolved_count = utils.resolve_source_reference(path, entities, entity_name, 0, field, data)
         self.assertEquals(resolved_count, 3)
 
+    def test_resolve_source_reference__wildcard_resolutions(self):
+        data = EXAMPLE_SOURCE_DATA
+        entities = EXAMPLE_ENTITY
+        entity_name = 'Person'
+        field = 'dob'
+        path = 'data.pe*[*].dob'
+        resolved_count = utils.resolve_source_reference(path, entities, entity_name, 0, field, data)
+        self.assertEquals(resolved_count, 3)
+
     def test_get_or_make_uuid(self):
         entity_type = 'Person'
         field_name = '_id'
@@ -118,6 +145,32 @@ class UtilsTests(TestCase):
         expected_entity = EXAMPLE_ENTITY
         data, entities = utils.extract_entities(requirements, response_data, entity_stubs)
         self.assertEquals(len(expected_entity['Person']), len(entities['Person']))
+
+    def test_extract_create_entities__no_requirements(self):
+        submission_payload = EXAMPLE_SOURCE_DATA
+        mapping_definition = {'mapping': [], 'entities': {}}
+        schemas = {}
+        entities = utils.extract_create_entities(
+            submission_payload,
+            mapping_definition,
+            schemas,
+        )
+        self.assertEqual(len(entities), 0)
+
+    def test_extract_create_entities(self):
+        submission_payload = EXAMPLE_SOURCE_DATA
+        mapping_definition = EXAMPLE_MAPPING
+        schemas = {'Person': EXAMPLE_SCHEMA}
+        entities = utils.extract_create_entities(
+            submission_payload,
+            mapping_definition,
+            schemas,
+        )
+        self.assertTrue(len(entities) > 0)
+        for entity in entities:
+            self.assertEqual(entity.id, entity.payload['id'])
+            self.assertIn(entity.projectschema_name, schemas.keys())
+            self.assertEqual(entity.status, 'Publishable')
 
     def test_is_not_custom_jsonpath(self):
         # Examples taken from https://github.com/json-path/JsonPath#path-examples
@@ -158,6 +211,25 @@ class UtilsTests(TestCase):
         }
         expected = set([1, 2])
         path = '$.dose-*.id'
+        result = set([x.value for x in utils.find_by_jsonpath(obj, path)])
+        self.assertEquals(expected, result)
+
+    def test_find_by_jsonpath__filter_by_prefix_nested_base(self):
+        obj = {
+            'data': {
+                'dose-1': {
+                    'id': 1,
+                },
+                'dose-2': {
+                    'id': 2,
+                },
+                'person-1': {
+                    'id': 3,
+                },
+            }
+        }
+        expected = set([1, 2])
+        path = '$.data.dose-*.id'
         result = set([x.value for x in utils.find_by_jsonpath(obj, path)])
         self.assertEquals(expected, result)
 

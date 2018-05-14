@@ -1,0 +1,5 @@
+debug: true
+odk:
+  repository: aether-odk
+release: latest
+testing: true

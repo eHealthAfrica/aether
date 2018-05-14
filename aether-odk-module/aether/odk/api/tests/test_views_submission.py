@@ -1,3 +1,21 @@
+# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+#
+# See the NOTICE file distributed with this work for additional information
+# regarding copyright ownership.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on anx
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
 import json
 import mock
 import requests
@@ -177,7 +195,8 @@ class PostSubmissionTests(CustomTestCase):
             response = requests.get(submission['attachments_url'], headers=self.KERNEL_HEADERS)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             content = response.json()
-            self.assertEqual(content['count'], attachments)
+            # there is always one more attachment, the original submission content itself
+            self.assertEqual(content['count'], attachments + 1)
 
     def test__submission__post__no_granted_surveyor(self):
         # remove user as granted surveyor
@@ -241,7 +260,7 @@ class PostSubmissionTests(CustomTestCase):
                 {XML_SUBMISSION_PARAM: f},
                 **self.headers_user
             )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content.decode())
         self.helper_check_submission()
 
     def test__submission__post__with_attachment(self):
@@ -278,6 +297,39 @@ class PostSubmissionTests(CustomTestCase):
 
         # check that submission was created with four attachments
         self.helper_check_submission(attachments=4)
+
+    def test__submission__post__with_attachments__multiple_requests(self):
+        # An ODK Collect submission containing several large attachments will be
+        # split up into several POST requests. The form data in all these
+        # requests is identical, but the attachments differ. In this test, we
+        # check that all attachments belonging to e.g. one ODK Collect submission
+        # get associated with that submission -- even if they arrive at different
+        # times.
+        count = 3
+        for _ in range(count):
+            with open(self.samples['submission']['file-ok'], 'rb') as f:
+                response = self.client.post(
+                    self.url,
+                    {
+                        XML_SUBMISSION_PARAM: f,
+                        'attach': SimpleUploadedFile('audio.wav', b'abc'),
+                    },
+                    **self.headers_user
+                )
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content.decode())
+        self.helper_check_submission(attachments=count)
+
+    def test__submission__post__no_instance_id(self):
+        with open(self.samples['submission']['file-err-missing-instance-id'], 'rb') as f:
+            response = self.client.post(
+                self.url,
+                {
+                    XML_SUBMISSION_PARAM: f,
+                    'attach': SimpleUploadedFile('audio.wav', b'abc'),
+                },
+                **self.headers_user
+            )
+            self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     @mock.patch('requests.delete')
     @mock.patch('requests.post',
@@ -342,5 +394,5 @@ class PostSubmissionTests(CustomTestCase):
         )
         mock_del.assert_called_once()
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.content.decode())
         self.helper_check_submission(succeed=False)

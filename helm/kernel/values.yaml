@@ -1,0 +1,40 @@
+replicaCount: 1
+image:
+  repository: nginx
+  tag: stable-alpine
+  pullPolicy: IfNotPresent
+kernel:
+  repository: "ehealthafrica/aether-kernel"
+name: kernel
+project: aether
+release: 0.6.0
+service:
+  name: nginx
+  type: NodePort
+  externalPort: 80
+  internalPort: 80
+environment: "dev"
+ums_url: ums-dev
+domain: aether.local
+trusted_origins: .aether.local
+namespace:
+  create: false
+debug: false
+testing: false
+webserverPort: 8000
+liveEdit:
+  enabled: false
+application:
+  command: start_dev
+  secret: secrets
+  data_mount: /media
+database:
+  secret: database-credentials
+provider:
+  aws: false
+ingress:
+  enabled: true
+  hosts:
+    - kernel.aether.local
+  annotations:
+    nginx.ingress.kubernetes.io/ingress.class: "nginx"

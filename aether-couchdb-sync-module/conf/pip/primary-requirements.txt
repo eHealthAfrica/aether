@@ -8,7 +8,7 @@
 #                                                                              #
 ################################################################################
 
-django==1.11.9
+django<2
 django-cas-ng
 django-cors-headers
 django-debug-toolbar
@@ -16,7 +16,7 @@ django-rq
 django-ums-client
 djangorestframework
 oauth2client
-psycopg2
+psycopg2-binary
 raven
 redis
 requests

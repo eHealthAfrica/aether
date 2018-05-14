@@ -1,5 +1,24 @@
 #!/bin/bash
-set -e
+#
+# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+#
+# See the NOTICE file distributed with this work for additional information
+# regarding copyright ownership.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on anx
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+set -Eeuo pipefail
 
 
 # Define help message
@@ -9,19 +28,13 @@ show_help() {
     ----------------------------------------------------------------------------
     bash          : run bash
     eval          : eval shell command
-    manage        : invoke django manage.py commands
+    manage        : invoke manage.py commands
 
     pip_freeze    : freeze pip dependencies and write to requirements.txt
 
-    setupproddb   : create/migrate database for production
-    setuplocaldb  : create/migrate database for development (creates superuser and token)
-
-    test          : run tests
-    test_lint     : run flake8 tests
-    test_coverage : run tests with coverage output
-
-    start         : start webserver behind nginx
-    start_dev     : start webserver for development
+    start         : start in normal mode
+    start_dev     : start for test/dev
+    start_test     : start for test/dev
     """
 }
 
@@ -65,38 +78,21 @@ case "$1" in
         pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
     ;;
 
-    setuplocaldb )
-        setup_db
-        setup_initial_data
-    ;;
-
-    setupproddb )
-        setup_db
-    ;;
-
-    test)
-        #test_flake8
-        #test_coverage "${@:2}"
-    ;;
-
-    test_lint)
-        # test_flake8
-    ;;
-
-    test_coverage)
-        # test_coverage "${@:2}"
-    ;;
 
     start )
-        #source ~/.bashrc
+        ./manage.py
     ;;
 
     start_dev )
-        #setup_db
-        #setup_initial_data
 
-        ./manage.py # runserver 0.0.0.0:$WEB_SERVER_PORT
+        ./manage.py test
     ;;
+
+    start_test )
+
+        ./manage.py test
+    ;;
+
 
     help)
         show_help

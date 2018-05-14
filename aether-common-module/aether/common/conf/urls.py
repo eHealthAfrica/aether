@@ -1,3 +1,21 @@
+# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+#
+# See the NOTICE file distributed with this work for additional information
+# regarding copyright ownership.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on anx
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.decorators import login_required
@@ -5,8 +23,9 @@ from django.conf.urls import include, url
 
 from aether.common.auth.views import obtain_auth_token
 from aether.common.conf.views import basic_serve, media_serve
-from aether.common.health.views import health
+from aether.common.health.views import health, check_db
 from aether.common.kernel.views import check_kernel
+from aether.common.kernel.utils import get_kernel_server_url
 
 
 def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
@@ -48,8 +67,9 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
 
     urlpatterns = [
 
-        # `health` endpoint
+        # `health` endpoints
         url(r'^health$', health, name='health'),
+        url(r'^check-db$', check_db, name='check-db'),
 
         # `admin` section
         url(r'^admin/', admin.site.urls),
@@ -80,9 +100,19 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
         ]
 
     if kernel:
-        # checks if Core server is available
+        # checks if Kernel server is available
         urlpatterns += [
             url('^check-kernel$', check_kernel, name='check-kernel'),
         ]
+
+        # `aether.common.kernel.utils.get_kernel_server_url()` returns different
+        #  values depending on the value of `settings.TESTING`. Without these
+        # assertions, a deployment configuration missing e.g. `AETHER_KERNEL_URL`
+        # will seem to be in order until `get_kernel_server_url()` is called.
+        if settings.TESTING:
+            msg = 'Environment variable "AETHER_KERNEL_URL_TEST" is not set'
+        else:
+            msg = 'Environment variable "AETHER_KERNEL_URL" is not set'
+        assert get_kernel_server_url(), msg
 
     return urlpatterns

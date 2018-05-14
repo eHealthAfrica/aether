@@ -1,0 +1,12 @@
+{
+    "name":"eha.demo.2018.01",
+    "namespaces": {
+        "eha": "http://demo.eha.org/"
+    },
+    "base": "http://demo.eha.org/",
+    "parser_type": "schemadotorg",
+    "description":"eHA Demo Schema Library",
+    "output":"library.json",
+    "properties":"properties.csv",
+    "types":"types.csv"
+}

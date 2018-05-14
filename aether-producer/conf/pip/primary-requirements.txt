@@ -4,17 +4,17 @@
 #                                                                              #
 #                                 CHANGE ME !!!                                #
 #                                                                              #
-# Update me and then run 'docker-compose run kernel pip_freeze'                #
+# Update me and then run 'docker-compose run producer pip_freeze'              #
 #                                                                              #
 ################################################################################
 
 aether.client
+kafka
+psycopg2-binary
+requests
+
+# test libraries
 coverage
 flake8
 flake8-quotes
 mock
-psycopg2
-requests
-kafka
-avro
-

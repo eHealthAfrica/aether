@@ -1,12 +1,30 @@
-import string
+# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+#
+# See the NOTICE file distributed with this work for additional information
+# regarding copyright ownership.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on anx
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+import collections
 import json
 import re
+import string
 import uuid
 
 import jsonpath_ng
-from avro import schema
-from jsonpath_ng import parse
-from avro.io import Validate, AvroTypeException
+from spavro.schema import parse as parse_schema
+from spavro.io import validate
 
 from django.utils.safestring import mark_safe
 from pygments import highlight
@@ -65,7 +83,8 @@ def json_printable(obj):
         return obj
 
 
-custom_jsonpath_wildcard_regex = re.compile('(\$\.)?[a-zA-Z0-9_-]+\*')
+custom_jsonpath_wildcard_regex = re.compile('(\$\.)*([a-zA-Z0-9_-]+\.)*?[a-zA-Z0-9_-]+\*')
+incomplete_json_path_regex = re.compile('[a-zA-Z0-9_-]+\*')
 
 
 def find_by_jsonpath(obj, path):
@@ -74,8 +93,10 @@ def find_by_jsonpath(obj, path):
     `jsonpath_ng.jsonpath.Child.find()` in order to provide custom
     functionality as described in https://jira.ehealthafrica.org/browse/AET-38.
 
-    If the first element in `path` is a wildcard match prefixed by an arbitrary
-    string, `find` will attempt to filter the results by that prefix.
+    If the any single element in `path` is a wildcard match prefixed by an arbitrary
+    string, `find` will attempt to filter the results by that prefix. We then replace
+    that section of the path with a single wildcard which becomes a valid jsonpath.
+    We filter matches on their adherence to the partial path.
 
     **NOTE**: this behavior is not part of jsonpath spec.
     '''
@@ -91,9 +112,12 @@ def find_by_jsonpath(obj, path):
         #
         #     prefix = 'dose-'
         #     standard_jsonpath = '*.id'
+
         split_pos = match.end() - 1
         prefix = path[:split_pos].replace('$.', '')
-        standard_jsonpath = path[split_pos:]
+        illegal = incomplete_json_path_regex.search(path)
+        standard_jsonpath = path[:illegal.start()] + '*' + path[illegal.end():]
+
         # Perform an standard jsonpath search.
         result = []
         for datum in jsonpath_ng.parse(standard_jsonpath).find(obj):
@@ -108,20 +132,18 @@ def find_by_jsonpath(obj, path):
 
 
 def get_field_mappings(mapping_definition):
-    mapping_obj = mapping_definition
-    matches = parse('mapping[*]').find(mapping_obj)
+    matches = find_by_jsonpath(mapping_definition, 'mapping[*]')
     mappings = [match.value for match in matches]
     return mappings
 
 
 def JSP_get_basic_fields(avro_obj):
-    jsonpath_expr = parse('fields[*].name')
-    return [match.value for match in jsonpath_expr.find(avro_obj)]
+    return [match.value for match in find_by_jsonpath(avro_obj, 'fields[*].name')]
 
 
 def get_entity_definitions(mapping_definition, schemas):
     required_entities = {}
-    found_entities = parse('entities[*]').find(mapping_definition)
+    found_entities = find_by_jsonpath(mapping_definition, 'entities[*]')
     entities = [match.value for match in found_entities][0]
     for entity_definition in entities.items():
         entity_type, file_name = entity_definition
@@ -155,7 +177,7 @@ def get_entity_stub(requirements, entity_definitions, entity_name, source_data):
         for i, path in enumerate(paths):
             # if this is a json path, we'll resolve it to see how big the result is
             if '#!' not in path:
-                matches = parse(path).find(source_data)
+                matches = find_by_jsonpath(source_data, path)
                 [entity_stub[field].append(match.value) for match in matches]
             else:
                 entity_stub[field].append(path)
@@ -228,7 +250,7 @@ def resolve_entity_reference(
     # Called via #!entity-reference#jsonpath looks inside of the entities to be
     # exported as currently constructed returns the value(s) found at
     # entity_jsonpath
-    matches = parse(entity_jsonpath).find(constructed_entities)
+    matches = find_by_jsonpath(constructed_entities, entity_jsonpath)
     if len(matches) < 1:
         raise ValueError('path %s has no matches; aborting' % entity_jsonpath)
     if len(matches) < 2:
@@ -243,7 +265,7 @@ def resolve_source_reference(path, entities, entity_name, i, field, data):
     # called via normal jsonpath as source
     # is NOT defferable as all source data should be present at extractor start
     # assignes values directly to entities within function and return new offset value (i)
-    matches = parse(path).find(data)
+    matches = find_by_jsonpath(data, path)
     if not matches:
         entities[entity_name][i][field] = None
         i += 1
@@ -412,26 +434,13 @@ def extract_entities(requirements, response_data, entity_definitions):
     return data, entities
 
 
-def extract_create_entities(submission):
-    # Get the mapping definition from the submission (submission.mapping.definition):
-    mapping_definition = submission.mapping.definition
+Entity = collections.namedtuple(
+    'Entity',
+    ['id', 'payload', 'projectschema_name', 'status']
+)
 
-    # Get the primary key of the projectschema
-    # entity_pks = list(mapping_definition['entities'].values())
-    entity_ps_ids = mapping_definition.get('entities')
 
-    # Save submission and exit early if mapping does not specify any entities.
-    if not entity_ps_ids:
-        submission.save()
-        return
-
-    # Get the schema of the projectschema
-    # project_schema = models.ProjectSchema.objects.get(pk=entity_pks[0])
-    project_schemas = {
-        name: models.ProjectSchema.objects.get(pk=_id) for name, _id in entity_ps_ids.items()
-    }
-    schemas = {name: ps.schema.definition for name, ps in project_schemas.items()}
-    # schema = project_schema.schema.definition
+def extract_create_entities(submission_payload, mapping_definition, schemas):
 
     # Get entity definitions
     entity_defs = get_entity_definitions(mapping_definition, schemas)
@@ -442,42 +451,66 @@ def extract_create_entities(submission):
     # Get entity requirements
     requirements = get_entity_requirements(entity_defs, field_mappings)
 
-    submission_data = submission.payload
-
     # Only attempt entity extraction if requirements are present
     if any(requirements.values()):
         data, entity_types = extract_entities(
             requirements,
-            submission_data,
+            submission_payload,
             entity_defs,
         )
     else:
         entity_types = {}
 
     entity_list = []
-    for name, entities in entity_types.items():
+    for projectschema_name, entities in entity_types.items():
         for entity in entities:
-            obj = {
-                'id': entity['id'],
-                'payload': entity,
-                'status': 'Publishable',
-                'projectschema': project_schemas.get(name)
-            }
-            entity_list.append(obj)
-    # Save the submission to the db
-    submission.save()
-
-    # If extraction was successful, create new entities
-    if entity_list:
-        for e in entity_list:
-            entity = models.Entity(
-                id=e['id'],
-                payload=e['payload'],
-                status=e['status'],
-                projectschema=e['projectschema'],
-                submission=submission
+            obj = Entity(
+                id=entity['id'],
+                payload=entity,
+                projectschema_name=projectschema_name,
+                status='Publishable',
             )
-            entity.save()
+            entity_list.append(obj)
+
+    return entity_list
+
+
+def run_entity_extraction(submission):
+    # Get the mapping definition from the submission (submission.mapping.definition):
+    mapping_definition = submission.mapping.definition
+    # Get the primary key of the projectschema
+    # entity_pks = list(mapping_definition['entities'].values())
+    entity_ps_ids = mapping_definition.get('entities')
+    # Save submission and exit early if mapping does not specify any entities.
+    if not entity_ps_ids:
+        submission.save()
+        return
+    # Get the schema of the projectschema
+    project_schemas = {
+        name: models.ProjectSchema.objects.get(pk=_id) for name, _id in
+        entity_ps_ids.items()
+    }
+    schemas = {
+        name: ps.schema.definition for name, ps in
+        project_schemas.items()
+    }
+    entities = extract_create_entities(
+        submission_payload=submission.payload,
+        mapping_definition=mapping_definition,
+        schemas=schemas,
+    )
+    submission.save()
+    for entity in entities:
+        projectschema_name = entity.projectschema_name
+        projectschema = project_schemas[projectschema_name]
+        entity_instance = models.Entity(
+            id=entity.id,
+            payload=entity.payload,
+            status=entity.status,
+            projectschema=projectschema,
+            submission=submission,
+        )
+        entity_instance.save()
 
 
 def merge_objects(source, target, direction):
@@ -503,14 +536,12 @@ def merge_objects(source, target, direction):
 
 
 def validate_entity_payload(project_Schema, payload):
-    # Use avro.io to validate payload against the linke schema
-    schema_str = ''
-    if type(project_Schema.schema.definition) == list:
-        project_Schema.schema.definition[0]['name'] = project_Schema.schema.name
-        schema_str = json.dumps(project_Schema.schema.definition[0])
-    else:
-        project_Schema.schema.definition['name'] = project_Schema.schema.name
-        schema_str = json.dumps(project_Schema.schema.definition)
-    avro_schema = schema.Parse(schema_str)
-    if not Validate(avro_schema, payload):
-        raise AvroTypeException(avro_schema, payload)
+    # Use spavro to validate payload against the linked schema
+    try:
+        avro_schema = parse_schema(json.dumps(project_Schema.schema.definition, indent=2))
+        valid = validate(avro_schema, payload)
+        if not valid:
+            raise TypeError('Record did not conform to registered schema.')
+        return True
+    except Exception as err:
+        raise err

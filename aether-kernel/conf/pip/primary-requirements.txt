@@ -8,32 +8,34 @@
 #                                                                              #
 ################################################################################
 
-django==1.11.9
+django<2
 django-cas-ng
 django-cors-headers
 django-debug-toolbar
 django-filter
+django-model-utils
 django-reversion-compare
 django-ums-client
-django-model-utils
 djangorestframework
 djangorestframework-filters
 drf-dynamic-fields
 drf-openapi
+jsonpath_ng
 jsonschema
-mock
-psycopg2
+psycopg2-binary
 pygments
 python-dateutil
 raven
 requests
+spavro
 uwsgi
-jsonpath_ng
 
 # Aether common module
 aether.common
 
 # test libraries
 coverage
+django-autofixture
 flake8
 flake8-quotes
+mock

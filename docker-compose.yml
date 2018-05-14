@@ -9,8 +9,10 @@
 version: "2.1"
 
 networks:
-  internal:
-    driver: bridge
+  internal:  # alias as internal
+    external:
+      name: aether_internal  # if this isn't explicitly set it inherits from the containing folder name (aether or not)
+
 
 services:
 
@@ -56,11 +58,15 @@ services:
       interval: 3s
       timeout: 3s
       retries: 5
-    depends_on:
-      db:
-        condition: service_healthy
-      kong-migration:
-        condition: service_started
+    # FIXME: bring back these once we have figured out the reason for
+    #
+    #     ERROR: for kong-migration  Service "db" is missing a healthcheck configuration
+    #
+    # depends_on:
+      # db:
+      #   condition: service_healthy
+      # kong-migration:
+      #   condition: service_started
     networks:
       internal:
         aliases:
