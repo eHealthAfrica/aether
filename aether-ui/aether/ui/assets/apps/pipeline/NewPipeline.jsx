@@ -2,10 +2,6 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { defineMessages, injectIntl, FormattedMessage } from 'react-intl'
 
-import avro from 'avsc'
-import { generateGUID } from '../utils'
-import { entityTypes, inputSchema } from '../mock'
-
 const MESSAGES = defineMessages({
   placeholder: {
     defaultMessage: 'Name of new pipeline',
@@ -52,23 +48,7 @@ class NewPipeline extends Component {
     const onSubmit = (event) => {
       event.preventDefault()
 
-      // TODO: make api call
-      const newPipeline = {
-        name: this.state.newPipelineName,
-        id: generateGUID(),
-
-        // include mock data in the new pipeline
-        schema: inputSchema,
-        input: avro.parse(inputSchema, { noAnonymousTypes: true }).random(),
-        entity_types: entityTypes,
-        mapping: [],
-        mapping_errors: [],
-
-        // random data to display output component
-        output: entityTypes.map(schema => avro.parse(schema, { noAnonymousTypes: true }).random())
-      }
-
-      this.props.onStartPipeline(newPipeline)
+      this.props.onStartPipeline({ name: this.state.newPipelineName })
     }
 
     return (

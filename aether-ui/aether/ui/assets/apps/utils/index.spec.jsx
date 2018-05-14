@@ -4,9 +4,7 @@ import {
   clone,
   generateGUID,
   deepEqual,
-  getLoggedInUser,
-  applyStyle,
-  removeStyle
+  getLoggedInUser
 } from './index'
 
 describe('utils', () => {
@@ -80,31 +78,6 @@ describe('utils', () => {
       element.setAttribute('data-user-name', 'user')
       document.body.appendChild(element)
       expect(getLoggedInUser()).toEqual({id: 1, name: 'user'})
-    })
-  })
-
-  describe('applyStyle', () => {
-    it('should apply the specified style to an element', () => {
-      let element = document.createElement('div')
-      element.id = 'test-element'
-      document.body.appendChild(element)
-      applyStyle('test-element', 'test-style')
-      element = document.getElementById('test-element')
-      expect(element.outerHTML).toEqual('<div id="test-element" class="test-style"></div>')
-    })
-  })
-
-  describe('removeStyle', () => {
-    it('should remove the specified style from an element', () => {
-      let element = document.createElement('div')
-      element.id = 'test-element'
-      element.classList.add('test-style')
-      document.body.appendChild(element)
-      element = document.getElementById('test-element')
-      expect(element.outerHTML).toEqual('<div id="test-element" class="test-style"></div>')
-      removeStyle('test-element', 'test-style')
-      element = document.getElementById('test-element')
-      expect(element.outerHTML).toEqual('<div id="test-element" class=""></div>')
     })
   })
 })

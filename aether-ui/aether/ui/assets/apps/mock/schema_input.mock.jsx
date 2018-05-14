@@ -51,7 +51,7 @@ const inputSchema = {
       }, {
         'name': 'birthYear',
         'type': 'int',
-        'doc': `Type inferred from "1972"`
+        'doc': 'Type inferred from “1972”'
       }]
     }
   }, {
