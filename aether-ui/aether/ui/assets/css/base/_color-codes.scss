@@ -39,7 +39,7 @@ $colors-list: (
         border-top: $font-size-xs solid transparent;
         border-bottom: $font-size-xs solid transparent;
       }
-  
+
       &:hover {
         background-color: $current-color;
         &::after {
