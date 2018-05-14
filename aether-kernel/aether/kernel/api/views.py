@@ -179,6 +179,7 @@ def validate_mappings(request):
 
     try:
         data = request.data
+        # entities = utils.extract_create_entities(**data)
         entities = utils.extract_create_entities(**data)
         mapping_errors = mapping_validation.validate_mappings(
             submission_payload=data['submission_payload'],

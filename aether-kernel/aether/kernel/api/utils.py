@@ -38,6 +38,14 @@ from . import models, constants
 class EntityExtractionError(Exception):
     pass
 
+class EntityValidationError(Exception):
+    pass
+
+Entity = collections.namedtuple(
+    'Entity',
+    ['id', 'payload', 'projectschema_name', 'status'],
+)
+
 
 def __prettified__(response, lexer):
     # Truncate the data. Alter as needed
@@ -434,12 +442,6 @@ def extract_entities(requirements, response_data, entity_definitions):
     return data, entities
 
 
-Entity = collections.namedtuple(
-    'Entity',
-    ['id', 'payload', 'projectschema_name', 'status']
-)
-
-
 def extract_create_entities(submission_payload, mapping_definition, schemas):
 
     # Get entity definitions
@@ -535,13 +537,14 @@ def merge_objects(source, target, direction):
     return result
 
 
-def validate_entity_payload(project_Schema, payload):
+def validate_payload(schema_definition, payload):
     # Use spavro to validate payload against the linked schema
     try:
-        avro_schema = parse_schema(json.dumps(project_Schema.schema.definition, indent=2))
+        avro_schema = parse_schema(json.dumps(schema_definition))
         valid = validate(avro_schema, payload)
         if not valid:
-            raise TypeError('Record did not conform to registered schema.')
+            msg = 'Record did not conform to registered schema.'
+            raise EntityValidationError(msg)
         return True
     except Exception as err:
         raise err

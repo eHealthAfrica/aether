@@ -157,7 +157,7 @@ class UtilsTests(TestCase):
         )
         self.assertEqual(len(entities), 0)
 
-    def test_extract_create_entities(self):
+    def test_extract_create_entities__success(self):
         submission_payload = EXAMPLE_SOURCE_DATA
         mapping_definition = EXAMPLE_MAPPING
         schemas = {'Person': EXAMPLE_SCHEMA}
@@ -166,6 +166,41 @@ class UtilsTests(TestCase):
             mapping_definition,
             schemas,
         )
+        self.assertTrue(len(entities) > 0)
+        for entity in entities:
+            self.assertEqual(entity.id, entity.payload['id'])
+            self.assertIn(entity.projectschema_name, schemas.keys())
+            self.assertEqual(entity.status, 'Publishable')
+
+    def test_extract_create_entities__validation_error(self):
+        submission_payload = EXAMPLE_SOURCE_DATA
+        mapping_definition = EXAMPLE_MAPPING
+        # This schema shares the field names `id` and `name` with EXAMPLE_SCHEMA
+        schema = {
+            'type' : 'record',
+            'name' : 'Test',
+            'fields' : [
+                {
+                    'name' : 'id',
+                    'type' : 'string'
+                },
+                {
+                    'name' : 'name',
+                    'type' : {
+                        'type' : 'enum',
+                        'name' : 'Name',
+                        'symbols' : [ 'John', 'Jane' ]
+                    }
+                },
+            ]
+        }
+        schemas = {'Person': schema}
+        entities = utils.extract_create_entities(
+            submission_payload,
+            mapping_definition,
+            schemas,
+        )
+        self.assertIsNone(entities)
         self.assertTrue(len(entities) > 0)
         for entity in entities:
             self.assertEqual(entity.id, entity.payload['id'])
@@ -288,3 +323,46 @@ class UtilsTests(TestCase):
         path = '$.households[*].id'
         result = set([x.value for x in utils.find_by_jsonpath(obj, path)])
         self.assertEquals(expected, result)
+
+    def test_validate_payload__success(self):
+        schema_definition = {
+            'name': 'Test',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'a_string',
+                    'type': 'string',
+                },
+            ],
+        }
+        payload = {'a_string': 'test'}
+        result = utils.validate_payload(
+            schema_definition=schema_definition,
+            payload=payload,
+        )
+        self.assertTrue(result)
+
+    def test_validate_payload__error(self):
+        schema_definition = {
+            'name': 'Test',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'a_string',
+                    'type': 'string'
+                }
+            ],
+        }
+        payloads = [
+            {},
+            {'a_string': 1},
+            {'a': 'b'},
+        ]
+        for payload in payloads:
+            with self.assertRaises(utils.EntityValidationError) as err:
+                result = utils.validate_payload(
+                    schema_definition=schema_definition,
+                    payload=payload,
+                )
+            msg = 'did not conform to registered schema'
+            self.assertIn(msg, err.exception.args[0])
