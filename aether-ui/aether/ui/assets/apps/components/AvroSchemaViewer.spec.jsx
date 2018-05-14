@@ -8,7 +8,7 @@ import { AvroSchemaViewer } from '../components'
 
 describe('AvroSchemaViewer', () => {
   it('should take a valid avro schema and render an avro visualizer', () => {
-    const component = mountWithIntl(<AvroSchemaViewer schema={mockAvroSchema} />)
+    const component = mountWithIntl(<AvroSchemaViewer schema={mockAvroSchema} highlight={{'person.forename': 1}} />)
     expect(component.find('[data-qa^="group-title-"]').length).toEqual(9)
     expect(component.find('[data-qa="no-children-surname"]').html()).toContain('<span class="name">surname</span>')
   })
