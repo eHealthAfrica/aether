@@ -16,6 +16,8 @@
 #   djangorestframework-csv >= 2.0.0 < 3
 #   django-cors-headers     >= 2.0.0 < 3
 aether.common
+avro-python3
+fastavro
 
 
 django-model-utils

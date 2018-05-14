@@ -2,9 +2,11 @@ import json
 import requests
 import ast
 import uuid
+import avro.schema
 
 from aether.common.kernel import utils
 from django.http import JsonResponse
+from jsonpath_ng import jsonpath, parse
 
 from . import models
 
@@ -248,7 +250,7 @@ def publishPipeline(pipelineid, projectname):
                     for rule in pipeline.mapping
                 ]
                 mapping_data = {
-                    'name': '{}-{}'.format(projectname, pipeline.name),
+                    'name': pipeline.name,
                     'definition': {
                         'entities': pipeline.kernel_refs['projectSchema'],
                         'mapping': mapping
@@ -287,29 +289,73 @@ def convertMappings(mapping_from_kernel):
 def convertEntityTypes(entities_from_kernel):
     result = []
     for entity in entities_from_kernel:
-        schema = kernel_data_request(f'/schemas/{entities_from_kernel[entity]}')
+        print(entities_from_kernel[entity])
+        project_schema = kernel_data_request(f'projectschemas/{entities_from_kernel[entity]}')
+        schema = kernel_data_request(f'schemas/{project_schema["schema"]}')
         result.append(schema['definition'])
     return result
 
-def generate_sample_input_from_mapping(mappings):
+def generate_sample_input_from_mapping(mappings, schemas):
+    input_data_object = {}
+
+    def create_object_from_property_list(property_list, obj={}, property_type='dict'):
+        property_name = property_list.pop(0)
+        if len(property_list):
+            if property_name not in obj:
+                obj[property_name] = {}
+            return create_object_from_property_list(property_list, obj[property_name], property_type)
+        else:
+            if property_type is 'int':
+                obj[property_name] = 1
+            elif property_type is 'bool':
+                obj[property_name] = True
+            elif property_type is 'list':
+                obj[property_name] = []
+            elif property_type is 'dict':
+                obj[property_name] = {}
+            elif property_type is 'tuple':
+                obj[property_name] = (0, 1)
+            elif property_type is 'float':
+                obj[property_name] = 0.1
+            else:
+                obj[property_name] = 'a'
+        return obj
+
     for mapping in mappings:
-        source = mapping[0]
+        source = mapping[0].split('.')
+        destination_entity = mapping[1].split('.')[0]
+        print('Schemas', schemas)
+        print('Des Entity', destination_entity)
+        create_object_from_property_list(source, input_data_object)
+    return input_data_object
         
 
 def create_new_pipeline_from_kernel(entry, kernel_object):
     if entry is 'mapping':
+        entity_types = convertEntityTypes(kernel_object['definition']['entities'])
         models.Pipeline.create(
             name=kernel_object['name'],
-            input=generate_sample_input_from_mapping(kernel_object['definition']),
-            entity_types=convertEntityTypes(kernel_object['entities']),
+            input=generate_sample_input_from_mapping(kernel_object['definition']['mapping'],
+                                                     entity_types),
+            entity_types=entity_types,
             mapping=convertMappings(kernel_object['definition']),
-            kernel_refs=PIPELINE_EXAMPLE_1['kernel_refs']
+            # kernel_refs=PIPELINE_EXAMPLE_1['kernel_refs']
         )
+
+def generate_sample_schema_data(schemas):
+    results = {}
+    for schema in schemas:
+        c = avro.schema.Parse(json.dumps(schema))
+        print(c.fields)
+    return results    
 
 def kernel_to_pipeline():
     mappings = kernel_data_request('mappings')['results']
     for mapping in mappings:
         if not is_linked_to_pipeline('mapping', mapping['id']):
             create_new_pipeline_from_kernel('mapping', mapping)
-    print(mappings)
+    entity_types = convertEntityTypes(mappings[0]['definition']['entities'])
+    sample_schema_data = generate_sample_schema_data(entity_types)
+    x = generate_sample_input_from_mapping(mappings[0]['definition']['mapping'], entity_types)
+    print('YUEO', x)
     return []
