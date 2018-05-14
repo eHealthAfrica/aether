@@ -22,6 +22,8 @@ drf-dynamic-fields
 drf-openapi
 jsonpath_ng
 jsonschema
+ipdb
+ipython
 psycopg2-binary
 pygments
 python-dateutil
