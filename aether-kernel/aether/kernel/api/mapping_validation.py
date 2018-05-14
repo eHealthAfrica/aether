@@ -23,7 +23,27 @@ from .utils import find_by_jsonpath
 MESSAGE_NO_MATCH = 'No match for path'
 
 Success = collections.namedtuple('Success', ['path', 'result'])
-Failure = collections.namedtuple('Failure', ['path', 'error_message'])
+Failure = collections.namedtuple('Failure', ['path', 'description'])
+
+
+class JsonpathValidationError(object):
+    def __init__(self, description, path):
+        self.description = description
+        self.path = path
+
+    @classmethod
+    def from_failure(self, failure):
+        return JsonpathValidationError(
+            description=failure.description,
+            path=failure.path,
+        )
+
+    def as_dict(self):
+        return {
+            'description': self.description,
+            'path': self.path,
+            'type': self.__class__.__name__,
+        }
 
 
 def validate_getter(obj, path):
@@ -38,11 +58,11 @@ def validate_getter(obj, path):
     return Failure(path, MESSAGE_NO_MATCH)
 
 
-def validate_setter(entity_list, path):
+def validate_setter(entities, path):
     path_segments = path.split('.')
     schema_name = path_segments[0]
     setter = '.'.join(['$'] + path_segments[1:])
-    for entity in entity_list:
+    for entity in entities:
         if entity.projectschema_name == schema_name:
             result = [
                 datum.value for datum in
@@ -53,18 +73,19 @@ def validate_setter(entity_list, path):
     return Failure(path, MESSAGE_NO_MATCH)
 
 
-def validate_mapping(submission_payload, entity_list, mapping):
+def validate_mapping(submission_payload, entities, mapping):
     getter, setter = mapping
     return (
         validate_getter(submission_payload, getter),
-        validate_setter(entity_list, setter),
+        validate_setter(entities, setter),
     )
 
 
-def validate_mappings(submission_payload, entity_list, mapping_definition):
+def validate_mappings(submission_payload, entities, mapping_definition):
     errors = []
     for mapping in mapping_definition['mapping']:
-        for result in validate_mapping(submission_payload, entity_list, mapping):
+        for result in validate_mapping(submission_payload, entities, mapping):
             if isinstance(result, Failure):
-                errors.append(result)
+                error = JsonpathValidationError.from_failure(result).as_dict()
+                errors.append(error)
     return errors

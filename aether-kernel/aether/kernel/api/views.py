@@ -174,28 +174,24 @@ def validate_mappings(request):
     developing an Aether solution but have not yet submitted any complete
     Project; using this endpoint, it is possible to check the mapping functions
     (jsonpaths) align with both the source (`submission_payload`) and the
-    target (`entity_list`).
+    target (`entities`).
     '''
-
-    try:
-        data = request.data
-        # entities = utils.extract_create_entities(**data)
-        entities = utils.extract_create_entities(**data)
-        mapping_errors = mapping_validation.validate_mappings(
-            submission_payload=data['submission_payload'],
-            entity_list=entities,
-            mapping_definition=data['mapping_definition'],
-        )
-        return Response({
-            'entities': [
-                entity.payload for entity in entities
-            ],
-            'mapping_errors': [
-                error._asdict() for error in mapping_errors
-            ],
-        })
-    except Exception as e:
-        return Response(
-            {'message': 'Entity extraction error'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    serializer = serializers.MappingValidationSerializer(data=request.data)
+    if serializer.is_valid():
+        try:
+            submission_data, entities = utils.extract_create_entities(**serializer.data)
+            jsonpath_errors = mapping_validation.validate_mappings(
+                submission_payload=serializer.data['submission_payload'],
+                entities=entities,
+                mapping_definition=serializer.data['mapping_definition'],
+            )
+            type_errors = submission_data['aether_errors']
+            errors = type_errors or jsonpath_errors
+            return Response({
+                'entities': [entity.payload for entity in entities],
+                'mapping_errors': errors,
+            })
+        except Exception as e:
+            return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

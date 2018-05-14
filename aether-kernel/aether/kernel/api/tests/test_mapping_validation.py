@@ -40,13 +40,13 @@ class TestMappingValidation(TestCase):
     def test_validate_getter__failure(self):
         submission_payload = {'a': {'b': 'x'}}
         path = '$.d.e'
-        error_message = mapping_validation.MESSAGE_NO_MATCH
-        expected = mapping_validation.Failure(path, error_message)
+        description = mapping_validation.MESSAGE_NO_MATCH
+        expected = mapping_validation.Failure(path, description)
         result = mapping_validation.validate_getter(submission_payload, path)
         self.assertEquals(expected, result)
 
     def test_validate_setter__success(self):
-        entity_list = [
+        entities = [
             utils.Entity(
                 id=1,
                 payload={'a': {'b': 'x'}},
@@ -62,11 +62,11 @@ class TestMappingValidation(TestCase):
         ]
         path = 'Test-1.a.b'
         expected = mapping_validation.Success(path, ['x'])
-        result = mapping_validation.validate_setter(entity_list, path)
+        result = mapping_validation.validate_setter(entities, path)
         self.assertEquals(expected, result)
 
     def test_validate_setter__failure(self):
-        entity_list = [
+        entities = [
             utils.Entity(
                 id=1,
                 payload={'a': {'b': 'x'}},
@@ -81,14 +81,14 @@ class TestMappingValidation(TestCase):
             ),
         ]
         path = 'Test-3.a.b'  # nonexistent project schema name "Test-3"
-        error_message = mapping_validation.MESSAGE_NO_MATCH
-        expected = mapping_validation.Failure(path, error_message)
-        result = mapping_validation.validate_setter(entity_list, path)
+        description = mapping_validation.MESSAGE_NO_MATCH
+        expected = mapping_validation.Failure(path, description)
+        result = mapping_validation.validate_setter(entities, path)
         self.assertEquals(expected, result)
 
     def test_validate_mapping__success(self):
         submission_payload = {'a': {'b': 'x'}, 'c': {'d': 'y'}}
-        entity_list = [
+        entities = [
             utils.Entity(
                 id=1,
                 payload={'a': {'b': 'c'}},
@@ -110,13 +110,13 @@ class TestMappingValidation(TestCase):
         }
         expected = []
         result = mapping_validation.validate_mappings(
-            submission_payload, entity_list, mapping_definition,
+            submission_payload, entities, mapping_definition,
         )
         self.assertEquals(expected, result)
 
     def test_validate_mapping__wildcard_success(self):
         submission_payload = {'data': {'a1': {'b': 'x'}, 'a2': {'d': 'y'}}}
-        entity_list = [
+        entities = [
             utils.Entity(
                 id=1,
                 payload={'a': {'b': [{'b': 'x'}, {'d': 'y'}]}},
@@ -131,13 +131,13 @@ class TestMappingValidation(TestCase):
         }
         expected = []
         result = mapping_validation.validate_mappings(
-            submission_payload, entity_list, mapping_definition,
+            submission_payload, entities, mapping_definition,
         )
         self.assertEquals(expected, result)
 
     def test_validate_mapping__failure(self):
         submission_payload = {'a': {'b': 'x'}, 'c': {'d': 'y'}}
-        entity_list = [
+        entities = [
             utils.Entity(
                 id=1,
                 payload={'a': {'b': 'c'}},
@@ -158,16 +158,20 @@ class TestMappingValidation(TestCase):
             ]
         }
         expected = [
-            mapping_validation.Failure(
-                path=mapping_definition['mapping'][0][1],
-                error_message=mapping_validation.MESSAGE_NO_MATCH,
-            ),
-            mapping_validation.Failure(
-                path=mapping_definition['mapping'][1][0],
-                error_message=mapping_validation.MESSAGE_NO_MATCH,
-            ),
+            mapping_validation.JsonpathValidationError.from_failure(
+                mapping_validation.Failure(
+                    path=mapping_definition['mapping'][0][1],
+                    description=mapping_validation.MESSAGE_NO_MATCH,
+                ),
+            ).as_dict(),
+            mapping_validation.JsonpathValidationError.from_failure(
+                mapping_validation.Failure(
+                    path=mapping_definition['mapping'][1][0],
+                    description=mapping_validation.MESSAGE_NO_MATCH,
+                ),
+            ).as_dict(),
         ]
         result = mapping_validation.validate_mappings(
-            submission_payload, entity_list, mapping_definition,
+            submission_payload, entities, mapping_definition,
         )
         self.assertEquals(expected, result)

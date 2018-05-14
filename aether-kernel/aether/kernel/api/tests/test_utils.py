@@ -142,70 +142,87 @@ class UtilsTests(TestCase):
         requirements = EXAMPLE_REQUIREMENTS
         response_data = EXAMPLE_SOURCE_DATA
         entity_stubs = EXAMPLE_ENTITY_DEFINITION
+        schemas = {'Person': EXAMPLE_SCHEMA}
+        submission_data, entities = utils.extract_entities(
+            requirements,
+            response_data,
+            entity_stubs,
+            schemas,
+        )
         expected_entity = EXAMPLE_ENTITY
-        data, entities = utils.extract_entities(requirements, response_data, entity_stubs)
         self.assertEquals(len(expected_entity['Person']), len(entities['Person']))
 
     def test_extract_create_entities__no_requirements(self):
         submission_payload = EXAMPLE_SOURCE_DATA
         mapping_definition = {'mapping': [], 'entities': {}}
         schemas = {}
-        entities = utils.extract_create_entities(
+        submission_data, entities = utils.extract_create_entities(
             submission_payload,
             mapping_definition,
             schemas,
         )
-        self.assertEqual(len(entities), 0)
+        submission_errors = submission_data['aether_errors']
+        self.assertEquals(len(submission_errors), 0)
+        self.assertEquals(len(entities), 0)
 
     def test_extract_create_entities__success(self):
         submission_payload = EXAMPLE_SOURCE_DATA
         mapping_definition = EXAMPLE_MAPPING
         schemas = {'Person': EXAMPLE_SCHEMA}
-        entities = utils.extract_create_entities(
+        submission_data, entities = utils.extract_create_entities(
             submission_payload,
             mapping_definition,
             schemas,
         )
+        submission_errors = submission_data['aether_errors']
+        self.assertEquals(len(submission_errors), 0)
         self.assertTrue(len(entities) > 0)
         for entity in entities:
-            self.assertEqual(entity.id, entity.payload['id'])
+            self.assertEquals(entity.id, entity.payload['id'])
             self.assertIn(entity.projectschema_name, schemas.keys())
-            self.assertEqual(entity.status, 'Publishable')
+            self.assertEquals(entity.status, 'Publishable')
 
     def test_extract_create_entities__validation_error(self):
         submission_payload = EXAMPLE_SOURCE_DATA
         mapping_definition = EXAMPLE_MAPPING
-        # This schema shares the field names `id` and `name` with EXAMPLE_SCHEMA
+        # This schema shares the field names `id` and `name` with
+        # EXAMPLE_SCHEMA. The field types differ though, so we should expect a
+        # validation error to occur during entity extraction.
         schema = {
-            'type' : 'record',
-            'name' : 'Test',
-            'fields' : [
+            'type': 'record',
+            'name': 'Test',
+            'fields': [
                 {
-                    'name' : 'id',
-                    'type' : 'string'
+                    'name': 'id',
+                    'type': 'int',
                 },
                 {
-                    'name' : 'name',
-                    'type' : {
-                        'type' : 'enum',
-                        'name' : 'Name',
-                        'symbols' : [ 'John', 'Jane' ]
+                    'name': 'name',
+                    'type': {
+                        'type': 'enum',
+                        'name': 'Name',
+                        'symbols': ['John', 'Jane'],
                     }
                 },
             ]
         }
         schemas = {'Person': schema}
-        entities = utils.extract_create_entities(
+        submission_data, entities = utils.extract_create_entities(
             submission_payload,
             mapping_definition,
             schemas,
         )
-        self.assertIsNone(entities)
-        self.assertTrue(len(entities) > 0)
-        for entity in entities:
-            self.assertEqual(entity.id, entity.payload['id'])
-            self.assertIn(entity.projectschema_name, schemas.keys())
-            self.assertEqual(entity.status, 'Publishable')
+        submission_errors = submission_data['aether_errors']
+        self.assertEquals(
+            len(submission_errors),
+            len(EXAMPLE_SOURCE_DATA['data']['people']),
+        )
+        source_names = set([
+            person['name'] for person in EXAMPLE_SOURCE_DATA['data']['people']
+        ])
+        error_names = set([error['data']['name'] for error in submission_errors])
+        self.assertEquals(source_names, error_names)
+        self.assertEquals(len(entities), 0)
 
     def test_is_not_custom_jsonpath(self):
         # Examples taken from https://github.com/json-path/JsonPath#path-examples
@@ -360,9 +377,36 @@ class UtilsTests(TestCase):
         ]
         for payload in payloads:
             with self.assertRaises(utils.EntityValidationError) as err:
-                result = utils.validate_payload(
+                utils.validate_payload(
                     schema_definition=schema_definition,
                     payload=payload,
                 )
             msg = 'did not conform to registered schema'
             self.assertIn(msg, err.exception.args[0])
+
+    def test_validate_entities__error(self):
+        entity_list = [
+            {},
+            {'a_string': 1},
+            {'a': 'b'},
+        ]
+        entities = {
+            'Test': entity_list,
+        }
+        schemas = {
+            'Test': {
+                'name': 'Test',
+                'type': 'record',
+                'fields': [
+                    {
+                        'name': 'a_string',
+                        'type': 'string'
+                    }
+                ],
+            },
+        }
+        result = utils.validate_entities(entities=entities, schemas=schemas)
+        self.assertEquals(len(result.validation_errors), len(entity_list))
+        for validation_error in result.validation_errors:
+            msg = 'did not conform to registered schema'
+            self.assertIn(msg, validation_error['description'])

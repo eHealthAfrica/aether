@@ -156,6 +156,11 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
             submission = models.Submission(**validated_data)
             utils.run_entity_extraction(submission)
             return submission
+        except utils.EntityValidationError as e:
+            raise serializers.ValidationError({
+                'description': 'Entity validation error. Submission validation failed',
+                'details': e.args[0],
+            })
         except Exception as e:
             raise serializers.ValidationError({
                 'description': 'Submission validation failed'
@@ -242,7 +247,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     def create(self, validated_data):
         try:
-            utils.validate_payload(validated_data['projectschema']['schema']['definition'], validated_data['payload'])
+            utils.validate_payload(validated_data['projectschema'].schema.definition, validated_data['payload'])
         except Exception as schemaError:
             raise serializers.ValidationError(schemaError)
         try:
@@ -334,3 +339,9 @@ class MappingStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
             'id', 'name', 'definition', 'created',
             'first_submission', 'last_submission', 'submission_count',
         )
+
+
+class MappingValidationSerializer(serializers.Serializer):
+    submission_payload = serializers.JSONField()
+    mapping_definition = serializers.JSONField()
+    schemas = serializers.JSONField()
