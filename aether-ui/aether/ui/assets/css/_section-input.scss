@@ -91,33 +91,6 @@
       padding-top: .2rem;
       padding-bottom: .2rem;
     }
-
-    .input-mapped {
-      position: relative;
-
-      &:before {
-        content: '';
-        display: block;
-        position: absolute;
-        top: 0;
-        left: -.6rem;
-        width: .6rem;
-        height: 100%;
-        border-radius: .5rem 0 0 .5rem;
-      }
-
-      &::after {
-        content: '';
-        display: block;
-        position: absolute;
-        top: 0;
-        right: -.6rem;
-        width: 0;
-        height: 0;
-        border-top: $font-size-xs solid transparent;
-        border-bottom: $font-size-xs solid transparent;
-      }
-    }
   }
 }
 

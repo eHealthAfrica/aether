@@ -23,29 +23,69 @@ $colors-list: (
       color: $current-color;
     }
 
-    li:hover,
     .entityType-mapped {
       background-color: rgba($current-color, .2);
-    }
+      position: relative;
 
-    .entityType-mapped:hover {
-      background-color: $current-color;
+      &::after {
+        border-right: 0.6rem solid rgba($current-color, .2);
+        content: '';
+        display: block;
+        position: absolute;
+        top: 0;
+        left: -.6rem;
+        width: 0;
+        height: 0;
+        border-top: $font-size-xs solid transparent;
+        border-bottom: $font-size-xs solid transparent;
+      }
+  
+      &:hover {
+        background-color: $current-color;
+        &::after {
+          border-right: 0.6rem solid rgba($current-color, 1);
+        }
+      }
     }
   }
 
   .input-mapped-#{$i} {
     background-color: rgba($current-color, .2);
+    position: relative;
 
     &:hover {
       background-color: $current-color;
+      &::before {
+        background-color: $current-color;
+      }
+      &::after {
+        border-left: 0.6rem solid rgba($current-color, 1);
+      }
     }
 
     &::before {
       background-color: rgba($current-color, .2);
+      content: '';
+      display: block;
+      position: absolute;
+      top: 0;
+      left: -.6rem;
+      width: .6rem;
+      height: 100%;
+      border-radius: .5rem 0 0 .5rem;
     }
 
     &::after {
-      border-left: 0.6rem solid $current-color;
+      border-left: 0.6rem solid rgba($current-color, .2);
+      content: '';
+      display: block;
+      position: absolute;
+      top: 0;
+      right: -.6rem;
+      width: 0;
+      height: 0;
+      border-top: $font-size-xs solid transparent;
+      border-bottom: $font-size-xs solid transparent;
     }
   }
 }
