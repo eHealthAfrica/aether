@@ -5,8 +5,6 @@ import avro from 'avsc'
 class AvroSchemaViewer extends Component {
   getHighlightedClassName (jsonPath) {
     const {highlight} = this.props
-
-    console.log(highlight, jsonPath)
     // the simplest way (equity)
     // TODO: check that the jsonPath is included in any of the keys,
     // becuase they can also be "formulas"
