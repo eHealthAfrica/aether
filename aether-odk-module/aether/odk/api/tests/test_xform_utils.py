@@ -55,6 +55,24 @@ class XFormUtilsTests(CustomTestCase):
 
         self.assertEqual(data, expected)
 
+    def test__parse_submission__with_multilanguage(self):
+        with open(self.samples['submission']['file-ok'], 'rb') as xml:
+            data, form_id, version = extract_data_from_xml(xml)
+
+        with open(self.samples['submission']['file-ok-json'], 'rb') as content:
+            expected = json.load(content)
+
+        self.assertEqual(form_id, 'my-test-form')
+        self.assertEqual(version, '0')
+        self.assertEqual(len(list(data.keys())), 1)
+        self.assertEqual(list(data.keys())[0], 'Something_that_is_not_None')
+
+        # this form definition has more than one language declared
+        data = parse_submission(data, self.samples['xform']['raw-xml-i18n'])
+        self.assertNotEqual(list(data.keys())[0], 'Something_that_is_not_None')
+
+        self.assertEqual(data, expected)
+
     def test__get_instance_id(self):
         instance_id = 'abc'
         valid_data = {'meta': {'instanceID': instance_id}}

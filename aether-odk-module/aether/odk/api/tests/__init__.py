@@ -34,6 +34,8 @@ PATH_DIR = '/code/aether/odk/api/tests/files/'
 XFORM_XLS_FILE = PATH_DIR + 'demo-xform.xls'
 XFORM_XML_FILE = PATH_DIR + 'demo-xform.xml'
 
+XFORM_XML_FILE_I18N = PATH_DIR + 'demo-xform-multilang.xml'
+
 XML_DATA_FILE = PATH_DIR + 'demo-data.xml'
 XML_DATA_FILE_ERR = PATH_DIR + 'demo-data--error.xml'
 XML_DATA_FILE_ERR_MISSING_INSTANCE_ID = PATH_DIR + 'demo-data--error--missing-instance-id.xml'
@@ -92,6 +94,9 @@ class CustomTestCase(TransactionTestCase):
         with open(XFORM_XML_FILE, 'r') as f:
             XFORM_XML_RAW = f.read()
 
+        with open(XFORM_XML_FILE_I18N, 'r') as fi18n:
+            XFORM_XML_RAW_I18N = fi18n.read()
+
         self.samples = {
             # sample collection for submission posts
             'submission': {
@@ -109,6 +114,8 @@ class CustomTestCase(TransactionTestCase):
                 'raw-xml': XFORM_XML_RAW,
                 'file-xls': XFORM_XLS_FILE,
                 'file-xml': XFORM_XML_FILE,
+                'raw-xml-i18n': XFORM_XML_RAW_I18N,
+                'file-xml-i18n': XFORM_XML_FILE_I18N,
                 'file-err': XML_DATA_FILE_ERR,
             },
         }
