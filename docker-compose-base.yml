@@ -19,14 +19,57 @@ version: "2.1"
 services:
 
   # ---------------------------------
-  # Database + NGINX containers
+  # Database + Kong + NGINX
   # ---------------------------------
 
   postgres-base:
     image: postgres:9.6
+    env_file:
+      - environment-variables.sh
+    environment:
+      - POSTGRES_USER=kong
+      - POSTGRES_DB=kong
+
+  kong-migration-base:
+    image: kong
+    environment:
+      - KONG_DATABASE=postgres
+      - KONG_PG_HOST=db
+    command: kong migrations up
+
+  kong-base:
+    image: kong
+    restart: on-failure
+    ports:
+      - 8449:8449
+      - 8001:8001
+      - ${KONG_PORT}:${KONG_PORT}
+    environment:
+      - KONG_ADMIN_LISTEN=0.0.0.0:8001
+      - KONG_PROXY_LISTEN_SSL=0.0.0.0:8449
+      - KONG_PROXY_LISTEN=0.0.0.0:${KONG_PORT}
+      - KONG_DATABASE=postgres
+      - KONG_PG_HOST=db
+
+  kongfig:
+    build:
+      context: aether-kongfig
+    image: mashupmill/kongfig
+    env_file:
+      - environment-variables.sh
+    volumes:
+    # Register all modular kongfig files as volumes to have them pushed to kong
+      - ./aether-kernel/kongfig.yml:/config/_kernel-kongfig.yml
+      - ./aether-odk-module/kongfig.yml:/config/odk-kongfig.yml
+      - ./aether-couchdb-sync-module/kongfig.yml:/config/sync-kongfig.yml
+
+  kong-database:
+    image: postgres:9.6
 
   couchdb-base:
     image: couchdb:1.7.1
+    env_file:
+      - environment-variables.sh
     environment:
       COUCHDB_USER: admin
       COUCHDB_PASSWORD: secret
@@ -41,6 +84,8 @@ services:
 
   nginx-base:
     image: nginx:stable-alpine
+    env_file:
+      - environment-variables.sh
     volumes:
       # local setup
       - ./local-setup/nginx/nginx.conf:/etc/nginx/nginx.conf
@@ -56,7 +101,13 @@ services:
       - ./tmp/sync:/media/sync
       - ./tmp/ui:/media/ui
     ports:
-      - "80:80"
+      - "8080:8080"
+    expose:
+      - 8000
+      - 8449
+      - 8001
+      - 8444
+      - ${KONG_PORT}
 
 
   # ---------------------------------
@@ -68,12 +119,15 @@ services:
     build: ./aether-kernel
     stdin_open: true
     tty: true
+    env_file:
+      - environment-variables.sh
     environment:
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
-      CSRF_COOKIE_DOMAIN: .aether.local
+      CSRF_COOKIE_DOMAIN: .${PROJECT_URL}
       DEBUG: "true"
+      HOSTNAME: ${PROJECT_API_URL}/aether/v1
+      KONG_OAUTH2_PROVISION_KEY: ${KONG_OAUTH2_PROVISION_KEY}
       DJANGO_SECRET_KEY: "secret"
-      HOSTNAME: kernel.aether.local
       RDS_DB_NAME: aether
       RDS_HOSTNAME: db
       RDS_PASSWORD: ""
@@ -98,6 +152,8 @@ services:
     build: ./aether-odk-module
     stdin_open: true
     tty: true
+    env_file:
+      - environment-variables.sh
     environment:
       AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
       AETHER_KERNEL_URL: http://kernel:8000
@@ -105,8 +161,8 @@ services:
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
+      HOSTNAME: ${PROJECT_API_URL}/odk/v1
       DJANGO_SECRET_KEY: "secret"
-      HOSTNAME: odk.aether.local
       RDS_DB_NAME: odk
       RDS_HOSTNAME: db
       RDS_PASSWORD: ""
@@ -131,6 +187,8 @@ services:
     build: ./aether-couchdb-sync-module
     stdin_open: true
     tty: true
+    env_file:
+      - environment-variables.sh
     environment: &sync-environment
       AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
       AETHER_KERNEL_URL: http://kernel:8000
@@ -164,6 +222,8 @@ services:
 
   couchdb-sync-rq-base:
     image: aether-couchdb-sync
+    env_file:
+      - environment-variables.sh
     environment: *sync-environment
     volumes: *sync-volumes
     command: start_rq
