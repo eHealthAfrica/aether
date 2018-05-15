@@ -16,6 +16,7 @@ class KafkaConsumer(VanillaConsumer):
         "aether_masking_schema_annotation": "aetherMaskingLevel",
         "aether_masking_schema_levels": [0, 1, 2, 3, 4, 5],
         "aether_masking_schema_emit_level": 0,
+        "aether_emit_flag_required": True,
         "aether_emit_flag_field_path": "$.approved",
         "aether_emit_flag_values": [True]
     }
@@ -28,12 +29,18 @@ class KafkaConsumer(VanillaConsumer):
         super(KafkaConsumer, self).__init__(*topics, **configs)
 
     def get_approval_filter(self):
+        # If {aether_emit_flag_required} is True, each message is checked for a passing value.
         # An approval filter is a flag set in the body of each message and found at path
         # {aether_emit_flag_field_path} that controls whether a message is published or not. If the
         # value found at path {aether_emit_flag_field_path} is not a member of the set configured
         # at {aether_emit_flag_values}, then the message will not be published. If the value is in
         # the set {aether_emit_flag_values}, it will be published. These rules resolve to a simple
         # boolean filter which is returned by this function.
+        requires_approval = self.config.get("aether_emit_flag_required")
+        if not requires_approval:
+            def approval_filter(obj):
+                return True
+            return approval_filter
         check_condition_path = self.config.get("aether_emit_flag_field_path")
         pass_conditions = self.config.get("aether_emit_flag_values")
         check = None
