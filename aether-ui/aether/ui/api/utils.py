@@ -2,11 +2,9 @@ import json
 import requests
 import ast
 import uuid
-import avro.schema
 
 from aether.common.kernel import utils
 from django.http import JsonResponse
-from jsonpath_ng import jsonpath, parse
 
 from . import models
 
@@ -122,6 +120,7 @@ def validate_pipeline(pipeline):
             []
         )
 
+
 def kernel_data_request(url='', method='get', data={}):
     '''
     Handle requests to the kernel server
@@ -136,6 +135,7 @@ def kernel_data_request(url='', method='get', data={}):
         return res.json()
     else:
         raise Exception(res.json())
+
 
 def create_new_kernel_object(object_name, pipeline, data={}, project_name='Aux', entity_name=None):
     try:
@@ -273,6 +273,7 @@ def publishPipeline(pipelineid, projectname):
         outcome['failed'].append({'message': str(e), 'status': 'Bad request'})
         return JsonResponse({'links': None, 'info': outcome}, status=400)
 
+
 def is_linked_to_pipeline(object_name, id):
     kwargs = {
         '{0}__{1}'.format('kernel_refs', object_name): id
@@ -280,79 +281,44 @@ def is_linked_to_pipeline(object_name, id):
     linked_pipeline = models.Pipeline.objects.filter(**kwargs)
     return True if len(linked_pipeline) else False
 
+
 def convertMappings(mapping_from_kernel):
     result = []
     for mapping in mapping_from_kernel:
         result.append({'source': mapping[0], 'destination': mapping[1]})
     return result
 
+
 def convertEntityTypes(entities_from_kernel):
-    result = { 'schemas': [], 'ids': {}}
+    result = {'schemas': [], 'ids': {}}
     for entity in entities_from_kernel:
-        project_schema = kernel_data_request(f'projectschemas/{entities_from_kernel[entity]}')
-        schema = kernel_data_request(f'schemas/{project_schema["schema"]}')
-        result['schemas'].append(schema['definition'])
-        result['ids'][schema['name']] = schema['id']
+        try:
+            project_schema = kernel_data_request(f'projectschemas/{entities_from_kernel[entity]}')
+            schema = kernel_data_request(f'schemas/{project_schema["schema"]}')
+            result['schemas'].append(schema['definition'])
+            result['ids'][schema['name']] = schema['id']
+        except Exception:
+            pass
     return result
 
-def generate_sample_input_from_mapping(mappings):
-    input_data_object = {}
 
-    def create_object_from_property_list(property_list, obj={}, property_type='str'):
-        property_name = property_list.pop(0)
-        if len(property_list):
-            if property_name not in obj:
-                obj[property_name] = {}
-            elif type(obj[property_name]) is not dict:
-                obj[property_name] = {}
-            return create_object_from_property_list(property_list, obj[property_name], property_type)
-        else:
-            if property_name == '#!uuid':
-                obj['id'] = 1
-            elif property_type is 'int':
-                obj[property_name] = 1
-            elif property_type is 'bool':
-                obj[property_name] = True
-            elif property_type is 'list':
-                obj[property_name] = []
-            elif property_type is 'dict':
-                obj[property_name] = {}
-            elif property_type is 'tuple':
-                obj[property_name] = (0, 1)
-            elif property_type is 'float':
-                obj[property_name] = 0.1
-            else:
-                obj[property_name] = 'a'
-        return obj
+def create_new_pipeline_from_kernel(kernel_object):
+    entity_types = convertEntityTypes(kernel_object['definition']['entities'])
+    models.Pipeline.objects.create(
+        name=kernel_object['name'],
+        mapping=convertMappings(kernel_object['definition']['mapping']),
+        entity_types=entity_types['schemas'],
+        kernel_refs={
+            'project': kernel_object['project'],
+            'schema': entity_types['ids'],
+            'projectschema': kernel_object['definition']['entities'],
+            'mapping': kernel_object['id']
+        }
+    )
 
-    for mapping in mappings:
-        source = mapping[0].split('.')
-        create_object_from_property_list(source, input_data_object)
-    return input_data_object
-        
-
-def create_new_pipeline_from_kernel(entry, kernel_object):
-    if entry is 'mapping':
-        c_entityTypes = convertEntityTypes(kernel_object['definition']['entities'])
-        pipeline = models.Pipeline.objects.create(
-            name=kernel_object['name'],
-            input=generate_sample_input_from_mapping(kernel_object['definition']['mapping']),
-            entity_types=c_entityTypes['schemas'],
-            mapping=convertMappings(kernel_object['definition']['mapping']),
-            kernel_refs= {
-                'project': kernel_object['project'],
-                'schema': c_entityTypes['ids'],
-                'projectschema': kernel_object['definition']['entities'],
-                'mapping': kernel_object['id']
-            }
-        )
-        return pipeline    
 
 def kernel_to_pipeline():
-    created_pipelines = []
     mappings = kernel_data_request('mappings')['results']
     for mapping in mappings:
         if not is_linked_to_pipeline('mapping', mapping['id']):
-            pipeline = create_new_pipeline_from_kernel('mapping', mapping)
-            created_pipelines.append(str(pipeline.id))
-    return created_pipelines
+            create_new_pipeline_from_kernel(mapping)

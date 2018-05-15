@@ -264,7 +264,7 @@ class ViewsTest(TestCase):
             }
         )
 
-    def test_view_publish_pipeline(self):
+    def test_view_01_publish_pipeline(self):
         username = 'test'
         password = 'testtest'
         self.client.login(username=username, password=password)
@@ -358,3 +358,18 @@ class ViewsTest(TestCase):
         url = reverse('ui:pipeline-publish', args=[str(pipeline_id) + 'wrong'])
         response = self.client.post(url, {'project_name': 'Aux 1'})
         response_data = json.loads(response.content)
+
+    def test_view_02_fetch_pipeline(self):
+        username = 'test'
+        password = 'testtest'
+        self.client.login(username=username, password=password)
+        url = reverse('ui:pipeline-fetch')
+        response = self.client.get(url, content_type='application/json')
+        response_data = json.loads(response.content)
+        self.assertEqual(len(response_data), 1)
+        self.assertEqual(len(response_data[0]['entity_types']), 2)
+
+        # Ensure linked mappings are not recreated
+        response = self.client.get(url, content_type='application/json')
+        response_data = json.loads(response.content)
+        self.assertEqual(len(response_data), 1)

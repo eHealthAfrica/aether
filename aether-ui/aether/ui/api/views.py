@@ -1,6 +1,6 @@
 import requests
 
-from django.http import (HttpResponse, JsonResponse)
+from django.http import HttpResponse, JsonResponse
 from django.views import View
 from rest_framework import viewsets
 from rest_framework.decorators import action

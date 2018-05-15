@@ -5,7 +5,7 @@ from django.test import TestCase
 from . import PIPELINE_EXAMPLE_1
 from ..models import Pipeline
 from ..utils import (kernel_data_request, create_new_kernel_object, is_object_linked,
-                     create_project_schema_object)
+                     create_project_schema_object, convertEntityTypes)
 
 
 class ViewsTest(TestCase):
@@ -54,3 +54,9 @@ class ViewsTest(TestCase):
         exception = ast.literal_eval(str(exc.exception))
         self.assertEqual(exception['object_name'], 'unknown')
         self.assertFalse(is_object_linked(pipeline.kernel_refs, 'schema', 'Person'))
+
+    def test_convert_entity_types(self):
+        with self.assertRaises(Exception) as exc:
+            convertEntityTypes({'Person': '123456'})
+            exception = ast.literal_eval(str(exc.exception))
+            self.assertEqual(exception['object_name'], 'unknown')
