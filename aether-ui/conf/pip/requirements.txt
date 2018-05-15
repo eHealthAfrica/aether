@@ -13,7 +13,6 @@
 ################################################################################
 
 aether.common==0.0.0
-avro-python3==1.8.2
 awscli==1.15.20
 botocore==1.10.20
 certifi==2018.4.16
@@ -33,12 +32,10 @@ djangorestframework==3.8.2
 djangorestframework-csv==2.1.0
 docutils==0.14
 drf-dynamic-fields==0.3.0
-fastavro==0.18.2
 flake8==3.5.0
 flake8-quotes==1.0.0
 idna==2.6
 jmespath==0.9.3
-jsonpath-ng==1.4.3
 mccabe==0.6.1
 mock==2.0.0
 pbr==4.0.2
