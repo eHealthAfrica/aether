@@ -1,0 +1,10 @@
+#########################################################################################
+#                                                                              		    #
+#                              Frozen requirements                             		    #
+#                                                                              		    #
+#                               DO NOT CHANGE !!!                              		    #
+#                                                                              		    #
+# To update this first update 'primary-requirements.txt'                       		    #
+# then run 'docker-compose run myconsumer pip_freeze'                                   #
+#                                                                              		    #
+#########################################################################################

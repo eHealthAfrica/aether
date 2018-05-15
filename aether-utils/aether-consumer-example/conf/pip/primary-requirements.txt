@@ -1,0 +1,16 @@
+#################################################################################################
+#                                                                              					#
+#                             Primary requirements                             					#
+#                                                                              					#
+#                                 CHANGE ME !!!                                					#
+#                                                                              					#
+# Update me and then run 'docker-compose run myconsumer pip_freeze'                             #
+#                                                                              					#
+#################################################################################################
+
+aether.consumer
+blessings
+flake8
+mock
+pytest
+pytest-runner

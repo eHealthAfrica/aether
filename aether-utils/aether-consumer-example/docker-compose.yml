@@ -1,0 +1,16 @@
+version: "2.1"
+services:
+  myconsumer:
+    build: .
+    stdin_open: true
+    tty: true
+    environment:
+     - PYTHONUNBUFFERED=1
+    networks:
+      - aether
+    command: start
+
+networks:
+  aether:
+    external:
+      name: aether_internal

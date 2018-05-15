@@ -1,0 +1,4 @@
+{
+    "bootstrap_servers" : ["kafka:29092"],
+    "auto_offset_reset" : "earliest"
+}
