@@ -1,0 +1,137 @@
+---
+host: "kong:8001"
+apis:
+# Whitelist localhost for development purposes.
+# With this, no authentication is required to access api endpoint while on localhost
+
+  - name: "kernel-localhost"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://kernel:8000"
+      hosts:
+        - "kernel.aether.local"
+      preserve_host: true
+
+# Kernel api access from frontend apps, requirers the request contains an OAuth2 token for kong passage
+# Token can be gotten from Kong-pass-oauth2 `/token`
+# Accessible via `http://{KONG_HOST}/ext/aether`
+
+  - name: "kernel-external"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://kernel:8000"
+      hosts:
+        - "PROJECT_API_URL"
+      uris:
+        - "/ext/aether"
+      preserve_host: true
+    plugins:
+      - name: oauth2
+        attributes:
+          config:
+            scopes:
+              - "email,phone"
+            mandatory_scope: false
+            token_expiration: 86400
+            enable_authorization_code: true
+            enable_password_grant: true
+            hide_credentials: false
+            provision_key: KONG_OAUTH2_PROVISION_KEY
+
+# Kernel api for app level communication, requires an auth-key be included in all request headers as `apikey`
+# Accessible via `http://{KONG_HOST}/aether`
+
+  - name: "kernel-internal"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://kernel:8000"
+      uris:
+        - "/aether"
+      preserve_host: true
+      hosts:
+        - "PROJECT_API_URL"
+    plugins:
+    - name: key-auth
+      ensure: "present"
+      attributes:
+        config:
+          key_names:
+            - apikey
+          hide_credentials: true
+
+  - name: "kernel-internal-fallback"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://kernel:8000"
+      uris:
+        - "/"
+      preserve_host: true
+      hosts:
+        - "PROJECT_API_URL"
+    plugins:
+    - name: key-auth
+      ensure: "present"
+      attributes:
+        config:
+          key_names:
+            - apikey
+          hide_credentials: true
+
+# Generates OAuth2 tokens for kong passage from a 3rd party frontend app
+# Supply `username, password, grant_type=password, authenticated_userid(Optional),
+# authourization token if available from 3rd party authentication service` and get a token in exchange
+
+  - name: "Kong-pass-oauth2"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://kernel:8000"
+      uris:
+        - "/token"
+      strip_uri: false
+    plugins:
+    - name: key-auth
+      ensure: "present"
+      attributes:
+        config:
+          key_names:
+            - apikey
+          hide_credentials: true
+
+# Kernel apis for retriving django static files and accounts urls
+
+  - name: "kernel-static"
+    ensure: "present"
+    attributes:
+      upstream_url: "http://kernel:8000"
+      hosts:
+        - "PROJECT_API_URL"
+      uris:
+        - "/static"
+        - "/accounts"
+      preserve_host: true
+      strip_uri: false
+
+# Kong consumer associated with internal app level communications
+# subscribed to OAuth2 and Auth-Key authorization
+
+consumers:
+  - username: KONG_CONSUMER
+    credentials:
+      - name: key-auth
+        attributes:
+          key: KONG_APIKEY
+      - name: oauth2
+        attributes:
+          name: "Aux"
+          redirect_uri: "http://ui.aether.local:8004"
+          client_id: KONG_CONSUMER
+
+# Kong anonymous consumer, available for anonymous access to endpoints that should be publicly accessible
+
+  - username: anonymous_user
+    credentials:
+      - name: oauth2
+        attributes:
+          name: "Aux"
+          redirect_uri: "http://ui.aether.local:8004"
+          client_id: "anonymous_user"
