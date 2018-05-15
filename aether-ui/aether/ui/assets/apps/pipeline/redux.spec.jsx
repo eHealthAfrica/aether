@@ -1,6 +1,6 @@
 /* global describe, it, expect, beforeEach */
 import reducer, { types, selectedPipelineChanged,
-  addPipeline, getPipelines, updatePipeline, INITIAL_PIPELINE, getPipelineById } from './redux'
+  addPipeline, getPipelines, updatePipeline, INITIAL_PIPELINE, getPipelineById, publishPipeline } from './redux'
 import { createStore, applyMiddleware } from 'redux'
 import nock from 'nock'
 import middleware from '../redux/middleware'
@@ -138,7 +138,9 @@ describe('Pipeline actions', () => {
       pipelineList: [],
       selectedPipeline: null,
       error: { error: 'Not Found', status: 404 },
-      notFound: null
+      notFound: null,
+      publishSuccess: null,
+      publishError: null
     }
     return store.dispatch(action())
       .then(() => {
@@ -174,6 +176,46 @@ describe('Pipeline actions', () => {
               pipeline
             )
           })
+      })
+  })
+
+  it('should dispatch a publish pipeline action and save response in the redux store', () => {
+    const expected = {
+      links: {},
+      info: {}
+    }
+    nock('http://localhost')
+      .post('/api/ui/pipelines/1/publish/')
+      .reply(200, expected)
+    expect(typeof publishPipeline(1)).toEqual('object')
+    return store.dispatch(publishPipeline(1))
+      .then(() => {
+        expect(store.getState().publishSuccess).toEqual(
+          expected
+        )
+        expect(store.getState().publishError).toEqual(
+          null
+        )
+      })
+  })
+
+  it('should dispatch a wrong publish pipeline action and save response in the redux store', () => {
+    const returnedData = {
+      links: {},
+      info: {}
+    }
+    const expected = {'error': {'info': {}, 'links': {}}, 'status': 400}
+    nock('http://localhost')
+      .post('/api/ui/pipelines/100/publish/')
+      .reply(400, returnedData)
+    return store.dispatch(publishPipeline(100))
+      .then(() => {
+        expect(store.getState().publishError).toEqual(
+          expected
+        )
+        expect(store.getState().publishSuccess).toEqual(
+          null
+        )
       })
   })
 })
