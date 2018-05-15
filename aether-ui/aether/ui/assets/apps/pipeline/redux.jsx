@@ -23,23 +23,26 @@ export const INITIAL_PIPELINE = {
   notFound: null
 }
 
-export const addPipeline = newPipeline => ({
+export const addPipeline = ({ name }) => ({
   types: ['', types.PIPELINE_ADD, types.PIPELINE_ERROR],
-  promise: client => client.post(`${urls.PIPELINES_URL}`,
+  promise: client => client.post(
+    `${urls.PIPELINES_URL}`,
     { 'Content-Type': 'application/json' },
-    { data: { name: newPipeline.name } })
+    { data: { name } })
 })
 
 export const getPipelineById = id => ({
   types: ['', types.PIPELINE_UPDATE, types.PIPELINE_NOT_FOUND],
-  promise: client => client.get(`${urls.PIPELINES_URL}${id}/`,
+  promise: client => client.get(
+    `${urls.PIPELINES_URL}${id}/`,
     { 'Content-Type': 'application/json' }
   )
 })
 
 export const updatePipeline = pipeline => ({
   types: ['', types.PIPELINE_UPDATE, types.PIPELINE_ERROR],
-  promise: client => client.put(`${urls.PIPELINES_URL}${pipeline.id}/`,
+  promise: client => client.put(
+    `${urls.PIPELINES_URL}${pipeline.id}/`,
     { 'Content-Type': 'application/json' },
     { data: pipeline }
   )
@@ -52,21 +55,56 @@ export const selectedPipelineChanged = selectedPipeline => ({
 
 export const getPipelines = () => ({
   types: ['', types.GET_ALL, types.PIPELINE_ERROR],
-  promise: client => client.get(`${urls.PIPELINES_URL}?limit=5000`, { 'Content-Type': 'application/json' }) // limit query_string used instead of pagination (temporary)
+  promise: client => client.get(
+    // limit query_string used instead of pagination (temporary)
+    `${urls.PIPELINES_URL}?limit=5000`,
+    { 'Content-Type': 'application/json' }
+  )
 })
+
+const parsePipeline = (pipeline) => {
+  const COLORS = 10 // This value is the number of colors in the `_color-codes.scss`
+  // will highlight the relations among mapping rules, entity types and input schema
+  const highlightSource = {}
+  const highlightDestination = []
+
+  // each EntityType has a color based on the order it was added to the list
+  const entityColors = {}
+  const entityTypes = (pipeline.entity_types || [])
+  entityTypes.forEach((entity, index) => {
+    entityColors[entity.name] = (index % COLORS) + 1
+  })
+
+  // indicate the color to each JSON path in each rule source and destination
+  const mappingRules = (pipeline.mapping || [])
+  mappingRules.forEach(rule => {
+    // find out the number assigned to the linked Entity Type
+    const entityType = rule.destination.split('.')[0]
+    const color = entityColors[entityType] || 0
+
+    highlightSource[rule.source] = color
+    highlightDestination.push(rule.destination)
+  })
+
+  return {
+    ...clone(pipeline),
+    highlightSource,
+    highlightDestination
+  }
+}
 
 const reducer = (state = INITIAL_PIPELINE, action) => {
   const newPipelineList = clone(state.pipelineList)
 
   switch (action.type) {
     case types.PIPELINE_ADD: {
-      const newPipeline = clone(action.payload)
+      const newPipeline = parsePipeline(action.payload)
       newPipelineList.unshift(newPipeline)
       return { ...state, pipelineList: newPipelineList, selectedPipeline: newPipeline, error: null }
     }
 
     case types.PIPELINE_UPDATE: {
-      const updatedPipeline = clone({ ...state.selectedPipeline, ...action.payload })
+      const updatedPipeline = parsePipeline({ ...state.selectedPipeline, ...action.payload })
       const index = newPipelineList.findIndex(x => x.id === updatedPipeline.id)
       newPipelineList[index] = updatedPipeline
 
@@ -74,7 +112,7 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
     }
 
     case types.SELECTED_PIPELINE_CHANGED: {
-      return { ...state, selectedPipeline: clone(action.payload), error: null }
+      return { ...state, selectedPipeline: parsePipeline(action.payload), error: null }
     }
 
     case types.GET_ALL: {

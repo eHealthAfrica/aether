@@ -23,7 +23,7 @@ describe('Pipeline actions', () => {
   })
 
   it('should dispatch a selected pipeline changed action and update the redux store', () => {
-    const selectedPipeline = { name: 'mock name', id: 1, errors: 0, entityTypes: 3 }
+    const selectedPipeline = { name: 'mock name', id: 1, errors: 0, entityTypes: 3, 'highlightDestination': [], 'highlightSource': {} }
     const expectedAction = {
       type: types.SELECTED_PIPELINE_CHANGED,
       payload: selectedPipeline
@@ -58,7 +58,9 @@ describe('Pipeline actions', () => {
       'output': null,
       'entity_types': [],
       'schema': null,
-      'input': null
+      'input': null,
+      'highlightDestination': [],
+      'highlightSource': {}
     }
     nock('http://localhost')
       .get('/api/ui/pipelines/?limit=5000')
@@ -153,7 +155,9 @@ describe('Pipeline actions', () => {
       'output': null,
       'entity_types': [],
       'schema': null,
-      'input': null
+      'input': null,
+      'highlightDestination': [],
+      'highlightSource': {}
     }
     nock('http://localhost')
       .get('/api/ui/pipelines/?limit=5000')

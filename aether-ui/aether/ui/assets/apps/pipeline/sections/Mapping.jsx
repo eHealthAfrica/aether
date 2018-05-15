@@ -10,18 +10,14 @@ class Mapping extends Component {
     super(props)
 
     this.state = {
-      mappingRules: this.parseProps(props)
+      mappingRules: props.selectedPipeline.mapping || []
     }
   }
 
   componentWillReceiveProps (nextProps) {
     this.setState({
-      mappingRules: this.parseProps(nextProps)
+      mappingRules: nextProps.selectedPipeline.mapping || []
     })
-  }
-
-  parseProps (props) {
-    return props.selectedPipeline.mapping || []
   }
 
   notifyChange (event) {
