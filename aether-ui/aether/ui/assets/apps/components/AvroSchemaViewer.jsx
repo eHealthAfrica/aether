@@ -5,9 +5,9 @@ import avro from 'avsc'
 class AvroSchemaViewer extends Component {
   getHighlightedClassName (jsonPath) {
     const {highlight} = this.props
-    // the simplest way (equity)
+    // the simplest way (equality)
     // TODO: check that the jsonPath is included in any of the keys,
-    // becuase they can also be "formulas"
+    // because they can also be "formulas"
     const keys = Object.keys(highlight)
     for (let i = 0; i < keys.length; i++) {
       if (keys[i] === jsonPath) {
@@ -18,7 +18,8 @@ class AvroSchemaViewer extends Component {
     return ''
   }
 
-  schemaToMarkup (schema, parent) {
+  // parent is passed if schema fields in view are nested.
+  schemaToMarkup (schema, parent = null) {
     if (schema.fields && schema.fields.length) {
       const jsonPath = `${parent || schema.name}`
       const className = this.getHighlightedClassName(jsonPath)
