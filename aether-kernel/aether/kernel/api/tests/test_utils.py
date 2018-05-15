@@ -139,6 +139,10 @@ class UtilsTests(TestCase):
         self.assertEquals(len(failed_actions), 0)
 
     def test_extract_entities(self):
+        '''
+        Assert that the number of extracted entities equals the
+        number of Persons in the source data.
+        '''
         requirements = EXAMPLE_REQUIREMENTS
         response_data = EXAMPLE_SOURCE_DATA
         entity_stubs = EXAMPLE_ENTITY_DEFINITION
@@ -153,6 +157,10 @@ class UtilsTests(TestCase):
         self.assertEquals(len(expected_entity['Person']), len(entities['Person']))
 
     def test_extract_create_entities__no_requirements(self):
+        '''
+        If the mapping contains neither paths nor entity references, no
+        entities can be extracted.
+        '''
         submission_payload = EXAMPLE_SOURCE_DATA
         mapping_definition = {'mapping': [], 'entities': {}}
         schemas = {}
@@ -166,6 +174,10 @@ class UtilsTests(TestCase):
         self.assertEquals(len(entities), 0)
 
     def test_extract_create_entities__success(self):
+        '''
+        Assert that no errors are accumulated and that the
+        extracted entities are of the expected type.
+        '''
         submission_payload = EXAMPLE_SOURCE_DATA
         mapping_definition = EXAMPLE_MAPPING
         schemas = {'Person': EXAMPLE_SCHEMA}
@@ -183,6 +195,10 @@ class UtilsTests(TestCase):
             self.assertEquals(entity.status, 'Publishable')
 
     def test_extract_create_entities__validation_error(self):
+        '''
+        Assert that validation errors are accumulated and that they contain
+        information about the non-validating entities.
+        '''
         submission_payload = EXAMPLE_SOURCE_DATA
         mapping_definition = EXAMPLE_MAPPING
         # This schema shares the field names `id` and `name` with

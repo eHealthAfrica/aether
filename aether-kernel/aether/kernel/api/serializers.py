@@ -156,11 +156,6 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
             submission = models.Submission(**validated_data)
             utils.run_entity_extraction(submission)
             return submission
-        except utils.EntityValidationError as e:
-            raise serializers.ValidationError({
-                'description': 'Entity validation error. Submission validation failed',
-                'details': e.args[0],
-            })
         except Exception as e:
             raise serializers.ValidationError({
                 'description': 'Submission validation failed'

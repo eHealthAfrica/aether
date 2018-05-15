@@ -383,6 +383,9 @@ class ViewsTest(TransactionTestCase):
         )
 
     def test_example_entity_extraction__success(self):
+        '''
+        Assert that valid mappings validate and no errors are accumulated.
+        '''
         url = reverse('validate-mappings')
         data = json.dumps({
             'submission_payload': EXAMPLE_SOURCE_DATA,
@@ -398,6 +401,9 @@ class ViewsTest(TransactionTestCase):
         self.assertEqual(len(response_data['mapping_errors']), 0)
 
     def test_example_entity_extraction__failure(self):
+        '''
+        Assert that errors are collected when invalid entities are created.
+        '''
         url = reverse('validate-mappings')
         data = json.dumps({
             'submission_payload': EXAMPLE_SOURCE_DATA,
@@ -425,8 +431,15 @@ class ViewsTest(TransactionTestCase):
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data['entities']), 0)
         self.assertEqual(len(response_data['mapping_errors']), 1)
+        self.assertEqual(
+            response_data['mapping_errors'][0]['type'],
+            'EntityValidationError',
+        )
 
     def test_example_entity_extraction__400_BAD_REQUEST(self):
+        '''
+        Invalid requests should return status code 400.
+        '''
         url = reverse('validate-mappings')
         data = json.dumps({
             'mapping_definition': {
@@ -453,6 +466,9 @@ class ViewsTest(TransactionTestCase):
         self.assertIn('This field is required', response_data['submission_payload'][0])
 
     def test_example_entity_extraction__500_INTERNAL_SERVER_ERROR(self):
+        '''
+        Unexpected mapping or extraction failures should return status code 500.
+        '''
         with mock.patch('aether.kernel.api.mapping_validation.validate_mappings') as m:
             message = 'test'
             m.side_effect = Exception(message)

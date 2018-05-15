@@ -27,6 +27,10 @@ Failure = collections.namedtuple('Failure', ['path', 'description'])
 
 
 class JsonpathValidationError(object):
+    '''
+    This class represents a failed jsonpath lookup. It wraps
+    `mapping_validation.Failure` and adds a `type` key.
+    '''
     def __init__(self, description, path):
         self.description = description
         self.path = path
@@ -47,6 +51,9 @@ class JsonpathValidationError(object):
 
 
 def validate_getter(obj, path):
+    '''
+    Validate the left side of a mapping pair ("source").
+    '''
     if path.startswith('#!'):
         return Success(path, [])
     result = [
@@ -59,6 +66,9 @@ def validate_getter(obj, path):
 
 
 def validate_setter(entities, path):
+    '''
+    Validate the right side of a mapping pair ("destination").
+    '''
     path_segments = path.split('.')
     schema_name = path_segments[0]
     setter = '.'.join(['$'] + path_segments[1:])
@@ -82,6 +92,16 @@ def validate_mapping(submission_payload, entities, mapping):
 
 
 def validate_mappings(submission_payload, entities, mapping_definition):
+    '''
+    Given an arbitrarily shaped submission_payload and a list of entities,
+    accumulate a list of the lookup errors (if any) which would occur when
+    applying the mappings to them.
+
+    This is primarily used by the aether-ui module via the validate_mappings
+    view.
+
+    Returns a list of dicts created by JsonpathValidationError.
+    '''
     errors = []
     for mapping in mapping_definition['mapping']:
         for result in validate_mapping(submission_payload, entities, mapping):
