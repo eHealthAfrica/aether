@@ -88,15 +88,17 @@ def test_masking_category_pass(default_consumer_args,
 
 
 @pytest.mark.integration
-@pytest.mark.parametrize("publish_on, expected_count", [
-    ([True], int(topic_size / 2)),
-    ([False], int(topic_size / 2)),
-    ([True, False], topic_size),
-    (True, int(topic_size / 2)),
-    (False, int(topic_size / 2))
+@pytest.mark.parametrize("required_field, publish_on, expected_count", [
+    (True, [True], int(topic_size / 2)),
+    (True, [False], int(topic_size / 2)),
+    (True, [True, False], topic_size),
+    (True, True, int(topic_size / 2)),
+    (True, False, int(topic_size / 2)),
+    (False, True, int(topic_size))  # Turn off publish filtering
 ])
 def test_publishing_boolean_pass(default_consumer_args,
                                  messages_test_boolean_pass,
+                                 required_field,
                                  publish_on,
                                  expected_count):
     topic = "TestBooleanPass"
@@ -104,6 +106,7 @@ def test_publishing_boolean_pass(default_consumer_args,
            topic_size), "Should have generated the right number of messages"
     # set configs
     consumer_kwargs = default_consumer_args
+    consumer_kwargs["aether_emit_flag_required"] = required_field
     consumer_kwargs["aether_emit_flag_values"] = publish_on
     # get messages for this emit level
     iter_consumer = KafkaConsumer(**consumer_kwargs)
