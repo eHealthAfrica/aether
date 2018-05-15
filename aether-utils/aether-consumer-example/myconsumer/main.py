@@ -36,7 +36,7 @@ def bold(obj):
     print(t.bold(obj))
 
 def norm(obj):
-    print(t.bold(obj))
+    print(obj)
 
 def error(obj):
     with t.location(int(t.width/2 - len(obj)/2), 0):
@@ -44,6 +44,9 @@ def error(obj):
 
 def pjson(obj):
     print(t.bold(json.dumps(obj, indent=2)))
+
+def wait():
+    input("Press enter to continue")
 
 class KafkaViewer(object):
 
@@ -98,10 +101,10 @@ class KafkaViewer(object):
             self.get_consumer(quiet=True)
             quit_str = "Exit KafkaViewer"
             topics = [i for i in self.consumer.topics()]
-            topics.append(quit_str)
             if not topics:
                 bold("No topics available")
                 raise IOError("No topics available")
+            topics.append(quit_str)
             bold("Choose a Topic to View")
             topic = self.ask(topics)
             if topic is quit_str:
@@ -110,29 +113,47 @@ class KafkaViewer(object):
             self.consumer.seek_to_beginning()
             self.show_topic()
 
-    def show_topic(self):
-        messages = self.consumer.poll_and_deserialize(max_records=100)
-        if not messages:
-            norm("No messages available!")
-            return
-        pjson(messages)
-        part = 0
-        choices = [i for i in messages.keys()]
-        if len(choices) > 1:
-            bold("Choose a Parition to View")
-            part = ask(choices)
-        messages = messages.get(choices[0])
-        pjson(messages)
+    def show_topic(self, batch_size=100):
+        current = 0
+        while True:
+            messages = self.consumer.poll_and_deserialize(1000, batch_size)
+            if not messages:
+                t.clear()
+                norm("No messages available!")
+                return
+            part = 0
+            choices = [i for i in messages.keys()]
+            if len(choices) > 1:
+                bold("Choose a Parition to View")
+                part = ask(choices)
+            messages = messages.get(choices[0])
+            if not self.view_messages(messages, batch_size, current):
+                return
+            current += batch_size
 
+
+    def view_messages(self, messages, batch_size, current):
+        options = [
+                "Next Message",
+                "Skip forward %s messages" % (batch_size),
+                "View Current Schema",
+                "Exit to List of Available Topics"
+            ]
+        for x, message in enumerate(messages):
+            t.clear()
+            norm("message #%s (%s of batch sized %s)" % (current+x, x, batch_size))
+            for msg in message.get('messages'):
+                pjson(msg)
+                res = self.ask(options)
+                idx = options.index(res)
+                if idx == 1:
+                    return True
+                elif idx == 2:
+                    t.clear()
+                    pjson(message.get('schema'))
+                    wait()
+                elif idx == 3:
+                    return False
 
 
 viewer = KafkaViewer()
-
-
-
-
-
-
-
-
-
