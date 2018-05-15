@@ -77,7 +77,6 @@ describe('utils', () => {
       element.setAttribute('data-user-id', '1')
       element.setAttribute('data-user-name', 'user')
       document.body.appendChild(element)
-
       expect(getLoggedInUser()).toEqual({id: 1, name: 'user'})
     })
   })

@@ -31,44 +31,8 @@ PIPELINE_EXAMPLE = {
                 ],
                 'namespace': 'age'
               }
-            },
-            {
-              'name': 'gender',
-              'type': 'string'
-            },
-            {
-              'name': 'mothersForename',
-              'type': 'string'
-            },
-            {
-              'name': 'location',
-              'type': {
-                'name': 'location',
-                'type': 'record',
-                'fields': [
-                  {
-                    'name': 'zone',
-                    'type': 'string'
-                  },
-                  {
-                    'name': 'area',
-                    'type': 'string'
-                  },
-                  {
-                    'name': 'village',
-                    'type': 'string'
-                  }
-                ],
-                'namespace': 'location'
-              }
-            },
-            {
-              'doc': 'Type inferred from 1972',
-              'name': 'birthYear',
-              'type': 'int'
             }
-          ],
-          'namespace': ''
+          ]
         }
       },
       {
@@ -201,19 +165,11 @@ PIPELINE_EXAMPLE = {
     '_rev': '2-2a896000d68883bb22ac3aa80dff71a6',
     'type': 'participant',
     'person': {
+      'forename': 'a',
+      'surname': 'b',
       'age': {
         'years': '43'
-      },
-      'gender': 'Male',
-      'surname': 'Lfdjk',
-      'forename': 'Sejflsd Dljljkf',
-      'location': {
-        'area': 'muluma',
-        'zone': 'mosango',
-        'village': 'kisala-lupa'
-      },
-      'birthYear': 1972,
-      'mothersForename': 'Fokdsh'
+      }
     }
   },
   'entity_types': [
@@ -236,17 +192,6 @@ PIPELINE_EXAMPLE = {
         {
           'name': 'age',
           'type': 'int'
-        },
-        {
-          'name': 'gender',
-          'type': {
-            'name': 'Gender',
-            'type': 'enum',
-            'symbols': [
-              'MALE',
-              'FEMALE'
-            ]
-          }
         }
       ]
     },

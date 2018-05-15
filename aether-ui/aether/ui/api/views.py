@@ -31,7 +31,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
         publish and update the pipeline with related kernel model ids.
         '''
         project_name = request.data['project_name'] if 'project_name' in request.data else 'Aux'
-        return ui_utils.publishPipeline(pk, project_name)
+        return ui_utils.publish_pipeline(pk, project_name)
 
 
 class TokenProxyView(View):
