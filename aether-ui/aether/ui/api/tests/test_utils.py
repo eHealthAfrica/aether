@@ -52,10 +52,10 @@ class ViewsTest(TestCase):
             utils.create_new_kernel_object('project', pipeline, {}, 'Aux-test')
         exception = ast.literal_eval(str(exc.exception))
         self.assertEqual(exception['object_name'], 'unknown')
-        self.assertFalse(is_object_linked(pipeline.kernel_refs, 'schema', 'Person'))
+        self.assertFalse(utils.is_object_linked(pipeline.kernel_refs, 'schema', 'Person'))
 
     def test_convert_entity_types(self):
         with self.assertRaises(Exception) as exc:
-            convertEntityTypes({'Person': '123456'})
+            utils.convertEntityTypes({'Person': '123456'})
             exception = ast.literal_eval(str(exc.exception))
             self.assertEqual(exception['object_name'], 'unknown')
