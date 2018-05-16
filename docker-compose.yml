@@ -39,54 +39,70 @@ services:
     networks:
       - internal
 
-  kong-migration:
-    extends:
-      file: docker-compose-base.yml
-      service: kong-migration-base
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - internal
-
-  kong:
-    extends:
-      file: docker-compose-base.yml
-      service: kong-base
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://kong:8001" ]
-      interval: 3s
-      timeout: 3s
-      retries: 5
-    # FIXME: bring back these once we have figured out the reason for
-    #
-    #     ERROR: for kong-migration  Service "db" is missing a healthcheck configuration
-    #
-    # depends_on:
-      # db:
-      #   condition: service_healthy
-      # kong-migration:
-      #   condition: service_started
-    networks:
-      internal:
-        aliases:
-          - ${PROJECT_API_URL}
-
-  kongfig:
-    extends:
-      file: docker-compose-base.yml
-      service: kongfig
-    links:
-      - 'kong:kong'
-    networks:
-      - internal
-
   redis:
     extends:
       file: docker-compose-base.yml
       service: redis-base
     networks:
       - internal
+
+
+  # ---------------------------------
+  # Kong
+  # ---------------------------------
+
+  kong-database:
+    image: postgres:9.6
+    environment:
+      - POSTGRES_USER=kong
+      - POSTGRES_DB=kong
+
+  kong-migration-base:
+    image: kong
+    environment:
+      - KONG_DATABASE=postgres
+      - KONG_PG_HOST=kong-database
+    depends_on:
+      - kong-database
+    links:
+      - kong-database
+    command: kong migrations up
+
+  kong:
+    image: kong
+    restart: on-failure
+    ports:
+      - "8449:8449"
+      - "8001:8001"
+      - "9449:9449"
+      - "9000:9000"
+    environment:
+      - KONG_ADMIN_LISTEN=0.0.0.0:8001
+      - KONG_ADMIN_LISTEN_SSL=0.0.0.0:8444
+      - KONG_PROXY_LISTEN=0.0.0.0:9000
+      - KONG_PROXY_LISTEN_SSL=0.0.0.0:9449
+      - KONG_DATABASE=postgres
+      - KONG_PG_HOST=kong-database
+    depends_on:
+      - kong-migration-base
+    links:
+      - kong-database
+
+  kongfig:
+    build:
+      context: aether-kongfig
+    image: mashupmill/kongfig
+    env_file:
+      - environment-variables.sh
+    volumes:
+    # Register all modular kongfig files as volumes to have them pushed to kong
+      - ./aether-kernel/kongfig.yml:/config/_kernel-kongfig.yml
+      - ./aether-odk-module/kongfig.yml:/config/odk-kongfig.yml
+      - ./aether-couchdb-sync-module/kongfig.yml:/config/sync-kongfig.yml
+    depends_on:
+      - kong
+    links:
+      - 'kong:kong'
 
 
   # ---------------------------------
