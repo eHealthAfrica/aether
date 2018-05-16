@@ -16,16 +16,23 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import re
-import xmltodict
-
 from dateutil import parser
 
-from pyxform import xls2json, builder
+from pyxform import builder, xls2json, xform2json
 from pyxform.xls2json_backends import xls_to_dict
+from pyxform.xform_instance_parser import XFormInstanceParser
 
+
+# ------------------------------------------------------------------------------
+# Parser methods
+# ------------------------------------------------------------------------------
 
 def parse_file(filename, content):
+    '''
+    Depending on the file extension parses file content into an XML string.
+    This method does not validate the content itself.
+    '''
+
     if filename.endswith('.xml'):
         return parse_xmlform(content)
     else:
@@ -33,128 +40,71 @@ def parse_file(filename, content):
 
 
 def parse_xlsform(fp):
-    warnings = []
-    json_survey = xls2json.workbook_to_json(xls_to_dict(fp), None, 'default', warnings)
+    '''
+    Parses XLS file content into an XML string.
+    '''
+
+    xform_dict = xls_to_dict(fp)
+    settings = xform_dict['settings'][0]
+    name = settings['instance_name'] if 'instance_name' in settings else None
+    language = settings['default_language'] if 'default_language' in settings else 'default'
+
+    json_survey = xls2json.workbook_to_json(
+        workbook_dict=xform_dict,
+        form_name=name,
+        default_language=language,
+        warnings=[],
+    )
     survey = builder.create_survey_element_from_dict(json_survey)
     return survey.xml().toprettyxml(indent='  ')
 
 
 def parse_xmlform(fp):
-    content = fp.read()
+    '''
+    Parses XML file content into an XML string. Checking that the content is a
+    valid XML.
+    '''
+
+    content = fp.read().decode('utf-8')
     # check that the file content is a valid XML
-    xmltodict.parse(content)
-    # but return the untouched content if it does not raise an exception
-    return content.decode('utf-8')
+    __parse_xml_to_dict(content)
+    # but return the untouched content if it does not raise any exception
+    return content
 
 
-def parse_xml(xml_content):
-    return xmltodict.parse(xml_content)
-
-
-def get_xml_title(data):
+def validate_xform(xml_definition):
     '''
-    Extracts form title from xml definition
-
-        <h:html>
-          <h:head>
-            <h:title> T I T L E </h:title>
-            ...
-          </h:head>
-          <h:body>
-          </h:body>
-        </h:html>
-
-     '''
-
-    try:
-        # data is an `OrderedDict` object
-        return data['h:html']['h:head']['h:title']
-    except Exception:
-        return None
-
-
-def get_xml_form_id(data):
-    '''
-    Extracts form id from xml definition
-    '''
-
-    return get_xml_instance_attr(data, '@id')
-
-
-def get_xml_version(data):
-    '''
-    Extracts form version from xml definition
-    '''
-
-    return get_xml_instance_attr(data, '@version')
-
-
-def get_xml_instance_attr(data, attr):
-    '''
-    Extracts the attribute of the first instance child from xml definition
-
-        <h:html>
-          <h:head>
-            <h:title> T I T L E </h:title>
-            <model>
-              <instance>
-                <Something id="F O R M I D" version="V E R S I O N"></Something>
-              </instance>
-              <instance id="choice-1"></instance>
-              <instance id="choice-2"></instance>
-
-              <instance id="choice-n"></instance>
-            </model>
-          </h:head>
-          <h:body>
-          </h:body>
-        </h:html>
-
+    Validates xForm definition
     '''
 
     try:
-        # data is an `OrderedDict` object
-        instance = data['h:html']['h:head']['model']['instance']
-        # this can be a list of instances or one entry
-        if isinstance(instance, list):
-            # assumption: the first one is the form definition, the rest are the choices
-            instance = instance[0]
-
-        if isinstance(instance, dict):
-            # assumption: there is only one child (key)
-            key = list(instance.keys())[0]
-            return instance[key][attr]
-
+        xform_dict = __parse_xml_to_dict(xml_definition)
     except Exception:
-        pass
+        raise TypeError('not valid xForm definition')
 
-    return None
+    if (
+        'html' not in xform_dict
+        or 'body' not in xform_dict['html']
+        or 'head' not in xform_dict['html']
+        or 'model' not in xform_dict['html']['head']
+        or 'bind' not in xform_dict['html']['head']['model']
+    ):
+        raise TypeError('not valid xForm definition')
 
+    instance = __get_xform_instance(xform_dict)
 
-def extract_data_from_xml(xml_content):
-    '''
-    Parses the XML submission into a dictionary,
-    also extracts the form id and the form version.
-    '''
+    head = xform_dict['html']['head']
+    title = head['title'] if 'title' in head else None
+    form_id = instance['id'] if 'id' in instance else None
 
-    data = parse_xml(xml_content)
+    if not title and not form_id:
+        raise TypeError('missing title and form_id')
 
-    instance = list(data.items())[0][1]  # TODO make more robust
-    form_id = instance['@id']
-    version = instance['@version'] if '@version' in instance else '0'
+    if not title:
+        raise TypeError('missing title')
 
-    return data, form_id, version
-
-
-def get_instance_id(data):
-    '''
-    Extracts device instance id from xml data
-    '''
-
-    try:
-        return data['meta']['instanceID']
-    except Exception:
-        return None
+    if not form_id:
+        raise TypeError('missing form_id')
 
 
 def parse_submission(data, xml_definition):
@@ -186,34 +136,33 @@ def parse_submission(data, xml_definition):
         }
     '''
 
-    def walk(obj, parent_keys, coerce_dict):
-        if not parent_keys:
-            parent_keys = []
-
+    def walk(obj, parent_keys=[]):
         for k, v in obj.items():
             keys = parent_keys + [k]
             xpath = '/' + '/'.join(keys)
-            _type = coerce_dict.get(xpath)
+            _type = xpath_types.get(xpath)
 
-            if _type == 'list' and not isinstance(v, list):
+            if _type == 'repeat' and not isinstance(v, list):
                 # list of one item but not presented as a list
                 # transform it back into a list
                 obj[k] = [v]
 
             if isinstance(v, dict):
-                walk(v, keys, coerce_dict)
+                walk(v, keys)
 
             elif isinstance(v, list):
                 for i in v:
                     # indices are not important
-                    walk(i, keys, coerce_dict)
+                    walk(i, keys)
 
             elif v is not None:
+                # parse specific type values
+                # the rest of them remains the same (as string)
 
-                if _type in ('int', 'integer'):
+                if _type in ('int', 'integer', 'long', 'short'):
                     obj[k] = int(v)
 
-                if _type == 'decimal':
+                if _type in ('decimal', 'double', 'float'):
                     obj[k] = float(v)
 
                 if _type in ('date', 'dateTime'):
@@ -229,27 +178,23 @@ def parse_submission(data, xml_definition):
                     }
 
             else:
+                if _type == 'geopoint':
+                    # to prevent further errors, in case of null values
+                    # return the same structure but with null values
+                    obj[k] = {
+                        'coordinates': [],
+                        'altitude': None,
+                        'accuracy': None,
+                        'type': None,
+                    }
+                elif _type == 'repeat':
+                    # null arrays are handled as empty arrays
+                    obj[k] = []
+            else:
                 obj[k] = None
 
-    coerce_dict = {}
-    # bind entries define the fields and its types or possible values (choices list)
-    for bind_entry in re.findall(r'<bind.*/>', xml_definition):
-        re_nodeset = re.findall(r'nodeset="([^"]*)"', bind_entry)
-        re_type = re.findall(r'type="([^"]*)"', bind_entry)
-
-        try:
-            coerce_dict[re_nodeset[0]] = re_type[0]
-        except Exception:
-            # ignore, sometimes there is no "type"
-            # <bind nodeset="/ZZZ/some_field" relevant=" /ZZZ/some_choice ='value'"/>
-            pass
-
-    # repeat entries define the "list" fields
-    for repeat_entry in re.findall(r'<repeat.*>', xml_definition):
-        re_nodeset = re.findall(r'nodeset="([^"]*)"', repeat_entry)
-        coerce_dict[re_nodeset[0]] = 'list'
-
-    walk(data, None, coerce_dict)  # modifies inplace
+    xpath_types = __get_nodeset_types(xml_definition)
+    walk(data)  # modifies inplace
 
     # assumption: there is only one child that represents the form content
     # usually: {'ZZZ': { ... }}
@@ -258,3 +203,146 @@ def parse_submission(data, xml_definition):
         data = data[list(data.keys())[0]]
 
     return data
+
+
+# ------------------------------------------------------------------------------
+# Getter methods
+# ------------------------------------------------------------------------------
+
+def get_xform_data_from_xml(xml_definition):
+    '''
+    Extracts the meaningful data from the xForm.
+    '''
+
+    xform_dict = __parse_xml_to_dict(xml_definition)
+
+    title = xform_dict['html']['head']['title']
+    instance = __get_xform_instance(xform_dict)
+
+    form_id = instance['id']
+    version = instance['version'] if 'version' in instance else None
+
+    return title, form_id, version
+
+
+def get_instance_data_from_xml(xml_content):
+    '''
+    Parses the XML submission into a dictionary,
+    also extracts the form id and the form version.
+    '''
+
+    xform_parser = XFormInstanceParser(xml_content.decode('utf-8'))
+
+    instance_dict = xform_parser.to_json_dict()
+    form_id = xform_parser.get_xform_id_string()
+    version = xform_parser.get_attributes().get('version') or '0'
+
+    # include attributes in instance content
+    root = xform_parser.get_root_node_name()
+    for k, v in xform_parser.get_attributes().items():
+        instance_dict[root][f'@{k}'] = v
+
+    instance_dict[root]['@id'] = form_id
+    instance_dict[root]['@version'] = version
+
+    return instance_dict, form_id, version
+
+
+def get_instance_id(instance_dict):
+    '''
+    Extracts device instance id from xml data
+    '''
+
+    try:
+        return instance_dict['meta']['instanceID']
+    except Exception:
+        return None
+
+
+# ------------------------------------------------------------------------------
+# Private methods
+# ------------------------------------------------------------------------------
+
+def __parse_xml_to_dict(xml_content):
+    '''
+    Parses XML file content into an dictionary.
+    '''
+
+    return xform2json.XFormToDict(xml_content).get_dict()
+
+
+def __get_xform_instance(xform_dict):
+    '''
+    Extracts instance from xForm definition
+    '''
+
+    try:
+        instance = xform_dict['html']['head']['model']['instance']
+
+        # this can be a list of instances or one entry
+        if isinstance(instance, list):
+            instances = instance
+            instance = None
+
+            for i in instances:
+                # the default instance is the only one without "id"
+                if 'id' not in i:
+                    instance = i
+                    break
+
+        if isinstance(instance, dict):
+            # assumption: there is only one child (key)
+            key = list(instance.keys())[0]
+            return instance[key]
+
+        else:
+            raise TypeError('missing instance definition')
+
+    except Exception:
+        raise TypeError('missing instance definition')
+
+
+def __get_nodeset_types(xml_definition):
+    '''
+    Extract nodeset types from the xForm definition (in XML format).
+    '''
+
+    nodeset_types = {}
+    xform_dict = __parse_xml_to_dict(xml_definition)
+
+    for entries in __find_in_dict('bind', xform_dict):
+        if isinstance(entries, dict):
+            entries = [entries]
+        for bind_entry in entries:
+            if 'type' in bind_entry:
+                nodeset = bind_entry['nodeset']
+                nodeset_type = bind_entry['type']
+                nodeset_types[nodeset] = nodeset_type
+
+    # search in body all the repeat entries
+    for entries in __find_in_dict('repeat', xform_dict):
+        if isinstance(entries, dict):
+            entries = [entries]
+        for repeat_entry in entries:
+            nodeset = repeat_entry['nodeset']
+            nodeset_types[nodeset] = 'repeat'
+
+    return nodeset_types
+
+
+def __find_in_dict(key, dictionary):
+    # https://gist.github.com/douglasmiranda/5127251
+    # it could return a list, a dict, or a primitive value
+    for k, v in dictionary.items():
+        if k == key:
+            yield v
+
+        elif isinstance(v, dict):
+            for result in __find_in_dict(key, v):
+                yield result
+
+        elif isinstance(v, list):
+            for d in v:
+                if isinstance(d, dict):
+                    for result in __find_in_dict(key, d):
+                        yield result

@@ -47,7 +47,7 @@
         </translation>
       </itext>
       <instance>
-        <Something_that_is_not_None id="my-test-form" version="Test-1.0">
+        <Something_that_is_not_None id="my-test-form">
           <starttime/>
           <endtime/>
           <deviceid/>
@@ -55,7 +55,6 @@
           <region/>
           <name/>
           <location/>
-          <location_none/>
           <image/>
           <number/>
           <number2/>
@@ -69,6 +68,7 @@
             <choice_b/>
           </option_b>
           <lang/>
+          <iterate_count/>
           <iterate jr:template="">
             <index/>
             <value/>
@@ -76,9 +76,6 @@
           <iterate_one jr:template="">
             <item/>
           </iterate_one>
-          <iterate_none jr:template="">
-            <nothing/>
-          </iterate_none>
           <meta>
             <instanceID/>
             <instanceName/>
@@ -174,7 +171,6 @@
       <bind nodeset="/Something_that_is_not_None/region" required="false()" type="select1"/>
       <bind nodeset="/Something_that_is_not_None/name" required="false()" type="string"/>
       <bind nodeset="/Something_that_is_not_None/location" required="false()" type="geopoint"/>
-      <bind nodeset="/Something_that_is_not_None/location_none" required="false()" type="geopoint"/>
       <bind nodeset="/Something_that_is_not_None/image" required="false()" type="binary"/>
       <bind nodeset="/Something_that_is_not_None/number" required="false()" type="int"/>
       <bind nodeset="/Something_that_is_not_None/number2" required="false()" type="decimal"/>
@@ -186,10 +182,10 @@
       <bind nodeset="/Something_that_is_not_None/option_b" relevant=" /Something_that_is_not_None/option ='b'"/>
       <bind nodeset="/Something_that_is_not_None/option_b/choice_b" type="string"/>
       <bind nodeset="/Something_that_is_not_None/lang" type="select"/>
+      <bind calculate="3" nodeset="/Something_that_is_not_None/iterate_count" readonly="true()" type="string"/>
       <bind nodeset="/Something_that_is_not_None/iterate/index" type="int"/>
       <bind nodeset="/Something_that_is_not_None/iterate/value" type="string"/>
       <bind nodeset="/Something_that_is_not_None/iterate_one/item" type="string"/>
-      <bind nodeset="/Something_that_is_not_None/iterate_none/nothing" type="string"/>
       <bind
             calculate="concat('uuid:', uuid())"
             nodeset="/Something_that_is_not_None/meta/instanceID"
@@ -225,9 +221,6 @@
     </input>
     <input ref="/Something_that_is_not_None/location">
       <label>Collect your GPS coordinates</label>
-    </input>
-    <input ref="/Something_that_is_not_None/location_none">
-      <label>Ignore your GPS coordinates</label>
     </input>
     <upload mediatype="image/*" ref="/Something_that_is_not_None/image">
       <label>Take a picture</label>
@@ -285,6 +278,7 @@
     <group ref="/Something_that_is_not_None/iterate">
       <label>Indicate loop elements</label>
       <repeat
+              jr:count=" /Something_that_is_not_None/iterate_count "
               nodeset="/Something_that_is_not_None/iterate">
         <input ref="/Something_that_is_not_None/iterate/index">
           <label>Index</label>
@@ -295,18 +289,10 @@
       </repeat>
     </group>
     <group ref="/Something_that_is_not_None/iterate_one">
-      <label>Indicate one</label>
+      <label>Indicate elements</label>
       <repeat nodeset="/Something_that_is_not_None/iterate_one">
         <input ref="/Something_that_is_not_None/iterate_one/item">
           <label>Item</label>
-        </input>
-      </repeat>
-    </group>
-    <group ref="/Something_that_is_not_None/iterate_none">
-      <label>Indicate none</label>
-      <repeat nodeset="/Something_that_is_not_None/iterate_none">
-        <input ref="/Something_that_is_not_None/iterate_none/nothing">
-          <label>None</label>
         </input>
       </repeat>
     </group>

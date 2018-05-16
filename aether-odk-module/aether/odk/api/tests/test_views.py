@@ -29,7 +29,7 @@ class ViewsTests(CustomTestCase):
     def setUp(self):
         super(ViewsTests, self).setUp()
         self.helper_create_user()
-        self.xform = self.helper_create_xform(with_media=True)
+        self.xform = self.helper_create_xform(with_media=True, with_version=False)
         self.formIdXml = '<formID>%s</formID>' % self.xform.form_id
         self.url_get_form = self.xform.download_url
         self.url_get_media = self.xform.manifest_url

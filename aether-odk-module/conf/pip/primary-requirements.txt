@@ -27,7 +27,6 @@ uwsgi
 # xForm and data manipulation
 python-dateutil
 pyxform
-xmltodict
 
 
 # UMS libraries

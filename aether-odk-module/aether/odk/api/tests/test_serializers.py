@@ -46,7 +46,7 @@ class SerializersTests(CustomTestCase):
         self.assertTrue(xform.is_valid(), xform.errors)
         xform.save()
         self.assertEqual(xform.data['form_id'], 'my-test-form')
-        self.assertEqual(xform.data['title'], 'my-test-form')
+        self.assertEqual(xform.data['title'], 'My Test Form')
         self.assertNotEqual(xform.data['version'], '0', 'no default version number')
         self.assertIn('<h:head>', xform.data['xml_data'])
 
@@ -68,7 +68,7 @@ class SerializersTests(CustomTestCase):
         self.assertTrue(xform.is_valid(), xform.errors)
         xform.save()
         self.assertEqual(xform.data['form_id'], 'my-test-form')
-        self.assertEqual(xform.data['title'], 'my-test-form')
+        self.assertEqual(xform.data['title'], 'My Test Form')
         self.assertNotEqual(xform.data['version'], '0', 'no default version number')
         self.assertIn('<h:head>', xform.data['xml_data'])
 
@@ -90,7 +90,7 @@ class SerializersTests(CustomTestCase):
         self.assertTrue(xform.is_valid(), xform.errors)
         xform.save()
         self.assertEqual(xform.data['form_id'], 'my-test-form')
-        self.assertEqual(xform.data['title'], 'my-test-form')
+        self.assertEqual(xform.data['title'], 'My Test Form')
         self.assertNotEqual(xform.data['version'], '0', 'no default version number')
         self.assertIn('<h:head>', xform.data['xml_data'])
 

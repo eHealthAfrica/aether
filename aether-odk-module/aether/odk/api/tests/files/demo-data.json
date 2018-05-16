@@ -1,7 +1,8 @@
 {
   "@id": "my-test-form",
-  "starttime": "2017-07-14T16:37:08.966+02",
-  "endtime": "2017-07-14T16:38:47.151+02",
+  "@version": "test-1.0",
+  "starttime": "2017-07-14T16:37:08.966000+02:00",
+  "endtime": "2017-07-14T16:38:47.151000+02:00",
   "deviceid": "355217062209730",
   "name": "Name",
   "country": "CM",
@@ -14,6 +15,12 @@
     "altitude": 108.0,
     "accuracy": 22.0
   },
+  "location_none": {
+    "type": null,
+    "coordinates": [],
+    "altitude": null,
+    "accuracy": null
+  },
   "number": 3,
   "number2": 3.56,
   "date": "2017-07-14T00:00:00",
@@ -25,22 +32,27 @@
   "lang": "EN,FR",
   "iterate": [
     {
-      "index": "1"
+      "index": 1,
+      "value": "One"
     },
     {
-      "index": "2"
+      "index": 2,
+      "value": "Two"
     },
     {
-      "index": "3"
+      "index": 3,
+      "value": "Three"
     }
   ],
   "iterate_one": [
     {
-      "index": "one"
+      "item": "one"
     }
   ],
+  "iterate_none": [],
   "meta": {
-    "instanceID": "uuid:cef69d9d-ebd9-408f-8bc6-9d418bb083d9"
+    "instanceID": "uuid:cef69d9d-ebd9-408f-8bc6-9d418bb083d9",
+    "instanceName": "Something_that_is_not_None"
   },
   "not_in_the_definition": "Oops!"
 }

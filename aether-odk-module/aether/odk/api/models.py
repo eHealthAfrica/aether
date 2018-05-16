@@ -27,10 +27,8 @@ from django.db import models, IntegrityError
 from django.utils import timezone
 
 from .xform_utils import (
-    get_xml_form_id,
-    get_xml_title,
-    get_xml_version,
-    parse_xml,
+    get_xform_data_from_xml,
+    validate_xform,
 )
 
 
@@ -77,43 +75,15 @@ class Mapping(models.Model):
         ordering = ['name']
 
 
-def __validate_xml_data__(value, return_values=False):
+def __validate_xml_data__(value):
     '''
-    Validates xml definition:
-
-    1. parses xml
-    2. checks if title is valid
-    3. checks if form id is valid
-
-    If indicated returns the following extracted values:
-
-    - xForm title
-    - xForm form_id
-    - xForm version
-
+    Validates xml definition
     '''
 
     try:
-        data = parse_xml(value)
-
-        title = get_xml_title(data)
-        form_id = get_xml_form_id(data)
-        version = get_xml_version(data)
-
-        if not title and not form_id:
-            raise ValidationError('missing title and form_id')
-
-        if not title:
-            raise ValidationError('missing title')
-
-        if not form_id:
-            raise ValidationError('missing form_id')
-
+        validate_xform(value)
     except Exception as e:
         raise ValidationError(e)
-
-    if return_values:
-        return title, form_id, version
 
 
 class XForm(models.Model):
@@ -180,9 +150,14 @@ class XForm(models.Model):
 
     def save(self, *args, **kwargs):
         try:
-            title, form_id, version = __validate_xml_data__(self.xml_data, return_values=True)
+            self.full_clean()
         except ValidationError as ve:
             raise IntegrityError(ve)
+
+        if not self.xml_data:
+            raise IntegrityError({'xml_data': ['This field is required']})
+
+        title, form_id, version = get_xform_data_from_xml(self.xml_data)
 
         self.title = title
         self.form_id = form_id

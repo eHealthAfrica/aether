@@ -65,7 +65,7 @@ class AdminTests(CustomTestCase):
 
         instance = XForm.objects.first()
         self.assertEqual(instance.form_id, 'my-test-form')
-        self.assertEqual(instance.title, 'my-test-form')
+        self.assertEqual(instance.title, 'My Test Form')
         self.assertEqual(instance.description, 'some text')
         self.assertEqual(instance.mapping, self.mapping)
 
@@ -80,7 +80,7 @@ class AdminTests(CustomTestCase):
 
         instance = XForm.objects.first()
         self.assertEqual(instance.form_id, 'my-test-form')
-        self.assertEqual(instance.title, 'my-test-form')
+        self.assertEqual(instance.title, 'My Test Form')
         self.assertEqual(instance.description, 'some text')
         self.assertEqual(instance.mapping, self.mapping)
 

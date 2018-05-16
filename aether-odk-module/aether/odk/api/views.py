@@ -50,7 +50,7 @@ from .serializers import (
 )
 from .surveyors_utils import get_surveyors
 from .xform_utils import (
-    extract_data_from_xml,
+    get_instance_data_from_xml,
     get_instance_id,
     parse_submission,
 )
@@ -275,7 +275,7 @@ def xform_submission(request):
     try:
         xml = request.FILES[XML_SUBMISSION_PARAM]
         xml_content = xml.read()  # the content will be sent as an attachment
-        data, form_id, version = extract_data_from_xml(xml_content)
+        data, form_id, version = get_instance_data_from_xml(xml_content)
     except Exception as e:
         logger.warning('Unexpected error when handling file')
         logger.error(str(e))

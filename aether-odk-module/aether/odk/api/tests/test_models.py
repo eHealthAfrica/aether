@@ -18,126 +18,16 @@
 
 import uuid
 
-from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError
 
 from . import CustomTestCase
-from ..models import Mapping, XForm, MediaFile, __validate_xml_data__
+from ..models import Mapping, XForm, MediaFile
 
 
 class ModelsTests(CustomTestCase):
 
     MAPPING_ID = uuid.uuid4()
-
-    def test__validate_xml_data__no_title__no_form_id(self):
-        with self.assertRaises(ValidationError) as ve:
-            __validate_xml_data__(
-                '''
-                    <h:html>
-                        <h:head/>
-                        <h:body/>
-                    </h:html>
-                '''
-            )
-            self.assertEqual(ve.messages[0], 'missing title and form_id')
-
-    def test__validate_xml_data__no_title(self):
-        with self.assertRaises(ValidationError) as ve:
-            __validate_xml_data__(
-                '''
-                    <h:html>
-                        <h:head>
-                            <model>
-                                <instance>
-                                    <A id="xform-id-test"/>
-                                </instance>
-                            </model>
-                        </h:head>
-                        <h:body/>
-                    </h:html>
-                '''
-            )
-            self.assertEqual(ve.messages[0], 'missing title')
-
-    def test__validate_xml_data__no_title__blank(self):
-        with self.assertRaises(ValidationError) as ve:
-            __validate_xml_data__(
-                '''
-                    <h:html>
-                        <h:head>
-                            <h:title></h:title>
-                            <model>
-                                <instance>
-                                    <B id="xform-id-test"/>
-                                </instance>
-                            </model>
-                        </h:head>
-                        <h:body/>
-                    </h:html>
-                '''
-            )
-            self.assertEqual(ve.messages[0], 'missing title')
-
-    def test__validate_xml_data__no_xform_id(self):
-        with self.assertRaises(ValidationError) as ve:
-            __validate_xml_data__(
-                '''
-                    <h:html>
-                        <h:head>
-                            <h:title>xForm - Test</h:title>
-                            <model>
-                                <instance>
-                                    <None/>
-                                </instance>
-                            </model>
-                        </h:head>
-                        <h:body/>
-                    </h:html>
-                '''
-            )
-            self.assertEqual(ve.messages[0], 'missing form_id')
-
-    def test__validate_xml_data__no_xform_id__blank(self):
-        with self.assertRaises(ValidationError) as ve:
-            __validate_xml_data__(
-                '''
-                    <h:html>
-                        <h:head>
-                            <h:title>xForm - Test</h:title>
-                            <model>
-                                <instance>
-                                    <C id=""/>
-                                </instance>
-                            </model>
-                        </h:head>
-                        <h:body/>
-                    </h:html>
-                '''
-            )
-            self.assertEqual(ve, ValidationError('missing form_id'))
-
-    def test__validate_xml_data__with__title__and__xform_id(self):
-        try:
-            __validate_xml_data__(
-                '''
-                    <h:html>
-                        <h:head>
-                            <h:title>xForm - Test</h:title>
-                            <model>
-                                <instance>
-                                    <D id="xform-id-test"/>
-                                </instance>
-                            </model>
-                        </h:head>
-                        <h:body/>
-                    </h:html>
-                '''
-            )
-            self.assertTrue(True)
-        except ValidationError as ve:
-            self.assertIsNone(ve)
-            self.assertTrue(False)
 
     def test__xform__create__raises_errors(self):
         # missing required fields
@@ -180,17 +70,7 @@ class ModelsTests(CustomTestCase):
             IntegrityError,
             XForm.objects.create,
             mapping=self.helper_create_mapping(),
-            xml_data='''
-                <h:html
-                    xmlns="http://www.w3.org/2002/xforms"
-                    xmlns:ev="http://www.w3.org/2001/xml-events"
-                    xmlns:h="http://www.w3.org/1999/xhtml"
-                    xmlns:jr="http://openrosa.org/javarosa"
-                    xmlns:orx="http://openrosa.org/xforms"
-                    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-
-                  <h:head>
-            ''',
+            xml_data=self.samples['xform']['xml-err'],
         )
 
     def test__xform__save(self):
@@ -207,8 +87,8 @@ class ModelsTests(CustomTestCase):
         self.assertEqual(instance.manifest_url, '', 'without media files no manifest url')
         self.assertEqual(str(instance), 'xForm - Test - xform-id-test')
 
-        self.assertEqual(instance.md5sum, 'c584277aeaea85d08837b1b04a6ffc59')
-        self.assertEqual(instance.hash, 'md5:c584277aeaea85d08837b1b04a6ffc59')
+        self.assertEqual(instance.md5sum, '5e97c4e929f64d7701804043e3b544ba')
+        self.assertEqual(instance.hash, 'md5:5e97c4e929f64d7701804043e3b544ba')
 
     def test__mapping__surveyors(self):
         instance = Mapping.objects.create(
