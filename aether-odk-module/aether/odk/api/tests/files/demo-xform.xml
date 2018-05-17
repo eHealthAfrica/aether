@@ -68,7 +68,7 @@
           <option_b>
             <choice_b/>
           </option_b>
-          <lang/>
+          <lang>EN</lang>
           <iterate jr:template="">
             <index/>
             <value/>
