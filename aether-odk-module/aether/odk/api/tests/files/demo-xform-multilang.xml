@@ -306,7 +306,6 @@
             <index/>
             <value/>
           </iterate>
-          <iterate_one_count/>
           <iterate_one jr:template="">
             <item/>
           </iterate_one>

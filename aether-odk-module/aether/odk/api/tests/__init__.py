@@ -35,6 +35,7 @@ XFORM_XLS_FILE = PATH_DIR + 'demo-xform.xls'
 XFORM_XML_FILE = PATH_DIR + 'demo-xform.xml'
 XFORM_XML_FILE_NOVERSION = PATH_DIR + 'demo-xform-noversion.xml'
 XFORM_XML_FILE_I18N = PATH_DIR + 'demo-xform-multilang.xml'
+XFORM_AVRO_FILE = PATH_DIR + 'demo-xform.avsc'
 
 XML_DATA_FILE = PATH_DIR + 'demo-data.xml'
 XML_DATA_FILE_ERR = PATH_DIR + 'demo-data--error.xml'
@@ -106,7 +107,6 @@ XML_DATA_ERR = '''
             xmlns:jr="http://openrosa.org/javarosa"
             xmlns:orx="http://openrosa.org/xforms"
             xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-
         <!-- missing close tag -->
         <h:head>
     </h:html>
@@ -146,6 +146,8 @@ class CustomTestCase(TransactionTestCase):
 
                 'raw-xml': XFORM_XML_RAW,
                 'file-xml': XFORM_XML_FILE,
+
+                'file-avro': XFORM_AVRO_FILE,
 
                 'raw-xml-noversion': XFORM_XML_RAW_NOVERSION,
                 'file-xml-noversion': XFORM_XML_FILE_NOVERSION,

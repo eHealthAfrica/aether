@@ -16,95 +16,32 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from collections import defaultdict
 from dateutil import parser
+from xml.etree import ElementTree
 
-from pyxform import builder, xls2json, xform2json
+from pyxform import builder, xls2json
 from pyxform.xls2json_backends import xls_to_dict
 from pyxform.xform_instance_parser import XFormInstanceParser
+
+
+DEFAULT_XFORM_VERSION = '0'
 
 
 # ------------------------------------------------------------------------------
 # Parser methods
 # ------------------------------------------------------------------------------
 
-def parse_file(filename, content):
+def parse_xform_file(filename, content):
     '''
     Depending on the file extension parses file content into an XML string.
     This method does not validate the content itself.
     '''
 
     if filename.endswith('.xml'):
-        return parse_xmlform(content)
+        return __parse_xmlform(content)
     else:
-        return parse_xlsform(content)
-
-
-def parse_xlsform(fp):
-    '''
-    Parses XLS file content into an XML string.
-    '''
-
-    xform_dict = xls_to_dict(fp)
-    settings = xform_dict['settings'][0]
-    name = settings['instance_name'] if 'instance_name' in settings else None
-    language = settings['default_language'] if 'default_language' in settings else 'default'
-
-    json_survey = xls2json.workbook_to_json(
-        workbook_dict=xform_dict,
-        form_name=name,
-        default_language=language,
-        warnings=[],
-    )
-    survey = builder.create_survey_element_from_dict(json_survey)
-    return survey.xml().toprettyxml(indent='  ')
-
-
-def parse_xmlform(fp):
-    '''
-    Parses XML file content into an XML string. Checking that the content is a
-    valid XML.
-    '''
-
-    content = fp.read().decode('utf-8')
-    # check that the file content is a valid XML
-    __parse_xml_to_dict(content)
-    # but return the untouched content if it does not raise any exception
-    return content
-
-
-def validate_xform(xml_definition):
-    '''
-    Validates xForm definition
-    '''
-
-    try:
-        xform_dict = __parse_xml_to_dict(xml_definition)
-    except Exception:
-        raise TypeError('not valid xForm definition')
-
-    if (
-        'html' not in xform_dict
-        or 'body' not in xform_dict['html']
-        or 'head' not in xform_dict['html']
-        or 'model' not in xform_dict['html']['head']
-        or 'bind' not in xform_dict['html']['head']['model']
-    ):
-        raise TypeError('not valid xForm definition')
-
-    instance = __get_xform_instance(xform_dict)
-
-    head = xform_dict['html']['head']
-    title = head['title'] if 'title' in head else None
-    form_id = instance['id'] if 'id' in instance else None
-
-    if not title and not form_id:
-        raise TypeError('missing title and form_id')
-
-    if not title:
-        raise TypeError('missing title')
-
-    if not form_id:
-        raise TypeError('missing form_id')
+        return __parse_xlsform(content)
 
 
 def parse_submission(data, xml_definition):
@@ -190,10 +127,14 @@ def parse_submission(data, xml_definition):
                 elif _type == 'repeat':
                     # null arrays are handled as empty arrays
                     obj[k] = []
-            else:
-                obj[k] = None
+                else:
+                    obj[k] = None
 
-    xpath_types = __get_nodeset_types(xml_definition)
+    xpath_types = {
+        xpath: definition['type']
+        for xpath, definition in __get_xform_schema(xml_definition).items()
+        if definition['type']
+    }
     walk(data)  # modifies inplace
 
     # assumption: there is only one child that represents the form content
@@ -203,6 +144,214 @@ def parse_submission(data, xml_definition):
         data = data[list(data.keys())[0]]
 
     return data
+
+
+def parse_xform_to_avro_schema(xml_definition):
+    '''
+    Transforms the xForm definition (in XML format) to AVRO schema.
+
+        <h:html>
+          <h:head>
+            <h:title> T I T L E </h:title>
+            <model>
+              <itext>
+                <translation default="true()" lang="AAA">
+                  <text id="/a/field_1:label">
+                    <value>T E X T - #1</value>
+                  </text>
+
+                  <text id="/a/field_n:label">
+                    <value>T E X T - #N</value>
+                  </text>
+                </translation>
+                <translation lang="BBB">
+                  <text id="/a/field_1:label">
+                    <value>U F Y U - #1</value>
+                  </text>
+
+                  <text id="/a/field_n:label">
+                    <value>U F Y U - #N</value>
+                  </text>
+                </translation>
+              </itext>
+
+              <instance>
+                <Something id="F O R M I D" version="V E R S I O N"></Something>
+              </instance>
+              <instance id="choice-1"></instance>
+              <instance id="choice-2"></instance>
+
+              <instance id="choice-n"></instance>
+
+              <bind nodeset="/a/field_1" ... type="T Y P E"/>
+              <bind nodeset="/a/field_2" ... type="T Y P E"/>
+              <bind nodeset="/a/field_2/child_1" ... type="T Y P E"/>
+
+              <bind nodeset="/a/field_n" ... type="T Y P E"/>
+            </model>
+          </h:head>
+          <h:body>
+          </h:body>
+        </h:html>
+    '''
+
+    title, form_id, version = get_xform_data_from_xml(xml_definition)
+    version = version or DEFAULT_XFORM_VERSION
+
+    KEY = '-----'
+
+    # initial schema, with "@id" and "@version" attributes
+    avro_schema = {
+        'name': form_id,
+        'doc': f'{title} (version: {version})',
+        'type': 'record',
+        'fields': [
+            {
+                'name': '@id',
+                'doc': 'xForm ID',
+                'type': 'string',
+                'default': form_id,
+            },
+            {
+                'name': '@version',
+                'doc': 'xForm version',
+                'type': 'string',
+                'default': version,
+            },
+        ],
+        # this is going to be removed later, but it's used to speed up the build process
+        KEY: None,
+    }
+
+    xform_schema = __get_xform_schema(xml_definition)
+    for xpath, definition in xform_schema.items():
+        if len(xpath.split('/')) == 2:
+            # include the KEY value
+            avro_schema[KEY] = xpath
+            # ignore the root (already implemented)
+            continue
+
+        current_type = definition['type']
+        current_name = xpath.split('/')[-1:][0]
+        current_doc = definition['label']
+
+        parent_path = '/'.join(xpath.split('/')[:-1])
+        parent = list(__find_by_key_value(avro_schema, KEY, parent_path))[0]
+
+        # record
+        if current_type == 'group':
+            parent['fields'].append({
+                'name': current_name,
+                'doc': current_doc,
+                'type': 'record',
+                'fields': [],
+                KEY: xpath,
+            })
+            continue
+
+        # array
+        if current_type == 'repeat':
+            parent['fields'].append({
+                'name': current_name,
+                'doc': current_doc,
+                'type': {
+                    'type': 'array',
+                    'items': {
+                        'name': current_name,
+                        'doc': current_doc,
+                        'type': 'record',
+                        'fields': [],
+                        KEY: xpath,
+                    },
+                },
+            })
+            continue
+
+        # final leaf
+        current_field = {
+            'name': current_name,
+            'type': __get_avro_primitive_type(current_type, definition['required']),
+            'doc': current_doc,
+        }
+        parent['fields'].append(current_field)
+
+        # there are three types of GEO types: geopoint, geotrace and geoshape
+        # currently, only geopoint is implemented by ODK Collect
+        if current_type == 'geopoint':
+            current_field['type'] = 'record'
+            current_field['fields'] = [
+                {
+                    'name': 'coordinates',
+                    'type': 'array',
+                    'items': 'float',
+                },
+                {
+                    'name': 'altitude',
+                    'type': __get_avro_primitive_type('float', definition['required']),
+                },
+                {
+                    'name': 'accuracy',
+                    'type': __get_avro_primitive_type('float', definition['required']),
+                },
+                {
+                    'name': 'type',
+                    'type': __get_avro_primitive_type('string', definition['required']),
+                },
+            ]
+
+    # remove fake KEY
+    __delete_key_in_dict(avro_schema, KEY)
+
+    return avro_schema
+
+
+# ------------------------------------------------------------------------------
+# Validator methods
+# ------------------------------------------------------------------------------
+
+def validate_xform(xml_definition):
+    '''
+    Validates xForm definition
+    '''
+
+    try:
+        xform_dict = __parse_xml_to_dict(xml_definition)
+    except Exception:
+        raise TypeError('not valid xForm definition')
+
+    if (
+        'h:html' not in xform_dict
+        or xform_dict['h:html'] is None
+
+        or 'h:body' not in xform_dict['h:html']
+
+        or 'h:head' not in xform_dict['h:html']
+        or xform_dict['h:html']['h:head'] is None
+
+        or 'h:title' not in xform_dict['h:html']['h:head']
+
+        or 'model' not in xform_dict['h:html']['h:head']
+        or xform_dict['h:html']['h:head']['model'] is None
+
+        or 'bind' not in xform_dict['h:html']['h:head']['model']
+
+        or 'instance' not in xform_dict['h:html']['h:head']['model']
+        or xform_dict['h:html']['h:head']['model']['instance'] is None
+    ):
+        raise TypeError('missing required tags')
+
+    title = xform_dict['h:html']['h:head']['h:title']
+    instance = __get_xform_instance(xform_dict)
+    form_id = instance['@id'] if instance and '@id' in instance else None
+
+    if not title and not form_id:
+        raise TypeError('missing title and form_id')
+
+    if not title:
+        raise TypeError('missing title')
+
+    if not form_id:
+        raise TypeError('missing form_id')
 
 
 # ------------------------------------------------------------------------------
@@ -216,11 +365,11 @@ def get_xform_data_from_xml(xml_definition):
 
     xform_dict = __parse_xml_to_dict(xml_definition)
 
-    title = xform_dict['html']['head']['title']
+    title = xform_dict['h:html']['h:head']['h:title']
     instance = __get_xform_instance(xform_dict)
 
-    form_id = instance['id']
-    version = instance['version'] if 'version' in instance else None
+    form_id = instance['@id']
+    version = instance['@version'] if '@version' in instance else None
 
     return title, form_id, version
 
@@ -235,7 +384,7 @@ def get_instance_data_from_xml(xml_content):
 
     instance_dict = xform_parser.to_json_dict()
     form_id = xform_parser.get_xform_id_string()
-    version = xform_parser.get_attributes().get('version') or '0'
+    version = xform_parser.get_attributes().get('version') or DEFAULT_XFORM_VERSION
 
     # include attributes in instance content
     root = xform_parser.get_root_node_name()
@@ -263,86 +412,312 @@ def get_instance_id(instance_dict):
 # Private methods
 # ------------------------------------------------------------------------------
 
+def __parse_xlsform(fp):
+    '''
+    Parses XLS file content into an XML string.
+    '''
+
+    xform_dict = xls_to_dict(fp)
+    settings = xform_dict['settings'][0] if 'settings' in xform_dict else {}
+    name = settings['instance_name'] if 'instance_name' in settings else None
+    language = settings['default_language'] if 'default_language' in settings else 'default'
+
+    json_survey = xls2json.workbook_to_json(
+        workbook_dict=xform_dict,
+        form_name=name,
+        default_language=language,
+        warnings=[],
+    )
+    survey = builder.create_survey_element_from_dict(json_survey)
+    return survey.xml().toprettyxml(indent='  ')
+
+
+def __parse_xmlform(fp):
+    '''
+    Parses XML file content into an XML string. Checking that the content is a
+    valid XML.
+    '''
+
+    content = fp.read().decode('utf-8')
+    # check that the file content is a valid XML
+    __parse_xml_to_dict(content)
+    # but return the untouched content if it does not raise any exception
+    return content
+
+
 def __parse_xml_to_dict(xml_content):
     '''
     Parses XML file content into an dictionary.
     '''
 
-    return xform2json.XFormToDict(xml_content).get_dict()
+    root = ElementTree.fromstring(xml_content)
+    xml_dict = __etree_to_dict(root)
+    return xml_dict
 
 
-def __get_xform_instance(xform_dict):
+def __get_xform_instance(xform_dict, with_root=False):
     '''
     Extracts instance from xForm definition
     '''
 
     try:
-        instance = xform_dict['html']['head']['model']['instance']
-
-        # this can be a list of instances or one entry
-        if isinstance(instance, list):
-            instances = instance
-            instance = None
-
-            for i in instances:
-                # the default instance is the only one without "id"
-                if 'id' not in i:
-                    instance = i
-                    break
+        instances = __wrap_as_list(xform_dict['h:html']['h:head']['model']['instance'])
+        for i in instances:
+            # the default instance is the only one without "id" attribute
+            if '@id' not in i:
+                instance = i
+                break
 
         if isinstance(instance, dict):
+            if with_root:
+                return instance
+
             # assumption: there is only one child (key)
             key = list(instance.keys())[0]
             return instance[key]
 
-        else:
-            raise TypeError('missing instance definition')
-
     except Exception:
-        raise TypeError('missing instance definition')
+        pass
+
+    raise TypeError('missing instance definition')
 
 
-def __get_nodeset_types(xml_definition):
+def __get_xform_schema(xml_definition):
     '''
-    Extract nodeset types from the xForm definition (in XML format).
+    Extracts the xForm schema from the xForm definition (in XML format).
     '''
 
-    nodeset_types = {}
+    schema = {}
+
     xform_dict = __parse_xml_to_dict(xml_definition)
+    itexts = __get_xform_itexts(xform_dict)
 
-    for entries in __find_in_dict('bind', xform_dict):
-        if isinstance(entries, dict):
-            entries = [entries]
+    # get the default instance
+    # this contains the expected data tree
+    # we can extract all the xpaths from here
+    instance = __get_xform_instance(xform_dict, with_root=True)
+    for xpath, has_children in __get_all_paths(instance):
+        schema[xpath] = {
+            'xpath': xpath,
+            'type': 'group' if has_children else 'string',
+            # all the tree path is present till the leaf
+            'required': True,
+            'label': __get_xform_label(xform_dict, xpath, itexts),
+        }
+
+    for entries in __find_in_dict(xform_dict, 'bind'):
+        entries = __wrap_as_list(entries)
         for bind_entry in entries:
-            if 'type' in bind_entry:
-                nodeset = bind_entry['nodeset']
-                nodeset_type = bind_entry['type']
-                nodeset_types[nodeset] = nodeset_type
+            if '@type' in bind_entry:
+                xpath = bind_entry['@nodeset']
+                schema[xpath]['type'] = bind_entry['@type']
+                _required = 'required' in bind_entry and bind_entry['@required'] == 'true()'
+                schema[xpath]['required'] = _required
 
     # search in body all the repeat entries
-    for entries in __find_in_dict('repeat', xform_dict):
-        if isinstance(entries, dict):
-            entries = [entries]
+    for entries in __find_in_dict(xform_dict, 'repeat'):
+        entries = __wrap_as_list(entries)
         for repeat_entry in entries:
-            nodeset = repeat_entry['nodeset']
-            nodeset_types[nodeset] = 'repeat'
+            xpath = repeat_entry['@nodeset']
+            schema[xpath]['type'] = 'repeat'
 
-    return nodeset_types
+    return schema
 
 
-def __find_in_dict(key, dictionary):
+def __get_xform_itexts(xform_dict):
+    '''
+    Extract all translated texts from xForm definition (as dict)
+    '''
+
+    try:
+        translations = xform_dict['h:html']['h:head']['model']['itext']['translation']
+        translations = __wrap_as_list(translations)
+
+        # the first translation entry must be the default language
+        translation = translations[0]  # take the first one
+        # just in case check the whole list
+        for tt in translations:
+            if '@default' in tt and tt['@default'] == 'true()':
+                translation = tt
+                break
+
+        # convert all text entries in a dict wich key is the text id
+        texts = __wrap_as_list(translation['text'])
+        return {text_entry['@id']: text_entry['value'] for text_entry in texts}
+
+    except Exception:
+        pass
+
+    return {}
+
+
+def __get_xform_label(xform_dict, xpath, texts={}):
+    '''
+    Searches the "label" tag linked to the xpath in the xForm definition.
+    If not found returns the xpath.
+    '''
+
+    label = xpath
+    try:
+        for tag in __find_by_key_value(xform_dict['h:html']['h:body'], key='@ref', value=xpath):
+            label_tag = tag['label']
+            if isinstance(label_tag, dict):
+                # there are more than one language defined in the form
+                #   <label ref="jr:itext('{xpath}:label')"/>
+                label_id = label_tag['@ref'][10:-2]  # f'{xpath}:label'
+                label = texts[label_id]
+            else:
+                label = label_tag
+    except Exception:
+        pass
+
+    return label
+
+
+def __get_avro_primitive_type(xform_type, required=False):
+    '''
+    Finds out the AVRO type based on current type and the XML definition.
+    '''
+
+    AVRO_TYPES = (
+        # 'boolean',  # not supported by ODK Collect
+        # 'bytes',    # it's equivalent to binary, will contain the file path to the content
+        'double',
+        'float',
+        'int',
+        'long',
+        'string',
+    )
+
+    if xform_type in ('integer', 'short'):
+        _type = 'int'
+    elif xform_type == 'decimal':
+        _type = 'double'
+    elif xform_type in ('select', 'select1'):
+        _type = 'string'
+    elif xform_type not in AVRO_TYPES:  # what to do with an unknown type
+        _type = 'string'
+    else:
+        _type = xform_type
+
+    if not required:
+        _type = ['null', _type]
+
+    return _type
+
+
+# ------------------------------------------------------------------------------
+# Private helper methods
+# ------------------------------------------------------------------------------
+
+def __wrap_as_list(value):
+    if not isinstance(value, list):
+        return [value]
+    return value
+
+
+def __delete_key_in_dict(dictionary, key):
+    def walk(obj):
+        if isinstance(obj, dict):
+            if key in obj:
+                del obj[key]
+            for v in obj.values():
+                walk(v)
+        elif isinstance(obj, list):
+            for v in obj:
+                walk(v)
+
+    walk(dictionary)
+
+
+def __find_in_dict(dictionary, key):
     # https://gist.github.com/douglasmiranda/5127251
-    # it could return a list, a dict, or a primitive value
     for k, v in dictionary.items():
         if k == key:
             yield v
 
-        elif isinstance(v, dict):
-            for result in __find_in_dict(key, v):
+        else:
+            for result in __iterate_dict(v, __find_in_dict, key):
                 yield result
 
-        elif isinstance(v, list):
-            for d in v:
-                if isinstance(d, dict):
-                    for result in __find_in_dict(key, d):
-                        yield result
+
+def __find_by_key_value(dictionary, key, value):
+    for k, v in dictionary.items():
+        if k == key and v == value:
+            yield dictionary
+
+        else:
+            for result in __iterate_dict(v, __find_by_key_value, key, value):
+                yield result
+
+
+def __iterate_dict(value, func, *args, **kwargs):
+    if isinstance(value, dict):
+        for result in func(value, *args, **kwargs):
+            yield result
+
+    elif isinstance(value, list):
+        for d in value:
+            if isinstance(d, dict):
+                for result in func(d, *args, **kwargs):
+                    yield result
+
+
+def __get_all_paths(dictionary):
+    '''
+    Returns the list of jsonpaths with a boolean indicating if the jsonpath
+    corresponds to an inner path (has children).
+
+    It does not return any attribute paths.
+
+    It's only used to get the jsonpaths (or xpaths)
+    of the instance skeleton defined in the xForm.
+
+    Assumption: there are no lists in the skeleton.
+    '''
+    def walk(obj, parent_keys=[]):
+        for k, v in obj.items():
+            if k.startswith('@'):  # ignore attributes
+                continue
+            keys = parent_keys + [k]
+            xpath = '/' + '/'.join(keys)
+            paths.append((xpath, isinstance(v, dict)))
+            if isinstance(v, dict):
+                walk(v, keys)
+
+    paths = []
+    walk(dictionary)
+    return paths
+
+
+# https://stackoverflow.com/questions/2148119/how-to-convert-an-xml-string-to-a-dictionary-in-python
+def __etree_to_dict(elem):
+    # this method is not perfect but it's enough for us
+    def clean(name):
+        for uri, prefix in ElementTree.register_namespace._namespace_map.items():
+            pref = f'{prefix}:' if prefix else ''
+            name = name.replace('{%s}' % uri, pref)
+        return name
+
+    tt = clean(elem.tag)
+    d = {tt: {} if elem.attrib else None}
+    children = list(elem)
+
+    if children:
+        dd = defaultdict(list)
+        for dc in map(__etree_to_dict, children):
+            for k, v in dc.items():
+                dd[k].append(v)
+        d = {tt: {clean(k): v[0] if len(v) == 1 else v for k, v in dd.items()}}
+
+    if elem.attrib:
+        d[tt].update(('@' + clean(k), v) for k, v in elem.attrib.items())
+
+    if elem.text:
+        text = elem.text.strip()
+        if children or elem.attrib:
+            if text:
+                d[tt]['#text'] = text
+        else:
+            d[tt] = text
+    return d
