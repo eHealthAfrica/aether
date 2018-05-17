@@ -2,6 +2,7 @@ import requests
 
 from django.http import HttpResponse, JsonResponse
 from django.views import View
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.decorators import action
 
@@ -31,7 +32,22 @@ class PipelineViewSet(viewsets.ModelViewSet):
         publish and update the pipeline with related kernel model ids.
         '''
         project_name = request.data['project_name'] if 'project_name' in request.data else 'Aux'
-        return ui_utils.publish_pipeline(pk, project_name)
+        pipeline = get_object_or_404(models.Pipeline, pk=pk)
+        outcome = {
+            'successful': [],
+            'error': [],
+            'exists': []
+        }
+        outcome = ui_utils.publish_preflight(pipeline, project_name, outcome)
+        if len(outcome['error']) or len(outcome['exists']):
+            return JsonResponse(outcome, status=400)
+        else:
+            outcome = ui_utils.publish_pipeline(pipeline, project_name)
+            if len(outcome['error']):
+                return JsonResponse(outcome, status=400)
+            else:
+                del outcome['error']
+                return JsonResponse(outcome, status=200)
 
 
 class TokenProxyView(View):

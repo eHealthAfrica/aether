@@ -113,7 +113,7 @@ const parsePipeline = (pipeline) => {
 
 const reducer = (state = INITIAL_PIPELINE, action) => {
   const newPipelineList = clone(state.pipelineList)
-
+  state = { ...state, publishError: null, publishSuccess: null }
   switch (action.type) {
     case types.PIPELINE_ADD: {
       const newPipeline = parsePipeline(action.payload)
@@ -146,11 +146,11 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
     }
 
     case types.PIPELINE_PUBLISH_SUCCESS: {
-      return { ...state, publishSuccess: action.payload, publishError: null }
+      return { ...state, publishSuccess: action.payload.successful }
     }
 
     case types.PIPELINE_PUBLISH_ERROR: {
-      return { ...state, publishSuccess: null, publishError: action.error }
+      return { ...state, publishError: action.error.error }
     }
 
     case types.GET_FROM_KERNEL: {
