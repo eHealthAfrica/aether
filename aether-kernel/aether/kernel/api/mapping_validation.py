@@ -18,7 +18,7 @@
 
 import collections
 
-from jsonpath_ng import parse
+from .utils import find_by_jsonpath
 
 MESSAGE_NO_MATCH = 'No match for path'
 
@@ -31,7 +31,7 @@ def validate_getter(obj, path):
         return Success(path, [])
     result = [
         datum.value for datum in
-        parse(path).find(obj)
+        find_by_jsonpath(obj, path)
     ]
     if result:
         return Success(path, result)
@@ -46,7 +46,7 @@ def validate_setter(entity_list, path):
         if entity.projectschema_name == schema_name:
             result = [
                 datum.value for datum in
-                parse(setter).find(entity.payload)
+                find_by_jsonpath(entity.payload, setter)
             ]
             if result:
                 return Success(path, result)

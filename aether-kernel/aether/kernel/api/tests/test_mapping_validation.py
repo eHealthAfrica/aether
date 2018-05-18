@@ -114,6 +114,27 @@ class TestMappingValidation(TestCase):
         )
         self.assertEquals(expected, result)
 
+    def test_validate_mapping__wildcard_success(self):
+        submission_payload = {'data': {'a1': {'b': 'x'}, 'a2': {'d': 'y'}}}
+        entity_list = [
+            utils.Entity(
+                id=1,
+                payload={'a': {'b': [{'b': 'x'}, {'d': 'y'}]}},
+                projectschema_name='Test-1',
+                status='Publishable',
+            )
+        ]
+        mapping_definition = {
+            'mapping': [
+                ('$.data.a*', 'Test-1.a.b')
+            ]
+        }
+        expected = []
+        result = mapping_validation.validate_mappings(
+            submission_payload, entity_list, mapping_definition,
+        )
+        self.assertEquals(expected, result)
+
     def test_validate_mapping__failure(self):
         submission_payload = {'a': {'b': 'x'}, 'c': {'d': 'y'}}
         entity_list = [
