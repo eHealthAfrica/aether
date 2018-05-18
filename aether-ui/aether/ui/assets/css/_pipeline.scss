@@ -134,6 +134,14 @@ div[class^='pipeline-nav-item__'] {
     opacity: .4;
     margin: 0 .8rem;
   }
+
+  &:hover {
+
+    .badge {
+      @include bg-gradient;
+      opacity: 1;
+    }
+  }
 }
 
 div.pipeline-nav-item__input {
