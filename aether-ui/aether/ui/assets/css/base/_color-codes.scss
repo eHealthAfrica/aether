@@ -4,11 +4,11 @@
 
 $colors-list: (
   #6ed7c2
-  #d76e89
   #6ebcd7
   #cfd76e
   #d7b46e
   #d79a6e
+  #d76e89
   #d76ec2
   #a5b990
   #88b5ac
@@ -28,7 +28,7 @@ $colors-list: (
       position: relative;
 
       &::after {
-        border-right: 0.6rem solid rgba($current-color, .2);
+        border-right: .6rem solid rgba($current-color, .2);
         content: '';
         display: block;
         position: absolute;
@@ -42,8 +42,9 @@ $colors-list: (
 
       &:hover {
         background-color: $current-color;
+
         &::after {
-          border-right: 0.6rem solid rgba($current-color, 1);
+          border-right: .6rem solid rgba($current-color, 1);
         }
       }
     }
@@ -55,11 +56,13 @@ $colors-list: (
 
     &:hover {
       background-color: $current-color;
+
       &::before {
         background-color: $current-color;
       }
+
       &::after {
-        border-left: 0.6rem solid rgba($current-color, 1);
+        border-left: .6rem solid rgba($current-color, 1);
       }
     }
 
@@ -76,7 +79,7 @@ $colors-list: (
     }
 
     &::after {
-      border-left: 0.6rem solid rgba($current-color, .2);
+      border-left: .6rem solid rgba($current-color, .2);
       content: '';
       display: block;
       position: absolute;

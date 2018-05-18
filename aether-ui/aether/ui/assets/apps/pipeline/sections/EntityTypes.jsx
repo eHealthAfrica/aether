@@ -75,22 +75,25 @@ class EntityTypes extends Component {
                 defaultMessage='Paste Entity Type definitions'
               />
             </label>
-            { this.state.error &&
-              <div className='hint error-message'>
-                <h4 className='hint-title'>
-                  <FormattedMessage
-                    id='entitytype.invalid.message'
-                    defaultMessage='You have provided invalid AVRO schemas.'
-                  />
-                </h4>
-                { this.state.error }
-              </div>
-            }
+
+            <div className='textarea-header'>
+              { this.state.error &&
+                <div className='hint error-message'>
+                  <h4 className='hint-title'>
+                    <FormattedMessage
+                      id='entitytype.invalid.message'
+                      defaultMessage='You have provided invalid AVRO schemas.'
+                    />
+                  </h4>
+                  { this.state.error }
+                </div>
+              }
+            </div>
 
             <FormattedMessage id='entityTypeSchema.placeholder' defaultMessage='Enter your schemas'>
               {message => (
                 <textarea
-                  className='input-d monospace'
+                  className={`input-d monospace ${this.state.error ? 'error' : ''}`}
                   value={this.state.entityTypesSchema}
                   onChange={this.onSchemaTextChanged.bind(this)}
                   placeholder={message}
