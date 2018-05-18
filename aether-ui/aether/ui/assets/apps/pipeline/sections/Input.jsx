@@ -227,7 +227,10 @@ class Input extends Component {
     return (
       <div className='section-body'>
         <div className='section-left'>
-          <AvroSchemaViewer schema={this.props.selectedPipeline.schema} />
+          <AvroSchemaViewer
+            schema={this.props.selectedPipeline.schema}
+            highlight={this.props.selectedPipeline.highlightSource}
+          />
         </div>
         <div className='section-right'>
           <h3 className='title-large'>

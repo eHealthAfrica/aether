@@ -9,7 +9,7 @@ import Input from './sections/Input'
 import EntityTypes from './sections/EntityTypes'
 import Mapping from './sections/Mapping'
 import Output from './sections/Output'
-import { getPipelineById, getPipelines } from './redux'
+import { getPipelineById, getPipelines, publishPipeline } from './redux'
 
 class Pipeline extends Component {
   constructor (props) {
@@ -49,6 +49,10 @@ class Pipeline extends Component {
     }
   }
 
+  publish () {
+    this.props.publishPipeline(this.props.selectedPipeline.id)
+  }
+
   render () {
     const {selectedPipeline} = this.props
     if (!selectedPipeline) {
@@ -68,7 +72,7 @@ class Pipeline extends Component {
             <span> // </span>
             { selectedPipeline.name }
           </div>
-          <button type='submit' className='btn btn-c btn-publish'>
+          <button type='button' className='btn btn-c btn-publish' onClick={this.publish.bind(this)}>
             <FormattedMessage
               id='pipeline.navbar.breadcrumb.publish'
               defaultMessage='Publish pipeline'
@@ -167,7 +171,9 @@ class Pipeline extends Component {
 
 const mapStateToProps = ({ pipelines }) => ({
   selectedPipeline: pipelines.selectedPipeline,
-  pipelineList: pipelines.pipelineList
+  pipelineList: pipelines.pipelineList,
+  publishError: pipelines.publishError,
+  publishSuccess: pipelines.publishSuccess
 })
 
-export default connect(mapStateToProps, { getPipelineById, getPipelines })(Pipeline)
+export default connect(mapStateToProps, { getPipelineById, getPipelines, publishPipeline })(Pipeline)

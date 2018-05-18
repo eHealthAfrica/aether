@@ -3,15 +3,26 @@ import requests
 from django.http import HttpResponse
 from django.views import View
 from rest_framework import viewsets
+from rest_framework.decorators import action
+
 
 from ..settings import AETHER_APPS
-from . import models, serializers
+from . import models, serializers, utils as ui_utils
 
 
 class PipelineViewSet(viewsets.ModelViewSet):
     queryset = models.Pipeline.objects.all()
     serializer_class = serializers.PipelineSerializer
     ordering = ('name',)
+
+    @action(methods=['post'], detail=True)
+    def publish(self, request, pk=None):
+        '''
+        This view transform the supplied pipeline to kernal models,
+        publish and update the pipeline with related kernel model ids.
+        '''
+        project_name = request.data['project_name'] if 'project_name' in request.data else 'Aux'
+        return ui_utils.publish_pipeline(pk, project_name)
 
 
 class TokenProxyView(View):
