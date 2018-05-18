@@ -86,7 +86,7 @@ class EntityTypeViewer extends Component {
         <div className='hint'>
           <FormattedMessage
             id='entityTypes.entity.invalid.schema'
-            defaultMessage='Invalid schema'
+            defaultMessage='No Entity Types added to this pipeline yet.'
           />
         </div>
       )
