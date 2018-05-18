@@ -534,14 +534,14 @@ class XFormUtilsAvroTests(CustomTestCase):
             xform_avro = json.load(content)
 
         schema = parse_xform_to_avro_schema(self.samples['xform']['raw-xml'])
-        self.assertEqual(schema['name'], 'my-test-form')
-        self.assertEqual(schema['doc'], 'My Test Form (version: Test-1.0)')
+        self.assertEqual(schema['name'], 'MyTestForm')
+        self.assertEqual(schema['doc'], 'My Test Form (id: my-test-form, version: Test-1.0)')
 
         self.assertEqual(schema, xform_avro)
 
         schema_i18n = parse_xform_to_avro_schema(self.samples['xform']['raw-xml-i18n'])
-        self.assertEqual(schema_i18n['name'], 'my-test-form')
-        self.assertEqual(schema_i18n['doc'], 'My Test Form (multilang) (version: Test-1.0)')
+        self.assertEqual(schema_i18n['name'], 'MyTestForm')
+        self.assertEqual(schema_i18n['doc'], 'My Test Form (multilang) (id: my-test-form, version: Test-1.0)')
 
         # the same fields
         self.assertEqual(schema['fields'], schema_i18n['fields'])

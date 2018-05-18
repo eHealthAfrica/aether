@@ -1,16 +1,16 @@
 {
-  "name": "my-test-form",
-  "doc": "My Test Form (version: Test-1.0)",
+  "name": "MyTestForm",
+  "doc": "My Test Form (id: my-test-form, version: Test-1.0)",
   "type": "record",
   "fields": [
     {
-      "name": "@id",
+      "name": "_id",
       "doc": "xForm ID",
       "type": "string",
       "default": "my-test-form"
     },
     {
-      "name": "@version",
+      "name": "_version",
       "doc": "xForm version",
       "type": "string",
       "default": "Test-1.0"

@@ -1,6 +1,6 @@
 {
-  "@id": "my-test-form",
-  "@version": "test-1.0",
+  "_id": "my-test-form",
+  "_version": "test-1.0",
   "starttime": "2017-07-14T16:37:08.966000+02:00",
   "endtime": "2017-07-14T16:38:47.151000+02:00",
   "deviceid": "355217062209730",

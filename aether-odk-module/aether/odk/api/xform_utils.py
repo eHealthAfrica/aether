@@ -52,8 +52,8 @@ def parse_submission(data, xml_definition):
 
         {
             'ZZZ': {
-                '@id': 'form-id',
-                '@version': 'v1,
+                '_id': 'form-id',
+                '_version': 'v1,
                 ...
                 'choice_a': 'id_1',
                 'number_b': '1',
@@ -64,8 +64,8 @@ def parse_submission(data, xml_definition):
     Into:
 
         {
-            '@id': 'form-id',
-            '@version': 'v1,
+            '_id': 'form-id',
+            '_version': 'v1,
             ...
             'choice_a': 'value_1',
             'number_b': 1,
@@ -197,23 +197,25 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
 
     title, form_id, version = get_xform_data_from_xml(xml_definition)
     version = version or default_version
+    # AVRO names contain only [A-Za-z0-9_]
+    name = ''.join([c if c.isalnum() else ' ' for c in form_id]).title().replace(' ', '')
 
     KEY = '-----'
 
-    # initial schema, with "@id" and "@version" attributes
+    # initial schema, with "id" and "version" attributes
     avro_schema = {
-        'name': form_id,
-        'doc': f'{title} (version: {version})',
+        'name': name,
+        'doc': f'{title} (id: {form_id}, version: {version})',
         'type': 'record',
         'fields': [
             {
-                'name': '@id',
+                'name': '_id',
                 'doc': 'xForm ID',
                 'type': 'string',
                 'default': form_id,
             },
             {
-                'name': '@version',
+                'name': '_version',
                 'doc': 'xForm version',
                 'type': 'string',
                 'default': version,
@@ -392,11 +394,11 @@ def get_instance_data_from_xml(xml_content):
     # The instance attributes are not taking into consideration.
     # # Include attributes in instance content
     # for k, v in xform_parser.get_attributes().items():
-    #     instance_dict[root][f'@{k}'] = v
+    #     instance_dict[root][f'_{k}'] = v
 
     # The only ones allowed are `id` and `version` and included manually.
-    instance_dict[root]['@id'] = form_id
-    instance_dict[root]['@version'] = version
+    instance_dict[root]['_id'] = form_id
+    instance_dict[root]['_version'] = version
 
     return instance_dict, form_id, version
 
