@@ -132,7 +132,7 @@ def parse_submission(data, xml_definition):
 
     xpath_types = {
         xpath: definition['type']
-        for xpath, definition in __get_xform_schema(xml_definition).items()
+        for xpath, definition in __get_xform_instance_skeleton(xml_definition).items()
         if definition['type']
     }
     walk(data)  # modifies inplace
@@ -219,16 +219,17 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
                 'default': version,
             },
         ],
-        # this is going to be removed later, but it's used to speed up the build process
+        # this is going to be removed later,
+        # but it's used to speed up the build process
         KEY: None,
     }
 
-    xform_schema = __get_xform_schema(xml_definition)
+    xform_schema = __get_xform_instance_skeleton(xml_definition)
     for xpath, definition in xform_schema.items():
         if len(xpath.split('/')) == 2:
             # include the KEY value
             avro_schema[KEY] = xpath
-            # ignore the root (already implemented)
+            # ignore the root (already created)
             continue
 
         current_type = definition['type']
@@ -386,11 +387,14 @@ def get_instance_data_from_xml(xml_content):
     form_id = xform_parser.get_xform_id_string()
     version = xform_parser.get_attributes().get('version') or DEFAULT_XFORM_VERSION
 
-    # include attributes in instance content
     root = xform_parser.get_root_node_name()
-    for k, v in xform_parser.get_attributes().items():
-        instance_dict[root][f'@{k}'] = v
 
+    # The instance attributes are not taking into consideration.
+    # # Include attributes in instance content
+    # for k, v in xform_parser.get_attributes().items():
+    #     instance_dict[root][f'@{k}'] = v
+
+    # The only ones allowed are `id` and `version` and included manually.
     instance_dict[root]['@id'] = form_id
     instance_dict[root]['@version'] = version
 
@@ -482,9 +486,25 @@ def __get_xform_instance(xform_dict, with_root=False):
     raise TypeError('missing instance definition')
 
 
-def __get_xform_schema(xml_definition):
+def __get_xform_instance_skeleton(xml_definition):
     '''
-    Extracts the xForm schema from the xForm definition (in XML format).
+    Extracts the xForm instance skeleton from the xForm definition (in XML format).
+
+    The instance attributes are not taking into consideration. The only ones allowed
+    are `id` and `version` and included manually in the AVRO schema.
+
+    Will return a list with the following structure:
+
+        - `xpath`, the field xpath within the instance.
+
+        - `type`, the xForm data type. For an intermediate field the possible values
+          are, `repeat` or `group`. Default value is string.
+
+        - `required`, if the field is required or not. It's not relevant for
+          intermediate fields.
+
+        - `label`, the linked label of the field, in case of multilanguage takes
+          the translation for the default one.
     '''
 
     schema = {}
@@ -493,8 +513,8 @@ def __get_xform_schema(xml_definition):
     itexts = __get_xform_itexts(xform_dict)
 
     # get the default instance
-    # this contains the expected data tree
-    # we can extract all the xpaths from here
+    # this contains the data skeleton
+    # take all the xpaths and rest of meaningful data from here
     instance = __get_xform_instance(xform_dict, with_root=True)
     for xpath, has_children in __get_all_paths(instance):
         schema[xpath] = {
@@ -577,7 +597,7 @@ def __get_xform_label(xform_dict, xpath, texts={}):
 
 def __get_avro_primitive_type(xform_type, required=False):
     '''
-    Finds out the AVRO type based on current type and the XML definition.
+    Transforms the xForm data type into its equivalent AVRO primitive type.
     '''
 
     AVRO_TYPES = (
@@ -667,7 +687,7 @@ def __iterate_dict(value, func, *args, **kwargs):
 def __get_all_paths(dictionary):
     '''
     Returns the list of jsonpaths with a boolean indicating if the jsonpath
-    corresponds to an inner path (has children).
+    corresponds to an intermediate field (has children).
 
     It does not return any attribute paths.
 
