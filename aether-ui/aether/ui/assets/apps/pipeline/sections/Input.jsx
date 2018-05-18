@@ -85,7 +85,9 @@ class SchemaInput extends Component {
             </div>
           }
         </div>
-        <FormattedMessage id='pipeline.input.schema.placeholder' defaultMessage='Paste an AVRO Schema and Sample Data will be generated for your convenience to use in the pipeline.'>
+        <FormattedMessage
+          id='pipeline.input.schema.placeholder'
+          defaultMessage='Paste an AVRO Schema and Sample Data will be generated for your convenience to use in the pipeline.'>
           {msg => (
             <textarea
               className={`monospace ${this.state.error ? 'error' : ''}`}
@@ -181,7 +183,9 @@ class DataInput extends Component {
             </div>
           }
         </div>
-        <FormattedMessage id='pipeline.input.data.placeholder' defaultMessage='We will generate some sample data for you, once you have added a schema. Or, Add data in JSON Format and Aether will derive an AVRO schema for you.'>
+        <FormattedMessage
+          id='pipeline.input.data.placeholder'
+          defaultMessage='We will generate some sample data for you, once you have added a schema. Or, Add data in JSON Format and Aether will derive an AVRO schema for you.'>
           {msg => (
             <textarea
               className={`monospace ${this.state.error ? 'error' : ''}`}
