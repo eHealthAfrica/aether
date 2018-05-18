@@ -557,7 +557,8 @@ def __get_xform_label(xform_dict, xpath, texts={}):
     If not found returns the xpath.
     '''
 
-    label = xpath
+    # remove root in xpath (it's not going to be sent in the submission)
+    label = '/' + '/'.join(xpath.split('/')[2:])
     try:
         for tag in __find_by_key_value(xform_dict['h:html']['h:body'], key='@ref', value=xpath):
             label_tag = tag['label']
