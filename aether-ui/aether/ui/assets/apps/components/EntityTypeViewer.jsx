@@ -121,7 +121,7 @@ class EntityTypeViewer extends Component {
         <div className='hint'>
           <FormattedMessage
             id='entityTypes.entity.empty.message'
-            defaultMessage='No entity types added to your pipeline yet.'
+            defaultMessage='No entity types added to this pipeline yet.'
           />
         </div>
       )

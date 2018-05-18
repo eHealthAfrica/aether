@@ -8,7 +8,18 @@
     padding: 2rem 0;
   }
 
+  .tabs {
+
+    .tab.selected {
+      box-shadow: 1px 1px 1px rgba($black, .2) inset;
+      background-color: darken($dark-blue, 3);
+      color: $white;
+    }
+  }
+
   .rules {
+    @include shadow-cutout-dark;
+    background-color: darken($dark-blue, 3);
     padding: $unit $unit-xl;
   }
 
@@ -95,8 +106,9 @@
   }
 
   .definition {
+    @include shadow-cutout-dark;
+    background-color: darken($dark-blue, 3);
     padding: $unit $unit-xl;
-    margin-top: auto;
 
     .definition-code {
       @include shadow-flat-dark;

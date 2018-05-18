@@ -22,10 +22,10 @@ describe('EntityTypeViewer', () => {
     expect(component.html()).toContain('Invalid entity type')
   })
 
-  it('should take an invalid schema and render error', () => {
+  it('should take an empty schema and render error', () => {
     const inValidSchema = []
     const component = mountWithIntl(<EntityTypeViewer schema={inValidSchema} />)
-    expect(component.html()).toContain('Invalid schema')
+    expect(component.html()).toContain('No Entity Types added to this pipeline yet.')
   })
 
   it('should take an empty schema input and render message', () => {
