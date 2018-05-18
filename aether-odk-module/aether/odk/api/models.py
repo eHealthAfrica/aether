@@ -21,6 +21,7 @@ import uuid
 from hashlib import md5
 
 from django.contrib.auth import get_user_model
+from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.db import models, IntegrityError
@@ -28,8 +29,35 @@ from django.utils import timezone
 
 from .xform_utils import (
     get_xform_data_from_xml,
+    parse_xform_to_avro_schema,
     validate_xform,
 )
+
+
+'''
+
+Data model schema:
+
+
+    +------------------+       +------------------+       +------------------+
+    | Mapping          |       | XForm            |       | MediaFile        |
+    +==================+       +==================+       +==================+
+    | mapping_id       |<--+   | id               |<--+   | id               |
+    | name             |   |   | xml_data         |   |   | name             |
+    +::::::::::::::::::+   |   | description      |   |   | media_file       |
+    | surveyors (User) |   |   | created_at       |   |   +~~~~~~~~~~~~~~~~~~+
+    +------------------+   |   +~~~~~~~~~~~~~~~~~~+   |   | md5sum           |
+                           |   | title            |   |   +::::::::::::::::::+
+                           |   | form_id          |   +--<| xform            |
+                           |   | version          |       +------------------+
+                           |   | avro_schema      |
+                           |   | md5sum           |
+                           |   +::::::::::::::::::+
+                           +--<| mapping          |
+                               | surveyors (User) |
+                               +------------------+
+
+'''
 
 
 class Mapping(models.Model):
@@ -109,9 +137,10 @@ class XForm(models.Model):
     form_id = models.TextField(default='', editable=False)
     version = models.TextField(default='0', blank=True)
     md5sum = models.CharField(default='', editable=False, max_length=36)
+    avro_schema = JSONField(blank=True, null=True, editable=False)
 
     description = models.TextField(default='', null=True, blank=True)
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
 
     @property
     def hash(self):
@@ -166,6 +195,7 @@ class XForm(models.Model):
             self.version = version
 
         self.update_hash(increase_version=version is None)
+        self.avro_schema = parse_xform_to_avro_schema(self.xml_data, default_version=self.version)
 
         return super(XForm, self).save(*args, **kwargs)
 

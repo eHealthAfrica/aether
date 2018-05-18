@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
                 ('form_id', models.TextField(default='', editable=False)),
                 ('xml_data', models.TextField(blank=True, validators=[aether.odk.api.models.__validate_xml_data__])),
                 ('description', models.TextField(blank=True, default='', null=True)),
-                ('created_at', models.DateTimeField(default=django.utils.timezone.now)),
+                ('created_at', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
                 ('survey', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='xforms', to='odk.Survey')),
                 ('surveyors', models.ManyToManyField(blank=True, related_name='xforms', to=settings.AUTH_USER_MODEL)),
             ],

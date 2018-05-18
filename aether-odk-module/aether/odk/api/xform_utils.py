@@ -146,7 +146,7 @@ def parse_submission(data, xml_definition):
     return data
 
 
-def parse_xform_to_avro_schema(xml_definition):
+def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VERSION):
     '''
     Transforms the xForm definition (in XML format) to AVRO schema.
 
@@ -196,7 +196,7 @@ def parse_xform_to_avro_schema(xml_definition):
     '''
 
     title, form_id, version = get_xform_data_from_xml(xml_definition)
-    version = version or DEFAULT_XFORM_VERSION
+    version = version or default_version
 
     KEY = '-----'
 
@@ -232,7 +232,7 @@ def parse_xform_to_avro_schema(xml_definition):
             continue
 
         current_type = definition['type']
-        current_name = xpath.split('/')[-1:][0]
+        current_name = xpath.split('/')[-1]
         current_doc = definition['label']
 
         parent_path = '/'.join(xpath.split('/')[:-1])
