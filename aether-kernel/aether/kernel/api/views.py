@@ -1,7 +1,6 @@
 from django.db.models import Count, Min, Max
 
 from rest_framework import viewsets, permissions
-from rest_framework.decorators import action
 from drf_openapi.views import SchemaView
 from rest_framework.response import Response
 from rest_framework.decorators import (
@@ -76,7 +75,6 @@ class ProjectViewSet(CustomViewSet):
         serialized_data = serializers.ProjectSerializer(
                            filtered_list, context={'request': request}, many=True).data
         return Response(serialized_data, status=HTTPStatus.OK)
-        
 
 
 class MappingViewSet(CustomViewSet):
@@ -156,7 +154,6 @@ class ProjectSchemaViewSet(CustomViewSet):
         serialized_data = serializers.ProjectSchemaSerializer(
                            filtered_list, context={'request': request}, many=True).data
         return Response(serialized_data, status=HTTPStatus.OK)
-        
 
 
 class EntityViewSet(CustomViewSet):
