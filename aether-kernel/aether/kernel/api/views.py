@@ -146,6 +146,18 @@ class ProjectSchemaViewSet(CustomViewSet):
     serializer_class = serializers.ProjectSchemaSerializer
     filter_class = filters.ProjectSchemaFilter
 
+    @action(methods=['get'], detail=False)
+    def byname(self, request):
+        '''
+        This view returns project schemas filtered by the passed name
+        '''
+        name = self.request.query_params.get('name', None)
+        filtered_list = utils.find_by_name('ProjectSchema', name)
+        serialized_data = serializers.ProjectSchemaSerializer(
+                           filtered_list, context={'request': request}, many=True).data
+        return Response(serialized_data, status=HTTPStatus.OK)
+        
+
 
 class EntityViewSet(CustomViewSet):
     queryset = models.Entity.objects.all()

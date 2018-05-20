@@ -43,10 +43,15 @@ class ViewsTest(TestCase):
         utils.create_new_kernel_object('schema', pipeline, schema_data)
         pipeline = Pipeline.objects.get(pk=pipeline.id)
         self.assertIn('PersonX', pipeline.kernel_refs['schema'])
+        self.assertIn('PersonX', pipeline.kernel_refs['projectSchema'])
         utils.create_project_schema_object('Test-Schema-Project', pipeline,
                                            pipeline.kernel_refs['schema']['PersonX'],
                                            'PersonX')
-        self.assertIn('PersonX', pipeline.kernel_refs['projectSchema'])
+        utils.create_project_schema_object('Test-Schema-Project-1', pipeline,
+                                           pipeline.kernel_refs['schema']['PersonX'],
+                                           'PersonC')
+        pipeline = Pipeline.objects.get(pk=pipeline.id)
+        self.assertIn('PersonC', pipeline.kernel_refs['projectSchema'])
 
         with self.assertRaises(Exception) as exc:
             utils.create_new_kernel_object('project', pipeline, {}, 'Aux-test')

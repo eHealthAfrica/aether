@@ -181,8 +181,7 @@ describe('Pipeline actions', () => {
 
   it('should dispatch a publish pipeline action and save response in the redux store', () => {
     const expected = {
-      links: {},
-      info: {}
+      successful: ['Passed 1', 'Passed 2']
     }
     nock('http://localhost')
       .post('/api/ui/pipelines/1/publish/')
@@ -191,7 +190,7 @@ describe('Pipeline actions', () => {
     return store.dispatch(publishPipeline(1))
       .then(() => {
         expect(store.getState().publishSuccess).toEqual(
-          expected
+          expected.successful
         )
         expect(store.getState().publishError).toEqual(
           null
@@ -201,17 +200,16 @@ describe('Pipeline actions', () => {
 
   it('should dispatch a wrong publish pipeline action and save response in the redux store', () => {
     const returnedData = {
-      links: {},
-      info: {}
+      error: ['error 1'],
+      exists: ['exist 1']
     }
-    const expected = {'error': {'info': {}, 'links': {}}, 'status': 400}
     nock('http://localhost')
       .post('/api/ui/pipelines/100/publish/')
       .reply(400, returnedData)
     return store.dispatch(publishPipeline(100))
       .then(() => {
         expect(store.getState().publishError).toEqual(
-          expected
+          returnedData
         )
         expect(store.getState().publishSuccess).toEqual(
           null

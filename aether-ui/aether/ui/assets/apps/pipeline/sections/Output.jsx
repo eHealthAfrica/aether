@@ -7,13 +7,13 @@ class Output extends Component {
     const errorList = []
     errors.error.forEach(error => {
       errorList.push(<li key={error}>
-          <FormattedMessage id={`publish.error.${error}`} defaultMessage={error} />
-        </li>)
+        <FormattedMessage id={`publish.error.${error}`} defaultMessage={error} />
+      </li>)
     })
     errors.exists.forEach(exists => {
       errorList.push(<li key={exists}>
-          <FormattedMessage id={`publish.error.${exists}`} defaultMessage={exists} />
-        </li>)
+        <FormattedMessage id={`publish.error.${exists}`} defaultMessage={exists} />
+      </li>)
     })
     return <ul>{errorList}</ul>
   }
@@ -22,8 +22,8 @@ class Output extends Component {
     const successList = []
     success.forEach(passed => {
       successList.push(<li key={passed}>
-          <FormattedMessage id={`publish.success.${passed}`} defaultMessage={passed} />
-        </li>)
+        <FormattedMessage id={`publish.success.${passed}`} defaultMessage={passed} />
+      </li>)
     })
     return <ul>{successList}</ul>
   }
@@ -37,9 +37,9 @@ class Output extends Component {
               <h3 className='title-medium'>
                 <FormattedMessage id='publish.errors' defaultMessage='Publish errors' />
               </h3>
-                {
-                  this.buildPublishErrors(this.props.publishError)
-                }
+              {
+                this.buildPublishErrors(this.props.publishError)
+              }
             </div>
           )
         }
@@ -49,12 +49,12 @@ class Output extends Component {
               <h3 className='title-medium'>
                 <FormattedMessage id='publish.success' defaultMessage='Publish success' />
               </h3>
-                {
-                  this.buildPublishSuccess(this.props.publishSuccess)
-                }
-            </div> 
+              {
+                this.buildPublishSuccess(this.props.publishSuccess)
+              }
+            </div>
           )
-        }              
+        }
         <div className='pipeline-data pipeline-errors'>
           <h3 className='title-medium'>
             <FormattedMessage id='output.mapping_errors' defaultMessage='Mapping errors' />

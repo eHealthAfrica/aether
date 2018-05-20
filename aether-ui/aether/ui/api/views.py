@@ -32,12 +32,16 @@ class PipelineViewSet(viewsets.ModelViewSet):
         publish and update the pipeline with related kernel model ids.
         '''
         project_name = request.data['project_name'] if 'project_name' in request.data else 'Aux'
-        pipeline = get_object_or_404(models.Pipeline, pk=pk)
         outcome = {
             'successful': [],
             'error': [],
             'exists': []
         }
+        try:
+            pipeline = get_object_or_404(models.Pipeline, pk=pk)
+        except Exception as e:
+            outcome['error'].append(str(e))
+            return JsonResponse(outcome, status=400)
         outcome = ui_utils.publish_preflight(pipeline, project_name, outcome)
         if len(outcome['error']) or len(outcome['exists']):
             return JsonResponse(outcome, status=400)
