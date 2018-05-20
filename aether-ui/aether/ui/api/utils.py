@@ -288,10 +288,10 @@ def is_linked_to_pipeline(object_name, id):
 
 
 def convertMappings(mapping_from_kernel):
-    result = []
-    for mapping in mapping_from_kernel:
-        result.append({'source': mapping[0], 'destination': mapping[1]})
-    return result
+    return [
+        {'source': mapping[0], 'destination': mapping[1]}
+        for mapping in mapping_from_kernel
+    ]
 
 
 def convertEntityTypes(entities_from_kernel):

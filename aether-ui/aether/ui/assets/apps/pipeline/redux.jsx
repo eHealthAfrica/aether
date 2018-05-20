@@ -78,7 +78,9 @@ export const getPipelines = () => ({
 
 export const fetchPipelines = () => ({
   types: ['', types.GET_FROM_KERNEL, types.GET_FROM_KERNEL_ERROR],
-  promise: client => client.get(`${urls.PIPELINES_URL}fetch/?limit=5000`, { 'Content-Type': 'application/json' })
+  promise: client => client.post(
+    `${urls.PIPELINES_URL}fetch/?limit=5000`,
+    { 'Content-Type': 'application/json' })
 })
 const parsePipeline = (pipeline) => {
   const COLORS = 10 // This value is the number of colors in the `_color-codes.scss`

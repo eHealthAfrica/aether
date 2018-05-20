@@ -1,6 +1,7 @@
 import requests
 
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
+from rest_framework.response import Response
 from django.views import View
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
@@ -15,7 +16,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.PipelineSerializer
     ordering = ('name',)
 
-    @action(methods=['get'], detail=False)
+    @action(methods=['post'], detail=False)
     def fetch(self, request):
         '''
         This view gets kernel objects, transforms and loads into a pipeline
@@ -23,7 +24,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
         ui_utils.kernel_to_pipeline()
         pipelines = models.Pipeline.objects.all()
         serialized_data = serializers.PipelineSerializer(pipelines, context={'request': request}, many=True).data
-        return JsonResponse(serialized_data, status=200, safe=False)
+        return Response(serialized_data, status=200)
 
     @action(methods=['post'], detail=True)
     def publish(self, request, pk=None):
@@ -41,17 +42,17 @@ class PipelineViewSet(viewsets.ModelViewSet):
             pipeline = get_object_or_404(models.Pipeline, pk=pk)
         except Exception as e:
             outcome['error'].append(str(e))
-            return JsonResponse(outcome, status=400)
+            return Response(outcome, status=400)
         outcome = ui_utils.publish_preflight(pipeline, project_name, outcome)
         if len(outcome['error']) or len(outcome['exists']):
-            return JsonResponse(outcome, status=400)
+            return Response(outcome, status=400)
         else:
             outcome = ui_utils.publish_pipeline(pipeline, project_name)
             if len(outcome['error']):
-                return JsonResponse(outcome, status=400)
+                return Response(outcome, status=400)
             else:
                 del outcome['error']
-                return JsonResponse(outcome, status=200)
+                return Response(outcome, status=200)
 
 
 class TokenProxyView(View):

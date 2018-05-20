@@ -403,12 +403,12 @@ class ViewsTest(TestCase):
         password = 'testtest'
         self.client.login(username=username, password=password)
         url = reverse('ui:pipeline-fetch')
-        response = self.client.get(url, content_type='application/json')
+        response = self.client.post(url, content_type='application/json')
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 2)
         self.assertEqual(len(response_data[0]['entity_types']), 2)
 
         # Ensure linked mappings are not recreated
-        response = self.client.get(url, content_type='application/json')
+        response = self.client.post(url, content_type='application/json')
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 2)
