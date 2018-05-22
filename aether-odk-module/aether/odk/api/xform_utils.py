@@ -260,29 +260,35 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         if current_type == 'group':
             parent['fields'].append({
                 'name': current_name,
-                'type': {
-                    'name': current_name,
-                    'doc': current_doc,
-                    'type': 'record',
-                    'fields': [],
-                    KEY: xpath,
-                },
-            })
-
-        # array
-        elif current_type == 'repeat':
-            parent['fields'].append({
-                'name': current_name,
-                'type': {
-                    'type': 'array',
-                    'items': {
+                'type': [
+                    'null',
+                    {
                         'name': current_name,
                         'doc': current_doc,
                         'type': 'record',
                         'fields': [],
                         KEY: xpath,
                     },
-                },
+                ],
+            })
+
+        # array
+        elif current_type == 'repeat':
+            parent['fields'].append({
+                'name': current_name,
+                'type': [
+                    'null',
+                    {
+                        'type': 'array',
+                        'items': {
+                            'name': current_name,
+                            'doc': current_doc,
+                            'type': 'record',
+                            'fields': [],
+                            KEY: xpath,
+                        },
+                    },
+                ],
             })
 
         # there are three types of GEO types: geopoint, geotrace and geoshape
@@ -290,32 +296,35 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         elif current_type == 'geopoint':
             parent['fields'].append({
                 'name': current_name,
-                'type': {
-                    'name': current_name,
-                    'type': 'record',
-                    'doc': current_doc,
-                    'fields': [
-                        {
-                            'name': 'coordinates',
-                            'type': {
-                                'type': 'array',
-                                'items': 'float',
+                'type': [
+                    'null',
+                    {
+                        'name': current_name,
+                        'type': 'record',
+                        'doc': current_doc,
+                        'fields': [
+                            {
+                                'name': 'coordinates',
+                                'type': {
+                                    'type': 'array',
+                                    'items': 'float',
+                                },
                             },
-                        },
-                        {
-                            'name': 'altitude',
-                            'type': __get_avro_primitive_type('float', definition['required']),
-                        },
-                        {
-                            'name': 'accuracy',
-                            'type': __get_avro_primitive_type('float', definition['required']),
-                        },
-                        {
-                            'name': 'type',
-                            'type': __get_avro_primitive_type('string', definition['required']),
-                        },
-                    ]
-                },
+                            {
+                                'name': 'altitude',
+                                'type': __get_avro_primitive_type('float', definition['required']),
+                            },
+                            {
+                                'name': 'accuracy',
+                                'type': __get_avro_primitive_type('float', definition['required']),
+                            },
+                            {
+                                'name': 'type',
+                                'type': __get_avro_primitive_type('string', definition['required']),
+                            },
+                        ],
+                    },
+                ],
             })
 
         # final and simple leaf
@@ -551,8 +560,7 @@ def __get_xform_instance_skeleton(xml_definition):
         schema[xpath] = {
             'xpath': xpath,
             'type': 'group' if has_children else 'string',
-            # all the tree path is present till the leaf
-            'required': True,
+            'required': False,
             'label': __get_xform_label(xform_dict, xpath, itexts),
         }
 
