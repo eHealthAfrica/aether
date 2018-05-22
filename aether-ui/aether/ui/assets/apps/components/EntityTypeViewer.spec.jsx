@@ -30,7 +30,7 @@ describe('EntityTypeViewer', () => {
 
   it('should take an empty schema input and render message', () => {
     const component = mountWithIntl(<EntityTypeViewer />)
-    expect(component.html()).toContain('No entity types added to your pipeline yet.')
+    expect(component.html()).toContain('No entity types added to this pipeline yet.')
   })
 
   it('should take entity type without fields', () => {
