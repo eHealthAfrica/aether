@@ -33,7 +33,6 @@ PATH_DIR = '/code/aether/odk/api/tests/files/'
 
 XFORM_XLS_FILE = PATH_DIR + 'demo-xform.xls'
 XFORM_XML_FILE = PATH_DIR + 'demo-xform.xml'
-XFORM_XML_FILE_NOVERSION = PATH_DIR + 'demo-xform-noversion.xml'
 XFORM_XML_FILE_I18N = PATH_DIR + 'demo-xform-multilang.xml'
 XFORM_AVRO_FILE = PATH_DIR + 'demo-xform.avsc'
 
@@ -99,6 +98,62 @@ XML_DATA = '''
     </h:html>
 '''
 
+XML_DATA_NO_VERSION = '''
+    <h:html
+            xmlns="http://www.w3.org/2002/xforms"
+            xmlns:ev="http://www.w3.org/2001/xml-events"
+            xmlns:h="http://www.w3.org/1999/xhtml"
+            xmlns:jr="http://openrosa.org/javarosa"
+            xmlns:orx="http://openrosa.org/xforms"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <h:head>
+            <h:title>xForm - Test</h:title>
+            <model>
+                <instance>
+                    <Mapping id="xform-id-test">
+                        <starttime/>
+                        <endtime/>
+                        <deviceid/>
+                        <meta>
+                            <instanceID/>
+                        </meta>
+                    </Mapping>
+                </instance>
+                <instance id="other-entry"/>
+
+                <bind
+                        jr:preload="timestamp"
+                        jr:preloadParams="start"
+                        jr:requiredMsg="start"
+                        nodeset="/Mapping/starttime"
+                        required="true()"
+                        type="dateTime"/>
+                <bind
+                        jr:preload="timestamp"
+                        jr:preloadParams="end"
+                        jr:requiredMsg="end"
+                        nodeset="/Mapping/endtime"
+                        required="true()"
+                        type="dateTime"/>
+                <bind
+                        jr:preload="property"
+                        jr:preloadParams="deviceid"
+                        jr:requiredMsg="device"
+                        nodeset="/Mapping/deviceid"
+                        required="true()"
+                        type="string"/>
+
+                <bind
+                        calculate="concat('uuid:', uuid())"
+                        nodeset="/Mapping/meta/instanceID"
+                        readonly="true()"
+                        type="string"/>
+            </model>
+        </h:head>
+        <h:body/>
+    </h:html>
+'''
+
 XML_DATA_ERR = '''
     <h:html
             xmlns="http://www.w3.org/2002/xforms"
@@ -121,9 +176,6 @@ class CustomTestCase(TransactionTestCase):
         with open(XFORM_XML_FILE, 'r') as fp:
             XFORM_XML_RAW = fp.read()
 
-        with open(XFORM_XML_FILE_NOVERSION, 'r') as fp:
-            XFORM_XML_RAW_NOVERSION = fp.read()
-
         with open(XFORM_XML_FILE_I18N, 'r') as fp:
             XFORM_XML_RAW_I18N = fp.read()
 
@@ -139,6 +191,7 @@ class CustomTestCase(TransactionTestCase):
             # sample collection for xForm objects
             'xform': {
                 'xml-ok': XML_DATA,
+                'xml-ok-noversion': XML_DATA_NO_VERSION,
                 'xml-err': XML_DATA_ERR,
 
                 'file-xls': XFORM_XLS_FILE,
@@ -148,9 +201,6 @@ class CustomTestCase(TransactionTestCase):
                 'file-xml': XFORM_XML_FILE,
 
                 'file-avro': XFORM_AVRO_FILE,
-
-                'raw-xml-noversion': XFORM_XML_RAW_NOVERSION,
-                'file-xml-noversion': XFORM_XML_FILE_NOVERSION,
 
                 'raw-xml-i18n': XFORM_XML_RAW_I18N,
                 'file-xml-i18n': XFORM_XML_FILE_I18N,
@@ -214,12 +264,14 @@ class CustomTestCase(TransactionTestCase):
     def helper_create_xform(self,
                             mapping_id=None,
                             surveyor=None,
+                            xml_data=None,
                             with_media=False,
                             with_version=True):
-        if with_version:
-            xml_data = self.samples['xform']['raw-xml']
-        else:
-            xml_data = self.samples['xform']['raw-xml-noversion']
+        if not xml_data:
+            if with_version:
+                xml_data = self.samples['xform']['xml-ok']
+            else:
+                xml_data = self.samples['xform']['xml-ok-noversion']
 
         xform = XForm.objects.create(
             description='test',

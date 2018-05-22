@@ -89,7 +89,7 @@ class SubmissionTests(CustomTestCase):
 
     def test__submission__400(self):
         # create xForm entry
-        self.helper_create_xform(surveyor=self.user)
+        self.helper_create_xform(surveyor=self.user, xml_data=self.samples['xform']['raw-xml'])
 
         # submit right response but server is not available yet
         with open(self.samples['submission']['file-ok'], 'rb') as f:
@@ -167,7 +167,12 @@ class PostSubmissionTests(CustomTestCase):
         self.SUBMISSIONS_URL = kernel_utils.get_submissions_url()
         self.ATTACHMENTS_URL = kernel_utils.get_attachments_url()
         # create xForm entry
-        self.xform = self.helper_create_xform(surveyor=self.user, mapping_id=mapping_id)
+        self.xform = self.helper_create_xform(
+            surveyor=self.user,
+            mapping_id=mapping_id,
+            xml_data=self.samples['xform']['raw-xml'],
+        )
+
         self.assertTrue(self.xform.is_surveyor(self.user))
 
     def tearDown(self):
