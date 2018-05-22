@@ -1,5 +1,6 @@
 {
   "name": "MyTestForm",
+  "namespace": "aether.odk.xforms",
   "doc": "My Test Form (id: my-test-form, version: Test-1.0)",
   "type": "record",
   "fields": [
@@ -65,69 +66,79 @@
     },
     {
       "name": "location",
-      "type": "record",
-      "doc": "Collect your GPS coordinates",
-      "fields": [
-        {
-          "name": "coordinates",
-          "type": "array",
-          "items": "float"
-        },
-        {
-          "name": "altitude",
-          "type": [
-            "null",
-            "float"
-          ]
-        },
-        {
-          "name": "accuracy",
-          "type": [
-            "null",
-            "float"
-          ]
-        },
-        {
-          "name": "type",
-          "type": [
-            "null",
-            "string"
-          ]
-        }
-      ]
+      "type": {
+        "name": "location",
+        "type": "record",
+        "doc": "Collect your GPS coordinates",
+        "fields": [
+          {
+            "name": "coordinates",
+            "type": {
+              "type": "array",
+              "items": "float"
+            }
+          },
+          {
+            "name": "altitude",
+            "type": [
+              "null",
+              "float"
+            ]
+          },
+          {
+            "name": "accuracy",
+            "type": [
+              "null",
+              "float"
+            ]
+          },
+          {
+            "name": "type",
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        ]
+      }
     },
     {
       "name": "location_none",
-      "type": "record",
-      "doc": "Ignore your GPS coordinates",
-      "fields": [
-        {
-          "name": "coordinates",
-          "type": "array",
-          "items": "float"
-        },
-        {
-          "name": "altitude",
-          "type": [
-            "null",
-            "float"
-          ]
-        },
-        {
-          "name": "accuracy",
-          "type": [
-            "null",
-            "float"
-          ]
-        },
-        {
-          "name": "type",
-          "type": [
-            "null",
-            "string"
-          ]
-        }
-      ]
+      "type": {
+        "name": "location_none",
+        "type": "record",
+        "doc": "Ignore your GPS coordinates",
+        "fields": [
+          {
+            "name": "coordinates",
+            "type": {
+              "type": "array",
+              "items": "float"
+            }
+          },
+          {
+            "name": "altitude",
+            "type": [
+              "null",
+              "float"
+            ]
+          },
+          {
+            "name": "accuracy",
+            "type": [
+              "null",
+              "float"
+            ]
+          },
+          {
+            "name": "type",
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        ]
+      }
     },
     {
       "name": "image",
@@ -179,33 +190,39 @@
     },
     {
       "name": "option_a",
-      "doc": "Option A",
-      "type": "record",
-      "fields": [
-        {
-          "name": "choice_a",
-          "type": [
-            "null",
-            "string"
-          ],
-          "doc": "Choice A"
-        }
-      ]
+      "type": {
+        "name": "option_a",
+        "doc": "Option A",
+        "type": "record",
+        "fields": [
+          {
+            "name": "choice_a",
+            "type": [
+              "null",
+              "string"
+            ],
+            "doc": "Choice A"
+          }
+        ]
+      }
     },
     {
       "name": "option_b",
-      "doc": "Option B",
-      "type": "record",
-      "fields": [
-        {
-          "name": "choice_b",
-          "type": [
-            "null",
-            "string"
-          ],
-          "doc": "Choice B"
-        }
-      ]
+      "type": {
+        "name": "option_b",
+        "doc": "Option B",
+        "type": "record",
+        "fields": [
+          {
+            "name": "choice_b",
+            "type": [
+              "null",
+              "string"
+            ],
+            "doc": "Choice B"
+          }
+        ]
+      }
     },
     {
       "name": "lang",
@@ -217,7 +234,6 @@
     },
     {
       "name": "iterate",
-      "doc": "Indicate loop elements",
       "type": {
         "type": "array",
         "items": {
@@ -247,7 +263,6 @@
     },
     {
       "name": "iterate_one",
-      "doc": "Indicate one",
       "type": {
         "type": "array",
         "items": {
@@ -269,7 +284,6 @@
     },
     {
       "name": "iterate_none",
-      "doc": "Indicate none",
       "type": {
         "type": "array",
         "items": {
@@ -291,26 +305,29 @@
     },
     {
       "name": "meta",
-      "doc": "/meta",
-      "type": "record",
-      "fields": [
-        {
-          "name": "instanceID",
-          "type": [
-            "null",
-            "string"
-          ],
-          "doc": "/meta/instanceID"
-        },
-        {
-          "name": "instanceName",
-          "type": [
-            "null",
-            "string"
-          ],
-          "doc": "/meta/instanceName"
-        }
-      ]
+      "type": {
+        "name": "meta",
+        "doc": "/meta",
+        "type": "record",
+        "fields": [
+          {
+            "name": "instanceID",
+            "type": [
+              "null",
+              "string"
+            ],
+            "doc": "/meta/instanceID"
+          },
+          {
+            "name": "instanceName",
+            "type": [
+              "null",
+              "string"
+            ],
+            "doc": "/meta/instanceName"
+          }
+        ]
+      }
     }
   ]
 }

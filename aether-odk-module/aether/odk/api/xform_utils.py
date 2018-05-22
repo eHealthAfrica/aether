@@ -205,6 +205,7 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
     # initial schema, with "id" and "version" attributes
     avro_schema = {
         'name': name,
+        'namespace': 'aether.odk.xforms',
         'doc': f'{title} (id: {form_id}, version: {version})',
         'type': 'record',
         'fields': [
@@ -241,22 +242,23 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         parent_path = '/'.join(xpath.split('/')[:-1])
         parent = list(__find_by_key_value(avro_schema, KEY, parent_path))[0]
 
-        # record
+        # nested record
         if current_type == 'group':
             parent['fields'].append({
                 'name': current_name,
-                'doc': current_doc,
-                'type': 'record',
-                'fields': [],
-                KEY: xpath,
+                'type': {
+                    'name': current_name,
+                    'doc': current_doc,
+                    'type': 'record',
+                    'fields': [],
+                    KEY: xpath,
+                },
             })
-            continue
 
         # array
-        if current_type == 'repeat':
+        elif current_type == 'repeat':
             parent['fields'].append({
                 'name': current_name,
-                'doc': current_doc,
                 'type': {
                     'type': 'array',
                     'items': {
@@ -268,39 +270,47 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
                     },
                 },
             })
-            continue
-
-        # final leaf
-        current_field = {
-            'name': current_name,
-            'type': __get_avro_primitive_type(current_type, definition['required']),
-            'doc': current_doc,
-        }
-        parent['fields'].append(current_field)
 
         # there are three types of GEO types: geopoint, geotrace and geoshape
         # currently, only geopoint is implemented by ODK Collect
-        if current_type == 'geopoint':
-            current_field['type'] = 'record'
-            current_field['fields'] = [
-                {
-                    'name': 'coordinates',
-                    'type': 'array',
-                    'items': 'float',
+        elif current_type == 'geopoint':
+            parent['fields'].append({
+                'name': current_name,
+                'type': {
+                    'name': current_name,
+                    'type': 'record',
+                    'doc': current_doc,
+                    'fields': [
+                        {
+                            'name': 'coordinates',
+                            'type': {
+                                'type': 'array',
+                                'items': 'float',
+                            },
+                        },
+                        {
+                            'name': 'altitude',
+                            'type': __get_avro_primitive_type('float', definition['required']),
+                        },
+                        {
+                            'name': 'accuracy',
+                            'type': __get_avro_primitive_type('float', definition['required']),
+                        },
+                        {
+                            'name': 'type',
+                            'type': __get_avro_primitive_type('string', definition['required']),
+                        },
+                    ]
                 },
-                {
-                    'name': 'altitude',
-                    'type': __get_avro_primitive_type('float', definition['required']),
-                },
-                {
-                    'name': 'accuracy',
-                    'type': __get_avro_primitive_type('float', definition['required']),
-                },
-                {
-                    'name': 'type',
-                    'type': __get_avro_primitive_type('string', definition['required']),
-                },
-            ]
+            })
+
+        # final and simple leaf
+        else:
+            parent['fields'].append({
+                'name': current_name,
+                'type': __get_avro_primitive_type(current_type, definition['required']),
+                'doc': current_doc,
+            })
 
     # remove fake KEY
     __delete_key_in_dict(avro_schema, KEY)
