@@ -33,6 +33,8 @@ from rest_framework import status
 
 from http import HTTPStatus
 
+from aether.kernel.settings import logger
+
 from . import models, serializers, filters, constants, utils, mapping_validation
 
 
@@ -160,6 +162,24 @@ class AetherSchemaView(SchemaView):
     permission_classes = (permissions.AllowAny, )
 
 
+def run_mapping_validation(submission_payload, mapping_definition, schemas):
+    submission_data, entities = utils.extract_create_entities(
+        submission_payload,
+        mapping_definition,
+        schemas,
+    )
+    jsonpath_errors = mapping_validation.validate_mappings(
+        submission_payload=submission_payload,
+        entities=entities,
+        mapping_definition=mapping_definition,
+    )
+    type_errors = submission_data['aether_errors']
+    return (
+        type_errors or jsonpath_errors,
+        entities,
+    )
+
+
 @api_view(['POST'])
 @renderer_classes([JSONRenderer])
 @permission_classes([IsAuthenticated])
@@ -177,21 +197,15 @@ def validate_mappings(request):
     target (`entities`).
     '''
     serializer = serializers.MappingValidationSerializer(data=request.data)
-    if serializer.is_valid():
-        try:
-            submission_data, entities = utils.extract_create_entities(**serializer.data)
-            jsonpath_errors = mapping_validation.validate_mappings(
-                submission_payload=serializer.data['submission_payload'],
-                entities=entities,
-                mapping_definition=serializer.data['mapping_definition'],
-            )
-            type_errors = submission_data['aether_errors']
-            errors = type_errors or jsonpath_errors
-            return Response({
-                'entities': [entity.payload for entity in entities],
-                'mapping_errors': errors,
-            })
-        except Exception as e:
-            return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    else:
+    if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        errors, entities = run_mapping_validation(**serializer.data)
+        return Response({
+            'entities': [entity.payload for entity in entities],
+            'mapping_errors': errors,
+        })
+    except Exception as e:
+        error = str(e)
+        logger.exception(error)
+        return Response(error, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
