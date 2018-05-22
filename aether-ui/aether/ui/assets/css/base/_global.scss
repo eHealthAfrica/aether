@@ -171,6 +171,7 @@ textarea:active {
     background: $light-grey;
     border-radius: $border-radius $border-radius 0 0;
     color: $text-color;
+    pointer-events: none;
   }
 }
 
