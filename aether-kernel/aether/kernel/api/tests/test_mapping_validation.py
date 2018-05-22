@@ -18,7 +18,6 @@
 
 from django.test import TestCase
 from .. import mapping_validation
-from .. import utils
 
 valid_schemas = {
     'Person': {
@@ -52,6 +51,7 @@ invalid_schemas = {
         ]
     }
 }
+
 
 class TestMappingValidation(TestCase):
 

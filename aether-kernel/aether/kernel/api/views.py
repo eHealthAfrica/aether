@@ -16,6 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import traceback
+
 from django.db.models import Count, Min, Max
 
 from rest_framework import viewsets, permissions
@@ -207,6 +209,5 @@ def validate_mappings(request):
             'mapping_errors': errors,
         })
     except Exception as e:
-        error = str(e)
-        logger.exception(error)
-        return Response(error, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        logger.debug(traceback.format_exc())
+        return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)

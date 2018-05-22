@@ -29,7 +29,7 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from .. import models, constants, mapping_validation
+from .. import models, constants
 
 from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA,
                SAMPLE_LOCATION_SCHEMA_DEFINITION, SAMPLE_HOUSEHOLD_SCHEMA_DEFINITION,

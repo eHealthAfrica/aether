@@ -114,5 +114,3 @@ def validate_mappings(submission_payload, schemas, mapping_definition):
             if isinstance(result, Failure):
                 errors.append(result)
     return errors
-
-
