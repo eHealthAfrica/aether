@@ -265,7 +265,7 @@ class ViewsTest(TestCase):
             }
         )
 
-    def test_view_01_publish_pipeline(self):
+    def test_view_pipeline___publish(self):
         username = 'test'
         password = 'testtest'
         self.client.login(username=username, password=password)
@@ -308,7 +308,7 @@ class ViewsTest(TestCase):
 
         url = reverse('ui:pipeline-list')
         data = json.dumps({
-            'name': 'pipeline 1'
+            'name': 'pipeline1'
         })
         response = self.client.post(url, data=data, content_type='application/json')
         response_data = json.loads(response.content)
@@ -320,7 +320,8 @@ class ViewsTest(TestCase):
         response = self.client.post(url, {'project_name': 'Aux 1'})
         response_data = json.loads(response.content)
         self.assertGreater(len(response_data['exists']), 0)
-        self.assertIn(response_data['exists'][0],
+        map_data = json.loads(data)
+        self.assertIn(response_data['exists'][0][map_data['name']],
                       'Mapping with id {} exists'.format(pipeline.kernel_refs['mapping']))
 
         url = reverse('ui:pipeline-list')
@@ -343,7 +344,7 @@ class ViewsTest(TestCase):
         response = self.client.post(url, {'project_name': 'Aux 1'})
         response_data = json.loads(response.content)
         self.assertGreater(len(response_data['exists']), 0)
-        self.assertIn(response_data['exists'][0],
+        self.assertIn(response_data['exists'][0]['Screening'],
                       '{} schema with id {} exists'.format('Screening',
                                                            pipeline.kernel_refs['schema']['Screening']))
 
@@ -364,7 +365,7 @@ class ViewsTest(TestCase):
         url = reverse('ui:pipeline-publish', args=[pipeline_id])
         response = self.client.post(url, {'project_name': 'Aux 1'})
         response_data = json.loads(response.content)
-        self.assertGreater(len(response_data['error']), 0)
+        self.assertGreater(len(response_data['exists']), 0)
 
         url = reverse('ui:pipeline-publish', args=[str(pipeline_id) + 'wrong'])
         response = self.client.post(url, {'project_name': 'Aux 1'})
@@ -379,10 +380,12 @@ class ViewsTest(TestCase):
                     'exists': []
                 }
         outcome = utils.publish_preflight(pipeline, 'Aux', outcome)
-        self.assertGreater(len(outcome['error']), 0)
-        self.assertEqual(len(outcome['exists']), 0)
+        self.assertEqual(len(outcome['exists']), 5)
 
-    def test_view_02_pubish_pipeline(self):
+    def test_view_pipeline__publish(self):
+        username = 'test'
+        password = 'testtest'
+        self.client.login(username=username, password=password)
         pipeline = Pipeline.objects.create(
             name='Pipeline Mock 2',
             schema={'name': 'test', 'type': 'record', 'fields':
@@ -397,8 +400,21 @@ class ViewsTest(TestCase):
         outcome = utils.publish_pipeline(pipeline, 'Aux')
         self.assertIn(outcome['successful'][0],
                       'Existing Aux project used')
+        outcome = utils.publish_pipeline(pipeline, 'Aux')
+        self.assertEqual(len(outcome['error']), 2)
+        url = reverse('ui:pipeline-publish', args=[str(pipeline.id)])
+        response = self.client.post(url, {'project_name': 'Aux', 'overwrite': True})
+        response_data = json.loads(response.content)
+        self.assertEqual(len(response_data['successful']), 4)
 
-    def test_view_03_fetch_pipeline(self):
+        pipeline.kernel_refs = {}
+        pipeline.save()
+        url = reverse('ui:pipeline-publish', args=[str(pipeline.id)])
+        response = self.client.post(url, {'project_name': 'Aux', 'overwrite': True})
+        response_data = json.loads(response.content)
+        self.assertEqual(len(response_data['successful']), 3)
+
+    def test_view_pipeline_fetch(self):
         username = 'test'
         password = 'testtest'
         self.client.login(username=username, password=password)

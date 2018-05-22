@@ -11,9 +11,11 @@ class Output extends Component {
       </li>)
     })
     errors.exists.forEach(exists => {
-      errorList.push(<li key={exists}>
-        <FormattedMessage id={`publish.error.${exists}`} defaultMessage={exists} />
-      </li>)
+      Object.keys(exists).forEach(exist => {
+        errorList.push(<li key={exist}>
+          <FormattedMessage id={`publish.exists.${exist}`} defaultMessage={exists[exist]} />
+        </li>)
+      })
     })
     return <ul>{errorList}</ul>
   }

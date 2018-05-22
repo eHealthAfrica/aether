@@ -8,6 +8,8 @@ from .. import utils
 
 
 class ViewsTest(TestCase):
+    project_id = ''
+
     def test_kernel_data_request(self):
         result = utils.kernel_data_request('projects', 'get')
         self.assertIn('count', result)
@@ -40,6 +42,7 @@ class ViewsTest(TestCase):
                       }
         # must run on an empty kernel db
         utils.create_new_kernel_object('project', pipeline, project_data)
+        self.project_id = pipeline.kernel_refs['project']
         utils.create_new_kernel_object('schema', pipeline, schema_data)
         pipeline = Pipeline.objects.get(pk=pipeline.id)
         self.assertIn('PersonX', pipeline.kernel_refs['schema'])
@@ -64,3 +67,14 @@ class ViewsTest(TestCase):
             utils.convertEntityTypes({'Person': '123456'})
             exception = ast.literal_eval(str(exc.exception))
             self.assertEqual(exception['object_name'], 'unknown')
+
+    def test_update_kernel_object(self):
+        with self.assertRaises(Exception):
+            data = {
+                'name': 'Aux-test'
+            }
+            utils.update_kernel_object('project', self.project_id, data)
+
+        with self.assertRaises(Exception):
+            data = {}
+            utils.update_kernel_object('project', self.project_id, data)

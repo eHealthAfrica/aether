@@ -65,33 +65,11 @@ class ProjectViewSet(CustomViewSet):
     serializer_class = serializers.ProjectSerializer
     filter_class = filters.ProjectFilter
 
-    @action(methods=['get'], detail=False)
-    def byname(self, request):
-        '''
-        This view returns projects filtered by the passed name
-        '''
-        name = self.request.query_params.get('name', None)
-        filtered_list = utils.find_by_name('Project', name)
-        serialized_data = serializers.ProjectSerializer(
-                           filtered_list, context={'request': request}, many=True).data
-        return Response(serialized_data, status=HTTPStatus.OK)
-
 
 class MappingViewSet(CustomViewSet):
     queryset = models.Mapping.objects.all()
     serializer_class = serializers.MappingSerializer
     filter_class = filters.MappingFilter
-
-    @action(methods=['get'], detail=False)
-    def byname(self, request):
-        '''
-        This view returns mapping filtered by the passed name
-        '''
-        name = self.request.query_params.get('name', None)
-        filtered_list = utils.find_by_name('Mapping', name)
-        serialized_data = serializers.MappingSerializer(
-                           filtered_list, context={'request': request}, many=True).data
-        return Response(serialized_data, status=HTTPStatus.OK)
 
 
 class MappingStatsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -127,33 +105,11 @@ class SchemaViewSet(CustomViewSet):
     serializer_class = serializers.SchemaSerializer
     filter_class = filters.SchemaFilter
 
-    @action(methods=['get'], detail=False)
-    def byname(self, request):
-        '''
-        This view returns schema filtered by the passed name
-        '''
-        name = self.request.query_params.get('name', None)
-        filtered_list = utils.find_by_name('Schema', name)
-        serialized_data = serializers.SchemaSerializer(
-                           filtered_list, context={'request': request}, many=True).data
-        return Response(serialized_data, status=HTTPStatus.OK)
-
 
 class ProjectSchemaViewSet(CustomViewSet):
     queryset = models.ProjectSchema.objects.all()
     serializer_class = serializers.ProjectSchemaSerializer
     filter_class = filters.ProjectSchemaFilter
-
-    @action(methods=['get'], detail=False)
-    def byname(self, request):
-        '''
-        This view returns project schemas filtered by the passed name
-        '''
-        name = self.request.query_params.get('name', None)
-        filtered_list = utils.find_by_name('ProjectSchema', name)
-        serialized_data = serializers.ProjectSchemaSerializer(
-                           filtered_list, context={'request': request}, many=True).data
-        return Response(serialized_data, status=HTTPStatus.OK)
 
 
 class EntityViewSet(CustomViewSet):

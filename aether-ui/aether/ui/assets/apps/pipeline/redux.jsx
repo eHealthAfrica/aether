@@ -54,11 +54,11 @@ export const updatePipeline = pipeline => ({
   )
 })
 
-export const publishPipeline = (id, projectName = PROJECT_NAME) => ({
+export const publishPipeline = (id, projectName = PROJECT_NAME, overwrite = false) => ({
   types: ['', types.PIPELINE_PUBLISH_SUCCESS, types.PIPELINE_PUBLISH_ERROR],
   promise: client => client.post(`${urls.PIPELINES_URL}${id}/publish/`,
     { 'Content-Type': 'application/json' },
-    { data: { project_name: projectName } }
+    { data: { project_name: projectName, overwrite } }
   )
 })
 
