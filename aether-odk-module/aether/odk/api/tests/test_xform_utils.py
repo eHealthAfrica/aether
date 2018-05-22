@@ -563,52 +563,28 @@ class XFormUtilsAvroTests(CustomTestCase):
         xml_definition = '''
             <h:html
                     xmlns="http://www.w3.org/2002/xforms"
-                    xmlns:ev="http://www.w3.org/2001/xml-events"
-                    xmlns:h="http://www.w3.org/1999/xhtml"
-                    xmlns:jr="http://openrosa.org/javarosa"
-                    xmlns:odk="http://www.opendatakit.org/xforms"
-                    xmlns:orx="http://openrosa.org/xforms"
-                    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                    xmlns:h="http://www.w3.org/1999/xhtml">
                 <h:head>
                     <h:title>nested repeats test</h:title>
                     <model>
                         <instance>
                             <nested-repeats id="nested_repeats_test">
-                                <Repeat_1 jr:template="">
-                                    <name/>
-                                    <Repeat_2 jr:template="">
-                                        <name2/>
+                                <Repeat_1>
+                                    <name_1/>
+                                    <Repeat_2>
+                                        <name_2/>
                                     </Repeat_2>
                                 </Repeat_1>
-                                <meta>
-                                    <instanceID/>
-                                </meta>
                             </nested-repeats>
                         </instance>
-
-                        <bind nodeset="/nested-repeats/Repeat_1/name" type="string"/>
-                        <bind nodeset="/nested-repeats/Repeat_1/Repeat_2/name2" type="string"/>
-                        <bind
-                                calculate="concat('uuid:', uuid())"
-                                nodeset="/nested-repeats/meta/instanceID"
-                                readonly="true()"
-                                type="string"/>
                     </model>
                 </h:head>
-                <h:body class="pages">
+
+                <h:body>
                     <group ref="/nested-repeats/Repeat_1">
-                        <label></label>
                         <repeat nodeset="/nested-repeats/Repeat_1">
-                            <input ref="/nested-repeats/Repeat_1/name">
-                                <label>name_label</label>
-                            </input>
                             <group ref="/nested-repeats/Repeat_1/Repeat_2">
-                                <label></label>
-                                <repeat nodeset="/nested-repeats/Repeat_1/Repeat_2">
-                                    <input ref="/nested-repeats/Repeat_1/Repeat_2/name2">
-                                        <label>name_label</label>
-                                    </input>
-                                </repeat>
+                                <repeat nodeset="/nested-repeats/Repeat_1/Repeat_2"/>
                             </group>
                         </repeat>
                     </group>
@@ -636,65 +612,122 @@ class XFormUtilsAvroTests(CustomTestCase):
                 },
                 {
                     'name': 'Repeat_1',
-                    'type': {
-                        'type': 'array',
-                        'items': {
-                            'name': 'Repeat_1',
-                            'doc': '/Repeat_1',
-                            'type': 'record',
-                            'fields': [
-                                {
-                                    'name': 'name',
-                                    'type': [
-                                        'null',
-                                        'string',
-                                    ],
-                                    'doc': 'name_label',
-                                },
-                                {
-                                    'name': 'Repeat_2',
-                                    'type': {
-                                        'type': 'array',
-                                        'items': {
-                                            'name': 'Repeat_2',
-                                            'doc': '/Repeat_1/Repeat_2',
-                                            'type': 'record',
-                                            'fields': [
-                                                {
-                                                    'name': 'name2',
-                                                    'type': [
-                                                        'null',
-                                                        'string',
-                                                    ],
-                                                    'doc': 'name_label',
-                                                },
-                                            ],
-                                        },
+                    'type': [
+                        'null',
+                        {
+                            'type': 'array',
+                            'items': {
+                                'name': 'Repeat_1',
+                                'doc': '/Repeat_1',
+                                'type': 'record',
+                                'fields': [
+                                    {
+                                        'name': 'name_1',
+                                        'type': ['null', 'string'],
+                                        'doc': '/Repeat_1/name_1',
                                     },
-                                },
-                            ],
-                        },
-                    },
-                },
-                {
-                    'name': 'meta',
-                    'type': {
-                        'name': 'meta',
-                        'doc': '/meta',
-                        'type': 'record',
-                        'fields': [
-                            {
-                                'name': 'instanceID',
-                                'type': [
-                                    'null',
-                                    'string'
+                                    {
+                                        'name': 'Repeat_2',
+                                        'type': [
+                                            'null',
+                                            {
+                                                'type': 'array',
+                                                'items': {
+                                                    'name': 'Repeat_2',
+                                                    'doc': '/Repeat_1/Repeat_2',
+                                                    'type': 'record',
+                                                    'fields': [
+                                                        {
+                                                            'name': 'name_2',
+                                                            'type': ['null', 'string'],
+                                                            'doc': '/Repeat_1/Repeat_2/name_2',
+                                                        },
+                                                    ],
+                                                },
+                                            },
+                                        ],
+                                    },
                                 ],
-                                'doc': '/meta/instanceID',
                             },
-                        ],
-                    },
-                }
+                        },
+                    ],
+                },
             ],
         }
 
-        self.assertEqual(parse_xform_to_avro_schema(xml_definition), expected)
+        schema = parse_xform_to_avro_schema(xml_definition)
+        self.assertEqual(schema, expected, json.dumps(schema, indent=2))
+
+    def test__parse_xform_to_avro_schema__validate_errors(self):
+        xml_definition = '''
+            <h:html
+                    xmlns="http://www.w3.org/2002/xforms"
+                    xmlns:h="http://www.w3.org/1999/xhtml">
+                <h:head>
+                    <h:title>forcing validation error</h:title>
+                    <model>
+                        <instance>
+                            <wrong-names id="wrong-names">
+                                <full-name>
+                                    <first-name/>
+                                    <last-name/>
+                                </full-name>
+                            </wrong-names>
+                        </instance>
+                    </model>
+                </h:head>
+                <h:body/>
+            </h:html>
+        '''
+
+        expected = {
+            'name': 'WrongNames',
+            'namespace': 'aether.odk.xforms',
+            'doc': 'forcing validation error (id: wrong-names, version: 0)',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': '_id',
+                    'doc': 'xForm ID',
+                    'type': 'string',
+                    'default': 'wrong-names',
+                },
+                {
+                    'name': '_version',
+                    'doc': 'xForm version',
+                    'type': 'string',
+                    'default': '0',
+                },
+                {
+                    'name': 'full-name',
+                    'type': [
+                        'null',
+                        {
+                            'name': 'full-name',
+                            'doc': '/full-name',
+                            'type': 'record',
+                            'fields': [
+                                {
+                                    'name': 'first-name',
+                                    'type': ['null', 'string'],
+                                    'doc': '/full-name/first-name',
+                                },
+                                {
+                                    'name': 'last-name',
+                                    'type': ['null', 'string'],
+                                    'doc': '/full-name/last-name',
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+            '_errors': [
+                'Invalid name "full-name".',
+                'Invalid name "first-name".',
+                'Invalid name "last-name".',
+            ],
+        }
+
+        schema = parse_xform_to_avro_schema(xml_definition)
+        self.assertEqual(schema, expected, json.dumps(schema, indent=2))

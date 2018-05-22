@@ -15,12 +15,7 @@
     "altitude": 108.0,
     "accuracy": 22.0
   },
-  "location_none": {
-    "type": null,
-    "coordinates": [],
-    "altitude": null,
-    "accuracy": null
-  },
+  "location_none": null,
   "number": 3,
   "number2": 3.56,
   "date": "2017-07-14T00:00:00",
