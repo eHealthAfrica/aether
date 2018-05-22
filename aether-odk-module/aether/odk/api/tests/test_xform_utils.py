@@ -497,6 +497,19 @@ class XFormUtilsAvroTests(CustomTestCase):
         }
         self.assertEqual(get_label(xform_dict, '/None/any'), '/any')
 
+    def test__get_xform_label__blank_label(self):
+        xform_dict = {
+            'h:html': {
+                'h:body': {
+                    'any-tag': {
+                        '@ref': '/None/any',
+                        'label': '',
+                    }
+                }
+            }
+        }
+        self.assertEqual(get_label(xform_dict, '/None/any'), '/any')
+
     def test__get_xform_label__one_language(self):
         xform_dict = {
             'h:html': {
