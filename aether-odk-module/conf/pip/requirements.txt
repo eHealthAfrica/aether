@@ -39,6 +39,7 @@ pyxform==0.11.2
 raven==6.8.0
 requests==2.18.4
 six==1.11.0
+spavro==1.1.17
 sqlparse==0.2.4
 traceback2==1.4.0
 unicodecsv==0.14.1

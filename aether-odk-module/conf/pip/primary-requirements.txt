@@ -27,6 +27,7 @@ uwsgi
 # xForm and data manipulation
 python-dateutil
 pyxform
+spavro
 
 
 # UMS libraries

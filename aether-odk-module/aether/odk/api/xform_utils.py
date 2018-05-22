@@ -16,6 +16,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import json
+import re
+
 from collections import defaultdict
 from dateutil import parser
 from xml.etree import ElementTree
@@ -23,9 +26,12 @@ from xml.etree import ElementTree
 from pyxform import builder, xls2json
 from pyxform.xls2json_backends import xls_to_dict
 from pyxform.xform_instance_parser import XFormInstanceParser
+from spavro.schema import parse as parse_avro_schema, SchemaParseException
 
 
 DEFAULT_XFORM_VERSION = '0'
+
+_RE_AVRO_NAME = re.compile(r'^([A-Za-z_][A-Za-z0-9_]*)$')
 
 
 # ------------------------------------------------------------------------------
@@ -225,6 +231,8 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         # this is going to be removed later,
         # but it's used to speed up the build process
         KEY: None,
+        # this is going to include the schema errors
+        '_errors': []
     }
 
     xform_schema = __get_xform_instance_skeleton(xml_definition)
@@ -238,6 +246,12 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         current_type = definition['type']
         current_name = xpath.split('/')[-1]
         current_doc = definition['label']
+
+        # validate name
+        try:
+            __validate_avro_name(current_name)
+        except SchemaParseException as e:
+            avro_schema['_errors'].append(str(e))
 
         parent_path = '/'.join(xpath.split('/')[:-1])
         parent = list(__find_by_key_value(avro_schema, KEY, parent_path))[0]
@@ -314,6 +328,11 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
 
     # remove fake KEY
     __delete_key_in_dict(avro_schema, KEY)
+
+    # validate generated schema
+    __validate_avro_schema(avro_schema)
+    if not avro_schema['_errors']:
+        del avro_schema['_errors']
 
     return avro_schema
 
@@ -637,6 +656,19 @@ def __get_avro_primitive_type(xform_type, required=False):
         _type = ['null', _type]
 
     return _type
+
+
+def __validate_avro_schema(avro_schema):  # pragma: no cover
+    # apart from naming errors, are we generating an invalid schema???
+    try:
+        parse_avro_schema(json.dumps(avro_schema))
+    except SchemaParseException as e:
+        avro_schema['_errors'].append(str(e))
+
+
+def __validate_avro_name(name):
+    if _RE_AVRO_NAME.match(name) is None:
+        raise SchemaParseException(f'Invalid name "{name}".')
 
 
 # ------------------------------------------------------------------------------
