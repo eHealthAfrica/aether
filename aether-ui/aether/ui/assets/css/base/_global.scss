@@ -143,7 +143,6 @@ textarea:active {
   height: 100%;
   display: flex;
   flex-direction: column;
-  margin-top: 1rem;
 }
 
 .tabs {
@@ -152,10 +151,9 @@ textarea:active {
   margin-bottom: -$border-radius;
 
   .tab {
-    margin-right: 1rem;
     background: none;
     border: 0;
-    padding: 1rem 6rem 1rem 2rem;
+    padding: 1.2rem 10% 1.2rem 2rem;
     font-size: $font-size-m;
     font-weight: 300;
     color: $action-color;
