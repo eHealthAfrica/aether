@@ -2,12 +2,12 @@
 set -e
 
 function build_container() {
-  echo "_________________________________________________ Building $1 container"
+  echo "_____________________________________________ Building $1 container"
   $DC_TEST build "$1"-test
 }
 
 function kill_all(){
-  echo "_________________________________________________ Killing Containers"
+  echo "_____________________________________________ Killing Containers"
   $DC_TEST kill
   $DC_TEST down
 }
