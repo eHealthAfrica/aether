@@ -354,13 +354,10 @@ def convertMappings(mapping_from_kernel):
 def convertEntityTypes(entities_from_kernel):
     result = {'schemas': [], 'ids': {}}
     for entity in entities_from_kernel:
-        try:
-            project_schema = kernel_data_request(f'projectschemas/{entities_from_kernel[entity]}/')
-            schema = kernel_data_request(f'schemas/{project_schema["schema"]}/')
-            result['schemas'].append(schema['definition'])
-            result['ids'][schema['name']] = schema['id']
-        except Exception:
-            pass
+        project_schema = kernel_data_request(f'projectschemas/{entities_from_kernel[entity]}/')
+        schema = kernel_data_request(f'schemas/{project_schema["schema"]}/')
+        result['schemas'].append(schema['definition'])
+        result['ids'][schema['name']] = schema['id']
     return result
 
 
