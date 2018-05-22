@@ -599,7 +599,7 @@ def __get_xform_label(xform_dict, xpath, texts={}):
                 #   <label ref="jr:itext('{xpath}:label')"/>
                 label_id = label_tag['@ref'][10:-2]  # f'{xpath}:label'
                 label = texts[label_id]
-            else:
+            elif label_tag:
                 label = label_tag
     except Exception:
         pass
