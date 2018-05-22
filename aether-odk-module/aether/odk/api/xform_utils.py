@@ -121,16 +121,7 @@ def parse_submission(data, xml_definition):
                     }
 
             else:
-                if _type == 'geopoint':
-                    # to prevent further errors, in case of null values
-                    # return the same structure but with null values
-                    obj[k] = {
-                        'coordinates': [],
-                        'altitude': None,
-                        'accuracy': None,
-                        'type': None,
-                    }
-                elif _type == 'repeat':
+                if _type == 'repeat':
                     # null arrays are handled as empty arrays
                     obj[k] = []
                 else:
