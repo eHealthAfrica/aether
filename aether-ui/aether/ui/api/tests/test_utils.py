@@ -42,7 +42,7 @@ class ViewsTest(TestCase):
                       }
         # must run on an empty kernel db
         utils.create_new_kernel_object('project', pipeline, project_data)
-        self.project_id = pipeline.kernel_refs['project']
+        ViewsTest.project_id = pipeline.kernel_refs['project']
         utils.create_new_kernel_object('schema', pipeline, schema_data)
         pipeline = Pipeline.objects.get(pk=pipeline.id)
         self.assertIn('PersonX', pipeline.kernel_refs['schema'])
@@ -69,11 +69,16 @@ class ViewsTest(TestCase):
             self.assertEqual(exception['object_name'], 'unknown')
 
     def test_update_kernel_object(self):
-        with self.assertRaises(Exception):
-            data = {
-                'name': 'Aux-test'
-            }
-            utils.update_kernel_object('project', self.project_id, data)
+        data = {
+            'name': 'Aux-test-2',
+            'revision': 'test-rev',
+            'salad_schema': '[]',
+            'jsonld_context': '[]',
+            'rdf_definition': '[]'
+        }
+        utils.update_kernel_object('project', self.project_id, data)
+        project = utils.kernel_data_request(f'projects/{self.project_id}/')
+        self.assertIn('Aux-test-2', project['name'])
 
         with self.assertRaises(Exception):
             data = {}
