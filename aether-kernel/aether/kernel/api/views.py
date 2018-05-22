@@ -168,18 +168,15 @@ def run_mapping_validation(submission_payload, mapping_definition, schemas):
         mapping_definition,
         schemas,
     )
-    jsonpath_errors = mapping_validation.validate_mappings(
+    validation_result = mapping_validation.validate_mappings(
         submission_payload=submission_payload,
-        entities=entities,
+        schemas=schemas,
         mapping_definition=mapping_definition,
     )
+    jsonpath_errors = [error._asdict() for error in validation_result]
     type_errors = submission_data['aether_errors']
     return (
-        # Only return jsonpath errors if no type errors are present.
-        # Background: if we have any type errors, no meaningful jsonpath
-        # validation could have taken place, since jsonpath validations were
-        # run against invalid or absent entities/types.
-        type_errors or jsonpath_errors,
+        jsonpath_errors + type_errors,
         entities,
     )
 

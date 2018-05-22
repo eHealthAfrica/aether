@@ -35,10 +35,6 @@ from pygments.lexers.python import Python3Lexer
 from . import models, constants
 
 
-class EntityExtractionError(Exception):
-    pass
-
-
 class EntityValidationError(Exception):
     pass
 
@@ -430,7 +426,6 @@ def validate_entities(entities, schemas):
                 validated_entities[entity_name].append(entity_payload)
             except EntityValidationError as err:
                 error = {
-                    'type': EntityValidationError.__name__,
                     'description': err.args[0],
                     'data': entity_payload,
                 }

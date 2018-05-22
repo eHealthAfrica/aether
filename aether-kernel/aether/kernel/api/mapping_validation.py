@@ -17,37 +17,34 @@
 # under the License.
 
 import collections
+import json
 
 from .utils import find_by_jsonpath
 
-MESSAGE_NO_MATCH = 'No match for path'
+import spavro
 
 Success = collections.namedtuple('Success', ['path', 'result'])
 Failure = collections.namedtuple('Failure', ['path', 'description'])
 
 
-class JsonpathValidationError(object):
-    '''
-    This class represents a failed jsonpath lookup. It wraps
-    `mapping_validation.Failure` and adds a `type` key.
-    '''
-    def __init__(self, description, path):
-        self.description = description
-        self.path = path
+INVALID_PATH = (
+    'A destination path (the right side of a mapping) must consist of '
+    'exactly two parts: <schema-name>.<field-name>. '
+    'Example: "Person.firstName"'
+)
+NO_MATCH = 'No match for path'
 
-    @classmethod
-    def from_failure(self, failure):
-        return JsonpathValidationError(
-            description=failure.description,
-            path=failure.path,
-        )
 
-    def as_dict(self):
-        return {
-            'description': self.description,
-            'path': self.path,
-            'type': self.__class__.__name__,
-        }
+def no_schema(schema_name):
+    return 'Could not find schema "{schema_name}"'.format(
+        schema_name=schema_name
+    )
+
+
+def invalid_schema(schema_name):
+    return 'The schema "{schema_name}" is invalid'.format(
+        schema_name=schema_name
+    )
 
 
 def validate_getter(obj, path):
@@ -62,25 +59,36 @@ def validate_getter(obj, path):
     ]
     if result:
         return Success(path, result)
-    return Failure(path, MESSAGE_NO_MATCH)
+    return Failure(path, NO_MATCH)
 
 
-def validate_setter(entities, path):
+def validate_setter(schemas, path):
     '''
     Validate the right side of a mapping pair ("destination").
     '''
     path_segments = path.split('.')
-    schema_name = path_segments[0]
-    setter = '.'.join(['$'] + path_segments[1:])
-    for entity in entities:
-        if entity.projectschema_name == schema_name:
-            result = [
-                datum.value for datum in
-                find_by_jsonpath(entity.payload, setter)
-            ]
-            if result:
-                return Success(path, result)
-    return Failure(path, MESSAGE_NO_MATCH)
+    try:
+        schema_name, field_name = path_segments
+    except ValueError as e:
+        return Failure(path, INVALID_PATH)
+
+    try:
+        schema_definition = schemas[schema_name]
+    except KeyError as e:
+        message = no_schema(schema_name)
+        return Failure(path, message)
+
+    try:
+        spavro.schema.parse(json.dumps(schema_definition))
+    except spavro.schema.SchemaParseException as e:
+        message = invalid_schema(schema_name)
+        return Failure(path, message)
+
+    for field in schema_definition['fields']:
+        if field['name'] == field_name:
+            return Success(path, [])
+
+    return Failure(path, NO_MATCH)
 
 
 def validate_mapping(submission_payload, entities, mapping):
@@ -91,7 +99,7 @@ def validate_mapping(submission_payload, entities, mapping):
     )
 
 
-def validate_mappings(submission_payload, entities, mapping_definition):
+def validate_mappings(submission_payload, schemas, mapping_definition):
     '''
     Given an arbitrarily shaped submission_payload and a list of entities,
     accumulate a list of the lookup errors (if any) which would occur when
@@ -99,13 +107,12 @@ def validate_mappings(submission_payload, entities, mapping_definition):
 
     This is primarily used by the aether-ui module via the validate_mappings
     view.
-
-    Returns a list of dicts created by JsonpathValidationError.
     '''
     errors = []
     for mapping in mapping_definition['mapping']:
-        for result in validate_mapping(submission_payload, entities, mapping):
+        for result in validate_mapping(submission_payload, schemas, mapping):
             if isinstance(result, Failure):
-                error = JsonpathValidationError.from_failure(result).as_dict()
-                errors.append(error)
+                errors.append(result)
     return errors
+
+

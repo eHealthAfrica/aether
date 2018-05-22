@@ -29,7 +29,7 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from .. import models, constants
+from .. import models, constants, mapping_validation
 
 from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA,
                SAMPLE_LOCATION_SCHEMA_DEFINITION, SAMPLE_HOUSEHOLD_SCHEMA_DEFINITION,
@@ -430,11 +430,16 @@ class ViewsTest(TransactionTestCase):
         )
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data['entities']), 0)
-        self.assertEqual(len(response_data['mapping_errors']), 1)
-        self.assertEqual(
-            response_data['mapping_errors'][0]['type'],
-            'EntityValidationError',
-        )
+        self.assertEqual(len(response_data['mapping_errors']), 3)
+        expected = set([
+                'Could not find schema "person"',
+                'No match for path',
+                'Extracted record did not conform to registered schema',
+        ])
+        result = set([
+            error['description'] for error in response_data['mapping_errors']
+        ])
+        self.assertEqual(expected, result)
 
     def test_example_entity_extraction__400_BAD_REQUEST(self):
         '''
@@ -453,6 +458,7 @@ class ViewsTest(TransactionTestCase):
                     # "not_a_field" is not a field of `Person`
                     ['data.village', 'Person.not_a_field'],
                 ],
+                # "schemas" are missing
             },
         })
         response = self.client.post(
