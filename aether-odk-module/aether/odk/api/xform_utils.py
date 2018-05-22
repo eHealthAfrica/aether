@@ -669,9 +669,9 @@ def __find_in_dict(dictionary, key):
         if k == key:
             yield v
 
-        else:
-            for result in __iterate_dict(v, __find_in_dict, key):
-                yield result
+        # continue searching in the value
+        for result in __iterate_dict(v, __find_in_dict, key):
+            yield result
 
 
 def __find_by_key_value(dictionary, key, value):
@@ -679,9 +679,9 @@ def __find_by_key_value(dictionary, key, value):
         if k == key and v == value:
             yield dictionary
 
-        else:
-            for result in __iterate_dict(v, __find_by_key_value, key, value):
-                yield result
+        # continue searching in the value keys
+        for result in __iterate_dict(v, __find_by_key_value, key, value):
+            yield result
 
 
 def __iterate_dict(value, func, *args, **kwargs):
