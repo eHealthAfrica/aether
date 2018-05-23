@@ -118,7 +118,7 @@ class PostSubmissionTests(CustomTestCase):
         self.helper_create_user()
         self.url = reverse('xform-submission')
 
-        # create mapping in Kernel testing server
+        # create Mapping in Kernel testing server
         self.assertTrue(kernel_utils.test_connection())
         self.KERNEL_HEADERS = kernel_utils.get_auth_header()
 
@@ -169,7 +169,7 @@ class PostSubmissionTests(CustomTestCase):
         # create xForm entry
         self.xform = self.helper_create_xform(
             surveyor=self.user,
-            mapping_id=mapping_id,
+            kernel_id=mapping_id,
             xml_data=self.samples['xform']['raw-xml'],
         )
 
@@ -205,8 +205,8 @@ class PostSubmissionTests(CustomTestCase):
 
     def test__submission__post__no_granted_surveyor(self):
         # remove user as granted surveyor
-        self.xform.mapping.surveyors.clear()
-        self.xform.mapping.save()
+        self.xform.project.surveyors.clear()
+        self.xform.project.save()
         self.xform.surveyors.clear()
         self.xform.surveyors.add(self.helper_create_surveyor())
         self.xform.save()

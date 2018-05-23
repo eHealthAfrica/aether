@@ -22,12 +22,12 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError
 
 from . import CustomTestCase
-from ..models import Mapping, XForm, MediaFile
+from ..models import Project, XForm, MediaFile
 
 
 class ModelsTests(CustomTestCase):
 
-    MAPPING_ID = uuid.uuid4()
+    PROJECT_ID = uuid.uuid4()
 
     def test__xform__create__raises_errors(self):
         # missing required fields
@@ -39,9 +39,9 @@ class ModelsTests(CustomTestCase):
         self.assertRaises(
             IntegrityError,
             XForm.objects.create,
-            mapping=self.helper_create_mapping(),
+            project=self.helper_create_project(),
         )
-        # missing mapping id
+        # missing project id
         self.assertRaises(
             IntegrityError,
             XForm.objects.create,
@@ -51,7 +51,7 @@ class ModelsTests(CustomTestCase):
         self.assertRaises(
             IntegrityError,
             XForm.objects.create,
-            mapping=self.helper_create_mapping(),
+            project=self.helper_create_project(),
             xml_data='''
                 <h:html>
                   <h:head>
@@ -69,13 +69,13 @@ class ModelsTests(CustomTestCase):
         self.assertRaises(
             IntegrityError,
             XForm.objects.create,
-            mapping=self.helper_create_mapping(),
+            project=self.helper_create_project(),
             xml_data=self.samples['xform']['xml-err'],
         )
 
     def test__xform__save(self):
         instance = XForm.objects.create(
-            mapping=self.helper_create_mapping(mapping_id=self.MAPPING_ID),
+            project=self.helper_create_project(project_id=self.PROJECT_ID),
             xml_data=self.samples['xform']['xml-ok'],
         )
 
@@ -90,9 +90,9 @@ class ModelsTests(CustomTestCase):
         self.assertEqual(instance.md5sum, '5e97c4e929f64d7701804043e3b544ba')
         self.assertEqual(instance.hash, 'md5:5e97c4e929f64d7701804043e3b544ba')
 
-    def test__mapping__surveyors(self):
-        instance = Mapping.objects.create(
-            mapping_id=self.MAPPING_ID,
+    def test__project__surveyors(self):
+        instance = Project.objects.create(
+            project_id=self.PROJECT_ID,
         )
         self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')
 
@@ -117,7 +117,7 @@ class ModelsTests(CustomTestCase):
 
     def test__xform__surveyors(self):
         instance = XForm.objects.create(
-            mapping=self.helper_create_mapping(mapping_id=self.MAPPING_ID),
+            project=self.helper_create_project(project_id=self.PROJECT_ID),
             xml_data=self.samples['xform']['xml-ok'],
         )
         self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')
@@ -142,23 +142,23 @@ class ModelsTests(CustomTestCase):
                          'if granted surveyors not all users are surveyors')
 
         surveyor2 = self.helper_create_surveyor(username='surveyor2')
-        instance.mapping.surveyors.add(surveyor2)
-        instance.mapping.save()
+        instance.project.surveyors.add(surveyor2)
+        instance.project.save()
         self.assertEqual(instance.surveyors.count(), 1, 'one custom granted surveyor')
         self.assertTrue(instance.is_surveyor(surveyor))
         self.assertTrue(instance.is_surveyor(surveyor2),
-                        'mapping surveyors are also xform surveyors')
+                        'project surveyors are also xform surveyors')
 
         instance.surveyors.clear()
         instance.save()
         self.assertEqual(instance.surveyors.count(), 0, 'no custom granted surveyor')
         self.assertFalse(instance.is_surveyor(surveyor))
         self.assertTrue(instance.is_surveyor(surveyor2),
-                        'mapping surveyors are always xform surveyors')
+                        'project surveyors are always xform surveyors')
 
     def test__xform__media(self):
         xform = XForm.objects.create(
-            mapping=self.helper_create_mapping(mapping_id=self.MAPPING_ID),
+            project=self.helper_create_project(project_id=self.PROJECT_ID),
             xml_data=self.samples['xform']['xml-ok'],
         )
 
@@ -181,7 +181,7 @@ class ModelsTests(CustomTestCase):
 
     def test__xform__version(self):
         xform = XForm.objects.create(
-            mapping=self.helper_create_mapping(mapping_id=self.MAPPING_ID),
+            project=self.helper_create_project(project_id=self.PROJECT_ID),
             xml_data=self.samples['xform']['xml-ok'],
         )
         last_version = xform.version

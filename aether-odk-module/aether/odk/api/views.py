@@ -41,9 +41,9 @@ from aether.common.kernel.utils import (
 )
 from ..settings import logger
 
-from .models import Mapping, XForm, MediaFile
+from .models import Project, XForm, MediaFile
 from .serializers import (
-    MappingSerializer,
+    ProjectSerializer,
     MediaFileSerializer,
     SurveyorSerializer,
     XFormSerializer,
@@ -63,13 +63,13 @@ Parameter name of the submission file:
 XML_SUBMISSION_PARAM = 'xml_submission_file'
 
 
-class MappingViewSet(viewsets.ModelViewSet):
+class ProjectViewSet(viewsets.ModelViewSet):
     '''
-    Create new Mapping entries.
+    Create new Project entries.
     '''
 
-    queryset = Mapping.objects.order_by('name')
-    serializer_class = MappingSerializer
+    queryset = Project.objects.order_by('name')
+    serializer_class = ProjectSerializer
     search_fields = ('name',)
 
 
@@ -89,9 +89,9 @@ class XFormViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = self.queryset
 
-        mapping_id = self.request.query_params.get('mapping_id', None)
-        if mapping_id is not None:
-            queryset = queryset.filter(mapping=mapping_id)
+        project_id = self.request.query_params.get('project_id', None)
+        if project_id is not None:
+            queryset = queryset.filter(project=project_id)
 
         return queryset
 
@@ -122,21 +122,21 @@ class SurveyorViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = self.queryset
 
-        mapping_id = self.request.query_params.get('mapping_id', None)
-        if mapping_id is not None:
-            # get forms with this mapping id and with surveyors
+        project_id = self.request.query_params.get('project_id', None)
+        if project_id is not None:
+            # get forms with this project id and with surveyors
             xforms = XForm.objects \
-                          .filter(mapping=mapping_id) \
+                          .filter(project=project_id) \
                           .exclude(surveyors=None) \
                           .values_list('surveyors', flat=True)
 
-            # take also the Mapping surveyors
-            mappings = Mapping.objects \
-                              .filter(mapping_id=mapping_id) \
+            # take also the Project surveyors
+            projects = Project.objects \
+                              .filter(project_id=project_id) \
                               .exclude(surveyors=None) \
                               .values_list('surveyors', flat=True)
 
-            items = xforms.union(mappings)
+            items = xforms.union(projects)
             # build the surveyors list
             surveyors = set([])
             for item in items:
@@ -339,7 +339,7 @@ def xform_submission(request):
             response = requests.post(
                 submissions_url,
                 json={
-                    'mapping': str(xform.mapping.pk),
+                    'mapping': str(xform.kernel_id),
                     'payload': data,
                 },
                 headers=auth_header,

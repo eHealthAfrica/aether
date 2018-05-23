@@ -33,11 +33,11 @@ class SerializersTests(CustomTestCase):
         self.request = RequestFactory().get('/')
 
     def test_xform_serializer__no_files(self):
-        mapping_id = uuid.uuid4()
-        self.helper_create_mapping(mapping_id=mapping_id)
+        project_id = uuid.uuid4()
+        self.helper_create_project(project_id=project_id)
         xform = XFormSerializer(
             data={
-                'mapping': mapping_id,
+                'project': project_id,
                 'description': 'test xml data',
                 'xml_data': self.samples['xform']['raw-xml'],
             },
@@ -54,11 +54,11 @@ class SerializersTests(CustomTestCase):
         with open(self.samples['xform']['file-xml'], 'rb') as data:
             content = SimpleUploadedFile('xform.xml', data.read())
 
-        mapping_id = uuid.uuid4()
-        self.helper_create_mapping(mapping_id=mapping_id)
+        project_id = uuid.uuid4()
+        self.helper_create_project(project_id=project_id)
         xform = XFormSerializer(
             data={
-                'mapping': mapping_id,
+                'project': project_id,
                 'description': 'test xml file',
                 'xml_file': content,
             },
@@ -76,11 +76,11 @@ class SerializersTests(CustomTestCase):
         with open(self.samples['xform']['file-xls'], 'rb') as data:
             content = SimpleUploadedFile('xform.xls', data.read())
 
-        mapping_id = uuid.uuid4()
-        self.helper_create_mapping(mapping_id=mapping_id)
+        project_id = uuid.uuid4()
+        self.helper_create_project(project_id=project_id)
         xform = XFormSerializer(
             data={
-                'mapping': mapping_id,
+                'project': project_id,
                 'description': 'test xls file',
                 'xml_file': content,
             },
@@ -97,11 +97,11 @@ class SerializersTests(CustomTestCase):
     def test_xform_serializer__with_wrong_file(self):
         content = SimpleUploadedFile('xform.xls', b'abcd')
 
-        mapping_id = uuid.uuid4()
-        self.helper_create_mapping(mapping_id=mapping_id)
+        project_id = uuid.uuid4()
+        self.helper_create_project(project_id=project_id)
         xform = XFormSerializer(
             data={
-                'mapping': mapping_id,
+                'project': project_id,
                 'description': 'test wrong file',
                 'xml_file': content,
             },
@@ -111,8 +111,8 @@ class SerializersTests(CustomTestCase):
         self.assertFalse(xform.is_valid(), xform.errors)
 
     def test_media_file_serializer__no_name(self):
-        mapping_id = uuid.uuid4()
-        xform = self.helper_create_xform(mapping_id=mapping_id)
+        project_id = uuid.uuid4()
+        xform = self.helper_create_xform(project_id=project_id)
 
         media_file = MediaFileSerializer(
             data={
