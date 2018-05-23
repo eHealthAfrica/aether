@@ -16,8 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import traceback
-
 from django.db.models import Count, Min, Max
 
 from rest_framework import viewsets, permissions
@@ -34,8 +32,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
 from http import HTTPStatus
-
-from aether.kernel.settings import logger
 
 from . import models, serializers, filters, constants, utils, mapping_validation
 
@@ -209,5 +205,4 @@ def validate_mappings(request):
             'mapping_errors': errors,
         })
     except Exception as e:
-        logger.debug(traceback.format_exc())
         return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
