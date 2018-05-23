@@ -160,6 +160,25 @@ class AetherSchemaView(SchemaView):
     permission_classes = (permissions.AllowAny, )
 
 
+def run_mapping_validation(submission_payload, mapping_definition, schemas):
+    submission_data, entities = utils.extract_create_entities(
+        submission_payload,
+        mapping_definition,
+        schemas,
+    )
+    validation_result = mapping_validation.validate_mappings(
+        submission_payload=submission_payload,
+        schemas=schemas,
+        mapping_definition=mapping_definition,
+    )
+    jsonpath_errors = [error._asdict() for error in validation_result]
+    type_errors = submission_data['aether_errors']
+    return (
+        jsonpath_errors + type_errors,
+        entities,
+    )
+
+
 @api_view(['POST'])
 @renderer_classes([JSONRenderer])
 @permission_classes([IsAuthenticated])
@@ -174,27 +193,16 @@ def validate_mappings(request):
     developing an Aether solution but have not yet submitted any complete
     Project; using this endpoint, it is possible to check the mapping functions
     (jsonpaths) align with both the source (`submission_payload`) and the
-    target (`entity_list`).
+    target (`entities`).
     '''
-
+    serializer = serializers.MappingValidationSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     try:
-        data = request.data
-        entities = utils.extract_create_entities(**data)
-        mapping_errors = mapping_validation.validate_mappings(
-            submission_payload=data['submission_payload'],
-            entity_list=entities,
-            mapping_definition=data['mapping_definition'],
-        )
+        errors, entities = run_mapping_validation(**serializer.data)
         return Response({
-            'entities': [
-                entity.payload for entity in entities
-            ],
-            'mapping_errors': [
-                error._asdict() for error in mapping_errors
-            ],
+            'entities': [entity.payload for entity in entities],
+            'mapping_errors': errors,
         })
     except Exception as e:
-        return Response(
-            {'message': 'Entity extraction error'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
