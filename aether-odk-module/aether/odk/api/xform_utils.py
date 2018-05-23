@@ -586,7 +586,8 @@ def __get_xform_itexts(xform_dict):
     '''
 
     try:
-        translations = __wrap_as_list(xform_dict['h:html']['h:head']['model']['itext']['translation'])
+        model = xform_dict['h:html']['h:head']['model']
+        translations = __wrap_as_list(model['itext']['translation'])
     except Exception:
         # translations are not mandatory
         return {}
@@ -613,17 +614,30 @@ def __get_xform_label(xform_dict, xpath, texts={}):
     # remove root in xpath (it's not going to be sent in the submission)
     label = '/' + '/'.join(xpath.split('/')[2:])
     try:
-        for tag in __find_by_key_value(xform_dict['h:html']['h:body'], key='@ref', value=xpath):
-            label_tag = tag['label']
-            if isinstance(label_tag, dict):
-                # there are more than one language defined in the form
-                #   <label ref="jr:itext('{xpath}:label')"/>
-                label_id = label_tag['@ref'][10:-2]  # f'{xpath}:label'
-                label = texts[label_id]
-            elif label_tag:
-                label = label_tag
+        body = xform_dict['h:html']['h:body'] or {}
     except Exception:
-        pass
+        # this should never happen because we already validated the xForm
+        # but in the test we are checking all the possible cases trying to break this
+        return label
+
+    tags = list(__find_by_key_value(body, key='@ref', value=xpath))
+    if not tags:
+        return label
+
+    tag = tags[0]  # there is only one
+    if 'label' not in tag or not tag['label']:
+        return label
+
+    label_tag = tag['label']
+    if isinstance(label_tag, str):
+        return label_tag
+
+    ref = label_tag['@ref']
+    if ref.startswith("jr:itext('") and ref.endswith("')"):
+        #   <label ref="jr:itext('{xpath}:label')"/>
+        label_id = ref[10:-2]  # f'{xpath}:label'
+        if label_id in texts and texts[label_id]:
+            return texts[label_id]
 
     return label
 

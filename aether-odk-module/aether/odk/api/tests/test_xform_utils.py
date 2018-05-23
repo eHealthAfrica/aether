@@ -482,6 +482,10 @@ class XFormUtilsAvroTests(CustomTestCase):
         self.assertEqual(get_texts(xform_dict), {'a': 'B'})
 
     def test__get_xform_label__no_body(self):
+        xform_dict = {}
+        self.assertEqual(get_label(xform_dict, '/None'), '/', 'removes root')
+        self.assertEqual(get_label(xform_dict, '/None/any'), '/any')
+
         xform_dict = {'h:html': {'h:body': None}}
         self.assertEqual(get_label(xform_dict, '/None'), '/', 'removes root')
         self.assertEqual(get_label(xform_dict, '/None/any'), '/any')
@@ -511,7 +515,7 @@ class XFormUtilsAvroTests(CustomTestCase):
         }
         self.assertEqual(get_label(xform_dict, '/None/any'), '/any')
 
-    def test__get_xform_label__one_language(self):
+    def test__get_xform_label__string_value(self):
         xform_dict = {
             'h:html': {
                 'h:body': {
@@ -524,14 +528,14 @@ class XFormUtilsAvroTests(CustomTestCase):
         }
         self.assertEqual(get_label(xform_dict, '/None/any'), 'Any')
 
-    def test__get_xform_label__multi_language(self):
+    def test__get_xform_label__formula_value(self):
         xform_dict = {
             'h:html': {
                 'h:body': {
                     'any-tag': {
                         '@ref': '/None/a/b/c/any',
                         'label': {
-                            '@ref': 'jr:itext(\'any:label\')',
+                            '@ref': "jr:itext('any:label')",
                         },
                     }
                 }
@@ -542,6 +546,21 @@ class XFormUtilsAvroTests(CustomTestCase):
             get_label(xform_dict, '/None/a/b/c/any', {'any:label': 'Something'}),
             'Something'
         )
+
+    def test__get_xform_label__formula_value__unknown(self):
+        xform_dict = {
+            'h:html': {
+                'h:body': {
+                    'any-tag': {
+                        '@ref': '/None/any',
+                        'label': {
+                            '@ref': 'jr:itext(itextId)',
+                        },
+                    }
+                }
+            }
+        }
+        self.assertEqual(get_label(xform_dict, '/None/any'), '/any')
 
     def test__parse_xform_to_avro_schema__with_multilanguage(self):
         with open(self.samples['xform']['file-avro'], 'rb') as content:
