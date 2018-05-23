@@ -101,12 +101,20 @@ class Pipeline extends Component {
           />
         </button>
       ) : (
-        <button type='button' className='btn btn-w btn-primary' onClick={this.publishOverwrite.bind(this)}>
-          <FormattedMessage
-            id='publish.modal.overwrite'
-            defaultMessage='Overwrite Existing Pipeline'
-          />
-        </button>
+        <div>
+          <button type='button' className='btn btn-w' onClick={this.setPublishOptionsModal.bind(this, false)}>
+            <FormattedMessage
+              id='publish.modal.cancel'
+              defaultMessage='Cancel'
+            />
+          </button>
+          <button type='button' className='btn btn-w btn-primary' onClick={this.publishOverwrite.bind(this)}>
+            <FormattedMessage
+              id='publish.modal.overwrite'
+              defaultMessage='Overwrite Existing Pipeline'
+            />
+          </button>       
+        </div>           
       ),
       showPublishOptions: true,
       publishOptionsContent: status === 'success' ? this.buildPublishSuccess(statusData) : this.buildPublishErrors(statusData)
@@ -133,7 +141,7 @@ class Pipeline extends Component {
     return (
       <div className={'pipelines-container show-pipeline'}>
         <Modal show={this.state.showPublishOptions} header={`Publish ${this.props.selectedPipeline.name}`}
-          onClose={this.setPublishOptionsModal.bind(this, false)} buttons={this.state.publishOptionsButtons}>
+          buttons={this.state.publishOptionsButtons}>
           {this.state.publishOptionsContent}
         </Modal>
         <NavBar showBreadcrumb>

@@ -48,6 +48,7 @@
         }
       }
     }
+
     .success {
       li {
         color: $green;
@@ -63,11 +64,8 @@
 
   .modal-actions {
     margin-top: $unit;
-    display: flex;
-    justify-content: space-between;
 
     .btn {
-      flex: 1 1 auto;
 
       &:not(:first-child) {
         margin-left: $unit;

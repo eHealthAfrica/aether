@@ -12,12 +12,6 @@ class Modal extends Component {
           <div className='modal-content'>
             {this.props.children}
             <div className='modal-actions'>
-              <button type='button' className='btn btn-w' onClick={this.props.onClose}>
-                <FormattedMessage
-                  id='publish.modal.cancel'
-                  defaultMessage='Cancel'
-                />
-              </button>
               {this.props.buttons}
             </div>
           </div>
