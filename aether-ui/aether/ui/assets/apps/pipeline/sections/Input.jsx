@@ -243,7 +243,7 @@ class Input extends Component {
               defaultMessage='Define the source for your pipeline'
             />
           </h3>
-          <div className='toggleable-content'>
+          <div className='toggleable-content mt-3'>
             <div className='tabs'>
               <button
                 className={`tab ${this.state.view === SCHEMA_VIEW ? 'selected' : ''}`}

@@ -5,11 +5,23 @@
   .section-body {
     display: flex;
     flex-direction: column;
-    padding: 2rem 0;
+    padding: 2rem 0 0;
+  }
+
+  .tabs {
+
+    .tab.selected {
+      box-shadow: 1px 1px 1px rgba($black, .2) inset;
+      background-color: darken($dark-blue, 3);
+      color: $white;
+    }
   }
 
   .rules {
+    box-shadow: 1px 1px 1px rgba($black, .2) inset;
+    background-color: darken($dark-blue, 3);
     padding: $unit $unit-xl;
+    flex: 1 1 auto;
   }
 
   .rules-buttons {
@@ -88,19 +100,19 @@
 
     &::before {
       left: -11px;
-      background-color: $dark-blue;
+      background-color: darken($dark-blue, 3);
       border-right: 1px solid rgba($black, .4);
       border-top: 1px solid rgba($black, .3);
     }
   }
 
   .definition {
+    box-shadow: 1px 1px 1px rgba($black, .2) inset;
+    background-color: darken($dark-blue, 3);
     padding: $unit $unit-xl;
-    margin-top: auto;
+    flex: 1 1 auto;
 
     .definition-code {
-      @include shadow-flat-dark;
-      padding: 1rem;
       border-radius: $border-radius;
     }
   }

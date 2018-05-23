@@ -43,6 +43,10 @@ $colors-list: (
       &:hover {
         background-color: $current-color;
 
+        .type {
+          color: $white;
+        }
+
         &::after {
           border-right: .6rem solid rgba($current-color, 1);
         }
@@ -56,6 +60,10 @@ $colors-list: (
 
     &:hover {
       background-color: $current-color;
+
+      .type {
+        color: $white;
+      }
 
       &::before {
         background-color: $current-color;
