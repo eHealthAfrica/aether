@@ -113,8 +113,8 @@ class Pipeline extends Component {
               id='publish.modal.overwrite'
               defaultMessage='Overwrite Existing Pipeline'
             />
-          </button>       
-        </div>           
+          </button>
+        </div>
       ),
       showPublishOptions: true,
       publishOptionsContent: status === 'success' ? this.buildPublishSuccess(statusData) : this.buildPublishErrors(statusData)

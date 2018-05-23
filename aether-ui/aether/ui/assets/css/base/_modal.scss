@@ -18,8 +18,8 @@
   }
 
   .modal-dialog {
-    margin: 7rem auto;
     @include card;
+    margin: 7rem auto;
     padding: 0;
   }
 
@@ -41,7 +41,7 @@
       li {
         color: $red;
 
-        &:before {
+        &::before {
           content: '\f06a ';
           font: 1rem $icon-font;
           margin-right: .3rem;
@@ -53,7 +53,7 @@
       li {
         color: $green;
 
-        &:before {
+        &::before {
           content: '\f058 ';
           font: 1rem $icon-font;
           margin-right: .3rem;
