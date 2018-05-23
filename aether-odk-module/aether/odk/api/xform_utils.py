@@ -586,25 +586,22 @@ def __get_xform_itexts(xform_dict):
     '''
 
     try:
-        translations = xform_dict['h:html']['h:head']['model']['itext']['translation']
-        translations = __wrap_as_list(translations)
-
-        # the first translation entry must be the default language
-        translation = translations[0]  # take the first one
-        # just in case check the whole list
-        for tt in translations:
-            if '@default' in tt and tt['@default'] == 'true()':
-                translation = tt
-                break
-
-        # convert all text entries in a dict wich key is the text id
-        texts = __wrap_as_list(translation['text'])
-        return {text_entry['@id']: text_entry['value'] for text_entry in texts}
-
+        translations = __wrap_as_list(xform_dict['h:html']['h:head']['model']['itext']['translation'])
     except Exception:
-        pass
+        # translations are not mandatory
+        return {}
 
-    return {}
+    # the first translation entry must be the default language
+    translation = translations[0]  # take the first one
+    # just in case check the whole list
+    for tt in translations:
+        if '@default' in tt and tt['@default'] == 'true()':
+            translation = tt
+            break
+
+    # convert all text entries in a dict wich key is the text id
+    texts = __wrap_as_list(translation['text'])
+    return {text_entry['@id']: text_entry['value'] for text_entry in texts}
 
 
 def __get_xform_label(xform_dict, xpath, texts={}):
