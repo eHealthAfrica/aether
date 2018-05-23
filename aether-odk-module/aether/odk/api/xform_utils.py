@@ -341,6 +341,11 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
 # Validator methods
 # ------------------------------------------------------------------------------
 
+
+class XFormParseError(Exception):
+    pass
+
+
 def validate_xform(xml_definition):
     '''
     Validates xForm definition
@@ -348,8 +353,8 @@ def validate_xform(xml_definition):
 
     try:
         xform_dict = __parse_xml_to_dict(xml_definition)
-    except Exception:
-        raise TypeError('not valid xForm definition')
+    except Exception as e:
+        raise XFormParseError(f'Not valid xForm definition. Reason: {str(e)}.')
 
     if (
         'h:html' not in xform_dict
@@ -370,20 +375,20 @@ def validate_xform(xml_definition):
         or 'instance' not in xform_dict['h:html']['h:head']['model']
         or xform_dict['h:html']['h:head']['model']['instance'] is None
     ):
-        raise TypeError('missing required tags')
+        raise XFormParseError('Missing required tags.')
 
     title = xform_dict['h:html']['h:head']['h:title']
     instance = __get_xform_instance(xform_dict)
     form_id = instance['@id'] if instance and '@id' in instance else None
 
     if not title and not form_id:
-        raise TypeError('missing title and form_id')
+        raise XFormParseError('Missing form title and instance ID.')
 
     if not title:
-        raise TypeError('missing title')
+        raise XFormParseError('Missing form title.')
 
     if not form_id:
-        raise TypeError('missing form_id')
+        raise XFormParseError('Missing instance ID.')
 
 
 # ------------------------------------------------------------------------------
@@ -497,24 +502,25 @@ def __get_xform_instance(xform_dict, with_root=False):
 
     try:
         instances = __wrap_as_list(xform_dict['h:html']['h:head']['model']['instance'])
-        for i in instances:
-            # the default instance is the only one without "id" attribute
-            if '@id' not in i:
-                instance = i
-                break
+    except Exception as e:
+        raise XFormParseError(f'Missing instance definition. Reason: {str(e)}')
 
-        if isinstance(instance, dict):
-            if with_root:
-                return instance
+    instance = None
+    for i in instances:
+        # the default instance is the only one without "id" attribute
+        if '@id' not in i:
+            instance = i
+            break
 
-            # assumption: there is only one child (key)
-            key = list(instance.keys())[0]
-            return instance[key]
+    if not instance or not isinstance(instance, dict):
+        raise XFormParseError('Missing instance definition.')
 
-    except Exception:
-        pass
+    if with_root:
+        return instance
 
-    raise TypeError('missing instance definition')
+    # assumption: there is only one child (key)
+    key = list(instance.keys())[0]
+    return instance[key]
 
 
 def __get_xform_instance_skeleton(xml_definition):
