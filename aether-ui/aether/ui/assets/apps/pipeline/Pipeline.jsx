@@ -94,23 +94,19 @@ class Pipeline extends Component {
   getPublishOptions (status, statusData) {
     this.setState({
       publishOptionsButtons: status === 'success' ? (
-        <div>
-          <button type='button' className='btn btn-d' onClick={this.setPublishOptionsModal.bind(this, false)}>
-            <FormattedMessage
-              id='publish.modal.sucess.ok'
-              defaultMessage='Ok'
-            />
-          </button>
-        </div>
+        <button type='button' className='btn btn-w btn-primary' onClick={this.setPublishOptionsModal.bind(this, false)}>
+          <FormattedMessage
+            id='publish.modal.sucess.ok'
+            defaultMessage='Ok'
+          />
+        </button>
       ) : (
-        <div>
-          <button type='button' className='btn btn-d' onClick={this.publishOverwrite.bind(this)}>
-            <FormattedMessage
-              id='publish.modal.overwrite'
-              defaultMessage='Overwrite Existing Pipeline'
-            />
-          </button>
-        </div>
+        <button type='button' className='btn btn-w btn-primary' onClick={this.publishOverwrite.bind(this)}>
+          <FormattedMessage
+            id='publish.modal.overwrite'
+            defaultMessage='Overwrite Existing Pipeline'
+          />
+        </button>
       ),
       showPublishOptions: true,
       publishOptionsContent: status === 'success' ? this.buildPublishSuccess(statusData) : this.buildPublishErrors(statusData)

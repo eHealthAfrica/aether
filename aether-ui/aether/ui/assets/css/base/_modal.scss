@@ -1,12 +1,6 @@
 .modal {
   background-color: rgba($text-color, .7);
-
-  // reset font-settings to override inherited styles from parent element
-  font-size: 1rem;
-  font-weight: normal;
-  text-align: left;
   color: $text-color;
-  white-space: normal;
 
   &.show {
     display: block;
@@ -14,37 +8,71 @@
 
   .modal-header {
     align-items: flex-start;
+    padding: $unit $unit-xl;
+  }
+
+  .modal-title {
+    font-weight: 300;
+    letter-spacing: .04em;
+    font-size: $font-size-m;
   }
 
   .modal-dialog {
-    margin: 80px auto;
-    background-color: $white;
-    border-radius: $border-radius;
-    box-shadow: 2px 2px 4px $text-color;
+    margin: 7rem auto;
+    @include card;
+    padding: 0;
   }
 
   .modal-content {
     border: 0;
-    padding: 10px;
+    padding: $unit-xl;
+
+    ul {
+      padding: 0;
+    }
+
+    li {
+      padding: .2rem 0;
+      list-style: none;
+      font-size: $font-size-s;
+    }
+
     .error {
       li {
         color: $red;
-        list-style: disc;
-        font-size: 0.9rem;
+
+        &:before {
+          content: '\f06a ';
+          font: 1rem $icon-font;
+          margin-right: .3rem;
+        }
       }
     }
-
     .success {
       li {
         color: $green;
-        list-style: disc;
-        font-size: 0.9rem;
+
+        &:before {
+          content: '\f058 ';
+          font: 1rem $icon-font;
+          margin-right: .3rem;
+        }
       }
     }
   }
 
   .modal-actions {
-    flex-direction: column;
+    margin-top: $unit;
+    display: flex;
+    justify-content: space-between;
+
+    .btn {
+      flex: 1 1 auto;
+
+      &:not(:first-child) {
+        margin-left: $unit;
+      }
+    }
   }
 
   .close {
@@ -58,11 +86,4 @@
       color: $hover-color;
     }
   }
-}
-
-// This is the div that is wrapped around the confirmation button once the modal is triggered.
-// The modal is rendered within the button that triggered it.
-
-.confirmation-container {
-  display: inline-block;
 }
