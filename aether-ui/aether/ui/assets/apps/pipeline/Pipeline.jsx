@@ -3,7 +3,8 @@ import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 import { Link } from 'react-router-dom'
 
-import { NavBar } from '../components'
+import { NavBar, Modal } from '../components'
+import { PROJECT_NAME } from '../utils/constants'
 
 import Input from './sections/Input'
 import EntityTypes from './sections/EntityTypes'
@@ -18,7 +19,10 @@ class Pipeline extends Component {
     this.state = {
       pipelineView: 'input',
       showOutput: false,
-      fullscreen: false
+      fullscreen: false,
+      showPublishOptions: false,
+      publishOptionsButtons: null,
+      publishOptionsContent: null
     }
   }
 
@@ -47,11 +51,81 @@ class Pipeline extends Component {
     if (!this.props.pipelineList.length && !nextProps.pipelineList.length) {
       this.props.history.replace('/')
     }
+    if (nextProps.publishError) {
+      this.getPublishOptions('error', nextProps.publishError)
+    }
+    if (nextProps.publishSuccess) {
+      this.getPublishOptions('success', nextProps.publishSuccess)
+    }
+  }
+
+  buildPublishErrors (errors) {
+    const errorList = []
+    errors.error.forEach(error => {
+      errorList.push(<li key={error}>
+        <FormattedMessage id={`publish.error.${error}`} defaultMessage={error} />
+      </li>)
+    })
+    errors.exists.forEach(exists => {
+      Object.keys(exists).forEach(exist => {
+        errorList.push(<li key={exist}>
+          <FormattedMessage id={`publish.exists.${exist}`} defaultMessage={exists[exist]} />
+        </li>)
+      })
+    })
+    return <ul className='error'>{errorList}</ul>
+  }
+
+  buildPublishSuccess (success) {
+    const successList = []
+    success.forEach(passed => {
+      successList.push(<li key={passed}>
+        <FormattedMessage id={`publish.success.${passed}`} defaultMessage={passed} />
+      </li>)
+    })
+    return <ul className='success'>{successList}</ul>
   }
 
   publish () {
     // todo: check if and overwrite is required
     this.props.publishPipeline(this.props.selectedPipeline.id)
+  }
+
+  getPublishOptions (status, statusData) {
+    this.setState({
+      publishOptionsButtons: status === 'success' ? (
+        <div>
+          <button type='button' className='btn btn-d' onClick={this.setPublishOptionsModal.bind(this, false)}>
+            <FormattedMessage
+              id='publish.modal.sucess.ok'
+              defaultMessage='Ok'
+            />
+          </button>
+        </div>
+      ) : (
+        <div>
+          <button type='button' className='btn btn-d' onClick={this.publishOverwrite.bind(this)}>
+            <FormattedMessage
+              id='publish.modal.overwrite'
+              defaultMessage='Overwrite Existing Pipeline'
+            />
+          </button>
+        </div>
+      ),
+      showPublishOptions: true,
+      publishOptionsContent: status === 'success' ? this.buildPublishSuccess(statusData) : this.buildPublishErrors(statusData)
+    })
+  }
+
+  setPublishOptionsModal (visible) {
+    this.setState({
+      showPublishOptions: visible
+    })
+  }
+
+  publishOverwrite () {
+    this.setPublishOptionsModal(false)
+    this.props.publishPipeline(this.props.selectedPipeline.id, PROJECT_NAME, true)
   }
 
   render () {
@@ -62,6 +136,10 @@ class Pipeline extends Component {
 
     return (
       <div className={'pipelines-container show-pipeline'}>
+        <Modal show={this.state.showPublishOptions} header={`Publish ${this.props.selectedPipeline.name}`}
+          onClose={this.setPublishOptionsModal.bind(this, false)} buttons={this.state.publishOptionsButtons}>
+          {this.state.publishOptionsContent}
+        </Modal>
         <NavBar showBreadcrumb>
           <div className='breadcrumb-links'>
             <Link to='/'>

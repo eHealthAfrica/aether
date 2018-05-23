@@ -36,7 +36,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
         project_name = request.data['project_name'] if 'project_name' in request.data else 'Aux'
         overwrite = False
         if 'overwrite' in request.data:
-            overwrite = True
+            overwrite = request.data['overwrite']
         outcome = {
             'successful': [],
             'error': [],

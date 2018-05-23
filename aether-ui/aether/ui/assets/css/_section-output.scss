@@ -13,17 +13,6 @@
     code {
       color: $red;
     }
-    li {
-      color: $red;
-      list-style: disc;
-    }
-  }
-
-  .pipeline-success {
-    li {
-      color: $green;
-      list-style: disc;
-    }
   }
 
   .pipeline-data {

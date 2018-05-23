@@ -301,7 +301,7 @@ def publish_pipeline(pipeline, projectname, overwrite=False):
                     if is_project_schema_linked:
                         update_kernel_object('projectSchema', pipeline.kernel_refs['projectSchema'][schema_name],
                                              project_schema_data)
-                        outcome['successful'].append('{} project schema updated'.format(schema_name))
+                        outcome['successful'].append('{}-{} project schema updated'.format(projectname, schema_name))
                     else:
                         pipeline.kernel_refs['projectSchema'] = {} if 'projectSchema' not in pipeline.kernel_refs \
                             else pipeline.kernel_refs['projectSchema']
