@@ -6,7 +6,7 @@ from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
-import aether.odk.api.xform_utils
+import aether.odk.api.models
 import uuid
 
 
@@ -33,9 +33,9 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('title', models.TextField(default='', editable=False)),
                 ('form_id', models.TextField(default='', editable=False)),
-                ('xml_data', models.TextField(blank=True, validators=[aether.odk.api.xform_utils.validate_xmldict])),
+                ('xml_data', models.TextField(blank=True, validators=[aether.odk.api.models.__validate_xml_data__])),
                 ('description', models.TextField(blank=True, default='', null=True)),
-                ('created_at', models.DateTimeField(default=django.utils.timezone.now)),
+                ('created_at', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
                 ('survey', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='xforms', to='odk.Survey')),
                 ('surveyors', models.ManyToManyField(blank=True, related_name='xforms', to=settings.AUTH_USER_MODEL)),
             ],

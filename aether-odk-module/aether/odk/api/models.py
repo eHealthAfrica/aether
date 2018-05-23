@@ -16,18 +16,48 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import xmltodict
 import uuid
 
 from hashlib import md5
 
 from django.contrib.auth import get_user_model
+from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.db import models, IntegrityError
 from django.utils import timezone
 
-from .xform_utils import get_xml_title, get_xml_form_id, get_xml_version, validate_xmldict
+from .xform_utils import (
+    get_xform_data_from_xml,
+    parse_xform_to_avro_schema,
+    validate_xform,
+)
+
+
+'''
+
+Data model schema:
+
+
+    +------------------+       +------------------+       +------------------+
+    | Mapping          |       | XForm            |       | MediaFile        |
+    +==================+       +==================+       +==================+
+    | mapping_id       |<--+   | id               |<--+   | id               |
+    | name             |   |   | xml_data         |   |   | name             |
+    +::::::::::::::::::+   |   | description      |   |   | media_file       |
+    | surveyors (User) |   |   | created_at       |   |   +~~~~~~~~~~~~~~~~~~+
+    +------------------+   |   +~~~~~~~~~~~~~~~~~~+   |   | md5sum           |
+                           |   | title            |   |   +::::::::::::::::::+
+                           |   | form_id          |   +--<| xform            |
+                           |   | version          |       +------------------+
+                           |   | avro_schema      |
+                           |   | md5sum           |
+                           |   +::::::::::::::::::+
+                           +--<| mapping          |
+                               | surveyors (User) |
+                               +------------------+
+
+'''
 
 
 class Mapping(models.Model):
@@ -73,6 +103,17 @@ class Mapping(models.Model):
         ordering = ['name']
 
 
+def __validate_xml_data__(value):
+    '''
+    Validates xml definition
+    '''
+
+    try:
+        validate_xform(value)
+    except Exception as e:
+        raise ValidationError(e)
+
+
 class XForm(models.Model):
     '''
     Database representation of an XForm
@@ -89,16 +130,17 @@ class XForm(models.Model):
     surveyors = models.ManyToManyField(to=get_user_model(), blank=True)
 
     # here comes the extracted data from an xForm file
-    xml_data = models.TextField(blank=True, validators=[validate_xmldict])
+    xml_data = models.TextField(blank=True, validators=[__validate_xml_data__])
 
     # taken from xml_data
     title = models.TextField(default='', editable=False)
     form_id = models.TextField(default='', editable=False)
     version = models.TextField(default='0', blank=True)
     md5sum = models.CharField(default='', editable=False, max_length=36)
+    avro_schema = JSONField(blank=True, null=True, editable=False)
 
     description = models.TextField(default='', null=True, blank=True)
-    created_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
 
     @property
     def hash(self):
@@ -137,20 +179,23 @@ class XForm(models.Model):
 
     def save(self, *args, **kwargs):
         try:
-            validate_xmldict(self.xml_data)
+            self.full_clean()
         except ValidationError as ve:
-            raise IntegrityError('xml_data not valid')
+            raise IntegrityError(ve)
 
-        data = xmltodict.parse(self.xml_data)
-        self.title = get_xml_title(data)
-        self.form_id = get_xml_form_id(data)
+        if not self.xml_data:
+            raise IntegrityError({'xml_data': ['This field is required']})
 
-        version = get_xml_version(data)
+        title, form_id, version = get_xform_data_from_xml(self.xml_data)
+
+        self.title = title
+        self.form_id = form_id
         if version:
             # set version from xml data
             self.version = version
 
         self.update_hash(increase_version=version is None)
+        self.avro_schema = parse_xform_to_avro_schema(self.xml_data, default_version=self.version)
 
         return super(XForm, self).save(*args, **kwargs)
 

@@ -23,7 +23,7 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.translation import ugettext as _
 
 from .models import Mapping, XForm
-from .xform_utils import parse_file
+from .xform_utils import parse_xform_file
 from .surveyors_utils import get_surveyors
 
 
@@ -63,7 +63,7 @@ class XFormForm(forms.ModelForm):
 
     def clean_xml_data(self):
         if 'xml_file' in self.files:
-            return parse_file(
+            return parse_xform_file(
                 filename=str(self.files['xml_file']),
                 content=self.files['xml_file'].file,
             )

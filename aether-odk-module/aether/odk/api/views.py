@@ -34,7 +34,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import StaticHTMLRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
 
-from aether.common.kernel.utils import get_auth_header, get_submissions_url, get_attachments_url
+from aether.common.kernel.utils import (
+    get_attachments_url,
+    get_auth_header,
+    get_submissions_url,
+)
+from ..settings import logger
 
 from .models import Mapping, XForm, MediaFile
 from .serializers import (
@@ -44,9 +49,11 @@ from .serializers import (
     XFormSerializer,
 )
 from .surveyors_utils import get_surveyors
-from .xform_utils import extract_data_from_xml, parse_submission, get_instance_id
-
-from ..settings import logger
+from .xform_utils import (
+    get_instance_data_from_xml,
+    get_instance_id,
+    parse_submission,
+)
 
 '''
 ODK Collect sends the Survey responses within an attachment file in XML format.
@@ -135,7 +142,7 @@ class SurveyorViewSet(viewsets.ModelViewSet):
             for item in items:
                 try:
                     surveyors = surveyors.union(item)
-                except Exception as e:
+                except Exception:
                     surveyors.add(item)
             # filter by these surveyors
             queryset = queryset.filter(id__in=surveyors)
@@ -268,7 +275,7 @@ def xform_submission(request):
     try:
         xml = request.FILES[XML_SUBMISSION_PARAM]
         xml_content = xml.read()  # the content will be sent as an attachment
-        data, form_id, version = extract_data_from_xml(xml_content)
+        data, form_id, version = get_instance_data_from_xml(xml_content)
     except Exception as e:
         logger.warning('Unexpected error when handling file')
         logger.error(str(e))

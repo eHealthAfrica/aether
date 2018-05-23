@@ -23,7 +23,7 @@ from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
 from .models import Mapping, XForm, MediaFile
-from .xform_utils import parse_file
+from .xform_utils import parse_xform_file
 from .surveyors_utils import get_surveyors, flag_as_surveyor
 
 
@@ -68,7 +68,7 @@ class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         if value['xml_file']:
             try:
                 # extract data from file and put it on `xml_data`
-                value['xml_data'] = parse_file(
+                value['xml_data'] = parse_xform_file(
                     filename=str(value['xml_file']),
                     content=value['xml_file'],
                 )
