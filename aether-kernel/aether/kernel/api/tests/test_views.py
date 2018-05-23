@@ -431,14 +431,14 @@ class ViewsTest(TransactionTestCase):
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data['entities']), 0)
         self.assertEqual(len(response_data['mapping_errors']), 3)
-        expected = set([
-                'Could not find schema "person"',
-                'No match for path',
-                'Extracted record did not conform to registered schema',
-        ])
-        result = set([
+        expected = [
+            'Could not find schema "person"',
+            'No match for path',
+            'Extracted record did not conform to registered schema',
+        ]
+        result = [
             error['description'] for error in response_data['mapping_errors']
-        ])
+        ]
         self.assertEqual(expected, result)
 
     def test_example_entity_extraction__400_BAD_REQUEST(self):
