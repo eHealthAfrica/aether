@@ -74,6 +74,7 @@ class ModelsTests(TransactionTestCase):
         self.assertEquals(attachment.name, 'sample.txt')
         self.assertEquals(attachment.md5sum, '900150983cd24fb0d6963f7d28e17f72')
         self.assertEquals(attachment.submission_revision, submission.revision)
+        self.assertEquals(attachment.attachment_path, attachment.attachment_file.path)
 
         attachment_2 = models.Attachment.objects.create(
             submission=submission,
