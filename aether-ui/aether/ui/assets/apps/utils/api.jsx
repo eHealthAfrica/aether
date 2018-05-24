@@ -47,9 +47,13 @@ export default class ApiClient {
                 if (res.status === 404) {
                   reject(new NotFoundError())
                 } else {
-                  res.json().then(error => {
-                    resolve({ error, status: res.status })
-                  })
+                  try {
+                    res.json().then(error => {
+                      resolve({ error, status: res.status })
+                    })
+                  } catch (err) {
+                    reject(err)
+                  }
                 }
               }
             })

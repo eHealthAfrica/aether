@@ -2,15 +2,15 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 import { Link } from 'react-router-dom'
+import moment from 'moment'
 
-import { NavBar, Modal } from '../components'
-import { PROJECT_NAME } from '../utils/constants'
+import { NavBar, PublishButton } from '../components'
 
 import Input from './sections/Input'
 import EntityTypes from './sections/EntityTypes'
 import Mapping from './sections/Mapping'
 import Output from './sections/Output'
-import { getPipelineById, getPipelines, publishPipeline } from './redux'
+import { getPipelineById, getPipelines } from './redux'
 
 class Pipeline extends Component {
   constructor (props) {
@@ -19,10 +19,7 @@ class Pipeline extends Component {
     this.state = {
       pipelineView: 'input',
       showOutput: false,
-      fullscreen: false,
-      showPublishOptions: false,
-      publishOptionsButtons: null,
-      publishOptionsContent: null
+      fullscreen: false
     }
   }
 
@@ -51,84 +48,6 @@ class Pipeline extends Component {
     if (!this.props.pipelineList.length && !nextProps.pipelineList.length) {
       this.props.history.replace('/')
     }
-    if (nextProps.publishError) {
-      this.getPublishOptions('error', nextProps.publishError)
-    }
-    if (nextProps.publishSuccess) {
-      this.getPublishOptions('success', nextProps.publishSuccess)
-    }
-  }
-
-  buildPublishErrors (errors) {
-    const errorList = []
-    errors.error.forEach(error => {
-      errorList.push(<li key={error}>
-        <FormattedMessage id={`publish.error.${error}`} defaultMessage={error} />
-      </li>)
-    })
-    errors.exists.forEach(exists => {
-      Object.keys(exists).forEach(exist => {
-        errorList.push(<li key={exist}>
-          <FormattedMessage id={`publish.exists.${exist}`} defaultMessage={exists[exist]} />
-        </li>)
-      })
-    })
-    return <ul className='error'>{errorList}</ul>
-  }
-
-  buildPublishSuccess (publishSuccessList) {
-    const successList = publishSuccessList.map(passed => (
-      <li key={passed}>
-        <FormattedMessage id={`publish.success.${passed}`} defaultMessage={passed} />
-      </li>
-    ))
-    return <ul>{successList}</ul>
-  }
-
-  publish () {
-    // todo: check if and overwrite is required
-    this.props.publishPipeline(this.props.selectedPipeline.id)
-  }
-
-  getPublishOptions (status, statusData) {
-    this.setState({
-      publishOptionsButtons: status === 'success' ? (
-        <button type='button' className='btn btn-w btn-primary' onClick={this.setPublishOptionsModal.bind(this, false)}>
-          <FormattedMessage
-            id='publish.modal.sucess.ok'
-            defaultMessage='Ok'
-          />
-        </button>
-      ) : (
-        <div>
-          <button type='button' className='btn btn-w' onClick={this.setPublishOptionsModal.bind(this, false)}>
-            <FormattedMessage
-              id='publish.modal.cancel'
-              defaultMessage='Cancel'
-            />
-          </button>
-          <button type='button' className='btn btn-w btn-primary' onClick={this.publishOverwrite.bind(this)}>
-            <FormattedMessage
-              id='publish.modal.overwrite'
-              defaultMessage='Overwrite Existing Pipeline'
-            />
-          </button>
-        </div>
-      ),
-      showPublishOptions: true,
-      publishOptionsContent: status === 'success' ? this.buildPublishSuccess(statusData) : this.buildPublishErrors(statusData)
-    })
-  }
-
-  setPublishOptionsModal (visible) {
-    this.setState({
-      showPublishOptions: visible
-    })
-  }
-
-  publishOverwrite () {
-    this.setPublishOptionsModal(false)
-    this.props.publishPipeline(this.props.selectedPipeline.id, PROJECT_NAME, true)
   }
 
   render () {
@@ -139,10 +58,6 @@ class Pipeline extends Component {
 
     return (
       <div className={'pipelines-container show-pipeline'}>
-        <Modal show={this.state.showPublishOptions} header={`Publish ${this.props.selectedPipeline.name}`}
-          buttons={this.state.publishOptionsButtons}>
-          {this.state.publishOptionsContent}
-        </Modal>
         <NavBar showBreadcrumb>
           <div className='breadcrumb-links'>
             <Link to='/'>
@@ -158,15 +73,12 @@ class Pipeline extends Component {
             <div className='status-publish'>
               <FormattedMessage
                 id='pipeline.publish-status'
-                defaultMessage='published on April 19th'
+                defaultMessage={this.props.selectedPipeline.published_on
+                  ? `Published on ${moment(new Date(this.props.selectedPipeline.published_on)).format('MMMM DD, YYYY HH:mm')}`
+                  : 'Not published'}
               />
             </div>
-            <button type='button' className='btn btn-c btn-publish' onClick={this.publish.bind(this)}>
-              <FormattedMessage
-                id='pipeline.navbar.breadcrumb.publish'
-                defaultMessage='Publish pipeline'
-              />
-            </button>
+            <PublishButton pipeline={this.props.selectedPipeline} className='btn btn-c btn-publish' />
           </div>
         </NavBar>
 
@@ -261,9 +173,7 @@ class Pipeline extends Component {
 
 const mapStateToProps = ({ pipelines }) => ({
   selectedPipeline: pipelines.selectedPipeline,
-  pipelineList: pipelines.pipelineList,
-  publishError: pipelines.publishError,
-  publishSuccess: pipelines.publishSuccess
+  pipelineList: pipelines.pipelineList
 })
 
-export default connect(mapStateToProps, { getPipelineById, getPipelines, publishPipeline })(Pipeline)
+export default connect(mapStateToProps, { getPipelineById, getPipelines })(Pipeline)

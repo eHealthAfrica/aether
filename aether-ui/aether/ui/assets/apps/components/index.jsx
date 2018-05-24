@@ -4,6 +4,7 @@ import NavBar from './NavBar'
 import AvroSchemaViewer from './AvroSchemaViewer'
 import EntityTypeViewer from './EntityTypeViewer'
 import Modal from './Modal'
+import PublishButton from './PublishButton'
 
 // export all components
 export {
@@ -11,5 +12,6 @@ export {
   NavBar,
   AvroSchemaViewer,
   EntityTypeViewer,
-  Modal
+  Modal,
+  PublishButton
 }

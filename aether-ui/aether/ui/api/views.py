@@ -1,5 +1,4 @@
 import requests
-import datetime
 
 from django.http import HttpResponse
 from rest_framework.response import Response
@@ -8,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from http import HTTPStatus
+from django.utils import timezone
 
 from ..settings import AETHER_APPS
 from . import models, serializers, utils as ui_utils
@@ -49,6 +49,9 @@ class PipelineViewSet(viewsets.ModelViewSet):
             outcome['error'].append(str(e))
             return Response(outcome, status=HTTPStatus.BAD_REQUEST)
         outcome = ui_utils.publish_preflight(pipeline, project_name, outcome)
+
+        if outcome['error']:
+            return Response(outcome, status=HTTPStatus.BAD_REQUEST)
         if outcome['exists']:
             if overwrite:
                 outcome = ui_utils.publish_pipeline(pipeline, project_name, True)
@@ -56,12 +59,15 @@ class PipelineViewSet(viewsets.ModelViewSet):
                 return Response(outcome, status=HTTPStatus.BAD_REQUEST)
         else:
             outcome = ui_utils.publish_pipeline(pipeline, project_name)
+
         if outcome['error']:
             return Response(outcome, status=HTTPStatus.BAD_REQUEST)
         else:
             del outcome['error']
-            pipeline.published_on = datetime.datetime.now().time()
+            pipeline.published_on = timezone.now()
             pipeline.save()
+            serialized_data = serializers.PipelineSerializer(pipeline, context={'request': request}).data
+            outcome['pipeline'] = serialized_data
             return Response(outcome, status=HTTPStatus.OK)
 
 
