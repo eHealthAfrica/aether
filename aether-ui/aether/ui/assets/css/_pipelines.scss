@@ -117,12 +117,12 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-}
 
-.status-publish {
-  font-size: $font-size-xs;
-  margin-right: 1rem;
-  color: $grey;
+  .status-publish {
+    font-size: $font-size-xs;
+    margin-right: 1rem;
+    color: $grey;
+  }
 }
 
 .pipeline-new {

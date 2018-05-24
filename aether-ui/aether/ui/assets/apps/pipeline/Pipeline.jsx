@@ -155,12 +155,20 @@ class Pipeline extends Component {
             <span> // </span>
             { selectedPipeline.name }
           </div>
-          <button type='button' className='btn btn-c btn-publish' onClick={this.publish.bind(this)}>
-            <FormattedMessage
-              id='pipeline.navbar.breadcrumb.publish'
-              defaultMessage='Publish pipeline'
-            />
-          </button>
+          <div className='top-nav-publish'>
+            <div className='status-publish'>
+              <FormattedMessage
+                id='pipeline.publish-status'
+                defaultMessage='published on April 19th'
+              />
+            </div>
+            <button type='button' className='btn btn-c btn-publish' onClick={this.publish.bind(this)}>
+              <FormattedMessage
+                id='pipeline.navbar.breadcrumb.publish'
+                defaultMessage='Publish pipeline'
+              />
+            </button>
+          </div>
         </NavBar>
 
         <div className={`pipeline pipeline--${this.state.pipelineView} ${this.state.showOutput ? 'show-output' : ''} ${this.state.fullscreen ? 'fullscreen' : ''}`}>
