@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
+import moment from 'moment'
 
 import { PROJECT_NAME } from '../utils/constants'
 import { NavBar } from '../components'
@@ -24,6 +25,7 @@ class PipelineList extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
+    console.log(nextProps.pipelineList)
     if (nextProps.error !== this.props.error) {
       // TODO: handle errors
     }
@@ -86,7 +88,8 @@ class PipelineList extends Component {
           <div className='status-publish'>
             <FormattedMessage
               id='pipeline.list.publish-status'
-              defaultMessage='published on April 19th'
+              defaultMessage={pipeline.published_on ? `published on ${moment(new Date(pipeline.published_on)).format('MMMM DD')}` :
+              'not published'}
             />
           </div>
           <button type='button' className='btn btn-w btn-publish'>

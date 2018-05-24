@@ -1,4 +1,5 @@
 import requests
+import datetime
 
 from django.http import HttpResponse
 from rest_framework.response import Response
@@ -59,6 +60,8 @@ class PipelineViewSet(viewsets.ModelViewSet):
             return Response(outcome, status=HTTPStatus.BAD_REQUEST)
         else:
             del outcome['error']
+            pipeline.published_on = datetime.datetime.now().time()
+            pipeline.save()
             return Response(outcome, status=HTTPStatus.OK)
 
 
