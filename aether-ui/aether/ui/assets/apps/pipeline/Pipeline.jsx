@@ -76,14 +76,13 @@ class Pipeline extends Component {
     return <ul className='error'>{errorList}</ul>
   }
 
-  buildPublishSuccess (success) {
-    const successList = []
-    success.forEach(passed => {
-      successList.push(<li key={passed}>
+  buildPublishSuccess (publishSuccessList) {
+    const successList = publishSuccessList.map(passed => (
+      <li key={passed}>
         <FormattedMessage id={`publish.success.${passed}`} defaultMessage={passed} />
-      </li>)
-    })
-    return <ul className='success'>{successList}</ul>
+      </li>
+    ))
+    return <ul>{successList}</ul>
   }
 
   publish () {
