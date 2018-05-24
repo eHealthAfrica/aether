@@ -20,13 +20,12 @@ class Output extends Component {
     return <ul>{errorList}</ul>
   }
 
-  buildPublishSuccess (success) {
-    const successList = []
-    success.forEach(passed => {
-      successList.push(<li key={passed}>
+  buildPublishSuccess (publishSuccessList) {
+    const successList = publishSuccessList.map(passed => (
+      <li key={passed}>
         <FormattedMessage id={`publish.success.${passed}`} defaultMessage={passed} />
-      </li>)
-    })
+      </li>
+    ))
     return <ul>{successList}</ul>
   }
 
