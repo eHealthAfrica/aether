@@ -68,7 +68,7 @@ Data model schema:
 
 
 class Project(TimeStampedModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
     name = models.CharField(max_length=50, null=False, unique=True)
 
@@ -86,7 +86,7 @@ class Project(TimeStampedModel):
 
 
 class Mapping(TimeStampedModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
     name = models.CharField(max_length=50, null=False, unique=True)
 
@@ -108,7 +108,7 @@ class Mapping(TimeStampedModel):
 
 
 class Submission(TimeStampedModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
 
     map_revision = models.TextField(default='1')
@@ -140,7 +140,7 @@ def __attachment_path__(instance, filename):
 
 
 class Attachment(TimeStampedModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
 
     # http://www.linfo.org/file_name.html
     # Modern Unix-like systems support long file names, usually up to 255 bytes in length.
@@ -184,7 +184,7 @@ class Attachment(TimeStampedModel):
 
 
 class Schema(TimeStampedModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
     name = models.CharField(max_length=50, null=False, unique=True)
 
@@ -205,7 +205,7 @@ class Schema(TimeStampedModel):
 
 
 class ProjectSchema(TimeStampedModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     name = models.CharField(max_length=50, null=False, unique=True)
 
     mandatory_fields = models.TextField(null=True, blank=True)
@@ -226,7 +226,7 @@ class ProjectSchema(TimeStampedModel):
 
 
 class Entity(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
 
     payload = JSONField(blank=False, null=False)
