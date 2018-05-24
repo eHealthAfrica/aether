@@ -49,14 +49,14 @@ class PipelineViewSet(viewsets.ModelViewSet):
             outcome['error'].append(str(e))
             return Response(outcome, status=HTTPStatus.BAD_REQUEST)
         outcome = ui_utils.publish_preflight(pipeline, project_name, outcome)
-        if len(outcome['exists']):
+        if outcome['exists']:
             if overwrite:
                 outcome = ui_utils.publish_pipeline(pipeline, project_name, True)
             else:
                 return Response(outcome, status=HTTPStatus.BAD_REQUEST)
         else:
             outcome = ui_utils.publish_pipeline(pipeline, project_name)
-        if len(outcome['error']):
+        if outcome['error']:
             return Response(outcome, status=HTTPStatus.BAD_REQUEST)
         else:
             del outcome['error']

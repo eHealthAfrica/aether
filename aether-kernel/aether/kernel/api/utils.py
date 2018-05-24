@@ -525,9 +525,3 @@ def validate_entity_payload(project_Schema, payload):
         return
     except Exception as err:
         raise err
-
-
-def find_by_name(model_name, name):
-    model = getattr(models, model_name)
-    queryset = model.objects.all()
-    return queryset.filter(name=name)

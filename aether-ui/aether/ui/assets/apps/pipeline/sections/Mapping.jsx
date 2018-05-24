@@ -10,7 +10,8 @@ class Mapping extends Component {
     super(props)
 
     this.state = {
-      mappingRules: props.selectedPipeline.mapping || []
+      mappingRules: props.selectedPipeline.mapping || [],
+      view: 'rules'
     }
   }
 
@@ -29,32 +30,63 @@ class Mapping extends Component {
     return !deepEqual(this.state.mappingRules, this.props.selectedPipeline.mapping)
   }
 
+  toggleMappingView () {
+    if (this.state.view === 'rules') {
+      this.setState({ view: 'definitions' })
+    } else {
+      this.setState({ view: 'rules' })
+    }
+  }
+
   render () {
     return (
       <div className='section-body'>
-        <div className='rules'>
-          <h3 className='title-medium'>
-            <FormattedMessage id='mapping.rules' defaultMessage='Mapping rules' />
-          </h3>
-          <form onSubmit={this.notifyChange.bind(this)}>
-            { this.state.mappingRules.map(this.renderRule.bind(this)) }
+        <div className='toggleable-content'>
+          <div className='tabs'>
+            <button
+              className={`tab ${this.state.view === 'rules' ? 'selected' : ''}`}
+              onClick={this.toggleMappingView.bind(this)}>
+              <FormattedMessage
+                id='pipeline.mapping.toggle.rules'
+                defaultMessage='Mapping rules'
+              />
+            </button>
+            <button
+              className={`tab ${this.state.view === 'definitions' ? 'selected' : ''}`}
+              onClick={this.toggleMappingView.bind(this)}>
+              <FormattedMessage
+                id='pipeline.mapping.toggle.definitions'
+                defaultMessage='JSON'
+              />
+            </button>
+          </div>
 
-            <div className='rules-buttons'>
-              { this.renderAddNewRuleButton() }
+          {this.state.view === 'rules' &&
+            <div className='rules'>
+              <form onSubmit={this.notifyChange.bind(this)}>
+                { this.state.mappingRules.map(this.renderRule.bind(this)) }
 
-              <button type='submit' className='btn btn-d btn-primary' disabled={!this.hasChanged()}>
-                <span className='details-title'>
-                  <FormattedMessage
-                    id='mapping.rules.button.ok'
-                    defaultMessage='Apply mapping rules to pipeline'
-                  />
-                </span>
-              </button>
+                <div className='rules-buttons'>
+                  { this.renderAddNewRuleButton() }
+
+                  <button type='submit' className='btn btn-d btn-primary' disabled={!this.hasChanged()}>
+                    <span className='details-title'>
+                      <FormattedMessage
+                        id='mapping.rules.button.ok'
+                        defaultMessage='Apply mapping rules to pipeline'
+                      />
+                    </span>
+                  </button>
+                </div>
+              </form>
             </div>
-          </form>
-        </div>
+          }
 
-        { this.renderDefinition() }
+          {this.state.view === 'definitions' &&
+            this.renderDefinition()
+          }
+
+        </div>
       </div>
     )
   }
@@ -159,9 +191,6 @@ class Mapping extends Component {
 
     return (
       <div className='definition'>
-        <h3 className='title-medium'>
-          <FormattedMessage id='mapping.definitions' defaultMessage='Rule definitions' />
-        </h3>
         <div className='definition-code'>
           <code>
             { JSON.stringify(definition, 0, 2) }
