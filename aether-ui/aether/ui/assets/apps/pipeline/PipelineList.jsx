@@ -82,6 +82,21 @@ class PipelineList extends Component {
             defaultMessage='Errors'
           />
         </div>
+        <div className='pipeline-publish'>
+          <div className='status-publish'>
+            <FormattedMessage
+              id='pipeline.list.publish-status'
+              defaultMessage='published on April 19th'
+            />
+          </div>
+          <button type='button' className='btn btn-w btn-publish'>
+            <FormattedMessage
+              id='pipeline.navbar.breadcrumb.publish'
+              defaultMessage='Publish pipeline'
+            />
+          </button>
+        </div>
+
       </div>
     ))
   }
