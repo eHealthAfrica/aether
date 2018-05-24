@@ -8,6 +8,7 @@ from django.test import TestCase, RequestFactory
 from ..views import TokenProxyView
 from . import (PIPELINE_EXAMPLE, PIPELINE_EXAMPLE_WITH_MAPPING_ERRORS)
 from ..models import Pipeline
+from .. import utils
 
 
 RESPONSE_MOCK = mock.Mock(status_code=200)
@@ -264,10 +265,11 @@ class ViewsTest(TestCase):
             }
         )
 
-    def test_view_publish_pipeline(self):
+    def test_view_pipeline___publish(self):
         username = 'test'
         password = 'testtest'
         self.client.login(username=username, password=password)
+
         url = reverse('ui:pipeline-list')
         data = json.dumps(PIPELINE_EXAMPLE)
         response = self.client.post(url, data=data, content_type='application/json')
@@ -284,6 +286,15 @@ class ViewsTest(TestCase):
         self.assertEqual(len(pipeline.kernel_refs), 4)
         self.assertEqual(len(pipeline.kernel_refs['schema']), 2)
 
+        outcome = {
+                    'successful': [],
+                    'error': [],
+                    'exists': []
+                }
+        outcome = utils.publish_preflight(pipeline, 'Aux', outcome)
+        self.assertEqual(len(outcome['error']), 0)
+        self.assertEqual(len(outcome['exists']), 3)
+
         url = reverse('ui:pipeline-list')
         data = json.dumps(PIPELINE_EXAMPLE_WITH_MAPPING_ERRORS)
         response = self.client.post(url, data=data, content_type='application/json')
@@ -292,12 +303,12 @@ class ViewsTest(TestCase):
         url = reverse('ui:pipeline-publish', args=[pipeline_id])
         response = self.client.post(url)
         response_data = json.loads(response.content)
-        self.assertIn(response_data['info']['failed'][0]['message'],
+        self.assertIn(response_data['error'][0],
                       'Mappings have errors')
 
         url = reverse('ui:pipeline-list')
         data = json.dumps({
-            'name': 'pipeline 1'
+            'name': 'pipeline1'
         })
         response = self.client.post(url, data=data, content_type='application/json')
         response_data = json.loads(response.content)
@@ -308,8 +319,9 @@ class ViewsTest(TestCase):
         url = reverse('ui:pipeline-publish', args=[pipeline_id])
         response = self.client.post(url, {'project_name': 'Aux 1'})
         response_data = json.loads(response.content)
-        self.assertGreater(len(response_data['info']['exists']), 0)
-        self.assertIn(response_data['info']['exists'][0]['message'],
+        self.assertGreater(len(response_data['exists']), 0)
+        map_data = json.loads(data)
+        self.assertIn(response_data['exists'][0][map_data['name']],
                       'Mapping with id {} exists'.format(pipeline.kernel_refs['mapping']))
 
         url = reverse('ui:pipeline-list')
@@ -331,8 +343,8 @@ class ViewsTest(TestCase):
         url = reverse('ui:pipeline-publish', args=[pipeline_id])
         response = self.client.post(url, {'project_name': 'Aux 1'})
         response_data = json.loads(response.content)
-        self.assertGreater(len(response_data['info']['exists']), 0)
-        self.assertIn(response_data['info']['exists'][0]['message'],
+        self.assertGreater(len(response_data['exists']), 0)
+        self.assertIn(response_data['exists'][0]['Screening'],
                       '{} schema with id {} exists'.format('Screening',
                                                            pipeline.kernel_refs['schema']['Screening']))
 
@@ -353,8 +365,66 @@ class ViewsTest(TestCase):
         url = reverse('ui:pipeline-publish', args=[pipeline_id])
         response = self.client.post(url, {'project_name': 'Aux 1'})
         response_data = json.loads(response.content)
-        self.assertGreater(len(response_data['info']['failed']), 0)
+        self.assertGreater(len(response_data['exists']), 0)
 
         url = reverse('ui:pipeline-publish', args=[str(pipeline_id) + 'wrong'])
         response = self.client.post(url, {'project_name': 'Aux 1'})
         response_data = json.loads(response.content)
+
+        pipeline.kernel_refs = {}
+        pipeline.save()
+
+        outcome = {
+                    'successful': [],
+                    'error': [],
+                    'exists': []
+                }
+        outcome = utils.publish_preflight(pipeline, 'Aux', outcome)
+        self.assertEqual(len(outcome['exists']), 5)
+
+    def test_view_pipeline__publish(self):
+        username = 'test'
+        password = 'testtest'
+        self.client.login(username=username, password=password)
+        pipeline = Pipeline.objects.create(
+            name='Pipeline Mock 2',
+            schema={'name': 'test', 'type': 'record', 'fields':
+                    [{'name': 'name', 'type': 'string'}]},
+            input={'test': {'name': 'myValue'}},
+            entity_types=[{'name': 'Test', 'type': 'record', 'fields':
+                          [{'type': 'string', 'name': 'name'}, {'type': 'string', 'name': 'id'}]}],
+            mapping=[{'source': 'test.name', 'destination': 'Test.name'},
+                     {'source': '#!uuid', 'destination': 'Test.id'}],
+            output={'id': 'uuids', 'name': 'a-name'}
+        )
+        outcome = utils.publish_pipeline(pipeline, 'Aux')
+        self.assertIn(outcome['successful'][0],
+                      'Existing Aux project used')
+        outcome = utils.publish_pipeline(pipeline, 'Aux')
+        self.assertEqual(len(outcome['error']), 2)
+        url = reverse('ui:pipeline-publish', args=[str(pipeline.id)])
+        response = self.client.post(url, {'project_name': 'Aux', 'overwrite': True})
+        response_data = json.loads(response.content)
+        self.assertEqual(len(response_data['successful']), 4)
+
+        pipeline.kernel_refs = {}
+        pipeline.save()
+        url = reverse('ui:pipeline-publish', args=[str(pipeline.id)])
+        response = self.client.post(url, {'project_name': 'Aux', 'overwrite': True})
+        response_data = json.loads(response.content)
+        self.assertEqual(len(response_data['successful']), 3)
+
+    def test_view_pipeline_fetch(self):
+        username = 'test'
+        password = 'testtest'
+        self.client.login(username=username, password=password)
+        url = reverse('ui:pipeline-fetch')
+        response = self.client.post(url, content_type='application/json')
+        response_data = json.loads(response.content)
+        self.assertEqual(len(response_data), 2)
+        self.assertEqual(len(response_data[0]['entity_types']), 2)
+
+        # Ensure linked mappings are not recreated
+        response = self.client.post(url, content_type='application/json')
+        response_data = json.loads(response.content)
+        self.assertEqual(len(response_data), 2)

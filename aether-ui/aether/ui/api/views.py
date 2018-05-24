@@ -1,10 +1,12 @@
 import requests
 
 from django.http import HttpResponse
+from rest_framework.response import Response
 from django.views import View
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.decorators import action
-
+from http import HTTPStatus
 
 from ..settings import AETHER_APPS
 from . import models, serializers, utils as ui_utils
@@ -15,6 +17,16 @@ class PipelineViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.PipelineSerializer
     ordering = ('name',)
 
+    @action(methods=['post'], detail=False)
+    def fetch(self, request):
+        '''
+        This view gets kernel objects, transforms and loads into a pipeline
+        '''
+        ui_utils.kernel_to_pipeline()
+        pipelines = models.Pipeline.objects.all()
+        serialized_data = serializers.PipelineSerializer(pipelines, context={'request': request}, many=True).data
+        return Response(serialized_data, status=HTTPStatus.OK)
+
     @action(methods=['post'], detail=True)
     def publish(self, request, pk=None):
         '''
@@ -22,7 +34,32 @@ class PipelineViewSet(viewsets.ModelViewSet):
         publish and update the pipeline with related kernel model ids.
         '''
         project_name = request.data['project_name'] if 'project_name' in request.data else 'Aux'
-        return ui_utils.publish_pipeline(pk, project_name)
+        overwrite = False
+        if 'overwrite' in request.data:
+            overwrite = True
+        outcome = {
+            'successful': [],
+            'error': [],
+            'exists': []
+        }
+        try:
+            pipeline = get_object_or_404(models.Pipeline, pk=pk)
+        except Exception as e:
+            outcome['error'].append(str(e))
+            return Response(outcome, status=HTTPStatus.BAD_REQUEST)
+        outcome = ui_utils.publish_preflight(pipeline, project_name, outcome)
+        if outcome['exists']:
+            if overwrite:
+                outcome = ui_utils.publish_pipeline(pipeline, project_name, True)
+            else:
+                return Response(outcome, status=HTTPStatus.BAD_REQUEST)
+        else:
+            outcome = ui_utils.publish_pipeline(pipeline, project_name)
+        if outcome['error']:
+            return Response(outcome, status=HTTPStatus.BAD_REQUEST)
+        else:
+            del outcome['error']
+            return Response(outcome, status=HTTPStatus.OK)
 
 
 class TokenProxyView(View):

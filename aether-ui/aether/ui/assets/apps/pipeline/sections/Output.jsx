@@ -3,10 +3,60 @@ import { FormattedMessage } from 'react-intl'
 import { connect } from 'react-redux'
 
 class Output extends Component {
+  buildPublishErrors (errors) {
+    const errorList = []
+    errors.error.forEach(error => {
+      errorList.push(<li key={error}>
+        <FormattedMessage id={`publish.error.${error}`} defaultMessage={error} />
+      </li>)
+    })
+    errors.exists.forEach(exists => {
+      Object.keys(exists).forEach(exist => {
+        errorList.push(<li key={exist}>
+          <FormattedMessage id={`publish.exists.${exist}`} defaultMessage={exists[exist]} />
+        </li>)
+      })
+    })
+    return <ul>{errorList}</ul>
+  }
+
+  buildPublishSuccess (publishSuccessList) {
+    const successList = publishSuccessList.map(passed => (
+      <li key={passed}>
+        <FormattedMessage id={`publish.success.${passed}`} defaultMessage={passed} />
+      </li>
+    ))
+    return <ul>{successList}</ul>
+  }
+
   render () {
     return (
       <div className='section-body'>
-        <div className='pipeline-errors'>
+        {
+          this.props.publishError && (
+            <div className='pipeline-errors'>
+              <h3 className='title-medium'>
+                <FormattedMessage id='publish.errors' defaultMessage='Publish errors' />
+              </h3>
+              {
+                this.buildPublishErrors(this.props.publishError)
+              }
+            </div>
+          )
+        }
+        {
+          this.props.publishSuccess && (
+            <div className='pipeline-success'>
+              <h3 className='title-medium'>
+                <FormattedMessage id='publish.success' defaultMessage='Publish success' />
+              </h3>
+              {
+                this.buildPublishSuccess(this.props.publishSuccess)
+              }
+            </div>
+          )
+        }
+        <div className='pipeline-data pipeline-errors'>
           <h3 className='title-medium'>
             <FormattedMessage id='output.mapping_errors' defaultMessage='Mapping errors' />
           </h3>
@@ -28,7 +78,9 @@ class Output extends Component {
 }
 
 const mapStateToProps = ({ pipelines }) => ({
-  selectedPipeline: pipelines.selectedPipeline
+  selectedPipeline: pipelines.selectedPipeline,
+  publishError: pipelines.publishError,
+  publishSuccess: pipelines.publishSuccess
 })
 
 export default connect(mapStateToProps)(Output)

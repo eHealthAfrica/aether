@@ -50,6 +50,7 @@ class Pipeline extends Component {
   }
 
   publish () {
+    // todo: check if and overwrite is required
     this.props.publishPipeline(this.props.selectedPipeline.id)
   }
 

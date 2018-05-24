@@ -15,7 +15,9 @@ export const types = {
   GET_ALL: 'pipeline_get_all',
   PIPELINE_ERROR: 'pipeline_error',
   GET_BY_ID: 'pipeline_get_by_id',
-  PIPELINE_NOT_FOUND: 'pipeline_not_found'
+  PIPELINE_NOT_FOUND: 'pipeline_not_found',
+  GET_FROM_KERNEL: 'get_from_kernel',
+  GET_FROM_KERNEL_ERROR: 'get_from_kernel_error'
 }
 
 export const INITIAL_PIPELINE = {
@@ -52,11 +54,11 @@ export const updatePipeline = pipeline => ({
   )
 })
 
-export const publishPipeline = (id, projectName = PROJECT_NAME) => ({
+export const publishPipeline = (id, projectName = PROJECT_NAME, overwrite = false) => ({
   types: ['', types.PIPELINE_PUBLISH_SUCCESS, types.PIPELINE_PUBLISH_ERROR],
   promise: client => client.post(`${urls.PIPELINES_URL}${id}/publish/`,
     { 'Content-Type': 'application/json' },
-    { data: { project_name: projectName } }
+    { data: { project_name: projectName, overwrite } }
   )
 })
 
@@ -74,6 +76,12 @@ export const getPipelines = () => ({
   )
 })
 
+export const fetchPipelines = () => ({
+  types: ['', types.GET_FROM_KERNEL, types.GET_FROM_KERNEL_ERROR],
+  promise: client => client.post(
+    `${urls.PIPELINES_URL}fetch/?limit=5000`,
+    { 'Content-Type': 'application/json' })
+})
 const parsePipeline = (pipeline) => {
   const COLORS = 10 // This value is the number of colors in the `_color-codes.scss`
   // will highlight the relations among mapping rules, entity types and input schema
@@ -107,7 +115,7 @@ const parsePipeline = (pipeline) => {
 
 const reducer = (state = INITIAL_PIPELINE, action) => {
   const newPipelineList = clone(state.pipelineList)
-
+  state = { ...state, publishError: null, publishSuccess: null }
   switch (action.type) {
     case types.PIPELINE_ADD: {
       const newPipeline = parsePipeline(action.payload)
@@ -140,11 +148,15 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
     }
 
     case types.PIPELINE_PUBLISH_SUCCESS: {
-      return { ...state, publishSuccess: action.payload, publishError: null }
+      return { ...state, publishSuccess: action.payload.successful }
     }
 
     case types.PIPELINE_PUBLISH_ERROR: {
-      return { ...state, publishSuccess: null, publishError: action.error }
+      return { ...state, publishError: action.error.error }
+    }
+
+    case types.GET_FROM_KERNEL: {
+      return { ...state, pipelineList: action.payload }
     }
 
     default:

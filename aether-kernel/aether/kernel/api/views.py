@@ -1,13 +1,13 @@
 from django.db.models import Count, Min, Max
 
 from rest_framework import viewsets, permissions
-from rest_framework.decorators import action
 from drf_openapi.views import SchemaView
 from rest_framework.response import Response
 from rest_framework.decorators import (
     api_view,
     permission_classes,
     renderer_classes,
+    action,
 )
 from rest_framework.renderers import JSONRenderer
 from rest_framework.permissions import IsAuthenticated
