@@ -16,8 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import uuid
-
 from django.urls import reverse
 
 from ..api.tests import CustomTestCase
@@ -26,13 +24,13 @@ from ..api.models import XForm
 
 class AdminTests(CustomTestCase):
 
-    PROJECT_ID = uuid.uuid4()
-
     def setUp(self):
         super(AdminTests, self).setUp()
         self.helper_create_superuser()
         self.url = reverse('admin:odk_xform_add')
-        self.project = self.helper_create_project(project_id=self.PROJECT_ID)
+
+        self.project = self.helper_create_project()
+        self.PROJECT_ID = self.project.project_id
 
     def test__post__empty(self):
         response = self.client.post(

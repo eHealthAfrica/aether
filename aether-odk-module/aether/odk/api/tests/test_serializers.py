@@ -16,8 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import uuid
-
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory
@@ -33,7 +31,7 @@ class SerializersTests(CustomTestCase):
         self.request = RequestFactory().get('/')
 
     def test_xform_serializer__no_files(self):
-        project_id = uuid.uuid4()
+        project_id = self.helper_create_uuid()
         self.helper_create_project(project_id=project_id)
         xform = XFormSerializer(
             data={
@@ -54,7 +52,7 @@ class SerializersTests(CustomTestCase):
         with open(self.samples['xform']['file-xml'], 'rb') as data:
             content = SimpleUploadedFile('xform.xml', data.read())
 
-        project_id = uuid.uuid4()
+        project_id = self.helper_create_uuid()
         self.helper_create_project(project_id=project_id)
         xform = XFormSerializer(
             data={
@@ -76,7 +74,7 @@ class SerializersTests(CustomTestCase):
         with open(self.samples['xform']['file-xls'], 'rb') as data:
             content = SimpleUploadedFile('xform.xls', data.read())
 
-        project_id = uuid.uuid4()
+        project_id = self.helper_create_uuid()
         self.helper_create_project(project_id=project_id)
         xform = XFormSerializer(
             data={
@@ -97,7 +95,7 @@ class SerializersTests(CustomTestCase):
     def test_xform_serializer__with_wrong_file(self):
         content = SimpleUploadedFile('xform.xls', b'abcd')
 
-        project_id = uuid.uuid4()
+        project_id = self.helper_create_uuid()
         self.helper_create_project(project_id=project_id)
         xform = XFormSerializer(
             data={
@@ -111,7 +109,7 @@ class SerializersTests(CustomTestCase):
         self.assertFalse(xform.is_valid(), xform.errors)
 
     def test_media_file_serializer__no_name(self):
-        project_id = uuid.uuid4()
+        project_id = self.helper_create_uuid()
         xform = self.helper_create_xform(project_id=project_id)
 
         media_file = MediaFileSerializer(

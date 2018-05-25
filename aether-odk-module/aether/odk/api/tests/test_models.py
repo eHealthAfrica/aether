@@ -16,8 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import uuid
-
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError
 
@@ -26,8 +24,6 @@ from ..models import Project, XForm, MediaFile
 
 
 class ModelsTests(CustomTestCase):
-
-    PROJECT_ID = uuid.uuid4()
 
     def test__xform__create__raises_errors(self):
         # missing required fields
@@ -75,7 +71,7 @@ class ModelsTests(CustomTestCase):
 
     def test__xform__save(self):
         instance = XForm.objects.create(
-            project=self.helper_create_project(project_id=self.PROJECT_ID),
+            project=Project.objects.create(),
             xml_data=self.samples['xform']['xml-ok'],
         )
 
@@ -91,9 +87,7 @@ class ModelsTests(CustomTestCase):
         self.assertEqual(instance.hash, 'md5:5e97c4e929f64d7701804043e3b544ba')
 
     def test__project__surveyors(self):
-        instance = Project.objects.create(
-            project_id=self.PROJECT_ID,
-        )
+        instance = Project.objects.create()
         self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')
 
         self.helper_create_superuser()
@@ -117,7 +111,7 @@ class ModelsTests(CustomTestCase):
 
     def test__xform__surveyors(self):
         instance = XForm.objects.create(
-            project=self.helper_create_project(project_id=self.PROJECT_ID),
+            project=Project.objects.create(),
             xml_data=self.samples['xform']['xml-ok'],
         )
         self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')
@@ -158,10 +152,9 @@ class ModelsTests(CustomTestCase):
 
     def test__xform__media(self):
         xform = XForm.objects.create(
-            project=self.helper_create_project(project_id=self.PROJECT_ID),
+            project=Project.objects.create(),
             xml_data=self.samples['xform']['xml-ok'],
         )
-
         media = MediaFile.objects.create(
             xform=xform,
             media_file=SimpleUploadedFile('sample.txt', b'abc'),
@@ -181,7 +174,7 @@ class ModelsTests(CustomTestCase):
 
     def test__xform__version(self):
         xform = XForm.objects.create(
-            project=self.helper_create_project(project_id=self.PROJECT_ID),
+            project=Project.objects.create(),
             xml_data=self.samples['xform']['xml-ok'],
         )
         last_version = xform.version

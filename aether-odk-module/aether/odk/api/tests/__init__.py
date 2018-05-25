@@ -170,7 +170,6 @@ XML_DATA_ERR = '''
 
 
 class MockResponse:
-    # used to mock responses and not make the  `xform_submission` method fail
     def __init__(self, status_code, json_data=None):
         self.json_data = json_data
         self.status_code = status_code
@@ -222,6 +221,9 @@ class CustomTestCase(TransactionTestCase):
     def tearDown(self):
         self.client.logout()
 
+    def helper_create_uuid(self):
+        return uuid.uuid4()
+
     def helper_create_superuser(self):
         username = 'admin'
         email = 'admin@example.com'
@@ -255,7 +257,7 @@ class CustomTestCase(TransactionTestCase):
 
     def helper_create_project(self, project_id=None, surveyor=None):
         if project_id is None:
-            project_id = uuid.uuid4()
+            project_id = self.helper_create_uuid()
 
         project, _ = Project.objects.get_or_create(
             name='test',

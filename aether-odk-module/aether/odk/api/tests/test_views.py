@@ -16,8 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import uuid
-
 from django.urls import reverse
 from rest_framework import status
 
@@ -177,7 +175,7 @@ class ViewsTests(CustomTestCase):
 
     def test__xform__filters(self):
         self.xform.delete()  # remove default xform
-        project_ids = {i: uuid.uuid4() for i in range(4)}
+        project_ids = {i: self.helper_create_uuid() for i in range(4)}
         self.helper_create_xform(project_id=project_ids[0])
         self.helper_create_xform(project_id=project_ids[0])
         self.helper_create_xform(project_id=project_ids[1])
@@ -234,7 +232,7 @@ class ViewsTests(CustomTestCase):
         self.assertEqual(response.json()['count'], 0)
 
     def test__surveyors__by_project(self):
-        project_ids = {i: uuid.uuid4() for i in range(4)}
+        project_ids = {i: self.helper_create_uuid() for i in range(4)}
         # create surveyors
         a = self.helper_create_surveyor(username='a')
         b = self.helper_create_surveyor(username='b')
