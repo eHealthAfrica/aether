@@ -17,21 +17,18 @@
 # under the License.
 
 from django.db.models import Count, Min, Max
+from django.shortcuts import get_object_or_404
 
-from rest_framework import viewsets, permissions
-from rest_framework.decorators import action
 from drf_openapi.views import SchemaView
+from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import (
+    action,
     api_view,
     permission_classes,
     renderer_classes,
 )
 from rest_framework.renderers import JSONRenderer
-from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
-
-from http import HTTPStatus
 
 from . import models, serializers, filters, constants, utils, mapping_validation
 
@@ -52,7 +49,7 @@ def get_entity_linked_data(entity, request, resolved, depth, start_depth=0):
                     resolved[linked_entity_schema_name][linked_data_ref] = serializers.EntityLDSerializer(
                         linked_entity, context={'request': request}).data
                     get_entity_linked_data(linked_entity, request, resolved, depth, start_depth)
-            except Exception as e:
+            except Exception:
                 pass
     return resolved
 
@@ -136,10 +133,7 @@ class EntityViewSet(CustomViewSet):
     filter_class = filters.EntityFilter
 
     def retrieve(self, request, pk=None, *args, **kwargs):
-        try:
-            selected_record = models.Entity.objects.get(pk=pk)
-        except Exception as e:
-            return Response(str(e), status=HTTPStatus.NOT_FOUND)
+        selected_record = get_object_or_404(models.Entity, pk=pk)
         depth = request.query_params.get('depth')
         if depth:
             try:
@@ -147,13 +141,13 @@ class EntityViewSet(CustomViewSet):
                 if depth > constants.LINKED_DATA_MAX_DEPTH:
                     return Response({
                         'description': 'Supported max depth is 3'
-                    }, status=HTTPStatus.BAD_REQUEST)
+                    }, status=status.HTTP_400_BAD_REQUEST)
                 else:
                     selected_record.resolved = get_entity_linked_data(selected_record, request, {}, depth)
             except Exception as e:
-                return Response(str(e), status=HTTPStatus.BAD_REQUEST)
+                return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
         serializer_class = serializers.EntitySerializer(selected_record, context={'request': request})
-        return Response(serializer_class.data, status=HTTPStatus.OK)
+        return Response(serializer_class.data)
 
 
 class AetherSchemaView(SchemaView):
@@ -181,7 +175,7 @@ def run_mapping_validation(submission_payload, mapping_definition, schemas):
 
 @api_view(['POST'])
 @renderer_classes([JSONRenderer])
-@permission_classes([IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated])
 def validate_mappings(request):
     '''
     Given a `submission_payload`, a `mapping_definition` and a list of
