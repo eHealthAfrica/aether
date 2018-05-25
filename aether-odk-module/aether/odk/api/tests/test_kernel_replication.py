@@ -20,16 +20,14 @@ import json
 import mock
 import requests
 
+from aether.common.kernel.utils import get_auth_header, get_kernel_server_url
+
 from . import CustomTestCase, MockResponse
 from ..kernel_replication import (
     replicate_project,
     replicate_xform,
     KernelReplicationError,
     __upsert_item as upsert,
-
-    # from aether common
-    get_auth_header,
-    get_kernel_server_url,
 )
 
 

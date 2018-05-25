@@ -25,6 +25,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import (
+    action,
     api_view,
     authentication_classes,
     permission_classes,
@@ -48,20 +49,13 @@ from .serializers import (
     SurveyorSerializer,
     XFormSerializer,
 )
-from .kernel_replication import replicate_xform, KernelReplicationError
-from .surveyors_utils import get_surveyors
-from .xform_utils import (
-    get_instance_data_from_xml,
-    get_instance_id,
-    parse_submission,
+from .kernel_replication import (
+    replicate_project,
+    replicate_xform,
+    KernelReplicationError,
 )
-
-'''
-ODK Collect sends the Survey responses within an attachment file in XML format.
-
-Parameter name of the submission file:
-'''
-XML_SUBMISSION_PARAM = 'xml_submission_file'
+from .surveyors_utils import get_surveyors
+from .xform_utils import get_instance_data_from_xml, parse_submission
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -72,6 +66,26 @@ class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.order_by('name')
     serializer_class = ProjectSerializer
     search_fields = ('name',)
+
+    @action(detail=True, methods=['patch'])
+    def replicates(self, request, pk=None, *args, **kwargs):
+        '''
+        Replicates project in Aether Kernel server.
+
+        Reachable at ``.../projects/{pk}/replicates/``
+        '''
+
+        project = get_object_or_404(Project, pk=pk)
+
+        try:
+            replicate_project(project)
+        except KernelReplicationError as kre:
+            return Response(
+                data={'description': str(kre)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return self.retrieve(request, pk, *args, **kwargs)
 
 
 class XFormViewSet(viewsets.ModelViewSet):
@@ -95,6 +109,26 @@ class XFormViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(project=project_id)
 
         return queryset
+
+    @action(detail=True, methods=['patch'])
+    def replicates(self, request, pk=None, *args, **kwargs):
+        '''
+        Replicates the xform in Aether Kernel server.
+
+        Reachable at ``.../xforms/{pk}/replicates/``
+        '''
+
+        xform = get_object_or_404(XForm, pk=pk)
+
+        try:
+            replicate_xform(xform)
+        except KernelReplicationError as kre:
+            return Response(
+                data={'description': str(kre)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return self.retrieve(request, pk, *args, **kwargs)
 
 
 class MediaFileViewSet(viewsets.ModelViewSet):
@@ -156,6 +190,14 @@ Views needed by ODK Collect
 
 https://bitbucket.org/javarosa
 '''
+
+
+'''
+ODK Collect sends the Survey responses within an attachment file in XML format.
+
+Parameter name of the submission file:
+'''
+XML_SUBMISSION_PARAM = 'xml_submission_file'
 
 
 @api_view(['GET'])
