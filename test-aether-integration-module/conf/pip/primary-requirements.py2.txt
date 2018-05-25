@@ -8,15 +8,12 @@
 #                                                                              					#
 #################################################################################################################
 
-
 aether.client
-aether.mocker
-aether.saladbar
+aether_saladbar
 coverage
 flake8
-kafka
 mock
 pytest
 pytest-runner
 requests
-spavro
+
