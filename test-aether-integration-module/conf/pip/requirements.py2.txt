@@ -12,7 +12,6 @@ aether-saladbar==0.0.0
 aether.client==0.0.0
 attrs==17.4.0
 avro==1.8.1
-bzr==2.7.0.dev1
 CacheControl==0.11.7
 certifi==2018.1.18
 chardet==3.0.4
