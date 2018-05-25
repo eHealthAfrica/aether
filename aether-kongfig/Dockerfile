@@ -8,11 +8,9 @@ ENV BETWEEN_CHECK_DELAY=2 \
     CONFIG= \
     DEBUG=false
 
-
-COPY ./entrypoint.sh /usr/local/bin/entrypoint
+COPY ./entrypoint.sh /usr/local/bin
 
 RUN npm install kongfig -g --loglevel error
+RUN chmod a+x /usr/local/bin/entrypoint.sh
 
-RUN chmod a+x /usr/local/bin/entrypoint
-
-ENTRYPOINT ["entrypoint"]
+ENTRYPOINT ["entrypoint.sh"]
