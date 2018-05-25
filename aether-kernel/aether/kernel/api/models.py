@@ -56,7 +56,7 @@ Data model schema:
     | id               |<--+  |   | id               |<--+   | id               |   |
     | revision         |   |  |   | name             |   |   | revision         |   |
     | name             |   |  |   | mandatory_fields |   |   | payload          |   |
-    | definiton        |   |  |   | transport_rule   |   |   | status           |   |
+    | definition       |   |  |   | transport_rule   |   |   | status           |   |
     | type             |   |  |   | masked_fields    |   |   | modified         |   |
     +------------------+   |  |   | is_encrypted     |   |   +::::::::::::::::::+   |
                            |  |   +::::::::::::::::::+   |   | submission       |>--+
