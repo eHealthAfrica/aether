@@ -287,12 +287,29 @@ def xform_submission(request):
     try:
         xml = request.FILES[XML_SUBMISSION_PARAM]
         xml_content = xml.read()  # the content will be sent as an attachment
-        data, form_id, version = get_instance_data_from_xml(xml_content)
+        data, form_id, version, instance_id = get_instance_data_from_xml(xml_content)
     except Exception as e:
         msg = 'Unexpected error when handling submission file.'
         logger.warning(msg)
         logger.error(str(e))
         return Response(data=msg + '\n' + str(e), status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+    # When handling submissions containing multiple attachments, ODK
+    # Collect will split the submission into multiple POST requests. Using
+    # the instance id of the submission, we can assign the attached files
+    # to the correct submission.
+    #
+    # The code in this block makes some assumptions:
+    #   1. The submission has an instance id, accessible at `data['meta']['instanceID']`.
+    #   2. The instance id is globally unique.
+    #   3. The form data in the submission is identical for all
+    #      POST requests with the same instance id.
+    #
+    # These assumptions match the OpenRosa spec linked to above.
+    if not instance_id:
+        msg = 'Instance ID is missing in submission.'
+        logger.warning(msg)
+        return Response(data=msg, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     # take the first xForm in which the current user is granted surveyor
     # TODO take the one that matches the version
@@ -330,24 +347,6 @@ def xform_submission(request):
     submissions_url = get_submissions_url()
 
     try:
-        # When handling submissions containing multiple attachments, ODK
-        # Collect will split the submission into multiple POST requests. Using
-        # the instance id of the submission, we can assign the attached files
-        # to the correct submission.
-        #
-        # The code in this block makes some assumptions:
-        #   1. The submission has an instance id, accessible at `data['meta']['instanceID']`.
-        #   2. The instance id is globally unique.
-        #   3. The form data in the submission is identical for all
-        #      POST requests with the same instance id.
-        #
-        # These assumptions match the OpenRosa spec linked to above.
-        instance_id = get_instance_id(data)
-        if not instance_id:
-            msg = 'Instance ID is missing in submission.'
-            logger.warning(msg)
-            return Response(data=msg, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-
         previous_submissions_response = requests.get(
             submissions_url,
             headers=auth_header,
