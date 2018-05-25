@@ -17,6 +17,7 @@
 # under the License.
 
 import base64
+import json
 import uuid
 
 from django.contrib.auth import get_user_model
@@ -168,6 +169,17 @@ XML_DATA_ERR = '''
 '''
 
 
+class MockResponse:
+    # used to mock responses and not make the  `xform_submission` method fail
+    def __init__(self, status_code, json_data=None):
+        self.json_data = json_data
+        self.status_code = status_code
+        self.content = json.dumps(json_data).encode('utf-8')
+
+    def json(self):
+        return self.json_data
+
+
 class CustomTestCase(TransactionTestCase):
 
     def setUp(self):
@@ -263,7 +275,6 @@ class CustomTestCase(TransactionTestCase):
 
     def helper_create_xform(self,
                             project_id=None,
-                            kernel_id=None,
                             surveyor=None,
                             xml_data=None,
                             with_media=False,
@@ -281,7 +292,6 @@ class CustomTestCase(TransactionTestCase):
                 project_id=project_id,
             ),
             xml_data=xml_data,
-            kernel_id=kernel_id,
         )
 
         if surveyor:

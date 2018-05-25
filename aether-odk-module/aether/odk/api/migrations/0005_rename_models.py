@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='xform',
             name='kernel_id',
-            field=models.UUIDField(null=True, blank=True, default=uuid.uuid4),
+            field=models.UUIDField(default=uuid.uuid4),
         ),
 
         migrations.AlterField(

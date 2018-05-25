@@ -64,7 +64,7 @@ Data model schema:
 
 class Project(models.Model):
     '''
-    Database link of a Aether Kernel Project
+    Database link of an Aether Kernel Project
 
     The needed and common data is stored here, like the list of granted surveyors.
 
@@ -132,7 +132,7 @@ class XForm(models.Model):
     '''
 
     # This is needed to submit data to kernel
-    kernel_id = models.UUIDField(blank=True, null=True)
+    kernel_id = models.UUIDField(default=uuid.uuid4)
 
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
 

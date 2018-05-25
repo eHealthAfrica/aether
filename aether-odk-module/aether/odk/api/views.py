@@ -48,6 +48,7 @@ from .serializers import (
     SurveyorSerializer,
     XFormSerializer,
 )
+from .kernel_replication import replicate_xform, KernelReplicationError
 from .surveyors_utils import get_surveyors
 from .xform_utils import (
     get_instance_data_from_xml,
@@ -148,6 +149,13 @@ class SurveyorViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(id__in=surveyors)
 
         return queryset
+
+
+'''
+Views needed by ODK Collect
+
+https://bitbucket.org/javarosa
+'''
 
 
 @api_view(['GET'])
@@ -262,24 +270,29 @@ def xform_submission(request):
     # first of all check if the connection is possible
     auth_header = get_auth_header()
     if not auth_header:
-        return Response(status=status.HTTP_424_FAILED_DEPENDENCY)
+        return Response(
+            data='Connection with Aether Kernel server is not possible.',
+            status=status.HTTP_424_FAILED_DEPENDENCY,
+        )
 
     if request.method == 'HEAD':
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     if not request.FILES or XML_SUBMISSION_PARAM not in request.FILES:
         # missing submitted data
-        logger.warning('Missing submitted data')
-        return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        msg = 'Missing submitted data.'
+        logger.warning(msg)
+        return Response(data=msg, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     try:
         xml = request.FILES[XML_SUBMISSION_PARAM]
         xml_content = xml.read()  # the content will be sent as an attachment
         data, form_id, version = get_instance_data_from_xml(xml_content)
     except Exception as e:
-        logger.warning('Unexpected error when handling file')
+        msg = 'Unexpected error when handling submission file.'
+        logger.warning(msg)
         logger.error(str(e))
-        return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        return Response(data=msg + '\n' + str(e), status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     # take the first xForm in which the current user is granted surveyor
     # TODO take the one that matches the version
@@ -292,17 +305,26 @@ def xform_submission(request):
             break
     if not xform:
         if xforms:
-            logger.error('xForm entry {} unauthorized.'.format(form_id))
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
+            msg = f'xForm entry {form_id} unauthorized.'
+            logger.error(msg)
+            return Response(data=msg, status=status.HTTP_401_UNAUTHORIZED)
         else:
-            logger.error('xForm entry {} not found.'.format(form_id))
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            msg = f'xForm entry {form_id} not found.'
+            logger.error(msg)
+            return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
 
     # check sent version with current one
     if version < xform.version:  # pragma: no cover
-        logger.warning(
-            'Sending response to {} xform version, current is {}'.format(version, xform.version)
-        )
+        logger.warning(f'Sending response to {version} xForm version, current is {xform.version}.')
+
+    # make sure that the xForm replication already exists in Aether Kernel
+    try:
+        replicate_xform(xform)
+    except KernelReplicationError as kre:
+        msg = f'Unexpected error from Aether Kernel server when checking the xForm "{form_id}".'
+        logger.warning(msg)
+        logger.error(str(kre))
+        return Response(data=msg + '\n' + str(kre), status=status.HTTP_424_FAILED_DEPENDENCY)
 
     data = parse_submission(data, xform.xml_data)
     submissions_url = get_submissions_url()
@@ -322,8 +344,10 @@ def xform_submission(request):
         # These assumptions match the OpenRosa spec linked to above.
         instance_id = get_instance_id(data)
         if not instance_id:
-            logger.warning('Instance id is missing in submission')
-            return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+            msg = 'Instance ID is missing in submission.'
+            logger.warning(msg)
+            return Response(data=msg, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
         previous_submissions_response = requests.get(
             submissions_url,
             headers=auth_header,
@@ -347,13 +371,13 @@ def xform_submission(request):
             submission_content = response.content.decode('utf-8')
 
             if response.status_code != status.HTTP_201_CREATED:
-                logger.warning(
-                    'Unexpected response {} from Aether Kernel server when submitting data "{}"'.format(
-                        response.status_code, form_id,
-                    )
+                msg = (
+                    f'Unexpected response {response.status_code} from ' +
+                    f'Aether Kernel server when submitting data of the xForm "{form_id}".'
                 )
+                logger.warning(msg)
                 logger.warning(submission_content)
-                return Response(status=response.status_code)
+                return Response(data=msg + '\n' + submission_content, status=response.status_code)
             # If there is one field with non ascii characters, the usual
             # response.json() will throw a `UnicodeDecodeError`.
             submission_id = json.loads(submission_content).get('id')
@@ -380,26 +404,27 @@ def xform_submission(request):
                     headers=auth_header,
                 )
                 if response.status_code != status.HTTP_201_CREATED:
-                    logger.warning(
-                        'Unexpected response {} '
-                        'from Aether Kernel server when submitting attachment "{}"'
-                        .format(response.status_code, form_id))
-                    logger.warning(response.content.decode('utf-8'))
+                    attachment_content = response.content.decode('utf-8')
+                    msg = (
+                        f'Unexpected response {response.status_code} from ' +
+                        f'Aether Kernel server when submitting attachment of the xForm "{form_id}".'
+                    )
+                    logger.warning(msg)
+                    logger.warning(attachment_content)
 
                     # delete previous submission and return error
                     requests.delete(get_submissions_url(submission_id), headers=auth_header)
-                    return Response(status=response.status_code)
+                    return Response(data=msg + '\n' + attachment_content, status=response.status_code)
 
         return Response(status=status.HTTP_201_CREATED)
 
     except Exception as e:
-        logger.warning(
-            'Unexpected error from Aether Kernel server when submitting data "{}"'.format(form_id)
-        )
+        msg = f'Unexpected error from Aether Kernel server when submitting data of the xForm "{form_id}".'
+        logger.warning(msg)
         logger.error(str(e))
 
         if submission_id:
             # delete previous submission and ignore response
             requests.delete(get_submissions_url(submission_id), headers=auth_header)
         # something went wrong... just send an 400 error
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(data=msg + '\n' + str(e), status=status.HTTP_400_BAD_REQUEST)
