@@ -119,6 +119,7 @@ class XFormViewSet(viewsets.ModelViewSet):
         '''
 
         xform = get_object_or_404(XForm, pk=pk)
+        xform.save()  # creates avro schema if missing
 
         try:
             replicate_xform(xform)

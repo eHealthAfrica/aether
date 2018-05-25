@@ -32,17 +32,16 @@ def replicate_project(project):
     '''
 
     item_id = str(project.project_id)
+    # because the name is unique use an unexpected one
+    item_name = f'aether.odk.xforms: {item_id}'
+
     __upsert_item(
         item_model='projects',
         item_id=item_id,
         item_new={
             'id': item_id,
-            # because the name is unique use an unexpected one
-            'name': f'odk: {item_id}',
+            'name': item_name,
             'revision': '1',
-            'salad_schema': '{}',
-            'jsonld_context': '{}',
-            'rdf_definition': '{}',
         },
         # no need to update any property there
         item_update=None,
@@ -68,7 +67,7 @@ def replicate_xform(xform):
     # all the replicated items will have the same id
     item_id = str(xform.kernel_id)
     # because the name is unique use an unexpected one
-    item_name = f'odk: {item_id}'
+    item_name = f'aether.odk.xforms: {item_id}'
     project_id = str(xform.project.project_id)
 
     # 2. check mapping (this links the xForm submissions with the mapping)
@@ -115,9 +114,6 @@ def replicate_xform(xform):
             'name': item_name,
             'project': project_id,
             'schema': item_id,
-            'mandatory_fields': '*',
-            'transport_rule': '*',
-            'masked_fields': '*',
         },
         # make sure that the ids are the expected ones
         item_update={
