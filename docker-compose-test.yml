@@ -48,10 +48,6 @@ services:
       - db-test
     ports:
       - "9000:9000"
-    depends_on:
-      - db-test
-
-    command: start_dev
 
 
 
@@ -75,9 +71,6 @@ services:
       - kernel-test
     ports:
       - "9443:9443"
-    depends_on:
-      - db-test
-      - kernel-test
 
 
   # ---------------------------------
