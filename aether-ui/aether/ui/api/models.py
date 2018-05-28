@@ -190,6 +190,11 @@ class Pipeline(TimeStampedModel):
     #      {"path": 'jsonpath-input-a', "description": 'No match for path'},
     #      {"path": 'jsonpath-entity-type-b', "description": 'No match for path'},
     #      ...
+    #      # Summary of the error with the extracted entity
+    #      {
+    #        "description": 'Extracted record did not conform to registered schema',
+    #        "data": {"id": 'uuid:####', ...}
+    #      }
     #    ]
     # }
     mapping_errors = JSONField(blank=True, null=True, editable=False)
