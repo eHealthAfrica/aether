@@ -1,4 +1,23 @@
 # -*- coding: utf-8 -*-
+
+# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+#
+# See the NOTICE file distributed with this work for additional information
+# regarding copyright ownership.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on anx
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 from drf_dynamic_fields import DynamicFieldsMixin
@@ -223,7 +242,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     def create(self, validated_data):
         try:
-            utils.validate_entity_payload(validated_data['projectschema'], validated_data['payload'])
+            utils.validate_payload(validated_data['projectschema'].schema.definition, validated_data['payload'])
         except Exception as schemaError:
             raise serializers.ValidationError(schemaError)
         try:
@@ -272,7 +291,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
             else:
                 instance.payload = target_payload
             try:
-                utils.validate_entity_payload(instance.projectschema, instance.payload)
+                utils.validate_payload(instance.projectschema.schema.definition, instance.payload)
             except Exception as schemaError:
                 raise serializers.ValidationError(schemaError)
             instance.save()
@@ -315,3 +334,9 @@ class MappingStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
             'id', 'name', 'definition', 'created',
             'first_submission', 'last_submission', 'submission_count',
         )
+
+
+class MappingValidationSerializer(serializers.Serializer):
+    submission_payload = serializers.JSONField()
+    mapping_definition = serializers.JSONField()
+    schemas = serializers.JSONField()

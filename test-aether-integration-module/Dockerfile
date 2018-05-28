@@ -4,12 +4,6 @@ FROM python:3.6
 ## setup container
 ################################################################################
 
-#install pip2
-RUN wget https://bootstrap.pypa.io/get-pip.py -O - | python2
-
-RUN pip2 --version
-RUN pip3 --version
-
 ################################################################################
 ## install app
 ## copy files one by one and split commands to use docker cache
@@ -19,8 +13,7 @@ WORKDIR /code
 
 COPY ./conf/pip /code/conf/pip
 
-RUN pip3 install -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.py3.txt
-RUN pip2 install -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.py2.txt
+RUN pip3 install -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt
 
 COPY ./ /code
 
