@@ -1,0 +1,31 @@
+Artifacts
+    Schema1
+        _id
+        annotation_name  # 1
+        5 masking elements
+            Different Masking Levels on each element
+        publish_flag - 1 - pass on True
+            boolean value
+
+    Schema2
+        _id
+        annotation_name  # 2
+        5 masking elements
+            Different Masking Levels on each element
+        publish_flag - 2 - pass on value "yes"
+            choice of three text values
+
+
+Test Requires:
+    Kafka Running in container
+    Session Scoped Producer Sends TestMessages to Topic
+
+    Run Tests on Consumer
+
+        schema - 1
+            Masking levels 0 - 5
+            publish flag check
+
+        schema_2
+            Masking levels 0 - 5
+            publish flag check

@@ -1,3 +1,21 @@
+# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+#
+# See the NOTICE file distributed with this work for additional information
+# regarding copyright ownership.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on anx
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
 import json
 import requests
 
@@ -16,7 +34,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import StaticHTMLRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
 
-from aether.common.kernel.utils import get_auth_header, get_submissions_url, get_attachments_url
+from aether.common.kernel.utils import (
+    get_attachments_url,
+    get_auth_header,
+    get_submissions_url,
+)
+from ..settings import logger
 
 from .models import Mapping, XForm, MediaFile
 from .serializers import (
@@ -26,9 +49,11 @@ from .serializers import (
     XFormSerializer,
 )
 from .surveyors_utils import get_surveyors
-from .xform_utils import extract_data_from_xml, parse_submission, get_instance_id
-
-from ..settings import logger
+from .xform_utils import (
+    get_instance_data_from_xml,
+    get_instance_id,
+    parse_submission,
+)
 
 '''
 ODK Collect sends the Survey responses within an attachment file in XML format.
@@ -117,7 +142,7 @@ class SurveyorViewSet(viewsets.ModelViewSet):
             for item in items:
                 try:
                     surveyors = surveyors.union(item)
-                except Exception as e:
+                except Exception:
                     surveyors.add(item)
             # filter by these surveyors
             queryset = queryset.filter(id__in=surveyors)
@@ -249,7 +274,8 @@ def xform_submission(request):
 
     try:
         xml = request.FILES[XML_SUBMISSION_PARAM]
-        data, form_id, version = extract_data_from_xml(xml)
+        xml_content = xml.read()  # the content will be sent as an attachment
+        data, form_id, version = get_instance_data_from_xml(xml_content)
     except Exception as e:
         logger.warning('Unexpected error when handling file')
         logger.error(str(e))
@@ -279,6 +305,7 @@ def xform_submission(request):
         )
 
     data = parse_submission(data, xform.xml_data)
+    submissions_url = get_submissions_url()
 
     try:
         # When handling submissions containing multiple attachments, ODK
@@ -298,7 +325,7 @@ def xform_submission(request):
             logger.warning('Instance id is missing in submission')
             return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
         previous_submissions_response = requests.get(
-            get_submissions_url(),
+            submissions_url,
             headers=auth_header,
             params={'instanceID': instance_id},
         )
@@ -310,7 +337,7 @@ def xform_submission(request):
         if previous_submissions_count == 0:
             submission_id = None
             response = requests.post(
-                get_submissions_url(),
+                submissions_url,
                 json={
                     'mapping': str(xform.mapping.pk),
                     'payload': data,
@@ -337,12 +364,19 @@ def xform_submission(request):
             submission_id = previous_submissions['results'][0]['id']
 
         # Submit attachments (if any) to the submission.
+        attachments_url = get_attachments_url()
         for name, f in request.FILES.items():
-            if name != XML_SUBMISSION_PARAM:
+            # submit the XML file as an attachment but only for the first time
+            if name != XML_SUBMISSION_PARAM or previous_submissions_count == 0:
+                if name == XML_SUBMISSION_PARAM:
+                    file_content = xml_content
+                else:
+                    file_content = f
+
                 response = requests.post(
-                    get_attachments_url(),
+                    attachments_url,
                     data={'submission': submission_id},
-                    files={'attachment_file': (f.name, f, f.content_type)},
+                    files={'attachment_file': (f.name, file_content, f.content_type)},
                     headers=auth_header,
                 )
                 if response.status_code != status.HTTP_201_CREATED:

@@ -66,8 +66,6 @@ services:
     stdin_open: true
     tty: true
     environment:
-      AETHER_KERNEL_URL: http://kernel:8000
-      AETHER_KERNEL_URL_TEST: http://kernel-test:9000
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"

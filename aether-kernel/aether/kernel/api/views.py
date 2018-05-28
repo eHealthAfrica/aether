@@ -1,19 +1,34 @@
-from django.db.models import Count, Min, Max
+# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+#
+# See the NOTICE file distributed with this work for additional information
+# regarding copyright ownership.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on anx
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
 
-from rest_framework import viewsets, permissions
+from django.db.models import Count, Min, Max
+from django.shortcuts import get_object_or_404
+
 from drf_openapi.views import SchemaView
+from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import (
+    action,
     api_view,
     permission_classes,
     renderer_classes,
-    action,
 )
 from rest_framework.renderers import JSONRenderer
-from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
-
-from http import HTTPStatus
 
 from . import models, serializers, filters, constants, utils, mapping_validation
 
@@ -34,7 +49,7 @@ def get_entity_linked_data(entity, request, resolved, depth, start_depth=0):
                     resolved[linked_entity_schema_name][linked_data_ref] = serializers.EntityLDSerializer(
                         linked_entity, context={'request': request}).data
                     get_entity_linked_data(linked_entity, request, resolved, depth, start_depth)
-            except Exception as e:
+            except Exception:
                 pass
     return resolved
 
@@ -118,10 +133,7 @@ class EntityViewSet(CustomViewSet):
     filter_class = filters.EntityFilter
 
     def retrieve(self, request, pk=None, *args, **kwargs):
-        try:
-            selected_record = models.Entity.objects.get(pk=pk)
-        except Exception as e:
-            return Response(str(e), status=HTTPStatus.NOT_FOUND)
+        selected_record = get_object_or_404(models.Entity, pk=pk)
         depth = request.query_params.get('depth')
         if depth:
             try:
@@ -129,22 +141,41 @@ class EntityViewSet(CustomViewSet):
                 if depth > constants.LINKED_DATA_MAX_DEPTH:
                     return Response({
                         'description': 'Supported max depth is 3'
-                    }, status=HTTPStatus.BAD_REQUEST)
+                    }, status=status.HTTP_400_BAD_REQUEST)
                 else:
                     selected_record.resolved = get_entity_linked_data(selected_record, request, {}, depth)
             except Exception as e:
-                return Response(str(e), status=HTTPStatus.BAD_REQUEST)
+                return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
         serializer_class = serializers.EntitySerializer(selected_record, context={'request': request})
-        return Response(serializer_class.data, status=HTTPStatus.OK)
+        return Response(serializer_class.data)
 
 
 class AetherSchemaView(SchemaView):
     permission_classes = (permissions.AllowAny, )
 
 
+def run_mapping_validation(submission_payload, mapping_definition, schemas):
+    submission_data, entities = utils.extract_create_entities(
+        submission_payload,
+        mapping_definition,
+        schemas,
+    )
+    validation_result = mapping_validation.validate_mappings(
+        submission_payload=submission_payload,
+        schemas=schemas,
+        mapping_definition=mapping_definition,
+    )
+    jsonpath_errors = [error._asdict() for error in validation_result]
+    type_errors = submission_data['aether_errors']
+    return (
+        jsonpath_errors + type_errors,
+        entities,
+    )
+
+
 @api_view(['POST'])
 @renderer_classes([JSONRenderer])
-@permission_classes([IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated])
 def validate_mappings(request):
     '''
     Given a `submission_payload`, a `mapping_definition` and a list of
@@ -156,27 +187,16 @@ def validate_mappings(request):
     developing an Aether solution but have not yet submitted any complete
     Project; using this endpoint, it is possible to check the mapping functions
     (jsonpaths) align with both the source (`submission_payload`) and the
-    target (`entity_list`).
+    target (`entities`).
     '''
-
+    serializer = serializers.MappingValidationSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     try:
-        data = request.data
-        entities = utils.extract_create_entities(**data)
-        mapping_errors = mapping_validation.validate_mappings(
-            submission_payload=data['submission_payload'],
-            entity_list=entities,
-            mapping_definition=data['mapping_definition'],
-        )
+        errors, entities = run_mapping_validation(**serializer.data)
         return Response({
-            'entities': [
-                entity.payload for entity in entities
-            ],
-            'mapping_errors': [
-                error._asdict() for error in mapping_errors
-            ],
+            'entities': [entity.payload for entity in entities],
+            'mapping_errors': errors,
         })
     except Exception as e:
-        return Response(
-            {'message': 'Entity extraction error'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)

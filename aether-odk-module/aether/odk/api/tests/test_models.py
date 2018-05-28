@@ -1,3 +1,21 @@
+# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+#
+# See the NOTICE file distributed with this work for additional information
+# regarding copyright ownership.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on anx
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
 import uuid
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -52,17 +70,7 @@ class ModelsTests(CustomTestCase):
             IntegrityError,
             XForm.objects.create,
             mapping=self.helper_create_mapping(),
-            xml_data='''
-                <h:html
-                    xmlns="http://www.w3.org/2002/xforms"
-                    xmlns:ev="http://www.w3.org/2001/xml-events"
-                    xmlns:h="http://www.w3.org/1999/xhtml"
-                    xmlns:jr="http://openrosa.org/javarosa"
-                    xmlns:orx="http://openrosa.org/xforms"
-                    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-
-                  <h:head>
-            ''',
+            xml_data=self.samples['xform']['xml-err'],
         )
 
     def test__xform__save(self):
@@ -78,6 +86,9 @@ class ModelsTests(CustomTestCase):
                          '/forms/{}/form.xml?version=v1'.format(instance.pk))
         self.assertEqual(instance.manifest_url, '', 'without media files no manifest url')
         self.assertEqual(str(instance), 'xForm - Test - xform-id-test')
+
+        self.assertEqual(instance.md5sum, '5e97c4e929f64d7701804043e3b544ba')
+        self.assertEqual(instance.hash, 'md5:5e97c4e929f64d7701804043e3b544ba')
 
     def test__mapping__surveyors(self):
         instance = Mapping.objects.create(
@@ -163,6 +174,7 @@ class ModelsTests(CustomTestCase):
         media.save()
         self.assertEqual(media.name, 'sample.txt', 'no replaces name')
         self.assertEqual(media.md5sum, 'e2fc714c4727ee9395f324cd2e7f331f')
+        self.assertEqual(media.hash, 'md5:e2fc714c4727ee9395f324cd2e7f331f')
         # with media files there is manifest_url
         self.assertEqual(xform.manifest_url,
                          '/forms/{}/manifest.xml?version={}'.format(xform.id, xform.version))

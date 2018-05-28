@@ -1,0 +1,53 @@
+{
+  "_id": "my-test-form",
+  "_version": "test-1.0",
+  "starttime": "2017-07-14T16:37:08.966000+02:00",
+  "endtime": "2017-07-14T16:38:47.151000+02:00",
+  "deviceid": "355217062209730",
+  "name": "Name",
+  "country": "CM",
+  "location": {
+    "type": "Point",
+    "coordinates": [
+      52.52469543,
+      13.39282687
+    ],
+    "altitude": 108.0,
+    "accuracy": 22.0
+  },
+  "location_none": null,
+  "number": 3,
+  "number2": 3.56,
+  "date": "2017-07-14T00:00:00",
+  "datetime": "2017-07-14T16:38:47.151000+02:00",
+  "choice": "a",
+  "a_choice": "A",
+  "b_choice": null,
+  "image": null,
+  "lang": "EN,FR",
+  "iterate": [
+    {
+      "index": 1,
+      "value": "One"
+    },
+    {
+      "index": 2,
+      "value": "Two"
+    },
+    {
+      "index": 3,
+      "value": "Three"
+    }
+  ],
+  "iterate_one": [
+    {
+      "item": "one"
+    }
+  ],
+  "iterate_none": [],
+  "meta": {
+    "instanceID": "uuid:cef69d9d-ebd9-408f-8bc6-9d418bb083d9",
+    "instanceName": "Something_that_is_not_None"
+  },
+  "not_in_the_definition": "Oops!"
+}

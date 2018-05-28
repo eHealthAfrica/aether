@@ -1,13 +1,34 @@
+# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+#
+# See the NOTICE file distributed with this work for additional information
+# regarding copyright ownership.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on anx
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
 import copy
 import json
 import datetime
 import dateutil.parser
+
+import mock
 
 from django.contrib.auth import get_user_model
 from django.test import TransactionTestCase
 from django.urls import reverse
 
 from rest_framework import status
+
 from .. import models, constants
 
 from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA,
@@ -362,6 +383,9 @@ class ViewsTest(TransactionTestCase):
         )
 
     def test_example_entity_extraction__success(self):
+        '''
+        Assert that valid mappings validate and no errors are accumulated.
+        '''
         url = reverse('validate-mappings')
         data = json.dumps({
             'submission_payload': EXAMPLE_SOURCE_DATA,
@@ -377,6 +401,9 @@ class ViewsTest(TransactionTestCase):
         self.assertEqual(len(response_data['mapping_errors']), 0)
 
     def test_example_entity_extraction__failure(self):
+        '''
+        Assert that errors are collected when invalid entities are created.
+        '''
         url = reverse('validate-mappings')
         data = json.dumps({
             'submission_payload': EXAMPLE_SOURCE_DATA,
@@ -402,10 +429,22 @@ class ViewsTest(TransactionTestCase):
             content_type='application/json'
         )
         response_data = json.loads(response.content)
-        self.assertEqual(len(response_data['entities']), 1)
-        self.assertEqual(len(response_data['mapping_errors']), 2)
+        self.assertEqual(len(response_data['entities']), 0)
+        self.assertEqual(len(response_data['mapping_errors']), 3)
+        expected = [
+            'Could not find schema "person"',
+            'No match for path',
+            'Extracted record did not conform to registered schema',
+        ]
+        result = [
+            error['description'] for error in response_data['mapping_errors']
+        ]
+        self.assertEqual(expected, result)
 
-    def test_example_entity_extraction__assert_raises(self):
+    def test_example_entity_extraction__400_BAD_REQUEST(self):
+        '''
+        Invalid requests should return status code 400.
+        '''
         url = reverse('validate-mappings')
         data = json.dumps({
             'mapping_definition': {
@@ -419,6 +458,7 @@ class ViewsTest(TransactionTestCase):
                     # "not_a_field" is not a field of `Person`
                     ['data.village', 'Person.not_a_field'],
                 ],
+                # "schemas" are missing
             },
         })
         response = self.client.post(
@@ -426,7 +466,28 @@ class ViewsTest(TransactionTestCase):
             data=data,
             content_type='application/json'
         )
+        response_data = json.loads(response.content)
         self.assertEquals(response.status_code, 400)
+        self.assertIn('This field is required', response_data['schemas'][0])
+        self.assertIn('This field is required', response_data['submission_payload'][0])
+
+    def test_example_entity_extraction__500_INTERNAL_SERVER_ERROR(self):
+        '''
+        Unexpected mapping or extraction failures should return status code 500.
+        '''
+        with mock.patch('aether.kernel.api.mapping_validation.validate_mappings') as m:
+            message = 'test'
+            m.side_effect = Exception(message)
+            url = reverse('validate-mappings')
+            data = json.dumps({
+                'submission_payload': EXAMPLE_SOURCE_DATA,
+                'mapping_definition': EXAMPLE_MAPPING,
+                'schemas': {'Person': EXAMPLE_SCHEMA},
+            })
+            response = self.client.post(url, data=data, content_type='application/json')
+            response_data = json.loads(response.content)
+            self.assertEquals(response.status_code, 500)
+            self.assertEquals(response_data, message)
 
     # Test resolving linked entities
     def helper_read_linked_data_entities(self, view_name, obj, depth):

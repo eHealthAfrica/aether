@@ -8,7 +8,6 @@
 #                                                                              #
 ################################################################################
 
-avro-python3
 django<2
 django-cas-ng
 django-cors-headers
@@ -21,7 +20,6 @@ djangorestframework
 djangorestframework-filters
 drf-dynamic-fields
 drf-openapi
-fastavro
 jsonpath_ng
 jsonschema
 psycopg2-binary
@@ -29,6 +27,7 @@ pygments
 python-dateutil
 raven
 requests
+spavro
 uwsgi
 
 # Aether common module
@@ -36,6 +35,7 @@ aether.common
 
 # test libraries
 coverage
+django-autofixture
 flake8
 flake8-quotes
 mock

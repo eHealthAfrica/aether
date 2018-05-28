@@ -421,10 +421,10 @@ class ViewsTest(TestCase):
         url = reverse('ui:pipeline-fetch')
         response = self.client.post(url, content_type='application/json')
         response_data = json.loads(response.content)
-        self.assertEqual(len(response_data), 2)
-        self.assertEqual(len(response_data[0]['entity_types']), 2)
+        self.assertEqual(len(response_data), 3)
+        self.assertEqual(len(response_data[1]['entity_types']), 2)
 
         # Ensure linked mappings are not recreated
         response = self.client.post(url, content_type='application/json')
         response_data = json.loads(response.content)
-        self.assertEqual(len(response_data), 2)
+        self.assertEqual(len(response_data), 3)
