@@ -187,8 +187,8 @@ class Pipeline(TimeStampedModel):
     #      {...},
     #    ],
     #    "mapping_errors": [
-    #      {"path": 'jsonpath-input-a', "error_message": 'No match for path'},
-    #      {"path": 'jsonpath-entity-type-b', "error_message": 'No match for path'},
+    #      {"path": 'jsonpath-input-a', "description": 'No match for path'},
+    #      {"path": 'jsonpath-entity-type-b', "description": 'No match for path'},
     #      ...
     #    ]
     # }

@@ -16,17 +16,19 @@ def validate_pipeline(pipeline):
     The expected return format is a list with two values, the first one is
     the list of errors and the second one the list of generated entities.
 
-    The list of errors is a list of objects with two keys:
-    - `path`, the wrong jsonpath included in any of the mapping rules,
-    - `error_message` is the explanation.
+    The list of errors is a list of objects with these keys:
+    - `description` (always) is the error explanation,
+    - `path` (optional) the wrong jsonpath included in any of the mapping rules,
+    - `data` (optional) the extracted entity that cannot be used yet. This appears
+      along with the `description` "Extracted record did not conform to registered schema".
 
     ::
 
         (
             [
-                {'path': 'jsonpath.wrong.1', 'error_message': 'Reason 1'},
-                {'path': 'jsonpath.wrong.2', 'error_message': 'Reason 2'},
-                {'path': 'jsonpath.wrong.3', 'error_message': 'Reason 3'},
+                {'path': 'jsonpath.wrong.1', 'description': 'Reason 1'},
+                {'path': 'jsonpath.wrong.2', 'description': 'Reason 2'},
+                {'path': 'jsonpath.wrong.3', 'description': 'Reason 3'},
                 # ...
             ],
 
@@ -46,7 +48,7 @@ def validate_pipeline(pipeline):
     # check kernel connection
     if not utils.test_connection():
         return (
-            [{'error_message': 'It was not possible to connect to Aether Kernel Server.'}],
+            [{'description': 'It was not possible to connect to Aether Kernel Server.'}],
             [],
         )
 
@@ -107,7 +109,8 @@ def validate_pipeline(pipeline):
             headers=utils.get_auth_header(),
         )
         resp.raise_for_status()
-        response = resp.json()
+        response = json.loads(resp.content)
+
         return (
             response['mapping_errors'] if 'mapping_errors' in response else [],
             response['entities'] if 'entities' in response else [],
@@ -115,7 +118,7 @@ def validate_pipeline(pipeline):
 
     except Exception as e:
         return (
-            [{'error_message': f'It was not possible to validate the pipeline: {str(e)}'}],
+            [{'description': f'It was not possible to validate the pipeline: {str(e)}'}],
             []
         )
 

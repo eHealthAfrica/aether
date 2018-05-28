@@ -1,3 +1,4 @@
+import json
 import mock
 
 from django.conf import settings
@@ -39,9 +40,10 @@ def mock_return_true(*args):
 
 
 class MockResponse:
-    def __init__(self, json_data, status_code):
-        self.json_data = json_data
+    def __init__(self, status_code, json_data={}):
         self.status_code = status_code
+        self.json_data = json_data
+        self.content = json.dumps(json_data)
 
     def raise_for_status(self):
         if self.status_code >= 400:
@@ -103,12 +105,12 @@ class ModelsPipelineTests(TestCase):
 
         self.assertEqual(
             pipeline.mapping_errors,
-            [{'error_message': 'It was not possible to connect to Aether Kernel Server.'}]
+            [{'description': 'It was not possible to connect to Aether Kernel Server.'}]
         )
         self.assertEqual(pipeline.output, [])
 
     @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
-    @mock.patch('requests.post', return_value=MockResponse({}, 500))
+    @mock.patch('requests.post', return_value=MockResponse(500))
     def test__pipeline__save__with_server_error(self, mock_post):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
@@ -118,7 +120,7 @@ class ModelsPipelineTests(TestCase):
         )
         self.assertEqual(
             pipeline.mapping_errors,
-            [{'error_message': f'It was not possible to validate the pipeline: 500'}]
+            [{'description': f'It was not possible to validate the pipeline: 500'}]
         )
         self.assertEqual(pipeline.output, [])
         mock_post.assert_called_once()
@@ -143,10 +145,10 @@ class ModelsPipelineTests(TestCase):
 
     @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
     @mock.patch('requests.post',
-                return_value=MockResponse({
+                return_value=MockResponse(200, {
                     'entities_2': 'something',
                     'mapping_errors_2': 'something else',
-                }, 200))
+                }))
     def test__pipeline__save__with_wrong_response(self, mock_post):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
@@ -178,10 +180,10 @@ class ModelsPipelineTests(TestCase):
 
     @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
     @mock.patch('requests.post',
-                return_value=MockResponse({
+                return_value=MockResponse(200, {
                     'entities': 'something',
                     'mapping_errors': 'something else',
-                }, 200))
+                }))
     def test__pipeline__save__validated(self, mock_post):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
@@ -216,35 +218,30 @@ class ModelsPipelineTests(TestCase):
             },
         )
 
-    def test__pipeline_workflow__with_kernel(self):
+    def test__pipeline_workflow__with_kernel__wrong_rules(self):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
             input=INPUT_SAMPLE,
             entity_types=[ENTITY_SAMPLE],
-            mapping=[],
+            mapping=[
+                {'source': '#!uuid', 'destination': 'Person.id'},
+                {'source': '$.not_a_real_key', 'destination': 'Person.firstName'},
+            ],
         )
 
-        pipeline.mapping = [
-            {'source': '#!uuid', 'destination': 'Person.id'},
-            {'source': '$.not_a_real_key', 'destination': 'Person.firstName'},
-        ]
-        pipeline.save()
-        self.assertEqual(pipeline.mapping_errors, [
-            {'path': '$.not_a_real_key', 'error_message': 'No match for path'}
-        ])
-        self.assertIsNotNone(pipeline.output[0]['id'], 'Generated id!')
-        self.assertIsNone(pipeline.output[0]['firstName'],
-                          'Wrong jsonpaths return None values')
+        self.assertEqual(pipeline.output, [], 'No output if there are errors')
+        self.assertEqual(pipeline.mapping_errors[0],
+                         {'path': '$.not_a_real_key', 'description': 'No match for path'})
 
-        pipeline.mapping = [
-            {'source': '#!uuid', 'destination': 'Person.id'},
-            {'source': '$.surname', 'destination': 'Person.firstName'},
-        ]
-        pipeline.save()
-        self.assertEqual(pipeline.mapping_errors, [])
-        self.assertNotEqual(pipeline.output, [])
-        self.assertIsNotNone(pipeline.output[0]['id'], 'Generated id!')
-        self.assertEqual(pipeline.output[0]['firstName'], 'Smith')
+        # the last entry is the extracted entity
+        self.assertEqual(
+            pipeline.mapping_errors[1]['description'],
+            'Extracted record did not conform to registered schema'
+        )
+        # the entity was generated but included within the errors
+        self.assertIsNotNone(pipeline.mapping_errors[1]['data']['id'], 'Generated id!')
+        self.assertIsNone(pipeline.mapping_errors[1]['data']['firstName'],
+                          'Wrong jsonpaths return None values')
 
     def test__pipeline_workflow__with_kernel__missing_id(self):
         pipeline = Pipeline.objects.create(
@@ -254,11 +251,27 @@ class ModelsPipelineTests(TestCase):
             mapping=[{'source': '$.surname', 'destination': 'Person.firstName'}],
         )
 
-        # weird error when there is no id rule for the entity
+        # error when there is no id rule for the entity
         self.assertEqual(
-            pipeline.mapping_errors[0]['error_message'],
-            'It was not possible to validate the pipeline: '
-            '400 Client Error: Bad Request '
-            f'for url: {KERNEL_URL}'
+            pipeline.mapping_errors[0]['description'],
+            'Extracted record did not conform to registered schema'
         )
+        self.assertNotIn('path', pipeline.mapping_errors[0])
+        self.assertIn('data', pipeline.mapping_errors[0])
         self.assertEqual(pipeline.output, [])
+
+    def test__pipeline_workflow__with_kernel__no_errors(self):
+        pipeline = Pipeline.objects.create(
+            name='Pipeline test',
+            input=INPUT_SAMPLE,
+            entity_types=[ENTITY_SAMPLE],
+            mapping=[
+                {'source': '#!uuid', 'destination': 'Person.id'},
+                {'source': '$.surname', 'destination': 'Person.firstName'},
+            ],
+        )
+
+        self.assertEqual(pipeline.mapping_errors, [])
+        self.assertNotEqual(pipeline.output, [])
+        self.assertIsNotNone(pipeline.output[0]['id'], 'Generated id!')
+        self.assertEqual(pipeline.output[0]['firstName'], 'Smith')
