@@ -94,7 +94,7 @@ prepare_and_test_container_load_kernel_data odk aether/kernel/api/tests/fixtures
 # test a clean SYNC TEST container
 prepare_and_test_container_load_kernel_data couchdb-sync aether/kernel/api/tests/fixtures/project.json
 
-$DC_TEST down
+# test a clean UI TEST container
 prepare_and_test_container ui
 
 # kill ALL containers
