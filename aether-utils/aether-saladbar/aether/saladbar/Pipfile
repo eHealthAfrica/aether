@@ -1,0 +1,18 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+
+
+[packages]
+
+requests = "*"
+schema-salad = "*"
+"aether.saladbar" = {path = "../..", editable = true}
+"aether.client" = {path = "../../../aether-client", editable = true}
+
+
+
+[dev-packages]
+
+"autopep8" = "*"

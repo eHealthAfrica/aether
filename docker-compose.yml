@@ -9,8 +9,10 @@
 version: "2.1"
 
 networks:
-  internal:
-    driver: bridge
+  internal:  # alias as internal
+    external:
+      name: aether_internal  # if this isn't explicitly set it inherits from the containing folder name (aether or not)
+
 
 services:
 

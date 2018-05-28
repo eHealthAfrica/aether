@@ -1,3 +1,21 @@
+# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+#
+# See the NOTICE file distributed with this work for additional information
+# regarding copyright ownership.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on anx
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password as validate_pwd
 from django.utils.translation import ugettext as _
@@ -5,7 +23,7 @@ from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
 from .models import Mapping, XForm, MediaFile
-from .xform_utils import parse_file
+from .xform_utils import parse_xform_file
 from .surveyors_utils import get_surveyors, flag_as_surveyor
 
 
@@ -50,7 +68,7 @@ class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         if value['xml_file']:
             try:
                 # extract data from file and put it on `xml_data`
-                value['xml_data'] = parse_file(
+                value['xml_data'] = parse_xform_file(
                     filename=str(value['xml_file']),
                     content=value['xml_file'],
                 )

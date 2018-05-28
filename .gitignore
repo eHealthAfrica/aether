@@ -114,6 +114,7 @@ local_settings.py
 Session.vim
 .netrwhist
 *~
+.~*
 .hypothesis
 coverage_html/
 

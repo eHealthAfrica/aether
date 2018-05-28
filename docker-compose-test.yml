@@ -52,6 +52,9 @@ services:
     command: start_dev
 
 
+    command: start_dev
+
+
 
   # ---------------------------------
   # ODK module
@@ -126,7 +129,6 @@ services:
   # ---------------------------------
   # Aether Client container
   # ---------------------------------
-
   client-test:
     build: aether-utils/aether-client
     image: aether/client

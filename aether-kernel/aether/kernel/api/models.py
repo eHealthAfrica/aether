@@ -1,4 +1,23 @@
 # encoding: utf-8
+
+# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+#
+# See the NOTICE file distributed with this work for additional information
+# regarding copyright ownership.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on anx
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
 import uuid
 from datetime import datetime
 from hashlib import md5
@@ -37,7 +56,7 @@ Data model schema:
     | id               |<--+  |   | id               |<--+   | id               |   |
     | revision         |   |  |   | name             |   |   | revision         |   |
     | name             |   |  |   | mandatory_fields |   |   | payload          |   |
-    | definiton        |   |  |   | transport_rule   |   |   | status           |   |
+    | definition       |   |  |   | transport_rule   |   |   | status           |   |
     | type             |   |  |   | masked_fields    |   |   | modified         |   |
     +------------------+   |  |   | is_encrypted     |   |   +::::::::::::::::::+   |
                            |  |   +::::::::::::::::::+   |   | submission       |>--+
@@ -49,12 +68,13 @@ Data model schema:
 
 
 class Project(TimeStampedModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    revision = models.TextField()
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    revision = models.TextField(default='1')
     name = models.CharField(max_length=50, null=False, unique=True)
-    salad_schema = models.TextField()
-    jsonld_context = models.TextField()
-    rdf_definition = models.TextField()
+
+    salad_schema = models.TextField(null=True, blank=True)
+    jsonld_context = models.TextField(null=True, blank=True)
+    rdf_definition = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -66,10 +86,12 @@ class Project(TimeStampedModel):
 
 
 class Mapping(TimeStampedModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    revision = models.TextField(default='1')
     name = models.CharField(max_length=50, null=False, unique=True)
+
     definition = JSONField(blank=False, null=False)
-    revision = models.TextField()
+
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
 
     @property
@@ -86,11 +108,13 @@ class Mapping(TimeStampedModel):
 
 
 class Submission(TimeStampedModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
+
     map_revision = models.TextField(default='1')
     date = models.DateTimeField(auto_now_add=True, db_index=True)
     payload = JSONField(blank=False, null=False)
+
     mapping = models.ForeignKey(to=Mapping, related_name='submissions', on_delete=models.CASCADE)
 
     @property
@@ -116,16 +140,18 @@ def __attachment_path__(instance, filename):
 
 
 class Attachment(TimeStampedModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    submission = models.ForeignKey(to=Submission, on_delete=models.CASCADE)
-    submission_revision = models.TextField()
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
 
     # http://www.linfo.org/file_name.html
     # Modern Unix-like systems support long file names, usually up to 255 bytes in length.
     name = models.CharField(max_length=255)
+
     attachment_file = models.FileField(upload_to=__attachment_path__)
     # save attachment hash to check later if the file is not corrupted
     md5sum = models.CharField(blank=True, max_length=36)
+
+    submission = models.ForeignKey(to=Submission, on_delete=models.CASCADE)
+    submission_revision = models.TextField()
 
     @property
     def attachment_path(self):
@@ -158,11 +184,12 @@ class Attachment(TimeStampedModel):
 
 
 class Schema(TimeStampedModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    revision = models.TextField(default='1')
     name = models.CharField(max_length=50, null=False, unique=True)
+
     type = models.CharField(max_length=50)
     definition = JSONField(blank=False, null=False)
-    revision = models.TextField()
 
     @property
     def definition_prettified(self):
@@ -178,12 +205,14 @@ class Schema(TimeStampedModel):
 
 
 class ProjectSchema(TimeStampedModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     name = models.CharField(max_length=50, null=False, unique=True)
-    mandatory_fields = models.CharField(max_length=100)
-    transport_rule = models.TextField()
-    masked_fields = models.TextField()
+
+    mandatory_fields = models.TextField(null=True, blank=True)
+    transport_rule = models.TextField(null=True, blank=True)
+    masked_fields = models.TextField(null=True, blank=True)
     is_encrypted = models.BooleanField(default=False)
+
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
     schema = models.ForeignKey(to=Schema, on_delete=models.CASCADE)
 
@@ -197,13 +226,15 @@ class ProjectSchema(TimeStampedModel):
 
 
 class Entity(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
+
     payload = JSONField(blank=False, null=False)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    modified = models.CharField(max_length=100, editable=False)
+
     projectschema = models.ForeignKey(to=ProjectSchema, on_delete=models.SET_NULL, null=True)
     submission = models.ForeignKey(to=Submission, on_delete=models.SET_NULL, blank=True, null=True)
-    modified = models.CharField(max_length=100, editable=False)
 
     def save(self, **kwargs):
         if self.modified:
