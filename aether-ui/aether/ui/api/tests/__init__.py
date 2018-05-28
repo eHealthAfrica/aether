@@ -184,14 +184,6 @@ PIPELINE_EXAMPLE = {
         {
           'name': 'firstName',
           'type': 'string'
-        },
-        {
-          'name': 'lastName',
-          'type': 'string'
-        },
-        {
-          'name': 'age',
-          'type': 'int'
         }
       ]
     },
