@@ -49,12 +49,6 @@ services:
     ports:
       - "9000:9000"
 
-    command: start_dev
-
-
-    command: start_dev
-
-
 
   # ---------------------------------
   # ODK module
