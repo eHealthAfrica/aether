@@ -322,7 +322,7 @@ def publish_pipeline(pipeline, projectname, overwrite=False):
     mapping_data = {
         'name': pipeline.name,
         'definition': {
-            'entities': pipeline.kernel_refs['projectSchema'] if 'projectSchema' in pipeline.kernel_refs else {},
+            'entities': pipeline.kernel_refs.get('projectSchema', {}),
             'mapping': mapping
             },
         'revision': str(uuid.uuid4()),

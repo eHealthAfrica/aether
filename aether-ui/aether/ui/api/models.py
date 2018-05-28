@@ -195,7 +195,7 @@ class Pipeline(TimeStampedModel):
     mapping_errors = JSONField(blank=True, null=True, editable=False)
     output = JSONField(blank=True, null=True, editable=False)
     kernel_refs = JSONField(blank=True, null=True, editable=False)
-    published_on = models.fields.DateTimeField(blank=True, editable=False, null=True)
+    published_on = models.DateTimeField(blank=True, editable=False, null=True)
 
     def __str__(self):
         return self.name

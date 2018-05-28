@@ -35,9 +35,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
         publish and update the pipeline with related kernel model ids.
         '''
         project_name = request.data['project_name'] if 'project_name' in request.data else 'Aux'
-        overwrite = False
-        if 'overwrite' in request.data:
-            overwrite = request.data['overwrite']
+        overwrite = request.data.get('overwrite', False)
         outcome = {
             'successful': [],
             'error': [],
