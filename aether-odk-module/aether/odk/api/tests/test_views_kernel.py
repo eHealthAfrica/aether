@@ -22,7 +22,7 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 from . import CustomTestCase
-from ..kernel_replication import KernelReplicationError
+from ..kernel_utils import KernelPropagationError
 
 
 class ReplicationViewsTests(CustomTestCase):
@@ -41,41 +41,41 @@ class ReplicationViewsTests(CustomTestCase):
         self.client.logout()
 
     def test__project_replication(self):
-        url_404 = reverse('project-replicates', kwargs={'pk': self.helper_create_uuid()})
+        url_404 = reverse('project-propagates', kwargs={'pk': self.helper_create_uuid()})
         response = self.client.patch(url_404)
         self.assertEqual(response.status_code, 404)
 
         project = self.helper_create_project()
-        url = reverse('project-replicates', kwargs={'pk': project.pk})
+        url = reverse('project-propagates', kwargs={'pk': project.pk})
 
-        with mock.patch('aether.odk.api.views.replicate_project',
+        with mock.patch('aether.odk.api.views.create_kernel_project',
                         return_value=True) as mock_repl:
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 200)
             mock_repl.assert_called_once()
 
-        with mock.patch('aether.odk.api.views.replicate_project',
-                        side_effect=[KernelReplicationError]) as mock_repl:
+        with mock.patch('aether.odk.api.views.create_kernel_project',
+                        side_effect=[KernelPropagationError]) as mock_repl:
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 400)
             mock_repl.assert_called_once()
 
     def test__xform_replication(self):
-        url_404 = reverse('xform-replicates', kwargs={'pk': 0})
+        url_404 = reverse('xform-propagates', kwargs={'pk': 0})
         response = self.client.patch(url_404)
         self.assertEqual(response.status_code, 404)
 
         xform = self.helper_create_xform()
-        url = reverse('xform-replicates', kwargs={'pk': xform.pk})
+        url = reverse('xform-propagates', kwargs={'pk': xform.pk})
 
-        with mock.patch('aether.odk.api.views.replicate_xform',
+        with mock.patch('aether.odk.api.views.create_kernel_artefacts',
                         return_value=True) as mock_repl:
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 200)
             mock_repl.assert_called_once()
 
-        with mock.patch('aether.odk.api.views.replicate_xform',
-                        side_effect=[KernelReplicationError]) as mock_repl:
+        with mock.patch('aether.odk.api.views.create_kernel_artefacts',
+                        side_effect=[KernelPropagationError]) as mock_repl:
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 400)
             mock_repl.assert_called_once()

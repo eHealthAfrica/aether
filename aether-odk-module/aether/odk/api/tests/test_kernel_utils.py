@@ -23,47 +23,47 @@ import requests
 from aether.common.kernel.utils import get_auth_header, get_kernel_server_url
 
 from . import CustomTestCase, MockResponse
-from ..kernel_replication import (
-    replicate_project,
-    replicate_xform,
-    KernelReplicationError,
+from ..kernel_utils import (
+    create_kernel_project,
+    create_kernel_artefacts,
+    KernelPropagationError,
     __upsert_item as upsert,
 )
 
 
 class KernelReplicationTest(CustomTestCase):
 
-    @mock.patch('aether.odk.api.kernel_replication.get_auth_header', return_value=None)
+    @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value=None)
     def test__upsert_item__no_connection(self, mock_auth):
-        with self.assertRaises(KernelReplicationError) as kre:
+        with self.assertRaises(KernelPropagationError) as kpe:
             upsert(
                 item_model='none',
                 item_id=1,
                 item_new={},
             )
 
-        self.assertIsNotNone(kre)
+        self.assertIsNotNone(kpe)
         self.assertIn('Connection with Aether Kernel server is not possible.',
-                      str(kre.exception), kre)
+                      str(kpe.exception), kpe)
         mock_auth.assert_called_once()
 
     @mock.patch('requests.get', return_value=mock.Mock(status_code=400))
-    @mock.patch('aether.odk.api.kernel_replication.get_auth_header', return_value={
+    @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value={
         'Authorization': 'Token ABCDEFGH'
     })
     def test__upsert_item__unexpected_error(self, mock_auth, mock_get):
-        with self.assertRaises(KernelReplicationError) as kre:
+        with self.assertRaises(KernelPropagationError) as kpe:
             upsert(
                 item_model='projects',
                 item_id=1,
                 item_new={},
             )
 
-        self.assertIsNotNone(kre)
+        self.assertIsNotNone(kpe)
         self.assertIn('Unexpected response from Aether Kernel server',
-                      str(kre.exception), kre)
+                      str(kpe.exception), kpe)
         self.assertIn('while trying to check the existence of the project with id 1',
-                      str(kre.exception), kre)
+                      str(kpe.exception), kpe)
         mock_auth.assert_called_once()
         mock_get.assert_called_once_with(
             url='http://kernel-test:9000/projects/1.json',
@@ -71,7 +71,7 @@ class KernelReplicationTest(CustomTestCase):
         )
 
     @mock.patch('requests.get', return_value=mock.Mock(status_code=200))
-    @mock.patch('aether.odk.api.kernel_replication.get_auth_header', return_value={
+    @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value={
         'Authorization': 'Token ABCDEFGH'
     })
     def test__upsert_item__already_there__no_update(self, mock_auth, mock_get):
@@ -85,7 +85,7 @@ class KernelReplicationTest(CustomTestCase):
 
     @mock.patch('requests.put', return_value=mock.Mock(status_code=200))
     @mock.patch('requests.get', side_effect=[MockResponse(status_code=200, json_data={'id': '1'})])
-    @mock.patch('aether.odk.api.kernel_replication.get_auth_header', return_value={
+    @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value={
         'Authorization': 'Token ABCDEFGH'
     })
     def test__upsert_item__already_there__with_update(self, mock_auth, mock_get, mock_put):
@@ -110,21 +110,21 @@ class KernelReplicationTest(CustomTestCase):
 
     @mock.patch('requests.put', return_value=mock.Mock(status_code=400))
     @mock.patch('requests.get', side_effect=[MockResponse(status_code=200, json_data={'id': '1'})])
-    @mock.patch('aether.odk.api.kernel_replication.get_auth_header', return_value={
+    @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value={
         'Authorization': 'Token ABCDEFGH'
     })
     def test__upsert_item__already_there__with_update__error(self, mock_auth, mock_get, mock_put):
-        with self.assertRaises(KernelReplicationError) as kre:
+        with self.assertRaises(KernelPropagationError) as kpe:
             upsert(item_model='projects',
                    item_id=1,
                    item_new={},
                    item_update={'name': 'update'},
                    )
-        self.assertIsNotNone(kre)
+        self.assertIsNotNone(kpe)
         self.assertIn('Unexpected response from Aether Kernel server',
-                      str(kre.exception), kre)
+                      str(kpe.exception), kpe)
         self.assertIn('while trying to update the project with id 1',
-                      str(kre.exception), kre)
+                      str(kpe.exception), kpe)
 
         mock_auth.assert_called_once()
         mock_get.assert_called_once_with(
@@ -139,20 +139,20 @@ class KernelReplicationTest(CustomTestCase):
 
     @mock.patch('requests.post', return_value=mock.Mock(status_code=400))
     @mock.patch('requests.get', return_value=mock.Mock(status_code=404))
-    @mock.patch('aether.odk.api.kernel_replication.get_auth_header', return_value={
+    @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value={
         'Authorization': 'Token ABCDEFGH'
     })
     def test__upsert_item__not_there__with_create__error(self, mock_auth, mock_get, mock_post):
-        with self.assertRaises(KernelReplicationError) as kre:
+        with self.assertRaises(KernelPropagationError) as kpe:
             upsert(item_model='projects',
                    item_id=1,
                    item_new={'name': 'new'},
                    )
-        self.assertIsNotNone(kre)
+        self.assertIsNotNone(kpe)
         self.assertIn('Unexpected response from Aether Kernel server',
-                      str(kre.exception), kre)
+                      str(kpe.exception), kpe)
         self.assertIn('while trying to create the project with id 1',
-                      str(kre.exception), kre)
+                      str(kpe.exception), kpe)
 
         mock_auth.assert_called_once()
         mock_get.assert_called_once_with(
@@ -167,7 +167,7 @@ class KernelReplicationTest(CustomTestCase):
 
     @mock.patch('requests.post', return_value=mock.Mock(status_code=201))
     @mock.patch('requests.get', return_value=mock.Mock(status_code=404))
-    @mock.patch('aether.odk.api.kernel_replication.get_auth_header', return_value={
+    @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value={
         'Authorization': 'Token ABCDEFGH'
     })
     def test__upsert_item__not_there(self, mock_auth, mock_get, mock_post):
@@ -224,9 +224,9 @@ class AetherKernelReplicationTest(CustomTestCase):
         requests.delete(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
         requests.delete(self.SCHEMA_URL, headers=self.KERNEL_HEADERS)
 
-    def test__replicate_project(self):
+    def test__create_kernel_project(self):
 
-        self.assertTrue(replicate_project(self.project))
+        self.assertTrue(create_kernel_project(self.project))
 
         response = requests.get(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 200)
@@ -234,9 +234,9 @@ class AetherKernelReplicationTest(CustomTestCase):
         self.assertEqual(kernel_project['id'], str(self.project.project_id))
         self.assertNotEqual(kernel_project['name'], self.project.name)
 
-    def test__replicate_xform(self):
+    def test__create_kernel_artefacts(self):
 
-        self.assertTrue(replicate_xform(self.xform))
+        self.assertTrue(create_kernel_artefacts(self.xform))
 
         response = requests.get(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 200)

@@ -49,10 +49,10 @@ from .serializers import (
     SurveyorSerializer,
     XFormSerializer,
 )
-from .kernel_replication import (
-    replicate_project,
-    replicate_xform,
-    KernelReplicationError,
+from .kernel_utils import (
+    create_kernel_project,
+    create_kernel_artefacts,
+    KernelPropagationError,
 )
 from .surveyors_utils import get_surveyors
 from .xform_utils import get_instance_data_from_xml, parse_submission
@@ -68,20 +68,20 @@ class ProjectViewSet(viewsets.ModelViewSet):
     search_fields = ('name',)
 
     @action(detail=True, methods=['patch'])
-    def replicates(self, request, pk=None, *args, **kwargs):
+    def propagates(self, request, pk=None, *args, **kwargs):
         '''
-        Replicates project in Aether Kernel server.
+        Creates a copy of the project in Aether Kernel server.
 
-        Reachable at ``.../projects/{pk}/replicates/``
+        Reachable at ``.../projects/{pk}/propagates/``
         '''
 
         project = get_object_or_404(Project, pk=pk)
 
         try:
-            replicate_project(project)
-        except KernelReplicationError as kre:
+            create_kernel_project(project)
+        except KernelPropagationError as kpe:
             return Response(
-                data={'description': str(kre)},
+                data={'description': str(kpe)},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -111,21 +111,21 @@ class XFormViewSet(viewsets.ModelViewSet):
         return queryset
 
     @action(detail=True, methods=['patch'])
-    def replicates(self, request, pk=None, *args, **kwargs):
+    def propagates(self, request, pk=None, *args, **kwargs):
         '''
-        Replicates the xform in Aether Kernel server.
+        Creates the artefacts of the xform in Aether Kernel server.
 
-        Reachable at ``.../xforms/{pk}/replicates/``
+        Reachable at ``.../xforms/{pk}/propagates/``
         '''
 
         xform = get_object_or_404(XForm, pk=pk)
         xform.save()  # creates avro schema if missing
 
         try:
-            replicate_xform(xform)
-        except KernelReplicationError as kre:
+            create_kernel_artefacts(xform)
+        except KernelPropagationError as kpe:
             return Response(
-                data={'description': str(kre)},
+                data={'description': str(kpe)},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -379,12 +379,12 @@ def xform_submission(request):
 
     # make sure that the xForm replication already exists in Aether Kernel
     try:
-        replicate_xform(xform)
-    except KernelReplicationError as kre:
+        create_kernel_artefacts(xform)
+    except KernelPropagationError as kpe:
         msg = f'Unexpected error from Aether Kernel server when checking the xForm "{form_id}".'
         logger.warning(msg)
-        logger.error(str(kre))
-        return Response(data=msg + '\n' + str(kre), status=status.HTTP_424_FAILED_DEPENDENCY)
+        logger.error(str(kpe))
+        return Response(data=msg + '\n' + str(kpe), status=status.HTTP_424_FAILED_DEPENDENCY)
 
     data = parse_submission(data, xform.xml_data)
     submissions_url = get_submissions_url()

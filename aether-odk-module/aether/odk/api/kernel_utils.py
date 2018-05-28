@@ -22,13 +22,13 @@ import requests
 from aether.common.kernel.utils import get_auth_header, get_kernel_server_url
 
 
-class KernelReplicationError(Exception):
+class KernelPropagationError(Exception):
     pass
 
 
-def replicate_project(project):
+def create_kernel_project(project):
     '''
-    Replicates the indicated project in Aether Kernel.
+    Creates a copy of the indicated project in Aether Kernel.
     '''
 
     item_id = str(project.project_id)
@@ -51,9 +51,9 @@ def replicate_project(project):
     return True
 
 
-def replicate_xform(xform):
+def create_kernel_artefacts(xform):
     '''
-    Replicates the indicated xForm in Aether Kernel.
+    Creates artefacts based on the indicated xForm in Aether Kernel.
 
     One XForm should create in Kernel:
         - one Mapping,
@@ -62,7 +62,7 @@ def replicate_xform(xform):
     '''
 
     # 1. make sure that the project already exists in Kernel
-    replicate_project(xform.project)
+    create_kernel_project(xform.project)
 
     # all the replicated items will have the same id
     item_id = str(xform.kernel_id)
@@ -135,7 +135,7 @@ def __upsert_item(item_model, item_id, item_new, item_update=None):
 
     auth_header = get_auth_header()
     if not auth_header:
-        raise KernelReplicationError('Connection with Aether Kernel server is not possible.')
+        raise KernelPropagationError('Connection with Aether Kernel server is not possible.')
 
     kernel_url = get_kernel_server_url()
     url = f'{kernel_url}/{item_model}/{item_id}.json'
@@ -145,7 +145,7 @@ def __upsert_item(item_model, item_id, item_new, item_update=None):
 
     # the only acceptable responses are 200 or 404
     if response.status_code not in (200, 404):
-        raise KernelReplicationError(
+        raise KernelPropagationError(
             'Unexpected response from Aether Kernel server '
             f'while trying to check the existence of the {item_model[:-1]} with id {item_id}.\n'
             f'Response: {content}'
@@ -162,7 +162,7 @@ def __upsert_item(item_model, item_id, item_new, item_update=None):
         response_put = requests.put(url=url, json=item_kernel, headers=auth_header)
         if response_put.status_code != 200:
             content_put = response_put.content.decode('utf-8')
-            raise KernelReplicationError(
+            raise KernelPropagationError(
                 'Unexpected response from Aether Kernel server '
                 f'while trying to update the {item_model[:-1]} with id {item_id}.\n'
                 f'Response: {content_put}'
@@ -175,7 +175,7 @@ def __upsert_item(item_model, item_id, item_new, item_update=None):
         content_post = response_post.content.decode('utf-8')
 
         if response_post.status_code != 201:
-            raise KernelReplicationError(
+            raise KernelPropagationError(
                 'Unexpected response from Aether Kernel server '
                 f'while trying to create the {item_model[:-1]} with id {item_id}.\n'
                 f'Response: {content_post}'
