@@ -30,7 +30,7 @@ from rest_framework.decorators import (
 )
 from rest_framework.renderers import JSONRenderer
 
-from . import models, serializers, filters, constants, utils, mapping_validation
+from . import models, serializers, filters, constants, utils, mapping_validation, project_artefacts
 
 
 def get_entity_linked_data(entity, request, resolved, depth, start_depth=0):
@@ -79,6 +79,61 @@ class ProjectViewSet(CustomViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectSerializer
     filter_class = filters.ProjectFilter
+
+    @action(detail=True, methods=['get', 'patch'])
+    def artefacts(self, request, pk=None, *args, **kwargs):
+        '''
+        Returns the list of project and its artefacts
+        (schemas, project schemas and mappings) ids by type.
+
+        Reachable at ``.../projects/{pk}/artefacts/``
+        '''
+
+        if request.method == 'GET':
+            return self.__retrieve_artefacts(request, pk)
+        else:
+            return self.__upsert_artefacts(request, pk)
+
+    def __retrieve_artefacts(self, request, pk=None):
+        '''
+        Returns the list of project and all its artefacts
+        (schemas, project schemas and mappings) ids by type.
+        '''
+
+        project = get_object_or_404(models.Project, pk=pk)
+        results = project_artefacts.get_project_artefacts(project)
+
+        return Response(data=results)
+
+    def __upsert_artefacts(self, request, pk=None):
+        '''
+        Creates or updates the project and its artefacts:
+        schemas, project schemas and mappings.
+
+        Returns the list of project and affected artefacts ids by type.
+
+        Expected payload:
+
+            {
+                "name": "project name",
+                "schemas": [
+                    # list of schemas
+                ],
+                "mappings": [
+                    # list of mappings assigned to the project
+                ],
+            }
+        '''
+
+        data = request.data
+        results = project_artefacts.upsert_project_artefacts(
+            project_id=pk,
+            project_name=data.get('name'),
+            schemas=data.get('schemas', []),
+            mappings=data.get('mappings', []),
+        )
+
+        return Response(data=results)
 
 
 class MappingViewSet(CustomViewSet):
