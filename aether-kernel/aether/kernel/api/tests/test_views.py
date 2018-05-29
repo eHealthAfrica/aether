@@ -593,7 +593,7 @@ class ViewsTest(TransactionTestCase):
         url = reverse('project-artefacts', kwargs={'pk': project_id})
 
         response_get_404 = self.client.get(url)
-        self.assertEqual(response_get_404.status_code, 404, 'The project does not exists yet')
+        self.assertEqual(response_get_404.status_code, 404, 'The project does not exist yet')
 
         # create project and artefacts
         response_patch = self.client.patch(
