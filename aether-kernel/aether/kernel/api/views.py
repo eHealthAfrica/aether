@@ -83,8 +83,7 @@ class ProjectViewSet(CustomViewSet):
     @action(detail=True, methods=['get', 'patch'])
     def artefacts(self, request, pk=None, *args, **kwargs):
         '''
-        Returns the list of project and its artefacts
-        (schemas, project schemas and mappings) ids by type.
+        Returns the list of project and its artefact ids by type.
 
         Reachable at ``.../projects/{pk}/artefacts/``
         '''
@@ -96,8 +95,7 @@ class ProjectViewSet(CustomViewSet):
 
     def __retrieve_artefacts(self, request, pk=None):
         '''
-        Returns the list of project and all its artefacts
-        (schemas, project schemas and mappings) ids by type.
+        Returns the list of project and all its artefact ids by type.
         '''
 
         project = get_object_or_404(models.Project, pk=pk)
@@ -110,19 +108,49 @@ class ProjectViewSet(CustomViewSet):
         Creates or updates the project and its artefacts:
         schemas, project schemas and mappings.
 
-        Returns the list of project and affected artefacts ids by type.
+        Returns the list of project and affected artefact ids by type.
+
+        Indicating an ``id`` in any of the entries doesn't mean that
+        the instance must exists, but in case of not, a new one with that
+        id will be created.
 
         Expected payload:
 
             {
-                "name": "project name",
+                # this is optional, if missing the method will assign a random name
+                "name": "project name (optional but unique)",
+
+                # this is optional, for each entry the method will
+                # create/update a schema and also link it to the project
+                # (projectschema entry)
                 "schemas": [
-                    # list of schemas
+                    {
+                        "id": "schema id (optional)",
+                        "name": "schema name (optional but unique)",
+                        "definition": {
+                            # the avro schema
+                        },
+                        "type": "record"
+                    },
+                    # ...
                 ],
+
+                # also optional
                 "mappings": [
-                    # list of mappings assigned to the project
-                ],
+                    {
+                    "id": "mapping id (optional)",
+                    "name": "mapping name (optional but unique)",
+                    # optional
+                    "definition": {
+                        "mapping": [
+                        # the mapping rules
+                        ]
+                    }
+                    },
+                    # ...
+                ]
             }
+
         '''
 
         data = request.data
