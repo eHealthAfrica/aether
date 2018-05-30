@@ -434,18 +434,12 @@ def get_instance_data_from_xml(xml_content):
     instance_dict[root]['_id'] = form_id
     instance_dict[root]['_version'] = version
 
-    return instance_dict, form_id, version
-
-
-def get_instance_id(instance_dict):
-    '''
-    Extracts device instance id from xml data
-    '''
-
     try:
-        return instance_dict['meta']['instanceID']
+        instance_id = instance_dict[root]['meta']['instanceID']
     except Exception:
-        return None
+        instance_id = None
+
+    return instance_dict, form_id, version, instance_id
 
 
 # ------------------------------------------------------------------------------

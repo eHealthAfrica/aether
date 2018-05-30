@@ -23,7 +23,7 @@ from . import views
 
 router = DefaultRouter()
 
-router.register('mappings', views.MappingViewSet)
+router.register('projects', views.ProjectViewSet)
 router.register('xforms', views.XFormViewSet)
 router.register('media-files', views.MediaFileViewSet)
 router.register('surveyors', views.SurveyorViewSet)
