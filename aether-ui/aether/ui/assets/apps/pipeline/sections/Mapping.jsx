@@ -67,9 +67,6 @@ class Mapping extends Component {
   render () {
     return (
       <div className='section-body'>
-        <button onClick={this.generateIdentityMapping.bind(this)} >
-          Instant Identity
-        </button>
         <div className='toggleable-content'>
           <div className='tabs'>
             <button
@@ -108,6 +105,12 @@ class Mapping extends Component {
                   </button>
                 </div>
               </form>
+              <div className='identity-mapping'>
+                <p>You can use Identity mapping for a 1:1 translation of your input into mappings. This will automatically create an Entity Type and its mappings.</p>
+                <button className='btn btn-d' onClick={this.generateIdentityMapping.bind(this)} >
+                  Apply Identity Mapping
+                </button>
+              </div>
             </div>
           }
 

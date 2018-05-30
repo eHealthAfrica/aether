@@ -22,6 +22,12 @@
     background-color: darken($dark-blue, 3);
     padding: $unit $unit-xl;
     flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+
+    form {
+      padding-bottom: 1rem;
+    }
   }
 
   .rules-buttons {
@@ -33,6 +39,12 @@
     .btn {
       margin-top: 1rem;
     }
+  }
+
+  .identity-mapping {
+    border-top: 1px dashed rgba($light-grey, .2);
+    margin-top: auto;
+    padding: 1rem 0 2rem;
   }
 
   .rule {
