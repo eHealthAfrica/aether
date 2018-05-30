@@ -50,8 +50,8 @@ from .serializers import (
     XFormSerializer,
 )
 from .kernel_utils import (
-    create_kernel_project,
-    create_kernel_artefacts,
+    propagate_kernel_project,
+    propagate_kernel_artefacts,
     KernelPropagationError,
 )
 from .surveyors_utils import get_surveyors
@@ -78,7 +78,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project = get_object_or_404(Project, pk=pk)
 
         try:
-            create_kernel_project(project)
+            propagate_kernel_project(project)
         except KernelPropagationError as kpe:
             return Response(
                 data={'description': str(kpe)},
@@ -122,7 +122,7 @@ class XFormViewSet(viewsets.ModelViewSet):
         xform.save()  # creates avro schema if missing
 
         try:
-            create_kernel_artefacts(xform)
+            propagate_kernel_artefacts(xform)
         except KernelPropagationError as kpe:
             return Response(
                 data={'description': str(kpe)},
@@ -379,7 +379,7 @@ def xform_submission(request):
 
     # make sure that the xForm replication already exists in Aether Kernel
     try:
-        create_kernel_artefacts(xform)
+        propagate_kernel_artefacts(xform)
     except KernelPropagationError as kpe:
         msg = f'Unexpected error from Aether Kernel server when checking the xForm "{form_id}".'
         logger.warning(msg)

@@ -24,209 +24,124 @@ from aether.common.kernel.utils import get_auth_header, get_kernel_server_url
 
 from . import CustomTestCase, MockResponse
 from ..kernel_utils import (
-    create_kernel_project,
-    create_kernel_artefacts,
+    propagate_kernel_project,
+    propagate_kernel_artefacts,
     KernelPropagationError,
-    __upsert_item as upsert,
+    __upsert_kernel_artefacts as upsert_kernel,
 )
 
 
 class KernelReplicationTest(CustomTestCase):
 
+    def setUp(self):
+        super(KernelReplicationTest, self).setUp()
+
+        # create project entry
+        self.project = self.helper_create_project()
+
+        # create xForm entries
+        self.xform_1 = self.helper_create_xform(
+            project_id=self.project.project_id,
+            xml_data=self.samples['xform']['raw-xml'],
+        )
+        self.xform_2 = self.helper_create_xform(
+            project_id=self.project.project_id,
+            xml_data=self.samples['xform']['raw-xml'],
+        )
+
+        self.KERNEL_ID_1 = str(self.xform_1.kernel_id)
+        self.KERNEL_ID_2 = str(self.xform_2.kernel_id)
+
+        self.KERNEL_HEADERS = get_auth_header()
+        kernel_url = get_kernel_server_url()
+        self.PROJECT_URL = f'{kernel_url}/projects/{str(self.project.project_id)}/'
+
+        self.MAPPING_URL_1 = f'{kernel_url}/mappings/{self.KERNEL_ID_1}/'
+        self.SCHEMA_URL_1 = f'{kernel_url}/schemas/{self.KERNEL_ID_1}/'
+
+        self.MAPPING_URL_2 = f'{kernel_url}/mappings/{self.KERNEL_ID_2}/'
+        self.SCHEMA_URL_2 = f'{kernel_url}/schemas/{self.KERNEL_ID_2}/'
+
+        # check that nothing exists already in kernel
+        response = requests.get(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
+        self.assertEqual(response.status_code, 404)
+
+        response = requests.get(self.MAPPING_URL_1, headers=self.KERNEL_HEADERS)
+        self.assertEqual(response.status_code, 404)
+        response = requests.get(self.SCHEMA_URL_1, headers=self.KERNEL_HEADERS)
+        self.assertEqual(response.status_code, 404)
+
+        response = requests.get(self.MAPPING_URL_2, headers=self.KERNEL_HEADERS)
+        self.assertEqual(response.status_code, 404)
+        response = requests.get(self.SCHEMA_URL_2, headers=self.KERNEL_HEADERS)
+        self.assertEqual(response.status_code, 404)
+
+    def tearDown(self):
+        super(KernelReplicationTest, self).tearDown()
+
+        # delete the test objects created in kernel testing server
+        requests.delete(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
+        requests.delete(self.SCHEMA_URL_1, headers=self.KERNEL_HEADERS)
+        requests.delete(self.SCHEMA_URL_2, headers=self.KERNEL_HEADERS)
+
+    @mock.patch('requests.patch', return_value=MockResponse(status_code=400))
     @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value=None)
-    def test__upsert_item__no_connection(self, mock_auth):
+    def test__upsert_kernel_artefacts__no_connection(self, mock_auth, mock_patch):
         with self.assertRaises(KernelPropagationError) as kpe:
-            upsert(
-                item_model='none',
-                item_id=1,
-                item_new={},
+            upsert_kernel(
+                project=self.project,
+                artefacts={'schemas': [], 'mappings': []},
             )
 
         self.assertIsNotNone(kpe)
         self.assertIn('Connection with Aether Kernel server is not possible.',
                       str(kpe.exception), kpe)
         mock_auth.assert_called_once()
+        mock_patch.assert_not_called()
 
-    @mock.patch('requests.get', return_value=mock.Mock(status_code=400))
+    @mock.patch('requests.patch', return_value=MockResponse(status_code=400))
     @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value={
         'Authorization': 'Token ABCDEFGH'
     })
-    def test__upsert_item__unexpected_error(self, mock_auth, mock_get):
+    def test__upsert_kernel_artefacts__unexpected_error(self, mock_auth, mock_patch):
         with self.assertRaises(KernelPropagationError) as kpe:
-            upsert(
-                item_model='projects',
-                item_id=1,
-                item_new={},
+            upsert_kernel(
+                project=self.project,
+                artefacts={'schemas': [], 'mappings': []},
             )
 
         self.assertIsNotNone(kpe)
         self.assertIn('Unexpected response from Aether Kernel server',
                       str(kpe.exception), kpe)
-        self.assertIn('while trying to check the existence of the project with id 1',
+        self.assertIn('while trying to create/update the project artefacts',
                       str(kpe.exception), kpe)
         mock_auth.assert_called_once()
-        mock_get.assert_called_once_with(
-            url='http://kernel-test:9000/projects/1.json',
+        mock_patch.assert_called_once_with(
+            url=f'http://kernel-test:9000/projects/{str(self.project.project_id)}/artefacts/',
+            json={'schemas': [], 'mappings': []},
             headers={'Authorization': 'Token ABCDEFGH'},
         )
 
-    @mock.patch('requests.get', return_value=mock.Mock(status_code=200))
+    @mock.patch('requests.patch', return_value=MockResponse(status_code=200))
     @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value={
         'Authorization': 'Token ABCDEFGH'
     })
-    def test__upsert_item__already_there__no_update(self, mock_auth, mock_get):
-        self.assertTrue(upsert(item_model='projects', item_id=1, item_new={}))
+    def test__upsert_kernel_artefacts__ok(self, mock_auth, mock_patch):
+        self.assertTrue(upsert_kernel(
+            project=self.project,
+            artefacts={'schemas': [], 'mappings': []}
+        ))
 
         mock_auth.assert_called_once()
-        mock_get.assert_called_once_with(
-            url='http://kernel-test:9000/projects/1.json',
+        mock_patch.assert_called_once_with(
+            url=f'http://kernel-test:9000/projects/{str(self.project.project_id)}/artefacts/',
+            json={'schemas': [], 'mappings': []},
             headers={'Authorization': 'Token ABCDEFGH'},
         )
 
-    @mock.patch('requests.put', return_value=mock.Mock(status_code=200))
-    @mock.patch('requests.get', side_effect=[MockResponse(status_code=200, json_data={'id': '1'})])
-    @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value={
-        'Authorization': 'Token ABCDEFGH'
-    })
-    def test__upsert_item__already_there__with_update(self, mock_auth, mock_get, mock_put):
-        self.assertTrue(upsert(item_model='projects',
-                               item_id=1,
-                               item_new={},
-                               item_update={
-                                   'name': 'new',
-                               },
-                               ))
+    def test__propagate_kernel_project(self):
 
-        mock_auth.assert_called_once()
-        mock_get.assert_called_once_with(
-            url='http://kernel-test:9000/projects/1.json',
-            headers={'Authorization': 'Token ABCDEFGH'},
-        )
-        mock_put.assert_called_once_with(
-            url='http://kernel-test:9000/projects/1.json',
-            headers={'Authorization': 'Token ABCDEFGH'},
-            json={'id': '1', 'name': 'new'},
-        )
-
-    @mock.patch('requests.put', return_value=mock.Mock(status_code=400))
-    @mock.patch('requests.get', side_effect=[MockResponse(status_code=200, json_data={'id': '1'})])
-    @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value={
-        'Authorization': 'Token ABCDEFGH'
-    })
-    def test__upsert_item__already_there__with_update__error(self, mock_auth, mock_get, mock_put):
-        with self.assertRaises(KernelPropagationError) as kpe:
-            upsert(item_model='projects',
-                   item_id=1,
-                   item_new={},
-                   item_update={'name': 'update'},
-                   )
-        self.assertIsNotNone(kpe)
-        self.assertIn('Unexpected response from Aether Kernel server',
-                      str(kpe.exception), kpe)
-        self.assertIn('while trying to update the project with id 1',
-                      str(kpe.exception), kpe)
-
-        mock_auth.assert_called_once()
-        mock_get.assert_called_once_with(
-            url='http://kernel-test:9000/projects/1.json',
-            headers={'Authorization': 'Token ABCDEFGH'},
-        )
-        mock_put.assert_called_once_with(
-            url='http://kernel-test:9000/projects/1.json',
-            headers={'Authorization': 'Token ABCDEFGH'},
-            json={'id': '1', 'name': 'update'},
-        )
-
-    @mock.patch('requests.post', return_value=mock.Mock(status_code=400))
-    @mock.patch('requests.get', return_value=mock.Mock(status_code=404))
-    @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value={
-        'Authorization': 'Token ABCDEFGH'
-    })
-    def test__upsert_item__not_there__with_create__error(self, mock_auth, mock_get, mock_post):
-        with self.assertRaises(KernelPropagationError) as kpe:
-            upsert(item_model='projects',
-                   item_id=1,
-                   item_new={'name': 'new'},
-                   )
-        self.assertIsNotNone(kpe)
-        self.assertIn('Unexpected response from Aether Kernel server',
-                      str(kpe.exception), kpe)
-        self.assertIn('while trying to create the project with id 1',
-                      str(kpe.exception), kpe)
-
-        mock_auth.assert_called_once()
-        mock_get.assert_called_once_with(
-            url='http://kernel-test:9000/projects/1.json',
-            headers={'Authorization': 'Token ABCDEFGH'},
-        )
-        mock_post.assert_called_once_with(
-            url='http://kernel-test:9000/projects.json',
-            headers={'Authorization': 'Token ABCDEFGH'},
-            json={'name': 'new'},
-        )
-
-    @mock.patch('requests.post', return_value=mock.Mock(status_code=201))
-    @mock.patch('requests.get', return_value=mock.Mock(status_code=404))
-    @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value={
-        'Authorization': 'Token ABCDEFGH'
-    })
-    def test__upsert_item__not_there(self, mock_auth, mock_get, mock_post):
-        self.assertTrue(
-            upsert(item_model='projects',
-                   item_id=1,
-                   item_new={'name': 'new'},
-                   ))
-
-        mock_auth.assert_called_once()
-        mock_get.assert_called_once_with(
-            url='http://kernel-test:9000/projects/1.json',
-            headers={'Authorization': 'Token ABCDEFGH'},
-        )
-        mock_post.assert_called_once_with(
-            url='http://kernel-test:9000/projects.json',
-            headers={'Authorization': 'Token ABCDEFGH'},
-            json={'name': 'new'},
-        )
-
-
-class AetherKernelReplicationTest(CustomTestCase):
-
-    def setUp(self):
-        super(AetherKernelReplicationTest, self).setUp()
-
-        # create xForm entry
-        self.xform = self.helper_create_xform(
-            xml_data=self.samples['xform']['raw-xml'],
-        )
-        self.project = self.xform.project
-
-        self.KERNEL_HEADERS = get_auth_header()
-        kernel_url = get_kernel_server_url()
-        self.PROJECT_URL = f'{kernel_url}/projects/{str(self.project.project_id)}.json'
-        self.MAPPING_URL = f'{kernel_url}/mappings/{str(self.xform.kernel_id)}.json'
-        self.SCHEMA_URL = f'{kernel_url}/schemas/{str(self.xform.kernel_id)}.json'
-        self.PROJECTSCHEMA_URL = f'{kernel_url}/projectschemas/{str(self.xform.kernel_id)}.json'
-
-        # check that nothing exists already in kernel
-        response = requests.get(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
-        self.assertEqual(response.status_code, 404)
-        response = requests.get(self.MAPPING_URL, headers=self.KERNEL_HEADERS)
-        self.assertEqual(response.status_code, 404)
-        response = requests.get(self.SCHEMA_URL, headers=self.KERNEL_HEADERS)
-        self.assertEqual(response.status_code, 404)
-        response = requests.get(self.PROJECTSCHEMA_URL, headers=self.KERNEL_HEADERS)
-        self.assertEqual(response.status_code, 404)
-
-    def tearDown(self):
-        super(AetherKernelReplicationTest, self).tearDown()
-
-        # delete the test objects created in kernel testing server
-        requests.delete(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
-        requests.delete(self.SCHEMA_URL, headers=self.KERNEL_HEADERS)
-
-    def test__create_kernel_project(self):
-
-        self.assertTrue(create_kernel_project(self.project))
+        self.assertTrue(propagate_kernel_project(self.project))
 
         response = requests.get(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 200)
@@ -234,26 +149,52 @@ class AetherKernelReplicationTest(CustomTestCase):
         self.assertEqual(kernel_project['id'], str(self.project.project_id))
         self.assertNotEqual(kernel_project['name'], self.project.name)
 
-    def test__create_kernel_artefacts(self):
+        # creates the artefacts for the xForm 1
+        response = requests.get(self.MAPPING_URL_1, headers=self.KERNEL_HEADERS)
+        self.assertEqual(response.status_code, 200)
+        kernel_mapping_1 = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(kernel_mapping_1['id'], self.KERNEL_ID_1)
 
-        self.assertTrue(create_kernel_artefacts(self.xform))
+        response = requests.get(self.SCHEMA_URL_1, headers=self.KERNEL_HEADERS)
+        self.assertEqual(response.status_code, 200)
+        kernel_schema_1 = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(kernel_schema_1['id'], self.KERNEL_ID_1)
+
+        # creates the artefacts for the xForm 2
+        response = requests.get(self.MAPPING_URL_2, headers=self.KERNEL_HEADERS)
+        self.assertEqual(response.status_code, 200)
+        kernel_mapping_2 = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(kernel_mapping_2['id'], self.KERNEL_ID_2)
+
+        response = requests.get(self.SCHEMA_URL_2, headers=self.KERNEL_HEADERS)
+        self.assertEqual(response.status_code, 200)
+        kernel_schema_2 = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(kernel_schema_2['id'], self.KERNEL_ID_2)
+
+    def test__propagate_kernel_artefacts(self):
+
+        self.assertTrue(propagate_kernel_artefacts(self.xform_1))
 
         response = requests.get(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 200)
         kernel_project = json.loads(response.content.decode('utf-8'))
         self.assertEqual(kernel_project['id'], str(self.project.project_id))
+        self.assertNotEqual(kernel_project['name'], self.project.name)
 
-        response = requests.get(self.MAPPING_URL, headers=self.KERNEL_HEADERS)
+        # creates the artefacts for the xForm 1
+        response = requests.get(self.MAPPING_URL_1, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 200)
-        kernel_mapping = json.loads(response.content.decode('utf-8'))
-        self.assertEqual(kernel_mapping['id'], str(self.xform.kernel_id))
+        kernel_mapping_1 = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(kernel_mapping_1['id'], self.KERNEL_ID_1)
 
-        response = requests.get(self.SCHEMA_URL, headers=self.KERNEL_HEADERS)
+        response = requests.get(self.SCHEMA_URL_1, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 200)
-        kernel_schema = json.loads(response.content.decode('utf-8'))
-        self.assertEqual(kernel_schema['id'], str(self.xform.kernel_id))
+        kernel_schema_1 = json.loads(response.content.decode('utf-8'))
+        self.assertEqual(kernel_schema_1['id'], self.KERNEL_ID_1)
 
-        response = requests.get(self.PROJECTSCHEMA_URL, headers=self.KERNEL_HEADERS)
-        self.assertEqual(response.status_code, 200)
-        kernel_projectschema = json.loads(response.content.decode('utf-8'))
-        self.assertEqual(kernel_projectschema['id'], str(self.xform.kernel_id))
+        # does not create the artefacts for the xForm 2
+        response = requests.get(self.MAPPING_URL_2, headers=self.KERNEL_HEADERS)
+        self.assertEqual(response.status_code, 404)
+
+        response = requests.get(self.SCHEMA_URL_2, headers=self.KERNEL_HEADERS)
+        self.assertEqual(response.status_code, 404)

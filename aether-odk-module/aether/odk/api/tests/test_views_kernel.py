@@ -48,17 +48,17 @@ class ReplicationViewsTests(CustomTestCase):
         project = self.helper_create_project()
         url = reverse('project-propagates', kwargs={'pk': project.pk})
 
-        with mock.patch('aether.odk.api.views.create_kernel_project',
-                        return_value=True) as mock_repl:
+        with mock.patch('aether.odk.api.views.propagate_kernel_project',
+                        return_value=True) as mock_kernel:
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 200)
-            mock_repl.assert_called_once()
+            mock_kernel.assert_called_once()
 
-        with mock.patch('aether.odk.api.views.create_kernel_project',
-                        side_effect=[KernelPropagationError]) as mock_repl:
+        with mock.patch('aether.odk.api.views.propagate_kernel_project',
+                        side_effect=[KernelPropagationError]) as mock_kernel:
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 400)
-            mock_repl.assert_called_once()
+            mock_kernel.assert_called_once()
 
     def test__xform_replication(self):
         url_404 = reverse('xform-propagates', kwargs={'pk': 0})
@@ -68,14 +68,14 @@ class ReplicationViewsTests(CustomTestCase):
         xform = self.helper_create_xform()
         url = reverse('xform-propagates', kwargs={'pk': xform.pk})
 
-        with mock.patch('aether.odk.api.views.create_kernel_artefacts',
-                        return_value=True) as mock_repl:
+        with mock.patch('aether.odk.api.views.propagate_kernel_artefacts',
+                        return_value=True) as mock_kernel:
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 200)
-            mock_repl.assert_called_once()
+            mock_kernel.assert_called_once()
 
-        with mock.patch('aether.odk.api.views.create_kernel_artefacts',
-                        side_effect=[KernelPropagationError]) as mock_repl:
+        with mock.patch('aether.odk.api.views.propagate_kernel_artefacts',
+                        side_effect=[KernelPropagationError]) as mock_kernel:
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 400)
-            mock_repl.assert_called_once()
+            mock_kernel.assert_called_once()

@@ -27,7 +27,7 @@ from aether.common.kernel import utils as common_kernel_utils
 
 from . import CustomTestCase, MockResponse
 from ..views import XML_SUBMISSION_PARAM
-from ..kernel_utils import create_kernel_artefacts, KernelPropagationError
+from ..kernel_utils import propagate_kernel_artefacts, KernelPropagationError
 
 
 class SubmissionTests(CustomTestCase):
@@ -79,7 +79,8 @@ class SubmissionTests(CustomTestCase):
     def test__submission__424__replication(self):
         # with xform and right xml but not kernel replication
         self.helper_create_xform(surveyor=self.user, xml_data=self.samples['xform']['raw-xml'])
-        with mock.patch('aether.odk.api.views.create_kernel_artefacts', side_effect=KernelPropagationError):
+        with mock.patch('aether.odk.api.views.propagate_kernel_artefacts',
+                        side_effect=KernelPropagationError):
             with open(self.samples['submission']['file-ok'], 'rb') as f:
                 response = self.client.post(
                     self.url,
@@ -88,7 +89,7 @@ class SubmissionTests(CustomTestCase):
                 )
         self.assertEqual(response.status_code, status.HTTP_424_FAILED_DEPENDENCY)
 
-    @mock.patch('aether.odk.api.views.create_kernel_artefacts', return_value=True)
+    @mock.patch('aether.odk.api.views.propagate_kernel_artefacts', return_value=True)
     def test__submission__400(self, mock_replicate):
         # create xForm entry
         self.helper_create_xform(surveyor=self.user, xml_data=self.samples['xform']['raw-xml'])
@@ -118,8 +119,8 @@ class PostSubmissionTests(CustomTestCase):
         )
         self.assertTrue(self.xform.is_surveyor(self.user))
         self.assertIsNotNone(self.xform.kernel_id)
-        # replicate in kernel
-        self.assertTrue(create_kernel_artefacts(self.xform))
+        # propagate in kernel
+        self.assertTrue(propagate_kernel_artefacts(self.xform))
 
         # check Kernel testing server
         self.assertTrue(common_kernel_utils.test_connection())
@@ -129,7 +130,7 @@ class PostSubmissionTests(CustomTestCase):
         self.SUBMISSIONS_URL = common_kernel_utils.get_submissions_url()
         self.ATTACHMENTS_URL = common_kernel_utils.get_attachments_url()
         self.PROJECT_URL = f'{kernel_url}/projects/{str(self.xform.project.project_id)}/'
-        self.SCHEMA_URL = f'{kernel_url}/projects/{str(self.xform.kernel_id)}/'
+        self.SCHEMA_URL = f'{kernel_url}/schemas/{str(self.xform.kernel_id)}/'
 
     def tearDown(self):
         super(PostSubmissionTests, self).tearDown()

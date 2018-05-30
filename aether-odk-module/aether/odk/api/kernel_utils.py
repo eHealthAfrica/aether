@@ -16,7 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
 import requests
 
 from aether.common.kernel.utils import get_auth_header, get_kernel_server_url
@@ -26,160 +25,82 @@ class KernelPropagationError(Exception):
     pass
 
 
-def create_kernel_project(project):
+def propagate_kernel_project(project):
     '''
-    Creates a copy of the indicated project in Aether Kernel.
+    Creates a copy of the indicated project in Aether Kernel
+    and creates/updates its linked artefacts.
     '''
 
-    item_id = str(project.project_id)
-    # because the name is unique use an unexpected one
-    item_name = f'aether.odk: {item_id}'
+    artefacts = {
+        'schemas': [],
+        'mappings': [],
+    }
 
-    __upsert_item(
-        item_model='projects',
-        item_id=item_id,
-        item_new={
-            'id': item_id,
-            'name': item_name,
-            'revision': '1',
-        },
-        # no need to update any property there
-        item_update=None,
-    )
+    for xform in project.xforms.all():
+        schema, mapping = __xform_to_artefacts(xform)
+        artefacts['schemas'].append(schema)
+        artefacts['mappings'].append(mapping)
 
-    # indicates that the item is in Kernel
+    __upsert_kernel_artefacts(project, artefacts)
+
+    # indicates that the project and its artefacts are in Kernel
     return True
 
 
-def create_kernel_artefacts(xform):
+def propagate_kernel_artefacts(xform):
     '''
-    Creates artefacts based on the indicated xForm in Aether Kernel.
+    Creates/updates artefacts based on the indicated xForm in Aether Kernel.
 
-    One XForm should create in Kernel:
+    One XForm should create/update in Kernel:
+        - one Project,
         - one Mapping,
         - one Schema and
         - one ProjectSchema.
     '''
 
-    # 1. make sure that the project already exists in Kernel
-    create_kernel_project(xform.project)
+    schema, mapping = __xform_to_artefacts(xform)
+    artefacts = {
+        'schemas': [schema],
+        'mappings': [mapping],
+    }
 
-    # all the replicated items will have the same id
-    item_id = str(xform.kernel_id)
-    # because the name is unique use an unexpected one
-    item_name = f'aether.odk: {item_id}'
-    project_id = str(xform.project.project_id)
+    __upsert_kernel_artefacts(xform.project, artefacts)
 
-    # 2. check mapping (this links the xForm submissions with the mapping)
-    __upsert_item(
-        item_model='mappings',
-        item_id=item_id,
-        item_new={
-            'id': item_id,
-            'name': item_name,
-            'revision': xform.version,
-            'project': project_id,
-            'definition': {'mappings': []},
-        },
-        # make sure that the project id is the expected one
-        item_update={
-            'project': project_id,
-        },
-    )
-
-    # 3. check schema (creates the entity definition for the xForm)
-    __upsert_item(
-        item_model='schemas',
-        item_id=item_id,
-        item_new={
-            'id': item_id,
-            'name': item_name,
-            'revision': xform.version,
-            'definition': xform.avro_schema,
-            'type': 'xform',
-        },
-        item_update={
-            'revision': xform.version,
-            'definition': xform.avro_schema,
-            'type': 'xform',
-        },
-    )
-
-    # 4. check project schema (this links the schema with the project)
-    __upsert_item(
-        item_model='projectschemas',
-        item_id=item_id,
-        item_new={
-            'id': item_id,
-            'name': item_name,
-            'project': project_id,
-            'schema': item_id,
-        },
-        # make sure that the ids are the expected ones
-        item_update={
-            'project': project_id,
-            'schema': item_id,
-        },
-    )
-
-    # indicates that the items are in Kernel
+    # indicates that the xform linked artefacts are in Kernel
     return True
 
 
-def __upsert_item(item_model, item_id, item_new, item_update=None):
+def __upsert_kernel_artefacts(project, artefacts={}):
     '''
-    This methods checks the existence of the item in Aether Kernel.
+    This method pushes the project artefacts to Aether Kernel.
+    '''
 
-    If it doesn't exist creates it otherwise updates its properties.
-    '''
+    project_id = str(project.project_id)
 
     auth_header = get_auth_header()
     if not auth_header:
         raise KernelPropagationError('Connection with Aether Kernel server is not possible.')
 
     kernel_url = get_kernel_server_url()
-    url = f'{kernel_url}/{item_model}/{item_id}.json'
+    url = f'{kernel_url}/projects/{project_id}/artefacts/'
 
-    response = requests.get(url=url, headers=auth_header)
-    content = response.content.decode('utf-8')
-
-    # the only acceptable responses are 200 or 404
-    if response.status_code not in (200, 404):
+    response = requests.patch(url=url, json=artefacts, headers=auth_header)
+    if response.status_code != 200:
+        content = response.content.decode('utf-8')
         raise KernelPropagationError(
             'Unexpected response from Aether Kernel server '
-            f'while trying to check the existence of the {item_model[:-1]} with id {item_id}.\n'
+            f'while trying to create/update the project artefacts "{project_id}".\n'
             f'Response: {content}'
         )
 
-    if response.status_code == 200:
-        if not item_update:  # if not provided then no need to update
-            return True
-
-        # already exists, update it with the given item
-        item_kernel = json.loads(content)
-        for k, v in item_update.items():
-            item_kernel[k] = v
-        response_put = requests.put(url=url, json=item_kernel, headers=auth_header)
-        if response_put.status_code != 200:
-            content_put = response_put.content.decode('utf-8')
-            raise KernelPropagationError(
-                'Unexpected response from Aether Kernel server '
-                f'while trying to update the {item_model[:-1]} with id {item_id}.\n'
-                f'Response: {content_put}'
-            )
-
-    if response.status_code == 404:
-        # it does not exist yet, create it
-        url_post = f'{kernel_url}/{item_model}.json'
-        response_post = requests.post(url=url_post, json=item_new, headers=auth_header)
-        content_post = response_post.content.decode('utf-8')
-
-        if response_post.status_code != 201:
-            raise KernelPropagationError(
-                'Unexpected response from Aether Kernel server '
-                f'while trying to create the {item_model[:-1]} with id {item_id}.\n'
-                f'Response: {content_post}'
-            )
-
-    # indicates that the item is in Kernel
     return True
+
+
+def __xform_to_artefacts(xform):
+    # all the items will have the same id
+    item_id = str(xform.kernel_id)
+
+    schema = {'id': item_id, 'definition': xform.avro_schema}
+    mapping = {'id': item_id}
+
+    return schema, mapping
