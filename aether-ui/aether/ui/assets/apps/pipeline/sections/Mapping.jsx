@@ -5,44 +5,25 @@ import { connect } from 'react-redux'
 import { generateGUID, deepEqual } from '../../utils'
 import { updatePipeline } from '../redux'
 
-export const deriveMappingRules = (schema) => {
-  const fieldToMappingRule = (field) => {
-    return {
-      id: generateGUID(),
-      source: `$.${field.name}`,
-      destination: `${schema.name}.${field.name}`
-    }
-  }
-  return schema.fields.map(fieldToMappingRule)
-}
-
 class Mapping extends Component {
   constructor (props) {
     super(props)
 
     this.state = {
       mappingRules: props.selectedPipeline.mapping || [],
-      schema: props.selectedPipeline.schema || {},
-      entityTypes: props.selectedPipeline.entity_types || [],
       view: 'rules'
     }
   }
 
   componentWillReceiveProps (nextProps) {
     this.setState({
-      mappingRules: nextProps.selectedPipeline.mapping || [],
-      schema: nextProps.selectedPipeline.schema || {},
-      entityTypes: nextProps.selectedPipeline.entity_types || []
+      mappingRules: nextProps.selectedPipeline.mapping || []
     })
   }
 
   notifyChange (event) {
     event.preventDefault()
-    this.props.updatePipeline({
-      ...this.props.selectedPipeline,
-      mapping: this.state.mappingRules,
-      entity_types: this.state.entityTypes
-    })
+    this.props.updatePipeline({ ...this.props.selectedPipeline, mapping: this.state.mappingRules })
   }
 
   hasChanged () {
@@ -55,13 +36,6 @@ class Mapping extends Component {
     } else {
       this.setState({ view: 'rules' })
     }
-  }
-
-  generateIdentityMapping () {
-    const schema = this.props.selectedPipeline.schema
-    const mappingRules = deriveMappingRules(schema)
-    const entityTypes = [schema]
-    this.setState({schema, mappingRules, entityTypes})
   }
 
   render () {
@@ -105,12 +79,6 @@ class Mapping extends Component {
                   </button>
                 </div>
               </form>
-              <div className='identity-mapping'>
-                <p>You can use Identity mapping for a 1:1 translation of your input into mappings. This will automatically create an Entity Type and its mappings.</p>
-                <button className='btn btn-d' onClick={this.generateIdentityMapping.bind(this)} >
-                  Apply Identity Mapping
-                </button>
-              </div>
             </div>
           }
 

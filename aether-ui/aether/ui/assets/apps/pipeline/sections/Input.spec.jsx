@@ -1,5 +1,5 @@
 /* global test, expect */
-import {deriveMappingRules} from './Mapping'
+import {deriveMappingRules} from './Input'
 
 test('deriveMappingRules', () => {
   const schemaName = 'Test'

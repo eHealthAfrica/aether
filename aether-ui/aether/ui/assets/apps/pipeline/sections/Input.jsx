@@ -4,7 +4,7 @@ import { connect } from 'react-redux'
 import avro from 'avsc'
 
 import { AvroSchemaViewer } from '../../components'
-import { deepEqual } from '../../utils'
+import { generateGUID, deepEqual } from '../../utils'
 import { generateSchemaName } from '../../utils/generateSchemaName'
 import { updatePipeline } from '../redux'
 
@@ -16,6 +16,17 @@ import { updatePipeline } from '../redux'
 // avro schema is derived from this sample and displayed in the `SchemaInput`.
 const SCHEMA_VIEW = 'SCHEMA_VIEW'
 const DATA_VIEW = 'DATA_VIEW'
+
+export const deriveMappingRules = (schema) => {
+  const fieldToMappingRule = (field) => {
+    return {
+      id: generateGUID(),
+      source: `$.${field.name}`,
+      destination: `${schema.name}.${field.name}`
+    }
+  }
+  return schema.fields.map(fieldToMappingRule)
+}
 
 class SchemaInput extends Component {
   constructor (props) {
@@ -227,6 +238,17 @@ class Input extends Component {
     }
   }
 
+  generateIdentityMapping () {
+    const schema = this.props.selectedPipeline.schema
+    const mappingRules = deriveMappingRules(schema)
+    const entityTypes = [schema]
+    this.props.updatePipeline({
+      ...this.props.selectedPipeline,
+      mapping: mappingRules,
+      entity_types: entityTypes
+    })
+  }
+
   render () {
     return (
       <div className='section-body'>
@@ -264,6 +286,15 @@ class Input extends Component {
             </div>
             {this.state.view === SCHEMA_VIEW && <SchemaInput {...this.props} />}
             {this.state.view === DATA_VIEW && <DataInput {...this.props} />}
+            <div className='identity-mapping'>
+              <p>You can use Identity mapping for a 1:1 translation of your input into mappings. This will automatically create an Entity Type and its mappings.</p>
+              <button
+                className='btn btn-d'
+                onClick={this.generateIdentityMapping.bind(this)}
+              >
+                Apply Identity Mapping
+              </button>
+            </div>
           </div>
         </div>
       </div>
