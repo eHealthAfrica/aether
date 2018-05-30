@@ -2,14 +2,15 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 import { Link } from 'react-router-dom'
+import moment from 'moment'
 
-import { NavBar } from '../components'
+import { NavBar, PublishButton } from '../components'
 
 import Input from './sections/Input'
 import EntityTypes from './sections/EntityTypes'
 import Mapping from './sections/Mapping'
 import Output from './sections/Output'
-import { getPipelineById, getPipelines, publishPipeline } from './redux'
+import { getPipelineById, getPipelines } from './redux'
 
 class Pipeline extends Component {
   constructor (props) {
@@ -49,11 +50,6 @@ class Pipeline extends Component {
     }
   }
 
-  publish () {
-    // todo: check if and overwrite is required
-    this.props.publishPipeline(this.props.selectedPipeline.id)
-  }
-
   render () {
     const {selectedPipeline} = this.props
     if (!selectedPipeline) {
@@ -73,12 +69,17 @@ class Pipeline extends Component {
             <span> // </span>
             { selectedPipeline.name }
           </div>
-          <button type='button' className='btn btn-c btn-publish' onClick={this.publish.bind(this)}>
-            <FormattedMessage
-              id='pipeline.navbar.breadcrumb.publish'
-              defaultMessage='Publish pipeline'
-            />
-          </button>
+          <div className='top-nav-publish'>
+            <div className='status-publish'>
+              <FormattedMessage
+                id='pipeline.publish-status'
+                defaultMessage={this.props.selectedPipeline.published_on
+                  ? `Published on ${moment(new Date(this.props.selectedPipeline.published_on)).format('MMMM DD, YYYY HH:mm')}`
+                  : 'Not published'}
+              />
+            </div>
+            <PublishButton pipeline={this.props.selectedPipeline} className='btn btn-c btn-publish' />
+          </div>
         </NavBar>
 
         <div className={`pipeline pipeline--${this.state.pipelineView} ${this.state.showOutput ? 'show-output' : ''} ${this.state.fullscreen ? 'fullscreen' : ''}`}>
@@ -172,9 +173,7 @@ class Pipeline extends Component {
 
 const mapStateToProps = ({ pipelines }) => ({
   selectedPipeline: pipelines.selectedPipeline,
-  pipelineList: pipelines.pipelineList,
-  publishError: pipelines.publishError,
-  publishSuccess: pipelines.publishSuccess
+  pipelineList: pipelines.pipelineList
 })
 
-export default connect(mapStateToProps, { getPipelineById, getPipelines, publishPipeline })(Pipeline)
+export default connect(mapStateToProps, { getPipelineById, getPipelines })(Pipeline)
