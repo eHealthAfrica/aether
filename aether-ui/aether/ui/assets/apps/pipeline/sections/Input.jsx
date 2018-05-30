@@ -3,7 +3,7 @@ import { FormattedMessage } from 'react-intl'
 import { connect } from 'react-redux'
 import avro from 'avsc'
 
-import { AvroSchemaViewer } from '../../components'
+import { AvroSchemaViewer, Modal } from '../../components'
 import { generateGUID, deepEqual } from '../../utils'
 import { generateSchemaName } from '../../utils/generateSchemaName'
 import { updatePipeline } from '../redux'
@@ -226,8 +226,22 @@ class Input extends Component {
   constructor (props) {
     super(props)
     this.state = {
+      showModal: false,
       view: DATA_VIEW
     }
+    this.generateIdentityMapping = this.generateIdentityMapping.bind(this)
+    this.hideModal = this.hideModal.bind(this)
+    this.renderModal = this.renderModal.bind(this)
+    this.showModal = this.showModal.bind(this)
+    this.toggleInputView = this.toggleInputView.bind(this)
+  }
+
+  showModal () {
+    this.setState({showModal: true})
+  }
+
+  hideModal () {
+    this.setState({showModal: false})
   }
 
   toggleInputView () {
@@ -236,6 +250,19 @@ class Input extends Component {
     } else {
       this.setState({ view: DATA_VIEW })
     }
+  }
+
+  renderModal () {
+    return (
+      <div>
+        <button onClick={this.generateIdentityMapping}>
+          Yes
+        </button>
+        <button onClick={this.hideModal}>
+          No
+        </button>
+      </div>
+    )
   }
 
   generateIdentityMapping () {
@@ -247,6 +274,7 @@ class Input extends Component {
       mapping: mappingRules,
       entity_types: entityTypes
     })
+    this.hideModal()
   }
 
   render () {
@@ -269,7 +297,7 @@ class Input extends Component {
             <div className='tabs'>
               <button
                 className={`tab ${this.state.view === SCHEMA_VIEW ? 'selected' : ''}`}
-                onClick={this.toggleInputView.bind(this)}>
+                onClick={this.toggleInputView}>
                 <FormattedMessage
                   id='pipeline.input.toggle.schema'
                   defaultMessage='Avro schema'
@@ -277,7 +305,7 @@ class Input extends Component {
               </button>
               <button
                 className={`tab ${this.state.view === DATA_VIEW ? 'selected' : ''}`}
-                onClick={this.toggleInputView.bind(this)}>
+                onClick={this.toggleInputView}>
                 <FormattedMessage
                   id='pipeline.input.toggle.data'
                   defaultMessage='JSON Data'
@@ -286,15 +314,16 @@ class Input extends Component {
             </div>
             {this.state.view === SCHEMA_VIEW && <SchemaInput {...this.props} />}
             {this.state.view === DATA_VIEW && <DataInput {...this.props} />}
+
             <div className='identity-mapping'>
               <p>You can use Identity mapping for a 1:1 translation of your input into mappings. This will automatically create an Entity Type and its mappings.</p>
-              <button
-                className='btn btn-d'
-                onClick={this.generateIdentityMapping.bind(this)}
-              >
+              <button className='btn btn-d' onClick={this.showModal}>
                 Apply Identity Mapping
               </button>
             </div>
+
+            <Modal show={this.state.showModal} buttons={this.renderModal()} />
+
           </div>
         </div>
       </div>
