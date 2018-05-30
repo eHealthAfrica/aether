@@ -20,6 +20,7 @@ import copy
 import json
 import datetime
 import dateutil.parser
+import uuid
 
 import mock
 
@@ -581,3 +582,33 @@ class ViewsTest(TransactionTestCase):
 
         self.assertEqual(response_get, response_post, 'same list view')
         self.assertEqual(response_get['id'], project_id)
+
+    def test_project_artefacts__endpoints(self):
+        self.assertEqual(reverse('project-artefacts', kwargs={'pk': 1}), '/projects/1/artefacts/')
+
+        response_get_404 = self.client.get('/projects/artefacts/')
+        self.assertEqual(response_get_404.status_code, 404)
+
+        project_id = str(uuid.uuid4())
+        url = reverse('project-artefacts', kwargs={'pk': project_id})
+
+        response_get_404 = self.client.get(url)
+        self.assertEqual(response_get_404.status_code, 404, 'The project does not exist yet')
+
+        # create project and artefacts
+        response_patch = self.client.patch(
+            url,
+            json.dumps({'name': f'Project {project_id}'}),
+            content_type='application/json'
+        ).json()
+        self.assertEqual(response_patch, {
+            'project': project_id, 'schemas': [], 'project_schemas': [], 'mappings': []
+        })
+        project = models.Project.objects.get(pk=project_id)
+        self.assertEqual(project.name, f'Project {project_id}')
+
+        # try to retrieve again
+        response_get = self.client.get(url).json()
+        self.assertEqual(response_get, {
+            'project': project_id, 'schemas': [], 'project_schemas': [], 'mappings': []
+        })

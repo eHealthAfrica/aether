@@ -30,7 +30,7 @@ from rest_framework.decorators import (
 )
 from rest_framework.renderers import JSONRenderer
 
-from . import models, serializers, filters, constants, utils, mapping_validation
+from . import models, serializers, filters, constants, utils, mapping_validation, project_artefacts
 
 
 def get_entity_linked_data(entity, request, resolved, depth, start_depth=0):
@@ -79,6 +79,89 @@ class ProjectViewSet(CustomViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectSerializer
     filter_class = filters.ProjectFilter
+
+    @action(detail=True, methods=['get', 'patch'])
+    def artefacts(self, request, pk=None, *args, **kwargs):
+        '''
+        Returns the list of project and its artefact ids by type.
+
+        Reachable at ``.../projects/{pk}/artefacts/``
+        '''
+
+        if request.method == 'GET':
+            return self.__retrieve_artefacts(request, pk)
+        else:
+            return self.__upsert_artefacts(request, pk)
+
+    def __retrieve_artefacts(self, request, pk=None):
+        '''
+        Returns the list of project and all its artefact ids by type.
+        '''
+
+        project = get_object_or_404(models.Project, pk=pk)
+        results = project_artefacts.get_project_artefacts(project)
+
+        return Response(data=results)
+
+    def __upsert_artefacts(self, request, pk=None):
+        '''
+        Creates or updates the project and its artefacts:
+        schemas, project schemas and mappings.
+
+        Returns the list of project and affected artefact ids by type.
+
+        Indicating an ``id`` in any of the entries doesn't mean that
+        the instance must exists, but in case of not, a new one with that
+        id will be created.
+
+        Expected payload:
+
+            {
+                # this is optional, if missing the method will assign a random name
+                "name": "project name (optional but unique)",
+
+                # this is optional, for each entry the method will
+                # create/update a schema and also link it to the project
+                # (projectschema entry)
+                "schemas": [
+                    {
+                        "id": "schema id (optional)",
+                        "name": "schema name (optional but unique)",
+                        "definition": {
+                            # the avro schema
+                        },
+                        "type": "record"
+                    },
+                    # ...
+                ],
+
+                # also optional
+                "mappings": [
+                    {
+                        "id": "mapping id (optional)",
+                        "name": "mapping name (optional but unique)",
+                        # optional but nice to have
+                        "definition": {
+                            "mapping": [
+                                # the mapping rules
+                            ]
+                        }
+                    },
+                    # ...
+                ]
+            }
+
+        '''
+
+        data = request.data
+        results = project_artefacts.upsert_project_artefacts(
+            project_id=pk,
+            project_name=data.get('name'),
+            schemas=data.get('schemas', []),
+            mappings=data.get('mappings', []),
+        )
+
+        return Response(data=results)
 
 
 class MappingViewSet(CustomViewSet):
