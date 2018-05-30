@@ -3,7 +3,7 @@
   transition: padding .2s;
   justify-content: flex-start;
   align-items: baseline;
-  z-index: 1;
+  z-index: 3;
 }
 
 .top-nav:hover + .pipeline {
@@ -34,8 +34,20 @@
   }
 }
 
-.btn-publish {
+.top-nav-publish {
   margin-left: auto;
+  display: flex;
+  align-items: baseline;
+
+  .status-publish {
+    font-size: $font-size-xs;
+    margin-right: 1rem;
+    opacity: 0;
+    transition: opacity .4s;
+  }
+}
+
+.btn-publish {
   transition: all .4s;
   padding: .3em 1.2em;
 }
@@ -90,7 +102,8 @@
     padding: 1rem;
 
     .top-nav-breadcrumb,
-    .top-nav-logo {
+    .top-nav-logo,
+    .status-publish {
       opacity: 1;
     }
   }

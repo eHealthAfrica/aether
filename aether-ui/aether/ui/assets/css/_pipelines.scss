@@ -67,6 +67,7 @@
   &:hover {
     cursor: pointer;
     box-shadow: 3px 3px 5px rgba($text-color, .4), -1px -1px 1px $light-grey inset;
+    background: $background-color;
 
     .preview-heading {
       color: darken($hover-color, 10);
@@ -106,6 +107,21 @@
 
   &.error .badge {
     color: $red;
+  }
+}
+
+.pipeline-publish {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dotted $grey;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+
+  .status-publish {
+    font-size: $font-size-xs;
+    margin-right: 1rem;
+    color: $grey;
   }
 }
 
@@ -171,7 +187,7 @@
   }
 }
 
-@media screen and (max-width: 920px) {
+@media screen and (max-width: 1000px) {
 
   .pipeline-previews {
     grid-template-columns: auto auto;
