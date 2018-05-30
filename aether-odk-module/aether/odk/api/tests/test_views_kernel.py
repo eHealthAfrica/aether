@@ -25,10 +25,10 @@ from . import CustomTestCase
 from ..kernel_utils import KernelPropagationError
 
 
-class ReplicationViewsTests(CustomTestCase):
+class KernelViewsTests(CustomTestCase):
 
     def setUp(self):
-        super(ReplicationViewsTests, self).setUp()
+        super(KernelViewsTests, self).setUp()
 
         username = 'test'
         email = 'test@example.com'
@@ -37,10 +37,10 @@ class ReplicationViewsTests(CustomTestCase):
         self.assertTrue(self.client.login(username=username, password=password))
 
     def tearDown(self):
-        super(ReplicationViewsTests, self).tearDown()
+        super(KernelViewsTests, self).tearDown()
         self.client.logout()
 
-    def test__project_replication(self):
+    def test__project_propagation(self):
         url_404 = reverse('project-propagates', kwargs={'pk': self.helper_create_uuid()})
         response = self.client.patch(url_404)
         self.assertEqual(response.status_code, 404)
@@ -60,7 +60,7 @@ class ReplicationViewsTests(CustomTestCase):
             self.assertEqual(response.status_code, 400)
             mock_kernel.assert_called_once()
 
-    def test__xform_replication(self):
+    def test__xform_propagation(self):
         url_404 = reverse('xform-propagates', kwargs={'pk': 0})
         response = self.client.patch(url_404)
         self.assertEqual(response.status_code, 404)

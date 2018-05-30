@@ -377,11 +377,11 @@ def xform_submission(request):
     if version < xform.version:  # pragma: no cover
         logger.warning(f'Sending response to {version} xForm version, current is {xform.version}.')
 
-    # make sure that the xForm replication already exists in Aether Kernel
+    # make sure that the xForm artefacts already exist in Aether Kernel
     try:
         propagate_kernel_artefacts(xform)
     except KernelPropagationError as kpe:
-        msg = f'Unexpected error from Aether Kernel server when checking the xForm "{form_id}".'
+        msg = f'Unexpected error from Aether Kernel server when checking the xForm artefacts "{form_id}".'
         logger.warning(msg)
         logger.error(str(kpe))
         return Response(data=msg + '\n' + str(kpe), status=status.HTTP_424_FAILED_DEPENDENCY)

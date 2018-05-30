@@ -76,8 +76,8 @@ class SubmissionTests(CustomTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-    def test__submission__424__replication(self):
-        # with xform and right xml but not kernel replication
+    def test__submission__424__propagation(self):
+        # with xform and right xml but not kernel propagation
         self.helper_create_xform(surveyor=self.user, xml_data=self.samples['xform']['raw-xml'])
         with mock.patch('aether.odk.api.views.propagate_kernel_artefacts',
                         side_effect=KernelPropagationError):
@@ -90,7 +90,7 @@ class SubmissionTests(CustomTestCase):
         self.assertEqual(response.status_code, status.HTTP_424_FAILED_DEPENDENCY)
 
     @mock.patch('aether.odk.api.views.propagate_kernel_artefacts', return_value=True)
-    def test__submission__400(self, mock_replicate):
+    def test__submission__400(self, mock_propagate):
         # create xForm entry
         self.helper_create_xform(surveyor=self.user, xml_data=self.samples['xform']['raw-xml'])
 

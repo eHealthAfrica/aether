@@ -31,10 +31,10 @@ from ..kernel_utils import (
 )
 
 
-class KernelReplicationTest(CustomTestCase):
+class KernelUtilsTest(CustomTestCase):
 
     def setUp(self):
-        super(KernelReplicationTest, self).setUp()
+        super(KernelUtilsTest, self).setUp()
 
         # create project entry
         self.project = self.helper_create_project()
@@ -77,7 +77,7 @@ class KernelReplicationTest(CustomTestCase):
         self.assertEqual(response.status_code, 404)
 
     def tearDown(self):
-        super(KernelReplicationTest, self).tearDown()
+        super(KernelUtilsTest, self).tearDown()
 
         # delete the test objects created in kernel testing server
         requests.delete(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
