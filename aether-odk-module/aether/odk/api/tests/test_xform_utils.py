@@ -28,7 +28,6 @@ from ..xform_utils import (
     __parse_xml_to_dict as parse_xml_to_dict,
 
     get_instance_data_from_xml,
-    get_instance_id,
 
     parse_submission,
     parse_xform_file,
@@ -267,12 +266,13 @@ class XFormUtilsParsersTests(CustomTestCase):
 
     def test__parse_submission(self):
         with open(self.samples['submission']['file-ok'], 'rb') as xml:
-            data, form_id, version = get_instance_data_from_xml(xml.read())
+            data, form_id, version, instance_id = get_instance_data_from_xml(xml.read())
         with open(self.samples['submission']['file-ok-json'], 'rb') as content:
             expected = json.load(content)
 
         self.assertEqual(form_id, 'my-test-form')
         self.assertEqual(version, 'test-1.0')
+        self.assertEqual(instance_id, 'uuid:cef69d9d-ebd9-408f-8bc6-9d418bb083d9')
         self.assertEqual(len(list(data.keys())), 1)
         self.assertEqual(list(data.keys())[0], 'Something_that_is_not_None')
 
@@ -283,12 +283,13 @@ class XFormUtilsParsersTests(CustomTestCase):
 
     def test__parse_submission__with_multilanguage(self):
         with open(self.samples['submission']['file-ok'], 'rb') as xml:
-            data, form_id, version = get_instance_data_from_xml(xml.read())
+            data, form_id, version, instance_id = get_instance_data_from_xml(xml.read())
         with open(self.samples['submission']['file-ok-json'], 'rb') as content:
             expected = json.load(content)
 
         self.assertEqual(form_id, 'my-test-form')
         self.assertEqual(version, 'test-1.0')
+        self.assertEqual(instance_id, 'uuid:cef69d9d-ebd9-408f-8bc6-9d418bb083d9')
         self.assertEqual(len(list(data.keys())), 1)
         self.assertEqual(list(data.keys())[0], 'Something_that_is_not_None')
 
@@ -297,18 +298,6 @@ class XFormUtilsParsersTests(CustomTestCase):
         self.assertNotEqual(list(data.keys())[0], 'Something_that_is_not_None')
 
         self.assertEqual(data, expected)
-
-
-class XFormUtilsGettersTests(CustomTestCase):
-
-    def test__get_instance_id(self):
-        instance_id = 'abc'
-        valid_data = {'meta': {'instanceID': instance_id}}
-        result = get_instance_id(valid_data)
-        self.assertEqual(result, instance_id)
-        invalid_data = {}
-        result = get_instance_id(invalid_data)
-        self.assertIsNone(result)
 
 
 class XFormUtilsAvroTests(CustomTestCase):

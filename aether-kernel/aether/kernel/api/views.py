@@ -138,14 +138,14 @@ class ProjectViewSet(CustomViewSet):
                 # also optional
                 "mappings": [
                     {
-                    "id": "mapping id (optional)",
-                    "name": "mapping name (optional but unique)",
-                    # optional
-                    "definition": {
-                        "mapping": [
-                        # the mapping rules
-                        ]
-                    }
+                        "id": "mapping id (optional)",
+                        "name": "mapping name (optional but unique)",
+                        # optional but nice to have
+                        "definition": {
+                            "mapping": [
+                                # the mapping rules
+                            ]
+                        }
                     },
                     # ...
                 ]
