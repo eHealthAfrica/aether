@@ -10,9 +10,14 @@ class Output extends Component {
           <h3 className='title-medium'>
             <FormattedMessage id='output.mapping_errors' defaultMessage='Mapping errors' />
           </h3>
-          <code>
-            { JSON.stringify(this.props.selectedPipeline.mapping_errors || [], 0, 2) }
-          </code>
+          <ul>
+            { this.props.selectedPipeline.mapping_errors && this.props.selectedPipeline.mapping_errors.map((error, index) => (
+              <li key={`${error.path}_${index}`}>
+                <span className='error-description'>{error.description}</span>
+                <span className='error-path'>{error.path ? `"${error.path}"` : ''}</span>
+              </li>
+            )) }
+          </ul>
         </div>
         <div className='pipeline-data'>
           <h3 className='title-medium'>

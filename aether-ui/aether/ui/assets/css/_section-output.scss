@@ -10,8 +10,15 @@
   }
 
   .pipeline-errors {
-    code {
+    ul {
       color: $red;
+    }
+    .error-description {
+      margin-right: 7px;
+    }
+
+    .error-path {
+      font-style: italic;
     }
   }
 
