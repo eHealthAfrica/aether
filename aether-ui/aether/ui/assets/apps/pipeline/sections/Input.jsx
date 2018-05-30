@@ -255,10 +255,10 @@ class Input extends Component {
   renderModal () {
     return (
       <div>
-        <button onClick={this.generateIdentityMapping}>
+        <button className='btn btn-w' onClick={this.generateIdentityMapping}>
           Yes
         </button>
-        <button onClick={this.hideModal}>
+        <button className='btn btn-w' onClick={this.hideModal}>
           No
         </button>
       </div>
@@ -317,7 +317,7 @@ class Input extends Component {
 
             <div className='identity-mapping'>
               <p>You can use Identity mapping for a 1:1 translation of your input into mappings. This will automatically create an Entity Type and its mappings.</p>
-              <button className='btn btn-d' onClick={this.showModal}>
+              <button className='btn btn-w' onClick={this.showModal}>
                 Apply Identity Mapping
               </button>
             </div>
