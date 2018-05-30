@@ -63,7 +63,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
     Create new Project entries.
     '''
 
-    queryset = Project.objects.order_by('name')
+    queryset = Project.objects \
+                      .prefetch_related('xforms', 'xforms__media_files') \
+                      .order_by('name')
     serializer_class = ProjectSerializer
     search_fields = ('name',)
 
@@ -97,7 +99,9 @@ class XFormViewSet(viewsets.ModelViewSet):
 
     '''
 
-    queryset = XForm.objects.order_by('title')
+    queryset = XForm.objects \
+                    .prefetch_related('media_files') \
+                    .order_by('title')
     serializer_class = XFormSerializer
     search_fields = ('title', 'description', 'xml_data',)
 
