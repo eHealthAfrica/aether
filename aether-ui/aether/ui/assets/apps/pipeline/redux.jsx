@@ -149,6 +149,12 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
     }
 
     case types.PIPELINE_PUBLISH_SUCCESS: {
+      if (action.payload.pipeline) {
+        const updatedPipeline = parsePipeline({ ...state.selectedPipeline, ...action.payload.pipeline })
+        const index = newPipelineList.findIndex(x => x.id === action.payload.pipeline.id)
+        newPipelineList[index] = updatedPipeline
+        return { ...state, publishSuccess: action.payload.successful, pipelineList: newPipelineList, selectedPipeline: updatedPipeline }
+      }
       return { ...state, publishSuccess: action.payload.successful }
     }
 
