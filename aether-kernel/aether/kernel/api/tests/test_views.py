@@ -362,6 +362,36 @@ class ViewsTest(TransactionTestCase):
             data=submission,
         )
 
+    def test_project_stats_view(self):
+        for _ in range(4):
+            response = self.helper_create_object('mapping-list', {
+                'name': str(uuid.uuid4()),  # random name
+                'definition': {},
+                'revision': 'Sample mapping revision',
+                'project': str(self.project.pk),
+            })
+            mapping_id = response.json()['id']
+
+            for __ in range(10):
+                self.helper_create_object('submission-list', {
+                    'revision': 'Sample submission revision',
+                    'map_revision': 'Sample map revision',
+                    'date': str(datetime.datetime.now()),
+                    'payload': EXAMPLE_SOURCE_DATA,
+                    'mapping': mapping_id,
+                })
+        url = reverse('projects_stats-detail', kwargs={'pk': self.project.pk})
+        response = self.client.get(url, format='json')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        json = response.json()
+        self.assertEquals(json['id'], str(self.project.pk))
+        submission_count = models.Submission.objects.count()
+        self.assertEquals(json['submission_count'], submission_count)
+        self.assertLessEqual(
+            dateutil.parser.parse(json['first_submission']),
+            dateutil.parser.parse(json['last_submission']),
+        )
+
     def test_mapping_stats_view(self):
         for _ in range(10):
             self.helper_create_object('submission-list', {
