@@ -79,6 +79,10 @@ prepare_and_test_container client
 prepare_and_test_container odk
 
 
+# test a clean UI TEST container
+prepare_and_test_container ui
+
+
 echo "_____________________________________________ Starting auxiliary databases"
 $DC_TEST up -d couchdb-test redis-test
 

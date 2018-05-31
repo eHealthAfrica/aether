@@ -189,7 +189,7 @@ In the case of `aether-odk-module` and `aether-couchdb-sync-module` there is a
 global token to connect to `aether-kernel` set in the **required** environment
 variable `AETHER_KERNEL_TOKEN`.
 
-In the case of `gather` there are tokens per user. This means that every time
+In the case of `aether-ui` there are tokens per user. This means that every time
 a logged in user tries to visit any page that requires to fetch data from any of
 the other apps, `aether-kernel` and/or `aether-odk-module`, the system will verify
 that the user token for that app is valid or will request a new one using the
@@ -224,7 +224,7 @@ If the response is `Always Look on the Bright Side of Life!!!`
 it's not possible to connect, on the other hand if the message is
 `Brought to you by eHealth Africa - good tech for hard places` everything goes fine.
 
-This also applies for `aether-couchdb-sync-module` and `gather`.
+This also applies for `aether-couchdb-sync-module` and `aether-ui`.
 
 In the case of `aether-couchdb-sync-module` a valid `GOOGLE_CLIENT_ID`
 environment variable is necessary to verify the device credentials as well.
