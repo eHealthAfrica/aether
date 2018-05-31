@@ -1,4 +1,9 @@
 #!/bin/bash
+echo "Waiting for kong service to start..."
+until $(curl --output /dev/null --silent --head --fail http://kong:8001); do
+    sleep 1
+done
+
 echo "Starting kongfig push to kong..."
 mkdir -p ../kongfig-files
 cp -R ./* ../kongfig-files/
