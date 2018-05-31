@@ -242,7 +242,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     def create(self, validated_data):
         try:
-            utils.validate_entity_payload(validated_data['projectschema'], validated_data['payload'])
+            utils.validate_payload(validated_data['projectschema'].schema.definition, validated_data['payload'])
         except Exception as schemaError:
             raise serializers.ValidationError(schemaError)
         try:
@@ -291,7 +291,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
             else:
                 instance.payload = target_payload
             try:
-                utils.validate_entity_payload(instance.projectschema, instance.payload)
+                utils.validate_payload(instance.projectschema.schema.definition, instance.payload)
             except Exception as schemaError:
                 raise serializers.ValidationError(schemaError)
             instance.save()
@@ -334,3 +334,9 @@ class MappingStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
             'id', 'name', 'definition', 'created',
             'first_submission', 'last_submission', 'submission_count',
         )
+
+
+class MappingValidationSerializer(serializers.Serializer):
+    submission_payload = serializers.JSONField()
+    mapping_definition = serializers.JSONField()
+    schemas = serializers.JSONField()

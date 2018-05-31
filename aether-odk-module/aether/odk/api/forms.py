@@ -22,12 +22,12 @@ from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.translation import ugettext as _
 
-from .models import Mapping, XForm
-from .xform_utils import parse_file
+from .models import Project, XForm
+from .xform_utils import parse_xform_file
 from .surveyors_utils import get_surveyors
 
 
-class MappingForm(forms.ModelForm):
+class ProjectForm(forms.ModelForm):
 
     surveyors = forms.ModelMultipleChoiceField(
         label=_('Surveyors'),
@@ -38,9 +38,9 @@ class MappingForm(forms.ModelForm):
     )
 
     class Meta:
-        model = Mapping
+        model = Project
         fields = (
-            'mapping_id',
+            'project_id',
             'name',
             'surveyors',
         )
@@ -63,7 +63,7 @@ class XFormForm(forms.ModelForm):
 
     def clean_xml_data(self):
         if 'xml_file' in self.files:
-            return parse_file(
+            return parse_xform_file(
                 filename=str(self.files['xml_file']),
                 content=self.files['xml_file'].file,
             )
@@ -82,7 +82,7 @@ class XFormForm(forms.ModelForm):
     class Meta:
         model = XForm
         fields = [
-            'id', 'mapping',
+            'id', 'project',
             'xml_file', 'xml_data',
             'surveyors', 'description',
         ]

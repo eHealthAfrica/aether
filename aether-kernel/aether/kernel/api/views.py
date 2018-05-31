@@ -19,8 +19,11 @@ import requests
 import json
 
 from django.db.models import Count, Min, Max
+from django.shortcuts import get_object_or_404
 
-from rest_framework import viewsets, permissions
+from drf_openapi.views import SchemaView
+from rest_framework import viewsets, permissions, status
+from rest_framework.response import Response
 from rest_framework.decorators import (
     action,
     api_view,
@@ -28,18 +31,13 @@ from rest_framework.decorators import (
     permission_classes,
     renderer_classes,
 )
-from drf_openapi.views import SchemaView
-from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
 
 from http import HTTPStatus
 from django.http import HttpResponse
 
 from aether.common.conf import settings as app_settings
-
-from . import models, serializers, filters, constants, utils, mapping_validation
+from . import models, serializers, filters, constants, utils, mapping_validation, project_artefacts
 
 
 def get_entity_linked_data(entity, request, resolved, depth, start_depth=0):
@@ -58,7 +56,7 @@ def get_entity_linked_data(entity, request, resolved, depth, start_depth=0):
                     resolved[linked_entity_schema_name][linked_data_ref] = serializers.EntityLDSerializer(
                         linked_entity, context={'request': request}).data
                     get_entity_linked_data(linked_entity, request, resolved, depth, start_depth)
-            except Exception as e:
+            except Exception:
                 pass
     return resolved
 
@@ -88,6 +86,89 @@ class ProjectViewSet(CustomViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectSerializer
     filter_class = filters.ProjectFilter
+
+    @action(detail=True, methods=['get', 'patch'])
+    def artefacts(self, request, pk=None, *args, **kwargs):
+        '''
+        Returns the list of project and its artefact ids by type.
+
+        Reachable at ``.../projects/{pk}/artefacts/``
+        '''
+
+        if request.method == 'GET':
+            return self.__retrieve_artefacts(request, pk)
+        else:
+            return self.__upsert_artefacts(request, pk)
+
+    def __retrieve_artefacts(self, request, pk=None):
+        '''
+        Returns the list of project and all its artefact ids by type.
+        '''
+
+        project = get_object_or_404(models.Project, pk=pk)
+        results = project_artefacts.get_project_artefacts(project)
+
+        return Response(data=results)
+
+    def __upsert_artefacts(self, request, pk=None):
+        '''
+        Creates or updates the project and its artefacts:
+        schemas, project schemas and mappings.
+
+        Returns the list of project and affected artefact ids by type.
+
+        Indicating an ``id`` in any of the entries doesn't mean that
+        the instance must exists, but in case of not, a new one with that
+        id will be created.
+
+        Expected payload:
+
+            {
+                # this is optional, if missing the method will assign a random name
+                "name": "project name (optional but unique)",
+
+                # this is optional, for each entry the method will
+                # create/update a schema and also link it to the project
+                # (projectschema entry)
+                "schemas": [
+                    {
+                        "id": "schema id (optional)",
+                        "name": "schema name (optional but unique)",
+                        "definition": {
+                            # the avro schema
+                        },
+                        "type": "record"
+                    },
+                    # ...
+                ],
+
+                # also optional
+                "mappings": [
+                    {
+                        "id": "mapping id (optional)",
+                        "name": "mapping name (optional but unique)",
+                        # optional but nice to have
+                        "definition": {
+                            "mapping": [
+                                # the mapping rules
+                            ]
+                        }
+                    },
+                    # ...
+                ]
+            }
+
+        '''
+
+        data = request.data
+        results = project_artefacts.upsert_project_artefacts(
+            project_id=pk,
+            project_name=data.get('name'),
+            schemas=data.get('schemas', []),
+            mappings=data.get('mappings', []),
+        )
+
+        return Response(data=results)
 
 
 class MappingViewSet(CustomViewSet):
@@ -142,10 +223,7 @@ class EntityViewSet(CustomViewSet):
     filter_class = filters.EntityFilter
 
     def retrieve(self, request, pk=None, *args, **kwargs):
-        try:
-            selected_record = models.Entity.objects.get(pk=pk)
-        except Exception as e:
-            return Response(str(e), status=HTTPStatus.NOT_FOUND)
+        selected_record = get_object_or_404(models.Entity, pk=pk)
         depth = request.query_params.get('depth')
         if depth:
             try:
@@ -153,17 +231,36 @@ class EntityViewSet(CustomViewSet):
                 if depth > constants.LINKED_DATA_MAX_DEPTH:
                     return Response({
                         'description': 'Supported max depth is 3'
-                    }, status=HTTPStatus.BAD_REQUEST)
+                    }, status=status.HTTP_400_BAD_REQUEST)
                 else:
                     selected_record.resolved = get_entity_linked_data(selected_record, request, {}, depth)
             except Exception as e:
-                return Response(str(e), status=HTTPStatus.BAD_REQUEST)
+                return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
         serializer_class = serializers.EntitySerializer(selected_record, context={'request': request})
-        return Response(serializer_class.data, status=HTTPStatus.OK)
+        return Response(serializer_class.data)
 
 
 class AetherSchemaView(SchemaView):
     permission_classes = (permissions.AllowAny, )
+
+
+def run_mapping_validation(submission_payload, mapping_definition, schemas):
+    submission_data, entities = utils.extract_create_entities(
+        submission_payload,
+        mapping_definition,
+        schemas,
+    )
+    validation_result = mapping_validation.validate_mappings(
+        submission_payload=submission_payload,
+        schemas=schemas,
+        mapping_definition=mapping_definition,
+    )
+    jsonpath_errors = [error._asdict() for error in validation_result]
+    type_errors = submission_data['aether_errors']
+    return (
+        jsonpath_errors + type_errors,
+        entities,
+    )
 
 
 @api_view(['POST'])
@@ -227,7 +324,7 @@ def setup_kong_consumer(request, *args, **kwargs):
 
 @api_view(['POST'])
 @renderer_classes([JSONRenderer])
-@permission_classes([IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated])
 def validate_mappings(request):
     '''
     Given a `submission_payload`, a `mapping_definition` and a list of
@@ -239,27 +336,16 @@ def validate_mappings(request):
     developing an Aether solution but have not yet submitted any complete
     Project; using this endpoint, it is possible to check the mapping functions
     (jsonpaths) align with both the source (`submission_payload`) and the
-    target (`entity_list`).
+    target (`entities`).
     '''
-
+    serializer = serializers.MappingValidationSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     try:
-        data = request.data
-        entities = utils.extract_create_entities(**data)
-        mapping_errors = mapping_validation.validate_mappings(
-            submission_payload=data['submission_payload'],
-            entity_list=entities,
-            mapping_definition=data['mapping_definition'],
-        )
+        errors, entities = run_mapping_validation(**serializer.data)
         return Response({
-            'entities': [
-                entity.payload for entity in entities
-            ],
-            'mapping_errors': [
-                error._asdict() for error in mapping_errors
-            ],
+            'entities': [entity.payload for entity in entities],
+            'mapping_errors': errors,
         })
     except Exception as e:
-        return Response(
-            {'message': 'Entity extraction error'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)

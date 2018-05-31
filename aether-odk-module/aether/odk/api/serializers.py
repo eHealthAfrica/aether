@@ -22,8 +22,8 @@ from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
-from .models import Mapping, XForm, MediaFile
-from .xform_utils import parse_file
+from .models import Project, XForm, MediaFile
+from .xform_utils import parse_xform_file
 from .surveyors_utils import get_surveyors, flag_as_surveyor
 
 
@@ -39,9 +39,9 @@ class MediaFileSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     url = serializers.HyperlinkedIdentityField('xform-detail', read_only=True)
-    mapping_url = serializers.HyperlinkedRelatedField(
-        'mapping-detail',
-        source='mapping',
+    project_url = serializers.HyperlinkedRelatedField(
+        'project-detail',
+        source='project',
         read_only=True
     )
 
@@ -68,7 +68,7 @@ class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         if value['xml_file']:
             try:
                 # extract data from file and put it on `xml_data`
-                value['xml_data'] = parse_file(
+                value['xml_data'] = parse_xform_file(
                     filename=str(value['xml_file']),
                     content=value['xml_file'],
                 )
@@ -117,9 +117,9 @@ class SurveyorSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = ('id', 'username', 'password', )
 
 
-class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class ProjectSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
-    url = serializers.HyperlinkedIdentityField('mapping-detail', read_only=True)
+    url = serializers.HyperlinkedIdentityField('project-detail', read_only=True)
     surveyors = serializers.PrimaryKeyRelatedField(
         label=_('Surveyors'),
         many=True,
@@ -131,5 +131,5 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     xforms = XFormSerializer(read_only=True, many=True)
 
     class Meta:
-        model = Mapping
+        model = Project
         fields = '__all__'

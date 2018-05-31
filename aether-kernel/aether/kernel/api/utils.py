@@ -35,8 +35,19 @@ from pygments.lexers.python import Python3Lexer
 from . import models, constants
 
 
-class EntityExtractionError(Exception):
+class EntityValidationError(Exception):
     pass
+
+
+Entity = collections.namedtuple(
+    'Entity',
+    ['id', 'payload', 'projectschema_name', 'status'],
+)
+
+EntityValidationResult = collections.namedtuple(
+    'EntityValidationResult',
+    ['validation_errors', 'entities'],
+)
 
 
 def __prettified__(response, lexer):
@@ -401,7 +412,31 @@ def extract_entity(entity_type, entities, requirements, data, entity_stub):
     return failed_actions
 
 
-def extract_entities(requirements, response_data, entity_definitions):
+def validate_entities(entities, schemas):
+    validation_errors = []
+    validated_entities = collections.defaultdict(list)
+    for entity_name, entity_payloads in entities.items():
+        for entity_payload in entity_payloads:
+            schema_definition = schemas[entity_name]
+            try:
+                validate_payload(
+                    schema_definition=schema_definition,
+                    payload=entity_payload,
+                )
+                validated_entities[entity_name].append(entity_payload)
+            except EntityValidationError as err:
+                error = {
+                    'description': err.args[0],
+                    'data': entity_payload,
+                }
+                validation_errors.append(error)
+    return EntityValidationResult(
+        validation_errors=validation_errors,
+        entities=validated_entities,
+    )
+
+
+def extract_entities(requirements, response_data, entity_definitions, schemas):
     data = response_data if response_data else []
     data['aether_errors'] = []
     # for output. Since we need to submit the extracted entities as different
@@ -431,13 +466,9 @@ def extract_entities(requirements, response_data, entity_definitions):
     # send a log of paths with errors to the user via saved response
     for action in failed_again:
         data['aether_errors'].append('failed %s' % action.path)
-    return data, entities
-
-
-Entity = collections.namedtuple(
-    'Entity',
-    ['id', 'payload', 'projectschema_name', 'status']
-)
+    validation_result = validate_entities(entities, schemas)
+    data['aether_errors'].extend(validation_result.validation_errors)
+    return data, validation_result.entities
 
 
 def extract_create_entities(submission_payload, mapping_definition, schemas):
@@ -452,27 +483,27 @@ def extract_create_entities(submission_payload, mapping_definition, schemas):
     requirements = get_entity_requirements(entity_defs, field_mappings)
 
     # Only attempt entity extraction if requirements are present
+    submission_data = {'aether_errors': []}
+    entity_types = {}
     if any(requirements.values()):
-        data, entity_types = extract_entities(
+        submission_data, entity_types = extract_entities(
             requirements,
             submission_payload,
             entity_defs,
+            schemas,
         )
-    else:
-        entity_types = {}
 
-    entity_list = []
-    for projectschema_name, entities in entity_types.items():
-        for entity in entities:
-            obj = Entity(
-                id=entity['id'],
-                payload=entity,
+    entities = []
+    for projectschema_name, entity_payloads in entity_types.items():
+        for entity_payload in entity_payloads:
+            entity = Entity(
+                id=entity_payload['id'],
+                payload=entity_payload,
                 projectschema_name=projectschema_name,
                 status='Publishable',
             )
-            entity_list.append(obj)
-
-    return entity_list
+            entities.append(entity)
+    return submission_data, entities
 
 
 def run_entity_extraction(submission):
@@ -494,12 +525,12 @@ def run_entity_extraction(submission):
         name: ps.schema.definition for name, ps in
         project_schemas.items()
     }
-    entities = extract_create_entities(
+    submission.save()
+    _, entities = extract_create_entities(
         submission_payload=submission.payload,
         mapping_definition=mapping_definition,
         schemas=schemas,
     )
-    submission.save()
     for entity in entities:
         projectschema_name = entity.projectschema_name
         projectschema = project_schemas[projectschema_name]
@@ -535,13 +566,14 @@ def merge_objects(source, target, direction):
     return result
 
 
-def validate_entity_payload(project_Schema, payload):
+def validate_payload(schema_definition, payload):
     # Use spavro to validate payload against the linked schema
     try:
-        avro_schema = parse_schema(json.dumps(project_Schema.schema.definition, indent=2))
+        avro_schema = parse_schema(json.dumps(schema_definition))
         valid = validate(avro_schema, payload)
         if not valid:
-            raise TypeError('Record did not conform to registered schema.')
+            msg = 'Extracted record did not conform to registered schema'
+            raise EntityValidationError(msg)
         return True
     except Exception as err:
         raise err

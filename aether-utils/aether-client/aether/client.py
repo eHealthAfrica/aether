@@ -647,11 +647,12 @@ class SubmissionData(DataEndpoint):
         else:
             return super(SubmissionData, self).pluck(self.pluck_url % id)
 
-    def submit(self, data):
+    def submit(self, data, refresh=False):
         if not data.get('mapping'):
             data['mapping'] = self.mapping.id
         res = super(SubmissionData, self).submit(self.url, data)
-        self.collection.load()
+        if refresh:
+            self.collection.load()
         return res
 
     def __str__(self):

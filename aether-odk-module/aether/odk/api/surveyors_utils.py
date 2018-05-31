@@ -55,7 +55,7 @@ def get_surveyors():
         # make sure that the group exists
         surveyor_group = get_surveyor_group()
         return surveyors.filter(groups__name=surveyor_group.name)
-    except Exception as e:  # pragma: no cover
+    except Exception:  # pragma: no cover
         return surveyors
 
 

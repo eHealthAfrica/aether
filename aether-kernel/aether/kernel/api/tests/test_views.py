@@ -20,12 +20,16 @@ import copy
 import json
 import datetime
 import dateutil.parser
+import uuid
+
+import mock
 
 from django.contrib.auth import get_user_model
 from django.test import TransactionTestCase
 from django.urls import reverse
 
 from rest_framework import status
+
 from .. import models, constants
 
 from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA,
@@ -380,6 +384,9 @@ class ViewsTest(TransactionTestCase):
         )
 
     def test_example_entity_extraction__success(self):
+        '''
+        Assert that valid mappings validate and no errors are accumulated.
+        '''
         url = reverse('validate-mappings')
         data = json.dumps({
             'submission_payload': EXAMPLE_SOURCE_DATA,
@@ -395,6 +402,9 @@ class ViewsTest(TransactionTestCase):
         self.assertEqual(len(response_data['mapping_errors']), 0)
 
     def test_example_entity_extraction__failure(self):
+        '''
+        Assert that errors are collected when invalid entities are created.
+        '''
         url = reverse('validate-mappings')
         data = json.dumps({
             'submission_payload': EXAMPLE_SOURCE_DATA,
@@ -420,10 +430,22 @@ class ViewsTest(TransactionTestCase):
             content_type='application/json'
         )
         response_data = json.loads(response.content)
-        self.assertEqual(len(response_data['entities']), 1)
-        self.assertEqual(len(response_data['mapping_errors']), 2)
+        self.assertEqual(len(response_data['entities']), 0)
+        self.assertEqual(len(response_data['mapping_errors']), 3)
+        expected = [
+            'Could not find schema "person"',
+            'No match for path',
+            'Extracted record did not conform to registered schema',
+        ]
+        result = [
+            error['description'] for error in response_data['mapping_errors']
+        ]
+        self.assertEqual(expected, result)
 
-    def test_example_entity_extraction__assert_raises(self):
+    def test_example_entity_extraction__400_BAD_REQUEST(self):
+        '''
+        Invalid requests should return status code 400.
+        '''
         url = reverse('validate-mappings')
         data = json.dumps({
             'mapping_definition': {
@@ -437,6 +459,7 @@ class ViewsTest(TransactionTestCase):
                     # "not_a_field" is not a field of `Person`
                     ['data.village', 'Person.not_a_field'],
                 ],
+                # "schemas" are missing
             },
         })
         response = self.client.post(
@@ -444,7 +467,28 @@ class ViewsTest(TransactionTestCase):
             data=data,
             content_type='application/json'
         )
+        response_data = json.loads(response.content)
         self.assertEquals(response.status_code, 400)
+        self.assertIn('This field is required', response_data['schemas'][0])
+        self.assertIn('This field is required', response_data['submission_payload'][0])
+
+    def test_example_entity_extraction__500_INTERNAL_SERVER_ERROR(self):
+        '''
+        Unexpected mapping or extraction failures should return status code 500.
+        '''
+        with mock.patch('aether.kernel.api.mapping_validation.validate_mappings') as m:
+            message = 'test'
+            m.side_effect = Exception(message)
+            url = reverse('validate-mappings')
+            data = json.dumps({
+                'submission_payload': EXAMPLE_SOURCE_DATA,
+                'mapping_definition': EXAMPLE_MAPPING,
+                'schemas': {'Person': EXAMPLE_SCHEMA},
+            })
+            response = self.client.post(url, data=data, content_type='application/json')
+            response_data = json.loads(response.content)
+            self.assertEquals(response.status_code, 500)
+            self.assertEquals(response_data, message)
 
     # Test resolving linked entities
     def helper_read_linked_data_entities(self, view_name, obj, depth):
@@ -538,3 +582,33 @@ class ViewsTest(TransactionTestCase):
 
         self.assertEqual(response_get, response_post, 'same list view')
         self.assertEqual(response_get['id'], project_id)
+
+    def test_project_artefacts__endpoints(self):
+        self.assertEqual(reverse('project-artefacts', kwargs={'pk': 1}), '/projects/1/artefacts/')
+
+        response_get_404 = self.client.get('/projects/artefacts/')
+        self.assertEqual(response_get_404.status_code, 404)
+
+        project_id = str(uuid.uuid4())
+        url = reverse('project-artefacts', kwargs={'pk': project_id})
+
+        response_get_404 = self.client.get(url)
+        self.assertEqual(response_get_404.status_code, 404, 'The project does not exist yet')
+
+        # create project and artefacts
+        response_patch = self.client.patch(
+            url,
+            json.dumps({'name': f'Project {project_id}'}),
+            content_type='application/json'
+        ).json()
+        self.assertEqual(response_patch, {
+            'project': project_id, 'schemas': [], 'project_schemas': [], 'mappings': []
+        })
+        project = models.Project.objects.get(pk=project_id)
+        self.assertEqual(project.name, f'Project {project_id}')
+
+        # try to retrieve again
+        response_get = self.client.get(url).json()
+        self.assertEqual(response_get, {
+            'project': project_id, 'schemas': [], 'project_schemas': [], 'mappings': []
+        })

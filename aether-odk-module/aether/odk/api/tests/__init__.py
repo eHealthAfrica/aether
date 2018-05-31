@@ -17,13 +17,14 @@
 # under the License.
 
 import base64
+import json
 import uuid
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TransactionTestCase
 
-from ..models import Mapping, XForm, MediaFile
+from ..models import Project, XForm, MediaFile
 from ..surveyors_utils import get_surveyor_group
 
 
@@ -33,6 +34,8 @@ PATH_DIR = '/code/aether/odk/api/tests/files/'
 
 XFORM_XLS_FILE = PATH_DIR + 'demo-xform.xls'
 XFORM_XML_FILE = PATH_DIR + 'demo-xform.xml'
+XFORM_XML_FILE_I18N = PATH_DIR + 'demo-xform-multilang.xml'
+XFORM_AVRO_FILE = PATH_DIR + 'demo-xform.avsc'
 
 XML_DATA_FILE = PATH_DIR + 'demo-data.xml'
 XML_DATA_FILE_ERR = PATH_DIR + 'demo-data--error.xml'
@@ -42,46 +45,138 @@ JSON_DATA_FILE = PATH_DIR + 'demo-data.json'
 
 XML_DATA = '''
     <h:html
-        xmlns="http://www.w3.org/2002/xforms"
-        xmlns:ev="http://www.w3.org/2001/xml-events"
-        xmlns:h="http://www.w3.org/1999/xhtml"
-        xmlns:jr="http://openrosa.org/javarosa"
-        xmlns:orx="http://openrosa.org/xforms"
-        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+            xmlns="http://www.w3.org/2002/xforms"
+            xmlns:ev="http://www.w3.org/2001/xml-events"
+            xmlns:h="http://www.w3.org/1999/xhtml"
+            xmlns:jr="http://openrosa.org/javarosa"
+            xmlns:orx="http://openrosa.org/xforms"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <h:head>
+            <h:title>xForm - Test</h:title>
+            <model>
+                <instance>
+                    <Mapping id="xform-id-test" version="v1">
+                        <starttime/>
+                        <endtime/>
+                        <deviceid/>
+                        <meta>
+                            <instanceID/>
+                        </meta>
+                    </Mapping>
+                </instance>
+                <instance id="other-entry"/>
 
-      <h:head>
-        <h:title>xForm - Test</h:title>
-        <model>
-          <instance>
-            <Mapping id="xform-id-test" version="v1">
-              <starttime/>
-              <endtime/>
-              <deviceid/>
-              <meta>
-                <instanceID/>
-              </meta>
-            </Mapping>
-          </instance>
-          <instance id="other-entry">
-          </instance>
-        </model>
-      </h:head>
-      <h:body>
-      </h:body>
+                <bind
+                        jr:preload="timestamp"
+                        jr:preloadParams="start"
+                        jr:requiredMsg="start"
+                        nodeset="/Mapping/starttime"
+                        required="true()"
+                        type="dateTime"/>
+                <bind
+                        jr:preload="timestamp"
+                        jr:preloadParams="end"
+                        jr:requiredMsg="end"
+                        nodeset="/Mapping/endtime"
+                        required="true()"
+                        type="dateTime"/>
+                <bind
+                        jr:preload="property"
+                        jr:preloadParams="deviceid"
+                        jr:requiredMsg="device"
+                        nodeset="/Mapping/deviceid"
+                        required="true()"
+                        type="string"/>
+
+                <bind
+                        calculate="concat('uuid:', uuid())"
+                        nodeset="/Mapping/meta/instanceID"
+                        readonly="true()"
+                        type="string"/>
+            </model>
+        </h:head>
+        <h:body/>
+    </h:html>
+'''
+
+XML_DATA_NO_VERSION = '''
+    <h:html
+            xmlns="http://www.w3.org/2002/xforms"
+            xmlns:ev="http://www.w3.org/2001/xml-events"
+            xmlns:h="http://www.w3.org/1999/xhtml"
+            xmlns:jr="http://openrosa.org/javarosa"
+            xmlns:orx="http://openrosa.org/xforms"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <h:head>
+            <h:title>xForm - Test</h:title>
+            <model>
+                <instance>
+                    <Mapping id="xform-id-test">
+                        <starttime/>
+                        <endtime/>
+                        <deviceid/>
+                        <meta>
+                            <instanceID/>
+                        </meta>
+                    </Mapping>
+                </instance>
+                <instance id="other-entry"/>
+
+                <bind
+                        jr:preload="timestamp"
+                        jr:preloadParams="start"
+                        jr:requiredMsg="start"
+                        nodeset="/Mapping/starttime"
+                        required="true()"
+                        type="dateTime"/>
+                <bind
+                        jr:preload="timestamp"
+                        jr:preloadParams="end"
+                        jr:requiredMsg="end"
+                        nodeset="/Mapping/endtime"
+                        required="true()"
+                        type="dateTime"/>
+                <bind
+                        jr:preload="property"
+                        jr:preloadParams="deviceid"
+                        jr:requiredMsg="device"
+                        nodeset="/Mapping/deviceid"
+                        required="true()"
+                        type="string"/>
+
+                <bind
+                        calculate="concat('uuid:', uuid())"
+                        nodeset="/Mapping/meta/instanceID"
+                        readonly="true()"
+                        type="string"/>
+            </model>
+        </h:head>
+        <h:body/>
     </h:html>
 '''
 
 XML_DATA_ERR = '''
     <h:html
-        xmlns="http://www.w3.org/2002/xforms"
-        xmlns:ev="http://www.w3.org/2001/xml-events"
-        xmlns:h="http://www.w3.org/1999/xhtml"
-        xmlns:jr="http://openrosa.org/javarosa"
-        xmlns:orx="http://openrosa.org/xforms"
-        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-
-      <h:head>
+            xmlns="http://www.w3.org/2002/xforms"
+            xmlns:ev="http://www.w3.org/2001/xml-events"
+            xmlns:h="http://www.w3.org/1999/xhtml"
+            xmlns:jr="http://openrosa.org/javarosa"
+            xmlns:orx="http://openrosa.org/xforms"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <!-- missing close tag -->
+        <h:head>
+    </h:html>
 '''
+
+
+class MockResponse:
+    def __init__(self, status_code, json_data=None):
+        self.json_data = json_data
+        self.status_code = status_code
+        self.content = json.dumps(json_data).encode('utf-8')
+
+    def json(self):
+        return self.json_data
 
 
 class CustomTestCase(TransactionTestCase):
@@ -89,8 +184,11 @@ class CustomTestCase(TransactionTestCase):
     def setUp(self):
         self.surveyor_group = get_surveyor_group()
 
-        with open(XFORM_XML_FILE, 'r') as f:
-            XFORM_XML_RAW = f.read()
+        with open(XFORM_XML_FILE, 'r') as fp:
+            XFORM_XML_RAW = fp.read()
+
+        with open(XFORM_XML_FILE_I18N, 'r') as fp:
+            XFORM_XML_RAW_I18N = fp.read()
 
         self.samples = {
             # sample collection for submission posts
@@ -104,17 +202,27 @@ class CustomTestCase(TransactionTestCase):
             # sample collection for xForm objects
             'xform': {
                 'xml-ok': XML_DATA,
+                'xml-ok-noversion': XML_DATA_NO_VERSION,
                 'xml-err': XML_DATA_ERR,
 
-                'raw-xml': XFORM_XML_RAW,
                 'file-xls': XFORM_XLS_FILE,
-                'file-xml': XFORM_XML_FILE,
                 'file-err': XML_DATA_FILE_ERR,
+
+                'raw-xml': XFORM_XML_RAW,
+                'file-xml': XFORM_XML_FILE,
+
+                'file-avro': XFORM_AVRO_FILE,
+
+                'raw-xml-i18n': XFORM_XML_RAW_I18N,
+                'file-xml-i18n': XFORM_XML_FILE_I18N,
             },
         }
 
     def tearDown(self):
         self.client.logout()
+
+    def helper_create_uuid(self):
+        return uuid.uuid4()
 
     def helper_create_superuser(self):
         username = 'admin'
@@ -147,34 +255,45 @@ class CustomTestCase(TransactionTestCase):
         surveyor.save()
         return surveyor
 
-    def helper_create_mapping(self, mapping_id=None, surveyor=None):
-        if mapping_id is None:
-            mapping_id = uuid.uuid4()
+    def helper_create_project(self, project_id=None, surveyor=None):
+        if project_id is None:
+            project_id = self.helper_create_uuid()
 
-        mapping, _ = Mapping.objects.get_or_create(
+        project, _ = Project.objects.get_or_create(
             name='test',
-            mapping_id=mapping_id,
+            project_id=project_id,
         )
 
-        self.assertEqual(str(mapping), '{} - test'.format(mapping_id))
+        self.assertEqual(str(project), '{} - test'.format(project_id))
 
         if surveyor:
             if type(surveyor) is list:
-                mapping.surveyors.set(surveyor)
+                project.surveyors.set(surveyor)
             else:
-                mapping.surveyors.add(surveyor)
-            mapping.save()
+                project.surveyors.add(surveyor)
+            project.save()
 
-        return mapping
+        return project
 
-    def helper_create_xform(self, mapping_id=None, surveyor=None, with_media=False):
+    def helper_create_xform(self,
+                            project_id=None,
+                            surveyor=None,
+                            xml_data=None,
+                            with_media=False,
+                            with_version=True):
+        if not xml_data:
+            if with_version:
+                xml_data = self.samples['xform']['xml-ok']
+            else:
+                xml_data = self.samples['xform']['xml-ok-noversion']
+
         xform = XForm.objects.create(
             description='test',
-            mapping=self.helper_create_mapping(
+            project=self.helper_create_project(
                 surveyor=surveyor,
-                mapping_id=mapping_id,
+                project_id=project_id,
             ),
-            xml_data=self.samples['xform']['raw-xml'],
+            xml_data=xml_data,
         )
 
         if surveyor:
