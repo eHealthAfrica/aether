@@ -133,3 +133,4 @@ terraform.tfstate.backup
 # Visual Studio files
 .vs
 demo
+.env
