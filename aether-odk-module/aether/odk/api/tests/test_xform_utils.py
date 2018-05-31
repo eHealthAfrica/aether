@@ -551,6 +551,21 @@ class XFormUtilsAvroTests(CustomTestCase):
         }
         self.assertEqual(get_label(xform_dict, '/None/any'), '/any')
 
+    def test__get_xform_label__another_dict(self):
+        xform_dict = {
+            'h:html': {
+                'h:body': {
+                    'any-tag': {
+                        '@ref': '/None/a/b/c/any',
+                        'label': {
+                            'output': 'any text',
+                        },
+                    }
+                }
+            }
+        }
+        self.assertEqual(get_label(xform_dict, '/None/a/b/c/any'), '/a/b/c/any')
+
     def test__parse_xform_to_avro_schema__with_multilanguage(self):
         with open(self.samples['xform']['file-avro'], 'rb') as content:
             xform_avro = json.load(content)
@@ -559,7 +574,7 @@ class XFormUtilsAvroTests(CustomTestCase):
         self.assertEqual(schema['name'], 'MyTestForm')
         self.assertEqual(schema['doc'], 'My Test Form (id: my-test-form, version: Test-1.0)')
 
-        self.assertEqual(schema, xform_avro)
+        self.assertEqual(schema, xform_avro, json.dumps(schema, indent='  '))
 
         schema_i18n = parse_xform_to_avro_schema(self.samples['xform']['raw-xml-i18n'])
         self.assertEqual(schema_i18n['name'], 'MyTestForm')
