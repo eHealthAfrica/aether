@@ -1,18 +1,33 @@
+import json
 import mock
 
-from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from ..models import UserTokens
+from aether.common.kernel import utils as kernel_utils
+
+from ..models import Pipeline
 
 
-get_or_create_user_app_token = UserTokens.get_or_create_user_app_token
+INPUT_SAMPLE = {
+    'name': 'John',
+    'surname': 'Smith',
+    'age': 33,
+}
 
-MODULES = ['kernel']
-
-
-def mock_return_none(*args):
-    return None
+ENTITY_SAMPLE = {
+    'name': 'Person',
+    'type': 'record',
+    'fields': [
+        {
+            'name': 'id',
+            'type': 'string',
+        },
+        {
+            'name': 'firstName',
+            'type': 'string',
+        }
+    ],
+}
 
 
 def mock_return_false(*args):
@@ -24,9 +39,14 @@ def mock_return_true(*args):
 
 
 class MockResponse:
-    def __init__(self, json_data, status_code):
-        self.json_data = json_data
+    def __init__(self, status_code, json_data={}):
         self.status_code = status_code
+        self.json_data = json_data
+        self.content = json.dumps(json_data)
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise Exception(self.status_code)
 
     def json(self):
         return self.json_data
@@ -35,140 +55,228 @@ class MockResponse:
 class ModelsTests(TestCase):
 
     def setUp(self):
-        username = 'test'
-        email = 'test@example.com'
-        password = 'testtest'
-        self.user = get_user_model().objects.create_user(username, email, password)
+        # check Kernel testing server
+        self.assertTrue(kernel_utils.test_connection())
+        self.KERNEL_URL = kernel_utils.get_kernel_server_url() + '/validate-mappings/'
+        self.KERNEL_HEADERS = kernel_utils.get_auth_header()
 
-    def test__user_tokens__get_app_url(self):
-        user_tokens, _ = UserTokens.objects.get_or_create(user=self.user)
-        self.assertEqual(user_tokens.get_app_url('kernel'), 'http://kernel-test:9000')
-        self.assertEqual(user_tokens.get_app_url('other'), None)
+    def test__str(self):
+        pipeline = Pipeline.objects.create(
+            name='Pipeline test',
+        )
+        self.assertEqual(str(pipeline), 'Pipeline test')
 
-    def test__user_tokens__unknown_app(self):
-        user_tokens, _ = UserTokens.objects.get_or_create(user=self.user)
-        self.assertEqual(user_tokens.kernel_token, None)
+    def test__pipeline__save__missing_requirements(self):
+        pipeline = Pipeline.objects.create(
+            name='Pipeline test',
+        )
 
-        app_name = 'unknown'
+        # default
+        self.assertEqual(pipeline.mapping_errors, [])
+        self.assertEqual(pipeline.output, [])
 
-        self.assertEqual(user_tokens.get_app_url(app_name), None)
-        self.assertEqual(user_tokens.get_app_token(app_name), None)
-        self.assertEqual(user_tokens.create_app_token(app_name), None)
-        self.assertEqual(user_tokens.get_or_create_app_token(app_name), None)
-        self.assertFalse(user_tokens.validates_app_token(app_name))
+        # no input
+        pipeline.input = {}
+        pipeline.mapping = [{'source': '#!uuid', 'destination': 'Person.id'}]
+        pipeline.entity_types = [ENTITY_SAMPLE]
+        pipeline.save()
+        self.assertEqual(pipeline.mapping_errors, [])
+        self.assertEqual(pipeline.output, [])
 
-        with mock.patch('requests.post') as mock_post:
-            self.assertEqual(user_tokens.obtain_app_token(app_name), None)
-            mock_post.assert_not_called()
+        # no mapping rules
+        pipeline.input = INPUT_SAMPLE
+        pipeline.mapping = []
+        pipeline.entity_types = [ENTITY_SAMPLE]
+        pipeline.save()
+        self.assertEqual(pipeline.mapping_errors, [])
+        self.assertEqual(pipeline.output, [])
 
-        user_tokens.save_app_token(app_name, '9876543210')
-        self.assertEqual(user_tokens.kernel_token, None)
+        # no entity types
+        pipeline.input = INPUT_SAMPLE
+        pipeline.mapping = [{'source': '#!uuid', 'destination': 'Person.id'}]
+        pipeline.entity_types = []
+        pipeline.save()
+        self.assertEqual(pipeline.mapping_errors, [])
+        self.assertEqual(pipeline.output, [])
 
-    def helper__test_user_tokens__default_values(self, user_tokens, app_name, app_property):
-        self.assertNotEqual(user_tokens.get_app_url(app_name), None)
-        self.assertEqual(user_tokens.get_app_token(app_name), None)
-        self.assertEqual(getattr(user_tokens, app_property), None)
-        self.assertFalse(user_tokens.validates_app_token(app_name))
+    @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_false)
+    def test__pipeline__save__test_connection_fail(self):
+        pipeline = Pipeline.objects.create(
+            name='Pipeline test',
+            input=INPUT_SAMPLE,
+            entity_types=[ENTITY_SAMPLE],
+            mapping=[{'source': '#!uuid', 'destination': 'Person.id'}],
+        )
 
-    def helper__test_user_tokens__create_app_token(self, user_tokens, app_name, app_property):
-        with mock.patch('requests.post',
-                        return_value=MockResponse({'token': 'ABCDEFGH'}, 200)) as mock_post:
-            self.assertEqual(user_tokens.create_app_token(app_name), 'ABCDEFGH')
-            self.assertEqual(getattr(user_tokens, app_property), 'ABCDEFGH')
-            mock_post.assert_called_once()
+        self.assertEqual(
+            pipeline.mapping_errors,
+            [{'description': 'It was not possible to connect to Aether Kernel Server.'}]
+        )
+        self.assertEqual(pipeline.output, [])
 
-    def helper__test_user_tokens__get_or_create_app_token(self,
-                                                          user_tokens,
-                                                          app_name,
-                                                          app_property):
-        # token DOES exist
-        with mock.patch('requests.post') as mock_post:
-            self.assertEqual(user_tokens.get_or_create_app_token(app_name), 'ABCDEFGH')
-            self.assertEqual(getattr(user_tokens, app_property), 'ABCDEFGH')
-            mock_post.assert_not_called()
+    @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
+    @mock.patch('requests.post', return_value=MockResponse(500))
+    def test__pipeline__save__with_server_error(self, mock_post):
+        pipeline = Pipeline.objects.create(
+            name='Pipeline test',
+            input=INPUT_SAMPLE,
+            entity_types=[ENTITY_SAMPLE],
+            mapping=[{'source': '#!uuid', 'destination': 'Person.id'}],
+        )
+        self.assertEqual(
+            pipeline.mapping_errors,
+            [{'description': f'It was not possible to validate the pipeline: 500'}]
+        )
+        self.assertEqual(pipeline.output, [])
+        mock_post.assert_called_once()
+        mock_post.assert_called_once_with(
+            url=self.KERNEL_URL,
+            headers=self.KERNEL_HEADERS,
+            json={
+                'submission_payload': INPUT_SAMPLE,
+                'mapping_definition': {
+                    'entities': {
+                        'Person': None,
+                    },
+                    'mapping': [
+                        ['#!uuid', 'Person.id'],
+                    ],
+                },
+                'schemas': {
+                    'Person': ENTITY_SAMPLE,
+                },
+            },
+        )
 
-        # remove token
-        user_tokens.save_app_token(app_name, None)
-        self.assertEqual(user_tokens.get_app_token(app_name), None)
-        self.assertEqual(getattr(user_tokens, app_property), None)
+    @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
+    @mock.patch('requests.post',
+                return_value=MockResponse(200, {
+                    'entities_2': 'something',
+                    'mapping_errors_2': 'something else',
+                }))
+    def test__pipeline__save__with_wrong_response(self, mock_post):
+        pipeline = Pipeline.objects.create(
+            name='Pipeline test',
+            input=INPUT_SAMPLE,
+            entity_types=[ENTITY_SAMPLE],
+            mapping=[{'source': '#!uuid', 'destination': 'Person.id'}],
+        )
+        self.assertEqual(pipeline.mapping_errors, [])
+        self.assertEqual(pipeline.output, [])
+        mock_post.assert_called_once()
+        mock_post.assert_called_once_with(
+            url=self.KERNEL_URL,
+            headers=self.KERNEL_HEADERS,
+            json={
+                'submission_payload': INPUT_SAMPLE,
+                'mapping_definition': {
+                    'entities': {
+                        'Person': None,
+                    },
+                    'mapping': [
+                        ['#!uuid', 'Person.id'],
+                    ],
+                },
+                'schemas': {
+                    'Person': ENTITY_SAMPLE,
+                },
+            },
+        )
 
-        # token DOES NOT exist
-        with mock.patch('requests.post',
-                        return_value=MockResponse({'token': '0123456789'}, 200)) as mock_post:
-            self.assertEqual(user_tokens.get_or_create_app_token(app_name), '0123456789')
-            self.assertEqual(getattr(user_tokens, app_property), '0123456789')
-            mock_post.assert_called_once()
+    @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
+    @mock.patch('requests.post',
+                return_value=MockResponse(200, {
+                    'entities': 'something',
+                    'mapping_errors': 'something else',
+                }))
+    def test__pipeline__save__validated(self, mock_post):
+        pipeline = Pipeline.objects.create(
+            name='Pipeline test',
+            input=INPUT_SAMPLE,
+            entity_types=[ENTITY_SAMPLE],
+            mapping=[
+                {'source': '#!uuid', 'destination': 'Person.id'},
+                {'source': '$.firstName', 'destination': 'Person.firstName'},
+            ],
+        )
 
-    def helper__test_user_tokens__validates_app_token(self, user_tokens, app_name, app_property):
-        with mock.patch('requests.get', return_value=mock.Mock(status_code=403)):
-            self.assertFalse(user_tokens.validates_app_token(app_name))
-        with mock.patch('requests.get', return_value=mock.Mock(status_code=200)):
-            self.assertTrue(user_tokens.validates_app_token(app_name))
+        self.assertEqual(pipeline.mapping_errors, 'something else')
+        self.assertEqual(pipeline.output, 'something')
+        mock_post.assert_called_once()
+        mock_post.assert_called_once_with(
+            url=self.KERNEL_URL,
+            headers=self.KERNEL_HEADERS,
+            json={
+                'submission_payload': INPUT_SAMPLE,
+                'mapping_definition': {
+                    'entities': {
+                        'Person': None,
+                    },
+                    'mapping': [
+                        ['#!uuid', 'Person.id'],
+                        ['$.firstName', 'Person.firstName'],
+                    ],
+                },
+                'schemas': {
+                    'Person': ENTITY_SAMPLE,
+                },
+            },
+        )
 
-        # what happens if the base_url or the token for the APP was not set
-        with mock.patch('aether.ui.api.models.AETHER_APPS', new={}):
-            self.assertFalse(user_tokens.validates_app_token(app_name))
+    def test__pipeline_workflow__with_kernel__wrong_rules(self):
+        pipeline = Pipeline.objects.create(
+            name='Pipeline test',
+            input=INPUT_SAMPLE,
+            entity_types=[ENTITY_SAMPLE],
+            mapping=[
+                {'source': '#!uuid', 'destination': 'Person.id'},
+                {'source': '$.not_a_real_key', 'destination': 'Person.firstName'},
+            ],
+        )
 
-        # None tokens are always not valid
-        setattr(user_tokens, app_property, None)
-        self.assertFalse(user_tokens.validates_app_token(app_name))
+        self.assertEqual(pipeline.output, [], 'No output if there are errors')
+        self.assertEqual(pipeline.mapping_errors[0],
+                         {'path': '$.not_a_real_key', 'description': 'No match for path'})
 
-    def helper__test_user_tokens__obtain_app_token(self, user_tokens, app_name, app_property):
-        setattr(user_tokens, app_property, '0123456789')
+        # the last entry is the extracted entity
+        self.assertEqual(
+            pipeline.mapping_errors[1]['description'],
+            'Extracted record did not conform to registered schema'
+        )
+        # the entity was generated but included within the errors
+        self.assertIsNotNone(pipeline.mapping_errors[1]['data']['id'], 'Generated id!')
+        self.assertIsNone(pipeline.mapping_errors[1]['data']['firstName'],
+                          'Wrong jsonpaths return None values')
 
-        # obtain token from server, it does not mean that it is saved within the user tokens
-        with mock.patch('requests.post',
-                        return_value=MockResponse({'token': 'ZYXWVUTSR'}, 200)) as mock_post:
-            self.assertEqual(user_tokens.obtain_app_token(app_name), 'ZYXWVUTSR')
-            self.assertEqual(user_tokens.get_app_token(app_name), '0123456789')
-            self.assertEqual(getattr(user_tokens, app_property), '0123456789')
-            mock_post.assert_called_once()
+    def test__pipeline_workflow__with_kernel__missing_id(self):
+        pipeline = Pipeline.objects.create(
+            name='Pipeline test',
+            input=INPUT_SAMPLE,
+            entity_types=[ENTITY_SAMPLE],
+            mapping=[{'source': '$.surname', 'destination': 'Person.firstName'}],
+        )
 
-        # what happens if the base_url or the token for the APP was not set
-        with mock.patch('aether.ui.api.models.AETHER_APPS', new={}):
-            self.assertEqual(user_tokens.obtain_app_token(app_name), None)
+        # error when there is no id rule for the entity
+        self.assertEqual(
+            pipeline.mapping_errors[0]['description'],
+            'Extracted record did not conform to registered schema'
+        )
+        self.assertNotIn('path', pipeline.mapping_errors[0])
+        self.assertIn('data', pipeline.mapping_errors[0])
+        self.assertEqual(pipeline.output, [])
 
-        # with an error on the other side
-        with mock.patch('requests.post', return_value=mock.Mock(status_code=403)):
-            self.assertEqual(user_tokens.obtain_app_token(app_name), None)
+    def test__pipeline_workflow__with_kernel__no_errors(self):
+        pipeline = Pipeline.objects.create(
+            name='Pipeline test',
+            input=INPUT_SAMPLE,
+            entity_types=[ENTITY_SAMPLE],
+            mapping=[
+                {'source': '#!uuid', 'destination': 'Person.id'},
+                {'source': '$.surname', 'destination': 'Person.firstName'},
+            ],
+        )
 
-    def test_user_tokens__apps(self):
-        for app in MODULES:
-            ut, _ = UserTokens.objects.get_or_create(user=self.user)
-            prop = '{}_token'.format(app.replace('-', '_'))
-
-            self.helper__test_user_tokens__default_values(ut, app, prop)
-            self.helper__test_user_tokens__create_app_token(ut, app, prop)
-            self.helper__test_user_tokens__get_or_create_app_token(ut, app, prop)
-            self.helper__test_user_tokens__validates_app_token(ut, app, prop)
-            self.helper__test_user_tokens__obtain_app_token(ut, app, prop)
-
-            ut.delete()
-
-    def test_get_or_create_user_app_token__unknown_app(self):
-        self.assertEqual(get_or_create_user_app_token(self.user, 'other'), None)
-
-    @mock.patch('aether.ui.api.models.AETHER_APPS', new={})
-    def test_get_or_create_user_app_token__not_base_url(self):
-        for app in MODULES:
-            self.assertEqual(get_or_create_user_app_token(self.user, app), None)
-
-    @mock.patch('aether.ui.api.models.UserTokens.create_app_token', new=mock_return_none)
-    @mock.patch('aether.ui.api.models.UserTokens.validates_app_token', new=mock_return_false)
-    def test_get_or_create_user_app_token__not_valid_token(self):
-        for app in MODULES:
-            self.assertEqual(get_or_create_user_app_token(self.user, app), None)
-
-    @mock.patch('aether.ui.api.models.UserTokens.get_app_token', new=mock_return_none)
-    @mock.patch('aether.ui.api.models.UserTokens.validates_app_token', new=mock_return_true)
-    def test_get_or_create_user_app_token__none_token(self):
-        for app in MODULES:
-            self.assertEqual(get_or_create_user_app_token(self.user, app), None)
-
-    @mock.patch('aether.ui.api.models.UserTokens.validates_app_token', new=mock_return_true)
-    def test_get_or_create_user_app_token__valid_token(self):
-        user_tokens, _ = UserTokens.objects.get_or_create(user=self.user)
-        for app in MODULES:
-            user_tokens.save_app_token(app, 'ABCDEFGH')
-            self.assertEqual(get_or_create_user_app_token(self.user, app).token,
-                             'ABCDEFGH')
+        self.assertEqual(pipeline.mapping_errors, [])
+        self.assertNotEqual(pipeline.output, [])
+        self.assertIsNotNone(pipeline.output[0]['id'], 'Generated id!')
+        self.assertEqual(pipeline.output[0]['firstName'], 'Smith')

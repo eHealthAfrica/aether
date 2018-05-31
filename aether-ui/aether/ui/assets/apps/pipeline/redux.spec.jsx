@@ -38,7 +38,7 @@ describe('Pipeline actions', () => {
   it('should create an action when adding a new pipeline and store in redux', () => {
     const newPipeline = { name: 'mock new name' }
     nock('http://localhost')
-      .post('/api/ui/pipelines/')
+      .post('/api/pipelines/')
       .reply(200, Object.assign(newPipeline, { id: 'mockid' }))
     expect(typeof addPipeline(newPipeline)).toEqual('object')
     return store.dispatch(addPipeline(newPipeline))
@@ -63,11 +63,11 @@ describe('Pipeline actions', () => {
       'highlightSource': {}
     }
     nock('http://localhost')
-      .get('/api/ui/pipelines/?limit=5000')
+      .get('/api/pipelines/?limit=5000')
       .reply(200, mockPipelines)
 
     nock('http://localhost')
-      .put(`/api/ui/pipelines/${pipeline.id}/`)
+      .put(`/api/pipelines/${pipeline.id}/`)
       .reply(200, pipeline)
     expect(typeof updatePipeline(pipeline)).toEqual('object')
     return store.dispatch(getPipelines())
@@ -93,11 +93,11 @@ describe('Pipeline actions', () => {
       'input': null
     }
     nock('http://localhost')
-      .get('/api/ui/pipelines/?limit=5000')
+      .get('/api/pipelines/?limit=5000')
       .reply(200, mockPipelines)
 
     nock('http://localhost')
-      .put(`/api/ui/pipelines/${wrongPipeline.id}/`)
+      .put(`/api/pipelines/${wrongPipeline.id}/`)
       .reply(404)
     expect(typeof updatePipeline(wrongPipeline)).toEqual('object')
     return store.dispatch(getPipelines())
@@ -113,7 +113,7 @@ describe('Pipeline actions', () => {
 
   it('should successfully get all pipelines and add to store', () => {
     nock('http://localhost')
-      .get('/api/ui/pipelines/?limit=5000')
+      .get('/api/pipelines/?limit=5000')
       .reply(200, mockPipelines)
     store.dispatch({type: types.GET_ALL, payload: {}})
     expect(store.getState().pipelineList).toEqual([])
@@ -127,9 +127,9 @@ describe('Pipeline actions', () => {
 
   it('should fail on getting all pipelines and store error', () => {
     nock('http://localhost')
-      .get('/api/ui/nojson.json')
+      .get('/api/nojson.json')
       .reply(404)
-    const NotFoundUrl = 'http://localhost/api/ui/nojson.json'
+    const NotFoundUrl = 'http://localhost/api/nojson.json'
     const action = () => ({
       types: ['', types.GET_ALL, types.PIPELINE_ERROR],
       promise: client => client.get(NotFoundUrl)
@@ -162,10 +162,10 @@ describe('Pipeline actions', () => {
       'highlightSource': {}
     }
     nock('http://localhost')
-      .get('/api/ui/pipelines/?limit=5000')
+      .get('/api/pipelines/?limit=5000')
       .reply(200, mockPipelines)
     nock('http://localhost')
-      .get(`/api/ui/pipelines/${pipeline.id}/`)
+      .get(`/api/pipelines/${pipeline.id}/`)
       .reply(200, pipeline)
     expect(typeof getPipelineById(pipeline.id)).toEqual('object')
     return store.dispatch(getPipelines())
@@ -184,7 +184,7 @@ describe('Pipeline actions', () => {
       successful: ['Passed 1', 'Passed 2']
     }
     nock('http://localhost')
-      .post('/api/ui/pipelines/1/publish/')
+      .post('/api/pipelines/1/publish/')
       .reply(200, expected)
     expect(typeof publishPipeline(1)).toEqual('object')
     return store.dispatch(publishPipeline(1))
@@ -204,7 +204,7 @@ describe('Pipeline actions', () => {
       exists: ['exist 1']
     }
     nock('http://localhost')
-      .post('/api/ui/pipelines/100/publish/')
+      .post('/api/pipelines/100/publish/')
       .reply(400, returnedData)
     return store.dispatch(publishPipeline(100))
       .then(() => {
