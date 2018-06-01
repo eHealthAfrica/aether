@@ -3,7 +3,7 @@
 import React from 'react'
 import { mountWithIntl } from 'enzyme-react-intl'
 
-import mockAvroSchema from '../mock/schema_input.mock'
+import mockAvroSchema from '../../tests/mock/schema_input.mock'
 import { AvroSchemaViewer } from '../components'
 
 describe('AvroSchemaViewer', () => {

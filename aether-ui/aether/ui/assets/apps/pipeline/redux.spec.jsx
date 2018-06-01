@@ -1,10 +1,12 @@
 /* global describe, it, expect, beforeEach */
 import reducer, { types, selectedPipelineChanged,
-  addPipeline, getPipelines, updatePipeline, INITIAL_PIPELINE, getPipelineById, publishPipeline } from './redux'
+  addPipeline, getPipelines, updatePipeline,
+  INITIAL_PIPELINE, getPipelineById, publishPipeline } from './redux'
 import { createStore, applyMiddleware } from 'redux'
 import nock from 'nock'
 import middleware from '../redux/middleware'
-import mockPipelines from '../mock/pipelines.mock'
+import mockPipelines from '../../tests/mock/pipelines.mock'
+import { MAX_PAGE_SIZE } from '../utils/constants'
 
 describe('Pipeline actions', () => {
   let store
@@ -23,7 +25,14 @@ describe('Pipeline actions', () => {
   })
 
   it('should dispatch a selected pipeline changed action and update the redux store', () => {
-    const selectedPipeline = { name: 'mock name', id: 1, errors: 0, entityTypes: 3, 'highlightDestination': [], 'highlightSource': {} }
+    const selectedPipeline = {
+      name: 'mock name',
+      id: 1,
+      errors: 0,
+      entityTypes: 3,
+      highlightDestination: [],
+      highlightSource: {}
+    }
     const expectedAction = {
       type: types.SELECTED_PIPELINE_CHANGED,
       payload: selectedPipeline
@@ -63,7 +72,7 @@ describe('Pipeline actions', () => {
       'highlightSource': {}
     }
     nock('http://localhost')
-      .get('/api/pipelines/?limit=5000')
+      .get(`/api/pipelines/?limit=${MAX_PAGE_SIZE}`)
       .reply(200, mockPipelines)
 
     nock('http://localhost')
@@ -93,7 +102,7 @@ describe('Pipeline actions', () => {
       'input': null
     }
     nock('http://localhost')
-      .get('/api/pipelines/?limit=5000')
+      .get(`/api/pipelines/?limit=${MAX_PAGE_SIZE}`)
       .reply(200, mockPipelines)
 
     nock('http://localhost')
@@ -113,7 +122,7 @@ describe('Pipeline actions', () => {
 
   it('should successfully get all pipelines and add to store', () => {
     nock('http://localhost')
-      .get('/api/pipelines/?limit=5000')
+      .get(`/api/pipelines/?limit=${MAX_PAGE_SIZE}`)
       .reply(200, mockPipelines)
     store.dispatch({type: types.GET_ALL, payload: {}})
     expect(store.getState().pipelineList).toEqual([])
@@ -140,7 +149,8 @@ describe('Pipeline actions', () => {
       error: { error: 'Not Found', status: 404 },
       notFound: null,
       publishSuccess: null,
-      publishError: null
+      publishError: null,
+      isNewPipeline: false
     }
     return store.dispatch(action())
       .then(() => {
@@ -162,7 +172,7 @@ describe('Pipeline actions', () => {
       'highlightSource': {}
     }
     nock('http://localhost')
-      .get('/api/pipelines/?limit=5000')
+      .get(`/api/pipelines/?limit=${MAX_PAGE_SIZE}`)
       .reply(200, mockPipelines)
     nock('http://localhost')
       .get(`/api/pipelines/${pipeline.id}/`)

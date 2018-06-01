@@ -4,7 +4,8 @@ import { FormattedMessage } from 'react-intl'
 import moment from 'moment'
 
 import { PROJECT_NAME } from '../utils/constants'
-import { NavBar, PublishButton } from '../components'
+import { NavBar, Modal } from '../components'
+import PublishButton from './PublishButton'
 
 import NewPipeline from './NewPipeline'
 import { addPipeline, selectedPipelineChanged, getPipelines, fetchPipelines } from './redux'
@@ -13,7 +14,10 @@ class PipelineList extends Component {
   constructor (props) {
     super(props)
     this.state = {
-      view: 'show-index'
+      view: 'show-index',
+      showError: false,
+      errorHeader: '',
+      errorMessage: ''
     }
   }
 
@@ -25,9 +29,20 @@ class PipelineList extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
-    if (nextProps.error !== this.props.error) {
-      // TODO: handle errors
+    if (nextProps.error && nextProps.error.error && nextProps.error.error.name && nextProps.error.error.name.length) {
+      this.setState({
+        showError: true,
+        errorHeader: `Error code ${nextProps.error.status}`,
+        errorMessage: nextProps.error.error.name[0]
+      })
     }
+    if (nextProps.isNewPipeline) {
+      this.props.history.push(`/${nextProps.pipelineList[0].id}`)
+    }
+  }
+
+  setErrorModal (visible) {
+    this.setState({ showError: visible })
   }
 
   render () {
@@ -61,6 +76,16 @@ class PipelineList extends Component {
       <div
         key={pipeline.id}
         className='pipeline-preview'>
+        <Modal buttons={
+          <button type='button' className='btn btn-w btn-primary' onClick={this.setErrorModal.bind(this, false)}>
+            <FormattedMessage
+              id='pipeline.modal.error.ok'
+              defaultMessage='Ok'
+            />
+          </button>
+        } header={this.state.errorHeader} show={this.state.showError}>
+          {this.state.errorMessage}
+        </Modal>
         <div
           onClick={() => { this.onSelectPipeline(pipeline) }}>
           <h2 className='preview-heading'>{pipeline.name}</h2>
@@ -89,7 +114,7 @@ class PipelineList extends Component {
           <div className='status-publish'>
             <FormattedMessage
               id='pipeline.list.publish-status'
-              defaultMessage={pipeline.published_on ? `Published on ${moment(new Date(pipeline.published_on)).format('MMMM DD')}`
+              defaultMessage={pipeline.published_on ? `Published on ${moment(pipeline.published_on).format('MMMM DD')}`
                 : 'Not published'}
             />
           </div>
@@ -102,7 +127,6 @@ class PipelineList extends Component {
 
   onStartPipeline (newPipeline) {
     this.props.addPipeline(newPipeline)
-    this.props.history.push(`/${newPipeline.id}`)
   }
 
   onSelectPipeline (pipeline) {
@@ -113,7 +137,8 @@ class PipelineList extends Component {
 
 const mapStateToProps = ({ pipelines }) => ({
   pipelineList: pipelines.pipelineList,
-  error: pipelines.error
+  error: pipelines.error,
+  isNewPipeline: pipelines.isNewPipeline
 })
 
 export default connect(mapStateToProps, { getPipelines, selectedPipelineChanged, addPipeline, fetchPipelines })(PipelineList)

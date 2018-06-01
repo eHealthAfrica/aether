@@ -3,7 +3,7 @@
 import React from 'react'
 import { mountWithIntl } from 'enzyme-react-intl'
 
-import mockEntityTypesSchema from '../mock/schema_entityTypes.mock'
+import mockEntityTypesSchema from '../../tests/mock/schema_entityTypes.mock'
 import { EntityTypeViewer } from '../components'
 
 describe('EntityTypeViewer', () => {
@@ -49,7 +49,6 @@ describe('EntityTypeViewer', () => {
       }
     })
     const component = mountWithIntl(<EntityTypeViewer schema={entityTypeWithoutSymbols} highlight={['Person.firstName']} />)
-    // TODO: Updates when styles are added to rendered components
     expect(component.html()).toContain('<span class="type"> enum</span>')
     expect(component.html()).toContain('<span class="name">building</span>')
   })
