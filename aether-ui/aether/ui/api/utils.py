@@ -102,14 +102,7 @@ def validate_pipeline(pipeline):
     }
 
     try:
-        kernerl_url = utils.get_kernel_server_url()
-        resp = requests.post(
-            url=f'{kernerl_url}/validate-mappings/',
-            json=json.loads(json.dumps(payload)),
-            headers=utils.get_auth_header(),
-        )
-        resp.raise_for_status()
-        response = json.loads(resp.content)
+        response = kernel_data_request('validate-mappings/', 'post', json.loads(json.dumps(payload)))
 
         return (
             response['mapping_errors'] if 'mapping_errors' in response else [],
@@ -129,14 +122,20 @@ def kernel_data_request(url='', method='get', data={}):
     '''
     kernerl_url = utils.get_kernel_server_url()
     res = requests.request(method=method,
-                           url=f'{kernerl_url}/{url}',
-                           headers=utils.get_auth_header(),
-                           json=data
-                           )
+                            url=f'{kernerl_url}/{url}',
+                            headers=utils.get_auth_header(),
+                            json=data
+                            )
     if res.status_code >= 200 and res.status_code < 400:
-        return res.json()
+        try:
+            return res.json()
+        except Exception:
+            return res
     else:
-        raise Exception(res.json())
+        try:
+            raise res.json()
+        except Exception:
+            raise res
 
 
 def create_new_kernel_object(object_name, pipeline, data={}, project_name='Aux', entity_name=None):
@@ -385,9 +384,12 @@ def create_new_pipeline_from_kernel(kernel_object):
 
 
 def kernel_to_pipeline():
-    mappings = kernel_data_request('mappings/')['results']
-    pipelines = []
-    for mapping in mappings:
-        if not is_linked_to_pipeline('mapping', mapping['id']):
-            pipelines.append(create_new_pipeline_from_kernel(mapping))
-    return pipelines
+    try:
+        mappings = kernel_data_request('mappings/')['results']
+        pipelines = []
+        for mapping in mappings:
+            if not is_linked_to_pipeline('mapping', mapping['id']):
+                pipelines.append(create_new_pipeline_from_kernel(mapping))
+        return pipelines
+    except Exception as e:
+        raise e

@@ -58,6 +58,9 @@ services:
       interval: 3s
       timeout: 3s
       retries: 5
+    depends_on:
+      kong-migration:
+        condition: service_started
     # FIXME: bring back these once we have figured out the reason for
     #
     #     ERROR: for kong-migration  Service "db" is missing a healthcheck configuration
