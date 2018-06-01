@@ -31,7 +31,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
         This view transform the supplied pipeline to kernal models,
         publish and update the pipeline with related kernel model ids.
         '''
-        project_name = request.data['project_name'] if 'project_name' in request.data else 'Aux'
+        project_name = request.data.get('project_name', 'Aux')
         overwrite = request.data.get('overwrite', False)
         outcome = {
             'successful': [],
@@ -58,7 +58,6 @@ class PipelineViewSet(viewsets.ModelViewSet):
         if outcome['error']:
             return Response(outcome, status=HTTPStatus.BAD_REQUEST)
         else:
-            del outcome['error']
             pipeline.published_on = timezone.now()
             pipeline.save()
             serialized_data = serializers.PipelineSerializer(pipeline, context={'request': request}).data

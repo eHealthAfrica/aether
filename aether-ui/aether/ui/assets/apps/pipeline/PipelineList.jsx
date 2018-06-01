@@ -29,11 +29,11 @@ class PipelineList extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
-    if (nextProps.error && nextProps.error.error && nextProps.error.error.name && nextProps.error.error.name.length) {
+    if (nextProps.error) {
       this.setState({
         showError: true,
         errorHeader: `Error code ${nextProps.error.status}`,
-        errorMessage: nextProps.error.error.name[0]
+        errorMessage: nextProps.error.message
       })
     }
     if (nextProps.isNewPipeline) {
