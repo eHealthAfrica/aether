@@ -114,7 +114,7 @@ describe('Pipeline actions', () => {
         return store.dispatch(updatePipeline(wrongPipeline))
           .then(res => {
             expect(store.getState().error).toEqual(
-              { error: 'Not Found', status: 404 }
+              { error: 'Not Found', message: 'Resource Not Found', status: 404 }
             )
           })
       })
@@ -146,7 +146,7 @@ describe('Pipeline actions', () => {
     const expectedStoreData = {
       pipelineList: [],
       selectedPipeline: null,
-      error: { error: 'Not Found', status: 404 },
+      error: { error: 'Not Found', message: 'Resource Not Found', status: 404 },
       notFound: null,
       publishSuccess: null,
       publishError: null,
