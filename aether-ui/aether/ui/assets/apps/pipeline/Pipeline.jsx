@@ -4,7 +4,8 @@ import { FormattedMessage } from 'react-intl'
 import { Link } from 'react-router-dom'
 import moment from 'moment'
 
-import { NavBar, PublishButton } from '../components'
+import { NavBar } from '../components'
+import PublishButton from './PublishButton'
 
 import Input from './sections/Input'
 import EntityTypes from './sections/EntityTypes'
@@ -74,7 +75,7 @@ class Pipeline extends Component {
               <FormattedMessage
                 id='pipeline.publish-status'
                 defaultMessage={this.props.selectedPipeline.published_on
-                  ? `Published on ${moment(new Date(this.props.selectedPipeline.published_on)).format('MMMM DD, YYYY HH:mm')}`
+                  ? `Published on ${moment(this.props.selectedPipeline.published_on).format('MMMM DD, YYYY HH:mm')}`
                   : 'Not published'}
               />
             </div>

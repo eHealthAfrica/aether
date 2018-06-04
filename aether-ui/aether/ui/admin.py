@@ -3,11 +3,11 @@ from django.contrib import admin
 from .api import models
 
 
-class UserTokensAdmin(admin.ModelAdmin):
+class PipelineAdmin(admin.ModelAdmin):
 
-    list_display = ('user', 'kernel_token',)
-    search_fields = ('user',)
+    list_display = ('name', 'published_on',)
+    search_fields = ('name',)
     ordering = list_display
 
 
-admin.site.register(models.UserTokens, UserTokensAdmin)
+admin.site.register(models.Pipeline, PipelineAdmin)

@@ -2,8 +2,8 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 import { PROJECT_NAME } from '../utils/constants'
-import { publishPipeline, selectedPipelineChanged } from '../pipeline/redux'
-import Modal from './Modal'
+import { publishPipeline, selectedPipelineChanged } from './redux'
+import Modal from '../components/Modal'
 
 class PublishButton extends Component {
   constructor (props) {

@@ -17,13 +17,14 @@
 # under the License.
 
 import base64
+import json
 import uuid
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TransactionTestCase
 
-from ..models import Mapping, XForm, MediaFile
+from ..models import Project, XForm, MediaFile
 from ..surveyors_utils import get_surveyor_group
 
 
@@ -168,6 +169,16 @@ XML_DATA_ERR = '''
 '''
 
 
+class MockResponse:
+    def __init__(self, status_code, json_data=None):
+        self.json_data = json_data
+        self.status_code = status_code
+        self.content = json.dumps(json_data).encode('utf-8')
+
+    def json(self):
+        return self.json_data
+
+
 class CustomTestCase(TransactionTestCase):
 
     def setUp(self):
@@ -210,6 +221,9 @@ class CustomTestCase(TransactionTestCase):
     def tearDown(self):
         self.client.logout()
 
+    def helper_create_uuid(self):
+        return uuid.uuid4()
+
     def helper_create_superuser(self):
         username = 'admin'
         email = 'admin@example.com'
@@ -241,28 +255,28 @@ class CustomTestCase(TransactionTestCase):
         surveyor.save()
         return surveyor
 
-    def helper_create_mapping(self, mapping_id=None, surveyor=None):
-        if mapping_id is None:
-            mapping_id = uuid.uuid4()
+    def helper_create_project(self, project_id=None, surveyor=None):
+        if project_id is None:
+            project_id = self.helper_create_uuid()
 
-        mapping, _ = Mapping.objects.get_or_create(
+        project, _ = Project.objects.get_or_create(
             name='test',
-            mapping_id=mapping_id,
+            project_id=project_id,
         )
 
-        self.assertEqual(str(mapping), '{} - test'.format(mapping_id))
+        self.assertEqual(str(project), '{} - test'.format(project_id))
 
         if surveyor:
             if type(surveyor) is list:
-                mapping.surveyors.set(surveyor)
+                project.surveyors.set(surveyor)
             else:
-                mapping.surveyors.add(surveyor)
-            mapping.save()
+                project.surveyors.add(surveyor)
+            project.save()
 
-        return mapping
+        return project
 
     def helper_create_xform(self,
-                            mapping_id=None,
+                            project_id=None,
                             surveyor=None,
                             xml_data=None,
                             with_media=False,
@@ -275,9 +289,9 @@ class CustomTestCase(TransactionTestCase):
 
         xform = XForm.objects.create(
             description='test',
-            mapping=self.helper_create_mapping(
+            project=self.helper_create_project(
                 surveyor=surveyor,
-                mapping_id=mapping_id,
+                project_id=project_id,
             ),
             xml_data=xml_data,
         )

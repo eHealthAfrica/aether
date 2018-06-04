@@ -4,8 +4,7 @@ import { connect } from 'react-redux'
 import avro from 'avsc'
 
 import { AvroSchemaViewer, Modal } from '../../components'
-import { generateGUID, deepEqual } from '../../utils'
-import { generateSchemaName } from '../../utils/generateSchemaName'
+import { deepEqual, generateGUID, generateSchemaName } from '../../utils'
 import { updatePipeline } from '../redux'
 
 // The input section has two subviews `SCHEMA_VIEW` and `DATA_VIEW`.

@@ -28,6 +28,17 @@ show_help() {
   """
 }
 
+pip_freeze() {
+    pip install virtualenv
+    rm -rf /tmp/env
+
+    virtualenv -p python3 /tmp/env/
+    /tmp/env/bin/pip install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
+
+    cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
+    /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
+}
+
 setup_db() {
   export PGPASSWORD=$RDS_PASSWORD
   export PGHOST=$RDS_HOSTNAME
@@ -52,16 +63,6 @@ setup_db() {
 setup_initial_data() {
   # create initial superuser
   ./manage.py loaddata ./conf/extras/initial.json
-}
-
-setup_projects() {
-  # Wait for kernel to become available
-  until $(curl --output /dev/null --silent --head $AETHER_KERNEL_URL); do
-    >&2 echo 'Waiting for Aether kernel...'
-    sleep 1
-  done
-  # Set up Aether and Ui projects and ensure that they are in sync
-  ./manage.py setup_aether_project
 }
 
 setup_prod() {
@@ -120,11 +121,7 @@ case "$1" in
   ;;
 
   pip_freeze )
-    rm -rf /tmp/env
-    pip install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
-
-    cat ./conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
-    pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
+    pip_freeze
   ;;
 
   setuplocaldb )
@@ -168,7 +165,6 @@ case "$1" in
   start )
     setup_db
     setup_prod
-    setup_projects
 
     # remove previous files
     rm -r -f ${BUNDLES_DIR}

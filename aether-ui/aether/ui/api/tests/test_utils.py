@@ -64,7 +64,7 @@ class ViewsTest(TestCase):
 
     def test_convert_entity_types(self):
         with self.assertRaises(Exception) as exc:
-            utils.convertEntityTypes({'Person': '123456'})
+            utils.convert_entity_types({'Person': '123456'})
             exception = ast.literal_eval(str(exc.exception))
             self.assertEqual(exception['object_name'], 'unknown')
 

@@ -1,6 +1,6 @@
 /* global jQuery */
 import 'whatwg-fetch'
-import { NotFoundError } from './errors'
+import { NotFoundError, HTTPError } from './errors'
 
 const methods = ['get', 'post', 'put', 'patch', 'del']
 
@@ -45,11 +45,12 @@ export default class ApiClient {
                 res.json().then(res => resolve(res)).catch(err => reject(err)) // Should be extended to cater for other content-types or than json
               } else {
                 if (res.status === 404) {
-                  reject(new NotFoundError())
+                  reject(new NotFoundError('Resource Not Found'))
                 } else {
                   try {
-                    res.json().then(error => {
-                      resolve({ error, status: res.status })
+                    res.json().then(err => {
+                      const message = err.name && err.name.length && err.name[0]
+                      reject(new HTTPError(message, err, res.status))
                     })
                   } catch (err) {
                     reject(err)

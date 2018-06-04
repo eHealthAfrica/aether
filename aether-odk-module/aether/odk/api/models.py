@@ -39,30 +39,32 @@ from .xform_utils import (
 Data model schema:
 
 
-    +------------------+       +------------------+       +------------------+
-    | Mapping          |       | XForm            |       | MediaFile        |
-    +==================+       +==================+       +==================+
-    | mapping_id       |<--+   | id               |<--+   | id               |
-    | name             |   |   | xml_data         |   |   | name             |
-    +::::::::::::::::::+   |   | description      |   |   | media_file       |
-    | surveyors (User) |   |   | created_at       |   |   +~~~~~~~~~~~~~~~~~~+
-    +------------------+   |   +~~~~~~~~~~~~~~~~~~+   |   | md5sum           |
-                           |   | title            |   |   +::::::::::::::::::+
-                           |   | form_id          |   +--<| xform            |
-                           |   | version          |       +------------------+
-                           |   | avro_schema      |
-                           |   | md5sum           |
-                           |   +::::::::::::::::::+
-                           +--<| mapping          |
-                               | surveyors (User) |
-                               +------------------+
+    +------------------+       +-------------------+       +------------------+
+    | Project          |       | XForm             |       | MediaFile        |
+    +==================+       +===================+       +==================+
+    | project_id       |<--+   | id                |<--+   | id               |
+    | name             |   |   | xml_data          |   |   | name             |
+    +::::::::::::::::::+   |   | description       |   |   | media_file       |
+    | surveyors (User) |   |   | created_at        |   |   +~~~~~~~~~~~~~~~~~~+
+    +------------------+   |   +~~~~~~~~~~~~~~~~~~-+   |   | md5sum           |
+                           |   | title             |   |   +::::::::::::::::::+
+                           |   | form_id           |   +--<| xform            |
+                           |   | version           |       +------------------+
+                           |   | md5sum            |
+                           |   | avro_schema       |
+                           |   +:::::::::::::::::::+
+                           |   | kernel_id         |
+                           |   +:::::::::::::::::::+
+                           +--<| project           |
+                               | surveyors (User)  |
+                               +-------------------+
 
 '''
 
 
-class Mapping(models.Model):
+class Project(models.Model):
     '''
-    Database link of a Aether Kernel Mapping
+    Database link of an Aether Kernel Project
 
     The needed and common data is stored here, like the list of granted surveyors.
 
@@ -70,7 +72,7 @@ class Mapping(models.Model):
 
     # This is needed to submit data to kernel
     # (there is a one to one relation)
-    mapping_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    project_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
 
     name = models.TextField(null=True, blank=True, default='')
 
@@ -79,11 +81,11 @@ class Mapping(models.Model):
 
     def is_surveyor(self, user):
         '''
-        Indicates if the given user is a granted surveyor of the Mapping.
+        Indicates if the given user is a granted surveyor of the Project.
 
         Rules:
             - User is superuser.
-            - Mapping has no surveyors.
+            - Project has no surveyors.
             - User is in the surveyors list.
 
         '''
@@ -95,11 +97,11 @@ class Mapping(models.Model):
         )
 
     def __str__(self):
-        return '{} - {}'.format(str(self.mapping_id), self.name)
+        return '{} - {}'.format(str(self.project_id), self.name)
 
     class Meta:
         app_label = 'odk'
-        default_related_name = 'mappings'
+        default_related_name = 'projects'
         ordering = ['name']
 
 
@@ -116,15 +118,26 @@ def __validate_xml_data__(value):
 
 class XForm(models.Model):
     '''
-    Database representation of an XForm
+    Database representation of an XForm.
 
     The data is stored in XML format and could be converted to the
     other supported formats when it is needed.
 
+
+    One XForm should create in Kernel:
+        - one Mapping,
+        - one Schema and
+        - one ProjectSchema.
+
     '''
 
     # This is needed to submit data to kernel
-    mapping = models.ForeignKey(to=Mapping, on_delete=models.CASCADE)
+    kernel_id = models.UUIDField(default=uuid.uuid4)
+
+    project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
+
+    description = models.TextField(default='', null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
 
     # the list of granted surveyors
     surveyors = models.ManyToManyField(to=get_user_model(), blank=True)
@@ -138,9 +151,6 @@ class XForm(models.Model):
     version = models.TextField(default='0', blank=True)
     md5sum = models.CharField(default='', editable=False, max_length=36)
     avro_schema = JSONField(blank=True, null=True, editable=False)
-
-    description = models.TextField(default='', null=True, blank=True)
-    created_at = models.DateTimeField(default=timezone.now, editable=False)
 
     @property
     def hash(self):
@@ -205,16 +215,16 @@ class XForm(models.Model):
 
         Rules:
             - User is superuser.
-            - xForm and Mapping have no surveyors.
-            - User is in the xForm or Mapping surveyors list.
+            - xForm and Project have no surveyors.
+            - User is in the xForm or Project surveyors list.
 
         '''
 
         return (
             user.is_superuser or
-            (self.surveyors.count() == 0 and self.mapping.surveyors.count() == 0) or
+            (self.surveyors.count() == 0 and self.project.surveyors.count() == 0) or
             user in self.surveyors.all() or
-            user in self.mapping.surveyors.all()
+            user in self.project.surveyors.all()
         )
 
     def update_hash(self, increase_version=False):
@@ -236,9 +246,9 @@ class XForm(models.Model):
 
 
 def __media_path__(instance, filename):
-    # file will be uploaded to MEDIA_ROOT/<mapping>/<xform>/filename
-    return '{mapping}/{xform}/{filename}'.format(
-        mapping=instance.xform.mapping.pk,
+    # file will be uploaded to MEDIA_ROOT/<project>/<xform>/filename
+    return '{project}/{xform}/{filename}'.format(
+        project=instance.xform.project.pk,
         xform=instance.xform.pk,
         filename=filename,
     )

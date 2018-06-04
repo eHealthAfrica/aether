@@ -7,7 +7,7 @@ from . import models
 class PipelineSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         read_only=True,
-        view_name='ui:pipeline-detail',
+        view_name='pipeline-detail',
     )
 
     class Meta:
