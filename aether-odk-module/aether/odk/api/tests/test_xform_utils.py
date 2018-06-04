@@ -574,7 +574,7 @@ class XFormUtilsAvroTests(CustomTestCase):
         self.assertEqual(schema['name'], 'MyTestForm')
         self.assertEqual(schema['doc'], 'My Test Form (id: my-test-form, version: Test-1.0)')
 
-        self.assertEqual(schema, xform_avro, json.dumps(schema, indent='  '))
+        self.assertEqual(schema, xform_avro)
 
         schema_i18n = parse_xform_to_avro_schema(self.samples['xform']['raw-xml-i18n'])
         self.assertEqual(schema_i18n['name'], 'MyTestForm')
