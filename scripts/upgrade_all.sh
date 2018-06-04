@@ -20,7 +20,7 @@
 #
 set -Eeuo pipefail
 
-containers=( kernel odk couchdb-sync )
+containers=( kernel odk couchdb-sync ui )
 
 # create the common module
 ./scripts/build_common_and_distribute.sh

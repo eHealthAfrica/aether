@@ -51,6 +51,7 @@ services:
       - ./tmp/kernel:/media/kernel
       - ./tmp/odk:/media/odk
       - ./tmp/sync:/media/sync
+      - ./tmp/ui:/media/ui
     ports:
       - "80:80"
 
@@ -165,6 +166,67 @@ services:
     command: start_rq
 
   # ---------------------------------
+  # Aether UI module
+  # ---------------------------------
+
+  ui-base:
+    image: ui
+    stdin_open: true
+    tty: true
+    build: aether-ui
+    environment: &ui-environment
+      AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
+      AETHER_KERNEL_URL: http://kernel:8000
+      AETHER_KERNEL_URL_TEST: http://kernel-test:9000
+      AETHER_MODULES: "kernel,"
+      CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
+      CSRF_COOKIE_DOMAIN: .aether.local
+      DEBUG: "true"
+      DJANGO_SECRET_KEY: "secret"
+      HOSTNAME: ui.aether.local
+      RDS_DB_NAME: ui
+      RDS_HOSTNAME: db
+      RDS_PASSWORD: ""
+      RDS_PORT: 5432
+      RDS_USERNAME: postgres
+      STATIC_ROOT: /code/aether/ui/assets/bundles
+      WEB_SERVER_PORT: 8004
+    volumes: &ui-volumes
+      #################################################
+      #                    WARNING                    #
+      # do not include the root folder as volume or   #
+      # `node_modules` folder will not be available   #
+      #                                               #
+      # - ./:/code # DO NOT UNCOMMENT!!!              #
+      #################################################
+
+      - ./aether-ui/conf:/code/conf
+      - ./aether-ui/aether:/code/aether
+
+      - ./aether-ui/entrypoint.sh:/code/entrypoint.sh
+      - ./aether-ui/manage.py:/code/manage.py
+      - ./aether-ui/setup.py:/code/setup.py
+      - ./aether-ui/package.json:/code/package.json
+
+      # media folder
+      - ./tmp/ui:/media
+    ports:
+      - "8004:8004"
+    command: start_dev
+
+  # ---------------------------------
+  # Webpack container
+  # ---------------------------------
+
+  webpack-base:
+    image: ui
+    environment: *ui-environment
+    volumes: *ui-volumes
+    ports:
+      - "3000:3000"
+    command: start_webpack
+
+  # ---------------------------------
   # Kafka & Zookeeper
   # ---------------------------------
 
@@ -206,4 +268,3 @@ services:
     environment:
      - PYTHONUNBUFFERED=1
     command: start_dev
-

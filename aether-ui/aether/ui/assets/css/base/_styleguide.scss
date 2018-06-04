@@ -1,0 +1,118 @@
+/*
+These classes are only used in the styleguide page.
+If you need one of them clone it in the correspond scss file.
+*/
+
+$font-sizes: (
+  xs:        $font-size-xs,
+  s:         $font-size-s,
+  standard:  $font-size-standard,
+  m:         $font-size-m,
+  l:         $font-size-l,
+  xl:        $font-size-xl,
+  xxl:       $font-size-xxl
+);
+
+// sass-lint:disable no-color-keywords
+$colors: (
+  white:            $white,
+  black:            $black,
+
+  red:              $red,
+  orange:           $orange,
+  green:            $green,
+
+  text-color:       $text-color,
+  background-color: $background-color,
+
+  dark-blue:        $dark-blue,
+  purple:           $purple,
+  light-grey:       $light-grey,
+  grey:             $grey,
+
+  shadow-color:     $shadow-color,
+  action-color:     $action-color,
+  hover-color:      $hover-color,
+  action-color-b:   $action-color-b
+);
+
+// sass-lint:enable no-color-keywords
+
+.styleguide {
+
+  .container {
+    border-bottom: 1px dotted #4a4a4a;
+    padding: 2rem;
+  }
+
+  .container.dark-blue {
+    background: $dark-blue;
+    color: $white;
+  }
+
+  .container.gradient {
+    @include bg-gradient;
+  }
+
+  .section-header {
+    margin-left: -2rem;
+    margin-bottom: 2rem;
+  }
+
+  .color-samples {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+  }
+
+  .color-sample,
+  .entity-color-sample {
+    padding: 10px;
+    font-size: $font-size-s;
+    flex: 1;
+    min-width: 150px;
+  }
+
+  .button-samples {
+    display: flex;
+    flex-wrap: wrap;
+
+    .container {
+      flex: 1;
+      border: 0;
+    }
+  }
+
+  @each $name, $size in $font-sizes {
+    .font-sample-#{$name} {
+      font-size: $size;
+      line-height: $size;
+      margin-bottom: 2rem;
+    }
+  }
+
+  @each $name, $color in $colors {
+    .color-sample-#{$name} {
+      background-color: $color;
+      height: 80px;
+      width: 100%;
+    }
+  }
+
+  @each $current-color in $colors-list {
+    $i: index($colors-list, $current-color);
+
+    .entity-color-sample:nth-child(#{$i}) {
+
+      div {
+        background-color: $current-color;
+        height: 80px;
+        width: 100%;
+      }
+
+      &::after {
+        content: '#{$current-color}';
+      }
+    }
+  }
+}

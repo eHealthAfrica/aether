@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load render_bundle from webpack_loader %}
+{% load ui_tags %}
+
+
+{% block title %}{{ app_name }} - {% trans 'Pipelines' %}{% endblock title %}
+
+
+{% block content %}
+
+  <span
+    id="logged-in-user-info"
+    data-user-id="{{ request.user.id }}"
+    data-user-name="{{ request.user|get_fullname }}"
+    class="invisible"></span>
+
+  <div id="pipeline-app"></div>
+
+  {% render_bundle 'pipeline' %}
+
+{% endblock content %}

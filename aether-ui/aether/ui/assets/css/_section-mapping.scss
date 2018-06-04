@@ -1,0 +1,119 @@
+.pipeline-section__mapping {
+  background: $dark-blue;
+  color: $white;
+
+  .section-body {
+    display: flex;
+    flex-direction: column;
+    padding: 2rem 0 0;
+  }
+
+  .tabs {
+
+    .tab.selected {
+      box-shadow: 1px 1px 1px rgba($black, .2) inset;
+      background-color: darken($dark-blue, 3);
+      color: $white;
+    }
+  }
+
+  .rules {
+    box-shadow: 1px 1px 1px rgba($black, .2) inset;
+    background-color: darken($dark-blue, 3);
+    padding: $unit $unit-xl;
+    flex: 1 1 auto;
+  }
+
+  .rules-buttons {
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+
+    .btn {
+      margin-top: 1rem;
+    }
+  }
+
+  .rule {
+    display: flex;
+    flex-wrap: wrap;
+    margin: .6rem 0;
+    justify-content: space-between;
+
+    input {
+      padding: .4rem .8rem;
+      height: 32px;
+      background: none;
+      box-shadow: none;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+
+      &::Placeholder {
+        color: rgba($white, .4);
+      }
+    }
+
+    .btn {
+      margin: .2rem 0;
+    }
+  }
+
+  .rule-input {
+    flex: 1 1 auto;
+    margin: .2rem .6rem .2rem 0;
+    background-color: darken($dark-blue, 5);
+    box-shadow: 1px 1px 1px rgba($black, .2) inset, 1px 1px 0 rgba($white, .1);
+    height: 32px;
+    position: relative;
+
+    &::before {
+      content: '';
+      display: block;
+      width: 24px;
+      height: 24px;
+      position: absolute;
+      top: 4px;
+      transform: rotate(45deg);
+    }
+  }
+
+  .rule-input.source {
+    border-radius: $border-radius * 2 0 0 $border-radius * 2;
+    z-index: 1;
+
+    &::before {
+      right: -11px;
+      background-color: darken($dark-blue, 5);
+      border-right: 1px solid rgba($white, .2);
+      border-top: 1px solid rgba($white, .1);
+    }
+  }
+
+  .rule-input.destination {
+    border-radius: 0 $border-radius * 2 $border-radius * 2 0;
+
+    input {
+      padding-left: 1.6rem;
+    }
+
+    &::before {
+      left: -11px;
+      background-color: darken($dark-blue, 3);
+      border-right: 1px solid rgba($black, .4);
+      border-top: 1px solid rgba($black, .3);
+    }
+  }
+
+  .definition {
+    box-shadow: 1px 1px 1px rgba($black, .2) inset;
+    background-color: darken($dark-blue, 3);
+    padding: $unit $unit-xl;
+    flex: 1 1 auto;
+
+    .definition-code {
+      border-radius: $border-radius;
+    }
+  }
+}

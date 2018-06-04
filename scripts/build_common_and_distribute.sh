@@ -33,15 +33,9 @@ $DC_COMMON run   common build
 PCK_FILE=aether.common-0.0.0-py2.py3-none-any.whl
 
 # distribute within the containers
-containers=( kernel odk couchdb-sync )
-for container in "${containers[@]}"
+FOLDERS=( aether-kernel aether-odk-module aether-couchdb-sync-module aether-ui )
+for FOLDER in "${FOLDERS[@]}"
 do
-  if [[ $container = "kernel" ]]
-  then
-    FOLDER=aether-$container
-  else
-    FOLDER=aether-$container-module
-  fi
   cp -r ./aether-common-module/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
 done
 
