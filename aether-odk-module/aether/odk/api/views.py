@@ -21,6 +21,7 @@ import requests
 
 from django.conf import settings
 from django.shortcuts import get_object_or_404
+from django.utils.translation import ugettext as _
 
 from rest_framework import viewsets, status
 from rest_framework.authentication import BasicAuthentication
@@ -56,6 +57,49 @@ from .kernel_utils import (
 )
 from .surveyors_utils import get_surveyors
 from .xform_utils import get_instance_data_from_xml, parse_submission
+
+
+# list of messages that can be translated
+MSG_XFORM_VERSION_WARNING = _(
+    'Requesting {requested_version} xform version, current is {current_version}'
+)
+MSG_KERNEL_CONNECTION_ERR = _(
+    'Connection with Aether Kernel server is not possible.'
+)
+MSG_SUBMISSION_MISSING_DATA_ERR = _(
+    'Missing submitted data.'
+)
+MSG_SUBMISSION_FILE_ERR = _(
+    'Unexpected error while handling submission file.'
+)
+MSG_SUBMISSION_MISSING_INSTANCE_ID_ERR = _(
+    'Instance ID is missing in submission.'
+)
+MSG_SUBMISSION_XFORM_UNAUTHORIZED_ERR = _(
+    'xForm entry {form_id} unauthorized.'
+)
+MSG_SUBMISSION_XFORM_NOT_FOUND_ERR = _(
+    'xForm entry {form_id} no found.'
+)
+MSG_SUBMISSION_XFORM_VERSION_WARNING = _(
+    'Sending response to {submission_version} xform version, current is {current_version}'
+)
+MSG_SUBMISSION_KERNEL_ARTEFACTS_ERR = _(
+    'Unexpected error from Aether Kernel server '
+    'while checking the xForm artefacts "{form_id}".'
+)
+MSG_SUBMISSION_KERNEL_SUBMIT_ERR = _(
+    'Unexpected response {status} from Aether Kernel server '
+    'while submitting data of the xForm "{form_id}".'
+)
+MSG_SUBMISSION_KERNEL_SUBMIT_ATTACHMENT_ERR = _(
+    'Unexpected response {status} from Aether Kernel server '
+    'while submitting attachment of the xForm "{form_id}".'
+)
+MSG_SUBMISSION_SUBMIT_ERR = _(
+    'Unexpected error from Aether Kernel server '
+    'while submitting data of the xForm "{form_id}".'
+)
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -251,9 +295,8 @@ def xform_get_download(request, pk):
     version = request.query_params.get('version', '0')
     # check provided version with current one
     if version < xform.version:
-        logger.warning(
-            'Requesting {} xform version, current is {}'.format(version, xform.version)
-        )
+        logger.warning(MSG_XFORM_VERSION_WARNING.format(
+            requested_version=version, current_version=xform.version))
 
     return Response(
         data=xform.xml_data,
@@ -287,9 +330,8 @@ def xform_get_manifest(request, pk):
     version = request.query_params.get('version', '0')
     # check provided version with current one
     if version < xform.version:
-        logger.warning(
-            'Requesting {} xform version, current is {}'.format(version, xform.version)
-        )
+        logger.warning(MSG_XFORM_VERSION_WARNING.format(
+            requested_version=version, current_version=xform.version))
 
     return Response(
         data={
@@ -318,7 +360,7 @@ def xform_submission(request):
     auth_header = get_auth_header()
     if not auth_header:
         return Response(
-            data='Connection with Aether Kernel server is not possible.',
+            data=MSG_KERNEL_CONNECTION_ERR,
             status=status.HTTP_424_FAILED_DEPENDENCY,
         )
 
@@ -327,7 +369,7 @@ def xform_submission(request):
 
     if not request.FILES or XML_SUBMISSION_PARAM not in request.FILES:
         # missing submitted data
-        msg = 'Missing submitted data.'
+        msg = MSG_SUBMISSION_MISSING_DATA_ERR
         logger.warning(msg)
         return Response(data=msg, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
@@ -336,7 +378,7 @@ def xform_submission(request):
         xml_content = xml.read()  # the content will be sent as an attachment
         data, form_id, version, instance_id = get_instance_data_from_xml(xml_content)
     except Exception as e:
-        msg = 'Unexpected error when handling submission file.'
+        msg = MSG_SUBMISSION_FILE_ERR
         logger.warning(msg)
         logger.error(str(e))
         return Response(data=msg + '\n' + str(e), status=status.HTTP_422_UNPROCESSABLE_ENTITY)
@@ -354,7 +396,7 @@ def xform_submission(request):
     #
     # These assumptions match the OpenRosa spec linked to above.
     if not instance_id:
-        msg = 'Instance ID is missing in submission.'
+        msg = MSG_SUBMISSION_MISSING_INSTANCE_ID_ERR
         logger.warning(msg)
         return Response(data=msg, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
@@ -369,23 +411,24 @@ def xform_submission(request):
             break
     if not xform:
         if xforms:
-            msg = f'xForm entry {form_id} unauthorized.'
+            msg = MSG_SUBMISSION_XFORM_UNAUTHORIZED_ERR.format(form_id=form_id)
             logger.error(msg)
             return Response(data=msg, status=status.HTTP_401_UNAUTHORIZED)
         else:
-            msg = f'xForm entry {form_id} not found.'
+            msg = MSG_SUBMISSION_XFORM_NOT_FOUND_ERR.format(form_id=form_id)
             logger.error(msg)
             return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
 
     # check sent version with current one
     if version < xform.version:  # pragma: no cover
-        logger.warning(f'Sending response to {version} xForm version, current is {xform.version}.')
+        logger.warning(MSG_SUBMISSION_XFORM_VERSION_WARNING.format(
+            submission_version=version, current_version=xform.version))
 
     # make sure that the xForm artefacts already exist in Aether Kernel
     try:
         propagate_kernel_artefacts(xform)
     except KernelPropagationError as kpe:
-        msg = f'Unexpected error from Aether Kernel server when checking the xForm artefacts "{form_id}".'
+        msg = MSG_SUBMISSION_KERNEL_ARTEFACTS_ERR.format(form_id=form_id)
         logger.warning(msg)
         logger.error(str(kpe))
         return Response(data=msg + '\n' + str(kpe), status=status.HTTP_424_FAILED_DEPENDENCY)
@@ -417,10 +460,7 @@ def xform_submission(request):
             submission_content = response.content.decode('utf-8')
 
             if response.status_code != status.HTTP_201_CREATED:
-                msg = (
-                    f'Unexpected response {response.status_code} from ' +
-                    f'Aether Kernel server when submitting data of the xForm "{form_id}".'
-                )
+                msg = MSG_SUBMISSION_KERNEL_SUBMIT_ERR.format(status=response.status_code, form_id=form_id)
                 logger.warning(msg)
                 logger.warning(submission_content)
                 return Response(data=msg + '\n' + submission_content, status=response.status_code)
@@ -451,10 +491,8 @@ def xform_submission(request):
                 )
                 if response.status_code != status.HTTP_201_CREATED:
                     attachment_content = response.content.decode('utf-8')
-                    msg = (
-                        f'Unexpected response {response.status_code} from ' +
-                        f'Aether Kernel server when submitting attachment of the xForm "{form_id}".'
-                    )
+                    msg = MSG_SUBMISSION_KERNEL_SUBMIT_ATTACHMENT_ERR.format(
+                        status=response.status_code, form_id=form_id)
                     logger.warning(msg)
                     logger.warning(attachment_content)
 
@@ -465,7 +503,7 @@ def xform_submission(request):
         return Response(status=status.HTTP_201_CREATED)
 
     except Exception as e:
-        msg = f'Unexpected error from Aether Kernel server when submitting data of the xForm "{form_id}".'
+        msg = MSG_SUBMISSION_SUBMIT_ERR.format(form_id=form_id)
         logger.warning(msg)
         logger.error(str(e))
 

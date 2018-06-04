@@ -51,6 +51,7 @@ class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         queryset=get_surveyors(),
         allow_null=True,
         default=[],
+        help_text=_('If you do not specify any surveyors, EVERYONE will be able to access this xForm.'),
     )
 
     xml_file = serializers.FileField(
@@ -126,6 +127,7 @@ class ProjectSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         queryset=get_surveyors(),
         allow_null=True,
         default=[],
+        help_text=_('If you do not specify any surveyors, EVERYONE will be able to access this project xForms.'),
     )
     # this will return all linked xForms with media files in one request call
     xforms = XFormSerializer(read_only=True, many=True)
