@@ -38,6 +38,10 @@ class SubmissionFilter(filters.FilterSet):
         name='payload__meta__instanceID',
         lookup_expr='exact',
     )
+    project = filters.CharFilter(
+        name='mapping__project',
+        lookup_expr='exact',
+    )
 
     class Meta:
         exclude = ('payload',)
