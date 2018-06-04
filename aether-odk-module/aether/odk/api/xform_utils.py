@@ -28,10 +28,34 @@ from pyxform.xls2json_backends import xls_to_dict
 from pyxform.xform_instance_parser import XFormInstanceParser
 from spavro.schema import parse as parse_avro_schema, SchemaParseException
 
+from django.utils.translation import ugettext as _
+
 
 DEFAULT_XFORM_VERSION = '0'
 
 _RE_AVRO_NAME = re.compile(r'^([A-Za-z_][A-Za-z0-9_]*)$')
+
+MSG_ERROR_REASON = _(
+    ' Reason: {error}.'
+)
+MSG_VALIDATION_XFORM_PARSE_ERR = _(
+    'Not valid xForm definition.'
+)
+MSG_VALIDATION_XFORM_MISSING_TAGS_ERR = _(
+    'Missing required tags.'
+)
+MSG_VALIDATION_XFORM_MISSING_TITLE_INSTANCE_ID_ERR = _(
+    'Missing required form title and instance ID.'
+)
+MSG_VALIDATION_XFORM_MISSING_TITLE_ERR = _(
+    'Missing required form title.'
+)
+MSG_VALIDATION_XFORM_MISSING_INSTANCE_ID_ERR = _(
+    'Missing required instance ID.'
+)
+MSG_XFORM_MISSING_INSTANCE_ERR = _(
+    'Missing required instance definition.'
+)
 
 
 # ------------------------------------------------------------------------------
@@ -354,7 +378,9 @@ def validate_xform(xml_definition):
     try:
         xform_dict = __parse_xml_to_dict(xml_definition)
     except Exception as e:
-        raise XFormParseError(f'Not valid xForm definition. Reason: {str(e)}.')
+        raise XFormParseError(
+            MSG_VALIDATION_XFORM_PARSE_ERR +
+            MSG_ERROR_REASON.format(error=str(e)))
 
     if (
         'h:html' not in xform_dict
@@ -375,20 +401,20 @@ def validate_xform(xml_definition):
         or 'instance' not in xform_dict['h:html']['h:head']['model']
         or xform_dict['h:html']['h:head']['model']['instance'] is None
     ):
-        raise XFormParseError('Missing required tags.')
+        raise XFormParseError(MSG_VALIDATION_XFORM_MISSING_TAGS_ERR)
 
     title = xform_dict['h:html']['h:head']['h:title']
     instance = __get_xform_instance(xform_dict)
     form_id = instance.get('@id') if instance else None
 
     if not title and not form_id:
-        raise XFormParseError('Missing form title and instance ID.')
+        raise XFormParseError(MSG_VALIDATION_XFORM_MISSING_TITLE_INSTANCE_ID_ERR)
 
     if not title:
-        raise XFormParseError('Missing form title.')
+        raise XFormParseError(MSG_VALIDATION_XFORM_MISSING_TITLE_ERR)
 
     if not form_id:
-        raise XFormParseError('Missing instance ID.')
+        raise XFormParseError(MSG_VALIDATION_XFORM_MISSING_INSTANCE_ID_ERR)
 
 
 # ------------------------------------------------------------------------------
@@ -497,7 +523,10 @@ def __get_xform_instance(xform_dict, with_root=False):
     try:
         instances = __wrap_as_list(xform_dict['h:html']['h:head']['model']['instance'])
     except Exception as e:
-        raise XFormParseError(f'Missing instance definition. Reason: {str(e)}')
+        raise XFormParseError(
+            MSG_XFORM_MISSING_INSTANCE_ERR +
+            MSG_ERROR_REASON.format(error=str(e))
+        )
 
     instance = None
     for i in instances:
@@ -507,7 +536,7 @@ def __get_xform_instance(xform_dict, with_root=False):
             break
 
     if not instance or not isinstance(instance, dict):
-        raise XFormParseError('Missing instance definition.')
+        raise XFormParseError(MSG_XFORM_MISSING_INSTANCE_ERR)
 
     if with_root:
         return instance

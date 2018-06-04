@@ -115,6 +115,7 @@ class KernelUtilsTest(CustomTestCase):
                       str(kpe.exception), kpe)
         self.assertIn('while trying to create/update the project artefacts',
                       str(kpe.exception), kpe)
+        self.assertIn(f'"{str(self.project.project_id)}"', str(kpe.exception), kpe)
         mock_auth.assert_called_once()
         mock_patch.assert_called_once_with(
             url=f'http://kernel-test:9000/projects/{str(self.project.project_id)}/artefacts/',
