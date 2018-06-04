@@ -141,9 +141,7 @@ def kernel_data_request(url='', method='get', data=None):
         raise Exception(res.json())
 
 
-def create_new_kernel_object(object_name, pipeline, data=None, project_name='Aux', entity_name=None):
-    if data is None:
-        data = {}
+def create_new_kernel_object(object_name, pipeline, data, project_name='Aux', entity_name=None):
     try:
         res = kernel_data_request(f'{object_name.lower()}s/', 'post', data)
     except Exception as e:
@@ -166,9 +164,7 @@ def create_new_kernel_object(object_name, pipeline, data=None, project_name='Aux
     return pipeline
 
 
-def update_kernel_object(object_name, id, data=None):
-    if data is None:
-        data = {}
+def update_kernel_object(object_name, id, data):
     return kernel_data_request(f'{object_name.lower()}s/{id}/', 'put', data)
 
 
