@@ -18,26 +18,17 @@
     },
     {
       "name": "starttime",
-      "type": [
-        "null",
-        "string"
-      ],
+      "type": "string",
       "doc": "/starttime"
     },
     {
       "name": "endtime",
-      "type": [
-        "null",
-        "string"
-      ],
+      "type": "string",
       "doc": "/endtime"
     },
     {
       "name": "deviceid",
-      "type": [
-        "null",
-        "string"
-      ],
+      "type": "string",
       "doc": "/deviceid"
     },
     {
@@ -188,10 +179,7 @@
     },
     {
       "name": "option",
-      "type": [
-        "null",
-        "string"
-      ],
+      "type": "string",
       "doc": "Choice (A/B)"
     },
     {
