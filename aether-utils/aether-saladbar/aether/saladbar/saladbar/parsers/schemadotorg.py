@@ -442,7 +442,9 @@ def make_graph(
     return properties, records
 
 
-def make_dependency_graph(graphed_records, records, limited_properties={}):
+def make_dependency_graph(graphed_records, records, limited_properties=None):
+    if limited_properties is None:
+        limited_properties = {}
     graph = {}
     for key in graphed_records:
         record = records[key]
@@ -475,7 +477,9 @@ def get_parental_properties(
         properties,
         lineage,
         all_records,
-        limited_properties={}):
+        limited_properties=None):
+    if limited_properties is None:
+        limited_properties = {}
     output = {}
     permitted = set([i for val in limited_properties.values() for i in val])
     props = set(properties)
