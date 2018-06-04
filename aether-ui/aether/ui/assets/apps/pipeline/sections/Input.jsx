@@ -336,10 +336,12 @@ class Input extends Component {
             {this.state.view === SCHEMA_VIEW && <SchemaInput {...this.props} />}
             {this.state.view === DATA_VIEW && <DataInput {...this.props} />}
             <div className='identity-mapping'>
-              <FormattedMessage
-                id='pipeline.input.identityMapping.btn-apply'
-                defaultMessage='You can use an identity mapping for a 1:1 translation of your input into mappings. This will automatically create both Entity Types and Mappings.'
-              />
+              <p>
+                <FormattedMessage
+                  id='pipeline.input.identityMapping.btn-apply'
+                  defaultMessage='You can use an identity mapping for a 1:1 translation of your input into mappings. This will automatically create both Entity Types and Mappings.'
+                />
+              </p>
               <button className='btn btn-w' onClick={this.showModal}>
                 <FormattedMessage
                   id='pipeline.input.identityMapping.btn-apply'
