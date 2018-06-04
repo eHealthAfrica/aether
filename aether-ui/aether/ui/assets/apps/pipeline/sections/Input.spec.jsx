@@ -4,9 +4,46 @@ import sinon from 'sinon'
 
 import { mountWithIntl } from 'enzyme-react-intl'
 
-import { findByDataQa } from '../../utils'
-import { Modal } from '../../components/Modal'
-import { deriveMappingRules, IdentityMapping } from './Input'
+import { findByDataQa } from '../../../tests/ui-tests-environment/utils'
+import Modal from '../../components/Modal'
+import {
+  deriveEntityTypes,
+  deriveMappingRules,
+  IdentityMapping
+} from './Input'
+
+describe('deriveEntityTypes', () => {
+  it('derives valid entity types from a schema', () => {
+    const schemaName = 'Test'
+    const schema = {
+      name: schemaName,
+      type: 'record',
+      fields: [
+        {
+          name: 'a',
+          type: 'string'
+        },
+        {
+          name: 'b',
+          type: 'int'
+        }
+      ]
+    }
+    const expected = [
+      {
+        source: '$.a',
+        destination: `${schemaName}.a`
+      },
+      {
+        source: '$.b',
+        destination: `${schemaName}.b`
+      }
+    ]
+    const result = deriveEntityTypes(schema)
+    console.log(result)
+  })
+})
+
 
 describe('deriveMappingRules', () => {
   it('derives valid mapping rules from a schema', () => {
@@ -47,8 +84,7 @@ describe('<IdentityMapping />', () => {
   it('opens modal', () => {
     const component = mountWithIntl(<IdentityMapping />)
     expect(component.find(Modal).length).toEqual(0)
-    const button = component.find('[data-qa="input.identityMapping.btn-apply"]')
-    button.simulate('click')
+    findByDataQa(component, 'input.identityMapping.btn-apply').simulate('click')
     expect(component.find(Modal).length).toEqual(1)
   })
 

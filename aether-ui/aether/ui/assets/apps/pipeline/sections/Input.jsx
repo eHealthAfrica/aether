@@ -16,6 +16,10 @@ import { updatePipeline } from '../redux'
 const SCHEMA_VIEW = 'SCHEMA_VIEW'
 const DATA_VIEW = 'DATA_VIEW'
 
+export const deriveEntityTypes = (schema) => {
+  return 123
+}
+
 export const deriveMappingRules = (schema) => {
   const fieldToMappingRule = (field) => {
     return {
