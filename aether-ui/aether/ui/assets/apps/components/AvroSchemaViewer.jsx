@@ -39,26 +39,44 @@ class AvroSchemaViewer extends Component {
           </li>
         </ul>
       )
+    } else if (Array.isArray(schema.type)) {
+      schema.type.forEach(typeItem => {
+        if (typeof typeItem === 'string') {
+          return this.deepestRender(schema)
+        } else if (typeItem === null) {
+
+        } else {
+          typeItem.type.name = typeItem.name
+          return (
+            this.schemaToMarkup(typeItem.type, `${parent ? parent + '.' : ''}${schema.name}`)
+          )
+        }
+      })
     } else if (typeof schema.type !== 'string') {
       schema.type.name = schema.name
       return (
         this.schemaToMarkup(schema.type, `${parent ? parent + '.' : ''}${schema.name}`)
       )
     } else {
-      const jsonPath = `${parent ? parent + '.' : ''}${schema.name}`
-      const className = this.getHighlightedClassName(jsonPath)
-
-      return (
-        <li
-          data-qa={`no-children-${schema.name}`}
-          key={schema.name}
-          className={className}
-          id={`input_${jsonPath}`}>
-          <span className='name'>{schema.name}</span>
-          <span className='type'> {schema.type}</span>
-        </li>
-      )
+      return this.deepestRender(schema)
     }
+  }
+
+  deepestRender (schema, isNullable=false) {
+    const jsonPath = `${parent ? parent + '.' : ''}${schema.name}`
+    const className = this.getHighlightedClassName(jsonPath)
+
+    return (
+      <li
+        data-qa={`no-children-${schema.name}`}
+        key={schema.name}
+        className={className}
+        id={`input_${jsonPath}`}>
+        <span className='name'>{schema.name}</span>
+        <span className='type'> {schema.type}</span>
+        { isNullable && <span className='type'>, Nullable</span> }
+      </li>
+    )
   }
 
   render () {
@@ -81,6 +99,7 @@ class AvroSchemaViewer extends Component {
         </div>
       )
     } catch (error) {
+      console.log(error)
       return (
         <div className='hint'>
           <FormattedMessage
