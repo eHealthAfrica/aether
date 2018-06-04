@@ -122,11 +122,11 @@ class ViewsTest(TransactionTestCase):
         return json.loads(response.content).get('count')
 
     # TEST CREATE:
-    def helper_create_object(self, view_name, data, isNegative=False):
+    def helper_create_object(self, view_name, data, is_negative=False):
         url = reverse(view_name)
         data = json.dumps(data)
         response = self.client.post(url, data, content_type='application/json')
-        if isNegative:
+        if is_negative:
             self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         else:
             self.assertEquals(response.status_code, status.HTTP_201_CREATED)
@@ -209,8 +209,8 @@ class ViewsTest(TransactionTestCase):
 
     # TEST READ
 
-    def helper_read_object_id(self, view_name, Obj):
-        url = reverse(view_name, kwargs={'pk': Obj.pk})
+    def helper_read_object_id(self, view_name, obj):
+        url = reverse(view_name, kwargs={'pk': obj.pk})
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         return response
@@ -225,11 +225,11 @@ class ViewsTest(TransactionTestCase):
 
     # TEST UPDATE
 
-    def helper_update_object_id(self, view_name, updated_data, Obj, isNegative=False):
-        url = reverse(view_name, kwargs={'pk': Obj.pk})
+    def helper_update_object_id(self, view_name, updated_data, obj, is_negative=False):
+        url = reverse(view_name, kwargs={'pk': obj.pk})
         updated_data = json.dumps(updated_data)
         response = self.client.put(url, updated_data, content_type='application/json')
-        if isNegative:
+        if is_negative:
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.status_code)
         else:
             self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
@@ -315,8 +315,8 @@ class ViewsTest(TransactionTestCase):
 
     # TEST DELETE
 
-    def helper_delete_object_pk(self, view_name, Obj):
-        url = reverse(view_name, kwargs={'pk': Obj.pk})
+    def helper_delete_object_pk(self, view_name, obj):
+        url = reverse(view_name, kwargs={'pk': obj.pk})
         response = self.client.delete(url, format='json', follow=True)
         self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
         return response
