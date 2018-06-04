@@ -6,11 +6,29 @@ import { mountWithIntl } from 'enzyme-react-intl'
 
 import { findByDataQa } from '../../../tests/ui-tests-environment/utils'
 import Modal from '../../components/Modal'
-import {
-  deriveEntityTypes,
-  deriveMappingRules,
-  IdentityMapping
-} from './Input'
+import * as input from './Input'
+
+describe('makeOptionalField', () => {
+  it('makes an AVRO field optional', () => {
+    const tests = [
+      [
+        {name: 'a', type: 'string'},
+        {name: 'a', type: [null, 'string']}
+      ],
+      [
+        {name: 'b', type: [null, 'string']},
+        {name: 'b', type: [null, 'string']}
+      ],
+      [
+        {name: 'c', type: ['int', 'string']},
+        {name: 'c', type: [null, 'int', 'string']}
+      ]
+    ]
+    tests.map(([args, result]) => {
+      expect(input.makeOptionalField(args)).toEqual(result)
+    })
+  })
+})
 
 describe('deriveEntityTypes', () => {
   it('derives valid entity types from a schema', () => {
@@ -21,11 +39,15 @@ describe('deriveEntityTypes', () => {
       fields: [
         {
           name: 'a',
-          type: 'string'
+          type: 'int'
         },
         {
           name: 'b',
-          type: 'int'
+          type: [null, 'string']
+        },
+        {
+          name: 'c',
+          type: ['string', 'int']
         }
       ]
     }
@@ -39,8 +61,10 @@ describe('deriveEntityTypes', () => {
         destination: `${schemaName}.b`
       }
     ]
-    const result = deriveEntityTypes(schema)
-    console.log(result)
+    const result = input.deriveEntityTypes(schema)
+    expect(result[0].fields[0].type).toEqual([null, 'int'])
+    expect(result[0].fields[1].type).toEqual([null, 'string'])
+    expect(result[0].fields[2].type).toEqual([null, 'string', 'int'])
   })
 })
 
@@ -72,7 +96,7 @@ describe('deriveMappingRules', () => {
         destination: `${schemaName}.b`
       }
     ]
-    const result = deriveMappingRules(schema)
+    const result = input.deriveMappingRules(schema)
     expected.map((mappingRule, i) => {
       expect(mappingRule.source).toEqual(result[i].source)
       expect(mappingRule.destination).toEqual(result[i].destination)
@@ -82,7 +106,7 @@ describe('deriveMappingRules', () => {
 
 describe('<IdentityMapping />', () => {
   it('opens modal', () => {
-    const component = mountWithIntl(<IdentityMapping />)
+    const component = mountWithIntl(<input.IdentityMapping />)
     expect(component.find(Modal).length).toEqual(0)
     findByDataQa(component, 'input.identityMapping.btn-apply').simulate('click')
     expect(component.find(Modal).length).toEqual(1)
@@ -96,14 +120,14 @@ describe('<IdentityMapping />', () => {
         fields: [
           {
             name: 'a',
-            type: 'string'
+            type: [null, 'string']
           }
         ]
       }
     }
     const updatePipeline = sinon.spy()
     const component = mountWithIntl(
-      <IdentityMapping
+      <input.IdentityMapping
         selectedPipeline={selectedPipeline}
         updatePipeline={updatePipeline}
       />

@@ -16,8 +16,27 @@ import { updatePipeline } from '../redux'
 const SCHEMA_VIEW = 'SCHEMA_VIEW'
 const DATA_VIEW = 'DATA_VIEW'
 
+export const isOptionalType = (type) => {
+  return Array.isArray(type) && (type.indexOf(null) > -1)
+}
+
+export const makeOptionalType = (type) => {
+  if (isOptionalType(type)) {
+    return type
+  }
+  if (Array.isArray(type)) {
+    return [null, ...type]
+  }
+  return [null, type]
+}
+
+export const makeOptionalField = (field) => {
+  return {...field, type: makeOptionalType(field.type)}
+}
+
 export const deriveEntityTypes = (schema) => {
-  return 123
+  const fields = schema.fields.map(makeOptionalField)
+  return [{...schema, fields: fields}]
 }
 
 export const deriveMappingRules = (schema) => {
@@ -250,7 +269,7 @@ export class IdentityMapping extends Component {
   generateIdentityMapping () {
     const schema = this.props.selectedPipeline.schema
     const mappingRules = deriveMappingRules(schema)
-    const entityTypes = [schema]
+    const entityTypes = deriveEntityTypes(schema)
     this.props.updatePipeline({
       ...this.props.selectedPipeline,
       mapping: mappingRules,
