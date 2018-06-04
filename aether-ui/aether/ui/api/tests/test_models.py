@@ -39,7 +39,9 @@ def mock_return_true(*args):
 
 
 class MockResponse:
-    def __init__(self, status_code, json_data={}):
+    def __init__(self, status_code, json_data=None):
+        if json_data is None:
+            json_data = {}
         self.status_code = status_code
         self.json_data = json_data
         self.content = json.dumps(json_data)

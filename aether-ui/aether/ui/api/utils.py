@@ -123,10 +123,12 @@ def validate_pipeline(pipeline):
         )
 
 
-def kernel_data_request(url='', method='get', data={}):
+def kernel_data_request(url='', method='get', data=None):
     '''
     Handle requests to the kernel server
     '''
+    if data is None:
+        data = {}
     kernerl_url = utils.get_kernel_server_url()
     res = requests.request(method=method,
                            url=f'{kernerl_url}/{url}',
@@ -139,7 +141,9 @@ def kernel_data_request(url='', method='get', data={}):
         raise Exception(res.json())
 
 
-def create_new_kernel_object(object_name, pipeline, data={}, project_name='Aux', entity_name=None):
+def create_new_kernel_object(object_name, pipeline, data=None, project_name='Aux', entity_name=None):
+    if data is None:
+        data = {}
     try:
         res = kernel_data_request(f'{object_name.lower()}s/', 'post', data)
     except Exception as e:
@@ -162,7 +166,9 @@ def create_new_kernel_object(object_name, pipeline, data={}, project_name='Aux',
     return pipeline
 
 
-def update_kernel_object(object_name, id, data={}):
+def update_kernel_object(object_name, id, data=None):
+    if data is None:
+        data = {}
     return kernel_data_request(f'{object_name.lower()}s/{id}/', 'put', data)
 
 
