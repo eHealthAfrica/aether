@@ -31,12 +31,12 @@ export const makeOptionalType = (type) => {
 }
 
 export const makeOptionalField = (field) => {
-  return {...field, type: makeOptionalType(field.type)}
+  return { ...field, type: makeOptionalType(field.type) }
 }
 
 export const deriveEntityTypes = (schema) => {
   const fields = schema.fields.map(makeOptionalField)
-  return [{...schema, fields: fields}]
+  return [{ ...schema, fields: fields }]
 }
 
 export const deriveMappingRules = (schema) => {
@@ -259,11 +259,11 @@ export class IdentityMapping extends Component {
   }
 
   showModal () {
-    this.setState({showModal: true})
+    this.setState({ showModal: true })
   }
 
   hideModal () {
-    this.setState({showModal: false})
+    this.setState({ showModal: false })
   }
 
   generateIdentityMapping () {
