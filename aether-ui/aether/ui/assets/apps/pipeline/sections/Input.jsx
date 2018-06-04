@@ -253,15 +253,37 @@ class Input extends Component {
   }
 
   renderModal () {
-    return (
+    if (!this.state.showModal) { return null }
+    const header = (
+      <FormattedMessage
+        id='pipeline.input.identityMapping.header'
+        defaultMessage='Create identity mapping'
+      />
+    )
+    const content = (
+      <FormattedMessage
+        id='pipeline.input.identityMapping.content'
+        defaultMessage='Are you sure that you want to create an identity mapping? This action will overwrite all existing entity types and mappings.'
+      />
+    )
+    const buttons = (
       <div>
-        <button className='btn btn-w' onClick={this.generateIdentityMapping}>
-          Yes
+        <button className='btn btn-w btn-primary' onClick={this.generateIdentityMapping}>
+          <FormattedMessage
+            id='pipeline.input.identityMapping.btn-confirm'
+            defaultMessage='Yes'
+          />
         </button>
         <button className='btn btn-w' onClick={this.hideModal}>
-          No
+          <FormattedMessage
+            id='pipeline.input.identityMapping.btn-cancel'
+            defaultMessage='Cancel'
+          />
         </button>
       </div>
+    )
+    return (
+      <Modal show header={header} children={content} buttons={buttons} />
     )
   }
 
@@ -314,16 +336,19 @@ class Input extends Component {
             </div>
             {this.state.view === SCHEMA_VIEW && <SchemaInput {...this.props} />}
             {this.state.view === DATA_VIEW && <DataInput {...this.props} />}
-
             <div className='identity-mapping'>
-              <p>You can use Identity mapping for a 1:1 translation of your input into mappings. This will automatically create an Entity Type and its mappings.</p>
+              <FormattedMessage
+                id='pipeline.input.identityMapping.btn-apply'
+                defaultMessage='You can use an identity mapping for a 1:1 translation of your input into mappings. This will automatically create both Entity Types and Mappings.'
+              />
               <button className='btn btn-w' onClick={this.showModal}>
-                Apply Identity Mapping
+                <FormattedMessage
+                  id='pipeline.input.identityMapping.btn-apply'
+                  defaultMessage='Apply identity mapping'
+                />
               </button>
             </div>
-
-            <Modal show={this.state.showModal} buttons={this.renderModal()} />
-
+            {this.renderModal()}
           </div>
         </div>
       </div>
