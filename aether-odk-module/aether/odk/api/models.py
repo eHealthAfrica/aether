@@ -26,6 +26,7 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.db import models, IntegrityError
 from django.utils import timezone
+from django.utils.translation import ugettext as _
 
 from .xform_utils import (
     get_xform_data_from_xml,
@@ -72,12 +73,22 @@ class Project(models.Model):
 
     # This is needed to submit data to kernel
     # (there is a one to one relation)
-    project_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    project_id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        verbose_name=_('project ID'),
+        help_text=_('This ID corresponds to an Aether Kernel project ID.'),
+    )
 
-    name = models.TextField(null=True, blank=True, default='')
+    name = models.TextField(null=True, blank=True, default='', verbose_name=_('name'))
 
     # the list of granted surveyors
-    surveyors = models.ManyToManyField(to=get_user_model(), blank=True)
+    surveyors = models.ManyToManyField(
+        to=get_user_model(),
+        blank=True,
+        verbose_name=_('surveyors'),
+        help_text=_('If you do not specify any surveyors, EVERYONE will be able to access this project xForms.'),
+    )
 
     def is_surveyor(self, user):
         '''
@@ -103,6 +114,8 @@ class Project(models.Model):
         app_label = 'odk'
         default_related_name = 'projects'
         ordering = ['name']
+        verbose_name = _('project')
+        verbose_name_plural = _('projects')
 
 
 def __validate_xml_data__(value):
@@ -132,25 +145,42 @@ class XForm(models.Model):
     '''
 
     # This is needed to submit data to kernel
-    kernel_id = models.UUIDField(default=uuid.uuid4)
+    kernel_id = models.UUIDField(
+        default=uuid.uuid4,
+        verbose_name=_('Aether Kernel ID'),
+        help_text=_('This ID is used to create Aether Kernel artefacts (schema, project schema and mapping).'),
+    )
 
-    project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
+    project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
 
-    description = models.TextField(default='', null=True, blank=True)
-    created_at = models.DateTimeField(default=timezone.now, editable=False)
+    description = models.TextField(default='', null=True, blank=True, verbose_name=_('xForm description'))
+    created_at = models.DateTimeField(default=timezone.now, editable=False, verbose_name=_('created at'))
 
     # the list of granted surveyors
-    surveyors = models.ManyToManyField(to=get_user_model(), blank=True)
+    surveyors = models.ManyToManyField(
+        to=get_user_model(),
+        blank=True,
+        verbose_name=_('surveyors'),
+        help_text=_('If you do not specify any surveyors, EVERYONE will be able to access this xForm.'),
+    )
 
     # here comes the extracted data from an xForm file
-    xml_data = models.TextField(blank=True, validators=[__validate_xml_data__])
+    xml_data = models.TextField(
+        blank=True,
+        validators=[__validate_xml_data__],
+        verbose_name=_('XML definition'),
+        help_text=_(
+            'This XML must conform the JavaRosa specification. '
+            'https://bitbucket.org/javarosa/javarosa/wiki/xform'
+        )
+    )
 
     # taken from xml_data
-    title = models.TextField(default='', editable=False)
-    form_id = models.TextField(default='', editable=False)
-    version = models.TextField(default='0', blank=True)
-    md5sum = models.CharField(default='', editable=False, max_length=36)
-    avro_schema = JSONField(blank=True, null=True, editable=False)
+    title = models.TextField(default='', editable=False, verbose_name=_('xForm title'))
+    form_id = models.TextField(default='', editable=False, verbose_name=_('xForm ID'))
+    version = models.TextField(default='0', blank=True, verbose_name=_('xForm version'))
+    md5sum = models.CharField(default='', editable=False, max_length=36, verbose_name=_('xForm md5sum'))
+    avro_schema = JSONField(blank=True, null=True, editable=False, verbose_name=_('AVRO schema'))
 
     @property
     def hash(self):
@@ -194,7 +224,7 @@ class XForm(models.Model):
             raise IntegrityError(ve)
 
         if not self.xml_data:
-            raise IntegrityError({'xml_data': ['This field is required']})
+            raise IntegrityError({'xml_data': [_('This field is required.')]})
 
         title, form_id, version = get_xform_data_from_xml(self.xml_data)
 
@@ -243,6 +273,8 @@ class XForm(models.Model):
         app_label = 'odk'
         default_related_name = 'xforms'
         ordering = ['title', 'form_id']
+        verbose_name = _('xform')
+        verbose_name_plural = _('xforms')
 
 
 def __media_path__(instance, filename):
@@ -260,11 +292,11 @@ class MediaFile(models.Model):
 
     '''
 
-    xform = models.ForeignKey(to=XForm, on_delete=models.CASCADE)
+    xform = models.ForeignKey(to=XForm, on_delete=models.CASCADE, verbose_name=_('xForm'))
 
-    name = models.TextField(blank=True)
-    media_file = models.FileField(upload_to=__media_path__)
-    md5sum = models.CharField(editable=False, max_length=36)
+    name = models.TextField(blank=True, verbose_name=_('name'))
+    media_file = models.FileField(upload_to=__media_path__, verbose_name=_('file'))
+    md5sum = models.CharField(editable=False, max_length=36, verbose_name=_('md5sum'))
 
     @property
     def hash(self):
@@ -290,3 +322,5 @@ class MediaFile(models.Model):
         app_label = 'odk'
         default_related_name = 'media_files'
         ordering = ['xform', 'name']
+        verbose_name = _('media file')
+        verbose_name_plural = _('media files')

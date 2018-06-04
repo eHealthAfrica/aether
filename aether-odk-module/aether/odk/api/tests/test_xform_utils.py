@@ -89,7 +89,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                 '''
             )
         self.assertIsNotNone(ve)
-        self.assertIn('Missing instance definition.', str(ve.exception), ve)
+        self.assertIn('Missing required instance definition.', str(ve.exception), ve)
 
     def test__validate_xform__no_title__no_form_id(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -116,7 +116,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                 '''
             )
         self.assertIsNotNone(ve)
-        self.assertIn('Missing form title and instance ID.', str(ve.exception), ve)
+        self.assertIn('Missing required form title and instance ID.', str(ve.exception), ve)
 
     def test__validate_xform__no_title__blank(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -143,7 +143,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                 '''
             )
         self.assertIsNotNone(ve)
-        self.assertIn('Missing form title.', str(ve.exception), ve)
+        self.assertIn('Missing required form title.', str(ve.exception), ve)
 
     def test__validate_xform__no_xform_id(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -170,7 +170,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                 '''
             )
         self.assertIsNotNone(ve)
-        self.assertIn('Missing instance ID.', str(ve.exception), ve)
+        self.assertIn('Missing required instance ID.', str(ve.exception), ve)
 
     def test__validate_xform__no_xform_id__blank(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -197,7 +197,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                 '''
             )
         self.assertIsNotNone(ve)
-        self.assertIn('Missing instance ID.', str(ve.exception), ve)
+        self.assertIn('Missing required instance ID.', str(ve.exception), ve)
 
     def test__validate_xform__with__title__and__xform_id(self):
         try:
@@ -361,7 +361,7 @@ class XFormUtilsAvroTests(CustomTestCase):
         with self.assertRaises(XFormParseError) as ve:
             get_instance({})
         self.assertIsNotNone(ve)
-        self.assertIn('Missing instance definition.', str(ve.exception), ve)
+        self.assertIn('Missing required instance definition.', str(ve.exception), ve)
 
     def test__get_xform_instance__error__no_instances(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -375,7 +375,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                 }
             })
         self.assertIsNotNone(ve)
-        self.assertIn('Missing instance definition.', str(ve.exception), ve)
+        self.assertIn('Missing required instance definition.', str(ve.exception), ve)
 
     def test__get_xform_instance__error___no_default_instance(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -393,7 +393,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                 }
             })
         self.assertIsNotNone(ve)
-        self.assertIn('Missing instance definition.', str(ve.exception), ve)
+        self.assertIn('Missing required instance definition.', str(ve.exception), ve)
 
     def test__get_xform_instance(self):
         xform_dict = {

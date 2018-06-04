@@ -82,7 +82,7 @@ class XFormForm(forms.ModelForm):
     class Meta:
         model = XForm
         fields = [
-            'id', 'project',
+            'id', 'project', 'kernel_id',
             'xml_file', 'xml_data',
             'surveyors', 'description',
         ]
