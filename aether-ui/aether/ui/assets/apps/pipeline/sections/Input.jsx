@@ -118,6 +118,7 @@ class SchemaInput extends Component {
             />
           </span>
         </button>
+        {this.state.inputSchema && !this.hasChanged() && <IdentityMapping {...this.props} />}
       </form>
     )
   }
@@ -216,23 +217,22 @@ class DataInput extends Component {
             />
           </span>
         </button>
+        {this.state.inputData && !this.hasChanged() && <IdentityMapping {...this.props} />}
       </form>
     )
   }
 }
 
-class Input extends Component {
+export class IdentityMapping extends Component {
   constructor (props) {
     super(props)
     this.state = {
-      showModal: false,
-      view: DATA_VIEW
+      showModal: false
     }
     this.generateIdentityMapping = this.generateIdentityMapping.bind(this)
     this.hideModal = this.hideModal.bind(this)
     this.renderModal = this.renderModal.bind(this)
     this.showModal = this.showModal.bind(this)
-    this.toggleInputView = this.toggleInputView.bind(this)
   }
 
   showModal () {
@@ -243,12 +243,16 @@ class Input extends Component {
     this.setState({showModal: false})
   }
 
-  toggleInputView () {
-    if (this.state.view === DATA_VIEW) {
-      this.setState({ view: SCHEMA_VIEW })
-    } else {
-      this.setState({ view: DATA_VIEW })
-    }
+  generateIdentityMapping () {
+    const schema = this.props.selectedPipeline.schema
+    const mappingRules = deriveMappingRules(schema)
+    const entityTypes = [schema]
+    this.props.updatePipeline({
+      ...this.props.selectedPipeline,
+      mapping: mappingRules,
+      entity_types: entityTypes
+    })
+    this.hideModal()
   }
 
   renderModal () {
@@ -267,7 +271,10 @@ class Input extends Component {
     )
     const buttons = (
       <div>
-        <button className='btn btn-w btn-primary' onClick={this.generateIdentityMapping}>
+        <button
+          data-qa='input.identityMapping.btn-confirm'
+          className='btn btn-w btn-primary'
+          onClick={this.generateIdentityMapping}>
           <FormattedMessage
             id='pipeline.input.identityMapping.btn-confirm'
             defaultMessage='Yes'
@@ -282,20 +289,58 @@ class Input extends Component {
       </div>
     )
     return (
-      <Modal show header={header} children={content} buttons={buttons} />
+      <Modal
+        show
+        header={header}
+        children={content}
+        buttons={buttons}
+      />
     )
   }
 
-  generateIdentityMapping () {
-    const schema = this.props.selectedPipeline.schema
-    const mappingRules = deriveMappingRules(schema)
-    const entityTypes = [schema]
-    this.props.updatePipeline({
-      ...this.props.selectedPipeline,
-      mapping: mappingRules,
-      entity_types: entityTypes
-    })
-    this.hideModal()
+  render () {
+    return (
+      <div>
+        <div className='identity-mapping'>
+          <p>
+            <FormattedMessage
+              id='pipeline.input.identityMapping.btn-apply'
+              defaultMessage='You can use an identity mapping for a 1:1 translation of your input into mappings. This will automatically create both Entity Types and Mappings.'
+            />
+          </p>
+          <button
+            data-qa='input.identityMapping.btn-apply'
+            className='btn btn-w'
+            onClick={this.showModal}
+          >
+            <FormattedMessage
+              id='pipeline.input.identityMapping.btn-apply'
+              defaultMessage='Apply identity mapping'
+            />
+          </button>
+        </div>
+        {this.renderModal()}
+      </div>
+    )
+  }
+}
+
+class Input extends Component {
+  constructor (props) {
+    super(props)
+    this.state = {
+      showModal: false,
+      view: DATA_VIEW
+    }
+    this.toggleInputView = this.toggleInputView.bind(this)
+  }
+
+  toggleInputView () {
+    if (this.state.view === DATA_VIEW) {
+      this.setState({ view: SCHEMA_VIEW })
+    } else {
+      this.setState({ view: DATA_VIEW })
+    }
   }
 
   render () {
@@ -335,21 +380,6 @@ class Input extends Component {
             </div>
             {this.state.view === SCHEMA_VIEW && <SchemaInput {...this.props} />}
             {this.state.view === DATA_VIEW && <DataInput {...this.props} />}
-            <div className='identity-mapping'>
-              <p>
-                <FormattedMessage
-                  id='pipeline.input.identityMapping.btn-apply'
-                  defaultMessage='You can use an identity mapping for a 1:1 translation of your input into mappings. This will automatically create both Entity Types and Mappings.'
-                />
-              </p>
-              <button className='btn btn-w' onClick={this.showModal}>
-                <FormattedMessage
-                  id='pipeline.input.identityMapping.btn-apply'
-                  defaultMessage='Apply identity mapping'
-                />
-              </button>
-            </div>
-            {this.renderModal()}
           </div>
         </div>
       </div>
