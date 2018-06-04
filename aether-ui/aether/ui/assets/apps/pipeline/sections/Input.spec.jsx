@@ -13,15 +13,15 @@ describe('makeOptionalField', () => {
     const tests = [
       [
         {name: 'a', type: 'string'},
-        {name: 'a', type: [null, 'string']}
+        {name: 'a', type: ['null', 'string']}
       ],
       [
-        {name: 'b', type: [null, 'string']},
-        {name: 'b', type: [null, 'string']}
+        {name: 'b', type: ['null', 'string']},
+        {name: 'b', type: ['null', 'string']}
       ],
       [
         {name: 'c', type: ['int', 'string']},
-        {name: 'c', type: [null, 'int', 'string']}
+        {name: 'c', type: ['null', 'int', 'string']}
       ]
     ]
     tests.map(([args, result]) => {
@@ -43,7 +43,7 @@ describe('deriveEntityTypes', () => {
         },
         {
           name: 'b',
-          type: [null, 'string']
+          type: ['null', 'string']
         },
         {
           name: 'c',
@@ -51,23 +51,12 @@ describe('deriveEntityTypes', () => {
         }
       ]
     }
-    const expected = [
-      {
-        source: '$.a',
-        destination: `${schemaName}.a`
-      },
-      {
-        source: '$.b',
-        destination: `${schemaName}.b`
-      }
-    ]
     const result = input.deriveEntityTypes(schema)
-    expect(result[0].fields[0].type).toEqual([null, 'int'])
-    expect(result[0].fields[1].type).toEqual([null, 'string'])
-    expect(result[0].fields[2].type).toEqual([null, 'string', 'int'])
+    expect(result[0].fields[0].type).toEqual(['null', 'int'])
+    expect(result[0].fields[1].type).toEqual(['null', 'string'])
+    expect(result[0].fields[2].type).toEqual(['null', 'string', 'int'])
   })
 })
-
 
 describe('deriveMappingRules', () => {
   it('derives valid mapping rules from a schema', () => {
@@ -120,7 +109,7 @@ describe('<IdentityMapping />', () => {
         fields: [
           {
             name: 'a',
-            type: [null, 'string']
+            type: ['null', 'string']
           }
         ]
       }

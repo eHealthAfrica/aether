@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import { injectIntl } from 'react-intl'
 import Portal from './Portal'
 
 export default class Modal extends Component {

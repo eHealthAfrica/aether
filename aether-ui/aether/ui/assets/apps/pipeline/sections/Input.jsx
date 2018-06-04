@@ -17,7 +17,7 @@ const SCHEMA_VIEW = 'SCHEMA_VIEW'
 const DATA_VIEW = 'DATA_VIEW'
 
 export const isOptionalType = (type) => {
-  return Array.isArray(type) && (type.indexOf(null) > -1)
+  return Array.isArray(type) && (type.indexOf('null') > -1)
 }
 
 export const makeOptionalType = (type) => {
@@ -25,9 +25,9 @@ export const makeOptionalType = (type) => {
     return type
   }
   if (Array.isArray(type)) {
-    return [null, ...type]
+    return ['null', ...type]
   }
-  return [null, type]
+  return ['null', type]
 }
 
 export const makeOptionalField = (field) => {
