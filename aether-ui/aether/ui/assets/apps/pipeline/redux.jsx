@@ -100,11 +100,12 @@ const parsePipeline = (pipeline) => {
   const mappingRules = (pipeline.mapping || [])
   mappingRules.forEach(rule => {
     // find out the number assigned to the linked Entity Type
-    const entityType = rule.destination.split('.')[0]
+    const ruleSplit = rule.destination.split('.')
+    const entityType = ruleSplit[0] === '$' ? ruleSplit[1] : ruleSplit[0]
     const color = entityColors[entityType] || 0
 
-    highlightSource[rule.source] = color
-    highlightDestination.push(rule.destination)
+    highlightSource[rule.source.replace('$.', '')] = color
+    highlightDestination.push(rule.destination.replace('$.', ''))
   })
 
   return {
