@@ -76,7 +76,7 @@ class AvroSchemaViewer extends Component {
         id={`input_${jsonPath}`}>
         <span className='name'>{schema.name}</span>
         <span className='type'> {typesOptions && typesOptions.length ? typesOptions.toString() : schema.type}</span>
-        { isNullable && <span className='type'>, (nullable)</span> }
+        { isNullable && <span className='type'> (nullable)</span> }
       </li>
     )
   }

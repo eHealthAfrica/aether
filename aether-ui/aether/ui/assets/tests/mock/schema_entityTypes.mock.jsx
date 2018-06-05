@@ -4,7 +4,7 @@ const entityTypes = [
     'name': 'Person',
     'fields': [
       {
-        'name': 'hatId',
+        'name': 'id',
         'type': 'string'
       },
       {
@@ -13,11 +13,11 @@ const entityTypes = [
       },
       {
         'name': 'lastName',
-        'type': 'string'
+        'type': ['null', 'string']
       },
       {
         'name': 'age',
-        'type': 'int'
+        'type': ["int", {"name": "data-type", "type": "string"}]
       },
       {
         'name': 'gender',
@@ -34,7 +34,7 @@ const entityTypes = [
     'name': 'Screening',
     'fields': [
       {
-        'name': 'hatId',
+        'name': 'id',
         'type': 'string'
       },
       {

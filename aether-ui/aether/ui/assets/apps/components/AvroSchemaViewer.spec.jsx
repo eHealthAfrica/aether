@@ -11,6 +11,9 @@ describe('AvroSchemaViewer', () => {
     const component = mountWithIntl(<AvroSchemaViewer schema={mockAvroSchema} highlight={{'person.forename': 1}} />)
     expect(component.find('[data-qa^="group-title-"]').length).toEqual(9)
     expect(component.find('[data-qa="no-children-surname"]').html()).toContain('<span class="name">surname</span>')
+    expect(component.find('[data-qa="no-children-forename"]').html())
+      .toContain('<span class="name">forename</span><span class="type"> string,data-type: int</span>')
+    expect(component.find('[data-qa="no-children-gender"]').html()).toContain('<span class="type"> (nullable)</span>')
   })
 
   it('should take a invalid avro schema and render an invalid error message', () => {

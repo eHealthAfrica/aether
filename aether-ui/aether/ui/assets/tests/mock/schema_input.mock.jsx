@@ -10,7 +10,7 @@ const inputSchema = {
       'namespace': '',
       'fields': [{
         'name': 'forename',
-        'type': 'string'
+        'type': ['string', {'name': 'data-type', 'type': 'int'}]
       }, {
         'name': 'surname',
         'type': 'string'
@@ -27,7 +27,7 @@ const inputSchema = {
         }
       }, {
         'name': 'gender',
-        'type': 'string'
+        'type': ['null', 'string']
       }, {
         'name': 'mothersForename',
         'type': 'string'
