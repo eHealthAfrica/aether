@@ -46,24 +46,69 @@ class XFormUtilsValidatorsTests(CustomTestCase):
         self.assertIsNotNone(ve)
         self.assertIn('Not valid xForm definition.', str(ve.exception), ve)
 
-    def test__validate_xform__missing_required(self):
+    def test__validate_xform__missing_required__html(self):
+        with self.assertRaises(XFormParseError) as ve:
+            validate_xform(
+                '''
+                    <html></html>
+                '''
+            )
+        self.assertIsNotNone(ve)
+        self.assertIn('Missing required tags:', str(ve.exception), ve)
+        self.assertIn('<h:html>', str(ve.exception), ve)
+
+    def test__validate_xform__missing_required__html__children(self):
         with self.assertRaises(XFormParseError) as ve:
             validate_xform(
                 '''
                     <h:html
                             xmlns="http://www.w3.org/2002/xforms"
-                            xmlns:ev="http://www.w3.org/2001/xml-events"
-                            xmlns:h="http://www.w3.org/1999/xhtml"
-                            xmlns:jr="http://openrosa.org/javarosa"
-                            xmlns:orx="http://openrosa.org/xforms"
-                            xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-                        <h:head/>
+                            xmlns:h="http://www.w3.org/1999/xhtml">
+                    </h:html>
+                '''
+            )
+        self.assertIsNotNone(ve)
+        self.assertIn('Missing required tags:', str(ve.exception), ve)
+        self.assertIn('<h:body> in <h:html>', str(ve.exception), ve)
+        self.assertIn('<h:head> in <h:html>', str(ve.exception), ve)
+
+    def test__validate_xform__missing_required__head__children(self):
+        with self.assertRaises(XFormParseError) as ve:
+            validate_xform(
+                '''
+                    <h:html
+                            xmlns="http://www.w3.org/2002/xforms"
+                            xmlns:h="http://www.w3.org/1999/xhtml">
+                        <h:head>
+                        </h:head>
                         <h:body/>
                     </h:html>
                 '''
             )
         self.assertIsNotNone(ve)
-        self.assertIn('Missing required tags.', str(ve.exception), ve)
+        self.assertIn('Missing required tags:', str(ve.exception), ve)
+        self.assertIn('<h:title> in <h:html><h:head>', str(ve.exception), ve)
+        self.assertIn('<model> in <h:html><h:head>', str(ve.exception), ve)
+
+    def test__validate_xform__missing_required__model__children(self):
+        with self.assertRaises(XFormParseError) as ve:
+            validate_xform(
+                '''
+                    <h:html
+                            xmlns="http://www.w3.org/2002/xforms"
+                            xmlns:h="http://www.w3.org/1999/xhtml">
+                        <h:head>
+                            <model>
+                            </model>
+                        </h:head>
+                        <h:body/>
+                    </h:html>
+                '''
+            )
+        self.assertIsNotNone(ve)
+        self.assertIn('Missing required tags:', str(ve.exception), ve)
+        self.assertIn('<bind> in <h:html><h:head><model>', str(ve.exception), ve)
+        self.assertIn('<instance> in <h:html><h:head><model>', str(ve.exception), ve)
 
     def test__validate_xform__no_instance(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -71,11 +116,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                 '''
                     <h:html
                             xmlns="http://www.w3.org/2002/xforms"
-                            xmlns:ev="http://www.w3.org/2001/xml-events"
-                            xmlns:h="http://www.w3.org/1999/xhtml"
-                            xmlns:jr="http://openrosa.org/javarosa"
-                            xmlns:orx="http://openrosa.org/xforms"
-                            xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                            xmlns:h="http://www.w3.org/1999/xhtml">
                         <h:head>
                             <h:title/>
                             <model>
@@ -97,11 +138,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                 '''
                     <h:html
                             xmlns="http://www.w3.org/2002/xforms"
-                            xmlns:ev="http://www.w3.org/2001/xml-events"
-                            xmlns:h="http://www.w3.org/1999/xhtml"
-                            xmlns:jr="http://openrosa.org/javarosa"
-                            xmlns:orx="http://openrosa.org/xforms"
-                            xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                            xmlns:h="http://www.w3.org/1999/xhtml">
                         <h:head>
                             <h:title/>
                             <model>
@@ -124,11 +161,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                 '''
                     <h:html
                             xmlns="http://www.w3.org/2002/xforms"
-                            xmlns:ev="http://www.w3.org/2001/xml-events"
-                            xmlns:h="http://www.w3.org/1999/xhtml"
-                            xmlns:jr="http://openrosa.org/javarosa"
-                            xmlns:orx="http://openrosa.org/xforms"
-                            xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                            xmlns:h="http://www.w3.org/1999/xhtml">
                         <h:head>
                             <h:title/>
                             <model>
@@ -151,11 +184,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                 '''
                     <h:html
                             xmlns="http://www.w3.org/2002/xforms"
-                            xmlns:ev="http://www.w3.org/2001/xml-events"
-                            xmlns:h="http://www.w3.org/1999/xhtml"
-                            xmlns:jr="http://openrosa.org/javarosa"
-                            xmlns:orx="http://openrosa.org/xforms"
-                            xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                            xmlns:h="http://www.w3.org/1999/xhtml">
                         <h:head>
                             <h:title>xForm - Test</h:title>
                             <model>
@@ -178,11 +207,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                 '''
                     <h:html
                             xmlns="http://www.w3.org/2002/xforms"
-                            xmlns:ev="http://www.w3.org/2001/xml-events"
-                            xmlns:h="http://www.w3.org/1999/xhtml"
-                            xmlns:jr="http://openrosa.org/javarosa"
-                            xmlns:orx="http://openrosa.org/xforms"
-                            xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                            xmlns:h="http://www.w3.org/1999/xhtml">
                         <h:head>
                             <h:title>xForm - Test</h:title>
                             <model>

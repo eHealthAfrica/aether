@@ -42,7 +42,7 @@ MSG_VALIDATION_XFORM_PARSE_ERR = _(
     'Not valid xForm definition.'
 )
 MSG_VALIDATION_XFORM_MISSING_TAGS_ERR = _(
-    'Missing required tags.'
+    'Missing required tags: {tags}.'
 )
 MSG_VALIDATION_XFORM_MISSING_TITLE_INSTANCE_ID_ERR = _(
     'Missing required form title and instance ID.'
@@ -382,26 +382,39 @@ def validate_xform(xml_definition):
             MSG_VALIDATION_XFORM_PARSE_ERR +
             MSG_ERROR_REASON.format(error=str(e)))
 
+    tags = []
     if (
         'h:html' not in xform_dict
         or xform_dict['h:html'] is None
-
-        or 'h:body' not in xform_dict['h:html']
-
-        or 'h:head' not in xform_dict['h:html']
-        or xform_dict['h:html']['h:head'] is None
-
-        or 'h:title' not in xform_dict['h:html']['h:head']
-
-        or 'model' not in xform_dict['h:html']['h:head']
-        or xform_dict['h:html']['h:head']['model'] is None
-
-        or 'bind' not in xform_dict['h:html']['h:head']['model']
-
-        or 'instance' not in xform_dict['h:html']['h:head']['model']
-        or xform_dict['h:html']['h:head']['model']['instance'] is None
     ):
-        raise XFormParseError(MSG_VALIDATION_XFORM_MISSING_TAGS_ERR)
+        tags.append('<h:html>')
+    else:
+        if 'h:body' not in xform_dict['h:html']:
+            tags.append('<h:body> in <h:html>')
+
+        if (
+            'h:head' not in xform_dict['h:html']
+            or xform_dict['h:html']['h:head'] is None
+        ):
+            tags.append('<h:head> in <h:html>')
+        else:
+            if 'h:title' not in xform_dict['h:html']['h:head']:
+                tags.append('<h:title> in <h:html><h:head>')
+            if (
+                'model' not in xform_dict['h:html']['h:head']
+                or xform_dict['h:html']['h:head']['model'] is None
+            ):
+                tags.append('<model> in <h:html><h:head>')
+            else:
+                if 'bind' not in xform_dict['h:html']['h:head']['model']:
+                    tags.append('<bind> in <h:html><h:head><model>')
+                if (
+                    'instance' not in xform_dict['h:html']['h:head']['model']
+                    or xform_dict['h:html']['h:head']['model']['instance'] is None
+                ):
+                    tags.append('<instance> in <h:html><h:head><model>')
+    if tags:
+        raise XFormParseError(MSG_VALIDATION_XFORM_MISSING_TAGS_ERR.format(tags=', '.join(tags)))
 
     title = xform_dict['h:html']['h:head']['h:title']
     instance = __get_xform_instance(xform_dict)
