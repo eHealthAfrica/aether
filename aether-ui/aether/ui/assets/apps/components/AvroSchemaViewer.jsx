@@ -40,31 +40,22 @@ class AvroSchemaViewer extends Component {
         </ul>
       )
     } else if (Array.isArray(schema.type)) {
-      let typeStringOptions = null
+      let typeStringOptions = []
       const typeObjectOptions = []
       let isNullable = false
       schema.type.forEach(typeItem => {
         if (typeof typeItem === 'string') {
-          if (!typeStringOptions) {
-            typeStringOptions = []
-          }
           if (typeItem === 'null') {
             isNullable = true
           } else {
             typeStringOptions.push(typeItem)
-          }          
+          }
         } else if (typeof typeItem === 'object') {
           typeObjectOptions.push(typeItem)
         }
       })
-      const nestedList = typeObjectOptions.map(obj => {
-        console.log(obj.name)
-        return this.schemaToMarkup(obj, `${parent ? parent + '.' : ''}${schema.name}`)
-      })
-      return (<ul key={schema.name} className='group'>
-        {this.deepestRender(schema, parent, typeStringOptions, isNullable, nestedList && nestedList.length)}
-        <li><ul className='group-list'>{nestedList}</ul></li>
-      </ul>)
+      typeStringOptions.push(typeObjectOptions.map(obj => (`${obj.name}: ${obj.type}`)))
+      return this.deepestRender(schema, parent, typeStringOptions, isNullable)
     } else if (typeof schema.type !== 'string') {
       schema.type.name = schema.name
       return this.schemaToMarkup(schema.type, `${parent ? parent + '.' : ''}${schema.name}`)
@@ -73,18 +64,18 @@ class AvroSchemaViewer extends Component {
     }
   }
 
-  deepestRender (schema, parent=null, primitiveTypes=null, isNullable=false, hasChildren=false) {
+  deepestRender (schema, parent = null, typesOptions = null, isNullable = false) {
     const jsonPath = `${parent ? parent + '.' : ''}${schema.name}`
     const className = this.getHighlightedClassName(jsonPath)
 
     return (
       <li
-        data-qa={hasChildren ? `group-title-${schema.name}` : `no-children-${schema.name}`}
+        data-qa={`no-children-${schema.name}`}
         key={schema.name}
-        className={hasChildren ? `group-title ${className}` : className}
+        className={className}
         id={`input_${jsonPath}`}>
-        <span className={hasChildren ? '': 'name'}>{schema.name}</span>
-        <span className='type'> {primitiveTypes ? primitiveTypes.toString() : schema.type}</span>
+        <span className='name'>{schema.name}</span>
+        <span className='type'> {typesOptions && typesOptions.length ? typesOptions.toString() : schema.type}</span>
         { isNullable && <span className='type'>, (nullable)</span> }
       </li>
     )
