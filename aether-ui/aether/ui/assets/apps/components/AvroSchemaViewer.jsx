@@ -101,7 +101,6 @@ class AvroSchemaViewer extends Component {
         </div>
       )
     } catch (error) {
-      console.log(error)
       return (
         <div className='hint'>
           <FormattedMessage
