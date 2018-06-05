@@ -136,12 +136,12 @@ def parse_submission(data, xml_definition):
                     obj[k] = parser.parse(v).isoformat()
 
                 if _type == 'geopoint':
-                    lat, lng, altitude, accuracy = v.split()
+                    latitude, longitude, altitude, accuracy = v.split()
                     obj[k] = {
-                        'coordinates': [float(lat), float(lng)],
+                        'latitude': float(latitude),
+                        'longitude': float(longitude),
                         'altitude': float(altitude),
                         'accuracy': float(accuracy),
-                        'type': 'Point',
                     }
 
             else:
@@ -319,23 +319,20 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
                         'doc': current_doc,
                         'fields': [
                             {
-                                'name': 'coordinates',
-                                'type': {
-                                    'type': 'array',
-                                    'items': 'float',
-                                },
+                                'name': 'latitude',
+                                'type': __get_avro_primitive_type('float', True),
+                            },
+                            {
+                                'name': 'longitude',
+                                'type': __get_avro_primitive_type('float', True),
                             },
                             {
                                 'name': 'altitude',
-                                'type': __get_avro_primitive_type('float', definition.get('required')),
+                                'type': __get_avro_primitive_type('float', False),
                             },
                             {
                                 'name': 'accuracy',
-                                'type': __get_avro_primitive_type('float', definition.get('required')),
-                            },
-                            {
-                                'name': 'type',
-                                'type': __get_avro_primitive_type('string', definition.get('required')),
+                                'type': __get_avro_primitive_type('float', False),
                             },
                         ],
                     },
