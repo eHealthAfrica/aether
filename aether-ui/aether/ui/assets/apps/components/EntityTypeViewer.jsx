@@ -13,27 +13,47 @@ const PropertyList = props => {
   }
 
   return props.fields.map(field => {
-    if (field.type.fields) {
-      let parent = null
-      if (props.parent) {
-        parent = `${props.parent}.${field.name}`
-      } else {
-        parent = field.name
-      }
+    let parent = null
+    if (props.parent) {
+      parent = `${props.parent}.${field.name}`
+    } else {
+      parent = field.name
+    }
 
+    if (Array.isArray(field.type)) {
+      let typeStringOptions = null
+      const typeObjectOptions = []
+      let isNullable = false
+      field.type.forEach(typeItem => {
+        if (!typeStringOptions) {
+          typeStringOptions = []
+        }
+        if (typeof typeItem === 'string') {
+          if (typeItem === 'null') {
+            isNullable = true
+          } else {
+            typeStringOptions.push(typeItem)
+          }          
+        } else if (typeof typeItem === 'object') {
+          typeStringOptions.push(typeItem.type)
+        }
+      })
       return PropertyList({
         highlight: props.highlight,
-        fields: field.type.fields,
-        parent,
+        fields: [{name: field.name, type: typeStringOptions.toString()}],
+        name: props.name,
+        parent: props.parent,
+        isNullable
+      })
+    } else if (typeof field.type === 'object') {
+      return PropertyList({
+        highlight: props.highlight,
+        fields: field.type.fields || [field.type],
+        parent: field.type.fields ? `${parent}.${field.type.name}` : parent,
         name: props.name
       })
     } else {
-      let fieldType = ''
-      if (typeof field.type === 'object') {
-        fieldType = field.type.symbols ? `{${field.type.symbols.toString()}}` : field.type.type
-      } else {
-        fieldType = field.type
-      }
+      const fieldType = field.type
 
       if (props.parent) {
         const jsonPath = `${props.name}.${props.parent}.${field.name}`
@@ -44,7 +64,8 @@ const PropertyList = props => {
             className={className}
             id={`entityType_${jsonPath}`}>
             <span className='name'>{`${props.parent}.${field.name}`}</span>
-            <span className='type'> {fieldType}</span>
+            <span className='type'> {fieldType === 'enum' ? `${fieldType}: [${field.symbols.toString()}]` : fieldType}</span>
+            {props.isNullable ? <span className='type'> (nullable)</span> : null}
           </li>
         )
       } else {
@@ -57,6 +78,7 @@ const PropertyList = props => {
             id={`entityType_${jsonPath}`}>
             <span className='name'>{field.name}</span>
             <span className='type'> {fieldType}</span>
+            {props.isNullable ? <span className='type'> (nullable)</span> : null}
           </li>
         )
       }
