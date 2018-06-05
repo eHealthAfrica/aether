@@ -12,7 +12,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -35,6 +35,20 @@ class ProjectAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     ordering = list_display
 
+    fieldsets = (
+        (_('Aether Kernel'), {
+            'description': _('Please choose the Aether Kernel Project.'),
+            'fields': ['project_id', 'name', ]
+        }),
+
+        (_('Granted surveyors'), {
+            'description': _(
+                'If you do not specify any surveyors, EVERYONE will be able to access this project xForms.'
+            ),
+            'fields': ['surveyors', ],
+        }),
+    )
+
 
 class XFormAdmin(admin.ModelAdmin):
 
@@ -56,13 +70,13 @@ class XFormAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (_('Aether Kernel'), {
-            'description': _('Please choose the Aether Kernel Project.'),
-            'fields': ['project', 'description', ]
+            'description': _('Please indicate the Aether Kernel artefacts.'),
+            'fields': ['project', 'kernel_id', ]
         }),
 
         (_('xForm definition'), {
             'description': _('Please upload an XLS Form or an XML File, or enter the XML data.'),
-            'fields': ['xml_file', 'xml_data', 'title', 'form_id', 'version', ],
+            'fields': ['xml_file', 'xml_data', 'description', 'title', 'form_id', 'version', ],
         }),
 
         (_('Granted surveyors'), {

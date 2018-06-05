@@ -10,7 +10,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -64,7 +64,7 @@ class TestFilters(TransactionTestCase):
             result = set([entity['id'] for entity in response['results']])
             self.assertEqual(expected, result)
 
-    def test_submission_filter(self):
+    def test_submission_filter__by_instanceID(self):
         def gen_submission_payload():
             return {'meta': {'instanceID': str(uuid.uuid4())}}
         submission_field_values = {
@@ -83,3 +83,29 @@ class TestFilters(TransactionTestCase):
                 response['results'][0]['payload']['meta']['instanceID'],
                 instance_id,
             )
+
+    def test_submission_filter__by_project(self):
+        # Generate projects.
+        for _ in range(random.randint(10, 20)):
+            generate_project()
+        # Get a list of all projects.
+        projects = models.Project.objects.all()
+        for project in projects:
+            # Filter submissions in all projects based on the project they are
+            # associated with.
+            submissions = models.Submission.objects.filter(
+                mapping__project=project
+            )
+            # ...and retrieve all submission ids.
+            expected = set([str(submission.id) for submission in submissions])
+            # Request a list of all submissions, filtered by `project`.
+            # This checks that SubmissionFilter.project exists and that
+            # SubmissionFilter has been correctly configured.
+            kwargs = {'project': str(project.id)}
+            url = reverse(viewname='submission-list')
+            response = json.loads(
+                self.client.get(url, kwargs, format='json').content
+            )
+            # Check both sets of ids for equality.
+            result = set([submission['id'] for submission in response['results']])
+            self.assertEqual(expected, result)

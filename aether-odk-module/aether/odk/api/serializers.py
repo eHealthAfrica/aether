@@ -10,7 +10,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -51,6 +51,7 @@ class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         queryset=get_surveyors(),
         allow_null=True,
         default=[],
+        help_text=_('If you do not specify any surveyors, EVERYONE will be able to access this xForm.'),
     )
 
     xml_file = serializers.FileField(
@@ -126,6 +127,7 @@ class ProjectSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         queryset=get_surveyors(),
         allow_null=True,
         default=[],
+        help_text=_('If you do not specify any surveyors, EVERYONE will be able to access this project xForms.'),
     )
     # this will return all linked xForms with media files in one request call
     xforms = XFormSerializer(read_only=True, many=True)

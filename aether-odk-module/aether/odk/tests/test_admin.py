@@ -10,7 +10,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -35,7 +35,11 @@ class AdminTests(CustomTestCase):
     def test__post__empty(self):
         response = self.client.post(
             self.url,
-            {'description': 'some text', 'project': self.PROJECT_ID},
+            {
+                'description': 'some text',
+                'project': self.PROJECT_ID,
+                'kernel_id': self.helper_create_uuid(),
+            },
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(XForm.objects.count(), 0)
@@ -47,6 +51,7 @@ class AdminTests(CustomTestCase):
                 'xml_data': self.samples['xform']['xml-err'],
                 'description': 'some text',
                 'project': self.PROJECT_ID,
+                'kernel_id': self.helper_create_uuid(),
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -56,7 +61,12 @@ class AdminTests(CustomTestCase):
         with open(self.samples['xform']['file-xls'], 'rb') as fp:
             response = self.client.post(
                 self.url,
-                {'xml_file': fp, 'description': 'some text', 'project': self.PROJECT_ID},
+                {
+                    'xml_file': fp,
+                    'description': 'some text',
+                    'project': self.PROJECT_ID,
+                    'kernel_id': self.helper_create_uuid(),
+                },
             )
         self.assertEqual(response.status_code, 302)  # redirected to list
         self.assertEqual(XForm.objects.count(), 1)
@@ -71,7 +81,12 @@ class AdminTests(CustomTestCase):
         with open(self.samples['xform']['file-xml'], 'rb') as fp:
             response = self.client.post(
                 self.url,
-                {'xml_file': fp, 'description': 'some text', 'project': self.PROJECT_ID},
+                {
+                    'xml_file': fp,
+                    'description': 'some text',
+                    'project': self.PROJECT_ID,
+                    'kernel_id': self.helper_create_uuid(),
+                },
             )
         self.assertEqual(response.status_code, 302)  # redirected to list
         self.assertEqual(XForm.objects.count(), 1)
@@ -89,6 +104,7 @@ class AdminTests(CustomTestCase):
                 'xml_data': self.samples['xform']['xml-ok'],
                 'description': 'some text',
                 'project': self.PROJECT_ID,
+                'kernel_id': self.helper_create_uuid(),
             },
         )
         self.assertEqual(response.status_code, 302)  # redirected to list
@@ -110,6 +126,7 @@ class AdminTests(CustomTestCase):
                 'xml_data': self.samples['xform']['xml-ok'],
                 'description': 'some text',
                 'project': self.PROJECT_ID,
+                'kernel_id': self.helper_create_uuid(),
                 'surveyors': [surveyor.id],
             },
         )

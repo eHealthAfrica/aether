@@ -12,7 +12,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -42,6 +42,8 @@ Data model schema:
     | Project          |          | Mapping          |       | Submission       |       | Attachment          |
     +==================+          +==================+       +==================+       +=====================+
     | id               |<-----+   | id               |<--+   | id               |<--+   | id                  |
+    | created          |      |   | created          |   |   | created          |   |   | created             |
+    | modified         |      |   | modified         |   |   | modified         |   |   | modified            |
     | revision         |      |   | revision         |   |   | revision         |   |   | name                |
     | name             |      |   | name             |   |   | date             |   |   | attachment_file     |
     | salad_schema     |      |   | definition       |   |   | payload          |   |   | md5sum              |
@@ -54,14 +56,16 @@ Data model schema:
     | Schema           |      |   | ProjectSchema    |       | Entity           |   |
     +==================+      |   +==================+       +==================+   |
     | id               |<--+  |   | id               |<--+   | id               |   |
-    | revision         |   |  |   | name             |   |   | revision         |   |
-    | name             |   |  |   | mandatory_fields |   |   | payload          |   |
-    | definition       |   |  |   | transport_rule   |   |   | status           |   |
-    | type             |   |  |   | masked_fields    |   |   | modified         |   |
-    +------------------+   |  |   | is_encrypted     |   |   +::::::::::::::::::+   |
-                           |  |   +::::::::::::::::::+   |   | submission       |>--+
-                           |  +--<| project          |   +--<| projectschema    |
-                           +-----<| schema           |       +------------------+
+    | created          |   |  |   | created          |   |   | modified         |   |
+    | modified         |   |  |   | modified         |   |   | revision         |   |
+    | revision         |   |  |   | name             |   |   | payload          |   |
+    | name             |   |  |   | mandatory_fields |   |   | status           |   |
+    | definition       |   |  |   | transport_rule   |   |   +::::::::::::::::::+   |
+    | type             |   |  |   | masked_fields    |   |   | submission       |>--+
+    +------------------+   |  |   | is_encrypted     |   +--<| projectschema    |
+                           |  |   +::::::::::::::::::+       +------------------+
+                           |  +--<| project          |
+                           +-----<| schema           |
                                   +------------------+
 
 '''
@@ -82,7 +86,7 @@ class Project(TimeStampedModel):
     class Meta:
         app_label = 'kernel'
         default_related_name = 'projects'
-        ordering = ('modified',)
+        ordering = ('-modified',)
 
 
 class Mapping(TimeStampedModel):
@@ -104,7 +108,7 @@ class Mapping(TimeStampedModel):
     class Meta:
         app_label = 'kernel'
         default_related_name = 'mappings'
-        ordering = ('modified',)
+        ordering = ('-modified',)
 
 
 class Submission(TimeStampedModel):
@@ -127,7 +131,7 @@ class Submission(TimeStampedModel):
     class Meta:
         app_label = 'kernel'
         default_related_name = 'submissions'
-        ordering = ('modified',)
+        ordering = ('-modified',)
 
 
 def __attachment_path__(instance, filename):
@@ -201,7 +205,7 @@ class Schema(TimeStampedModel):
     class Meta:
         app_label = 'kernel'
         default_related_name = 'schemas'
-        ordering = ('modified',)
+        ordering = ('-modified',)
 
 
 class ProjectSchema(TimeStampedModel):
@@ -222,7 +226,7 @@ class ProjectSchema(TimeStampedModel):
     class Meta:
         app_label = 'kernel'
         default_related_name = 'projectschemas'
-        ordering = ('modified',)
+        ordering = ('-modified',)
 
 
 class Entity(models.Model):
@@ -254,4 +258,4 @@ class Entity(models.Model):
         app_label = 'kernel'
         default_related_name = 'entities'
         verbose_name_plural = 'entities'
-        ordering = ('modified',)
+        ordering = ('-modified',)

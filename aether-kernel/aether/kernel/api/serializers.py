@@ -12,7 +12,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -321,6 +321,19 @@ class EntityLDSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     class Meta:
         model = models.Entity
         fields = '__all__'
+
+
+class ProjectStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+    first_submission = serializers.DateTimeField()
+    last_submission = serializers.DateTimeField()
+    submission_count = serializers.IntegerField()
+
+    class Meta:
+        model = models.Project
+        fields = (
+            'id', 'name', 'created',
+            'first_submission', 'last_submission', 'submission_count',
+        )
 
 
 class MappingStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
