@@ -12,7 +12,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -22,12 +22,12 @@ from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.utils.translation import ugettext as _
 
-from .models import Mapping, XForm
+from .models import Project, XForm
 from .xform_utils import parse_xform_file
 from .surveyors_utils import get_surveyors
 
 
-class MappingForm(forms.ModelForm):
+class ProjectForm(forms.ModelForm):
 
     surveyors = forms.ModelMultipleChoiceField(
         label=_('Surveyors'),
@@ -38,9 +38,9 @@ class MappingForm(forms.ModelForm):
     )
 
     class Meta:
-        model = Mapping
+        model = Project
         fields = (
-            'mapping_id',
+            'project_id',
             'name',
             'surveyors',
         )
@@ -82,7 +82,7 @@ class XFormForm(forms.ModelForm):
     class Meta:
         model = XForm
         fields = [
-            'id', 'mapping',
+            'id', 'project', 'kernel_id',
             'xml_file', 'xml_data',
             'surveyors', 'description',
         ]

@@ -10,7 +10,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -28,7 +28,6 @@ from ..xform_utils import (
     __parse_xml_to_dict as parse_xml_to_dict,
 
     get_instance_data_from_xml,
-    get_instance_id,
 
     parse_submission,
     parse_xform_file,
@@ -90,7 +89,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                 '''
             )
         self.assertIsNotNone(ve)
-        self.assertIn('Missing instance definition.', str(ve.exception), ve)
+        self.assertIn('Missing required instance definition.', str(ve.exception), ve)
 
     def test__validate_xform__no_title__no_form_id(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -117,7 +116,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                 '''
             )
         self.assertIsNotNone(ve)
-        self.assertIn('Missing form title and instance ID.', str(ve.exception), ve)
+        self.assertIn('Missing required form title and instance ID.', str(ve.exception), ve)
 
     def test__validate_xform__no_title__blank(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -144,7 +143,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                 '''
             )
         self.assertIsNotNone(ve)
-        self.assertIn('Missing form title.', str(ve.exception), ve)
+        self.assertIn('Missing required form title.', str(ve.exception), ve)
 
     def test__validate_xform__no_xform_id(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -171,7 +170,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                 '''
             )
         self.assertIsNotNone(ve)
-        self.assertIn('Missing instance ID.', str(ve.exception), ve)
+        self.assertIn('Missing required instance ID.', str(ve.exception), ve)
 
     def test__validate_xform__no_xform_id__blank(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -198,7 +197,7 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                 '''
             )
         self.assertIsNotNone(ve)
-        self.assertIn('Missing instance ID.', str(ve.exception), ve)
+        self.assertIn('Missing required instance ID.', str(ve.exception), ve)
 
     def test__validate_xform__with__title__and__xform_id(self):
         try:
@@ -267,12 +266,13 @@ class XFormUtilsParsersTests(CustomTestCase):
 
     def test__parse_submission(self):
         with open(self.samples['submission']['file-ok'], 'rb') as xml:
-            data, form_id, version = get_instance_data_from_xml(xml.read())
+            data, form_id, version, instance_id = get_instance_data_from_xml(xml.read())
         with open(self.samples['submission']['file-ok-json'], 'rb') as content:
             expected = json.load(content)
 
         self.assertEqual(form_id, 'my-test-form')
         self.assertEqual(version, 'test-1.0')
+        self.assertEqual(instance_id, 'uuid:cef69d9d-ebd9-408f-8bc6-9d418bb083d9')
         self.assertEqual(len(list(data.keys())), 1)
         self.assertEqual(list(data.keys())[0], 'Something_that_is_not_None')
 
@@ -283,12 +283,13 @@ class XFormUtilsParsersTests(CustomTestCase):
 
     def test__parse_submission__with_multilanguage(self):
         with open(self.samples['submission']['file-ok'], 'rb') as xml:
-            data, form_id, version = get_instance_data_from_xml(xml.read())
+            data, form_id, version, instance_id = get_instance_data_from_xml(xml.read())
         with open(self.samples['submission']['file-ok-json'], 'rb') as content:
             expected = json.load(content)
 
         self.assertEqual(form_id, 'my-test-form')
         self.assertEqual(version, 'test-1.0')
+        self.assertEqual(instance_id, 'uuid:cef69d9d-ebd9-408f-8bc6-9d418bb083d9')
         self.assertEqual(len(list(data.keys())), 1)
         self.assertEqual(list(data.keys())[0], 'Something_that_is_not_None')
 
@@ -297,18 +298,6 @@ class XFormUtilsParsersTests(CustomTestCase):
         self.assertNotEqual(list(data.keys())[0], 'Something_that_is_not_None')
 
         self.assertEqual(data, expected)
-
-
-class XFormUtilsGettersTests(CustomTestCase):
-
-    def test__get_instance_id(self):
-        instance_id = 'abc'
-        valid_data = {'meta': {'instanceID': instance_id}}
-        result = get_instance_id(valid_data)
-        self.assertEqual(result, instance_id)
-        invalid_data = {}
-        result = get_instance_id(invalid_data)
-        self.assertIsNone(result)
 
 
 class XFormUtilsAvroTests(CustomTestCase):
@@ -372,7 +361,7 @@ class XFormUtilsAvroTests(CustomTestCase):
         with self.assertRaises(XFormParseError) as ve:
             get_instance({})
         self.assertIsNotNone(ve)
-        self.assertIn('Missing instance definition.', str(ve.exception), ve)
+        self.assertIn('Missing required instance definition.', str(ve.exception), ve)
 
     def test__get_xform_instance__error__no_instances(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -386,7 +375,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                 }
             })
         self.assertIsNotNone(ve)
-        self.assertIn('Missing instance definition.', str(ve.exception), ve)
+        self.assertIn('Missing required instance definition.', str(ve.exception), ve)
 
     def test__get_xform_instance__error___no_default_instance(self):
         with self.assertRaises(XFormParseError) as ve:
@@ -404,7 +393,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                 }
             })
         self.assertIsNotNone(ve)
-        self.assertIn('Missing instance definition.', str(ve.exception), ve)
+        self.assertIn('Missing required instance definition.', str(ve.exception), ve)
 
     def test__get_xform_instance(self):
         xform_dict = {
@@ -561,6 +550,21 @@ class XFormUtilsAvroTests(CustomTestCase):
             }
         }
         self.assertEqual(get_label(xform_dict, '/None/any'), '/any')
+
+    def test__get_xform_label__another_dict(self):
+        xform_dict = {
+            'h:html': {
+                'h:body': {
+                    'any-tag': {
+                        '@ref': '/None/a/b/c/any',
+                        'label': {
+                            'output': 'any text',
+                        },
+                    }
+                }
+            }
+        }
+        self.assertEqual(get_label(xform_dict, '/None/a/b/c/any'), '/a/b/c/any')
 
     def test__parse_xform_to_avro_schema__with_multilanguage(self):
         with open(self.samples['xform']['file-avro'], 'rb') as content:

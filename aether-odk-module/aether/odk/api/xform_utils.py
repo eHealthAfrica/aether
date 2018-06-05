@@ -10,7 +10,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -28,10 +28,34 @@ from pyxform.xls2json_backends import xls_to_dict
 from pyxform.xform_instance_parser import XFormInstanceParser
 from spavro.schema import parse as parse_avro_schema, SchemaParseException
 
+from django.utils.translation import ugettext as _
+
 
 DEFAULT_XFORM_VERSION = '0'
 
 _RE_AVRO_NAME = re.compile(r'^([A-Za-z_][A-Za-z0-9_]*)$')
+
+MSG_ERROR_REASON = _(
+    ' Reason: {error}.'
+)
+MSG_VALIDATION_XFORM_PARSE_ERR = _(
+    'Not valid xForm definition.'
+)
+MSG_VALIDATION_XFORM_MISSING_TAGS_ERR = _(
+    'Missing required tags.'
+)
+MSG_VALIDATION_XFORM_MISSING_TITLE_INSTANCE_ID_ERR = _(
+    'Missing required form title and instance ID.'
+)
+MSG_VALIDATION_XFORM_MISSING_TITLE_ERR = _(
+    'Missing required form title.'
+)
+MSG_VALIDATION_XFORM_MISSING_INSTANCE_ID_ERR = _(
+    'Missing required instance ID.'
+)
+MSG_XFORM_MISSING_INSTANCE_ERR = _(
+    'Missing required instance definition.'
+)
 
 
 # ------------------------------------------------------------------------------
@@ -128,9 +152,9 @@ def parse_submission(data, xml_definition):
                     obj[k] = None
 
     xpath_types = {
-        xpath: definition['type']
+        xpath: definition.get('type')
         for xpath, definition in __get_xform_instance_skeleton(xml_definition).items()
-        if definition['type']
+        if definition.get('type')
     }
     walk(data)  # modifies inplace
 
@@ -234,9 +258,9 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
             # ignore the root (already created)
             continue
 
-        current_type = definition['type']
+        current_type = definition.get('type')
         current_name = xpath.split('/')[-1]
-        current_doc = definition['label']
+        current_doc = definition.get('label')
 
         # validate name
         try:
@@ -303,15 +327,15 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
                             },
                             {
                                 'name': 'altitude',
-                                'type': __get_avro_primitive_type('float', definition['required']),
+                                'type': __get_avro_primitive_type('float', definition.get('required')),
                             },
                             {
                                 'name': 'accuracy',
-                                'type': __get_avro_primitive_type('float', definition['required']),
+                                'type': __get_avro_primitive_type('float', definition.get('required')),
                             },
                             {
                                 'name': 'type',
-                                'type': __get_avro_primitive_type('string', definition['required']),
+                                'type': __get_avro_primitive_type('string', definition.get('required')),
                             },
                         ],
                     },
@@ -322,7 +346,7 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         else:
             parent['fields'].append({
                 'name': current_name,
-                'type': __get_avro_primitive_type(current_type, definition['required']),
+                'type': __get_avro_primitive_type(current_type, definition.get('required')),
                 'doc': current_doc,
             })
 
@@ -354,7 +378,9 @@ def validate_xform(xml_definition):
     try:
         xform_dict = __parse_xml_to_dict(xml_definition)
     except Exception as e:
-        raise XFormParseError(f'Not valid xForm definition. Reason: {str(e)}.')
+        raise XFormParseError(
+            MSG_VALIDATION_XFORM_PARSE_ERR +
+            MSG_ERROR_REASON.format(error=str(e)))
 
     if (
         'h:html' not in xform_dict
@@ -375,20 +401,20 @@ def validate_xform(xml_definition):
         or 'instance' not in xform_dict['h:html']['h:head']['model']
         or xform_dict['h:html']['h:head']['model']['instance'] is None
     ):
-        raise XFormParseError('Missing required tags.')
+        raise XFormParseError(MSG_VALIDATION_XFORM_MISSING_TAGS_ERR)
 
     title = xform_dict['h:html']['h:head']['h:title']
     instance = __get_xform_instance(xform_dict)
-    form_id = instance['@id'] if instance and '@id' in instance else None
+    form_id = instance.get('@id') if instance else None
 
     if not title and not form_id:
-        raise XFormParseError('Missing form title and instance ID.')
+        raise XFormParseError(MSG_VALIDATION_XFORM_MISSING_TITLE_INSTANCE_ID_ERR)
 
     if not title:
-        raise XFormParseError('Missing form title.')
+        raise XFormParseError(MSG_VALIDATION_XFORM_MISSING_TITLE_ERR)
 
     if not form_id:
-        raise XFormParseError('Missing instance ID.')
+        raise XFormParseError(MSG_VALIDATION_XFORM_MISSING_INSTANCE_ID_ERR)
 
 
 # ------------------------------------------------------------------------------
@@ -405,8 +431,8 @@ def get_xform_data_from_xml(xml_definition):
     title = xform_dict['h:html']['h:head']['h:title']
     instance = __get_xform_instance(xform_dict)
 
-    form_id = instance['@id']
-    version = instance['@version'] if '@version' in instance else None
+    form_id = instance.get('@id')
+    version = instance.get('@version')
 
     return title, form_id, version
 
@@ -434,18 +460,12 @@ def get_instance_data_from_xml(xml_content):
     instance_dict[root]['_id'] = form_id
     instance_dict[root]['_version'] = version
 
-    return instance_dict, form_id, version
-
-
-def get_instance_id(instance_dict):
-    '''
-    Extracts device instance id from xml data
-    '''
-
     try:
-        return instance_dict['meta']['instanceID']
+        instance_id = instance_dict[root]['meta']['instanceID']
     except Exception:
-        return None
+        instance_id = None
+
+    return instance_dict, form_id, version, instance_id
 
 
 # ------------------------------------------------------------------------------
@@ -458,9 +478,9 @@ def __parse_xlsform(fp):
     '''
 
     xform_dict = xls_to_dict(fp)
-    settings = xform_dict['settings'][0] if 'settings' in xform_dict else {}
-    name = settings['instance_name'] if 'instance_name' in settings else None
-    language = settings['default_language'] if 'default_language' in settings else 'default'
+    settings = xform_dict.get('settings', [{}])[0]
+    name = settings.get('instance_name')
+    language = settings.get('default_language', 'default')
 
     json_survey = xls2json.workbook_to_json(
         workbook_dict=xform_dict,
@@ -503,7 +523,10 @@ def __get_xform_instance(xform_dict, with_root=False):
     try:
         instances = __wrap_as_list(xform_dict['h:html']['h:head']['model']['instance'])
     except Exception as e:
-        raise XFormParseError(f'Missing instance definition. Reason: {str(e)}')
+        raise XFormParseError(
+            MSG_XFORM_MISSING_INSTANCE_ERR +
+            MSG_ERROR_REASON.format(error=str(e))
+        )
 
     instance = None
     for i in instances:
@@ -513,7 +536,7 @@ def __get_xform_instance(xform_dict, with_root=False):
             break
 
     if not instance or not isinstance(instance, dict):
-        raise XFormParseError('Missing instance definition.')
+        raise XFormParseError(MSG_XFORM_MISSING_INSTANCE_ERR)
 
     if with_root:
         return instance
@@ -565,16 +588,15 @@ def __get_xform_instance_skeleton(xml_definition):
         entries = __wrap_as_list(entries)
         for bind_entry in entries:
             if '@type' in bind_entry:
-                xpath = bind_entry['@nodeset']
-                schema[xpath]['type'] = bind_entry['@type']
-                _required = 'required' in bind_entry and bind_entry['@required'] == 'true()'
-                schema[xpath]['required'] = _required
+                xpath = bind_entry.get('@nodeset')
+                schema[xpath]['type'] = bind_entry.get('@type')
+                schema[xpath]['required'] = bind_entry.get('@required') == 'true()'
 
     # search in body all the repeat entries
     for entries in __find_in_dict(xform_dict, 'repeat'):
         entries = __wrap_as_list(entries)
         for repeat_entry in entries:
-            xpath = repeat_entry['@nodeset']
+            xpath = repeat_entry.get('@nodeset')
             schema[xpath]['type'] = 'repeat'
 
     return schema
@@ -596,7 +618,7 @@ def __get_xform_itexts(xform_dict):
     translation = translations[0]  # take the first one
     # just in case check the whole list
     for tt in translations:
-        if '@default' in tt and tt['@default'] == 'true()':
+        if tt.get('@default') == 'true()':
             translation = tt
             break
 
@@ -625,15 +647,15 @@ def __get_xform_label(xform_dict, xpath, texts={}):
         return label
 
     tag = tags[0]  # there is only one
-    if 'label' not in tag or not tag['label']:
+    if not tag.get('label'):
         return label
 
-    label_tag = tag['label']
+    label_tag = tag.get('label')
     if isinstance(label_tag, str):
         return label_tag
 
-    ref = label_tag['@ref']
-    if ref.startswith("jr:itext('") and ref.endswith("')"):
+    ref = label_tag.get('@ref')
+    if ref and ref.startswith("jr:itext('") and ref.endswith("')"):
         #   <label ref="jr:itext('{xpath}:label')"/>
         label_id = ref[10:-2]  # f'{xpath}:label'
         if label_id in texts and texts[label_id]:

@@ -10,7 +10,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -26,6 +26,7 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.db import models, IntegrityError
 from django.utils import timezone
+from django.utils.translation import ugettext as _
 
 from .xform_utils import (
     get_xform_data_from_xml,
@@ -39,30 +40,32 @@ from .xform_utils import (
 Data model schema:
 
 
-    +------------------+       +------------------+       +------------------+
-    | Mapping          |       | XForm            |       | MediaFile        |
-    +==================+       +==================+       +==================+
-    | mapping_id       |<--+   | id               |<--+   | id               |
-    | name             |   |   | xml_data         |   |   | name             |
-    +::::::::::::::::::+   |   | description      |   |   | media_file       |
-    | surveyors (User) |   |   | created_at       |   |   +~~~~~~~~~~~~~~~~~~+
-    +------------------+   |   +~~~~~~~~~~~~~~~~~~+   |   | md5sum           |
-                           |   | title            |   |   +::::::::::::::::::+
-                           |   | form_id          |   +--<| xform            |
-                           |   | version          |       +------------------+
-                           |   | avro_schema      |
-                           |   | md5sum           |
-                           |   +::::::::::::::::::+
-                           +--<| mapping          |
-                               | surveyors (User) |
-                               +------------------+
+    +------------------+       +-------------------+       +------------------+
+    | Project          |       | XForm             |       | MediaFile        |
+    +==================+       +===================+       +==================+
+    | project_id       |<--+   | id                |<--+   | id               |
+    | name             |   |   | xml_data          |   |   | name             |
+    +::::::::::::::::::+   |   | description       |   |   | media_file       |
+    | surveyors (User) |   |   | created_at        |   |   +~~~~~~~~~~~~~~~~~~+
+    +------------------+   |   +~~~~~~~~~~~~~~~~~~-+   |   | md5sum           |
+                           |   | title             |   |   +::::::::::::::::::+
+                           |   | form_id           |   +--<| xform            |
+                           |   | version           |       +------------------+
+                           |   | md5sum            |
+                           |   | avro_schema       |
+                           |   +:::::::::::::::::::+
+                           |   | kernel_id         |
+                           |   +:::::::::::::::::::+
+                           +--<| project           |
+                               | surveyors (User)  |
+                               +-------------------+
 
 '''
 
 
-class Mapping(models.Model):
+class Project(models.Model):
     '''
-    Database link of a Aether Kernel Mapping
+    Database link of an Aether Kernel Project
 
     The needed and common data is stored here, like the list of granted surveyors.
 
@@ -70,20 +73,30 @@ class Mapping(models.Model):
 
     # This is needed to submit data to kernel
     # (there is a one to one relation)
-    mapping_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    project_id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        verbose_name=_('project ID'),
+        help_text=_('This ID corresponds to an Aether Kernel project ID.'),
+    )
 
-    name = models.TextField(null=True, blank=True, default='')
+    name = models.TextField(null=True, blank=True, default='', verbose_name=_('name'))
 
     # the list of granted surveyors
-    surveyors = models.ManyToManyField(to=get_user_model(), blank=True)
+    surveyors = models.ManyToManyField(
+        to=get_user_model(),
+        blank=True,
+        verbose_name=_('surveyors'),
+        help_text=_('If you do not specify any surveyors, EVERYONE will be able to access this project xForms.'),
+    )
 
     def is_surveyor(self, user):
         '''
-        Indicates if the given user is a granted surveyor of the Mapping.
+        Indicates if the given user is a granted surveyor of the Project.
 
         Rules:
             - User is superuser.
-            - Mapping has no surveyors.
+            - Project has no surveyors.
             - User is in the surveyors list.
 
         '''
@@ -95,12 +108,14 @@ class Mapping(models.Model):
         )
 
     def __str__(self):
-        return '{} - {}'.format(str(self.mapping_id), self.name)
+        return '{} - {}'.format(str(self.project_id), self.name)
 
     class Meta:
         app_label = 'odk'
-        default_related_name = 'mappings'
+        default_related_name = 'projects'
         ordering = ['name']
+        verbose_name = _('project')
+        verbose_name_plural = _('projects')
 
 
 def __validate_xml_data__(value):
@@ -116,31 +131,56 @@ def __validate_xml_data__(value):
 
 class XForm(models.Model):
     '''
-    Database representation of an XForm
+    Database representation of an XForm.
 
     The data is stored in XML format and could be converted to the
     other supported formats when it is needed.
 
+
+    One XForm should create in Kernel:
+        - one Mapping,
+        - one Schema and
+        - one ProjectSchema.
+
     '''
 
     # This is needed to submit data to kernel
-    mapping = models.ForeignKey(to=Mapping, on_delete=models.CASCADE)
+    kernel_id = models.UUIDField(
+        default=uuid.uuid4,
+        verbose_name=_('Aether Kernel ID'),
+        help_text=_('This ID is used to create Aether Kernel artefacts (schema, project schema and mapping).'),
+    )
+
+    project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
+
+    description = models.TextField(default='', null=True, blank=True, verbose_name=_('xForm description'))
+    created_at = models.DateTimeField(default=timezone.now, editable=False, verbose_name=_('created at'))
 
     # the list of granted surveyors
-    surveyors = models.ManyToManyField(to=get_user_model(), blank=True)
+    surveyors = models.ManyToManyField(
+        to=get_user_model(),
+        blank=True,
+        verbose_name=_('surveyors'),
+        help_text=_('If you do not specify any surveyors, EVERYONE will be able to access this xForm.'),
+    )
 
     # here comes the extracted data from an xForm file
-    xml_data = models.TextField(blank=True, validators=[__validate_xml_data__])
+    xml_data = models.TextField(
+        blank=True,
+        validators=[__validate_xml_data__],
+        verbose_name=_('XML definition'),
+        help_text=_(
+            'This XML must conform the JavaRosa specification. '
+            'https://bitbucket.org/javarosa/javarosa/wiki/xform'
+        )
+    )
 
     # taken from xml_data
-    title = models.TextField(default='', editable=False)
-    form_id = models.TextField(default='', editable=False)
-    version = models.TextField(default='0', blank=True)
-    md5sum = models.CharField(default='', editable=False, max_length=36)
-    avro_schema = JSONField(blank=True, null=True, editable=False)
-
-    description = models.TextField(default='', null=True, blank=True)
-    created_at = models.DateTimeField(default=timezone.now, editable=False)
+    title = models.TextField(default='', editable=False, verbose_name=_('xForm title'))
+    form_id = models.TextField(default='', editable=False, verbose_name=_('xForm ID'))
+    version = models.TextField(default='0', blank=True, verbose_name=_('xForm version'))
+    md5sum = models.CharField(default='', editable=False, max_length=36, verbose_name=_('xForm md5sum'))
+    avro_schema = JSONField(blank=True, null=True, editable=False, verbose_name=_('AVRO schema'))
 
     @property
     def hash(self):
@@ -184,7 +224,7 @@ class XForm(models.Model):
             raise IntegrityError(ve)
 
         if not self.xml_data:
-            raise IntegrityError({'xml_data': ['This field is required']})
+            raise IntegrityError({'xml_data': [_('This field is required.')]})
 
         title, form_id, version = get_xform_data_from_xml(self.xml_data)
 
@@ -205,16 +245,16 @@ class XForm(models.Model):
 
         Rules:
             - User is superuser.
-            - xForm and Mapping have no surveyors.
-            - User is in the xForm or Mapping surveyors list.
+            - xForm and Project have no surveyors.
+            - User is in the xForm or Project surveyors list.
 
         '''
 
         return (
             user.is_superuser or
-            (self.surveyors.count() == 0 and self.mapping.surveyors.count() == 0) or
+            (self.surveyors.count() == 0 and self.project.surveyors.count() == 0) or
             user in self.surveyors.all() or
-            user in self.mapping.surveyors.all()
+            user in self.project.surveyors.all()
         )
 
     def update_hash(self, increase_version=False):
@@ -233,12 +273,14 @@ class XForm(models.Model):
         app_label = 'odk'
         default_related_name = 'xforms'
         ordering = ['title', 'form_id']
+        verbose_name = _('xform')
+        verbose_name_plural = _('xforms')
 
 
 def __media_path__(instance, filename):
-    # file will be uploaded to MEDIA_ROOT/<mapping>/<xform>/filename
-    return '{mapping}/{xform}/{filename}'.format(
-        mapping=instance.xform.mapping.pk,
+    # file will be uploaded to MEDIA_ROOT/<project>/<xform>/filename
+    return '{project}/{xform}/{filename}'.format(
+        project=instance.xform.project.pk,
         xform=instance.xform.pk,
         filename=filename,
     )
@@ -250,11 +292,11 @@ class MediaFile(models.Model):
 
     '''
 
-    xform = models.ForeignKey(to=XForm, on_delete=models.CASCADE)
+    xform = models.ForeignKey(to=XForm, on_delete=models.CASCADE, verbose_name=_('xForm'))
 
-    name = models.TextField(blank=True)
-    media_file = models.FileField(upload_to=__media_path__)
-    md5sum = models.CharField(editable=False, max_length=36)
+    name = models.TextField(blank=True, verbose_name=_('name'))
+    media_file = models.FileField(upload_to=__media_path__, verbose_name=_('file'))
+    md5sum = models.CharField(editable=False, max_length=36, verbose_name=_('md5sum'))
 
     @property
     def hash(self):
@@ -280,3 +322,5 @@ class MediaFile(models.Model):
         app_label = 'odk'
         default_related_name = 'media_files'
         ordering = ['xform', 'name']
+        verbose_name = _('media file')
+        verbose_name_plural = _('media files')

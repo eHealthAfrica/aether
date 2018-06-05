@@ -10,13 +10,11 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
-import uuid
 
 from django.urls import reverse
 
@@ -26,18 +24,22 @@ from ..api.models import XForm
 
 class AdminTests(CustomTestCase):
 
-    MAPPING_ID = uuid.uuid4()
-
     def setUp(self):
         super(AdminTests, self).setUp()
         self.helper_create_superuser()
         self.url = reverse('admin:odk_xform_add')
-        self.mapping = self.helper_create_mapping(mapping_id=self.MAPPING_ID)
+
+        self.project = self.helper_create_project()
+        self.PROJECT_ID = self.project.project_id
 
     def test__post__empty(self):
         response = self.client.post(
             self.url,
-            {'description': 'some text', 'mapping': self.MAPPING_ID},
+            {
+                'description': 'some text',
+                'project': self.PROJECT_ID,
+                'kernel_id': self.helper_create_uuid(),
+            },
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(XForm.objects.count(), 0)
@@ -48,7 +50,8 @@ class AdminTests(CustomTestCase):
             {
                 'xml_data': self.samples['xform']['xml-err'],
                 'description': 'some text',
-                'mapping': self.MAPPING_ID,
+                'project': self.PROJECT_ID,
+                'kernel_id': self.helper_create_uuid(),
             },
         )
         self.assertEqual(response.status_code, 200)
@@ -58,7 +61,12 @@ class AdminTests(CustomTestCase):
         with open(self.samples['xform']['file-xls'], 'rb') as fp:
             response = self.client.post(
                 self.url,
-                {'xml_file': fp, 'description': 'some text', 'mapping': self.MAPPING_ID},
+                {
+                    'xml_file': fp,
+                    'description': 'some text',
+                    'project': self.PROJECT_ID,
+                    'kernel_id': self.helper_create_uuid(),
+                },
             )
         self.assertEqual(response.status_code, 302)  # redirected to list
         self.assertEqual(XForm.objects.count(), 1)
@@ -67,13 +75,18 @@ class AdminTests(CustomTestCase):
         self.assertEqual(instance.form_id, 'my-test-form')
         self.assertEqual(instance.title, 'My Test Form')
         self.assertEqual(instance.description, 'some text')
-        self.assertEqual(instance.mapping, self.mapping)
+        self.assertEqual(instance.project, self.project)
 
     def test__post__xml_file(self):
         with open(self.samples['xform']['file-xml'], 'rb') as fp:
             response = self.client.post(
                 self.url,
-                {'xml_file': fp, 'description': 'some text', 'mapping': self.MAPPING_ID},
+                {
+                    'xml_file': fp,
+                    'description': 'some text',
+                    'project': self.PROJECT_ID,
+                    'kernel_id': self.helper_create_uuid(),
+                },
             )
         self.assertEqual(response.status_code, 302)  # redirected to list
         self.assertEqual(XForm.objects.count(), 1)
@@ -82,7 +95,7 @@ class AdminTests(CustomTestCase):
         self.assertEqual(instance.form_id, 'my-test-form')
         self.assertEqual(instance.title, 'My Test Form')
         self.assertEqual(instance.description, 'some text')
-        self.assertEqual(instance.mapping, self.mapping)
+        self.assertEqual(instance.project, self.project)
 
     def test__post__xml_data(self):
         response = self.client.post(
@@ -90,7 +103,8 @@ class AdminTests(CustomTestCase):
             {
                 'xml_data': self.samples['xform']['xml-ok'],
                 'description': 'some text',
-                'mapping': self.MAPPING_ID,
+                'project': self.PROJECT_ID,
+                'kernel_id': self.helper_create_uuid(),
             },
         )
         self.assertEqual(response.status_code, 302)  # redirected to list
@@ -100,7 +114,7 @@ class AdminTests(CustomTestCase):
         self.assertEqual(instance.form_id, 'xform-id-test')
         self.assertEqual(instance.title, 'xForm - Test')
         self.assertEqual(instance.description, 'some text')
-        self.assertEqual(instance.mapping, self.mapping)
+        self.assertEqual(instance.project, self.project)
         self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')
         self.assertTrue(instance.is_surveyor(self.admin), 'superusers are always granted surveyors')
 
@@ -111,7 +125,8 @@ class AdminTests(CustomTestCase):
             {
                 'xml_data': self.samples['xform']['xml-ok'],
                 'description': 'some text',
-                'mapping': self.MAPPING_ID,
+                'project': self.PROJECT_ID,
+                'kernel_id': self.helper_create_uuid(),
                 'surveyors': [surveyor.id],
             },
         )
@@ -122,7 +137,7 @@ class AdminTests(CustomTestCase):
         self.assertEqual(instance.form_id, 'xform-id-test')
         self.assertEqual(instance.title, 'xForm - Test')
         self.assertEqual(instance.description, 'some text')
-        self.assertEqual(instance.mapping, self.mapping)
+        self.assertEqual(instance.project, self.project)
 
         self.assertEqual(instance.surveyors.count(), 1)
         self.assertIn(surveyor, instance.surveyors.all())

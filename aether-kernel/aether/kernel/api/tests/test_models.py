@@ -10,16 +10,19 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
 
+import datetime
+import uuid
+
+from django.db.utils import IntegrityError
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TransactionTestCase
-import datetime
 
 from .. import models
 
@@ -74,6 +77,7 @@ class ModelsTests(TransactionTestCase):
         self.assertEquals(attachment.name, 'sample.txt')
         self.assertEquals(attachment.md5sum, '900150983cd24fb0d6963f7d28e17f72')
         self.assertEquals(attachment.submission_revision, submission.revision)
+        self.assertEquals(attachment.attachment_path, attachment.attachment_file.path)
 
         attachment_2 = models.Attachment.objects.create(
             submission=submission,
@@ -118,3 +122,39 @@ class ModelsTests(TransactionTestCase):
         self.assertEquals(str(entity), 'Entity {}'.format(entity.id))
         self.assertNotEqual(models.Entity.objects.count(), 0)
         self.assertTrue(entity.payload_prettified is not None)
+
+    def test_models_ids(self):
+
+        first_id = uuid.uuid4()
+        second_id = uuid.uuid4()
+        self.assertNotEqual(first_id, second_id)
+        self.assertEqual(models.Project.objects.filter(pk=first_id).count(), 0)
+        self.assertEqual(models.Project.objects.filter(pk=second_id).count(), 0)
+
+        # can create project assigning the id
+        project = models.Project.objects.create(
+            id=first_id,
+            revision='rev 1',
+            name='a first project name',
+        )
+
+        # trying to update id
+        project.id = second_id
+        # it's trying to create a new project (not replacing the current one)
+        with self.assertRaises(IntegrityError) as ie:
+            project.save()
+
+        self.assertIsNotNone(ie)
+        self.assertIn('Key (name)=(a first project name) already exists.', str(ie.exception))
+
+        # if we change the name we'll ended up with two projects
+        project.name = 'a second project name'
+        project.save()
+
+        first_project = models.Project.objects.get(pk=first_id)
+        self.assertIsNotNone(first_project)
+        self.assertEqual(first_project.name, 'a first project name')
+
+        second_project = models.Project.objects.get(pk=second_id)
+        self.assertIsNotNone(second_project)
+        self.assertEqual(second_project.name, 'a second project name')
