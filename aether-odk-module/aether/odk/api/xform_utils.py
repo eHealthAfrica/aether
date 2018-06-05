@@ -369,7 +369,10 @@ class XFormParseError(Exception):
 
 def validate_xform(xml_definition):
     '''
-    Validates xForm definition
+    Validates xForm definition.
+
+    This XML must conform the JavaRosa specification.
+    https://bitbucket.org/javarosa/javarosa/wiki/xform
     '''
 
     try:
@@ -403,8 +406,6 @@ def validate_xform(xml_definition):
             ):
                 tags.append('<model> in <h:html><h:head>')
             else:
-                if 'bind' not in xform_dict['h:html']['h:head']['model']:
-                    tags.append('<bind> in <h:html><h:head><model>')
                 if (
                     'instance' not in xform_dict['h:html']['h:head']['model']
                     or xform_dict['h:html']['h:head']['model']['instance'] is None

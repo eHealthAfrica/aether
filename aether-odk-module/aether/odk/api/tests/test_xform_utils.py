@@ -107,7 +107,6 @@ class XFormUtilsValidatorsTests(CustomTestCase):
             )
         self.assertIsNotNone(ve)
         self.assertIn('Missing required tags:', str(ve.exception), ve)
-        self.assertIn('<bind> in <h:html><h:head><model>', str(ve.exception), ve)
         self.assertIn('<instance> in <h:html><h:head><model>', str(ve.exception), ve)
 
     def test__validate_xform__no_instance(self):
@@ -122,7 +121,6 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                             <model>
                                 <instance>
                                 </instance>
-                                <bind/>
                             </model>
                         </h:head>
                         <h:body/>
@@ -145,7 +143,6 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                                 <instance>
                                     <A/>
                                 </instance>
-                                <bind/>
                             </model>
                         </h:head>
                         <h:body/>
@@ -168,7 +165,6 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                                 <instance>
                                     <B id="xform-id-test"/>
                                 </instance>
-                                <bind />
                             </model>
                         </h:head>
                         <h:body/>
@@ -191,7 +187,6 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                                 <instance>
                                     <None/>
                                 </instance>
-                                <bind />
                             </model>
                         </h:head>
                         <h:body/>
@@ -214,7 +209,6 @@ class XFormUtilsValidatorsTests(CustomTestCase):
                                 <instance>
                                     <C id=""/>
                                 </instance>
-                                <bind />
                             </model>
                         </h:head>
                         <h:body/>
