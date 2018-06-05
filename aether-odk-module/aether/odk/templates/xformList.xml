@@ -20,7 +20,7 @@ specific language governing permissions and limitations
 under the License.
 {% endcomment %}
 
-{# https://bitbucket.org/javarosa/javarosa/wiki/FormListAPI #}
+{# https://docs.opendatakit.org/openrosa-form-list/ #}
 <xforms xmlns="http://openrosa.org/xforms/xformsList">
   {% for xform in xforms %}
   <xform>

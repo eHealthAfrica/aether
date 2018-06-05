@@ -372,7 +372,7 @@ def validate_xform(xml_definition):
     Validates xForm definition.
 
     This XML must conform the JavaRosa specification.
-    https://bitbucket.org/javarosa/javarosa/wiki/xform
+    http://opendatakit.github.io/xforms-spec/
     '''
 
     try:

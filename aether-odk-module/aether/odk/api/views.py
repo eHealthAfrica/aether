@@ -237,7 +237,7 @@ class SurveyorViewSet(viewsets.ModelViewSet):
 '''
 Views needed by ODK Collect
 
-https://bitbucket.org/javarosa
+https://docs.opendatakit.org/
 '''
 
 
@@ -255,7 +255,7 @@ XML_SUBMISSION_PARAM = 'xml_submission_file'
 @permission_classes([IsAuthenticated])
 def xform_list(request):
     '''
-    https://bitbucket.org/javarosa/javarosa/wiki/FormListAPI
+    https://docs.opendatakit.org/openrosa-form-list/
 
     '''
 
@@ -282,7 +282,7 @@ def xform_list(request):
 @permission_classes([IsAuthenticated])
 def xform_get_download(request, pk):
     '''
-    https://bitbucket.org/javarosa/javarosa/wiki/FormListAPI
+    https://docs.opendatakit.org/openrosa-form-list/
 
     Represents the `<downloadUrl/>` entry in the forms list.
 
@@ -311,7 +311,7 @@ def xform_get_download(request, pk):
 @permission_classes([IsAuthenticated])
 def xform_get_manifest(request, pk):
     '''
-    https://bitbucket.org/javarosa/javarosa/wiki/FormListAPI
+    https://docs.opendatakit.org/openrosa-form-list/
 
     Represents the `<manifestUrl/>` entry in the forms list.
 
@@ -352,7 +352,7 @@ def xform_get_manifest(request, pk):
 @permission_classes([IsAuthenticated])
 def xform_submission(request):
     '''
-    https://bitbucket.org/javarosa/javarosa/wiki/FormSubmissionAPI
+    https://docs.opendatakit.org/openrosa-form-submission/
 
     '''
 

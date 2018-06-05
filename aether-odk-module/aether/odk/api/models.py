@@ -170,8 +170,8 @@ class XForm(models.Model):
         validators=[__validate_xml_data__],
         verbose_name=_('XML definition'),
         help_text=_(
-            'This XML must conform the JavaRosa specification. '
-            'https://bitbucket.org/javarosa/javarosa/wiki/xform'
+            'This XML must conform the ODK XForms specification. '
+            'http://opendatakit.github.io/xforms-spec/'
         )
     )
 
@@ -189,7 +189,7 @@ class XForm(models.Model):
     @property
     def download_url(self):
         '''
-        https://bitbucket.org/javarosa/javarosa/wiki/FormListAPI
+        https://docs.opendatakit.org/openrosa-form-list/
 
         Represents the `<downloadUrl/>` entry in the forms list.
 
@@ -203,7 +203,7 @@ class XForm(models.Model):
     @property
     def manifest_url(self):
         '''
-        https://bitbucket.org/javarosa/javarosa/wiki/FormListAPI
+        https://docs.opendatakit.org/openrosa-form-list/
 
         Represents the `<manifestUrl/>` entry in the forms list.
 
