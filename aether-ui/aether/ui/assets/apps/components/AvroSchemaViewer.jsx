@@ -51,11 +51,14 @@ class AvroSchemaViewer extends Component {
             typeStringOptions.push(typeItem)
           }
         } else if (typeof typeItem === 'object') {
+          typeStringOptions.push(typeof typeItem.type === 'string' ? typeItem.type : typeof typeItem.type)
           typeObjectOptions.push(typeItem)
         }
       })
-      typeStringOptions.push(typeObjectOptions.map(obj => (`${obj.name}: ${obj.type}`)))
-      return this.deepestRender(schema, parent, typeStringOptions, isNullable)
+      const nestedList = typeObjectOptions.length && typeObjectOptions.map(obj => (this.schemaToMarkup(obj,
+        `${parent ? parent + '.' : ''}${schema.name}`)))
+        console.log(nestedList)
+      return this.deepestRender(schema, parent, typeStringOptions, isNullable, <ul>{nestedList}</ul>)
     } else if (typeof schema.type !== 'string') {
       schema.type.name = schema.name
       return this.schemaToMarkup(schema.type, `${parent ? parent + '.' : ''}${schema.name}`)
@@ -64,10 +67,9 @@ class AvroSchemaViewer extends Component {
     }
   }
 
-  deepestRender (schema, parent = null, typesOptions = null, isNullable = false) {
+  deepestRender (schema, parent = null, typesOptions = null, isNullable = false, children = null) {
     const jsonPath = `${parent ? parent + '.' : ''}${schema.name}`
     const className = this.getHighlightedClassName(jsonPath)
-
     return (
       <li
         data-qa={`no-children-${schema.name}`}
@@ -77,6 +79,7 @@ class AvroSchemaViewer extends Component {
         <span className='name'>{schema.name}</span>
         <span className='type'> {typesOptions && typesOptions.length ? typesOptions.toString() : schema.type}</span>
         { isNullable && <span className='type'> (nullable)</span> }
+        { children }
       </li>
     )
   }
