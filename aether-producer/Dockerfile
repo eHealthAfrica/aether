@@ -14,10 +14,8 @@ RUN /tmp/setup.sh
 ################################################################################
 
 WORKDIR /
-RUN ls ./
 
 COPY ./conf/pip /code/conf/pip
-COPY ./conf/pip/dependencies /code/conf/pip/dependencies
 COPY ./ /code
 
 WORKDIR /code
