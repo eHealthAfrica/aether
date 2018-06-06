@@ -19,6 +19,7 @@
 import json
 import mock
 import requests
+import os
 
 from aether.common.kernel.utils import get_auth_header, get_kernel_server_url
 
@@ -35,6 +36,8 @@ class KernelUtilsTest(CustomTestCase):
 
     def setUp(self):
         super(KernelUtilsTest, self).setUp()
+
+        self.aether_kernel_url = os.getenv('AETHER_KERNEL_URL_TEST')
 
         # create project entry
         self.project = self.helper_create_project()
@@ -118,7 +121,7 @@ class KernelUtilsTest(CustomTestCase):
         self.assertIn(f'"{str(self.project.project_id)}"', str(kpe.exception), kpe)
         mock_auth.assert_called_once()
         mock_patch.assert_called_once_with(
-            url=f'http://kernel-test:9000/projects/{str(self.project.project_id)}/artefacts/',
+            url=f'{self.aether_kernel_url}/projects/{str(self.project.project_id)}/artefacts/',
             json={'schemas': [], 'mappings': []},
             headers={'Authorization': 'Token ABCDEFGH'},
         )
@@ -135,7 +138,7 @@ class KernelUtilsTest(CustomTestCase):
 
         mock_auth.assert_called_once()
         mock_patch.assert_called_once_with(
-            url=f'http://kernel-test:9000/projects/{str(self.project.project_id)}/artefacts/',
+            url=f'{self.aether_kernel_url}/projects/{str(self.project.project_id)}/artefacts/',
             json={'schemas': [], 'mappings': []},
             headers={'Authorization': 'Token ABCDEFGH'},
         )
