@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 ./scripts/kubernetes/install_minikube.sh
 ./scripts/kubernetes/install_helm.sh --version v2.8.1
 ./scripts/kubernetes/start_minikube.sh
