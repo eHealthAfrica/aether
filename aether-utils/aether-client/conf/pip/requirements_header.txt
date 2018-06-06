@@ -1,19 +1,12 @@
 #################################################################################
 #                                                                               #
-#                             Primary requirements                              #
+#                              Frozen requirements                              #
 #                                                                               #
-#                                 CHANGE ME !!!                                 #
+#                               DO NOT CHANGE !!!                               #
 #                                                                               #
-# Update me and then run                                                        #
+# To update this first update 'primary-requirements.txt' then run               #
 #                                                                               #
 # docker-compose -f docker-compose-build-aether-utils.yml run client pip_freeze #
 #                                                                               #
 #################################################################################
 
-# main libraries
-requests
-
-
-# test libraries
-coverage
-flake8
