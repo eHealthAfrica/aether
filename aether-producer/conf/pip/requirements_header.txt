@@ -5,6 +5,8 @@
 #                               DO NOT CHANGE !!!                              #
 #                                                                              #
 # To update this first update 'primary-requirements.txt'                       #
-# then run 'docker-compose run producer pip_freeze'                            #
+#                                                                              #
+# docker-compose -f docker-compose-connect.yml run aether-producer pip_freeze  #
 #                                                                              #
 ################################################################################
+
