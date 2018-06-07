@@ -116,7 +116,6 @@ class Submission(TimeStampedModel):
     revision = models.TextField(default='1')
 
     map_revision = models.TextField(default='1')
-    date = models.DateTimeField(auto_now_add=True, db_index=True)
     payload = JSONField(blank=False, null=False)
 
     mapping = models.ForeignKey(to=Mapping, related_name='submissions', on_delete=models.CASCADE)
