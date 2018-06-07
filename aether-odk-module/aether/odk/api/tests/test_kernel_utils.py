@@ -10,7 +10,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -36,6 +36,8 @@ class KernelUtilsTest(CustomTestCase):
     def setUp(self):
         super(KernelUtilsTest, self).setUp()
 
+        self.kernel_url = get_kernel_server_url()
+
         # create project entry
         self.project = self.helper_create_project()
 
@@ -53,14 +55,13 @@ class KernelUtilsTest(CustomTestCase):
         self.KERNEL_ID_2 = str(self.xform_2.kernel_id)
 
         self.KERNEL_HEADERS = get_auth_header()
-        kernel_url = get_kernel_server_url()
-        self.PROJECT_URL = f'{kernel_url}/projects/{str(self.project.project_id)}/'
+        self.PROJECT_URL = f'{self.kernel_url}/projects/{str(self.project.project_id)}/'
 
-        self.MAPPING_URL_1 = f'{kernel_url}/mappings/{self.KERNEL_ID_1}/'
-        self.SCHEMA_URL_1 = f'{kernel_url}/schemas/{self.KERNEL_ID_1}/'
+        self.MAPPING_URL_1 = f'{self.kernel_url}/mappings/{self.KERNEL_ID_1}/'
+        self.SCHEMA_URL_1 = f'{self.kernel_url}/schemas/{self.KERNEL_ID_1}/'
 
-        self.MAPPING_URL_2 = f'{kernel_url}/mappings/{self.KERNEL_ID_2}/'
-        self.SCHEMA_URL_2 = f'{kernel_url}/schemas/{self.KERNEL_ID_2}/'
+        self.MAPPING_URL_2 = f'{self.kernel_url}/mappings/{self.KERNEL_ID_2}/'
+        self.SCHEMA_URL_2 = f'{self.kernel_url}/schemas/{self.KERNEL_ID_2}/'
 
         # check that nothing exists already in kernel
         response = requests.get(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
@@ -115,9 +116,10 @@ class KernelUtilsTest(CustomTestCase):
                       str(kpe.exception), kpe)
         self.assertIn('while trying to create/update the project artefacts',
                       str(kpe.exception), kpe)
+        self.assertIn(f'"{str(self.project.project_id)}"', str(kpe.exception), kpe)
         mock_auth.assert_called_once()
         mock_patch.assert_called_once_with(
-            url=f'http://kernel-test:9000/projects/{str(self.project.project_id)}/artefacts/',
+            url=f'{self.kernel_url}/projects/{str(self.project.project_id)}/artefacts/',
             json={'schemas': [], 'mappings': []},
             headers={'Authorization': 'Token ABCDEFGH'},
         )
@@ -134,7 +136,7 @@ class KernelUtilsTest(CustomTestCase):
 
         mock_auth.assert_called_once()
         mock_patch.assert_called_once_with(
-            url=f'http://kernel-test:9000/projects/{str(self.project.project_id)}/artefacts/',
+            url=f'{self.kernel_url}/projects/{str(self.project.project_id)}/artefacts/',
             json={'schemas': [], 'mappings': []},
             headers={'Authorization': 'Token ABCDEFGH'},
         )

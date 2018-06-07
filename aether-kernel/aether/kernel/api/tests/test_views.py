@@ -10,7 +10,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -122,11 +122,11 @@ class ViewsTest(TransactionTestCase):
         return json.loads(response.content).get('count')
 
     # TEST CREATE:
-    def helper_create_object(self, view_name, data, isNegative=False):
+    def helper_create_object(self, view_name, data, is_negative=False):
         url = reverse(view_name)
         data = json.dumps(data)
         response = self.client.post(url, data, content_type='application/json')
-        if isNegative:
+        if is_negative:
             self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         else:
             self.assertEquals(response.status_code, status.HTTP_201_CREATED)
@@ -209,8 +209,8 @@ class ViewsTest(TransactionTestCase):
 
     # TEST READ
 
-    def helper_read_object_id(self, view_name, Obj):
-        url = reverse(view_name, kwargs={'pk': Obj.pk})
+    def helper_read_object_id(self, view_name, obj):
+        url = reverse(view_name, kwargs={'pk': obj.pk})
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         return response
@@ -225,11 +225,11 @@ class ViewsTest(TransactionTestCase):
 
     # TEST UPDATE
 
-    def helper_update_object_id(self, view_name, updated_data, Obj, isNegative=False):
-        url = reverse(view_name, kwargs={'pk': Obj.pk})
+    def helper_update_object_id(self, view_name, updated_data, obj, is_negative=False):
+        url = reverse(view_name, kwargs={'pk': obj.pk})
         updated_data = json.dumps(updated_data)
         response = self.client.put(url, updated_data, content_type='application/json')
-        if isNegative:
+        if is_negative:
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.status_code)
         else:
             self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
@@ -315,8 +315,8 @@ class ViewsTest(TransactionTestCase):
 
     # TEST DELETE
 
-    def helper_delete_object_pk(self, view_name, Obj):
-        url = reverse(view_name, kwargs={'pk': Obj.pk})
+    def helper_delete_object_pk(self, view_name, obj):
+        url = reverse(view_name, kwargs={'pk': obj.pk})
         response = self.client.delete(url, format='json', follow=True)
         self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
         return response
@@ -360,6 +360,36 @@ class ViewsTest(TransactionTestCase):
         self.helper_create_object(
             view_name='submission-list',
             data=submission,
+        )
+
+    def test_project_stats_view(self):
+        for _ in range(4):
+            response = self.helper_create_object('mapping-list', {
+                'name': str(uuid.uuid4()),  # random name
+                'definition': {},
+                'revision': 'Sample mapping revision',
+                'project': str(self.project.pk),
+            })
+            mapping_id = response.json()['id']
+
+            for __ in range(10):
+                self.helper_create_object('submission-list', {
+                    'revision': 'Sample submission revision',
+                    'map_revision': 'Sample map revision',
+                    'date': str(datetime.datetime.now()),
+                    'payload': EXAMPLE_SOURCE_DATA,
+                    'mapping': mapping_id,
+                })
+        url = reverse('projects_stats-detail', kwargs={'pk': self.project.pk})
+        response = self.client.get(url, format='json')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        json = response.json()
+        self.assertEquals(json['id'], str(self.project.pk))
+        submission_count = models.Submission.objects.count()
+        self.assertEquals(json['submission_count'], submission_count)
+        self.assertLessEqual(
+            dateutil.parser.parse(json['first_submission']),
+            dateutil.parser.parse(json['last_submission']),
         )
 
     def test_mapping_stats_view(self):

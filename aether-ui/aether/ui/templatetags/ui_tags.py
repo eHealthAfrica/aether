@@ -17,12 +17,3 @@ def get_fullname(user):
         return '{} {}'. format(user.first_name, user.last_name)
 
     return user.username
-
-
-@register.filter(name='get_token')
-def get_app_token(user, app_name):
-    '''
-    Returns a token to connect to the given app
-    '''
-
-    return user.app_tokens.get_app_token(app_name)

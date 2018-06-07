@@ -116,10 +116,12 @@ def validate_pipeline(pipeline):
         )
 
 
-def kernel_data_request(url='', method='get', data={}):
+def kernel_data_request(url='', method='get', data=None):
     '''
     Handle requests to the kernel server
     '''
+    if data is None:
+        data = {}
     kernerl_url = utils.get_kernel_server_url()
     res = requests.request(method=method,
                             url=f'{kernerl_url}/{url}',
@@ -138,7 +140,7 @@ def kernel_data_request(url='', method='get', data={}):
             raise res
 
 
-def create_new_kernel_object(object_name, pipeline, data={}, project_name='Aux', entity_name=None):
+def create_new_kernel_object(object_name, pipeline, data, project_name='Aux', entity_name=None):
     try:
         res = kernel_data_request(f'{object_name.lower()}s/', 'post', data)
     except Exception as e:
@@ -161,7 +163,7 @@ def create_new_kernel_object(object_name, pipeline, data={}, project_name='Aux',
     return pipeline
 
 
-def update_kernel_object(object_name, id, data={}):
+def update_kernel_object(object_name, id, data):
     return kernel_data_request(f'{object_name.lower()}s/{id}/', 'put', data)
 
 
@@ -350,14 +352,14 @@ def is_linked_to_pipeline(object_name, id):
     return True if len(linked_pipeline) else False
 
 
-def convertMappings(mapping_from_kernel):
+def convert_mappings(mapping_from_kernel):
     return [
         {'source': mapping[0], 'destination': mapping[1]}
         for mapping in mapping_from_kernel
     ]
 
 
-def convertEntityTypes(entities_from_kernel):
+def convert_entity_types(entities_from_kernel):
     result = {'schemas': [], 'ids': {}}
     for entity, entity_id in entities_from_kernel.items():
         project_schema = kernel_data_request(f'projectschemas/{entity_id}/')
@@ -368,10 +370,10 @@ def convertEntityTypes(entities_from_kernel):
 
 
 def create_new_pipeline_from_kernel(kernel_object):
-    entity_types = convertEntityTypes(kernel_object['definition']['entities'])
+    entity_types = convert_entity_types(kernel_object['definition']['entities'])
     new_pipeline = models.Pipeline.objects.create(
         name=kernel_object['name'],
-        mapping=convertMappings(kernel_object['definition']['mapping']),
+        mapping=convert_mappings(kernel_object['definition']['mapping']),
         entity_types=entity_types['schemas'],
         kernel_refs={
             'project': kernel_object['project'],

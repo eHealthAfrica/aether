@@ -12,7 +12,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -29,7 +29,7 @@ show_help() {
     bash          : run bash
     build         : build python wheel of library in /dist
     eval          : eval shell command
-    manage        : invoke django manage.py commands
+    manage        : invoke manage.py commands
 
     pip_freeze    : freeze pip dependencies and write to requirements.txt
 
@@ -70,11 +70,18 @@ case "$1" in
     ;;
 
     pip_freeze )
+        pip install virtualenv
         rm -rf /tmp/env
-        pip install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
+
+        virtualenv -p python3 /tmp/env/
+        /tmp/env/bin/pip install -r ./conf/pip/primary-requirements.txt --upgrade
 
         cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
-        pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
+        /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
+    ;;
+
+    setuplocaldb )
+        echo "Nothing to prepare."
     ;;
 
     test)

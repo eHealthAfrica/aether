@@ -6,7 +6,7 @@ set -e
 check_variable() {
   if [ -n "$1" ];
   then
-    echo "$2 in Ordnung!"
+    echo "$2 set!"
   else
     echo "Missing $2"
     exit -1

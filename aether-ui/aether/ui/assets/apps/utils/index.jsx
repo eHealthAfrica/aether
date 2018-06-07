@@ -14,7 +14,7 @@ export const generateGUID = () => {
       .toString(16)
       .substring(1)
   }
-  return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4()
+  return `${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`
 }
 
 /**
@@ -68,5 +68,27 @@ export const getLoggedInUser = () => {
   return {
     id: parseInt(loggedInUserElement ? loggedInUserElement.getAttribute('data-user-id') : null, 10),
     name: loggedInUserElement ? loggedInUserElement.getAttribute('data-user-name') : ''
+  }
+}
+
+/* This function is used as a typeHook option by `avro.Type.forValue().
+ * Background: when deriving avro schemas from sample data, all records, enums, and
+ * fixed avro types will be anonymous. Using the `typeHook` option, we can pass in
+ * a name generator which allows to maintain compatibility with other avro
+ * libraries such as python-spavro.
+ *
+ *    See: https://github.com/mtth/avsc/issues/108#issuecomment-302436388
+ */
+export const generateSchemaName = (prefix) => {
+  let index = 0
+  return (schema) => {
+    switch (schema.type) {
+      case 'enum':
+      case 'fixed':
+      case 'record':
+        schema.name = `${prefix}_${index++}`
+        break
+      default:
+    }
   }
 }

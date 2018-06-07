@@ -1,15 +1,19 @@
-################################################################################
-#                                                                              #
-#                             Primary requirements                             #
-#                                                                              #
-#                                 CHANGE ME !!!                                #
-#                                                                              #
-# Update me and then run 'docker-compose run kernel pip_freeze'                  #
-#                                                                              #
-################################################################################
+#################################################################################
+#                                                                               #
+#                             Primary requirements                              #
+#                                                                               #
+#                                 CHANGE ME !!!                                 #
+#                                                                               #
+# Update me and then run                                                        #
+#                                                                               #
+# docker-compose -f docker-compose-build-aether-utils.yml run client pip_freeze #
+#                                                                               #
+#################################################################################
 
-coverage
-flake8
-mock
+# main libraries
 requests
 
+
+# test libraries
+coverage
+flake8

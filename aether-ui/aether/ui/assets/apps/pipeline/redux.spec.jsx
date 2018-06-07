@@ -1,10 +1,12 @@
 /* global describe, it, expect, beforeEach */
 import reducer, { types, selectedPipelineChanged,
-  addPipeline, getPipelines, updatePipeline, INITIAL_PIPELINE, getPipelineById, publishPipeline } from './redux'
+  addPipeline, getPipelines, updatePipeline,
+  INITIAL_PIPELINE, getPipelineById, publishPipeline } from './redux'
 import { createStore, applyMiddleware } from 'redux'
 import nock from 'nock'
 import middleware from '../redux/middleware'
-import mockPipelines from '../mock/pipelines.mock'
+import mockPipelines from '../../tests/mock/pipelines.mock'
+import { MAX_PAGE_SIZE } from '../utils/constants'
 
 describe('Pipeline actions', () => {
   let store
@@ -23,7 +25,14 @@ describe('Pipeline actions', () => {
   })
 
   it('should dispatch a selected pipeline changed action and update the redux store', () => {
-    const selectedPipeline = { name: 'mock name', id: 1, errors: 0, entityTypes: 3, 'highlightDestination': [], 'highlightSource': {} }
+    const selectedPipeline = {
+      name: 'mock name',
+      id: 1,
+      errors: 0,
+      entityTypes: 3,
+      highlightDestination: [],
+      highlightSource: {}
+    }
     const expectedAction = {
       type: types.SELECTED_PIPELINE_CHANGED,
       payload: selectedPipeline
@@ -38,7 +47,7 @@ describe('Pipeline actions', () => {
   it('should create an action when adding a new pipeline and store in redux', () => {
     const newPipeline = { name: 'mock new name' }
     nock('http://localhost')
-      .post('/api/ui/pipelines/')
+      .post('/api/pipelines/')
       .reply(200, Object.assign(newPipeline, { id: 'mockid' }))
     expect(typeof addPipeline(newPipeline)).toEqual('object')
     return store.dispatch(addPipeline(newPipeline))
@@ -63,11 +72,11 @@ describe('Pipeline actions', () => {
       'highlightSource': {}
     }
     nock('http://localhost')
-      .get('/api/ui/pipelines/?limit=5000')
+      .get(`/api/pipelines/?limit=${MAX_PAGE_SIZE}`)
       .reply(200, mockPipelines)
 
     nock('http://localhost')
-      .put(`/api/ui/pipelines/${pipeline.id}/`)
+      .put(`/api/pipelines/${pipeline.id}/`)
       .reply(200, pipeline)
     expect(typeof updatePipeline(pipeline)).toEqual('object')
     return store.dispatch(getPipelines())
@@ -93,11 +102,11 @@ describe('Pipeline actions', () => {
       'input': null
     }
     nock('http://localhost')
-      .get('/api/ui/pipelines/?limit=5000')
+      .get(`/api/pipelines/?limit=${MAX_PAGE_SIZE}`)
       .reply(200, mockPipelines)
 
     nock('http://localhost')
-      .put(`/api/ui/pipelines/${wrongPipeline.id}/`)
+      .put(`/api/pipelines/${wrongPipeline.id}/`)
       .reply(404)
     expect(typeof updatePipeline(wrongPipeline)).toEqual('object')
     return store.dispatch(getPipelines())
@@ -105,7 +114,7 @@ describe('Pipeline actions', () => {
         return store.dispatch(updatePipeline(wrongPipeline))
           .then(res => {
             expect(store.getState().error).toEqual(
-              { error: 'Not Found', status: 404 }
+              { error: 'Not Found', message: 'Resource Not Found', status: 404 }
             )
           })
       })
@@ -113,7 +122,7 @@ describe('Pipeline actions', () => {
 
   it('should successfully get all pipelines and add to store', () => {
     nock('http://localhost')
-      .get('/api/ui/pipelines/?limit=5000')
+      .get(`/api/pipelines/?limit=${MAX_PAGE_SIZE}`)
       .reply(200, mockPipelines)
     store.dispatch({type: types.GET_ALL, payload: {}})
     expect(store.getState().pipelineList).toEqual([])
@@ -127,9 +136,9 @@ describe('Pipeline actions', () => {
 
   it('should fail on getting all pipelines and store error', () => {
     nock('http://localhost')
-      .get('/api/ui/nojson.json')
+      .get('/api/nojson.json')
       .reply(404)
-    const NotFoundUrl = 'http://localhost/api/ui/nojson.json'
+    const NotFoundUrl = 'http://localhost/api/nojson.json'
     const action = () => ({
       types: ['', types.GET_ALL, types.PIPELINE_ERROR],
       promise: client => client.get(NotFoundUrl)
@@ -137,10 +146,11 @@ describe('Pipeline actions', () => {
     const expectedStoreData = {
       pipelineList: [],
       selectedPipeline: null,
-      error: { error: 'Not Found', status: 404 },
+      error: { error: 'Not Found', message: 'Resource Not Found', status: 404 },
       notFound: null,
       publishSuccess: null,
-      publishError: null
+      publishError: null,
+      isNewPipeline: false
     }
     return store.dispatch(action())
       .then(() => {
@@ -162,10 +172,10 @@ describe('Pipeline actions', () => {
       'highlightSource': {}
     }
     nock('http://localhost')
-      .get('/api/ui/pipelines/?limit=5000')
+      .get(`/api/pipelines/?limit=${MAX_PAGE_SIZE}`)
       .reply(200, mockPipelines)
     nock('http://localhost')
-      .get(`/api/ui/pipelines/${pipeline.id}/`)
+      .get(`/api/pipelines/${pipeline.id}/`)
       .reply(200, pipeline)
     expect(typeof getPipelineById(pipeline.id)).toEqual('object')
     return store.dispatch(getPipelines())
@@ -184,7 +194,7 @@ describe('Pipeline actions', () => {
       successful: ['Passed 1', 'Passed 2']
     }
     nock('http://localhost')
-      .post('/api/ui/pipelines/1/publish/')
+      .post('/api/pipelines/1/publish/')
       .reply(200, expected)
     expect(typeof publishPipeline(1)).toEqual('object')
     return store.dispatch(publishPipeline(1))
@@ -204,7 +214,7 @@ describe('Pipeline actions', () => {
       exists: ['exist 1']
     }
     nock('http://localhost')
-      .post('/api/ui/pipelines/100/publish/')
+      .post('/api/pipelines/100/publish/')
       .reply(400, returnedData)
     return store.dispatch(publishPipeline(100))
       .then(() => {

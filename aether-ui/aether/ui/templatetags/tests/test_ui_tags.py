@@ -1,8 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from ...api.models import UserTokens
-from ..ui_tags import get_fullname, get_app_token
+from ..ui_tags import get_fullname
 
 
 class UiTagsTests(TestCase):
@@ -29,11 +28,3 @@ class UiTagsTests(TestCase):
         user.first_name = 'first'
         user.last_name = 'last'
         self.assertEqual(get_fullname(user), 'first last')
-
-    def test_get_app_token(self):
-        user = get_user_model().objects.create()
-        UserTokens.objects.create(
-            user=user,
-            kernel_token='abcde',
-        )
-        self.assertEqual(get_app_token(user, 'kernel'), 'abcde')

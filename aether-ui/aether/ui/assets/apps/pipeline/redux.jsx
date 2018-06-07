@@ -3,7 +3,7 @@
 
 import { clone } from '../utils'
 import urls from '../utils/urls'
-import { PROJECT_NAME } from '../utils/constants'
+import { PROJECT_NAME, MAX_PAGE_SIZE } from '../utils/constants'
 
 export const types = {
   PIPELINE_ADD: 'pipeline_add',
@@ -26,7 +26,8 @@ export const INITIAL_PIPELINE = {
   error: null,
   notFound: null,
   publishError: null,
-  publishSuccess: null
+  publishSuccess: null,
+  isNewPipeline: false
 }
 
 export const addPipeline = ({ name }) => ({
@@ -71,7 +72,7 @@ export const getPipelines = () => ({
   types: ['', types.GET_ALL, types.PIPELINE_ERROR],
   promise: client => client.get(
     // limit query_string used instead of pagination (temporary)
-    `${urls.PIPELINES_URL}?limit=5000`,
+    `${urls.PIPELINES_URL}?limit=${MAX_PAGE_SIZE}`,
     { 'Content-Type': 'application/json' }
   )
 })
@@ -79,9 +80,10 @@ export const getPipelines = () => ({
 export const fetchPipelines = () => ({
   types: ['', types.GET_FROM_KERNEL, types.GET_FROM_KERNEL_ERROR],
   promise: client => client.post(
-    `${urls.PIPELINES_URL}fetch/?limit=5000`,
+    `${urls.PIPELINES_URL}fetch/?limit=${MAX_PAGE_SIZE}`,
     { 'Content-Type': 'application/json' })
 })
+
 const parsePipeline = (pipeline) => {
   const COLORS = 10 // This value is the number of colors in the `_color-codes.scss`
   // will highlight the relations among mapping rules, entity types and input schema
@@ -115,12 +117,11 @@ const parsePipeline = (pipeline) => {
 
 const reducer = (state = INITIAL_PIPELINE, action) => {
   const newPipelineList = clone(state.pipelineList)
-  state = { ...state, publishError: null, publishSuccess: null }
+  state = { ...state, publishError: null, publishSuccess: null, isNewPipeline: false, error: null }
   switch (action.type) {
     case types.PIPELINE_ADD: {
       const newPipeline = parsePipeline(action.payload)
-      newPipelineList.unshift(newPipeline)
-      return { ...state, pipelineList: newPipelineList, selectedPipeline: newPipeline, error: null }
+      return { ...state, pipelineList: [newPipeline, ...newPipelineList], selectedPipeline: newPipeline, isNewPipeline: true }
     }
 
     case types.PIPELINE_UPDATE: {
@@ -128,15 +129,15 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
       const index = newPipelineList.findIndex(x => x.id === updatedPipeline.id)
       newPipelineList[index] = updatedPipeline
 
-      return { ...state, pipelineList: newPipelineList, selectedPipeline: updatedPipeline, error: null }
+      return { ...state, pipelineList: newPipelineList, selectedPipeline: updatedPipeline }
     }
 
     case types.SELECTED_PIPELINE_CHANGED: {
-      return { ...state, selectedPipeline: parsePipeline(action.payload), error: null }
+      return { ...state, selectedPipeline: parsePipeline(action.payload) }
     }
 
     case types.GET_ALL: {
-      return { ...state, pipelineList: action.payload.results || [], error: null }
+      return { ...state, pipelineList: action.payload.results || [] }
     }
 
     case types.PIPELINE_ERROR: {
