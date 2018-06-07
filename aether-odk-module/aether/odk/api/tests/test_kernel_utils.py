@@ -36,6 +36,8 @@ class KernelUtilsTest(CustomTestCase):
     def setUp(self):
         super(KernelUtilsTest, self).setUp()
 
+        self.kernel_url = get_kernel_server_url()
+
         # create project entry
         self.project = self.helper_create_project()
 
@@ -53,14 +55,13 @@ class KernelUtilsTest(CustomTestCase):
         self.KERNEL_ID_2 = str(self.xform_2.kernel_id)
 
         self.KERNEL_HEADERS = get_auth_header()
-        kernel_url = get_kernel_server_url()
-        self.PROJECT_URL = f'{kernel_url}/projects/{str(self.project.project_id)}/'
+        self.PROJECT_URL = f'{self.kernel_url}/projects/{str(self.project.project_id)}/'
 
-        self.MAPPING_URL_1 = f'{kernel_url}/mappings/{self.KERNEL_ID_1}/'
-        self.SCHEMA_URL_1 = f'{kernel_url}/schemas/{self.KERNEL_ID_1}/'
+        self.MAPPING_URL_1 = f'{self.kernel_url}/mappings/{self.KERNEL_ID_1}/'
+        self.SCHEMA_URL_1 = f'{self.kernel_url}/schemas/{self.KERNEL_ID_1}/'
 
-        self.MAPPING_URL_2 = f'{kernel_url}/mappings/{self.KERNEL_ID_2}/'
-        self.SCHEMA_URL_2 = f'{kernel_url}/schemas/{self.KERNEL_ID_2}/'
+        self.MAPPING_URL_2 = f'{self.kernel_url}/mappings/{self.KERNEL_ID_2}/'
+        self.SCHEMA_URL_2 = f'{self.kernel_url}/schemas/{self.KERNEL_ID_2}/'
 
         # check that nothing exists already in kernel
         response = requests.get(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
@@ -118,7 +119,7 @@ class KernelUtilsTest(CustomTestCase):
         self.assertIn(f'"{str(self.project.project_id)}"', str(kpe.exception), kpe)
         mock_auth.assert_called_once()
         mock_patch.assert_called_once_with(
-            url=f'http://kernel-test:9000/projects/{str(self.project.project_id)}/artefacts/',
+            url=f'{self.kernel_url}/projects/{str(self.project.project_id)}/artefacts/',
             json={'schemas': [], 'mappings': []},
             headers={'Authorization': 'Token ABCDEFGH'},
         )
@@ -135,7 +136,7 @@ class KernelUtilsTest(CustomTestCase):
 
         mock_auth.assert_called_once()
         mock_patch.assert_called_once_with(
-            url=f'http://kernel-test:9000/projects/{str(self.project.project_id)}/artefacts/',
+            url=f'{self.kernel_url}/projects/{str(self.project.project_id)}/artefacts/',
             json={'schemas': [], 'mappings': []},
             headers={'Authorization': 'Token ABCDEFGH'},
         )

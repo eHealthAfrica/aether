@@ -23,8 +23,8 @@ import { FormattedMessage } from 'react-intl'
 import { connect } from 'react-redux'
 import avro from 'avsc'
 
-import { AvroSchemaViewer } from '../../components'
-import { deepEqual, generateSchemaName } from '../../utils'
+import { AvroSchemaViewer, Modal } from '../../components'
+import { deepEqual, generateGUID, generateSchemaName } from '../../utils'
 import { updatePipeline } from '../redux'
 
 // The input section has two subviews `SCHEMA_VIEW` and `DATA_VIEW`.
@@ -35,6 +35,40 @@ import { updatePipeline } from '../redux'
 // avro schema is derived from this sample and displayed in the `SchemaInput`.
 const SCHEMA_VIEW = 'SCHEMA_VIEW'
 const DATA_VIEW = 'DATA_VIEW'
+
+export const isOptionalType = (type) => {
+  return Array.isArray(type) && (type.indexOf('null') > -1)
+}
+
+export const makeOptionalType = (type) => {
+  if (isOptionalType(type)) {
+    return type
+  }
+  if (Array.isArray(type)) {
+    return ['null', ...type]
+  }
+  return ['null', type]
+}
+
+export const makeOptionalField = (field) => {
+  return { ...field, type: makeOptionalType(field.type) }
+}
+
+export const deriveEntityTypes = (schema) => {
+  const fields = schema.fields.map(makeOptionalField)
+  return [{ ...schema, fields: fields }]
+}
+
+export const deriveMappingRules = (schema) => {
+  const fieldToMappingRule = (field) => {
+    return {
+      id: generateGUID(),
+      source: `$.${field.name}`,
+      destination: `${schema.name}.${field.name}`
+    }
+  }
+  return schema.fields.map(fieldToMappingRule)
+}
 
 class SchemaInput extends Component {
   constructor (props) {
@@ -127,6 +161,7 @@ class SchemaInput extends Component {
             />
           </span>
         </button>
+        {this.state.inputSchema && !this.hasChanged() && <IdentityMapping {...this.props} />}
       </form>
     )
   }
@@ -225,7 +260,110 @@ class DataInput extends Component {
             />
           </span>
         </button>
+        {this.state.inputData && !this.hasChanged() && <IdentityMapping {...this.props} />}
       </form>
+    )
+  }
+}
+
+export class IdentityMapping extends Component {
+  constructor (props) {
+    super(props)
+    this.state = {
+      showModal: false
+    }
+    this.generateIdentityMapping = this.generateIdentityMapping.bind(this)
+    this.hideModal = this.hideModal.bind(this)
+    this.renderModal = this.renderModal.bind(this)
+    this.showModal = this.showModal.bind(this)
+  }
+
+  showModal () {
+    this.setState({ showModal: true })
+  }
+
+  hideModal () {
+    this.setState({ showModal: false })
+  }
+
+  generateIdentityMapping () {
+    const schema = this.props.selectedPipeline.schema
+    const mappingRules = deriveMappingRules(schema)
+    const entityTypes = deriveEntityTypes(schema)
+    this.props.updatePipeline({
+      ...this.props.selectedPipeline,
+      mapping: mappingRules,
+      entity_types: entityTypes
+    })
+    this.hideModal()
+  }
+
+  renderModal () {
+    if (!this.state.showModal) { return null }
+    const header = (
+      <FormattedMessage
+        id='pipeline.input.identityMapping.header'
+        defaultMessage='Create identity mapping'
+      />
+    )
+    const content = (
+      <FormattedMessage
+        id='pipeline.input.identityMapping.content'
+        defaultMessage='Are you sure that you want to create an identity mapping? This action will overwrite all existing entity types and mappings.'
+      />
+    )
+    const buttons = (
+      <div>
+        <button
+          data-qa='input.identityMapping.btn-confirm'
+          className='btn btn-w btn-primary'
+          onClick={this.generateIdentityMapping}>
+          <FormattedMessage
+            id='pipeline.input.identityMapping.btn-confirm'
+            defaultMessage='Yes'
+          />
+        </button>
+        <button className='btn btn-w' onClick={this.hideModal}>
+          <FormattedMessage
+            id='pipeline.input.identityMapping.btn-cancel'
+            defaultMessage='Cancel'
+          />
+        </button>
+      </div>
+    )
+    return (
+      <Modal
+        show
+        header={header}
+        children={content}
+        buttons={buttons}
+      />
+    )
+  }
+
+  render () {
+    return (
+      <div>
+        <div className='identity-mapping'>
+          <p>
+            <FormattedMessage
+              id='pipeline.input.identityMapping.btn-apply'
+              defaultMessage='You can use an identity mapping for a 1:1 translation of your input into mappings. This will automatically create both Entity Types and Mappings.'
+            />
+          </p>
+          <button
+            data-qa='input.identityMapping.btn-apply'
+            className='btn btn-w'
+            onClick={this.showModal}
+          >
+            <FormattedMessage
+              id='pipeline.input.identityMapping.btn-apply'
+              defaultMessage='Apply identity mapping'
+            />
+          </button>
+        </div>
+        {this.renderModal()}
+      </div>
     )
   }
 }
@@ -234,8 +372,10 @@ class Input extends Component {
   constructor (props) {
     super(props)
     this.state = {
+      showModal: false,
       view: DATA_VIEW
     }
+    this.toggleInputView = this.toggleInputView.bind(this)
   }
 
   toggleInputView () {
@@ -266,7 +406,7 @@ class Input extends Component {
             <div className='tabs'>
               <button
                 className={`tab ${this.state.view === SCHEMA_VIEW ? 'selected' : ''}`}
-                onClick={this.toggleInputView.bind(this)}>
+                onClick={this.toggleInputView}>
                 <FormattedMessage
                   id='pipeline.input.toggle.schema'
                   defaultMessage='Avro schema'
@@ -274,7 +414,7 @@ class Input extends Component {
               </button>
               <button
                 className={`tab ${this.state.view === DATA_VIEW ? 'selected' : ''}`}
-                onClick={this.toggleInputView.bind(this)}>
+                onClick={this.toggleInputView}>
                 <FormattedMessage
                   id='pipeline.input.toggle.data'
                   defaultMessage='JSON Data'

@@ -59,7 +59,7 @@
     flex-direction: column;
     width: 100%;
     height: calc(100vh - 6rem - #{$navbar-height-xs} - #{$unit}*2);
-    min-height: 40rem;
+    min-height: 35em;
     position: relative;
     justify-content: space-between;
     align-items: flex-start;
@@ -78,6 +78,10 @@
   .form-label {
     color: $light-grey;
   }
+}
+
+.entity-types-schema {
+  padding-bottom: $unit;
 }
 
 .entity-type {

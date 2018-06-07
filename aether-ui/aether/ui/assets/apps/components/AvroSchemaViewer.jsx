@@ -22,6 +22,8 @@ import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 import avro from 'avsc'
 
+import {clone} from '../utils'
+
 class AvroSchemaViewer extends Component {
   getHighlightedClassName (jsonPath) {
     const {highlight} = this.props
@@ -97,7 +99,7 @@ class AvroSchemaViewer extends Component {
       avro.parse(this.props.schema, { noAnonymousTypes: true })
       return (
         <div className='input-schema'>
-          { this.schemaToMarkup(this.props.schema) }
+          { this.schemaToMarkup(clone(this.props.schema)) }
         </div>
       )
     } catch (error) {

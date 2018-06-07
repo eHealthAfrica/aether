@@ -29,7 +29,7 @@ show_help() {
     bash          : run bash
     build         : build python wheel of library in /dist
     eval          : eval shell command
-    manage        : invoke django manage.py commands
+    manage        : invoke manage.py commands
 
     pip_freeze    : freeze pip dependencies and write to requirements.txt
 
@@ -70,11 +70,18 @@ case "$1" in
     ;;
 
     pip_freeze )
+        pip install virtualenv
         rm -rf /tmp/env
-        pip install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
+
+        virtualenv -p python3 /tmp/env/
+        /tmp/env/bin/pip install -r ./conf/pip/primary-requirements.txt --upgrade
 
         cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
-        pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
+        /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
+    ;;
+
+    setuplocaldb )
+        echo "Nothing to prepare."
     ;;
 
     test)

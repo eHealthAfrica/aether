@@ -19,10 +19,9 @@
  */
 
 import React, { Component } from 'react'
-import { injectIntl } from 'react-intl'
 import Portal from './Portal'
 
-class Modal extends Component {
+export default class Modal extends Component {
   render () {
     return (
       <Portal>
@@ -43,5 +42,3 @@ class Modal extends Component {
     )
   }
 }
-
-export default injectIntl(Modal)

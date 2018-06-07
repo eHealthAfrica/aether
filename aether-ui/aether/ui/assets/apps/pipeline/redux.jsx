@@ -103,6 +103,7 @@ export const fetchPipelines = () => ({
     `${urls.PIPELINES_URL}fetch/?limit=${MAX_PAGE_SIZE}`,
     { 'Content-Type': 'application/json' })
 })
+
 const parsePipeline = (pipeline) => {
   const COLORS = 10 // This value is the number of colors in the `_color-codes.scss`
   // will highlight the relations among mapping rules, entity types and input schema
