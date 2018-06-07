@@ -21,6 +21,7 @@ from django.conf.urls import include, url
 from aether.common.conf.urls import generate_urlpatterns
 from aether.kernel.api.views import AetherSchemaView
 
+import rest_framework
 
 API_PREFIX = '^(?P<version>v1)'
 

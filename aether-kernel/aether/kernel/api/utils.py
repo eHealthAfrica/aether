@@ -465,7 +465,8 @@ def extract_entities(requirements, response_data, entity_definitions, schemas):
             action.resolve(entities)
     # send a log of paths with errors to the user via saved response
     for action in failed_again:
-        data['aether_errors'].append('failed %s' % action.path)
+        error = 'Failure: "{}"'.format(action.error)
+        data['aether_errors'].append(error)
     validation_result = validate_entities(entities, schemas)
     data['aether_errors'].extend(validation_result.validation_errors)
     return data, validation_result.entities
