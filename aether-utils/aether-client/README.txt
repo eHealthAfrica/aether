@@ -13,4 +13,4 @@ Aether dir run:
 
 To build and distribute, there's a script in:
 
-    `scripts/build_client_and_distribute.sh`
+    `scripts/build_aether_utils_and_distribute.sh`

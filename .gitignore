@@ -133,3 +133,6 @@ terraform.tfstate.backup
 # Visual Studio files
 .vs
 demo
+
+# npm
+**/package-lock.json

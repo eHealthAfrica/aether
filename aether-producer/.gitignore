@@ -1,6 +1,5 @@
-producer/offset.json
+producer/*offset.json
 client/
 *__pycache__
 *.pyc
 *.*~
-
