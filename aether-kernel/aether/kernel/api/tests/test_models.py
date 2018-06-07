@@ -16,7 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import datetime
 import uuid
 
 from django.db.utils import IntegrityError
@@ -61,7 +60,6 @@ class ModelsTests(TransactionTestCase):
         submission = models.Submission.objects.create(
             revision='a sample revision',
             map_revision='a sample map revision',
-            date=datetime.datetime.now(),
             payload={},
             mapping=mapping
         )

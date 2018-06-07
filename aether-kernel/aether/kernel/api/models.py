@@ -195,7 +195,6 @@ class Submission(TimeStampedModel):
 
     Indexes:
         "kernel_submission_pkey" PRIMARY KEY, btree (id)
-        "kernel_submission_date_###" btree (date)
         "kernel_submission_mapping_id_###" btree (mapping_id)
 
     Foreign-key constraints:
