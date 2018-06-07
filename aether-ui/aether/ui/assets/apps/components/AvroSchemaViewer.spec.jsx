@@ -12,8 +12,10 @@ describe('AvroSchemaViewer', () => {
     expect(component.find('[data-qa^="group-title-"]').length).toEqual(9)
     expect(component.find('[data-qa="no-children-surname"]').html()).toContain('<span class="name">surname</span>')
     expect(component.find('[data-qa="no-children-forename"]').html())
-      .toContain('<span class="name">forename</span><span class="type"> string,data-type: int</span>')
+      .toContain('<span class="name">forename</span><span class="type"> string,int</span>')
     expect(component.find('[data-qa="no-children-gender"]').html()).toContain('<span class="type"> (nullable)</span>')
+    expect(component.find('[id="input_person.iterate_one.item"]').html())
+      .toContain('<span class="name item">item</span>')
   })
 
   it('should take a invalid avro schema and render an invalid error message', () => {

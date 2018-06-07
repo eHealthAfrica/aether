@@ -27,8 +27,35 @@ const inputSchema = {
         }
       }, {
         'name': 'gender',
-        'type': ['null', 'string']
-      }, {
+        'type': ['null', 'string', {'name': 'gender', 'type': 'record', 'fields': [{
+          'name': 'gender_male', 'type': 'int'
+        }]}]
+      },
+      {
+        'name': 'iterate_one',
+        'type': [
+          'null',
+          {
+            'type': 'array',
+            'items': {
+              'name': 'iterate_one',
+              'doc': 'Indicate one',
+              'type': 'record',
+              'fields': [
+                {
+                  'name': 'item',
+                  'type': [
+                    'null',
+                    'string'
+                  ],
+                  'doc': 'Item'
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
         'name': 'mothersForename',
         'type': 'string'
       }, {
