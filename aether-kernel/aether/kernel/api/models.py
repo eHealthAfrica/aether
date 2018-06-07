@@ -45,12 +45,12 @@ Data model schema:
     | created          |      |   | created          |   |   | created          |   |   | created             |
     | modified         |      |   | modified         |   |   | modified         |   |   | modified            |
     | revision         |      |   | revision         |   |   | revision         |   |   | name                |
-    | name             |      |   | name             |   |   | date             |   |   | attachment_file     |
-    | salad_schema     |      |   | definition       |   |   | payload          |   |   | md5sum              |
-    | jsonld_context   |      |   +::::::::::::::::::+   |   +::::::::::::::::::+   |   +:::::::::::::::::::::+
-    | rdf_definition   |      +--<| project          |   +--<| mapping          |   +--<| submission          |
-    +------------------+      |   +------------------+       | map_revision     |   |   | submission_revision |
-                              |                              +------------------+   |   +---------------------+
+    | name             |      |   | name             |   |   | payload          |   |   | attachment_file     |
+    | salad_schema     |      |   | definition       |   |   +::::::::::::::::::+   |   | md5sum              |
+    | jsonld_context   |      |   +::::::::::::::::::+   +--<| mapping          |   |   +:::::::::::::::::::::+
+    | rdf_definition   |      +--<| project          |       | map_revision     |   +--<| submission          |
+    +------------------+      |   +------------------+       +------------------+   |   | submission_revision |
+                              |                                                     |   +---------------------+
                               |                                                     |
     +------------------+      |   +------------------+       +------------------+   |
     | Schema           |      |   | ProjectSchema    |       | Entity           |   |
@@ -72,6 +72,40 @@ Data model schema:
 
 
 class Project(TimeStampedModel):
+    '''
+                Table "public.kernel_project"
+
+         Column     |           Type           | Modifiers
+    ----------------+--------------------------+-----------
+     id             | uuid                     | not null
+     revision       | text                     | not null
+     name           | character varying(50)    | not null
+     salad_schema   | text                     |
+     jsonld_context | text                     |
+     rdf_definition | text                     |
+     created        | timestamp with time zone | not null
+     modified       | timestamp with time zone | not null
+
+    Indexes:
+        "kernel_project_pkey" PRIMARY KEY, btree (id)
+        "kernel_project_name_###_uniq" UNIQUE CONSTRAINT, btree (name)
+        "kernel_project_name_###_like" btree (name varchar_pattern_ops)
+
+    Referenced by:
+        TABLE "kernel_mapping"
+            CONSTRAINT "kernel_mapping_project_id_###_fk_kernel_project_id"
+            FOREIGN KEY (project_id)
+            REFERENCES kernel_project(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+        TABLE "kernel_projectschema"
+            CONSTRAINT "kernel_projectschema_project_id_###_fk_kernel_project_id"
+            FOREIGN KEY (project_id)
+            REFERENCES kernel_project(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+    '''
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
     name = models.CharField(max_length=50, null=False, unique=True)
@@ -90,6 +124,40 @@ class Project(TimeStampedModel):
 
 
 class Mapping(TimeStampedModel):
+    '''
+                Table "public.kernel_mapping"
+
+       Column   |           Type           | Modifiers
+    ------------+--------------------------+-----------
+     id         | uuid                     | not null
+     name       | character varying(50)    | not null
+     definition | jsonb                    | not null
+     revision   | text                     | not null
+     project_id | uuid                     | not null
+     created    | timestamp with time zone | not null
+     modified   | timestamp with time zone | not null
+
+    Indexes:
+        "kernel_mapping_pkey" PRIMARY KEY, btree (id)
+        "kernel_mapping_name_###_uniq" UNIQUE CONSTRAINT, btree (name)
+        "kernel_mapping_name_###_like" btree (name varchar_pattern_ops)
+        "kernel_mapping_project_id_###" btree (project_id)
+
+    Foreign-key constraints:
+        "kernel_mapping_project_id_###_fk_kernel_project_id"
+            FOREIGN KEY (project_id)
+            REFERENCES kernel_project(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+    Referenced by:
+        TABLE "kernel_submission"
+            CONSTRAINT "kernel_submission_mapping_id_###_fk_kernel_mapping_id"
+            FOREIGN KEY (mapping_id)
+            REFERENCES kernel_mapping(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+    '''
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
     name = models.CharField(max_length=50, null=False, unique=True)
@@ -112,6 +180,45 @@ class Mapping(TimeStampedModel):
 
 
 class Submission(TimeStampedModel):
+    '''
+                Table "public.kernel_submission"
+
+        Column    |           Type           | Modifiers
+    --------------+--------------------------+-----------
+     id           | uuid                     | not null
+     revision     | text                     | not null
+     map_revision | text                     | not null
+     payload      | jsonb                    | not null
+     mapping_id   | uuid                     | not null
+     created      | timestamp with time zone | not null
+     modified     | timestamp with time zone | not null
+
+    Indexes:
+        "kernel_submission_pkey" PRIMARY KEY, btree (id)
+        "kernel_submission_date_###" btree (date)
+        "kernel_submission_mapping_id_###" btree (mapping_id)
+
+    Foreign-key constraints:
+        "kernel_submission_mapping_id_###_fk_kernel_mapping_id"
+            FOREIGN KEY (mapping_id)
+            REFERENCES kernel_mapping(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+    Referenced by:
+        TABLE "kernel_attachment"
+            CONSTRAINT "kernel_attachment_submission_id_###_fk_kernel_submission_id"
+            FOREIGN KEY (submission_id)
+            REFERENCES kernel_submission(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+        TABLE "kernel_entity"
+            CONSTRAINT "kernel_entity_submission_id_###_fk_kernel_submission_id"
+            FOREIGN KEY (submission_id)
+            REFERENCES kernel_submission(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+    '''
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
 
@@ -143,6 +250,32 @@ def __attachment_path__(instance, filename):
 
 
 class Attachment(TimeStampedModel):
+    '''
+                Table "public.kernel_attachment"
+
+           Column        |           Type           | Modifiers
+    ---------------------+--------------------------+-----------
+     id                  | uuid                     | not null
+     submission_revision | text                     | not null
+     name                | character varying(255)   | not null
+     attachment_file     | character varying(100)   | not null
+     md5sum              | character varying(36)    | not null
+     submission_id       | uuid                     | not null
+     created             | timestamp with time zone | not null
+     modified            | timestamp with time zone | not null
+
+    Indexes:
+        "kernel_attachment_pkey" PRIMARY KEY, btree (id)
+        "kernel_attachment_submission_id_###" btree (submission_id)
+
+    Foreign-key constraints:
+        "kernel_attachment_submission_id_###_fk_kernel_submission_id"
+            FOREIGN KEY (submission_id)
+            REFERENCES kernel_submission(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+    '''
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
 
     # http://www.linfo.org/file_name.html
@@ -187,6 +320,32 @@ class Attachment(TimeStampedModel):
 
 
 class Schema(TimeStampedModel):
+    '''
+                Table "public.kernel_schema"
+
+       Column   |           Type           | Modifiers
+    ------------+--------------------------+-----------
+     id         | uuid                     | not null
+     name       | character varying(50)    | not null
+     type       | character varying(50)    | not null
+     definition | jsonb                    | not null
+     revision   | text                     | not null
+     created    | timestamp with time zone | not null
+     modified   | timestamp with time zone | not null
+
+    Indexes:
+        "kernel_schema_pkey" PRIMARY KEY, btree (id)
+        "kernel_schema_name_###_uniq" UNIQUE CONSTRAINT, btree (name)
+        "kernel_schema_name_###_like" btree (name varchar_pattern_ops)
+
+    Referenced by:
+        TABLE "kernel_projectschema"
+            CONSTRAINT "kernel_projectschema_schema_id_###_fk_kernel_schema_id"
+            FOREIGN KEY (schema_id)
+            REFERENCES kernel_schema(id)
+            DEFERRABLE INITIALLY DEFERRED
+    '''
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
     name = models.CharField(max_length=50, null=False, unique=True)
@@ -208,6 +367,49 @@ class Schema(TimeStampedModel):
 
 
 class ProjectSchema(TimeStampedModel):
+    '''
+                Table "public.kernel_projectschema"
+
+          Column      |           Type           | Modifiers
+    ------------------+--------------------------+-----------
+     id               | uuid                     | not null
+     name             | character varying(50)    | not null
+     mandatory_fields | text                     |
+     transport_rule   | text                     |
+     masked_fields    | text                     |
+     is_encrypted     | boolean                  | not null
+     project_id       | uuid                     | not null
+     schema_id        | uuid                     | not null
+     created          | timestamp with time zone | not null
+     modified         | timestamp with time zone | not null
+
+    Indexes:
+        "kernel_projectschema_pkey" PRIMARY KEY, btree (id)
+        "kernel_projectschema_name_###_uniq" UNIQUE CONSTRAINT, btree (name)
+        "kernel_projectschema_name_###_like" btree (name varchar_pattern_ops)
+        "kernel_projectschema_project_id_###" btree (project_id)
+        "kernel_projectschema_schema_id_###" btree (schema_id)
+
+    Foreign-key constraints:
+        "kernel_projectschema_project_id_###_fk_kernel_project_id"
+            FOREIGN KEY (project_id)
+            REFERENCES kernel_project(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+        "kernel_projectschema_schema_id_###_fk_kernel_schema_id"
+            FOREIGN KEY (schema_id)
+            REFERENCES kernel_schema(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+    Referenced by:
+        TABLE "kernel_entity"
+            CONSTRAINT "kernel_entity_projectschema_id_###_fk_kernel_project_id"
+            FOREIGN KEY (projectschema_id)
+            REFERENCES kernel_projectschema(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+    '''
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     name = models.CharField(max_length=50, null=False, unique=True)
 
@@ -229,6 +431,37 @@ class ProjectSchema(TimeStampedModel):
 
 
 class Entity(models.Model):
+    '''
+                Table "public.kernel_entity"
+
+          Column      |          Type          | Modifiers
+    ------------------+------------------------+-----------
+     id               | uuid                   | not null
+     revision         | text                   | not null
+     payload          | jsonb                  | not null
+     status           | character varying(20)  | not null
+     modified         | character varying(100) | not null
+     projectschema_id | uuid                   |
+     submission_id    | uuid                   |
+
+    Indexes:
+        "kernel_entity_pkey" PRIMARY KEY, btree (id)
+        "kernel_entity_projectschema_id_###" btree (projectschema_id)
+        "kernel_entity_submission_id_###" btree (submission_id)
+
+    Foreign-key constraints:
+        "kernel_entity_projectschema_id_###_fk_kernel_project_id"
+            FOREIGN KEY (projectschema_id)
+            REFERENCES kernel_projectschema(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+        "kernel_entity_submission_id_###_fk_kernel_submission_id"
+            FOREIGN KEY (submission_id)
+            REFERENCES kernel_submission(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+    '''
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
 
