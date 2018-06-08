@@ -42,7 +42,7 @@ MSG_VALIDATION_XFORM_PARSE_ERR = _(
     'Not valid xForm definition.'
 )
 MSG_VALIDATION_XFORM_MISSING_TAGS_ERR = _(
-    'Missing required tags.'
+    'Missing required tags: {tags}.'
 )
 MSG_VALIDATION_XFORM_MISSING_TITLE_INSTANCE_ID_ERR = _(
     'Missing required form title and instance ID.'
@@ -136,12 +136,12 @@ def parse_submission(data, xml_definition):
                     obj[k] = parser.parse(v).isoformat()
 
                 if _type == 'geopoint':
-                    lat, lng, altitude, accuracy = v.split()
+                    latitude, longitude, altitude, accuracy = v.split()
                     obj[k] = {
-                        'coordinates': [float(lat), float(lng)],
+                        'latitude': float(latitude),
+                        'longitude': float(longitude),
                         'altitude': float(altitude),
                         'accuracy': float(accuracy),
-                        'type': 'Point',
                     }
 
             else:
@@ -319,23 +319,20 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
                         'doc': current_doc,
                         'fields': [
                             {
-                                'name': 'coordinates',
-                                'type': {
-                                    'type': 'array',
-                                    'items': 'float',
-                                },
+                                'name': 'latitude',
+                                'type': __get_avro_primitive_type('float', True),
+                            },
+                            {
+                                'name': 'longitude',
+                                'type': __get_avro_primitive_type('float', True),
                             },
                             {
                                 'name': 'altitude',
-                                'type': __get_avro_primitive_type('float', definition.get('required')),
+                                'type': __get_avro_primitive_type('float', False),
                             },
                             {
                                 'name': 'accuracy',
-                                'type': __get_avro_primitive_type('float', definition.get('required')),
-                            },
-                            {
-                                'name': 'type',
-                                'type': __get_avro_primitive_type('string', definition.get('required')),
+                                'type': __get_avro_primitive_type('float', False),
                             },
                         ],
                     },
@@ -372,7 +369,10 @@ class XFormParseError(Exception):
 
 def validate_xform(xml_definition):
     '''
-    Validates xForm definition
+    Validates xForm definition.
+
+    This XML must conform the JavaRosa specification.
+    http://opendatakit.github.io/xforms-spec/
     '''
 
     try:
@@ -382,26 +382,39 @@ def validate_xform(xml_definition):
             MSG_VALIDATION_XFORM_PARSE_ERR +
             MSG_ERROR_REASON.format(error=str(e)))
 
+    missing_tags = []
     if (
         'h:html' not in xform_dict
         or xform_dict['h:html'] is None
-
-        or 'h:body' not in xform_dict['h:html']
-
-        or 'h:head' not in xform_dict['h:html']
-        or xform_dict['h:html']['h:head'] is None
-
-        or 'h:title' not in xform_dict['h:html']['h:head']
-
-        or 'model' not in xform_dict['h:html']['h:head']
-        or xform_dict['h:html']['h:head']['model'] is None
-
-        or 'bind' not in xform_dict['h:html']['h:head']['model']
-
-        or 'instance' not in xform_dict['h:html']['h:head']['model']
-        or xform_dict['h:html']['h:head']['model']['instance'] is None
     ):
-        raise XFormParseError(MSG_VALIDATION_XFORM_MISSING_TAGS_ERR)
+        missing_tags.append('<h:html>')
+    else:
+        if 'h:body' not in xform_dict['h:html']:
+            missing_tags.append('<h:body> in <h:html>')
+
+        if (
+            'h:head' not in xform_dict['h:html']
+            or xform_dict['h:html']['h:head'] is None
+        ):
+            missing_tags.append('<h:head> in <h:html>')
+        else:
+            if 'h:title' not in xform_dict['h:html']['h:head']:
+                missing_tags.append('<h:title> in <h:html><h:head>')
+            if (
+                'model' not in xform_dict['h:html']['h:head']
+                or xform_dict['h:html']['h:head']['model'] is None
+            ):
+                missing_tags.append('<model> in <h:html><h:head>')
+            else:
+                if (
+                    'instance' not in xform_dict['h:html']['h:head']['model']
+                    or xform_dict['h:html']['h:head']['model']['instance'] is None
+                ):
+                    missing_tags.append('<instance> in <h:html><h:head><model>')
+    if missing_tags:
+        raise XFormParseError(
+            MSG_VALIDATION_XFORM_MISSING_TAGS_ERR.format(tags=', '.join(missing_tags))
+        )
 
     title = xform_dict['h:html']['h:head']['h:title']
     instance = __get_xform_instance(xform_dict)

@@ -49,7 +49,9 @@ class ModelsTests(CustomTestCase):
             XForm.objects.create,
             project=self.helper_create_project(),
             xml_data='''
-                <h:html>
+                <h:html
+                        xmlns="http://www.w3.org/2002/xforms"
+                        xmlns:h="http://www.w3.org/1999/xhtml">
                   <h:head>
                     <model>
                       <instance>
@@ -185,6 +187,6 @@ class ModelsTests(CustomTestCase):
         self.assertEqual(last_version, xform.version, 'nothing changed')
         last_version = xform.version
 
-        xform.xml_data = self.samples['xform']['raw-xml']
+        xform.xml_data = self.samples['xform']['xml-ok-noversion']
         xform.save()
         self.assertNotEqual(last_version, xform.version, 'changed xml data')

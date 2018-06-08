@@ -23,7 +23,7 @@ from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
 from .models import Project, XForm, MediaFile
-from .xform_utils import parse_xform_file
+from .xform_utils import parse_xform_file, validate_xform
 from .surveyors_utils import get_surveyors, flag_as_surveyor
 
 
@@ -73,6 +73,8 @@ class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
                     filename=str(value['xml_file']),
                     content=value['xml_file'],
                 )
+                # validate xml data and link the possible errors to this field
+                validate_xform(value['xml_data'])
             except Exception as e:
                 raise serializers.ValidationError({'xml_file': str(e)})
         value.pop('xml_file')
