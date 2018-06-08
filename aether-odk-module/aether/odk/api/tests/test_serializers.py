@@ -46,7 +46,9 @@ class SerializersTests(CustomTestCase):
         self.assertEqual(xform.data['form_id'], 'my-test-form')
         self.assertEqual(xform.data['title'], 'My Test Form')
         self.assertNotEqual(xform.data['version'], '0', 'no default version number')
+        self.assertIn('<h:html', xform.data['xml_data'])
         self.assertIn('<h:head>', xform.data['xml_data'])
+        self.assertIn('<h:body>', xform.data['xml_data'])
 
     def test_xform_serializer__with_xml_file(self):
         with open(self.samples['xform']['file-xml'], 'rb') as data:
@@ -93,20 +95,36 @@ class SerializersTests(CustomTestCase):
         self.assertIn('<h:head>', xform.data['xml_data'])
 
     def test_xform_serializer__with_wrong_file(self):
-        content = SimpleUploadedFile('xform.xls', b'abcd')
-
         project_id = self.helper_create_uuid()
         self.helper_create_project(project_id=project_id)
         xform = XFormSerializer(
             data={
                 'project': project_id,
-                'description': 'test wrong file',
-                'xml_file': content,
+                'description': 'test wrong file: Missing required tags',
+                'xml_file': SimpleUploadedFile('xform.xml', b'<html></html>'),
             },
             context={'request': self.request},
         )
 
         self.assertFalse(xform.is_valid(), xform.errors)
+        self.assertIn('xml_file', xform.errors)
+        self.assertIn('Missing required tags:', xform.errors['xml_file'][0])
+
+    def test_xform_serializer__with_wrong_xml_data(self):
+        project_id = self.helper_create_uuid()
+        self.helper_create_project(project_id=project_id)
+        xform = XFormSerializer(
+            data={
+                'project': project_id,
+                'description': 'test wrong data: Missing required tags',
+                'xml_data': '<html></html>',
+            },
+            context={'request': self.request},
+        )
+
+        self.assertFalse(xform.is_valid(), xform.errors)
+        self.assertIn('xml_data', xform.errors)
+        self.assertIn('Missing required tags:', xform.errors['xml_data'][0])
 
     def test_media_file_serializer__no_name(self):
         project_id = self.helper_create_uuid()
