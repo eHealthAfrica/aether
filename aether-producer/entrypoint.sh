@@ -34,28 +34,10 @@ show_help() {
 
     start         : start in normal mode
     start_dev     : start for test/dev
-    start_test     : start for test/dev
+    start_test    : start for test/dev
     """
 }
 
-test_flake8() {
-    '''
-    flake8 /code/. --config=/code/conf/extras/flake8.cfg
-    '''
-}
-
-test_coverage() {
-    '''
-    export RCFILE=/code/conf/extras/coverage.rc
-    export TESTING=true
-    export DEBUG=false
-
-    coverage run    --rcfile="$RCFILE" manage.py test "${@:1}"
-    coverage report --rcfile="$RCFILE"
-    coverage erase
-    '''
-    cat /code/conf/extras/good_job.txt
-}
 
 case "$1" in
     bash )
@@ -71,11 +53,14 @@ case "$1" in
     ;;
 
     pip_freeze )
+        pip install virtualenv
         rm -rf /tmp/env
-        pip install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
+
+        virtualenv -p python3 /tmp/env/
+        /tmp/env/bin/pip install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
 
         cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
-        pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
+        /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
     ;;
 
 
@@ -84,12 +69,10 @@ case "$1" in
     ;;
 
     start_dev )
-
         ./manage.py test
     ;;
 
     start_test )
-
         ./manage.py test
     ;;
 

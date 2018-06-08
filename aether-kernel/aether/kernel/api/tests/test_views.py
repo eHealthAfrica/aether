@@ -18,7 +18,6 @@
 
 import copy
 import json
-import datetime
 import dateutil.parser
 import uuid
 
@@ -99,7 +98,6 @@ class ViewsTest(TransactionTestCase):
         self.submission = models.Submission.objects.create(
             revision='a sample revision',
             map_revision='a sample map revision',
-            date=datetime.datetime.now(),
             payload=EXAMPLE_SOURCE_DATA,
             mapping=self.mapping
         )
@@ -149,7 +147,6 @@ class ViewsTest(TransactionTestCase):
         self.helper_create_object('submission-list', {
             'revision': 'Sample submission revision',
             'map_revision': 'Sample map revision',
-            'date': str(datetime.datetime.now()),
             'payload': EXAMPLE_SOURCE_DATA,
             'mapping': str(self.mapping.pk),
         })
@@ -245,7 +242,6 @@ class ViewsTest(TransactionTestCase):
         self.helper_update_object_id('submission-detail', {
             'revision': 'Sample submission revision updated',
             'map_revision': 'Sample map revision updated',
-            'date': str(datetime.datetime.now()),
             'payload': {},
             'mapping': str(self.mapping.pk),
         }, self.submission)
@@ -376,7 +372,6 @@ class ViewsTest(TransactionTestCase):
                 self.helper_create_object('submission-list', {
                     'revision': 'Sample submission revision',
                     'map_revision': 'Sample map revision',
-                    'date': str(datetime.datetime.now()),
                     'payload': EXAMPLE_SOURCE_DATA,
                     'mapping': mapping_id,
                 })
@@ -397,7 +392,6 @@ class ViewsTest(TransactionTestCase):
             self.helper_create_object('submission-list', {
                 'revision': 'Sample submission revision',
                 'map_revision': 'Sample map revision',
-                'date': str(datetime.datetime.now()),
                 'payload': EXAMPLE_SOURCE_DATA,
                 'mapping': str(self.mapping.pk),
             })
