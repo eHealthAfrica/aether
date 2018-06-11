@@ -579,13 +579,11 @@ def run_entity_extraction(submission):
         entity_instance.save()
     # If we're in debug, we need to periodically clear Django's caching of DB calls.
     # This doesn't have to happen often so we do it randomly
-    try:
-        if DEBUG:
-            wipe = randint(0, 100) == 100
-            if wipe:
-                db.reset_queries()
-    except Exception as err:
-        print(err)
+    if DEBUG:
+        wipe = randint(0, 100) == 100
+        if wipe:
+            db.reset_queries()
+
 
 
 def merge_objects(source, target, direction):
