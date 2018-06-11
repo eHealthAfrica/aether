@@ -361,7 +361,15 @@ class XForm(models.Model):
             self.version = version
 
         self.update_hash(increase_version=version is None)
-        self.avro_schema = parse_xform_to_avro_schema(self.xml_data, default_version=self.version)
+
+        new_avro_schema = parse_xform_to_avro_schema(self.xml_data, default_version=self.version)
+        if new_avro_schema != self.avro_schema:
+            self.avro_schema = new_avro_schema
+            # set a new `kernel_id` value, this will generate
+            # a new schema and mapping entry in kernel and
+            # new submissions will be assigned to the new one, not the old one.
+            # With this we will hopefully keep track of all xform versions
+            self.kernel_id = uuid.uuid4()
 
         return super(XForm, self).save(*args, **kwargs)
 
