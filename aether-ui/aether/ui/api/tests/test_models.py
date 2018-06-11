@@ -112,7 +112,7 @@ class ModelsTests(TestCase):
 
         self.assertEqual(
             pipeline.mapping_errors,
-            [{'description': 'It was not possible to connect to Aether Kernel Server.'}]
+            [{'description': 'It was not possible to connect to Aether Kernel.'}]
         )
         self.assertEqual(pipeline.output, [])
 

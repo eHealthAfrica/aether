@@ -3,7 +3,7 @@
 import React from 'react'
 import { mountWithIntl } from 'enzyme-react-intl'
 
-import mockEntityTypesSchema from '../../tests/mock/schema_entityTypes.mock'
+import mockEntityTypesSchema from '../../tests/mock/schema_entityTypes.mock.json'
 import { EntityTypeViewer } from '../components'
 
 describe('EntityTypeViewer', () => {
@@ -13,6 +13,10 @@ describe('EntityTypeViewer', () => {
     expect(component.find('div.entity-types-schema').children().length).toEqual(2)
     expect(component.html()).not.toContain('Invalid entity type')
     expect(component.html()).not.toContain('Invalid schema')
+    expect(component.find('[id="entityType_Person.lastName"]').html())
+      .toContain('<span class="type"> (nullable)</span>')
+    expect(component.find('[id="entityType_Person.age"]').html())
+      .toContain('<span class="type"> int,string</span>')
   })
 
   it('should take a valid json with empty entities', () => {
