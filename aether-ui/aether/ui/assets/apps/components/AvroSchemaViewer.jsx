@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 import avro from 'avsc'
 
-import {clone} from '../utils'
+import {clone, generateGUID} from '../utils'
 
 class AvroSchemaViewer extends Component {
   getHighlightedClassName (jsonPath) {
@@ -88,7 +88,7 @@ class AvroSchemaViewer extends Component {
     return (
       <li
         data-qa={`no-children-${schema.name}`}
-        key={schema.name}
+        key={`${schema.name}-${generateGUID()}`}
         className={className}
         id={`input_${jsonPath}`}>
         {schema.name && (<span>
