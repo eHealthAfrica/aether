@@ -20,20 +20,6 @@
 #
 set -e
 
-function prepare_and_test_container() {
-  container="$1"-test
-
-  echo "_____________________________________________ Starting $1 tasks"
-  $DC_TEST build $container
-  $DC_TEST run   $container setuplocaldb
-  if [[ $2 ]]
-  then
-    $DC_TEST run kernel-test manage loaddata $2
-  fi
-  $DC_TEST run $container test --noinput
-  echo "_____________________________________________ $1 tasks done"
-}
-
 function prepare_container() {
   echo "_____________________________________________ Preparing $1 container"
   build_container $1
@@ -48,6 +34,7 @@ function build_container() {
 
 DC_TEST="docker-compose -f docker-compose-test.yml"
 DC_COMMON="docker-compose -f docker-compose-common.yml"
+
 
 echo "_____________________________________________ TESTING"
 
