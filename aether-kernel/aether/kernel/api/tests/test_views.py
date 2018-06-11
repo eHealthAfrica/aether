@@ -461,11 +461,11 @@ class ViewsTest(TransactionTestCase):
         )
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data['entities']), 0)
-        self.assertEqual(len(response_data['mapping_errors']), 3)
         expected = [
             'Could not find schema "person"',
             'No match for path',
-            'Extracted record did not conform to registered schema',
+            'Expected type "string" at path "Person.dob". Actual value: None',
+            'Expected type "string" at path "Person.villageID". Actual value: None',
         ]
         result = [
             error['description'] for error in response_data['mapping_errors']
@@ -507,8 +507,7 @@ class ViewsTest(TransactionTestCase):
         Unexpected mapping or extraction failures should return status code 500.
         '''
         with mock.patch('aether.kernel.api.mapping_validation.validate_mappings') as m:
-            message = 'test'
-            m.side_effect = Exception(message)
+            m.side_effect = Exception()
             url = reverse('validate-mappings')
             data = json.dumps({
                 'submission_payload': EXAMPLE_SOURCE_DATA,
@@ -518,7 +517,6 @@ class ViewsTest(TransactionTestCase):
             response = self.client.post(url, data=data, content_type='application/json')
             response_data = json.loads(response.content)
             self.assertEquals(response.status_code, 500)
-            self.assertEquals(response_data, message)
 
     # Test resolving linked entities
     def helper_read_linked_data_entities(self, view_name, obj, depth):

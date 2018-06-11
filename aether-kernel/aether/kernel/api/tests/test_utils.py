@@ -17,6 +17,7 @@
 # under the License.
 
 from django.test import TestCase
+
 from .. import utils
 from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA,
                EXAMPLE_REQUIREMENTS, EXAMPLE_ENTITY_DEFINITION,
@@ -204,16 +205,17 @@ class UtilsTests(TestCase):
         # This schema shares the field names `id` and `name` with
         # EXAMPLE_SCHEMA. The field types differ though, so we should expect a
         # validation error to occur during entity extraction.
+        error_count = 2
         schema = {
             'type': 'record',
             'name': 'Test',
             'fields': [
                 {
                     'name': 'id',
-                    'type': 'int',
+                    'type': 'int',  # error 1
                 },
                 {
-                    'name': 'name',
+                    'name': 'name',  # error 2
                     'type': {
                         'type': 'enum',
                         'name': 'Name',
@@ -231,13 +233,8 @@ class UtilsTests(TestCase):
         submission_errors = submission_data['aether_errors']
         self.assertEquals(
             len(submission_errors),
-            len(EXAMPLE_SOURCE_DATA['data']['people']),
+            len(EXAMPLE_SOURCE_DATA['data']['people']) * error_count,
         )
-        source_names = set([
-            person['name'] for person in EXAMPLE_SOURCE_DATA['data']['people']
-        ])
-        error_names = set([error['data']['name'] for error in submission_errors])
-        self.assertEquals(source_names, error_names)
         self.assertEquals(len(entities), 0)
 
     def test_is_not_custom_jsonpath(self):
@@ -424,5 +421,5 @@ class UtilsTests(TestCase):
         result = utils.validate_entities(entities=entities, schemas=schemas)
         self.assertEquals(len(result.validation_errors), len(entity_list))
         for validation_error in result.validation_errors:
-            msg = 'did not conform to registered schema'
+            msg = 'Expected type "string" at path "Test.a_string"'
             self.assertIn(msg, validation_error['description'])
