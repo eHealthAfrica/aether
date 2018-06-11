@@ -20,21 +20,9 @@ specific language governing permissions and limitations
 under the License.
 {% endcomment %}
 
-{# https://docs.opendatakit.org/openrosa-form-list/ #}
-<xforms xmlns="http://openrosa.org/xforms/xformsList">
-  {% for xform in xforms %}
-  <xform>
-    <formID>{{ xform.form_id }}</formID>
-    <name>{{ xform.title }}</name>
-    <version>{{ xform.version }}</version>
-    <hash>{{ xform.hash }}</hash>
-    {% if verbose %}
-    <descriptionText>{{ xform.description }}</descriptionText>
-    {% endif %}
-    <downloadUrl>{{ host }}{{ xform.download_url }}</downloadUrl>
-    {% if xform.manifest_url %}
-    <manifestUrl>{{ host }}{{ xform.manifest_url }}</manifestUrl>
-    {% endif %}
-  </xform>
-  {% endfor %}
-</xforms>
+{# https://docs.opendatakit.org/openrosa-http/#openrosa-responses #}
+<OpenRosaResponse xmlns="http://openrosa.org/http/response">
+  <message nature="{{ nature }}">
+    {{ message }}
+  </message>
+</OpenRosaResponse>
