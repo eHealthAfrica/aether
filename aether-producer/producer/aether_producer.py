@@ -29,7 +29,6 @@ from avro.datafile import DataFileWriter
 from avro.io import DatumWriter
 from avro.io import Validate
 
-
 from kafka import KafkaProducer, KafkaConsumer
 from aether.client import KernelClient
 from psycopg2.extras import DictCursor
@@ -106,15 +105,13 @@ def get_offset(key):
         return None
 
 
-def count_since(offset=None, topic=None):
-    if not offset:
-        offset = ""
+def has_items_since(offset=""):
     with psycopg2.connect(**_settings.postgres_connection_info) as conn:
         cursor = conn.cursor(cursor_factory=DictCursor)
         # We'd originally used a 'count(CASE WHEN e.modified >'
         # That broke mysteriously and borked everything so we're using a less optimal call.
         # Benchmarks show it good enough for now but probably should be fixed  # TODO
-        count_str = '''
+        cursor.execute('''
             SELECT
                 e.id,
                 e.modified,
@@ -126,14 +123,10 @@ def count_since(offset=None, topic=None):
             inner join kernel_projectschema ps on e.projectschema_id = ps.id
             inner join kernel_schema s on ps.schema_id = s.id
             WHERE e.modified > '%s'
-        ''' % (offset)
-        if topic:
-            count_str += '''AND ps.name = '%s'
-            ORDER BY e.modified ASC;''' % topic
-        else:
-            count_str += '''ORDER BY e.modified ASC;'''
-        cursor.execute(count_str);
-        return sum([1 for row in cursor])
+            LIMIT 1;
+        ''' % (offset));
+
+        return bool(cursor.fetchall())
 
 
 def get_entities(offset = None, max_size=1000):  # TODO implement batch pull by topic in Stream
@@ -255,6 +248,7 @@ class StreamManager(object):
     def kill(self, *args, **kwargs):
         self.killed = True
 
+
 def main_loop(test=False):
     global _settings
     _settings = Settings(test)
@@ -263,9 +257,8 @@ def main_loop(test=False):
     try:
         while True:
             offset = get_offset("entities")
-            new_items = count_since(offset)
-            if new_items:
-                print ("Found %s new items, processing" % new_items)
+            has_items = has_items_since(offset)
+            if has_items:
                 entities = get_entities(offset)
                 manager = StreamManager(kernel)
                 manager.send(entities)
