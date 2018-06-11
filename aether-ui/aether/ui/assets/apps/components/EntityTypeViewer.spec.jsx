@@ -3,7 +3,7 @@
 import React from 'react'
 import { mountWithIntl } from 'enzyme-react-intl'
 
-import mockEntityTypesSchema from '../../tests/mock/schema_entityTypes.mock'
+import mockEntityTypesSchema from '../../tests/mock/schema_entityTypes.mock.json'
 import { EntityTypeViewer } from '../components'
 
 describe('EntityTypeViewer', () => {
