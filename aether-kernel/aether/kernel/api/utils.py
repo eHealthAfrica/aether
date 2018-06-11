@@ -17,8 +17,10 @@
 # under the License.
 
 import collections
+from copy import deepcopy
 import json
 import re
+import os
 import string
 import uuid
 
@@ -33,6 +35,40 @@ from pygments.lexers import JsonLexer
 from pygments.lexers.python import Python3Lexer
 
 from . import models, constants
+
+
+#We need to detect instance running in debug mode. See CachedParser docstring
+DEBUG = os.environ['DEBUG'] == 'true'
+if DEBUG:
+    print('Starting in Debug')
+    from random import randint
+    from django import db
+
+
+class CachedParser(object):
+    # jsonpath_ng.parse is a very time/compute expensive operation. The output is always
+    # the same for a given path. To reduce the number of times parse() is called, we cache
+    # all calls to jsonpath_ng here. This greatly improves extraction performance. However,
+    # when run in an instance of Django with debug=True, Django's db call caching causes massive
+    # memory usage. In debug, we must periodically call db.reset_queries() periodically to avoid
+    # unbounded memory requirements.
+
+    cache = {}
+
+
+    @staticmethod
+    def parse(path):
+        # we never need to call parse directly; use find()
+        if not path in CachedParser.cache.keys():
+            CachedParser.cache[path] = deepcopy(jsonpath_ng.parse(path))
+        return CachedParser.cache[path]
+
+
+    @staticmethod
+    def find(path, obj):
+        # find is an optimized call with a potentially cached parse object.
+        parser = CachedParser.parse(path)
+        return parser.find(obj)
 
 
 class EntityValidationError(Exception):
@@ -131,7 +167,8 @@ def find_by_jsonpath(obj, path):
 
         # Perform an standard jsonpath search.
         result = []
-        for datum in jsonpath_ng.parse(standard_jsonpath).find(obj):
+        matches = CachedParser.find(standard_jsonpath, obj)
+        for datum in matches:
             full_path = str(datum.full_path)
             # Only include datum if its full path starts with `prefix`.
             if full_path.startswith(prefix):
@@ -139,7 +176,8 @@ def find_by_jsonpath(obj, path):
         return result
     else:
         # Otherwise, perform a standard jsonpath search of `obj`.
-        return jsonpath_ng.parse(path).find(obj)
+        matches = CachedParser.find(path, obj)
+        return matches
 
 
 def get_field_mappings(mapping_definition):
@@ -542,6 +580,16 @@ def run_entity_extraction(submission):
             submission=submission,
         )
         entity_instance.save()
+    #If we're in debug, we need to periodically clear Django's caching of DB calls.
+    # This doesn't have to happen often so we do it randomly
+    try:
+        if DEBUG:
+            wipe = randint(0, 100) == 100
+            if wipe:
+                print('Clearing queries')
+                db.reset_queries()
+    except Exception as err:
+        print(err)
 
 
 def merge_objects(source, target, direction):
