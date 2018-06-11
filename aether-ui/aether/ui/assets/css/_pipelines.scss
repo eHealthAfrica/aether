@@ -173,6 +173,18 @@
     width: 100%;
   }
 
+  @-webkit-keyframes autofill {
+    to {
+        color: $white;
+        background: rgba($text-color, .1);
+    }
+}
+
+  .text-input:-webkit-autofill {
+    -webkit-animation-name: autofill;
+    -webkit-animation-fill-mode: both;
+  }
+
   .text-input::Placeholder {
     color: rgba($white, .4);
     line-height: 1.3em;
