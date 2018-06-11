@@ -102,10 +102,10 @@ textarea:active {
 }
 
 @-webkit-keyframes autofill {
-    to {
-        color: $white;
-        background: transparent;
-    }
+  to {
+    color: $white;
+    background: transparent;
+  }
 }
 
 input:-webkit-autofill,
