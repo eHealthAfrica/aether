@@ -7,7 +7,6 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from ..settings import AETHER_APPS
 from . import models, serializers, utils
 
 

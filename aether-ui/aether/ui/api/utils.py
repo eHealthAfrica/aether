@@ -123,6 +123,7 @@ def kernel_data_request(url='', method='get', data=None):
     if data is None:
         data = {}
     kernerl_url = utils.get_kernel_server_url()
+    print('KERNEL URL', kernerl_url)
     res = requests.request(method=method,
                             url=f'{kernerl_url}/{url}',
                             headers=utils.get_auth_header(),

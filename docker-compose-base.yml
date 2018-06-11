@@ -233,7 +233,7 @@ services:
     build: aether-ui
     environment: &ui-environment
       AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
-      AETHER_KERNEL_URL: http://${PROJECT_API_URL}/aether/v1
+      AETHER_KERNEL_URL: ${PROJECT_API_URL}/aether/v1
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000
       AETHER_MODULES: "kernel,"
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
