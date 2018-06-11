@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 import avro from 'avsc'
 
-import {clone} from '../utils'
+import {clone, generateGUID} from '../utils'
 
 class AvroSchemaViewer extends Component {
   getHighlightedClassName (jsonPath) {
@@ -21,12 +21,16 @@ class AvroSchemaViewer extends Component {
   }
 
   // parent is passed if schema fields in view are nested.
-  schemaToMarkup (schema, parent = null) {
+  schemaToMarkup (schema, parent = null, isUnion = false, isItem = false) {
     if (schema.fields && schema.fields.length) {
       const jsonPath = `${parent || schema.name}`
       const className = this.getHighlightedClassName(jsonPath)
 
-      return (
+      return isUnion ? (
+        <ul key={schema.name} className='group-list'>
+          { schema.fields.map(field => this.schemaToMarkup(field, parent, isUnion, isItem)) }
+        </ul>
+      ) : (
         <ul key={schema.name} className='group'>
           <li
             data-qa={`group-title-${schema.name}`}
@@ -36,31 +40,66 @@ class AvroSchemaViewer extends Component {
           </li>
           <li>
             <ul key={schema.name} className='group-list'>
-              { schema.fields.map(field => this.schemaToMarkup(field, parent)) }
+              { schema.fields.map(field => this.schemaToMarkup(field, parent, isUnion, isItem)) }
             </ul>
           </li>
         </ul>
       )
+    } else if (Array.isArray(schema.type)) {
+      let typeStringOptions = []
+      const typeObjectOptions = []
+      let isNullable = false
+      schema.type.forEach(typeItem => {
+        if (typeof typeItem === 'string') {
+          if (typeItem === 'null') {
+            isNullable = true
+          } else {
+            typeStringOptions.push(typeItem)
+          }
+        } else if (typeof typeItem === 'object') {
+          typeStringOptions.push(typeof typeItem.type === 'string' ? typeItem.type : typeof typeItem.type)
+          typeObjectOptions.push(typeItem)
+        }
+      })
+      const nestedList = typeObjectOptions.length && typeObjectOptions.map(obj => (this.schemaToMarkup(obj,
+        `${parent ? parent + '.' : ''}${schema.name}`, true, isItem)))
+      return this.deepestRender(schema, parent, true, isItem, typeStringOptions, isNullable, nestedList !== 0 && <ul>{nestedList}</ul>)
     } else if (typeof schema.type !== 'string') {
       schema.type.name = schema.name
-      return (
-        this.schemaToMarkup(schema.type, `${parent ? parent + '.' : ''}${schema.name}`)
-      )
+      let parentName = ''
+      if (parent) {
+        parentName = schema.type.type === 'array' ? parent : `${parent}.${schema.name}`
+      } else {
+        parentName = schema.name
+      }
+      return this.schemaToMarkup(schema.type, parentName, isUnion, isItem)
     } else {
-      const jsonPath = `${parent ? parent + '.' : ''}${schema.name}`
-      const className = this.getHighlightedClassName(jsonPath)
-
-      return (
-        <li
-          data-qa={`no-children-${schema.name}`}
-          key={schema.name}
-          className={className}
-          id={`input_${jsonPath}`}>
-          <span className='name'>{schema.name}</span>
-          <span className='type'> {schema.type}</span>
-        </li>
-      )
+      return this.deepestRender(schema, parent, isUnion, isItem)
     }
+  }
+
+  deepestRender (schema, parent = null, isUnion = false, isItem = false, typesOptions = null, isNullable = false, children = null) {
+    const jsonPath = `${parent ? parent + '.' : ''}${schema.name}`
+    const className = this.getHighlightedClassName(jsonPath)
+    let arrayItems = null
+    if (schema.type === 'array' && typeof schema.items !== 'string') {
+      arrayItems = this.schemaToMarkup(schema.items, parent, isUnion, true)
+    }
+    return (
+      <li
+        data-qa={`no-children-${schema.name}`}
+        key={`${schema.name}-${generateGUID()}`}
+        className={className}
+        id={`input_${jsonPath}`}>
+        {schema.name && (<span>
+          <span className={isItem ? 'name item' : 'name'}>{schema.name}</span>
+          <span className='type'> {typesOptions && typesOptions.length ? typesOptions.toString() : schema.type}</span></span>)
+        }
+        { isNullable && <span className='type'> (nullable)</span> }
+        { arrayItems }
+        { children }
+      </li>
+    )
   }
 
   render () {
