@@ -278,12 +278,10 @@ def main_loop(test=False):
                 # print("Sleeping for %s" % (_settings.sleep_time))
                 Sleep(_settings.sleep_time)
     except KeyboardInterrupt as ek:
-        print ("Caught Keyboard interrupt")
-        if manager:
-            print ("Trying to kill manager")
-            manager.stop()
+        print("Caught Keyboard interrupt")
     finally:
         if manager:
+            print("Trying to kill manager")
             manager.stop()
 
 
