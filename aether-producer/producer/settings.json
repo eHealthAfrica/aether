@@ -1,10 +1,11 @@
 {
     "kafka_server": "kafka:29092",
-    "start_delay": 20,
+    "start_delay": 5,
     "sleep_time": 10,
     "jdbc_connection_string": "jdbc:postgresql://db:5432/aether?user=postgres",
     "jdbc_user": "postgres",
     "offset_file": "offset.json",
+    "postgres_pull_limit" : 10000,
     "postgres_connection_info": {
         "user" : "postgres",
         "dbname" : "aether",
@@ -15,5 +16,25 @@
     "kernel_credentials": {
         "username": "admin-kernel",
         "password": "adminadmin"
+    },
+    "kafka_settings" : {
+        "bootstrap.servers": "kafka-test:29092",
+        "acks" : 2,
+        "max.in.flight.requests.per.connection" : 1,
+        "linger.ms" : 200,
+        "retry.backoff.ms": 25,
+        "default.topic.config": {
+            "request.timeout.ms" : 200,
+            "message.timeout.ms" : 1000
+        },
+        "message.send.max.retries" : 9,
+        "queue.buffering.max.ms" : 100,
+        "socket.blocking.max.ms" : 100,
+        "socket.timeout.ms" : 10000
+
+    },
+    "flask_settings": {
+        "port" : 5005,
+        "max_connections" : 1
     }
 }

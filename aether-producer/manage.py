@@ -23,6 +23,10 @@ import sys
 from time import sleep
 
 if __name__ == '__main__':
+    from producer import new_producer
+    new_producer.main()
+
+    '''
     if len(sys.argv) > 1:
         if sys.argv[1].strip() == "test":
             print("starting producer for test")
@@ -37,3 +41,4 @@ if __name__ == '__main__':
         from producer import aether_producer
         aether_producer.main_loop()
         print("Started Producer")
+    '''

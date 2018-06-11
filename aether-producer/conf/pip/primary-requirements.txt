@@ -11,7 +11,10 @@
 ################################################################################
 
 aether.client
-avro-python3
-kafka
+confluent_kafka
+flask
+gevent
 psycopg2-binary
+psycogreen
 requests
+spavro
