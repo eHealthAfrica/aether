@@ -1,7 +1,8 @@
 {
-    "kafka_server": "kafka:29092",
+    "offset_db_url" : "sqlite:////offset.db",
     "start_delay": 5,
     "sleep_time": 10,
+    "log_level" : "DEBUG",
     "jdbc_connection_string": "jdbc:postgresql://db:5432/aether?user=postgres",
     "jdbc_user": "postgres",
     "offset_file": "offset.json",
@@ -36,5 +37,9 @@
     "flask_settings": {
         "port" : 5005,
         "max_connections" : 1
+    },
+    "topic_settings" : {
+        "name_modifier" : "%s"
+
     }
 }
