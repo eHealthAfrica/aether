@@ -128,6 +128,7 @@ class Pipeline extends Component {
               className='pipeline-nav-item__output'
               onClick={() => this.toggleOutput()}>
               <div className='badge badge-small' />
+              <span className={`status ${this.props.selectedPipeline.mapping_errors.length > 0 ? 'red' : 'green'}`} />
               <FormattedMessage
                 id='pipeline.navbar.output'
                 defaultMessage='Output'

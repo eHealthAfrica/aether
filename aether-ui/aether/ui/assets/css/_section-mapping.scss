@@ -66,6 +66,26 @@
     }
   }
 
+  .rule.error {
+    position: relative;
+
+    input.error {
+      color: $red;
+    }
+
+    &::after {
+      border-radius: 50%;
+      background-color: $red;
+      width: 10px;
+      height: 10px;
+      position: absolute;
+      left: -20px;
+      top: 15px;
+      content: '';
+      display: block;
+    }
+  }
+
   .rule-input {
     flex: 1 1 auto;
     margin: .2rem .6rem .2rem 0;

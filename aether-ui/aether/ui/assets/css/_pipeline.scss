@@ -177,6 +177,23 @@ div.pipeline-nav-item__output {
 
     transition: right $transition-speed;
   }
+
+  .status {
+    border-radius: 50%;
+    width: 10px;
+    height: 10px;
+    content: '';
+    display: block;
+    margin-right: 5px;
+  }
+
+  .red {
+    background-color: $red;
+  }
+
+  .green {
+    background-color: $green;
+  }
 }
 
 .pipeline-sections {
