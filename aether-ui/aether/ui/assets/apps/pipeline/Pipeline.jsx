@@ -37,6 +37,7 @@ class Pipeline extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
+    console.log(nextProps.selectedPipeline)
     if (this.props.match.params.id !== nextProps.match.params.id) {
       this.props.getPipelineById(nextProps.match.params.id)
     }
@@ -128,7 +129,9 @@ class Pipeline extends Component {
               className='pipeline-nav-item__output'
               onClick={() => this.toggleOutput()}>
               <div className='badge badge-small' />
-              <span className={`status ${this.props.selectedPipeline.mapping_errors.length > 0 ? 'red' : 'green'}`} />
+              { this.props.selectedPipeline.mapping.length > 0 &&
+                <span className={`status ${this.props.selectedPipeline.mapping_errors.length > 0
+                  ? 'red' : 'green'}`} /> }
               <FormattedMessage
                 id='pipeline.navbar.output'
                 defaultMessage='Output'
