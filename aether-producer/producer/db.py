@@ -92,13 +92,14 @@ class Offset(Base):
             if offset:
                 offset.offset_value = offset
                 session = get_session()
+                session.add(offset)
                 session.commit()
-                return True
+                return offset
             else:
                 raise ValueError('No row with matching name %s' % name)
         except Exception as err:
             logger.error('Could not save offset for topic %s | %s' % (name, err))
-            return False
+            return offset
 
     @classmethod
     def get_offset(cls, name):

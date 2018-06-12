@@ -7,25 +7,25 @@ version: "2.1"
 
 services:
 
- # zookeeper:
- #   extends:
- #     file: docker-compose-base.yml
- #     service: zookeeper-base
- #   restart: on-failure
- #   networks:
- #     - aether
+  zookeeper:
+    extends:
+      file: docker-compose-base.yml
+      service: zookeeper-base
+    restart: on-failure
+    networks:
+      - aether
 
- # kafka:
- #   extends:
- #     file: docker-compose-base.yml
- #     service: kafka-base
- #   restart: on-failure
- #   depends_on:
- #     - zookeeper
- #   links:
- #     - zookeeper
- #   networks:
- #     - aether
+  kafka:
+    extends:
+      file: docker-compose-base.yml
+      service: kafka-base
+    restart: on-failure
+    depends_on:
+      - zookeeper
+    links:
+      - zookeeper
+    networks:
+      - aether
 
   # ---------------------------------
   # Aether Kafka Producer
@@ -36,9 +36,9 @@ services:
       file: docker-compose-base.yml
       service: aether-producer-base
     restart: on-failure
-#    links:
-#      - kafka
-#      - zookeeper
+    links:
+      - kafka
+      - zookeeper
     ports:
       - "5005:5005"
     networks:

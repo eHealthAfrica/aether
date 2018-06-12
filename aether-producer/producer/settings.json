@@ -6,7 +6,7 @@
     "jdbc_connection_string": "jdbc:postgresql://db:5432/aether?user=postgres",
     "jdbc_user": "postgres",
     "offset_file": "offset.json",
-    "postgres_pull_limit" : 10000,
+    "postgres_pull_limit" : 100,
     "postgres_connection_info": {
         "user" : "postgres",
         "dbname" : "aether",
@@ -19,7 +19,7 @@
         "password": "adminadmin"
     },
     "kafka_settings" : {
-        "bootstrap.servers": "kafka-test:29092",
+        "bootstrap.servers": "kafka:29092",
         "acks" : 2,
         "max.in.flight.requests.per.connection" : 1,
         "linger.ms" : 200,

@@ -22,6 +22,7 @@ monkey.patch_all()
 import psycogreen.gevent
 psycogreen.gevent.patch_psycopg()
 
+import ast
 from collections import UserDict
 from contextlib import contextmanager
 import gevent
@@ -42,8 +43,8 @@ from gevent.pywsgi import WSGIServer
 from confluent_kafka import Producer, Consumer, KafkaException
 from psycopg2.extras import DictCursor
 from requests.exceptions import ConnectionError
-from spavro.datafile import DataFileWriter
-from spavro.io import DatumWriter
+from spavro.datafile import DataFileWriter, DataFileReader
+from spavro.io import DatumWriter, DatumReader
 from spavro.io import validate
 from urllib3.exceptions import MaxRetryError
 
@@ -160,7 +161,7 @@ class ServerHandler(object):
                         continue
                     sleep(self.settings['start_delay'])
                 else:
-                    sleep(self.settings['start_delay'])
+                    sleep(1)
             except Exception as e:
                 self.logger.info('No Aether connection...')
                 sleep(self.settings['start_delay'])
@@ -182,6 +183,7 @@ class ServerHandler(object):
                         self.schema_handlers[schema.name] = SchemaHandler(self, schema)
                     else:
                         print("old %s" % schema.name)
+                        # TODO UPDATE ON SCHEMA CHANGE
                 for x in range(10):
                     if not self.killed:
                         sleep(1)
@@ -252,6 +254,7 @@ class SchemaHandler(object):
             inner join kernel_projectschema ps on e.projectschema_id = ps.id
             inner join kernel_schema s on ps.schema_id = s.id
             WHERE e.modified > '%s'
+            AND s.name = '%s'
             ORDER BY e.modified ASC
             LIMIT %d;
         '''
@@ -260,8 +263,10 @@ class SchemaHandler(object):
         self.context = server_handler
         self.logger = self.context.logger
         self.name = schema.name
-        self.modified = "2018-06-11T10:11:38.202313"
+        self.modified = ""
+        self.limit = self.context.settings.get('postgres_pull_limit', 100)
         self.status = {"latest_msg":None}
+        self.change_set = {}
         self.pg_creds = self.context.settings.get('postgres_connection_info')
         try:
             self.topic_name = self.context.settings \
@@ -272,9 +277,8 @@ class SchemaHandler(object):
             print(err)
             self.topic_name = self.name
         self.update_schema(schema)
-        self.set_offset("a")
-        print(self.get_offset())
-
+        self.producer = Producer(**self.context.settings.get('kafka_settings'))
+        self.context.threads.append(gevent.spawn(self.update_kafka))
 
     def updates_available(self):
         query = SchemaHandler.NEW_STR % (self.modified, self.name)
@@ -283,16 +287,84 @@ class SchemaHandler(object):
             cursor.execute(query);
             return sum([1 for i in cursor]) > 0
 
-    def update_schema(self, schema_def):
-        pass
+    def get_db_updates(self):
+        query = SchemaHandler.QUERY_STR % (self.modified, self.name, self.limit)
+        with psycopg2.connect(**self.pg_creds) as conn:
+            cursor = conn.cursor(cursor_factory=DictCursor)
+            cursor.execute(query);
+            return [{key : row[key] for key in row.keys()} for row in cursor]
+
+    def update_schema(self, schema_obj):
+        schema = ast.literal_eval(str(schema_obj.definition))
+        self.schema = spavro.schema.parse(json.dumps(schema))
 
     def get_status(self):
+        self.status['inflight'] = [i for i in self.change_set.keys()]
         return self.status
+
+    def kafka_callback(self,err=None, msg=None, _=None, **kwargs):
+        try:
+            obj = io.BytesIO()
+            if err:
+                obj.write(msg.value())
+                reader = DataFileReader(obj, DatumReader())
+                for x, message in enumerate(reader):
+                    _id = message.get("id")
+                    modified = message.get("modified")
+                    self.logger.error("Couldn't save modified: %s in topic %s | err %s" % ( modified, self.topic_name, err))
+            else:
+                obj.write(msg.value())
+                reader = DataFileReader(obj, DatumReader())
+                for x, message in enumerate(reader):
+                    _id = message.get("id")
+                    #self.logger.debug("Saved id: %s in topic %s" % ( _id, self.topic_name))
+                    del self.change_set[_id]
+        except Exception as error:
+            self.logger.debug('ERROR %s ', [error, _, msg, err, kwargs])
+        finally:
+            obj.close()
+
+    def update_kafka(self):
+        while not self.context.killed:
+            self.modified = self.get_offset()
+            if not self.updates_available():
+                sleep(1)
+                continue
+            try:
+                self.change_set = {}
+                new_rows = self.get_db_updates()
+                end_offset = new_rows[-1].get('modified')
+
+                bytes_writer = io.BytesIO()
+                writer = DataFileWriter(bytes_writer, DatumWriter(), self.schema, codec='deflate')
+
+                for row in new_rows:
+                    _id = row['id']
+                    msg = row.get("payload")
+                    self.change_set[_id] = row
+                    writer.append(msg)
+
+                writer.flush()
+                raw_bytes = bytes_writer.getvalue()
+                writer.close()
+
+                self.producer.produce(
+                    self.topic_name,
+                    raw_bytes,
+                    callback=self.kafka_callback
+                )
+                self.producer.flush()
+                self.set_offset(end_offset)
+            except Exception as err:
+                self.logger.error('error in Kafka save: %s' % err)
+                sleep(1)
+
 
     def get_offset(self):
         try:
             offset = Offset.get_offset(self.name)
             if offset:
+                self.logger.debug("Got offset for %s | %s" % (self.name, offset.offset_value))
                 return offset.offset_value
             else:
                 raise ValueError('No entry for %s' % self.name)
@@ -303,11 +375,13 @@ class SchemaHandler(object):
             return ""
 
     def set_offset(self, offset):
-        ok = Offset.update(self.name, offset)
-        if not ok:
+        new_offset = Offset.update(self.name, offset)
+        if not new_offset:
             self.logger.info('Creating new offset entry for %s' % self.name)
             Offset.create(schema_name=self.name, offset_value=offset)
-        self.status['offset'] = offset
+        else:
+            self.logger.debug("new offset for %s | %s" % (self.name, new_offset.offset_value))
+        self.status['offset'] = new_offset.offset_value
 
 
 def main():
