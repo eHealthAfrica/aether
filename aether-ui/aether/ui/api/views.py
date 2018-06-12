@@ -20,13 +20,10 @@ class PipelineViewSet(viewsets.ModelViewSet):
         '''
         This view gets kernel objects, transforms and loads into a pipeline
         '''
-        try:
-            utils.kernel_to_pipeline()
-            pipelines = models.Pipeline.objects.all()
-            serialized_data = serializers.PipelineSerializer(pipelines, context={'request': request}, many=True).data
-            return Response(serialized_data, status=HTTPStatus.OK)
-        except Exception as e:
-            return Response(e)
+        utils.kernel_to_pipeline()
+        pipelines = models.Pipeline.objects.all()
+        serialized_data = serializers.PipelineSerializer(pipelines, context={'request': request}, many=True).data
+        return Response(serialized_data, status=HTTPStatus.OK)
 
     @action(methods=['post'], detail=True)
     def publish(self, request, pk=None):
