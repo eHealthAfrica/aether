@@ -188,7 +188,7 @@ div.pipeline-nav-item__output {
 
 .section-body {
   width: 100%;
-  height: calc(100vh - 10px - #{$pipeline-nav-height});
+  height: calc(100vh - #{$navbar-height-xs} - #{$pipeline-nav-height});
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -196,7 +196,7 @@ div.pipeline-nav-item__output {
 div[class^='pipeline-section__'],
 .pipeline-output {
   width: 0;
-  height: calc(100vh - 10px);
+  height: calc(100vh - #{$navbar-height-xs});
   padding-top: $pipeline-nav-height;
   transition: width $transition-speed;
   position: relative;
