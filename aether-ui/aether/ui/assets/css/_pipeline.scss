@@ -10,7 +10,7 @@ $pipeline-nav-height: 4rem;
 $input-nav-width: 6rem;
 $entityTypes-nav-width: 11rem;
 $mapping-nav-width: 9rem;
-$output-nav-width: 7rem;
+$output-nav-width: 8rem;
 
 .pipeline {
   background: $white;
@@ -179,12 +179,13 @@ div.pipeline-nav-item__output {
   }
 
   .status {
+    @include shadow-cutout-dark;
     border-radius: 50%;
-    width: 10px;
-    height: 10px;
+    width: .8em;
+    height: .8em;
     content: '';
     display: block;
-    margin-right: 5px;
+    margin-right: .5em;
   }
 
   .red {

@@ -73,14 +73,14 @@
       color: $red;
     }
 
-    &::after {
+    &::before {
       border-radius: 50%;
       background-color: $red;
-      width: 10px;
-      height: 10px;
+      width: .6em;
+      height: .6em;
       position: absolute;
-      left: -20px;
-      top: 15px;
+      left: -1.2em;
+      top: 1em;
       content: '';
       display: block;
     }
