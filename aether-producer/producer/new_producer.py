@@ -182,7 +182,8 @@ class ServerHandler(object):
                         self.logger.info("New topic connected: %s" % schema.name)
                         self.schema_handlers[schema.name] = SchemaHandler(self, schema)
                     else:
-                        print("old %s" % schema.name)
+                        pass
+                        # print("old %s" % schema.name)
                         # TODO UPDATE ON SCHEMA CHANGE
                 for x in range(10):
                     if not self.killed:
@@ -267,6 +268,8 @@ class SchemaHandler(object):
         self.limit = self.context.settings.get('postgres_pull_limit', 100)
         self.status = {"latest_msg":None}
         self.change_set = {}
+        self.successful_changes = []
+        self.failed_changes = {}
         self.pg_creds = self.context.settings.get('postgres_connection_info')
         try:
             self.topic_name = self.context.settings \
@@ -306,19 +309,21 @@ class SchemaHandler(object):
         try:
             obj = io.BytesIO()
             if err:
+                self.logger.error("Callback returned with Error")
                 obj.write(msg.value())
                 reader = DataFileReader(obj, DatumReader())
                 for x, message in enumerate(reader):
                     _id = message.get("id")
-                    modified = message.get("modified")
-                    self.logger.error("Couldn't save modified: %s in topic %s | err %s" % ( modified, self.topic_name, err))
+                    self.logger.error("NO-SAVE: %s in topic %s | err %s" % ( _id, self.topic_name, err.name()))
+                    self.failed_changes[_id] = err
             else:
+                self.logger.error("Callback returned with OK")
                 obj.write(msg.value())
                 reader = DataFileReader(obj, DatumReader())
                 for x, message in enumerate(reader):
                     _id = message.get("id")
-                    self.logger.debug("Saved id: %s in topic %s" % ( _id, self.topic_name))
-                    del self.change_set[_id]
+                    self.logger.debug("SAVE: %s in topic %s" % ( _id, self.topic_name))
+                    self.successful_changes.append(_id)
         except Exception as error:
             self.logger.debug('ERROR %s ', [error, _, msg, err, kwargs])
         finally:
@@ -326,12 +331,14 @@ class SchemaHandler(object):
 
     def update_kafka(self):
         while not self.context.killed:
+
             self.modified = self.get_offset()
             if not self.updates_available():
-                self.logger.info('no new updates available')
-                sleep(5)
+                self.logger.debug('No updates')
+                sleep(1)
                 continue
             try:
+                self.logger.debug("Getting Changeset for %s" % self.name)
                 self.change_set = {}
                 new_rows = self.get_db_updates()
                 end_offset = new_rows[-1].get('modified')
@@ -355,22 +362,66 @@ class SchemaHandler(object):
                     callback=self.kafka_callback
                 )
                 self.producer.flush()
-                self.set_offset(end_offset)
+                self.wait_for_kafka(end_offset)
+
             except Exception as err:
                 self.logger.error('error in Kafka save: %s' % err)
                 sleep(1)
+
+    def wait_for_kafka(self, end_offset, timeout=10, iters_per_sec=100, failure_wait_time=10):
+        self.logger.debug('Waiting for Kafka to flush')
+        sleep_time = timeout / (timeout * iters_per_sec)
+        change_set_size = len(self.change_set)
+        errors = {}
+        for i in range(timeout * iters_per_sec):
+
+            for _id, err in self.failed_changes.items():
+                error_type = str(err.name())
+                # accumulate error types
+                del self.change_set[_id]
+                errors[error_type] = errors.get(error_type, 0) + 1
+
+            if len(self.failed_changes) == change_set_size:
+                # whole changeset failed; systemic failure likely; sleep it off and try again
+                self.logger.error(["changeset error profile", errors])
+                self.logger.debug('Changeset not saved; likely broker outage, sleeping worker for %s' % self.name)
+                self.failed_changes = {}
+                self.successful_changes = []
+                sleep(failure_wait_time)
+                self.logger.debug('Resuming worker for %s' % self.name)
+                return  # all failed; ignore changeset
+
+            elif len(self.successful_changes) == change_set_size:
+                self.logger.debug('All changes saved ok.')
+                break # all were saved, so that's nice
+
+            for _id in self.successful_changes:
+                del self.change_set[_id]
+
+            if len(self.change_set) == 0:
+                # no more in flight changes
+                break
+
+            sleep(sleep_time)
+
+        self.logger.error(["changeset error profile", errors])
+        self.failed_changes = {}
+        self.successful_changes = []
+        #Once we're satisfied, we set the new offset past the processed messages
+        self.set_offset(end_offset)
+
 
 
     def get_offset(self):
         try:
             offset = Offset.get_offset(self.name)
             if offset:
-                self.logger.debug("Got offset for %s | %s" % (self.name, offset.offset_value))
+                #self.logger.debug("Got offset for %s | %s" % (self.name, offset.offset_value))
                 return offset.offset_value
             else:
                 raise ValueError('No entry for %s' % self.name)
         except Exception as err:
-            msg = 'Could not get offset for %s | %s' % (self.name, err)
+            msg = 'Could not get offset for %s assuming it is a new type| %s' % (self.name, err)
             self.logger.error(msg)
             self.status['latest_msg'] = msg
             return ""
