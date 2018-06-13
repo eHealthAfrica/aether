@@ -86,17 +86,20 @@ class Offset(Base):
         return offset
 
     @classmethod
-    def update(cls, name, offset):
+    def update(cls, name, offset_value):
         try:
-            offset=Offset.get_offset(name)
+            session = get_session()
+            offset = session.query(cls).filter_by(
+                schema_name=name
+            ).first()
             if offset:
-                offset.offset_value = offset
-                session = get_session()
+                offset.offset_value = offset_value
                 session.add(offset)
                 session.commit()
                 return offset
             else:
                 raise ValueError('No row with matching name %s' % name)
+                return None
         except Exception as err:
             logger.error('Could not save offset for topic %s | %s' % (name, err))
             return offset

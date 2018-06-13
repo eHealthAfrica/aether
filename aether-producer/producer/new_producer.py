@@ -317,7 +317,7 @@ class SchemaHandler(object):
                 reader = DataFileReader(obj, DatumReader())
                 for x, message in enumerate(reader):
                     _id = message.get("id")
-                    #self.logger.debug("Saved id: %s in topic %s" % ( _id, self.topic_name))
+                    self.logger.debug("Saved id: %s in topic %s" % ( _id, self.topic_name))
                     del self.change_set[_id]
         except Exception as error:
             self.logger.debug('ERROR %s ', [error, _, msg, err, kwargs])
@@ -328,7 +328,8 @@ class SchemaHandler(object):
         while not self.context.killed:
             self.modified = self.get_offset()
             if not self.updates_available():
-                sleep(1)
+                self.logger.info('no new updates available')
+                sleep(5)
                 continue
             try:
                 self.change_set = {}

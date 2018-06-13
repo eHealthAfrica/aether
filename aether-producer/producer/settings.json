@@ -1,5 +1,5 @@
 {
-    "offset_db_url" : "sqlite:////offset.db",
+    "offset_db_url" : "sqlite:///offset.db",
     "start_delay": 5,
     "sleep_time": 10,
     "log_level" : "DEBUG",
