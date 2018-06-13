@@ -5,35 +5,19 @@ import { connect } from 'react-redux'
 import { generateGUID, deepEqual } from '../../utils'
 import { updatePipeline } from '../redux'
 
-// TODO: test
-const getMappingRules = (props) => {
-  if (props.selectedPipeline.mapping.length) {
-    return props.selectedPipeline.mapping
-  }
-  const entityTypes = props.selectedPipeline.entity_types
-  const result = entityTypes.map((schema) => {
-    return {
-      id: generateGUID(),
-      source: '#!uuid',
-      destination: `${schema.name}.id`
-    }
-  })
-  return result
-}
-
 class Mapping extends Component {
   constructor (props) {
     super(props)
 
     this.state = {
-      mappingRules: getMappingRules(props),
+      mappingRules: props.selectedPipeline.mapping || [],
       view: 'rules'
     }
   }
 
   componentWillReceiveProps (nextProps) {
     this.setState({
-      mappingRules: getMappingRules(nextProps)
+      mappingRules: nextProps.selectedPipeline.mapping || []
     })
   }
 

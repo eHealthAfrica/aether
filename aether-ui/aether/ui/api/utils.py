@@ -109,12 +109,17 @@ def validate_pipeline(pipeline):
         json=json.loads(json.dumps(payload)),
         headers=utils.get_auth_header(),
     )
-    # TODO: document why this is convoluted
+    # If everything went well, map 'mapping_errors' to 'errors' and 'entities'
+    # to 'output'.
     if resp.status_code == status.HTTP_200_OK:
         data = resp.json()
         errors = data.get('mapping_errors', [])
         output = data.get('entities', [])
         return (errors, output)
+    # The 400 response we get from the restframework serializers is a
+    # dictionary. The keys are serializer field names and the values are
+    # lists of errors. Concatenate all lists and return the result as
+    # `errors`.
     elif resp.status_code == status.HTTP_400_BAD_REQUEST:
         data = resp.json()
         errors = []

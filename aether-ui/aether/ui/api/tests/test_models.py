@@ -153,6 +153,45 @@ class ModelsTests(TestCase):
 
     @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
     @mock.patch('requests.post',
+                return_value=MockResponse(400, {
+                    'entities': [],
+                    'mapping_errors': ['test']
+                }))
+    def test__pipeline__save__with_bad_request(self, mock_post):
+        malformed_schema = {'name': 'Person'}
+        pipeline = Pipeline.objects.create(
+            name='Pipeline test',
+            input=INPUT_SAMPLE,
+            entity_types=[malformed_schema],
+            mapping=[{'source': '#!uuid', 'destination': 'Person.id'}],
+        )
+        self.assertEqual(
+            pipeline.mapping_errors,
+            [{'description': 'test'}]
+        )
+        self.assertEqual(pipeline.output, [])
+        mock_post.assert_called_once()
+        mock_post.assert_called_once_with(
+            url=self.KERNEL_URL,
+            headers=self.KERNEL_HEADERS,
+            json={
+                'submission_payload': INPUT_SAMPLE,
+                'mapping_definition': {
+                    'entities': {
+                        'Person': None,
+                    },
+                    'mapping': [
+                        ['#!uuid', 'Person.id'],
+                    ],
+                },
+                'schemas': {
+                    'Person': malformed_schema,
+                },
+            },
+        )
+
+    @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
+    @mock.patch('requests.post',
                 return_value=MockResponse(200, {
                     'entities_2': 'something',
                     'mapping_errors_2': 'something else',
