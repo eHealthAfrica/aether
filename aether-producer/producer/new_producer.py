@@ -25,6 +25,7 @@ psycogreen.gevent.patch_psycopg()
 import ast
 from collections import UserDict
 from contextlib import contextmanager
+import datetime
 import gevent
 from gevent.pool import Pool
 import io
@@ -35,7 +36,6 @@ import psycopg2
 import signal
 import spavro.schema
 import sys
-from traceback import format_exc
 
 from aether.client import KernelClient
 from flask import Flask, Response, request, abort, jsonify
@@ -53,6 +53,7 @@ from producer.db import Offset
 
 FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 
+
 class Settings(UserDict):
 
     def __init__(self, test=False):
@@ -69,7 +70,8 @@ class Settings(UserDict):
             obj = json.load(f)
             for k in obj:
                 self.data[k] = obj.get(k)
-            self.data['offset_path'] = "%s/%s" % (FILE_PATH, self.data['offset_file'])
+            self.data['offset_path'] = "%s/%s" % (
+                FILE_PATH, self.data['offset_file'])
 
 
 class kHandler(object):
@@ -102,7 +104,7 @@ class kHandler(object):
 class ServerHandler(object):
     def __init__(self, settings):
         self.settings = settings
-        #Start Signal Handlers
+        # Start Signal Handlers
         self.killed = False
         signal.signal(signal.SIGTERM, self.kill)
         signal.signal(signal.SIGINT, self.kill)
@@ -137,7 +139,6 @@ class ServerHandler(object):
         self.http.close()
         self.worker_pool.kill()
         self.killed = True
-
 
     # Connectivity
 
@@ -176,11 +177,14 @@ class ServerHandler(object):
                 schemas = []
                 with kHandler(self):
                     self.kernel.refresh()
-                    schemas = [schema for schema in self.kernel.Resource.Schema]
+                    schemas = [
+                        schema for schema in self.kernel.Resource.Schema]
                 for schema in schemas:
                     if not schema.name in self.schema_handlers.keys():
-                        self.logger.info("New topic connected: %s" % schema.name)
-                        self.schema_handlers[schema.name] = SchemaHandler(self, schema)
+                        self.logger.info(
+                            "New topic connected: %s" % schema.name)
+                        self.schema_handlers[schema.name] = SchemaHandler(
+                            self, schema)
                     else:
                         pass
                         # print("old %s" % schema.name)
@@ -203,13 +207,16 @@ class ServerHandler(object):
     def serve(self):
         self.app = Flask(__name__)  # pylint: disable=invalid-name
         self.logger = self.app.logger
-        log_level = logging.getLevelName(self.settings.get('log_level', 'DEBUG'))
+        log_level = logging.getLevelName(
+            self.settings.get('log_level', 'DEBUG'))
         self.logger.setLevel(log_level)
         self.app.debug = True
-        pool_size = self.settings.get('flask_settings', {}).get('max_connections', 1)
+        pool_size = self.settings.get(
+            'flask_settings', {}).get('max_connections', 1)
         port = self.settings.get('flask_settings', {}).get('port', 5005)
         self.worker_pool = Pool(pool_size)
-        self.http = WSGIServer(('', port), self.app.wsgi_app, spawn=self.worker_pool)
+        self.http = WSGIServer(
+            ('', port), self.app.wsgi_app, spawn=self.worker_pool)
         self.http.start()
 
     # Exposed Request Endpoints
@@ -221,10 +228,11 @@ class ServerHandler(object):
     def request_status(self):
         with self.app.app_context():
             status = {
-                "kernel" : self.kernel is not None,
-                "topics" : {k : v.get_status() for k,v in self.schema_handlers.items()}
+                "kernel": self.kernel is not None,
+                "topics": {k: v.get_status() for k, v in self.schema_handlers.items()}
             }
             return jsonify(status)
+
 
 class SchemaHandler(object):
 
@@ -266,7 +274,7 @@ class SchemaHandler(object):
         self.name = schema.name
         self.modified = ""
         self.limit = self.context.settings.get('postgres_pull_limit', 100)
-        self.status = {"latest_msg":None}
+        self.status = {"latest_msg": None}
         self.change_set = {}
         self.successful_changes = []
         self.failed_changes = {}
@@ -287,15 +295,16 @@ class SchemaHandler(object):
         query = SchemaHandler.NEW_STR % (self.modified, self.name)
         with psycopg2.connect(**self.pg_creds) as conn:
             cursor = conn.cursor(cursor_factory=DictCursor)
-            cursor.execute(query);
+            cursor.execute(query)
             return sum([1 for i in cursor]) > 0
 
     def get_db_updates(self):
-        query = SchemaHandler.QUERY_STR % (self.modified, self.name, self.limit)
+        query = SchemaHandler.QUERY_STR % (
+            self.modified, self.name, self.limit)
         with psycopg2.connect(**self.pg_creds) as conn:
             cursor = conn.cursor(cursor_factory=DictCursor)
-            cursor.execute(query);
-            return [{key : row[key] for key in row.keys()} for row in cursor]
+            cursor.execute(query)
+            return [{key: row[key] for key in row.keys()} for row in cursor]
 
     def update_schema(self, schema_obj):
         schema = ast.literal_eval(str(schema_obj.definition))
@@ -305,7 +314,7 @@ class SchemaHandler(object):
         self.status['inflight'] = [i for i in self.change_set.keys()]
         return self.status
 
-    def kafka_callback(self,err=None, msg=None, _=None, **kwargs):
+    def kafka_callback(self, err=None, msg=None, _=None, **kwargs):
         try:
             obj = io.BytesIO()
             if err:
@@ -314,7 +323,8 @@ class SchemaHandler(object):
                 reader = DataFileReader(obj, DatumReader())
                 for x, message in enumerate(reader):
                     _id = message.get("id")
-                    self.logger.error("NO-SAVE: %s in topic %s | err %s" % ( _id, self.topic_name, err.name()))
+                    self.logger.error("NO-SAVE: %s in topic %s | err %s" %
+                                      (_id, self.topic_name, err.name()))
                     self.failed_changes[_id] = err
             else:
                 self.logger.error("Callback returned with OK")
@@ -322,7 +332,8 @@ class SchemaHandler(object):
                 reader = DataFileReader(obj, DatumReader())
                 for x, message in enumerate(reader):
                     _id = message.get("id")
-                    self.logger.debug("SAVE: %s in topic %s" % ( _id, self.topic_name))
+                    self.logger.debug("SAVE: %s in topic %s" %
+                                      (_id, self.topic_name))
                     self.successful_changes.append(_id)
         except Exception as error:
             self.logger.debug('ERROR %s ', [error, _, msg, err, kwargs])
@@ -344,7 +355,8 @@ class SchemaHandler(object):
                 end_offset = new_rows[-1].get('modified')
 
                 bytes_writer = io.BytesIO()
-                writer = DataFileWriter(bytes_writer, DatumWriter(), self.schema, codec='deflate')
+                writer = DataFileWriter(
+                    bytes_writer, DatumWriter(), self.schema, codec='deflate')
 
                 for row in new_rows:
                     _id = row['id']
@@ -369,7 +381,6 @@ class SchemaHandler(object):
                 sleep(1)
 
     def wait_for_kafka(self, end_offset, timeout=10, iters_per_sec=100, failure_wait_time=10):
-        self.logger.debug('Waiting for Kafka to flush')
         sleep_time = timeout / (timeout * iters_per_sec)
         change_set_size = len(self.change_set)
         errors = {}
@@ -383,8 +394,13 @@ class SchemaHandler(object):
 
             if len(self.failed_changes) == change_set_size:
                 # whole changeset failed; systemic failure likely; sleep it off and try again
-                self.logger.error(["changeset error profile", errors])
-                self.logger.debug('Changeset not saved; likely broker outage, sleeping worker for %s' % self.name)
+                self.status["last_changeset_errors"] = {
+                    "changes" : change_set_size,
+                    "errors" errors,
+                    "timestamp" : datetime.now().isoformat()
+                    }
+                self.logger.debug(
+                    'Changeset not saved; likely broker outage, sleeping worker for %s' % self.name)
                 self.failed_changes = {}
                 self.successful_changes = []
                 sleep(failure_wait_time)
@@ -393,7 +409,7 @@ class SchemaHandler(object):
 
             elif len(self.successful_changes) == change_set_size:
                 self.logger.debug('All changes saved ok.')
-                break # all were saved, so that's nice
+                break  # all were saved, so that's nice
 
             for _id in self.successful_changes:
                 del self.change_set[_id]
@@ -404,13 +420,17 @@ class SchemaHandler(object):
 
             sleep(sleep_time)
 
-        self.logger.error(["changeset error profile", errors])
+        if errors:
+            self.status["last_changeset_errors"] = {
+                    "changes" : change_set_size,
+                    "errors" errors,
+                    "timestamp" : datetime.now().isoformat()
+                    }
         self.failed_changes = {}
         self.successful_changes = []
-        #Once we're satisfied, we set the new offset past the processed messages
+        self.change_set = {}
+        # Once we're satisfied, we set the new offset past the processed messages
         self.set_offset(end_offset)
-
-
 
     def get_offset(self):
         try:
@@ -421,7 +441,8 @@ class SchemaHandler(object):
             else:
                 raise ValueError('No entry for %s' % self.name)
         except Exception as err:
-            msg = 'Could not get offset for %s assuming it is a new type| %s' % (self.name, err)
+            msg = 'Could not get offset for %s assuming it is a new type| %s' % (
+                self.name, err)
             self.logger.error(msg)
             self.status['latest_msg'] = msg
             return ""
@@ -432,7 +453,8 @@ class SchemaHandler(object):
             self.logger.info('Creating new offset entry for %s' % self.name)
             Offset.create(schema_name=self.name, offset_value=offset)
         else:
-            self.logger.debug("new offset for %s | %s" % (self.name, new_offset.offset_value))
+            self.logger.debug("new offset for %s | %s" %
+                              (self.name, new_offset.offset_value))
         self.status['offset'] = new_offset.offset_value
 
 
