@@ -45,19 +45,19 @@ class ViewsTest(TestCase):
             kernel_refs=PIPELINE_EXAMPLE_1['kernel_refs']
         )
         project_data = {
-                        'revision': '123',
-                        'name': 'Test-Project',
-                        'salad_schema': '[]',
-                        'jsonld_context': '[]',
-                        'rdf_definition': '[]'
-                      }
+            'revision': '123',
+            'name': 'Test-Project',
+            'salad_schema': '[]',
+            'jsonld_context': '[]',
+            'rdf_definition': '[]'
+        }
         entity_type = PIPELINE_EXAMPLE_1['entity_types'][2]
         schema_data = {
-                        'revision': '123',
-                        'name': entity_type['name'],
-                        'type': entity_type['type'],
-                        'definition': entity_type
-                      }
+            'revision': '123',
+            'name': entity_type['name'],
+            'type': entity_type['type'],
+            'definition': entity_type
+        }
         # must run on an empty kernel db
         utils.create_new_kernel_object('project', pipeline, project_data)
         ViewsTest.project_id = pipeline.kernel_refs['project']

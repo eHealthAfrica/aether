@@ -49,7 +49,9 @@ class ModelsTests(CustomTestCase):
             XForm.objects.create,
             project=self.helper_create_project(),
             xml_data='''
-                <h:html>
+                <h:html
+                        xmlns="http://www.w3.org/2002/xforms"
+                        xmlns:h="http://www.w3.org/1999/xhtml">
                   <h:head>
                     <model>
                       <instance>
@@ -172,19 +174,30 @@ class ModelsTests(CustomTestCase):
         self.assertEqual(xform.manifest_url,
                          '/forms/{}/manifest.xml?version={}'.format(xform.id, xform.version))
 
-    def test__xform__version(self):
+    def test__xform__version_control(self):
         xform = XForm.objects.create(
             project=Project.objects.create(),
             xml_data=self.samples['xform']['xml-ok'],
         )
         last_version = xform.version
+        last_avro_schema = xform.avro_schema
+        last_kernel_id = xform.kernel_id
         self.assertEqual(last_version, 'v1')
 
         xform.xml_data = self.samples['xform']['xml-ok']
         xform.save()
-        self.assertEqual(last_version, xform.version, 'nothing changed')
-        last_version = xform.version
 
-        xform.xml_data = self.samples['xform']['raw-xml']
+        self.assertEqual(last_version, xform.version, 'nothing changed')
+        self.assertEqual(last_avro_schema, xform.avro_schema, 'nothing changed')
+        self.assertEqual(last_kernel_id, xform.kernel_id, 'nothing changed')
+
+        last_version = xform.version
+        last_avro_schema = xform.avro_schema
+        last_kernel_id = xform.kernel_id
+
+        xform.xml_data = self.samples['xform']['xml-ok-noversion']
         xform.save()
+
         self.assertNotEqual(last_version, xform.version, 'changed xml data')
+        self.assertNotEqual(last_avro_schema, xform.avro_schema, 'changed AVRO schema')
+        self.assertNotEqual(last_kernel_id, xform.kernel_id, 'changed Kernel ID')

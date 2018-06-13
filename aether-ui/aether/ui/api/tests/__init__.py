@@ -17,7 +17,7 @@
 # under the License.
 
 PIPELINE_EXAMPLE = {
-  'name': 'Pipeline Mock 1',
+  'name': 'Pipeline Example',
   'schema': {
     'name': 'hat',
     'type': 'record',
@@ -279,7 +279,7 @@ PIPELINE_EXAMPLE = {
 }
 
 PIPELINE_EXAMPLE_1 = {
-  'name': 'Pipeline Mock 2',
+  'name': 'Pipeline Example 1',
   'schema': {
     'name': 'hat',
     'type': 'record',
@@ -387,7 +387,7 @@ PIPELINE_EXAMPLE_1 = {
 
 
 PIPELINE_EXAMPLE_WITH_MAPPING_ERRORS = {
-  'name': 'Pipeline Mock With Errors',
+  'name': 'Pipeline Example With Mapping Errors',
   'schema': {
     'name': 'hat',
     'type': 'record',

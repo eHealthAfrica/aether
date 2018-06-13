@@ -79,6 +79,10 @@
     font-weight: 600;
   }
 
+  .item {
+    text-decoration: line-through;
+  }
+
   .type {
     font-style: italic;
     color: $grey;

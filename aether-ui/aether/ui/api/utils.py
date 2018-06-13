@@ -67,7 +67,7 @@ def validate_pipeline(pipeline):
     # check kernel connection
     if not utils.test_connection():
         return (
-            [{'description': 'It was not possible to connect to Aether Kernel Server.'}],
+            [{'description': 'It was not possible to connect to Aether Kernel.'}],
             [],
         )
 
@@ -299,43 +299,7 @@ def publish_pipeline(pipeline, projectname, overwrite=False):
                 entity_type['name']))
         except Exception as e:
             if overwrite:
-                is_schema_linked = is_object_linked(pipeline.kernel_refs, 'schema', schema_name)
-                is_project_schema_linked = is_object_linked(pipeline.kernel_refs, 'projectSchema', schema_name)
-
-                if is_schema_linked:
-                    update_kernel_object('schema', pipeline.kernel_refs['schema'][schema_name], schema_data)
-                else:
-                    pipeline.kernel_refs['schema'] = {} if 'schema' not in pipeline.kernel_refs \
-                        else pipeline.kernel_refs['schema']
-                    get_by_name = kernel_data_request(f'schemas/?name={entity_type["name"]}')['results'][0]
-                    update_kernel_object('schema', get_by_name['id'], schema_data)
-                    pipeline.kernel_refs['schema'][schema_name] = get_by_name['id']
-                outcome['successful'].append('{} schema updated'.format(schema_name))
-
-                project_schema_name = '{}-{}'.format(projectname, schema_name)
-                project_schema_data = {
-                        'name': project_schema_name,
-                        'mandatory_fields': '[]',
-                        'transport_rule': '[]',
-                        'masked_fields': '[]',
-                        'is_encrypted': False,
-                        'project': pipeline.kernel_refs['project'],
-                        'schema': pipeline.kernel_refs['schema'][schema_name]
-                    }
-
-                if is_project_schema_linked:
-                    update_kernel_object('projectSchema',
-                                         pipeline.kernel_refs['projectSchema'][schema_name],
-                                         project_schema_data)
-                else:
-                    pipeline.kernel_refs['projectSchema'] = {} if 'projectSchema' not in pipeline.kernel_refs \
-                        else pipeline.kernel_refs['projectSchema']
-                    get_by_name = kernel_data_request(f'projectschemas/?name={project_schema_name}')['results'][0]
-                    update_kernel_object('projectSchema',
-                                         get_by_name['id'],
-                                         project_schema_data)
-                    pipeline.kernel_refs['projectSchema'][schema_name] = get_by_name['id']
-                outcome['successful'].append('{}-{} project schema updated'.format(projectname, schema_name))
+                outcome = overwrite_kernel_schema(pipeline, schema_name, schema_data, projectname, outcome)
             else:
                 outcome['error'].append(str(e))
 
@@ -361,6 +325,47 @@ def publish_pipeline(pipeline, projectname, overwrite=False):
             outcome['successful'].append('{} mapping updated'.format(pipeline.name))
         else:
             outcome['error'].append(str(e))
+    return outcome
+
+
+def overwrite_kernel_schema(pipeline, schema_name, schema_data, projectname, outcome):
+    is_schema_linked = is_object_linked(pipeline.kernel_refs, 'schema', schema_name)
+    is_project_schema_linked = is_object_linked(pipeline.kernel_refs, 'projectSchema', schema_name)
+
+    if is_schema_linked:
+        update_kernel_object('schema', pipeline.kernel_refs['schema'][schema_name], schema_data)
+    else:
+        pipeline.kernel_refs['schema'] = {} if 'schema' not in pipeline.kernel_refs \
+            else pipeline.kernel_refs['schema']
+        get_by_name = kernel_data_request(f'schemas/?name={schema_name}')['results'][0]
+        update_kernel_object('schema', get_by_name['id'], schema_data)
+        pipeline.kernel_refs['schema'][schema_name] = get_by_name['id']
+    outcome['successful'].append('{} schema updated'.format(schema_name))
+
+    project_schema_name = '{}-{}'.format(projectname, schema_name)
+    project_schema_data = {
+        'name': project_schema_name,
+        'mandatory_fields': '[]',
+        'transport_rule': '[]',
+        'masked_fields': '[]',
+        'is_encrypted': False,
+        'project': pipeline.kernel_refs['project'],
+        'schema': pipeline.kernel_refs['schema'][schema_name]
+    }
+
+    if is_project_schema_linked:
+        update_kernel_object('projectSchema',
+                             pipeline.kernel_refs['projectSchema'][schema_name],
+                             project_schema_data)
+    else:
+        pipeline.kernel_refs['projectSchema'] = {} if 'projectSchema' not in pipeline.kernel_refs \
+            else pipeline.kernel_refs['projectSchema']
+        get_by_name = kernel_data_request(f'projectschemas/?name={project_schema_name}')['results'][0]
+        update_kernel_object('projectSchema',
+                             get_by_name['id'],
+                             project_schema_data)
+        pipeline.kernel_refs['projectSchema'][schema_name] = get_by_name['id']
+    outcome['successful'].append('{}-{} project schema updated'.format(projectname, schema_name))
     return outcome
 
 

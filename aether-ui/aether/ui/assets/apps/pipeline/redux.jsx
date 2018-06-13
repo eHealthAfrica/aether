@@ -124,7 +124,7 @@ const parsePipeline = (pipeline) => {
     const entityType = rule.destination.split('.')[0]
     const color = entityColors[entityType] || 0
 
-    highlightSource[rule.source] = color
+    highlightSource[rule.source.replace('$.', '')] = color
     highlightDestination.push(rule.destination)
   })
 

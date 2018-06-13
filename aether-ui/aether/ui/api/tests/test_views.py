@@ -57,7 +57,7 @@ class ViewsTest(TestCase):
 
         url_patch = reverse('pipeline-detail', kwargs={'pk': response_data['id']})
 
-        # patching a property will no alter the rest
+        # patching a property will not alter the rest
 
         data = json.dumps({'input': {'id': 1}})
         response = self.client.patch(url_patch, data=data, content_type='application/json')
@@ -77,7 +77,7 @@ class ViewsTest(TestCase):
         response = self.client.post(url, data=data, content_type='application/json')
         response_data = json.loads(response.content)
         pipeline_id = response_data['id']
-        self.assertEqual(response_data['name'], 'Pipeline Mock 1')
+        self.assertEqual(response_data['name'], 'Pipeline Example')
         url = reverse('pipeline-publish', args=[pipeline_id])
         response = self.client.post(url, {'project_name': 'Aux'})
         response_data = json.loads(response.content)
