@@ -65,11 +65,12 @@
           "doc": "Collect your GPS coordinates",
           "fields": [
             {
-              "name": "coordinates",
-              "type": {
-                "type": "array",
-                "items": "float"
-              }
+              "name": "latitude",
+              "type": "float"
+            },
+            {
+              "name": "longitude",
+              "type": "float"
             },
             {
               "name": "altitude",
@@ -83,13 +84,6 @@
               "type": [
                 "null",
                 "float"
-              ]
-            },
-            {
-              "name": "type",
-              "type": [
-                "null",
-                "string"
               ]
             }
           ]
@@ -106,11 +100,12 @@
           "doc": "Ignore your GPS coordinates",
           "fields": [
             {
-              "name": "coordinates",
-              "type": {
-                "type": "array",
-                "items": "float"
-              }
+              "name": "latitude",
+              "type": "float"
+            },
+            {
+              "name": "longitude",
+              "type": "float"
             },
             {
               "name": "altitude",
@@ -124,13 +119,6 @@
               "type": [
                 "null",
                 "float"
-              ]
-            },
-            {
-              "name": "type",
-              "type": [
-                "null",
-                "string"
               ]
             }
           ]

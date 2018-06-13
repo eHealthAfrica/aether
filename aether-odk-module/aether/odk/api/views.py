@@ -20,6 +20,7 @@ import json
 import requests
 
 from django.conf import settings
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext as _
 
@@ -64,7 +65,7 @@ MSG_XFORM_VERSION_WARNING = _(
     'Requesting {requested_version} xform version, current is {current_version}'
 )
 MSG_KERNEL_CONNECTION_ERR = _(
-    'Connection with Aether Kernel server is not possible.'
+    'Connection with Aether Kernel is not possible.'
 )
 MSG_SUBMISSION_MISSING_DATA_ERR = _(
     'Missing submitted data.'
@@ -85,20 +86,23 @@ MSG_SUBMISSION_XFORM_VERSION_WARNING = _(
     'Sending response to {submission_version} xform version, current is {current_version}'
 )
 MSG_SUBMISSION_KERNEL_ARTEFACTS_ERR = _(
-    'Unexpected error from Aether Kernel server '
+    'Unexpected error from Aether Kernel '
     'while checking the xForm artefacts "{form_id}".'
 )
 MSG_SUBMISSION_KERNEL_SUBMIT_ERR = _(
-    'Unexpected response {status} from Aether Kernel server '
+    'Unexpected response {status} from Aether Kernel '
     'while submitting data of the xForm "{form_id}".'
 )
 MSG_SUBMISSION_KERNEL_SUBMIT_ATTACHMENT_ERR = _(
-    'Unexpected response {status} from Aether Kernel server '
+    'Unexpected response {status} from Aether Kernel '
     'while submitting attachment of the xForm "{form_id}".'
 )
 MSG_SUBMISSION_SUBMIT_ERR = _(
-    'Unexpected error from Aether Kernel server '
+    'Unexpected error from Aether Kernel '
     'while submitting data of the xForm "{form_id}".'
+)
+MSG_SUBMISSION_SUBMIT_SUCCESS = _(
+    'Successfully submitted data of the xForm "{form_id}" to Aether Kernel.'
 )
 
 
@@ -237,7 +241,7 @@ class SurveyorViewSet(viewsets.ModelViewSet):
 '''
 Views needed by ODK Collect
 
-https://bitbucket.org/javarosa
+https://docs.opendatakit.org/
 '''
 
 
@@ -255,7 +259,7 @@ XML_SUBMISSION_PARAM = 'xml_submission_file'
 @permission_classes([IsAuthenticated])
 def xform_list(request):
     '''
-    https://bitbucket.org/javarosa/javarosa/wiki/FormListAPI
+    https://docs.opendatakit.org/openrosa-form-list/
 
     '''
 
@@ -282,7 +286,7 @@ def xform_list(request):
 @permission_classes([IsAuthenticated])
 def xform_get_download(request, pk):
     '''
-    https://bitbucket.org/javarosa/javarosa/wiki/FormListAPI
+    https://docs.opendatakit.org/openrosa-form-list/
 
     Represents the `<downloadUrl/>` entry in the forms list.
 
@@ -311,7 +315,7 @@ def xform_get_download(request, pk):
 @permission_classes([IsAuthenticated])
 def xform_get_manifest(request, pk):
     '''
-    https://bitbucket.org/javarosa/javarosa/wiki/FormListAPI
+    https://docs.opendatakit.org/openrosa-form-list/
 
     Represents the `<manifestUrl/>` entry in the forms list.
 
@@ -347,12 +351,16 @@ def xform_get_manifest(request, pk):
 
 
 @api_view(['POST', 'HEAD'])
-@renderer_classes([StaticHTMLRenderer])
+@renderer_classes([TemplateHTMLRenderer])
 @authentication_classes([BasicAuthentication])
 @permission_classes([IsAuthenticated])
 def xform_submission(request):
     '''
-    https://bitbucket.org/javarosa/javarosa/wiki/FormSubmissionAPI
+    Submission specification:
+    https://docs.opendatakit.org/openrosa-form-submission/
+
+    Response specification:
+    https://docs.opendatakit.org/openrosa-http/#openrosa-responses
 
     '''
 
@@ -360,18 +368,33 @@ def xform_submission(request):
     auth_header = get_auth_header()
     if not auth_header:
         return Response(
-            data=MSG_KERNEL_CONNECTION_ERR,
+            data={
+                'nature': 'submit_error',
+                'message': MSG_KERNEL_CONNECTION_ERR,
+            },
             status=status.HTTP_424_FAILED_DEPENDENCY,
+            template_name='openRosaResponse.xml',
+            content_type='text/xml',
+            headers={'X-OpenRosa-Version': '1.0'},
         )
 
     if request.method == 'HEAD':
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
 
     if not request.FILES or XML_SUBMISSION_PARAM not in request.FILES:
         # missing submitted data
         msg = MSG_SUBMISSION_MISSING_DATA_ERR
         logger.warning(msg)
-        return Response(data=msg, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        return Response(
+            data={
+                'nature': 'submit_error',
+                'message': msg,
+            },
+            status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            template_name='openRosaResponse.xml',
+            content_type='text/xml',
+            headers={'X-OpenRosa-Version': '1.0'},
+        )
 
     try:
         xml = request.FILES[XML_SUBMISSION_PARAM]
@@ -381,7 +404,16 @@ def xform_submission(request):
         msg = MSG_SUBMISSION_FILE_ERR
         logger.warning(msg)
         logger.error(str(e))
-        return Response(data=msg + '\n' + str(e), status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        return Response(
+            data={
+                'nature': 'submit_error',
+                'message': msg + '\n' + str(e),
+            },
+            status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            template_name='openRosaResponse.xml',
+            content_type='text/xml',
+            headers={'X-OpenRosa-Version': '1.0'},
+        )
 
     # When handling submissions containing multiple attachments, ODK
     # Collect will split the submission into multiple POST requests. Using
@@ -398,7 +430,16 @@ def xform_submission(request):
     if not instance_id:
         msg = MSG_SUBMISSION_MISSING_INSTANCE_ID_ERR
         logger.warning(msg)
-        return Response(data=msg, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        return Response(
+            data={
+                'nature': 'submit_error',
+                'message': msg,
+            },
+            status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            template_name='openRosaResponse.xml',
+            content_type='text/xml',
+            headers={'X-OpenRosa-Version': '1.0'},
+        )
 
     # take the first xForm in which the current user is granted surveyor
     # TODO take the one that matches the version
@@ -413,11 +454,29 @@ def xform_submission(request):
         if xforms:
             msg = MSG_SUBMISSION_XFORM_UNAUTHORIZED_ERR.format(form_id=form_id)
             logger.error(msg)
-            return Response(data=msg, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                data={
+                    'nature': 'submit_error',
+                    'message': msg,
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+                template_name='openRosaResponse.xml',
+                content_type='text/xml',
+                headers={'X-OpenRosa-Version': '1.0'},
+            )
         else:
             msg = MSG_SUBMISSION_XFORM_NOT_FOUND_ERR.format(form_id=form_id)
             logger.error(msg)
-            return Response(data=msg, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                data={
+                    'nature': 'submit_error',
+                    'message': msg,
+                },
+                status=status.HTTP_404_NOT_FOUND,
+                template_name='openRosaResponse.xml',
+                content_type='text/xml',
+                headers={'X-OpenRosa-Version': '1.0'},
+            )
 
     # check sent version with current one
     if version < xform.version:  # pragma: no cover
@@ -431,7 +490,16 @@ def xform_submission(request):
         msg = MSG_SUBMISSION_KERNEL_ARTEFACTS_ERR.format(form_id=form_id)
         logger.warning(msg)
         logger.error(str(kpe))
-        return Response(data=msg + '\n' + str(kpe), status=status.HTTP_424_FAILED_DEPENDENCY)
+        return Response(
+            data={
+                'nature': 'submit_error',
+                'message': msg + '\n' + str(kpe),
+            },
+            status=status.HTTP_424_FAILED_DEPENDENCY,
+            template_name='openRosaResponse.xml',
+            content_type='text/xml',
+            headers={'X-OpenRosa-Version': '1.0'},
+        )
 
     data = parse_submission(data, xform.xml_data)
     submissions_url = get_submissions_url()
@@ -463,7 +531,16 @@ def xform_submission(request):
                 msg = MSG_SUBMISSION_KERNEL_SUBMIT_ERR.format(status=response.status_code, form_id=form_id)
                 logger.warning(msg)
                 logger.warning(submission_content)
-                return Response(data=msg + '\n' + submission_content, status=response.status_code)
+                return Response(
+                    data={
+                        'nature': 'submit_error',
+                        'message': msg + '\n' + submission_content,
+                    },
+                    status=response.status_code,
+                    template_name='openRosaResponse.xml',
+                    content_type='text/xml',
+                    headers={'X-OpenRosa-Version': '1.0'},
+                )
             # If there is one field with non ascii characters, the usual
             # response.json() will throw a `UnicodeDecodeError`.
             submission_id = json.loads(submission_content).get('id')
@@ -498,9 +575,27 @@ def xform_submission(request):
 
                     # delete previous submission and return error
                     requests.delete(get_submissions_url(submission_id), headers=auth_header)
-                    return Response(data=msg + '\n' + attachment_content, status=response.status_code)
+                    return Response(
+                        data={
+                            'nature': 'submit_error',
+                            'message': msg + '\n' + attachment_content,
+                        },
+                        status=response.status_code,
+                        template_name='openRosaResponse.xml',
+                        content_type='text/xml',
+                        headers={'X-OpenRosa-Version': '1.0'},
+                    )
 
-        return Response(status=status.HTTP_201_CREATED)
+        return Response(
+            data={
+                'nature': 'submit_success',
+                'message': MSG_SUBMISSION_SUBMIT_SUCCESS.format(form_id=form_id),
+            },
+            status=status.HTTP_201_CREATED,
+            template_name='openRosaResponse.xml',
+            content_type='text/xml',
+            headers={'X-OpenRosa-Version': '1.0'},
+        )
 
     except Exception as e:
         msg = MSG_SUBMISSION_SUBMIT_ERR.format(form_id=form_id)
@@ -511,4 +606,13 @@ def xform_submission(request):
             # delete previous submission and ignore response
             requests.delete(get_submissions_url(submission_id), headers=auth_header)
         # something went wrong... just send an 400 error
-        return Response(data=msg + '\n' + str(e), status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            data={
+                'nature': 'submit_error',
+                'message': msg + '\n' + str(e),
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+            template_name='openRosaResponse.xml',
+            content_type='text/xml',
+            headers={'X-OpenRosa-Version': '1.0'},
+        )

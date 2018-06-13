@@ -118,6 +118,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='xform',
             name='xml_data',
-            field=models.TextField(blank=True, help_text='This XML must conform the JavaRosa specification. https://bitbucket.org/javarosa/javarosa/wiki/xform', validators=[aether.odk.api.models.__validate_xml_data__], verbose_name='XML definition'),
+            field=models.TextField(blank=True, help_text='This XML must conform the ODK XForms specification. http://opendatakit.github.io/xforms-spec/', validators=[aether.odk.api.models.__validate_xml_data__], verbose_name='XML definition'),
         ),
     ]

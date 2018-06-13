@@ -69,6 +69,61 @@ class Project(models.Model):
 
     The needed and common data is stored here, like the list of granted surveyors.
 
+
+    ----------------------------------------------------------------------------
+
+            Table "public.odk_project"
+
+       Column   | Type | Modifiers
+    ------------+------+-----------
+     project_id | uuid | not null
+     name       | text |
+
+    Indexes:
+        "odk_project_pkey" PRIMARY KEY, btree (project_id)
+
+    Referenced by:
+        TABLE "odk_project_surveyors"
+            CONSTRAINT "odk_project_surveyor_project_id_###_fk_odk_project_project_id"
+            FOREIGN KEY (project_id)
+            REFERENCES odk_project(project_id)
+            DEFERRABLE INITIALLY DEFERRED
+
+        TABLE "odk_xform"
+            CONSTRAINT "odk_xform_project_id_###_fk_odk_project_project_id"
+            FOREIGN KEY (project_id)
+            REFERENCES odk_project(project_id)
+            DEFERRABLE INITIALLY DEFERRED
+
+    ----------------------------------------------------------------------------
+
+            Table "public.odk_project_surveyors"
+
+       Column   |  Type   |                             Modifiers
+    ------------+---------+-------------------------------------------------------------------
+     id         | integer | not null default nextval('odk_project_surveyors_id_seq'::regclass)
+     project_id | uuid    | not null
+     user_id    | integer | not null
+
+    Indexes:
+        "odk_project_surveyors_pkey" PRIMARY KEY, btree (id)
+        "odk_project_surveyors_survey_id_user_id_###_uniq" UNIQUE CONSTRAINT, btree (project_id, user_id)
+        "odk_project_surveyors_survey_id_###" btree (project_id)
+        "odk_project_surveyors_user_id_###" btree (user_id)
+
+    Foreign-key constraints:
+        "odk_project_surveyor_project_id_###_fk_odk_project_project_id"
+            FOREIGN KEY (project_id)
+            REFERENCES odk_project(project_id)
+            DEFERRABLE INITIALLY DEFERRED
+
+        "odk_project_surveyors_user_id_###_fk_auth_user_id"
+            FOREIGN KEY (user_id)
+            REFERENCES auth_user(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+    ----------------------------------------------------------------------------
+
     '''
 
     # This is needed to submit data to kernel
@@ -142,6 +197,77 @@ class XForm(models.Model):
         - one Schema and
         - one ProjectSchema.
 
+
+    ----------------------------------------------------------------------------
+
+            Table "public.odk_xform"
+
+       Column    |           Type           |                       Modifiers
+    -------------+--------------------------+--------------------------------------------------------
+     id          | integer                  | not null default nextval('odk_xform_id_seq'::regclass)
+     title       | text                     | not null
+     form_id     | text                     | not null
+     xml_data    | text                     | not null
+     description | text                     |
+     created_at  | timestamp with time zone | not null
+     project_id  | uuid                     | not null
+     md5sum      | character varying(36)    | not null
+     version     | text                     | not null
+     avro_schema | jsonb                    |
+     kernel_id   | uuid                     | not null
+
+    Indexes:
+        "odk_xform_pkey" PRIMARY KEY, btree (id)
+        "odk_xform_survey_id_###" btree (project_id)
+
+    Foreign-key constraints:
+        "odk_xform_project_id_###_fk_odk_project_project_id"
+            FOREIGN KEY (project_id)
+            REFERENCES odk_project(project_id)
+            DEFERRABLE INITIALLY DEFERRED
+
+    Referenced by:
+        TABLE "odk_mediafile"
+            CONSTRAINT "odk_mediafile_xform_id_###_fk_odk_xform_id"
+            FOREIGN KEY (xform_id)
+            REFERENCES odk_xform(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+        TABLE "odk_xform_surveyors"
+            CONSTRAINT "odk_xform_surveyors_xform_id_###_fk_odk_xform_id"
+            FOREIGN KEY (xform_id)
+            REFERENCES odk_xform(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+    ----------------------------------------------------------------------------
+
+            Table "public.odk_xform_surveyors"
+
+      Column  |  Type   |                            Modifiers
+    ----------+---------+------------------------------------------------------------------
+     id       | integer | not null default nextval('odk_xform_surveyors_id_seq'::regclass)
+     xform_id | integer | not null
+     user_id  | integer | not null
+
+    Indexes:
+        "odk_xform_surveyors_pkey" PRIMARY KEY, btree (id)
+        "odk_xform_surveyors_xform_id_user_id_###_uniq" UNIQUE CONSTRAINT, btree (xform_id, user_id)
+        "odk_xform_surveyors_user_id_###" btree (user_id)
+        "odk_xform_surveyors_xform_id_###" btree (xform_id)
+
+    Foreign-key constraints:
+        "odk_xform_surveyors_user_id_###_fk_auth_user_id"
+            FOREIGN KEY (user_id)
+            REFERENCES auth_user(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+        "odk_xform_surveyors_xform_id_###_fk_odk_xform_id"
+            FOREIGN KEY (xform_id)
+            REFERENCES odk_xform(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+    ----------------------------------------------------------------------------
+
     '''
 
     # This is needed to submit data to kernel
@@ -170,8 +296,8 @@ class XForm(models.Model):
         validators=[__validate_xml_data__],
         verbose_name=_('XML definition'),
         help_text=_(
-            'This XML must conform the JavaRosa specification. '
-            'https://bitbucket.org/javarosa/javarosa/wiki/xform'
+            'This XML must conform the ODK XForms specification. '
+            'http://opendatakit.github.io/xforms-spec/'
         )
     )
 
@@ -189,7 +315,7 @@ class XForm(models.Model):
     @property
     def download_url(self):
         '''
-        https://bitbucket.org/javarosa/javarosa/wiki/FormListAPI
+        https://docs.opendatakit.org/openrosa-form-list/
 
         Represents the `<downloadUrl/>` entry in the forms list.
 
@@ -203,7 +329,7 @@ class XForm(models.Model):
     @property
     def manifest_url(self):
         '''
-        https://bitbucket.org/javarosa/javarosa/wiki/FormListAPI
+        https://docs.opendatakit.org/openrosa-form-list/
 
         Represents the `<manifestUrl/>` entry in the forms list.
 
@@ -235,7 +361,15 @@ class XForm(models.Model):
             self.version = version
 
         self.update_hash(increase_version=version is None)
-        self.avro_schema = parse_xform_to_avro_schema(self.xml_data, default_version=self.version)
+
+        new_avro_schema = parse_xform_to_avro_schema(self.xml_data, default_version=self.version)
+        if new_avro_schema != self.avro_schema:
+            self.avro_schema = new_avro_schema
+            # set a new `kernel_id` value, this will generate
+            # a new schema and mapping entry in kernel and
+            # new submissions will be assigned to the new one, not the old one.
+            # With this we will hopefully keep track of all xform versions
+            self.kernel_id = uuid.uuid4()
 
         return super(XForm, self).save(*args, **kwargs)
 
@@ -289,6 +423,31 @@ def __media_path__(instance, filename):
 class MediaFile(models.Model):
     '''
     Database representation of a media file linked to an XForm
+
+
+    ----------------------------------------------------------------------------
+
+            Table "public.odk_mediafile"
+
+       Column   |          Type          |                         Modifiers
+    ------------+------------------------+------------------------------------------------------------
+     id         | integer                | not null default nextval('odk_mediafile_id_seq'::regclass)
+     name       | text                   | not null
+     media_file | character varying(100) | not null
+     md5sum     | character varying(36)  | not null
+     xform_id   | integer                | not null
+
+    Indexes:
+        "odk_mediafile_pkey" PRIMARY KEY, btree (id)
+        "odk_mediafile_xform_id_###" btree (xform_id)
+
+    Foreign-key constraints:
+        "odk_mediafile_xform_id_###_fk_odk_xform_id"
+            FOREIGN KEY (xform_id)
+            REFERENCES odk_xform(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+    ----------------------------------------------------------------------------
 
     '''
 
