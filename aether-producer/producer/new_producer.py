@@ -25,7 +25,7 @@ psycogreen.gevent.patch_psycopg()
 import ast
 from collections import UserDict
 from contextlib import contextmanager
-import datetime
+from datetime import datetime
 import gevent
 from gevent.pool import Pool
 import io
@@ -36,6 +36,7 @@ import psycopg2
 import signal
 import spavro.schema
 import sys
+import traceback
 
 from aether.client import KernelClient
 from flask import Flask, Response, request, abort, jsonify
@@ -116,6 +117,7 @@ class ServerHandler(object):
         self.init_db()
         # Clear objects and start
         self.kernel = None
+        self.kafka = False
         self.schema_handlers = {}
         self.run()
 
@@ -228,7 +230,8 @@ class ServerHandler(object):
     def request_status(self):
         with self.app.app_context():
             status = {
-                "kernel": self.kernel is not None,
+                "kernel": self.kernel is not None,  # This is a real object
+                "kafka": self.kafka is not False,   # This is just a status flag
                 "topics": {k: v.get_status() for k, v in self.schema_handlers.items()}
             }
             return jsonify(status)
@@ -274,7 +277,10 @@ class SchemaHandler(object):
         self.name = schema.name
         self.modified = ""
         self.limit = self.context.settings.get('postgres_pull_limit', 100)
-        self.status = {"latest_msg": None}
+        self.status = {
+            "last_errors_set": {},
+            "last_changeset_status": {}
+        }
         self.change_set = {}
         self.successful_changes = []
         self.failed_changes = {}
@@ -318,16 +324,16 @@ class SchemaHandler(object):
         try:
             obj = io.BytesIO()
             if err:
-                self.logger.error("Callback returned with Error")
+                self.logger.debug("Callback returned with Error")
                 obj.write(msg.value())
                 reader = DataFileReader(obj, DatumReader())
                 for x, message in enumerate(reader):
                     _id = message.get("id")
-                    self.logger.error("NO-SAVE: %s in topic %s | err %s" %
+                    self.logger.info("NO-SAVE: %s in topic %s | err %s" %
                                       (_id, self.topic_name, err.name()))
                     self.failed_changes[_id] = err
             else:
-                self.logger.error("Callback returned with OK")
+                self.logger.debug("Callback returned with OK")
                 obj.write(msg.value())
                 reader = DataFileReader(obj, DatumReader())
                 for x, message in enumerate(reader):
@@ -376,29 +382,36 @@ class SchemaHandler(object):
                 self.producer.flush()
                 self.wait_for_kafka(end_offset)
 
-            except Exception as err:
-                self.logger.error('error in Kafka save: %s' % err)
+            except Exception as ke:
+                self.logger.error('error in Kafka save: %s' % ke)
+                self.logger.error(traceback.format_exc())
                 sleep(1)
 
-    def wait_for_kafka(self, end_offset, timeout=10, iters_per_sec=100, failure_wait_time=10):
+    def wait_for_kafka(self, end_offset, timeout=10, iters_per_sec=10, failure_wait_time=10):
         sleep_time = timeout / (timeout * iters_per_sec)
         change_set_size = len(self.change_set)
         errors = {}
         for i in range(timeout * iters_per_sec):
 
             for _id, err in self.failed_changes.items():
-                error_type = str(err.name())
                 # accumulate error types
-                del self.change_set[_id]
-                errors[error_type] = errors.get(error_type, 0) + 1
+                error_type = str(err.name())
+                try:
+                    del self.change_set[_id]
+                    errors[error_type] = errors.get(error_type, 0) + 1
+                except KeyError as ke:
+                    pass  # could have been removed on previous iter
 
-            if len(self.failed_changes) == change_set_size:
+
+            if len(self.failed_changes) >= change_set_size:
                 # whole changeset failed; systemic failure likely; sleep it off and try again
-                self.status["last_changeset_errors"] = {
-                    "changes" : change_set_size,
-                    "errors" errors,
-                    "timestamp" : datetime.now().isoformat()
+                self.status["last_errors_set"] = {
+                    "changes": change_set_size,
+                    "errors": errors,
+                    "outcome" : "RETRY",
+                    "timestamp": datetime.now().isoformat()
                     }
+                self.context.kafka = False
                 self.logger.debug(
                     'Changeset not saved; likely broker outage, sleeping worker for %s' % self.name)
                 self.failed_changes = {}
@@ -412,7 +425,10 @@ class SchemaHandler(object):
                 break  # all were saved, so that's nice
 
             for _id in self.successful_changes:
-                del self.change_set[_id]
+                try:
+                    del self.change_set[_id]
+                except KeyError:
+                    pass  # could have been removed on previous iter
 
             if len(self.change_set) == 0:
                 # no more in flight changes
@@ -421,11 +437,27 @@ class SchemaHandler(object):
             sleep(sleep_time)
 
         if errors:
-            self.status["last_changeset_errors"] = {
-                    "changes" : change_set_size,
-                    "errors" errors,
-                    "timestamp" : datetime.now().isoformat()
+            for _id, err in self.failed_changes.items():
+                self.logger.error('SAVE FAILURE: T: %s ID %s , ERR_MSG %s' % (
+                    self.name, _id, err.name()))
+            dropped_messages = change_set_size - len(self.successful_changes)
+            errors["NO_REPLY"] = dropped_messages -len(self.failed_changes)
+            self.status["last_errors_set"] = {
+                    "changes": change_set_size,
+                    "errors": errors,
+                    "failed": len(self.failed_changes),
+                    "succeeded": len(self.successful_changes),
+                    "outcome" : "MSGS_DROPPED : %s" % dropped_messages,
+                    "timestamp": datetime.now().isoformat()
                     }
+            self.logger.error(self.status.get('last_errors_set'))
+        self.status["last_changeset_status"] = {
+                    "changes": change_set_size,
+                    "failed": len(self.failed_changes),
+                    "succeeded": len(self.successful_changes),
+                    "timestamp": datetime.now().isoformat()
+        }
+        self.context.kafka = True
         self.failed_changes = {}
         self.successful_changes = []
         self.change_set = {}
@@ -441,10 +473,8 @@ class SchemaHandler(object):
             else:
                 raise ValueError('No entry for %s' % self.name)
         except Exception as err:
-            msg = 'Could not get offset for %s assuming it is a new type| %s' % (
-                self.name, err)
+            msg = 'Could not get offset for %s last_errors_set it is a new type' % (self.name)
             self.logger.error(msg)
-            self.status['latest_msg'] = msg
             return ""
 
     def set_offset(self, offset):

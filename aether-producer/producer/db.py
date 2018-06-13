@@ -87,6 +87,7 @@ class Offset(Base):
 
     @classmethod
     def update(cls, name, offset_value):
+        # Update or Create if not existing
         try:
             session = get_session()
             offset = session.query(cls).filter_by(
@@ -98,8 +99,13 @@ class Offset(Base):
                 session.commit()
                 return offset
             else:
-                raise ValueError('No row with matching name %s' % name)
-                return None
+                offset = cls(
+                    schema_name=name,
+                    offset_value=offset_value
+                )
+                session.add(offset)
+                session.commit()
+                return offset
         except Exception as err:
             logger.error('Could not save offset for topic %s | %s' % (name, err))
             return offset

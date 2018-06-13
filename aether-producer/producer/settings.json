@@ -2,11 +2,11 @@
     "offset_db_url" : "sqlite:///offset.db",
     "start_delay": 5,
     "sleep_time": 10,
-    "log_level" : "DEBUG",
+    "log_level" : "ERROR",
     "jdbc_connection_string": "jdbc:postgresql://db:5432/aether?user=postgres",
     "jdbc_user": "postgres",
     "offset_file": "offset.json",
-    "postgres_pull_limit" : 100,
+    "postgres_pull_limit" : 250,
     "postgres_connection_info": {
         "user" : "postgres",
         "dbname" : "aether",
@@ -20,7 +20,7 @@
     },
     "kafka_settings" : {
         "bootstrap.servers": "kafka:29092",
-        "acks" : 2,
+        "acks" : 1,
         "max.in.flight.requests.per.connection" : 1,
         "linger.ms" : 200,
         "retry.backoff.ms": 25,
