@@ -1,10 +1,10 @@
 {
+    "offset_db_url" : "sqlite:///test-offset.db",
     "start_delay": 5,
-    "sleep_time": 2,
-    "jdbc_connection_string": "jdbc:postgresql://db-test:5432/aether?user=postgres",
-    "jdbc_user": "postgres",
-    "offset_file": "test-offset.json",
-    "postgres_pull_limit" : 10000,
+    "sleep_time": 10,
+    "log_level" : "ERROR",
+    "offset_file": "offset.json",
+    "postgres_pull_limit" : 250,
     "postgres_connection_info": {
         "user" : "postgres",
         "dbname" : "kernel-test",
@@ -16,9 +16,9 @@
         "username": "admin-kernel",
         "password": "adminadmin"
     },
-    "kafka_settings" :     {
+    "kafka_settings" : {
         "bootstrap.servers": "kafka-test:29092",
-        "acks" : 2,
+        "acks" : 1,
         "max.in.flight.requests.per.connection" : 1,
         "linger.ms" : 200,
         "retry.backoff.ms": 25,
@@ -33,7 +33,11 @@
 
     },
     "flask_settings": {
-        "port" : 5005,
-        "max_connections" : 10
+        "port" : 5009,
+        "max_connections" : 3
+    },
+    "topic_settings" : {
+        "name_modifier" : "%s"
+
     }
 }

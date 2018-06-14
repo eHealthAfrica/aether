@@ -16,132 +16,263 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from gevent import monkey, sleep
+# need to patch sockets to make requests async
+monkey.patch_all()
+import psycogreen.gevent
+psycogreen.gevent.patch_psycopg()
+
 import ast
+from collections import UserDict
+from contextlib import contextmanager
+from datetime import datetime
+import gevent
+from gevent.pool import Pool
 import io
 import json
+import logging
 import os
 import psycopg2
 import signal
-import avro.schema
+import spavro.schema
 import sys
+import traceback
 
-from avro.datafile import DataFileWriter
-from avro.io import DatumWriter
-from avro.io import Validate
-
-
-from kafka import KafkaProducer, KafkaConsumer
 from aether.client import KernelClient
+from flask import Flask, Response, request, abort, jsonify
+from gevent.pywsgi import WSGIServer
+from confluent_kafka import Producer, Consumer, KafkaException
 from psycopg2.extras import DictCursor
-from time import sleep as Sleep
+from requests.exceptions import ConnectionError
+from spavro.datafile import DataFileWriter, DataFileReader
+from spavro.io import DatumWriter, DatumReader
+from spavro.io import validate
+from urllib3.exceptions import MaxRetryError
+
+from producer import db
+from producer.db import Offset
 
 FILE_PATH = os.path.dirname(os.path.realpath(__file__))
-SETTINGS_FILE = "%s/settings.json" % FILE_PATH
-TEST_SETTINGS_FILE = "%s/test_settings.json" % FILE_PATH
 
 
-class Settings(object):
-
+class Settings(UserDict):
+    # A container for our settings
     def __init__(self, test=False):
+        SETTINGS_FILE = "%s/settings.json" % FILE_PATH
+        TEST_SETTINGS_FILE = "%s/test_settings.json" % FILE_PATH
+        self.data = {}
         if test:
             self.load(TEST_SETTINGS_FILE)
         else:
             self.load(SETTINGS_FILE)
+
     def load(self, path):
         with open(path) as f:
             obj = json.load(f)
             for k in obj:
-                setattr(self, k, obj.get(k))
-            self.offset_path = "%s/%s" % (FILE_PATH, self.offset_file)
+                self.data[k] = obj.get(k)
+            self.data['offset_path'] = "%s/%s" % (
+                FILE_PATH, self.data['offset_file'])
 
 
-def connect(_settings, retry=3):
-    kernel = None
-    consumer = None
-    for x in range(retry):
-        try:
-            kernel = KernelClient(url=_settings.kernel_url, **_settings.kernel_credentials)
-            break
-        except Exception as e:
-            Sleep(_settings.start_delay)
-    if not kernel:
-        print("No connection to AetherKernel")
-        sys.exit(1)
-    for x in range(retry):
-        try:
-            consumer = KafkaConsumer(bootstrap_servers=_settings.kafka_server)
-            break
-        except Exception as err:
-            Sleep(_settings.start_delay)
-    if not consumer:
-        print("No connection to Kafka")
-        sys.exit(1)
-    return kernel
-
-
-def set_offset_value(key, value):
-    offsets = {}
-    try:
-        with open(_settings.offset_path) as f:
-            offsets = json.load(f)
-            try:
-                offsets[key] = value
-            except TypeError as te:
-                offsets = {key: value}
-    except IOError as ioe:
-        offsets = {key: value}
-    with open (_settings.offset_path, "w") as f:
-        json.dump(offsets, f)
-
-
-def get_offset(key):
-    try:
-        with open(_settings.offset_path) as f:
-            offsets = json.load(f)
-            try:
-                return offsets[key]
-            except ValueError as e:
-                None
-    except IOError as ioe:
-        return None
-
-
-def count_since(offset=None, topic=None):
-    if not offset:
-        offset = ""
-    with psycopg2.connect(**_settings.postgres_connection_info) as conn:
-        cursor = conn.cursor(cursor_factory=DictCursor)
-        # We'd originally used a 'count(CASE WHEN e.modified >'
-        # That broke mysteriously and borked everything so we're using a less optimal call.
-        # Benchmarks show it good enough for now but probably should be fixed  # TODO
-        count_str = '''
-            SELECT
-                e.id,
-                e.modified,
-                ps.name as project_schema_name,
-                ps.id as project_schema_id,
-                s.name as schema_name,
-                s.id as schema_id
-            FROM kernel_entity e
-            inner join kernel_projectschema ps on e.projectschema_id = ps.id
-            inner join kernel_schema s on ps.schema_id = s.id
-            WHERE e.modified > '%s'
-        ''' % (offset)
-        if topic:
-            count_str += '''AND ps.name = '%s'
-            ORDER BY e.modified ASC;''' % topic
+class KernelHandler(object):
+    # Context for Kernel, which nulls kernel for reconnection if an error occurs
+    # Errors of type ignored_exceptions are logged but don't null kernel
+    def __init__(self, handler, ignored_exceptions=None):
+        self.handler = handler
+        self.log = self.handler.logger
+        if ignored_exceptions is not None and isinstance(ignored_exceptions, list) is not True:
+            self.ignored_exceptions = [ignored_exceptions]
+        elif ignored_exceptions is not None:
+            self.ignored_exceptions = ignored_exceptions
         else:
-            count_str += '''ORDER BY e.modified ASC;'''
-        cursor.execute(count_str);
-        return sum([1 for row in cursor])
+            self.ignored_exceptions = []
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_val, traceback):
+        if exc_type:
+            if exc_type in self.ignored_exceptions:
+                return True
+            self.handler.kernel = None
+            self.log.error("Lost Kernel Connection: %s" % exc_type)
+            return True
+        return True
 
 
-def get_entities(offset = None, max_size=1000):  # TODO implement batch pull by topic in Stream
-    if not offset:
-        offset = ""
-    with psycopg2.connect(**_settings.postgres_connection_info) as conn:
-        cursor = conn.cursor(cursor_factory=DictCursor)
-        query_str = '''
+class ServerHandler(object):
+    # Serves status & healthcheck over HTTP
+    # Dispatches Signals
+    # Keeps track of schemas
+    # Spawns/ Manages all Topics
+
+    def __init__(self, settings):
+        self.settings = settings
+        # Start Signal Handlers
+        self.killed = False
+        signal.signal(signal.SIGTERM, self.kill)
+        signal.signal(signal.SIGINT, self.kill)
+        gevent.signal(signal.SIGTERM, self.kill)
+        # Turn on Flask Endpoints
+        self.serve()
+        self.add_endpoints()
+        # Initialize Offsetdb
+        self.init_db()
+        # Clear objects and start
+        self.kernel = None
+        self.kafka = False
+        self.schema_handlers = {}
+        self.run()
+
+    def keep_alive_loop(self):
+        # Keeps the server up in case all other threads join at the same time.
+        while not self.killed:
+            sleep(1)
+
+    def run(self):
+        self.threads = []
+        self.threads.append(gevent.spawn(self.keep_alive_loop))
+        self.threads.append(gevent.spawn(self.connect_aether))
+        self.threads.append(gevent.spawn(self.check_schemas))
+        gevent.joinall(self.threads)
+
+    def update_schema(self, name):
+        pass
+
+    def kill(self, *args, **kwargs):
+        # Stops HTTP service and flips stop switch, which is read by greenlets
+        self.app.logger.warn('Shutting down gracefully')
+        self.http.stop()
+        self.http.close()
+        self.worker_pool.kill()
+        self.killed = True
+
+    def safe_sleep(self, dur):
+        # keeps shutdown time low
+        for x in range(dur):
+            if not self.killed:
+                sleep(1)
+
+    # Connectivity
+
+    # Connect to sqlite
+    def init_db(self):
+        url = self.settings.get('offset_db_url')
+        db.init(url)
+        self.logger.info("OffsetDB initialized at %s" % url)
+
+    # Maintain Aether Connection
+    def connect_aether(self):
+        self.logger.info('Connecting to Aether...')
+        self.kernel = None
+        while not self.killed:
+            try:
+                if not self.kernel:
+                    with KernelHandler(self, ignored_exceptions=[MaxRetryError, ConnectionError]):
+                        self.kernel = KernelClient(
+                            url=self.settings['kernel_url'],
+                            **self.settings['kernel_credentials']
+                        )
+                        self.logger.info('Connected to Aether.')
+                        continue
+                    self.safe_sleep(self.settings['start_delay'])
+                else:
+                    self.safe_sleep(1)
+            except Exception as e:
+                self.logger.info('No Aether connection...')
+                self.safe_sleep(self.settings['start_delay'])
+
+        self.logger.debug('No longer attempting to connect to Aether')
+
+    # Main Kafka / Schema Loop
+    def check_schemas(self):
+        # Checks for schemas in Kernel
+        # Creates SchemaHandlers for found schemas.
+        # Updates SchemaHandler.schema on schema change
+        while not self.killed:
+            if not self.kernel:
+                sleep(1)
+            else:
+                schemas = []
+                with KernelHandler(self):
+                    self.kernel.refresh()
+                    schemas = [
+                        schema for schema in self.kernel.Resource.Schema]
+                for schema in schemas:
+                    if not schema.name in self.schema_handlers.keys():
+                        self.logger.info(
+                            "New topic connected: %s" % schema.name)
+                        self.schema_handlers[schema.name] = SchemaHandler(
+                            self, schema)
+                    else:
+                        res = self.schema_handlers[schema.name]
+                        if res.schema_obj != res.parse_schema(schema):
+                            res.update_schema(schema)
+                            self.logger.info("Schema %s updated" % schema.name)
+                        else:
+                            self.logger.debug("Schema %s unchanged" % schema.name)
+                # Time between checks for schema change
+                self.safe_sleep(10)
+        self.logger.debug('No longer checking schemas')
+
+    # Flask Functions
+
+    def add_endpoints(self):
+        # URLS configured here
+        self.register('healthcheck', self.request_healthcheck)
+        self.register('status', self.request_status)
+
+    def register(self, route_name, fn):
+        self.app.add_url_rule('/%s' % route_name, route_name, view_func=fn)
+
+    def serve(self):
+        self.app = Flask(__name__)  # pylint: disable=invalid-name
+        self.logger = self.app.logger
+        log_level = logging.getLevelName(
+            self.settings.get('log_level', 'DEBUG'))
+        self.logger.setLevel(log_level)
+        self.app.debug = True
+        pool_size = self.settings.get(
+            'flask_settings', {}).get('max_connections', 1)
+        port = self.settings.get('flask_settings', {}).get('port', 5005)
+        self.worker_pool = Pool(pool_size)
+        self.http = WSGIServer(
+            ('', port), self.app.wsgi_app, spawn=self.worker_pool)
+        self.http.start()
+
+    # Exposed Request Endpoints
+
+    def request_healthcheck(self):
+        with self.app.app_context():
+            return Response({"healthy": True})
+
+    def request_status(self):
+        status = {
+                "kernel": self.kernel is not None,  # This is a real object
+                "kafka": self.kafka is not False,   # This is just a status flag
+                "topics": {k: v.get_status() for k, v in self.schema_handlers.items()}
+            }
+        with self.app.app_context():
+            return jsonify(status)
+
+
+class SchemaHandler(object):
+
+    # Changes detection
+    NEW_STR = '''
+        SELECT
+            e.id,
+            e.modified
+        FROM kernel_entity e
+        inner join kernel_projectschema ps on e.projectschema_id = ps.id
+        inner join kernel_schema s on ps.schema_id = s.id
+        WHERE e.modified > '%s'
+        AND s.name = '%s'
+        LIMIT 1; '''
+
+    # Changes query
+    QUERY_STR = '''
             SELECT
                 e.id,
                 e.revision,
@@ -157,135 +288,254 @@ def get_entities(offset = None, max_size=1000):  # TODO implement batch pull by 
             inner join kernel_projectschema ps on e.projectschema_id = ps.id
             inner join kernel_schema s on ps.schema_id = s.id
             WHERE e.modified > '%s'
+            AND s.name = '%s'
             ORDER BY e.modified ASC
             LIMIT %d;
-        '''  % (offset, max_size)
-        cursor.execute(query_str)
-        for row in cursor:
-            yield {key : row[key] for key in row.keys()}
+        '''
 
-
-class KafkaStream(object):
-    def __init__(self, topic, kernel):
-        self.topic = topic
-        self.kernel = kernel
-        #connect to Server
-        self.producer = KafkaProducer(bootstrap_servers=_settings.kafka_server, acks=1, key_serializer=str.encode)
-        self.get_avro()
-        print ("Connected to stream for topic: %s" % self.topic)
-
-
-    def send(self, row):
-        msg = row.get("payload")
-        offset = row.get("modified")
-        bytes_writer = io.BytesIO()
-        valid = Validate(self.schema, msg)
-        if not valid:
-            raise ValueError("message doesn't adhere to schema \n%s\n%s" % (json.dumps(self.schema), json.dumps(msg)))
+    def __init__(self, server_handler, schema):
+        self.context = server_handler
+        self.logger = self.context.logger
+        self.name = schema.name
+        self.modified = ""
+        self.limit = self.context.settings.get('postgres_pull_limit', 100)
+        self.status = {
+            "last_errors_set": {},
+            "last_changeset_status": {}
+        }
+        self.change_set = {}
+        self.successful_changes = []
+        self.failed_changes = {}
+        self.pg_creds = self.context.settings.get('postgres_connection_info')
         try:
-            bytes_writer = io.BytesIO()
-            writer = DataFileWriter(bytes_writer, DatumWriter(), self.schema, codec='deflate')
-            writer.append(msg)
-            writer.flush()
-            raw_bytes = bytes_writer.getvalue()
-            writer.close()
-            future = self.producer.send(self.topic, key=str(msg.get("id")), value=raw_bytes)
-            #block until it actually sends. We don't want offsets getting out of sync
-            try:
-                record_metadata = future.get(timeout=10)
-            except Exception as ke:
-                print ("Error submitting record")
-                raise ke
-            self.producer.flush()
-            set_offset_value("entities", offset)
+            self.topic_name = self.context.settings \
+                .get('topic_settings', {}) \
+                .get('name_modifier', "%s") \
+                % self.name
+        except Exception as err:  # Bad Name
+            self.topic_name = self.name
+        self.update_schema(schema)
+        self.producer = Producer(**self.context.settings.get('kafka_settings'))
+        # Spawn worker and give to pool.
+        self.context.threads.append(gevent.spawn(self.update_kafka))
 
-        except Exception as e:
-            print ("Issue with Topic %s : %s" % (self.topic, e))
-            raise e
+    def updates_available(self):
+        query = SchemaHandler.NEW_STR % (self.modified, self.name)
+        with psycopg2.connect(**self.pg_creds) as conn:
+            cursor = conn.cursor(cursor_factory=DictCursor)
+            cursor.execute(query)
+            return sum([1 for i in cursor]) > 0
 
+    def get_db_updates(self):
+        query = SchemaHandler.QUERY_STR % (
+            self.modified, self.name, self.limit)
+        with psycopg2.connect(**self.pg_creds) as conn:
+            cursor = conn.cursor(cursor_factory=DictCursor)
+            cursor.execute(query)
+            return [{key: row[key] for key in row.keys()} for row in cursor]
 
-    def get_avro(self):
-        #Gets avro schema used for encoding messages
-        #TODO Fix issue with json coming from API Client being single quoted
-        definition = ast.literal_eval(str(self.kernel.Resource.Schema.get(self.topic).definition))
-        self.schema = avro.schema.Parse(json.dumps(definition))
+    def update_schema(self, schema_obj):
+        self.schema_obj = self.parse_schema(schema_obj)
+        self.schema = spavro.schema.parse(json.dumps(self.schema_obj))
 
+    def parse_schema(self, schema_obj):
+        return ast.literal_eval(str(schema_obj.definition))
 
-    def stop(self):
-        self.producer.flush()
-        self.producer.close()
+    def get_status(self):
+        # Updates inflight status and returns to Flask called
+        self.status['inflight'] = [i for i in self.change_set.keys()]
+        return self.status
 
-
-class StreamManager(object):
-
-
-    def __init__(self, kernel):
-        self.killed = False
-        signal.signal(signal.SIGINT, self.kill) #SIGTERM ends run
-        signal.signal(signal.SIGTERM, self.kill)
-        self.kernel = kernel
-        self.streams = {}
-        self.start()
-
-
-    def start(self):
-        self.kernel.refresh()
-        topics = self.kernel.Resource.Schema
-        for topic in topics:
-            self.streams[topic.name] = KafkaStream(topic.name, self.kernel)
-
-
-    def send(self, row_generator):
-        for row in row_generator:
-            if self.killed: #look for sigterm
-                print ("manager stopped in progress via signal")
-                return
-            topic = row.get("schema_name")
-            self.streams[topic].send(row)
-        print ("manager finished processing changes")
-
-
-    def stop(self):
-        for name, stream in self.streams.items():
-            stream.stop()
-            print ("released connection to topic: %s" % name)
-        self.streams = {}
-        print ("manager stopped")
-
-    def kill(self, *args, **kwargs):
-        self.killed = True
-
-def main_loop(test=False):
-    global _settings
-    _settings = Settings(test)
-    manager = None
-    kernel = connect(_settings, retry=3)
-    try:
-        while True:
-            offset = get_offset("entities")
-            new_items = count_since(offset)
-            if new_items:
-                print ("Found %s new items, processing" % new_items)
-                entities = get_entities(offset)
-                manager = StreamManager(kernel)
-                manager.send(entities)
-                manager.stop()
-                if manager.killed:
-                    print("processed stopped by SIGTERM")
-                    break
-                manager = None
+    # Callback function registered with Kafka Producer to acknowledge receipt
+    def kafka_callback(self, err=None, msg=None, _=None, **kwargs):
+        try:
+            obj = io.BytesIO()
+            if err:
+                obj.write(msg.value())
+                reader = DataFileReader(obj, DatumReader())
+                for x, message in enumerate(reader):
+                    _id = message.get("id")
+                    self.logger.info("NO-SAVE: %s in topic %s | err %s" %
+                                      (_id, self.topic_name, err.name()))
+                    self.failed_changes[_id] = err
             else:
-                # print("Sleeping for %s" % (_settings.sleep_time))
-                Sleep(_settings.sleep_time)
-    except KeyboardInterrupt as ek:
-        print ("Caught Keyboard interrupt")
-        if manager:
-            print ("Trying to kill manager")
-            manager.stop()
-    finally:
-        if manager:
-            manager.stop()
+                obj.write(msg.value())
+                reader = DataFileReader(obj, DatumReader())
+                for x, message in enumerate(reader):
+                    _id = message.get("id")
+                    self.logger.debug("SAVE: %s in topic %s" %
+                                      (_id, self.topic_name))
+                    self.successful_changes.append(_id)
+        except Exception as error:
+            self.logger.debug('ERROR %s ', [error, _, msg, err, kwargs])
+        finally:
+            obj.close()
+
+    def update_kafka(self):
+        # Main update loop
+        # Takes records from PostGres
+        # Gives them to Kafka
+        # Kicks off wait for receipt acknowledgement before saving new offset
+        while not self.context.killed:
+
+            self.modified = self.get_offset()
+            if not self.updates_available():
+                self.logger.debug('No updates')
+                sleep(1)
+                continue
+            try:
+                self.logger.debug("Getting Changeset for %s" % self.name)
+                self.change_set = {}
+                new_rows = self.get_db_updates()
+                end_offset = new_rows[-1].get('modified')
+
+                bytes_writer = io.BytesIO()
+                writer = DataFileWriter(
+                    bytes_writer, DatumWriter(), self.schema, codec='deflate')
+
+                for row in new_rows:
+                    _id = row['id']
+                    msg = row.get("payload")
+                    self.change_set[_id] = row
+                    writer.append(msg)
+
+                writer.flush()
+                raw_bytes = bytes_writer.getvalue()
+                writer.close()
+
+                self.producer.produce(
+                    self.topic_name,
+                    raw_bytes,
+                    callback=self.kafka_callback
+                )
+                self.producer.flush()
+                self.wait_for_kafka(end_offset)
+
+            except Exception as ke:
+                self.logger.error('error in Kafka save: %s' % ke)
+                self.logger.error(traceback.format_exc())
+                sleep(1)
+
+    def wait_for_kafka(self, end_offset, timeout=10, iters_per_sec=10, failure_wait_time=10):
+        # Waits for confirmation of message receipt from Kafka before moving to next changeset
+        # Logs errors and status to log and to web interface
+
+        sleep_time = timeout / (timeout * iters_per_sec)
+        change_set_size = len(self.change_set)
+        errors = {}
+        for i in range(timeout * iters_per_sec):
+
+            # whole changeset failed; systemic failure likely; sleep it off and try again
+            if len(self.failed_changes) >= change_set_size:
+                self.handle_kafka_errors(
+                    change_set_size, all_failed=True, failure_wait_time=failure_wait_time)
+                self.clear_changeset()
+                self.logger.info(
+                    'Changeset not saved; likely broker outage, sleeping worker for %s' % self.name)
+                self.context.safe_sleep(failure_wait_time)
+                return  # all failed; ignore changeset
+
+            # All changes were saved
+            elif len(self.successful_changes) == change_set_size:
+
+                self.logger.debug('All changes saved ok.')
+                break
+
+            # Remove successful and errored changes
+            for _id, err in self.failed_changes.items():
+                try:
+                    del self.change_set[_id]
+                except KeyError as ke:
+                    pass  # could have been removed on previous iter
+            for _id in self.successful_changes:
+                try:
+                    del self.change_set[_id]
+                except KeyError:
+                    pass  # could have been removed on previous iter
+
+            # All changes registered
+            if len(self.change_set) == 0:
+                break
+
+            self.context.safe_sleep(sleep_time)
+
+        # Timeout reached or all messages returned ( and not all failed )
+
+        self.status["last_changeset_status"] = {
+                    "changes": change_set_size,
+                    "failed": len(self.failed_changes),
+                    "succeeded": len(self.successful_changes),
+                    "timestamp": datetime.now().isoformat()
+        }
+        if errors:
+            self.handle_kafka_errors(change_set_size, all_failed=False)
+        self.clear_changeset()
+        # Once we're satisfied, we set the new offset past the processed messages
+        self.context.kafka = True
+        self.set_offset(end_offset)
+
+    def handle_kafka_errors(self, change_set_size, all_failed=False, failure_wait_time=10):
+        # Errors in saving data to Kafka are handled and logged here
+        errors = {}
+        for _id, err in self.failed_changes.items():
+            # accumulate error types
+            error_type = str(err.name())
+            errors[error_type] = errors.get(error_type, 0) + 1
+
+        last_error_set = {
+                    "changes": change_set_size,
+                    "errors": errors,
+                    "outcome" : "RETRY",
+                    "timestamp": datetime.now().isoformat()
+                    }
+
+        if not all_failed:
+            # Collect Error types for reporting
+            for _id, err in self.failed_changes.items():
+                self.logger.error('KernelHandlerFAILURE: T: %s ID %s , ERR_MSG %s' % (
+                    self.name, _id, err.name()))
+            dropped_messages = change_set_size - len(self.successful_changes)
+            errors["NO_REPLY"] = dropped_messages -len(self.failed_changes)
+            last_error_set["failed"] = len(self.failed_changes),
+            last_error_set["succeeded"] = len(self.successful_changes),
+            last_error_set["outcome"] = "MSGS_DROPPED : %s" % dropped_messages,
+
+        self.status["last_errors_set"] = last_error_set
+        if all_failed:
+            self.context.kafka = False
+        return
+
+    def clear_changeset(self):
+        self.failed_changes = {}
+        self.successful_changes = []
+        self.change_set = {}
 
 
-if __name__ == "__main__":
-    main_loop()
+    def get_offset(self):
+        # Get current offset from Database
+        try:
+            offset = Offset.get_offset(self.name)
+            if offset:
+                self.logger.debug("Got offset for %s | %s" % (self.name, offset.offset_value))
+                return offset.offset_value
+            else:
+                raise ValueError('No entry for %s' % self.name)
+        except Exception as err:
+            self.logger.error('Could not get offset for %s it is a new type' % (self.name))
+            return "" # No valid offset so return empty string which is < any value
+
+    def set_offset(self, offset):
+        # Set a new offset in the database
+        new_offset = Offset.update(self.name, offset)
+        if not new_offset:
+            self.logger.info('Creating new offset entry for %s' % self.name)
+            Offset.create(schema_name=self.name, offset_value=offset)
+        else:
+            self.logger.debug("new offset for %s | %s" %
+                              (self.name, new_offset.offset_value))
+        self.status['offset'] = new_offset.offset_value
+
+
+def main(test=False):
+    settings = Settings(test=test)
+    handler = ServerHandler(settings)
