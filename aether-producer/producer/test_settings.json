@@ -16,6 +16,7 @@
         "username": "admin-kernel",
         "password": "adminadmin"
     },
+    "kafka_failure_wait_time" : 4,
     "kafka_settings" : {
         "bootstrap.servers": "kafka-test:29092",
         "acks" : 1,
@@ -33,7 +34,7 @@
 
     },
     "flask_settings": {
-        "port" : 5009,
+        "port" : 9005,
         "max_connections" : 3
     },
     "topic_settings" : {

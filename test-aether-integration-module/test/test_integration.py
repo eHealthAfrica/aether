@@ -22,7 +22,11 @@ def test_4_check_updated_count(existing_entities, generate_entities):
     assert(len(existing_entities.get(SEED_TYPE)) >= SEED_ENTITIES)
 
 
-def test_5_check_stream_entities(read_people, existing_entities):
+def test_5_check_producer_status(existing_entities, producer_status):
+    assert(len(existing_entities.get(SEED_TYPE)) == producer_status)
+
+
+def test_6_check_stream_entities(read_people, existing_entities):
     kernel_messages = [msg.get("payload").get("id") for msg in existing_entities.get(SEED_TYPE)]
     kafka_messages = [msg.get("id") for msg in read_people]
     assert(len(kernel_messages) == len(kafka_messages))

@@ -307,6 +307,7 @@ class SchemaHandler(object):
         self.successful_changes = []
         self.failed_changes = {}
         self.pg_creds = self.context.settings.get('postgres_connection_info')
+        self.kafka_failure_wait_time = self.context.settings.get('kafka_failure_wait_time', 10)
         try:
             self.topic_name = self.context.settings \
                 .get('topic_settings', {}) \
@@ -409,7 +410,7 @@ class SchemaHandler(object):
                     callback=self.kafka_callback
                 )
                 self.producer.flush()
-                self.wait_for_kafka(end_offset)
+                self.wait_for_kafka(end_offset, failure_wait_time=self.kafka_failure_wait_time)
 
             except Exception as ke:
                 self.logger.error('error in Kafka save: %s' % ke)

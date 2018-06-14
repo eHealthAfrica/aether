@@ -181,6 +181,8 @@ services:
     extends:
       file: docker-compose-base.yml
       service: aether-producer-base
+    ports:
+      - "9005:9005"
     links:
       - kafka-test
       - zookeeper-test

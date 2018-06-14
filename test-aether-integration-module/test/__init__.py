@@ -18,11 +18,14 @@
 
 import pytest
 from time import sleep
+import requests
 
 from aether.client import KernelClient
 import aether.saladbar.wizard as wizard
 
+
 from .consumer import get_consumer, read
+
 
 KERNEL_URL = "http://kernel-test:9000/v1"
 
@@ -76,6 +79,27 @@ def existing_schemas(aether_client):
 @pytest.fixture(scope="module")
 def existing_projectschemas(aether_client):
     return [i for i in aether_client.Resource.ProjectSchema]
+
+
+@pytest.fixture(scope="function")
+def producer_status():
+    max_retry = 30
+    url = "http://producer-test:9005/status"
+    for x in range(max_retry):
+        try:
+            status = requests.get(url).json()
+            kafka = status.get('kafka')
+            if not kafka:
+                raise ValueError('Kafka not connected yet')
+            person = status.get('topics', {}).get(SEED_TYPE, {})
+            ok_count = person.get('last_changeset_status', {}).get('succeeded')
+            if ok_count:
+                return ok_count
+            else:
+                sleep(1)
+        except Exception as err:
+            print(err)
+            sleep(1)
 
 
 @pytest.fixture(scope="function")

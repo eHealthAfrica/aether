@@ -16,6 +16,7 @@
         "username": "admin-kernel",
         "password": "adminadmin"
     },
+    "kafka_failure_wait_time" : 10,
     "kafka_settings" : {
         "bootstrap.servers": "kafka:29092",
         "acks" : 1,
