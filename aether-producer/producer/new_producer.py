@@ -75,10 +75,9 @@ class Settings(UserDict):
                 FILE_PATH, self.data['offset_file'])
 
 
-class kHandler(object):
+class KernelHandler(object):
     # Context for Kernel, which nulls kernel for reconnection if an error occurs
-    # We can catch some error types if required for just logging
-    # Errors in classes ignored_exceptions are logged but don't null kernel
+    # Errors of type ignored_exceptions are logged but don't null kernel
     def __init__(self, handler, ignored_exceptions=None):
         self.handler = handler
         self.log = self.handler.logger
@@ -97,12 +96,17 @@ class kHandler(object):
             if exc_type in self.ignored_exceptions:
                 return True
             self.handler.kernel = None
-            self.log.error("Lost Aether Connection: %s" % exc_type)
+            self.log.error("Lost Kernel Connection: %s" % exc_type)
             return True
         return True
 
 
 class ServerHandler(object):
+    # Serves status & healthcheck over HTTP
+    # Dispatches Signals
+    # Keeps track of schemas
+    # Spawns/ Manages all Topics
+
     def __init__(self, settings):
         self.settings = settings
         # Start Signal Handlers
@@ -122,6 +126,7 @@ class ServerHandler(object):
         self.run()
 
     def keep_alive_loop(self):
+        # Keeps the server up in case all other threads join at the same time.
         while not self.killed:
             sleep(1)
 
@@ -136,11 +141,18 @@ class ServerHandler(object):
         pass
 
     def kill(self, *args, **kwargs):
+        # Stops HTTP service and flips stop switch, which is read by greenlets
         self.app.logger.warn('Shutting down gracefully')
         self.http.stop()
         self.http.close()
         self.worker_pool.kill()
         self.killed = True
+
+    def safe_sleep(self, dur):
+        # keeps shutdown time low
+        for x in range(dur):
+            if not self.killed:
+                sleep(1)
 
     # Connectivity
 
@@ -155,29 +167,34 @@ class ServerHandler(object):
         while not self.killed:
             try:
                 if not self.kernel:
-                    with kHandler(self, ignored_exceptions=[MaxRetryError, ConnectionError]):
+                    with KernelHandler(self, ignored_exceptions=[MaxRetryError, ConnectionError]):
                         self.kernel = KernelClient(
                             url=self.settings['kernel_url'],
                             **self.settings['kernel_credentials']
                         )
                         self.logger.info('Connected to Aether.')
                         continue
-                    sleep(self.settings['start_delay'])
+                    self.safe_sleep(self.settings['start_delay'])
                 else:
-                    sleep(1)
+                    self.safe_sleep(1)
             except Exception as e:
                 self.logger.info('No Aether connection...')
-                sleep(self.settings['start_delay'])
+                self.safe_sleep(self.settings['start_delay'])
 
         self.logger.debug('No longer attempting to connect to Aether')
 
+    # Main Kafka / Schema Loop
+
     def check_schemas(self):
+        # Checks for schemas in Kernel
+        # Creates SchemaHandlers for found schemas.
+        # Updates SchemaHandler.schema on schema change
         while not self.killed:
             if not self.kernel:
                 sleep(1)
             else:
                 schemas = []
-                with kHandler(self):
+                with KernelHandler(self):
                     self.kernel.refresh()
                     schemas = [
                         schema for schema in self.kernel.Resource.Schema]
@@ -188,12 +205,14 @@ class ServerHandler(object):
                         self.schema_handlers[schema.name] = SchemaHandler(
                             self, schema)
                     else:
-                        pass
-                        # print("old %s" % schema.name)
-                        # TODO UPDATE ON SCHEMA CHANGE
-                for x in range(10):
-                    if not self.killed:
-                        sleep(1)
+                        res = self.schema_handlers[schema.name]
+                        if res.schema_obj != schema:
+                            res.update_schema(schema)
+                            self.logger.info("Schema %s updated" % schema.name)
+                        else:
+                            self.logger.debug("Schema %s unchanged" % schema.name)
+                # Time between checks for schema change
+                self.safe_sleep(10)
         self.logger.debug('No longer checking schemas')
 
     # Flask Functions
@@ -313,6 +332,7 @@ class SchemaHandler(object):
             return [{key: row[key] for key in row.keys()} for row in cursor]
 
     def update_schema(self, schema_obj):
+        self.schema_obj = schema_obj
         schema = ast.literal_eval(str(schema_obj.definition))
         self.schema = spavro.schema.parse(json.dumps(schema))
 
@@ -347,6 +367,10 @@ class SchemaHandler(object):
             obj.close()
 
     def update_kafka(self):
+        # Main update loop
+        # Takes records from PostGres
+        # Gives them to Kafka
+        # Kicks off wait for receipt acknowledgement before saving new offset
         while not self.context.killed:
 
             self.modified = self.get_offset()
@@ -388,81 +412,99 @@ class SchemaHandler(object):
                 sleep(1)
 
     def wait_for_kafka(self, end_offset, timeout=10, iters_per_sec=10, failure_wait_time=10):
+        # Waits for confirmation of message receipt from Kafka before moving to next changeset
+        # Logs errors and status to log and to web interface
+
         sleep_time = timeout / (timeout * iters_per_sec)
         change_set_size = len(self.change_set)
         errors = {}
         for i in range(timeout * iters_per_sec):
 
-            for _id, err in self.failed_changes.items():
-                # accumulate error types
-                error_type = str(err.name())
-                try:
-                    del self.change_set[_id]
-                    errors[error_type] = errors.get(error_type, 0) + 1
-                except KeyError as ke:
-                    pass  # could have been removed on previous iter
-
-
+            # whole changeset failed; systemic failure likely; sleep it off and try again
             if len(self.failed_changes) >= change_set_size:
-                # whole changeset failed; systemic failure likely; sleep it off and try again
-                self.status["last_errors_set"] = {
-                    "changes": change_set_size,
-                    "errors": errors,
-                    "outcome" : "RETRY",
-                    "timestamp": datetime.now().isoformat()
-                    }
-                self.context.kafka = False
+                self.handle_kafka_errors(
+                    change_set_size, all_failed=True, failure_wait_time=failure_wait_time)
+                self.clear_changeset()
                 self.logger.debug(
                     'Changeset not saved; likely broker outage, sleeping worker for %s' % self.name)
-                self.failed_changes = {}
-                self.successful_changes = []
-                sleep(failure_wait_time)
-                self.logger.debug('Resuming worker for %s' % self.name)
+                self.context.safe_sleep(failure_wait_time)
                 return  # all failed; ignore changeset
 
+            # All changes were saved
             elif len(self.successful_changes) == change_set_size:
-                self.logger.debug('All changes saved ok.')
-                break  # all were saved, so that's nice
 
+                self.logger.debug('All changes saved ok.')
+                break
+
+            # Remove successful and errored changes
+            for _id, err in self.failed_changes.items():
+                try:
+                    del self.change_set[_id]
+                except KeyError as ke:
+                    pass  # could have been removed on previous iter
             for _id in self.successful_changes:
                 try:
                     del self.change_set[_id]
                 except KeyError:
                     pass  # could have been removed on previous iter
 
+            # All changes registered
             if len(self.change_set) == 0:
-                # no more in flight changes
                 break
 
-            sleep(sleep_time)
+            self.context.safe_sleep(sleep_time)
 
-        if errors:
-            for _id, err in self.failed_changes.items():
-                self.logger.error('SAVE FAILURE: T: %s ID %s , ERR_MSG %s' % (
-                    self.name, _id, err.name()))
-            dropped_messages = change_set_size - len(self.successful_changes)
-            errors["NO_REPLY"] = dropped_messages -len(self.failed_changes)
-            self.status["last_errors_set"] = {
-                    "changes": change_set_size,
-                    "errors": errors,
-                    "failed": len(self.failed_changes),
-                    "succeeded": len(self.successful_changes),
-                    "outcome" : "MSGS_DROPPED : %s" % dropped_messages,
-                    "timestamp": datetime.now().isoformat()
-                    }
-            self.logger.error(self.status.get('last_errors_set'))
+        # Timeout reached or all messages returned ( and not all failed )
+
         self.status["last_changeset_status"] = {
                     "changes": change_set_size,
                     "failed": len(self.failed_changes),
                     "succeeded": len(self.successful_changes),
                     "timestamp": datetime.now().isoformat()
         }
+        if errors:
+            self.handle_kafka_errors(change_set_size, all_failed=False)
+        self.clear_changeset()
+        # Once we're satisfied, we set the new offset past the processed messages
         self.context.kafka = True
+        self.set_offset(end_offset)
+
+    def handle_kafka_errors(self, change_set_size, all_failed=False, failure_wait_time=10):
+        # Errors in saving data to Kafka are handled and logged here
+        errors = {}
+        for _id, err in self.failed_changes.items():
+            # accumulate error types
+            error_type = str(err.name())
+            errors[error_type] = errors.get(error_type, 0) + 1
+
+        last_error_set = {
+                    "changes": change_set_size,
+                    "errors": errors,
+                    "outcome" : "RETRY",
+                    "timestamp": datetime.now().isoformat()
+                    }
+
+        if not all_failed:
+            # Collect Error types for reporting
+            for _id, err in self.failed_changes.items():
+                self.logger.error('KernelHandlerFAILURE: T: %s ID %s , ERR_MSG %s' % (
+                    self.name, _id, err.name()))
+            dropped_messages = change_set_size - len(self.successful_changes)
+            errors["NO_REPLY"] = dropped_messages -len(self.failed_changes)
+            last_error_set["failed"] = len(self.failed_changes),
+            last_error_set["succeeded"] = len(self.successful_changes),
+            last_error_set["outcome"] = "MSGS_DROPPED : %s" % dropped_messages,
+
+        self.status["last_errors_set"] = last_error_set
+        if all_failed:
+            self.context.kafka = False
+        return
+
+    def clear_changeset(self):
         self.failed_changes = {}
         self.successful_changes = []
         self.change_set = {}
-        # Once we're satisfied, we set the new offset past the processed messages
-        self.set_offset(end_offset)
+
 
     def get_offset(self):
         try:
@@ -473,7 +515,7 @@ class SchemaHandler(object):
             else:
                 raise ValueError('No entry for %s' % self.name)
         except Exception as err:
-            msg = 'Could not get offset for %s last_errors_set it is a new type' % (self.name)
+            msg = 'Could not get offset for %s it is a new type' % (self.name)
             self.logger.error(msg)
             return ""
 
