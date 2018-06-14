@@ -19,7 +19,6 @@
 import collections
 import json
 import re
-import os
 import string
 import uuid
 
