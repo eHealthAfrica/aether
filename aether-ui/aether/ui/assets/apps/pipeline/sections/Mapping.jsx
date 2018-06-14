@@ -133,11 +133,9 @@ class Mapping extends Component {
       })
     }
 
-    const hasError = (source, destination = null) => {
-      return this.props.selectedPipeline.mapping_errors.filter(
-        error => (error.path && (error.path === source || error.path === destination))
-      ).length > 0
-    }
+    const hasError = (source, destination = null) => (Boolean(this.props.selectedPipeline.mapping_errors.find(
+      error => (error.path && (error.path === source || error.path === destination))
+    )))
 
     return (
       <div key={rule.id} className={`${hasError(rule.source, rule.destination) && 'error'} rule`}>
