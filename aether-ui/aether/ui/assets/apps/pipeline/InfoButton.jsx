@@ -43,32 +43,33 @@ class InfoButton extends Component {
             submissionUrl
               ? (
                 <div>
-                  <div>
-                    <span>
+                  <div className='modal-section'>
+                    <label className='form-label'>
                       <FormattedMessage
                         id='info.modal.publishedDate'
-                        defaultMessage={`Published on ${moment(this.props.pipeline.published_on).format('DD MMMM, YYYY HH:mm:ss')}`}
+                        defaultMessage='Published on'
                       />
+                    </label>
+                    <span>
+                      {moment(this.props.pipeline.published_on).format('DD MMMM, YYYY HH:mm:ss')}
                     </span>
                   </div>
-                  <br />
-                  <div>
-                    <span>
+                  <div className='modal-section mt-5'>
+                    <label className='form-label'>
                       <FormattedMessage
                         id='info.modal.SubmissionUrl'
-                        defaultMessage='Submission URL: '
+                        defaultMessage='Submission URL'
                       />
-                    </span>
+                    </label>
                     <a href={submissionUrl}>{submissionUrl}</a>
                   </div>
-                  <br />
-                  <div>
-                    <span>
+                  <div className='modal-section mt-5'>
+                    <label className='form-label'>
                       <FormattedMessage
                         id='info.modal.SubmissionSample'
-                        defaultMessage='Submission sample data: '
+                        defaultMessage='Submission sample data'
                       />
-                    </span>
+                    </label>
                     <div className='code'>
                       <code>
                         { JSON.stringify(sampleData || [], 0, 2) }
@@ -86,7 +87,7 @@ class InfoButton extends Component {
               )
           }
         </Modal>
-        <img src='/static/images/fullscreen-icon.svg' onClick={this.setInfoModal.bind(this, true)} />
+        <i className='fas fa-info-circle published-info-icon' onClick={this.setInfoModal.bind(this, true)} />
       </span>
     )
   }
