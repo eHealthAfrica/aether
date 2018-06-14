@@ -60,6 +60,13 @@
         }
       }
     }
+
+    div.code {
+      background-color: $blue;
+      padding: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
   }
 
   .modal-actions {
