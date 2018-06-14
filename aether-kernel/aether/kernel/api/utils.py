@@ -120,7 +120,8 @@ def json_printable(obj):
         return obj
 
 
-custom_jsonpath_wildcard_regex = re.compile('(\$\.)*([a-zA-Z0-9_-]+\.)*?[a-zA-Z0-9_-]+\*')
+custom_jsonpath_wildcard_regex = re.compile(
+    '(\$\.)*([a-zA-Z0-9_-]+\.)*?[a-zA-Z0-9_-]+\*')
 incomplete_json_path_regex = re.compile('[a-zA-Z0-9_-]+\*')
 
 
@@ -186,7 +187,8 @@ def get_entity_definitions(mapping_definition, schemas):
     entities = [match.value for match in found_entities][0]
     for entity_definition in entities.items():
         entity_type, file_name = entity_definition
-        required_entities[entity_type] = JSP_get_basic_fields(schemas.get(entity_type))
+        required_entities[entity_type] = JSP_get_basic_fields(
+            schemas.get(entity_type))
     return required_entities
 
 
@@ -201,7 +203,8 @@ def get_entity_requirements(entities, field_mappings):
                              if dst.startswith(entity_type+'.')]
         for field in entity_definition:
             # filter again to find sources pertaining to this particular field in this entity
-            field_sources = [src for src, dst in matching_mappings if dst == field]
+            field_sources = [src for src,
+                             dst in matching_mappings if dst == field]
             entity_requirements[field] = field_sources
         all_requirements[entity_type] = entity_requirements
     return all_requirements
@@ -229,6 +232,7 @@ class DeferrableAction(object):
     have to worry about. If something can't be resolved, we save it for later
     and attempt resolution at the end of entity construction.
     '''
+
     def __init__(self, path, args, function=None):
         self.res = None
         self.path = path
@@ -327,7 +331,8 @@ def get_or_make_uuid(entity_type, field_name, instance_number, source_data):
     base = 'aether_extractor_enrichment'
     if source_data.get(base, {}).get(entity_type, {}).get(field_name):
         try:
-            value = source_data.get(base, {}).get(entity_type).get(field_name)[instance_number]
+            value = source_data.get(base, {}).get(
+                entity_type).get(field_name)[instance_number]
         except IndexError as e:
             source_data[base][entity_type][field_name].append(value)
         finally:
@@ -404,7 +409,8 @@ def extract_entity(entity_type, entities, requirements, data, entity_stub):
     count = max([len(entity_stub.get(field)) for field in entity_stub.keys()])
     # make empty stubs for our expected outputs. One for each member
     # identified in count process
-    entities[entity_type] = [{field: None for field in entity_stub.keys()} for i in range(count)]
+    entities[entity_type] = [
+        {field: None for field in entity_stub.keys()} for i in range(count)]
 
     # iterate required fields, resolve paths and copy data to stubs
     for field, paths in requirements.get(entity_type).items():
@@ -422,7 +428,8 @@ def extract_entity(entity_type, entities, requirements, data, entity_stub):
             path = paths[-1] if len(paths) < (i + 1) else paths[i]
             # check to see if we need to use a special reference here
             if '#!' not in path:
-                i = resolve_source_reference(path, entities, entity_type, i, field, data)
+                i = resolve_source_reference(
+                    path, entities, entity_type, i, field, data)
             else:
                 # Special action to be dispatched
                 action = DeferrableAction(
@@ -475,7 +482,8 @@ def extract_entities(requirements, response_data, entity_definitions, schemas):
     # sometimes order matters and our custom actions failed. We'll put them here
     failed_actions = []
     for entity_type in required_entities:
-        entity_stub = get_entity_stub(requirements, entity_definitions, entity_type, data)
+        entity_stub = get_entity_stub(
+            requirements, entity_definitions, entity_type, data)
         # extract the entity pushing failures onto failed actions
         failed_actions.extend(
             extract_entity(
