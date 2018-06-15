@@ -192,7 +192,7 @@ class ServerHandler(object):
                 schemas = []
                 with KernelHandler(self):
                     self.kernel.refresh()
-                    schemas = self.kernel.Resource.Schema.keys()
+                    schemas = [schema for schema in self.kernel.Resource.Schema]
                 for schema in schemas:
                     if not schema.name in self.schema_handlers.keys():
                         self.logger.info(
