@@ -61,8 +61,8 @@ services:
   # ---------------------------------
 
   kernel-base:
-    build: aether-kernel
     image: aether-kernel
+    build: ./aether-kernel
     stdin_open: true
     tty: true
     environment:
@@ -91,8 +91,8 @@ services:
   # ---------------------------------
 
   odk-base:
-    build: aether-odk-module
     image: aether-odk
+    build: ./aether-odk-module
     stdin_open: true
     tty: true
     environment:
@@ -124,8 +124,8 @@ services:
   # ---------------------------------
 
   couchdb-sync-base:
-    build: aether-couchdb-sync-module
     image: aether-couchdb-sync
+    build: ./aether-couchdb-sync-module
     stdin_open: true
     tty: true
     environment: &sync-environment
@@ -170,8 +170,8 @@ services:
   # ---------------------------------
 
   ui-base:
-    build: aether-ui
     image: aether-ui
+    build: ./aether-ui
     stdin_open: true
     tty: true
     environment: &ui-environment
@@ -254,8 +254,8 @@ services:
   # ---------------------------------
 
   aether-producer-base:
-    build: aether-producer
     image: aether-producer
+    build: ./aether-producer
     restart: on-failure
     stdin_open: true
     volumes:
