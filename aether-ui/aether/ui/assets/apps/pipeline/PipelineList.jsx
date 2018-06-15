@@ -119,7 +119,7 @@ class PipelineList extends Component {
               defaultMessage={pipeline.published_on ? `Published on ${moment(pipeline.published_on).format('MMMM DD')}`
                 : 'Not published'}
             />
-            { pipeline.published_on && 
+            { pipeline.published_on &&
               <InfoButton pipeline={pipeline} />
             }
           </div>

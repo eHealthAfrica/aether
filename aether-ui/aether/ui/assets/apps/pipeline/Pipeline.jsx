@@ -79,7 +79,7 @@ class Pipeline extends Component {
                   ? `Published on ${moment(this.props.selectedPipeline.published_on).format('MMMM DD, YYYY HH:mm')}`
                   : 'Not published'}
               />
-              {this.props.selectedPipeline.published_on && 
+              {this.props.selectedPipeline.published_on &&
                 <InfoButton pipeline={this.props.selectedPipeline} />
               }
             </div>
