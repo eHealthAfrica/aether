@@ -170,10 +170,10 @@ services:
   # ---------------------------------
 
   ui-base:
-    image: ui
+    build: aether-ui
+    image: aether-ui
     stdin_open: true
     tty: true
-    build: aether-ui
     environment: &ui-environment
       AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
       AETHER_KERNEL_URL: http://kernel:8000
@@ -215,7 +215,7 @@ services:
     command: start_dev
 
   ui-webpack-base:
-    image: ui
+    image: aether-ui
     environment: *ui-environment
     volumes: *ui-volumes
     ports:
