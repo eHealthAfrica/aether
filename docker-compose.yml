@@ -111,7 +111,7 @@ services:
       - internal
 
   # ---------------------------------
-  # Aether UI container
+  # Aether UI module
   # ---------------------------------
 
   ui:
@@ -124,20 +124,16 @@ services:
     depends_on:
       - db
       - kernel
-      - webpack
+      - ui-webpack
     networks:
       internal:
         aliases:
           - ui.aether.local
 
-  # ---------------------------------
-  # Webpack container
-  # ---------------------------------
-
-  webpack:
+  ui-webpack:
     extends:
       file: docker-compose-base.yml
-      service: webpack-base
+      service: ui-webpack-base
     networks:
       - internal
 
