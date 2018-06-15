@@ -214,16 +214,12 @@ services:
       - "8004:8004"
     command: start_dev
 
-  # ---------------------------------
-  # Webpack container
-  # ---------------------------------
-
-  webpack-base:
+  ui-webpack-base:
     image: ui
     environment: *ui-environment
     volumes: *ui-volumes
     ports:
-      - "3000:3000"
+      - "3004:3004"
     command: start_webpack
 
   # ---------------------------------
