@@ -5,6 +5,7 @@
 #  * Aether Kernel
 #  * ODK Module
 #  * CouchDB Sync Module
+#  * Aether UI
 #
 # These container will be extended in the other DC files with dependencies and networks.
 # Volumes and environment variables can be overriden in those files too.
@@ -170,7 +171,7 @@ services:
   # ---------------------------------
 
   ui-base:
-    image: ui
+    image: aether-ui
     stdin_open: true
     tty: true
     build: aether-ui
@@ -219,7 +220,7 @@ services:
   # ---------------------------------
 
   webpack-base:
-    image: ui
+    image: aether-ui
     environment: *ui-environment
     volumes: *ui-volumes
     ports:
