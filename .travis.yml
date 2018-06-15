@@ -1,7 +1,7 @@
 sudo: required
 language: python
 python:
-- '3.4'
+- '3.6'
 services:
 - docker
 cache:
@@ -21,7 +21,7 @@ deploy:
   skip_cleanup: true
   on:
     branch: ^\d+\.\d+(\.\d+)?(-\S*)?$
-    tags: true  
+    tags: true
 - provider: script
   script: "./scripts/release.sh"
   skip_cleanup: true
