@@ -21,7 +21,7 @@
 set -Eeuo pipefail
 
 IMAGE_REPO='ehealthafrica'
-APPS=( kernel odk couchdb-sync )
+APPS=( kernel odk couchdb-sync ui )
 VERSION=`cat VERSION`
 
 if [ -z "$TRAVIS_TAG" ];
