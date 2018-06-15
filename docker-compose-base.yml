@@ -5,6 +5,9 @@
 #  * Aether Kernel
 #  * ODK Module
 #  * CouchDB Sync Module
+#  * Kernel UI Module
+#  * Producer Module
+#  * Zookeper & Kafka
 #
 # These container will be extended in the other DC files with dependencies and networks.
 # Volumes and environment variables can be overriden in those files too.
