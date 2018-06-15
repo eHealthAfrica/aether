@@ -81,12 +81,7 @@ class KernelHandler(object):
     def __init__(self, handler, ignored_exceptions=None):
         self.handler = handler
         self.log = self.handler.logger
-        if ignored_exceptions is not None and isinstance(ignored_exceptions, list) is not True:
-            self.ignored_exceptions = [ignored_exceptions]
-        elif ignored_exceptions is not None:
-            self.ignored_exceptions = ignored_exceptions
-        else:
-            self.ignored_exceptions = []
+        self.ignored_exceptions = ignored_exceptions
 
     def __enter__(self):
         pass
@@ -197,8 +192,7 @@ class ServerHandler(object):
                 schemas = []
                 with KernelHandler(self):
                     self.kernel.refresh()
-                    schemas = [
-                        schema for schema in self.kernel.Resource.Schema]
+                    schemas = self.kernel.Resource.Schema.keys()
                 for schema in schemas:
                     if not schema.name in self.schema_handlers.keys():
                         self.logger.info(
@@ -232,7 +226,8 @@ class ServerHandler(object):
         log_level = logging.getLevelName(
             self.settings.get('log_level', 'DEBUG'))
         self.logger.setLevel(log_level)
-        self.app.debug = True
+        if log_level is "DEBUG":
+            self.app.debug = True
         pool_size = self.settings.get(
             'flask_settings', {}).get('max_connections', 1)
         port = self.settings.get('flask_settings', {}).get('port', 5005)
@@ -297,7 +292,7 @@ class SchemaHandler(object):
         self.context = server_handler
         self.logger = self.context.logger
         self.name = schema.name
-        self.modified = ""
+        self.offset = ""
         self.limit = self.context.settings.get('postgres_pull_limit', 100)
         self.status = {
             "last_errors_set": {},
@@ -315,21 +310,24 @@ class SchemaHandler(object):
                 % self.name
         except Exception as err:  # Bad Name
             self.topic_name = self.name
+            self.logger.error("invalid name_modifier using topic name for topic: %s" % self.name)
         self.update_schema(schema)
         self.producer = Producer(**self.context.settings.get('kafka_settings'))
         # Spawn worker and give to pool.
         self.context.threads.append(gevent.spawn(self.update_kafka))
 
     def updates_available(self):
-        query = SchemaHandler.NEW_STR % (self.modified, self.name)
+        modified = "" if not self.offset else self.offset  # "" evals to < all strings
+        query = SchemaHandler.NEW_STR % (modified, self.name)
         with psycopg2.connect(**self.pg_creds) as conn:
             cursor = conn.cursor(cursor_factory=DictCursor)
             cursor.execute(query)
             return sum([1 for i in cursor]) > 0
 
     def get_db_updates(self):
+        modified = "" if not self.offset else self.offset  # "" evals to < all strings
         query = SchemaHandler.QUERY_STR % (
-            self.modified, self.name, self.limit)
+            modified, self.name, self.limit)
         with psycopg2.connect(**self.pg_creds) as conn:
             cursor = conn.cursor(cursor_factory=DictCursor)
             cursor.execute(query)
@@ -349,28 +347,21 @@ class SchemaHandler(object):
 
     # Callback function registered with Kafka Producer to acknowledge receipt
     def kafka_callback(self, err=None, msg=None, _=None, **kwargs):
-        try:
-            obj = io.BytesIO()
-            if err:
-                obj.write(msg.value())
-                reader = DataFileReader(obj, DatumReader())
-                for x, message in enumerate(reader):
-                    _id = message.get("id")
-                    self.logger.info("NO-SAVE: %s in topic %s | err %s" %
+        if err:
+            self.logger.error('ERROR %s', [err, msg, kwargs])
+        with io.BytesIO() as obj:
+            obj.write(msg.value())
+            reader = DataFileReader(obj, DatumReader())
+            for message in reader:
+                _id = message.get("id")
+                if err:
+                    self.logger.debug("NO-SAVE: %s in topic %s | err %s" %
                                       (_id, self.topic_name, err.name()))
                     self.failed_changes[_id] = err
-            else:
-                obj.write(msg.value())
-                reader = DataFileReader(obj, DatumReader())
-                for x, message in enumerate(reader):
-                    _id = message.get("id")
+                else:
                     self.logger.debug("SAVE: %s in topic %s" %
                                       (_id, self.topic_name))
                     self.successful_changes.append(_id)
-        except Exception as error:
-            self.logger.debug('ERROR %s ', [error, _, msg, err, kwargs])
-        finally:
-            obj.close()
 
     def update_kafka(self):
         # Main update loop
@@ -379,7 +370,7 @@ class SchemaHandler(object):
         # Kicks off wait for receipt acknowledgement before saving new offset
         while not self.context.killed:
 
-            self.modified = self.get_offset()
+            self.offset = self.get_offset()
             if not self.updates_available():
                 self.logger.debug('No updates')
                 sleep(1)
@@ -523,16 +514,13 @@ class SchemaHandler(object):
                 raise ValueError('No entry for %s' % self.name)
         except Exception as err:
             self.logger.error('Could not get offset for %s it is a new type' % (self.name))
-            return "" # No valid offset so return empty string which is < any value
+            # No valid offset so return None; query will use empty string which is < any value
+            return None
 
     def set_offset(self, offset):
         # Set a new offset in the database
         new_offset = Offset.update(self.name, offset)
-        if not new_offset:
-            self.logger.info('Creating new offset entry for %s' % self.name)
-            Offset.create(schema_name=self.name, offset_value=offset)
-        else:
-            self.logger.debug("new offset for %s | %s" %
+        self.logger.debug("new offset for %s | %s" %
                               (self.name, new_offset.offset_value))
         self.status['offset'] = new_offset.offset_value
 
