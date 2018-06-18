@@ -96,11 +96,12 @@ class KernelHandler(object):
         return True
 
 
-class ServerHandler(object):
+class ProducerManager(object):
     # Serves status & healthcheck over HTTP
     # Dispatches Signals
     # Keeps track of schemas
-    # Spawns/ Manages all Topics
+    # Spawns a TopicManager for each schema type in Kernel
+    # TopicManager registers own eventloop greenlet (update_kafka) with ProducerManager
 
     def __init__(self, settings):
         self.settings = settings
@@ -130,10 +131,9 @@ class ServerHandler(object):
         self.threads.append(gevent.spawn(self.keep_alive_loop))
         self.threads.append(gevent.spawn(self.connect_aether))
         self.threads.append(gevent.spawn(self.check_schemas))
+        # Also going into this greenlet pool:
+        # Each TopicManager.update_kafka() from TopicManager.init
         gevent.joinall(self.threads)
-
-    def update_schema(self, name):
-        pass
 
     def kill(self, *args, **kwargs):
         # Stops HTTP service and flips stop switch, which is read by greenlets
@@ -141,10 +141,10 @@ class ServerHandler(object):
         self.http.stop()
         self.http.close()
         self.worker_pool.kill()
-        self.killed = True
+        self.killed = True  # Flag checked by spawned TopicManagers to stop themselves
 
     def safe_sleep(self, dur):
-        # keeps shutdown time low
+        # keeps shutdown time low by yielding during sleep and checking if killed.
         for x in range(dur):
             if not self.killed:
                 sleep(1)
@@ -174,17 +174,23 @@ class ServerHandler(object):
                     self.safe_sleep(self.settings['start_delay'])
                 else:
                     self.safe_sleep(1)
-            except Exception as e:
+            except ConnectionError as ce:
+                self.logger.debug(ce)
+            except MaxRetryError as mre:
+                self.logger.debug(mre)
+            except Exception as err:
                 self.logger.info('No Aether connection...')
+                self.logger.debug(err)
                 self.safe_sleep(self.settings['start_delay'])
 
         self.logger.debug('No longer attempting to connect to Aether')
 
-    # Main Kafka / Schema Loop
+    # Main Schema Loop
+    # Spawns TopicManagers for new schemas, updates schemas for workers on change.
     def check_schemas(self):
         # Checks for schemas in Kernel
-        # Creates SchemaHandlers for found schemas.
-        # Updates SchemaHandler.schema on schema change
+        # Creates TopicManagers for found schemas.
+        # Updates TopicManager.schema on schema change
         while not self.killed:
             if not self.kernel:
                 sleep(1)
@@ -197,17 +203,17 @@ class ServerHandler(object):
                     if not schema.name in self.schema_handlers.keys():
                         self.logger.info(
                             "New topic connected: %s" % schema.name)
-                        self.schema_handlers[schema.name] = SchemaHandler(
+                        self.schema_handlers[schema.name] = TopicManager(
                             self, schema)
                     else:
-                        res = self.schema_handlers[schema.name]
-                        if res.schema_obj != res.parse_schema(schema):
-                            res.update_schema(schema)
+                        topic_manager = self.schema_handlers[schema.name]
+                        if topic_manager.schema_changed(schema):
+                            topic_manager.update_schema(schema)
                             self.logger.info("Schema %s updated" % schema.name)
                         else:
                             self.logger.debug("Schema %s unchanged" % schema.name)
                 # Time between checks for schema change
-                self.safe_sleep(10)
+                self.safe_sleep(self.settings['sleep_time'])
         self.logger.debug('No longer checking schemas')
 
     # Flask Functions
@@ -252,9 +258,11 @@ class ServerHandler(object):
             return jsonify(status)
 
 
-class SchemaHandler(object):
+class TopicManager(object):
 
-    # Changes detection
+    # Creates a long running job on TopicManager.update_kafka
+
+    # Changes detection query
     NEW_STR = '''
         SELECT
             e.id,
@@ -266,7 +274,7 @@ class SchemaHandler(object):
         AND s.name = '%s'
         LIMIT 1; '''
 
-    # Changes query
+    # Changes pull query
     QUERY_STR = '''
             SELECT
                 e.id,
@@ -301,6 +309,7 @@ class SchemaHandler(object):
         self.change_set = {}
         self.successful_changes = []
         self.failed_changes = {}
+        self.wait_time = self.context.settings.get('sleep_time', 2)
         self.pg_creds = self.context.settings.get('postgres_connection_info')
         self.kafka_failure_wait_time = self.context.settings.get('kafka_failure_wait_time', 10)
         try:
@@ -309,8 +318,12 @@ class SchemaHandler(object):
                 .get('name_modifier', "%s") \
                 % self.name
         except Exception as err:  # Bad Name
-            self.topic_name = self.name
-            self.logger.error("invalid name_modifier using topic name for topic: %s" % self.name)
+            self.logger.critical(("invalid name_modifier using topic name for topic: %s."
+                                  " Update configuration for"
+                                  " topic_settings.name_modifier") % self.name)
+            # This is a failure which could cause topics to collide. We'll kill the producer
+            # so the configuration can be updated.
+            sys.exit(1)
         self.update_schema(schema)
         self.producer = Producer(**self.context.settings.get('kafka_settings'))
         # Spawn worker and give to pool.
@@ -318,7 +331,7 @@ class SchemaHandler(object):
 
     def updates_available(self):
         modified = "" if not self.offset else self.offset  # "" evals to < all strings
-        query = SchemaHandler.NEW_STR % (modified, self.name)
+        query = TopicManager.NEW_STR % (modified, self.name)
         with psycopg2.connect(**self.pg_creds) as conn:
             cursor = conn.cursor(cursor_factory=DictCursor)
             cursor.execute(query)
@@ -326,11 +339,13 @@ class SchemaHandler(object):
 
     def get_db_updates(self):
         modified = "" if not self.offset else self.offset  # "" evals to < all strings
-        query = SchemaHandler.QUERY_STR % (
+        query = TopicManager.QUERY_STR % (
             modified, self.name, self.limit)
         with psycopg2.connect(**self.pg_creds) as conn:
             cursor = conn.cursor(cursor_factory=DictCursor)
             cursor.execute(query)
+            # Since this cursor is of limited size, we keep it in memory instead of
+            # returning an iterator to free up the DB resource
             return [{key: row[key] for key in row.keys()} for row in cursor]
 
     def update_schema(self, schema_obj):
@@ -338,7 +353,14 @@ class SchemaHandler(object):
         self.schema = spavro.schema.parse(json.dumps(self.schema_obj))
 
     def parse_schema(self, schema_obj):
+        # We split this method from update_schema because schema_obj as it is can not
+        # be compared for differences. literal_eval fixes this. As such, this is used
+        # by the schema_changed() method.
         return ast.literal_eval(str(schema_obj.definition))
+
+    def schema_changed(self, schema_candidate):
+        # for use by ProducerManager.check_schemas()
+        return parse_schema(schema_candidate) == self.schema_obj
 
     def get_status(self):
         # Updates inflight status and returns to Flask called
@@ -365,35 +387,47 @@ class SchemaHandler(object):
 
     def update_kafka(self):
         # Main update loop
-        # Takes records from PostGres
-        # Gives them to Kafka
-        # Kicks off wait for receipt acknowledgement before saving new offset
+        # Monitors postgres for changes via TopicManager.updates_available
+        # Consumes updates to the Posgres DB via TopicManager.get_db_updates
+        # Sends new messages to Kafka
+        # Registers message callback (ok or fail) to TopicManager.kafka_callback
+        # Waits for all messages to be accepted or timeout in TopicManager.wait_for_kafka
+
         while not self.context.killed:
 
             self.offset = self.get_offset()
             if not self.updates_available():
                 self.logger.debug('No updates')
-                sleep(1)
+                self.context.safe_sleep(self.wait_time)
                 continue
             try:
                 self.logger.debug("Getting Changeset for %s" % self.name)
                 self.change_set = {}
                 new_rows = self.get_db_updates()
                 end_offset = new_rows[-1].get('modified')
+            except Exception as pge:
+                self.logger.error('Couldn't get new records from kernel: %s' % pge)
+                self.context.safe_sleep(self.wait_time)
+                continue
 
-                bytes_writer = io.BytesIO()
-                writer = DataFileWriter(
-                    bytes_writer, DatumWriter(), self.schema, codec='deflate')
+            try:
+                with io.BytesIO() as bytes_writer:
+                    writer = DataFileWriter(
+                        bytes_writer, DatumWriter(), self.schema, codec='deflate')
 
-                for row in new_rows:
-                    _id = row['id']
-                    msg = row.get("payload")
-                    self.change_set[_id] = row
-                    writer.append(msg)
+                    for row in new_rows:
+                        _id = row['id']
+                        msg = row.get("payload")
+                        if validate(self.schema, msg):
+                            # Message validates against current schema
+                            self.change_set[_id] = row
+                            writer.append(msg)
+                        else:
+                            # Message doesn't have the proper format for the current schema.
+                            self.logger.critical("SCHEMA_MISMATCH:NOT SAVED! TOPIC:%s, ID:%s" % (self.name, _id))
 
-                writer.flush()
-                raw_bytes = bytes_writer.getvalue()
-                writer.close()
+                    writer.flush()
+                    raw_bytes = bytes_writer.getvalue()
 
                 self.producer.produce(
                     self.topic_name,
@@ -406,7 +440,7 @@ class SchemaHandler(object):
             except Exception as ke:
                 self.logger.error('error in Kafka save: %s' % ke)
                 self.logger.error(traceback.format_exc())
-                sleep(1)
+                self.context.safe_sleep(self.wait_time)
 
     def wait_for_kafka(self, end_offset, timeout=10, iters_per_sec=10, failure_wait_time=10):
         # Waits for confirmation of message receipt from Kafka before moving to next changeset
@@ -484,7 +518,7 @@ class SchemaHandler(object):
         if not all_failed:
             # Collect Error types for reporting
             for _id, err in self.failed_changes.items():
-                self.logger.error('KernelHandlerFAILURE: T: %s ID %s , ERR_MSG %s' % (
+                self.logger.critical('PRODUCER_FAILURE: T: %s ID %s , ERR_MSG %s' % (
                     self.name, _id, err.name()))
             dropped_messages = change_set_size - len(self.successful_changes)
             errors["NO_REPLY"] = dropped_messages -len(self.failed_changes)
@@ -505,15 +539,12 @@ class SchemaHandler(object):
 
     def get_offset(self):
         # Get current offset from Database
-        try:
-            offset = Offset.get_offset(self.name)
-            if offset:
-                self.logger.debug("Got offset for %s | %s" % (self.name, offset.offset_value))
-                return offset.offset_value
-            else:
-                raise ValueError('No entry for %s' % self.name)
-        except Exception as err:
-            self.logger.error('Could not get offset for %s it is a new type' % (self.name))
+        offset = Offset.get_offset(self.name)
+        if offset:
+            self.logger.debug("Got offset for %s | %s" % (self.name, offset.offset_value))
+            return offset.offset_value
+        else:
+            self.logger.debug('Could not get offset for %s it is a new type' % (self.name))
             # No valid offset so return None; query will use empty string which is < any value
             return None
 
@@ -527,4 +558,4 @@ class SchemaHandler(object):
 
 def main(test=False):
     settings = Settings(test=test)
-    handler = ServerHandler(settings)
+    handler = ProducerManager(settings)
