@@ -1,63 +1,32 @@
-import ast
 import os
 import io
 import json
 import sys
 import threading
 import signal
-import avro.schema
-import avro.io
 
-from avro.datafile import DataFileReader
-from avro.io import DatumReader
-
+import spavro
 from time import sleep as Sleep
-from aether.client import KernelClient
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import TransportError, ConflictError
-from kafka import KafkaConsumer
+from aether.consumer import KafkaConsumer
 
 FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 CONN_RETRY = 3
 CONN_RETRY_WAIT_TIME = 10
 
-
 #Default Kafka Port
 KAFKA_HOST = "kafka:29092"  # from outside of docker it's kafka.aether.local:29092
 
-#Default Kernel Credentials
-kernel_credentials ={
-    "username": "admin-kernel",
-    "password": "adminadmin",
-}
-
 #Global Elasticsearch Connection
 es = None
-#Global Kernel Connection
-kernel = None
 
 def pprint(obj):
     print(json.dumps(obj, indent=2))
 
 def connect():
-    connect_aether()
     connect_kafka()
     connect_es()
-
-
-def connect_aether():
-    for x in range(CONN_RETRY):
-        try:
-            global kernel
-            kernel = KernelClient(url= "http://kernel.aether.local:8000", **kernel_credentials)
-            return
-        except Exception as ke:
-            #TODO find proper Exception type
-            kernel = None
-            print ("Error initializing connection to Aether: %s" % ke)
-            Sleep(CONN_RETRY_WAIT_TIME)
-    print("Failed to connect to Aether after %s retries" % CONN_RETRY)
-    sys.exit(1) # Kill consumer with error
 
 def connect_es():
     for x in range(CONN_RETRY):
@@ -173,7 +142,8 @@ class ESConsumer(threading.Thread):
                                          session_timeout_ms=18000,
                                          request_timeout_ms=20000,
                                          auto_offset_reset='latest',
-                                         consumer_timeout_ms=17000)
+                                         consumer_timeout_ms=17000,
+                                         aether_emit_flag_required=False)
             self.consumer.subscribe([self.topic])
             self.seek_to_beginning(self.consumer)  # TODO KILL
             return True
@@ -185,6 +155,7 @@ class ESConsumer(threading.Thread):
         consumer.poll(timeout_ms=100, max_records=1)  #we have to poll to get the right partitions assigned to the consumer
         consumer.seek_to_beginning()
 
+    '''
     def run(self):
         while True:
             if self.connect():
@@ -216,10 +187,6 @@ class ESConsumer(threading.Thread):
                             self.processor.load_avro(schema)
                             self.processor.load()  # create a process pipeline based on the new schema
                             print(schema)
-                        '''
-                        except Exception as err:
-                            print(err)
-                        '''
 
                         for x, msg in enumerate(reader):
                             # do something with the individual messages
@@ -243,6 +210,38 @@ class ESConsumer(threading.Thread):
         print ("Shutting down consumer %s | %s" % (self.index, self.topic))
         self.consumer.close()
         return
+    '''
+
+    def run(self):
+        while True:
+            if self.connect():
+                break
+            elif self.stopped:
+                return
+            Sleep(2)
+        last_schema = None
+        while not self.stopped:
+            new_messages = self.consumer.poll_and_deserialize(
+                timeout_ms=self.consumer_timeout,
+                max_records=self.consumer_max_records)
+            for parition_key, packages in new_messages.items():
+                for package in packages:
+                    schema = package.get('schema')
+                    print(schema)
+                    messages = package.get('messages')
+                    print("messages", len(messages))
+                    if schema != last_schema:
+                        self.processor.load_avro(schema)
+                    for x, msg in enumerate(messages):
+                        doc = self.processor.process(msg)
+                        print(doc)
+                        self.submit(doc)
+                    last_schema = schema
+
+        print ("Shutting down consumer %s | %s" % (self.index, self.topic))
+        self.consumer.close()
+        return
+
 
     def submit(self, doc):
         parent = doc.get("_parent", None)
@@ -270,10 +269,6 @@ class ESConsumer(threading.Thread):
             except TransportError as te:
                 print("conflict exists, ignoring document with id %s" % doc.get("id", "unknown"))
 
-    def get_records(self):
-        messages = self.consumer.poll(timeout_ms=self.consumer_timeout, max_records=self.consumer_max_records)
-        return messages
-
     def stop(self):
         print ("%s caught stop signal" % (self.group_name))
         self.stopped = True
@@ -287,14 +282,10 @@ class ESItemProcessor(object):
         self.pipeline = []
         self.schema = None
         self.schema_obj = None
-        self.schema_obj_all = None
         self.es_type = type_name
         self.type_instructions = type_instructions
         self.topic_name = type_name
-        '''
-        self.get_avro()
-        self.load(type_instructions)
-        '''
+
 
     def deserialize(self, doc):
         bytes_reader = io.BytesIO(doc.value)
@@ -303,32 +294,11 @@ class ESItemProcessor(object):
         doc = reader.read(decoder)
         return doc
 
-    def load_avro(self, schema_str):
+    def load_avro(self, schema_obj):
 
-        schema_obj = json.loads(schema_str)
-        pprint(schema_obj)
-        self.schema = avro.schema.parse(schema_str)
+        self.schema = spavro.schema.parse(json.dumps(schema_obj))
         self.schema_obj = schema_obj
-        self.schema_obj_all = schema_obj
-        #self.schema_obj = [schema for schema in self.schema_obj if schema.get("name").endswith(self.es_type)][0]
-
-    def get_avro(self):
-        schemas = kernel.Resource.Schema
-        for schema in schemas:
-            if schema.name.lower() == self.es_type:
-                print ("%s matches %s" % (schema.name, self.es_type))
-                self.topic_name = schema.name
-                try:
-                    definition = ast.literal_eval(str(schema.definition))
-                    self.schema_obj = definition
-                    self.schema = avro.schema.Parse(json.dumps(definition))
-                except Exception as ave:
-                    print ("Error parsing Avro schema for type %s" % self.es_type)
-                    raise ave
-        if not self.schema:
-            print ("""No registered schema in Aether looks like indexed type: %s.
-                The messages must be serialized with a schema""" % self.es_type)
-            # raise TypeError("No registered schema in Aether looks like indexed type: %s" % self.es_type)
+        self.load()
 
     def load(self):
         self.pipeline = []
@@ -345,7 +315,6 @@ class ESItemProcessor(object):
                     self.pipeline.append(res)
 
     def process(self, doc, schema=None):
-        # doc = self.deserialize(doc) #TODO switch based on presence of a schema
         for instr in self.pipeline:
             doc = self.exc(doc, instr)
         return doc
