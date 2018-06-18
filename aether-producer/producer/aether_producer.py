@@ -88,11 +88,11 @@ class KernelHandler(object):
 
     def __exit__(self, exc_type, exc_val, traceback):
         if exc_type:
-            if exc_type in self.ignored_exceptions:
+            if self.ignored_exceptions and exc_type in self.ignored_exceptions:
                 return True
             self.handler.kernel = None
-            self.log.error("Lost Kernel Connection: %s" % exc_type)
-            return True
+            self.log.info("Kernel Connection Failed: %s" % exc_type)
+            return False
         return True
 
 
@@ -159,29 +159,35 @@ class ProducerManager(object):
 
     # Maintain Aether Connection
     def connect_aether(self):
-        self.logger.info('Connecting to Aether...')
         self.kernel = None
         while not self.killed:
+            errored = False
             try:
                 if not self.kernel:
-                    with KernelHandler(self, ignored_exceptions=[MaxRetryError, ConnectionError]):
+                    self.logger.info('Connecting to Aether...')
+                    with KernelHandler(self):
                         self.kernel = KernelClient(
                             url=self.settings['kernel_url'],
                             **self.settings['kernel_credentials']
                         )
                         self.logger.info('Connected to Aether.')
                         continue
-                    self.safe_sleep(self.settings['start_delay'])
-                else:
-                    self.safe_sleep(1)
+                self.safe_sleep(self.settings['start_delay'])
+
             except ConnectionError as ce:
+                errored = True
                 self.logger.debug(ce)
             except MaxRetryError as mre:
+                errored = True
                 self.logger.debug(mre)
             except Exception as err:
-                self.logger.info('No Aether connection...')
+                errored = True
                 self.logger.debug(err)
+
+            if errored:
+                self.logger.info('No Aether connection...')
                 self.safe_sleep(self.settings['start_delay'])
+            errored = False
 
         self.logger.debug('No longer attempting to connect to Aether')
 
@@ -198,7 +204,8 @@ class ProducerManager(object):
                 schemas = []
                 with KernelHandler(self):
                     self.kernel.refresh()
-                    schemas = [schema for schema in self.kernel.Resource.Schema]
+                    schemas = [
+                        schema for schema in self.kernel.Resource.Schema]
                 for schema in schemas:
                     if not schema.name in self.schema_handlers.keys():
                         self.logger.info(
@@ -209,9 +216,11 @@ class ProducerManager(object):
                         topic_manager = self.schema_handlers[schema.name]
                         if topic_manager.schema_changed(schema):
                             topic_manager.update_schema(schema)
-                            self.logger.info("Schema %s updated" % schema.name)
+                            self.logger.debug(
+                                "Schema %s updated" % schema.name)
                         else:
-                            self.logger.debug("Schema %s unchanged" % schema.name)
+                            self.logger.debug(
+                                "Schema %s unchanged" % schema.name)
                 # Time between checks for schema change
                 self.safe_sleep(self.settings['sleep_time'])
         self.logger.debug('No longer checking schemas')
@@ -250,10 +259,10 @@ class ProducerManager(object):
 
     def request_status(self):
         status = {
-                "kernel": self.kernel is not None,  # This is a real object
-                "kafka": self.kafka is not False,   # This is just a status flag
-                "topics": {k: v.get_status() for k, v in self.schema_handlers.items()}
-            }
+            "kernel": self.kernel is not None,  # This is a real object
+            "kafka": self.kafka is not False,   # This is just a status flag
+            "topics": {k: v.get_status() for k, v in self.schema_handlers.items()}
+        }
         with self.app.app_context():
             return jsonify(status)
 
@@ -311,7 +320,8 @@ class TopicManager(object):
         self.failed_changes = {}
         self.wait_time = self.context.settings.get('sleep_time', 2)
         self.pg_creds = self.context.settings.get('postgres_connection_info')
-        self.kafka_failure_wait_time = self.context.settings.get('kafka_failure_wait_time', 10)
+        self.kafka_failure_wait_time = self.context.settings.get(
+            'kafka_failure_wait_time', 10)
         try:
             self.topic_name = self.context.settings \
                 .get('topic_settings', {}) \
@@ -406,7 +416,8 @@ class TopicManager(object):
                 new_rows = self.get_db_updates()
                 end_offset = new_rows[-1].get('modified')
             except Exception as pge:
-                self.logger.error('Couldn't get new records from kernel: %s' % pge)
+                self.logger.error(
+                    'Could not get new records from kernel: %s' % pge)
                 self.context.safe_sleep(self.wait_time)
                 continue
 
@@ -424,7 +435,8 @@ class TopicManager(object):
                             writer.append(msg)
                         else:
                             # Message doesn't have the proper format for the current schema.
-                            self.logger.critical("SCHEMA_MISMATCH:NOT SAVED! TOPIC:%s, ID:%s" % (self.name, _id))
+                            self.logger.critical(
+                                "SCHEMA_MISMATCH:NOT SAVED! TOPIC:%s, ID:%s" % (self.name, _id))
 
                     writer.flush()
                     raw_bytes = bytes_writer.getvalue()
@@ -435,7 +447,8 @@ class TopicManager(object):
                     callback=self.kafka_callback
                 )
                 self.producer.flush()
-                self.wait_for_kafka(end_offset, failure_wait_time=self.kafka_failure_wait_time)
+                self.wait_for_kafka(
+                    end_offset, failure_wait_time=self.kafka_failure_wait_time)
 
             except Exception as ke:
                 self.logger.error('error in Kafka save: %s' % ke)
@@ -488,10 +501,10 @@ class TopicManager(object):
         # Timeout reached or all messages returned ( and not all failed )
 
         self.status["last_changeset_status"] = {
-                    "changes": change_set_size,
-                    "failed": len(self.failed_changes),
-                    "succeeded": len(self.successful_changes),
-                    "timestamp": datetime.now().isoformat()
+            "changes": change_set_size,
+            "failed": len(self.failed_changes),
+            "succeeded": len(self.successful_changes),
+            "timestamp": datetime.now().isoformat()
         }
         if errors:
             self.handle_kafka_errors(change_set_size, all_failed=False)
@@ -509,11 +522,11 @@ class TopicManager(object):
             errors[error_type] = errors.get(error_type, 0) + 1
 
         last_error_set = {
-                    "changes": change_set_size,
-                    "errors": errors,
-                    "outcome" : "RETRY",
-                    "timestamp": datetime.now().isoformat()
-                    }
+            "changes": change_set_size,
+            "errors": errors,
+            "outcome": "RETRY",
+            "timestamp": datetime.now().isoformat()
+        }
 
         if not all_failed:
             # Collect Error types for reporting
@@ -521,7 +534,7 @@ class TopicManager(object):
                 self.logger.critical('PRODUCER_FAILURE: T: %s ID %s , ERR_MSG %s' % (
                     self.name, _id, err.name()))
             dropped_messages = change_set_size - len(self.successful_changes)
-            errors["NO_REPLY"] = dropped_messages -len(self.failed_changes)
+            errors["NO_REPLY"] = dropped_messages - len(self.failed_changes)
             last_error_set["failed"] = len(self.failed_changes),
             last_error_set["succeeded"] = len(self.successful_changes),
             last_error_set["outcome"] = "MSGS_DROPPED : %s" % dropped_messages,
@@ -536,15 +549,16 @@ class TopicManager(object):
         self.successful_changes = []
         self.change_set = {}
 
-
     def get_offset(self):
         # Get current offset from Database
         offset = Offset.get_offset(self.name)
         if offset:
-            self.logger.debug("Got offset for %s | %s" % (self.name, offset.offset_value))
+            self.logger.debug("Got offset for %s | %s" %
+                              (self.name, offset.offset_value))
             return offset.offset_value
         else:
-            self.logger.debug('Could not get offset for %s it is a new type' % (self.name))
+            self.logger.debug(
+                'Could not get offset for %s it is a new type' % (self.name))
             # No valid offset so return None; query will use empty string which is < any value
             return None
 
@@ -552,7 +566,7 @@ class TopicManager(object):
         # Set a new offset in the database
         new_offset = Offset.update(self.name, offset)
         self.logger.debug("new offset for %s | %s" %
-                              (self.name, new_offset.offset_value))
+                          (self.name, new_offset.offset_value))
         self.status['offset'] = new_offset.offset_value
 
 
