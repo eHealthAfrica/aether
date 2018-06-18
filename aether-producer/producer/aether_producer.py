@@ -496,7 +496,7 @@ class TopicManager(object):
             if len(self.change_set) == 0:
                 break
 
-            self.context.safe_sleep(sleep_time)
+            sleep(sleep_time)
 
         # Timeout reached or all messages returned ( and not all failed )
 
