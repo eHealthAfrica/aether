@@ -1,0 +1,15 @@
+################################################################################
+#                                                                              #
+#                             Primary requirements                             #
+#                                                                              #
+#                                 CHANGE ME !!!                                #
+#                                                                              #
+# Update me and then run 'docker-compose run consumer-elastic pip_freeze'      #
+#                                                                              #
+################################################################################
+
+aether.consumer
+elasticsearch
+flake8
+flake8-quotes
+mock
