@@ -118,7 +118,7 @@ class ProducerManager(object):
         # Clear objects and start
         self.kernel = None
         self.kafka = False
-        self.schema_handlers = {}
+        self.topic_managers = {}
         self.run()
 
     def keep_alive_loop(self):
@@ -207,13 +207,13 @@ class ProducerManager(object):
                     schemas = [
                         schema for schema in self.kernel.Resource.Schema]
                 for schema in schemas:
-                    if not schema.name in self.schema_handlers.keys():
+                    if not schema.name in self.topic_managers.keys():
                         self.logger.info(
                             "New topic connected: %s" % schema.name)
-                        self.schema_handlers[schema.name] = TopicManager(
+                        self.topic_managers[schema.name] = TopicManager(
                             self, schema)
                     else:
-                        topic_manager = self.schema_handlers[schema.name]
+                        topic_manager = self.topic_managers[schema.name]
                         if topic_manager.schema_changed(schema):
                             topic_manager.update_schema(schema)
                             self.logger.debug(
@@ -261,7 +261,7 @@ class ProducerManager(object):
         status = {
             "kernel": self.kernel is not None,  # This is a real object
             "kafka": self.kafka is not False,   # This is just a status flag
-            "topics": {k: v.get_status() for k, v in self.schema_handlers.items()}
+            "topics": {k: v.get_status() for k, v in self.topic_managers.items()}
         }
         with self.app.app_context():
             return jsonify(status)
@@ -370,7 +370,7 @@ class TopicManager(object):
 
     def schema_changed(self, schema_candidate):
         # for use by ProducerManager.check_schemas()
-        return parse_schema(schema_candidate) == self.schema_obj
+        return self.parse_schema(schema_candidate) == self.schema_obj
 
     def get_status(self):
         # Updates inflight status and returns to Flask called
