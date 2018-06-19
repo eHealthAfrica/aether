@@ -110,4 +110,15 @@ describe('utils', () => {
       })
     })
   })
+
+  // Default settings in editor
+  // Non-editable #!uuid mapping
+  // Validation in the backend: each schema must have a top-level
+  // field named "id" of type "string"
+  describe('WIP', () => {
+    it('add "id" field if not present', () => {
+    })
+    it('rename "id" field if present and move', () => {
+    })
+  })
 })

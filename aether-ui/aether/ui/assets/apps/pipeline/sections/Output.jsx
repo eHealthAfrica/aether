@@ -13,7 +13,7 @@ class Output extends Component {
           <ul>
             { this.props.selectedPipeline.mapping_errors && this.props.selectedPipeline.mapping_errors.map((error, index) => (
               <li key={`${error.path}_${index}`}>
-                <span className='error-description'>{error.description}</span>
+                <span className='error-description'>{error.description || error}</span>
                 <span className='error-path'>{error.path ? `"${error.path}"` : ''}</span>
               </li>
             )) }

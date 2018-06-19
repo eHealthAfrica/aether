@@ -31,6 +31,7 @@ export const makeOptionalType = (type) => {
 }
 
 export const makeOptionalField = (field) => {
+  if (field.name === 'id') { return field }
   return { ...field, type: makeOptionalType(field.type) }
 }
 

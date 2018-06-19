@@ -32,7 +32,7 @@ from pygments.formatters import HtmlFormatter
 from pygments.lexers import JsonLexer
 from pygments.lexers.python import Python3Lexer
 
-from . import models, constants
+from . import models, constants, avro_tools
 
 
 class CachedParser(object):
@@ -452,18 +452,17 @@ def validate_entities(entities, schemas):
     for entity_name, entity_payloads in entities.items():
         for entity_payload in entity_payloads:
             schema_definition = schemas[entity_name]
-            try:
-                validate_payload(
-                    schema_definition=schema_definition,
-                    payload=entity_payload,
-                )
+            validation_result = avro_tools.AvroValidator(
+                schema=parse_schema(json.dumps(schema_definition)),
+                datum=entity_payload,
+            )
+            if validation_result.errors:
+                for error in validation_result.errors:
+                    validation_errors.append({
+                        'description': avro_tools.format_validation_error(error),
+                    })
+            else:
                 validated_entities[entity_name].append(entity_payload)
-            except EntityValidationError as err:
-                error = {
-                    'description': err.args[0],
-                    'data': entity_payload,
-                }
-                validation_errors.append(error)
     return EntityValidationResult(
         validation_errors=validation_errors,
         entities=validated_entities,
@@ -500,7 +499,8 @@ def extract_entities(requirements, response_data, entity_definitions, schemas):
             action.resolve(entities)
     # send a log of paths with errors to the user via saved response
     for action in failed_again:
-        data['aether_errors'].append('failed %s' % action.path)
+        error = 'Failure: "{}"'.format(action.error)
+        data['aether_errors'].append(error)
     validation_result = validate_entities(entities, schemas)
     data['aether_errors'].extend(validation_result.validation_errors)
     return data, validation_result.entities

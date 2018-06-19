@@ -29,7 +29,7 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from .. import models, constants
+from .. import models, constants, validators
 
 from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA,
                SAMPLE_LOCATION_SCHEMA_DEFINITION, SAMPLE_HOUSEHOLD_SCHEMA_DEFINITION,
@@ -455,11 +455,11 @@ class ViewsTest(TransactionTestCase):
         )
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data['entities']), 0)
-        self.assertEqual(len(response_data['mapping_errors']), 3)
         expected = [
             'Could not find schema "person"',
             'No match for path',
-            'Extracted record did not conform to registered schema',
+            'Expected type "string" at path "Person.dob". Actual value: None',
+            'Expected type "string" at path "Person.villageID". Actual value: None',
         ]
         result = [
             error['description'] for error in response_data['mapping_errors']
@@ -501,8 +501,7 @@ class ViewsTest(TransactionTestCase):
         Unexpected mapping or extraction failures should return status code 500.
         '''
         with mock.patch('aether.kernel.api.mapping_validation.validate_mappings') as m:
-            message = 'test'
-            m.side_effect = Exception(message)
+            m.side_effect = Exception()
             url = reverse('validate-mappings')
             data = json.dumps({
                 'submission_payload': EXAMPLE_SOURCE_DATA,
@@ -510,9 +509,7 @@ class ViewsTest(TransactionTestCase):
                 'schemas': {'Person': EXAMPLE_SCHEMA},
             })
             response = self.client.post(url, data=data, content_type='application/json')
-            response_data = json.loads(response.content)
             self.assertEquals(response.status_code, 500)
-            self.assertEquals(response_data, message)
 
     # Test resolving linked entities
     def helper_read_linked_data_entities(self, view_name, obj, depth):
@@ -636,3 +633,65 @@ class ViewsTest(TransactionTestCase):
         self.assertEqual(response_get, {
             'project': project_id, 'schemas': [], 'project_schemas': [], 'mappings': []
         })
+
+    def test_schema_validate_definition__success(self):
+        view_name = 'schema-list'
+        url = reverse(view_name)
+        data = json.dumps({
+            'name': 'Test',
+            'type': 'test',
+            'definition': {
+                'name': 'Test',
+                'type': 'record',
+                'fields': [
+                    {
+                        'name': 'id',
+                        'type': 'string'
+                    }
+                ]
+            }
+        })
+        response = self.client.post(url, data, content_type='application/json')
+        self.assertEqual(response.status_code, 201)
+
+    def test_schema_validate_definition__errors(self):
+        view_name = 'schema-list'
+        url = reverse(view_name)
+        schemas = [
+            json.dumps({
+                'name': 'Test',
+                'type': 'test',
+                'definition': {
+                    'name': 'Test',
+                    'type': 'record',
+                    'fields': [
+                        {
+                            'name': 'a',  # missing key "id"
+                            'type': 'string'
+                        }
+                    ]
+                }
+            }),
+            json.dumps({
+                'name': 'Test',
+                'type': 'test',
+                'definition': {
+                    'name': 'Test',
+                    'type': 'record',
+                    'fields': [
+                        {
+                            'name': 'id',
+                            'type': 'int'  # id is not of type "string"
+                        }
+                    ]
+                }
+            })
+        ]
+        for schema in schemas:
+            response = self.client.post(url, schema, content_type='application/json')
+            response_content = json.loads(response.content)
+            self.assertIn(
+                validators.MESSAGE_REQUIRED_ID,
+                response_content['definition'][0],
+            )
+            self.assertEqual(response.status_code, 400)
