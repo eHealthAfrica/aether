@@ -2,7 +2,7 @@
 
   .section-body {
     display: flex;
-    padding: 2rem 0;
+    padding: 2rem 0 0;
     position: relative;
   }
 
@@ -17,7 +17,7 @@
     width: 100%;
     padding: $unit $unit-xl;
     border-left: 1px dashed $light-grey;
-    height: calc(100vh - 6.8rem - #{$navbar-height-xs});
+    height: calc(100vh - 6rem - #{$navbar-height-xs});
     min-height: 35rem;
     position: relative;
     flex-direction: column;
@@ -59,6 +59,10 @@
     font-weight: 600;
   }
 
+  .item {
+    text-decoration: line-through;
+  }
+
   .type {
     font-style: italic;
     color: $grey;
@@ -82,6 +86,10 @@
       border-bottom: 1px solid $light-grey;
       padding-top: .2rem;
       padding-bottom: .2rem;
+    }
+
+    li[class^='input-mapped'] {
+      border-bottom: 1px solid $white;
     }
   }
 }
