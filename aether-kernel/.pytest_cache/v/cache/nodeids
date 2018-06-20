@@ -1,0 +1,8 @@
+[
+  "aether/kernel/api/tests/test_validators.py::ValidatorsTest::test_has_valid_id_field__error",
+  "aether/kernel/api/tests/test_validators.py::ValidatorsTest::test_has_valid_id_field__success",
+  "aether/kernel/api/tests/test_validators.py::ValidatorsTest::test_validate_avro_schema__error",
+  "aether/kernel/api/tests/test_validators.py::ValidatorsTest::test_validate_avro_schema__success",
+  "aether/kernel/api/tests/test_validators.py::ValidatorsTest::test_validate_mapping_definition__error",
+  "aether/kernel/api/tests/test_validators.py::ValidatorsTest::test_validate_mapping_definition__success"
+]
