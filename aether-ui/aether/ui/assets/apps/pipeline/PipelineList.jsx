@@ -23,9 +23,10 @@ import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 import moment from 'moment'
 
-import { PROJECT_NAME } from '../utils/constants'
+import { PROJECT_NAME, getKernelURL } from '../utils/constants'
 import { NavBar, Modal } from '../components'
 import PublishButton from './PublishButton'
+import InfoButton from './InfoButton'
 
 import NewPipeline from './NewPipeline'
 import { addPipeline, selectedPipelineChanged, getPipelines, fetchPipelines } from './redux'
@@ -46,6 +47,7 @@ class PipelineList extends Component {
       this.props.getPipelines()
     }
     this.props.fetchPipelines()
+    this.props.getKernelURL()
   }
 
   componentWillReceiveProps (nextProps) {
@@ -138,6 +140,9 @@ class PipelineList extends Component {
               defaultMessage={pipeline.published_on ? `Published on ${moment(pipeline.published_on).format('MMMM DD')}`
                 : 'Not published'}
             />
+            { pipeline.published_on &&
+              <InfoButton pipeline={pipeline} />
+            }
           </div>
           <PublishButton pipeline={pipeline} className='btn btn-w btn-publish' />
         </div>
@@ -162,4 +167,4 @@ const mapStateToProps = ({ pipelines }) => ({
   isNewPipeline: pipelines.isNewPipeline
 })
 
-export default connect(mapStateToProps, { getPipelines, selectedPipelineChanged, addPipeline, fetchPipelines })(PipelineList)
+export default connect(mapStateToProps, { getPipelines, selectedPipelineChanged, addPipeline, fetchPipelines, getKernelURL })(PipelineList)

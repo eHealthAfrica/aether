@@ -26,6 +26,7 @@ import moment from 'moment'
 
 import { NavBar } from '../components'
 import PublishButton from './PublishButton'
+import InfoButton from './InfoButton'
 
 import Input from './sections/Input'
 import EntityTypes from './sections/EntityTypes'
@@ -98,6 +99,9 @@ class Pipeline extends Component {
                   ? `Published on ${moment(this.props.selectedPipeline.published_on).format('MMMM DD, YYYY HH:mm')}`
                   : 'Not published'}
               />
+              {this.props.selectedPipeline.published_on &&
+                <InfoButton pipeline={this.props.selectedPipeline} />
+              }
             </div>
             <PublishButton pipeline={this.props.selectedPipeline} className='btn btn-c btn-publish' />
           </div>

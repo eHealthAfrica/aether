@@ -18,6 +18,7 @@
 
 import json
 import mock
+import os
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -224,3 +225,8 @@ class ViewsTest(TestCase):
         response = self.client.post(url, content_type='application/json')
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 2)
+
+    def test_view_get_kernel_url(self):
+        url = reverse('kernel-url')
+        response = self.client.get(url)
+        self.assertEqual(json.loads(response.content), os.environ.get('AETHER_KERNEL_URL_TEST'))
