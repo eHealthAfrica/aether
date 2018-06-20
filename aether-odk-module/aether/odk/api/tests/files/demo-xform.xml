@@ -1,12 +1,13 @@
 <h:html
-    xmlns="http://www.w3.org/2002/xforms"
-    xmlns:ev="http://www.w3.org/2001/xml-events"
-    xmlns:h="http://www.w3.org/1999/xhtml"
-    xmlns:jr="http://openrosa.org/javarosa"
-    xmlns:orx="http://openrosa.org/xforms"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        xmlns="http://www.w3.org/2002/xforms"
+        xmlns:ev="http://www.w3.org/2001/xml-events"
+        xmlns:h="http://www.w3.org/1999/xhtml"
+        xmlns:jr="http://openrosa.org/javarosa"
+        xmlns:odk="http://www.opendatakit.org/xforms"
+        xmlns:orx="http://openrosa.org/xforms"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <h:head>
-    <h:title>my-test-form</h:title>
+    <h:title>My Test Form</h:title>
     <model>
       <itext>
         <translation default="true()" lang="English">
@@ -46,7 +47,7 @@
         </translation>
       </itext>
       <instance>
-        <Something_that_is_not_None id="my-test-form">
+        <Something_that_is_not_None id="my-test-form" version="Test-1.0">
           <starttime/>
           <endtime/>
           <deviceid/>
@@ -54,6 +55,7 @@
           <region/>
           <name/>
           <location/>
+          <location_none/>
           <image/>
           <number/>
           <number2/>
@@ -66,17 +68,20 @@
           <option_b>
             <choice_b/>
           </option_b>
-          <lang/>
-          <iterate_count/>
+          <lang>EN</lang>
           <iterate jr:template="">
             <index/>
+            <value/>
           </iterate>
-          <iterate_one_count/>
           <iterate_one jr:template="">
-            <index/>
+            <item/>
           </iterate_one>
+          <iterate_none jr:template="">
+            <nothing/>
+          </iterate_none>
           <meta>
             <instanceID/>
+            <instanceName/>
           </meta>
         </Something_that_is_not_None>
       </instance>
@@ -96,23 +101,23 @@
         <root>
           <item>
             <itextId>static_instance-region-0</itextId>
-            <country>CM</country>
             <name>CM-1</name>
+            <country>CM</country>
           </item>
           <item>
             <itextId>static_instance-region-1</itextId>
-            <country>CM</country>
             <name>CM-2</name>
+            <country>CM</country>
           </item>
           <item>
             <itextId>static_instance-region-2</itextId>
-            <country>NG</country>
             <name>NG-N</name>
+            <country>NG</country>
           </item>
           <item>
             <itextId>static_instance-region-3</itextId>
-            <country>NG</country>
             <name>NG-S</name>
+            <country>NG</country>
           </item>
         </root>
       </instance>
@@ -169,6 +174,7 @@
       <bind nodeset="/Something_that_is_not_None/region" required="false()" type="select1"/>
       <bind nodeset="/Something_that_is_not_None/name" required="false()" type="string"/>
       <bind nodeset="/Something_that_is_not_None/location" required="false()" type="geopoint"/>
+      <bind nodeset="/Something_that_is_not_None/location_none" required="false()" type="geopoint"/>
       <bind nodeset="/Something_that_is_not_None/image" required="false()" type="binary"/>
       <bind nodeset="/Something_that_is_not_None/number" required="false()" type="int"/>
       <bind nodeset="/Something_that_is_not_None/number2" required="false()" type="decimal"/>
@@ -180,14 +186,18 @@
       <bind nodeset="/Something_that_is_not_None/option_b" relevant=" /Something_that_is_not_None/option ='b'"/>
       <bind nodeset="/Something_that_is_not_None/option_b/choice_b" type="string"/>
       <bind nodeset="/Something_that_is_not_None/lang" type="select"/>
-      <bind calculate="3" nodeset="/Something_that_is_not_None/iterate_count" readonly="true()" type="string"/>
-      <bind nodeset="/Something_that_is_not_None/iterate/index" type="string"/>
-      <bind calculate="1" nodeset="/Something_that_is_not_None/iterate_one_count" readonly="true()" type="string"/>
-      <bind nodeset="/Something_that_is_not_None/iterate_one/index" type="string"/>
+      <bind nodeset="/Something_that_is_not_None/iterate/index" type="int"/>
+      <bind nodeset="/Something_that_is_not_None/iterate/value" type="string"/>
+      <bind nodeset="/Something_that_is_not_None/iterate_one/item" type="string"/>
+      <bind nodeset="/Something_that_is_not_None/iterate_none/nothing" type="string"/>
       <bind
             calculate="concat('uuid:', uuid())"
             nodeset="/Something_that_is_not_None/meta/instanceID"
             readonly="true()"
+            type="string"/>
+      <bind
+            calculate="Something_that_is_not_None"
+            nodeset="/Something_that_is_not_None/meta/instanceName"
             type="string"/>
     </model>
   </h:head>
@@ -215,6 +225,9 @@
     </input>
     <input ref="/Something_that_is_not_None/location">
       <label>Collect your GPS coordinates</label>
+    </input>
+    <input ref="/Something_that_is_not_None/location_none">
+      <label>Ignore your GPS coordinates</label>
     </input>
     <upload mediatype="image/*" ref="/Something_that_is_not_None/image">
       <label>Take a picture</label>
@@ -270,18 +283,30 @@
       </item>
     </select>
     <group ref="/Something_that_is_not_None/iterate">
-      <label></label>
-      <repeat jr:count=" /Something_that_is_not_None/iterate_count " nodeset="/Something_that_is_not_None/iterate">
+      <label>Indicate loop elements</label>
+      <repeat
+              nodeset="/Something_that_is_not_None/iterate">
         <input ref="/Something_that_is_not_None/iterate/index">
           <label>Index</label>
+        </input>
+        <input ref="/Something_that_is_not_None/iterate/value">
+          <label>Value</label>
         </input>
       </repeat>
     </group>
     <group ref="/Something_that_is_not_None/iterate_one">
-      <label></label>
-      <repeat jr:count=" /Something_that_is_not_None/iterate_one_count " nodeset="/Something_that_is_not_None/iterate_one">
-        <input ref="/Something_that_is_not_None/iterate_one/index">
-          <label>Index</label>
+      <label>Indicate one</label>
+      <repeat nodeset="/Something_that_is_not_None/iterate_one">
+        <input ref="/Something_that_is_not_None/iterate_one/item">
+          <label>Item</label>
+        </input>
+      </repeat>
+    </group>
+    <group ref="/Something_that_is_not_None/iterate_none">
+      <label>Indicate none</label>
+      <repeat nodeset="/Something_that_is_not_None/iterate_none">
+        <input ref="/Something_that_is_not_None/iterate_none/nothing">
+          <label>None</label>
         </input>
       </repeat>
     </group>

@@ -1,7 +1,7 @@
 sudo: required
 language: python
 python:
-- '3.4'
+- '3.6'
 services:
 - docker
 cache:
@@ -10,10 +10,9 @@ cache:
 before_script:
 - docker login -u ehealthafricadevops -p $DOCKER_HUB_PASSWORD
 script:
-# This runs the kernel and odk tests in a minikube cluster
-- "./scripts/kubernetes/run_travis.sh"
-# Run all tests with docker-compose
-- "./scripts/test_all.sh"
+# First, run the kernel and odk tests in a minikube cluster. If everything goes
+# well, run all tests in a docker-compose environment.
+- "./scripts/kubernetes/run_travis.sh && ./scripts/test_all.sh"
 after_script:
 - "./scripts/kill_all.sh"
 deploy:
@@ -22,7 +21,7 @@ deploy:
   skip_cleanup: true
   on:
     branch: ^\d+\.\d+(\.\d+)?(-\S*)?$
-    tags: true  
+    tags: true
 - provider: script
   script: "./scripts/release.sh"
   skip_cleanup: true

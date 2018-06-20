@@ -12,7 +12,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -21,19 +21,33 @@
 from django.contrib import admin
 from django.utils.translation import ugettext as _
 
-from .api.models import Mapping, XForm, MediaFile
-from .api.forms import MappingForm, XFormForm
+from .api.models import Project, XForm, MediaFile
+from .api.forms import ProjectForm, XFormForm
 
 
-class MappingAdmin(admin.ModelAdmin):
+class ProjectAdmin(admin.ModelAdmin):
 
-    form = MappingForm
+    form = ProjectForm
     list_display = (
-        'mapping_id',
+        'project_id',
         'name',
     )
     search_fields = ('name',)
     ordering = list_display
+
+    fieldsets = (
+        (_('Aether Kernel'), {
+            'description': _('Please choose the Aether Kernel Project.'),
+            'fields': ['project_id', 'name', ]
+        }),
+
+        (_('Granted surveyors'), {
+            'description': _(
+                'If you do not specify any surveyors, EVERYONE will be able to access this project xForms.'
+            ),
+            'fields': ['surveyors', ],
+        }),
+    )
 
 
 class XFormAdmin(admin.ModelAdmin):
@@ -41,7 +55,7 @@ class XFormAdmin(admin.ModelAdmin):
     form = XFormForm
     list_display = (
         'id',
-        'mapping',
+        'project',
         'title',
         'form_id',
         'description',
@@ -51,18 +65,18 @@ class XFormAdmin(admin.ModelAdmin):
     list_filter = ('created_at',)
     date_hierarchy = 'created_at'
     readonly_fields = ('title', 'form_id', 'version',)
-    search_fields = ('mapping', 'title', 'form_id',)
+    search_fields = ('project', 'title', 'form_id',)
     ordering = list_display
 
     fieldsets = (
         (_('Aether Kernel'), {
-            'description': _('Please choose the Aether Kernel Mapping.'),
-            'fields': ['mapping', 'description', ]
+            'description': _('Please indicate the Aether Kernel artefacts.'),
+            'fields': ['project', 'kernel_id', ]
         }),
 
         (_('xForm definition'), {
             'description': _('Please upload an XLS Form or an XML File, or enter the XML data.'),
-            'fields': ['xml_file', 'xml_data', 'title', 'form_id', 'version', ],
+            'fields': ['xml_file', 'xml_data', 'description', 'title', 'form_id', 'version', ],
         }),
 
         (_('Granted surveyors'), {
@@ -87,6 +101,6 @@ class MediaFileAdmin(admin.ModelAdmin):
     ordering = list_display
 
 
-admin.site.register(Mapping, MappingAdmin)
+admin.site.register(Project, ProjectAdmin)
 admin.site.register(XForm, XFormAdmin)
 admin.site.register(MediaFile, MediaFileAdmin)

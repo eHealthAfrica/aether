@@ -10,7 +10,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -442,7 +442,9 @@ def make_graph(
     return properties, records
 
 
-def make_dependency_graph(graphed_records, records, limited_properties={}):
+def make_dependency_graph(graphed_records, records, limited_properties=None):
+    if limited_properties is None:
+        limited_properties = {}
     graph = {}
     for key in graphed_records:
         record = records[key]
@@ -475,7 +477,9 @@ def get_parental_properties(
         properties,
         lineage,
         all_records,
-        limited_properties={}):
+        limited_properties=None):
+    if limited_properties is None:
+        limited_properties = {}
     output = {}
     permitted = set([i for val in limited_properties.values() for i in val])
     props = set(properties)

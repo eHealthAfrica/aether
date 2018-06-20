@@ -1,0 +1,370 @@
+@keyframes slide-up {
+  0%   { top: 100vh; }
+  100% { top: $navbar-height-xs; }
+}
+
+$transition-speed: .6s;
+
+$pipeline-nav-height: 4rem;
+
+$input-nav-width: 6rem;
+$entityTypes-nav-width: 11rem;
+$mapping-nav-width: 9rem;
+$output-nav-width: 8rem;
+
+.pipeline {
+  background: $white;
+  box-shadow: 0 -1px 3px rgba($text-color, .3);
+  position: fixed;
+  display: flex;
+  top: $navbar-height-xs;
+  bottom: 0;
+  width: 100vw;
+  transition: top .2s;
+  animation: slide-up .6s;
+  z-index: 2;
+}
+
+.pipeline-nav {
+  display: flex;
+  position: absolute;
+  width: 100%;
+  align-items: baseline;
+  justify-content: space-between;
+  z-index: 3;
+}
+
+.fullscreen-toggle {
+  height: 1.8rem;
+  position: relative;
+  margin-left: 1rem;
+  align-items: center;
+  transition: margin-left $transition-speed;
+  color: $action-color;
+  display: none;
+
+  &::before {
+    @include shadow-flat-dark;
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 50%;
+    background: url('/static/images/fullscreen-icon.svg') center center no-repeat;
+  }
+
+  &::after {
+    @include shadow-flat-dark;
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 1rem;
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 50%;
+    background: url('/static/images/fullscreen-exit-icon.svg') center center no-repeat;
+    display: none;
+  }
+
+  span {
+    padding: 0 3.2rem 0 2.3rem;
+    opacity: 0;
+    transition: opacity .2s;
+  }
+
+  &:focus,
+  &:hover {
+    &::before,
+    &::after {
+      background-color: rgba($action-color-b, .2);
+    }
+
+    span {
+      opacity: 1;
+    }
+  }
+}
+
+.fullscreen .fullscreen-toggle {
+  margin-left: calc(100% - 19rem);
+  border-right: 1px solid $grey;
+
+  &::before {
+    display: none;
+  }
+
+  &::after {
+    display: block;
+  }
+}
+
+.pipeline-nav-items {
+  display: flex;
+  width: calc(100% - #{$output-nav-width});
+  align-items: baseline;
+  justify-content: space-between;
+  transition: width $transition-speed;
+}
+
+div[class^='pipeline-nav-item__'] {
+  @include label;
+  color: $action-color-b;
+  font-weight: 600;
+  padding: .6rem 0;
+  transition: all $transition-speed;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  align-items: baseline;
+  justify-content: flex-start;
+  display: flex;
+
+  .badge {
+    color: $white;
+    font-weight: 600;
+    background: $grey;
+    width: 1.8rem;
+    min-width: 1.8rem;
+    height: 1.8rem;
+    padding: .4rem 0;
+    opacity: .4;
+    margin: 0 .8rem;
+  }
+
+  &:hover {
+
+    .badge {
+      @include bg-gradient;
+      opacity: 1;
+    }
+  }
+}
+
+div.pipeline-nav-item__input {
+  width: $input-nav-width;
+}
+
+div.pipeline-nav-item__entityTypes {
+  width: $entityTypes-nav-width;
+}
+
+div.pipeline-nav-item__mapping {
+  width: $mapping-nav-width;
+}
+
+div.pipeline-nav-item__output {
+
+  text-align: right;
+  justify-content: flex-end;
+  padding-right: 2rem;
+  width: $output-nav-width;
+  position: relative;
+
+  .output-toggle {
+    width: 0;
+    height: 0;
+    border-top: .4rem solid transparent;
+    border-bottom: .4rem solid transparent;
+    border-left: .6rem solid $action-color;
+
+    position: absolute;
+    top: .8rem;
+    right: .6rem;
+
+    transition: right $transition-speed;
+  }
+
+  .status {
+    @include shadow-cutout-dark;
+    border-radius: 50%;
+    width: .8em;
+    height: .8em;
+    content: '';
+    display: block;
+    margin-right: .5em;
+  }
+
+  .red {
+    background-color: $red;
+  }
+
+  .green {
+    background-color: $green;
+  }
+}
+
+.pipeline-sections {
+  color: $text-color;
+  display: flex;
+  width: 100%;
+  transition: width $transition-speed;
+}
+
+.section-body {
+  width: 100%;
+  height: calc(100vh - #{$navbar-height-xs} - #{$pipeline-nav-height});
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+div[class^='pipeline-section__'],
+.pipeline-output {
+  width: 0;
+  height: calc(100vh - #{$navbar-height-xs});
+  padding-top: $pipeline-nav-height;
+  transition: width $transition-speed;
+  position: relative;
+}
+
+// STATES
+
+@mixin selected {
+  .badge {
+    @include bg-gradient;
+    opacity: 1;
+  }
+
+  .fullscreen-toggle {
+    display: flex;
+  }
+}
+
+// INPUT
+
+.pipeline--input {
+
+  div.pipeline-nav-item__input {
+    @include selected;
+    width: calc(100% - (#{$entityTypes-nav-width} + #{$mapping-nav-width}));
+    color: $text-color;
+  }
+
+  div.pipeline-section__input {
+    width: 100%;
+  }
+}
+
+// ENTITY TYPES
+
+.pipeline--entityTypes {
+
+  div.pipeline-nav-item__input {
+    width: $column-width;
+  }
+
+  div.pipeline-section__input {
+    width: $column-width;
+  }
+
+  div.pipeline-nav-item__entityTypes {
+    @include selected;
+    width: calc(100% - #{$column-width} - (#{$mapping-nav-width}));
+    color: $white;
+  }
+
+  div.pipeline-section__entityTypes {
+    width: calc(100% - #{$column-width});
+  }
+}
+
+.pipeline--entityTypes.fullscreen {
+
+  div.pipeline-nav-item__input,
+  div.pipeline-nav-item__mapping {
+    width: 0;
+  }
+
+  div.pipeline-section__input {
+    width: 0;
+  }
+
+  div.pipeline-nav-item__entityTypes {
+    width: 100%;
+  }
+
+  div.pipeline-section__entityTypes {
+    width: 100%;
+  }
+}
+
+// MAPPING
+
+.pipeline--mapping {
+
+  div.pipeline-nav-item__input {
+    width: $column-width;
+  }
+
+  div.pipeline-section__input {
+    width: $column-width;
+  }
+
+  div.pipeline-nav-item__entityTypes {
+    width: $column-width;
+  }
+
+  div.pipeline-section__entityTypes {
+    width: $column-width;
+  }
+
+  div.pipeline-nav-item__mapping {
+    @include selected;
+    width: calc(100% - #{$column-width}*2);
+    color: $white;
+  }
+
+  div.pipeline-section__mapping {
+    width: calc(100% - #{$column-width}*2);
+  }
+}
+
+.pipeline--mapping.fullscreen {
+
+  div.pipeline-nav-item__input,
+  div.pipeline-nav-item__entityTypes {
+    width: 0;
+  }
+
+  div.pipeline-section__input,
+  div.pipeline-section__entityTypes {
+    width: 0;
+  }
+
+  div.pipeline-nav-item__mapping {
+    width: 100%;
+  }
+
+  div.pipeline-section__mapping {
+    width: 100%;
+  }
+}
+
+
+// OUTPUT
+
+.show-output {
+
+  .pipeline-nav-items {
+    width: calc(100vw - #{$output-width});
+  }
+
+  div.pipeline-nav-item__output {
+    width: $output-width;
+
+    .output-toggle {
+      right: calc(100% - 1.6rem);
+    }
+  }
+
+  .pipeline-sections {
+    width: calc(100vw - #{$output-width});
+  }
+
+  .pipeline-output {
+    width: $output-width;
+  }
+}

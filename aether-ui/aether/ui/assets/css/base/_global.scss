@@ -1,0 +1,221 @@
+body,
+html {
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  color: $text-color;
+  font: 15px $body-font-family;
+  line-height: 1.3em;
+}
+
+a {
+  color: $action-color;
+
+  &:active,
+  &:focus,
+  &:hover {
+    color: $hover-color;
+    text-decoration: none;
+  }
+}
+
+ul {
+  padding-left: 1rem;
+}
+
+.container-fluid {
+  padding: 0;
+}
+
+.small,
+small {
+  font-size: $font-size-s;
+}
+
+.badge {
+  background: rgba($grey, .1);
+  border-radius: $font-size-standard;
+  padding: .3rem .6rem;
+  font-weight: 300;
+  font-size: $font-size-standard;
+  margin: 0 .4em;
+}
+
+.badge-big {
+  font-size: $font-size-l;
+  border-radius: $font-size-l;
+  padding: .6rem .9rem;
+}
+
+.badge-b {
+  @include shadow-cutout-white;
+}
+
+.form-label {
+  display: block;
+  font-weight: 300;
+  letter-spacing: .04em;
+  font-size: $font-size-m;
+  margin-bottom: 1.2rem;
+}
+
+.title-medium {
+  @extend .form-label;
+}
+
+.title-large {
+  @extend .form-label;
+  font-size: $font-size-l;
+}
+
+input[type='password'],
+input[type='text'],
+textarea {
+  @include shadow-cutout-white;
+  border: 0;
+  border-radius: $border-radius;
+  background: $background-color;
+  font-family: $body-font-family;
+  padding: .8em;
+
+  &:disabled {
+    background: $light-grey;
+    color: $grey;
+  }
+
+  &.input-d {
+    @include shadow-cutout-dark;
+    background: rgba($text-color, .3);
+    color: $white;
+  }
+
+  &.error {
+    background: rgba($red, .1);
+  }
+}
+
+input,
+input:focus,
+input:active,
+textarea:focus,
+textarea:active {
+  outline: 0;
+}
+
+@-webkit-keyframes autofill {
+  to {
+    color: $white;
+    background: transparent;
+  }
+}
+
+input:-webkit-autofill,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-animation-name: autofill;
+  -webkit-animation-fill-mode: both;
+}
+
+.textarea-header {
+  @include shadow-cutout-white;
+  background: $light-grey;
+  border-radius: $border-radius $border-radius 0 0;
+  width: 100%;
+  min-height: .6rem;
+  margin-bottom: -$border-radius;
+  position: relative;
+  z-index: 0;
+
+  .hint {
+    margin: 1rem;
+  }
+}
+
+.textarea-header+textarea {
+  border-radius: 0 0 $border-radius $border-radius;
+}
+
+.dropdown-menu {
+  border-radius: 0;
+  border: 0;
+  box-shadow: 0 2px 4px $text-color;
+  top: 120%;
+
+  &::before {
+    content: '';
+    display: block;
+    width: 12px;
+    height: 12px;
+    background: $white;
+    transform: rotate(45deg);
+    position: absolute;
+    left: 1.8rem;
+    top: -6px;
+  }
+}
+
+.toggleable-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.tabs {
+  position: relative;
+  z-index: 2;
+  margin-bottom: -$border-radius;
+
+  .tab {
+    background: none;
+    border: 0;
+    padding: 1.2rem 10% 1.2rem 2rem;
+    font-size: $font-size-m;
+    font-weight: 300;
+    color: $action-color;
+
+    &:active,
+    &:focus,
+    &:hover {
+      cursor: pointer;
+      outline: none;
+    }
+  }
+
+  .tab.selected {
+    @include shadow-cutout-white;
+    background: $light-grey;
+    border-radius: $border-radius $border-radius 0 0;
+    color: $text-color;
+    pointer-events: none;
+  }
+}
+
+.monospace {
+  font: $font-size-xs $code-font-family;
+  line-height: 1.4em;
+}
+
+pre {
+  background-color: $black;
+  font-family: $code-font-family;
+  font-size: $font-size-xs;
+  color: $green;
+  max-height: 200px;
+  max-width: 500px;
+  overflow: auto;
+  white-space: pre;
+  padding: .5rem;
+}
+
+code {
+  color: $light-grey;
+  font: $font-size-xs $code-font-family;
+  white-space: pre-wrap;
+}
+
+@media screen and (max-width: 768px) {
+
+  body,
+  html {
+    font-size: 13px;
+  }
+}

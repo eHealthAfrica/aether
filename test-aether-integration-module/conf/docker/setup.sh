@@ -12,7 +12,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -34,12 +34,15 @@ export PYTHONUNBUFFERED=true
 # install packages
 ################################################################################
 
-# Add postgres apt repo to get more recent postgres versions
-#echo 'deb http://apt.postgresql.org/pub/repos/apt/ jessie-pgdg main' > /etc/apt/sources.list.d/pgdg.list
-#wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+PACKAGE_LIST=/tmp/apt-packages.txt
+if [ -f "$PACKAGE_LIST" ]; then
+    # Add postgres apt repo to get more recent postgres versions
+    echo 'deb http://apt.postgresql.org/pub/repos/apt/ jessie-pgdg main' > /etc/apt/sources.list.d/pgdg.list
+    wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
 
-apt-get update -qq
-cat /tmp/apt-packages.txt | xargs apt-get -qq --yes --force-yes install
+    apt-get update -qq
+    apt-get -qq --yes --force-yes install `cat $PACKAGE_LIST`
+fi
 
 
 ################################################################################

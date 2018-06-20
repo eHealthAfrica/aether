@@ -15,7 +15,8 @@ docker-compose build kernel odk
 # when troubleshooting.
 helm install stable/postgresql \
      --name db \
-     --values=./helm/overrides/db.yaml
+     --values=./helm/overrides/db.yaml \
+     --version=0.13.1
 # Wait for the deployment to reach a "Running" state.
 kubectl rollout status deployment db
 

@@ -12,7 +12,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -20,34 +20,21 @@
 #
 set -e
 
-function prepare_and_test_container() {
-  container="$1"-test
-
-  echo "_____________________________________________ Starting $1 tasks"
-  $DC_TEST build $container
-  $DC_TEST run   $container setuplocaldb
-  if [[ $2 ]]
-  then
-    $DC_TEST run kernel-test manage loaddata $2
-  fi
-  $DC_TEST run $container test --noinput
-  echo "_____________________________________________ $1 tasks done"
-}
-
 function prepare_container() {
-  echo "_________________________________________________ Preparing $1 container"
+  echo "_____________________________________________ Preparing $1 container"
   build_container $1
   $DC_TEST run "$1"-test setuplocaldb
-  echo "_________________________________________________ $1 ready!"
+  echo "_____________________________________________ $1 ready!"
 }
 
 function build_container() {
-  echo "_________________________________________________ Building $1 container"
+  echo "_____________________________________________ Building $1 container"
   $DC_TEST build "$1"-test
 }
 
 DC_TEST="docker-compose -f docker-compose-test.yml"
 DC_COMMON="docker-compose -f docker-compose-common.yml"
+
 
 echo "_____________________________________________ TESTING"
 
