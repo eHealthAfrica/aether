@@ -14,13 +14,15 @@
   .modal-title {
     font-weight: 300;
     letter-spacing: .04em;
-    font-size: $font-size-m;
+    font-size: $font-size-l;
   }
 
   .modal-dialog {
     @include card;
-    margin: 7rem auto;
+    margin: 10vh auto;
     padding: 0;
+    max-height: 80vh;
+    overflow-y: auto;
   }
 
   .modal-content {
@@ -60,6 +62,13 @@
         }
       }
     }
+
+    div.code {
+      background-color: $mid-blue;
+      padding: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
   }
 
   .modal-actions {
@@ -83,5 +92,13 @@
     &:hover {
       color: $hover-color;
     }
+  }
+}
+
+@media screen and (min-width: 576px) {
+
+  .modal-dialog {
+    width: 70vw;
+    max-width: 800px;
   }
 }

@@ -6,6 +6,9 @@ from http import HTTPStatus
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.decorators import api_view
+
+from aether.common.kernel import utils
 
 from . import models, serializers, utils as ui_utils
 
@@ -63,3 +66,8 @@ class PipelineViewSet(viewsets.ModelViewSet):
             serialized_data = serializers.PipelineSerializer(pipeline, context={'request': request}).data
             outcome['pipeline'] = serialized_data
             return Response(outcome, status=HTTPStatus.OK)
+
+
+@api_view(['GET'])
+def get_kernel_url(request):
+    return Response(utils.get_kernel_server_url())
