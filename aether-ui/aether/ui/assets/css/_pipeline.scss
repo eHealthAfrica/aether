@@ -30,7 +30,7 @@ $pipeline-nav-height: 4rem;
 $input-nav-width: 6rem;
 $entityTypes-nav-width: 11rem;
 $mapping-nav-width: 9rem;
-$output-nav-width: 7rem;
+$output-nav-width: 8rem;
 
 .pipeline {
   background: $white;
@@ -197,6 +197,24 @@ div.pipeline-nav-item__output {
 
     transition: right $transition-speed;
   }
+
+  .status {
+    @include shadow-cutout-dark;
+    border-radius: 50%;
+    width: .8em;
+    height: .8em;
+    content: '';
+    display: block;
+    margin-right: .5em;
+  }
+
+  .red {
+    background-color: $red;
+  }
+
+  .green {
+    background-color: $green;
+  }
 }
 
 .pipeline-sections {
@@ -208,7 +226,7 @@ div.pipeline-nav-item__output {
 
 .section-body {
   width: 100%;
-  height: calc(100vh - 10px - #{$pipeline-nav-height});
+  height: calc(100vh - #{$navbar-height-xs} - #{$pipeline-nav-height});
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -216,7 +234,7 @@ div.pipeline-nav-item__output {
 div[class^='pipeline-section__'],
 .pipeline-output {
   width: 0;
-  height: calc(100vh - 10px);
+  height: calc(100vh - #{$navbar-height-xs});
   padding-top: $pipeline-nav-height;
   transition: width $transition-speed;
   position: relative;

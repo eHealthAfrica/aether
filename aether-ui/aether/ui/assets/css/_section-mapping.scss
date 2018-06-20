@@ -28,6 +28,11 @@
     padding: 2rem 0 0;
   }
 
+  .toggleable-content {
+    height: auto;
+    display: block;
+  }
+
   .tabs {
 
     .tab.selected {
@@ -44,10 +49,6 @@
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-
-    form {
-      padding-bottom: 1rem;
-    }
   }
 
   .rules-buttons {
@@ -83,6 +84,26 @@
 
     .btn {
       margin: .2rem 0;
+    }
+  }
+
+  .rule.error {
+    position: relative;
+
+    input.error {
+      color: $red;
+    }
+
+    &::before {
+      border-radius: 50%;
+      background-color: $red;
+      width: .6em;
+      height: .6em;
+      position: absolute;
+      left: -1.2em;
+      top: 1em;
+      content: '';
+      display: block;
     }
   }
 

@@ -24,7 +24,7 @@
 
   .section-body {
     display: flex;
-    padding: 2rem 0;
+    padding: 2rem 0 0;
     position: relative;
   }
 
@@ -59,7 +59,7 @@
     flex-direction: column;
     width: 100%;
     height: calc(100vh - 6rem - #{$navbar-height-xs} - #{$unit}*2);
-    min-height: 35em;
+    min-height: 25em;
     position: relative;
     justify-content: space-between;
     align-items: flex-start;

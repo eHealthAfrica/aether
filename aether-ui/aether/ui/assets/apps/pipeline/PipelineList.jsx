@@ -121,7 +121,8 @@ class PipelineList extends Component {
           </div>
 
           <div className='summary-errors'>
-            <span className='badge badge-b badge-big'>
+            <span className={`badge badge-b badge-big
+            ${pipeline && pipeline.mapping_errors.length && 'error'}`}>
               { pipeline.mapping_errors ? pipeline.mapping_errors.length : 0 }
             </span>
             <FormattedMessage

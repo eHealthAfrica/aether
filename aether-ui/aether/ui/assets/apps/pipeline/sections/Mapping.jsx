@@ -153,15 +153,19 @@ class Mapping extends Component {
       })
     }
 
+    const hasError = (source, destination = null) => (Boolean(this.props.selectedPipeline.mapping_errors.find(
+      error => (error.path && (error.path === source || error.path === destination))
+    )))
+
     return (
-      <div key={rule.id} className='rule'>
+      <div key={rule.id} className={`${hasError(rule.source, rule.destination) && 'error'} rule`}>
         <div className='rule-input source'>
           <FormattedMessage id='mapping.rule.source.placeholder' defaultMessage='define source'>
             {message => (
               <input
                 type='text'
                 required
-                className='input-d'
+                className={`${hasError(rule.source) && 'error'} input-d`}
                 name='source'
                 value={rule.source}
                 onChange={onChangeInput}
@@ -177,7 +181,7 @@ class Mapping extends Component {
               <input
                 type='text'
                 required
-                className='input-d'
+                className={`${hasError(rule.destination) && 'error'} input-d`}
                 name='destination'
                 value={rule.destination}
                 onChange={onChangeInput}

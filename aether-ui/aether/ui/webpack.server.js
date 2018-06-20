@@ -19,12 +19,13 @@
  */
 
 
-const fs = require('fs')
+
 const webpack = require('webpack')
 const WebpackDevServer = require('webpack-dev-server')
 const buildConfig = require('./webpack.common')
 
-const WEBPACK_URL = 'http://localhost:3000'
+const WEBPACK_PORT = 3004
+const WEBPACK_URL = `http://localhost:${WEBPACK_PORT}`
 
 const config = buildConfig({
   production: false,
@@ -63,7 +64,7 @@ new WebpackDevServer(webpack(config), {
   inline: true,
   historyApiFallback: true,
   // Fixes:
-  //    Access to XXX at 'https://localhost:3000/static/ZZZ' from origin
+  //    Access to XXX at 'https://localhost:{port}/static/ZZZ' from origin
   //    has been blocked by CORS policy
   headers: { 'Access-Control-Allow-Origin': '*' },
   https: false,
@@ -83,6 +84,6 @@ new WebpackDevServer(webpack(config), {
     chunkModules: false
   }
 })
-  .listen(3000, '0.0.0.0', () => {
+  .listen(WEBPACK_PORT, '0.0.0.0', () => {
     console.log('Listening at', WEBPACK_URL)
   })
