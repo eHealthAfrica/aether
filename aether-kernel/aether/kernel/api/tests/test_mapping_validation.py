@@ -10,7 +10,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -18,7 +18,39 @@
 
 from django.test import TestCase
 from .. import mapping_validation
-from .. import utils
+
+valid_schemas = {
+    'Person': {
+        'name': 'Person',
+        'type': 'record',
+        'fields': [
+            {
+                'name': 'firstName',
+                'type': 'string'
+            },
+            {
+                'name': 'lastName',
+                'type': 'string'
+            },
+            {
+                'name': 'age',
+                'type': 'int'
+            }
+        ]
+    }
+}
+
+invalid_schemas = {
+    'Person': {
+        'name': 'Person',
+        'type': 'record',
+        'fields': [
+            {
+                'invalidField': 1
+            }
+        ]
+    }
+}
 
 
 class TestMappingValidation(TestCase):
@@ -40,117 +72,74 @@ class TestMappingValidation(TestCase):
     def test_validate_getter__failure(self):
         submission_payload = {'a': {'b': 'x'}}
         path = '$.d.e'
-        error_message = mapping_validation.MESSAGE_NO_MATCH
-        expected = mapping_validation.Failure(path, error_message)
+        description = mapping_validation.NO_MATCH
+        expected = mapping_validation.Failure(path, description)
         result = mapping_validation.validate_getter(submission_payload, path)
         self.assertEquals(expected, result)
 
     def test_validate_setter__success(self):
-        entity_list = [
-            utils.Entity(
-                id=1,
-                payload={'a': {'b': 'x'}},
-                projectschema_name='Test-1',
-                status='Publishable',
-            ),
-            utils.Entity(
-                id=2,
-                payload={'c': {'d': 'y'}},
-                projectschema_name='Test-2',
-                status='Publishable',
-            ),
-        ]
-        path = 'Test-1.a.b'
-        expected = mapping_validation.Success(path, ['x'])
-        result = mapping_validation.validate_setter(entity_list, path)
+        path = 'Person.firstName'
+        expected = mapping_validation.Success(path, [])
+        result = mapping_validation.validate_setter(valid_schemas, path)
         self.assertEquals(expected, result)
 
-    def test_validate_setter__failure(self):
-        entity_list = [
-            utils.Entity(
-                id=1,
-                payload={'a': {'b': 'x'}},
-                projectschema_name='Test-1',
-                status='Publishable',
-            ),
-            utils.Entity(
-                id=2,
-                payload={'c': {'d': 'y'}},
-                projectschema_name='Test-2',
-                status='Publishable',
-            ),
-        ]
-        path = 'Test-3.a.b'  # nonexistent project schema name "Test-3"
-        error_message = mapping_validation.MESSAGE_NO_MATCH
-        expected = mapping_validation.Failure(path, error_message)
-        result = mapping_validation.validate_setter(entity_list, path)
+    def test_validate_setter__failure__invalid_path(self):
+        path = 'a.b.c'
+        description = mapping_validation.INVALID_PATH
+        expected = mapping_validation.Failure(path, description)
+        result = mapping_validation.validate_setter(valid_schemas, path)
+        self.assertEquals(expected, result)
+
+    def test_validate_setter__failure__invalid_schema(self):
+        path = 'Person.firstName'
+        description = mapping_validation.invalid_schema('Person')
+        expected = mapping_validation.Failure(path, description)
+        result = mapping_validation.validate_setter(invalid_schemas, path)
+        self.assertEquals(expected, result)
+
+    def test_validate_setter__failure__no_match(self):
+        path = 'Person.nonexistentField'
+        description = mapping_validation.NO_MATCH
+        expected = mapping_validation.Failure(path, description)
+        result = mapping_validation.validate_setter(valid_schemas, path)
+        self.assertEquals(expected, result)
+
+    def test_validate_setter__failure__no_schema(self):
+        path = 'NonexistantSchema.firstName'
+        description = mapping_validation.no_schema('NonexistantSchema')
+        expected = mapping_validation.Failure(path, description)
+        result = mapping_validation.validate_setter(valid_schemas, path)
         self.assertEquals(expected, result)
 
     def test_validate_mapping__success(self):
         submission_payload = {'a': {'b': 'x'}, 'c': {'d': 'y'}}
-        entity_list = [
-            utils.Entity(
-                id=1,
-                payload={'a': {'b': 'c'}},
-                projectschema_name='Test-1',
-                status='Publishable',
-            ),
-            utils.Entity(
-                id=2,
-                payload={'c': {'d': 'y'}},
-                projectschema_name='Test-2',
-                status='Publishable',
-            ),
-        ]
         mapping_definition = {
             'mapping': [
-                ('$.a.b', 'Test-1.a.b'),
-                ('$.c.d', 'Test-2.c.d'),
+                ('$.a.b', 'Person.firstName'),
+                ('$.c.d', 'Person.lastName'),
             ]
         }
         expected = []
         result = mapping_validation.validate_mappings(
-            submission_payload, entity_list, mapping_definition,
+            submission_payload, valid_schemas, mapping_definition,
         )
         self.assertEquals(expected, result)
 
     def test_validate_mapping__wildcard_success(self):
         submission_payload = {'data': {'a1': {'b': 'x'}, 'a2': {'d': 'y'}}}
-        entity_list = [
-            utils.Entity(
-                id=1,
-                payload={'a': {'b': [{'b': 'x'}, {'d': 'y'}]}},
-                projectschema_name='Test-1',
-                status='Publishable',
-            )
-        ]
         mapping_definition = {
             'mapping': [
-                ('$.data.a*', 'Test-1.a.b')
+                ('$.data.a*', 'Person.firstName')
             ]
         }
         expected = []
         result = mapping_validation.validate_mappings(
-            submission_payload, entity_list, mapping_definition,
+            submission_payload, valid_schemas, mapping_definition,
         )
         self.assertEquals(expected, result)
 
     def test_validate_mapping__failure(self):
         submission_payload = {'a': {'b': 'x'}, 'c': {'d': 'y'}}
-        entity_list = [
-            utils.Entity(
-                id=1,
-                payload={'a': {'b': 'c'}},
-                projectschema_name='Test-1',
-                status='Publishable',
-            ),
-            utils.Entity(
-                id=2,
-                payload={'c': {'d': 'y'}},
-                projectschema_name='Test-2',
-                status='Publishable',
-            ),
-        ]
         mapping_definition = {
             'mapping': [
                 ('$.a.b', 'Test-1.nonexistent'),
@@ -160,14 +149,18 @@ class TestMappingValidation(TestCase):
         expected = [
             mapping_validation.Failure(
                 path=mapping_definition['mapping'][0][1],
-                error_message=mapping_validation.MESSAGE_NO_MATCH,
+                description=mapping_validation.no_schema('Test-1'),
             ),
             mapping_validation.Failure(
                 path=mapping_definition['mapping'][1][0],
-                error_message=mapping_validation.MESSAGE_NO_MATCH,
+                description=mapping_validation.NO_MATCH,
+            ),
+            mapping_validation.Failure(
+                path=mapping_definition['mapping'][1][1],
+                description=mapping_validation.INVALID_PATH,
             ),
         ]
         result = mapping_validation.validate_mappings(
-            submission_payload, entity_list, mapping_definition,
+            submission_payload, valid_schemas, mapping_definition,
         )
         self.assertEquals(expected, result)

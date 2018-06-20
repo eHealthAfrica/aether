@@ -10,24 +10,20 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
 
-import uuid
-
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError
 
 from . import CustomTestCase
-from ..models import Mapping, XForm, MediaFile
+from ..models import Project, XForm, MediaFile
 
 
 class ModelsTests(CustomTestCase):
-
-    MAPPING_ID = uuid.uuid4()
 
     def test__xform__create__raises_errors(self):
         # missing required fields
@@ -39,9 +35,9 @@ class ModelsTests(CustomTestCase):
         self.assertRaises(
             IntegrityError,
             XForm.objects.create,
-            mapping=self.helper_create_mapping(),
+            project=self.helper_create_project(),
         )
-        # missing mapping id
+        # missing project id
         self.assertRaises(
             IntegrityError,
             XForm.objects.create,
@@ -51,9 +47,11 @@ class ModelsTests(CustomTestCase):
         self.assertRaises(
             IntegrityError,
             XForm.objects.create,
-            mapping=self.helper_create_mapping(),
+            project=self.helper_create_project(),
             xml_data='''
-                <h:html>
+                <h:html
+                        xmlns="http://www.w3.org/2002/xforms"
+                        xmlns:h="http://www.w3.org/1999/xhtml">
                   <h:head>
                     <model>
                       <instance>
@@ -69,23 +67,13 @@ class ModelsTests(CustomTestCase):
         self.assertRaises(
             IntegrityError,
             XForm.objects.create,
-            mapping=self.helper_create_mapping(),
-            xml_data='''
-                <h:html
-                    xmlns="http://www.w3.org/2002/xforms"
-                    xmlns:ev="http://www.w3.org/2001/xml-events"
-                    xmlns:h="http://www.w3.org/1999/xhtml"
-                    xmlns:jr="http://openrosa.org/javarosa"
-                    xmlns:orx="http://openrosa.org/xforms"
-                    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-
-                  <h:head>
-            ''',
+            project=self.helper_create_project(),
+            xml_data=self.samples['xform']['xml-err'],
         )
 
     def test__xform__save(self):
         instance = XForm.objects.create(
-            mapping=self.helper_create_mapping(mapping_id=self.MAPPING_ID),
+            project=Project.objects.create(),
             xml_data=self.samples['xform']['xml-ok'],
         )
 
@@ -97,10 +85,11 @@ class ModelsTests(CustomTestCase):
         self.assertEqual(instance.manifest_url, '', 'without media files no manifest url')
         self.assertEqual(str(instance), 'xForm - Test - xform-id-test')
 
-    def test__mapping__surveyors(self):
-        instance = Mapping.objects.create(
-            mapping_id=self.MAPPING_ID,
-        )
+        self.assertEqual(instance.md5sum, '5e97c4e929f64d7701804043e3b544ba')
+        self.assertEqual(instance.hash, 'md5:5e97c4e929f64d7701804043e3b544ba')
+
+    def test__project__surveyors(self):
+        instance = Project.objects.create()
         self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')
 
         self.helper_create_superuser()
@@ -124,7 +113,7 @@ class ModelsTests(CustomTestCase):
 
     def test__xform__surveyors(self):
         instance = XForm.objects.create(
-            mapping=self.helper_create_mapping(mapping_id=self.MAPPING_ID),
+            project=Project.objects.create(),
             xml_data=self.samples['xform']['xml-ok'],
         )
         self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')
@@ -149,26 +138,25 @@ class ModelsTests(CustomTestCase):
                          'if granted surveyors not all users are surveyors')
 
         surveyor2 = self.helper_create_surveyor(username='surveyor2')
-        instance.mapping.surveyors.add(surveyor2)
-        instance.mapping.save()
+        instance.project.surveyors.add(surveyor2)
+        instance.project.save()
         self.assertEqual(instance.surveyors.count(), 1, 'one custom granted surveyor')
         self.assertTrue(instance.is_surveyor(surveyor))
         self.assertTrue(instance.is_surveyor(surveyor2),
-                        'mapping surveyors are also xform surveyors')
+                        'project surveyors are also xform surveyors')
 
         instance.surveyors.clear()
         instance.save()
         self.assertEqual(instance.surveyors.count(), 0, 'no custom granted surveyor')
         self.assertFalse(instance.is_surveyor(surveyor))
         self.assertTrue(instance.is_surveyor(surveyor2),
-                        'mapping surveyors are always xform surveyors')
+                        'project surveyors are always xform surveyors')
 
     def test__xform__media(self):
         xform = XForm.objects.create(
-            mapping=self.helper_create_mapping(mapping_id=self.MAPPING_ID),
+            project=Project.objects.create(),
             xml_data=self.samples['xform']['xml-ok'],
         )
-
         media = MediaFile.objects.create(
             xform=xform,
             media_file=SimpleUploadedFile('sample.txt', b'abc'),
@@ -181,23 +169,35 @@ class ModelsTests(CustomTestCase):
         media.save()
         self.assertEqual(media.name, 'sample.txt', 'no replaces name')
         self.assertEqual(media.md5sum, 'e2fc714c4727ee9395f324cd2e7f331f')
+        self.assertEqual(media.hash, 'md5:e2fc714c4727ee9395f324cd2e7f331f')
         # with media files there is manifest_url
         self.assertEqual(xform.manifest_url,
                          '/forms/{}/manifest.xml?version={}'.format(xform.id, xform.version))
 
-    def test__xform__version(self):
+    def test__xform__version_control(self):
         xform = XForm.objects.create(
-            mapping=self.helper_create_mapping(mapping_id=self.MAPPING_ID),
+            project=Project.objects.create(),
             xml_data=self.samples['xform']['xml-ok'],
         )
         last_version = xform.version
+        last_avro_schema = xform.avro_schema
+        last_kernel_id = xform.kernel_id
         self.assertEqual(last_version, 'v1')
 
         xform.xml_data = self.samples['xform']['xml-ok']
         xform.save()
-        self.assertEqual(last_version, xform.version, 'nothing changed')
-        last_version = xform.version
 
-        xform.xml_data = self.samples['xform']['raw-xml']
+        self.assertEqual(last_version, xform.version, 'nothing changed')
+        self.assertEqual(last_avro_schema, xform.avro_schema, 'nothing changed')
+        self.assertEqual(last_kernel_id, xform.kernel_id, 'nothing changed')
+
+        last_version = xform.version
+        last_avro_schema = xform.avro_schema
+        last_kernel_id = xform.kernel_id
+
+        xform.xml_data = self.samples['xform']['xml-ok-noversion']
         xform.save()
+
         self.assertNotEqual(last_version, xform.version, 'changed xml data')
+        self.assertNotEqual(last_avro_schema, xform.avro_schema, 'changed AVRO schema')
+        self.assertNotEqual(last_kernel_id, xform.kernel_id, 'changed Kernel ID')

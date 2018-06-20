@@ -110,6 +110,33 @@ services:
     networks:
       - internal
 
+  # ---------------------------------
+  # Aether UI module
+  # ---------------------------------
+
+  ui:
+    extends:
+      file: docker-compose-base.yml
+      service: ui-base
+    # uncomment to speed up common module development
+    # volumes:
+    #   - ./aether-common-module/aether/common:/code/aether/common
+    depends_on:
+      - db
+      - kernel
+      - ui-webpack
+    networks:
+      internal:
+        aliases:
+          - ui.aether.local
+
+  ui-webpack:
+    extends:
+      file: docker-compose-base.yml
+      service: ui-webpack-base
+    networks:
+      - internal
+
 
   # ---------------------------------
   # NGINX container

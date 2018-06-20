@@ -4,17 +4,14 @@
 #                                                                              #
 #                                 CHANGE ME !!!                                #
 #                                                                              #
-# Update me and then run 'docker-compose run producer pip_freeze'              #
+# Update me and then run                                                       #
+#                                                                              #
+# docker-compose -f docker-compose-connect.yml run aether-producer pip_freeze  #
 #                                                                              #
 ################################################################################
 
 aether.client
+avro-python3
 kafka
 psycopg2-binary
 requests
-
-# test libraries
-coverage
-flake8
-flake8-quotes
-mock

@@ -10,7 +10,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -228,7 +228,9 @@ class DataMocker(object):
         size = choice(range(2, self.MAX_ARRAY_SIZE))
         return [fn() for i in range(size)]
 
-    def gen_random_type(self, name=None, _types=[]):
+    def gen_random_type(self, name=None, _types=None):
+        if _types is None:
+            _types = []
         return MockFn(self._gen_random_type, [name, _types])
 
     def _gen_random_type(self, name, types):
@@ -343,10 +345,12 @@ class DataMocker(object):
         else:
             self.required.append(property)
 
-    def restrict_type(self, property_name, allowable_types=[]):
+    def restrict_type(self, property_name, allowable_types=None):
         # some properties can be completed by multiple types of properties
         # for example [null, int, string[]?].
         # restrict_type allows you to chose a subset of the permitted types for mocking
+        if allowable_types is None:
+            allowable_types = []
         self.restricted_types[property_name] = allowable_types
 
 

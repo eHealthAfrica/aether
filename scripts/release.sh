@@ -12,7 +12,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -21,7 +21,7 @@
 set -Eeuo pipefail
 
 IMAGE_REPO='ehealthafrica'
-APPS=( kernel odk couchdb-sync )
+APPS=( kernel odk couchdb-sync ui )
 VERSION=`cat VERSION`
 
 if [ -z "$TRAVIS_TAG" ];
@@ -32,7 +32,7 @@ fi
 for APP in "${APPS[@]}"
 do
   AETHER_APP="aether-${APP}"
-	echo "version: $VERSION"
+  echo "version: $VERSION"
   echo "Building Docker image ${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
   docker-compose build --build-arg GIT_REVISION=$TRAVIS_COMMIT \
   --build-arg VERSION=$VERSION $APP

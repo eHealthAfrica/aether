@@ -1,0 +1,56 @@
+// ************************************
+// Colors
+// ************************************
+
+$white:              #fff;
+$black:              #000;
+
+$red:                #d25b69;
+$orange:             #e8a835;
+$green:              #7bd494;
+
+$text-color:         #2d3146;
+$background-color:   #faf9fc;
+
+$dark-blue:          #32415d;
+$purple:             #7175dd;
+$mid-blue:           lighten($dark-blue, 5);
+
+$grey:               #aea8b4;
+$light-grey:         #ede9f2;
+
+$shadow-color:       rgba($text-color, .3);
+
+$action-color:       #0093ff;
+$action-color-b:     #50aef3;
+$hover-color:        $purple;
+
+// ************************************
+// Fonts
+// ************************************
+
+$body-font-family: 'Open Sans', Arial, sans-serif;
+$code-font-family: 'Fira Mono', SFMono-Regular, Menlo, Monaco, monospace;
+$icon-font:        'Font Awesome 5 Free';
+
+$font-size-xs:       .86rem;
+$font-size-s:        .94rem;
+$font-size-standard: 1rem;
+$font-size-m:        1.2rem;
+$font-size-l:        1.6rem;
+$font-size-xl:       2rem;
+$font-size-xxl:      3.2rem;
+
+// ************************************
+// Sizes
+// ************************************
+
+$unit: 1.2rem;
+$unit-xl: 2rem;
+$border-radius: 4px;
+
+$column-width: 20vw;
+$output-width: 25vw;
+$navbar-height-xs: 32px;
+
+$indent: 1rem;

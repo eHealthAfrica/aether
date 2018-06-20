@@ -1,0 +1,87 @@
+.modal {
+  background-color: rgba($text-color, .7);
+  color: $text-color;
+
+  &.show {
+    display: block;
+  }
+
+  .modal-header {
+    align-items: flex-start;
+    padding: $unit $unit-xl;
+  }
+
+  .modal-title {
+    font-weight: 300;
+    letter-spacing: .04em;
+    font-size: $font-size-m;
+  }
+
+  .modal-dialog {
+    @include card;
+    margin: 7rem auto;
+    padding: 0;
+  }
+
+  .modal-content {
+    border: 0;
+    padding: $unit-xl;
+
+    ul {
+      padding: 0;
+    }
+
+    li {
+      padding: .2rem 0;
+      list-style: none;
+      font-size: $font-size-s;
+    }
+
+    .error {
+      li {
+        color: $red;
+
+        &::before {
+          content: '\f06a ';
+          font: 1rem $icon-font;
+          margin-right: .3rem;
+        }
+      }
+    }
+
+    .success {
+      li {
+        color: $green;
+
+        &::before {
+          content: '\f058 ';
+          font: 1rem $icon-font;
+          margin-right: .3rem;
+        }
+      }
+    }
+  }
+
+  .modal-actions {
+    margin-top: $unit;
+
+    .btn {
+
+      &:not(:first-child) {
+        margin-left: $unit;
+      }
+    }
+  }
+
+  .close {
+    color: $action-color;
+    opacity: 1;
+    font-size: 2.5rem;
+    line-height: 1rem;
+    font-weight: 400;
+
+    &:hover {
+      color: $hover-color;
+    }
+  }
+}

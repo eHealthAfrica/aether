@@ -12,7 +12,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -20,9 +20,10 @@
 #
 set -Eeuo pipefail
 
-docker-compose 							kill
-docker-compose -f docker-compose-base.yml      			kill
-docker-compose -f docker-compose-connect.yml   			kill
-docker-compose -f docker-compose-common.yml    			kill
-docker-compose -f docker-compose-build-aether-utils.yml    	kill
-docker-compose -f docker-compose-test.yml      			kill
+for dc_file in $(find docker-compose*.yml 2> /dev/null)
+do
+  :
+
+  echo "Killing $dc_file containers"
+  docker-compose -f $dc_file kill
+done

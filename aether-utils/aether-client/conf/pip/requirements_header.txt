@@ -1,0 +1,12 @@
+#################################################################################
+#                                                                               #
+#                              Frozen requirements                              #
+#                                                                               #
+#                               DO NOT CHANGE !!!                               #
+#                                                                               #
+# To update this first update 'primary-requirements.txt' then run               #
+#                                                                               #
+# docker-compose -f docker-compose-build-aether-utils.yml run client pip_freeze #
+#                                                                               #
+#################################################################################
+

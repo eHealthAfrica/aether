@@ -10,7 +10,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -25,8 +25,13 @@ from . import views
 router = DefaultRouter()
 
 router.register('projects', views.ProjectViewSet)
+router.register('projects-stats',
+                views.ProjectStatsViewSet,
+                base_name='projects_stats')
 router.register('mappings', views.MappingViewSet)
-router.register('mappings-stats', views.MappingStatsViewSet, base_name='mappings_stats')
+router.register('mappings-stats',
+                views.MappingStatsViewSet,
+                base_name='mappings_stats')
 router.register('projectschemas', views.ProjectSchemaViewSet)
 router.register('submissions', views.SubmissionViewSet)
 router.register('attachments', views.AttachmentViewSet)

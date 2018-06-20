@@ -10,50 +10,148 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
 
-import xmltodict
 import uuid
 
 from hashlib import md5
 
 from django.contrib.auth import get_user_model
+from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.db import models, IntegrityError
 from django.utils import timezone
+from django.utils.translation import ugettext as _
 
-from .xform_utils import get_xml_title, get_xml_form_id, get_xml_version, validate_xmldict
+from .xform_utils import (
+    get_xform_data_from_xml,
+    parse_xform_to_avro_schema,
+    validate_xform,
+)
 
 
-class Mapping(models.Model):
+'''
+
+Data model schema:
+
+
+    +------------------+       +-------------------+       +------------------+
+    | Project          |       | XForm             |       | MediaFile        |
+    +==================+       +===================+       +==================+
+    | project_id       |<--+   | id                |<--+   | id               |
+    | name             |   |   | xml_data          |   |   | name             |
+    +::::::::::::::::::+   |   | description       |   |   | media_file       |
+    | surveyors (User) |   |   | created_at        |   |   +~~~~~~~~~~~~~~~~~~+
+    +------------------+   |   +~~~~~~~~~~~~~~~~~~-+   |   | md5sum           |
+                           |   | title             |   |   +::::::::::::::::::+
+                           |   | form_id           |   +--<| xform            |
+                           |   | version           |       +------------------+
+                           |   | md5sum            |
+                           |   | avro_schema       |
+                           |   +:::::::::::::::::::+
+                           |   | kernel_id         |
+                           |   +:::::::::::::::::::+
+                           +--<| project           |
+                               | surveyors (User)  |
+                               +-------------------+
+
+'''
+
+
+class Project(models.Model):
     '''
-    Database link of a Aether Kernel Mapping
+    Database link of an Aether Kernel Project
 
     The needed and common data is stored here, like the list of granted surveyors.
+
+
+    ----------------------------------------------------------------------------
+
+            Table "public.odk_project"
+
+       Column   | Type | Modifiers
+    ------------+------+-----------
+     project_id | uuid | not null
+     name       | text |
+
+    Indexes:
+        "odk_project_pkey" PRIMARY KEY, btree (project_id)
+
+    Referenced by:
+        TABLE "odk_project_surveyors"
+            CONSTRAINT "odk_project_surveyor_project_id_###_fk_odk_project_project_id"
+            FOREIGN KEY (project_id)
+            REFERENCES odk_project(project_id)
+            DEFERRABLE INITIALLY DEFERRED
+
+        TABLE "odk_xform"
+            CONSTRAINT "odk_xform_project_id_###_fk_odk_project_project_id"
+            FOREIGN KEY (project_id)
+            REFERENCES odk_project(project_id)
+            DEFERRABLE INITIALLY DEFERRED
+
+    ----------------------------------------------------------------------------
+
+            Table "public.odk_project_surveyors"
+
+       Column   |  Type   |                             Modifiers
+    ------------+---------+-------------------------------------------------------------------
+     id         | integer | not null default nextval('odk_project_surveyors_id_seq'::regclass)
+     project_id | uuid    | not null
+     user_id    | integer | not null
+
+    Indexes:
+        "odk_project_surveyors_pkey" PRIMARY KEY, btree (id)
+        "odk_project_surveyors_survey_id_user_id_###_uniq" UNIQUE CONSTRAINT, btree (project_id, user_id)
+        "odk_project_surveyors_survey_id_###" btree (project_id)
+        "odk_project_surveyors_user_id_###" btree (user_id)
+
+    Foreign-key constraints:
+        "odk_project_surveyor_project_id_###_fk_odk_project_project_id"
+            FOREIGN KEY (project_id)
+            REFERENCES odk_project(project_id)
+            DEFERRABLE INITIALLY DEFERRED
+
+        "odk_project_surveyors_user_id_###_fk_auth_user_id"
+            FOREIGN KEY (user_id)
+            REFERENCES auth_user(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+    ----------------------------------------------------------------------------
 
     '''
 
     # This is needed to submit data to kernel
     # (there is a one to one relation)
-    mapping_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    project_id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        verbose_name=_('project ID'),
+        help_text=_('This ID corresponds to an Aether Kernel project ID.'),
+    )
 
-    name = models.TextField(null=True, blank=True, default='')
+    name = models.TextField(null=True, blank=True, default='', verbose_name=_('name'))
 
     # the list of granted surveyors
-    surveyors = models.ManyToManyField(to=get_user_model(), blank=True)
+    surveyors = models.ManyToManyField(
+        to=get_user_model(),
+        blank=True,
+        verbose_name=_('surveyors'),
+        help_text=_('If you do not specify any surveyors, EVERYONE will be able to access this project xForms.'),
+    )
 
     def is_surveyor(self, user):
         '''
-        Indicates if the given user is a granted surveyor of the Mapping.
+        Indicates if the given user is a granted surveyor of the Project.
 
         Rules:
             - User is superuser.
-            - Mapping has no surveyors.
+            - Project has no surveyors.
             - User is in the surveyors list.
 
         '''
@@ -65,40 +163,150 @@ class Mapping(models.Model):
         )
 
     def __str__(self):
-        return '{} - {}'.format(str(self.mapping_id), self.name)
+        return '{} - {}'.format(str(self.project_id), self.name)
 
     class Meta:
         app_label = 'odk'
-        default_related_name = 'mappings'
+        default_related_name = 'projects'
         ordering = ['name']
+        verbose_name = _('project')
+        verbose_name_plural = _('projects')
+
+
+def __validate_xml_data__(value):
+    '''
+    Validates xml definition
+    '''
+
+    try:
+        validate_xform(value)
+    except Exception as e:
+        raise ValidationError(e)
 
 
 class XForm(models.Model):
     '''
-    Database representation of an XForm
+    Database representation of an XForm.
 
     The data is stored in XML format and could be converted to the
     other supported formats when it is needed.
 
+
+    One XForm should create in Kernel:
+        - one Mapping,
+        - one Schema and
+        - one ProjectSchema.
+
+
+    ----------------------------------------------------------------------------
+
+            Table "public.odk_xform"
+
+       Column    |           Type           |                       Modifiers
+    -------------+--------------------------+--------------------------------------------------------
+     id          | integer                  | not null default nextval('odk_xform_id_seq'::regclass)
+     title       | text                     | not null
+     form_id     | text                     | not null
+     xml_data    | text                     | not null
+     description | text                     |
+     created_at  | timestamp with time zone | not null
+     project_id  | uuid                     | not null
+     md5sum      | character varying(36)    | not null
+     version     | text                     | not null
+     avro_schema | jsonb                    |
+     kernel_id   | uuid                     | not null
+
+    Indexes:
+        "odk_xform_pkey" PRIMARY KEY, btree (id)
+        "odk_xform_survey_id_###" btree (project_id)
+
+    Foreign-key constraints:
+        "odk_xform_project_id_###_fk_odk_project_project_id"
+            FOREIGN KEY (project_id)
+            REFERENCES odk_project(project_id)
+            DEFERRABLE INITIALLY DEFERRED
+
+    Referenced by:
+        TABLE "odk_mediafile"
+            CONSTRAINT "odk_mediafile_xform_id_###_fk_odk_xform_id"
+            FOREIGN KEY (xform_id)
+            REFERENCES odk_xform(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+        TABLE "odk_xform_surveyors"
+            CONSTRAINT "odk_xform_surveyors_xform_id_###_fk_odk_xform_id"
+            FOREIGN KEY (xform_id)
+            REFERENCES odk_xform(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+    ----------------------------------------------------------------------------
+
+            Table "public.odk_xform_surveyors"
+
+      Column  |  Type   |                            Modifiers
+    ----------+---------+------------------------------------------------------------------
+     id       | integer | not null default nextval('odk_xform_surveyors_id_seq'::regclass)
+     xform_id | integer | not null
+     user_id  | integer | not null
+
+    Indexes:
+        "odk_xform_surveyors_pkey" PRIMARY KEY, btree (id)
+        "odk_xform_surveyors_xform_id_user_id_###_uniq" UNIQUE CONSTRAINT, btree (xform_id, user_id)
+        "odk_xform_surveyors_user_id_###" btree (user_id)
+        "odk_xform_surveyors_xform_id_###" btree (xform_id)
+
+    Foreign-key constraints:
+        "odk_xform_surveyors_user_id_###_fk_auth_user_id"
+            FOREIGN KEY (user_id)
+            REFERENCES auth_user(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+        "odk_xform_surveyors_xform_id_###_fk_odk_xform_id"
+            FOREIGN KEY (xform_id)
+            REFERENCES odk_xform(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+    ----------------------------------------------------------------------------
+
     '''
 
     # This is needed to submit data to kernel
-    mapping = models.ForeignKey(to=Mapping, on_delete=models.CASCADE)
+    kernel_id = models.UUIDField(
+        default=uuid.uuid4,
+        verbose_name=_('Aether Kernel ID'),
+        help_text=_('This ID is used to create Aether Kernel artefacts (schema, project schema and mapping).'),
+    )
+
+    project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
+
+    description = models.TextField(default='', null=True, blank=True, verbose_name=_('xForm description'))
+    created_at = models.DateTimeField(default=timezone.now, editable=False, verbose_name=_('created at'))
 
     # the list of granted surveyors
-    surveyors = models.ManyToManyField(to=get_user_model(), blank=True)
+    surveyors = models.ManyToManyField(
+        to=get_user_model(),
+        blank=True,
+        verbose_name=_('surveyors'),
+        help_text=_('If you do not specify any surveyors, EVERYONE will be able to access this xForm.'),
+    )
 
     # here comes the extracted data from an xForm file
-    xml_data = models.TextField(blank=True, validators=[validate_xmldict])
+    xml_data = models.TextField(
+        blank=True,
+        validators=[__validate_xml_data__],
+        verbose_name=_('XML definition'),
+        help_text=_(
+            'This XML must conform the ODK XForms specification. '
+            'http://opendatakit.github.io/xforms-spec/'
+        )
+    )
 
     # taken from xml_data
-    title = models.TextField(default='', editable=False)
-    form_id = models.TextField(default='', editable=False)
-    version = models.TextField(default='0', blank=True)
-    md5sum = models.CharField(default='', editable=False, max_length=36)
-
-    description = models.TextField(default='', null=True, blank=True)
-    created_at = models.DateTimeField(default=timezone.now)
+    title = models.TextField(default='', editable=False, verbose_name=_('xForm title'))
+    form_id = models.TextField(default='', editable=False, verbose_name=_('xForm ID'))
+    version = models.TextField(default='0', blank=True, verbose_name=_('xForm version'))
+    md5sum = models.CharField(default='', editable=False, max_length=36, verbose_name=_('xForm md5sum'))
+    avro_schema = JSONField(blank=True, null=True, editable=False, verbose_name=_('AVRO schema'))
 
     @property
     def hash(self):
@@ -107,7 +315,7 @@ class XForm(models.Model):
     @property
     def download_url(self):
         '''
-        https://bitbucket.org/javarosa/javarosa/wiki/FormListAPI
+        https://docs.opendatakit.org/openrosa-form-list/
 
         Represents the `<downloadUrl/>` entry in the forms list.
 
@@ -121,7 +329,7 @@ class XForm(models.Model):
     @property
     def manifest_url(self):
         '''
-        https://bitbucket.org/javarosa/javarosa/wiki/FormListAPI
+        https://docs.opendatakit.org/openrosa-form-list/
 
         Represents the `<manifestUrl/>` entry in the forms list.
 
@@ -137,20 +345,31 @@ class XForm(models.Model):
 
     def save(self, *args, **kwargs):
         try:
-            validate_xmldict(self.xml_data)
+            self.full_clean()
         except ValidationError as ve:
-            raise IntegrityError('xml_data not valid')
+            raise IntegrityError(ve)
 
-        data = xmltodict.parse(self.xml_data)
-        self.title = get_xml_title(data)
-        self.form_id = get_xml_form_id(data)
+        if not self.xml_data:
+            raise IntegrityError({'xml_data': [_('This field is required.')]})
 
-        version = get_xml_version(data)
+        title, form_id, version = get_xform_data_from_xml(self.xml_data)
+
+        self.title = title
+        self.form_id = form_id
         if version:
             # set version from xml data
             self.version = version
 
         self.update_hash(increase_version=version is None)
+
+        new_avro_schema = parse_xform_to_avro_schema(self.xml_data, default_version=self.version)
+        if new_avro_schema != self.avro_schema:
+            self.avro_schema = new_avro_schema
+            # set a new `kernel_id` value, this will generate
+            # a new schema and mapping entry in kernel and
+            # new submissions will be assigned to the new one, not the old one.
+            # With this we will hopefully keep track of all xform versions
+            self.kernel_id = uuid.uuid4()
 
         return super(XForm, self).save(*args, **kwargs)
 
@@ -160,16 +379,16 @@ class XForm(models.Model):
 
         Rules:
             - User is superuser.
-            - xForm and Mapping have no surveyors.
-            - User is in the xForm or Mapping surveyors list.
+            - xForm and Project have no surveyors.
+            - User is in the xForm or Project surveyors list.
 
         '''
 
         return (
             user.is_superuser or
-            (self.surveyors.count() == 0 and self.mapping.surveyors.count() == 0) or
+            (self.surveyors.count() == 0 and self.project.surveyors.count() == 0) or
             user in self.surveyors.all() or
-            user in self.mapping.surveyors.all()
+            user in self.project.surveyors.all()
         )
 
     def update_hash(self, increase_version=False):
@@ -188,12 +407,14 @@ class XForm(models.Model):
         app_label = 'odk'
         default_related_name = 'xforms'
         ordering = ['title', 'form_id']
+        verbose_name = _('xform')
+        verbose_name_plural = _('xforms')
 
 
 def __media_path__(instance, filename):
-    # file will be uploaded to MEDIA_ROOT/<mapping>/<xform>/filename
-    return '{mapping}/{xform}/{filename}'.format(
-        mapping=instance.xform.mapping.pk,
+    # file will be uploaded to MEDIA_ROOT/<project>/<xform>/filename
+    return '{project}/{xform}/{filename}'.format(
+        project=instance.xform.project.pk,
         xform=instance.xform.pk,
         filename=filename,
     )
@@ -203,13 +424,38 @@ class MediaFile(models.Model):
     '''
     Database representation of a media file linked to an XForm
 
+
+    ----------------------------------------------------------------------------
+
+            Table "public.odk_mediafile"
+
+       Column   |          Type          |                         Modifiers
+    ------------+------------------------+------------------------------------------------------------
+     id         | integer                | not null default nextval('odk_mediafile_id_seq'::regclass)
+     name       | text                   | not null
+     media_file | character varying(100) | not null
+     md5sum     | character varying(36)  | not null
+     xform_id   | integer                | not null
+
+    Indexes:
+        "odk_mediafile_pkey" PRIMARY KEY, btree (id)
+        "odk_mediafile_xform_id_###" btree (xform_id)
+
+    Foreign-key constraints:
+        "odk_mediafile_xform_id_###_fk_odk_xform_id"
+            FOREIGN KEY (xform_id)
+            REFERENCES odk_xform(id)
+            DEFERRABLE INITIALLY DEFERRED
+
+    ----------------------------------------------------------------------------
+
     '''
 
-    xform = models.ForeignKey(to=XForm, on_delete=models.CASCADE)
+    xform = models.ForeignKey(to=XForm, on_delete=models.CASCADE, verbose_name=_('xForm'))
 
-    name = models.TextField(blank=True)
-    media_file = models.FileField(upload_to=__media_path__)
-    md5sum = models.CharField(editable=False, max_length=36)
+    name = models.TextField(blank=True, verbose_name=_('name'))
+    media_file = models.FileField(upload_to=__media_path__, verbose_name=_('file'))
+    md5sum = models.CharField(editable=False, max_length=36, verbose_name=_('md5sum'))
 
     @property
     def hash(self):
@@ -235,3 +481,5 @@ class MediaFile(models.Model):
         app_label = 'odk'
         default_related_name = 'media_files'
         ordering = ['xform', 'name']
+        verbose_name = _('media file')
+        verbose_name_plural = _('media files')

@@ -1,12 +1,5 @@
 FROM python:3.6
 
-################################################################################
-## setup container
-################################################################################
-
-COPY ./conf/docker/* /tmp/
-RUN /tmp/setup.sh
-
 
 ################################################################################
 ## install app
@@ -14,17 +7,13 @@ RUN /tmp/setup.sh
 ################################################################################
 
 WORKDIR /
-RUN ls ./
 
 COPY ./conf/pip /code/conf/pip
-COPY ./conf/pip/dependencies /code/conf/pip/dependencies
 COPY ./ /code
 
 WORKDIR /code
 
 RUN pip install -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt
-
-
 
 
 ################################################################################
