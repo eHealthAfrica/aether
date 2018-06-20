@@ -22,14 +22,14 @@ import uuid
 
 from autofixture import generators
 from django.contrib.auth import get_user_model
-from django.test import TransactionTestCase
+from django.test import TestCase
 from django.urls import reverse
 
 from aether.kernel.api import models
 from aether.kernel.api.tests.utils.generators import generate_project
 
 
-class TestFilters(TransactionTestCase):
+class TestFilters(TestCase):
 
     def setUp(self):
         username = 'user'
@@ -40,7 +40,7 @@ class TestFilters(TransactionTestCase):
 
     def test_entity_filter(self):
         # Generate projects.
-        for _ in range(random.randint(10, 20)):
+        for _ in range(random.randint(5, 10)):
             generate_project()
         # Get a list of all projects.
         projects = models.Project.objects.all()
@@ -86,7 +86,7 @@ class TestFilters(TransactionTestCase):
 
     def test_submission_filter__by_project(self):
         # Generate projects.
-        for _ in range(random.randint(10, 20)):
+        for _ in range(random.randint(5, 10)):
             generate_project()
         # Get a list of all projects.
         projects = models.Project.objects.all()

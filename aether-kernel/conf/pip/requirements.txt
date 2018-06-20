@@ -63,3 +63,9 @@ unicodecsv==0.14.1
 uritemplate==3.0.0
 urllib3==1.22
 uWSGI==2.0.17
+
+ipython
+ipdb
+pytest
+pytest-django
+pytest-watch
