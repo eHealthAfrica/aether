@@ -2,6 +2,7 @@ import json
 import requests
 import ast
 import uuid
+import os
 
 from aether.common.kernel import utils
 
@@ -46,7 +47,8 @@ def validate_pipeline(pipeline):
         return [], []
 
     # check kernel connection
-    if not utils.test_connection():
+    kong_apikey = os.environ.get('KONG_APIKEY', '')
+    if not utils.test_connection(kong_apikey):
         return (
             [{'description': 'It was not possible to connect to Aether Kernel.'}],
             [],
@@ -123,11 +125,10 @@ def kernel_data_request(url='', method='get', data=None):
     if data is None:
         data = {}
     kernerl_url = utils.get_kernel_server_url()
-    headers = utils.get_auth_header()
-    print('HEADER', utils.test_connection())
+    kong_apikey = os.environ.get('KONG_APIKEY', '')
     res = requests.request(method=method,
                         url=f'{kernerl_url}/{url}',
-                        headers=utils.get_auth_header(),
+                        headers=utils.get_auth_header(kong_apikey),
                         json=data
                         )
     if res.status_code >= 200 and res.status_code < 400:
@@ -137,9 +138,10 @@ def kernel_data_request(url='', method='get', data=None):
             return res
     else:
         try:
-            raise res.json()
+            error = json.loads(res.content)
         except Exception:
-            raise res
+            error = res.content
+        raise Exception(error)
 
 
 def create_new_kernel_object(object_name, pipeline, data, project_name='Aux', entity_name=None):

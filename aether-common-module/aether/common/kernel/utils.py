@@ -30,36 +30,41 @@ def get_kernel_server_url():
         return os.environ.get('AETHER_KERNEL_URL')
 
 
-def get_auth_header():
+def get_auth_header(kong_apikey=None):
     '''
     Returns the Authorization Header if connection to Aether Kernel is possible
     '''
 
-    if test_connection():
+    if test_connection(kong_apikey):
         token = os.environ.get('AETHER_KERNEL_TOKEN', '')
+        if kong_apikey:
+            return {'Authorization': 'Token {token}'.format(token=token), 'apikey': kong_apikey}
         return {'Authorization': 'Token {token}'.format(token=token)}
     return None
 
 
-def test_connection():
+def test_connection(kong_apikey=None):
     '''
     Checks possible connection with Aether Kernel
     '''
 
     url = get_kernel_server_url()
     token = os.environ.get('AETHER_KERNEL_TOKEN', '')
-
     if url and token:
         try:
             # check that the server is up
             h = requests.head(url)
-            assert h.status_code == 403  # expected response 403 Forbidden
+            assert h.status_code == 403 or h.status_code == 401  # expected response 403 Forbidden
             logger.info('Aether Kernel server ({url}) is up and responding!'.format(url=url))
 
             try:
                 # check that the token is valid
+                if kong_apikey:
+                    headers = {'Authorization': 'Token {token}'.format(token=token), 'apikey': kong_apikey}
+                else:
+                    headers = {'Authorization': 'Token {token}'.format(token=token)}
                 g = requests.get(url,
-                                 headers={'Authorization': 'Token {token}'.format(token=token)})
+                                 headers=headers)
                 assert g.status_code == 200, g.content
                 logger.info('Aether Kernel token is valid!')
 
