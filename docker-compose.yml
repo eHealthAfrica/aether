@@ -61,6 +61,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - internal
 
   kong-migration:
     image: kong
@@ -73,6 +75,8 @@ services:
         condition: service_healthy
     links:
       - kong-database
+    networks:
+      - internal
 
   kong:
     image: kong
@@ -96,6 +100,10 @@ services:
       - kong-migration
     links:
       - kong-database
+    networks:
+      internal:
+        aliases:
+          - ${PROJECT_API_URL}
 
   kongfig:
     image: mashupmill/kongfig
@@ -114,6 +122,8 @@ services:
       - kong
     links:
       - kong
+    networks:
+      - internal
 
 
   # ---------------------------------
