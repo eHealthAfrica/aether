@@ -1,11 +1,32 @@
+/*
+ * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+ *
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 import moment from 'moment'
 
-import { PROJECT_NAME } from '../utils/constants'
+import { PROJECT_NAME, getKernelURL } from '../utils/constants'
 import { NavBar, Modal } from '../components'
 import PublishButton from './PublishButton'
+import InfoButton from './InfoButton'
 
 import NewPipeline from './NewPipeline'
 import { addPipeline, selectedPipelineChanged, getPipelines, fetchPipelines } from './redux'
@@ -26,6 +47,7 @@ class PipelineList extends Component {
       this.props.getPipelines()
     }
     this.props.fetchPipelines()
+    this.props.getKernelURL()
   }
 
   componentWillReceiveProps (nextProps) {
@@ -118,6 +140,9 @@ class PipelineList extends Component {
               defaultMessage={pipeline.published_on ? `Published on ${moment(pipeline.published_on).format('MMMM DD')}`
                 : 'Not published'}
             />
+            { pipeline.published_on &&
+              <InfoButton pipeline={pipeline} />
+            }
           </div>
           <PublishButton pipeline={pipeline} className='btn btn-w btn-publish' />
         </div>
@@ -142,4 +167,4 @@ const mapStateToProps = ({ pipelines }) => ({
   isNewPipeline: pipelines.isNewPipeline
 })
 
-export default connect(mapStateToProps, { getPipelines, selectedPipelineChanged, addPipeline, fetchPipelines })(PipelineList)
+export default connect(mapStateToProps, { getPipelines, selectedPipelineChanged, addPipeline, fetchPipelines, getKernelURL })(PipelineList)
