@@ -24,6 +24,7 @@ from .. import utils
 AETHER_KERNEL_URL_MOCK = 'http://kernel'
 AETHER_KERNEL_URL_TEST_MOCK = 'http://kernel-test'
 AETHER_KERNEL_TOKEN_MOCK = 'mock-valid-token'
+AETHER_KERNEL_KONG_APIKEY_MOCK = 'mock-kong-apikey'
 AETHER_ENV_MOCK = {
     'AETHER_KERNEL_URL': AETHER_KERNEL_URL_MOCK,
     'AETHER_KERNEL_URL_TEST': AETHER_KERNEL_URL_TEST_MOCK,
@@ -91,6 +92,11 @@ class UtilsTests(TestCase):
     def test__test_connection_testing_env(self, mock_get, mock_head):
         self.assertTrue(utils.test_connection())
         self.assertNotEqual(utils.get_auth_header(), None)
+
+        self.assertTrue(utils.test_connection(AETHER_KERNEL_KONG_APIKEY_MOCK))
+        self.assertEqual(utils.get_auth_header(
+                         AETHER_KERNEL_KONG_APIKEY_MOCK).get('apikey', ''),
+                         AETHER_KERNEL_KONG_APIKEY_MOCK)
 
     def test__test_connection_env_fail(self):
         with mock.patch.dict('os.environ', {

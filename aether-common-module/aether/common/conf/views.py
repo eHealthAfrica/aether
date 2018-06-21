@@ -44,4 +44,5 @@ def basic_serve(request, path, *args, **kwargs):  # pragma: no cover
     '''
     Redirect the request to the path used by nginx for protected media using BASIC Authentication.
     '''
+
     return media_serve(request, path, *args, **kwargs)
