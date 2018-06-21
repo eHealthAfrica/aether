@@ -123,7 +123,14 @@ def validate_pipeline(pipeline):
     }
 
     try:
-        response = kernel_data_request('validate-mappings/', 'post', json.loads(json.dumps(payload)))
+        kernerl_url = utils.get_kernel_server_url()
+        resp = requests.post(
+            url=f'{kernerl_url}/validate-mappings/',
+            json=json.loads(json.dumps(payload)),
+            headers=utils.get_auth_header(kong_apikey),
+        )
+        resp.raise_for_status()
+        response = json.loads(resp.content)
 
         return (
             response['mapping_errors'] if 'mapping_errors' in response else [],
@@ -146,15 +153,11 @@ def kernel_data_request(url='', method='get', data=None):
     kernerl_url = utils.get_kernel_server_url()
     kong_apikey = os.environ.get('KONG_APIKEY', '')
     res = requests.request(method=method,
-                        url=f'{kernerl_url}/{url}',
-                        headers=utils.get_auth_header(kong_apikey),
-                        json=data
-                        )
+                           url=f'{kernerl_url}/{url}',
+                           headers=utils.get_auth_header(kong_apikey),
+                           json=data)
     if res.status_code >= 200 and res.status_code < 400:
-        try:
-            return res.json()
-        except Exception:
-            return res
+        return res.json()
     else:
         try:
             error = json.loads(res.content)
@@ -414,12 +417,9 @@ def create_new_pipeline_from_kernel(kernel_object):
 
 
 def kernel_to_pipeline():
-    try:
-        mappings = kernel_data_request('mappings/')['results']
-        pipelines = []
-        for mapping in mappings:
-            if not is_linked_to_pipeline('mapping', mapping['id']):
-                pipelines.append(create_new_pipeline_from_kernel(mapping))
-        return pipelines
-    except Exception as e:
-        raise e
+    mappings = kernel_data_request('mappings/')['results']
+    pipelines = []
+    for mapping in mappings:
+        if not is_linked_to_pipeline('mapping', mapping['id']):
+            pipelines.append(create_new_pipeline_from_kernel(mapping))
+    return pipelines

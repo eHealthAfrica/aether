@@ -26,7 +26,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
-from aether.common.kernel import utils
+from aether.common.kernel import utils as kernel_utils
 
 from . import models, serializers, utils
 
@@ -41,10 +41,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
         '''
         This view gets kernel objects, transforms and loads into a pipeline
         '''
-        try:
-            utils.kernel_to_pipeline()
-        except Exception as e:
-            return Response(str(e), status=HTTPStatus.BAD_REQUEST)
+        utils.kernel_to_pipeline()
         pipelines = models.Pipeline.objects.all()
         serialized_data = serializers.PipelineSerializer(pipelines, context={'request': request}, many=True).data
         return Response(serialized_data, status=HTTPStatus.OK)
@@ -91,4 +88,4 @@ class PipelineViewSet(viewsets.ModelViewSet):
 
 @api_view(['GET'])
 def get_kernel_url(request):
-    return Response(utils.get_kernel_server_url())
+    return Response(kernel_utils.get_kernel_server_url())

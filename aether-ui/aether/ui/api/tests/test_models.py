@@ -18,6 +18,7 @@
 
 import json
 import mock
+import os
 
 from django.test import TestCase
 
@@ -76,9 +77,10 @@ class ModelsTests(TestCase):
 
     def setUp(self):
         # check Kernel testing server
-        self.assertTrue(kernel_utils.test_connection())
+        kong_apikey = os.environ.get('KONG_APIKEY', '')
+        self.assertTrue(kernel_utils.test_connection(kong_apikey))
         self.KERNEL_URL = kernel_utils.get_kernel_server_url() + '/validate-mappings/'
-        self.KERNEL_HEADERS = kernel_utils.get_auth_header()
+        self.KERNEL_HEADERS = kernel_utils.get_auth_header(kong_apikey)
 
     def test__str(self):
         pipeline = Pipeline.objects.create(
@@ -219,7 +221,6 @@ class ModelsTests(TestCase):
                 {'source': '$.firstName', 'destination': 'Person.firstName'},
             ],
         )
-
         self.assertEqual(pipeline.mapping_errors, 'something else')
         self.assertEqual(pipeline.output, 'something')
         mock_post.assert_called_once()
