@@ -37,7 +37,11 @@ apis:
             enable_password_grant: true
             hide_credentials: false
             provision_key: KONG_OAUTH2_PROVISION_KEY
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 94a3462e664e7efa79f64c6b94c926bb86d97391
 # Kernel api for app level communication, requires an auth-key be included in all request headers as `apikey`
 # Accessible via `http://{KONG_HOST}/aether`
 
@@ -50,7 +54,11 @@ apis:
       preserve_host: true
       hosts:
         - "PROJECT_API_URL"
+<<<<<<< HEAD
     plugins:        
+=======
+    plugins:
+>>>>>>> 94a3462e664e7efa79f64c6b94c926bb86d97391
     - name: key-auth
       ensure: "present"
       attributes:
@@ -68,7 +76,11 @@ apis:
       preserve_host: true
       hosts:
         - "PROJECT_API_URL"
+<<<<<<< HEAD
     plugins:        
+=======
+    plugins:
+>>>>>>> 94a3462e664e7efa79f64c6b94c926bb86d97391
     - name: key-auth
       ensure: "present"
       attributes:
@@ -88,7 +100,11 @@ apis:
       uris:
         - "/token"
       strip_uri: false
+<<<<<<< HEAD
     plugins:        
+=======
+    plugins:
+>>>>>>> 94a3462e664e7efa79f64c6b94c926bb86d97391
     - name: key-auth
       ensure: "present"
       attributes:
@@ -127,7 +143,11 @@ consumers:
           client_id: KONG_CONSUMER
 
 # Kong anonymous consumer, available for anonymous access to endpoints that should be publicly accessible
+<<<<<<< HEAD
  
+=======
+
+>>>>>>> 94a3462e664e7efa79f64c6b94c926bb86d97391
   - username: anonymous_user
     credentials:
       - name: oauth2

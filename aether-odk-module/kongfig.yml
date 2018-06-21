@@ -1,6 +1,10 @@
 ---
 host: "kong:8001"
+<<<<<<< HEAD
 apis:  
+=======
+apis:
+>>>>>>> 94a3462e664e7efa79f64c6b94c926bb86d97391
 # ODK api for app level communication, requires an auth-key be included in all request headers as `apikey`
 # Accessible via `http://{KONG_HOST}/odk`
 
@@ -11,14 +15,22 @@ apis:
       uris:
         - "/odk"
       preserve_host: true
+<<<<<<< HEAD
     plugins:        
+=======
+    plugins:
+>>>>>>> 94a3462e664e7efa79f64c6b94c926bb86d97391
     - name: key-auth
       ensure: "present"
       attributes:
         config:
           key_names:
             - apikey
+<<<<<<< HEAD
           hide_credentials: true 
+=======
+          hide_credentials: true
+>>>>>>> 94a3462e664e7efa79f64c6b94c926bb86d97391
 
   - name: "odk-localhost"
     ensure: "present"
@@ -26,4 +38,8 @@ apis:
       upstream_url: "http://odk:8443"
       hosts:
         - "odk.aether.local"
+<<<<<<< HEAD
       preserve_host: true
+=======
+      preserve_host: true
+>>>>>>> 94a3462e664e7efa79f64c6b94c926bb86d97391

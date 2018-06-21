@@ -27,9 +27,12 @@ DEBUG = (os.environ.get('DEBUG', '').lower() == 'true')
 TESTING = (os.environ.get('TESTING', '').lower() == 'true')
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
+<<<<<<< HEAD
 KONG_PREFIX = '/aether'
 
 
+=======
+>>>>>>> 94a3462e664e7efa79f64c6b94c926bb86d97391
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 if DEBUG:  # pragma: no cover
