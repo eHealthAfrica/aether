@@ -39,51 +39,6 @@ services:
     networks:
       - internal
 
-  kong-migration:
-    extends:
-      file: docker-compose-base.yml
-      service: kong-migration-base
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - internal
-
-  kong:
-    extends:
-      file: docker-compose-base.yml
-      service: kong-base
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://kong:8001" ]
-      interval: 3s
-      timeout: 3s
-      retries: 5
-    depends_on:
-      kong-migration:
-        condition: service_started
-    # FIXME: bring back these once we have figured out the reason for
-    #
-    #     ERROR: for kong-migration  Service "db" is missing a healthcheck configuration
-    #
-    # depends_on:
-      # db:
-      #   condition: service_healthy
-      # kong-migration:
-      #   condition: service_started
-    networks:
-      internal:
-        aliases:
-          - ${PROJECT_API_URL}
-
-  kongfig:
-    extends:
-      file: docker-compose-base.yml
-      service: kongfig
-    links:
-      - 'kong:kong'
-    networks:
-      - internal
-
   redis:
     extends:
       file: docker-compose-base.yml
@@ -151,6 +106,8 @@ services:
       - ./aether-kernel/kongfig.yml:/config/_kernel-kongfig.yml
       - ./aether-odk-module/kongfig.yml:/config/odk-kongfig.yml
       - ./aether-couchdb-sync-module/kongfig.yml:/config/sync-kongfig.yml
+    env_file:
+      - .env
     environment:
       - KONG_PORT=${KONG_PORT}
     depends_on:

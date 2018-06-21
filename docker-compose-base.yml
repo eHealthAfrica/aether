@@ -30,39 +30,6 @@ services:
       - POSTGRES_USER=kong
       - POSTGRES_DB=kong
 
-  kong-migration-base:
-    image: kong
-    environment:
-      - KONG_DATABASE=postgres
-      - KONG_PG_HOST=db
-    command: kong migrations up
-
-  kong-base:
-    image: kong
-    restart: on-failure
-    ports:
-      - 8449:8449
-      - 8001:8001
-      - ${KONG_PORT}:${KONG_PORT}
-    environment:
-      - KONG_ADMIN_LISTEN=0.0.0.0:8001
-      - KONG_PROXY_LISTEN_SSL=0.0.0.0:8449
-      - KONG_PROXY_LISTEN=0.0.0.0:${KONG_PORT}
-      - KONG_DATABASE=postgres
-      - KONG_PG_HOST=db
-
-  kongfig:
-    build:
-      context: aether-kongfig
-    image: mashupmill/kongfig
-    env_file:
-      - .env
-    volumes:
-    # Register all modular kongfig files as volumes to have them pushed to kong
-      - ./aether-kernel/kongfig.yml:/config/_kernel-kongfig.yml
-      - ./aether-odk-module/kongfig.yml:/config/odk-kongfig.yml
-      - ./aether-couchdb-sync-module/kongfig.yml:/config/sync-kongfig.yml
-
   couchdb-base:
     image: couchdb:1.7.1
     env_file:
