@@ -32,6 +32,11 @@ from spavro.schema import parse, SchemaParseException
 MESSAGE_REQUIRED_ID = 'A schema is required to have a field "id" of type "string"'
 
 mapping_definition_schema = {
+    'description': (
+        'A mapping definition is either an empty object or an object with two '
+        'required properties: "entities" and "mapping". '
+        'An empty object will not trigger entity extraction.'
+    ),
     'oneOf': [
         {
             'type': 'object',
@@ -100,6 +105,10 @@ def validate_id_field(schema):
 
 
 def validate_mapping_definition(value):
+    '''
+    If ``value`` does not conform to the mapping definition schema, raise
+    ``serializers.ValidationError``.
+    '''
     errors = sorted(
         mapping_definition_validator.iter_errors(value),
         key=lambda e: e.path,
