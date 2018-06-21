@@ -32,12 +32,7 @@ from rest_framework.decorators import (
     permission_classes,
     renderer_classes,
 )
-from drf_openapi.views import SchemaView
-from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-
-from http import HTTPStatus
-from django.http import HttpResponse
 
 from aether.common.conf import settings as app_settings
 from . import models, serializers, filters, constants, utils, mapping_validation, project_artefacts
