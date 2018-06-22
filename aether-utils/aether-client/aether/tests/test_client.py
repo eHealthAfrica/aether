@@ -62,11 +62,6 @@ class KernelClientCase(unittest.TestCase):
             except AttributeError:
                 pass
             try:
-                fake_credentials = {"missing": "values"}
-                KernelClientCase.client = client.KernelClient(kernel_url, **fake_credentials)
-            except AttributeError:
-                pass
-            try:
                 KernelClientCase.client = client.KernelClient(kernel_url, **kernel_credentials)
                 print("Connected client to Aether on %s" % kernel_url)
             except Exception as e:
