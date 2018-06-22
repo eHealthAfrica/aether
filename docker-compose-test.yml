@@ -28,7 +28,60 @@ services:
     extends:
       file: docker-compose-base.yml
       service: redis-base
+  
+  kong-database-test:
+    extends:
+      file: docker-compose-base.yml
+      service: kong-database-base
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
+
+  # ---------------------------------
+  # Kong Containers
+  # ---------------------------------
+
+  kong-migration-test:
+    extends:
+      file: docker-compose-base.yml
+      service: kong-migration-base
+    environment:
+      - KONG_PG_HOST=kong-database-test
+    depends_on:
+      kong-database-test:
+        condition: service_healthy
+    links:
+      - kong-database-test
+
+  kong:
+    extends:
+      file: docker-compose-base.yml
+      service: kong-base
+    environment:
+      - KONG_PG_HOST=kong-database-test
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://kong:8001" ]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+    depends_on:
+      - kong-migration-test
+    links:
+      - kong-database-test
+
+  kongfig-test:
+    extends:
+      file: docker-compose-base.yml
+      service: kongfig-base
+    environment:
+      - PROJECT_API_URL=kong
+    depends_on:
+      - kong
+    links:
+      - kong
 
   # ---------------------------------
   # Aether Kernel
@@ -46,6 +99,7 @@ services:
       WEB_SERVER_PORT: 9000
     depends_on:
       - db-test
+      - kongfig-test
     ports:
       - "9000:9000"
 

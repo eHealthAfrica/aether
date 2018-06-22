@@ -180,10 +180,12 @@ CAS_LOGOUT_COMPLETELY = True
 CAS_SERVER_URL = os.environ.get('CAS_SERVER_URL', '')
 HOSTNAME = os.environ.get('HOSTNAME', '')
 PROJECT_API_URL = os.environ.get('PROJECT_API_URL', 'api.aether.local')
+if TESTING:   # pragma: no cover
+    PROJECT_API_URL = 'kong'
 KONG_OAUTH2_PROVISION_KEY = os.environ.get('KONG_OAUTH2_PROVISION_KEY', '')
 KONG_APIKEY = os.environ.get('KONG_APIKEY', '')
 KONG_CONSUMER = os.environ.get('KONG_CONSUMER', 'aether-internal')
-OAUTH2_TOKEN_URL = 'https://' + PROJECT_API_URL + ':8449/aether/v1/oauth2/token'
+OAUTH2_TOKEN_URL = 'https://{}:8449/ext/aether/oauth2/token'.format(PROJECT_API_URL)
 
 if CAS_SERVER_URL:  # pragma: no cover
     INSTALLED_APPS += [

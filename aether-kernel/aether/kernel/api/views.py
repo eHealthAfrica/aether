@@ -285,16 +285,12 @@ def setup_kong_consumer(request, *args, **kwargs):
     Create kong oauth2 credentials for authenticated user
     '''
     if 'username' in request.data and 'password' in request.data:
-        url = 'http://' + app_settings.PROJECT_API_URL + ':8001/consumers/' + app_settings.KONG_CONSUMER + '/oauth2'
-        if 'redirect_uri' in request.data:
-            redirect_uri = request.data['redirect_uri']
-        else:
-            redirect_uri = 'http://' + app_settings.PROJECT_API_URL
+        # todo: Authentication and authorization should be passed using the username and password
+        # before generating the token
 
-        if 'app_name' in request.data:
-            app_name = request.data['app_name']
-        else:
-            app_name = 'aether-app'
+        url = 'http://kong:8001/consumers/{}/oauth2'.format(app_settings.KONG_CONSUMER)
+        redirect_uri = request.data.get('redirect_uri', 'http://{}'.format(app_settings.PROJECT_API_URL))
+        app_name = request.data.get('app_name', 'aether-app')
 
         jsonData = {
             'redirect_uri': redirect_uri,
@@ -303,37 +299,33 @@ def setup_kong_consumer(request, *args, **kwargs):
         results = HttpResponse(json.dumps({'description': 'Check that kong server is reachable'}),
                                content_type='application/json')
         results.status_code = 400
-        try:
-            results = requests.post(url, json=jsonData,
-                                    headers={'Content-Type': 'application/json', 'apikey': app_settings.KONG_APIKEY})
-            client_credentials_returned = json.loads(results.content)
-            if 'client_id' in client_credentials_returned:
-                client_credentials = {}
-                client_credentials['provision_key'] = app_settings.KONG_OAUTH2_PROVISION_KEY
-                client_credentials['grant_type'] = 'password'
-                client_credentials['username'] = request.data['username']
-                client_credentials['password'] = request.data['password']
-                client_credentials['client_id'] = client_credentials_returned['client_id']
-                client_credentials['client_secret'] = client_credentials_returned['client_secret']
-                if 'authenticated_userid' in request.data:
-                    client_credentials['authenticated_userid'] = request.data['authenticated_userid']
-                else:
-                    client_credentials['authenticated_userid'] = request.data['username']
-                results = requests.post(app_settings.OAUTH2_TOKEN_URL, json=client_credentials, verify=False,
-                                        headers={'Content-Type': 'application/json',
-                                                 'apikey': app_settings.KONG_APIKEY})
-            else:
-                results = HttpResponse(json.dumps({'description': 'No client_id generated'}),
-                                       content_type='application/json')
-                results.status_code = 400
-        except Exception as e:
-            pass
-        return HttpResponse(results)
+
+        results = requests.post(url, json=jsonData,
+                                headers={'Content-Type': 'application/json', 'apikey': app_settings.KONG_APIKEY})
+        client_credentials_returned = json.loads(results.content)
+        if 'client_id' in client_credentials_returned:
+            client_credentials = {}
+            client_credentials['provision_key'] = app_settings.KONG_OAUTH2_PROVISION_KEY
+            client_credentials['grant_type'] = 'password'
+            client_credentials['username'] = request.data['username']
+            client_credentials['password'] = request.data['password']
+            client_credentials['client_id'] = client_credentials_returned['client_id']
+            client_credentials['client_secret'] = client_credentials_returned['client_secret']
+            client_credentials['authenticated_userid'] = request.data.get(
+                'authenticated_userid', request.data['username']
+            )
+            results = requests.post(app_settings.OAUTH2_TOKEN_URL, json=client_credentials, verify=False,
+                                    headers={'Content-Type': 'application/json',
+                                             'apikey': app_settings.KONG_APIKEY})
+        else:
+            results = HttpResponse(json.dumps({'description': 'No client_id generated'}),
+                                   content_type='application/json')
+            results.status_code = 400
     else:
         results = HttpResponse(json.dumps({'description': 'Missing username or password'}),
                                content_type='application/json')
         results.status_code = 400
-        return results
+    return results
 
 
 @api_view(['POST'])
