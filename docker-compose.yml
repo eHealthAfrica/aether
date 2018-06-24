@@ -83,7 +83,7 @@ services:
       test: ["CMD", "curl", "-f", "http://kong:8001" ]
       interval: 3s
       timeout: 3s
-      retries: 5
+      retries: 10
     depends_on:
       - kong-migration
     links:

@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import json
 from django.urls import reverse
 from django.test import TestCase
 
@@ -34,6 +35,8 @@ class TestViews(TestCase):
         self.assertEqual(400, response.status_code)
         response = self.client.post('/token', {'username': 'testUsername', 'password': 'testPassword'})
         self.assertEqual(200, response.status_code)
+        res = json.loads(response.content)
+        self.assertEqual('bearer', res['token_type'])
         response = self.client.post('/token',
                                     {'username': 'testUsername', 'password': 'testPassword',
                                      'redirect_uri': 'http://testuri.org', 'app_name': 'test_app'})

@@ -314,9 +314,12 @@ def setup_kong_consumer(request, *args, **kwargs):
             client_credentials['authenticated_userid'] = request.data.get(
                 'authenticated_userid', request.data['username']
             )
-            results = requests.post(app_settings.OAUTH2_TOKEN_URL, json=client_credentials, verify=False,
-                                    headers={'Content-Type': 'application/json',
-                                             'apikey': app_settings.KONG_APIKEY})
+            results = HttpResponse(
+                requests.post(app_settings.OAUTH2_TOKEN_URL, json=client_credentials, verify=False, headers={
+                    'Content-Type': 'application/json',
+                    'apikey': app_settings.KONG_APIKEY
+                })
+            )
         else:
             results = HttpResponse(json.dumps({'description': 'No client_id generated'}),
                                    content_type='application/json')
