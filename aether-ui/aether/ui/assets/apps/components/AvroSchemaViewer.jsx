@@ -84,13 +84,13 @@ class AvroSchemaViewer extends Component {
       const nestedList = typeObjectOptions.length && typeObjectOptions.map(obj => (this.schemaToMarkup(obj,
         `${parent ? parent + '.' : ''}${schema.name}`, true, isItem)))
       return this.deepestRender(schema, parent, true, isItem, typeStringOptions, isNullable, nestedList !== 0 && <ul>{nestedList}</ul>)
-    } else if (typeof schema.type !== 'string') {
+    } else if (schema.type && typeof schema.type !== 'string') {
       schema.type.name = schema.name
       let parentName = ''
       if (parent) {
         parentName = schema.type.type === 'array' ? parent : `${parent}.${schema.name}`
       } else {
-        parentName = schema.name
+        parentName = schema.type.type === 'array' ? '' : schema.name
       }
       return this.schemaToMarkup(schema.type, parentName, isUnion, isItem)
     } else {
@@ -142,6 +142,7 @@ class AvroSchemaViewer extends Component {
         </div>
       )
     } catch (error) {
+      console.log(error)
       return (
         <div className='hint'>
           <FormattedMessage
