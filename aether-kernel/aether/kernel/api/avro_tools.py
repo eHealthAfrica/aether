@@ -58,7 +58,7 @@ class AvroValidationException(Exception):
 # This namedtuple represents an avro validation error.
 # Fields:
 #     - expected: the expected type.
-#     - datum: the actual type.
+#     - datum: the actual value.
 #     - path: the location of the error, notated as a jsonpath.
 #
 # Example:

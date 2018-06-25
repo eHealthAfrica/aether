@@ -40,7 +40,7 @@ class TestFilters(TestCase):
 
     def test_entity_filter(self):
         # Generate projects.
-        for _ in range(random.randint(5, 10)):
+        for _ in range(random.randint(10, 20)):
             generate_project()
         # Get a list of all projects.
         projects = models.Project.objects.all()
@@ -86,7 +86,7 @@ class TestFilters(TestCase):
 
     def test_submission_filter__by_project(self):
         # Generate projects.
-        for _ in range(random.randint(5, 10)):
+        for _ in range(random.randint(10, 20)):
             generate_project()
         # Get a list of all projects.
         projects = models.Project.objects.all()
