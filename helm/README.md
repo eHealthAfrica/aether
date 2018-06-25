@@ -34,7 +34,7 @@ Once the mount process is running, we can do:
 ```
 ./scripts/kubernetes/install_secrets.sh && ./scripts/kubernetes/start_cluster.sh ./helm/overrides/local
 ```
-This will bring up both applications with auto-reloading of django code enabled. 
+This will bring up both applications with auto-reloading of django code enabled.
 
 ### Accessing the aether APIs from the host
 
