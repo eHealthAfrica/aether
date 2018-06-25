@@ -1,5 +1,5 @@
 {
-  "$base": "http://ehealthafrica.org/#", 
+  "$base": "http://ehealthafrica.org/#",
   "$namespaces": {
     "eha": "http://ehealthafrica.org/#"
   },
