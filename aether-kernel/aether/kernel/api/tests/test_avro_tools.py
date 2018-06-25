@@ -149,6 +149,13 @@ class TestAvroValidator(TestCase):
                 fields=[{'name': 'test', 'type': 'long'}],
                 datum={'test': 999999999999999999},
                 expected_errors=[],
+            ),
+            AvroValidatorTest(
+                fields=[{'name': 'test', 'type': 'long'}],
+                datum={'test': 'not-a-long'},
+                expected_errors=[
+                    error(expected='long', datum='not-a-long', path='Test.test'),
+                ],
             )
         ])
 
