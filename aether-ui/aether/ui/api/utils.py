@@ -128,8 +128,6 @@ def validate_pipeline(pipeline):
         json=json.loads(json.dumps(payload)),
         headers=utils.get_auth_header(),
     )
-    # If everything went well, map 'mapping_errors' to 'errors' and 'entities'
-    # to 'output'.
     if resp.status_code == status.HTTP_200_OK:
         data = resp.json()
         errors = data.get('mapping_errors', [])
