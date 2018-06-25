@@ -105,7 +105,7 @@ class AvroSchemaViewer extends Component {
     if (schema.type === 'array' && typeof schema.items !== 'string') {
       arrayItems = this.schemaToMarkup(schema.items, parent, isUnion, true)
     }
-    return (
+    return schema.name ? (
       <li
         data-qa={`no-children-${schema.name}`}
         key={`${schema.name}-${generateGUID()}`}
@@ -119,6 +119,11 @@ class AvroSchemaViewer extends Component {
         { arrayItems }
         { children }
       </li>
+    ) : (
+      <ul>
+        { arrayItems }
+        { children }
+      </ul>
     )
   }
 
