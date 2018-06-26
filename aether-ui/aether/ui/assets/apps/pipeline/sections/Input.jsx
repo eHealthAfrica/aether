@@ -51,6 +51,9 @@ export const makeOptionalType = (type) => {
 }
 
 export const makeOptionalField = (field) => {
+  // The top-level "id" field is reserved for unique ids; do not make it
+  // optional.
+  if (field.name === 'id') { return field }
   return { ...field, type: makeOptionalType(field.type) }
 }
 
