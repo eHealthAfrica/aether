@@ -20,6 +20,11 @@
 #
 set -Eeuo pipefail
 
+# Build dependencies
+./scripts/build_aether_utils_and_distribute.sh
+./scripts/build_common_and_distribute.sh
+
+# Build docker images
 IMAGE_REPO='ehealthafrica'
 APPS=( kernel odk couchdb-sync ui )
 VERSION=`cat VERSION`

@@ -25,7 +25,7 @@ webserverPort: 8000
 liveEdit:
   enabled: false
 application:
-  command: start_dev
+  command: start
   secret: secrets
   data_mount: /media
 database:
