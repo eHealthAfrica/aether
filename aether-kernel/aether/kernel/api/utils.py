@@ -32,7 +32,7 @@ from pygments.formatters import HtmlFormatter
 from pygments.lexers import JsonLexer
 from pygments.lexers.python import Python3Lexer
 
-from . import models, constants
+from . import models, constants, avro_tools
 
 
 class CachedParser(object):
@@ -66,7 +66,7 @@ class EntityValidationError(Exception):
 
 Entity = collections.namedtuple(
     'Entity',
-    ['id', 'payload', 'projectschema_name', 'status'],
+    ['payload', 'projectschema_name', 'status'],
 )
 
 EntityValidationResult = collections.namedtuple(
@@ -446,24 +446,48 @@ def extract_entity(entity_type, entities, requirements, data, entity_stub):
     return failed_actions
 
 
+def validate_entity_payload_id(entity_payload):
+    id_ = entity_payload.get('id', None)
+    try:
+        uuid.UUID(id_, version=4)
+        return None
+    except (ValueError, AttributeError, TypeError):
+        return {'description': 'Entity id "{}" is not a valid uuid'.format(id_)}
+
+
+def validate_avro(schema, datum):
+    result = avro_tools.AvroValidator(
+        schema=parse_schema(json.dumps(schema)),
+        datum=datum,
+    )
+    errors = []
+    for error in result.errors:
+        errors.append({
+            'description': avro_tools.format_validation_error(error),
+        })
+    return errors
+
+
 def validate_entities(entities, schemas):
     validation_errors = []
     validated_entities = collections.defaultdict(list)
     for entity_name, entity_payloads in entities.items():
         for entity_payload in entity_payloads:
+            entity_errors = []
+            id_error = validate_entity_payload_id(entity_payload)
+            if id_error:
+                entity_errors.append(id_error)
             schema_definition = schemas[entity_name]
-            try:
-                validate_payload(
-                    schema_definition=schema_definition,
-                    payload=entity_payload,
-                )
+            avro_validation_errors = validate_avro(
+                schema=schema_definition,
+                datum=entity_payload,
+            )
+            entity_errors.extend(avro_validation_errors)
+            if entity_errors:
+                validation_errors.extend(entity_errors)
+            else:
                 validated_entities[entity_name].append(entity_payload)
-            except EntityValidationError as err:
-                error = {
-                    'description': err.args[0],
-                    'data': entity_payload,
-                }
-                validation_errors.append(error)
+
     return EntityValidationResult(
         validation_errors=validation_errors,
         entities=validated_entities,
@@ -500,7 +524,8 @@ def extract_entities(requirements, response_data, entity_definitions, schemas):
             action.resolve(entities)
     # send a log of paths with errors to the user via saved response
     for action in failed_again:
-        data['aether_errors'].append('failed %s' % action.path)
+        error = 'Failure: "{}"'.format(action.error)
+        data['aether_errors'].append(error)
     validation_result = validate_entities(entities, schemas)
     data['aether_errors'].extend(validation_result.validation_errors)
     return data, validation_result.entities
@@ -532,7 +557,6 @@ def extract_create_entities(submission_payload, mapping_definition, schemas):
     for projectschema_name, entity_payloads in entity_types.items():
         for entity_payload in entity_payloads:
             entity = Entity(
-                id=entity_payload['id'],
                 payload=entity_payload,
                 projectschema_name=projectschema_name,
                 status='Publishable',
@@ -570,7 +594,6 @@ def run_entity_extraction(submission):
         projectschema_name = entity.projectschema_name
         projectschema = project_schemas[projectschema_name]
         entity_instance = models.Entity(
-            id=entity.id,
             payload=entity.payload,
             status=entity.status,
             projectschema=projectschema,

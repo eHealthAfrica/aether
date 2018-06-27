@@ -1,9 +1,31 @@
+
+# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+#
+# See the NOTICE file distributed with this work for additional information
+# regarding copyright ownership.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
 import json
 import requests
 import ast
 import uuid
 
+from rest_framework import status
+
 from aether.common.kernel import utils
+
 
 from . import models
 
@@ -100,27 +122,34 @@ def validate_pipeline(pipeline):
         },
         'schemas': schemas,
     }
-
-    try:
-        kernerl_url = utils.get_kernel_server_url()
-        resp = requests.post(
-            url=f'{kernerl_url}/validate-mappings/',
-            json=json.loads(json.dumps(payload)),
-            headers=utils.get_auth_header(),
-        )
-        resp.raise_for_status()
-        response = json.loads(resp.content)
-
-        return (
-            response['mapping_errors'] if 'mapping_errors' in response else [],
-            response['entities'] if 'entities' in response else [],
-        )
-
-    except Exception as e:
-        return (
-            [{'description': f'It was not possible to validate the pipeline: {str(e)}'}],
-            []
-        )
+    kernel_url = utils.get_kernel_server_url()
+    resp = requests.post(
+        url=f'{kernel_url}/validate-mappings/',
+        json=json.loads(json.dumps(payload)),
+        headers=utils.get_auth_header(),
+    )
+    if resp.status_code == status.HTTP_200_OK:
+        data = resp.json()
+        errors = data.get('mapping_errors', [])
+        output = data.get('entities', [])
+        return (errors, output)
+    # The 400 response we get from the restframework serializers is a
+    # dictionary. The keys are serializer field names and the values are
+    # lists of errors. Concatenate all lists and return the result as
+    # `errors`.
+    elif resp.status_code == status.HTTP_400_BAD_REQUEST:
+        data = resp.json()
+        errors = []
+        for error_group in data.values():
+            for error_detail in error_group:
+                error = {'description': str(error_detail)}
+                errors.append(error)
+        return (errors, [])
+    else:
+        data = resp.text
+        description = f'It was not possible to validate the pipeline: {str(data)}'
+        errors = [{'description': description}]
+        return (errors, [])
 
 
 def kernel_data_request(url='', method='get', data=None):
