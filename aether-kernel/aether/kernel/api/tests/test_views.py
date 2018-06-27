@@ -654,10 +654,48 @@ class ViewsTest(TestCase):
         response = self.client.post(url, data, content_type='application/json')
         self.assertEqual(response.status_code, 201)
 
+        good_complex_schemas = [
+            json.dumps([  # Has a union type as it's base, but it otherwise ok.
+                    {
+                        'name': 'Test-a',
+                        'type': 'test',
+                        'definition': {
+                            'name': 'Test-a',
+                            'type': 'record',
+                            'fields': [
+                                {
+                                    'name': 'id',
+                                    'type': 'string'
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        'name': 'Test-b',
+                        'type': 'test',
+                        'definition': {
+                            'name': 'Test-b',
+                            'type': 'record',
+                            'fields': [
+                                {
+                                    'name': 'id',
+                                    'type': 'string'
+                                }
+                            ]
+                        }
+                    },
+                ]
+            )
+        ]
+
+        for schema in good_complex_schemas:
+            response = self.client.post(url, schema, content_type='application/json')
+            self.assertEqual(response.status_code, 201)
+
     def test_schema_validate_definition__errors(self):
         view_name = 'schema-list'
         url = reverse(view_name)
-        schemas = [
+        bad_schemas = [
             json.dumps({
                 'name': 'Test',
                 'type': 'test',
@@ -687,7 +725,8 @@ class ViewsTest(TestCase):
                 }
             })
         ]
-        for schema in schemas:
+
+        for schema in bad_schemas:
             response = self.client.post(url, schema, content_type='application/json')
             response_content = json.loads(response.content)
             self.assertIn(
