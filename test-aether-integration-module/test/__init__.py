@@ -37,7 +37,7 @@ kernel_credentials = {
 kernel_retry = 15
 kernel_retry_time = 1
 
-SEED_ENTITIES = 500
+SEED_ENTITIES = 1234
 SEED_TYPE = "Person"
 
 
@@ -94,7 +94,7 @@ def producer_status():
             person = status.get('topics', {}).get(SEED_TYPE, {})
             ok_count = person.get('last_changeset_status', {}).get('succeeded')
             if ok_count:
-                sleep(5)
+                sleep(10)
                 return ok_count
             else:
                 sleep(1)
@@ -143,6 +143,6 @@ def generate_entities(aether_client, existing_schemas, existing_projectschemas):
 @pytest.fixture(scope="function")
 def read_people():
     consumer = get_consumer(SEED_TYPE)
-    messages = read(consumer, start="FIRST", verbose=True, timeout_ms=500)
+    messages = read(consumer, start="FIRST", verbose=False, timeout_ms=500)
     consumer.close()  # leaving consumers open can slow down zookeeper, try to stay tidy
     return messages
