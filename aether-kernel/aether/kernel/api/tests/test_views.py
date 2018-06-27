@@ -662,6 +662,7 @@ class ViewsTest(TestCase):
                         'definition': [{
                             'name': 'Test-a',
                             'type': 'record',
+                            'aetherBaseSchema': True,
                             'fields': [
                                 {
                                     'name': 'id',
@@ -669,11 +670,11 @@ class ViewsTest(TestCase):
                                 }
                             ]
                         }, {
-                            'name': 'Test-b',
+                            'name': 'AProperty',
                             'type': 'record',
                             'fields': [
                                 {
-                                    'name': 'id',
+                                    'name': 'other_type',
                                     'type': 'string'
                                 }
                             ]
@@ -697,6 +698,7 @@ class ViewsTest(TestCase):
                 'definition': {
                     'name': 'Test',
                     'type': 'record',
+                    'aetherBaseSchema': True,
                     'fields': [
                         {
                             'name': 'a',  # missing key "id"
@@ -711,6 +713,7 @@ class ViewsTest(TestCase):
                 'definition': {
                     'name': 'Test',
                     'type': 'record',
+                    'aetherBaseSchema': True,
                     'fields': [
                         {
                             'name': 'id',

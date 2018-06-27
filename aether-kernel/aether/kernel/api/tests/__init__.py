@@ -38,6 +38,7 @@ EXAMPLE_SCHEMA = {
     'extends': 'http://ehealthafrica.org/#CouchDoc',
     'type': 'record',
     'name': 'Person',
+    'aetherBaseSchema': True,
     'fields': [
         {
             'jsonldPredicate': '@id',
