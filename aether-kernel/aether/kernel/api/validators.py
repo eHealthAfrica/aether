@@ -95,6 +95,7 @@ def _has_valid_id_field(schema):
     else:
         schemas = schema
     for schema in schemas:
+        id_field_type = None
         for field in schema.get('fields', []):
             if field.get('name', None) == 'id':
                 id_field_type = field.get('type', None)
@@ -102,7 +103,7 @@ def _has_valid_id_field(schema):
 
         schema_statuses.append(id_field_type and id_field_type == 'string')
     # True if All of the statuses were True
-    return True in schema_statuses and False not in schema_statuses
+    return all(schema_statuses)
 
 
 def validate_id_field(schema):
