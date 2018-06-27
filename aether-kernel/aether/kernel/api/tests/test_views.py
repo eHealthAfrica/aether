@@ -655,11 +655,11 @@ class ViewsTest(TestCase):
         self.assertEqual(response.status_code, 201)
 
         good_complex_schemas = [
-            json.dumps([  # Has a union type as it's base, but it otherwise ok.
+            json.dumps(  # Has a union type as it's base, but it otherwise ok.
                     {
-                        'name': 'Test-a',
+                        'name': 'Test-ab',
                         'type': 'test',
-                        'definition': {
+                        'definition': [{
                             'name': 'Test-a',
                             'type': 'record',
                             'fields': [
@@ -668,12 +668,7 @@ class ViewsTest(TestCase):
                                     'type': 'string'
                                 }
                             ]
-                        }
-                    },
-                    {
-                        'name': 'Test-b',
-                        'type': 'test',
-                        'definition': {
+                        }, {
                             'name': 'Test-b',
                             'type': 'record',
                             'fields': [
@@ -683,8 +678,8 @@ class ViewsTest(TestCase):
                                 }
                             ]
                         }
-                    },
-                ]
+                        ]
+                    }
             )
         ]
 
