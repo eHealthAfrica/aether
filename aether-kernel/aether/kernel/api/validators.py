@@ -96,6 +96,9 @@ def _has_valid_id_field(schema):
         schemas = schema
     for schema in schemas:
         id_field_type = None
+        if not schema.get('aetherBaseSchema', False):
+            schema_statuses.append(True)
+            continue
         for field in schema.get('fields', []):
             if field.get('name', None) == 'id':
                 id_field_type = field.get('type', None)
