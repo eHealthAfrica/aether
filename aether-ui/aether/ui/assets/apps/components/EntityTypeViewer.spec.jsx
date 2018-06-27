@@ -37,6 +37,10 @@ describe('EntityTypeViewer', () => {
       .toContain('<span class="type"> (nullable)</span>')
     expect(component.find('[id="entityType_Person.age"]').html())
       .toContain('<span class="type"> int,string</span>')
+    expect(component.find('[id="entityType_Person.age"]').html())
+      .toContain('<i class="fas fa-lock"></i>')
+    expect(component.find('[id="entityType_Person.lastName"]').html())
+      .not.toContain('<i class="fas fa-lock"></i>')
   })
 
   it('should take a valid json with empty entities', () => {

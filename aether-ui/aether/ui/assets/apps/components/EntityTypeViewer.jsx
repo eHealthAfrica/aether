@@ -21,10 +21,11 @@
 import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 import { generateGUID } from '../utils'
-import { MASKING_ANNOTATION } from '../utils/constants'
+import { MASKING_ANNOTATION, MASKING_PUBLIC } from '../utils/constants'
 
 const PropertyList = props => {
-  const isMasked = field => (Boolean(field && field[MASKING_ANNOTATION]))
+  const isMasked = field => (Boolean(field && field[MASKING_ANNOTATION] &&
+    field[MASKING_ANNOTATION].toLowerCase() !== MASKING_PUBLIC))
 
   if (!props.fields || !props.fields.length) {
     return (
