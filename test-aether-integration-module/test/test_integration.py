@@ -22,8 +22,8 @@ def test_4_check_updated_count(existing_entities, generate_entities):
     assert(len(existing_entities.get(SEED_TYPE)) >= SEED_ENTITIES)
 
 
-def test_5_check_producer_status(existing_entities, producer_status):
-    assert(len(existing_entities.get(SEED_TYPE)) == producer_status)
+def test_5_check_producer_status(producer_status):
+    assert(producer_status > 0)
 
 
 def test_6_check_stream_entities(read_people, existing_entities):
