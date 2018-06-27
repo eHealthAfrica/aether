@@ -26,7 +26,7 @@ sudo ./scripts/kubernetes/install_helm.sh --version v2.8.1
 To start the `kernel` and `odk` modules in a local minikube cluster with code reloading enabled, we need to mount our aether repository in minikube:
 
 ```
-minikube mount $(realpath .):/aether
+minikube mount `pwd`:/aether
 ```
 This process needs to keep running in order for our mount to work, so start it in a separate terminal tab or background it in your current one.
 

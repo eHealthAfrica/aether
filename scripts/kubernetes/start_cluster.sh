@@ -6,6 +6,7 @@ set -x
 # subdirectory (e.g. "local", "test") represents an environment and contains one
 # file for each module with settings for that environment.
 VALUES_DIR=$1
+eval $(minikube docker-env)
 
 # Rebuild all images to make sure that are using the most recent versions.
 docker-compose build kernel odk
