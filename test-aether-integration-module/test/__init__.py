@@ -94,6 +94,7 @@ def producer_status():
             person = status.get('topics', {}).get(SEED_TYPE, {})
             ok_count = person.get('last_changeset_status', {}).get('succeeded')
             if ok_count:
+                sleep(5)
                 return ok_count
             else:
                 sleep(1)
