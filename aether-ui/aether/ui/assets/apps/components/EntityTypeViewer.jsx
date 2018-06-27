@@ -21,8 +21,11 @@
 import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 import { generateGUID } from '../utils'
+import { MASKING_ANNOTATION } from '../utils/constants'
 
 const PropertyList = props => {
+  const isMasked = field => (Boolean(field && field[MASKING_ANNOTATION]))
+
   if (!props.fields || !props.fields.length) {
     return (
       <FormattedMessage
@@ -66,7 +69,7 @@ const PropertyList = props => {
       })
       return PropertyList({
         highlight: props.highlight,
-        fields: [{name: field.name, type: typeStringOptions.toString()}],
+        fields: [{...field, name: field.name, type: typeStringOptions.toString()}],
         name: props.name,
         parent: props.parent,
         isNullable
@@ -87,6 +90,7 @@ const PropertyList = props => {
             key={`${props.parent}.${field.name}`}
             className={className}
             id={`entityType_${jsonPath}`}>
+            {isMasked(field) && <i className='fas fa-lock' />}
             <span className='name'>{`${props.parent}.${field.name}`}</span>
             <span className='type'> {fieldType === 'enum' && field.symbols
               ? `${fieldType}: [${field.symbols.toString()}]` : fieldType}</span>
@@ -101,6 +105,7 @@ const PropertyList = props => {
             key={field.name}
             className={className}
             id={`entityType_${jsonPath}`}>
+            {isMasked(field) && <i className='fas fa-lock' />}
             <span className='name'>{field.name}</span>
             <span className='type'> {fieldType}</span>
             {props.isNullable ? <span className='type'> (nullable)</span> : null}
