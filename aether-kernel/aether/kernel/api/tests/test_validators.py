@@ -56,6 +56,7 @@ class ValidatorsTest(TestCase):
         invalid_schema = {
             'name': 'Test',
             'type': 'record',
+            'aetherBaseSchema': True,
             'fields': [
                 {
                     'name': 'id',
