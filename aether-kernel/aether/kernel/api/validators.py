@@ -86,13 +86,27 @@ def validate_avro_schema(value):
 def _has_valid_id_field(schema):
     '''
     Check if ``schema`` has a top-level field "id" of type "string".
+    If top level is a union type, check all child schemas.
     '''
     id_field_type = None
-    for field in schema.get('fields', []):
-        if field.get('name', None) == 'id':
-            id_field_type = field.get('type', None)
-            break
-    return id_field_type and id_field_type == 'string'
+    schema_statuses = []
+    if not isinstance(schema, list):
+        schemas = [schema]
+    else:
+        schemas = schema
+    for schema in schemas:
+        id_field_type = None
+        if not schema.get('aetherBaseSchema', False):
+            schema_statuses.append(True)
+            continue
+        for field in schema.get('fields', []):
+            if field.get('name', None) == 'id':
+                id_field_type = field.get('type', None)
+                break
+
+        schema_statuses.append(id_field_type and id_field_type == 'string')
+    # True if All of the statuses were True
+    return all(schema_statuses)
 
 
 def validate_id_field(schema):

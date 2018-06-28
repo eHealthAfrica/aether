@@ -20,7 +20,7 @@ WORKDIR /code/
 ################################################################################
 
 COPY ./package.json /code/package.json
-RUN npm install --loglevel silly
+RUN npm install --loglevel warn
 
 
 
