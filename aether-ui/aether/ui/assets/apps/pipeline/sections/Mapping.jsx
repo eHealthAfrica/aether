@@ -31,14 +31,48 @@ class Mapping extends Component {
 
     this.state = {
       mappingRules: props.selectedPipeline.mapping || [],
-      view: 'rules'
+      view: 'rules',
+      error: null,
+      mappingRulesInput: props.selectedPipeline.mapping
+        ? this.mappingToJSON(props.selectedPipeline.mapping) : JSON.stringify([]),
+      current_rules: [],
+      jsonError: null
     }
+  }
+
+  componentDidMount () {
+    this.setState({
+      current_rules: JSON.parse(this.state.mappingRulesInput)
+    })
   }
 
   componentWillReceiveProps (nextProps) {
     this.setState({
       mappingRules: nextProps.selectedPipeline.mapping || []
     })
+    if (nextProps.selectedPipeline.mapping !== this.props.selectedPipeline.mapping) {
+      this.setState({
+        current_rules: [...nextProps.selectedPipeline.mapping],
+        mappingRulesInput: this.mappingToJSON(nextProps.selectedPipeline.mapping)
+      })
+    }
+  }
+
+  JSONToMapping (json) {
+    try {
+      const mapping = JSON.parse(json).map(rule => ({
+        id: generateGUID(),
+        source: rule[0],
+        destination: rule[1]
+      }))
+      return mapping
+    } catch (error) {
+      throw error
+    }
+  }
+
+  mappingToJSON (mapping) {
+    return JSON.stringify(mapping.map(item => ([item.source, item.destination])), 0, 2)
   }
 
   notifyChange (event) {
@@ -46,8 +80,29 @@ class Mapping extends Component {
     this.props.updatePipeline({ ...this.props.selectedPipeline, mapping: this.state.mappingRules })
   }
 
+  notifyChangeJSON (event) {
+    event.preventDefault()
+    let rules = []
+    this.setState({ jsonError: null })
+    try {
+      rules = this.JSONToMapping(this.state.mappingRulesInput)
+      this.props.updatePipeline({ ...this.props.selectedPipeline, mapping: rules })
+      this.setState({ current_rules: JSON.parse(this.state.mappingRulesInput) })
+    } catch (error) {
+      this.setState({ jsonError: error.message })
+    }
+  }
+
   hasChanged () {
     return !deepEqual(this.state.mappingRules, this.props.selectedPipeline.mapping)
+  }
+
+  hasChangedJson () {
+    try {
+      return !deepEqual(JSON.parse(this.state.mappingRulesInput), this.state.current_rules)
+    } catch (error) {
+      return true
+    }
   }
 
   toggleMappingView () {
@@ -56,6 +111,10 @@ class Mapping extends Component {
     } else {
       this.setState({ view: 'rules' })
     }
+  }
+
+  onMappingRulesTextChanged (event) {
+    this.setState({ mappingRulesInput: event.target.value })
   }
 
   render () {
@@ -207,18 +266,52 @@ class Mapping extends Component {
   }
 
   renderDefinition () {
-    const definition = {
-      // include mapping rules as expected in kernel
-      mapping: (this.props.selectedPipeline.mapping || [])
-        .map(rule => ([rule.source, rule.destination]))
-    }
-
     return (
       <div className='definition'>
         <div className='definition-code'>
-          <code>
-            { JSON.stringify(definition, 0, 2) }
-          </code>
+          <form onSubmit={this.notifyChangeJSON.bind(this)}>
+            <label className='form-label'>
+              <FormattedMessage
+                id='mapping.empty.message'
+                defaultMessage='Paste mapping rules'
+              />
+            </label>
+
+            <div className='textarea-header'>
+              { this.state.jsonError &&
+                <div className='hint error-message'>
+                  <h4 className='hint-title'>
+                    <FormattedMessage
+                      id='mapping.invalid.message'
+                      defaultMessage='You have provided invalid mapping rules.'
+                    />
+                  </h4>
+                  { this.state.jsonError }
+                </div>
+              }
+            </div>
+
+            <FormattedMessage id='mappingRules.placeholder' defaultMessage='Enter your mapping rules as an array'>
+              {message => (
+                <textarea
+                  className={`input-d monospace ${this.state.error ? 'error' : ''}`}
+                  value={this.state.mappingRulesInput}
+                  onChange={this.onMappingRulesTextChanged.bind(this)}
+                  placeholder={message}
+                  rows='10'
+                />
+              )}
+            </FormattedMessage>
+
+            <button type='submit' className='btn btn-d btn-primary mt-3' disabled={!this.hasChangedJson()}>
+              <span className='details-title'>
+                <FormattedMessage
+                  id='mapping.button.ok'
+                  defaultMessage='Apply mapping rules to pipeline'
+                />
+              </span>
+            </button>
+          </form>
         </div>
       </div>
     )
