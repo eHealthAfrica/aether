@@ -22,6 +22,11 @@ from . import models
 
 
 class ProjectFilter(filters.FilterSet):
+    schema = filters.CharFilter(
+        name='projectschemas__schema',
+        lookup_expr='exact',
+    )
+
     class Meta:
         fields = '__all__'
         model = models.Project
@@ -74,6 +79,10 @@ class ProjectSchemaFilter(filters.FilterSet):
 class EntityFilter(filters.FilterSet):
     project = filters.CharFilter(
         name='projectschema__project',
+        lookup_expr='exact',
+    )
+    schema = filters.CharFilter(
+        name='projectschema__schema',
         lookup_expr='exact',
     )
 
