@@ -120,7 +120,6 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 
 class AttachmentSerializerNested(DynamicFieldsMixin, serializers.ModelSerializer):
-
     name = serializers.CharField(read_only=True)
     url = serializers.CharField(read_only=True, source='attachment_path')
 
@@ -152,7 +151,8 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         source='attachments',
     )
 
-    # this will return all linked attachment file (name, relative url) in one request call
+    # this will return all linked attachment files
+    # (name, relative url) in one request call
     attachments = AttachmentSerializerNested(many=True, read_only=True)
 
     def create(self, validated_data):
@@ -248,6 +248,14 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     )
     merge = serializers.ChoiceField(MERGE_CHOICES, default=m_options.overwrite.value)
     resolved = serializers.JSONField(default={})
+
+    # this will return all linked attachment files
+    # (name, relative url) in one request call
+    attachments = AttachmentSerializerNested(
+        many=True,
+        read_only=True,
+        source='submission.attachments',
+    )
 
     def create(self, validated_data):
         try:
@@ -357,7 +365,8 @@ class MappingStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         model = models.Mapping
         fields = (
             'id', 'name', 'definition', 'created',
-            'first_submission', 'last_submission', 'submission_count',
+            'first_submission', 'last_submission',
+            'submissions_count', 'entities_count',
         )
 
 
