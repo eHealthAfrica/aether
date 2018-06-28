@@ -468,18 +468,34 @@ class XFormUtilsAvroTests(CustomTestCase):
                             'translation': [
                                 {
                                     '@lang': 'AA',
-                                    'text': [{
-                                        '@id': 'a',
-                                        'value': 'A',
-                                    }]
+                                    'text': [
+                                        {
+                                            '@id': 'a',
+                                            'value': 'A',
+                                        },
+                                        {
+                                            '@id': 'b',
+                                            'value': 'B',
+                                        },
+                                    ]
                                 },
                                 {
                                     '@default': 'true()',
                                     '@lang': 'BB',
-                                    'text': [{
-                                        '@id': 'a',
-                                        'value': 'B',
-                                    }]
+                                    'text': [
+                                        {
+                                            '@id': 'a',
+                                            'value': 'B',
+                                        },
+                                        {
+                                            '@id': 'b',
+                                            'value': 'C',
+                                        },
+                                        {
+                                            '@id': 'c',
+                                            'value': [],
+                                        },
+                                    ]
                                 },
                             ]
                         }
@@ -487,7 +503,43 @@ class XFormUtilsAvroTests(CustomTestCase):
                 }
             }
         }
-        self.assertEqual(get_texts(xform_dict), {'a': 'B'})
+        self.assertEqual(get_texts(xform_dict), {'a': 'B', 'b': 'C'})
+
+    def test__get_xform_itexts__several_values(self):
+        xform_dict = {
+            'h:html': {
+                'h:head': {
+                    'model': {
+                        'itext': {
+                            'translation': [
+                                {
+                                    '@default': 'true()',
+                                    '@lang': 'BB',
+                                    'text': [
+                                        {
+                                            '@id': 'a',
+                                            'value': [
+                                                {'@form': 'image', '#text': 'a'},
+                                                'B',
+                                                'C',
+                                            ],
+                                        },
+                                        {
+                                            '@id': 'b',
+                                            'value': [
+                                                'E',
+                                                {'@form': 'image', '#text': 'b'},
+                                            ],
+                                        },
+                                    ]
+                                },
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+        self.assertEqual(get_texts(xform_dict), {'a': 'B', 'b': 'E'})
 
     def test__get_xform_label__no_body(self):
         xform_dict = {}
@@ -590,13 +642,13 @@ class XFormUtilsAvroTests(CustomTestCase):
             xform_avro = json.load(content)
 
         schema = parse_xform_to_avro_schema(self.samples['xform']['raw-xml'])
-        self.assertEqual(schema['name'], 'MyTestForm')
+        self.assertEqual(schema['name'], 'MyTestForm_Test10')
         self.assertEqual(schema['doc'], 'My Test Form (id: my-test-form, version: Test-1.0)')
 
         self.assertEqual(schema, xform_avro)
 
         schema_i18n = parse_xform_to_avro_schema(self.samples['xform']['raw-xml-i18n'])
-        self.assertEqual(schema_i18n['name'], 'MyTestForm')
+        self.assertEqual(schema_i18n['name'], 'MyTestForm_Test10')
         self.assertEqual(schema_i18n['doc'], 'My Test Form (multilang) (id: my-test-form, version: Test-1.0)')
 
         # the same fields
@@ -636,7 +688,7 @@ class XFormUtilsAvroTests(CustomTestCase):
         '''
 
         expected = {
-            'name': 'NestedRepeatsTest',
+            'name': 'Nested_Repeats_Test_0',
             'namespace': 'aether.odk.xforms',
             'doc': 'nested repeats test (id: nested_repeats_test, version: 0)',
             'type': 'record',
@@ -724,7 +776,7 @@ class XFormUtilsAvroTests(CustomTestCase):
         '''
 
         expected = {
-            'name': 'WrongNames',
+            'name': 'WrongNames_0',
             'namespace': 'aether.odk.xforms',
             'doc': 'forcing validation error (id: wrong-names, version: 0)',
             'type': 'record',

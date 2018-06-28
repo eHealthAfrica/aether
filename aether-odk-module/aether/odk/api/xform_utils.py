@@ -161,8 +161,9 @@ def parse_submission(data, xml_definition):
     # assumption: there is only one child that represents the form content
     # usually: {'ZZZ': { ... }}
     # remove this first level and return content
-    if len(list(data.keys())) == 1:  # pragma: no cover
-        data = data[list(data.keys())[0]]
+    keys = list(data.keys())
+    if len(keys) == 1 and isinstance(data[keys[0]], dict):  # pragma: no cover
+        data = data[keys[0]]
 
     return data
 
@@ -218,8 +219,10 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
 
     title, form_id, version = get_xform_data_from_xml(xml_definition)
     version = version or default_version
+    # include version within name to identify different entity source
+    name = f'{form_id}_{version}'
     # AVRO names contain only [A-Za-z0-9_]
-    name = ''.join([c if c.isalnum() else ' ' for c in form_id]).title().replace(' ', '')
+    name = ''.join([c if c.isalnum() or c == '_' else ' ' for c in name]).title().replace(' ', '')
 
     KEY = '-----'
 
@@ -232,13 +235,13 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         'fields': [
             {
                 'name': '_id',
-                'doc': 'xForm ID',
+                'doc': _('xForm ID'),
                 'type': 'string',
                 'default': form_id,
             },
             {
                 'name': '_version',
-                'doc': 'xForm version',
+                'doc': _('xForm version'),
                 'type': 'string',
                 'default': version,
             },
@@ -618,6 +621,22 @@ def __get_xform_instance_skeleton(xml_definition):
 def __get_xform_itexts(xform_dict):
     '''
     Extract all translated texts from xForm definition (as dict)
+
+    <itext>
+        <translation default="true()" lang="AAA">
+            <text id="/Form/field/one:label">
+                <value>One</value>
+            </text>
+            <text id="/Form/field/two:label">
+                <value form="image">jr://images/two.png</value>
+                <value>Two</value>
+            </text>
+            ...
+        </translation>
+        <translation lang="BBB">
+            ...
+        </translation>
+    </itext>
     '''
 
     try:
@@ -636,8 +655,13 @@ def __get_xform_itexts(xform_dict):
             break
 
     # convert all text entries in a dict wich key is the text id
-    texts = __wrap_as_list(translation['text'])
-    return {text_entry['@id']: text_entry['value'] for text_entry in texts}
+    itexts = {}
+    for text_entry in __wrap_as_list(translation.get('text')):
+        for value in __wrap_as_list(text_entry.get('value')):
+            if isinstance(value, str):
+                itexts[text_entry.get('@id')] = value
+                break
+    return itexts
 
 
 def __get_xform_label(xform_dict, xpath, texts={}):
