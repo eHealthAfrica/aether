@@ -24,6 +24,8 @@ import urls from './urls'
 // calls pending when pagination is fully implemented
 export const MAX_PAGE_SIZE = 5000
 export const PROJECT_NAME = 'AUX'
+export const MASKING_ANNOTATION = 'aetherDataClassification'
+export const MASKING_PUBLIC = 'public'
 
 const types = {
   GET_KERNEL_URL: 'get_kernel_url',
