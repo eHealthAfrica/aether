@@ -1,10 +1,10 @@
 {
-    "kafka_server": "kafka:29092",
-    "start_delay": 20,
+    "offset_db_url" : "sqlite:///offset.db",
+    "start_delay": 5,
     "sleep_time": 10,
-    "jdbc_connection_string": "jdbc:postgresql://db:5432/aether?user=postgres",
-    "jdbc_user": "postgres",
-    "offset_file": "offset.json",
+    "log_level" : "ERROR",
+    "window_size_sec" : 2,
+    "postgres_pull_limit" : 250,
     "postgres_connection_info": {
         "user" : "postgres",
         "dbname" : "aether",
@@ -15,5 +15,30 @@
     "kernel_credentials": {
         "username": "admin-kernel",
         "password": "adminadmin"
+    },
+    "kafka_failure_wait_time" : 10,
+    "kafka_settings" : {
+        "bootstrap.servers": "kafka:29092",
+        "acks" : 1,
+        "max.in.flight.requests.per.connection" : 1,
+        "linger.ms" : 200,
+        "retry.backoff.ms": 25,
+        "default.topic.config": {
+            "request.timeout.ms" : 200,
+            "message.timeout.ms" : 1000
+        },
+        "message.send.max.retries" : 9,
+        "queue.buffering.max.ms" : 100,
+        "socket.blocking.max.ms" : 100,
+        "socket.timeout.ms" : 10000
+
+    },
+    "flask_settings": {
+        "port" : 5005,
+        "max_connections" : 3
+    },
+    "topic_settings" : {
+        "name_modifier" : "%s"
+
     }
 }

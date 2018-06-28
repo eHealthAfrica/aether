@@ -76,15 +76,6 @@ def read_poll_result(poll_result, verbose=False):
             reader = DataFileReader(obj, DatumReader())
 
             # We can get the schema directly from the reader.
-            # we get a mess of unicode that can't be json parsed so we need ast
-            '''
-            raw_schema = ast.literal_eval(str(reader.meta))
-            schema = ast.literal_eval(str(raw_schema.get("avro.schema")))
-            if not schema:
-                raise AttributeError("No Schema serialized with message!")
-            elif verbose:
-                pprint(schema)
-            '''
             for x, msg in enumerate(reader):  # multiple messages can arrive
                 messages.append(msg)
                 if verbose:                   # serialized in one package
@@ -94,12 +85,13 @@ def read_poll_result(poll_result, verbose=False):
     return messages
 
 
-def read(consumer, start="LATEST", verbose=False, timeout_ms=5000, max_records=1000):
+def read(consumer, start="LATEST", verbose=False, timeout_ms=5000, max_records=200):
     messages = []
     if start not in ["FIRST", "LATEST"]:
         raise ValueError("%s it not a valid argument for 'start='" % start)
     if start is "FIRST":
         seek_to_beginning(consumer)
+    blank = 0
     while True:
         try:
             poll_result = consumer.poll(timeout_ms=timeout_ms, max_records=max_records)
@@ -107,9 +99,12 @@ def read(consumer, start="LATEST", verbose=False, timeout_ms=5000, max_records=1
             print(nofpe)
             break
         if not poll_result:
-            break
+            blank += 1
+            if blank > 3:
+                break
+            Sleep(1)
+
         new_messages = read_poll_result(poll_result, verbose)
-        print(len(new_messages))
         messages.extend(new_messages)
     print("Read %s messages" % (len(messages)))
     return messages

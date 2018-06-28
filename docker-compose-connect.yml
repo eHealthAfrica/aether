@@ -39,6 +39,8 @@ services:
     links:
       - kafka
       - zookeeper
+    ports:
+      - "5005:5005"
     networks:
       - aether
     command: start
