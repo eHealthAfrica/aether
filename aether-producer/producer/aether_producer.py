@@ -349,16 +349,25 @@ class TopicManager(object):
             return sum([1 for i in cursor]) > 0
 
     def get_time_window_filter(self, query_time):
+        # You can't always trust that a set from kernel made up of time window
+        # start < _time < end is complete if nearlyequal(_time, now()).
+        # Sometimes rows belonging to that set would show up a couple mS after
+        # the window had closed and be dropped. Our solution was to truncate sets
+        # based on the insert time and now() to provide a buffer.
         TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
+
         def fn(row):
             commited = datetime.strptime(row.get('modified')[:26], TIME_FORMAT)
             lag_time = (query_time - commited).total_seconds()
             if lag_time > self.window_size_sec:
                 return True
             elif lag_time < -30.0:
-                self.logger.critical("INVALID LAG INTERVAL: %s. Check time settings on server." % lag_time)
+                # Sometimes fractional negatives show up. More than 30 seconds is an issue though.
+                self.logger.critical(
+                    "INVALID LAG INTERVAL: %s. Check time settings on server." % lag_time)
             _id = row.get('id')
-            self.logger.debug("WINDOW EXCLUDE: ID: %s, LAG: %s" % (_id, lag_time))
+            self.logger.debug("WINDOW EXCLUDE: ID: %s, LAG: %s" %
+                              (_id, lag_time))
             return False
         return fn
 
@@ -504,7 +513,8 @@ class TopicManager(object):
             # All changes were saved
             elif len(self.successful_changes) == change_set_size:
 
-                self.logger.debug('All changes saved ok in topic %s.' % self.name)
+                self.logger.debug(
+                    'All changes saved ok in topic %s.' % self.name)
                 break
 
             # Remove successful and errored changes
