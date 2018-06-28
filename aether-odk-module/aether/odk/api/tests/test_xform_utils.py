@@ -707,13 +707,13 @@ class XFormUtilsAvroTests(CustomTestCase):
                 },
                 {
                     'name': 'Repeat_1',
+                    'doc': '/Repeat_1',
                     'type': [
                         'null',
                         {
                             'type': 'array',
                             'items': {
                                 'name': 'Repeat_1',
-                                'doc': '/Repeat_1',
                                 'type': 'record',
                                 'fields': [
                                     {
@@ -723,13 +723,13 @@ class XFormUtilsAvroTests(CustomTestCase):
                                     },
                                     {
                                         'name': 'Repeat_2',
+                                        'doc': '/Repeat_1/Repeat_2',
                                         'type': [
                                             'null',
                                             {
                                                 'type': 'array',
                                                 'items': {
                                                     'name': 'Repeat_2',
-                                                    'doc': '/Repeat_1/Repeat_2',
                                                     'type': 'record',
                                                     'fields': [
                                                         {
@@ -795,11 +795,11 @@ class XFormUtilsAvroTests(CustomTestCase):
                 },
                 {
                     'name': 'full-name',
+                    'doc': '/full-name',
                     'type': [
                         'null',
                         {
                             'name': 'full-name',
-                            'doc': '/full-name',
                             'type': 'record',
                             'fields': [
                                 {

@@ -278,11 +278,11 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         if current_type == 'group':
             parent['fields'].append({
                 'name': current_name,
+                'doc': current_doc,
                 'type': [
                     'null',
                     {
                         'name': current_name,
-                        'doc': current_doc,
                         'type': 'record',
                         'fields': [],
                         KEY: xpath,
@@ -294,13 +294,13 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         elif current_type == 'repeat':
             parent['fields'].append({
                 'name': current_name,
+                'doc': current_doc,
                 'type': [
                     'null',
                     {
                         'type': 'array',
                         'items': {
                             'name': current_name,
-                            'doc': current_doc,
                             'type': 'record',
                             'fields': [],
                             KEY: xpath,
@@ -314,12 +314,12 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         elif current_type == 'geopoint':
             parent['fields'].append({
                 'name': current_name,
+                'doc': current_doc,
                 'type': [
                     'null',
                     {
                         'name': current_name,
                         'type': 'record',
-                        'doc': current_doc,
                         'fields': [
                             {
                                 'name': 'latitude',
