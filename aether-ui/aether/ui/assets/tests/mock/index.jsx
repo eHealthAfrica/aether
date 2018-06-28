@@ -18,7 +18,12 @@
  * under the License.
  */
 
-import reduxThunk from 'redux-thunk'
-import client from './client'
+import entityTypes from './schema_entityTypes.mock'
+import inputSchema from './schema_input.mock'
+import pipelines from './pipelines.mock'
 
-export default [reduxThunk, client]
+export {
+  entityTypes,
+  inputSchema,
+  pipelines
+}

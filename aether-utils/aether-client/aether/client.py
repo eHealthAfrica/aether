@@ -31,16 +31,12 @@ class GenericClient(object):
     _holds_resources = {}
     _data_types = {}
 
-    def __init__(self, url=None, **credentials):
+    def __init__(self, url=None, username=None, password=None, timeout=3):
         self.url_base = url
-        if not credentials:
-            raise AttributeError("No credentials passed!")
-        creds = credentials.keys()
-        if 'username' not in creds or 'password' not in creds:
+        self.timeout = timeout
+        if not (username and password):
             raise AttributeError("Credentials 'username' and 'password' required")
-        self.auth = requests.auth.HTTPBasicAuth(
-            credentials.get('username'),
-            credentials.get('password'))
+        self.auth = requests.auth.HTTPBasicAuth(username, password)
         self.refresh()
 
     def refresh(self):
@@ -52,7 +48,7 @@ class GenericClient(object):
     def delete(self, url):
         req = None
         try:
-            req = requests.delete(url, auth=self.auth)
+            req = requests.delete(url, auth=self.auth, timeout=getattr(self, 'timeout'))
             ok = req.status_code in [requests.codes.ok, requests.codes.no_content]
         except requests.exceptions.ConnectionError:
             ok = False
@@ -62,7 +58,7 @@ class GenericClient(object):
         }
 
     def get(self, url):
-        req = requests.get(url, auth=self.auth)
+        req = requests.get(url, auth=self.auth, timeout=getattr(self, 'timeout'))
         try:
             return req.json()
         except Exception as jse:
@@ -72,11 +68,11 @@ class GenericClient(object):
             return req.text  # TODO TEST
 
     def post(self, url, data):
-        req = requests.post(url, auth=self.auth, data=data)
+        req = requests.post(url, auth=self.auth, data=data, timeout=getattr(self, 'timeout'))
         return json.loads(req.text)
 
     def put(self, url, data):
-        req = requests.put(url, auth=self.auth, data=data)
+        req = requests.put(url, auth=self.auth, data=data, timeout=getattr(self, 'timeout'))
         return json.loads(req.text)
 
 
