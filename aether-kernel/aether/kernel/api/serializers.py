@@ -335,20 +335,23 @@ class EntityLDSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 class ProjectStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     first_submission = serializers.DateTimeField()
     last_submission = serializers.DateTimeField()
-    submission_count = serializers.IntegerField()
+    submissions_count = serializers.IntegerField()
+    entities_count = serializers.IntegerField()
 
     class Meta:
         model = models.Project
         fields = (
             'id', 'name', 'created',
-            'first_submission', 'last_submission', 'submission_count',
+            'first_submission', 'last_submission',
+            'submissions_count', 'entities_count',
         )
 
 
 class MappingStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     first_submission = serializers.DateTimeField()
     last_submission = serializers.DateTimeField()
-    submission_count = serializers.IntegerField()
+    submissions_count = serializers.IntegerField()
+    entities_count = serializers.IntegerField()
 
     class Meta:
         model = models.Mapping
