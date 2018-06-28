@@ -2,8 +2,8 @@
     "offset_db_url" : "sqlite:///test-offset.db",
     "start_delay": 5,
     "sleep_time": 10,
-    "log_level" : "ERROR",
-    "offset_file": "offset.json",
+    "log_level" : "DEBUG",
+    "window_size_sec" : 2,
     "postgres_pull_limit" : 250,
     "postgres_connection_info": {
         "user" : "postgres",

@@ -71,8 +71,6 @@ class Settings(UserDict):
             obj = json.load(f)
             for k in obj:
                 self.data[k] = obj.get(k)
-            self.data['offset_path'] = "%s/%s" % (
-                FILE_PATH, self.data['offset_file'])
 
 
 class KernelHandler(object):
@@ -319,6 +317,7 @@ class TopicManager(object):
         self.successful_changes = []
         self.failed_changes = {}
         self.wait_time = self.context.settings.get('sleep_time', 2)
+        self.window_size_sec = self.context.settings.get('window_size_sec', 3)
         self.pg_creds = self.context.settings.get('postgres_connection_info')
         self.kafka_failure_wait_time = self.context.settings.get(
             'kafka_failure_wait_time', 10)
@@ -340,23 +339,41 @@ class TopicManager(object):
         self.context.threads.append(gevent.spawn(self.update_kafka))
 
     def updates_available(self):
+
         modified = "" if not self.offset else self.offset  # "" evals to < all strings
+
         query = TopicManager.NEW_STR % (modified, self.name)
         with psycopg2.connect(**self.pg_creds) as conn:
             cursor = conn.cursor(cursor_factory=DictCursor)
             cursor.execute(query)
             return sum([1 for i in cursor]) > 0
 
+    def get_time_window_filter(self, query_time):
+        TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
+        def fn(row):
+            commited = datetime.strptime(row.get('modified')[:26], TIME_FORMAT)
+            lag_time = (query_time - commited).total_seconds()
+            if lag_time > self.window_size_sec:
+                return True
+            elif lag_time < -30.0:
+                self.logger.critical("INVALID LAG INTERVAL: %s. Check time settings on server." % lag_time)
+            _id = row.get('id')
+            self.logger.debug("WINDOW EXCLUDE: ID: %s, LAG: %s" % (_id, lag_time))
+            return False
+        return fn
+
     def get_db_updates(self):
         modified = "" if not self.offset else self.offset  # "" evals to < all strings
         query = TopicManager.QUERY_STR % (
             modified, self.name, self.limit)
+        query_time = datetime.now()
         with psycopg2.connect(**self.pg_creds) as conn:
             cursor = conn.cursor(cursor_factory=DictCursor)
             cursor.execute(query)
             # Since this cursor is of limited size, we keep it in memory instead of
             # returning an iterator to free up the DB resource
-            return [{key: row[key] for key in row.keys()} for row in cursor]
+            window_filter = self.get_time_window_filter(query_time)
+            return [{key: row[key] for key in row.keys()} for row in cursor if window_filter(row)]
 
     def update_schema(self, schema_obj):
         self.schema_obj = self.parse_schema(schema_obj)
@@ -414,6 +431,9 @@ class TopicManager(object):
                 self.logger.debug("Getting Changeset for %s" % self.name)
                 self.change_set = {}
                 new_rows = self.get_db_updates()
+                if not new_rows:
+                    self.context.safe_sleep(self.wait_time)
+                    continue
                 end_offset = new_rows[-1].get('modified')
             except Exception as pge:
                 self.logger.error(
@@ -429,8 +449,15 @@ class TopicManager(object):
                     for row in new_rows:
                         _id = row['id']
                         msg = row.get("payload")
+                        modified = row.get("modified")
                         if validate(self.schema, msg):
                             # Message validates against current schema
+                            self.logger.debug(
+                                "ENQUEUE MSG TOPIC: %s, ID: %s, MOD: %s" % (
+                                    self.name,
+                                    _id,
+                                    modified
+                                ))
                             self.change_set[_id] = row
                             writer.append(msg)
                         else:
@@ -477,7 +504,7 @@ class TopicManager(object):
             # All changes were saved
             elif len(self.successful_changes) == change_set_size:
 
-                self.logger.debug('All changes saved ok.')
+                self.logger.debug('All changes saved ok in topic %s.' % self.name)
                 break
 
             # Remove successful and errored changes
@@ -512,6 +539,8 @@ class TopicManager(object):
         # Once we're satisfied, we set the new offset past the processed messages
         self.context.kafka = True
         self.set_offset(end_offset)
+        # Sleep so that elements passed in the current window become eligible
+        self.context.safe_sleep(self.window_size_sec)
 
     def handle_kafka_errors(self, change_set_size, all_failed=False, failure_wait_time=10):
         # Errors in saving data to Kafka are handled and logged here
