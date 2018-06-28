@@ -47,7 +47,7 @@ def propagate_kernel_project(project):
     '''
 
     artefacts = {
-        'name': project.name,
+        'name': __right_pad(project.name),
         'schemas': [],
         'mappings': [],
     }
@@ -76,7 +76,7 @@ def propagate_kernel_artefacts(xform):
 
     schemas, mapping = __xform_to_artefacts(xform)
     artefacts = {
-        'name': xform.project.name,
+        'name': __right_pad(xform.project.name),
         'schemas': schemas,
         'mappings': [mapping],
     }
@@ -116,8 +116,7 @@ def __xform_to_artefacts(xform):
     item_id = str(xform.kernel_id)
     definition = copy.deepcopy(xform.avro_schema)
 
-    # Names are unique so we try to avoid annoying errors with duplicated names.
-    name = __right_pad(definition['name'])
+    name = definition['name']
     fields = definition['fields']
 
     # create identity mapping rules using the AVRO schema fields (first level)
@@ -143,15 +142,17 @@ def __xform_to_artefacts(xform):
             'type': 'string',
         })
 
+    random_name = __right_pad(name)
     schema = {
         'id': item_id,
-        'name': name,
+        'name': random_name,
         'definition': definition,
     }
     mapping = {
         'id': item_id,
-        'name': name,
+        'name': random_name,
         'definition': {
+            'entities': {name: item_id},
             'mapping': rules,
         }
     }

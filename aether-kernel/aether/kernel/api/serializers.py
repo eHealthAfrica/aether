@@ -162,7 +162,7 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
             return submission
         except Exception as e:
             raise serializers.ValidationError({
-                'description': 'Submission validation failed'
+                'description': 'Submission validation failed >> ' + str(e)
             })
 
     class Meta:
@@ -277,7 +277,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
             return entity
         except Exception as e:
             raise serializers.ValidationError({
-                'description': 'Submission validation failed'
+                'description': 'Submission validation failed >> ' + str(e)
             })
 
     def update(self, instance, validated_data):

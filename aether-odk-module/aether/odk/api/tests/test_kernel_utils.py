@@ -149,7 +149,7 @@ class KernelUtilsTest(CustomTestCase):
         self.assertEqual(response.status_code, 200)
         kernel_project = json.loads(response.content.decode('utf-8'))
         self.assertEqual(kernel_project['id'], str(self.project.project_id))
-        self.assertEqual(kernel_project['name'], self.project.name)
+        self.assertIn(self.project.name, kernel_project['name'])
 
         # creates the artefacts for the xForm 1
         response = requests.get(self.MAPPING_URL_1, headers=self.KERNEL_HEADERS)
@@ -184,7 +184,7 @@ class KernelUtilsTest(CustomTestCase):
         self.assertEqual(response.status_code, 200)
         kernel_project = json.loads(response.content.decode('utf-8'))
         self.assertEqual(kernel_project['id'], str(self.project.project_id))
-        self.assertEqual(kernel_project['name'], self.project.name)
+        self.assertIn(self.project.name, kernel_project['name'])
 
         # creates the artefacts for the xForm 1
         response = requests.get(self.MAPPING_URL_1, headers=self.KERNEL_HEADERS)

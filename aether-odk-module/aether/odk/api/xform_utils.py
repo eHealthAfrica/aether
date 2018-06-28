@@ -323,18 +323,22 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
                         'fields': [
                             {
                                 'name': 'latitude',
+                                'doc': _('latitude'),
                                 'type': __get_avro_primitive_type('float', True),
                             },
                             {
                                 'name': 'longitude',
+                                'doc': _('longitude'),
                                 'type': __get_avro_primitive_type('float', True),
                             },
                             {
                                 'name': 'altitude',
+                                'doc': _('altitude'),
                                 'type': __get_avro_primitive_type('float', False),
                             },
                             {
                                 'name': 'accuracy',
+                                'doc': _('accuracy'),
                                 'type': __get_avro_primitive_type('float', False),
                             },
                         ],
