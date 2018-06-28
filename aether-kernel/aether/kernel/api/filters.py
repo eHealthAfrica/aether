@@ -55,6 +55,11 @@ class AttachmentFilter(filters.FilterSet):
 
 
 class SchemaFilter(filters.FilterSet):
+    project = filters.CharFilter(
+        name='projectschemas__project',
+        lookup_expr='exact',
+    )
+
     class Meta:
         exclude = ('definition',)
         model = models.Schema
