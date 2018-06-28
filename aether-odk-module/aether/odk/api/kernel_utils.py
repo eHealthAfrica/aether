@@ -16,7 +16,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import copy
+import random
 import requests
+import string
 
 from django.utils.translation import ugettext as _
 
@@ -44,13 +47,14 @@ def propagate_kernel_project(project):
     '''
 
     artefacts = {
+        'name': project.name,
         'schemas': [],
         'mappings': [],
     }
 
-    for xform in project.xforms.all():
-        schema, mapping = __xform_to_artefacts(xform)
-        artefacts['schemas'].append(schema)
+    for xform in project.xforms.order_by('-modified_at'):
+        schemas, mapping = __xform_to_artefacts(xform)
+        artefacts['schemas'] += schemas
         artefacts['mappings'].append(mapping)
 
     __upsert_kernel_artefacts(project, artefacts)
@@ -66,13 +70,14 @@ def propagate_kernel_artefacts(xform):
     One XForm should create/update in Kernel:
         - one Project,
         - one Mapping,
-        - one Schema and
-        - one ProjectSchema.
+        - one or more Schemas and
+        - one or more ProjectSchemas.
     '''
 
-    schema, mapping = __xform_to_artefacts(xform)
+    schemas, mapping = __xform_to_artefacts(xform)
     artefacts = {
-        'schemas': [schema],
+        'name': xform.project.name,
+        'schemas': schemas,
         'mappings': [mapping],
     }
 
@@ -109,8 +114,55 @@ def __upsert_kernel_artefacts(project, artefacts={}):
 def __xform_to_artefacts(xform):
     # all the items will have the same id
     item_id = str(xform.kernel_id)
+    definition = copy.deepcopy(xform.avro_schema)
 
-    schema = {'id': item_id, 'definition': xform.avro_schema}
-    mapping = {'id': item_id}
+    # Names are unique so we try to avoid annoying errors with duplicated names.
+    name = __right_pad(definition['name'])
+    fields = definition['fields']
 
-    return schema, mapping
+    # create identity mapping rules using the AVRO schema fields (first level)
+    rules = [
+        [
+            '{}.{}'.format('$', f['name']),   # source
+            '{}.{}'.format(name, f['name']),  # destination
+        ]
+        for f in fields
+    ]
+
+    # kernel entities/ schemas need an "id" field,
+    # if this does not exist include it manually
+    id_or_none = next((x for x in fields if x['name'] == 'id'), None)
+    if id_or_none is None:
+        rules.append([
+            '#!uuid',  # this will generate an UUID during entity extractor step
+            f'{name}.id',
+        ])
+        definition['fields'].append({
+            'name': 'id',
+            'doc': _('ID'),
+            'type': 'string',
+        })
+
+    schema = {
+        'id': item_id,
+        'name': name,
+        'definition': definition,
+    }
+    mapping = {
+        'id': item_id,
+        'name': name,
+        'definition': {
+            'mapping': rules,
+        }
+    }
+
+    return [schema], mapping
+
+
+def __right_pad(value):
+    '''
+    Creates a random string of length 50 and appends it to the given value
+    '''
+    alphanum = string.ascii_letters + string.digits
+    pad = ''.join([random.choice(alphanum) for x in range(50)])
+    return (f'{value}__{pad}')[0:50]
