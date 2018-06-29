@@ -39,11 +39,9 @@ show_help() {
   test_lint     : run flake8, standardjs and sass lint tests
   test_coverage : run python tests with coverage output
   test_py       : alias of test_coverage
-  test_js       : run js tests with enzyme and jest
 
   start         : start webserver behind nginx
   start_dev     : start webserver for development
-  start_webpack : start webpack server (only in DEV mode)
   """
 }
 
@@ -92,7 +90,6 @@ setup_prod() {
 }
 
 test_lint() {
-  npm run test-lint
   flake8 ./aether --config=./conf/extras/flake8.cfg
 }
 
@@ -105,10 +102,6 @@ test_coverage() {
   coverage erase
 
   cat ./conf/extras/good_job.txt
-}
-
-test_js() {
-  npm run test-js "${@:1}"
 }
 
 
@@ -154,12 +147,7 @@ case "$1" in
 
   test)
     test_lint
-    test_js
     test_coverage
-
-    # remove previous files
-    rm -r -f ${BUNDLES_DIR}
-    npm run webpack
 
     # collect static assets
     ./manage.py collectstatic --noinput --dry-run
@@ -177,17 +165,9 @@ case "$1" in
     test_coverage "${@:2}"
   ;;
 
-  test_js)
-    test_js "${@:2}"
-  ;;
-
   start )
     setup_db
     setup_prod
-
-    # remove previous files
-    rm -r -f ${BUNDLES_DIR}
-    npm run webpack
 
       # create static assets
     ./manage.py collectstatic --noinput --clear
@@ -204,12 +184,6 @@ case "$1" in
     setup_db
     setup_initial_data
     ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
-  ;;
-
-  start_webpack )
-    # remove previous files
-    rm -r -f ${BUNDLES_DIR}
-    npm run webpack-server
   ;;
 
   help)

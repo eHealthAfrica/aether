@@ -22,6 +22,9 @@ WORKDIR /code/
 COPY ./package.json /code/package.json
 RUN npm install --loglevel warn
 
+# create distributed app
+COPY ./ /code
+RUN npm run webpack
 
 
 ################################################################################
@@ -34,10 +37,6 @@ FROM python:3.6 AS ui_py
 ################################################################################
 ## setup container
 ################################################################################
-
-## make node+npm available within the python container
-COPY --from=ui_node /usr/local/bin/nodejs        /usr/local/bin/nodejs
-COPY --from=ui_node /usr/local/lib/node_modules  /usr/local/lib/node_modules
 
 COPY ./conf/docker/* /tmp/
 RUN /tmp/setup.sh
@@ -59,11 +58,11 @@ RUN pip install -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.tx
 
 COPY ./ /code
 
+# copy distributed app into Django app
+COPY --from=ui_node /code/aether/ui/assets/bundles /code/aether/ui/assets/bundles
+
 # create user to run container (avoid root user)
 RUN useradd -ms /bin/false aether
 RUN chown -R aether: /code
-
-# move this line to the bottom to speed up setup
-COPY --from=ui_node /code/node_modules /code/node_modules
 
 ENTRYPOINT ["/code/entrypoint.sh"]

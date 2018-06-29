@@ -41,7 +41,7 @@ function prepare_container() {
 function prepare_and_test_container() {
   echo "_____________________________________________ Starting $1 tasks"
   prepare_container $1
-  $DC_TEST run "$1"-test test --noinput
+  $DC_TEST run "$1"-test test
   echo "_____________________________________________ $1 tasks done"
 }
 
@@ -81,6 +81,8 @@ prepare_and_test_container odk
 
 # test a clean UI TEST container
 prepare_and_test_container ui
+$DC_TEST build ui-webpack-test
+$DC_TEST run   ui-webpack-test test
 
 
 echo "_____________________________________________ Starting auxiliary databases"
