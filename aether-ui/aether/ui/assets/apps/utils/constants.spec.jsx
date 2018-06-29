@@ -24,4 +24,6 @@ import * as constants from './constants.jsx'
 test('constants', () => {
   expect(constants.MAX_PAGE_SIZE).toBe(5000)
   expect(constants.PROJECT_NAME).toBeDefined()
+  expect(constants.MASKING_ANNOTATION).toBe('aetherDataClassification')
+  expect(constants.MASKING_PUBLIC).toBe('public')
 })
