@@ -1,0 +1,57 @@
+{% extends "rest_framework/login_base.html" %}
+
+{% load render_bundle from webpack_loader %}
+{% load static %}
+
+{% block branding %}
+  <div class="top-nav-logo" title="aether" href="#/">
+    <div class="logo-container">
+      <div class="flipper">
+        <div class="front"></div>
+        <div class="back"></div>
+      </div>
+    </div>
+    <span data-app-name="app-name"><b>ae</b>ther</span>
+  </div>
+{% endblock %}
+
+{% block style %}
+  {% if dev_mode %}
+    {# this is for CSS Hot reloading in development (render as another JS file) #}
+    {% render_bundle 'styles' %}
+  {% else %}
+    {# render as CSS file #}
+    {% render_bundle 'styles' 'css' %}
+  {% endif %}
+  <style>
+    body {
+      background: #50aef3;
+      background-image: linear-gradient(to right, rgba(113, 117, 221, 0), #7175dd);
+      font: 15px "Open Sans", Arial, sans-serif;
+      color: white;
+    }
+    .top-nav-logo {
+      display: block;
+      height: 1rem;
+      margin: 10rem 0 4rem;
+    }
+    .top-nav-logo span {
+      display: inline-block;
+      font-weight: 300;
+      font-size: 56px;
+      margin: -20px 60px 0;
+      height: 24px;
+      color: white;
+    }
+    .btn {
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 1px 1px 0 rgba(255, 255, 255, 0.1) inset, -1px -1px 0 rgba(45, 49, 70, 0.3) inset, 0 0 4px rgba(45, 49, 70, 0.1);
+      color: #fff;
+      font-size: 1rem;
+      margin-top: 1rem;
+      padding: 1em 3em;
+    }
+    .btn:hover {
+      box-shadow: 1px 1px 0 rgba(255, 255, 255, 0.1) inset, -1px -1px 0 rgba(45, 49, 70, 0.3) inset, 0 0 4px rgba(45, 49, 70, 0.1);    }
+  </style>
+{% endblock %}

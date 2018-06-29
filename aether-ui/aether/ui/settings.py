@@ -42,9 +42,10 @@ WEBPACK_LOADER = {
 }
 
 INSTALLED_APPS += [
-    'webpack_loader',
-    'aether.ui',
+    'webpack_loader'
 ]
+# must be first because template overrides
+INSTALLED_APPS.insert(0, 'aether.ui')
 
 TEMPLATES[0]['OPTIONS']['context_processors'] += [
     'aether.ui.context_processors.ui_context',
