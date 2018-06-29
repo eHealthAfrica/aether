@@ -73,6 +73,17 @@ export const deriveMappingRules = (schema) => {
   return schema.fields.map(fieldToMappingRule)
 }
 
+const MESSAGES = defineMessages({
+  recursiveError: {
+    defaultMessage: 'You have provided a recursive schema. Currently not supported.',
+    id: 'pipeline.input.schema.invalid.message.head.recursive'
+  },
+  regularError: {
+    defaultMessage: 'You have provided an invalid AVRO schema.',
+    id: 'pipeline.input.schema.invalid.message.head'
+  }
+})
+
 class SchemaInput extends Component {
   constructor (props) {
     super(props)
@@ -104,16 +115,6 @@ class SchemaInput extends Component {
   notifyChange (event) {
     event.preventDefault()
     const {formatMessage} = this.props.intl
-    const MESSAGES = defineMessages({
-      recursiveError: {
-        defaultMessage: 'You have provided a recursive schema. Currently not supported.',
-        id: 'pipeline.input.schema.invalid.message.head.recursive'
-      },
-      regularError: {
-        defaultMessage: 'You have provided an invalid AVRO schema.',
-        id: 'pipeline.input.schema.invalid.message.head'
-      }
-    })
     this.setState({
       error: null,
       errorHead: null
