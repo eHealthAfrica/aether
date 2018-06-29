@@ -362,6 +362,7 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
     if not avro_schema['_errors']:
         del avro_schema['_errors']
 
+    __clean_dict(avro_schema)
     return avro_schema
 
 
@@ -671,25 +672,23 @@ def __get_xform_itexts(xform_dict):
 def __get_xform_label(xform_dict, xpath, texts={}):
     '''
     Searches the "label" tag linked to the xpath in the xForm definition.
-    If not found returns the xpath.
+    If not found returns None.
     '''
 
-    # remove root in xpath (it's not going to be sent in the submission)
-    label = '/' + '/'.join(xpath.split('/')[2:])
     try:
         body = xform_dict['h:html']['h:body'] or {}
     except Exception:
         # this should never happen because we already validated the xForm
         # but in the test we are checking all the possible cases trying to break this
-        return label
+        return None
 
     tags = list(__find_by_key_value(body, key='@ref', value=xpath))
     if not tags:
-        return label
+        return None
 
     tag = tags[0]  # there is only one
     if not tag.get('label'):
-        return label
+        return None
 
     label_tag = tag.get('label')
     if isinstance(label_tag, str):
@@ -702,7 +701,7 @@ def __get_xform_label(xform_dict, xpath, texts={}):
         if label_id in texts and texts[label_id]:
             return texts[label_id]
 
-    return label
+    return None
 
 
 def __get_avro_primitive_type(xform_type, required=False):
@@ -865,3 +864,27 @@ def __etree_to_dict(elem):
         else:
             d[tt] = text
     return d
+
+
+def __clean_dict(data):
+    '''
+    Remove useless keys in dictionary
+    '''
+
+    if data and type(data).__name__ == 'dict':
+        keys = set(data.keys())
+        for key in keys:
+            value = data[key]
+            if value is None or value is False:
+                data.pop(key)
+
+            elif type(value).__name__ == 'list':
+                data[key] = [
+                    __clean_dict(item)
+                    for item in value
+                ]
+
+            else:
+                data[key] = __clean_dict(value)
+
+    return data

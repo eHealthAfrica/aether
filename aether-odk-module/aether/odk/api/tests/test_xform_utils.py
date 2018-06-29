@@ -543,12 +543,10 @@ class XFormUtilsAvroTests(CustomTestCase):
 
     def test__get_xform_label__no_body(self):
         xform_dict = {}
-        self.assertEqual(get_label(xform_dict, '/None'), '/', 'removes root')
-        self.assertEqual(get_label(xform_dict, '/None/any'), '/any')
+        self.assertIsNone(get_label(xform_dict, '/None'))
 
         xform_dict = {'h:html': {'h:body': None}}
-        self.assertEqual(get_label(xform_dict, '/None'), '/', 'removes root')
-        self.assertEqual(get_label(xform_dict, '/None/any'), '/any')
+        self.assertIsNone(get_label(xform_dict, '/None/any'))
 
     def test__get_xform_label__no_linked_label(self):
         xform_dict = {
@@ -560,7 +558,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                 }
             }
         }
-        self.assertEqual(get_label(xform_dict, '/None/any'), '/any')
+        self.assertIsNone(get_label(xform_dict, '/None/any'))
 
     def test__get_xform_label__blank_label(self):
         xform_dict = {
@@ -573,7 +571,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                 }
             }
         }
-        self.assertEqual(get_label(xform_dict, '/None/any'), '/any')
+        self.assertIsNone(get_label(xform_dict, '/None/any'))
 
     def test__get_xform_label__string_value(self):
         xform_dict = {
@@ -601,7 +599,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                 }
             }
         }
-        self.assertEqual(get_label(xform_dict, '/None/a/b/c/any'), '/a/b/c/any')
+        self.assertIsNone(get_label(xform_dict, '/None/a/b/c/any'))
         self.assertEqual(
             get_label(xform_dict, '/None/a/b/c/any', {'any:label': 'Something'}),
             'Something'
@@ -620,7 +618,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                 }
             }
         }
-        self.assertEqual(get_label(xform_dict, '/None/any'), '/any')
+        self.assertIsNone(get_label(xform_dict, '/None/any'))
 
     def test__get_xform_label__another_dict(self):
         xform_dict = {
@@ -635,7 +633,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                 }
             }
         }
-        self.assertEqual(get_label(xform_dict, '/None/a/b/c/any'), '/a/b/c/any')
+        self.assertIsNone(get_label(xform_dict, '/None/a/b/c/any'))
 
     def test__parse_xform_to_avro_schema__with_multilanguage(self):
         with open(self.samples['xform']['file-avro'], 'rb') as content:
@@ -707,7 +705,6 @@ class XFormUtilsAvroTests(CustomTestCase):
                 },
                 {
                     'name': 'Repeat_1',
-                    'doc': '/Repeat_1',
                     'type': [
                         'null',
                         {
@@ -719,11 +716,9 @@ class XFormUtilsAvroTests(CustomTestCase):
                                     {
                                         'name': 'name_1',
                                         'type': ['null', 'string'],
-                                        'doc': '/Repeat_1/name_1',
                                     },
                                     {
                                         'name': 'Repeat_2',
-                                        'doc': '/Repeat_1/Repeat_2',
                                         'type': [
                                             'null',
                                             {
@@ -735,7 +730,6 @@ class XFormUtilsAvroTests(CustomTestCase):
                                                         {
                                                             'name': 'name_2',
                                                             'type': ['null', 'string'],
-                                                            'doc': '/Repeat_1/Repeat_2/name_2',
                                                         },
                                                     ],
                                                 },
@@ -795,7 +789,6 @@ class XFormUtilsAvroTests(CustomTestCase):
                 },
                 {
                     'name': 'full-name',
-                    'doc': '/full-name',
                     'type': [
                         'null',
                         {
@@ -805,12 +798,10 @@ class XFormUtilsAvroTests(CustomTestCase):
                                 {
                                     'name': 'first-name',
                                     'type': ['null', 'string'],
-                                    'doc': '/full-name/first-name',
                                 },
                                 {
                                     'name': 'last-name',
                                     'type': ['null', 'string'],
-                                    'doc': '/full-name/last-name',
                                 },
                             ],
                         },

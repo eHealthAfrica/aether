@@ -18,18 +18,15 @@
     },
     {
       "name": "starttime",
-      "type": "string",
-      "doc": "/starttime"
+      "type": "string"
     },
     {
       "name": "endtime",
-      "type": "string",
-      "doc": "/endtime"
+      "type": "string"
     },
     {
       "name": "deviceid",
-      "type": "string",
-      "doc": "/deviceid"
+      "type": "string"
     },
     {
       "name": "country",
@@ -253,7 +250,6 @@
     },
     {
       "name": "meta",
-      "doc": "/meta",
       "type": [
         "null",
         {
@@ -262,13 +258,11 @@
           "fields": [
             {
               "name": "instanceID",
-              "type": [ "null", "string" ],
-              "doc": "/meta/instanceID"
+              "type": [ "null", "string" ]
             },
             {
               "name": "instanceName",
-              "type": [ "null", "string" ],
-              "doc": "/meta/instanceName"
+              "type": [ "null", "string" ]
             }
           ]
         }
