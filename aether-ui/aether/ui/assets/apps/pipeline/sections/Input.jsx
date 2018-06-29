@@ -103,6 +103,17 @@ class SchemaInput extends Component {
 
   notifyChange (event) {
     event.preventDefault()
+    const {formatMessage} = this.props.intl
+    const MESSAGES = defineMessages({
+      recursiveError: {
+        defaultMessage: 'You have provided a recursive schema. Currently not supported.',
+        id: 'pipeline.input.schema.invalid.message.head.recursive'
+      },
+      regularError: {
+        defaultMessage: 'You have provided an invalid AVRO schema.',
+        id: 'pipeline.input.schema.invalid.message.head'
+      }
+    })
     this.setState({
       error: null,
       errorHead: null
@@ -119,7 +130,7 @@ class SchemaInput extends Component {
         if (error.message && error.message.startsWith('Maximum call stack size exceeded')) {
           this.setState({
             error: error.message,
-            errorHead: 'You have provided a recursive schema. Currently not supported'
+            errorHead: formatMessage(MESSAGES.recursiveError)
           })
         } else {
           throw error
@@ -129,7 +140,7 @@ class SchemaInput extends Component {
     } catch (error) {
       this.setState({
         error: error.message,
-        errorHead: 'You have provided an invalid AVRO schema.'
+        errorHead: formatMessage(MESSAGES.regularError)
       })
     }
   }
@@ -144,26 +155,15 @@ class SchemaInput extends Component {
   }
 
   render () {
-    const {formatMessage} = this.props.intl
-    const MESSAGES = defineMessages({
-      errorHead: {
-        defaultMessage: this.state.errorHead,
-        id: 'pipeline.input.schema.invalid.message.head'
-      },
-      error: {
-        defaultMessage: this.state.error,
-        id: 'pipeline.input.schema.invalid.message'
-      }
-    })
     return (
       <form onSubmit={this.notifyChange.bind(this)}>
         <div className='textarea-header'>
           {this.state.error &&
             <div className='hint error-message'>
               <h4 className='hint-title'>
-                {formatMessage(MESSAGES.errorHead)}
+                {this.state.errorHead}
               </h4>
-              {formatMessage(MESSAGES.error)}
+              {this.state.error}
             </div>
           }
         </div>
