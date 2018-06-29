@@ -79,14 +79,14 @@ class SchemaInput extends Component {
     this.state = {
       inputSchema: this.parseProps(props),
       view: SCHEMA_VIEW,
-      error: null
+      error: null,
+      errorHead: null
     }
   }
 
   componentWillReceiveProps (nextProps) {
     this.setState({
-      inputSchema: this.parseProps(nextProps),
-      error: null
+      inputSchema: this.parseProps(nextProps)
     })
   }
 
@@ -103,16 +103,34 @@ class SchemaInput extends Component {
 
   notifyChange (event) {
     event.preventDefault()
-
+    this.setState({
+      error: null,
+      errorHead: null
+    })
     try {
       // validate schema
       const schema = JSON.parse(this.state.inputSchema)
       const type = avro.parse(schema, { noAnonymousTypes: true })
       // generate a new input sample
-      const input = type.random()
+      let input = {}
+      try {
+        input = type.random()
+      } catch (error) {
+        if (error.message && error.message.startsWith('Maximum call stack size exceeded')) {
+          this.setState({
+            error: error.message,
+            errorHead: 'You have provided a recursive schema. Currently not supported'
+          })
+        } else {
+          throw error
+        }
+      }
       this.props.updatePipeline({ ...this.props.selectedPipeline, schema, input })
     } catch (error) {
-      this.setState({ error: error.message })
+      this.setState({
+        error: error.message,
+        errorHead: 'You have provided an invalid AVRO schema.'
+      })
     }
   }
 
@@ -134,7 +152,7 @@ class SchemaInput extends Component {
               <h4 className='hint-title'>
                 <FormattedMessage
                   id='pipeline.input.schema.invalid.message'
-                  defaultMessage='You have provided an invalid AVRO schema.'
+                  defaultMessage={this.state.errorHead}
                 />
               </h4>
               {this.state.error}
