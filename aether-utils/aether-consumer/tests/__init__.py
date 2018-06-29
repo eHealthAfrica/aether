@@ -30,7 +30,7 @@ from spavro.datafile import DataFileWriter
 from spavro.io import DatumWriter
 from spavro.schema import parse as ParseSchema
 
-from aether.consumer import KafkaConsumer
+from aet.consumer import KafkaConsumer
 from .assets.schemas import test_schemas
 
 kafka_server = "kafka-test:29092"

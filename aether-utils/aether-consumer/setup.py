@@ -21,7 +21,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='aether.consumer',
+    name='aet.consumer',
     author='Shawn Sarwar',
     author_email="shawn.sarwar@ehealthafrica.org",
     decription='''A library to consume messages from Kafka with added functionality based on
@@ -37,6 +37,6 @@ setup(
     ],
     packages=find_packages(),
     namespace_packages=['aether'],
-    keywords=['aether', 'kafka', 'consumer'],
+    keywords=['aet','aether', 'kafka', 'consumer'],
     classifiers=[]
 )

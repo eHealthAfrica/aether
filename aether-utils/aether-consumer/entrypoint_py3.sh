@@ -96,14 +96,14 @@ case "$1" in
         rm -rf dist
         rm -rf build
         rm -rf .eggs
-        rm -rf aether.kafka.egg-info
+        rm -rf aet.consumer.egg-info
 
         # create the distribution
         python setup.py bdist_wheel --universal
 
         # remove useless content
         rm -rf build
-        rm -rf aether.kafka.egg-info
+        rm -rf aet.consumer.egg-info
     ;;
 
     help)

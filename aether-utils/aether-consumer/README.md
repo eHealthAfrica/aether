@@ -21,6 +21,27 @@ There are many Avro libraries available for python. [Spavro] uses the syntax of 
     ]
 }
 ```
+For example, we can poll for the latest 100 messages like this:
+```python
+    from aet.consumer import KafkaConsumer
+    consumer = KafkaConsumer(**config)
+    consumer.subscribe('my-topic')
+
+    new_records = consumer.poll_and_deserialize(
+                timeout_ms=10,
+                max_records=100)
+
+    for parition_key, packages in new_records.items():
+        for package in packages:
+            schema = package.get('schema')
+            messages = package.get('messages')
+            if schema != last_schema:
+                pass  # Or do something since the schema has changed
+            for msg in messages:
+                pass  # do something with each message
+            last_schema = schema
+```
+
 Since any filtering based on the contents of a message require comprehension of the message, to perform any reads that requires filtering, _you must use this method_. Poll will return messages that are not filtered, regardless of consumer setting.
 
 ## Filtering Functionality
@@ -47,7 +68,7 @@ Emit filtering is enabled by default through  ```"aether_emit_flag_required" : T
 {
     "id": "passing_message",
     "values": [1,2,3],
-    "approved': True
+    "approved": true
 }
 ```
 
@@ -55,9 +76,9 @@ This message would be emitted for downstream systems.
 
 ```json
 {
-    "id": "failing_message",
-    "values": [1,2,3],
-    "approved': False
+	"id": "failing_message",
+	"values": [1, 2, 3],
+	"approved": false
 }
 ```
 
@@ -195,6 +216,5 @@ If the rest of the configuration remains, but we use ```"aether_masking_schema_e
 ```
 In this way, we can have different consumers emitting different versions of the same message to their respective downstream systems.
 
-[//]: #
-    [kafka-python] <https://github.com/dpkp/kafka-python>
-    [spavro] <https://github.com/pluralsight/spavro>
+[kafka-python]: <https://github.com/dpkp/kafka-python>
+[spavro]: <https://github.com/pluralsight/spavro>
