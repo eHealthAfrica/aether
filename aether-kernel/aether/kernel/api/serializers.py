@@ -12,7 +12,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -22,7 +22,7 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 from drf_dynamic_fields import DynamicFieldsMixin
 
-from . import models, utils, constants
+from . import constants, models, utils, validators
 
 import urllib
 
@@ -110,6 +110,10 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='submission-list',
     )
 
+    def validate_definition(self, value):
+        validators.validate_mapping_definition(value)
+        return value
+
     class Meta:
         model = models.Mapping
         fields = '__all__'
@@ -194,6 +198,11 @@ class SchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='projectschema-list',
     )
 
+    def validate_definition(self, value):
+        validators.validate_avro_schema(value)
+        validators.validate_id_field(value)
+        return value
+
     class Meta:
         model = models.Schema
         fields = '__all__'
@@ -242,7 +251,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     def create(self, validated_data):
         try:
-            utils.validate_entity_payload(validated_data['projectschema'], validated_data['payload'])
+            utils.validate_payload(validated_data['projectschema'].schema.definition, validated_data['payload'])
         except Exception as schemaError:
             raise serializers.ValidationError(schemaError)
         try:
@@ -291,7 +300,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
             else:
                 instance.payload = target_payload
             try:
-                utils.validate_entity_payload(instance.projectschema, instance.payload)
+                utils.validate_payload(instance.projectschema.schema.definition, instance.payload)
             except Exception as schemaError:
                 raise serializers.ValidationError(schemaError)
             instance.save()
@@ -323,6 +332,19 @@ class EntityLDSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ProjectStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+    first_submission = serializers.DateTimeField()
+    last_submission = serializers.DateTimeField()
+    submission_count = serializers.IntegerField()
+
+    class Meta:
+        model = models.Project
+        fields = (
+            'id', 'name', 'created',
+            'first_submission', 'last_submission', 'submission_count',
+        )
+
+
 class MappingStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     first_submission = serializers.DateTimeField()
     last_submission = serializers.DateTimeField()
@@ -334,3 +356,19 @@ class MappingStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
             'id', 'name', 'definition', 'created',
             'first_submission', 'last_submission', 'submission_count',
         )
+
+
+class MappingValidationSerializer(serializers.Serializer):
+    submission_payload = serializers.JSONField()
+    mapping_definition = serializers.JSONField()
+    schemas = serializers.JSONField()
+
+    def validate_schemas(self, value):
+        if not isinstance(value, dict):
+            raise serializers.ValidationError(
+                'Value {value} is not an Object'.format(value=value)
+            )
+        for schema in value.values():
+            validators.validate_avro_schema(schema)
+            validators.validate_id_field(schema)
+        return value

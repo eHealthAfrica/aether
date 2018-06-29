@@ -1,0 +1,16 @@
+[
+  {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$30000$YPvlO6vVjWwJ$BCI52unQsiNGLlUBe/TH+v9qkRBR/u4dFpQtnd2NGvs=",
+      "is_superuser": true,
+      "username": "admin-ui",
+      "first_name": "",
+      "last_name": "",
+      "email": "admin-ui@aether.org",
+      "is_staff": true,
+      "is_active": true
+    }
+  }
+]

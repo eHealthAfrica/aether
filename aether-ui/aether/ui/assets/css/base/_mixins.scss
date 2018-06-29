@@ -1,0 +1,76 @@
+/*
+ * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+ *
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+@mixin label {
+  font-size: $font-size-s;
+  font-weight: 400;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+@mixin card {
+  background: $white;
+  border-radius: $border-radius;
+  padding: 1rem;
+  color: $text-color;
+  box-shadow: 1px 1px 2px $shadow-color;
+}
+
+@mixin logo-ui {
+  background: url('/static/images/aux-icon-white.png');
+}
+
+@mixin logo-eha {
+  background: url('/static/images/eHA-icon.svg');
+}
+
+@mixin bg-gradient {
+  background: $action-color-b;
+  background-image: linear-gradient(to right, rgba($purple, 0), $purple);
+  color: $white;
+}
+
+@mixin shadow-flat-dark {
+  box-shadow: -1px -1px 0 rgba($black, .2), 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($black, .2) inset, 1px 1px 0 rgba($white, .1);
+}
+
+@mixin shadow-emboss-dark {
+  box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($black, .2) inset, 0 0 4px rgba($black, .3);
+}
+
+@mixin shadow-cutout-dark {
+  box-shadow: 1px 1px 1px rgba($black, .2) inset, 1px 1px 0 rgba($white, .1);
+}
+
+@mixin shadow-flat-white {
+  box-shadow: -1px -1px 0 rgba($text-color, .1), 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .1) inset, 1px 1px 0 rgba($white, .1);
+}
+
+@mixin shadow-emboss-white {
+  box-shadow: 1px 1px 0 rgba($white, .2) inset, -1px -1px 0 rgba($text-color, .2) inset, 0 0 2px rgba($text-color, .1);
+}
+
+@mixin shadow-cutout-white {
+  box-shadow: 1px 1px 1px rgba($text-color, .1) inset, 1px 1px 0 rgba($white, .1);
+}
+
+@mixin shadow-emboss-color {
+  box-shadow: 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($text-color, .3) inset, 0 0 4px rgba($text-color, .1);
+}

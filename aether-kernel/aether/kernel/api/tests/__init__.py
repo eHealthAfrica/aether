@@ -10,7 +10,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -24,7 +24,7 @@ SCHEMA_FILE_ERROR = PATH_DIR + 'err_schema.json'
 
 EXAMPLE_MAPPING = {
     'entities': {
-        'Person': 1
+        'Person': '1'
     },
     'mapping': [
         ['#!uuid', 'Person.id'],
@@ -38,6 +38,7 @@ EXAMPLE_SCHEMA = {
     'extends': 'http://ehealthafrica.org/#CouchDoc',
     'type': 'record',
     'name': 'Person',
+    'aetherBaseSchema': True,
     'fields': [
         {
             'jsonldPredicate': '@id',

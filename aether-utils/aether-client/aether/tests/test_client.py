@@ -10,7 +10,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -31,7 +31,7 @@ from . import (
     mapping_obj,
     submission_obj
 )
-from .. import client
+from .. import client as _client
 
 
 def pprint(obj):
@@ -58,16 +58,11 @@ class KernelClientCase(unittest.TestCase):
                 raise Exception()
         except Exception as err:
             try:
-                KernelClientCase.client = client.KernelClient(kernel_url)
+                KernelClientCase.client = _client.KernelClient(kernel_url)
             except AttributeError:
                 pass
             try:
-                fake_credentials = {"missing": "values"}
-                KernelClientCase.client = client.KernelClient(kernel_url, **fake_credentials)
-            except AttributeError:
-                pass
-            try:
-                KernelClientCase.client = client.KernelClient(kernel_url, **kernel_credentials)
+                KernelClientCase.client = _client.KernelClient(kernel_url, **kernel_credentials)
                 print("Connected client to Aether on %s" % kernel_url)
             except Exception as e:
                 print(e)

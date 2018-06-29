@@ -45,6 +45,6 @@ requests==2.18.4
 ruamel.yaml==0.14.12
 schema-salad==2.7.20180322174040
 six==1.11.0
-spavro==1.1.10
+spavro==1.1.17
 typing==3.6.4
 urllib3==1.22

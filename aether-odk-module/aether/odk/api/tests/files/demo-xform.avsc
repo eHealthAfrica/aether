@@ -1,0 +1,333 @@
+{
+  "name": "MyTestForm",
+  "namespace": "aether.odk.xforms",
+  "doc": "My Test Form (id: my-test-form, version: Test-1.0)",
+  "type": "record",
+  "fields": [
+    {
+      "name": "_id",
+      "doc": "xForm ID",
+      "type": "string",
+      "default": "my-test-form"
+    },
+    {
+      "name": "_version",
+      "doc": "xForm version",
+      "type": "string",
+      "default": "Test-1.0"
+    },
+    {
+      "name": "starttime",
+      "type": "string",
+      "doc": "/starttime"
+    },
+    {
+      "name": "endtime",
+      "type": "string",
+      "doc": "/endtime"
+    },
+    {
+      "name": "deviceid",
+      "type": "string",
+      "doc": "/deviceid"
+    },
+    {
+      "name": "country",
+      "type": [
+        "null",
+        "string"
+      ],
+      "doc": "Country"
+    },
+    {
+      "name": "region",
+      "type": [
+        "null",
+        "string"
+      ],
+      "doc": "Region"
+    },
+    {
+      "name": "name",
+      "type": [
+        "null",
+        "string"
+      ],
+      "doc": "What is your name?"
+    },
+    {
+      "name": "location",
+      "type": [
+        "null",
+        {
+          "name": "location",
+          "type": "record",
+          "doc": "Collect your GPS coordinates",
+          "fields": [
+            {
+              "name": "latitude",
+              "type": "float"
+            },
+            {
+              "name": "longitude",
+              "type": "float"
+            },
+            {
+              "name": "altitude",
+              "type": [
+                "null",
+                "float"
+              ]
+            },
+            {
+              "name": "accuracy",
+              "type": [
+                "null",
+                "float"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "location_none",
+      "type": [
+        "null",
+        {
+          "name": "location_none",
+          "type": "record",
+          "doc": "Ignore your GPS coordinates",
+          "fields": [
+            {
+              "name": "latitude",
+              "type": "float"
+            },
+            {
+              "name": "longitude",
+              "type": "float"
+            },
+            {
+              "name": "altitude",
+              "type": [
+                "null",
+                "float"
+              ]
+            },
+            {
+              "name": "accuracy",
+              "type": [
+                "null",
+                "float"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "image",
+      "type": [
+        "null",
+        "string"
+      ],
+      "doc": "Take a picture"
+    },
+    {
+      "name": "number",
+      "type": [
+        "null",
+        "int"
+      ],
+      "doc": "How many?"
+    },
+    {
+      "name": "number2",
+      "type": [
+        "null",
+        "double"
+      ],
+      "doc": "Percentage"
+    },
+    {
+      "name": "date",
+      "type": [
+        "null",
+        "string"
+      ],
+      "doc": "When?"
+    },
+    {
+      "name": "datetime",
+      "type": [
+        "null",
+        "string"
+      ],
+      "doc": "At?"
+    },
+    {
+      "name": "option",
+      "type": "string",
+      "doc": "Choice (A/B)"
+    },
+    {
+      "name": "option_a",
+      "type": [
+        "null",
+        {
+          "name": "option_a",
+          "doc": "Option A",
+          "type": "record",
+          "fields": [
+            {
+              "name": "choice_a",
+              "type": [
+                "null",
+                "string"
+              ],
+              "doc": "Choice A"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "option_b",
+      "type": [
+        "null",
+        {
+          "name": "option_b",
+          "doc": "Option B",
+          "type": "record",
+          "fields": [
+            {
+              "name": "choice_b",
+              "type": [
+                "null",
+                "string"
+              ],
+              "doc": "Choice B"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lang",
+      "type": [
+        "null",
+        "string"
+      ],
+      "doc": "Spoken languages"
+    },
+    {
+      "name": "iterate",
+      "type": [
+        "null",
+        {
+          "type": "array",
+          "items": {
+            "name": "iterate",
+            "doc": "Indicate loop elements",
+            "type": "record",
+            "fields": [
+              {
+                "name": "index",
+                "type": [
+                  "null",
+                  "int"
+                ],
+                "doc": "Index"
+              },
+              {
+                "name": "value",
+                "type": [
+                  "null",
+                  "string"
+                ],
+                "doc": "Value"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "iterate_one",
+      "type": [
+        "null",
+        {
+          "type": "array",
+          "items": {
+            "name": "iterate_one",
+            "doc": "Indicate one",
+            "type": "record",
+            "fields": [
+              {
+                "name": "item",
+                "type": [
+                  "null",
+                  "string"
+                ],
+                "doc": "Item"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "iterate_none",
+      "type": [
+        "null",
+        {
+          "type": "array",
+          "items": {
+            "name": "iterate_none",
+            "doc": "Indicate none",
+            "type": "record",
+            "fields": [
+              {
+                "name": "nothing",
+                "type": [
+                  "null",
+                  "string"
+                ],
+                "doc": "None"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "meta",
+      "type": [
+        "null",
+        {
+          "name": "meta",
+          "doc": "/meta",
+          "type": "record",
+          "fields": [
+            {
+              "name": "instanceID",
+              "type": [
+                "null",
+                "string"
+              ],
+              "doc": "/meta/instanceID"
+            },
+            {
+              "name": "instanceName",
+              "type": [
+                "null",
+                "string"
+              ],
+              "doc": "/meta/instanceName"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

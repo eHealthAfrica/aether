@@ -12,7 +12,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -125,6 +125,18 @@ case $container in
     echo "**********************************************************************"
 
     docker-compose up db couchdb redis kernel couchdb-sync couchdb-sync-rq nginx
+  ;;
+
+  ui)
+    echo "**********************************************************************"
+    echo "**** Starting PostgreSQL                                          ****"
+    echo "**** Starting NGINX                                               ****"
+    echo "**** Starting Kernel app                                          ****"
+    echo "**** Starting UI module                                           ****"
+    echo "**** Starting webpack                                             ****"
+    echo "**********************************************************************"
+
+    docker-compose up db kernel ui webpack nginx
   ;;
 
   *)

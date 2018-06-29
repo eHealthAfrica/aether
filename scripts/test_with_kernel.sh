@@ -12,7 +12,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -21,10 +21,10 @@
 set -Eeuo pipefail
 
 function prepare_container() {
-  echo "_________________________________________________ Preparing $1 container"
+  echo "_____________________________________________ Preparing $1 container"
   $DC_TEST build "$1"-test
   $DC_TEST run "$1"-test setuplocaldb
-  echo "_________________________________________________ $1 ready!"
+  echo "_____________________________________________ $1 ready!"
 }
 
 
@@ -45,16 +45,12 @@ echo "_____________________________________________ Killing ALL containers"
 ./scripts/kill_all.sh
 $DC_TEST down
 
-# start databases
-echo "_____________________________________________ Starting databases"
 
-if [[ $container = "odk" ]]
+echo "_____________________________________________ Starting databases"
+$DC_TEST up -d db-test
+if [[ $container = "couchdb-sync" ]]
 then
-  $DC_TEST up -d db-test
-  fixture=aether/kernel/api/tests/fixtures/project_empty_schema.json
-else
-  $DC_TEST up -d db-test couchdb-test redis-test
-  fixture=aether/kernel/api/tests/fixtures/project.json
+  $DC_TEST up -d couchdb-test redis-test
 fi
 
 # prepare and start KERNEL container
@@ -62,21 +58,22 @@ prepare_container kernel
 
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
-if [[ $container != "client" ]]
+if [[ $container == "couchdb-sync" ]]
 then
+  fixture=aether/kernel/api/tests/fixtures/project.json
   $DC_TEST run kernel-test manage loaddata $fixture
+  echo "_____________________________________________ Loaded initial data in kernel"
 fi
-echo "_____________________________________________ Loaded initial data in kernel"
+
 
 # build test container
 prepare_container $container
 
-# run tests
 echo "_____________________________________________ Testing $container"
 $DC_TEST run "$container"-test test
 
-# kill auxiliary containers
-echo "_____________________________________________ Killing auxiliary containers"
+
+echo "_____________________________________________ Killing ALL containers"
 ./scripts/kill_all.sh
 
 echo "_____________________________________________ END"

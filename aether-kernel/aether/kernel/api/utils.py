@@ -10,7 +10,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -32,11 +32,47 @@ from pygments.formatters import HtmlFormatter
 from pygments.lexers import JsonLexer
 from pygments.lexers.python import Python3Lexer
 
-from . import models, constants
+from . import models, constants, avro_tools
 
 
-class EntityExtractionError(Exception):
+class CachedParser(object):
+    # jsonpath_ng.parse is a very time/compute expensive operation. The output is always
+    # the same for a given path. To reduce the number of times parse() is called, we cache
+    # all calls to jsonpath_ng here. This greatly improves extraction performance. However,
+    # when run in an instance of Django with debug=True, Django's db call caching causes massive
+    # memory usage. In debug, we must periodically call db.reset_queries() to avoid unbounded
+    # memory expansion. If you run this with DEBUG = true, you'll eventually go OOM from the
+    # memory leak.
+
+    cache = {}
+
+    @staticmethod
+    def parse(path):
+        # we never need to call parse directly; use find()
+        if path not in CachedParser.cache.keys():
+            CachedParser.cache[path] = jsonpath_ng.parse(path)
+        return CachedParser.cache[path]
+
+    @staticmethod
+    def find(path, obj):
+        # find is an optimized call with a potentially cached parse object.
+        parser = CachedParser.parse(path)
+        return parser.find(obj)
+
+
+class EntityValidationError(Exception):
     pass
+
+
+Entity = collections.namedtuple(
+    'Entity',
+    ['payload', 'projectschema_name', 'status'],
+)
+
+EntityValidationResult = collections.namedtuple(
+    'EntityValidationResult',
+    ['validation_errors', 'entities'],
+)
 
 
 def __prettified__(response, lexer):
@@ -83,7 +119,8 @@ def json_printable(obj):
         return obj
 
 
-custom_jsonpath_wildcard_regex = re.compile('(\$\.)*([a-zA-Z0-9_-]+\.)*?[a-zA-Z0-9_-]+\*')
+custom_jsonpath_wildcard_regex = re.compile(
+    '(\$\.)*([a-zA-Z0-9_-]+\.)*?[a-zA-Z0-9_-]+\*')
 incomplete_json_path_regex = re.compile('[a-zA-Z0-9_-]+\*')
 
 
@@ -120,15 +157,17 @@ def find_by_jsonpath(obj, path):
 
         # Perform an standard jsonpath search.
         result = []
-        for datum in jsonpath_ng.parse(standard_jsonpath).find(obj):
-            full_path = str(datum.full_path)
-            # Only include datum if its full path starts with `prefix`.
+        matches = CachedParser.find(standard_jsonpath, obj)
+        for item in matches:
+            full_path = str(item.full_path)
+            # Only include item if its full path starts with `prefix`.
             if full_path.startswith(prefix):
-                result.append(datum)
+                result.append(item)
         return result
     else:
         # Otherwise, perform a standard jsonpath search of `obj`.
-        return jsonpath_ng.parse(path).find(obj)
+        matches = CachedParser.find(path, obj)
+        return matches
 
 
 def get_field_mappings(mapping_definition):
@@ -147,7 +186,8 @@ def get_entity_definitions(mapping_definition, schemas):
     entities = [match.value for match in found_entities][0]
     for entity_definition in entities.items():
         entity_type, file_name = entity_definition
-        required_entities[entity_type] = JSP_get_basic_fields(schemas.get(entity_type))
+        required_entities[entity_type] = JSP_get_basic_fields(
+            schemas.get(entity_type))
     return required_entities
 
 
@@ -162,7 +202,8 @@ def get_entity_requirements(entities, field_mappings):
                              if dst.startswith(entity_type+'.')]
         for field in entity_definition:
             # filter again to find sources pertaining to this particular field in this entity
-            field_sources = [src for src, dst in matching_mappings if dst == field]
+            field_sources = [src for src,
+                             dst in matching_mappings if dst == field]
             entity_requirements[field] = field_sources
         all_requirements[entity_type] = entity_requirements
     return all_requirements
@@ -190,6 +231,7 @@ class DeferrableAction(object):
     have to worry about. If something can't be resolved, we save it for later
     and attempt resolution at the end of entity construction.
     '''
+
     def __init__(self, path, args, function=None):
         self.res = None
         self.path = path
@@ -288,7 +330,8 @@ def get_or_make_uuid(entity_type, field_name, instance_number, source_data):
     base = 'aether_extractor_enrichment'
     if source_data.get(base, {}).get(entity_type, {}).get(field_name):
         try:
-            value = source_data.get(base, {}).get(entity_type).get(field_name)[instance_number]
+            value = source_data.get(base, {}).get(
+                entity_type).get(field_name)[instance_number]
         except IndexError as e:
             source_data[base][entity_type][field_name].append(value)
         finally:
@@ -365,7 +408,8 @@ def extract_entity(entity_type, entities, requirements, data, entity_stub):
     count = max([len(entity_stub.get(field)) for field in entity_stub.keys()])
     # make empty stubs for our expected outputs. One for each member
     # identified in count process
-    entities[entity_type] = [{field: None for field in entity_stub.keys()} for i in range(count)]
+    entities[entity_type] = [
+        {field: None for field in entity_stub.keys()} for i in range(count)]
 
     # iterate required fields, resolve paths and copy data to stubs
     for field, paths in requirements.get(entity_type).items():
@@ -383,7 +427,8 @@ def extract_entity(entity_type, entities, requirements, data, entity_stub):
             path = paths[-1] if len(paths) < (i + 1) else paths[i]
             # check to see if we need to use a special reference here
             if '#!' not in path:
-                i = resolve_source_reference(path, entities, entity_type, i, field, data)
+                i = resolve_source_reference(
+                    path, entities, entity_type, i, field, data)
             else:
                 # Special action to be dispatched
                 action = DeferrableAction(
@@ -401,7 +446,55 @@ def extract_entity(entity_type, entities, requirements, data, entity_stub):
     return failed_actions
 
 
-def extract_entities(requirements, response_data, entity_definitions):
+def validate_entity_payload_id(entity_payload):
+    id_ = entity_payload.get('id', None)
+    try:
+        uuid.UUID(id_, version=4)
+        return None
+    except (ValueError, AttributeError, TypeError):
+        return {'description': 'Entity id "{}" is not a valid uuid'.format(id_)}
+
+
+def validate_avro(schema, datum):
+    result = avro_tools.AvroValidator(
+        schema=parse_schema(json.dumps(schema)),
+        datum=datum,
+    )
+    errors = []
+    for error in result.errors:
+        errors.append({
+            'description': avro_tools.format_validation_error(error),
+        })
+    return errors
+
+
+def validate_entities(entities, schemas):
+    validation_errors = []
+    validated_entities = collections.defaultdict(list)
+    for entity_name, entity_payloads in entities.items():
+        for entity_payload in entity_payloads:
+            entity_errors = []
+            id_error = validate_entity_payload_id(entity_payload)
+            if id_error:
+                entity_errors.append(id_error)
+            schema_definition = schemas[entity_name]
+            avro_validation_errors = validate_avro(
+                schema=schema_definition,
+                datum=entity_payload,
+            )
+            entity_errors.extend(avro_validation_errors)
+            if entity_errors:
+                validation_errors.extend(entity_errors)
+            else:
+                validated_entities[entity_name].append(entity_payload)
+
+    return EntityValidationResult(
+        validation_errors=validation_errors,
+        entities=validated_entities,
+    )
+
+
+def extract_entities(requirements, response_data, entity_definitions, schemas):
     data = response_data if response_data else []
     data['aether_errors'] = []
     # for output. Since we need to submit the extracted entities as different
@@ -412,7 +505,8 @@ def extract_entities(requirements, response_data, entity_definitions):
     # sometimes order matters and our custom actions failed. We'll put them here
     failed_actions = []
     for entity_type in required_entities:
-        entity_stub = get_entity_stub(requirements, entity_definitions, entity_type, data)
+        entity_stub = get_entity_stub(
+            requirements, entity_definitions, entity_type, data)
         # extract the entity pushing failures onto failed actions
         failed_actions.extend(
             extract_entity(
@@ -430,14 +524,11 @@ def extract_entities(requirements, response_data, entity_definitions):
             action.resolve(entities)
     # send a log of paths with errors to the user via saved response
     for action in failed_again:
-        data['aether_errors'].append('failed %s' % action.path)
-    return data, entities
-
-
-Entity = collections.namedtuple(
-    'Entity',
-    ['id', 'payload', 'projectschema_name', 'status']
-)
+        error = 'Failure: "{}"'.format(action.error)
+        data['aether_errors'].append(error)
+    validation_result = validate_entities(entities, schemas)
+    data['aether_errors'].extend(validation_result.validation_errors)
+    return data, validation_result.entities
 
 
 def extract_create_entities(submission_payload, mapping_definition, schemas):
@@ -452,27 +543,26 @@ def extract_create_entities(submission_payload, mapping_definition, schemas):
     requirements = get_entity_requirements(entity_defs, field_mappings)
 
     # Only attempt entity extraction if requirements are present
+    submission_data = {'aether_errors': []}
+    entity_types = {}
     if any(requirements.values()):
-        data, entity_types = extract_entities(
+        submission_data, entity_types = extract_entities(
             requirements,
             submission_payload,
             entity_defs,
+            schemas,
         )
-    else:
-        entity_types = {}
 
-    entity_list = []
-    for projectschema_name, entities in entity_types.items():
-        for entity in entities:
-            obj = Entity(
-                id=entity['id'],
-                payload=entity,
+    entities = []
+    for projectschema_name, entity_payloads in entity_types.items():
+        for entity_payload in entity_payloads:
+            entity = Entity(
+                payload=entity_payload,
                 projectschema_name=projectschema_name,
                 status='Publishable',
             )
-            entity_list.append(obj)
-
-    return entity_list
+            entities.append(entity)
+    return submission_data, entities
 
 
 def run_entity_extraction(submission):
@@ -494,17 +584,16 @@ def run_entity_extraction(submission):
         name: ps.schema.definition for name, ps in
         project_schemas.items()
     }
-    entities = extract_create_entities(
+    submission.save()
+    _, entities = extract_create_entities(
         submission_payload=submission.payload,
         mapping_definition=mapping_definition,
         schemas=schemas,
     )
-    submission.save()
     for entity in entities:
         projectschema_name = entity.projectschema_name
         projectschema = project_schemas[projectschema_name]
         entity_instance = models.Entity(
-            id=entity.id,
             payload=entity.payload,
             status=entity.status,
             projectschema=projectschema,
@@ -535,13 +624,14 @@ def merge_objects(source, target, direction):
     return result
 
 
-def validate_entity_payload(project_Schema, payload):
+def validate_payload(schema_definition, payload):
     # Use spavro to validate payload against the linked schema
     try:
-        avro_schema = parse_schema(json.dumps(project_Schema.schema.definition, indent=2))
+        avro_schema = parse_schema(json.dumps(schema_definition))
         valid = validate(avro_schema, payload)
         if not valid:
-            raise TypeError('Record did not conform to registered schema.')
+            msg = 'Extracted record did not conform to registered schema'
+            raise EntityValidationError(msg)
         return True
     except Exception as err:
         raise err

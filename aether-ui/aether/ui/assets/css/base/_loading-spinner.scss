@@ -1,0 +1,100 @@
+/*
+ * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+ *
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+$duration: 1.6s;
+
+.loading-spinner {
+  position: relative;
+}
+
+// sass-lint:disable one-declaration-per-line
+@keyframes dot {
+  0%   { opacity: 0; top: 20px; background: $purple; }
+  10%  { opacity: 1; }
+  30%  { opacity: 1; top: 5px; background: $action-color; }
+  100% { opacity: 0; top: 5px; background: $action-color; }
+}
+// sass-lint:enable one-declaration-per-line
+
+.dot1,
+.dot2,
+.dot3,
+.dot4,
+.dot5,
+.dot6 {
+  width: 50px;
+  height: 50px;
+  position: absolute;
+
+  &::before {
+    content: '';
+    display: block;
+    position: absolute;
+    border-radius: 100%;
+    background: $action-color;
+    width: 8px;
+    height: 8px;
+    left: 22px;
+    top: 22px;
+    opacity: 0;
+    animation: dot $duration infinite;
+  }
+
+}
+
+.dot2 {
+  transform: rotate(60deg);
+
+  &::before {
+    animation-delay: $duration / 6;
+  }
+}
+
+.dot3 {
+  transform: rotate(120deg);
+
+  &::before {
+    animation-delay: $duration / 6 * 2;
+  }
+}
+
+.dot4 {
+  transform: rotate(180deg);
+
+  &::before {
+    animation-delay: $duration / 6 * 3;
+  }
+}
+
+.dot5 {
+  transform: rotate(240deg);
+
+  &::before {
+    animation-delay: $duration / 6 * 4;
+  }
+}
+
+.dot6 {
+  transform: rotate(300deg);
+
+  &::before {
+    animation-delay: $duration / 6 * 5;
+  }
+}

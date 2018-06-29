@@ -3,6 +3,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.whl
 
 # C extensions
 *.so
@@ -114,6 +115,7 @@ local_settings.py
 Session.vim
 .netrwhist
 *~
+.~*
 .hypothesis
 coverage_html/
 
@@ -132,3 +134,6 @@ terraform.tfstate.backup
 # Visual Studio files
 .vs
 demo
+
+# npm
+**/package-lock.json

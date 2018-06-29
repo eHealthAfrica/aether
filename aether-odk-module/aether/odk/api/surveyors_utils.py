@@ -10,7 +10,7 @@
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on anx
+# software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
@@ -55,7 +55,7 @@ def get_surveyors():
         # make sure that the group exists
         surveyor_group = get_surveyor_group()
         return surveyors.filter(groups__name=surveyor_group.name)
-    except Exception as e:  # pragma: no cover
+    except Exception:  # pragma: no cover
         return surveyors
 
 
