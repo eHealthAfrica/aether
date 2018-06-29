@@ -19,7 +19,7 @@
  */
 
 import React, { Component } from 'react'
-import { FormattedMessage } from 'react-intl'
+import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
 import { connect } from 'react-redux'
 import avro from 'avsc'
 
@@ -144,18 +144,26 @@ class SchemaInput extends Component {
   }
 
   render () {
+    const {formatMessage} = this.props.intl
+    const MESSAGES = defineMessages({
+      errorHead: {
+        defaultMessage: this.state.errorHead,
+        id: 'pipeline.input.schema.invalid.message.head'
+      },
+      error: {
+        defaultMessage: this.state.error,
+        id: 'pipeline.input.schema.invalid.message'
+      }
+    })
     return (
       <form onSubmit={this.notifyChange.bind(this)}>
         <div className='textarea-header'>
           {this.state.error &&
             <div className='hint error-message'>
               <h4 className='hint-title'>
-                <FormattedMessage
-                  id='pipeline.input.schema.invalid.message'
-                  defaultMessage={this.state.errorHead}
-                />
+              {formatMessage(MESSAGES.errorHead)}
               </h4>
-              {this.state.error}
+              {formatMessage(MESSAGES.error)}
             </div>
           }
         </div>
