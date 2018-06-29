@@ -54,7 +54,8 @@ services:
       - ./tmp/kernel:/media/kernel
       - ./tmp/odk:/media/odk
       - ./tmp/sync:/media/sync
-      - ./tmp/ui:/media/ui
+      - ./tmp/ui/media:/media/ui
+      - ./tmp/ui/bundles:/static/ui
     ports:
       - "80:80"
 
