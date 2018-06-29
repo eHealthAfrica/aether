@@ -161,7 +161,7 @@ class SchemaInput extends Component {
           {this.state.error &&
             <div className='hint error-message'>
               <h4 className='hint-title'>
-              {formatMessage(MESSAGES.errorHead)}
+                {formatMessage(MESSAGES.errorHead)}
               </h4>
               {formatMessage(MESSAGES.error)}
             </div>
@@ -463,4 +463,4 @@ const mapStateToProps = ({ pipelines }) => ({
   selectedPipeline: pipelines.selectedPipeline
 })
 
-export default connect(mapStateToProps, { updatePipeline })(Input)
+export default connect(mapStateToProps, { updatePipeline })(injectIntl(Input))
