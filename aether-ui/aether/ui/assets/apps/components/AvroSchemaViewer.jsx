@@ -58,11 +58,9 @@ class AvroSchemaViewer extends Component {
             id={`input_${jsonPath}`}>
             {schema.name}
           </li>
-          <li>
-            <ul key={schema.name} className='group-list'>
-              { schema.fields.map(field => this.schemaToMarkup(field, parent, isUnion, isItem)) }
-            </ul>
-          </li>
+          <ul key={schema.name} className='group-list'>
+            { schema.fields.map(field => this.schemaToMarkup(field, parent, isUnion, isItem)) }
+          </ul>
         </ul>
       )
     } else if (Array.isArray(schema.type)) {
