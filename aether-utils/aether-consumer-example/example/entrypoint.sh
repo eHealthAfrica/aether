@@ -55,7 +55,7 @@ case "$1" in
     ;;
 
     start )
-        python ./myconsumer/main.py "${@:2}"
+        python ./app/main.py "${@:2}"
     ;;
 
     test)
