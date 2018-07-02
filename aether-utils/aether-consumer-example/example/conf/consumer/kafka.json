@@ -1,5 +1,0 @@
-{
-    "bootstrap_servers" : ["kafka:29092"],
-    "auto_offset_reset" : "earliest",
-    "aether_emit_flag_required" : false
-}

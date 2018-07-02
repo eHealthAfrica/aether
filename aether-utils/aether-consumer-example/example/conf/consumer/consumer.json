@@ -1,3 +1,0 @@
-{
-  "consumer_connect_prompt" : "Please attach to this container and press enter to begin | docker attach %s"
-}
