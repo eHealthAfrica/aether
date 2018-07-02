@@ -76,10 +76,14 @@ class KafkaViewer(object):
                 error("%s is not a valid option | %s" % (x, err))
 
     def start(self):
+        args = {}
+        with open("/code/conf/consumer/consumer.json") as f:
+            args = json.load(f)
+        consumer_connect_prompt = args.get('consumer_connect_prompt')
         while True:
             try:
                 with timeout(5):
-                    bold("Please attach to this container and press enter to begin | docker attach %s" %
+                    bold(consumer_connect_prompt %
                          os.environ['HOSTNAME'])
                     input("...\n")
                     return
@@ -89,7 +93,7 @@ class KafkaViewer(object):
 
     def get_consumer(self, quiet=False, topic=None):
         args = {}
-        with open("./example/conf.json") as f:
+        with open("/code/conf/consumer/kafka.json") as f:
             args = json.load(f)
         if not quiet:
             t.clear()
@@ -109,7 +113,6 @@ class KafkaViewer(object):
             topics = [i for i in self.consumer.topics()]
             if not topics:
                 bold("No topics available")
-                raise IOError("No topics available")
             topics.append(quit_str)
             bold("Choose a Topic to View")
             topic = self.ask(topics)
