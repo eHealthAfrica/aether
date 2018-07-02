@@ -4,7 +4,7 @@ import os
 import json
 import signal
 
-from aether.consumer import KafkaConsumer
+from aet.consumer import KafkaConsumer
 from blessings import Terminal
 from time import sleep
 

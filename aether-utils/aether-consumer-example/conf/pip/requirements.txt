@@ -8,7 +8,7 @@
 # then run 'docker-compose run myconsumer pip_freeze'                                   #
 #                                                                              		    #
 #########################################################################################
-aether.consumer==1.0.0
+aet.consumer==0.9.1
 attrs==18.1.0
 blessings==1.6.1
 decorator==4.3.0
