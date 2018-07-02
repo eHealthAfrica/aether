@@ -26,7 +26,7 @@ if __name__ == '__main__':
 
     try:
         settings_path = os.environ['PRODUCER_SETTINGS_FILE']
-    except Exception:
+    except KeyError:
         print('PRODUCER_SETTINGS_FILE not set in environment.')
         sys.exit(1)
     from producer import aether_producer
