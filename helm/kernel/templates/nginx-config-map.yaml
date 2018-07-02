@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: kernel-nginx-config 
+  name: kernel-nginx-config
 data:
   default.conf: |
     server {
