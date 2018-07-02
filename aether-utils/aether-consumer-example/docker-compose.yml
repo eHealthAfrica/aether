@@ -1,7 +1,7 @@
 version: "2.1"
 services:
-  myconsumer:
-    build: .
+  example-consumer:
+    build: ./example
     stdin_open: true
     tty: true
     environment:

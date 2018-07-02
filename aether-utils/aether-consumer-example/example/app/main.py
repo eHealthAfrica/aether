@@ -8,12 +8,9 @@ from aet.consumer import KafkaConsumer
 from blessings import Terminal
 from time import sleep
 
-DEFAULT_TIMEOUT_MESSAGE = os.strerror(errno.ETIME)
-KAFKA_HOST = "kafka:29092"
-
 
 class timeout(contextlib.ContextDecorator):
-    def __init__(self, seconds, *, timeout_message=DEFAULT_TIMEOUT_MESSAGE, suppress_timeout_errors=False):
+    def __init__(self, seconds, *, timeout_message=os.strerror(errno.ETIME), suppress_timeout_errors=False):
         self.seconds = int(seconds)
         self.timeout_message = timeout_message
         self.suppress = bool(suppress_timeout_errors)
@@ -30,23 +27,30 @@ class timeout(contextlib.ContextDecorator):
         if self.suppress and exc_type is TimeoutError:
             return True
 
+
 t = Terminal()
+
 
 def bold(obj):
     print(t.bold(obj))
 
+
 def norm(obj):
     print(obj)
+
 
 def error(obj):
     with t.location(int(t.width/2 - len(obj)/2), 0):
         print(t.black_on_white(obj))
 
+
 def pjson(obj):
     print(t.bold(json.dumps(obj, indent=2)))
 
+
 def wait():
     input("Press enter to continue")
+
 
 class KafkaViewer(object):
 
@@ -63,7 +67,8 @@ class KafkaViewer(object):
             line = "%s ) %s" % (x, opt)
             norm(line)
         while True:
-            x = input("choices: ( %s ) : " % ([x+1 for x in range(len(options))]))
+            x = input("choices: ( %s ) : " %
+                      ([x+1 for x in range(len(options))]))
             try:
                 res = options[int(x)-1]
                 return res
@@ -74,7 +79,8 @@ class KafkaViewer(object):
         while True:
             try:
                 with timeout(5):
-                    bold("Please attach to this container and press enter to begin | docker attach %s" % os.environ['HOSTNAME'])
+                    bold("Please attach to this container and press enter to begin | docker attach %s" %
+                         os.environ['HOSTNAME'])
                     input("...\n")
                     return
             except TimeoutError:
@@ -83,7 +89,7 @@ class KafkaViewer(object):
 
     def get_consumer(self, quiet=False, topic=None):
         args = {}
-        with open("./myconsumer/conf.json") as f:
+        with open("./example/conf.json") as f:
             args = json.load(f)
         if not quiet:
             t.clear()
@@ -131,17 +137,17 @@ class KafkaViewer(object):
                 return
             current += batch_size
 
-
     def view_messages(self, messages, batch_size, current):
         options = [
-                "Next Message",
-                "Skip forward %s messages" % (batch_size),
-                "View Current Schema",
-                "Exit to List of Available Topics"
-            ]
+            "Next Message",
+            "Skip forward %s messages" % (batch_size),
+            "View Current Schema",
+            "Exit to List of Available Topics"
+        ]
         for x, message in enumerate(messages):
             t.clear()
-            norm("message #%s (%s of batch sized %s)" % (current+x, x, batch_size))
+            norm("message #%s (%s of batch sized %s)" %
+                 (current+x, x, batch_size))
             for msg in message.get('messages'):
                 pjson(msg)
                 res = self.ask(options)
