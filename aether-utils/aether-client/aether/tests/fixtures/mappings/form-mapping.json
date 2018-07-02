@@ -16,7 +16,7 @@
         ["None.hoh.hoh_lastname","Person.familyName"],
         ["None.hoh.hoh_age","Person.age"],
         ["#!entity-reference#Household[*].id", "Person.householdID"],
-        ["#!entity-reference#Person[0].id","Household.headOfHouseHold"],      
+        ["#!entity-reference#Person[0].id","Household.headOfHouseHold"],
         ["#!none","Person.firstName"],
         ["#!none","Person.familyName"],
         ["None.family_repeat[*].family_member.family_age", "Person.age"]

@@ -1,3 +1,21 @@
+# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+#
+# See the NOTICE file distributed with this work for additional information
+# regarding copyright ownership.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
 import json
 import mock
 
@@ -39,12 +57,13 @@ def mock_return_true(*args):
 
 
 class MockResponse:
-    def __init__(self, status_code, json_data=None):
+    def __init__(self, status_code, json_data=None, text=None):
         if json_data is None:
             json_data = {}
         self.status_code = status_code
         self.json_data = json_data
         self.content = json.dumps(json_data)
+        self.text = text
 
     def raise_for_status(self):
         if self.status_code >= 400:
@@ -117,7 +136,7 @@ class ModelsTests(TestCase):
         self.assertEqual(pipeline.output, [])
 
     @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
-    @mock.patch('requests.post', return_value=MockResponse(500))
+    @mock.patch('requests.post', return_value=MockResponse(500, text='Internal Server Error'))
     def test__pipeline__save__with_server_error(self, mock_post):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
@@ -127,7 +146,7 @@ class ModelsTests(TestCase):
         )
         self.assertEqual(
             pipeline.mapping_errors,
-            [{'description': f'It was not possible to validate the pipeline: 500'}]
+            [{'description': f'It was not possible to validate the pipeline: Internal Server Error'}]
         )
         self.assertEqual(pipeline.output, [])
         mock_post.assert_called_once()
@@ -146,6 +165,45 @@ class ModelsTests(TestCase):
                 },
                 'schemas': {
                     'Person': ENTITY_SAMPLE,
+                },
+            },
+        )
+
+    @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
+    @mock.patch('requests.post',
+                return_value=MockResponse(400, {
+                    'entities': [],
+                    'mapping_errors': ['test']
+                }))
+    def test__pipeline__save__with_bad_request(self, mock_post):
+        malformed_schema = {'name': 'Person'}
+        pipeline = Pipeline.objects.create(
+            name='Pipeline test',
+            input=INPUT_SAMPLE,
+            entity_types=[malformed_schema],
+            mapping=[{'source': '#!uuid', 'destination': 'Person.id'}],
+        )
+        self.assertEqual(
+            pipeline.mapping_errors,
+            [{'description': 'test'}]
+        )
+        self.assertEqual(pipeline.output, [])
+        mock_post.assert_called_once()
+        mock_post.assert_called_once_with(
+            url=self.KERNEL_URL,
+            headers=self.KERNEL_HEADERS,
+            json={
+                'submission_payload': INPUT_SAMPLE,
+                'mapping_definition': {
+                    'entities': {
+                        'Person': None,
+                    },
+                    'mapping': [
+                        ['#!uuid', 'Person.id'],
+                    ],
+                },
+                'schemas': {
+                    'Person': malformed_schema,
                 },
             },
         )
@@ -241,14 +299,16 @@ class ModelsTests(TestCase):
                          {'path': '$.not_a_real_key', 'description': 'No match for path'})
 
         # the last entry is the extracted entity
-        self.assertEqual(
+        self.assertIn(
+            'Expected type "string" at path "Person.firstName"',
             pipeline.mapping_errors[1]['description'],
-            'Extracted record did not conform to registered schema'
         )
-        # the entity was generated but included within the errors
-        self.assertIsNotNone(pipeline.mapping_errors[1]['data']['id'], 'Generated id!')
-        self.assertIsNone(pipeline.mapping_errors[1]['data']['firstName'],
-                          'Wrong jsonpaths return None values')
+        expected_errors = [
+            'No match for path',
+            'Expected type "string" at path "Person.firstName"',
+        ]
+        for expected, result in zip(expected_errors, pipeline.mapping_errors):
+            self.assertIn(expected, result['description'])
 
     def test__pipeline_workflow__with_kernel__missing_id(self):
         pipeline = Pipeline.objects.create(
@@ -259,12 +319,11 @@ class ModelsTests(TestCase):
         )
 
         # error when there is no id rule for the entity
-        self.assertEqual(
+        self.assertIn(
+            'is not a valid uuid',
             pipeline.mapping_errors[0]['description'],
-            'Extracted record did not conform to registered schema'
         )
         self.assertNotIn('path', pipeline.mapping_errors[0])
-        self.assertIn('data', pipeline.mapping_errors[0])
         self.assertEqual(pipeline.output, [])
 
     def test__pipeline_workflow__with_kernel__no_errors(self):

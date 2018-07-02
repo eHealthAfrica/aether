@@ -1,3 +1,5 @@
+application:
+  command: start_dev
 debug: true
 liveEdit:
   enabled: true
