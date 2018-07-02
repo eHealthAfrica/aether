@@ -32,6 +32,20 @@ test_odk() {
     run_command odk test
 }
 
+run_command kernel \
+            manage \
+            setup_admin \
+            --username "admin-kernel" \
+            --password "adminadmin" \
+            --token a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
+
+run_command odk \
+            manage \
+            setup_admin \
+            --username "admin-odk" \
+            --password "adminadmin" \
+            --token a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
+
 case "$1" in
     test_kernel )
         test_kernel

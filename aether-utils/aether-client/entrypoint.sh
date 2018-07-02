@@ -80,10 +80,6 @@ case "$1" in
         /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
     ;;
 
-    setuplocaldb )
-        echo "Nothing to prepare."
-    ;;
-
     test)
         test_flake8
         test_coverage "${@:2}"

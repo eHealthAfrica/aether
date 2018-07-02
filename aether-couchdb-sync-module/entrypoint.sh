@@ -31,8 +31,8 @@ show_help() {
 
     pip_freeze    : freeze pip dependencies and write to requirements.txt
 
-    setupproddb   : create/migrate database for production
-    setuplocaldb  : create/migrate database for development (creates superuser)
+    setup_admin   : create an admin user
+    setup_db      : create/migrate database
 
     test          : run tests
     test_lint     : run flake8 tests
@@ -127,13 +127,12 @@ case "$1" in
         pip_freeze
     ;;
 
-    setuplocaldb )
+    setup_db )
         setup_db
-        setup_initial_data
     ;;
 
-    setupproddb )
-        setup_db
+    setup_admin )
+        ./manage.py setup_admin "${@:2}"
     ;;
 
     test)

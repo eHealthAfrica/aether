@@ -23,28 +23,28 @@ set -Eeuox pipefail
 
 # Define help message
 show_help() {
-  echo """
-  Commands
-  ----------------------------------------------------------------------------
-  bash          : run bash
-  eval          : eval shell command
-  manage        : invoke django manage.py commands
+    echo """
+    Commands
+    ----------------------------------------------------------------------------
+    bash          : run bash
+    eval          : eval shell command
+    manage        : invoke django manage.py commands
 
-  pip_freeze    : freeze pip dependencies and write to requirements.txt
+    pip_freeze    : freeze pip dependencies and write to requirements.txt
 
-  setupproddb   : create/migrate database for production
-  setuplocaldb  : create/migrate database for development (creates superuser)
+    setup_admin   : create an admin user
+    setup_db      : create/migrate database
 
-  test          : run ALL tests
-  test_lint     : run flake8, standardjs and sass lint tests
-  test_coverage : run python tests with coverage output
-  test_py       : alias of test_coverage
-  test_js       : run js tests with enzyme and jest
+    test          : run ALL tests
+    test_lint     : run flake8, standardjs and sass lint tests
+    test_coverage : run python tests with coverage output
+    test_py       : alias of test_coverage
+    test_js       : run js tests with enzyme and jest
 
-  start         : start webserver behind nginx
-  start_dev     : start webserver for development
-  start_webpack : start webpack server (only in DEV mode)
-  """
+    start         : start webserver behind nginx
+    start_dev     : start webserver for development
+    start_webpack : start webpack server (only in DEV mode)
+    """
 }
 
 pip_freeze() {
@@ -77,11 +77,6 @@ setup_db() {
 
   # migrate data model if needed
   ./manage.py migrate --noinput
-}
-
-setup_initial_data() {
-  # create initial superuser
-  ./manage.py loaddata ./conf/extras/initial.json
 }
 
 setup_prod() {
@@ -143,13 +138,12 @@ case "$1" in
     pip_freeze
   ;;
 
-  setuplocaldb )
-    setup_db
-    setup_initial_data
+  setup_db )
+      setup_db
   ;;
 
-  setupproddb )
-    setup_db
+  setupadmin )
+      ./manage.py setup_admin "${@:2}"
   ;;
 
   test)
@@ -202,7 +196,6 @@ case "$1" in
 
   start_dev )
     setup_db
-    setup_initial_data
     ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
   ;;
 

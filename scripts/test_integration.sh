@@ -20,16 +20,22 @@
 #
 set -e
 
+function build_container() {
+    echo "_____________________________________________ Building $1 container"
+    $DC_TEST build "$1"-test
+}
+
 function prepare_container() {
   echo "_____________________________________________ Preparing $1 container"
   build_container $1
-  $DC_TEST run "$1"-test setuplocaldb
+  echo "........"
+  $DC_TEST run "$1"-test setup_db
+  $DC_TEST run "$1"-test \
+           manage setup_admin \
+           --username "admin-$1" \
+           --password "adminadmin" \
+           --token a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
   echo "_____________________________________________ $1 ready!"
-}
-
-function build_container() {
-  echo "_____________________________________________ Building $1 container"
-  $DC_TEST build "$1"-test
 }
 
 DC_TEST="docker-compose -f docker-compose-test.yml"

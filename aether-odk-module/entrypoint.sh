@@ -32,7 +32,8 @@ show_help() {
 
     pip_freeze    : freeze pip dependencies and write to requirements.txt
 
-    setuplocaldb  : create/migrate database for development (creates superuser and token)
+    setup_admin   : create an admin user
+    setup_db      : create/migrate database
 
     test          : run tests
     test_lint     : run flake8 tests
@@ -76,11 +77,6 @@ setup_db() {
     ./manage.py migrate --noinput
 }
 
-setup_initial_data() {
-    # create initial superuser
-    ./manage.py loaddata /code/conf/extras/initial.json
-}
-
 setup_prod() {
   # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
   ./manage.py setup_admin -p=$ADMIN_PASSWORD -t=$AETHER_ODK_TOKEN
@@ -120,9 +116,12 @@ case "$1" in
         pip_freeze
     ;;
 
-    setuplocaldb)
+    setup_db )
         setup_db
-        setup_initial_data
+    ;;
+
+    setup_admin )
+        ./manage.py setup_admin "${@:2}"
     ;;
 
     test)
@@ -159,7 +158,6 @@ case "$1" in
 
     start_dev )
         setup_db
-        setup_initial_data
 
         # media assets
         chown aether: /media

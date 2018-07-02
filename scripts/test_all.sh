@@ -34,7 +34,14 @@ function build_container() {
 function prepare_container() {
   echo "_____________________________________________ Preparing $1 container"
   build_container $1
-  $DC_TEST run "$1"-test setuplocaldb
+  echo "........"
+  $DC_TEST run "$1"-test setup_db
+  # TODO: update entrypoint docs
+  $DC_TEST run "$1"-test \
+           manage setup_admin \
+           --username "admin-$1" \
+           --password "adminadmin" \
+           --token a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
   echo "_____________________________________________ $1 ready!"
 }
 
@@ -72,16 +79,14 @@ $DC_TEST up -d kernel-test
 
 
 # test a clean CLIENT TEST container
-prepare_and_test_container client
-
+$DC_TEST build client-test
+$DC_TEST run client-test test --noinput
 
 # test a clean ODK TEST container
 prepare_and_test_container odk
 
-
 # test a clean UI TEST container
 prepare_and_test_container ui
-
 
 echo "_____________________________________________ Starting auxiliary databases"
 $DC_TEST up -d couchdb-test redis-test
