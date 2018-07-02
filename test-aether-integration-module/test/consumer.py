@@ -16,15 +16,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# import ast
-import io
 import json
 import sys
 from time import sleep as Sleep
 
-from spavro.datafile import DataFileReader
-from spavro.io import DatumReader
-from kafka import KafkaConsumer
+from aet.consumer import KafkaConsumer
 from kafka.consumer.fetcher import NoOffsetForPartitionError
 
 
@@ -34,6 +30,7 @@ def pprint(obj):
 
 def get_consumer(topic=None, strategy='latest'):
     consumer = KafkaConsumer(
+        aether_emit_flag_required=False,
         group_id='demo-reader',
         bootstrap_servers=['kafka-test:29092'],
         auto_offset_reset=strategy
@@ -60,29 +57,16 @@ def connect_kafka():
     sys.exit(1)  # Kill consumer with error
 
 
-def seek_to_beginning(consumer):
-    consumer.poll(timeout_ms=100, max_records=1)  # we have to poll to get the right partitions
-    consumer.seek_to_beginning()                  # assigned to the consumer
-
-
-def read_poll_result(poll_result, verbose=False):
-    messages = []
-    total_messages = 0
-    for part, packages in poll_result.items():   # we don't worry about the partitions for now
-        for package in packages:                 # a package can contain multiple messages
-            # schema = None                        # serialzed with the same schema
-            obj = io.BytesIO()
-            obj.write(package.value)
-            reader = DataFileReader(obj, DatumReader())
-
-            # We can get the schema directly from the reader.
-            for x, msg in enumerate(reader):  # multiple messages can arrive
-                messages.append(msg)
-                if verbose:                   # serialized in one package
+def read_poll_result(new_records, verbose=False):
+    flattened = []
+    for parition_key, packages in new_records.items():
+        for package in packages:
+            messages = package.get('messages')
+            for msg in messages:
+                flattened.append(msg)
+                if verbose:
                     pprint(msg)
-                total_messages += 1
-            obj.close()  # don't forget to close your open IO object.
-    return messages
+    return flattened
 
 
 def read(consumer, start="LATEST", verbose=False, timeout_ms=5000, max_records=200):
@@ -90,11 +74,13 @@ def read(consumer, start="LATEST", verbose=False, timeout_ms=5000, max_records=2
     if start not in ["FIRST", "LATEST"]:
         raise ValueError("%s it not a valid argument for 'start='" % start)
     if start is "FIRST":
-        seek_to_beginning(consumer)
+        consumer.seek_to_beginning()
     blank = 0
     while True:
         try:
-            poll_result = consumer.poll(timeout_ms=timeout_ms, max_records=max_records)
+            poll_result = consumer.poll_and_deserialize(
+                timeout_ms=timeout_ms,
+                max_records=max_records)
         except NoOffsetForPartitionError as nofpe:
             print(nofpe)
             break

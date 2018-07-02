@@ -98,7 +98,4 @@ kill_all
 # execute INTEGRATION TEST
 ./scripts/test_integration.sh
 
-# Testing Consumer Library
-./scripts/test_consumer_lib.sh
-
 echo "_____________________________________________ END"
