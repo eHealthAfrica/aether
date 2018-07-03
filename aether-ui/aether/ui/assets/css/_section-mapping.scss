@@ -1,3 +1,23 @@
+/*
+ * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+ *
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 .pipeline-section__mapping {
   background: $dark-blue;
   color: $white;
@@ -6,6 +26,11 @@
     display: flex;
     flex-direction: column;
     padding: 2rem 0 0;
+  }
+
+  .toggleable-content {
+    height: auto;
+    display: block;
   }
 
   .tabs {
@@ -24,10 +49,6 @@
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-
-    form {
-      padding-bottom: 1rem;
-    }
   }
 
   .rules-buttons {
@@ -63,6 +84,26 @@
 
     .btn {
       margin: .2rem 0;
+    }
+  }
+
+  .rule.error {
+    position: relative;
+
+    input.error {
+      color: $red;
+    }
+
+    &::before {
+      border-radius: 50%;
+      background-color: $red;
+      width: .6em;
+      height: .6em;
+      position: absolute;
+      left: -1.2em;
+      top: 1em;
+      content: '';
+      display: block;
     }
   }
 
@@ -121,5 +162,19 @@
     .definition-code {
       border-radius: $border-radius;
     }
+  }
+
+  .textarea-header {
+    box-shadow: 1px 1px 1px rgba($black, .2) inset, 1px 0 0 rgba($white, .1);
+    background: $dark-blue;
+  }
+
+  textarea {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+
+  .form-label {
+    color: $light-grey;
   }
 }

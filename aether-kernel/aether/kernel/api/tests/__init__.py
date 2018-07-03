@@ -24,7 +24,7 @@ SCHEMA_FILE_ERROR = PATH_DIR + 'err_schema.json'
 
 EXAMPLE_MAPPING = {
     'entities': {
-        'Person': 1
+        'Person': '1'
     },
     'mapping': [
         ['#!uuid', 'Person.id'],
@@ -38,6 +38,7 @@ EXAMPLE_SCHEMA = {
     'extends': 'http://ehealthafrica.org/#CouchDoc',
     'type': 'record',
     'name': 'Person',
+    'aetherBaseSchema': True,
     'fields': [
         {
             'jsonldPredicate': '@id',

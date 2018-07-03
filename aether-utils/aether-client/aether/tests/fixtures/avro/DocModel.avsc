@@ -1,20 +1,20 @@
 {
     "fields": [
         {
-            "jsonldPredicate": "@id", 
-            "type": "string", 
-            "name": "id", 
+            "jsonldPredicate": "@id",
+            "type": "string",
+            "name": "id",
             "inherited_from": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel"
-        }, 
+        },
         {
             "type": [
-                "null", 
+                "null",
                 "string"
-            ], 
-            "name": "revision", 
+            ],
+            "name": "revision",
             "inherited_from": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel"
         }
-    ], 
-    "type": "record", 
+    ],
+    "type": "record",
     "name": "DocModel"
 }
