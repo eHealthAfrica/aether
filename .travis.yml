@@ -14,8 +14,7 @@ before_script:
 script:
 # First, run the kernel and odk tests in a minikube cluster. If everything goes
 # well, run all tests in a docker-compose environment.
-- "echo $TRAVIS_BRANCH"
-#- "./scripts/kubernetes/run_travis.sh && ./scripts/test_all.sh"
+- "./scripts/kubernetes/run_travis.sh && ./scripts/test_all.sh"
 after_script:
 - "./scripts/kill_all.sh"
 
