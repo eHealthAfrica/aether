@@ -28,7 +28,7 @@ set -Eeuo pipefail
 IMAGE_REPO='ehealthafrica'
 CORE_APPS=( kernel odk couchdb-sync ui )
 CORE_COMPOSE='docker-compose.yml'
-CONNECT_APPS=( aether-producer )
+CONNECT_APPS=( producer )
 CONNECT_COMPOSE='docker-compose-connect.yml'
 VERSION=`cat VERSION`
 
