@@ -29,7 +29,7 @@ liveEdit:
 namespace:
   create: false
 application:
-  command: start
+  command: start_dev
   secret: secrets
   data_mount: /media
 database:

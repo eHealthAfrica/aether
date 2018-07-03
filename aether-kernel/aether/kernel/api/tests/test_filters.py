@@ -22,14 +22,14 @@ import uuid
 
 from autofixture import generators
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.urls import reverse
 
 from aether.kernel.api import models
 from aether.kernel.api.tests.utils.generators import generate_project
 
 
-class TestFilters(TestCase):
+class TestFilters(TransactionTestCase):
 
     def setUp(self):
         username = 'user'

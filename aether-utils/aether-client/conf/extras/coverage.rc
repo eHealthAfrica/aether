@@ -1,11 +1,11 @@
 [run]
 branch = true
-source =
+source = 
     /code/aether
 omit = *migrations*, *tests*, *test* *__init__*, *test.py
 
 [paths]
-source =
+source = 
     /code/aether
 omit = *migrations*, *tests* *__init__*, *test.py
 

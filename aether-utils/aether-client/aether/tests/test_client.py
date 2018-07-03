@@ -31,7 +31,7 @@ from . import (
     mapping_obj,
     submission_obj
 )
-from .. import client as _client
+from .. import client
 
 
 def pprint(obj):
@@ -58,11 +58,16 @@ class KernelClientCase(unittest.TestCase):
                 raise Exception()
         except Exception as err:
             try:
-                KernelClientCase.client = _client.KernelClient(kernel_url)
+                KernelClientCase.client = client.KernelClient(kernel_url)
             except AttributeError:
                 pass
             try:
-                KernelClientCase.client = _client.KernelClient(kernel_url, **kernel_credentials)
+                fake_credentials = {"missing": "values"}
+                KernelClientCase.client = client.KernelClient(kernel_url, **fake_credentials)
+            except AttributeError:
+                pass
+            try:
+                KernelClientCase.client = client.KernelClient(kernel_url, **kernel_credentials)
                 print("Connected client to Aether on %s" % kernel_url)
             except Exception as e:
                 print(e)

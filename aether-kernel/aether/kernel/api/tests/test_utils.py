@@ -16,10 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import uuid
-
 from django.test import TestCase
-
 from .. import utils
 from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA,
                EXAMPLE_REQUIREMENTS, EXAMPLE_ENTITY_DEFINITION,
@@ -193,6 +190,7 @@ class UtilsTests(TestCase):
         self.assertEquals(len(submission_errors), 0)
         self.assertTrue(len(entities) > 0)
         for entity in entities:
+            self.assertEquals(entity.id, entity.payload['id'])
             self.assertIn(entity.projectschema_name, schemas.keys())
             self.assertEquals(entity.status, 'Publishable')
 
@@ -206,17 +204,16 @@ class UtilsTests(TestCase):
         # This schema shares the field names `id` and `name` with
         # EXAMPLE_SCHEMA. The field types differ though, so we should expect a
         # validation error to occur during entity extraction.
-        error_count = 2
         schema = {
             'type': 'record',
             'name': 'Test',
             'fields': [
                 {
                     'name': 'id',
-                    'type': 'int',  # error 1
+                    'type': 'int',
                 },
                 {
-                    'name': 'name',  # error 2
+                    'name': 'name',
                     'type': {
                         'type': 'enum',
                         'name': 'Name',
@@ -234,43 +231,14 @@ class UtilsTests(TestCase):
         submission_errors = submission_data['aether_errors']
         self.assertEquals(
             len(submission_errors),
-            len(EXAMPLE_SOURCE_DATA['data']['people']) * error_count,
+            len(EXAMPLE_SOURCE_DATA['data']['people']),
         )
+        source_names = set([
+            person['name'] for person in EXAMPLE_SOURCE_DATA['data']['people']
+        ])
+        error_names = set([error['data']['name'] for error in submission_errors])
+        self.assertEquals(source_names, error_names)
         self.assertEquals(len(entities), 0)
-
-    def test_extract_create_entities__error_not_a_uuid(self):
-        submission_payload = {'id': 'not-a-uuid', 'a': 1}
-        mapping_definition = {
-            'entities': {'Test': str(uuid.uuid4())},
-            'mapping': [
-                ['$.id', 'Test.id'],
-                ['$.a', 'Test.b'],
-            ],
-        }
-        schema = {
-            'type': 'record',
-            'name': 'Test',
-            'fields': [
-                {
-                    'name': 'id',
-                    'type': 'string',
-                },
-                {
-                    'name': 'b',
-                    'type': 'int',
-                },
-            ],
-        }
-        schemas = {'Test': schema}
-        submission_data, entities = utils.extract_create_entities(
-            submission_payload,
-            mapping_definition,
-            schemas,
-        )
-        submission_errors = submission_data['aether_errors']
-        self.assertEqual(len(entities), 0)
-        self.assertEqual(len(submission_errors), 1)
-        self.assertIn('is not a valid uuid', submission_errors[0]['description'])
 
     def test_is_not_custom_jsonpath(self):
         # Examples taken from https://github.com/json-path/JsonPath#path-examples
@@ -454,4 +422,7 @@ class UtilsTests(TestCase):
             },
         }
         result = utils.validate_entities(entities=entities, schemas=schemas)
-        self.assertEquals(len(result.validation_errors), len(entity_list) * 2)
+        self.assertEquals(len(result.validation_errors), len(entity_list))
+        for validation_error in result.validation_errors:
+            msg = 'did not conform to registered schema'
+            self.assertIn(msg, validation_error['description'])

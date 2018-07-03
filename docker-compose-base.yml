@@ -5,9 +5,7 @@
 #  * Aether Kernel
 #  * ODK Module
 #  * CouchDB Sync Module
-#  * Kernel UI Module
-#  * Producer Module
-#  * Zookeper & Kafka
+#  * Aether UI
 #
 # These container will be extended in the other DC files with dependencies and networks.
 # Volumes and environment variables can be overriden in those files too.
@@ -64,8 +62,8 @@ services:
   # ---------------------------------
 
   kernel-base:
+    build: aether-kernel
     image: aether-kernel
-    build: ./aether-kernel
     stdin_open: true
     tty: true
     environment:
@@ -94,8 +92,8 @@ services:
   # ---------------------------------
 
   odk-base:
+    build: aether-odk-module
     image: aether-odk
-    build: ./aether-odk-module
     stdin_open: true
     tty: true
     environment:
@@ -127,8 +125,8 @@ services:
   # ---------------------------------
 
   couchdb-sync-base:
+    build: aether-couchdb-sync-module
     image: aether-couchdb-sync
-    build: ./aether-couchdb-sync-module
     stdin_open: true
     tty: true
     environment: &sync-environment
@@ -174,9 +172,9 @@ services:
 
   ui-base:
     image: aether-ui
-    build: ./aether-ui
     stdin_open: true
     tty: true
+    build: aether-ui
     environment: &ui-environment
       AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
       AETHER_KERNEL_URL: http://kernel:8000
@@ -217,12 +215,16 @@ services:
       - "8004:8004"
     command: start_dev
 
-  ui-webpack-base:
+  # ---------------------------------
+  # Webpack container
+  # ---------------------------------
+
+  webpack-base:
     image: aether-ui
     environment: *ui-environment
     volumes: *ui-volumes
     ports:
-      - "3004:3004"
+      - "3000:3000"
     command: start_webpack
 
   # ---------------------------------
@@ -257,8 +259,8 @@ services:
   # ---------------------------------
 
   aether-producer-base:
+    build: aether-producer
     image: aether-producer
-    build: ./aether-producer
     restart: on-failure
     stdin_open: true
     volumes:

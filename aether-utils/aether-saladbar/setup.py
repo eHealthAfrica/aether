@@ -27,7 +27,7 @@ setup(
     name='aether.saladbar',
     version='0.0.0',
     install_requires=[
-        "schema-salad"
+	"schema-salad"
     ],
     include_package_data=True,
     packages=find_packages(),

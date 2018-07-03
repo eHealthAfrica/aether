@@ -6,7 +6,6 @@ set -x
 # subdirectory (e.g. "local", "test") represents an environment and contains one
 # file for each module with settings for that environment.
 VALUES_DIR=$1
-eval $(minikube docker-env)
 
 # Rebuild all images to make sure that are using the most recent versions.
 docker-compose build kernel odk
@@ -16,8 +15,7 @@ docker-compose build kernel odk
 # when troubleshooting.
 helm install stable/postgresql \
      --name db \
-     --values=./helm/overrides/db.yaml \
-     --version=0.13.1
+     --values=./helm/overrides/db.yaml
 # Wait for the deployment to reach a "Running" state.
 kubectl rollout status deployment db
 

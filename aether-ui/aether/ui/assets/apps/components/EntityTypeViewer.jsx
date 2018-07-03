@@ -1,32 +1,8 @@
-/*
- * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
- *
- * See the NOTICE file distributed with this work for additional information
- * regarding copyright ownership.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-
 import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 import { generateGUID } from '../utils'
-import { MASKING_ANNOTATION, MASKING_PUBLIC } from '../utils/constants'
 
 const PropertyList = props => {
-  const isMasked = field => (Boolean(field && field[MASKING_ANNOTATION] &&
-    field[MASKING_ANNOTATION].toLowerCase() !== MASKING_PUBLIC))
-
   if (!props.fields || !props.fields.length) {
     return (
       <FormattedMessage
@@ -70,7 +46,7 @@ const PropertyList = props => {
       })
       return PropertyList({
         highlight: props.highlight,
-        fields: [{...field, name: field.name, type: typeStringOptions.toString()}],
+        fields: [{name: field.name, type: typeStringOptions.toString()}],
         name: props.name,
         parent: props.parent,
         isNullable
@@ -91,7 +67,6 @@ const PropertyList = props => {
             key={`${props.parent}.${field.name}`}
             className={className}
             id={`entityType_${jsonPath}`}>
-            {isMasked(field) && <i className='fas fa-lock' />}
             <span className='name'>{`${props.parent}.${field.name}`}</span>
             <span className='type'> {fieldType === 'enum' && field.symbols
               ? `${fieldType}: [${field.symbols.toString()}]` : fieldType}</span>
@@ -106,7 +81,6 @@ const PropertyList = props => {
             key={field.name}
             className={className}
             id={`entityType_${jsonPath}`}>
-            {isMasked(field) && <i className='fas fa-lock' />}
             <span className='name'>{field.name}</span>
             <span className='type'> {fieldType}</span>
             {props.isNullable ? <span className='type'> (nullable)</span> : null}
