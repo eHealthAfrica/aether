@@ -2,6 +2,8 @@
 
 set -ex
 
+source ./scripts/test-credentials.sh
+
 # When stopping and starting pods in a rapid succession, two or more instances
 # of a release will be active for a short period of time. To ensure that we run
 # the tests in the correct instance, we sort by "status.startTime" and pick the
@@ -32,19 +34,20 @@ test_odk() {
     run_command odk test
 }
 
-run_command kernel \
-            manage \
-            setup_admin \
-            --username "admin-kernel" \
-            --password "adminadmin" \
-            --token a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
+# TODO: fix these
+# run_command kernel \
+#             manage \
+#             setup_admin \
+#             --username "admin" \
+#             --password "adminadmin" \
+#             --token a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
 
-run_command odk \
-            manage \
-            setup_admin \
-            --username "admin-odk" \
-            --password "adminadmin" \
-            --token a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
+# run_command odk \
+#             manage \
+#             setup_admin \
+#             --username "admin-odk" \
+#             --password "adminadmin" \
+#             --token a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
 
 case "$1" in
     test_kernel )

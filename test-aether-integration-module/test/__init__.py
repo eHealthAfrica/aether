@@ -30,7 +30,7 @@ from .consumer import get_consumer, read
 KERNEL_URL = "http://kernel-test:9000/v1"
 
 kernel_credentials = {
-    "username": "admin-kernel",
+    "username": "admin",
     "password": "adminadmin",
 }
 

@@ -34,14 +34,6 @@ function build_container() {
 function prepare_container() {
   echo "_____________________________________________ Preparing $1 container"
   build_container $1
-  echo "........"
-  $DC_TEST run "$1"-test setup_db
-  # TODO: update entrypoint docs
-  $DC_TEST run "$1"-test \
-           manage setup_admin \
-           --username "admin-$1" \
-           --password "adminadmin" \
-           --token a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
   echo "_____________________________________________ $1 ready!"
 }
 
@@ -61,22 +53,15 @@ kill_all
 
 
 echo "_____________________________________________ Testing common module"
-$DC_COMMON down
-$DC_COMMON build
-$DC_COMMON run common test
-
-
-echo "_____________________________________________ Starting database"
-$DC_TEST up -d db-test
-
+# $DC_COMMON down
+# $DC_COMMON build
+# $DC_COMMON run common test
 
 # test and start a clean KERNEL TEST container
 prepare_and_test_container kernel
 
-
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
-
 
 # test a clean CLIENT TEST container
 $DC_TEST build client-test
@@ -100,7 +85,7 @@ prepare_and_test_container couchdb-sync
 # clean start for the next bunch of tests
 kill_all
 
-# execute INTEGRATION TEST
-./scripts/test_integration.sh
+# # execute INTEGRATION TEST
+# ./scripts/test_integration.sh
 
 echo "_____________________________________________ END"

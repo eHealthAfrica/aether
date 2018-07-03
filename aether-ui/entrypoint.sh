@@ -79,7 +79,7 @@ setup_db() {
   ./manage.py migrate --noinput
 }
 
-setup_prod() {
+setup_admin() {
   # check if vars exist
   ./conf/check_vars.sh
   # arguments: -u=admin -p=secretsecret -e=admin@ehealthafrica.org -t=01234656789abcdefghij
@@ -142,7 +142,7 @@ case "$1" in
       setup_db
   ;;
 
-  setupadmin )
+  setup_admin )
       ./manage.py setup_admin "${@:2}"
   ;;
 
@@ -177,7 +177,7 @@ case "$1" in
 
   start )
     setup_db
-    setup_prod
+    setup_admin
 
     # remove previous files
     rm -r -f ${BUNDLES_DIR}
@@ -196,6 +196,7 @@ case "$1" in
 
   start_dev )
     setup_db
+    setup_admin
     ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
   ;;
 

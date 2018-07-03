@@ -77,7 +77,7 @@ setup_db() {
     ./manage.py migrate --noinput
 }
 
-setup_prod() {
+setup_admin() {
   # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
   ./manage.py setup_admin -p=$ADMIN_PASSWORD -t=$AETHER_KERNEL_TOKEN
 }
@@ -116,15 +116,17 @@ case "$1" in
         pip_freeze
     ;;
 
+    setup_admin )
+        setup_admin
+    ;;
+
     setup_db )
         setup_db
     ;;
 
-    setup_admin )
-        ./manage.py setup_admin "${@:2}"
-    ;;
-
     test)
+        setup_db
+        setup_admin
         test_flake8
         test_coverage "${@:2}"
     ;;
@@ -139,7 +141,7 @@ case "$1" in
 
     start )
         setup_db
-        setup_prod
+        setup_admin
 
         # media assets
         chown aether: /media
@@ -158,14 +160,10 @@ case "$1" in
 
     start_dev )
         setup_db
+        setup_admin
 
         # media assets
         chown aether: /media
-
-        # create static assets
-        ./manage.py collectstatic --noinput
-        chmod -R 755 /var/www/static
-
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
 

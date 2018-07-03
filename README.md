@@ -36,17 +36,16 @@
 
 *[Return to TOC](#table-of-contents)*
 
-### Installation
+### Installation of a local development environment
 
 ```bash
 git clone git@github.com:eHealthAfrica/aether.git
 cd aether
-
-./scripts/build_common_and_distribute.sh
-./scripts/build_aether_utils_and_distribute.sh
-
 docker-compose build
+docker-compose up
 ```
+
+**NOTE**: the docker-compose files are intended for local development only. They contain hardcoded credentials TODO: more details
 
 Include this entry in your `/etc/hosts` file:
 
@@ -134,13 +133,13 @@ or
 This will start:
 
 - **Aether Kernel** on `http://kernel.aether.local:8000`
-  and create a superuser `admin-kernel` with the needed TOKEN.
+  and create a superuser `admin` with the needed TOKEN.
 
 - **Aether ODK Module** on `http://odk.aether.local:8443`
-  and create a superuser `admin-odk` with the needed TOKEN.
+  and create a superuser `admin` with the needed TOKEN.
 
 - **Aether CouchDB Sync Module** on `http://sync.aether.local:8666`
-  and create a superuser `admin-sync`.
+  and create a superuser `admin`.
 
 
 All the created superusers have password `adminadmin` in each container.

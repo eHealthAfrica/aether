@@ -206,6 +206,7 @@ class ViewsTests(CustomTestCase):
         self.assertEqual(response.json()['count'], 0)
 
     def test__surveyors__search(self):
+        response = self.client.get('/surveyors.json', **self.headers_user)
         self.helper_create_surveyor(username='peter-pan')
         self.helper_create_surveyor(username='peter-smith')
         self.helper_create_surveyor(username='peter-doe')

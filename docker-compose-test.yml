@@ -131,7 +131,6 @@ services:
       - ./aether-utils/aether-client:/code
 
     depends_on:
-      - db-test
       - kernel-test
 
   # ---------------------------------

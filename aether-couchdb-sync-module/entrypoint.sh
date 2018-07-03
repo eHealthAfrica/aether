@@ -88,7 +88,7 @@ setup_initial_data() {
     ./manage.py loaddata /code/conf/extras/initial.json
 }
 
-setup_prod() {
+setup_admin() {
   # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
   ./manage.py setup_admin -p=$ADMIN_PASSWORD
 }
@@ -136,6 +136,8 @@ case "$1" in
     ;;
 
     test)
+        setup_db
+        setup_admin
         test_flake8
         test_coverage "${@:2}"
     ;;
@@ -150,7 +152,7 @@ case "$1" in
 
     start )
         setup_db
-        setup_prod
+        setup_admin
 
         # media assets
         chown aether: /media
@@ -169,7 +171,7 @@ case "$1" in
 
     start_dev )
         setup_db
-        setup_initial_data
+        setup_admin
 
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;

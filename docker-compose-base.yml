@@ -69,6 +69,8 @@ services:
     stdin_open: true
     tty: true
     environment:
+      ADMIN_PASSWORD: "adminadmin"
+      AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
@@ -99,9 +101,11 @@ services:
     stdin_open: true
     tty: true
     environment:
+      ADMIN_PASSWORD: "adminadmin"
       AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
       AETHER_KERNEL_URL: http://kernel:8000
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000
+      AETHER_ODK_TOKEN: d5184a044bb5acff89a76ec4e67d0fcddd5cd3a1
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
@@ -132,6 +136,7 @@ services:
     stdin_open: true
     tty: true
     environment: &sync-environment
+      ADMIN_PASSWORD: "adminadmin"
       AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
       AETHER_KERNEL_URL: http://kernel:8000
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000
@@ -178,6 +183,7 @@ services:
     stdin_open: true
     tty: true
     environment: &ui-environment
+      ADMIN_PASSWORD: "adminadmin"
       AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
       AETHER_KERNEL_URL: http://kernel:8000
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000

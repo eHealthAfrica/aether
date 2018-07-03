@@ -379,7 +379,7 @@ class MockingManager(object):
             kernel_url = "http://kernel.aether.local:8000/v1"
         if not kernel_credentials:
             kernel_credentials = {
-                "username": "admin-kernel",
+                "username": "admin",
                 "password": "adminadmin",
             }
         self.client = KernelClient(kernel_url, **kernel_credentials)
