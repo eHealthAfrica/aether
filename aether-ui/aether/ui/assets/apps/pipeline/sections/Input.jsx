@@ -75,7 +75,7 @@ export const deriveMappingRules = (schema) => {
 
 const MESSAGES = defineMessages({
   recursiveError: {
-    defaultMessage: 'You have provided a recursive schema. Currently not supported.',
+    defaultMessage: 'Input data could not be generated from the schema provided. Recursive schemas are not supported.',
     id: 'pipeline.input.schema.invalid.message.head.recursive'
   },
   regularError: {
@@ -128,14 +128,10 @@ class SchemaInput extends Component {
       try {
         input = type.random()
       } catch (error) {
-        if (error.message && error.message.startsWith('Maximum call stack size exceeded')) {
-          this.setState({
-            error: error.message,
-            errorHead: formatMessage(MESSAGES.recursiveError)
-          })
-        } else {
-          throw error
-        }
+        this.setState({
+          error: error.message,
+          errorHead: formatMessage(MESSAGES.recursiveError)
+        })
       }
       this.props.updatePipeline({ ...this.props.selectedPipeline, schema, input })
     } catch (error) {

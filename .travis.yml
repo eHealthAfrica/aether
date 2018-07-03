@@ -22,12 +22,6 @@ deploy:
   script: "./scripts/release.sh"
   skip_cleanup: true
   on:
-    branch: ^\d+\.\d+(\.\d+)?(-\S*)?$
-    tags: true
-- provider: script
-  script: "./scripts/release.sh"
-  skip_cleanup: true
-  on:
     branch: ^release-\d+\.\d+(\.\d+)?(-\S*)?$
 env:
   global:

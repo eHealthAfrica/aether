@@ -186,6 +186,8 @@ services:
     extends:
       file: docker-compose-base.yml
       service: aether-producer-base
+    environment:
+      PRODUCER_SETTINGS_FILE: /code/producer/test_settings.json
     ports:
       - "9005:9005"
     links:
