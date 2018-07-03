@@ -5,7 +5,7 @@
 #  * Aether Kernel
 #  * ODK Module
 #  * CouchDB Sync Module
-#  * Kernel UI Module
+#  * Aether UI Module
 #  * Producer Module
 #  * Zookeper & Kafka
 #
@@ -54,8 +54,6 @@ services:
       - ./tmp/kernel:/media/kernel
       - ./tmp/odk:/media/odk
       - ./tmp/sync:/media/sync
-      - ./tmp/ui/media:/media/ui
-      - ./tmp/ui/bundles:/static/ui
     ports:
       - "80:80"
 
@@ -169,6 +167,7 @@ services:
     volumes: *sync-volumes
     command: start_rq
 
+
   # ---------------------------------
   # Aether UI module
   # ---------------------------------
@@ -196,10 +195,6 @@ services:
       WEB_SERVER_PORT: 8004
     volumes:
       - ./aether-ui:/code
-      # media folder
-      - ./tmp/ui/media:/media
-      # bundles folder
-      - ./tmp/ui/bundles:/code/aether/ui/assets/bundles
     ports:
       - "8004:8004"
     command: start_dev
@@ -224,12 +219,10 @@ services:
 
       - ./aether-ui/entrypoint.webpack.sh:/code/entrypoint.sh
       - ./aether-ui/package.json:/code/package.json
-
-      # bundles folder
-      - ./tmp/ui/bundles:/code/aether/ui/assets/bundles
     ports:
       - "3004:3004"
     command: start_dev
+
 
   # ---------------------------------
   # Kafka & Zookeeper
@@ -257,6 +250,7 @@ services:
       ADVERTISED_HOST_NAME: kafka
     extra_hosts:
       - "moby:127.0.0.1"
+
 
   # ---------------------------------
   # Aether Kafka Producer

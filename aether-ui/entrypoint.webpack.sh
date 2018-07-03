@@ -46,8 +46,6 @@ test_js() {
   npm run test-js "${@:1}"
 }
 
-export BUNDLES_DIR=./aether/ui/assets/bundles/*
-
 
 case "$1" in
   bash)
@@ -61,9 +59,6 @@ case "$1" in
   test)
     test_lint
     test_js
-
-    # remove previous files
-    rm -r -f ${BUNDLES_DIR}
     npm run webpack
   ;;
 
@@ -76,14 +71,10 @@ case "$1" in
   ;;
 
   build)
-    # remove previous files
-    rm -r -f ${BUNDLES_DIR}
     npm run webpack
   ;;
 
   start_dev)
-    # remove previous files
-    rm -r -f ${BUNDLES_DIR}
     npm run webpack-server
   ;;
 

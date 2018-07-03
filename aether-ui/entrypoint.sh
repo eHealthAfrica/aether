@@ -89,6 +89,15 @@ setup_prod() {
   ./manage.py setup_admin -p=$ADMIN_PASSWORD
 }
 
+setup_static() {
+  # create static assets
+  ./manage.py collectstatic --noinput --clear
+  # copy distributed app
+  cp -r /code/aether/ui/assets/bundles/* /var/www/static
+
+  chmod -R 755 /var/www/static/
+}
+
 test_lint() {
   flake8 ./aether --config=./conf/extras/flake8.cfg
 }
@@ -114,9 +123,6 @@ then
   )
 fi
 # --------------------------------
-
-export STATIC_DIR=/var/www/static/
-export BUNDLES_DIR=./aether/ui/assets/bundles/*
 
 
 case "$1" in
@@ -168,14 +174,7 @@ case "$1" in
   start )
     setup_db
     setup_prod
-
-      # create static assets
-    ./manage.py collectstatic --noinput --clear
-    cp -r ${BUNDLES_DIR} ${STATIC_DIR}
-    chmod -R 755 ${STATIC_DIR}
-
-    # media assets
-    chown aether: /media
+    setup_static
 
     /usr/local/bin/uwsgi --ini ./conf/uwsgi.ini
   ;;
@@ -183,6 +182,7 @@ case "$1" in
   start_dev )
     setup_db
     setup_initial_data
+
     ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
   ;;
 

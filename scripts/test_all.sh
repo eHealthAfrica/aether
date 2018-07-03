@@ -46,17 +46,14 @@ function prepare_and_test_container() {
 }
 
 DC_TEST="docker-compose -f docker-compose-test.yml"
-DC_COMMON="docker-compose -f docker-compose-common.yml"
 
 echo "_____________________________________________ TESTING"
 
 kill_all
 
 
-echo "_____________________________________________ Testing common module"
-$DC_COMMON down
-$DC_COMMON build
-$DC_COMMON run common test
+echo "_____________________________________________ Common module"
+./scripts/build_common_and_distribute.sh
 
 
 echo "_____________________________________________ Starting database"
@@ -80,9 +77,10 @@ prepare_and_test_container odk
 
 
 # test a clean UI TEST container
-prepare_and_test_container ui
 $DC_TEST build ui-webpack-test
 $DC_TEST run   ui-webpack-test test
+$DC_TEST run   ui-webpack-test build
+prepare_and_test_container ui
 
 
 echo "_____________________________________________ Starting auxiliary databases"

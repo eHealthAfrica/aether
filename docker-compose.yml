@@ -4,6 +4,7 @@
 #  * Aether Kernel
 #  * ODK Module
 #  * CouchDB Sync Module
+#  * Aether UI Module
 # ------------------------------------------------------------------------------
 
 version: "2.1"
