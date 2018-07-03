@@ -24,6 +24,10 @@ set -Eeuo pipefail
 ./scripts/build_aether_utils_and_distribute.sh
 ./scripts/build_common_and_distribute.sh
 
+# Prepare Aether UI static content
+docker-compose build ui-webpack
+docker-compose run   ui-webpack build
+
 # Build docker images
 IMAGE_REPO='ehealthafrica'
 APPS=( kernel odk couchdb-sync ui )

@@ -54,6 +54,8 @@ services:
       - ./tmp/kernel:/media/kernel
       - ./tmp/odk:/media/odk
       - ./tmp/sync:/media/sync
+      # ui static files
+      - ./aether-ui/aether/ui/assets/bundles:/static/ui
     ports:
       - "80:80"
 
