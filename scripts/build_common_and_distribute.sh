@@ -36,7 +36,6 @@ PCK_FILE=aether.common-0.0.0-py2.py3-none-any.whl
 FOLDERS=( aether-kernel aether-odk-module aether-couchdb-sync-module aether-ui )
 for FOLDER in "${FOLDERS[@]}"
 do
-  mkdir -p ./$FOLDER/conf/pip/dependencies
   cp -r ./aether-common-module/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
 done
 

@@ -59,6 +59,11 @@ class ImportTestCase(TestCase):
         clean_couch()
         # Check that we can connect to the kernel container.
         self.assertTrue(kernel_utils.test_connection())
+        # Delete all existing mappings in `kernel`:
+        for mapping in get_aether_mappings():
+            url = kernel_utils.get_mappings_url(mapping['id'])
+            url = mapping['url']
+            requests.delete(url, headers=headers_testing)
         # In order to be able to fetch this instance of
         # aether.kernel.api.models.Project and
         # aether.kernel.api.models.ProjectSchema, the fixture
@@ -112,10 +117,8 @@ class ImportTestCase(TestCase):
         data = resp.json()
         self.mapping_id = data['id']
         self.mapping_name = data['name']
-        self.mapping_url = data['url']
 
     def tearDown(self):
-        requests.delete(self.mapping_url, headers=headers_testing)
         clean_couch()
 
     @mock.patch('aether.sync.import_couchdb.kernel_utils.test_connection', return_value=False)

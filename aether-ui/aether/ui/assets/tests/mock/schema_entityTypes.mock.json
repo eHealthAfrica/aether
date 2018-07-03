@@ -13,12 +13,10 @@
       },
       {
         "name": "lastName",
-        "aetherDataClassification": "Public",
         "type": ["null", "string"]
       },
       {
         "name": "age",
-        "aetherDataClassification": "Restricted",
         "type": ["int", {"name": "data-type", "type": "string"}]
       },
       {

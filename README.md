@@ -42,9 +42,6 @@
 git clone git@github.com:eHealthAfrica/aether.git
 cd aether
 
-./scripts/build_common_and_distribute.sh
-./scripts/build_aether_utils_and_distribute.sh
-
 docker-compose build
 ```
 

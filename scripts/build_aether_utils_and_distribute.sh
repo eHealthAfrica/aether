@@ -42,7 +42,6 @@ do
   else
     FOLDER=$container-module
   fi
-  mkdir -p ./$FOLDER/conf/pip/dependencies
   cp -r ./aether-utils/aether-client/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
 done
 
@@ -62,7 +61,6 @@ do
   else
     FOLDER=$container-module
   fi
-  mkdir -p ./$FOLDER/conf/pip/dependencies
   cp -r ./aether-utils/aether-mock-data/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
 done
 
@@ -82,7 +80,6 @@ do
   else
     FOLDER=$container-module
   fi
-  mkdir -p ./$FOLDER/conf/pip/dependencies
   cp -r ./aether-utils/aether-saladbar/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
 done
 

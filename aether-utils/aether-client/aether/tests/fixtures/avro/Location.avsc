@@ -1,29 +1,29 @@
 {
     "fields": [
         {
-            "jsonldPredicate": "@id",
-            "type": "string",
-            "name": "id",
+            "jsonldPredicate": "@id", 
+            "type": "string", 
+            "name": "id", 
             "inherited_from": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel"
-        },
+        }, 
         {
             "type": [
-                "null",
+                "null", 
                 "string"
-            ],
-            "name": "revision",
+            ], 
+            "name": "revision", 
             "inherited_from": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel"
-        },
+        }, 
         {
-            "type": "float",
+            "type": "float", 
             "name": "lat"
-        },
+        }, 
         {
-            "type": "float",
+            "type": "float", 
             "name": "lng"
         }
-    ],
-    "type": "record",
-    "name": "Location",
+    ], 
+    "type": "record", 
+    "name": "Location", 
     "extends": "file:///home/sarwar/demo/aether/demo/code/project/salad/salad.json#DocModel"
 }

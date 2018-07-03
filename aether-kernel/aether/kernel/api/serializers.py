@@ -22,7 +22,7 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 from drf_dynamic_fields import DynamicFieldsMixin
 
-from . import constants, models, utils, validators
+from . import models, utils, constants
 
 import urllib
 
@@ -110,10 +110,6 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='submission-list',
     )
 
-    def validate_definition(self, value):
-        validators.validate_mapping_definition(value)
-        return value
-
     class Meta:
         model = models.Mapping
         fields = '__all__'
@@ -197,11 +193,6 @@ class SchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         source='projectschemas',
         view_name='projectschema-list',
     )
-
-    def validate_definition(self, value):
-        validators.validate_avro_schema(value)
-        validators.validate_id_field(value)
-        return value
 
     class Meta:
         model = models.Schema
@@ -362,13 +353,3 @@ class MappingValidationSerializer(serializers.Serializer):
     submission_payload = serializers.JSONField()
     mapping_definition = serializers.JSONField()
     schemas = serializers.JSONField()
-
-    def validate_schemas(self, value):
-        if not isinstance(value, dict):
-            raise serializers.ValidationError(
-                'Value {value} is not an Object'.format(value=value)
-            )
-        for schema in value.values():
-            validators.validate_avro_schema(schema)
-            validators.validate_id_field(schema)
-        return value

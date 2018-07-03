@@ -1,25 +1,5 @@
-/*
- * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
- *
- * See the NOTICE file distributed with this work for additional information
- * regarding copyright ownership.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-
 import React, { Component } from 'react'
-import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
+import { FormattedMessage } from 'react-intl'
 import { connect } from 'react-redux'
 import avro from 'avsc'
 
@@ -51,9 +31,6 @@ export const makeOptionalType = (type) => {
 }
 
 export const makeOptionalField = (field) => {
-  // The top-level "id" field is reserved for unique ids; do not make it
-  // optional.
-  if (field.name === 'id') { return field }
   return { ...field, type: makeOptionalType(field.type) }
 }
 
@@ -73,31 +50,20 @@ export const deriveMappingRules = (schema) => {
   return schema.fields.map(fieldToMappingRule)
 }
 
-const MESSAGES = defineMessages({
-  recursiveError: {
-    defaultMessage: 'You have provided a recursive schema. Currently not supported.',
-    id: 'pipeline.input.schema.invalid.message.head.recursive'
-  },
-  regularError: {
-    defaultMessage: 'You have provided an invalid AVRO schema.',
-    id: 'pipeline.input.schema.invalid.message.head'
-  }
-})
-
 class SchemaInput extends Component {
   constructor (props) {
     super(props)
     this.state = {
       inputSchema: this.parseProps(props),
       view: SCHEMA_VIEW,
-      error: null,
-      errorHead: null
+      error: null
     }
   }
 
   componentWillReceiveProps (nextProps) {
     this.setState({
-      inputSchema: this.parseProps(nextProps)
+      inputSchema: this.parseProps(nextProps),
+      error: null
     })
   }
 
@@ -114,35 +80,16 @@ class SchemaInput extends Component {
 
   notifyChange (event) {
     event.preventDefault()
-    const {formatMessage} = this.props.intl
-    this.setState({
-      error: null,
-      errorHead: null
-    })
+
     try {
       // validate schema
       const schema = JSON.parse(this.state.inputSchema)
       const type = avro.parse(schema, { noAnonymousTypes: true })
       // generate a new input sample
-      let input = {}
-      try {
-        input = type.random()
-      } catch (error) {
-        if (error.message && error.message.startsWith('Maximum call stack size exceeded')) {
-          this.setState({
-            error: error.message,
-            errorHead: formatMessage(MESSAGES.recursiveError)
-          })
-        } else {
-          throw error
-        }
-      }
+      const input = type.random()
       this.props.updatePipeline({ ...this.props.selectedPipeline, schema, input })
     } catch (error) {
-      this.setState({
-        error: error.message,
-        errorHead: formatMessage(MESSAGES.regularError)
-      })
+      this.setState({ error: error.message })
     }
   }
 
@@ -162,7 +109,10 @@ class SchemaInput extends Component {
           {this.state.error &&
             <div className='hint error-message'>
               <h4 className='hint-title'>
-                {this.state.errorHead}
+                <FormattedMessage
+                  id='pipeline.input.schema.invalid.message'
+                  defaultMessage='You have provided an invalid AVRO schema.'
+                />
               </h4>
               {this.state.error}
             </div>
@@ -464,4 +414,4 @@ const mapStateToProps = ({ pipelines }) => ({
   selectedPipeline: pipelines.selectedPipeline
 })
 
-export default connect(mapStateToProps, { updatePipeline })(injectIntl(Input))
+export default connect(mapStateToProps, { updatePipeline })(Input)

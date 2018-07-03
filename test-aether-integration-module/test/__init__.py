@@ -18,14 +18,11 @@
 
 import pytest
 from time import sleep
-import requests
 
 from aether.client import KernelClient
 import aether.saladbar.wizard as wizard
 
-
 from .consumer import get_consumer, read
-
 
 KERNEL_URL = "http://kernel-test:9000/v1"
 
@@ -37,7 +34,7 @@ kernel_credentials = {
 kernel_retry = 15
 kernel_retry_time = 1
 
-SEED_ENTITIES = 1234
+SEED_ENTITIES = 10
 SEED_TYPE = "Person"
 
 
@@ -82,28 +79,6 @@ def existing_projectschemas(aether_client):
 
 
 @pytest.fixture(scope="function")
-def producer_status():
-    max_retry = 30
-    url = "http://producer-test:9005/status"
-    for x in range(max_retry):
-        try:
-            status = requests.get(url).json()
-            kafka = status.get('kafka')
-            if not kafka:
-                raise ValueError('Kafka not connected yet')
-            person = status.get('topics', {}).get(SEED_TYPE, {})
-            ok_count = person.get('last_changeset_status', {}).get('succeeded')
-            if ok_count:
-                sleep(10)
-                return ok_count
-            else:
-                sleep(1)
-        except Exception as err:
-            print(err)
-            sleep(1)
-
-
-@pytest.fixture(scope="function")
 def existing_entities(aether_client, existing_projectschemas):
     entities = {}
     for ps in existing_projectschemas:
@@ -143,6 +118,6 @@ def generate_entities(aether_client, existing_schemas, existing_projectschemas):
 @pytest.fixture(scope="function")
 def read_people():
     consumer = get_consumer(SEED_TYPE)
-    messages = read(consumer, start="FIRST", verbose=False, timeout_ms=500)
+    messages = read(consumer, start="FIRST", verbose=True, timeout_ms=500)
     consumer.close()  # leaving consumers open can slow down zookeeper, try to stay tidy
     return messages

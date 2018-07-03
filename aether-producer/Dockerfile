@@ -6,7 +6,6 @@ FROM python:3.6
 ## copy files one by one and split commands to use docker cache
 ################################################################################
 
-
 WORKDIR /
 
 COPY ./conf/pip /code/conf/pip

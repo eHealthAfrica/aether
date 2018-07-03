@@ -7,7 +7,7 @@ version: "2.1"
 services:
 
   client:
-    build: ./aether-utils/aether-client
+    build: aether-utils/aether-client
     environment:
       TESTING: "true"
     volumes:
@@ -15,7 +15,7 @@ services:
     command: build
 
   mocker:
-    build: ./aether-utils/aether-mock-data
+    build: aether-utils/aether-mock-data
     environment:
       TESTING: "true"
     volumes:
@@ -23,7 +23,7 @@ services:
     command: build
 
   saladbar:
-    build: ./aether-utils/aether-saladbar
+    build: aether-utils/aether-saladbar
     environment:
       TESTING: "true"
     volumes:
