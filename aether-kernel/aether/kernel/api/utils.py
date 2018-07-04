@@ -290,7 +290,7 @@ def action_constant(args):
 
 
 def object_contains(test, obj):
-    logger.info(["compare", test, obj])
+    # Recursive object comparison function.
     if obj == test:
         return True
     if isinstance(obj, list):
@@ -299,23 +299,14 @@ def object_contains(test, obj):
         return True in [object_contains(test, i) for i in obj.values()]
     return False
 
-
-
-    return True
-
 def anchor_reference(source, context, source_data, instance_number):
-    logger.info("found pegged entity: %s" % source)
+    # Anchors entity-referenced object to a context. See resolve_entity_reference
     try:
         this_obj = None
         obj_matches = find_by_jsonpath(source_data, source)
-        logger.info("matches %s" % len(obj_matches))
         if len(obj_matches) >= instance_number:
-            logger.info('found match')
-            match = obj_matches[instance_number]
-            logger.info(match.value)
-            this_obj = match.value
+            this_obj = obj_matches[instance_number].value
         else:
-            logger.info("no matches")
             raise ValueError('source: %s unresolved' % (args[1]))
         context_obj = None
         obj_matches = find_by_jsonpath(source_data, context)
@@ -325,9 +316,9 @@ def anchor_reference(source, context, source_data, instance_number):
             if object_contains(this_obj, match.value):
                 return idx
         raise ValueError("Object match not found in context")
-
     except Exception as err:
         logger.error(err)
+        return -1
 
 def resolve_entity_reference(
         args,
@@ -342,31 +333,25 @@ def resolve_entity_reference(
     # entity_jsonpath
     entity_jsonpath = args[0]
     matches = find_by_jsonpath(constructed_entities, entity_jsonpath)
-    '''
-    logger.info(pprint([entity_jsonpath,
-        constructed_entities,
-        entity_type,
-        field_name,
-        instance_number,
-        source_data]))
-    logger.info(pprint([constructed_entities, entity_jsonpath]))
-    logger.info(["matches", matches])
-    '''
-    idx = -1
+    # optionally you can bind an element to a parent context.
+    # For example you have an array of houses of unknown length, and each house has
+    # a number of people. In the person record, you want to have a reference to House.id
+    # which is generated for the house. In that case, our command might be:
+    # #!entity-reference#House[*].id#house[*].person[*]#house[*]
+    # I.E. (the_value_you_want, a_reference_object, a_parent_context)
     if len(args) == 3:
         source = args[1]
         context = args[2]
         idx = anchor_reference(source, context, source_data, instance_number)
-        logger.info("idx: %s" % idx)
-    if idx >= 0:
-        return matches[idx].value
+        if idx >= 0:
+            return matches[idx].value
     if len(matches) < 1:
         raise ValueError('path %s has no matches; aborting' % entity_jsonpath)
     if len(matches) < 2:
         # single value
         return matches[0].value
     else:
-        # multiple values, choose the one aligned with this entity (#i)
+        # multiple values, attempt to choose the one aligned with this entity (#i)
         return matches[instance_number].value
 
 
