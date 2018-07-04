@@ -31,7 +31,7 @@ services:
   # Aether Kafka Producer
   # ---------------------------------
 
-  aether-producer:
+  producer:
     extends:
       file: docker-compose-base.yml
       service: aether-producer-base
