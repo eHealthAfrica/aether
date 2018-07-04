@@ -33,11 +33,13 @@ function build_container() {
 }
 
 DC_TEST="docker-compose -f docker-compose-test.yml"
+DC_COMMON="docker-compose -f docker-compose-common.yml"
 
 
 echo "_____________________________________________ TESTING"
 
 # kill ALL containers and clean TEST ones
+echo "_____________________________________________ Killing ALL containers"
 ./scripts/kill_all.sh
 $DC_TEST down
 
@@ -66,6 +68,7 @@ build_container integration
 $DC_TEST run integration-test test
 
 # kill ALL containers
+echo "_____________________________________________ Killing auxiliary containers"
 ./scripts/kill_all.sh
 
 echo "_____________________________________________ END"

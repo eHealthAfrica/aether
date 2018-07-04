@@ -155,13 +155,6 @@ class PostSubmissionTests(CustomTestCase):
 
         if succeed:
             submission = content['results'][0]
-
-            # get entities
-            response = requests.get(submission['entities_url'], headers=self.KERNEL_HEADERS)
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            content = response.json()
-            self.assertEqual(content['count'], 1)  # using identity mapping
-
             # get attachments
             response = requests.get(submission['attachments_url'], headers=self.KERNEL_HEADERS)
             self.assertEqual(response.status_code, status.HTTP_200_OK)

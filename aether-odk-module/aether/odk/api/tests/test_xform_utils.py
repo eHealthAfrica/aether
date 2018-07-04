@@ -468,34 +468,18 @@ class XFormUtilsAvroTests(CustomTestCase):
                             'translation': [
                                 {
                                     '@lang': 'AA',
-                                    'text': [
-                                        {
-                                            '@id': 'a',
-                                            'value': 'A',
-                                        },
-                                        {
-                                            '@id': 'b',
-                                            'value': 'B',
-                                        },
-                                    ]
+                                    'text': [{
+                                        '@id': 'a',
+                                        'value': 'A',
+                                    }]
                                 },
                                 {
                                     '@default': 'true()',
                                     '@lang': 'BB',
-                                    'text': [
-                                        {
-                                            '@id': 'a',
-                                            'value': 'B',
-                                        },
-                                        {
-                                            '@id': 'b',
-                                            'value': 'C',
-                                        },
-                                        {
-                                            '@id': 'c',
-                                            'value': [],
-                                        },
-                                    ]
+                                    'text': [{
+                                        '@id': 'a',
+                                        'value': 'B',
+                                    }]
                                 },
                             ]
                         }
@@ -503,50 +487,16 @@ class XFormUtilsAvroTests(CustomTestCase):
                 }
             }
         }
-        self.assertEqual(get_texts(xform_dict), {'a': 'B', 'b': 'C'})
-
-    def test__get_xform_itexts__several_values(self):
-        xform_dict = {
-            'h:html': {
-                'h:head': {
-                    'model': {
-                        'itext': {
-                            'translation': [
-                                {
-                                    '@default': 'true()',
-                                    '@lang': 'BB',
-                                    'text': [
-                                        {
-                                            '@id': 'a',
-                                            'value': [
-                                                {'@form': 'image', '#text': 'a'},
-                                                'B',
-                                                'C',
-                                            ],
-                                        },
-                                        {
-                                            '@id': 'b',
-                                            'value': [
-                                                'E',
-                                                {'@form': 'image', '#text': 'b'},
-                                            ],
-                                        },
-                                    ]
-                                },
-                            ]
-                        }
-                    }
-                }
-            }
-        }
-        self.assertEqual(get_texts(xform_dict), {'a': 'B', 'b': 'E'})
+        self.assertEqual(get_texts(xform_dict), {'a': 'B'})
 
     def test__get_xform_label__no_body(self):
         xform_dict = {}
-        self.assertIsNone(get_label(xform_dict, '/None'))
+        self.assertEqual(get_label(xform_dict, '/None'), '/', 'removes root')
+        self.assertEqual(get_label(xform_dict, '/None/any'), '/any')
 
         xform_dict = {'h:html': {'h:body': None}}
-        self.assertIsNone(get_label(xform_dict, '/None/any'))
+        self.assertEqual(get_label(xform_dict, '/None'), '/', 'removes root')
+        self.assertEqual(get_label(xform_dict, '/None/any'), '/any')
 
     def test__get_xform_label__no_linked_label(self):
         xform_dict = {
@@ -558,7 +508,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                 }
             }
         }
-        self.assertIsNone(get_label(xform_dict, '/None/any'))
+        self.assertEqual(get_label(xform_dict, '/None/any'), '/any')
 
     def test__get_xform_label__blank_label(self):
         xform_dict = {
@@ -571,7 +521,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                 }
             }
         }
-        self.assertIsNone(get_label(xform_dict, '/None/any'))
+        self.assertEqual(get_label(xform_dict, '/None/any'), '/any')
 
     def test__get_xform_label__string_value(self):
         xform_dict = {
@@ -599,7 +549,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                 }
             }
         }
-        self.assertIsNone(get_label(xform_dict, '/None/a/b/c/any'))
+        self.assertEqual(get_label(xform_dict, '/None/a/b/c/any'), '/a/b/c/any')
         self.assertEqual(
             get_label(xform_dict, '/None/a/b/c/any', {'any:label': 'Something'}),
             'Something'
@@ -618,7 +568,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                 }
             }
         }
-        self.assertIsNone(get_label(xform_dict, '/None/any'))
+        self.assertEqual(get_label(xform_dict, '/None/any'), '/any')
 
     def test__get_xform_label__another_dict(self):
         xform_dict = {
@@ -633,20 +583,20 @@ class XFormUtilsAvroTests(CustomTestCase):
                 }
             }
         }
-        self.assertIsNone(get_label(xform_dict, '/None/a/b/c/any'))
+        self.assertEqual(get_label(xform_dict, '/None/a/b/c/any'), '/a/b/c/any')
 
     def test__parse_xform_to_avro_schema__with_multilanguage(self):
         with open(self.samples['xform']['file-avro'], 'rb') as content:
             xform_avro = json.load(content)
 
         schema = parse_xform_to_avro_schema(self.samples['xform']['raw-xml'])
-        self.assertEqual(schema['name'], 'MyTestForm_Test10')
+        self.assertEqual(schema['name'], 'MyTestForm')
         self.assertEqual(schema['doc'], 'My Test Form (id: my-test-form, version: Test-1.0)')
 
         self.assertEqual(schema, xform_avro)
 
         schema_i18n = parse_xform_to_avro_schema(self.samples['xform']['raw-xml-i18n'])
-        self.assertEqual(schema_i18n['name'], 'MyTestForm_Test10')
+        self.assertEqual(schema_i18n['name'], 'MyTestForm')
         self.assertEqual(schema_i18n['doc'], 'My Test Form (multilang) (id: my-test-form, version: Test-1.0)')
 
         # the same fields
@@ -686,7 +636,7 @@ class XFormUtilsAvroTests(CustomTestCase):
         '''
 
         expected = {
-            'name': 'Nested_Repeats_Test_0',
+            'name': 'NestedRepeatsTest',
             'namespace': 'aether.odk.xforms',
             'doc': 'nested repeats test (id: nested_repeats_test, version: 0)',
             'type': 'record',
@@ -711,11 +661,13 @@ class XFormUtilsAvroTests(CustomTestCase):
                             'type': 'array',
                             'items': {
                                 'name': 'Repeat_1',
+                                'doc': '/Repeat_1',
                                 'type': 'record',
                                 'fields': [
                                     {
                                         'name': 'name_1',
                                         'type': ['null', 'string'],
+                                        'doc': '/Repeat_1/name_1',
                                     },
                                     {
                                         'name': 'Repeat_2',
@@ -725,11 +677,13 @@ class XFormUtilsAvroTests(CustomTestCase):
                                                 'type': 'array',
                                                 'items': {
                                                     'name': 'Repeat_2',
+                                                    'doc': '/Repeat_1/Repeat_2',
                                                     'type': 'record',
                                                     'fields': [
                                                         {
                                                             'name': 'name_2',
                                                             'type': ['null', 'string'],
+                                                            'doc': '/Repeat_1/Repeat_2/name_2',
                                                         },
                                                     ],
                                                 },
@@ -770,7 +724,7 @@ class XFormUtilsAvroTests(CustomTestCase):
         '''
 
         expected = {
-            'name': 'WrongNames_0',
+            'name': 'WrongNames',
             'namespace': 'aether.odk.xforms',
             'doc': 'forcing validation error (id: wrong-names, version: 0)',
             'type': 'record',
@@ -793,15 +747,18 @@ class XFormUtilsAvroTests(CustomTestCase):
                         'null',
                         {
                             'name': 'full-name',
+                            'doc': '/full-name',
                             'type': 'record',
                             'fields': [
                                 {
                                     'name': 'first-name',
                                     'type': ['null', 'string'],
+                                    'doc': '/full-name/first-name',
                                 },
                                 {
                                     'name': 'last-name',
                                     'type': ['null', 'string'],
+                                    'doc': '/full-name/last-name',
                                 },
                             ],
                         },

@@ -120,6 +120,7 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 
 class AttachmentSerializerNested(DynamicFieldsMixin, serializers.ModelSerializer):
+
     name = serializers.CharField(read_only=True)
     url = serializers.CharField(read_only=True, source='attachment_path')
 
@@ -151,8 +152,7 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         source='attachments',
     )
 
-    # this will return all linked attachment files
-    # (name, relative url) in one request call
+    # this will return all linked attachment file (name, relative url) in one request call
     attachments = AttachmentSerializerNested(many=True, read_only=True)
 
     def create(self, validated_data):
@@ -162,7 +162,7 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
             return submission
         except Exception as e:
             raise serializers.ValidationError({
-                'description': 'Submission validation failed >> ' + str(e)
+                'description': 'Submission validation failed'
             })
 
     class Meta:
@@ -249,14 +249,6 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     merge = serializers.ChoiceField(MERGE_CHOICES, default=m_options.overwrite.value)
     resolved = serializers.JSONField(default={})
 
-    # this will return all linked attachment files
-    # (name, relative url) in one request call
-    attachments = AttachmentSerializerNested(
-        many=True,
-        read_only=True,
-        source='submission.attachments',
-    )
-
     def create(self, validated_data):
         try:
             utils.validate_payload(validated_data['projectschema'].schema.definition, validated_data['payload'])
@@ -277,7 +269,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
             return entity
         except Exception as e:
             raise serializers.ValidationError({
-                'description': 'Submission validation failed >> ' + str(e)
+                'description': 'Submission validation failed'
             })
 
     def update(self, instance, validated_data):
@@ -343,30 +335,26 @@ class EntityLDSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 class ProjectStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     first_submission = serializers.DateTimeField()
     last_submission = serializers.DateTimeField()
-    submissions_count = serializers.IntegerField()
-    entities_count = serializers.IntegerField()
+    submission_count = serializers.IntegerField()
 
     class Meta:
         model = models.Project
         fields = (
             'id', 'name', 'created',
-            'first_submission', 'last_submission',
-            'submissions_count', 'entities_count',
+            'first_submission', 'last_submission', 'submission_count',
         )
 
 
 class MappingStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     first_submission = serializers.DateTimeField()
     last_submission = serializers.DateTimeField()
-    submissions_count = serializers.IntegerField()
-    entities_count = serializers.IntegerField()
+    submission_count = serializers.IntegerField()
 
     class Meta:
         model = models.Mapping
         fields = (
             'id', 'name', 'definition', 'created',
-            'first_submission', 'last_submission',
-            'submissions_count', 'entities_count',
+            'first_submission', 'last_submission', 'submission_count',
         )
 
 

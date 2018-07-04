@@ -24,8 +24,6 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const webpack = require('webpack')
 const buildEntries = require('./webpack.apps')
 
-const BUNDLES_DIR = path.resolve(__dirname, './assets/bundles/')
-
 module.exports = (custom) => ({
   mode: (custom.production ? 'production' : 'development'),
   context: __dirname,
@@ -36,7 +34,7 @@ module.exports = (custom) => ({
     filename: '[name]-[hash].js',
     library: ['ui', '[name]'],
     libraryTarget: 'var',
-    path: BUNDLES_DIR
+    path: path.resolve(__dirname, './assets/bundles/')
   }, custom.output),
 
   optimization: {
@@ -80,8 +78,8 @@ module.exports = (custom) => ({
 
     // needed by `django-webpack-loader`
     new BundleTracker({
-      path: BUNDLES_DIR,
-      filename: 'webpack-stats.json'
+      path: __dirname,
+      filename: './assets/bundles/webpack-stats.json'
     }),
 
     // Environment variables

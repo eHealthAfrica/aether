@@ -99,65 +99,6 @@ XML_DATA = '''
     </h:html>
 '''
 
-XML_DATA_WITH_ID = '''
-    <h:html
-            xmlns="http://www.w3.org/2002/xforms"
-            xmlns:ev="http://www.w3.org/2001/xml-events"
-            xmlns:h="http://www.w3.org/1999/xhtml"
-            xmlns:jr="http://openrosa.org/javarosa"
-            xmlns:orx="http://openrosa.org/xforms"
-            xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-        <h:head>
-            <h:title>xForm - Test</h:title>
-            <model>
-                <instance>
-                    <Mapping id="xform-id-test" version="v2">
-                        <starttime/>
-                        <endtime/>
-                        <deviceid/>
-                        <id/>
-                        <meta>
-                            <instanceID/>
-                        </meta>
-                    </Mapping>
-                </instance>
-                <instance id="other-entry"/>
-
-                <bind
-                        jr:preload="timestamp"
-                        jr:preloadParams="start"
-                        jr:requiredMsg="start"
-                        nodeset="/Mapping/starttime"
-                        required="true()"
-                        type="dateTime"/>
-                <bind
-                        jr:preload="timestamp"
-                        jr:preloadParams="end"
-                        jr:requiredMsg="end"
-                        nodeset="/Mapping/endtime"
-                        required="true()"
-                        type="dateTime"/>
-                <bind
-                        jr:preload="property"
-                        jr:preloadParams="deviceid"
-                        jr:requiredMsg="device"
-                        nodeset="/Mapping/deviceid"
-                        required="true()"
-                        type="string"/>
-
-                <bind nodeset="/Mapping/id" type="string"/>
-
-                <bind
-                        calculate="concat('uuid:', uuid())"
-                        nodeset="/Mapping/meta/instanceID"
-                        readonly="true()"
-                        type="string"/>
-            </model>
-        </h:head>
-        <h:body/>
-    </h:html>
-'''
-
 XML_DATA_NO_VERSION = '''
     <h:html
             xmlns="http://www.w3.org/2002/xforms"
@@ -261,7 +202,6 @@ class CustomTestCase(TransactionTestCase):
             # sample collection for xForm objects
             'xform': {
                 'xml-ok': XML_DATA,
-                'xml-ok-id': XML_DATA_WITH_ID,
                 'xml-ok-noversion': XML_DATA_NO_VERSION,
                 'xml-err': XML_DATA_ERR,
 

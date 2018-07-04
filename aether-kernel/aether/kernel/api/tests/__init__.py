@@ -100,48 +100,6 @@ EXAMPLE_SOURCE_DATA = {
     }
 }
 
-EXAMPLE_NESTED_SOURCE_DATA = {
-    'data': {
-        'village': 'somevillageID',
-        'houses': [
-            {
-                'num': 0,
-                'people': [
-                    {
-                        'name': 'PersonA',
-                        'dob': '2000-01-01'
-                    },
-                    {
-                        'name': 'PersonB',
-                        'dob': '2001-01-01'
-                    },
-                    {
-                        'name': 'PersonC',
-                        'dob': '2002-01-01'
-                    }
-                ]
-            },
-            {
-                'num': 1,
-                'people': [
-                    {
-                        'name': 'PersonD',
-                        'dob': '2000-01-01'
-                    },
-                    {
-                        'name': 'PersonE',
-                        'dob': '2001-01-01'
-                    },
-                    {
-                        'name': 'PersonF',
-                        'dob': '2002-01-01'
-                    }
-                ]
-            }
-        ]
-    }
-}
-
 EXAMPLE_SOURCE_DATA_ENTITY = {
     'villageID': 'somevillageID',
     'name': 'Person-Valid',
