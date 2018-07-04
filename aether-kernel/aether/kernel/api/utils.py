@@ -92,6 +92,8 @@ def __prettified__(response, lexer):
     return mark_safe(style + response)
 
 # TODO / KILL
+
+
 def pprint(obj):
     return json.dumps(obj, indent=2)
 
@@ -299,6 +301,7 @@ def object_contains(test, obj):
         return True in [object_contains(test, i) for i in obj.values()]
     return False
 
+
 def anchor_reference(source, context, source_data, instance_number):
     # Anchors entity-referenced object to a context. See resolve_entity_reference
     try:
@@ -319,6 +322,7 @@ def anchor_reference(source, context, source_data, instance_number):
     except Exception as err:
         logger.error(err)
         return -1
+
 
 def resolve_entity_reference(
         args,

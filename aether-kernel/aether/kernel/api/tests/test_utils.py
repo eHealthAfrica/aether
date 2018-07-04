@@ -77,15 +77,18 @@ class UtilsTests(TestCase):
         entities = EXAMPLE_ENTITY_DEFINITION
         field_mappings = EXAMPLE_FIELD_MAPPINGS
         expected = EXAMPLE_REQUIREMENTS
-        entity_requirements = str(utils.get_entity_requirements(entities, field_mappings))
-        self.assertTrue(str(expected) in entity_requirements, entity_requirements)
+        entity_requirements = str(
+            utils.get_entity_requirements(entities, field_mappings))
+        self.assertTrue(str(expected) in entity_requirements,
+                        entity_requirements)
 
     def test_get_entity_stub(self):
         requirements = EXAMPLE_REQUIREMENTS
         source_data = EXAMPLE_SOURCE_DATA
         entity_definitions = EXAMPLE_ENTITY_DEFINITION
         entity_name = 'Person'
-        stub = utils.get_entity_stub(requirements, entity_definitions, entity_name, source_data)
+        stub = utils.get_entity_stub(
+            requirements, entity_definitions, entity_name, source_data)
         self.assertEquals(len(stub.get('dob')), 3)
 
     def test_resolve_source_reference__single_resolution(self):
@@ -95,7 +98,8 @@ class UtilsTests(TestCase):
         entity_name = 'Person'
         field = 'villageID'
         path = requirements.get(entity_name, {}).get(field)[0]
-        resolved_count = utils.resolve_source_reference(path, entities, entity_name, 0, field, data)
+        resolved_count = utils.resolve_source_reference(
+            path, entities, entity_name, 0, field, data)
         self.assertEquals(resolved_count, 1)
 
     def test_resolve_source_reference__multiple_resolutions(self):
@@ -105,7 +109,8 @@ class UtilsTests(TestCase):
         entity_name = 'Person'
         field = 'dob'
         path = requirements.get(entity_name, {}).get(field)[0]
-        resolved_count = utils.resolve_source_reference(path, entities, entity_name, 0, field, data)
+        resolved_count = utils.resolve_source_reference(
+            path, entities, entity_name, 0, field, data)
         self.assertEquals(resolved_count, 3)
 
     def test_resolve_source_reference__wildcard_resolutions(self):
@@ -114,7 +119,8 @@ class UtilsTests(TestCase):
         entity_name = 'Person'
         field = 'dob'
         path = 'data.pe*[*].dob'
-        resolved_count = utils.resolve_source_reference(path, entities, entity_name, 0, field, data)
+        resolved_count = utils.resolve_source_reference(
+            path, entities, entity_name, 0, field, data)
         self.assertEquals(resolved_count, 3)
 
     def test_object_contains(self):
@@ -125,23 +131,25 @@ class UtilsTests(TestCase):
         is_included = utils.object_contains(test_person, source_house)
         not_included = utils.object_contains(test_person, other_house)
         self.assertTrue(is_included), "Person should be found in this house."
-        self.assertFalse(not_included), "Person should not found in this house."
+        self.assertFalse(
+            not_included), "Person should not found in this house."
 
     def test_anchor_references(self):
         source_data = EXAMPLE_NESTED_SOURCE_DATA
         source = "data.houses[*].people[*]"
-        context= "data.houses[*]"
+        context = "data.houses[*]"
         instance_number = 5
-        idx = utils.anchor_reference(source, context, source_data, instance_number)
+        idx = utils.anchor_reference(
+            source, context, source_data, instance_number)
         assertEquals(idx, 1), "Person #5 be found in second house, index @ 1"
-
 
     def test_get_or_make_uuid(self):
         entity_type = 'Person'
         field_name = '_id'
         instance_number = 0
         source_data = EXAMPLE_SOURCE_DATA
-        uuid = str(utils.get_or_make_uuid(entity_type, field_name, instance_number, source_data))
+        uuid = str(utils.get_or_make_uuid(
+            entity_type, field_name, instance_number, source_data))
         self.assertEquals(uuid.count('-'), 4)
 
     def test_extract_entity(self):
@@ -157,7 +165,8 @@ class UtilsTests(TestCase):
         failed_actions = utils.extract_entity(
             entity_name, entities, requirements, response_data, entity_stub
         )
-        self.assertEquals(len(expected_entity['Person']), len(entities['Person']))
+        self.assertEquals(
+            len(expected_entity['Person']), len(entities['Person']))
         self.assertEquals(len(failed_actions), 0)
 
     def test_extract_entities(self):
@@ -176,7 +185,8 @@ class UtilsTests(TestCase):
             schemas,
         )
         expected_entity = EXAMPLE_ENTITY
-        self.assertEquals(len(expected_entity['Person']), len(entities['Person']))
+        self.assertEquals(
+            len(expected_entity['Person']), len(entities['Person']))
 
     def test_extract_create_entities__no_requirements(self):
         '''
@@ -289,7 +299,8 @@ class UtilsTests(TestCase):
         submission_errors = submission_data['aether_errors']
         self.assertEqual(len(entities), 0)
         self.assertEqual(len(submission_errors), 1)
-        self.assertIn('is not a valid uuid', submission_errors[0]['description'])
+        self.assertIn('is not a valid uuid',
+                      submission_errors[0]['description'])
 
     def test_is_not_custom_jsonpath(self):
         # Examples taken from https://github.com/json-path/JsonPath#path-examples
