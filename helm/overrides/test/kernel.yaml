@@ -1,7 +1,0 @@
-application:
-  command: start_dev
-debug: true
-kernel:
-  repository: aether-kernel
-release: latest
-testing: true

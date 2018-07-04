@@ -1,3 +1,0 @@
-gettext-base
-postgresql-client-9.6=9.6.7-0+deb9u1
-vim

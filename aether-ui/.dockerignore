@@ -1,5 +1,0 @@
-.*
-*,cover
-!.coveragerc
-!.env
-!.pylintrc
