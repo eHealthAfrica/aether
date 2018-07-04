@@ -125,23 +125,23 @@ class UtilsTests(TestCase):
 
     def test_object_contains(self):
         data = EXAMPLE_NESTED_SOURCE_DATA
-        source_house = data['houses'][0]
-        other_house = data['houses'][1]
+        source_house = data['data']['houses'][0]
+        other_house = data['data']['houses'][1]
         test_person = source_house['people'][0]
         is_included = utils.object_contains(test_person, source_house)
         not_included = utils.object_contains(test_person, other_house)
-        self.assertTrue(is_included), "Person should be found in this house."
+        self.assertTrue(is_included), 'Person should be found in this house.'
         self.assertFalse(
-            not_included), "Person should not found in this house."
+            not_included), 'Person should not found in this house.'
 
     def test_anchor_references(self):
         source_data = EXAMPLE_NESTED_SOURCE_DATA
-        source = "data.houses[*].people[*]"
-        context = "data.houses[*]"
+        source = 'data.houses[*].people[*]'
+        context = 'data.houses[*]'
         instance_number = 5
         idx = utils.anchor_reference(
             source, context, source_data, instance_number)
-        assertEquals(idx, 1), "Person #5 be found in second house, index @ 1"
+        self.assertEquals(idx, 1), 'Person #5 be found in second house, index @ 1'
 
     def test_get_or_make_uuid(self):
         entity_type = 'Person'

@@ -105,8 +105,8 @@ EXAMPLE_NESTED_SOURCE_DATA = {
         'village': 'somevillageID',
         'houses': [
             {
-                "num": 0,
-                "people": [
+                'num': 0,
+                'people': [
                     {
                         'name': 'PersonA',
                         'dob': '2000-01-01'
@@ -121,9 +121,9 @@ EXAMPLE_NESTED_SOURCE_DATA = {
                     }
                 ]
             },
-                        {
-                "num": 1,
-                "people": [
+            {
+                'num': 1,
+                'people': [
                     {
                         'name': 'PersonD',
                         'dob': '2000-01-01'
@@ -138,7 +138,6 @@ EXAMPLE_NESTED_SOURCE_DATA = {
                     }
                 ]
             }
-
         ]
     }
 }

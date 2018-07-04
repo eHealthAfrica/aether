@@ -310,15 +310,14 @@ def anchor_reference(source, context, source_data, instance_number):
         if len(obj_matches) >= instance_number:
             this_obj = obj_matches[instance_number].value
         else:
-            raise ValueError('source: %s unresolved' % (args[1]))
-        context_obj = None
+            raise ValueError('source: %s unresolved' % (source))
         obj_matches = find_by_jsonpath(source_data, context)
         if not obj_matches:
-            raise ValueError('context: %s unresolved' % (args[2]))
+            raise ValueError('context: %s unresolved' % (context))
         for idx, match in enumerate(obj_matches):
             if object_contains(this_obj, match.value):
                 return idx
-        raise ValueError("Object match not found in context")
+        raise ValueError('Object match not found in context')
     except Exception as err:
         logger.error(err)
         return -1
@@ -441,7 +440,7 @@ def extractor_action(
     # Takes an extractor action instruction (#!action#args) and dispatches it to
     # the proper function
     action, args = resolve_action(source_path)
-    logger.debug("extractor_action: fn %s; args %s" % (action, (args,)))
+    logger.debug('extractor_action: fn %s; args %s' % (action, (args,)))
     if action == 'uuid':
         return get_or_make_uuid(entity_type, field_name, instance_number, source_data)
     elif action == 'entity-reference':
