@@ -36,7 +36,6 @@ django-webpack-loader
 
 
 # Server side
-awscli   # this is used for pulling down secrets from S3
 raven    # Sentry
 
 
