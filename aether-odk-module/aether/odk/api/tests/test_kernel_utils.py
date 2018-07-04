@@ -44,11 +44,11 @@ class KernelUtilsTest(CustomTestCase):
         # create xForm entries
         self.xform_1 = self.helper_create_xform(
             project_id=self.project.project_id,
-            xml_data=self.samples['xform']['raw-xml'],
+            xml_data=self.samples['xform']['xml-ok'],     # this form does not have any "id"
         )
         self.xform_2 = self.helper_create_xform(
             project_id=self.project.project_id,
-            xml_data=self.samples['xform']['raw-xml'],
+            xml_data=self.samples['xform']['xml-ok-id'],  # this form does have an "id"
         )
 
         self.KERNEL_ID_1 = str(self.xform_1.kernel_id)
@@ -149,13 +149,15 @@ class KernelUtilsTest(CustomTestCase):
         self.assertEqual(response.status_code, 200)
         kernel_project = json.loads(response.content.decode('utf-8'))
         self.assertEqual(kernel_project['id'], str(self.project.project_id))
-        self.assertNotEqual(kernel_project['name'], self.project.name)
+        self.assertIn(self.project.name, kernel_project['name'])
 
         # creates the artefacts for the xForm 1
         response = requests.get(self.MAPPING_URL_1, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 200)
         kernel_mapping_1 = json.loads(response.content.decode('utf-8'))
         self.assertEqual(kernel_mapping_1['id'], self.KERNEL_ID_1)
+        # last rule is #!uuid
+        self.assertEqual('#!uuid', kernel_mapping_1['definition']['mapping'][-1][0])
 
         response = requests.get(self.SCHEMA_URL_1, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 200)
@@ -167,6 +169,7 @@ class KernelUtilsTest(CustomTestCase):
         self.assertEqual(response.status_code, 200)
         kernel_mapping_2 = json.loads(response.content.decode('utf-8'))
         self.assertEqual(kernel_mapping_2['id'], self.KERNEL_ID_2)
+        self.assertNotEqual('#!uuid', kernel_mapping_2['definition']['mapping'][-1][0])
 
         response = requests.get(self.SCHEMA_URL_2, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 200)
@@ -181,7 +184,7 @@ class KernelUtilsTest(CustomTestCase):
         self.assertEqual(response.status_code, 200)
         kernel_project = json.loads(response.content.decode('utf-8'))
         self.assertEqual(kernel_project['id'], str(self.project.project_id))
-        self.assertNotEqual(kernel_project['name'], self.project.name)
+        self.assertIn(self.project.name, kernel_project['name'])
 
         # creates the artefacts for the xForm 1
         response = requests.get(self.MAPPING_URL_1, headers=self.KERNEL_HEADERS)

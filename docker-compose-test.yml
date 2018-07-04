@@ -119,6 +119,11 @@ services:
     ports:
       - "9004:9004"
 
+  ui-webpack-test:
+    extends:
+      file: docker-compose-base.yml
+      service: ui-webpack-base
+
 
   # ---------------------------------
   # Aether Client container

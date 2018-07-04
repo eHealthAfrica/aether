@@ -359,12 +359,16 @@ class ViewsTest(TestCase):
         )
 
     def test_project_stats_view(self):
+        project = models.Project.objects.create(
+            revision='rev 1',
+            name='a project with stats',
+        )
         for _ in range(4):
             response = self.helper_create_object('mapping-list', {
                 'name': str(uuid.uuid4()),  # random name
                 'definition': {},
                 'revision': 'Sample mapping revision',
-                'project': str(self.project.pk),
+                'project': str(project.pk),
             })
             mapping_id = response.json()['id']
 
@@ -375,33 +379,53 @@ class ViewsTest(TestCase):
                     'payload': EXAMPLE_SOURCE_DATA,
                     'mapping': mapping_id,
                 })
-        url = reverse('projects_stats-detail', kwargs={'pk': self.project.pk})
+        url = reverse('projects_stats-detail', kwargs={'pk': project.pk})
         response = self.client.get(url, format='json')
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         json = response.json()
-        self.assertEquals(json['id'], str(self.project.pk))
-        submission_count = models.Submission.objects.count()
-        self.assertEquals(json['submission_count'], submission_count)
+        self.assertEquals(json['id'], str(project.pk))
+        submissions_count = models.Submission \
+                                  .objects \
+                                  .filter(mapping__project=project.pk) \
+                                  .count()
+        self.assertEquals(json['submissions_count'], submissions_count)
+        entities_count = models.Entity \
+                               .objects \
+                               .filter(submission__mapping__project=project.pk) \
+                               .count()
+        self.assertEquals(json['entities_count'], entities_count)
         self.assertLessEqual(
             dateutil.parser.parse(json['first_submission']),
             dateutil.parser.parse(json['last_submission']),
         )
 
     def test_mapping_stats_view(self):
+        project = models.Project.objects.create(
+            revision='rev 1',
+            name='a project with stats',
+        )
+        mapping = models.Mapping.objects.create(
+            name='a mapping with stats',
+            definition={},
+            revision='revision 1',
+            project=project,
+        )
         for _ in range(10):
             self.helper_create_object('submission-list', {
                 'revision': 'Sample submission revision',
                 'map_revision': 'Sample map revision',
                 'payload': EXAMPLE_SOURCE_DATA,
-                'mapping': str(self.mapping.pk),
+                'mapping': str(mapping.pk),
             })
-        url = reverse('mappings_stats-detail', kwargs={'pk': self.mapping.pk})
+        url = reverse('mappings_stats-detail', kwargs={'pk': mapping.pk})
         response = self.client.get(url, format='json')
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         json = response.json()
-        self.assertEquals(json['id'], str(self.mapping.pk))
-        submission_count = models.Submission.objects.count()
-        self.assertEquals(json['submission_count'], submission_count)
+        self.assertEquals(json['id'], str(mapping.pk))
+        submissions_count = models.Submission.objects.filter(mapping=mapping.pk).count()
+        self.assertEquals(json['submissions_count'], submissions_count)
+        entities_count = models.Entity.objects.filter(submission__mapping=mapping.pk).count()
+        self.assertEquals(json['entities_count'], entities_count)
         self.assertLessEqual(
             dateutil.parser.parse(json['first_submission']),
             dateutil.parser.parse(json['last_submission']),

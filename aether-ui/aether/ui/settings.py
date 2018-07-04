@@ -36,8 +36,11 @@ APP_NAME = 'aether'
 # Javascript/CSS Files:
 WEBPACK_LOADER = {
     'DEFAULT': {
-        'BUNDLE_DIR_NAME': '/',  # used in prod
+        'BUNDLE_DIR_NAME': '/',
         'STATS_FILE': os.path.join(STATIC_ROOT, 'webpack-stats.json'),
+        'POLL_INTERVAL': 0.1,  # in miliseconds
+        'TIMEOUT': None,
+        'IGNORE': ['.+\.hot-update.js', '.+\.map'],
     },
 }
 
