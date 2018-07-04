@@ -161,8 +161,9 @@ def parse_submission(data, xml_definition):
     # assumption: there is only one child that represents the form content
     # usually: {'ZZZ': { ... }}
     # remove this first level and return content
-    if len(list(data.keys())) == 1:  # pragma: no cover
-        data = data[list(data.keys())[0]]
+    keys = list(data.keys())
+    if len(keys) == 1 and isinstance(data[keys[0]], dict):  # pragma: no cover
+        data = data[keys[0]]
 
     return data
 
@@ -218,8 +219,10 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
 
     title, form_id, version = get_xform_data_from_xml(xml_definition)
     version = version or default_version
+    # include version within name to identify different entity source
+    name = f'{form_id}_{version}'
     # AVRO names contain only [A-Za-z0-9_]
-    name = ''.join([c if c.isalnum() else ' ' for c in form_id]).title().replace(' ', '')
+    name = ''.join([c if c.isalnum() or c == '_' else ' ' for c in name]).title().replace(' ', '')
 
     KEY = '-----'
 
@@ -232,13 +235,13 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         'fields': [
             {
                 'name': '_id',
-                'doc': 'xForm ID',
+                'doc': _('xForm ID'),
                 'type': 'string',
                 'default': form_id,
             },
             {
                 'name': '_version',
-                'doc': 'xForm version',
+                'doc': _('xForm version'),
                 'type': 'string',
                 'default': version,
             },
@@ -275,11 +278,11 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         if current_type == 'group':
             parent['fields'].append({
                 'name': current_name,
+                'doc': current_doc,
                 'type': [
                     'null',
                     {
                         'name': current_name,
-                        'doc': current_doc,
                         'type': 'record',
                         'fields': [],
                         KEY: xpath,
@@ -291,13 +294,13 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         elif current_type == 'repeat':
             parent['fields'].append({
                 'name': current_name,
+                'doc': current_doc,
                 'type': [
                     'null',
                     {
                         'type': 'array',
                         'items': {
                             'name': current_name,
-                            'doc': current_doc,
                             'type': 'record',
                             'fields': [],
                             KEY: xpath,
@@ -311,27 +314,31 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         elif current_type == 'geopoint':
             parent['fields'].append({
                 'name': current_name,
+                'doc': current_doc,
                 'type': [
                     'null',
                     {
                         'name': current_name,
                         'type': 'record',
-                        'doc': current_doc,
                         'fields': [
                             {
                                 'name': 'latitude',
+                                'doc': _('latitude'),
                                 'type': __get_avro_primitive_type('float', True),
                             },
                             {
                                 'name': 'longitude',
+                                'doc': _('longitude'),
                                 'type': __get_avro_primitive_type('float', True),
                             },
                             {
                                 'name': 'altitude',
+                                'doc': _('altitude'),
                                 'type': __get_avro_primitive_type('float', False),
                             },
                             {
                                 'name': 'accuracy',
+                                'doc': _('accuracy'),
                                 'type': __get_avro_primitive_type('float', False),
                             },
                         ],
@@ -355,6 +362,7 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
     if not avro_schema['_errors']:
         del avro_schema['_errors']
 
+    __clean_dict(avro_schema)
     return avro_schema
 
 
@@ -618,6 +626,22 @@ def __get_xform_instance_skeleton(xml_definition):
 def __get_xform_itexts(xform_dict):
     '''
     Extract all translated texts from xForm definition (as dict)
+
+    <itext>
+        <translation default="true()" lang="AAA">
+            <text id="/Form/field/one:label">
+                <value>One</value>
+            </text>
+            <text id="/Form/field/two:label">
+                <value form="image">jr://images/two.png</value>
+                <value>Two</value>
+            </text>
+            ...
+        </translation>
+        <translation lang="BBB">
+            ...
+        </translation>
+    </itext>
     '''
 
     try:
@@ -636,32 +660,35 @@ def __get_xform_itexts(xform_dict):
             break
 
     # convert all text entries in a dict wich key is the text id
-    texts = __wrap_as_list(translation['text'])
-    return {text_entry['@id']: text_entry['value'] for text_entry in texts}
+    itexts = {}
+    for text_entry in __wrap_as_list(translation.get('text')):
+        for value in __wrap_as_list(text_entry.get('value')):
+            if isinstance(value, str):
+                itexts[text_entry.get('@id')] = value
+                break
+    return itexts
 
 
 def __get_xform_label(xform_dict, xpath, texts={}):
     '''
     Searches the "label" tag linked to the xpath in the xForm definition.
-    If not found returns the xpath.
+    If not found returns None.
     '''
 
-    # remove root in xpath (it's not going to be sent in the submission)
-    label = '/' + '/'.join(xpath.split('/')[2:])
     try:
         body = xform_dict['h:html']['h:body'] or {}
     except Exception:
         # this should never happen because we already validated the xForm
         # but in the test we are checking all the possible cases trying to break this
-        return label
+        return None
 
     tags = list(__find_by_key_value(body, key='@ref', value=xpath))
     if not tags:
-        return label
+        return None
 
     tag = tags[0]  # there is only one
     if not tag.get('label'):
-        return label
+        return None
 
     label_tag = tag.get('label')
     if isinstance(label_tag, str):
@@ -674,7 +701,7 @@ def __get_xform_label(xform_dict, xpath, texts={}):
         if label_id in texts and texts[label_id]:
             return texts[label_id]
 
-    return label
+    return None
 
 
 def __get_avro_primitive_type(xform_type, required=False):
@@ -837,3 +864,27 @@ def __etree_to_dict(elem):
         else:
             d[tt] = text
     return d
+
+
+def __clean_dict(data):
+    '''
+    Remove useless keys in dictionary
+    '''
+
+    if data and type(data).__name__ == 'dict':
+        keys = set(data.keys())
+        for key in keys:
+            value = data[key]
+            if value is None or value is False:
+                data.pop(key)
+
+            elif type(value).__name__ == 'list':
+                data[key] = [
+                    __clean_dict(item)
+                    for item in value
+                ]
+
+            else:
+                data[key] = __clean_dict(value)
+
+    return data
