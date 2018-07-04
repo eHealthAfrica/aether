@@ -13,15 +13,15 @@
 ################################################################################
 
 aether.common==0.0.0
-awscli==1.15.50
-botocore==1.10.49
+awscli==1.15.46
+botocore==1.10.46
 certifi==2018.4.16
 chardet==3.0.4
 colorama==0.3.9
 coverage==4.5.1
-Django==1.11.14
+Django==1.11.13
 django-cas-ng==3.5.9
-django-cors-headers==2.3.0
+django-cors-headers==2.2.1
 django-debug-toolbar==1.9.1
 django-model-utils==3.1.2
 django-ums-client==0.2.6
@@ -43,7 +43,7 @@ pycodestyle==2.3.1
 pyflakes==1.6.0
 python-cas==1.2.0
 python-dateutil==2.7.3
-pytz==2018.5
+pytz==2018.4
 PyYAML==3.12
 raven==6.9.0
 requests==2.19.1

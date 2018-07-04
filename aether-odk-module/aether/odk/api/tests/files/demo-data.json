@@ -17,11 +17,9 @@
   "number2": 3.56,
   "date": "2017-07-14T00:00:00",
   "datetime": "2017-07-14T16:38:47.151000+02:00",
-  "option": "a",
-  "option_a": {
-    "choice_a": "A"
-  },
-  "option_b": null,
+  "choice": "a",
+  "a_choice": "A",
+  "b_choice": null,
   "image": null,
   "lang": "EN,FR",
   "iterate": [

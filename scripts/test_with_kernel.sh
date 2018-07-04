@@ -41,6 +41,7 @@ fi
 DC_TEST="docker-compose -f docker-compose-test.yml"
 
 # make sure that there is nothing up before starting
+echo "_____________________________________________ Killing ALL containers"
 ./scripts/kill_all.sh
 $DC_TEST down
 
@@ -72,6 +73,7 @@ echo "_____________________________________________ Testing $container"
 $DC_TEST run "$container"-test test
 
 
+echo "_____________________________________________ Killing ALL containers"
 ./scripts/kill_all.sh
 
 echo "_____________________________________________ END"

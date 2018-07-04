@@ -171,8 +171,7 @@ class ProjectStatsViewSet(viewsets.ReadOnlyModelViewSet):
                      .annotate(
                          first_submission=Min('mappings__submissions__created'),
                          last_submission=Max('mappings__submissions__created'),
-                         submissions_count=Count('mappings__submissions__id'),
-                         entities_count=Count('mappings__submissions__entities__id'),
+                         submission_count=Count('mappings__submissions__id'),
                      )
     serializer_class = serializers.ProjectStatsSerializer
 
@@ -194,8 +193,7 @@ class MappingStatsViewSet(viewsets.ReadOnlyModelViewSet):
                      .annotate(
                          first_submission=Min('submissions__created'),
                          last_submission=Max('submissions__created'),
-                         submissions_count=Count('submissions__id'),
-                         entities_count=Count('submissions__entities__id'),
+                         submission_count=Count('submissions__id'),
                      )
     serializer_class = serializers.MappingStatsSerializer
 

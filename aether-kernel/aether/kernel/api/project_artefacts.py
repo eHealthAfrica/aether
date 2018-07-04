@@ -89,8 +89,6 @@ def upsert_project_artefacts(project_id=None, project_name=None, schemas=[], map
             project_schema = ProjectSchema.objects.get(project=project, schema=schema)
         except ObjectDoesNotExist:
             project_schema = ProjectSchema.objects.create(
-                # this enforces the schema to be used only once by a project
-                id=schema.pk,  # sharing schema id ???
                 project=project,
                 schema=schema,
                 name=__random_name(),  # names are unique

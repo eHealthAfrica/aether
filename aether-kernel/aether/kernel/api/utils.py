@@ -18,7 +18,6 @@
 
 import collections
 import json
-import logging
 import re
 import string
 import uuid
@@ -34,9 +33,6 @@ from pygments.lexers import JsonLexer
 from pygments.lexers.python import Python3Lexer
 
 from . import models, constants, avro_tools
-
-
-logger = logging.getLogger('django')
 
 
 class CachedParser(object):
@@ -285,40 +281,8 @@ def action_constant(args):
     return args
 
 
-def object_contains(test, obj):
-    # Recursive object comparison function.
-    if obj == test:
-        return True
-    if isinstance(obj, list):
-        return True in [object_contains(test, i) for i in obj]
-    elif isinstance(obj, dict):
-        return True in [object_contains(test, i) for i in obj.values()]
-    return False
-
-
-def anchor_reference(source, context, source_data, instance_number):
-    # Anchors entity-referenced object to a context. See resolve_entity_reference
-    try:
-        this_obj = None
-        obj_matches = find_by_jsonpath(source_data, source)
-        if len(obj_matches) >= instance_number:
-            this_obj = obj_matches[instance_number].value
-        else:
-            raise ValueError('source: %s unresolved' % (source))
-        obj_matches = find_by_jsonpath(source_data, context)
-        if not obj_matches:
-            raise ValueError('context: %s unresolved' % (context))
-        for idx, match in enumerate(obj_matches):
-            if object_contains(this_obj, match.value):
-                return idx
-        raise ValueError('Object match not found in context')
-    except Exception as err:
-        logger.error(err)
-        return -1
-
-
 def resolve_entity_reference(
-        args,
+        entity_jsonpath,
         constructed_entities,
         entity_type,
         field_name,
@@ -328,27 +292,14 @@ def resolve_entity_reference(
     # Called via #!entity-reference#jsonpath looks inside of the entities to be
     # exported as currently constructed returns the value(s) found at
     # entity_jsonpath
-    entity_jsonpath = args[0]
     matches = find_by_jsonpath(constructed_entities, entity_jsonpath)
-    # optionally you can bind an element to a parent context.
-    # For example you have an array of houses of unknown length, and each house has
-    # a number of people. In the person record, you want to have a reference to House.id
-    # which is generated for the house. In that case, our command might be:
-    # #!entity-reference#House[*].id#house[*].person[*]#house[*]
-    # I.E. (the_value_you_want, a_reference_object, a_parent_context)
-    if len(args) == 3:
-        source = args[1]
-        context = args[2]
-        idx = anchor_reference(source, context, source_data, instance_number)
-        if idx >= 0:
-            return matches[idx].value
     if len(matches) < 1:
         raise ValueError('path %s has no matches; aborting' % entity_jsonpath)
     if len(matches) < 2:
         # single value
         return matches[0].value
     else:
-        # multiple values, attempt to choose the one aligned with this entity (#i)
+        # multiple values, choose the one aligned with this entity (#i)
         return matches[instance_number].value
 
 
@@ -406,7 +357,17 @@ def resolve_action(source_path):
     # Action string is between #! and #
     action = opts[0]
     # If arguments are present we'll try and parse them
-    args = opts[1:] if len(opts) > 1 else None
+    args = opts[-1] if len(opts) > 1 else None
+    if args:
+        try:
+            # See if we can parse json from the argument
+            args = json.loads(args)
+        except ValueError:
+            # Not a json value so we'll leave it alone
+            pass
+    else:
+        # In case args is an empty string
+        args = None
     return action, args
 
 
@@ -421,7 +382,6 @@ def extractor_action(
     # Takes an extractor action instruction (#!action#args) and dispatches it to
     # the proper function
     action, args = resolve_action(source_path)
-    logger.debug('extractor_action: fn %s; args %s' % (action, (args,)))
     if action == 'uuid':
         return get_or_make_uuid(entity_type, field_name, instance_number, source_data)
     elif action == 'entity-reference':
