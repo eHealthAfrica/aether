@@ -31,11 +31,13 @@ services:
   # Aether Kafka Producer
   # ---------------------------------
 
-  aether-producer:
+  producer:
     extends:
       file: docker-compose-base.yml
       service: aether-producer-base
     restart: on-failure
+    environment:
+      PRODUCER_SETTINGS_FILE: /code/producer/settings.json
     links:
       - kafka
       - zookeeper

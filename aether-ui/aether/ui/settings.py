@@ -36,15 +36,16 @@ APP_NAME = 'aether'
 # Javascript/CSS Files:
 WEBPACK_LOADER = {
     'DEFAULT': {
-        'BUNDLE_DIR_NAME': '/',  # used in prod
+        'BUNDLE_DIR_NAME': '/',
         'STATS_FILE': os.path.join(STATIC_ROOT, 'webpack-stats.json'),
+        'POLL_INTERVAL': 0.1,  # in miliseconds
+        'TIMEOUT': None,
+        'IGNORE': ['.+\.hot-update.js', '.+\.map'],
     },
 }
 
-INSTALLED_APPS += [
-    'webpack_loader',
-    'aether.ui',
-]
+# aether.ui must be first because of template overrides
+INSTALLED_APPS = ['aether.ui'] + INSTALLED_APPS + ['webpack_loader']
 
 TEMPLATES[0]['OPTIONS']['context_processors'] += [
     'aether.ui.context_processors.ui_context',

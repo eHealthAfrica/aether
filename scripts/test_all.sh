@@ -40,22 +40,22 @@ function prepare_container() {
 function prepare_and_test_container() {
   echo "_____________________________________________ Starting $1 tasks"
   prepare_container $1
-  $DC_TEST run "$1"-test test --noinput
+  $DC_TEST run "$1"-test test
   echo "_____________________________________________ $1 tasks done"
 }
 
 DC_TEST="docker-compose -f docker-compose-test.yml"
-DC_COMMON="docker-compose -f docker-compose-common.yml"
 
 echo "_____________________________________________ TESTING"
 
 kill_all
 
 
-echo "_____________________________________________ Testing common module"
-$DC_COMMON down
-$DC_COMMON build
-$DC_COMMON run common test
+echo "_____________________________________________ Common module"
+./scripts/build_common_and_distribute.sh
+
+echo "_____________________________________________ Aether utils"
+./scripts/build_aether_utils_and_distribute.sh
 
 # test and start a clean KERNEL TEST container
 prepare_and_test_container kernel
@@ -71,6 +71,9 @@ $DC_TEST run client-test test --noinput
 prepare_and_test_container odk
 
 # test a clean UI TEST container
+$DC_TEST build ui-webpack-test
+$DC_TEST run   ui-webpack-test test
+$DC_TEST run   ui-webpack-test build
 prepare_and_test_container ui
 
 echo "_____________________________________________ Starting auxiliary databases"

@@ -4,6 +4,7 @@
 #  * Aether Kernel
 #  * ODK Module
 #  * CouchDB Sync Module
+#  * Aether UI Module
 # ------------------------------------------------------------------------------
 
 version: "2.1"
@@ -124,7 +125,10 @@ services:
     depends_on:
       - db
       - kernel
-      - ui-webpack
+
+      # UI depends on "ui-webpack" to serve the static content with hot reloading
+      # to start "ui" without webpack execute first "docker-compose run ui-webpack build"
+      # - ui-webpack
     networks:
       internal:
         aliases:
