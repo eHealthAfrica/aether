@@ -67,11 +67,6 @@ case "$1" in
         pip3 freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
     ;;
 
-    setuplocaldb )
-        #setup_db
-        #setup_initial_data
-    ;;
-
     setupproddb )
         setup_db
     ;;

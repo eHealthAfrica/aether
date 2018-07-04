@@ -25,18 +25,6 @@ function build_container() {
     $DC_TEST build "$1"-test
 }
 
-function prepare_container() {
-  echo "_____________________________________________ Preparing $1 container"
-  build_container $1
-  echo "........"
-  $DC_TEST run "$1"-test setup_db
-  $DC_TEST run "$1"-test \
-           manage setup_admin \
-           --username "admin-$1" \
-           --password "adminadmin" \
-           --token a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
-  echo "_____________________________________________ $1 ready!"
-}
 
 DC_TEST="docker-compose -f docker-compose-test.yml"
 DC_COMMON="docker-compose -f docker-compose-common.yml"
@@ -54,7 +42,7 @@ echo "_____________________________________________ Starting database"
 $DC_TEST up -d db-test
 
 # start a clean KERNEL TEST container
-prepare_container kernel
+build_container kernel
 
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test

@@ -32,7 +32,6 @@ show_help() {
 
     pip_freeze    : freeze pip dependencies and write to requirements.txt
 
-    setup_admin   : create an admin user
     setup_db      : create/migrate database
 
     test          : run tests

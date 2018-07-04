@@ -36,16 +36,15 @@
 
 *[Return to TOC](#table-of-contents)*
 
-### Installation of a local development environment
+### Installation
 
 ```bash
 git clone git@github.com:eHealthAfrica/aether.git
 cd aether
 docker-compose build
-docker-compose up
 ```
 
-**NOTE**: the docker-compose files are intended for local development only. They contain hardcoded credentials TODO: more details
+**IMPORTANT NOTE**: the docker-compose files are intended to be used exlusively for local development. Never deploy these to publicly accessible servers. 
 
 Include this entry in your `/etc/hosts` file:
 

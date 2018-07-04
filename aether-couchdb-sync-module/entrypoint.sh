@@ -31,7 +31,6 @@ show_help() {
 
     pip_freeze    : freeze pip dependencies and write to requirements.txt
 
-    setup_admin   : create an admin user
     setup_db      : create/migrate database
 
     test          : run tests
@@ -83,11 +82,6 @@ setup_db() {
     curl -s $COUCHDB_URL
 }
 
-setup_initial_data() {
-    # create initial superuser
-    ./manage.py loaddata /code/conf/extras/initial.json
-}
-
 setup_admin() {
   # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
   ./manage.py setup_admin -p=$ADMIN_PASSWORD
@@ -129,10 +123,6 @@ case "$1" in
 
     setup_db )
         setup_db
-    ;;
-
-    setup_admin )
-        ./manage.py setup_admin "${@:2}"
     ;;
 
     test)

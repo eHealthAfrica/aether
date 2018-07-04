@@ -53,9 +53,9 @@ kill_all
 
 
 echo "_____________________________________________ Testing common module"
-# $DC_COMMON down
-# $DC_COMMON build
-# $DC_COMMON run common test
+$DC_COMMON down
+$DC_COMMON build
+$DC_COMMON run common test
 
 # test and start a clean KERNEL TEST container
 prepare_and_test_container kernel
@@ -85,7 +85,7 @@ prepare_and_test_container couchdb-sync
 # clean start for the next bunch of tests
 kill_all
 
-# # execute INTEGRATION TEST
-# ./scripts/test_integration.sh
+# execute INTEGRATION TEST
+./scripts/test_integration.sh
 
 echo "_____________________________________________ END"
