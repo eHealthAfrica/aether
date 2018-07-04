@@ -19,7 +19,6 @@
 # under the License.
 
 import uuid
-from datetime import datetime
 from hashlib import md5
 from django.contrib.postgres.fields import JSONField
 from django.db import models
