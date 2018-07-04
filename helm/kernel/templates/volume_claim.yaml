@@ -4,7 +4,7 @@ apiVersion: v1
 metadata:
   name: {{ .Chart.Name }}
   annotations:
-    volume.beta.kubernetes.io/storage-class: "aws-efs-gp"
+    volume.beta.kubernetes.io/storage-class: "aws-efs"
 spec:
   accessModes:
     - ReadWriteMany
