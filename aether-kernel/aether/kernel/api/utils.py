@@ -18,6 +18,7 @@
 
 import collections
 import json
+import logging
 import re
 import string
 import uuid
@@ -33,6 +34,9 @@ from pygments.lexers import JsonLexer
 from pygments.lexers.python import Python3Lexer
 
 from . import models, constants, avro_tools
+
+
+logger = logging.getLogger('django')
 
 
 class CachedParser(object):
@@ -86,6 +90,10 @@ def __prettified__(response, lexer):
     style = '<style>' + formatter.get_style_defs() + '</style>'
     # Safe the output
     return mark_safe(style + response)
+
+# TODO / KILL
+def pprint(obj):
+    return json.dumps(obj, indent=2)
 
 
 def json_prettified(value, indent=2):
@@ -281,8 +289,48 @@ def action_constant(args):
     return args
 
 
+def object_contains(test, obj):
+    logger.info(["compare", test, obj])
+    if obj == test:
+        return True
+    if isinstance(obj, list):
+        return True in [object_contains(test, i) for i in obj]
+    elif isinstance(obj, dict):
+        return True in [object_contains(test, i) for i in obj.values()]
+    return False
+
+
+
+    return True
+
+def anchor_reference(source, context, source_data, instance_number):
+    logger.info("found pegged entity: %s" % source)
+    try:
+        this_obj = None
+        obj_matches = find_by_jsonpath(source_data, source)
+        logger.info("matches %s" % len(obj_matches))
+        if len(obj_matches) >= instance_number:
+            logger.info('found match')
+            match = obj_matches[instance_number]
+            logger.info(match.value)
+            this_obj = match.value
+        else:
+            logger.info("no matches")
+            raise ValueError('source: %s unresolved' % (args[1]))
+        context_obj = None
+        obj_matches = find_by_jsonpath(source_data, context)
+        if not obj_matches:
+            raise ValueError('context: %s unresolved' % (args[2]))
+        for idx, match in enumerate(obj_matches):
+            if object_contains(this_obj, match.value):
+                return idx
+        raise ValueError("Object match not found in context")
+
+    except Exception as err:
+        logger.error(err)
+
 def resolve_entity_reference(
-        entity_jsonpath,
+        args,
         constructed_entities,
         entity_type,
         field_name,
@@ -292,7 +340,26 @@ def resolve_entity_reference(
     # Called via #!entity-reference#jsonpath looks inside of the entities to be
     # exported as currently constructed returns the value(s) found at
     # entity_jsonpath
+    entity_jsonpath = args[0]
     matches = find_by_jsonpath(constructed_entities, entity_jsonpath)
+    '''
+    logger.info(pprint([entity_jsonpath,
+        constructed_entities,
+        entity_type,
+        field_name,
+        instance_number,
+        source_data]))
+    logger.info(pprint([constructed_entities, entity_jsonpath]))
+    logger.info(["matches", matches])
+    '''
+    idx = -1
+    if len(args) == 3:
+        source = args[1]
+        context = args[2]
+        idx = anchor_reference(source, context, source_data, instance_number)
+        logger.info("idx: %s" % idx)
+    if idx >= 0:
+        return matches[idx].value
     if len(matches) < 1:
         raise ValueError('path %s has no matches; aborting' % entity_jsonpath)
     if len(matches) < 2:
@@ -357,17 +424,21 @@ def resolve_action(source_path):
     # Action string is between #! and #
     action = opts[0]
     # If arguments are present we'll try and parse them
-    args = opts[-1] if len(opts) > 1 else None
+    args = opts[1:] if len(opts) > 1 else None
+    '''
     if args:
         try:
             # See if we can parse json from the argument
-            args = json.loads(args)
+            if json.loads(args):
+                args = json.loads(args)
         except ValueError:
             # Not a json value so we'll leave it alone
             pass
     else:
         # In case args is an empty string
         args = None
+    '''
+    logger.info(args)
     return action, args
 
 
@@ -382,6 +453,7 @@ def extractor_action(
     # Takes an extractor action instruction (#!action#args) and dispatches it to
     # the proper function
     action, args = resolve_action(source_path)
+    logger.info("extractor_action: fn %s; args %s" % (action, (args,)))
     if action == 'uuid':
         return get_or_make_uuid(entity_type, field_name, instance_number, source_data)
     elif action == 'entity-reference':
