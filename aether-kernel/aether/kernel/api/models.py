@@ -429,7 +429,7 @@ class ProjectSchema(TimeStampedModel):
         ordering = ('-modified',)
 
 
-class Entity(models.Model):
+class Entity(TimeStampedModel):
     '''
                 Table "public.kernel_entity"
 
@@ -466,17 +466,9 @@ class Entity(models.Model):
 
     payload = JSONField(blank=False, null=False)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
-    modified = models.CharField(max_length=100, editable=False)
 
     projectschema = models.ForeignKey(to=ProjectSchema, on_delete=models.SET_NULL, null=True)
     submission = models.ForeignKey(to=Submission, on_delete=models.SET_NULL, blank=True, null=True)
-
-    def save(self, **kwargs):
-        if self.modified:
-            self.modified = '{}-{}'.format(datetime.now().isoformat(), self.modified[27:None])
-        else:
-            self.modified = '{}-{}'.format(datetime.now().isoformat(), self.id)
-        super(Entity, self).save(**kwargs)
 
     @property
     def payload_prettified(self):
