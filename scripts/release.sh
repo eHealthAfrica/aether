@@ -36,7 +36,7 @@ CONNECT_APPS=( producer )
 CONNECT_COMPOSE='docker-compose-connect.yml'
 VERSION=`cat VERSION`
 
-release_app () {  # ( name of app -> $1, compose_path -> $2 )
+release_app () {
   APP_NAME=$1
   COMPOSE_PATH=$2
   AETHER_APP="aether-${1}"
