@@ -1,0 +1,22 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+
+[dev-packages]
+
+
+
+[packages]
+
+"aether.client" = {path = "./../aether-client"}
+"aether.saladbar" = {path = "."}
+requests = "*"
+schema-salad = "*"
+
+
+[requires]
+
+python_version = "3.5"
