@@ -423,7 +423,6 @@ def resolve_action(source_path):
         # In case args is an empty string
         args = None
     '''
-    logger.info(args)
     return action, args
 
 
@@ -438,7 +437,7 @@ def extractor_action(
     # Takes an extractor action instruction (#!action#args) and dispatches it to
     # the proper function
     action, args = resolve_action(source_path)
-    logger.info("extractor_action: fn %s; args %s" % (action, (args,)))
+    logger.debug("extractor_action: fn %s; args %s" % (action, (args,)))
     if action == 'uuid':
         return get_or_make_uuid(entity_type, field_name, instance_number, source_data)
     elif action == 'entity-reference':

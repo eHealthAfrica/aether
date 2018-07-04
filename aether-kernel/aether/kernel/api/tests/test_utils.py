@@ -22,8 +22,8 @@ from django.test import TestCase
 
 from .. import utils
 from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA,
-               EXAMPLE_REQUIREMENTS, EXAMPLE_ENTITY_DEFINITION,
-               EXAMPLE_FIELD_MAPPINGS, EXAMPLE_ENTITY)
+               EXAMPLE_NESTED_SOURCE_DATA, EXAMPLE_REQUIREMENTS,
+               EXAMPLE_ENTITY_DEFINITION, EXAMPLE_FIELD_MAPPINGS, EXAMPLE_ENTITY)
 
 
 class UtilsTests(TestCase):
@@ -116,6 +116,25 @@ class UtilsTests(TestCase):
         path = 'data.pe*[*].dob'
         resolved_count = utils.resolve_source_reference(path, entities, entity_name, 0, field, data)
         self.assertEquals(resolved_count, 3)
+
+    def test_object_contains(self):
+        data = EXAMPLE_NESTED_SOURCE_DATA
+        source_house = data['houses'][0]
+        other_house = data['houses'][1]
+        test_person = source_house['people'][0]
+        is_included = utils.object_contains(test_person, source_house)
+        not_included = utils.object_contains(test_person, other_house)
+        self.assertTrue(is_included), "Person should be found in this house."
+        self.assertFalse(not_included), "Person should not found in this house."
+
+    def test_anchor_references(self):
+        source_data = EXAMPLE_NESTED_SOURCE_DATA
+        source = "data.houses[*].people[*]"
+        context= "data.houses[*]"
+        instance_number = 5
+        idx = utils.anchor_reference(source, context, source_data, instance_number)
+        assertEquals(idx, 1), "Person #5 be found in second house, index @ 1"
+
 
     def test_get_or_make_uuid(self):
         entity_type = 'Person'
