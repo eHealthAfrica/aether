@@ -1,0 +1,73 @@
+.dropdown {
+  position: relative;
+  margin: 0.3rem;
+  display: inline-block;
+}
+
+.dropdown-toggle {
+  display: inline-block;
+  white-space: nowrap;
+  width: 100%;
+  position: relative;
+  padding: 0.6em 3.2em 0.65em 1.2em;
+  margin: 0;
+
+  .caret {
+    display: inline-block;
+    position: absolute;
+    right: 1.2em;
+    top: 40%;
+    width: 0;
+    height: 0;
+    vertical-align: middle;
+    border-top: 7px solid;
+    border-right: 6px solid transparent;
+    border-left: 6px solid transparent;
+  }
+
+  &.btn:hover, &.btn:focus, &.btn:active {
+    color: white;
+  }
+}
+
+@keyframes dropdown {
+    from {top: 80%; opacity: 0; max-height: 1px;}
+    to {top: 100%; opacity: 1; max-height: 300px;}
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  min-width: $padding-unit*8;
+  width: 100%;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  margin-top: -2px;
+  background: white;
+  padding: $padding-unit/2 0;
+  max-height: 300px;
+  overflow-y: auto;
+  box-shadow: 1px 2px 3px rgba($font-color, 0.5);
+
+  a {
+    display: block;
+    padding: $padding-unit/4 $padding-unit $padding-unit/3;
+    padding: 0.4em 1.2em 0.5em;
+    &:hover {
+      background: $bg-grey;
+    }
+  }
+  .divider {
+    border-top: 1px solid $light-grey;
+    margin: 0.5em;
+    padding: 0;
+  }
+}
+
+.open .dropdown-menu {
+  display: block;
+  animation-name: dropdown;
+  animation-duration: 0.2s;
+  animation-timing-function: ease-out;
+}

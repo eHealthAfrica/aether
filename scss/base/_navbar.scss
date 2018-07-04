@@ -1,0 +1,123 @@
+.navbar {
+  width: 100%;
+  padding: $unit*.9 $unit*2;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  position: fixed;
+  top: 0;
+  height: 4rem;
+  transition: background 0.5s, top .3s;
+  z-index: 1000;
+}
+
+.navbar.fixed {
+  background: rgba($font-color, .1);
+  z-index: 1000;
+  box-shadow: 0 -1px 2px rgba($font-color, .2) inset;
+}
+
+.logo {
+  text-indent: -2000px;
+  overflow: hidden;
+  width: 7rem;
+  height: 2rem;
+  margin-top: .1rem;
+  background: url("../images/aether-white.svg") center center no-repeat;
+  background-size: contain;
+}
+
+.navbar__nav {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  margin-left: 3rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+
+  li {
+    list-style: none;
+    margin: 0 0.9vW;
+  }
+
+  a {
+    display: block;
+    color: white;
+    text-transform: uppercase;
+    padding: .8em  .1em .1em;
+  }
+
+  li.active a:not(.btn),
+  li:hover a:not(.btn) {
+    border-bottom: 1px solid rgba(white, .5);
+  }
+
+  .navbar-button {
+    margin-left: auto;
+  }
+
+  .btn {
+    padding: .8em 1.6em;
+    margin: 0;
+    background: rgba($action-bright, .3);
+    &:hover {
+      background: $action-color;
+    }
+  }
+}
+
+.contact .nav-item__contact,
+.support .nav-item__support {
+  border-bottom: 1px solid rgba(white, .5);
+}
+
+@media screen and (max-width: 768px) {
+
+  .navbar {
+    padding: .8rem .6rem;
+  }
+  .navbar__nav {
+    margin-left: 2rem;
+  }
+}
+
+@media screen and (max-width: 640px) {
+
+  .navbar {
+    height: 6.5rem;
+    padding: $unit*.6;
+  }
+
+  .navbar.fixed {
+    top: -3.5rem;
+  }
+
+  .navbar__nav {
+    width: 100%;
+    margin-left: 0;
+    padding-top: .5rem;
+    border-top: 1px solid rgba(white, .6);
+    justify-content: center;
+
+    .btn {
+      padding: .6em 1.4em;
+    }
+
+    li {
+      margin: 0 2vW;
+    }
+  }
+  .navbar-button {
+    position: absolute;
+    top: $unit*.6;
+    right: $unit*.6;
+  }
+
+  .content {
+    margin-top: 3rem;
+    height: calc(100vH - 3rem);
+  }
+}
+

@@ -1,0 +1,14 @@
+name: Aether
+markdown: kramdown
+defaults:
+  -
+    scope:
+      path: ""
+    values:
+      home-link: "/index.html"
+  -
+    scope:
+      path: "documentation"
+    values:
+      page: "support"
+      layout: "docs"

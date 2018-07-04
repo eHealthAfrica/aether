@@ -1,0 +1,196 @@
+.form {
+  padding-top: $unit*2;
+}
+
+.form-row {
+  @extend .grid-row;
+  align-items: flex-end;
+
+  button {
+    margin: 0;
+    margin-top: $unit;
+    height: $unit*4;
+  }
+}
+
+label {
+  display: block;
+  font-size: 0.85em;
+  line-height: 1.3em;
+  padding-bottom: 5px;
+  color: $grey;
+  text-transform: uppercase;
+}
+
+.required label:after {
+  content: " *";
+  font-size: 1.4em;
+  font-weight: 400;
+  line-height: 0px;
+}
+
+/* TEXT INPUTS */
+
+.input {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  position: relative;
+  height: $unit*5;
+  padding: 0;
+  line-height: 0;
+  border-bottom: 1px solid $action-color;
+}
+
+.textarea {
+  height: auto;
+}
+
+.input:hover,
+.input.active,
+.input.has-error {
+
+  input,
+  select {
+    height: $unit*3;
+    padding: 5px 15px 0;
+  }
+  textarea {
+    height: $unit*12;
+    padding: 20px;
+  }
+}
+
+.input input:focus {
+  height: $unit*3;
+  padding: 5px 15px 0;
+}
+
+input, textarea, select {
+  border: none;
+  outline: none;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: $font-size;
+  line-height: 1.3em;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  input, textarea, select {
+    padding: 0px 15px;
+    height: 0px;
+    background: $input-color;
+    transition: all, 0.2s;
+    width: 100%;
+  }
+}
+
+
+/* OPTIONS */
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  padding-top: $padding-unit/2;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  position: absolute;
+  left: -9999px;
+}
+
+input[type="checkbox"] + label,
+input[type="radio"] + label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  text-transform: none;
+  color: $font-color;
+  margin-right: $padding-unit;
+  margin-top: $padding-unit/4;
+  &:before {
+    text-align: center;
+    content: "";
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    margin-right: 6px;
+    box-shadow: 0 0 0 1px $action-color;
+    border-radius: 18px;
+    font-family: "fontawesome";
+    font-size: 1em;
+    line-height: 1.4em;
+  }
+}
+
+input[type="checkbox"]:checked + label {
+
+  &:before {
+    content: "\f00c";
+    background: $action-color;
+    color: white;
+  }
+}
+input[type="radio"] + label {
+  color: $grey;
+}
+
+input[type="radio"]:checked + label {
+  color: $font-color;
+
+  &:before {
+    background: $action-color;
+    box-shadow: 0 0 0 2px $action-color, 0 0 0 3px white inset;
+  }
+}
+
+/* SELECTS */
+
+.input:hover,
+.input.active {
+
+  .select {
+    height: 42px;
+  }
+}
+
+.select {
+  line-height: 1.3em;
+  height: 0;
+  background: $input-color;
+  transition: all, 0.2s;
+  margin: 0;
+  overflow: hidden;
+  padding: 0 15px;
+  .dropdown-toggle {
+    height: 0;
+    padding: 0;
+  }
+}
+
+.custom-select {
+  line-height: 1.3em;
+  background: $input-color;
+  margin: 0;
+  height: 42px;
+
+  .dropdown-toggle {
+    color: $light-grey;
+    width: 100%;
+    padding: 13px 15px;
+
+    .caret {
+      border-top: 7px solid $action-color;
+    }
+  }
+}
+
+
+
+
+
+
+

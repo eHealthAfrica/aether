@@ -1,0 +1,99 @@
+toc:
+  - title: Introduction to Aether
+    url: /documentation/introduction/index.html
+    subfolderitems:
+      - page: What is Aether?
+        url: /documentation/introduction/index.html
+      - page: A Deeper Dive
+        url: /documentation/introduction/deeper.html
+  - title: Try It For Yourself
+    url: /documentation/try/index.html
+    subfolderitems:
+      - page: Spin Up a Local Instance
+        url: /documentation/try/index.html
+      - page: Adding Aether Connect
+        url: /documentation/try/connect.html
+  - title: Setup and Deployment Guide
+    url: /documentation/setup-deployment/index.html
+    subfolderitems:
+      - page: Introduction
+        url: /documentation/setup-deployment/index.html
+      - page: Cloud Installation
+        url: /documentation/setup-deployment/cloud-deployment.html
+      - page: Security
+        url: /documentation/setup-deployment/security.html
+      - page: User Management
+        url: /documentation/setup-deployment/user-management.html
+      - page: Aether Connect
+        url: /documentation/setup-deployment/aether-connect.html
+      - page: Monitoring and Troubleshooting
+        url: /documentation/setup-deployment/monitoring-troubleshooting.html
+      - page: Upgrading Aether
+        url: /documentation/setup-deployment/upgrading.html
+  - title: Aether UI User Guide
+    url: /documentation/ui/index.html
+    subfolderitems:
+      - page: Basic Concepts
+        url: /documentation/ui/index.html
+      - page: Introduction to the Interface
+        url: /documentation/ui/pipeline-intro.html
+      - page: Define your pipeline input
+        url: /documentation/ui/pipeline-input.html
+      - page: Model your pipeline output
+        url: /documentation/ui/pipeline-output.html
+      - page: Map the input to your output
+        url: /documentation/ui/pipeline-mapping.html
+      - page: Publish your pipeline
+        url: /documentation/ui/pipeline-publish.html
+  - title: Working with Aether Consumers
+    url: /documentation/consumers/index.html
+    subfolderitems:
+      - page: Introduction
+        url: /documentation/consumers/index.html
+      - page: CKAN Consumer
+        url: /documentation/consumers/ckan.html
+      - page: Elastic Search Consumer
+        url: /documentation/consumers/elastic-search.html
+  - title: Aether for Developers
+    url: /documentation/developers/index.html
+    subfolderitems:
+      - page: Introduction
+        url: /documentation/developers/index.html
+      - page: Standards and Best Practices for Development
+        url: /documentation/developers/standards.html
+      - page: Github Processes
+        url: /documentation/developers/github.html
+      - page: API Guide
+        url: /documentation/developers/api.html
+      - page: More Developer Docs...
+        url: /documentation/developers/more.html
+  # - title: Basic Concepts
+  #   subfolderitems:
+  #     - page: What is a pipeline?
+  #       url: /documentation/pipeline.html
+  #     - page: All about Entity Types
+  #       url: /documentation/entity-types.html
+  #     - page: About schemas
+  #       url: /documentation/schemas.html
+  # - title: Get started
+  #   subfolderitems:
+  #     - page: Installation
+  #       url: /documentation/installation.html
+  #     - page: Basic usage
+  #       url: /documentation/usage.html
+  # - title: Create a pipeline
+  #   subfolderitems:
+  #     - page: Introduction to the Interface
+  #       url: /documentation/pipeline-intro.html
+  #     - page: Define your pipeline input
+  #       url: /documentation/pipeline-input.html
+  #     - page: Model your pipeline output
+  #       url: /documentation/pipeline-output.html
+  #     - page: Map the input to your output
+  #       url: /documentation/pipeline-mapping.html
+  #     - page: Publish your pipeline
+  #       url: /documentation/pipeline-publish.html
+  # - title: Using the API
+  #   subfolderitems:
+  #     - page: Introduction
+  #       url: /documentation/api/introduction.html

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page.title }}</title>
+    <link  charset="utf-8"  media="screen"  type="text/css" href="{{ "css/index.css" | relative_url }}" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600" rel="stylesheet">
+    <link rel="stylesheet" href="{{"/css/font-awesome.min.css" | relative_url }}">
+    <link rel="shortcut icon" href="{{"/images/aux-icon.png" | relative_url }}"/>
+  </head>
+
+
+  <body role="document" class="{{ page.page }}">
+    {% include nav.html %}
+    
+    {% if page.background == true %}
+    <div class="background"></div>
+    {% endif %}
+
+    <div id="content" class="content">
+      <div id="top"></div>
+      
+    {{ content }}
+
+    {% include footer.html %}
+      
+    </div>
+    <a href="#top" class="top circle-button-up"><i class="angle-right"></i></a>
+
+
+
+
+
+        <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="{{"/js/jquery-2.1.4.min.js" | relative_url }}"></script>
+    <script src="{{"/js/navbar.js" | relative_url }}"></script>
+    <script src="{{"/js/dropdown.js" | relative_url }}"></script>
+    <script src="{{"/js/input.js" | relative_url }}"></script>
+
+  </body>
+
+</html>

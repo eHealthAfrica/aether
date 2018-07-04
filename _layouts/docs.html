@@ -1,0 +1,52 @@
+---
+layout: default
+---
+
+<div class="documentation">
+  <div class="dropdown doc-nav-mobile">
+    <a id="dropdownMenu2" href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+      {% for item in site.data.list.toc %}
+        {% for entry in item.subfolderitems %}
+          {% if entry.url == page.url %}{{ entry.page }}{% endif %}
+        {% endfor %}
+      {% endfor %}
+      {% if page.url == "/support.html" %}Welcome{% endif %}
+      <span class="caret"></span>
+    </a>
+    <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu2">
+      <li><a href="{{ '/support.html' | relative_url }}">Welcome</a></li>
+    {% for item in site.data.list.toc %}
+      <li class="doc-nav-title">{{ item.title }}</li>
+        <ul class="{% for entry in item.subfolderitems %}{% if entry.url == page.url %}active-section{% endif %}{% endfor %}">
+          {% for entry in item.subfolderitems %}
+            <li class="{% if entry.url == page.url %}active{% endif %}">
+              <a href="{{ entry.url | relative_url }}">{{ entry.page }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+    {% endfor %}
+    </ul>
+  </div>
+
+  <div class="doc-nav">
+    <a href="{{ '/support.html' | relative_url }}">Welcome</a>
+    {% for item in site.data.list.toc %}
+      <a href="{{ item.url | relative_url }}"><h3 class="doc-nav-title">{{ item.title }}</h3></a>
+        <ul class="{% for entry in item.subfolderitems %}{% if entry.url == page.url %}active-section{% endif %}{% endfor %}">
+          {% for entry in item.subfolderitems %}
+            <li class="{% if entry.url == page.url %}active{% endif %}">
+              <a href="{{ entry.url | relative_url }}">{{ entry.page }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+    {% endfor %}
+  </div>
+  <div class="doc-content{% if page.welcome == true %} welcome{% endif %}">
+
+    {{ content }}
+
+  </div>
+
+</div>
+
+

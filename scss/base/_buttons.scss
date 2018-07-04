@@ -1,0 +1,151 @@
+.btn {
+  border: none;
+  color: white;
+  white-space: nowrap;
+  cursor: pointer;
+  padding: 1.2em;
+  background: $action-color;
+  box-shadow: 1px 1px 2px rgba($font-color, 0.7), 1px 1px 0px rgba(white, 0.3) inset;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+
+  &:hover, &:focus, &:active {
+    background: $action-hover;
+    color: white;
+  }
+
+  &.inactive {
+    opacity: 0.5;
+    background: $mid-grey;
+    cursor: default;
+  }
+}
+
+.btn--lg {
+  font-size: 1rem;
+  padding: 1em 2em;
+}
+
+.btn--secondary {
+  background: $mid-grey;
+
+  &:hover, &:focus, &:active {
+    background: lighten($mid-grey, 5%);
+  }
+}
+
+.btn--block {
+  width: 100%;
+}
+
+.btn--minimal {
+  background: none;
+  color: $action-color;
+  box-shadow: none;
+
+  &:hover, &:focus, &:active {
+    color: $action-hover;
+    background: none;
+  }
+
+  &.inactive {
+    opacity: 0.5;
+    color: $mid-grey;
+    background: none;
+  }
+}
+
+.btn--flat {
+  box-shadow: none;
+}
+
+.btn--icon-right {
+
+  i {
+    margin-left: 1.2em;
+    margin-right: -0.3em;
+  }
+}
+
+.circle-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  color: white;
+
+  i {
+    z-index: 1;
+  }
+
+  span {
+    z-index: 2;
+    position: relative;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  &:hover i {
+    background: $action-color;
+  }
+
+  &:hover, &:focus, &:active {
+    color: white;
+  }
+
+  .angle-right {
+    @include angle-right(16px, 2px);
+  }
+}
+
+.circle-button-down {
+  @extend .circle-button;
+  flex-direction: column;
+
+  i {
+    transform: rotate(90deg);
+  }
+}
+
+.circle-button-up {
+  @extend .circle-button;
+  flex-direction: column;
+
+  i {
+    transform: rotate(-90deg);
+  }
+}
+
+
+.circle-button-big {
+  @extend .circle-button;
+
+  font-size: 2em;
+
+  .angle-right {
+    @include angle-right(30px, 3px);
+  }
+
+  span {
+    left: -30px;
+  }
+}
+
+.top {
+  @extend .circle-button-up;
+  position: absolute;
+  bottom: 2rem;
+  right: 2rem;
+  opacity: 1;
+  transition: opacity .2s;
+
+  &:not(.active) {
+    opacity: 0;
+    pointer-events: none;
+  }
+}

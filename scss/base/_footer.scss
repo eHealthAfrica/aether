@@ -1,0 +1,85 @@
+.footer {
+  padding: 1rem $margin;
+  margin: 4rem $margin*-1 0;
+  background: rgba($font-color, .1);
+  box-shadow: 0 1px 2px rgba($font-color, .2) inset;
+  color: white;
+  text-align: center;
+}
+
+.footer__logo {
+  display: inline-block;
+  text-indent: -2000px;
+  overflow: hidden;
+  width: 120px;
+  height: 40px;
+  background: url("../images/eHA-logo-white.svg") center center no-repeat;
+  background-size: contain;
+}
+
+.social-links {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  padding-bottom: $unit*2;
+}
+
+.facebook, .twitter, .instagram, .linkedin, .youtube, .email {
+  a {
+    display: block;
+    width: $unit;
+    height: $unit;
+    margin-right : $unit*2;
+    background: center center no-repeat; 
+    background-size: contain;
+  }
+}
+.facebook a {
+  background-image: url("../images/social-fb.png");  
+}
+
+.twitter a {
+  background-image: url("../images/social-twitter.png");  
+}
+
+.instagram a {
+  background-image: url("../images/social-instagram.png");  
+}
+
+.youtube a {
+  background-image: url("../images/social-youtube.png");  
+}
+
+.linkedin a {
+  background-image: url("../images/social-linkedin.png");  
+}
+
+.email {
+  margin-right: auto;
+}
+
+.email a {
+  background-image: url("../images/social-email.png");  
+  width: $unit;
+  color: white;
+  text-indent: 1.4rem;
+  font-size: .85rem;
+}
+
+@media screen and (min-width: 1600px) {
+  .footer {
+    padding: 1rem $margin*2;
+    margin: 4rem $margin*-2 0;
+  }
+}
+
+@media screen and (max-width: 640px) { 
+  .social-links {
+    justify-content: flex-start;
+  }
+  .email {
+    width: 100%;
+    margin-bottom: 1rem;
+    margin-right: 0;
+  }
+}
