@@ -407,19 +407,6 @@ def resolve_action(source_path):
     action = opts[0]
     # If arguments are present we'll try and parse them
     args = opts[1:] if len(opts) > 1 else None
-    '''
-    if args:
-        try:
-            # See if we can parse json from the argument
-            if json.loads(args):
-                args = json.loads(args)
-        except ValueError:
-            # Not a json value so we'll leave it alone
-            pass
-    else:
-        # In case args is an empty string
-        args = None
-    '''
     return action, args
 
 
