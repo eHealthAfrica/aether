@@ -91,12 +91,6 @@ def __prettified__(response, lexer):
     # Safe the output
     return mark_safe(style + response)
 
-# TODO / KILL
-
-
-def pprint(obj):
-    return json.dumps(obj, indent=2)
-
 
 def json_prettified(value, indent=2):
     '''
