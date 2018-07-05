@@ -281,6 +281,7 @@ class XForm(models.Model):
 
     description = models.TextField(default='', null=True, blank=True, verbose_name=_('xForm description'))
     created_at = models.DateTimeField(default=timezone.now, editable=False, verbose_name=_('created at'))
+    modified_at = models.DateTimeField(default=timezone.now, verbose_name=_('modified at'))
 
     # the list of granted surveyors
     surveyors = models.ManyToManyField(
@@ -371,6 +372,8 @@ class XForm(models.Model):
             # With this we will hopefully keep track of all xform versions
             self.kernel_id = uuid.uuid4()
 
+        # update "modified_at"
+        self.modified_at = timezone.now()
         return super(XForm, self).save(*args, **kwargs)
 
     def is_surveyor(self, user):
@@ -406,7 +409,7 @@ class XForm(models.Model):
     class Meta:
         app_label = 'odk'
         default_related_name = 'xforms'
-        ordering = ['title', 'form_id']
+        ordering = ['title', 'form_id', 'version']
         verbose_name = _('xform')
         verbose_name_plural = _('xforms')
 

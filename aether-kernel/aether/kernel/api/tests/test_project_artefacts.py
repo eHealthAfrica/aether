@@ -127,7 +127,8 @@ class ProjectArtefactsTests(TestCase):
 
         self.assertEqual(results_1['project'], str(project.pk))
         self.assertEqual(results_1['schemas'], set([schema_id]))
-        self.assertEqual(len(results_1['project_schemas']), 1)
+        self.assertEqual(results_1['project_schemas'], set([schema_id]),
+                         'Project schemas inherit schema ids')
         self.assertEqual(results_1['mappings'], set())
 
         project_schema_id = list(results_1['project_schemas'])[0]
@@ -158,7 +159,7 @@ class ProjectArtefactsTests(TestCase):
             # in this case the definition is updated and the deleted project schema re-generated
             {'id': schema_id, 'definition': {'name': 'Schema'}},
         ])
-        self.assertNotEqual(results_1, results_3, 'generates a new project schema')
+        self.assertEqual(results_1, results_3, 'generates a new project schema with the schema id')
         self.assertEqual(results_3['project'], str(project.pk))
         self.assertEqual(results_3['schemas'], set([schema_id]))
         self.assertEqual(len(results_3['project_schemas']), 1)
