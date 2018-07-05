@@ -67,28 +67,28 @@ $DC_TEST up -d kernel-test
 $DC_TEST build client-test
 $DC_TEST run client-test test --noinput
 
-# test a clean ODK TEST container
-prepare_and_test_container odk
+# # test a clean ODK TEST container
+# prepare_and_test_container odk
 
-# test a clean UI TEST container
-$DC_TEST build ui-webpack-test
-$DC_TEST run   ui-webpack-test test
-$DC_TEST run   ui-webpack-test build
-prepare_and_test_container ui
+# # test a clean UI TEST container
+# $DC_TEST build ui-webpack-test
+# $DC_TEST run   ui-webpack-test test
+# $DC_TEST run   ui-webpack-test build
+# prepare_and_test_container ui
 
-echo "_____________________________________________ Starting auxiliary databases"
-$DC_TEST up -d couchdb-test redis-test
+# echo "_____________________________________________ Starting auxiliary databases"
+# $DC_TEST up -d couchdb-test redis-test
 
-echo "_____________________________________________ Loading test project in kernel"
-$DC_TEST run kernel-test manage loaddata aether/kernel/api/tests/fixtures/project.json
+# echo "_____________________________________________ Loading test project in kernel"
+# $DC_TEST run kernel-test manage loaddata aether/kernel/api/tests/fixtures/project.json
 
-# test a clean SYNC TEST container
-prepare_and_test_container couchdb-sync
+# # test a clean SYNC TEST container
+# prepare_and_test_container couchdb-sync
 
 # clean start for the next bunch of tests
 kill_all
 
-# execute INTEGRATION TEST
-./scripts/test_integration.sh
+# # execute INTEGRATION TEST
+# ./scripts/test_integration.sh
 
 echo "_____________________________________________ END"

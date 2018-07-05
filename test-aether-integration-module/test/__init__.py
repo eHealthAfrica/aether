@@ -37,7 +37,7 @@ kernel_credentials = {
 kernel_retry = 15
 kernel_retry_time = 1
 
-SEED_ENTITIES = 1234
+SEED_ENTITIES = 12
 SEED_TYPE = "Person"
 
 

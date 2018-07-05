@@ -70,16 +70,16 @@ services:
     stdin_open: true
     tty: true
     environment:
-      ADMIN_PASSWORD: "adminadmin"
-      AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
+      ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
+      AETHER_KERNEL_TOKEN: ${AETHER_KERNEL_TOKEN}
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
-      DJANGO_SECRET_KEY: "secret"
+      DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}
       HOSTNAME: kernel.aether.local
       RDS_DB_NAME: aether
       RDS_HOSTNAME: db
-      RDS_PASSWORD: ""
+      RDS_PASSWORD: ${KERNEL_RDS_PASSWORD}
       RDS_PORT: 5432
       RDS_USERNAME: postgres
       WEB_SERVER_PORT: 8000
@@ -102,19 +102,19 @@ services:
     stdin_open: true
     tty: true
     environment:
-      ADMIN_PASSWORD: "adminadmin"
-      AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
+      ADMIN_PASSWORD: ${ODK_ADMIN_PASSWORD}
+      AETHER_KERNEL_TOKEN: ${AETHER_KERNEL_TOKEN}
       AETHER_KERNEL_URL: http://kernel:8000
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000
-      AETHER_ODK_TOKEN: d5184a044bb5acff89a76ec4e67d0fcddd5cd3a1
+      AETHER_ODK_TOKEN: ${AETHER_ODK_TOKEN}
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
-      DJANGO_SECRET_KEY: "secret"
+      DJANGO_SECRET_KEY: ${ODK_DJANGO_SECRET_KEY}
       HOSTNAME: odk.aether.local
       RDS_DB_NAME: odk
       RDS_HOSTNAME: db
-      RDS_PASSWORD: ""
+      RDS_PASSWORD: ${ODK_RDS_PASSWORD}
       RDS_PORT: 5432
       RDS_USERNAME: postgres
       WEB_SERVER_PORT: 8443
@@ -137,27 +137,27 @@ services:
     stdin_open: true
     tty: true
     environment: &sync-environment
-      ADMIN_PASSWORD: "adminadmin"
-      AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
+      ADMIN_PASSWORD: ${COUCHDB_SYNC_ADMIN_PASSWORD}
+      AETHER_KERNEL_TOKEN: ${AETHER_KERNEL_TOKEN}
       AETHER_KERNEL_URL: http://kernel:8000
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
-      COUCHDB_PASSWORD: secret
+      COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
       COUCHDB_URL: http://couchdb:5984
-      COUCHDB_USER: admin
+      COUCHDB_USER: ${COUCHDB_USER}
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
-      DJANGO_SECRET_KEY: "secret"
-      GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID}"
+      DJANGO_SECRET_KEY: ${COUCHDB_SYNC_DJANGO_SECRET_KEY}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       HOSTNAME: sync.aether.local
       RDS_DB_NAME: couchdb-sync
       RDS_HOSTNAME: db
-      RDS_PASSWORD: ""
+      RDS_PASSWORD: ${COUCHDB_SYNC_RDS_PASSWORD}
       RDS_PORT: 5432
       RDS_USERNAME: postgres
       REDIS_DB: 0
       REDIS_HOST: redis
-      REDIS_PASSWORD: ""
+      REDIS_PASSWORD: ${COUCHDB_SYNC_REDIS_PASSWORD}
       REDIS_PORT: 6379
       WEB_SERVER_PORT: 8666
     volumes: &sync-volumes
@@ -185,18 +185,18 @@ services:
     stdin_open: true
     tty: true
     environment: &ui-environment
-      ADMIN_PASSWORD: "adminadmin"
-      AETHER_KERNEL_TOKEN: a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24
+      ADMIN_PASSWORD: ${UI_ADMIN_PASSWORD}
+      AETHER_KERNEL_TOKEN: ${AETHER_KERNEL_TOKEN}
       AETHER_KERNEL_URL: http://kernel:8000
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
-      DJANGO_SECRET_KEY: "secret"
+      DJANGO_SECRET_KEY: ${UI_DJANGO_SECRET_KEY}
       HOSTNAME: ui.aether.local
       RDS_DB_NAME: ui
       RDS_HOSTNAME: db
-      RDS_PASSWORD: ""
+      RDS_PASSWORD: ${UI_RDS_PASSWORD}
       RDS_PORT: 5432
       RDS_USERNAME: postgres
       STATIC_ROOT: /code/aether/ui/assets/bundles

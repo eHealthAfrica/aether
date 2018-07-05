@@ -94,7 +94,6 @@ class Command(BaseCommand):
         # Skips if no given token or the auth token app is not installed
         if token_key and 'rest_framework.authtoken' in settings.INSTALLED_APPS:
             from rest_framework.authtoken.models import Token
-
             # delete previous token
             Token.objects.filter(user=admin).delete()
             # assign token value
