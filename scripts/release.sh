@@ -20,6 +20,9 @@
 #
 set -Eeuo pipefail
 
+# Try to create the common aether network if it doesn't exist.
+docker network create aether_internal
+
 # Build dependencies
 ./scripts/build_aether_utils_and_distribute.sh
 ./scripts/build_common_and_distribute.sh
