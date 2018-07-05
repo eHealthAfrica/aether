@@ -20,12 +20,14 @@
 
 /* global describe, it, expect */
 
+import avro from 'avsc'
 import {
   clone,
   deepEqual,
   generateGUID,
   generateSchemaName,
-  getLoggedInUser
+  getLoggedInUser,
+  traverseObject
 } from './index'
 
 describe('utils', () => {
@@ -99,6 +101,25 @@ describe('utils', () => {
       element.setAttribute('data-user-name', 'user')
       document.body.appendChild(element)
       expect(getLoggedInUser()).toEqual({id: 1, name: 'user'})
+    })
+  })
+
+  describe('traverseObject', () => {
+    it('traverses object and applies a function to each node', () => {
+      let result = []
+      const f = (node) => { result.push(node) }
+      const input = {a: [1, {b: [2, 3]}]}
+      traverseObject(f, input)
+      const expected = [
+        {"a": [1, {"b": [2, 3]}]},
+        [1, {"b": [2, 3]}],
+        1,
+        {"b": [2, 3]},
+        [2, 3],
+        2,
+        3
+      ]
+      expect(expected).toEqual(result)
     })
   })
 

@@ -91,13 +91,27 @@ export const getLoggedInUser = () => {
   }
 }
 
-/* This function is used as a typeHook option by `avro.Type.forValue().
- * Background: when deriving avro schemas from sample data, all records, enums, and
- * fixed avro types will be anonymous. Using the `typeHook` option, we can pass in
- * a name generator which allows to maintain compatibility with other avro
- * libraries such as python-spavro.
+/**
+ * Traverse object `obj` and apply function `f` to every node.
+ */
+export const traverseObject = (f, obj) => {
+  f(obj)
+  for (var k in obj) {
+    if (typeof obj[k] == "object" && obj.hasOwnProperty(k)) {
+      traverseObject(f, obj[k])
+    } else {
+      f(obj[k])
+    }
+  }
+}
+
+/* This function is applied to all named types in a derived avro record.
+ * Background: when `avsc` derives avro schemas from sample data, all
+ * records, enums and fixed types will be anonymous.
+ * To ensure compatibility with other avro implementations, we need to
+ * generate a name for each such type.
  *
- *    See: https://github.com/mtth/avsc/issues/108#issuecomment-302436388
+ * See: https://github.com/mtth/avsc/issues/108#issuecomment-302436388
  */
 export const generateSchemaName = (prefix) => {
   let index = 0
