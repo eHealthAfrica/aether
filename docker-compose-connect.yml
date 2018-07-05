@@ -1,5 +1,5 @@
 # Adds Kafka and Aether Producer
-version: "2.1"
+version: "3.5"
 
   # ---------------------------------
   # Aether Kafka Containers

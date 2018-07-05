@@ -7,12 +7,14 @@
 #  * Aether UI Module
 # ------------------------------------------------------------------------------
 
-version: "2.1"
+version: "3.5"
 
 networks:
   internal:  # alias as internal
-    external:
-      name: aether_internal  # if this isn't explicitly set it inherits from the containing folder name (aether or not)
+    external: true
+    # if this isn't explicitly set
+    # it inherits from the containing folder name (aether or not)
+    name: aether_internal
 
 
 services:
