@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.db import models as django_models
 import django_filters.rest_framework as filters
 
 from . import models
@@ -47,10 +48,19 @@ class SubmissionFilter(filters.FilterSet):
         name='mapping__project',
         lookup_expr='exact',
     )
+    filter_overrides = {
+        django_models.DateTimeField: {
+            'filter_class': filters.IsoDateTimeFilter
+        },
+    }
 
     class Meta:
         exclude = ('payload',)
         model = models.Submission
+        fields = {
+            'created': ('lt', 'gt', 'lte', 'gte'),
+            'modified': ('lt', 'gt', 'lte', 'gte')
+        }
 
 
 class AttachmentFilter(filters.FilterSet):
