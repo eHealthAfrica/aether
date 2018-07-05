@@ -79,10 +79,6 @@
     font-weight: 600;
   }
 
-  .item {
-    text-decoration: line-through;
-  }
-
   .type {
     font-style: italic;
     color: $grey;
@@ -101,7 +97,7 @@
       padding: 0;
     }
 
-    .group-list>li,
+    li:not(:only-child),
     .group-title {
       border-bottom: 1px solid $light-grey;
       padding-top: .2rem;
@@ -120,34 +116,50 @@
   border-bottom: 3px solid $light-grey;
 }
 
-.input-schema>.group .group {
+.input-schema>.group {
 
-  li li {
+  ul {
+    padding-left: 0;
+  }
+
+  .group {
     padding-left: $indent;
+
+    li {
+      margin-left: $indent * -1;
+    }
+
+    li:not(.group-title) {
+      padding-left: $indent;
+    }
   }
 
-  li li li {
+  .group .group {
     padding-left: $indent * 2;
-  }
-
-  li li li li {
-    padding-left: $indent * 3;
-  }
-
-  li li li li li {
-    padding-left: $indent * 4;
-  }
-
-  .group-list .group-list {
     margin-left: $indent * -1;
+
+    li {
+      margin-left: $indent * -2;
+      padding-left: $indent;
+    }
+
+    li:not(.group-title) {
+      padding-left: $indent * 2;
+    }
   }
 
-  .group-list .group-list .group-list {
+  .group .group .group {
+    padding-left: $indent * 3;
     margin-left: $indent * -2;
-  }
 
-  .group-list .group-list .group-list .group-list {
-    margin-left: $indent * -3;
+    li {
+      margin-left: $indent * -3;
+      padding-left: $indent * 2;
+    }
+
+    li:not(.group-title) {
+      padding-left: $indent * 3;
+    }
   }
 }
 
