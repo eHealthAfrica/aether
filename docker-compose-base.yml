@@ -14,7 +14,7 @@
 # See more in: https://docs.docker.com/compose/extends/
 # ------------------------------------------------------------------------------
 
-version: "2.1"
+version: "3.5"
 
 services:
 
