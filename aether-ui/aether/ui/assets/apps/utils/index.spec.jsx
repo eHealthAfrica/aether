@@ -20,7 +20,6 @@
 
 /* global describe, it, expect */
 
-import avro from 'avsc'
 import {
   clone,
   deepEqual,
@@ -111,10 +110,10 @@ describe('utils', () => {
       const input = {a: [1, {b: [2, 3]}]}
       traverseObject(f, input)
       const expected = [
-        {"a": [1, {"b": [2, 3]}]},
-        [1, {"b": [2, 3]}],
+        {'a': [1, {'b': [2, 3]}]},
+        [1, {'b': [2, 3]}],
         1,
-        {"b": [2, 3]},
+        {'b': [2, 3]},
         [2, 3],
         2,
         3

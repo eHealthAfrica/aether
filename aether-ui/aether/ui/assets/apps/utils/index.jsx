@@ -97,7 +97,7 @@ export const getLoggedInUser = () => {
 export const traverseObject = (f, obj) => {
   f(obj)
   for (var k in obj) {
-    if (typeof obj[k] == "object" && obj.hasOwnProperty(k)) {
+    if (typeof obj[k] === 'object' && obj.hasOwnProperty(k)) {
       traverseObject(f, obj[k])
     } else {
       f(obj[k])
