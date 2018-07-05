@@ -72,6 +72,9 @@ case "$1" in
 
   build)
     npm run webpack
+
+    # copy bundles in static folder
+    cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
   ;;
 
   start_dev)

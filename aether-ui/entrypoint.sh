@@ -89,16 +89,6 @@ setup_prod() {
   ./manage.py setup_admin -p=$ADMIN_PASSWORD
 }
 
-setup_static() {
-  # create static assets
-  ./manage.py collectstatic --noinput --clear
-  # copy distributed app
-  chown -R aether: /code/aether/ui/assets/bundles
-  cp -r /code/aether/ui/assets/bundles/* /var/www/static
-
-  chmod -R 755 /var/www/static/
-}
-
 test_lint() {
   flake8 ./aether --config=./conf/extras/flake8.cfg
 }
@@ -175,7 +165,15 @@ case "$1" in
   start )
     setup_db
     setup_prod
-    setup_static
+
+    # create static assets
+    ./manage.py collectstatic --noinput
+    chmod -R 755 /var/www/static
+
+    # expose version number
+    cp VERSION /var/www/VERSION
+    # add git revision
+    cp /code/REVISION /var/www/REVISION
 
     /usr/local/bin/uwsgi --ini ./conf/uwsgi.ini
   ;;
@@ -183,11 +181,6 @@ case "$1" in
   start_dev )
     setup_db
     setup_initial_data
-
-    # copy bundles in static folder
-    chmod -R 755 /code/aether/ui/assets/bundles
-    chown -R aether: /code/aether/ui/assets/bundles
-    cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
 
     ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
   ;;
