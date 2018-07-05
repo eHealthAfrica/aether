@@ -27,8 +27,7 @@ import { AvroSchemaViewer, Modal } from '../../components'
 import {
   deepEqual,
   generateGUID,
-  generateSchemaName,
-  traverseObject
+  generateSchema
 } from '../../utils'
 import { updatePipeline } from '../redux'
 
@@ -231,9 +230,7 @@ class DataInput extends Component {
     try {
       // Validate data and generate avro schema from input
       const input = JSON.parse(this.state.inputData)
-      const schema = avro.Type.forValue(input).schema()
-      const nameGen = generateSchemaName('Auto')
-      traverseObject(nameGen, schema)
+      const schema = generateSchema(input)
       this.props.updatePipeline({
         ...this.props.selectedPipeline,
         schema,

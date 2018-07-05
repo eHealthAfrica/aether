@@ -18,6 +18,8 @@
  * under the License.
  */
 
+import avro from 'avsc'
+
 /**
  * Clones object.
  *
@@ -125,4 +127,11 @@ export const generateSchemaName = (prefix) => {
       default:
     }
   }
+}
+
+export const generateSchema = (obj) => {
+  const schema = avro.Type.forValue(obj).schema()
+  const nameGen = generateSchemaName('Auto')
+  traverseObject(nameGen, schema)
+  return schema
 }

@@ -24,6 +24,7 @@ import {
   clone,
   deepEqual,
   generateGUID,
+  generateSchema,
   generateSchemaName,
   getLoggedInUser,
   traverseObject
@@ -148,6 +149,46 @@ describe('utils', () => {
         generator(input)
         expect(input).toEqual(output)
       })
+    })
+  })
+
+  describe('generateSchema', () => {
+    it('should generate a valid avro schema', () => {
+      const input = {a: [{b: 1}, {c: 1}]}
+      const expected = {
+        type: 'record',
+        fields: [
+          {
+            name: 'a',
+            type: {
+              type: 'array',
+              items: {
+                type: 'record',
+                fields: [
+                  {
+                    name: 'b',
+                    type: [
+                      'null',
+                      'int'
+                    ]
+                  },
+                  {
+                    name: 'c',
+                    type: [
+                      'null',
+                      'int'
+                    ]
+                  }
+                ],
+                name: 'Auto_1'
+              }
+            }
+          }
+        ],
+        name: 'Auto_0'
+      }
+      const result = generateSchema(input)
+      expect(expected).toEqual(result)
     })
   })
 })
