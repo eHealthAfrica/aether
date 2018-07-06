@@ -20,6 +20,9 @@
 #
 set -Eeuo pipefail
 
+# Try to create the common aether network if it doesn't exist.
+docker network create aether_internal
+
 # Build dependencies
 ./scripts/build_aether_utils_and_distribute.sh
 ./scripts/build_common_and_distribute.sh
@@ -36,11 +39,13 @@ CONNECT_APPS=( producer )
 CONNECT_COMPOSE='docker-compose-connect.yml'
 VERSION=`cat VERSION`
 
+
 release_app () {  # ( name of app -> $1, compose_path -> $2 )
   APP_NAME=$1
   COMPOSE_PATH=$2
   AETHER_APP="aether-${1}"
   echo "version: $VERSION"
+  echo "TRAVIS_COMMIT: $TRAVIS_COMMIT"
   echo "Building Docker image ${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
   docker-compose -f $COMPOSE_PATH build --build-arg GIT_REVISION=$TRAVIS_COMMIT \
   --build-arg VERSION=$VERSION $APP_NAME
