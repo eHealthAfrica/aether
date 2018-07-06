@@ -174,5 +174,38 @@
   }, {
     "name": "_rev",
     "type": "string"
-  }]
+  },
+  {
+      "name": "a",
+      "type": {
+        "type": "array",
+        "items": [
+          {
+            "name": "Auto_0",
+            "type": "record",
+            "fields": [
+              {
+                "name": "b",
+                "type": "int"
+              }
+            ]
+          },
+          {
+            "type": "array",
+            "items": {
+              "name": "Auto_1",
+              "type": "record",
+              "fields": [
+                {
+                  "name": "c",
+                  "type": "int"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+
+]
 }
