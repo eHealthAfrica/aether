@@ -209,7 +209,11 @@ class DataMocker(object):
         # actually compiles the instruction set for this type and returns the body
         instructions = self.instructions.get(name)
         if not instructions:
-            raise ValueError("No instuctions for type %s" % name)
+            alt = self.parent.names.get(name)
+            instructions = self.instructions.get(alt)
+            if not instructions:
+                raise ValueError("No instructions for type %s" % name)
+
         body = {}
         for name, fn in instructions:
             body[name] = fn()
@@ -301,8 +305,11 @@ class DataMocker(object):
     def load(self):
         # loads schema definition for this type
         self.schema = json.loads(self.raw_schema)
-        for obj in self.schema:
-            self.parse(obj)
+        if isinstance(self.schema, list):
+            for obj in self.schema:
+                self.parse(obj)
+        else:
+            self.parse(self.schema)
 
     def parse(self, schema):
         # looks at all the types called for
@@ -314,8 +321,11 @@ class DataMocker(object):
         for field in fields:
             instructions.append(self._comprehend_field(field))
         self.instructions[name] = instructions
+        for i in self.instructions[name]:
+            print(name, i)
 
     def _comprehend_field(self, field):
+        print("comprehend", field)
         # picks apart an avro definition of a field and builds mocking functions
         name = field.get("name")
         if name in self.ignored_properties:
@@ -385,6 +395,7 @@ class MockingManager(object):
         self.client = KernelClient(kernel_url, **kernel_credentials)
         self.types = {}
         self.alias = {}
+        self.names = {}
         self.project_schema = {}
         self.schema_id = {}
         self.type_client = {}
@@ -444,10 +455,22 @@ class MockingManager(object):
             print("Load %s" % name)
             _id = schema.get('id')
             definition = schema.get('definition')
-            full_name = [obj.get("name") for obj in definition if obj.get(
-                'name').endswith(name)][0]
+            if isinstance(definition, str):
+                definition = json.loads(definition)
+            if isinstance(definition, list):
+                full_name = [obj.get("name") for obj in definition if obj.get(
+                    'name').endswith(name)][0]
+            else:
+                full_name = definition.get('name')
+            namespace = definition.get('namespace')
+            if namespace:
+                if not name in namespace:
+                    full_name = namespace+"."+name
             self.types[full_name] = DataMocker(
                 full_name, json.dumps(definition), self)
+            self.names[name] = full_name
+            self.names[full_name] = name
+            self.types[name] = self.types[full_name]
             self.alias[full_name] = name
             self.alias[name] = full_name
             self.schema_id[name] = _id
