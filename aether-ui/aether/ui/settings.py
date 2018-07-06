@@ -44,9 +44,11 @@ WEBPACK_LOADER = {
     },
 }
 
-INSTALLED_APPS += [
-    'webpack_loader',
+# aether.ui must be first because of template overrides
+INSTALLED_APPS = [
     'aether.ui',
+    *INSTALLED_APPS,
+    'webpack_loader',
 ]
 
 TEMPLATES[0]['OPTIONS']['context_processors'] += [
