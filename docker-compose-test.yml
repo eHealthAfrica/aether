@@ -119,10 +119,10 @@ services:
     ports:
       - "9004:9004"
 
-  ui-webpack-test:
+  ui-assets-test:
     extends:
       file: docker-compose-base.yml
-      service: ui-webpack-base
+      service: ui-assets-base
 
 
   # ---------------------------------

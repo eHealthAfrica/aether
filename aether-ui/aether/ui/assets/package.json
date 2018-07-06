@@ -12,14 +12,14 @@
     "npm": ">=3.0.0"
   },
   "scripts": {
-    "test-lint-js": "standard './aether/ui/assets/apps/**/*.js*'",
+    "test-lint-js": "standard './apps/**/*.js*'",
     "test-lint-scss": "sass-lint --verbose",
     "test-lint": "npm run test-lint-scss && npm run test-lint-js",
     "test-js": "jest --expand",
     "test-js-verbose": "TERM=dumb && jest --expand --colors --maxWorkers=1",
     "test": "npm run test-lint && npm run test-js",
-    "webpack": "webpack --config ./aether/ui/webpack.prod.js",
-    "webpack-server": "node ./aether/ui/webpack.server.js"
+    "webpack": "webpack --config ./conf/webpack.prod.js",
+    "webpack-server": "node ./conf/webpack.server.js"
   },
   "dependencies": {
     "avsc": "~5.3.0",
@@ -75,14 +75,14 @@
       "react-hot-loader/babel"
     ]
   },
-  "sasslintConfig": "./conf/extras/sass-lint.yml",
+  "sasslintConfig": "./conf/sass-lint.yml",
   "standard": {
     "verbose": true
   },
   "jest": {
     "collectCoverage": true,
     "coverageDirectory": "<rootDir>/tests/.coverage",
-    "rootDir": "./aether/ui/assets",
+    "rootDir": ".",
     "setupFiles": [
       "<rootDir>/tests/jest.setup.jsx"
     ],

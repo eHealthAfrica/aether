@@ -11,19 +11,19 @@ Frontend assets are mounted on the pages via the
 
 ### The 2 builds, server and prod
 
-* There is a file with all the apps list: `webpack.apps.js`.
+* There is a file with all the apps list: `conf/webpack.apps.js`.
 
 * There are three webpack configuration files:
 
-  - `webpack.common.js`  -- contains the common features to build the webpack files.
-  - `webpack.server.js`  -- starts the server in port `3000` with HOT reloading.
-  - `webpack.prod.js`    -- compiles the files to be used in the Django app.
+  - `conf/webpack.common.js`  -- contains the common features to build the webpack files.
+  - `conf/webpack.server.js`  -- starts the server in port `3000` with HOT reloading.
+  - `conf/webpack.prod.js`    -- compiles the files to be used in the Django app.
 
-* The `start_webpack` entry point starts a webpack development server (port 3000),
+* The `start_dev` entry point starts a webpack development server (port 3004),
   that watches assets, rebuilds and does hot reloading of JS Components.
 
   ```bash
-  docker-compose up webpack
+  docker-compose up ui-assets
   ```
 
 
@@ -54,15 +54,17 @@ and [Enzyme](http://airbnb.io/enzyme/).
 
 ```bash
 # all tests
-docker-compose run ui eval npm run test
+docker-compose run ui-assets test
 
 # by type
-docker-compose run ui eval npm run test-lint-sass
-docker-compose run ui eval npm run test-lint-js
-docker-compose run ui eval npm run test-js
+docker-compose run ui-assets test_lint
+docker-compose run ui-assets test_js
 
+# more detailed
+docker-compose run ui-assets eval npm run test-lint-sass
+docker-compose run ui-assets eval npm run test-lint-js
 # in case you need to check `console.log` messages
-docker-compose run ui eval npm run test-js-verbose
+docker-compose run ui-assets eval npm run test-js-verbose
 ```
 
 
@@ -72,8 +74,8 @@ Unfortunately, for now you need to rebuild the container after upgrading
 or adding dependencies in `package.json`.
 
 ```bash
-docker-compose kill ui
-docker-compose up --build ui
+docker-compose kill ui-assets
+docker-compose up --build ui-assets
 ```
 
 
@@ -81,7 +83,7 @@ docker-compose up --build ui
 
 There are a couple of naming/coding conventions followed by the React Components:
 
-* Style linting rules defined in file `/conf/extras/sass-lint.yml`.
+* Style linting rules defined in file `conf/sass-lint.yml`.
 
 * Javascript linting rules defined by [Standard JS](https://github.com/feross/standard/>).
 
