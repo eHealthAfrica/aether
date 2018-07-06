@@ -37,6 +37,6 @@ Once the console output has stopped, you should be able to access the Aether UI 
 - _Username:_ **admin-ui**
 - _Password:_ **adminadmin**
 
-Now let’s [start creating our first Aether-based solution](first-steps).
+Now let’s [start creating our first Aether-based solution](walkthrough-core).
 
 
