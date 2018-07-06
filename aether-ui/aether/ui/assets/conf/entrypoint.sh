@@ -71,6 +71,7 @@ case "$1" in
   ;;
 
   build)
+    rm -r -f ./bundles/*
     npm run webpack
   ;;
 

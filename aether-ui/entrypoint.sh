@@ -153,6 +153,7 @@ case "$1" in
     setup_prod
 
     # create static assets
+    rm -r -f /code/aether/ui/static/*.*
     cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
     ./manage.py collectstatic --noinput
     chmod -R 755 /var/www/static
@@ -169,6 +170,8 @@ case "$1" in
     setup_db
     setup_initial_data
 
+    # cleaning
+    rm -r -f /code/aether/ui/static/*.*
     # copy assets bundles folder into static folder
     cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
 
