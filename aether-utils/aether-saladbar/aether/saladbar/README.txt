@@ -9,7 +9,7 @@ We specify which Libraries to use, and which schemas to import in salad-bar/conf
     "project": "ehaDemo",  # The name of our project
     "$base": "http://demo.eha.org/",  # The base namespace of our project
     "kernel_url": "http://kernel.aether.local:8000/v1",
-    "kernel_user": "admin-kernel",
+    "kernel_user": "admin",
     "kernel_pw": "adminadmin",
     "namespaces":{  # Explicit abbreviations for different namespaces (SALAD convention)
         "eha": "http://demo.eha.org/"

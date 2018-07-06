@@ -22,12 +22,12 @@ import os
 kernel_url = "http://kernel-test:9000"
 
 kernel_credentials ={
-    "username": "admin-kernel",
+    "username": "admin",
     "password": "adminadmin",
 }
 
 odk_credentials ={
-    "username": "admin-odk",
+    "username": "admin",
     "password": "adminadmin",
 }
 

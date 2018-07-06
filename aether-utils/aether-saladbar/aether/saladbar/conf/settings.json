@@ -2,7 +2,7 @@
     "project": "ehaDemo",
     "$base": "http://demo.eha.org/",
     "kernel_url": "http://kernel.aether.local:8000/v1",
-    "kernel_user": "admin-kernel",
+    "kernel_user": "admin",
     "kernel_pw": "adminadmin",
     "namespaces":{
         "eha": "http://demo.eha.org/"

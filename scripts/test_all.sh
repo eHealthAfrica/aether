@@ -34,7 +34,6 @@ function build_container() {
 function prepare_container() {
   echo "_____________________________________________ Preparing $1 container"
   build_container $1
-  $DC_TEST run "$1"-test setuplocaldb
   echo "_____________________________________________ $1 ready!"
 }
 
@@ -58,33 +57,24 @@ echo "_____________________________________________ Common module"
 echo "_____________________________________________ Aether utils"
 ./scripts/build_aether_utils_and_distribute.sh
 
-
-echo "_____________________________________________ Starting database"
-$DC_TEST up -d db-test
-
-
 # test and start a clean KERNEL TEST container
 prepare_and_test_container kernel
-
 
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
 
-
 # test a clean CLIENT TEST container
-prepare_and_test_container client
-
+$DC_TEST build client-test
+$DC_TEST run client-test test --noinput
 
 # test a clean ODK TEST container
 prepare_and_test_container odk
-
 
 # test a clean UI TEST container
 $DC_TEST build ui-webpack-test
 $DC_TEST run   ui-webpack-test test
 $DC_TEST run   ui-webpack-test build
 prepare_and_test_container ui
-
 
 echo "_____________________________________________ Starting auxiliary databases"
 $DC_TEST up -d couchdb-test redis-test

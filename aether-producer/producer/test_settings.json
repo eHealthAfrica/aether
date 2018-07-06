@@ -13,7 +13,7 @@
     },
     "kernel_url": "http://kernel-test:9000",
     "kernel_credentials": {
-        "username": "admin-kernel",
+        "username": "admin",
         "password": "adminadmin"
     },
     "kafka_failure_wait_time" : 4,

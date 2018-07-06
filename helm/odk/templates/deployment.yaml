@@ -107,6 +107,11 @@ spec:
             secretKeyRef:
               name: {{ .Values.application.secret }}
               key: odk-django-secret-key
+        - name: ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: odk-admin-password
         - name: AETHER_ODK_TOKEN
           valueFrom:
             secretKeyRef:

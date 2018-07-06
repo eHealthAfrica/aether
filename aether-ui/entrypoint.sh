@@ -23,26 +23,25 @@ set -Eeuox pipefail
 
 # Define help message
 show_help() {
-  echo """
-  Commands
-  ----------------------------------------------------------------------------
-  bash          : run bash
-  eval          : eval shell command
-  manage        : invoke django manage.py commands
+    echo """
+    Commands
+    ----------------------------------------------------------------------------
+    bash          : run bash
+    eval          : eval shell command
+    manage        : invoke django manage.py commands
 
-  pip_freeze    : freeze pip dependencies and write to requirements.txt
+    pip_freeze    : freeze pip dependencies and write to requirements.txt
 
-  setupproddb   : create/migrate database for production
-  setuplocaldb  : create/migrate database for development (creates superuser)
+    setup_db      : create/migrate database
 
-  test          : run ALL tests
-  test_lint     : run flake8, standardjs and sass lint tests
-  test_coverage : run python tests with coverage output
-  test_py       : alias of test_coverage
+    test          : run ALL tests
+    test_lint     : run flake8, standardjs and sass lint tests
+    test_coverage : run python tests with coverage output
+    test_py       : alias of test_coverage
 
-  start         : start webserver behind nginx
-  start_dev     : start webserver for development
-  """
+    start         : start webserver behind nginx
+    start_dev     : start webserver for development
+    """
 }
 
 pip_freeze() {
@@ -77,12 +76,7 @@ setup_db() {
   ./manage.py migrate --noinput
 }
 
-setup_initial_data() {
-  # create initial superuser
-  ./manage.py loaddata ./conf/extras/initial.json
-}
-
-setup_prod() {
+setup_admin() {
   # check if vars exist
   ./conf/check_vars.sh
   # arguments: -u=admin -p=secretsecret -e=admin@ehealthafrica.org -t=01234656789abcdefghij
@@ -143,13 +137,8 @@ case "$1" in
     pip_freeze
   ;;
 
-  setuplocaldb )
-    setup_db
-    setup_initial_data
-  ;;
-
-  setupproddb )
-    setup_db
+  setup_db )
+      setup_db
   ;;
 
   test)
@@ -174,7 +163,7 @@ case "$1" in
 
   start )
     setup_db
-    setup_prod
+    setup_admin
     setup_static
 
     /usr/local/bin/uwsgi --ini ./conf/uwsgi.ini
@@ -182,7 +171,7 @@ case "$1" in
 
   start_dev )
     setup_db
-    setup_initial_data
+    setup_admin
 
     # copy bundles in static folder
     chmod -R 755 /code/aether/ui/assets/bundles
