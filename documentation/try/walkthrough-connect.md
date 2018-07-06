@@ -1,6 +1,6 @@
 ---
 title: Aether - Try It - Aether Connect
-permalink: documentation/try/connect.html
+permalink: documentation/try/walkthrough-connect.html
 ---
 
 # Adding Aether Connect

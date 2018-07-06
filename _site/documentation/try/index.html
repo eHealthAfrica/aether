@@ -39,23 +39,15 @@
         
       
         
-          Spin Up a Local Instance
+          Installing Aether Bootstrap
+        
+          
+        
+          
         
           
         
       
-        
-          
-        
-          
-        
-          
-        
-          
-        
-          
-        
-          
         
           
         
@@ -117,11 +109,19 @@
         <ul class="active-section">
           
             <li class="active">
-              <a href="/documentation/try/index.html">Spin Up a Local Instance</a>
+              <a href="/documentation/try/index.html">Installing Aether Bootstrap</a>
             </li>
           
             <li class="">
-              <a href="/documentation/try/connect.html">Adding Aether Connect</a>
+              <a href="/documentation/try/walkthrough-core.html">Setting up an Aether-Based Project</a>
+            </li>
+          
+            <li class="">
+              <a href="/documentation/try/walkthrough-connect.html">Adding Aether Connect</a>
+            </li>
+          
+            <li class="">
+              <a href="/documentation/try/walkthrough-gather.html">Adding Gather</a>
             </li>
           
         </ul>
@@ -131,30 +131,6 @@
           
             <li class="">
               <a href="/documentation/setup-deployment/index.html">Introduction</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/setup-deployment/cloud-deployment.html">Cloud Installation</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/setup-deployment/security.html">Security</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/setup-deployment/user-management.html">User Management</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/setup-deployment/aether-connect.html">Aether Connect</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/setup-deployment/monitoring-troubleshooting.html">Monitoring and Troubleshooting</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/setup-deployment/upgrading.html">Upgrading Aether</a>
             </li>
           
         </ul>
@@ -253,11 +229,19 @@
         <ul class="active-section">
           
             <li class="active">
-              <a href="/documentation/try/index.html">Spin Up a Local Instance</a>
+              <a href="/documentation/try/index.html">Installing Aether Bootstrap</a>
             </li>
           
             <li class="">
-              <a href="/documentation/try/connect.html">Adding Aether Connect</a>
+              <a href="/documentation/try/walkthrough-core.html">Setting up an Aether-Based Project</a>
+            </li>
+          
+            <li class="">
+              <a href="/documentation/try/walkthrough-connect.html">Adding Aether Connect</a>
+            </li>
+          
+            <li class="">
+              <a href="/documentation/try/walkthrough-gather.html">Adding Gather</a>
             </li>
           
         </ul>
@@ -267,30 +251,6 @@
           
             <li class="">
               <a href="/documentation/setup-deployment/index.html">Introduction</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/setup-deployment/cloud-deployment.html">Cloud Installation</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/setup-deployment/security.html">Security</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/setup-deployment/user-management.html">User Management</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/setup-deployment/aether-connect.html">Aether Connect</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/setup-deployment/monitoring-troubleshooting.html">Monitoring and Troubleshooting</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/setup-deployment/upgrading.html">Upgrading Aether</a>
             </li>
           
         </ul>
@@ -371,11 +331,11 @@
 
     <h1 id="try-aether-for-yourself">Try Aether For Yourself</h1>
 
-<p>Aether is a platform. This means it only makes sense to use it in the context of creating a solution. For this initial run-through, we’re going to take some raw json input data and create some mappings to transform it into a more useable state.</p>
+<p>Aether is a platform. This means that it doesn’t do much on its own: it only makes sense to use it in the context of creating a solution. For this initial run-through, we’re going to create a simple solution that takes data collected in a microcensus and feeds it out to dashboards. We’ll start with some raw json input data, and create some mappings to transform it into a more useable state.</p>
 
 <p>In the next step, we’ll see how that data can then be fed through to Elastic Search by using Aether Connect, but first things first…</p>
 
-<p>If you want to see how this example works with data coming in from ODK Collect, take a look at this Gather run-through.</p>
+<p>Finally, we’ll see how <a href="https://gather.ehealthafrica.org">Gather</a>, our Aether-based ODK data collection tool, can integrate with this set-up to provide real-time analysis of data as it’s submitted from the field.</p>
 
 <p>We’ve created an <code class="highlighter-rouge">aether-bootstrap</code> repository to make it easy for you to get up and running with your first Aether-based solution. This contains a bunch of <code class="highlighter-rouge">docker-compose</code> files that will pull Docker images of the latest version of Aether from Docker Hub and start them up.</p>
 
@@ -383,13 +343,13 @@
 
 <p>In order to follow this run-through, you will need to have <a href="https://www.docker.com">Docker</a> installed.</p>
 
-<p>You will also need to register some domains for local resolution on your computer. This means editing your hosts file. On Mac/Linux this is at <code class="highlighter-rouge">/etc/hosts</code>; on Windows it’s at <code class="highlighter-rouge">...</code>. Add this line to the bottom:</p>
+<p>You will also need to register some domains for local resolution on your computer. This means editing your hosts file. On Mac/Linux this is at <code class="highlighter-rouge">/etc/hosts</code>; on Windows it’s at <code class="highlighter-rouge">c:\Windows\System32\Drivers\etc\hosts</code>. Add this line to the bottom:</p>
 
 <p><code class="highlighter-rouge">127.0.0.1       ui.aether.local kernel.aether.local</code></p>
 
 <h2 id="into-the-aether">Into the Aether</h2>
 
-<p>Start by cloning this repository to your computer:</p>
+<p>The easiest way to start building an Aether-based solution is to use <em>Aether Bootstrap</em>. Begin by cloning this repository to your computer:</p>
 
 <p><code class="highlighter-rouge">git clone git@github.com:eHealthAfrica/aether-bootstrap.git</code>
 <code class="highlighter-rouge">cd aether-bootstrap</code></p>
@@ -400,8 +360,12 @@
 
 <p>Once the console output has stopped, you should be able to access the Aether UI in your browser. Use these credentials to log in:</p>
 
-<p>Username: <strong>admin-ui</strong>
-Password: <strong>adminadmin</strong></p>
+<ul>
+  <li><em>Username:</em> <strong>admin-ui</strong></li>
+  <li><em>Password:</em> <strong>adminadmin</strong></li>
+</ul>
+
+<p>Now let’s <a href="first-steps">start creating our first Aether-based solution</a>.</p>
 
 
 

@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aether - Introduction - A Deeper Dive</title>
+    <title>Aether - First Steps</title>
     <link  charset="utf-8"  media="screen"  type="text/css" href="/css/index.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600" rel="stylesheet">
     <link rel="stylesheet" href="/css/font-awesome.min.css">
@@ -35,13 +35,13 @@
         
           
         
-          A Deeper Dive
+          
         
       
         
           
         
-          
+          Setting up an Aether-Based Project
         
           
         
@@ -93,26 +93,26 @@
       <li><a href="/support.html">Welcome</a></li>
     
       <li class="doc-nav-title">Introduction to Aether</li>
-        <ul class="active-section">
+        <ul class="">
           
             <li class="">
               <a href="/documentation/introduction/index.html">What is Aether?</a>
             </li>
           
-            <li class="active">
+            <li class="">
               <a href="/documentation/introduction/deeper.html">A Deeper Dive</a>
             </li>
           
         </ul>
     
       <li class="doc-nav-title">Try It For Yourself</li>
-        <ul class="">
+        <ul class="active-section">
           
             <li class="">
               <a href="/documentation/try/index.html">Installing Aether Bootstrap</a>
             </li>
           
-            <li class="">
+            <li class="active">
               <a href="/documentation/try/walkthrough-core.html">Setting up an Aether-Based Project</a>
             </li>
           
@@ -213,26 +213,26 @@
     <a href="/support.html">Welcome</a>
     
       <a href="/documentation/introduction/index.html"><h3 class="doc-nav-title">Introduction to Aether</h3></a>
-        <ul class="active-section">
+        <ul class="">
           
             <li class="">
               <a href="/documentation/introduction/index.html">What is Aether?</a>
             </li>
           
-            <li class="active">
+            <li class="">
               <a href="/documentation/introduction/deeper.html">A Deeper Dive</a>
             </li>
           
         </ul>
     
       <a href="/documentation/try/index.html"><h3 class="doc-nav-title">Try It For Yourself</h3></a>
-        <ul class="">
+        <ul class="active-section">
           
             <li class="">
               <a href="/documentation/try/index.html">Installing Aether Bootstrap</a>
             </li>
           
-            <li class="">
+            <li class="active">
               <a href="/documentation/try/walkthrough-core.html">Setting up an Aether-Based Project</a>
             </li>
           
@@ -329,19 +329,47 @@
   </div>
   <div class="doc-content">
 
-    <h1 id="a-deeper-dive">A Deeper Dive</h1>
+    <h1 id="a-simple-aether-based-solution">A Simple Aether-Based Solution</h1>
 
-<p>This document should be targeted at a developer or DevOps person and describe the architecture in enough detail to to allow that person to determine if Aether is right for their project.  Talk about:</p>
+<p>We’re going to take raw JSON data that has been collected during a microcensus, and learn how to break that data into pieces that can then be sent to different destinations. In Aether we do this by creating a new <em>pipeline</em>.</p>
 
-<ul>
-  <li>Django and how we use it</li>
-  <li>Kafka</li>
-  <li>Postgres</li>
-  <li>Kong (if applicable) (not in initial release)</li>
-  <li>Security models</li>
-  <li>Kubernetes</li>
-  <li>Other tech?</li>
-</ul>
+<p>A pipeline consists of a path that data takes through Aether, and the transformations that it goes through along the way. Within a pipeline, we define one or more <em>data contracts</em> that specify the format of the transformed data, along with rules that define how the input data is transformed to comply with those contracts.</p>
+
+<p>These contracts are defined using <em>schemas</em>, and the transformed data is known as <em>entities</em>, for reasons that will, hopefully, soon become obvious.</p>
+
+<p>In the <code class="highlighter-rouge">assets</code> folder of the <code class="highlighter-rouge">aether-bootstrap</code> repository contains some sample data, some schemas and a set of mappings. For the purposes of this walkthrough, we’re going to copy and paste the contents of these files into the Aether UI (for a more detailed overview of the UI, check out its <a href="/documentation/ui/">documentation</a>).</p>
+
+<p>Open the <a href="http://ui.aether.loca">UI</a> and log in if you haven’t already. We’re going to create a new pipeline, so hit the button that’s handily labelled <em>NEW PIPELINE</em>. Enter a name, and press <em>START PIPELINE</em>.</p>
+
+<h2 id="defining-our-input">Defining Our Input</h2>
+
+<p>The first thing you see is the input screen, where you can either paste some raw JSON data, or an AVRO schema that defines your input data. Open the <code class="highlighter-rouge">sample-data.json</code> file from the <code class="highlighter-rouge">assets</code> folder, copy the contents, and paste it into the text area. It should now look like this:</p>
+
+<p><img src="/images/walkthrough-1.png" alt="Input data" /></p>
+
+<p>At the bottom of the screen is a button labelled <em>DERIVE DATA FROM SCHEMA</em>. Click this, and Aether will generate an AVRO schema for you. The structure of the sample data is now shown in the sidebar.</p>
+
+<h2 id="defining-our-output-contracts">Defining Our Output Contracts</h2>
+
+<p>Now we’re going to add some <em>entity type definitions</em>. These are (more) schemas that constitute the <em>data contracts</em> we mentioned earlier. Click on <em>ENTITY TYPES</em>, open <code class="highlighter-rouge">all.json</code> in <code class="highlighter-rouge">assets/schemas</code> and copy and paste everything into the text area where it says <em>Enter your schemas</em>. Click <em>ADD TO PIPELINE</em>.</p>
+
+<p><img src="/images/walkthrough-2.png" alt="Entity types" /></p>
+
+<h2 id="defining-our-mappings">Defining Our Mappings</h2>
+
+<p>The third and final step is to create the mapping rules that specify how the input data is transformed into entities. Normally you would probably add these mappings one by one using the interface provided by the UI, but for the purposes of this walkthrough we’re going to - you guessed it - copy and paste the mapping definition from the <code class="highlighter-rouge">assets</code> folder.</p>
+
+<p>Open up <code class="highlighter-rouge">mapping.json</code> from <code class="highlighter-rouge">assets/mappings/</code> and copy the contents. In the UI, click on <em>MAPPING</em>, and then go to the tab labelled <em>JSON</em>. Paste everything into the text area and click on <em>APPLY MAPPING RULES TO PIPELINE</em>.</p>
+
+<p><img src="/images/walkthrough-3.png" alt="Mappings" /></p>
+
+<p>Fields in the <em>INPUT</em> and <em>ENTITY TYPES</em> sidebars are now highlighted to indicate mappings between them; if you click on the <em>Mapping rules</em> tab you can see the individual mapping rules.</p>
+
+<p>You might also have noticed the green dot next to the <em>OUTPUT</em> section in the top right hand corner of the screen. This indicates that your pipeline is successfully creating entities, i.e. that the data is being transformed and broken up into pieces as defined by our schemas. Open the <em>OUTPUT</em> screen, and you’ll see the transformed data.</p>
+
+<p>Congratulations! You have just completed the set-up of your first Aether-based solution.</p>
+
+<p>The next step is to send the entities to CKAN and Elastic Search / Kibana.</p>
 
 
   </div>

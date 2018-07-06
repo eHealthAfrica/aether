@@ -9,27 +9,31 @@ toc:
   - title: Try It For Yourself
     url: /documentation/try/index.html
     subfolderitems:
-      - page: Spin Up a Local Instance
+      - page: Installing Aether Bootstrap
         url: /documentation/try/index.html
+      - page: Setting up an Aether-Based Project
+        url: /documentation/try/walkthrough-core.html
       - page: Adding Aether Connect
-        url: /documentation/try/connect.html
+        url: /documentation/try/walkthrough-connect.html
+      - page: Adding Gather
+        url: /documentation/try/walkthrough-gather.html
   - title: Setup and Deployment Guide
     url: /documentation/setup-deployment/index.html
     subfolderitems:
       - page: Introduction
         url: /documentation/setup-deployment/index.html
-      - page: Cloud Installation
-        url: /documentation/setup-deployment/cloud-deployment.html
-      - page: Security
-        url: /documentation/setup-deployment/security.html
-      - page: User Management
-        url: /documentation/setup-deployment/user-management.html
-      - page: Aether Connect
-        url: /documentation/setup-deployment/aether-connect.html
-      - page: Monitoring and Troubleshooting
-        url: /documentation/setup-deployment/monitoring-troubleshooting.html
-      - page: Upgrading Aether
-        url: /documentation/setup-deployment/upgrading.html
+      # - page: Cloud Installation
+      #   url: /documentation/setup-deployment/cloud-deployment.html
+      # - page: Security
+      #   url: /documentation/setup-deployment/security.html
+      # - page: User Management
+      #   url: /documentation/setup-deployment/user-management.html
+      # - page: Aether Connect
+      #   url: /documentation/setup-deployment/aether-connect.html
+      # - page: Monitoring and Troubleshooting
+      #   url: /documentation/setup-deployment/monitoring-troubleshooting.html
+      # - page: Upgrading Aether
+      #   url: /documentation/setup-deployment/upgrading.html
   - title: Aether UI User Guide
     url: /documentation/ui/index.html
     subfolderitems:
