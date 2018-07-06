@@ -57,13 +57,12 @@ and [Enzyme](http://airbnb.io/enzyme/).
 docker-compose run ui-assets test
 
 # by type
-docker-compose run ui-assets eval test_lint
-# or
+docker-compose run ui-assets test_lint
+docker-compose run ui-assets test_js
+
+# more detailed
 docker-compose run ui-assets eval npm run test-lint-sass
 docker-compose run ui-assets eval npm run test-lint-js
-
-docker-compose run ui-assets eval test_js
-
 # in case you need to check `console.log` messages
 docker-compose run ui-assets eval npm run test-js-verbose
 ```
