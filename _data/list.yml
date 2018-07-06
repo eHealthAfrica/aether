@@ -11,7 +11,7 @@ toc:
     subfolderitems:
       - page: Installing Aether Bootstrap
         url: /documentation/try/index.html
-      - page: Setting up an Aether-Based Project
+      - page: Setting up an Aether-Based Solution
         url: /documentation/try/walkthrough-core.html
       - page: Adding Aether Connect
         url: /documentation/try/walkthrough-connect.html

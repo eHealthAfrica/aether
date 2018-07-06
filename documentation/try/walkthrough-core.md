@@ -1,5 +1,5 @@
 ---
-title: Aether - First Steps
+title: Aether - Setting Up an Aether-Based Solution
 permalink: documentation/try/walkthrough-core.html
 ---
 
