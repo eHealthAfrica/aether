@@ -47,18 +47,18 @@ class AvroSchemaViewer extends Component {
       const className = this.getHighlightedClassName(jsonPath)
 
       return isUnion ? (
-        <ul key={schema.name} className='group-list'>
+        <ul key={`${schema.name}-${generateGUID()}`} className='group-list'>
           { schema.fields.map(field => this.schemaToMarkup(field, parent, isUnion, isItem)) }
         </ul>
       ) : (
-        <ul key={schema.name} className='group'>
+        <ul key={`${schema.name}-${generateGUID()}`} className='group'>
           <li
             data-qa={`group-title-${schema.name}`}
             className={`group-title ${className}`}
             id={`input_${jsonPath}`}>
             {schema.name}
           </li>
-          <ul key={schema.name} className='group-list'>
+          <ul key={`${schema.name}-${generateGUID()}`} className='group-list'>
             { schema.fields.map(field => this.schemaToMarkup(field, parent, isUnion, isItem)) }
           </ul>
         </ul>
@@ -118,7 +118,7 @@ class AvroSchemaViewer extends Component {
         { children }
       </li>
     ) : (
-      <ul>
+      <ul key={generateGUID()}>
         { arrayItems }
         { children }
       </ul>
@@ -145,7 +145,6 @@ class AvroSchemaViewer extends Component {
         </div>
       )
     } catch (error) {
-      console.log(error)
       return (
         <div className='hint'>
           <FormattedMessage
