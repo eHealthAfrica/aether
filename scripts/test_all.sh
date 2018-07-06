@@ -80,9 +80,9 @@ prepare_and_test_container odk
 
 
 # test a clean UI TEST container
-$DC_TEST build ui-webpack-test
-$DC_TEST run   ui-webpack-test test
-$DC_TEST run   ui-webpack-test build
+$DC_TEST build ui-assets-test
+$DC_TEST run   ui-assets-test test
+$DC_TEST run   ui-assets-test build
 prepare_and_test_container ui
 
 

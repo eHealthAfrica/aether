@@ -18,5 +18,5 @@ RUN npm install --loglevel warn
 ## Last steps
 ################################################################################
 
-COPY ./entrypoint.webpack.sh /code/entrypoint.sh
-ENTRYPOINT ["/code/entrypoint.sh"]
+COPY ./ /code
+ENTRYPOINT ["/code/conf/entrypoint.sh"]

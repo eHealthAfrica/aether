@@ -24,7 +24,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const webpack = require('webpack')
 const buildEntries = require('./webpack.apps')
 
-const BUNDLES_DIR = path.resolve(__dirname, './assets/bundles/')
+const BUNDLES_DIR = path.resolve(__dirname, '../bundles/')
 
 module.exports = (custom) => ({
   mode: (custom.production ? 'production' : 'development'),

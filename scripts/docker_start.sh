@@ -133,10 +133,10 @@ case $container in
     echo "**** Starting NGINX                                               ****"
     echo "**** Starting Kernel app                                          ****"
     echo "**** Starting UI module                                           ****"
-    echo "**** Starting webpack                                             ****"
+    echo "**** Starting UI assets HMR                                       ****"
     echo "**********************************************************************"
 
-    docker-compose up db kernel ui webpack nginx
+    docker-compose up db kernel ui ui-assets nginx
   ;;
 
   *)
