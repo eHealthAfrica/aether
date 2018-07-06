@@ -33,7 +33,7 @@ show_help() {
   test_lint     : run standardjs and sass lint tests
   test_js       : run js tests with enzyme and jest
 
-  build         : create distributed app
+  build         : create distributed assets
   start_dev     : start webpack server (only in DEV mode)
   """
 }
@@ -72,9 +72,6 @@ case "$1" in
 
   build)
     npm run webpack
-
-    # copy bundles in static folder
-    cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
   ;;
 
   start_dev)

@@ -134,9 +134,6 @@ case "$1" in
   test)
     test_lint
     test_coverage
-
-    # collect static assets
-    ./manage.py collectstatic --noinput --dry-run
   ;;
 
   test_lint)
@@ -156,6 +153,7 @@ case "$1" in
     setup_prod
 
     # create static assets
+    cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
     ./manage.py collectstatic --noinput
     chmod -R 755 /var/www/static
 
@@ -170,6 +168,9 @@ case "$1" in
   start_dev )
     setup_db
     setup_initial_data
+
+    # copy assets bundles folder into static folder
+    cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
 
     ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
   ;;
