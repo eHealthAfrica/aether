@@ -26,7 +26,6 @@ django-storages==1.6.6
 django-ums-client==0.2.6
 django-webpack-loader==0.6.0
 djangorestframework==3.8.2
-djangorestframework-csv==2.1.0
 drf-dynamic-fields==0.3.0
 flake8==3.5.0
 flake8-quotes==1.0.0
@@ -45,6 +44,5 @@ raven==6.9.0
 requests==2.19.1
 six==1.11.0
 sqlparse==0.2.4
-unicodecsv==0.14.1
 urllib3==1.23
 uWSGI==2.0.17.1

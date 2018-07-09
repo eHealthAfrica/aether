@@ -13,8 +13,8 @@
 ################################################################################
 
 aether.common==0.0.0
-boto3==1.8.1
-botocore==1.11.1
+boto3==1.8.2
+botocore==1.11.2
 cachetools==2.1.0
 certifi==2018.8.24
 chardet==3.0.4
@@ -37,7 +37,6 @@ django-reversion-compare==0.8.4
 django-storages==1.6.6
 django-ums-client==0.2.6
 djangorestframework==3.8.2
-djangorestframework-csv==2.1.0
 djangorestframework-filters==0.10.2
 docutils==0.14
 drf-dynamic-fields==0.3.0
@@ -82,7 +81,6 @@ simplejson==3.16.0
 six==1.11.0
 spavro==1.1.19
 sqlparse==0.2.4
-unicodecsv==0.14.1
 uritemplate==3.0.0
 urllib3==1.23
 uWSGI==2.0.17.1

@@ -27,7 +27,6 @@ django-rq==1.2.0
 django-storages==1.6.6
 django-ums-client==0.2.6
 djangorestframework==3.8.2
-djangorestframework-csv==2.1.0
 flake8==3.5.0
 flake8-quotes==1.0.0
 httplib2==0.11.3
@@ -54,6 +53,5 @@ rq-scheduler==0.8.3
 rsa==3.4.2
 six==1.11.0
 sqlparse==0.2.4
-unicodecsv==0.14.1
 urllib3==1.23
 uWSGI==2.0.17.1
