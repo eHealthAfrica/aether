@@ -21,6 +21,7 @@ from collections import namedtuple
 import json
 from random import randint, uniform, choice, sample
 from queue import Queue, Empty
+import os
 import signal
 import string
 from threading import Thread
@@ -379,8 +380,8 @@ class MockingManager(object):
             kernel_url = "http://kernel.aether.local:8000/v1"
         if not kernel_credentials:
             kernel_credentials = {
-                "username": "admin",
-                "password": "adminadmin",
+                "username": os.environ['KERNEL_ADMIN_USERNAME'],
+                "password": os.environ['KERNEL_ADMIN_PASSWORD']
             }
         self.client = KernelClient(kernel_url, **kernel_credentials)
         self.types = {}

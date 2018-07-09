@@ -32,14 +32,14 @@ from .consumer import get_consumer, read
 KERNEL_URL = "http://kernel-test:9000/v1"
 
 kernel_credentials = {
-    "username": "admin",
+    "username": os.environ['KERNEL_ADMIN_USERNAME'],
     "password": os.environ['KERNEL_ADMIN_PASSWORD'],
 }
 
 kernel_retry = 15
 kernel_retry_time = 1
 
-SEED_ENTITIES = 12
+SEED_ENTITIES = 1234
 SEED_TYPE = "Person"
 
 
@@ -99,10 +99,10 @@ def producer_status():
                 sleep(10)
                 return ok_count
             else:
-                sleep(1)
+                sleep(5)
         except Exception as err:
             print(err)
-            sleep(1)
+            sleep(5)
 
 
 @pytest.fixture(scope="function")

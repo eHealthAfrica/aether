@@ -12,10 +12,6 @@
         "host" : "db"
     },
     "kernel_url": "http://kernel:8000",
-    "kernel_credentials": {
-        "username": "admin",
-        "password": "adminadmin"
-    },
     "kafka_failure_wait_time" : 10,
     "kafka_settings" : {
         "bootstrap.servers": "kafka:29092",

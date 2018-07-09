@@ -133,8 +133,8 @@ services:
     build: ./aether-utils/aether-client
 
     environment:
-      KERNEL_USERNAME: "admin"
-      KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
+      KERNEL_ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
+      KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
 
     volumes:
       - ./aether-utils/aether-client:/code
@@ -150,7 +150,7 @@ services:
     build: ./test-aether-integration-module
 
     environment:
-      KERNEL_USERNAME: "admin"
+      KERNEL_ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
       KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
 
     volumes:
@@ -194,6 +194,8 @@ services:
       file: docker-compose-base.yml
       service: aether-producer-base
     environment:
+      KERNEL_ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
+      KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
       PRODUCER_SETTINGS_FILE: /code/producer/test_settings.json
     ports:
       - "9005:9005"

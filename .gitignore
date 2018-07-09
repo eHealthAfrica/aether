@@ -143,3 +143,6 @@ demo
 
 # npm
 **/package-lock.json
+
+# docker-compose variables
+.env
