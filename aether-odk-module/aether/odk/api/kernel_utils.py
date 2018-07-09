@@ -121,6 +121,8 @@ def __xform_to_artefacts(xform):
     # all the items will have the same id
     item_id = str(xform.kernel_id)
     definition = copy.deepcopy(xform.avro_schema)
+    # assign namespace based on project name
+    definition['namespace'] = f'aether.odk.xforms.{__clean_name(xform.project.name)}'
 
     name = definition['name']
     fields = definition['fields']
@@ -173,3 +175,12 @@ def __right_pad(value):
     alphanum = string.ascii_letters + string.digits
     pad = ''.join([random.choice(alphanum) for x in range(50)])
     return (f'{value}__{pad}')[0:50]
+
+
+def __clean_name(value='Project'):
+    '''
+    Replaces any non alphanumeric character with spaces
+    Converts to title case
+    Removes spaces
+    '''
+    return ''.join([c if c.isalnum() else ' ' for c in value]).title().replace(' ', '')
