@@ -33,7 +33,7 @@ show_help() {
   test_lint     : run standardjs and sass lint tests
   test_js       : run js tests with enzyme and jest
 
-  build         : create distributed app
+  build         : create distributed assets
   start_dev     : start webpack server (only in DEV mode)
   """
 }
@@ -71,6 +71,7 @@ case "$1" in
   ;;
 
   build)
+    rm -r -f ./bundles/*
     npm run webpack
   ;;
 

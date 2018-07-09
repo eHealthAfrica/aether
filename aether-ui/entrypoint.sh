@@ -89,16 +89,6 @@ setup_prod() {
   ./manage.py setup_admin -p=$ADMIN_PASSWORD
 }
 
-setup_static() {
-  # create static assets
-  ./manage.py collectstatic --noinput --clear
-  # copy distributed app
-  chown -R aether: /code/aether/ui/assets/bundles
-  cp -r /code/aether/ui/assets/bundles/* /var/www/static
-
-  chmod -R 755 /var/www/static/
-}
-
 test_lint() {
   flake8 ./aether --config=./conf/extras/flake8.cfg
 }
@@ -113,17 +103,6 @@ test_coverage() {
 
   cat ./conf/extras/good_job.txt
 }
-
-
-# --------------------------------
-# set DJANGO_SECRET_KEY if needed
-if [ "$DJANGO_SECRET_KEY" = "" ]
-then
-  export DJANGO_SECRET_KEY=$(
-    cat /dev/urandom | tr -dc 'a-zA-Z0-9-_!@#$%^&*()_+{}|:<>?=' | fold -w 64 | head -n 4
-  )
-fi
-# --------------------------------
 
 
 case "$1" in
@@ -155,9 +134,6 @@ case "$1" in
   test)
     test_lint
     test_coverage
-
-    # collect static assets
-    ./manage.py collectstatic --noinput --dry-run
   ;;
 
   test_lint)
@@ -175,7 +151,17 @@ case "$1" in
   start )
     setup_db
     setup_prod
-    setup_static
+
+    # create static assets
+    rm -r -f /code/aether/ui/static/*.*
+    cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
+    ./manage.py collectstatic --noinput
+    chmod -R 755 /var/www/static
+
+    # expose version number
+    cp VERSION /var/www/VERSION
+    # add git revision
+    cp /code/REVISION /var/www/REVISION
 
     /usr/local/bin/uwsgi --ini ./conf/uwsgi.ini
   ;;
@@ -184,9 +170,9 @@ case "$1" in
     setup_db
     setup_initial_data
 
-    # copy bundles in static folder
-    chmod -R 755 /code/aether/ui/assets/bundles
-    chown -R aether: /code/aether/ui/assets/bundles
+    # cleaning
+    rm -r -f /code/aether/ui/static/*.*
+    # copy assets bundles folder into static folder
     cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
 
     ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
