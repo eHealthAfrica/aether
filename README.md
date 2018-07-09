@@ -56,7 +56,7 @@ scripts/generate-docker-compose-credentials.sh > .env
 docker-compose build && docker-compose up
 ```
 
-**IMPORTANT NOTE**: the docker-compose files are intended to be used exlusively for local development. Never deploy these to publicly accessible servers.
+**IMPORTANT NOTE**: the docker-compose files are intended to be used exclusively for local development. Never deploy these to publicly accessible servers.
 
 ##### Include this entry in your `/etc/hosts` file
 
@@ -152,9 +152,7 @@ This will start:
 - **Aether CouchDB Sync Module** on `http://sync.aether.local:8666`
   and create a superuser `admin`.
 
-
-All the created superusers have password `adminadmin` in each container.
-
+If you generated an `.env` file during installation, passwords for all superusers can be found there.
 
 To start any app/module separately:
 

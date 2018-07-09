@@ -57,6 +57,9 @@ echo "_____________________________________________ Common module"
 echo "_____________________________________________ Aether utils"
 ./scripts/build_aether_utils_and_distribute.sh
 
+echo "_____________________________________________ Starting database"
+$DC_TEST up -d db-test
+
 # test and start a clean KERNEL TEST container
 prepare_and_test_container kernel
 
