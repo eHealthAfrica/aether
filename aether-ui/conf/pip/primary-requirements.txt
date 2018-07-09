@@ -17,7 +17,6 @@
 #   django-debug-toolbar
 #   django-prometheus
 #   djangorestframework
-#   djangorestframework-csv
 #   psycopg2-binary
 #   requests
 aether.common
