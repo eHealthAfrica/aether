@@ -16,14 +16,15 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import unittest
+import json
+import os
 import random
 import sys
 import traceback
-import json
+import unittest
+
 from . import (
     kernel_url,
-    kernel_credentials,
     project_name,
     project_obj,
     schema_objs,
@@ -62,7 +63,13 @@ class KernelClientCase(unittest.TestCase):
             except AttributeError:
                 pass
             try:
-                KernelClientCase.client = _client.KernelClient(kernel_url, **kernel_credentials)
+                kernel_username = os.environ['KERNEL_USERNAME']
+                kernel_password = os.environ['KERNEL_PASSWORD']
+                KernelClientCase.client = _client.KernelClient(
+                    kernel_url,
+                    username=kernel_username,
+                    password=kernel_password,
+                )
                 print("Connected client to Aether on %s" % kernel_url)
             except Exception as e:
                 print(e)

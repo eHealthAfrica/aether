@@ -132,6 +132,10 @@ services:
     image: aether/client
     build: ./aether-utils/aether-client
 
+    environment:
+      KERNEL_USERNAME: "admin"
+      KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
+
     volumes:
       - ./aether-utils/aether-client:/code
 
@@ -144,6 +148,10 @@ services:
   integration-test:
     image: aether/integration
     build: ./test-aether-integration-module
+
+    environment:
+      KERNEL_USERNAME: "admin"
+      KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
 
     volumes:
       - ./test-aether-integration-module:/code

@@ -16,8 +16,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import pytest
+import os
 from time import sleep
+
+import pytest
 import requests
 
 from aether.client import KernelClient
@@ -31,7 +33,7 @@ KERNEL_URL = "http://kernel-test:9000/v1"
 
 kernel_credentials = {
     "username": "admin",
-    "password": "adminadmin",
+    "password": os.environ['KERNEL_ADMIN_PASSWORD'],
 }
 
 kernel_retry = 15

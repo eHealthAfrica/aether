@@ -21,16 +21,6 @@ import os
 
 kernel_url = "http://kernel-test:9000"
 
-kernel_credentials ={
-    "username": "admin",
-    "password": "adminadmin",
-}
-
-odk_credentials ={
-    "username": "admin",
-    "password": "adminadmin",
-}
-
 def file_to_json(path):
     with open(path) as f:
         return json.load(f)

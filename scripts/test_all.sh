@@ -51,14 +51,14 @@ echo "_____________________________________________ TESTING"
 kill_all
 
 
-echo "_____________________________________________ Common module"
-./scripts/build_common_and_distribute.sh
+# echo "_____________________________________________ Common module"
+# ./scripts/build_common_and_distribute.sh
 
 echo "_____________________________________________ Aether utils"
 ./scripts/build_aether_utils_and_distribute.sh
 
-# test and start a clean KERNEL TEST container
-prepare_and_test_container kernel
+# # test and start a clean KERNEL TEST container
+# prepare_and_test_container kernel
 
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
