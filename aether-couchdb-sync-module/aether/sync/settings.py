@@ -51,14 +51,14 @@ MIGRATION_MODULES = {
 }
 
 COUCHDB_URL = os.environ.get('COUCHDB_URL', 'http://couchdb:5984')
-COUCHDB_USER = os.environ.get('COUCHDB_USER', None)
-COUCHDB_PASSWORD = os.environ.get('COUCHDB_PASSWORD', None)
+COUCHDB_USER = os.environ['COUCHDB_USER']
+COUCHDB_PASSWORD = os.environ['COUCHDB_PASSWORD']
 COUCHDB_DIR = './couchdb'
 
 REDIS_HOST = os.environ.get('REDIS_HOST', 'redis')
 REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
 REDIS_DB = os.environ.get('REDIS_DB', 0)
-REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', None)
+REDIS_PASSWORD = os.environ['REDIS_PASSWORD']
 
 RQ_QUEUES = {
     'default': {

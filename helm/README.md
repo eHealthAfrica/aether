@@ -22,6 +22,16 @@ sudo ./scripts/kubernetes/install_helm.sh --version v2.8.1
 
 ## Running a local kubernetes cluster
 
+### Secrets
+
+For local development with Kubernetes and Minikube, we need to create some secrets.
+
+```bash
+./scripts/generate-kubernetes-credentials.sh > helm/test-secrets.yaml
+```
+
+The file `helm/test-secrets.yaml` will get picked up by `./scripts/install_secrets.sh` (see below).
+
 ### Environments
 To start the `kernel` and `odk` modules in a local minikube cluster with code reloading enabled, we need to mount our aether repository in minikube:
 
