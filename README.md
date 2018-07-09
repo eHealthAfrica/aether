@@ -38,18 +38,30 @@
 
 ### Installation
 
+##### Clone the repository
+
 ```bash
-git clone git@github.com:eHealthAfrica/aether.git
-cd aether
-docker-compose build
+git clone git@github.com:eHealthAfrica/aether.git && cd aether
 ```
 
-**IMPORTANT NOTE**: the docker-compose files are intended to be used exlusively for local development. Never deploy these to publicly accessible servers. 
+##### Generate credentials for local development with docker-compose
 
-Include this entry in your `/etc/hosts` file:
+```bash
+scripts/generate-docker-compose-credentials.sh > .env
+```
+
+##### Build containers and start the applications
+
+```bash
+docker-compose build && docker-compose up
+```
+
+**IMPORTANT NOTE**: the docker-compose files are intended to be used exlusively for local development. Never deploy these to publicly accessible servers.
+
+##### Include this entry in your `/etc/hosts` file
 
 ```
-127.0.0.1    kernel.aether.local odk.aether.local sync.aether.local
+127.0.0.1    kernel.aether.local odk.aether.local sync.aether.local ui.aether.local
 ```
 
 *[Return to TOC](#table-of-contents)*

@@ -12,7 +12,7 @@ before_script:
 - "./scripts/build_aether_utils_and_distribute.sh"
 - "./scripts/build_common_and_distribute.sh"
 - "./scripts/generate-compose-credentials.sh > .env"
-- "./scripts/generate-kubernetes-credentials.sh > helm/secrets.yaml"
+- "./scripts/generate-kubernetes-credentials.sh > helm/test-secrets.yaml"
 script:
 # First, run the kernel and odk tests in a minikube cluster. If everything goes
 # well, run all tests in a docker-compose environment.
