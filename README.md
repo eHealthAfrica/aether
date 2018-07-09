@@ -13,6 +13,7 @@
     - [Aether Kernel](#aether-kernel)
     - [Aether ODK Module](#aether-odk-module)
     - [Aether CouchDB Sync Module](#aether-couchdb-sync-module)
+    - [Aether UI Module](#aether-ui-module)
 - [Usage](#usage)
   - [Users & Authentication](#users--authentication)
     - [UMS settings for local development](#ums-settings-for-local-development)
@@ -85,6 +86,7 @@ of the most common ones with non default values. For more info take a look at th
 - `WEB_SERVER_PORT`: `8000` Web server port.
 - `AETHER_KERNEL_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24`
   to connect to it from other modules. It's used within the start up scripts.
+- `ADMIN_PASSWORD`: `adminadmin`. It's used within the start up scripts.
 
 
 #### Aether ODK Module
@@ -98,6 +100,7 @@ of the most common ones with non default values. For more info take a look at th
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9000` Aether Kernel Testing Server url.
 - `AETHER_ODK_TOKEN`: `d5184a044bb5acff89a76ec4e67d0fcddd5cd3a1`
   to connect to it from other modules. It's used within the start up scripts.
+- `ADMIN_PASSWORD`: `adminadmin`. It's used within the start up scripts.
 
 
 #### Aether CouchDB Sync Module
@@ -109,8 +112,20 @@ of the most common ones with non default values. For more info take a look at th
 - `AETHER_KERNEL_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24` Token to connect to kernel server.
 - `AETHER_KERNEL_URL`: `http://kernel:8000` Aether Kernel Server url.
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9000` Aether Kernel Testing Server url.
+- `ADMIN_PASSWORD`: `adminadmin`. It's used within the start up scripts.
 - `GOOGLE_CLIENT_ID`: `search for it in lastpass` Token used to verify the device identity with Google.
 
+
+#### Aether UI Module
+
+- `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
+- `HOSTNAME`: `odk.aether.local` Used by UMS.
+- `RDS_DB_NAME`: `ui` Postgres database name.
+- `WEB_SERVER_PORT`: `8004` Web server port.
+- `AETHER_KERNEL_TOKEN`: `a2d6bc20ad16ec8e715f2f42f54eb00cbbea2d24` Token to connect to kernel server.
+- `AETHER_KERNEL_URL`: `http://kernel:8000` Aether Kernel Server url.
+- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9000` Aether Kernel Testing Server url.
+- `ADMIN_PASSWORD`: `adminadmin`. It's used within the start up scripts.
 
 **WARNING**
 
@@ -142,6 +157,8 @@ This will start:
 - **Aether CouchDB Sync Module** on `http://sync.aether.local:8666`
   and create a superuser `admin-sync`.
 
+- **Aether UI Module** on `http://ui.aether.local:8004`
+  and create a superuser `admin-ui`.
 
 All the created superusers have password `adminadmin` in each container.
 
@@ -154,6 +171,8 @@ To start any app/module separately:
 ./scripts/docker_start.sh odk             # starts Aether ODK module and its dependencies
 
 ./scripts/docker_start.sh couchdb-sync    # starts Aether CouchDB Sync module and its dependencies
+
+./scripts/docker_start.sh ui              # starts Aether UI module and its dependencies
 ```
 
 *[Return to TOC](#table-of-contents)*
@@ -176,6 +195,7 @@ The client services are:
   - **Aether Kernel (local)** for `kernel.aether.local`.
   - **Aether ODK (local)**  for `odk.aether.local`.
   - **Aether Sync (local)** for `sync.aether.local`.
+  - **Aether UI (local)** for `ui.aether.local`.
 
 Other options are to log in via token, via basic authentication or via the
 standard django authentication process in the admin section.
@@ -188,16 +208,9 @@ The available options depend on each container.
 The communication between the containers is done via
 [token authentication](http://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication).
 
-In the case of `aether-odk-module` and `aether-couchdb-sync-module` there is a
-global token to connect to `aether-kernel` set in the **required** environment
-variable `AETHER_KERNEL_TOKEN`.
-
-In the case of `aether-ui` there are tokens per user. This means that every time
-a logged in user tries to visit any page that requires to fetch data from any of
-the other apps, `aether-kernel` and/or `aether-odk-module`, the system will verify
-that the user token for that app is valid or will request a new one using the
-global tokens, `AETHER_KERNEL_TOKEN` and/or `AETHER_ODK_TOKEN`; that's going to
-be used for all requests and will allow the system to better track the user actions.
+In the case of `aether-odk-module`, `aether-couchdb-sync-module` and `aether-ui`
+there is a global token to connect to `aether-kernel` set in the **required**
+environment variable `AETHER_KERNEL_TOKEN`.
 
 *[Return to TOC](#table-of-contents)*
 
@@ -232,18 +245,6 @@ This also applies for `aether-couchdb-sync-module` and `aether-ui`.
 In the case of `aether-couchdb-sync-module` a valid `GOOGLE_CLIENT_ID`
 environment variable is necessary to verify the device credentials as well.
 
-Infrastructure deployment is done with Terraform, which configuration
-files are stored in [terraform](terraform) directory.
-
-Application deployment is managed by AWS Elastic Container Service and is
-being done automatically on the following branches/environments:
-
-- branch `develop` is deployed to `dev` environment.
-  [![Build Status](https://travis-ci.com/eHealthAfrica/aether.svg?token=Rizk7xZxRNoTexqsQfXy&branch=develop)](https://travis-ci.com/eHealthAfrica/aether)
-
-- branch `master` is deployed to `prod` environment.
-  [![Build Status](https://travis-ci.com/eHealthAfrica/aether.svg?token=Rizk7xZxRNoTexqsQfXy&branch=master)](https://travis-ci.com/eHealthAfrica/aether)
-
 *[Return to TOC](#table-of-contents)*
 
 
@@ -260,6 +261,7 @@ The list of the main containers:
 | **kernel**        | Aether Kernel                                                           |
 | **odk**           | Aether ODK module (imports data from ODK Collect)                       |
 | **couchdb-sync**  | Aether CouchDB Sync module (imports data from Aether Mobile app)        |
+| **ui**            | Aether UI (creates entities and mapping rules)                          |
 | couchdb-sync-rq   | [RQ python](http://python-rq.org/) task runner to perform sync jobs     |
 | kernel-test       | Aether Kernel TESTING app (used only in e2e tests by other containers)  |
 
