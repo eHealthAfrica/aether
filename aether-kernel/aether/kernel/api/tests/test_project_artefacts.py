@@ -71,10 +71,19 @@ class ProjectArtefactsTests(TestCase):
         # updates indicated fields, keeps the rest
         mapping_1 = upsert(Mapping, pk=mapping_0.pk, ignore_fields=['name'],
                            definition={'mapping': []}, unknown=True)
+
         self.assertEqual(mapping_1.pk, mapping_0.pk)
         self.assertEqual(mapping_1.name, 'Mapping None')
         self.assertEqual(mapping_1.project, project_1)
         self.assertEqual(mapping_1.definition, {'mapping': []})
+
+        # does not update with action 'create'
+        mapping_2 = upsert(Mapping, pk=mapping_0.pk, ignore_fields=[], action='create',
+                           name='Mapping Two', project=project_1, definition={})
+
+        self.assertEqual(mapping_2.pk, mapping_0.pk)
+        self.assertEqual(mapping_2.name, 'Mapping None')
+        self.assertEqual(mapping_2.project, project_2)
 
     def test__upsert_project_artefacts__project(self):
 
