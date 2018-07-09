@@ -147,5 +147,5 @@ demo
 # docker-compose variables
 .env
 
-# Kubernetes secrets used for local development and on Travis
+# Kubernetes secrets used for local development
 helm/test-secrets.yaml
