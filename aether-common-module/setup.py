@@ -39,7 +39,6 @@ setup(
         'django-cors-headers',
         'django-debug-toolbar',
         'django-prometheus',
-        'djangorestframework-csv',
         'djangorestframework',
         'psycopg2-binary',
         'requests',
