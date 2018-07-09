@@ -47,6 +47,9 @@ def propagate_kernel_project(project):
     '''
 
     artefacts = {
+        # do not update the mapping rules in case of the xform was already propagated
+        # that might be the case that the user changed the default rules
+        'action': 'create',
         'name': __right_pad(project.name),
         'schemas': [],
         'mappings': [],
@@ -76,6 +79,9 @@ def propagate_kernel_artefacts(xform):
 
     schemas, mapping = __xform_to_artefacts(xform)
     artefacts = {
+        # do not update the mapping rules in case of the xform was already propagated
+        # that might be the case that the user changed the default rules
+        'action': 'create',
         'name': __right_pad(xform.project.name),
         'schemas': schemas,
         'mappings': [mapping],
