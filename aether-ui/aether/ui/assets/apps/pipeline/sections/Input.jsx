@@ -24,7 +24,11 @@ import { connect } from 'react-redux'
 import avro from 'avsc'
 
 import { AvroSchemaViewer, Modal } from '../../components'
-import { deepEqual, generateGUID, generateSchemaName } from '../../utils'
+import {
+  deepEqual,
+  generateGUID,
+  generateSchema
+} from '../../utils'
 import { updatePipeline } from '../redux'
 
 // The input section has two subviews `SCHEMA_VIEW` and `DATA_VIEW`.
@@ -226,8 +230,7 @@ class DataInput extends Component {
     try {
       // Validate data and generate avro schema from input
       const input = JSON.parse(this.state.inputData)
-      const options = { typeHook: generateSchemaName('Auto') }
-      const schema = avro.Type.forValue(input, options)
+      const schema = generateSchema(input)
       this.props.updatePipeline({
         ...this.props.selectedPipeline,
         schema,

@@ -22,11 +22,11 @@
 const apps = [
   {
     name: 'styles',
-    path: './assets/css/index.scss'
+    path: '../css/index.scss'
   },
   {
     name: 'pipeline',
-    path: './assets/apps/pipeline'
+    path: '../apps/pipeline'
   }
 ]
 

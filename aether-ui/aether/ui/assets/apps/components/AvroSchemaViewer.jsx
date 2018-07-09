@@ -47,22 +47,20 @@ class AvroSchemaViewer extends Component {
       const className = this.getHighlightedClassName(jsonPath)
 
       return isUnion ? (
-        <ul key={schema.name} className='group-list'>
+        <ul key={`${schema.name}-${generateGUID()}`} className='group-list'>
           { schema.fields.map(field => this.schemaToMarkup(field, parent, isUnion, isItem)) }
         </ul>
       ) : (
-        <ul key={schema.name} className='group'>
+        <ul key={`${schema.name}-${generateGUID()}`} className='group'>
           <li
             data-qa={`group-title-${schema.name}`}
             className={`group-title ${className}`}
             id={`input_${jsonPath}`}>
             {schema.name}
           </li>
-          <li>
-            <ul key={schema.name} className='group-list'>
-              { schema.fields.map(field => this.schemaToMarkup(field, parent, isUnion, isItem)) }
-            </ul>
-          </li>
+          <ul key={`${schema.name}-${generateGUID()}`} className='group-list'>
+            { schema.fields.map(field => this.schemaToMarkup(field, parent, isUnion, isItem)) }
+          </ul>
         </ul>
       )
     } else if (Array.isArray(schema.type)) {
@@ -84,13 +82,13 @@ class AvroSchemaViewer extends Component {
       const nestedList = typeObjectOptions.length && typeObjectOptions.map(obj => (this.schemaToMarkup(obj,
         `${parent ? parent + '.' : ''}${schema.name}`, true, isItem)))
       return this.deepestRender(schema, parent, true, isItem, typeStringOptions, isNullable, nestedList !== 0 && <ul>{nestedList}</ul>)
-    } else if (typeof schema.type !== 'string') {
+    } else if (schema.type && typeof schema.type !== 'string') {
       schema.type.name = schema.name
       let parentName = ''
       if (parent) {
         parentName = schema.type.type === 'array' ? parent : `${parent}.${schema.name}`
       } else {
-        parentName = schema.name
+        parentName = schema.type.type === 'array' ? '' : schema.name
       }
       return this.schemaToMarkup(schema.type, parentName, isUnion, isItem)
     } else {
@@ -105,7 +103,7 @@ class AvroSchemaViewer extends Component {
     if (schema.type === 'array' && typeof schema.items !== 'string') {
       arrayItems = this.schemaToMarkup(schema.items, parent, isUnion, true)
     }
-    return (
+    return schema.name ? (
       <li
         data-qa={`no-children-${schema.name}`}
         key={`${schema.name}-${generateGUID()}`}
@@ -119,6 +117,11 @@ class AvroSchemaViewer extends Component {
         { arrayItems }
         { children }
       </li>
+    ) : (
+      <ul key={generateGUID()}>
+        { arrayItems }
+        { children }
+      </ul>
     )
   }
 
