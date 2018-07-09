@@ -48,7 +48,6 @@ setup(
         'django-prometheus',
         'django-storages',
         'djangorestframework',
-        'djangorestframework-csv',
         'psycopg2-binary',
         'requests',
     ],

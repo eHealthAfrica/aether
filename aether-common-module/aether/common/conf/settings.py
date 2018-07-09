@@ -69,7 +69,6 @@ INSTALLED_APPS = [
     # REST framework with auth token
     'rest_framework',
     'rest_framework.authtoken',
-    'rest_framework_csv',
 
     # CORS checking
     'corsheaders',
@@ -118,7 +117,6 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
         'rest_framework.renderers.AdminRenderer',
-        'aether.common.drf.renderers.CustomCSVRenderer',
     ),
     'DEFAULT_PARSER_CLASSES': (
         'rest_framework.parsers.JSONParser',
