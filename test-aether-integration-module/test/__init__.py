@@ -99,10 +99,10 @@ def producer_status():
                 sleep(10)
                 return ok_count
             else:
-                sleep(5)
+                sleep(1)
         except Exception as err:
             print(err)
-            sleep(5)
+            sleep(1)
 
 
 @pytest.fixture(scope="function")

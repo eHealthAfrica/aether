@@ -1,5 +1,5 @@
 gen_pass () {
-    openssl rand -base64 16
+    cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1
 }
 
 cat <<EOF
@@ -9,7 +9,6 @@ metadata:
   name: secrets
 type: Opaque
 stringData:
-  
   kernel-admin-password: $(gen_pass)
   kernel-database-user: postgres
   kernel-database-password: $(gen_pass)

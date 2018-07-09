@@ -51,6 +51,7 @@ services:
     extends:
       file: docker-compose-base.yml
       service: kernel-base
+    # uncomment to speed up common module development
     volumes:
       - ./aether-common-module/aether/common:/code/aether/common
     depends_on:
