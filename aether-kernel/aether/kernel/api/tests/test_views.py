@@ -756,3 +756,15 @@ class ViewsTest(TestCase):
                 response_content['definition'][0],
             )
             self.assertEqual(response.status_code, 400)
+
+    def test_project__schemas_skeleton(self):
+        self.assertEqual(reverse('project-skeleton', kwargs={'pk': 1}),
+                         '/projects/1/schemas-skeleton/')
+
+        response = self.client.get(reverse('project-skeleton', kwargs={'pk': self.project.pk}))
+        self.assertEquals(response.status_code, 200)
+        json = response.json()
+        self.assertEqual(json, {
+            'jsonpaths': ['id', '_rev', 'name', 'dob', 'villageID'],
+            'docs': {'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
+        })

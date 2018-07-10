@@ -30,7 +30,16 @@ from rest_framework.decorators import (
 )
 from rest_framework.renderers import JSONRenderer
 
-from . import models, serializers, filters, constants, utils, mapping_validation, project_artefacts
+from . import (
+    avro_tools,
+    constants,
+    filters,
+    mapping_validation,
+    models,
+    project_artefacts,
+    serializers,
+    utils,
+)
 
 
 def get_entity_linked_data(entity, request, resolved, depth, start_depth=0):
@@ -79,6 +88,27 @@ class ProjectViewSet(CustomViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectSerializer
     filter_class = filters.ProjectFilter
+
+    @action(detail=True, methods=['get'], url_name='skeleton', url_path='schemas-skeleton')
+    def schemas_skeleton(self, request, pk=None, *args, **kwargs):
+        '''
+        Returns the schemas "skeleton" used by this project.
+
+        Reachable at ``.../projects/{pk}/schemas-skeleton/``
+        '''
+
+        project = get_object_or_404(models.Project, pk=pk)
+
+        # extract jsonpaths and docs from linked schemas definition
+        jsonpaths = []
+        docs = {}
+        for project_schema in project.projectschemas.order_by('-created'):
+            avro_tools.extract_jsonpaths_and_docs(
+                project_schema.schema.definition,
+                jsonpaths,
+                docs,
+            )
+        return Response(data={'jsonpaths': jsonpaths, 'docs': docs})
 
     @action(detail=True, methods=['get', 'patch'])
     def artefacts(self, request, pk=None, *args, **kwargs):
