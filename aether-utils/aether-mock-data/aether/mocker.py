@@ -19,14 +19,18 @@
 import collections
 from collections import namedtuple
 import json
-from random import randint, uniform, choice, sample
+import logging
 from queue import Queue, Empty
 import os
+from random import randint, uniform, choice, sample
 import signal
 import string
 from threading import Thread
 from time import sleep
 from uuid import uuid4
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 from aether.client import KernelClient
 
@@ -210,7 +214,11 @@ class DataMocker(object):
         # actually compiles the instruction set for this type and returns the body
         instructions = self.instructions.get(name)
         if not instructions:
-            raise ValueError("No instuctions for type %s" % name)
+            alt = self.parent.names.get(name)
+            instructions = self.instructions.get(alt)
+            if not instructions:
+                raise ValueError("No instructions for type %s" % name)
+
         body = {}
         for name, fn in instructions:
             body[name] = fn()
@@ -302,8 +310,11 @@ class DataMocker(object):
     def load(self):
         # loads schema definition for this type
         self.schema = json.loads(self.raw_schema)
-        for obj in self.schema:
-            self.parse(obj)
+        if isinstance(self.schema, list):
+            for obj in self.schema:
+                self.parse(obj)
+        else:
+            self.parse(self.schema)
 
     def parse(self, schema):
         # looks at all the types called for
@@ -315,6 +326,8 @@ class DataMocker(object):
         for field in fields:
             instructions.append(self._comprehend_field(field))
         self.instructions[name] = instructions
+        for i in self.instructions[name]:
+            log.debug("Add instruction to %s : %s" % (name, i))
 
     def _comprehend_field(self, field):
         # picks apart an avro definition of a field and builds mocking functions
@@ -386,6 +399,7 @@ class MockingManager(object):
         self.client = KernelClient(kernel_url, **kernel_credentials)
         self.types = {}
         self.alias = {}
+        self.names = {}
         self.project_schema = {}
         self.schema_id = {}
         self.type_client = {}
@@ -397,17 +411,21 @@ class MockingManager(object):
 
     def get(self, _type):
         if not _type in self.types.keys():
-            raise KeyError("No schema for type %s" % (_type))
+            msg = "No schema for type %s" % (_type)
+            log.error(msg)
+            raise KeyError(msg)
         return self.types.get(_type).get()
 
     def get_reference(self, _type):
         if not _type in self.types.keys():
-            raise KeyError("No schema for type %s" % (_type))
+            msg = "No schema for type %s" % (_type)
+            log.error(msg)
+            raise KeyError(msg)
         return self.types.get(_type).get_reference()
 
     def kill(self, *args, **kwargs):
         for name, mocker in self.types.items():
-            print("stopping %s" % (name))
+            log.info("Stopping thread for %s" % name)
             mocker.kill()
 
     def register(self, name, payload=None):
@@ -423,7 +441,7 @@ class MockingManager(object):
         ps_id = self.project_schema.get(type_id)
         data = self.payload_to_data(ps_id, payload)
         res = self.type_client[type_name].submit(data)
-        print("%s -> #%s" % (name, self.type_count[name]))
+        log.debug("Created instance # %s of type %s" % (self.type_count[name], name))
         return data
 
 
@@ -440,15 +458,28 @@ class MockingManager(object):
 
     def load(self):
         # loads schemas and project schemas from aether client
+        log.debug("Loading schemas from Aether Kernel")
         for schema in self.client.Resource.Schema:
             name = schema.get("name")
-            print("Load %s" % name)
+            log.debug("Loading schema for type %s \n%s" % (name, schema))
             _id = schema.get('id')
             definition = schema.get('definition')
-            full_name = [obj.get("name") for obj in definition if obj.get(
-                'name').endswith(name)][0]
+            if isinstance(definition, str):
+                definition = json.loads(definition)
+            if isinstance(definition, list):
+                full_name = [obj.get("name") for obj in definition if obj.get(
+                    'name').endswith(name)][0]
+            else:
+                full_name = definition.get('name')
+                namespace = definition.get('namespace')
+                if namespace:
+                    if not name in namespace:
+                        full_name = namespace+"."+name
             self.types[full_name] = DataMocker(
                 full_name, json.dumps(definition), self)
+            self.names[name] = full_name
+            self.names[full_name] = name
+            self.types[name] = self.types[full_name]
             self.alias[full_name] = name
             self.alias[name] = full_name
             self.schema_id[name] = _id
