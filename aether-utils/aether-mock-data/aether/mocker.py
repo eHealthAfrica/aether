@@ -462,10 +462,10 @@ class MockingManager(object):
                     'name').endswith(name)][0]
             else:
                 full_name = definition.get('name')
-            namespace = definition.get('namespace')
-            if namespace:
-                if not name in namespace:
-                    full_name = namespace+"."+name
+                namespace = definition.get('namespace')
+                if namespace:
+                    if not name in namespace:
+                        full_name = namespace+"."+name
             self.types[full_name] = DataMocker(
                 full_name, json.dumps(definition), self)
             self.names[name] = full_name
