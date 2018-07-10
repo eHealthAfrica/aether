@@ -392,7 +392,7 @@ class TopicManager(object):
 
     def schema_changed(self, schema_candidate):
         # for use by ProducerManager.check_schemas()
-        return self.parse_schema(schema_candidate) == self.schema_obj
+        return self.parse_schema(schema_candidate) != self.schema_obj
 
     def get_status(self):
         # Updates inflight status and returns to Flask called
