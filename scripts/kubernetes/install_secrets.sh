@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 
-set -x
+set -eu
 
-# Install secrets.
-kubectl create -f ./helm/dev-secrets/secrets.yaml
-kubectl create -f ./helm/dev-secrets/database-secrets.yaml
+# Install secrets for local development.
+kubectl create secret generic database-credentials \
+        --from-literal=host=db \
+        --from-literal=user=postgres \
+        --from-literal=password=$POSTGRES_PASSWORD
+kubectl create -f ./helm/test-secrets.yaml

@@ -31,8 +31,7 @@ show_help() {
 
     pip_freeze    : freeze pip dependencies and write to requirements.txt
 
-    setupproddb   : create/migrate database for production
-    setuplocaldb  : create/migrate database for development (creates superuser)
+    setup_db      : create/migrate database
 
     test          : run tests
     test_lint     : run flake8 tests
@@ -83,14 +82,9 @@ setup_db() {
     curl -s $COUCHDB_URL
 }
 
-setup_initial_data() {
-    # create initial superuser
-    ./manage.py loaddata /code/conf/extras/initial.json
-}
-
-setup_prod() {
-  # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
-  ./manage.py setup_admin -p=$ADMIN_PASSWORD
+setup_admin() {
+    # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
+    ./manage.py setup_admin -p=$ADMIN_PASSWORD
 }
 
 test_flake8() {
@@ -127,16 +121,13 @@ case "$1" in
         pip_freeze
     ;;
 
-    setuplocaldb )
-        setup_db
-        setup_initial_data
-    ;;
-
-    setupproddb )
+    setup_db )
         setup_db
     ;;
 
     test)
+        setup_db
+        setup_admin
         test_flake8
         test_coverage "${@:2}"
     ;;
@@ -151,7 +142,7 @@ case "$1" in
 
     start )
         setup_db
-        setup_prod
+        setup_admin
 
         # media assets
         chown aether: /media
@@ -170,7 +161,7 @@ case "$1" in
 
     start_dev )
         setup_db
-        setup_initial_data
+        setup_admin
 
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;

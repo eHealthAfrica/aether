@@ -20,17 +20,11 @@
 #
 set -e
 
-function prepare_container() {
-  echo "_____________________________________________ Preparing $1 container"
-  build_container $1
-  $DC_TEST run "$1"-test setuplocaldb
-  echo "_____________________________________________ $1 ready!"
+function build_container() {
+    echo "_____________________________________________ Building $1 container"
+    $DC_TEST build "$1"-test
 }
 
-function build_container() {
-  echo "_____________________________________________ Building $1 container"
-  $DC_TEST build "$1"-test
-}
 
 DC_TEST="docker-compose -f docker-compose-test.yml"
 
@@ -46,7 +40,7 @@ echo "_____________________________________________ Starting database"
 $DC_TEST up -d db-test
 
 # start a clean KERNEL TEST container
-prepare_container kernel
+build_container kernel
 
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test

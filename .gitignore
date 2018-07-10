@@ -143,3 +143,9 @@ demo
 
 # npm
 **/package-lock.json
+
+# docker-compose variables
+.env
+
+# Kubernetes secrets used for local development
+helm/test-secrets.yaml
