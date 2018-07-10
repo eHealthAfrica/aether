@@ -38,20 +38,30 @@
 
 ### Installation
 
+##### Clone the repository
+
 ```bash
-git clone git@github.com:eHealthAfrica/aether.git
-cd aether
-
-./scripts/build_common_and_distribute.sh
-./scripts/build_aether_utils_and_distribute.sh
-
-docker-compose build
+git clone git@github.com:eHealthAfrica/aether.git && cd aether
 ```
 
-Include this entry in your `/etc/hosts` file:
+##### Generate credentials for local development with docker-compose
+
+```bash
+scripts/generate-docker-compose-credentials.sh > .env
+```
+
+##### Build containers and start the applications
+
+```bash
+docker-compose build && docker-compose up
+```
+
+**IMPORTANT NOTE**: the docker-compose files are intended to be used exclusively for local development. Never deploy these to publicly accessible servers.
+
+##### Include this entry in your `/etc/hosts` file
 
 ```
-127.0.0.1    kernel.aether.local odk.aether.local sync.aether.local
+127.0.0.1    kernel.aether.local odk.aether.local sync.aether.local ui.aether.local
 ```
 
 *[Return to TOC](#table-of-contents)*
@@ -134,17 +144,15 @@ or
 This will start:
 
 - **Aether Kernel** on `http://kernel.aether.local:8000`
-  and create a superuser `admin-kernel` with the needed TOKEN.
+  and create a superuser `admin` with the needed TOKEN.
 
 - **Aether ODK Module** on `http://odk.aether.local:8443`
-  and create a superuser `admin-odk` with the needed TOKEN.
+  and create a superuser `admin` with the needed TOKEN.
 
 - **Aether CouchDB Sync Module** on `http://sync.aether.local:8666`
-  and create a superuser `admin-sync`.
+  and create a superuser `admin`.
 
-
-All the created superusers have password `adminadmin` in each container.
-
+If you generated an `.env` file during installation, passwords for all superusers can be found there.
 
 To start any app/module separately:
 

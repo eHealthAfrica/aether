@@ -227,8 +227,8 @@ def test_setup():
         with open(filename, "w") as f:
             json.dump(v, f, indent=2)
     kernel_url = settings.get("kernel_url")
-    kernel_user = settings.get("kernel_user")
-    kernel_pw = settings.get("kernel_pw")
+    kernel_user = os.environ['KERNEL_ADMIN_USERNAME']
+    kernel_pw = os.environ['KERNEL_ADMIN_PASSWORD']
     kernel_credentials = {"username": kernel_user, "password": kernel_pw}
     client = KernelClient(url=kernel_url, **kernel_credentials)
     register_project(client, project, schema_path=TEST_SCHEMAS)
@@ -276,8 +276,8 @@ def main():
 
     if ok:
         kernel_url = settings.get("kernel_url")
-        kernel_user = settings.get("kernel_user")
-        kernel_pw = settings.get("kernel_pw")
+        kernel_user = os.environ['KERNEL_ADMIN_USERNAME']
+        kernel_pw = os.environ['KERNEL_ADMIN_PASSWORD']
         kernel_credentials = {"username": kernel_user, "password": kernel_pw}
         client = KernelClient(url=kernel_url, **kernel_credentials)
         register_project(client, project)
