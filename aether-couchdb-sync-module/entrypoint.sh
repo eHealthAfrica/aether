@@ -83,8 +83,8 @@ setup_db() {
 }
 
 setup_admin() {
-  # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
-  ./manage.py setup_admin -p=$ADMIN_PASSWORD
+    # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
+    ./manage.py setup_admin -p=$ADMIN_PASSWORD
 }
 
 test_flake8() {

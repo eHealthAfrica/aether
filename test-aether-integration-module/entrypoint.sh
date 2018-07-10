@@ -67,10 +67,6 @@ case "$1" in
         pip3 freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
     ;;
 
-    setupproddb )
-        setup_db
-    ;;
-
     test)
         test_flake8
         test_coverage "${@:2}"
