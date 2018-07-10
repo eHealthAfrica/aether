@@ -38,6 +38,7 @@ services:
 
   redis-base:
     image: redis:alpine
+    command: "redis-server --requirepass ${COUCHDB_SYNC_REDIS_PASSWORD}"
 
   nginx-base:
     image: nginx:stable-alpine
