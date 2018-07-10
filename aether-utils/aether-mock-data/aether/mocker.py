@@ -19,13 +19,17 @@
 import collections
 from collections import namedtuple
 import json
-from random import randint, uniform, choice, sample
+import logging
 from queue import Queue, Empty
+from random import randint, uniform, choice, sample
 import signal
 import string
 from threading import Thread
 from time import sleep
 from uuid import uuid4
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 from aether.client import KernelClient
 
@@ -322,10 +326,9 @@ class DataMocker(object):
             instructions.append(self._comprehend_field(field))
         self.instructions[name] = instructions
         for i in self.instructions[name]:
-            print(name, i)
+            log.debug("Add instruction to %s : %s" % (name, i))
 
     def _comprehend_field(self, field):
-        print("comprehend", field)
         # picks apart an avro definition of a field and builds mocking functions
         name = field.get("name")
         if name in self.ignored_properties:
@@ -407,17 +410,21 @@ class MockingManager(object):
 
     def get(self, _type):
         if not _type in self.types.keys():
-            raise KeyError("No schema for type %s" % (_type))
+            msg = "No schema for type %s" % (_type)
+            log.error(msg)
+            raise KeyError(msg)
         return self.types.get(_type).get()
 
     def get_reference(self, _type):
         if not _type in self.types.keys():
-            raise KeyError("No schema for type %s" % (_type))
+            msg = "No schema for type %s" % (_type)
+            log.error(msg)
+            raise KeyError(msg)
         return self.types.get(_type).get_reference()
 
     def kill(self, *args, **kwargs):
         for name, mocker in self.types.items():
-            print("stopping %s" % (name))
+            log.info("Stopping thread for %s" % name)
             mocker.kill()
 
     def register(self, name, payload=None):
@@ -433,7 +440,7 @@ class MockingManager(object):
         ps_id = self.project_schema.get(type_id)
         data = self.payload_to_data(ps_id, payload)
         res = self.type_client[type_name].submit(data)
-        print("%s -> #%s" % (name, self.type_count[name]))
+        log.debug("Created instance # %s of type %s" % (self.type_count[name], name))
         return data
 
 
@@ -450,9 +457,10 @@ class MockingManager(object):
 
     def load(self):
         # loads schemas and project schemas from aether client
+        log.debug("Loading schemas from Aether Kernel")
         for schema in self.client.Resource.Schema:
             name = schema.get("name")
-            print("Load %s" % name)
+            log.debug("Loading schema for type %s \n%s" % (name, schema))
             _id = schema.get('id')
             definition = schema.get('definition')
             if isinstance(definition, str):
