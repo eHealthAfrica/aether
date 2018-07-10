@@ -49,6 +49,10 @@ boto3
 google-cloud-storage
 
 
+# XLSX libraries
+openpyxl
+
+
 # CAS libraries
 django-cas-ng
 django-ums-client
