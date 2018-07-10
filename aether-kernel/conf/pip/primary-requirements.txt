@@ -39,6 +39,10 @@ jsonschema
 spavro
 
 
+# XLSX libraries
+openpyxl
+
+
 # UMS libraries
 django-cas-ng
 django-ums-client
