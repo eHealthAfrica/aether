@@ -15,7 +15,7 @@ We’ve created an `aether-bootstrap` repository to make it easy for you to get 
 
 ## Prerequisites
 
-In order to follow this run-through, you will need to have [Docker](https://www.docker.com) installed.
+In order to follow this run-through, you will need to have [Docker](https://www.docker.com) installed (version 2.1 or higher).
 
 You will also need to register some domains for local resolution on your computer. This means editing your hosts file. On Mac/Linux this is at `/etc/hosts`; on Windows it’s at `c:\Windows\System32\Drivers\etc\hosts`. Add this line to the bottom:
 

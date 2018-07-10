@@ -66,26 +66,6 @@
           
         
       
-        
-          
-        
-          
-        
-          
-        
-      
-        
-          
-        
-          
-        
-          
-        
-          
-        
-          
-        
-      
       
       <span class="caret"></span>
     </a>
@@ -160,48 +140,6 @@
           
             <li class="">
               <a href="/documentation/ui/pipeline-publish.html">Publish your pipeline</a>
-            </li>
-          
-        </ul>
-    
-      <li class="doc-nav-title">Working with Aether Consumers</li>
-        <ul class="">
-          
-            <li class="">
-              <a href="/documentation/consumers/index.html">Introduction</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/consumers/ckan.html">CKAN Consumer</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/consumers/elastic-search.html">Elastic Search Consumer</a>
-            </li>
-          
-        </ul>
-    
-      <li class="doc-nav-title">Aether for Developers</li>
-        <ul class="">
-          
-            <li class="">
-              <a href="/documentation/developers/index.html">Introduction</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/developers/standards.html">Standards and Best Practices for Development</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/developers/github.html">Github Processes</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/developers/api.html">API Guide</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/developers/more.html">More Developer Docs...</a>
             </li>
           
         </ul>
@@ -284,48 +222,6 @@
           
         </ul>
     
-      <a href="/documentation/consumers/index.html"><h3 class="doc-nav-title">Working with Aether Consumers</h3></a>
-        <ul class="">
-          
-            <li class="">
-              <a href="/documentation/consumers/index.html">Introduction</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/consumers/ckan.html">CKAN Consumer</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/consumers/elastic-search.html">Elastic Search Consumer</a>
-            </li>
-          
-        </ul>
-    
-      <a href="/documentation/developers/index.html"><h3 class="doc-nav-title">Aether for Developers</h3></a>
-        <ul class="">
-          
-            <li class="">
-              <a href="/documentation/developers/index.html">Introduction</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/developers/standards.html">Standards and Best Practices for Development</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/developers/github.html">Github Processes</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/developers/api.html">API Guide</a>
-            </li>
-          
-            <li class="">
-              <a href="/documentation/developers/more.html">More Developer Docs...</a>
-            </li>
-          
-        </ul>
-    
   </div>
   <div class="doc-content">
 
@@ -339,7 +235,7 @@
 
 <p>In the <code class="highlighter-rouge">assets</code> folder of the <code class="highlighter-rouge">aether-bootstrap</code> repository contains some sample data, some schemas and a set of mappings. For the purposes of this walkthrough, we’re going to copy and paste the contents of these files into the Aether UI (for a more detailed overview of the UI, check out its <a href="/documentation/ui/">documentation</a>).</p>
 
-<p>Open the <a href="http://ui.aether.loca">UI</a> and log in if you haven’t already. We’re going to create a new pipeline, so hit the button that’s handily labelled <em>NEW PIPELINE</em>. Enter a name, and press <em>START PIPELINE</em>.</p>
+<p>Open the <a href="http://ui.aether.local">UI</a> and log in if you haven’t already. We’re going to create a new pipeline, so hit the button that’s handily labelled <em>NEW PIPELINE</em>. Enter a name, and press <em>START PIPELINE</em>.</p>
 
 <h2 id="defining-our-input">Defining Our Input</h2>
 
@@ -367,9 +263,80 @@
 
 <p>You might also have noticed the green dot next to the <em>OUTPUT</em> section in the top right hand corner of the screen. This indicates that your pipeline is successfully creating entities, i.e. that the data is being transformed and broken up into pieces as defined by our schemas. Open the <em>OUTPUT</em> screen, and you’ll see the transformed data.</p>
 
+<p>Now you can hit the <em>PUBLISH PIPELINE</em> button at the top right. Your pipeline is now live and ready to receive data. Let’s check this by sending it a raw JSON submission. We’re going to use <code class="highlighter-rouge">curl</code> to send a JSON file to the API endpoint that was automatically created when you published your pipeline – but first we need to locate that endpoint…</p>
+
+<h2 id="submitting-data-with-the-api">Submitting Data with the API</h2>
+
+<p>The following <code class="highlighter-rouge">curl</code> command will tell you all the mappings that have been created on your Aether instance. If you have been following these instructions, there should only be one.</p>
+
+<p><code class="highlighter-rouge">curl http://admin-kernel:adminadmin@kernel.aether.local:8000/mappings/</code></p>
+
+<p>(Note that we’re using basic auth here; obviously this is not how you would authenticate on a production instance)</p>
+
+<p>The output of this command should be a JSON description of the mapping that you just created with the UI, looking something like this:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+  "count":1,
+  "next":null,
+  "previous":null,
+  "results":[
+    {
+      "id":"2e4d2216-aade-48ef-8bc3-12f4792df07a",
+      "url":"http://kernel.aether.local:8000/mappings/2e4d2216-aade-48ef-8bc3-12f4792df07a/",
+      "project_url":"http://kernel.aether.local:8000/projects/774e33c8-d82b-43f9-82e4-27bb513aff68/",
+      "submissions_url":"http://kernel.aether.local:8000/submissions/?mapping=2e4d2216-aade-48ef-8bc3-12f4792df07a",
+      "created":"2018-07-09T13:11:43.562140Z" 
+      ...
+    }
+  ]
+}
+</code></pre></div></div>
+
+<p>The important field for us is the <code class="highlighter-rouge">id</code> of the mapping; this needs to be included in any data that we submit. So let’s do that now: open <code class="highlighter-rouge">assets/submission.json</code> in your favourite editor, and copy and paste the mapping id into the second line where it says <code class="highlighter-rouge">&lt;mapping UUID goes here&gt;</code>. It should now look something like this:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>{
+  "mapping": "2e4d2216-aade-48ef-8bc3-12f4792df07a",
+  "payload": {
+    "_id": "fKPopgxGLyzTUIPelIYLLJhGOYVEa",
+    "_version": "YUPRCpknNpjXoRIeFIbTaqcVYBd",
+    "start": "2018-07-01 15:32:05",
+    ...
+  }
+}
+</code></pre></div></div>
+
+<p>Now we can use curl to post this file to Aether:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl -H "Content-Type: application/json" --data @assets/submission.json http://admin-kernel:adminadmin@kernel.aether.local/submissions/
+</code></pre></div></div>
+
+<p>Aether is now going to take this submitted data and do entity extractions based on the mappings that we set in the UI. We can check the results of this process by accessing the entities endpoint:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl http://admin-kernel:adminadmin@kernel.aether.local:8000/entities/
+</code></pre></div></div>
+
+<p>You should get a sizeable chunk of JSON code that represents the entities that were extracted from the sample data that you just submitted. The first key in the JSON should be <code class="highlighter-rouge">count</code>, and the value should be <code class="highlighter-rouge">18</code> - 18 entities were extracted, as the microcensus data was broken down into <code class="highlighter-rouge">Surveys</code>, <code class="highlighter-rouge">Buildings</code>, <code class="highlighter-rouge">Households</code> and <code class="highlighter-rouge">People</code> (or actually, <code class="highlighter-rouge">Persons</code>).</p>
+
+<p>(At this point you may be saying to yourself, “That’s all very nice, but I don’t actually <em>want</em> to break my data up into separate entities”. That’s fine too - Aether can also create a pass-through pipeline for you, whereby the data that comes in is just pased through to the output without any extraction taking place - take a look at the UI documentation to find out more about how to do this)</p>
+
 <p>Congratulations! You have just completed the set-up of your first Aether-based solution.</p>
 
-<p>The next step is to send the entities to CKAN and Elastic Search / Kibana.</p>
+<h2 id="recap">Recap</h2>
+
+<ul>
+  <li>We learned about pipelines</li>
+  <li>We learned about the constituent parts of a pipeline:
+    <ul>
+      <li>Input data</li>
+      <li>Schemas</li>
+      <li>Mappings</li>
+    </ul>
+  </li>
+  <li>We set up an example pipeline with the Aether UI</li>
+  <li>We submitted some data to an API endpoint and saw how the pipeline was used to extract entities</li>
+</ul>
+
+<p>The <a href="walkthrough-connect.html">next step</a> is to extend the data pipeline so that it flows all the way out to CKAN.</p>
 
 
   </div>

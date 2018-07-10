@@ -49,28 +49,30 @@ toc:
         url: /documentation/ui/pipeline-mapping.html
       - page: Publish your pipeline
         url: /documentation/ui/pipeline-publish.html
-  - title: Working with Aether Consumers
-    url: /documentation/consumers/index.html
-    subfolderitems:
-      - page: Introduction
-        url: /documentation/consumers/index.html
-      - page: CKAN Consumer
-        url: /documentation/consumers/ckan.html
-      - page: Elastic Search Consumer
-        url: /documentation/consumers/elastic-search.html
-  - title: Aether for Developers
-    url: /documentation/developers/index.html
-    subfolderitems:
-      - page: Introduction
-        url: /documentation/developers/index.html
-      - page: Standards and Best Practices for Development
-        url: /documentation/developers/standards.html
-      - page: Github Processes
-        url: /documentation/developers/github.html
-      - page: API Guide
-        url: /documentation/developers/api.html
-      - page: More Developer Docs...
-        url: /documentation/developers/more.html
+  # - title: Working with Aether Consumers
+  #   url: /documentation/consumers/index.html
+  #   subfolderitems:
+  #     - page: Introduction
+  #       url: /documentation/consumers/index.html
+  #     - page: CKAN Consumer
+  #       url: /documentation/consumers/ckan.html
+  #     - page: Elastic Search Consumer
+  #       url: /documentation/consumers/elastic-search.html
+  # - title: Aether for Developers
+  #   url: /documentation/developers/index.html
+  #   subfolderitems:
+  #     - page: Introduction
+  #       url: /documentation/developers/index.html
+  #     - page: Standards and Best Practices for Development
+  #       url: /documentation/developers/standards.html
+  #     - page: Github Processes
+  #       url: /documentation/developers/github.html
+  #     - page: API Guide
+  #       url: /documentation/developers/api.html
+  #     - page: More Developer Docs...
+  #       url: /documentation/developers/more.html
+
+  # Sabine's original layout:
   # - title: Basic Concepts
   #   subfolderitems:
   #     - page: What is a pipeline?

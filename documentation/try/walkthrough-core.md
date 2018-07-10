@@ -13,7 +13,7 @@ These contracts are defined using _schemas_, and the transformed data is known a
 
 In the `assets` folder of the `aether-bootstrap` repository contains some sample data, some schemas and a set of mappings. For the purposes of this walkthrough, we’re going to copy and paste the contents of these files into the Aether UI (for a more detailed overview of the UI, check out its [documentation](/documentation/ui/)).
 
-Open the [UI](http://ui.aether.loca) and log in if you haven’t already. We’re going to create a new pipeline, so hit the button that’s handily labelled _NEW PIPELINE_. Enter a name, and press _START PIPELINE_.
+Open the [UI](http://ui.aether.local) and log in if you haven’t already. We’re going to create a new pipeline, so hit the button that’s handily labelled _NEW PIPELINE_. Enter a name, and press _START PIPELINE_.
 
 ## Defining Our Input
 
@@ -42,6 +42,76 @@ Fields in the _INPUT_ and _ENTITY TYPES_ sidebars are now highlighted to indicat
 
 You might also have noticed the green dot next to the _OUTPUT_ section in the top right hand corner of the screen. This indicates that your pipeline is successfully creating entities, i.e. that the data is being transformed and broken up into pieces as defined by our schemas. Open the _OUTPUT_ screen, and you’ll see the transformed data.
 
+Now you can hit the _PUBLISH PIPELINE_ button at the top right. Your pipeline is now live and ready to receive data. Let’s check this by sending it a raw JSON submission. We’re going to use `curl` to send a JSON file to the API endpoint that was automatically created when you published your pipeline – but first we need to locate that endpoint...
+
+## Submitting Data with the API
+
+The following `curl` command will tell you all the mappings that have been created on your Aether instance. If you have been following these instructions, there should only be one.
+
+`curl http://admin-kernel:adminadmin@kernel.aether.local:8000/mappings/`
+
+(Note that we’re using basic auth here; obviously this is not how you would authenticate on a production instance)
+
+The output of this command should be a JSON description of the mapping that you just created with the UI, looking something like this:
+
+```
+{
+  "count":1,
+  "next":null,
+  "previous":null,
+  "results":[
+    {
+      "id":"2e4d2216-aade-48ef-8bc3-12f4792df07a",
+      "url":"http://kernel.aether.local:8000/mappings/2e4d2216-aade-48ef-8bc3-12f4792df07a/",
+      "project_url":"http://kernel.aether.local:8000/projects/774e33c8-d82b-43f9-82e4-27bb513aff68/",
+      "submissions_url":"http://kernel.aether.local:8000/submissions/?mapping=2e4d2216-aade-48ef-8bc3-12f4792df07a",
+      "created":"2018-07-09T13:11:43.562140Z" 
+      ...
+    }
+  ]
+}
+```
+
+The important field for us is the `id` of the mapping; this needs to be included in any data that we submit. So let's do that now: open `assets/submission.json` in your favourite editor, and copy and paste the mapping id into the second line where it says `<mapping UUID goes here>`. It should now look something like this:
+
+```
+{
+  "mapping": "2e4d2216-aade-48ef-8bc3-12f4792df07a",
+  "payload": {
+    "_id": "fKPopgxGLyzTUIPelIYLLJhGOYVEa",
+    "_version": "YUPRCpknNpjXoRIeFIbTaqcVYBd",
+    "start": "2018-07-01 15:32:05",
+    ...
+  }
+}
+```
+
+Now we can use curl to post this file to Aether:
+
+```
+curl -H "Content-Type: application/json" --data @assets/submission.json http://admin-kernel:adminadmin@kernel.aether.local/submissions/
+```
+
+Aether is now going to take this submitted data and do entity extractions based on the mappings that we set in the UI. We can check the results of this process by accessing the entities endpoint:
+
+```
+curl http://admin-kernel:adminadmin@kernel.aether.local:8000/entities/
+```
+
+You should get a sizeable chunk of JSON code that represents the entities that were extracted from the sample data that you just submitted. The first key in the JSON should be `count`, and the value should be `18` - 18 entities were extracted, as the microcensus data was broken down into `Surveys`, `Buildings`, `Households` and `People` (or actually, `Persons`).
+
+(At this point you may be saying to yourself, “That’s all very nice, but I don’t actually _want_ to break my data up into separate entities”. That’s fine too - Aether can also create a pass-through pipeline for you, whereby the data that comes in is just pased through to the output without any extraction taking place - take a look at the UI documentation to find out more about how to do this)
+
 Congratulations! You have just completed the set-up of your first Aether-based solution.
 
-The next step is to send the entities to CKAN and Elastic Search / Kibana.
+## Recap
+
+- We learned about pipelines
+- We learned about the constituent parts of a pipeline:
+    + Input data
+    + Schemas
+    + Mappings
+- We set up an example pipeline with the Aether UI
+- We submitted some data to an API endpoint and saw how the pipeline was used to extract entities
+
+The [next step](walkthrough-connect.html) is to extend the data pipeline so that it flows all the way out to CKAN.
