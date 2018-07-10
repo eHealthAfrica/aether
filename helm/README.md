@@ -27,7 +27,7 @@ sudo ./scripts/kubernetes/install_helm.sh --version v2.8.1
 For local development with Kubernetes and Minikube, we need to create some secrets.
 
 ```bash
-./scripts/generate-kubernetes-credentials.sh > helm/test-secrets.yaml
+POSTGRES_PASSWORD=<postgres-password> ./scripts/generate-kubernetes-credentials.sh > helm/test-secrets.yaml
 ```
 
 The file `helm/test-secrets.yaml` will get picked up by `./scripts/install_secrets.sh` (see below).
@@ -42,8 +42,9 @@ This process needs to keep running in order for our mount to work, so start it i
 
 Once the mount process is running, we can do:
 ```
-./scripts/kubernetes/install_secrets.sh && ./scripts/kubernetes/start_cluster.sh ./helm/overrides/local
+POSTGRES_PASSWORD=<postgres-password> ./scripts/kubernetes/install_secrets.sh && ./scripts/kubernetes/start_cluster.sh ./helm/overrides/local
 ```
+
 This will bring up both applications with auto-reloading of django code enabled.
 
 ### Accessing the aether APIs from the host

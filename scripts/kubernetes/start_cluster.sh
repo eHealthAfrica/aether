@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -x
+set -u
 
 # $VALUES_DIR should point to one of the directories in `helm/overrides`. Each
 # subdirectory (e.g. "local", "test") represents an environment and contains one
@@ -17,6 +17,7 @@ docker-compose build kernel odk
 helm install stable/postgresql \
      --name db \
      --values=./helm/overrides/db.yaml \
+     --set postgresPassword=$POSTGRES_PASSWORD \
      --version=0.13.1
 # Wait for the deployment to reach a "Running" state.
 kubectl rollout status deployment db
