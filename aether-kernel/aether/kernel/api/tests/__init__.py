@@ -44,7 +44,8 @@ EXAMPLE_SCHEMA = {
             'jsonldPredicate': '@id',
             'type': 'string',
             'name': 'id',
-            'inherited_from': 'http://ehealthafrica.org/#CouchDoc'
+            'doc': 'ID',
+            'inherited_from': 'http://ehealthafrica.org/#CouchDoc',
         },
         {
             'type': [
@@ -52,7 +53,8 @@ EXAMPLE_SCHEMA = {
                 'string',
                 ],
             'name': '_rev',
-            'inherited_from': 'http://ehealthafrica.org/#CouchDoc'
+            'doc': 'REVISION',
+            'inherited_from': 'http://ehealthafrica.org/#CouchDoc',
         },
         {
             'type': [
@@ -63,7 +65,8 @@ EXAMPLE_SCHEMA = {
                     'items': 'string'
                 }
             ],
-            'name': 'name'
+            'name': 'name',
+            'doc': 'NAME',
         },
         {
             'type': 'string',
@@ -72,10 +75,11 @@ EXAMPLE_SCHEMA = {
         {
             'jsonldPredicate': {
                 '_type': '@id',
-                '_id': 'http://ehealthafrica.org/#Village'
+                '_id': 'http://ehealthafrica.org/#Village',
             },
             'type': 'string',
-            'name': 'villageID'
+            'name': 'villageID',
+            'doc': 'VILLAGE',
         }
     ]
 }
@@ -93,7 +97,7 @@ EXAMPLE_SOURCE_DATA = {
                 'dob': '2001-01-01'
             },
             {
-                'name': 'PersonC',
+                'name': ['FirstC', 'MiddleC', 'LastC'],
                 'dob': '2002-01-01'
             }
         ]
@@ -116,7 +120,7 @@ EXAMPLE_NESTED_SOURCE_DATA = {
                         'dob': '2001-01-01'
                     },
                     {
-                        'name': 'PersonC',
+                        'name': ['FirstC', 'MiddleC', 'LastC'],
                         'dob': '2002-01-01'
                     }
                 ]
@@ -175,7 +179,7 @@ EXAMPLE_ENTITY = {
         },
         {
             'id': '64d30f72-c15e-4476-9522-d26cb036c73b',
-            'name': 'PersonC',
+            'name': ['FirstC', 'MiddleC', 'LastC'],
             'dob': '2002-01-01',
             'villageID': 'somevillageID'
         }
