@@ -117,6 +117,11 @@ class ProjectViewSet(CustomViewSet):
         Expected payload:
 
             {
+                # this is optional, indicates the action to execute:
+                #   "create", creates the missing objects but does not update the existing ones
+                #   otherwise creates/updates the given objects
+                'action': 'upsert',
+
                 # this is optional, if missing the method will assign a random name
                 "name": "project name (optional but unique)",
 
@@ -155,6 +160,7 @@ class ProjectViewSet(CustomViewSet):
 
         data = request.data
         results = project_artefacts.upsert_project_artefacts(
+            action=data.get('action', 'upsert'),
             project_id=pk,
             project_name=data.get('name'),
             schemas=data.get('schemas', []),
@@ -171,7 +177,8 @@ class ProjectStatsViewSet(viewsets.ReadOnlyModelViewSet):
                      .annotate(
                          first_submission=Min('mappings__submissions__created'),
                          last_submission=Max('mappings__submissions__created'),
-                         submission_count=Count('mappings__submissions__id'),
+                         submissions_count=Count('mappings__submissions__id'),
+                         entities_count=Count('mappings__submissions__entities__id'),
                      )
     serializer_class = serializers.ProjectStatsSerializer
 
@@ -193,7 +200,8 @@ class MappingStatsViewSet(viewsets.ReadOnlyModelViewSet):
                      .annotate(
                          first_submission=Min('submissions__created'),
                          last_submission=Max('submissions__created'),
-                         submission_count=Count('submissions__id'),
+                         submissions_count=Count('submissions__id'),
+                         entities_count=Count('submissions__entities__id'),
                      )
     serializer_class = serializers.MappingStatsSerializer
 

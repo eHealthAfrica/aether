@@ -4,6 +4,7 @@
 #  * Aether Kernel
 #  * ODK Module
 #  * CouchDB Sync Module
+#  * Aether UI Module
 # ------------------------------------------------------------------------------
 
 version: "2.1"
@@ -124,16 +125,19 @@ services:
     depends_on:
       - db
       - kernel
-      - ui-webpack
+
+      # UI depends on "ui-assets" to serve the assets with hot reloading (HMR)
+      # to start "ui" without HMR execute first "docker-compose run ui-assets build"
+      # - ui-assets
     networks:
       internal:
         aliases:
           - ui.aether.local
 
-  ui-webpack:
+  ui-assets:
     extends:
       file: docker-compose-base.yml
-      service: ui-webpack-base
+      service: ui-assets-base
     networks:
       - internal
 

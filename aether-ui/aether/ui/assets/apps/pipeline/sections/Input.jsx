@@ -19,12 +19,16 @@
  */
 
 import React, { Component } from 'react'
-import { FormattedMessage } from 'react-intl'
+import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
 import { connect } from 'react-redux'
 import avro from 'avsc'
 
 import { AvroSchemaViewer, Modal } from '../../components'
-import { deepEqual, generateGUID, generateSchemaName } from '../../utils'
+import {
+  deepEqual,
+  generateGUID,
+  generateSchema
+} from '../../utils'
 import { updatePipeline } from '../redux'
 
 // The input section has two subviews `SCHEMA_VIEW` and `DATA_VIEW`.
@@ -73,20 +77,31 @@ export const deriveMappingRules = (schema) => {
   return schema.fields.map(fieldToMappingRule)
 }
 
+const MESSAGES = defineMessages({
+  recursiveError: {
+    defaultMessage: 'Input data could not be generated from the schema provided. Recursive schemas are not supported.',
+    id: 'pipeline.input.schema.invalid.message.head.recursive'
+  },
+  regularError: {
+    defaultMessage: 'You have provided an invalid AVRO schema.',
+    id: 'pipeline.input.schema.invalid.message.head'
+  }
+})
+
 class SchemaInput extends Component {
   constructor (props) {
     super(props)
     this.state = {
       inputSchema: this.parseProps(props),
       view: SCHEMA_VIEW,
-      error: null
+      error: null,
+      errorHead: null
     }
   }
 
   componentWillReceiveProps (nextProps) {
     this.setState({
-      inputSchema: this.parseProps(nextProps),
-      error: null
+      inputSchema: this.parseProps(nextProps)
     })
   }
 
@@ -103,16 +118,31 @@ class SchemaInput extends Component {
 
   notifyChange (event) {
     event.preventDefault()
-
+    const {formatMessage} = this.props.intl
+    this.setState({
+      error: null,
+      errorHead: null
+    })
     try {
       // validate schema
       const schema = JSON.parse(this.state.inputSchema)
       const type = avro.parse(schema, { noAnonymousTypes: true })
       // generate a new input sample
-      const input = type.random()
+      let input = {}
+      try {
+        input = type.random()
+      } catch (error) {
+        this.setState({
+          error: error.message,
+          errorHead: formatMessage(MESSAGES.recursiveError)
+        })
+      }
       this.props.updatePipeline({ ...this.props.selectedPipeline, schema, input })
     } catch (error) {
-      this.setState({ error: error.message })
+      this.setState({
+        error: error.message,
+        errorHead: formatMessage(MESSAGES.regularError)
+      })
     }
   }
 
@@ -132,10 +162,7 @@ class SchemaInput extends Component {
           {this.state.error &&
             <div className='hint error-message'>
               <h4 className='hint-title'>
-                <FormattedMessage
-                  id='pipeline.input.schema.invalid.message'
-                  defaultMessage='You have provided an invalid AVRO schema.'
-                />
+                {this.state.errorHead}
               </h4>
               {this.state.error}
             </div>
@@ -203,8 +230,7 @@ class DataInput extends Component {
     try {
       // Validate data and generate avro schema from input
       const input = JSON.parse(this.state.inputData)
-      const options = { typeHook: generateSchemaName('Auto') }
-      const schema = avro.Type.forValue(input, options)
+      const schema = generateSchema(input)
       this.props.updatePipeline({
         ...this.props.selectedPipeline,
         schema,
@@ -437,4 +463,4 @@ const mapStateToProps = ({ pipelines }) => ({
   selectedPipeline: pipelines.selectedPipeline
 })
 
-export default connect(mapStateToProps, { updatePipeline })(Input)
+export default connect(mapStateToProps, { updatePipeline })(injectIntl(Input))

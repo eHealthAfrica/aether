@@ -57,14 +57,9 @@ FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 class Settings(UserDict):
     # A container for our settings
-    def __init__(self, test=False):
-        SETTINGS_FILE = "%s/settings.json" % FILE_PATH
-        TEST_SETTINGS_FILE = "%s/test_settings.json" % FILE_PATH
+    def __init__(self, file_path=None):
         self.data = {}
-        if test:
-            self.load(TEST_SETTINGS_FILE)
-        else:
-            self.load(SETTINGS_FILE)
+        self.load(file_path)
 
     def load(self, path):
         with open(path) as f:
@@ -396,7 +391,7 @@ class TopicManager(object):
 
     def schema_changed(self, schema_candidate):
         # for use by ProducerManager.check_schemas()
-        return self.parse_schema(schema_candidate) == self.schema_obj
+        return self.parse_schema(schema_candidate) != self.schema_obj
 
     def get_status(self):
         # Updates inflight status and returns to Flask called
@@ -609,6 +604,6 @@ class TopicManager(object):
         self.status['offset'] = new_offset.offset_value
 
 
-def main(test=False):
-    settings = Settings(test=test)
+def main(file_path=None):
+    settings = Settings(file_path)
     handler = ProducerManager(settings)

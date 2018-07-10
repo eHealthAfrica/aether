@@ -39,11 +39,9 @@ show_help() {
   test_lint     : run flake8, standardjs and sass lint tests
   test_coverage : run python tests with coverage output
   test_py       : alias of test_coverage
-  test_js       : run js tests with enzyme and jest
 
   start         : start webserver behind nginx
   start_dev     : start webserver for development
-  start_webpack : start webpack server (only in DEV mode)
   """
 }
 
@@ -92,7 +90,6 @@ setup_prod() {
 }
 
 test_lint() {
-  npm run test-lint
   flake8 ./aether --config=./conf/extras/flake8.cfg
 }
 
@@ -106,24 +103,6 @@ test_coverage() {
 
   cat ./conf/extras/good_job.txt
 }
-
-test_js() {
-  npm run test-js "${@:1}"
-}
-
-
-# --------------------------------
-# set DJANGO_SECRET_KEY if needed
-if [ "$DJANGO_SECRET_KEY" = "" ]
-then
-  export DJANGO_SECRET_KEY=$(
-    cat /dev/urandom | tr -dc 'a-zA-Z0-9-_!@#$%^&*()_+{}|:<>?=' | fold -w 64 | head -n 4
-  )
-fi
-# --------------------------------
-
-export STATIC_DIR=/var/www/static/
-export BUNDLES_DIR=./aether/ui/assets/bundles/*
 
 
 case "$1" in
@@ -154,15 +133,7 @@ case "$1" in
 
   test)
     test_lint
-    test_js
     test_coverage
-
-    # remove previous files
-    rm -r -f ${BUNDLES_DIR}
-    npm run webpack
-
-    # collect static assets
-    ./manage.py collectstatic --noinput --dry-run
   ;;
 
   test_lint)
@@ -177,25 +148,20 @@ case "$1" in
     test_coverage "${@:2}"
   ;;
 
-  test_js)
-    test_js "${@:2}"
-  ;;
-
   start )
     setup_db
     setup_prod
 
-    # remove previous files
-    rm -r -f ${BUNDLES_DIR}
-    npm run webpack
+    # create static assets
+    rm -r -f /code/aether/ui/static/*.*
+    cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
+    ./manage.py collectstatic --noinput
+    chmod -R 755 /var/www/static
 
-      # create static assets
-    ./manage.py collectstatic --noinput --clear
-    cp -r ${BUNDLES_DIR} ${STATIC_DIR}
-    chmod -R 755 ${STATIC_DIR}
-
-    # media assets
-    chown aether: /media
+    # expose version number
+    cp VERSION /var/www/VERSION
+    # add git revision
+    cp /code/REVISION /var/www/REVISION
 
     /usr/local/bin/uwsgi --ini ./conf/uwsgi.ini
   ;;
@@ -203,13 +169,13 @@ case "$1" in
   start_dev )
     setup_db
     setup_initial_data
-    ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
-  ;;
 
-  start_webpack )
-    # remove previous files
-    rm -r -f ${BUNDLES_DIR}
-    npm run webpack-server
+    # cleaning
+    rm -r -f /code/aether/ui/static/*.*
+    # copy assets bundles folder into static folder
+    cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
+
+    ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
   ;;
 
   help)

@@ -71,10 +71,19 @@ class ProjectArtefactsTests(TestCase):
         # updates indicated fields, keeps the rest
         mapping_1 = upsert(Mapping, pk=mapping_0.pk, ignore_fields=['name'],
                            definition={'mapping': []}, unknown=True)
+
         self.assertEqual(mapping_1.pk, mapping_0.pk)
         self.assertEqual(mapping_1.name, 'Mapping None')
         self.assertEqual(mapping_1.project, project_1)
         self.assertEqual(mapping_1.definition, {'mapping': []})
+
+        # does not update with action 'create'
+        mapping_2 = upsert(Mapping, pk=mapping_0.pk, ignore_fields=[], action='create',
+                           name='Mapping Two', project=project_1, definition={})
+
+        self.assertEqual(mapping_2.pk, mapping_0.pk)
+        self.assertEqual(mapping_2.name, 'Mapping None')
+        self.assertEqual(mapping_2.project, project_2)
 
     def test__upsert_project_artefacts__project(self):
 
@@ -127,7 +136,8 @@ class ProjectArtefactsTests(TestCase):
 
         self.assertEqual(results_1['project'], str(project.pk))
         self.assertEqual(results_1['schemas'], set([schema_id]))
-        self.assertEqual(len(results_1['project_schemas']), 1)
+        self.assertEqual(results_1['project_schemas'], set([schema_id]),
+                         'Project schemas inherit schema ids')
         self.assertEqual(results_1['mappings'], set())
 
         project_schema_id = list(results_1['project_schemas'])[0]
@@ -158,7 +168,7 @@ class ProjectArtefactsTests(TestCase):
             # in this case the definition is updated and the deleted project schema re-generated
             {'id': schema_id, 'definition': {'name': 'Schema'}},
         ])
-        self.assertNotEqual(results_1, results_3, 'generates a new project schema')
+        self.assertEqual(results_1, results_3, 'generates a new project schema with the schema id')
         self.assertEqual(results_3['project'], str(project.pk))
         self.assertEqual(results_3['schemas'], set([schema_id]))
         self.assertEqual(len(results_3['project_schemas']), 1)

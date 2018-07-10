@@ -48,7 +48,13 @@ def get_project_artefacts(project):
 
 
 @transaction.atomic
-def upsert_project_artefacts(project_id=None, project_name=None, schemas=[], mappings=[]):
+def upsert_project_artefacts(
+    action='upsert',
+    project_id=None,
+    project_name=None,
+    schemas=[],
+    mappings=[],
+):
     '''
     Creates or updates the project and its artefacts: schemas, project schemas and mappings.
 
@@ -64,6 +70,7 @@ def upsert_project_artefacts(project_id=None, project_name=None, schemas=[], map
 
     # 1. create/update the project
     project = __upsert_instance(
+        action=action,
         model=Project,
         pk=project_id,
         ignore_fields=['name'],  # do not update the name if the project already exists
@@ -74,6 +81,7 @@ def upsert_project_artefacts(project_id=None, project_name=None, schemas=[], map
     # 2. create/update the list of schemas and assign them to the project
     for raw_schema in schemas:
         schema = __upsert_instance(
+            action=action,
             model=Schema,
             pk=raw_schema.get('id'),
             ignore_fields=['name'],
@@ -89,6 +97,8 @@ def upsert_project_artefacts(project_id=None, project_name=None, schemas=[], map
             project_schema = ProjectSchema.objects.get(project=project, schema=schema)
         except ObjectDoesNotExist:
             project_schema = ProjectSchema.objects.create(
+                # this enforces the schema to be used only once by a project
+                id=schema.pk,  # sharing schema id ???
                 project=project,
                 schema=schema,
                 name=__random_name(),  # names are unique
@@ -103,6 +113,7 @@ def upsert_project_artefacts(project_id=None, project_name=None, schemas=[], map
             ignore_fields.append('definition')
 
         mapping = __upsert_instance(
+            action=action,
             model=Mapping,
             pk=raw_mapping.get('id'),
             ignore_fields=ignore_fields,
@@ -115,15 +126,16 @@ def upsert_project_artefacts(project_id=None, project_name=None, schemas=[], map
     return results
 
 
-def __upsert_instance(model, pk=None, ignore_fields=[], **values):
+def __upsert_instance(model, pk=None, ignore_fields=[], action='upsert', **values):
     '''
     Creates or updates an instance of the indicated Model.
 
     Arguments:
 
-    - ``Model``          -- the model class.
+    - ``model``          -- the model class.
     - ``pk``             -- the primary key value of the instance, can be None.
     - ``ignore_fields``  -- if the instance already exists then these fields are not updated.
+    - ``action``         -- "create" create new ones but not update, otherwise create or update.
     - ``values``         -- the named list of instance values.
     '''
 
@@ -157,7 +169,8 @@ def __upsert_instance(model, pk=None, ignore_fields=[], **values):
         if k in fields:
             setattr(item, k, v)
 
-    item.save()
+    if is_new or action != 'create':
+        item.save()
     item.refresh_from_db()
     return item
 

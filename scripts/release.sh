@@ -24,26 +24,45 @@ set -Eeuo pipefail
 ./scripts/build_aether_utils_and_distribute.sh
 ./scripts/build_common_and_distribute.sh
 
+# Prepare Aether UI assets
+docker-compose build ui-assets
+docker-compose run   ui-assets build
+
 # Build docker images
 IMAGE_REPO='ehealthafrica'
-APPS=( kernel odk couchdb-sync ui )
+CORE_APPS=( kernel odk couchdb-sync ui )
+CORE_COMPOSE='docker-compose.yml'
+CONNECT_APPS=( producer )
+CONNECT_COMPOSE='docker-compose-connect.yml'
 VERSION=`cat VERSION`
+
+release_app () {
+  APP_NAME=$1
+  COMPOSE_PATH=$2
+  AETHER_APP="aether-${1}"
+  echo "version: $VERSION"
+  echo "Building Docker image ${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
+  docker-compose -f $COMPOSE_PATH build --build-arg GIT_REVISION=$TRAVIS_COMMIT \
+  --build-arg VERSION=$VERSION $APP_NAME
+
+  docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
+  docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:latest"
+  echo "Pushing Docker image ${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
+  docker push "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
+  docker push "${IMAGE_REPO}/${AETHER_APP}:latest"
+}
 
 if [ -z "$TRAVIS_TAG" ];
 then
   VERSION=${VERSION}-rc
 fi
 
-for APP in "${APPS[@]}"
+for APP in "${CORE_APPS[@]}"
 do
-  AETHER_APP="aether-${APP}"
-  echo "version: $VERSION"
-  echo "Building Docker image ${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
-  docker-compose build --build-arg GIT_REVISION=$TRAVIS_COMMIT \
-  --build-arg VERSION=$VERSION $APP
-  docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
-  docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:latest"
-  echo "Pushing Docker image ${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
-  docker push "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
-  docker push "${IMAGE_REPO}/${AETHER_APP}:latest"
+  release_app $APP $CORE_COMPOSE
+done
+
+for CONNECT_APP in "${CONNECT_APPS[@]}"
+do
+  release_app $CONNECT_APP $CONNECT_COMPOSE
 done

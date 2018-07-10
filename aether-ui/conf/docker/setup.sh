@@ -49,15 +49,6 @@ pip install --upgrade pip
 
 
 ################################################################################
-# create NODE symbolic links
-################################################################################
-
-ln -s /usr/local/bin/nodejs                            /usr/local/bin/node
-ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js   /usr/local/bin/npm
-ln -s /usr/local/lib/node_modules/npm/bin/npx-cli.js   /usr/local/bin/npx
-
-
-################################################################################
 # last steps and cleaning
 ################################################################################
 
