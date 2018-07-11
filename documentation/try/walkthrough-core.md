@@ -17,7 +17,12 @@ Open the [UI](http://ui.aether.local) and log in if you haven’t already. We’
 
 ## Defining Our Input
 
-The first thing you see is the input screen, where you can either paste some raw JSON data, or an AVRO schema that defines your input data. Open the `sample-data.json` file from the `assets` folder, copy the contents, and paste it into the text area. It should now look like this:
+The first thing you see is the input screen. This is where you tell Aether what your input data looks like. You can do this in one of two ways:
+
+- provide an [AVRO schema](https://en.wikipedia.org/wiki/Apache_Avro#Schema_definition[4])
+- provide a sample of some raw JSON data
+ 
+For this walkthrough, we’re going to do the latter. Open the `sample-data.json` file from the `assets` folder, copy the contents, and paste it into the text area. It should now look like this:
 
 ![Input data](/images/walkthrough-1.png)
 

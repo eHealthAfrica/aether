@@ -137,3 +137,6 @@ demo
 
 # npm
 **/package-lock.json
+
+# gh-pages
+_site/

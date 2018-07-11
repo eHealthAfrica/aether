@@ -4,8 +4,8 @@ toc:
     subfolderitems:
       - page: What is Aether?
         url: /documentation/introduction/index.html
-      - page: A Deeper Dive
-        url: /documentation/introduction/deeper.html
+      # - page: A Deeper Dive
+      #   url: /documentation/introduction/deeper.html
   - title: Try It For Yourself
     url: /documentation/try/index.html
     subfolderitems:
