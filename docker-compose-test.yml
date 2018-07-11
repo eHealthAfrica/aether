@@ -4,6 +4,11 @@
 #  * Aether Kernel
 #  * ODK Module
 #  * CouchDB Sync Module
+#  * Aether UI Module
+#  * Aether Client
+#  * Aether Integration Tests
+#  * Producer Module
+#  * Zookeper & Kafka
 # ------------------------------------------------------------------------------
 
 version: "2.1"
@@ -128,6 +133,7 @@ services:
   # ---------------------------------
   # Aether Client container
   # ---------------------------------
+
   client-test:
     image: aether/client
     build: ./aether-utils/aether-client
@@ -145,6 +151,7 @@ services:
   # ---------------------------------
   # Aether Integration Tests
   # ---------------------------------
+
   integration-test:
     image: aether/integration
     build: ./test-aether-integration-module

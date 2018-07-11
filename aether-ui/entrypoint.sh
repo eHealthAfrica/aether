@@ -144,15 +144,15 @@ case "$1" in
     # create static assets
     rm -r -f /code/aether/ui/static/*.*
     cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
-    ./manage.py collectstatic --noinput
+    ./manage.py collectstatic --noinput --clear --verbosity 0
     chmod -R 755 /var/www/static
 
-    # expose version number
-    cp VERSION /var/www/VERSION
-    # add git revision
-    cp /code/REVISION /var/www/REVISION
+    # expose version number (if exists)
+    cp ./VERSION /var/www/static/VERSION 2>/dev/null || :
+    # add git revision (if exists)
+    cp ./REVISION /var/www/static/REVISION 2>/dev/null || :
 
-    /usr/local/bin/uwsgi --ini ./conf/uwsgi.ini
+    /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini --http 0.0.0.0:$WEB_SERVER_PORT
   ;;
 
   start_dev )
