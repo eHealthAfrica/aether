@@ -70,10 +70,10 @@ def upsert_project_artefacts(
 
     # 1. create/update the project
     project = __upsert_instance(
-        action=action,
         model=Project,
         pk=project_id,
         ignore_fields=['name'],  # do not update the name if the project already exists
+        action=action,
         name=project_name or __random_name(),
     )
     results['project'] = str(project.pk)
@@ -81,10 +81,10 @@ def upsert_project_artefacts(
     # 2. create/update the list of schemas and assign them to the project
     for raw_schema in schemas:
         schema = __upsert_instance(
-            action=action,
             model=Schema,
             pk=raw_schema.get('id'),
             ignore_fields=['name'],
+            action=action,
             name=raw_schema.get('name', __random_name()),
             definition=raw_schema.get('definition', {}),
             type=raw_schema.get('type', 'record'),
@@ -96,12 +96,12 @@ def upsert_project_artefacts(
         try:
             project_schema = ProjectSchema.objects.get(project=project, schema=schema)
         except ObjectDoesNotExist:
-            project_schema = ProjectSchema.objects.create(
-                # this enforces the schema to be used only once by a project
-                id=schema.pk,  # sharing schema id ???
+            project_schema = __upsert_instance(
+                model=ProjectSchema,
+                pk=schema.pk,
                 project=project,
                 schema=schema,
-                name=__random_name(),  # names are unique
+                name=schema.name,
             )
         results['project_schemas'].add(str(project_schema.pk))
 
@@ -113,10 +113,10 @@ def upsert_project_artefacts(
             ignore_fields.append('definition')
 
         mapping = __upsert_instance(
-            action=action,
             model=Mapping,
             pk=raw_mapping.get('id'),
             ignore_fields=ignore_fields,
+            action=action,
             name=raw_mapping.get('name', __random_name()),
             definition=raw_mapping.get('definition', {'mappings': []}),
             project=project,
@@ -170,7 +170,12 @@ def __upsert_instance(model, pk=None, ignore_fields=[], action='upsert', **value
             setattr(item, k, v)
 
     if is_new or action != 'create':
+        # if is new first check that the same name is not there
+        # otherwise append a random string to it
+        if is_new and model.objects.filter(name=item.name).count() > 0:
+            item.name = __right_pad(item.name)
         item.save()
+
     item.refresh_from_db()
     return item
 
@@ -182,3 +187,10 @@ def __random_name():
     # Names are unique so we try to avoid annoying errors with duplicated names.
     alphanum = string.ascii_letters + string.digits
     return ''.join([random.choice(alphanum) for x in range(50)])
+
+
+def __right_pad(value):
+    '''
+    Creates a random string of length 50 and appends it to the given value
+    '''
+    return (f'{value} - {__random_name()}')[0:50]
