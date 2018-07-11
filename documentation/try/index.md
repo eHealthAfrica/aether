@@ -19,18 +19,24 @@ In order to follow this run-through, you will need to have [Docker](https://www.
 
 You will also need to register some domains for local resolution on your computer. This means editing your hosts file. On Mac/Linux this is at `/etc/hosts`; on Windows it’s at `c:\Windows\System32\Drivers\etc\hosts`. Add this line to the bottom:
 
-`127.0.0.1       ui.aether.local kernel.aether.local`
+```
+127.0.0.1       ui.aether.local kernel.aether.local
+```
 
 ## Into the Aether
 
 The easiest way to start building an Aether-based solution is to use _Aether Bootstrap_. Begin by cloning this repository to your computer:
 
-`git clone git@github.com:eHealthAfrica/aether-bootstrap.git`
-`cd aether-bootstrap`
+```
+git clone git@github.com:eHealthAfrica/aether-bootstrap.git
+cd aether-bootstrap
+```
 
 Now you just need to tell Docker to download the images and start them up:
 
-`docker-compose up`
+```
+docker-compose up
+```
 
 Once the console output has stopped, you should be able to access the Aether UI in your browser. Use these credentials to log in:
 
