@@ -32,8 +32,8 @@ from .consumer import get_consumer, read
 KERNEL_URL = "http://kernel-test:9000/v1"
 
 kernel_credentials = {
-    "username": os.environ['KERNEL_ADMIN_USERNAME'],
-    "password": os.environ['KERNEL_ADMIN_PASSWORD'],
+    "username": os.environ['KERNEL_READONLY_DB_USERNAME'],
+    "password": os.environ['KERNEL_READONLY_DB_PASSWORD'],
 }
 
 kernel_retry = 15

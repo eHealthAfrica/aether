@@ -78,6 +78,7 @@ services:
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}
       HOSTNAME: kernel.aether.local
+      KERNEL_READONLY_DB_PASSWORD: ${KERNEL_READONLY_DB_PASSWORD}
       RDS_DB_NAME: aether
       RDS_HOSTNAME: db
       RDS_PASSWORD: ${KERNEL_RDS_PASSWORD}
@@ -279,5 +280,7 @@ services:
      - ./aether-producer:/code
      - ./aether-client:/code/aether-client
     environment:
-     - PYTHONUNBUFFERED=1
+      PYTHONUNBUFFERED: 1
+      KERNEL_DB_USERNAME: ${KERNEL_READONLY_DB_USERNAME}
+      KERNEL_DB_PASSWORD: ${KERNEL_READONLY_DB_PASSWORD}
     command: start_dev

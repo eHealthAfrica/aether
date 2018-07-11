@@ -71,9 +71,10 @@ setup_db() {
       createdb -e $RDS_DB_NAME -e ENCODING=UTF8
       echo "$RDS_DB_NAME database created!"
     fi
-
     # migrate data model if needed
     ./manage.py migrate --noinput
+    # Create readonly database user
+    psql -U $RDS_USERNAME -h $RDS_HOSTNAME -v password=$KERNEL_READONLY_DB_PASSWORD -f s.sql
 }
 
 setup_admin() {

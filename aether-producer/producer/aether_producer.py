@@ -161,8 +161,8 @@ class ProducerManager(object):
                     with KernelHandler(self):
                         self.kernel = KernelClient(
                             url=self.settings['kernel_url'],
-                            username=os.environ['KERNEL_ADMIN_USERNAME'],
-                            password=os.environ['KERNEL_ADMIN_PASSWORD'],
+                            username=os.environ['KERNEL_READONLY_DB_USERNAME'],
+                            password=os.environ['KERNEL_READONLY_DB_PASSWORD'],
                         )
                         self.logger.info('Connected to Aether.')
                         continue

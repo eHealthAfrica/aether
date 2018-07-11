@@ -373,8 +373,8 @@ class MockingManager(object):
         # constructs a DataMocker for each type
         kernel_url = "http://kernel.aether.local:8000/v1"
         kernel_credentials = {
-            "username": os.environ['KERNEL_ADMIN_USERNAME'],
-            "password": os.environ['KERNEL_ADMIN_PASSWORD'],
+            "username": os.environ['KERNEL_READONLY_DB_USERNAME'],
+            "password": os.environ['KERNEL_READONLY_DB_PASSWORD'],
         }
         self.client = KernelClient(kernel_url, **kernel_credentials)
         self.types = {}
