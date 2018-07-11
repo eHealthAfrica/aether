@@ -40,7 +40,7 @@ docker-compose up
 
 Once the console output has stopped, you should be able to access the Aether UI in your browser. Use these credentials to log in:
 
-- _Username:_ **admin-ui**
+- _Username:_ **admin**
 - _Password:_ **adminadmin**
 
 Now let’s [start creating our first Aether-based solution](walkthrough-core).
