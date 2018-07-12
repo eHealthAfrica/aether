@@ -147,7 +147,7 @@ case "$1" in
         chown aether: /media
 
         # create static assets
-        ./manage.py collectstatic --noinput --noinput --clear --verbosity 0
+        ./manage.py collectstatic --noinput --clear --verbosity 0
         chmod -R 755 /var/www/static
 
         # expose version number (if exists)
