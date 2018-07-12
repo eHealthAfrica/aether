@@ -152,8 +152,8 @@ case "$1" in
         # add git revision (if exists)
         cp ./REVISION /var/www/static/REVISION 2>/dev/null || :
 
-        [ -z "$DEBUG" ] && DISABLE_LOGGING="--disable-logging" || DISABLE_LOGGING=""
-        /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini --http 0.0.0.0:$WEB_SERVER_PORT $DISABLE_LOGGING
+        [ -z "$DEBUG" ] && LOGGING="--disable-logging" || LOGGING=""
+        /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini --http 0.0.0.0:$WEB_SERVER_PORT $LOGGING
     ;;
 
     start_dev )
