@@ -18,7 +18,6 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-
 set -Eeuo pipefail
 
 # Define help message
