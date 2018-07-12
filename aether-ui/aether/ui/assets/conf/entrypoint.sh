@@ -18,8 +18,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-set -Eeuox pipefail
-
+set -Eeuo pipefail
 
 # Define help message
 show_help() {
