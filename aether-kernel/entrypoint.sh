@@ -88,7 +88,6 @@ test_flake8() {
 test_coverage() {
     export RCFILE=/code/conf/extras/coverage.rc
     export TESTING=true
-    export DEBUG=false
 
     coverage run    --rcfile="$RCFILE" manage.py test "${@:1}"
     coverage report --rcfile="$RCFILE"
@@ -150,7 +149,8 @@ case "$1" in
         # add git revision (if exists)
         cp ./REVISION /var/www/static/REVISION 2>/dev/null || :
 
-        /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini --http 0.0.0.0:$WEB_SERVER_PORT
+        [ -z "$DEBUG" ] && DISABLE_LOGGING="--disable-logging" || DISABLE_LOGGING=""
+        /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini --http 0.0.0.0:$WEB_SERVER_PORT $DISABLE_LOGGING
     ;;
 
     start_dev )
