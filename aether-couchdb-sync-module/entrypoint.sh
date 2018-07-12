@@ -156,7 +156,10 @@ case "$1" in
         cp ./REVISION /var/www/static/REVISION 2>/dev/null || :
 
         [ -z "$DEBUG" ] && LOGGING="--disable-logging" || LOGGING=""
-        /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini --http 0.0.0.0:$WEB_SERVER_PORT $LOGGING
+        /usr/local/bin/uwsgi \
+            --ini /code/conf/uwsgi.ini \
+            --http 0.0.0.0:$WEB_SERVER_PORT \
+            $LOGGING
     ;;
 
     start_dev )
