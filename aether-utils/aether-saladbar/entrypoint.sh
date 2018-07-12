@@ -20,7 +20,6 @@
 #
 set -Eeuo pipefail
 
-
 # Define help message
 show_help() {
     echo """
