@@ -379,7 +379,8 @@ def xform_submission(request):
         )
 
     if request.method == 'HEAD':
-        return HttpResponse(status=status.HTTP_204_NO_CONTENT)
+        return HttpResponse(status=status.HTTP_204_NO_CONTENT,
+                            headers={'X-OpenRosa-Version': '1.0'})
 
     if not request.FILES or XML_SUBMISSION_PARAM not in request.FILES:
         # missing submitted data
