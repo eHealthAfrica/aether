@@ -129,7 +129,7 @@ services:
       RDS_USERNAME: postgres
 
       # behind ngnix
-      WEB_SERVER_PORT: 8001
+      WEB_SERVER_PORT: 8002
       # standalone (without nginx) (ODK Collect only accepts 443 and 8443 ports)
       # WEB_SERVER_PORT: 8443
     volumes:
@@ -140,7 +140,7 @@ services:
       - ./.persistent_data/odk/static:/var/www/static
     ports:
       # behind ngnix
-      - "8001:8001"
+      - "8002:8002"
       # standalone (without nginx)
       # - "8443:8443"
     command: start_dev
