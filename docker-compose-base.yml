@@ -24,9 +24,6 @@ services:
 
   postgres-base:
     image: postgres:9.6-alpine
-    volumes:
-      # data volume
-      - ./.persistent_data/db/data:/var/lib/postgresql/data
 
   couchdb-base:
     image: couchdb:1.7.1
