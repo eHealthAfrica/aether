@@ -23,7 +23,7 @@ services:
   # ---------------------------------
 
   postgres-base:
-    image: postgres:9.6
+    image: postgres:9.6-alpine
 
   couchdb-base:
     image: couchdb:1.7.1
