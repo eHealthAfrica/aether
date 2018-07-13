@@ -130,11 +130,7 @@ terraform.tfstate.backup
 
 # Webpack build files
 **/assets/bundles/
-**/static/common-*.js
-**/static/html5shiv-*.js
-**/static/pipeline-*.js
-**/static/styles-*.css
-**/static/styles-*.js
+**/static/*-*.*
 webpack-stats.json
 
 # Visual Studio files
@@ -149,3 +145,6 @@ demo
 
 # Kubernetes secrets used for local development
 helm/test-secrets.yaml
+
+# persistent data
+.persistent_data
