@@ -55,123 +55,123 @@ pip_freeze() {
 }
 
 setup_db() {
-  export PGPASSWORD=$RDS_PASSWORD
-  export PGHOST=$RDS_HOSTNAME
-  export PGUSER=$RDS_USERNAME
+    export PGPASSWORD=$RDS_PASSWORD
+    export PGHOST=$RDS_HOSTNAME
+    export PGUSER=$RDS_USERNAME
 
-  until pg_isready -q; do
-    >&2 echo "Waiting for postgres..."
-    sleep 1
-  done
+    until pg_isready -q; do
+        >&2 echo "Waiting for postgres..."
+        sleep 1
+    done
 
-  if psql -c "" $RDS_DB_NAME; then
-    echo "$RDS_DB_NAME database exists!"
-  else
-    createdb -e $RDS_DB_NAME -e ENCODING=UTF8
-    echo "$RDS_DB_NAME database created!"
-  fi
+    if psql -c "" $RDS_DB_NAME; then
+        echo "$RDS_DB_NAME database exists!"
+    else
+        createdb -e $RDS_DB_NAME -e ENCODING=UTF8
+        echo "$RDS_DB_NAME database created!"
+    fi
 
-  # migrate data model if needed
-  ./manage.py migrate --noinput
+    # migrate data model if needed
+    ./manage.py migrate --noinput
 }
 
 setup_admin() {
-  # check if vars exist
-  ./conf/check_vars.sh
-  # arguments: -u=admin -p=secretsecret -e=admin@ehealthafrica.org -t=01234656789abcdefghij
-  ./manage.py setup_admin -p=$ADMIN_PASSWORD
+    # check if vars exist
+    ./conf/check_vars.sh
+    # arguments: -u=admin -p=secretsecret -e=admin@ehealthafrica.org -t=01234656789abcdefghij
+    ./manage.py setup_admin -p=$ADMIN_PASSWORD
 }
 
 test_lint() {
-  flake8 ./aether --config=./conf/extras/flake8.cfg
+    flake8 ./aether --config=./conf/extras/flake8.cfg
 }
 
 test_coverage() {
-  export RCFILE=./conf/extras/coverage.rc
-  export TESTING=true
+    export RCFILE=./conf/extras/coverage.rc
+    export TESTING=true
 
-  coverage run    --rcfile="$RCFILE" manage.py test "${@:1}"
-  coverage report --rcfile="$RCFILE"
-  coverage erase
+    coverage run    --rcfile="$RCFILE" manage.py test "${@:1}"
+    coverage report --rcfile="$RCFILE"
+    coverage erase
 
-  cat ./conf/extras/good_job.txt
+    cat ./conf/extras/good_job.txt
 }
 
 
 case "$1" in
-  bash )
-    bash
-  ;;
+    bash )
+        bash
+    ;;
 
-  eval )
-    eval "${@:2}"
-  ;;
+    eval )
+        eval "${@:2}"
+    ;;
 
-  manage )
-    ./manage.py "${@:2}"
-  ;;
+    manage )
+        ./manage.py "${@:2}"
+    ;;
 
-  pip_freeze )
-    pip_freeze
-  ;;
+    pip_freeze )
+        pip_freeze
+    ;;
 
-  setup_db )
-      setup_db
-  ;;
+    setup_db )
+        setup_db
+    ;;
 
-  test)
-    test_lint
-    test_coverage
-  ;;
+    test)
+        test_lint
+        test_coverage
+    ;;
 
-  test_lint)
-    test_lint
-  ;;
+    test_lint)
+        test_lint
+    ;;
 
-  test_coverage)
-    test_coverage "${@:2}"
-  ;;
+    test_coverage)
+        test_coverage "${@:2}"
+    ;;
 
-  test_py)
-    test_coverage "${@:2}"
-  ;;
+    test_py)
+        test_coverage "${@:2}"
+    ;;
 
-  start )
-    setup_db
-    setup_admin
+    start )
+        setup_db
+        setup_admin
 
-    # create static assets
-    rm -r -f /code/aether/ui/static/*.*
-    cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
-    ./manage.py collectstatic --noinput
-    chmod -R 755 /var/www/static
+        # create static assets
+        rm -r -f /code/aether/ui/static/*.*
+        cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
+        ./manage.py collectstatic --noinput
+        chmod -R 755 /var/www/static
 
-    # expose version number
-    cp VERSION /var/www/VERSION
-    # add git revision
-    cp /code/REVISION /var/www/REVISION
+        # expose version number
+        cp VERSION /var/www/VERSION
+        # add git revision
+        cp /code/REVISION /var/www/REVISION
 
-    [ -z "$DEBUG" ] && DISABLE_LOGGING="true" || DISABLE_LOGGING="false"
-    /usr/local/bin/uwsgi --ini ./conf/uwsgi.ini --disable-logging=$DISABLE_LOGGING
-  ;;
+        [ -z "$DEBUG" ] && DISABLE_LOGGING="true" || DISABLE_LOGGING="false"
+        /usr/local/bin/uwsgi --ini ./conf/uwsgi.ini --disable-logging=$DISABLE_LOGGING
+    ;;
 
-  start_dev )
-    setup_db
-    setup_admin
+    start_dev )
+        setup_db
+        setup_admin
 
-    # cleaning
-    rm -r -f /code/aether/ui/static/*.*
-    # copy assets bundles folder into static folder
-    cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
+        # cleaning
+        rm -r -f /code/aether/ui/static/*.*
+        # copy assets bundles folder into static folder
+        cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
 
-    ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
-  ;;
+        ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
+    ;;
 
-  help)
-    show_help
-  ;;
+    help)
+        show_help
+    ;;
 
-  *)
-    show_help
-  ;;
+    *)
+        show_help
+    ;;
 esac
