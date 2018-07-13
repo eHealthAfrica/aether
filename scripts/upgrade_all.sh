@@ -28,17 +28,17 @@ containers=( kernel odk couchdb-sync ui )
 
 for container in "${containers[@]}"
 do
-  :
+    :
 
-  # upgrade pip dependencies
-  echo "_____________________________________________ Updating $container"
-  docker-compose run $container pip_freeze
+    # upgrade pip dependencies
+    echo "_____________________________________________ Updating $container"
+    docker-compose run $container pip_freeze
 
-  echo "_____________________________________________ Rebuilding $container with updates"
-  # rebuild container
-  docker-compose build --no-cache $container
+    echo "_____________________________________________ Rebuilding $container with updates"
+    # rebuild container
+    docker-compose build --no-cache $container
 
-  echo "_____________________________________________ $container updated and rebuilt!"
+    echo "_____________________________________________ $container updated and rebuilt!"
 done
 
 ./scripts/kill_all.sh

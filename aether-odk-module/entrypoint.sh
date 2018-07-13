@@ -60,15 +60,15 @@ setup_db() {
     export PGPORT=$RDS_PORT
 
     until pg_isready -q; do
-      >&2 echo "Waiting for postgres..."
-      sleep 1
+        >&2 echo "Waiting for postgres..."
+        sleep 1
     done
 
     if psql -c "" $RDS_DB_NAME; then
-      echo "$RDS_DB_NAME database exists!"
+        echo "$RDS_DB_NAME database exists!"
     else
-      createdb -e $RDS_DB_NAME -e ENCODING=UTF8
-      echo "$RDS_DB_NAME database created!"
+        createdb -e $RDS_DB_NAME -e ENCODING=UTF8
+        echo "$RDS_DB_NAME database created!"
     fi
 
     # migrate data model if needed
