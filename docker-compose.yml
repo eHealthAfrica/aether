@@ -25,6 +25,8 @@ services:
     extends:
       file: docker-compose-base.yml
       service: postgres-base
+    volumes:
+      - ./.persistent_data/db/data:/var/lib/postgresql/data
     networks:
       - internal
 
