@@ -36,14 +36,14 @@ PCK_FILE=aether.client-0.0.0-py2.py3-none-any.whl
 containers=( producer test-aether-integration )
 for container in "${containers[@]}"
 do
-  if [[ $container = "producer" ]]
-  then
-    FOLDER=aether-$container
-  else
-    FOLDER=$container-module
-  fi
-  mkdir -p ./$FOLDER/conf/pip/dependencies
-  cp -r ./aether-utils/aether-client/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
+    if [[ $container = "producer" ]]
+    then
+        FOLDER=aether-$container
+    else
+        FOLDER=$container-module
+    fi
+    mkdir -p ./$FOLDER/conf/pip/dependencies
+    cp -r ./aether-utils/aether-client/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
 done
 
 # create the mocker distribution
@@ -56,14 +56,14 @@ PCK_FILE=aether.mocker-0.0.0-py2.py3-none-any.whl
 containers=( test-aether-integration )
 for container in "${containers[@]}"
 do
-  if [[ $container = "producer" ]]
-  then
-    FOLDER=aether-$container
-  else
-    FOLDER=$container-module
-  fi
-  mkdir -p ./$FOLDER/conf/pip/dependencies
-  cp -r ./aether-utils/aether-mock-data/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
+    if [[ $container = "producer" ]]
+    then
+        FOLDER=aether-$container
+    else
+        FOLDER=$container-module
+    fi
+    mkdir -p ./$FOLDER/conf/pip/dependencies
+    cp -r ./aether-utils/aether-mock-data/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
 done
 
 # create the saladbar distribution
@@ -76,14 +76,14 @@ PCK_FILE=aether.saladbar-0.0.0-py2.py3-none-any.whl
 containers=( test-aether-integration )
 for container in "${containers[@]}"
 do
-  if [[ $container = "producer" ]]
-  then
-    FOLDER=aether-$container
-  else
-    FOLDER=$container-module
-  fi
-  mkdir -p ./$FOLDER/conf/pip/dependencies
-  cp -r ./aether-utils/aether-saladbar/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
+    if [[ $container = "producer" ]]
+    then
+        FOLDER=aether-$container
+    else
+        FOLDER=$container-module
+    fi
+    mkdir -p ./$FOLDER/conf/pip/dependencies
+    cp -r ./aether-utils/aether-saladbar/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
 done
 
 
