@@ -69,12 +69,12 @@ services:
       RDS_DB_NAME: odk-test
       RDS_HOSTNAME: db-test
       TESTING: "true"
-      WEB_SERVER_PORT: 9443
+      WEB_SERVER_PORT: 9001
     depends_on:
       - db-test
       - kernel-test
     ports:
-      - "9443:9443"
+      - "9001:9001"
 
 
   # ---------------------------------
@@ -148,6 +148,7 @@ services:
     depends_on:
       - kernel-test
 
+
   # ---------------------------------
   # Aether Integration Tests
   # ---------------------------------
@@ -168,6 +169,7 @@ services:
       - kernel-test
       - kafka-test
       - producer-test
+
 
   # ---------------------------------
   # Aether Kafka Containers
@@ -191,6 +193,7 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper-test:32181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-test:29092
       ADVERTISED_HOST_NAME: kafka-test
+
 
   # ---------------------------------
   # Aether Kafka Producer
