@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.conf.urls import url
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from . import views
@@ -37,5 +37,5 @@ router.register('entities', views.EntityViewSet)
 
 
 urlpatterns = router.urls + [
-    url(r'^validate-mappings/$', view=views.validate_mappings_view, name='validate-mappings'),
+    path('validate-mappings/', view=views.validate_mappings_view, name='validate-mappings'),
 ]
