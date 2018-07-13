@@ -69,12 +69,12 @@ services:
       RDS_DB_NAME: odk-test
       RDS_HOSTNAME: db-test
       TESTING: "true"
-      WEB_SERVER_PORT: 9001
+      WEB_SERVER_PORT: 9002
     depends_on:
       - db-test
       - kernel-test
     ports:
-      - "9001:9001"
+      - "9002:9002"
 
 
   # ---------------------------------
