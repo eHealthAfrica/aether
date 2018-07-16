@@ -35,6 +35,7 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
     Default URLs included:
 
         - the `/health` URL. Always responds with `200` status and an empty JSON object `{}`.
+        - the `/check-db` URL. Responds with `500` status if the database is not available.
         - the `/admin` section URLs.
         - the `/accounts` URLs, checks if the REST Framework ones or the UMS ones.
         - the `debug toolbar` URLs only in DEBUG mode.

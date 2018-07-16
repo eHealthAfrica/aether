@@ -8,26 +8,42 @@
 #                                                                              #
 ################################################################################
 
-django<2
-django-cas-ng
-django-cors-headers
-django-debug-toolbar
-django-rq
-django-ums-client
-djangorestframework
-oauth2client
-psycopg2-binary
-raven
-redis
-requests
-rq
-rq-scheduler
-uwsgi
 
-# Aether common module
+# Main libraries
+
+# Aether common module, will also require:
+#   django < 2
+#   django-cors-headers
+#   django-debug-toolbar
+#   djangorestframework
+#   djangorestframework-csv
+#   psycopg2-binary
+#   requests
 aether.common
 
-# test libraries
+
+# OAuth
+oauth2client
+
+
+# Task scheduler
+django-rq
+redis
+rq
+rq-scheduler
+
+
+# UMS libraries
+django-cas-ng
+django-ums-client
+
+
+# Server side
+raven                  # Sentry
+uwsgi                  # Server behind NGINX
+
+
+# Test libraries
 coverage
 flake8
 flake8-quotes
