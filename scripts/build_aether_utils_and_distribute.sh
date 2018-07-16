@@ -18,7 +18,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-set -e
+set -Eeuo pipefail
 
 DC_CLIENT="docker-compose -f docker-compose-build-aether-utils.yml"
 
