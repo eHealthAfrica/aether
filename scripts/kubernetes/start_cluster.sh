@@ -20,18 +20,21 @@ helm install stable/postgresql \
      --set postgresPassword=$POSTGRES_PASSWORD \
      --version=0.13.1
 # Wait for the deployment to reach a "Running" state.
-kubectl rollout status deployment db
+# kubectl rollout status deployment db
 
 # Install kernel
 helm install helm/kernel \
      --name kernel \
      --values=./$VALUES_DIR/kernel.yaml
 # Wait for the deployment to reach a "Running" state.
-kubectl rollout status deployment kernel
+# kubectl rollout status deployment kernel
 
 # Install odk
 helm install helm/odk \
      --name odk \
      --values=$VALUES_DIR/odk.yaml
 # Wait for the deployment to reach a "Running" state.
-kubectl rollout status deployment odk
+# kubectl rollout status deployment odk
+
+while true; do kubectl get pods; sleep 1; done;
+

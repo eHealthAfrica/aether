@@ -83,6 +83,7 @@ services:
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}
       HOSTNAME: kernel.aether.local
+      KERNEL_READONLY_DB_USERNAME: readonlyuser
       KERNEL_READONLY_DB_PASSWORD: ${KERNEL_READONLY_DB_PASSWORD}
       RDS_DB_NAME: aether
       RDS_HOSTNAME: db
