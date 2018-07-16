@@ -18,7 +18,6 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-
 set -Eeuo pipefail
 
 # Define help message
@@ -61,15 +60,15 @@ setup_db() {
     export PGPORT=$RDS_PORT
 
     until pg_isready -q; do
-      >&2 echo "Waiting for postgres..."
-      sleep 1
+        >&2 echo "Waiting for postgres..."
+        sleep 1
     done
 
     if psql -c "" $RDS_DB_NAME; then
-      echo "$RDS_DB_NAME database exists!"
+        echo "$RDS_DB_NAME database exists!"
     else
-      createdb -e $RDS_DB_NAME -e ENCODING=UTF8
-      echo "$RDS_DB_NAME database created!"
+        createdb -e $RDS_DB_NAME -e ENCODING=UTF8
+        echo "$RDS_DB_NAME database created!"
     fi
     # migrate data model if needed
     ./manage.py migrate --noinput
@@ -82,8 +81,8 @@ setup_db() {
 }
 
 setup_admin() {
-  # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
-  ./manage.py setup_admin -p=$ADMIN_PASSWORD -t=$AETHER_KERNEL_TOKEN
+    # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
+    ./manage.py setup_admin -p=$ADMIN_PASSWORD -t=$AETHER_KERNEL_TOKEN
 }
 
 test_flake8() {
@@ -93,7 +92,6 @@ test_flake8() {
 test_coverage() {
     export RCFILE=/code/conf/extras/coverage.rc
     export TESTING=true
-    export DEBUG=false
 
     coverage run    --rcfile="$RCFILE" manage.py test "${@:1}"
     coverage report --rcfile="$RCFILE"
@@ -155,7 +153,8 @@ case "$1" in
         # add git revision
         cp /code/REVISION /var/www/REVISION
 
-        /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini
+        [ -z "$DEBUG" ] && DISABLE_LOGGING="true" || DISABLE_LOGGING="false"
+        /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini --disable-logging=$DISABLE_LOGGING
     ;;
 
     start_dev )

@@ -21,21 +21,21 @@
 set -Eeuo pipefail
 
 function prepare_container() {
-  echo "_____________________________________________ Preparing $1 container"
-  $DC_TEST build "$1"-test
-  $DC_TEST run "$1"-test setuplocaldb
-  echo "_____________________________________________ $1 ready!"
+    echo "_____________________________________________ Preparing $1 container"
+    $DC_TEST build "$1"-test
+    $DC_TEST run "$1"-test setuplocaldb
+    echo "_____________________________________________ $1 ready!"
 }
 
 
 if [ -n "$1" ];
 then
-  # take container name from argument, expected values `odk` or `couchdb-sync`
-  echo "Executing tests for $1 container"
-  container=$1
+    # take container name from argument, expected values `odk` or `couchdb-sync`
+    echo "Executing tests for $1 container"
+    container=$1
 else
-  echo "Nothing to do."
-  exit 0
+    echo "Nothing to do."
+    exit 0
 fi
 
 DC_TEST="docker-compose -f docker-compose-test.yml"
@@ -49,7 +49,7 @@ echo "_____________________________________________ Starting databases"
 $DC_TEST up -d db-test
 if [[ $container = "couchdb-sync" ]]
 then
-  $DC_TEST up -d couchdb-test redis-test
+    $DC_TEST up -d couchdb-test redis-test
 fi
 
 # prepare and start KERNEL container
@@ -59,9 +59,9 @@ echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
 if [[ $container == "couchdb-sync" ]]
 then
-  fixture=aether/kernel/api/tests/fixtures/project.json
-  $DC_TEST run kernel-test manage loaddata $fixture
-  echo "_____________________________________________ Loaded initial data in kernel"
+    fixture=aether/kernel/api/tests/fixtures/project.json
+    $DC_TEST run kernel-test manage loaddata $fixture
+    echo "_____________________________________________ Loaded initial data in kernel"
 fi
 
 

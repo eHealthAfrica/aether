@@ -37,32 +37,32 @@ CONNECT_COMPOSE='docker-compose-connect.yml'
 VERSION=`cat VERSION`
 
 release_app () {
-  APP_NAME=$1
-  COMPOSE_PATH=$2
-  AETHER_APP="aether-${1}"
-  echo "version: $VERSION"
-  echo "Building Docker image ${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
-  docker-compose -f $COMPOSE_PATH build --build-arg GIT_REVISION=$TRAVIS_COMMIT \
-  --build-arg VERSION=$VERSION $APP_NAME
+    APP_NAME=$1
+    COMPOSE_PATH=$2
+    AETHER_APP="aether-${1}"
+    echo "version: $VERSION"
+    echo "Building Docker image ${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
+    docker-compose -f $COMPOSE_PATH build --build-arg GIT_REVISION=$TRAVIS_COMMIT \
+        --build-arg VERSION=$VERSION $APP_NAME
 
-  docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
-  docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:latest"
-  echo "Pushing Docker image ${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
-  docker push "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
-  docker push "${IMAGE_REPO}/${AETHER_APP}:latest"
+    docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
+    docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:latest"
+    echo "Pushing Docker image ${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
+    docker push "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
+    docker push "${IMAGE_REPO}/${AETHER_APP}:latest"
 }
 
 if [ -z "$TRAVIS_TAG" ];
 then
-  VERSION=${VERSION}-rc
+    VERSION=${VERSION}-rc
 fi
 
 for APP in "${CORE_APPS[@]}"
 do
-  release_app $APP $CORE_COMPOSE
+    release_app $APP $CORE_COMPOSE
 done
 
 for CONNECT_APP in "${CONNECT_APPS[@]}"
 do
-  release_app $CONNECT_APP $CONNECT_COMPOSE
+    release_app $CONNECT_APP $CONNECT_COMPOSE
 done

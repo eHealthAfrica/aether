@@ -20,7 +20,6 @@
 #
 set -Eeuo pipefail
 
-
 # Define help message
 show_help() {
     echo """
@@ -48,7 +47,7 @@ test_flake8() {
 test_coverage() {
     export RCFILE=/code/conf/extras/coverage.rc
     export TESTING=true
-    export DEBUG=false
+
     coverage run    --rcfile="$RCFILE" manage.py test "${@:1}"
     coverage report --rcfile="$RCFILE"
     coverage erase
