@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+#
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -15,20 +17,33 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
+set -Eeuo pipefail
 
-'''
-WSGI config for aether project.
 
-It exposes the WSGI callable as a module-level variable named ``application``.
+case "$1" in
+    kubernetes)
+        ./scripts/build_aether_utils_and_distribute.sh
+        ./scripts/build_common_and_distribute.sh
 
-For more information on this file, see
-https://docs.djangoproject.com/en/dev/howto/deployment/wsgi/
-'''
+        ./scripts/kubernetes/run_travis.sh
+    ;;
 
-import os
+    dockercompose)
+        ./scripts/generate-docker-compose-credentials.sh > .env
 
-from django.core.wsgi import get_wsgi_application
+        ./scripts/test_all.sh
+    ;;
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aether.kernel.settings')
+    integration)
+        ./scripts/generate-docker-compose-credentials.sh > .env
+        ./scripts/build_aether_utils_and_distribute.sh
+        ./scripts/build_common_and_distribute.sh
 
-application = get_wsgi_application()
+        ./scripts/test_integration.sh
+    ;;
+
+    *)
+        echo "$1"
+    ;;
+esac

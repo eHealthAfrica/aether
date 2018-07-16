@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -Eeuox pipefail
+
 # Start helm
 helm init
 

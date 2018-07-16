@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -Eeuo pipefail
+
 export CHANGE_MINIKUBE_NONE_USER=true
 
 # Start Minikube

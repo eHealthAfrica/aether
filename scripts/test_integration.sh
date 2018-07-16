@@ -18,7 +18,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-set -e
+set -Eeuo pipefail
 
 function build_container() {
     echo "_____________________________________________ Building $1 container"

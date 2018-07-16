@@ -15,4 +15,3 @@ services:
     volumes:
       - ./aether-common-module:/code
     command: build
-  # ---------------------------------

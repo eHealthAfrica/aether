@@ -10,19 +10,22 @@
 
 
 # Main libraries
-# Aether common module, will also install:
-#   django                   < 2
-#   djangorestframework     >= 3.8   < 4
-#   djangorestframework-csv >= 2.0.0 < 3
-#   django-cors-headers     >= 2.0.0 < 3
+
+# Aether common module, will also require:
+#   django < 2
+#   django-cors-headers
+#   django-debug-toolbar
+#   djangorestframework
+#   djangorestframework-csv
+#   psycopg2-binary
+#   requests
 aether.common
 
 
+# Django specific
 django-model-utils
+django-webpack-loader
 drf-dynamic-fields
-psycopg2-binary
-requests
-uwsgi
 
 
 # UMS libraries
@@ -30,13 +33,9 @@ django-cas-ng
 django-ums-client
 
 
-# Development
-django-debug-toolbar
-django-webpack-loader
-
-
 # Server side
-raven    # Sentry
+raven                  # Sentry
+uwsgi                  # Server behind NGINX
 
 
 # Test libraries
