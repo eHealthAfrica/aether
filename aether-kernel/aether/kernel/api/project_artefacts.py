@@ -193,14 +193,14 @@ def __right_pad(model, value):
     '''
     Creates a numeric or a random string suffix for the given value
     '''
-    suffix = 0
+    numeric_suffix = 0
     new_value = value
 
     while model.objects.filter(name=new_value[0:50]).count() > 0:
         if len(new_value) > 50:
             # in case of name size overflow
-            return (f'{value} - {__random_name()}')
-        suffix += 1
-        new_value = f'{value}_{suffix}'
+            return (f'{value} - {__random_name()}')[0:50]
+        numeric_suffix += 1
+        new_value = f'{value}_{numeric_suffix}'
 
     return new_value[0:50]
