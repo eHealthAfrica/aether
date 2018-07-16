@@ -286,7 +286,7 @@ class ProjectArtefactsTests(TestCase):
         with self.assertRaises(IntegrityError) as ies:
             generate(
                 project_id=project_id,
-                project_name='Project',    # in use but will append a random string
+                project_name='Project',    # in use but will append `_1` to it.
                 schemas=[
                     {'name': name_50},     # this will be created
                     {'name': name_50},     # but this one will complain
