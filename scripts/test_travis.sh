@@ -25,12 +25,22 @@ case "$1" in
     kubernetes)
         ./scripts/build_aether_utils_and_distribute.sh
         ./scripts/build_common_and_distribute.sh
+
         ./scripts/kubernetes/run_travis.sh
     ;;
 
     dockercompose)
         ./scripts/generate-docker-compose-credentials.sh > .env
+
         ./scripts/test_all.sh
+    ;;
+
+    integration)
+        ./scripts/generate-docker-compose-credentials.sh > .env
+        ./scripts/build_aether_utils_and_distribute.sh
+        ./scripts/build_common_and_distribute.sh
+
+        ./scripts/test_integration.sh
     ;;
 
     *)

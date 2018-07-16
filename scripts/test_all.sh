@@ -18,7 +18,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-set -Eeuox pipefail
+set -Eeuo pipefail
 
 function kill_all() {
     echo "_____________________________________________ Killing containers"
@@ -90,8 +90,5 @@ prepare_and_test_container couchdb-sync
 
 # clean start for the next bunch of tests
 kill_all
-
-# execute INTEGRATION TEST
-./scripts/test_integration.sh
 
 echo "_____________________________________________ END"

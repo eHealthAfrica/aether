@@ -8,6 +8,7 @@ matrix:
   include:
     - env: 'TEST_MODE=kubernetes'
     - env: 'TEST_MODE=dockercompose'
+    - env: 'TEST_MODE=integration'
 
 services:
   - docker
