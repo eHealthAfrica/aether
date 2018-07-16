@@ -32,4 +32,3 @@ class SettingsTest(TestCase):
         self.assertEqual(settings.SECURE_PROXY_SSL_HEADER, None)
 
         self.assertEqual(settings.ROOT_URLCONF, 'aether.odk.urls')
-        self.assertEqual(settings.WSGI_APPLICATION, 'aether.odk.wsgi.application')

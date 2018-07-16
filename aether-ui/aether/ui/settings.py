@@ -29,7 +29,6 @@ from aether.common.conf.settings import INSTALLED_APPS, TEMPLATES, STATIC_ROOT
 # ------------------------------------------------------------------------------
 
 ROOT_URLCONF = 'aether.ui.urls'
-WSGI_APPLICATION = 'aether.ui.wsgi.application'
 
 APP_NAME = 'aether'
 

@@ -26,7 +26,6 @@ from aether.common.conf.settings import INSTALLED_APPS, REST_FRAMEWORK
 # ------------------------------------------------------------------------------
 
 ROOT_URLCONF = 'aether.kernel.urls'
-WSGI_APPLICATION = 'aether.kernel.wsgi.application'
 ADD_REVERSION_ADMIN = True
 
 INSTALLED_APPS += [
