@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -ex
+set -Eeuox pipefail
 
 # When stopping and starting pods in a rapid succession, two or more instances
 # of a release will be active for a short period of time. To ensure that we run

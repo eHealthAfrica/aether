@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 
-set -u
+set -Eeuox pipefail
 
 # $VALUES_DIR should point to one of the directories in `helm/overrides`. Each
 # subdirectory (e.g. "local", "test") represents an environment and contains one
 # file for each module with settings for that environment.
 VALUES_DIR=$1
-eval $(minikube docker-env)
 
 # Rebuild all images to make sure that are using the most recent versions.
 docker-compose build kernel odk
