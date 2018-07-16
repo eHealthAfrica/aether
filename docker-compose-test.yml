@@ -132,8 +132,8 @@ services:
     image: aether/client
     build: ./aether-utils/aether-client
     environment:
-      KERNEL_READONLY_DB_USERNAME: ${KERNEL_READONLY_DB_USERNAME}
-      KERNEL_DB_PASSWORD: ${KERNEL_READONLY_DB_PASSWORD}
+      KERNEL_ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
+      KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
     volumes:
       - ./aether-utils/aether-client:/code
     depends_on:
@@ -146,8 +146,8 @@ services:
     image: aether/integration
     build: ./test-aether-integration-module
     environment:
-      KERNEL_READONLY_DB_USERNAME: ${KERNEL_READONLY_DB_USERNAME}
-      KERNEL_READONLY_DB_PASSWORD: ${KERNEL_READONLY_DB_PASSWORD}
+      KERNEL_ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
+      KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
     volumes:
       - ./test-aether-integration-module:/code
     depends_on:
@@ -189,6 +189,8 @@ services:
       service: aether-producer-base
     environment:
       PRODUCER_SETTINGS_FILE: /code/producer/test_settings.json
+      KERNEL_ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
+      KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
     ports:
       - "9005:9005"
     links:

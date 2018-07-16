@@ -8,8 +8,8 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 
-\connect aether
-GRANT CONNECT ON DATABASE aether TO readonlyuser;
+\connect :database
+GRANT CONNECT ON DATABASE :database TO readonlyuser;
 GRANT USAGE ON SCHEMA public TO readonlyuser;
 GRANT SELECT ON kernel_entity TO readonlyuser;
 GRANT SELECT ON kernel_mapping TO readonlyuser;

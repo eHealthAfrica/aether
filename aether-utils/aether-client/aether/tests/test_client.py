@@ -63,8 +63,8 @@ class KernelClientCase(unittest.TestCase):
             except AttributeError:
                 pass
             try:
-                kernel_username = os.environ['KERNEL_READONLY_DB_USERNAME']
-                kernel_password = os.environ['KERNEL_READONLY_DB_PASSWORD']
+                kernel_username = os.environ['KERNEL_ADMIN_USERNAME']
+                kernel_password = os.environ['KERNEL_ADMIN_PASSWORD']
                 KernelClientCase.client = _client.KernelClient(
                     kernel_url,
                     username=kernel_username,

@@ -74,7 +74,11 @@ setup_db() {
     # migrate data model if needed
     ./manage.py migrate --noinput
     # Create readonly database user
-    psql -U $RDS_USERNAME -h $RDS_HOSTNAME -v password=$KERNEL_READONLY_DB_PASSWORD -f s.sql
+    psql -U $RDS_USERNAME \
+         -h $RDS_HOSTNAME \
+         -v database=$RDS_DB_NAME \
+         -v password=$KERNEL_READONLY_DB_PASSWORD \
+         -f s.sql
 }
 
 setup_admin() {
