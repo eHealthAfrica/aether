@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eu
+set -Eeuo pipefail
 
 # Install secrets for local development.
 kubectl create secret generic database-credentials \
