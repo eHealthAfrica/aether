@@ -247,18 +247,31 @@ class ProjectArtefactsTests(TestCase):
                             'only returns the affected ids NEVER ALL OF THEM')
 
     def test__upsert_project_artefacts__duplicated_name(self):
-        new_project = Project.objects.create(name='Project')
-        project_id = str(uuid.uuid4())
-        self.assertNotEqual(str(new_project.pk), project_id)
+        PROJECT_NAME = 'Project'
+        new_project = Project.objects.create(name=PROJECT_NAME)
+        project_id_2 = str(uuid.uuid4())
+        self.assertNotEqual(str(new_project.pk), project_id_2)
 
-        self.assertEqual(Project.objects.filter(pk=project_id).count(), 0)
+        self.assertEqual(Project.objects.filter(pk=project_id_2).count(), 0)
         generate(
-            project_id=project_id,
-            project_name='Project',  # already in use
+            project_id=project_id_2,
+            project_name=PROJECT_NAME,
         )
-        self.assertEqual(Project.objects.filter(pk=project_id).count(), 1)
-        project_2 = Project.objects.get(pk=project_id)
-        self.assertIn('Project - ', project_2.name)
+        self.assertEqual(Project.objects.filter(pk=project_id_2).count(), 1)
+        project_2 = Project.objects.get(pk=project_id_2)
+        self.assertEqual(PROJECT_NAME + '_1', project_2.name)
+
+        # once again
+        project_id_3 = str(uuid.uuid4())
+        self.assertNotEqual(str(new_project.pk), project_id_3)
+        self.assertEqual(Project.objects.filter(pk=project_id_3).count(), 0)
+        generate(
+            project_id=project_id_3,
+            project_name=PROJECT_NAME,
+        )
+        self.assertEqual(Project.objects.filter(pk=project_id_3).count(), 1)
+        project_3 = Project.objects.get(pk=project_id_3)
+        self.assertEqual(PROJECT_NAME + '_2', project_3.name)
 
     def test__upsert_project_artefacts__atomicity(self):
         new_project = Project.objects.create(name='Project')

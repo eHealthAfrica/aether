@@ -171,9 +171,9 @@ def __upsert_instance(model, pk=None, ignore_fields=[], action='upsert', **value
 
     if is_new or action != 'create':
         # if is new first check that the same name is not there
-        # otherwise append a random string to it
-        if is_new and model.objects.filter(name=item.name).count() > 0:
-            item.name = __right_pad(item.name)
+        # otherwise append a numeric suffix or a random string to it
+        if is_new:
+            item.name = __right_pad(model, item.name)
         item.save()
 
     item.refresh_from_db()
@@ -189,8 +189,18 @@ def __random_name():
     return ''.join([random.choice(alphanum) for x in range(50)])
 
 
-def __right_pad(value):
+def __right_pad(model, value):
     '''
-    Creates a random string of length 50 and appends it to the given value
+    Creates a numeric or a random string suffix for the given value
     '''
-    return (f'{value} - {__random_name()}')[0:50]
+    suffix = 0
+    new_value = value
+
+    while model.objects.filter(name=new_value[0:50]).count() > 0:
+        if len(new_value) > 50:
+            # in case of name size overflow
+            return (f'{value} - {__random_name()}')
+        suffix += 1
+        new_value = f'{value}_{suffix}'
+
+    return new_value[0:50]
