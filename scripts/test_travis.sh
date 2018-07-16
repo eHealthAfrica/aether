@@ -34,6 +34,6 @@ case "$1" in
     ;;
 
     *)
-        echo "${@:2}"
+        echo "$1"
     ;;
 esac
