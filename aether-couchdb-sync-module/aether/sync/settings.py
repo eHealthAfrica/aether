@@ -29,7 +29,6 @@ from aether.common.conf.settings import INSTALLED_APPS
 # ------------------------------------------------------------------------------
 
 ROOT_URLCONF = 'aether.sync.urls'
-WSGI_APPLICATION = 'aether.sync.wsgi.application'
 
 # Allow cors for all origins but only for the sync endpoint
 CORS_URLS_REGEX = r'^/sync/.*$'

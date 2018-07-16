@@ -64,6 +64,8 @@ services:
       - ./.persistent_data/ui/static:/static/ui
     ports:
       - "80:80"
+      # needed for ODK behind nginx (ODK Collect only accepts 443 and 8443 ports)
+      - "8443:8443"
 
 
   # ---------------------------------
@@ -125,7 +127,11 @@ services:
       RDS_PASSWORD: ${ODK_RDS_PASSWORD}
       RDS_PORT: 5432
       RDS_USERNAME: postgres
-      WEB_SERVER_PORT: 8443
+
+      # behind ngnix
+      WEB_SERVER_PORT: 8002
+      # standalone (without nginx) (ODK Collect only accepts 443 and 8443 ports)
+      # WEB_SERVER_PORT: 8443
     volumes:
       - ./aether-odk-module:/code
       # media folder
@@ -133,7 +139,10 @@ services:
       # static folder
       - ./.persistent_data/odk/static:/var/www/static
     ports:
-      - "8443:8443"
+      # behind ngnix
+      - "8002:8002"
+      # standalone (without nginx)
+      # - "8443:8443"
     command: start_dev
 
 
@@ -169,7 +178,7 @@ services:
       REDIS_HOST: redis
       REDIS_PASSWORD: ${COUCHDB_SYNC_REDIS_PASSWORD}
       REDIS_PORT: 6379
-      WEB_SERVER_PORT: 8666
+      WEB_SERVER_PORT: 8006
     volumes: &sync-volumes
       - ./aether-couchdb-sync-module:/code
       # media folder (not in use)
@@ -177,7 +186,7 @@ services:
       # static folder
       - ./.persistent_data/sync/static:/var/www/static
     ports:
-      - "8666:8666"
+      - "8006:8006"
     command: start_dev
 
   couchdb-sync-rq-base:
