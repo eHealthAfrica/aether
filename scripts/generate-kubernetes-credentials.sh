@@ -36,14 +36,13 @@ metadata:
   name: secrets
 type: Opaque
 stringData:
-  kernel-admin-username: admin
   kernel-admin-password: $(gen_random_string)
   kernel-database-user: postgres
   kernel-database-password: $POSTGRES_PASSWORD
   kernel-database-name: aether
   kernel-django-secret-key: $(gen_random_string)
   kernel-token: $(gen_random_string)
-  odk-admin-username: admin
+
   odk-admin-password: $(gen_random_string)
   odk-database-user: postgres
   odk-database-password: $POSTGRES_PASSWORD
