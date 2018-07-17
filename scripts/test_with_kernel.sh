@@ -23,7 +23,6 @@ set -Eeuo pipefail
 function prepare_container() {
     echo "_____________________________________________ Preparing $1 container"
     $DC_TEST build "$1"-test
-    $DC_TEST run "$1"-test setuplocaldb
     echo "_____________________________________________ $1 ready!"
 }
 

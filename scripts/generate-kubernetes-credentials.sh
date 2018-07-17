@@ -44,6 +44,7 @@ stringData:
   kernel-readonly-db-username: readonlyuser
   kernel-readonly-db-password: $(gen_random_string)
   kernel-token: $(gen_random_string)
+
   odk-admin-password: $(gen_random_string)
   odk-database-user: postgres
   odk-database-password: $POSTGRES_PASSWORD

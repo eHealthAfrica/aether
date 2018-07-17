@@ -21,17 +21,17 @@ services:
 
   db-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: postgres-base
 
   couchdb-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: couchdb-base
 
   redis-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: redis-base
 
 
@@ -41,7 +41,7 @@ services:
 
   kernel-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: kernel-base
     environment:
       MEDIA_ROOT: /tmp/
@@ -61,7 +61,7 @@ services:
 
   odk-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: odk-base
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9000
@@ -83,7 +83,7 @@ services:
 
   couchdb-sync-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: couchdb-sync-base
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9000
@@ -94,6 +94,7 @@ services:
       REDIS_HOST: redis-test
       TESTING: "true"
       WEB_SERVER_PORT: 9006
+      GOOGLE_CLIENT_ID: secret_google_client_id
     depends_on:
       - couchdb-test
       - db-test
@@ -109,7 +110,7 @@ services:
 
   ui-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: ui-base
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9000
@@ -171,12 +172,12 @@ services:
 
   zookeeper-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: zookeeper-base
 
   kafka-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: kafka-base
     depends_on:
       - zookeeper-test
@@ -195,7 +196,7 @@ services:
 
   producer-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: aether-producer-base
     environment:
       PRODUCER_SETTINGS_FILE: /code/producer/test_settings.json
