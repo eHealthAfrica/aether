@@ -13,6 +13,8 @@ services:
       # required environment variables
       DJANGO_SECRET_KEY: secret
       PGPASSWORD: secretsecret
+      PGUSER: dbuser
+      PGHOST: db-test
       DB_NAME: common
       # required by kernel module
       AETHER_KERNEL_URL_TEST: http://kernel-test

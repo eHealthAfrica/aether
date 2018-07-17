@@ -143,8 +143,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': os.environ['DB_NAME'],
         'PASSWORD': os.environ['PGPASSWORD'],
-        'USER': os.environ.get('PGUSER', 'postgres'),
-        'HOST': os.environ.get('PGHOST', 'db'),
+        'USER': os.environ['PGUSER'],
+        'HOST': os.environ['PGHOST'],
         'PORT': os.environ.get('PGPORT', '5432'),
         'TESTING': {'CHARSET': 'UTF8'},
     },
@@ -199,17 +199,12 @@ else:  # pragma: no cover
 
 SENTRY_DSN = os.environ.get('SENTRY_DSN')
 if SENTRY_DSN:  # pragma: no cover
-    INSTALLED_APPS += [
-        'raven.contrib.django.raven_compat',
-    ]
+    INSTALLED_APPS += ['raven.contrib.django.raven_compat', ]
     MIDDLEWARE = [
         'raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware',
     ] + MIDDLEWARE
 
-    SENTRY_CLIENT = os.environ.get(
-        'DJANGO_SENTRY_CLIENT',
-        'raven.contrib.django.raven_compat.DjangoClient'
-    )
+    SENTRY_CLIENT = 'raven.contrib.django.raven_compat.DjangoClient'
     SENTRY_CELERY_LOGLEVEL = logging.INFO
 else:  # pragma: no cover
     logger.info('No SENTRY enable!')
