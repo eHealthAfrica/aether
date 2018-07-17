@@ -85,11 +85,11 @@ services:
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}
       HOSTNAME: kernel.aether.local
-      RDS_DB_NAME: aether
-      RDS_HOSTNAME: db
-      RDS_PASSWORD: ${KERNEL_RDS_PASSWORD}
-      RDS_PORT: 5432
-      RDS_USERNAME: postgres
+      DB_NAME: aether
+      PGHOST: db
+      PGPASSWORD: ${KERNEL_DB_PASSWORD}
+      PGPORT: 5432
+      PGUSER: postgres
       WEB_SERVER_PORT: 8000
     volumes:
       - ./aether-kernel:/code
@@ -122,11 +122,11 @@ services:
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${ODK_DJANGO_SECRET_KEY}
       HOSTNAME: odk.aether.local
-      RDS_DB_NAME: odk
-      RDS_HOSTNAME: db
-      RDS_PASSWORD: ${ODK_RDS_PASSWORD}
-      RDS_PORT: 5432
-      RDS_USERNAME: postgres
+      DB_NAME: odk
+      PGHOST: db
+      PGPASSWORD: ${ODK_DB_PASSWORD}
+      PGPORT: 5432
+      PGUSER: postgres
 
       # behind ngnix
       WEB_SERVER_PORT: 8002
@@ -169,11 +169,11 @@ services:
       DJANGO_SECRET_KEY: ${COUCHDB_SYNC_DJANGO_SECRET_KEY}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       HOSTNAME: sync.aether.local
-      RDS_DB_NAME: couchdb-sync
-      RDS_HOSTNAME: db
-      RDS_PASSWORD: ${COUCHDB_SYNC_RDS_PASSWORD}
-      RDS_PORT: 5432
-      RDS_USERNAME: postgres
+      DB_NAME: couchdb-sync
+      PGHOST: db
+      PGUPASSWORD: ${COUCHDB_SYNC_DB_PASSWORD}
+      PGPORT: 5432
+      PGUSER: postgres
       REDIS_DB: 0
       REDIS_HOST: redis
       REDIS_PASSWORD: ${COUCHDB_SYNC_REDIS_PASSWORD}
@@ -215,11 +215,11 @@ services:
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${UI_DJANGO_SECRET_KEY}
       HOSTNAME: ui.aether.local
-      RDS_DB_NAME: ui
-      RDS_HOSTNAME: db
-      RDS_PASSWORD: ${UI_RDS_PASSWORD}
-      RDS_PORT: 5432
-      RDS_USERNAME: postgres
+      DB_NAME: ui
+      PGHOST: db
+      PGPASSWORD: ${UI_DB_PASSWORD}
+      PGPORT: 5432
+      PGUSER: postgres
 
       # use this value with "start_dev" command and webpack
       STATIC_ROOT: /code/aether/ui/assets/bundles
