@@ -92,7 +92,7 @@ of the most common ones with non default values. For more info take a look at th
 
 - `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
 - `HOSTNAME`: `kernel.aether.local` Used by UMS.
-- `RDS_DB_NAME`: `aether` Postgres database name.
+- `DB_NAME`: `aether` Database name.
 - `WEB_SERVER_PORT`: `8000` Web server port.
 - `AETHER_KERNEL_TOKEN`: `kernel_admin_user_auth_token`
   to connect to it from other modules. It's used within the start up scripts.
@@ -101,7 +101,7 @@ of the most common ones with non default values. For more info take a look at th
 
 - `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
 - `HOSTNAME`: `odk.aether.local` Used by UMS.
-- `RDS_DB_NAME`: `odk` Postgres database name.
+- `DB_NAME`: `odk` Database name.
 - `WEB_SERVER_PORT`: `8002` Web server port.
 - `AETHER_KERNEL_TOKEN`: `kernel_admin_user_auth_token` Token to connect to kernel server.
 - `AETHER_KERNEL_URL`: `http://kernel:8000` Aether Kernel Server url.
@@ -113,7 +113,7 @@ of the most common ones with non default values. For more info take a look at th
 
 - `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
 - `HOSTNAME`: `ui.aether.local` Used by UMS.
-- `RDS_DB_NAME`: `ui` Postgres database name.
+- `DB_NAME`: `ui` Database name.
 - `WEB_SERVER_PORT`: `8004` Web server port.
 - `AETHER_KERNEL_TOKEN`: `kernel_admin_user_auth_token` Token to connect to kernel server.
 - `AETHER_KERNEL_URL`: `http://kernel:8000` Aether Kernel Server url.
@@ -123,7 +123,7 @@ of the most common ones with non default values. For more info take a look at th
 
 - `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
 - `HOSTNAME`: `sync.aether.local` Used by UMS.
-- `RDS_DB_NAME`: `couchdb-sync` Postgres database name.
+- `DB_NAME`: `couchdb-sync` Database name.
 - `WEB_SERVER_PORT`: `8006` Web server port.
 - `AETHER_KERNEL_TOKEN`: `kernel_admin_user_auth_token` Token to connect to kernel server.
 - `AETHER_KERNEL_URL`: `http://kernel:8000` Aether Kernel Server url.

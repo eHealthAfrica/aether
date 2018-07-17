@@ -38,7 +38,7 @@ services:
 
   redis-base:
     image: redis:alpine
-    command: "redis-server --requirepass ${COUCHDB_SYNC_REDIS_PASSWORD}"
+    command: "redis-server --requirepass ${REDIS_PASSWORD}"
 
   nginx-base:
     image: nginx:stable-alpine
@@ -78,18 +78,23 @@ services:
     stdin_open: true
     tty: true
     environment:
+      ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
-      AETHER_KERNEL_TOKEN: ${AETHER_KERNEL_TOKEN}
+      ADMIN_TOKEN: ${KERNEL_ADMIN_TOKEN}
+
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
+      HOSTNAME: kernel.aether.local
+
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}
-      HOSTNAME: kernel.aether.local
-      RDS_DB_NAME: aether
-      RDS_HOSTNAME: db
-      RDS_PASSWORD: ${KERNEL_RDS_PASSWORD}
-      RDS_PORT: 5432
-      RDS_USERNAME: postgres
+
+      DB_NAME: aether
+      PGHOST: db
+      PGPASSWORD: ${KERNEL_DB_PASSWORD}
+      PGPORT: 5432
+      PGUSER: postgres
+
       WEB_SERVER_PORT: 8000
     volumes:
       - ./aether-kernel:/code
@@ -112,21 +117,26 @@ services:
     stdin_open: true
     tty: true
     environment:
+      ADMIN_USERNAME: ${ODK_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${ODK_ADMIN_PASSWORD}
-      AETHER_KERNEL_TOKEN: ${AETHER_KERNEL_TOKEN}
+      ADMIN_TOKEN: ${ODK_ADMIN_TOKEN}
+
+      AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
       AETHER_KERNEL_URL: http://kernel:8000
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000
-      AETHER_ODK_TOKEN: ${AETHER_ODK_TOKEN}
+
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
+      HOSTNAME: odk.aether.local
+
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${ODK_DJANGO_SECRET_KEY}
-      HOSTNAME: odk.aether.local
-      RDS_DB_NAME: odk
-      RDS_HOSTNAME: db
-      RDS_PASSWORD: ${ODK_RDS_PASSWORD}
-      RDS_PORT: 5432
-      RDS_USERNAME: postgres
+
+      DB_NAME: odk
+      PGHOST: db
+      PGPASSWORD: ${ODK_DB_PASSWORD}
+      PGPORT: 5432
+      PGUSER: postgres
 
       # behind ngnix
       WEB_SERVER_PORT: 8002
@@ -156,28 +166,37 @@ services:
     stdin_open: true
     tty: true
     environment: &sync-environment
+      ADMIN_USERNAME: ${COUCHDB_SYNC_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${COUCHDB_SYNC_ADMIN_PASSWORD}
-      AETHER_KERNEL_TOKEN: ${AETHER_KERNEL_TOKEN}
+
+      AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
       AETHER_KERNEL_URL: http://kernel:8000
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000
+
+      GOOGLE_CLIENT_ID: ${COUCHDB_SYNC_GOOGLE_CLIENT_ID}
+
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
+      CSRF_COOKIE_DOMAIN: .aether.local
+      HOSTNAME: sync.aether.local
+
+      DEBUG: "true"
+      DJANGO_SECRET_KEY: ${COUCHDB_SYNC_DJANGO_SECRET_KEY}
+
       COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
       COUCHDB_URL: http://couchdb:5984
       COUCHDB_USER: ${COUCHDB_USER}
-      CSRF_COOKIE_DOMAIN: .aether.local
-      DEBUG: "true"
-      DJANGO_SECRET_KEY: ${COUCHDB_SYNC_DJANGO_SECRET_KEY}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      HOSTNAME: sync.aether.local
-      RDS_DB_NAME: couchdb-sync
-      RDS_HOSTNAME: db
-      RDS_PASSWORD: ${COUCHDB_SYNC_RDS_PASSWORD}
-      RDS_PORT: 5432
-      RDS_USERNAME: postgres
+
+      DB_NAME: couchdb-sync
+      PGHOST: db
+      PGPASSWORD: ${COUCHDB_SYNC_DB_PASSWORD}
+      PGPORT: 5432
+      PGUSER: postgres
+
       REDIS_DB: 0
       REDIS_HOST: redis
-      REDIS_PASSWORD: ${COUCHDB_SYNC_REDIS_PASSWORD}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_PORT: 6379
+
       WEB_SERVER_PORT: 8006
     volumes: &sync-volumes
       - ./aether-couchdb-sync-module:/code
@@ -206,24 +225,28 @@ services:
     stdin_open: true
     tty: true
     environment:
+      ADMIN_USERNAME: ${UI_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${UI_ADMIN_PASSWORD}
-      AETHER_KERNEL_TOKEN: ${AETHER_KERNEL_TOKEN}
+
+      AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
       AETHER_KERNEL_URL: http://kernel:8000
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000
+
       CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
+      HOSTNAME: ui.aether.local
+
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${UI_DJANGO_SECRET_KEY}
-      HOSTNAME: ui.aether.local
-      RDS_DB_NAME: ui
-      RDS_HOSTNAME: db
-      RDS_PASSWORD: ${UI_RDS_PASSWORD}
-      RDS_PORT: 5432
-      RDS_USERNAME: postgres
+
+      DB_NAME: ui
+      PGHOST: db
+      PGPASSWORD: ${UI_DB_PASSWORD}
+      PGPORT: 5432
+      PGUSER: postgres
 
       # use this value with "start_dev" command and webpack
       STATIC_ROOT: /code/aether/ui/assets/bundles
-
       # use this value with "start_dev" command and without webpack
       # STATIC_ROOT: /code/aether/ui/static
 
