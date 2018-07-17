@@ -21,10 +21,8 @@
 set -Eeuo pipefail
 
 check_variable() {
-    if [ -n "$1" ];
+    if [ -z "$1" ];
     then
-        echo "$2 set in Aether ODK!"
-    else
         echo "Missing $2 in Aether ODK!"
         exit -1
     fi

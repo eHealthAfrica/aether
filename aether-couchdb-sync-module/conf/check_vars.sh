@@ -21,10 +21,8 @@
 set -Eeuo pipefail
 
 check_variable() {
-    if [ -n "$1" ];
+    if [ -z "$1" ];
     then
-        echo "$2 set in Aether CouchDB-Sync!"
-    else
         echo "Missing $2 in Aether CouchDB-Sync!"
         exit -1
     fi

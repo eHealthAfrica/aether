@@ -21,10 +21,8 @@
 set -Eeuo pipefail
 
 check_variable() {
-    if [ -n "$1" ];
+    if [ -z "$1" ];
     then
-        echo "$2 set in Aether UI!"
-    else
         echo "Missing $2 in Aether UI!"
         exit -1
     fi
