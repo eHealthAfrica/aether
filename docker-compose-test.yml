@@ -94,6 +94,7 @@ services:
       REDIS_HOST: redis-test
       TESTING: "true"
       WEB_SERVER_PORT: 9006
+      GOOGLE_CLIENT_ID: secret_google_client_id
     depends_on:
       - couchdb-test
       - db-test

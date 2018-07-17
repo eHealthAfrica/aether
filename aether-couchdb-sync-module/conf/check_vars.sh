@@ -35,3 +35,6 @@ check_variable $ADMIN_PASSWORD      "Admin user password (ADMIN_PASSWORD)"
 # Aether kernel
 check_variable $AETHER_KERNEL_URL   "Aether KERNEL url (AETHER_KERNEL_URL)"
 check_variable $AETHER_KERNEL_TOKEN "Aether KERNEL token (AETHER_KERNEL_TOKEN)"
+
+# Google ID
+check_variable $GOOGLE_CLIENT_ID    "Google Client ID (GOOGLE_CLIENT_ID)"
