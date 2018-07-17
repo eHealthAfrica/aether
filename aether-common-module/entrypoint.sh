@@ -54,15 +54,15 @@ test_coverage() {
 
 
 case "$1" in
-    bash )
+    bash)
         bash
     ;;
 
-    eval )
+    eval)
         eval "${@:2}"
     ;;
 
-    manage )
+    manage)
         ./manage.py "${@:2}"
     ;;
 

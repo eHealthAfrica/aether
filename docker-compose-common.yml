@@ -9,9 +9,16 @@ services:
   common:
     build: ./aether-common-module
     environment:
-      AETHER_KERNEL_URL_TEST: "http://kernel-test"
-      DJANGO_SECRET_KEY: "secret"
       TESTING: "true"
+      # required environment variables
+      DJANGO_SECRET_KEY: secret
+      PGPASSWORD: secretsecret
+      PGUSER: dbuser
+      PGHOST: db-test
+      PGPORT: "9999"
+      DB_NAME: common
+      # required by kernel module
+      AETHER_KERNEL_URL_TEST: http://kernel-test
     volumes:
       - ./aether-common-module:/code
     command: build
