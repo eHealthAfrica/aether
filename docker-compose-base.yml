@@ -173,7 +173,7 @@ services:
       HOSTNAME: sync.aether.local
       DB_NAME: couchdb-sync
       PGHOST: db
-      PGUPASSWORD: ${COUCHDB_SYNC_DB_PASSWORD}
+      PGPASSWORD: ${COUCHDB_SYNC_DB_PASSWORD}
       PGPORT: 5432
       PGUSER: postgres
       REDIS_DB: 0
