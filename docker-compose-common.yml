@@ -15,6 +15,7 @@ services:
       PGPASSWORD: secretsecret
       PGUSER: dbuser
       PGHOST: db-test
+      PGPORT: "9999"
       DB_NAME: common
       # required by kernel module
       AETHER_KERNEL_URL_TEST: http://kernel-test

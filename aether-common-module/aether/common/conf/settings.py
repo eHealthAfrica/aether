@@ -145,7 +145,7 @@ DATABASES = {
         'PASSWORD': os.environ['PGPASSWORD'],
         'USER': os.environ['PGUSER'],
         'HOST': os.environ['PGHOST'],
-        'PORT': os.environ.get('PGPORT', '5432'),
+        'PORT': os.environ['PGPORT'],
         'TESTING': {'CHARSET': 'UTF8'},
     },
 }
