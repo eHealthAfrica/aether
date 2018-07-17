@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+if [ -z $TRAVIS ]; then
+    eval $(minikube docker-env)
+fi
+
 set -Eeuox pipefail
 
 # $VALUES_DIR should point to one of the directories in `helm/overrides`. Each

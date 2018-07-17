@@ -39,19 +39,19 @@ AETHER_ODK_TOKEN=$(gen_random_string)
 KERNEL_ADMIN_USERNAME=admin
 KERNEL_ADMIN_PASSWORD=$(gen_random_string)
 KERNEL_DJANGO_SECRET_KEY=$(gen_random_string)
-KERNEL_RDS_PASSWORD=$(gen_random_string)
+KERNEL_DB_PASSWORD=$(gen_random_string)
 
 ODK_ADMIN_PASSWORD=$(gen_random_string)
 ODK_DJANGO_SECRET_KEY=$(gen_random_string)
-ODK_RDS_PASSWORD=$(gen_random_string)
+ODK_DB_PASSWORD=$(gen_random_string)
 
 COUCHDB_SYNC_ADMIN_PASSWORD=$(gen_random_string)
 COUCHDB_SYNC_DJANGO_SECRET_KEY=$(gen_random_string)
-COUCHDB_SYNC_RDS_PASSWORD=$(gen_random_string)
+COUCHDB_SYNC_DB_PASSWORD=$(gen_random_string)
 COUCHDB_SYNC_REDIS_PASSWORD=$(gen_random_string)
 COUCHDB_SYNC_GOOGLE_CLIENT_ID=$COUCHDB_SYNC_CLIENT_ID
 
 UI_ADMIN_PASSWORD=$(gen_random_string)
 UI_DJANGO_SECRET_KEY=$(gen_random_string)
-UI_RDS_PASSWORD=$(gen_random_string)
+UI_DB_PASSWORD=$(gen_random_string)
 EOF

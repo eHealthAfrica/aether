@@ -35,17 +35,17 @@ spec:
             secretKeyRef:
               name: {{ .Values.database.secret }}
               key: password
-        - name: RDS_USERNAME
+        - name: DB_USERNAME
           valueFrom:
             secretKeyRef:
               name: {{ .Values.application.secret }}
               key: odk-database-user
-        - name: RDS_PASSWORD
+        - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
               name: {{ .Values.application.secret }}
               key: odk-database-password
-        - name: RDS_DB_NAME
+        - name: DB_NAME
           valueFrom:
             secretKeyRef:
               name: {{ .Values.application.secret }}
@@ -128,24 +128,24 @@ spec:
           value: {{ .Values.kernel_url_test }}
         - name: TESTING
           value: {{ quote .Values.testing }}
-        - name: RDS_USERNAME
+        - name: PGUSER
           valueFrom:
             secretKeyRef:
               name: {{ .Values.application.secret }}
               key: odk-database-user
-        - name: RDS_PORT
+        - name: PGPORT
           value: "5432"
-        - name: RDS_HOSTNAME
+        - name: PGHOST
           valueFrom :
             secretKeyRef:
               name: {{ .Values.database.secret }}
               key: host
-        - name: RDS_PASSWORD
+        - name: PGPASSWORD
           valueFrom:
             secretKeyRef:
               name: {{ .Values.application.secret }}
               key: odk-database-password
-        - name: RDS_DB_NAME
+        - name: DB_NAME
           valueFrom:
             secretKeyRef:
               name: {{ .Values.application.secret }}
