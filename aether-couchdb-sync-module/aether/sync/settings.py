@@ -55,7 +55,7 @@ COUCHDB_PASSWORD = os.environ['COUCHDB_PASSWORD']
 COUCHDB_DIR = './couchdb'
 
 REDIS_HOST = os.environ['REDIS_HOST']
-REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
+REDIS_PORT = os.environ['REDIS_PORT']
 REDIS_DB = os.environ.get('REDIS_DB', 0)
 REDIS_PASSWORD = os.environ['REDIS_PASSWORD']
 
