@@ -41,7 +41,6 @@ stringData:
   kernel-database-password: $POSTGRES_PASSWORD
   kernel-database-name: aether
   kernel-django-secret-key: $(gen_random_string)
-  kernel-readonly-db-username: readonlyuser
   kernel-readonly-db-password: $(gen_random_string)
   kernel-token: $(gen_random_string)
 
