@@ -66,7 +66,8 @@ spec:
           - mountPath: /media
             name: {{ .Chart.Name }}
         - name: ui
-          image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+          # This default allows us to overwrite '.Chart.AppVersion' through the command line
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.pullPolicy }}
           args:
           - {{ .Values.app.command }}
