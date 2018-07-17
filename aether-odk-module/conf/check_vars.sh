@@ -23,9 +23,9 @@ set -Eeuo pipefail
 check_variable() {
     if [ -n "$1" ];
     then
-        echo "$2 set in Aether UI!"
+        echo "$2 set in Aether ODK!"
     else
-        echo "Missing $2 in Aether UI!"
+        echo "Missing $2 in Aether ODK!"
         exit -1
     fi
 }
@@ -33,6 +33,7 @@ check_variable() {
 # Admin user
 check_variable $ADMIN_USERNAME      "Admin user username (ADMIN_USERNAME)"
 check_variable $ADMIN_PASSWORD      "Admin user password (ADMIN_PASSWORD)"
+check_variable $ADMIN_TOKEN         "Admin user password (ADMIN_TOKEN)"
 
 # Aether kernel
 check_variable $AETHER_KERNEL_URL   "Aether KERNEL url (AETHER_KERNEL_URL)"

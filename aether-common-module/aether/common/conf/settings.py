@@ -25,7 +25,7 @@ import os
 
 DEBUG = (os.environ.get('DEBUG', '').lower() == 'true')
 TESTING = (os.environ.get('TESTING', '').lower() == 'true')
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
 
 logger = logging.getLogger(__name__)
@@ -141,8 +141,8 @@ REST_FRAMEWORK = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('DB_NAME'),
-        'PASSWORD': os.environ.get('PGPASSWORD', ''),
+        'NAME': os.environ['DB_NAME'],
+        'PASSWORD': os.environ['PGPASSWORD'],
         'USER': os.environ.get('PGUSER', 'postgres'),
         'HOST': os.environ.get('PGHOST', 'db'),
         'PORT': os.environ.get('PGPORT', '5432'),
@@ -183,7 +183,7 @@ HOSTNAME = os.environ.get('HOSTNAME', '')
 
 if CAS_SERVER_URL:  # pragma: no cover
     INSTALLED_APPS += [
-        # UMS apps
+        # CAS libraries
         'django_cas_ng',
         'ums_client',
     ]
@@ -191,19 +191,13 @@ if CAS_SERVER_URL:  # pragma: no cover
         'ums_client.backends.UMSRoleBackend',
     ]
 else:  # pragma: no cover
-    logger.info('No UMS enable!')
+    logger.info('No CAS enable!')
 
 
 # Sentry Configuration
 # ------------------------------------------------------------------------------
 
 SENTRY_DSN = os.environ.get('SENTRY_DSN')
-SENTRY_CLIENT = os.environ.get(
-    'DJANGO_SENTRY_CLIENT',
-    'raven.contrib.django.raven_compat.DjangoClient'
-)
-SENTRY_CELERY_LOGLEVEL = logging.INFO
-
 if SENTRY_DSN:  # pragma: no cover
     INSTALLED_APPS += [
         'raven.contrib.django.raven_compat',
@@ -211,6 +205,12 @@ if SENTRY_DSN:  # pragma: no cover
     MIDDLEWARE = [
         'raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware',
     ] + MIDDLEWARE
+
+    SENTRY_CLIENT = os.environ.get(
+        'DJANGO_SENTRY_CLIENT',
+        'raven.contrib.django.raven_compat.DjangoClient'
+    )
+    SENTRY_CELERY_LOGLEVEL = logging.INFO
 else:  # pragma: no cover
     logger.info('No SENTRY enable!')
 

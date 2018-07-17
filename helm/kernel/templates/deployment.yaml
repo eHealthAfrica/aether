@@ -101,12 +101,17 @@ spec:
             secretKeyRef:
               name: {{ .Values.application.secret }}
               key: kernel-django-secret-key
+        - name: ADMIN_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: kernel-admin-username
         - name: ADMIN_PASSWORD
           valueFrom:
             secretKeyRef:
               name: {{ .Values.application.secret }}
               key: kernel-admin-password
-        - name: AETHER_KERNEL_TOKEN
+        - name: ADMIN_TOKEN
           valueFrom:
             secretKeyRef:
               name: {{ .Values.application.secret }}

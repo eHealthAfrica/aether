@@ -21,17 +21,17 @@ services:
 
   db-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: postgres-base
 
   couchdb-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: couchdb-base
 
   redis-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: redis-base
 
 
@@ -41,7 +41,7 @@ services:
 
   kernel-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: kernel-base
     environment:
       MEDIA_ROOT: /tmp/
@@ -61,7 +61,7 @@ services:
 
   odk-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: odk-base
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9000
@@ -83,7 +83,7 @@ services:
 
   couchdb-sync-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: couchdb-sync-base
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9000
@@ -109,7 +109,7 @@ services:
 
   ui-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: ui-base
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9000
@@ -137,14 +137,11 @@ services:
   client-test:
     image: aether/client
     build: ./aether-utils/aether-client
-
     environment:
       KERNEL_ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
       KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
-
     volumes:
       - ./aether-utils/aether-client:/code
-
     depends_on:
       - kernel-test
 
@@ -156,14 +153,11 @@ services:
   integration-test:
     image: aether/integration
     build: ./test-aether-integration-module
-
     environment:
       KERNEL_ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
       KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
-
     volumes:
       - ./test-aether-integration-module:/code
-
     depends_on:
       - db-test
       - kernel-test
@@ -177,12 +171,12 @@ services:
 
   zookeeper-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: zookeeper-base
 
   kafka-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: kafka-base
     depends_on:
       - zookeeper-test
@@ -201,7 +195,7 @@ services:
 
   producer-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: aether-producer-base
     environment:
       KERNEL_ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}

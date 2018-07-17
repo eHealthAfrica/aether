@@ -31,7 +31,10 @@ show_help() {
 
     pip_freeze    : freeze pip dependencies and write to requirements.txt
 
-    setup_db      : create/migrate database
+    setup         : check required environment variables,
+                    create/migrate database and,
+                    create/update superuser using
+                        'ADMIN_USERNAME', 'ADMIN_PASSWORD'
 
     test          : run ALL tests
     test_lint     : run flake8, standardjs and sass lint tests
@@ -54,7 +57,10 @@ pip_freeze() {
     /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
 }
 
-setup_db() {
+setup() {
+    # check if required environment variables were set
+    ./conf/check_vars.sh
+
     until pg_isready -q; do
         >&2 echo "Waiting for postgres..."
         sleep 1
@@ -69,13 +75,9 @@ setup_db() {
 
     # migrate data model if needed
     ./manage.py migrate --noinput
-}
 
-setup_admin() {
-    # check if vars exist
-    ./conf/check_vars.sh
-    # arguments: -u=admin -p=secretsecret -e=admin@ehealthafrica.org -t=01234656789abcdefghij
-    ./manage.py setup_admin -p=$ADMIN_PASSWORD
+    # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
+    ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD
 }
 
 test_lint() {
@@ -111,30 +113,30 @@ case "$1" in
         pip_freeze
     ;;
 
-    setup_db )
-        setup_db
+    setup )
+        setup
     ;;
 
-    test)
+    test )
+        setup
         test_lint
         test_coverage
     ;;
 
-    test_lint)
+    test_lint )
         test_lint
     ;;
 
-    test_coverage)
+    test_coverage )
         test_coverage "${@:2}"
     ;;
 
-    test_py)
+    test_py )
         test_coverage "${@:2}"
     ;;
 
     start )
-        setup_db
-        setup_admin
+        setup
 
         # create static assets
         rm -r -f /code/aether/ui/static/*.*
@@ -155,8 +157,7 @@ case "$1" in
     ;;
 
     start_dev )
-        setup_db
-        setup_admin
+        setup
 
         # cleaning
         rm -r -f /code/aether/ui/static/*.*
@@ -166,11 +167,11 @@ case "$1" in
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
 
-    help)
+    help )
         show_help
     ;;
 
-    *)
+    * )
         show_help
     ;;
 esac
