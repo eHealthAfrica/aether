@@ -24,7 +24,7 @@ check_variable() {
     if [ -z "$1" ];
     then
         echo "Missing $2 in Aether UI!"
-        exit -1
+        exit 1
     fi
 }
 
