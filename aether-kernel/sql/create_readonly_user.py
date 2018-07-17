@@ -54,9 +54,9 @@ GRANT SELECT ON kernel_schema TO {role};
 
 
 def main():
-    dbname = os.environ['RDS_DB_NAME']
-    host = os.environ['RDS_HOSTNAME']
-    user = os.environ['RDS_USERNAME']
+    dbname = os.environ['DB_NAME']
+    host = os.environ['PGHOST']
+    user = os.environ['PGUSER']
 
     postgres_credentials = {
         'dbname': dbname,

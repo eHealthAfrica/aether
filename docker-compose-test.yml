@@ -45,8 +45,8 @@ services:
       service: kernel-base
     environment:
       MEDIA_ROOT: /tmp/
-      RDS_DB_NAME: kernel-test
-      RDS_HOSTNAME: db-test
+      DB_NAME: kernel-test
+      PGHOST: db-test
       TESTING: "true"
       WEB_SERVER_PORT: 9000
     depends_on:
@@ -66,8 +66,8 @@ services:
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9000
       MEDIA_ROOT: /tmp/
-      RDS_DB_NAME: odk-test
-      RDS_HOSTNAME: db-test
+      DB_NAME: odk-test
+      PGHOST: db-test
       TESTING: "true"
       WEB_SERVER_PORT: 9002
     depends_on:
@@ -89,8 +89,8 @@ services:
       AETHER_KERNEL_URL: http://kernel-test:9000
       COUCHDB_URL: http://couchdb-test:5984
       MEDIA_ROOT: /tmp/
-      RDS_DB_NAME: couchdb-sync-test
-      RDS_HOSTNAME: db-test
+      DB_NAME: couchdb-sync-test
+      PGHOST: db-test
       REDIS_HOST: redis-test
       TESTING: "true"
       WEB_SERVER_PORT: 9006
@@ -114,8 +114,8 @@ services:
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9000
       MEDIA_ROOT: /tmp/
-      RDS_DB_NAME: ui-test
-      RDS_HOSTNAME: db-test
+      DB_NAME: ui-test
+      PGHOST: db-test
       TESTING: "true"
       WEB_SERVER_PORT: 9004
     depends_on:
