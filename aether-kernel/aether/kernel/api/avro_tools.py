@@ -72,6 +72,11 @@ PRIMITIVE_TYPES = [
   FIXED,
 ]
 
+# indicates the complex field type within the full jsonpath
+ARRAY_PATH = '#'
+MAP_PATH = '*'
+UNION_PATH = '?'
+
 
 class AvroValidationException(Exception):
     pass
@@ -394,20 +399,20 @@ def extract_jsonpaths_and_docs(schema, paths, docs):
             # indicate that the next property can be any with "*" name
             values = current.get('values')
             map_type = values if __has_type(values) else {'type': values}
-            walker({**map_type, 'name': '*'}, jsonpath)
+            walker({**map_type, 'name': MAP_PATH}, jsonpath)
 
         elif current_type_value == ARRAY:
             # indicate that the next property can be any int with "#"
             items = current.get('items')
             array_type = items if __has_type(items) else {'type': items}
-            walker({**array_type, 'name': '#'}, jsonpath)
+            walker({**array_type, 'name': ARRAY_PATH}, jsonpath)
 
         elif isinstance(current_type_value, list):
             # indicate that the next property came from an union with "?"
             # union but not nullable :scream:
             for child in current_type_value:
                 if not __is_leaf(child):
-                    walker({**child, 'name': '?', 'doc': None}, jsonpath)
+                    walker({**child, 'name': UNION_PATH, 'doc': None}, jsonpath)
 
         # TODO: named types  ¯\_(ツ)_/¯
 
