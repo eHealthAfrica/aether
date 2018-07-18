@@ -24,6 +24,7 @@ import uuid
 import mock
 
 from django.contrib.auth import get_user_model
+from django.http import HttpResponse
 from django.test import TestCase
 from django.urls import reverse
 
@@ -768,3 +769,102 @@ class ViewsTest(TestCase):
             'jsonpaths': ['id', '_rev', 'name', 'dob', 'villageID'],
             'docs': {'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
         })
+
+    # CSV and XLSX export
+    def test_submissions_export__endpoints(self):
+        self.assertEqual(reverse('submission-xlsx'), '/submissions/xlsx/')
+        self.assertEqual(reverse('submission-csv'), '/submissions/csv/')
+
+    @mock.patch(
+        'aether.kernel.api.views.exporter.export_data',
+        side_effect=OSError('[Errno 2] No such file or directory'),
+    )
+    def test_submissions_export__error(self, mock_export):
+        response = self.client.get(reverse('submission-xlsx'))
+        self.assertEquals(response.status_code, 500)
+        data = response.json()['detail']
+        self.assertIn('Got an error while creating the file:', data)
+        self.assertIn('[Errno 2] No such file or directory', data)
+        mock_export.assert_called_once()
+
+    @mock.patch(
+        'aether.kernel.api.views.exporter.export_data',
+        return_value=HttpResponse('bytes', status=200),
+    )
+    def test_submissions_export__xlsx(self, mock_export):
+        response = self.client.get(reverse('submission-xlsx'))
+        self.assertEquals(response.status_code, 200)
+        mock_export.assert_called_once_with(
+            data=mock.ANY,
+            paths=[],
+            headers={},
+            format='xlsx',
+            filename='submissions',
+        )
+
+    @mock.patch(
+        'aether.kernel.api.views.exporter.export_data',
+        return_value=HttpResponse('bytes', status=200),
+    )
+    def test_submissions_export__csv(self, mock_export):
+        response = self.client.post(reverse('submission-csv'), data=json.dumps({
+            'paths': ['_id', '_rev'],
+            'headers': {'_id': 'id', '_rev': 'rev'},
+            'filename': 'export',
+        }), content_type='application/json')
+        self.assertEquals(response.status_code, 200)
+        mock_export.assert_called_once_with(
+            data=mock.ANY,
+            paths=['_id', '_rev'],
+            headers={'_id': 'id', '_rev': 'rev'},
+            format='csv',
+            separator=',',
+            filename='export',
+        )
+
+    def test_entities_export__endpoints(self):
+        self.assertEqual(reverse('entity-xlsx'), '/entities/xlsx/')
+        self.assertEqual(reverse('entity-csv'), '/entities/csv/')
+
+    @mock.patch(
+        'aether.kernel.api.views.exporter.export_data',
+        side_effect=OSError('[Errno 2] No such file or directory'),
+    )
+    def test_entities_export___error(self, mock_export):
+        response = self.client.get(reverse('entity-csv'))
+        self.assertEquals(response.status_code, 500)
+        data = response.json()['detail']
+        self.assertIn('Got an error while creating the file:', data)
+        self.assertIn('[Errno 2] No such file or directory', data)
+        mock_export.assert_called_once()
+
+    @mock.patch(
+        'aether.kernel.api.views.exporter.export_data',
+        return_value=HttpResponse('data', status=200),
+    )
+    def test_entities_export__xlsx(self, mock_export):
+        response = self.client.get(reverse('entity-xlsx'))
+        self.assertEquals(response.status_code, 200)
+        mock_export.assert_called_once_with(
+            data=mock.ANY,
+            paths=['id', '_rev', 'name', 'dob', 'villageID'],
+            headers={'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
+            format='xlsx',
+            filename='entities',
+        )
+
+    @mock.patch(
+        'aether.kernel.api.views.exporter.export_data',
+        return_value=HttpResponse('data', status=200),
+    )
+    def test_entities_export__csv(self, mock_export):
+        response = self.client.post(reverse('entity-csv'))
+        self.assertEquals(response.status_code, 200)
+        mock_export.assert_called_once_with(
+            data=mock.ANY,
+            paths=['id', '_rev', 'name', 'dob', 'villageID'],
+            headers={'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
+            format='csv',
+            separator=',',
+            filename='entities',
+        )

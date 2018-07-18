@@ -50,6 +50,11 @@ services:
       PGHOST: db-test
       TESTING: "true"
       WEB_SERVER_PORT: 9000
+    volumes:
+      # volumes in tests
+      - ./tmp/test/kernel/media:/media
+      - ./tmp/test/kernel/static:/var/www/static
+      - ./tmp/test/kernel/tmp:/tmp
     ports:
       - "9000:9000"
     command: start
@@ -71,6 +76,10 @@ services:
       PGHOST: db-test
       TESTING: "true"
       WEB_SERVER_PORT: 9002
+    volumes:
+      # volumes in tests
+      - ./tmp/test/odk/media:/media
+      - ./tmp/test/odk/static:/var/www/static
     ports:
       - "9002:9002"
     command: start
