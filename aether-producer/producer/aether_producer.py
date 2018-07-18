@@ -33,6 +33,7 @@ import json
 import logging
 import os
 import psycopg2
+from psycopg2 import sql
 import signal
 import spavro.schema
 import sys
@@ -273,8 +274,8 @@ class TopicManager(object):
         FROM kernel_entity e
         inner join kernel_projectschema ps on e.projectschema_id = ps.id
         inner join kernel_schema s on ps.schema_id = s.id
-        WHERE e.modified > '%s'
-        AND s.name = '%s'
+        WHERE e.modified > {modified}
+        AND s.name = {schema_name}
         LIMIT 1; '''
 
     # Changes pull query
@@ -293,10 +294,10 @@ class TopicManager(object):
             FROM kernel_entity e
             inner join kernel_projectschema ps on e.projectschema_id = ps.id
             inner join kernel_schema s on ps.schema_id = s.id
-            WHERE e.modified > '%s'
-            AND s.name = '%s'
+            WHERE e.modified > {modified}
+            AND s.name = {schema_name}
             ORDER BY e.modified ASC
-            LIMIT %d;
+            LIMIT {limit};
         '''
 
     def __init__(self, server_handler, schema):
@@ -337,8 +338,10 @@ class TopicManager(object):
     def updates_available(self):
 
         modified = "" if not self.offset else self.offset  # "" evals to < all strings
-
-        query = TopicManager.NEW_STR % (modified, self.name)
+        query = sql.SQL(TopicManager.NEW_STR).format(
+            modified=sql.Literal(modified),
+            schema_name=sql.Literal(self.name),
+        )
         with psycopg2.connect(**self.pg_creds) as conn:
             cursor = conn.cursor(cursor_factory=DictCursor)
             cursor.execute(query)
@@ -369,8 +372,11 @@ class TopicManager(object):
 
     def get_db_updates(self):
         modified = "" if not self.offset else self.offset  # "" evals to < all strings
-        query = TopicManager.QUERY_STR % (
-            modified, self.name, self.limit)
+        query = sql.SQL(TopicManager.QUERY_STR).format(
+            modified=sql.Literal(modified),
+            schema_name=sql.Literal(self.name),
+            limit=sql.Literal(self.limit),
+        )
         query_time = datetime.now()
         with psycopg2.connect(**self.pg_creds) as conn:
             cursor = conn.cursor(cursor_factory=DictCursor)

@@ -24,7 +24,7 @@ from ..conf.settings import logger
 
 
 def get_kernel_server_url():
-    if os.environ.get('TESTING', '').lower() == 'true':
+    if bool(os.environ.get('TESTING')):
         return os.environ.get('AETHER_KERNEL_URL_TEST')
     else:
         return os.environ.get('AETHER_KERNEL_URL')
