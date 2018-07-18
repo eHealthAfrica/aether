@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-init-config
+data:
+  init.sh: |
+    #!/bin/bash
+    set -u
+
+    psql -c "CREATE DATABASE $DB_NAME;"
+    psql -c "CREATE USER $DB_USERNAME WITH PASSWORD '$DB_PASSWORD';"
+    psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USERNAME;"
