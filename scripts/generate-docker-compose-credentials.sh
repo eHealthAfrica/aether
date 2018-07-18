@@ -25,9 +25,15 @@
 # Example:
 # ./scripts/generate-docker-compose-credentials.sh > .env
 
-set -e
-
 source ./scripts/random_string.sh
+check_openssl
+RET=$?
+if [ $RET -eq 1 ]; then
+    echo "Please install 'openssl'"
+    exit 1
+fi
+
+set -Eeo pipefail
 
 cat << EOF
 COUCHDB_USER=admin

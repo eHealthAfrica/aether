@@ -47,6 +47,8 @@ git clone git@github.com:eHealthAfrica/aether.git && cd aether
 
 ##### Generate credentials for local development with docker-compose
 
+**Note:** Make sure you have `openssl` installed in your system.
+
 ```bash
 ./scripts/generate-docker-compose-credentials.sh > .env
 ```
