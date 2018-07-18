@@ -104,9 +104,9 @@ class ProjectViewSet(CustomViewSet):
         docs = {}
         for project_schema in project.projectschemas.order_by('-created'):
             avro_tools.extract_jsonpaths_and_docs(
-                project_schema.schema.definition,
-                jsonpaths,
-                docs,
+                schema=project_schema.schema.definition,
+                jsonpaths=jsonpaths,
+                docs=docs,
             )
         return Response(data={'jsonpaths': jsonpaths, 'docs': docs})
 
