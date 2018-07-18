@@ -4,7 +4,7 @@ if [ -z $TRAVIS ]; then
     eval $(minikube docker-env)
 fi
 
-set -Eeuox pipefail
+set -Eeuo pipefail
 
 # $VALUES_DIR should point to one of the directories in `helm/overrides`. Each
 # subdirectory (e.g. "local", "test") represents an environment and contains one

@@ -25,9 +25,15 @@
 # Example:
 # ./scripts/generate-kubernetes-credentials.sh > helm/test-secrets.yaml
 
-set -eu
-
 source ./scripts/random_string.sh
+check_openssl
+RET=$?
+if [ $RET -eq 1 ]; then
+    echo "Please install 'openssl'"
+    exit 1
+fi
+
+set -Eeuo pipefail
 
 cat <<EOF
 apiVersion: v1
@@ -41,6 +47,7 @@ stringData:
   kernel-database-password: $POSTGRES_PASSWORD
   kernel-database-name: aether
   kernel-django-secret-key: $(gen_random_string)
+  kernel-readonly-db-password: $(gen_random_string)
   kernel-token: $(gen_random_string)
 
   odk-admin-password: $(gen_random_string)
