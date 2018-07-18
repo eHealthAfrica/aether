@@ -355,15 +355,15 @@ def is_nullable(avro_type):
     return isinstance(avro_type, list) and len(avro_type) == 2 and NULL in avro_type
 
 
-def extract_jsonpaths_and_docs(schema, paths, docs):
+def extract_jsonpaths_and_docs(schema, jsonpaths, docs):
     '''
     Extracts the "doc" properties of the AVRO schema and generates
     the list of possible jsonpaths
 
     Arguments:
-    - ``schema``   - The AVRO schema.
-    - ``paths``    - The initial jsonpaths, the extracted jsonpaths will be added here.
-    - ``docs``     - The initial docs, the extracted docs will be added here.
+    - ``schema``    - The AVRO schema.
+    - ``jsonpaths`` - The initial jsonpaths, the extracted jsonpaths will be added here.
+    - ``docs``      - The initial docs, the extracted docs will be added here.
 
     Assumption: the given schema is a valid schema.
     '''
@@ -374,8 +374,8 @@ def extract_jsonpaths_and_docs(schema, paths, docs):
             jsonpath = avro_type.get('name', '')
             if parent:
                 jsonpath = f'{parent}.{jsonpath}'
-            if jsonpath not in paths:
-                paths.append(jsonpath)
+            if jsonpath not in jsonpaths:
+                jsonpaths.append(jsonpath)
             if jsonpath not in docs and avro_type.get('doc'):
                 docs[jsonpath] = avro_type.get('doc')
 
