@@ -23,8 +23,10 @@ import os
 # Common Configuration
 # ------------------------------------------------------------------------------
 
-DEBUG = (os.environ.get('DEBUG', '').lower() == 'true')
-TESTING = (os.environ.get('TESTING', '').lower() == 'true')
+# Environment variables are false if unset or set to empty string, anything
+# else is considered true.
+DEBUG = bool(os.environ.get('DEBUG'))
+TESTING = bool(os.environ.get('TESTING'))
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
 
