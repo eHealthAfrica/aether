@@ -1,0 +1,34 @@
+replicaCount: 3
+pullPolicy: Always
+provider: aws
+# {{ .Release.Name }}.dev.ehealthafrica.org
+domain: dev.ehealthafrica.org
+debug: false
+
+image:
+  repository: "ehealthafrica/aether-ui"
+  # tag: {{ .Chart.appVersion }}
+
+service:
+  type: NodePort
+  externalPort: 80
+  internalPort: 80
+
+ingress:
+  enabled: true
+  path: /
+  annotations:
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:eu-west-1:387526361725:certificate/dcd71c49-1b5b-4b19-bd2d-6de98a3f6477"
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80,"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/scheme: "internet-facing"
+    alb.ingress.kubernetes.io/security-groups: "alb-ingress-controller.dev.k8s.eha.im"
+
+app:
+  port: 8000
+  command: start
+  secrets: ui-secrets
+  rdsDbName: aether_ui
+  rdsDbUser: aether_ui
+  rdsDbHost: dev-k8s-eha-im.cpqsfknb8sgc.eu-west-1.rds.amazonaws.com
+  kernelUrl: "http://kernel"
