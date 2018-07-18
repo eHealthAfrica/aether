@@ -107,6 +107,8 @@ services:
       - ./.persistent_data/media/kernel:/media
       # static folder
       - ./.persistent_data/static/kernel:/var/www/static
+      # temporary folder for Excel files
+      # - ./.persistent_data/tmp/kernel:/tmp
     ports:
       - "8000:8000"
     command: start_dev
