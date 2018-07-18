@@ -56,12 +56,13 @@ GRANT SELECT ON kernel_schema TO {role};
 def main():
     dbname = os.environ['DB_NAME']
     host = os.environ['PGHOST']
+    port = os.environ['PGPORT']
     user = os.environ['PGUSER']
 
     postgres_credentials = {
         'dbname': dbname,
         'host': host,
-        'port': 5432,
+        'port': port,
         'user': user,
     }
 
