@@ -44,6 +44,8 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 
+REVOKE ALL PRIVILEGES ON DATABASE {database} FROM {role} CASCADE;
+
 GRANT CONNECT ON DATABASE {database} TO {role};
 GRANT USAGE ON SCHEMA public TO {role};
 GRANT SELECT ON kernel_entity TO {role};
