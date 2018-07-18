@@ -9,11 +9,6 @@ image:
   repository: "ehealthafrica/aether-ui"
   # tag: {{ .Chart.appVersion }}
 
-service:
-  type: NodePort
-  externalPort: 80
-  internalPort: 80
-
 ingress:
   enabled: true
   path: /
