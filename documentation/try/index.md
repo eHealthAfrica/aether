@@ -9,8 +9,6 @@ Aether is a platform. This means that it doesn’t do much on its own: it only m
 
 In the next step, we'll see how that data can then be fed through to Elastic Search by using Aether Connect, but first things first...
 
-Finally, we’ll see how [Gather](https://gather.ehealthafrica.org), our Aether-based ODK data collection tool, can integrate with this set-up to provide real-time analysis of data as it’s submitted from the field.
-
 We’ve created an `aether-bootstrap` repository to make it easy for you to get up and running with your first Aether-based solution. This contains a bunch of `docker-compose` files that will pull Docker images of the latest version of Aether from Docker Hub and start them up. 
 
 ## Prerequisites

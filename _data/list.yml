@@ -15,8 +15,8 @@ toc:
         url: /documentation/try/walkthrough-core.html
       - page: Adding Aether Connect
         url: /documentation/try/walkthrough-connect.html
-      - page: Adding Gather
-        url: /documentation/try/walkthrough-gather.html
+      # - page: Adding Gather
+      #   url: /documentation/try/walkthrough-gather.html
   - title: Setup and Deployment Guide
     url: /documentation/setup-deployment/index.html
     subfolderitems:

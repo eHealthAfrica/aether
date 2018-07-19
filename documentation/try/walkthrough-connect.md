@@ -56,7 +56,7 @@ docker-compose -f ckan-consumer/docker-compose.yml up
 
 The `docker-compose.yml` file mounts an example configuration that we’ve included in this example, so feel free to take a look at it in `ckan-consumer/config/config.json`. Note that we’re telling the consumer which Kafka topics we’re interested in, and that we reference the organization that we set up in CKAN a moment ago.
 
-TODO create views in CKAN and 
+TODO create views in CKAN
 
 ## Submit Some More Data
 
@@ -76,4 +76,3 @@ If you now reload the CKAN page in your browser, you should see the new entities
 - we set up a local instance of CKAN
 - we ran the Aether CKAN Consumer, learned a little about how it’s configured, and saw how it feeds data to CKAN
 
-In the next step, we’re going to learn about Gather, and we’ll add it to this project so that we can use ODK Collect to conduct the Microcensus.
