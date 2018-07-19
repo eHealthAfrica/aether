@@ -21,3 +21,4 @@ app:
   rdsDbUser: aether_ui
   rdsDbHost: dev-k8s-eha-im.cpqsfknb8sgc.eu-west-1.rds.amazonaws.com
   kernelUrl: "http://kernel"
+  adminUser: admin
