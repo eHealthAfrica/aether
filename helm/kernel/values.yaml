@@ -29,6 +29,7 @@ application:
   secret: secrets
   data_mount: /media
   admin_user: admin
+  readonly_user: readonlyuser
 database:
   secret: database-credentials
 provider:

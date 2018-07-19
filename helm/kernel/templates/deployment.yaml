@@ -135,6 +135,13 @@ spec:
             secretKeyRef:
               name: {{ .Values.application.secret }}
               key: kernel-database-name
+        - name: KERNEL_READONLY_DB_USERNAME
+          value: {{ .Values.application.readonly_user }}
+        - name: KERNEL_READONLY_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.application.secret }}
+              key: kernel-readonly-db-password
         - name: TESTING
           value: {{ quote .Values.testing }}
         # `WEB_SERVER_PORT` is kept around for compatibility with the old tests,
