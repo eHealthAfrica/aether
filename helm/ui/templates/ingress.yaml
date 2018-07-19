@@ -23,5 +23,5 @@ spec:
           - path: /
             backend:
               serviceName: {{ .Release.Name }}
-              servicePort: {{ .Values.service.externalPort }}
+              servicePort: 80
 {{- end }}

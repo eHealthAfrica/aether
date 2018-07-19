@@ -1,28 +1,17 @@
 replicaCount: 3
 pullPolicy: Always
 provider: aws
-# {{ .Release.Name }}.dev.ehealthafrica.org
-domain: dev.ehealthafrica.org
 debug: false
+# {{ .Release.Name }}{{ .Values.domain }}
+# domain: yourdomain.org
 
 image:
   repository: "ehealthafrica/aether-ui"
-  # tag: {{ .Chart.appVersion }}
-
-service:
-  type: NodePort
-  externalPort: 80
-  internalPort: 80
+  # tag: {{ .Chart.AppVersion }}
 
 ingress:
   enabled: true
   path: /
-  annotations:
-    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:eu-west-1:387526361725:certificate/dcd71c49-1b5b-4b19-bd2d-6de98a3f6477"
-    alb.ingress.kubernetes.io/healthcheck-path: /health
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80,"HTTPS": 443}]'
-    alb.ingress.kubernetes.io/scheme: "internet-facing"
-    alb.ingress.kubernetes.io/security-groups: "alb-ingress-controller.dev.k8s.eha.im"
 
 app:
   port: 8000
