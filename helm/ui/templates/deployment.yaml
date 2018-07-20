@@ -110,10 +110,12 @@ spec:
             value: {{ if .Values.debug }}"1"{{ else }}""{{ end }}
           - name: WEB_SERVER_PORT
             value: {{ quote .Values.app.port }}
+          volumeMounts:
+          - mountPath: /var/www/static
+            name: static-assets-volume
       volumes:
       - name: {{ .Chart.Name }}
       - name: static-assets-volume
-        emptyDir: {}
       - name: nginx-config
         configMap:
           name: {{ .Release.Name }}-nginx-config
