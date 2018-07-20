@@ -35,6 +35,8 @@ fi
 
 set -Eeuo pipefail
 
+KERNEL_TOKEN=$(gen_random_string)
+
 cat <<EOF
 apiVersion: v1
 kind: Secret
@@ -49,8 +51,8 @@ stringData:
   kernel-django-secret-key: $(gen_random_string)
   kernel-django-admin-password: $(gen_random_string)
   kernel-readonly-db-password: $(gen_random_string)
-  kernel-token: $(gen_random_string)
-  admin-token: $(gen_random_string)
+  kernel-token: $KERNEL_TOKEN
+  admin-token: $KERNEL_TOKEN
 ---
 apiVersion: v1
 kind: Secret
@@ -64,5 +66,5 @@ stringData:
   odk-database-name: odk
   odk-django-secret-key: $(gen_random_string)
   odk-token: $(gen_random_string)
-  kernel-token: $(gen_random_string)
+  kernel-token: $KERNEL_TOKEN
 EOF
