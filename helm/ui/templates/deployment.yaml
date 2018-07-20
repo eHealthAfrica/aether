@@ -88,6 +88,8 @@ spec:
               secretKeyRef:
                 name: {{ .Values.app.secrets }}
                 key: ui-django-secret-key
+          - name: ADMIN_USERNAME
+            value: {{ .Values.app.adminUser }}
           - name: ADMIN_PASSWORD
             valueFrom:
               secretKeyRef:
@@ -108,14 +110,21 @@ spec:
             value: {{ .Values.app.rdsDbName }}
           - name: AETHER_KERNEL_URL
             value: {{ .Values.app.kernelUrl }}
+          - name: AETHER_KERNEL_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.app.secrets }}
+                key: ui-kernel-token
           - name: DEBUG
             value: {{ if .Values.debug }}"1"{{ else }}""{{ end }}
           - name: WEB_SERVER_PORT
             value: {{ quote .Values.app.port }}
+          volumeMounts:
+          - mountPath: /var/www/static
+            name: static-assets-volume
       volumes:
       - name: {{ .Chart.Name }}
       - name: static-assets-volume
-        emptyDir: {}
       - name: nginx-config
         configMap:
           name: {{ .Release.Name }}-nginx-config
