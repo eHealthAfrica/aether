@@ -13,9 +13,18 @@ We’ve created an `aether-bootstrap` repository to make it easy for you to get 
 
 ## Prerequisites
 
-In order to follow this run-through, you will need to have [Docker](https://www.docker.com) installed (version 2.1 or higher).
+Since Aether is a development platform, these instructions assume that you are a Developer or DevOps type person with familiarity with the commandline, github and docker. There isn't any programming required but the instructions will be challenging if you are not used to scripts, config files, JSON and just generally performing system admin type tasks.  If this is not you, Gather may be more apropriate.  [You can try Gather here](https://gather.ehealthafrica.org/documentation/try/).
 
-You will also need to register some domains for local resolution on your computer. This means editing your hosts file. On Mac/Linux this is at `/etc/hosts`; on Windows it’s at `c:\Windows\System32\Drivers\etc\hosts`. Add this line to the bottom:
+You will need a computer running Linux, Mac OSX or a cloud based Linux VM (such as AWS) with 8MB of RAM. These instructions have been tested on Ubuntu 16.04.x (we have seen issues with 14.x VMs) and Mac 10.13.x
+
+- GitHub
+    - [git](https://git-scm.com/) must be installed and available
+- Docker
+    - [Docker Compose](https://docs.docker.com/compose/) installed setup with at least 3GB limit
+- The following ports should be available on your machine:  
+80, 8000, 8004, 8443
+
+You will also need to register some domains for local resolution on your computer. This means editing your hosts file. On Mac/Linux this is at `/etc/hosts`; Modify the line that starts with `127.0.0.1` to include:
 
 ```
 127.0.0.1       ui.aether.local kernel.aether.local
