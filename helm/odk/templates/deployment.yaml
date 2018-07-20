@@ -8,6 +8,7 @@ metadata:
     release: {{ .Chart.Version }}
     heritage: {{ .Release.Service }}
 spec:
+  progressDeadlineSeconds: 180
   replicas: {{ .Values.replicaCount }}
   template:
     metadata:
