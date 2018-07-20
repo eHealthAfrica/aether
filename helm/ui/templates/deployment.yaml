@@ -72,7 +72,7 @@ spec:
           - {{ .Values.app.command }}
           ports:
             - name: http
-              containerPort: {{ quote .Values.app.port }}
+              containerPort: {{ .Values.app.port }}
               protocol: TCP
           livenessProbe:
             httpGet:
@@ -104,6 +104,8 @@ spec:
             value: {{ .Values.app.rdsDbHost }}
           - name: PGUSER
             value: {{ .Values.app.rdsDbUser }}
+          - name: PGPORT
+            value: {{ quote .Values.app.rdsDbPort }}
           - name: DB_NAME
             value: {{ .Values.app.rdsDbName }}
           - name: AETHER_KERNEL_URL
