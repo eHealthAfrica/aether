@@ -30,7 +30,7 @@ namespace:
   create: false
 application:
   command: start
-  secret: secrets
+  secret: odk-secrets
   data_mount: /media
   admin_user: admin
 database:

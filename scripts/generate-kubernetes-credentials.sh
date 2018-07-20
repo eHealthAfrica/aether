@@ -51,11 +51,18 @@ stringData:
   kernel-readonly-db-password: $(gen_random_string)
   kernel-token: $(gen_random_string)
   admin-token: $(gen_random_string)
-
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: odk-secrets
+type: Opaque
+stringData:
   odk-admin-password: $(gen_random_string)
   odk-database-user: postgres
   odk-database-password: $POSTGRES_PASSWORD
   odk-database-name: odk
   odk-django-secret-key: $(gen_random_string)
   odk-token: $(gen_random_string)
+  kernel-token: $(gen_random_string)
 EOF
