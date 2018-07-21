@@ -11,7 +11,7 @@ We’re now going to find out how we can get this mapped data to be published in
 
 Bringing up Aether Connect is just a question of running `docker-compose up` on the relevant file:
 
-`docker-compose -f docker-compose-connect.yml`
+`docker-compose -f docker-compose-connect.yml up`
 
 You can check that this worked by opening [http://localhost:5005/status](http://localhost:5005/status) in your browser. You should see something like this:
 
