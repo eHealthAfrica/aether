@@ -23,7 +23,7 @@ You can check that this worked by opening [http://localhost:5005/status](http://
 }
 ```
 
-This is the status page for the Aether Producer, which sits between the Aether Kernel and Kafka, passing out entities as they are created. We can see that bith `kafka` and `kernel` are set to `true`. This means that the Aether Producer has successfully communicated with both of them. 
+This is the status page for the Aether Producer, which sits between the Aether Kernel and Kafka, passing out entities as they are created. We can see that both `kafka` and `kernel` are set to `true`. This means that the Aether Producer has successfully communicated with both of them. 
 
 We can also see that four topics have been created, `Survey`, `Building`, `Household` and `Person`. Kafka separates its data feeds into separate topics, and the Producer automatically creates a new topic for each schema in Kernel. The Producer has found the entities that were created when we submitted data using `curl`, and has passed them to Kafka.
 
@@ -52,7 +52,7 @@ Creating user: 'admin'
   ...
 }
 ```
-Copy and save the API key.
+Copy and save the API key. *Its the part between the single quotes*
 
 Open `ckan-consumer/config/config.json` in your favourite editor, and change the value of `API_KEY` to what you just copied.
 
