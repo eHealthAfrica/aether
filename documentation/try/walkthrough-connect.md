@@ -56,7 +56,7 @@ Copy and save the API key. *Its the part between the single quotes*
 
 Open `ckan-consumer/config/config.json` in your favourite editor, and change the value of `API_KEY` to what you just copied.
 
-Now you can open CKAN in your browser - go to [http://localhost:5000](http://localhost:5000). Login using the password that you just entered. Select _Organization_ from the top bar and create an organization with the name `eHADemo`.
+Now you can open CKAN in your browser - go to [http://localhost:5000](http://localhost:5000). Login using the password that you just entered. Select _Organizations_ from the top bar and create an organization with the name `eHADemo`.
 
 ## Start the CKAN Consumer and Do Some More CKAN Configuration
 
@@ -76,7 +76,7 @@ If you want to see how data is published to CKAN in real time, you can re-submit
 
 ```
 cd ../aether-bootstrap
-curl -H "Content-Type: application/json" --data @assets/submission.json http://admin-kernel:adminadmin@kernel.aether.local/submissions/
+curl -H "Content-Type: application/json" --data @assets/submission.json http://admin:adminadmin@kernel.aether.local/submissions/
 ```
 
 If you now reload the CKAN page in your browser, you should see the new entities displayed.
