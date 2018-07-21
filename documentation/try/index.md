@@ -53,6 +53,7 @@ http://ui.aether.local/
 - _Username:_ **admin**
 - _Password:_ **adminadmin**
 
+![AUX](./AUX-PipelineScreen.png)
+
+
 Now let’s [start creating our first Aether-based solution](walkthrough-core).
-
-
