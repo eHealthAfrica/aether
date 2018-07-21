@@ -32,15 +32,27 @@ So now that we have got some entities _into_ Kafka, how do we get them out? That
 ## Installing CKAN
 
 We’ve supplied a script in the Github repository for the CKAN Consumer that will make it easy to install CKAN locally, so let’s start by cloning that repo:
-
 ```
-cd ..
+cd .. 
+```
+You should now be outside the aether-bootstrap project and at your toplevel git repository
+```
 git clone git@github.com:eHealthAfrica/aether-ckan-consumer.git
 cd aether-ckan-consumer/example
 scripts/setup_ckan.sh
 ```
+This script will prompt you to create a user named `admin`, enter an email address and ask you for a password. Don’t forget the password that you enter; you will need it shortly. The email address can be any correctly formatted address but doesn't have to be a real one.
 
-This script will prompt you to create a user named `admin`, and ask you for a password. Don’t forget the password that you enter; you will need it shortly. At the end of the process the script will output registration information, including an API key. Copy this key.
+At the end of the process the script will output registration information, including an API key. 
+```
+Creating user: 'admin'
+{'about': None,
+ 'activity_streams_email_notifications': False,
+ 'apikey': u'586c0901-65a6-4547-a80a-97438bcb9dd4',
+  ...
+}
+```
+Copy and save the API key.
 
 Open `ckan-consumer/config/config.json` in your favourite editor, and change the value of `API_KEY` to what you just copied.
 
