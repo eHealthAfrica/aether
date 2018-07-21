@@ -53,9 +53,9 @@ Now you can hit the _PUBLISH PIPELINE_ button at the top right. Your pipeline is
 
 ## Submitting Data with the API
 
-The following `curl` command will tell you all the mappings that have been created on your Aether instance. If you have been following these instructions, there should only be one.
+The following `curl` command will tell you all the mappings that have been created on your Aether instance. If you have been following these instructions from a fresh install, there should only be one.
 
-`curl http://admin-kernel:adminadmin@kernel.aether.local:8000/mappings/`
+`curl -H http://admin:adminadmin@kernel.aether.local:8000/mappings/`
 
 (Note that we’re using basic auth here; obviously this is not how you would authenticate on a production instance)
 
@@ -79,11 +79,11 @@ The output of this command should be a JSON description of the mapping that you 
 }
 ```
 
-The important field for us is the `id` of the mapping; this needs to be included in any data that we submit. So let's do that now: open `assets/submission.json` in your favourite editor, and copy and paste the mapping id into the second line where it says `<mapping UUID goes here>`. It should now look something like this:
+The important field for us is the `id` of the mapping; this needs to be included in any data that we submit. So let's do that now: open `assets/submission.json` in your favourite editor, and copy and paste your mapping id into the second line where it says `"mapping": "2e4d2216-aade-48ef-8bc3-12f4792df07a"` and replace the `2e4d2216-aade-48ef-8bc3-12f4792df07a` with your id. It should now look something like this:
 
 ```
 {
-  "mapping": "2e4d2216-aade-48ef-8bc3-12f4792df07a",
+  "mapping": "<your id>",
   "payload": {
     "_id": "fKPopgxGLyzTUIPelIYLLJhGOYVEa",
     "_version": "YUPRCpknNpjXoRIeFIbTaqcVYBd",
@@ -96,13 +96,13 @@ The important field for us is the `id` of the mapping; this needs to be included
 Now we can use curl to post this file to Aether:
 
 ```
-curl -H "Content-Type: application/json" --data @assets/submission.json http://admin-kernel:adminadmin@kernel.aether.local/submissions/
+curl -H "Content-Type: application/json" --data @assets/submission.json http://admin:adminadmin@kernel.aether.local/submissions/
 ```
 
 Aether is now going to take this submitted data and do entity extractions based on the mappings that we set in the UI. We can check the results of this process by accessing the entities endpoint:
 
 ```
-curl http://admin-kernel:adminadmin@kernel.aether.local:8000/entities/
+curl http://admin:adminadmin@kernel.aether.local:8000/entities/
 ```
 
 You should get a sizeable chunk of JSON code that represents the entities that were extracted from the sample data that you just submitted. The first key in the JSON should be `count`, and the value should be `18` - 18 entities were extracted, as the microcensus data was broken down into `Surveys`, `Buildings`, `Households` and `People` (or actually, `Persons`).
