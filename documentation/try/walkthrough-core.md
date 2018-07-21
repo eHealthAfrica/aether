@@ -13,9 +13,9 @@ These contracts are defined using _schemas_, and the transformed data is known a
 
 In the `assets` folder of the `aether-bootstrap` repository contains some sample data, some schemas and a set of mappings. For the purposes of this walkthrough, we’re going to copy and paste the contents of these files into the Aether UI (for a more detailed overview of the UI, check out its [documentation](/documentation/ui/)).
 
-You should already be set up, logged in and looking at a mostly empty **AUX//Pipelines** screen from the [previous step]() 
+You should already be set up, logged in and looking at a mostly empty **AUX//Pipelines** screen from the [previous step](index) 
 
-Open the [UI](http://ui.aether.local) and log in if you haven’t already. We’re going to create a new pipeline, so hit the button that’s handily labelled _NEW PIPELINE_. Enter a name, and press _START PIPELINE_.
+We’re going to create a new pipeline, so hit the button that’s handily labelled _NEW PIPELINE_. Enter a name, and press _START PIPELINE_.
 
 ## Defining Our Input
 
