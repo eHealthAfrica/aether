@@ -13,7 +13,8 @@ We’ve created an `aether-bootstrap` repository to make it easy for you to get 
 
 ## Prerequisites
 
-Since Aether is a development platform, these instructions assume that you are a Developer or DevOps type person with familiarity with the commandline, github and docker. There isn't any programming required but the instructions will be challenging if you are not used to scripts, config files, JSON and just generally performing system admin type tasks.  If this is not you, Gather may be more apropriate.  [You can try Gather here](https://gather.ehealthafrica.org/documentation/try/).
+Since Aether is a development platform, these instructions assume that you are a Developer or DevOps type person with familiarity with the commandline, github and docker. There isn't any programming required but the instructions will be challenging if you are not used to scripts, config files, JSON and just generally performing system admin type tasks.  If this is not you, Gather may be more apropriate.
+[You can try Gather here](https://gather.ehealthafrica.org/documentation/try/).
 
 You will need a computer running Linux, Mac OSX or a cloud based Linux VM (such as AWS) with 8MB of RAM. These instructions have been tested on Ubuntu 16.04.x (we have seen issues with 14.x VMs) and Mac 10.13.x
 
@@ -46,7 +47,9 @@ docker-compose up
 ```
 
 Once the console output has stopped, you should be able to access the Aether UI in your browser. Use these credentials to log in:
-
+```
+http://ui.aether.local/
+```
 - _Username:_ **admin**
 - _Password:_ **adminadmin**
 
