@@ -55,7 +55,7 @@ Now you can hit the _PUBLISH PIPELINE_ button at the top right. Your pipeline is
 
 The following `curl` command will tell you all the mappings that have been created on your Aether instance. If you have been following these instructions from a fresh install, there should only be one.
 
-`curl -H http://admin:adminadmin@kernel.aether.local:8000/mappings/`
+`curl http://admin:adminadmin@kernel.aether.local:8000/mappings/`
 
 (Note that we’re using basic auth here; obviously this is not how you would authenticate on a production instance)
 
