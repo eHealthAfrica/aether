@@ -7,7 +7,7 @@ permalink: documentation/try/index.html
 
 Aether is a platform. This means that it doesn’t do much on its own: it only makes sense to use it in the context of creating a solution. For this initial run-through, we’re going to create a simple solution that takes data collected in a microcensus and feeds it out to dashboards. We’ll start with some raw json input data, and create some mappings to transform it into a more useable state. 
 
-In the next step, we'll see how that data can then be fed through to Elastic Search by using Aether Connect, but first things first...
+In the next step, we'll see how that data can then be fed through to CKAN by using Aether Connect, but first things first...
 
 We’ve created an `aether-bootstrap` repository to make it easy for you to get up and running with your first Aether-based solution. This contains a bunch of `docker-compose` files that will pull Docker images of the latest version of Aether from Docker Hub and start them up. 
 
