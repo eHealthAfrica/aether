@@ -19,13 +19,13 @@ You can check that this worked by opening [http://localhost:5005/status](http://
 {
     kafka: false,
     kernel: true,
-    topics: { }
+    topics: { ...
 }
 ```
 
 This is the status page for the Aether Producer, which sits between the Aether Kernel and Kafka, passing out entities as they are created. We can see that bith `kafka` and `kernel` are set to `true`. This means that the Aether Producer has successfully communicated with both of them. 
 
-We can also see that four topics have been created, `Surveys`, `Buildings`, `Households` and `People` (TODO - are these correct?). Kafka separates its data feeds into separate topics, and the Producer automatically creates a new topic for each schema in Kernel. The Producer has found the entities that were created when we submitted data using `curl`, and has passed them to Kafka.
+We can also see that four topics have been created, `Survey`, `Building`, `Household` and `Person`. Kafka separates its data feeds into separate topics, and the Producer automatically creates a new topic for each schema in Kernel. The Producer has found the entities that were created when we submitted data using `curl`, and has passed them to Kafka.
 
 So now that we have got some entities _into_ Kafka, how do we get them out? That’s where we need a consumer. We’re going to use the CKAN consumer, so that we can watch our data get published to CKAN in real time. Starting the CKAN Consumer is pretty easy (clue: it rhymes with “flocker pompose”), but before we can do that we’ll need to take a short diversion so that we can get CKAN up and running.
 
