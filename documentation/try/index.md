@@ -54,6 +54,6 @@ http://ui.aether.local/
 - _Password:_ **adminadmin**
 
 If you see this screen, you are all configured and ready to move on.
-![AUX](./AUX-PipelineScreen.png)
+![AUX](/images/screenshots/pipelines-overview-start.png)
 
 Now let’s [start creating our first Aether-based solution](walkthrough-core).
