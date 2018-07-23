@@ -18,8 +18,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-set -e
-set -x
+set -Eeuox pipefail
 
 
 ################################################################################
@@ -33,6 +32,10 @@ export PYTHONUNBUFFERED=true
 ################################################################################
 # install packages
 ################################################################################
+
+# install missing packages in slim distribution
+apt-get update -qq
+apt-get -qq --yes --force-yes install wget gcc
 
 PACKAGE_LIST=/tmp/apt-packages.txt
 if [ -f "$PACKAGE_LIST" ]; then

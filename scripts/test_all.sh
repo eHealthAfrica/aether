@@ -59,10 +59,6 @@ prepare_and_test_container kernel
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
 
-# test a clean CLIENT TEST container
-$DC_TEST build client-test
-$DC_TEST run client-test test --noinput
-
 # test a clean ODK TEST container
 prepare_and_test_container odk
 
@@ -81,7 +77,5 @@ $DC_TEST run kernel-test manage loaddata aether/kernel/api/tests/fixtures/projec
 # test a clean SYNC TEST container
 prepare_and_test_container couchdb-sync
 
-# clean start for the next bunch of tests
 kill_all
-
 echo "_____________________________________________ END"
