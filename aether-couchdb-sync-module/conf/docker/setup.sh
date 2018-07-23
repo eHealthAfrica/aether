@@ -33,6 +33,10 @@ export PYTHONUNBUFFERED=true
 # install packages
 ################################################################################
 
+# install missing packages in slim distribution
+apt-get update -qq
+apt-get -qq --yes --force-yes install wget gcc
+
 PACKAGE_LIST=/tmp/apt-packages.txt
 if [ -f "$PACKAGE_LIST" ]; then
     # Add postgres apt repo to get more recent postgres versions
