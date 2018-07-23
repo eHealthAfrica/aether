@@ -79,10 +79,16 @@ spec:
             httpGet:
               path: /health
               port: http
+              httpHeaders:
+              - name: X-Kubernetes-Health-Check
+                value: livenessProbe
           readinessProbe:
             httpGet:
               path: /health
               port: http
+              httpHeaders:
+              - name: X-Kubernetes-Health-Check
+                value: readinessProbe
           env:
           - name: DJANGO_SECRET_KEY
             valueFrom:
