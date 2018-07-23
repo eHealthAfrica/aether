@@ -35,11 +35,13 @@ fi
 
 set -Eeuo pipefail
 
+KERNEL_TOKEN=$(gen_random_string)
+
 cat <<EOF
 apiVersion: v1
 kind: Secret
 metadata:
-  name: secrets
+  name: kernel-secrets
 type: Opaque
 stringData:
   kernel-admin-password: $(gen_random_string)
@@ -47,13 +49,22 @@ stringData:
   kernel-database-password: $POSTGRES_PASSWORD
   kernel-database-name: aether
   kernel-django-secret-key: $(gen_random_string)
+  kernel-django-admin-password: $(gen_random_string)
   kernel-readonly-db-password: $(gen_random_string)
-  kernel-token: $(gen_random_string)
-
+  kernel-token: $KERNEL_TOKEN
+  admin-token: $KERNEL_TOKEN
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: odk-secrets
+type: Opaque
+stringData:
   odk-admin-password: $(gen_random_string)
   odk-database-user: postgres
   odk-database-password: $POSTGRES_PASSWORD
   odk-database-name: odk
   odk-django-secret-key: $(gen_random_string)
   odk-token: $(gen_random_string)
+  kernel-token: $KERNEL_TOKEN
 EOF

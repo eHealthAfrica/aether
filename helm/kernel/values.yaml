@@ -1,42 +1,42 @@
-replicaCount: 1
+replicaCount: 3
 image:
   repository: nginx
   tag: stable-alpine
   pullPolicy: IfNotPresent
 kernel:
   repository: "ehealthafrica/aether-kernel"
-name: kernel
-project: aether
-release: 0.6.0
 service:
   name: nginx
   type: NodePort
   externalPort: 80
   internalPort: 80
 environment: "dev"
-ums_url: ums-dev
-domain: aether.local
-trusted_origins: .aether.local
+ums_url: "https://ums-dev.ehealthafrica.org"
+domain: dev.ehealthafrica.org
 namespace:
   create: false
-debug: false
+debug: true
 testing: false
-webserverPort: 8000
-liveEdit:
-  enabled: false
-application:
+app:
   command: start
-  secret: secrets
+  secret: kernel-secrets
   data_mount: /media
   admin_user: admin
   readonly_user: readonlyuser
+  port: 8000
 database:
   secret: database-credentials
+  host: dev-k8s-eha-im.cpqsfknb8sgc.eu-west-1.rds.amazonaws.com
+  port: 5432
+  name: aether_kernel
+  user: aether_kernel
 provider:
-  aws: false
+  aws: true
 ingress:
   enabled: true
-  hosts:
-    - kernel.aether.local
   annotations:
-    nginx.ingress.kubernetes.io/ingress.class: "nginx"
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:eu-west-1:387526361725:certificate/dcd71c49-1b5b-4b19-bd2d-6de98a3f6477"
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80,"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/scheme: "internet-facing"
+    alb.ingress.kubernetes.io/security-groups: "alb-ingress-controller.dev.k8s.eha.im"

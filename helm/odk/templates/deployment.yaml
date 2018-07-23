@@ -8,6 +8,7 @@ metadata:
     release: {{ .Chart.Version }}
     heritage: {{ .Release.Service }}
 spec:
+  progressDeadlineSeconds: 180
   replicas: {{ .Values.replicaCount }}
   template:
     metadata:
@@ -128,8 +129,10 @@ spec:
           value: {{ .Values.kernel_url }}
         - name: AETHER_KERNEL_URL_TEST
           value: {{ .Values.kernel_url_test }}
+        - name: DEBUG
+          value: {{ if .Values.debug }}"1"{{ else }}""{{ end }}
         - name: TESTING
-          value: {{ quote .Values.testing }}
+          value: {{ if .Values.testing }}"1"{{ else }}""{{ end }}
         - name: PGUSER
           valueFrom:
             secretKeyRef:
