@@ -18,7 +18,6 @@
 
 from django.db.models import Count, Min, Max
 from django.shortcuts import get_object_or_404
-from django.utils.translation import ugettext as _
 
 from drf_openapi.views import SchemaView
 from rest_framework import viewsets, permissions, status
@@ -65,28 +64,7 @@ def get_entity_linked_data(entity, request, resolved, depth, start_depth=0):
     return resolved
 
 
-class CustomViewSet(viewsets.ModelViewSet):
-
-    @action(detail=True, methods=['get', 'post'])
-    def details(self, request, pk=None, *args, **kwargs):
-        '''
-        Allow to retrieve data from a POST request.
-        Reachable at ``/{model}/{pk}/details/``
-        '''
-
-        return self.retrieve(request, pk, *args, **kwargs)
-
-    @action(detail=False, methods=['get', 'post'])
-    def fetch(self, request, *args, **kwargs):
-        '''
-        Allow to list data from a POST request.
-        Reachable at ``/{model}/fetch/``
-        '''
-
-        return self.list(request, *args, **kwargs)
-
-
-class ProjectViewSet(CustomViewSet):
+class ProjectViewSet(viewsets.ModelViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectSerializer
     filter_class = filters.ProjectFilter
@@ -219,7 +197,7 @@ class ProjectStatsViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ('name',)
 
 
-class MappingViewSet(CustomViewSet):
+class MappingViewSet(viewsets.ModelViewSet):
     queryset = models.Mapping.objects.all()
     serializer_class = serializers.MappingSerializer
     filter_class = filters.MappingFilter
@@ -242,69 +220,38 @@ class MappingStatsViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ('name',)
 
 
-class SubmissionViewSet(CustomViewSet):
+class SubmissionViewSet(exporter.ExporterViewSet):
     queryset = models.Submission.objects.all()
     serializer_class = serializers.SubmissionSerializer
     filter_class = filters.SubmissionFilter
 
-    @action(detail=False, methods=['get', 'post'])
-    def xlsx(self, request, *args, **kwargs):
-        '''
-        Export the data as an XLSX file
-        Reachable at ``/submissions/xlsx/``
-        '''
-        return self.__export(request, format='xlsx')
 
-    @action(detail=False, methods=['get', 'post'])
-    def csv(self, request, *args, **kwargs):
-        '''
-        Export the data as a bunch of CSV files
-        Reachable at ``/submissions/csv/``
-        '''
-        separator = self.__get(request, 'separator', ',')
-        return self.__export(request, format='csv', separator=separator)
-
-    def __get(self, request, name, default=None):
-        return request.GET.get(name, dict(request.data).get(name, default))
-
-    def __export(self, request, format, **kwargs):
-        try:
-            return exporter.export_data(
-                data=self.get_queryset().values('id', 'payload'),
-                paths=self.__get(request, 'paths', []),
-                headers=self.__get(request, 'headers', {}),
-                format=format,
-                filename=self.__get(request, 'filename', 'submissions'),
-                **kwargs
-            )
-        except IOError as e:
-            msg = _('Got an error while creating the file: {error}').format(error=str(e))
-            return Response(data={'detail': msg},
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-class AttachmentViewSet(CustomViewSet):
+class AttachmentViewSet(viewsets.ModelViewSet):
     queryset = models.Attachment.objects.all()
     serializer_class = serializers.AttachmentSerializer
     filter_class = filters.AttachmentFilter
 
 
-class SchemaViewSet(CustomViewSet):
+class SchemaViewSet(viewsets.ModelViewSet):
     queryset = models.Schema.objects.all()
     serializer_class = serializers.SchemaSerializer
     filter_class = filters.SchemaFilter
 
 
-class ProjectSchemaViewSet(CustomViewSet):
+class ProjectSchemaViewSet(viewsets.ModelViewSet):
     queryset = models.ProjectSchema.objects.all()
     serializer_class = serializers.ProjectSchemaSerializer
     filter_class = filters.ProjectSchemaFilter
 
 
-class EntityViewSet(CustomViewSet):
+class EntityViewSet(exporter.ExporterViewSet):
     queryset = models.Entity.objects.all()
     serializer_class = serializers.EntitySerializer
     filter_class = filters.EntityFilter
+
+    # Exporter required fields
+    schema_field = 'projectschema__schema__definition'
+    schema_order = '-projectschema__schema__created'
 
     def retrieve(self, request, pk=None, *args, **kwargs):
         selected_record = get_object_or_404(models.Entity, pk=pk)
@@ -322,57 +269,6 @@ class EntityViewSet(CustomViewSet):
                 return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
         serializer_class = serializers.EntitySerializer(selected_record, context={'request': request})
         return Response(serializer_class.data)
-
-    @action(detail=False, methods=['get', 'post'])
-    def xlsx(self, request, *args, **kwargs):
-        '''
-        Export the data as an XLSX file
-        Reachable at ``/entities/xlsx/``
-        '''
-        return self.__export(request, format='xlsx')
-
-    @action(detail=False, methods=['get', 'post'])
-    def csv(self, request, *args, **kwargs):
-        '''
-        Export the data as a bunch of CSV files
-        Reachable at ``/entities/csv/``
-        '''
-        separator = self.__get(request, 'separator', ',')
-        return self.__export(request, format='csv', separator=separator)
-
-    def __get(self, request, name, default=None):
-        return request.GET.get(name, dict(request.data).get(name, default))
-
-    def __export(self, request, format, **kwargs):
-        queryset = self.get_queryset()
-
-        # extract jsonpaths and docs from linked schemas definition
-        jsonpaths = []
-        docs = {}
-        schemas = queryset.order_by('-projectschema__schema__created') \
-                          .values('projectschema__schema__definition') \
-                          .distinct()
-        for schema in schemas:
-            avro_tools.extract_jsonpaths_and_docs(
-                schema=schema.get('projectschema__schema__definition'),
-                jsonpaths=jsonpaths,
-                docs=docs,
-            )
-
-        try:
-            return exporter.export_data(
-                data=queryset.values('id', 'payload'),
-                paths=self.__get(request, 'paths', []) or jsonpaths,
-                headers=self.__get(request, 'headers', {}) or docs,
-                format=format,
-                filename=self.__get(request, 'filename', 'entities'),
-                **kwargs
-            )
-
-        except IOError as e:
-            msg = _('Got an error while creating the file: {error}').format(error=str(e))
-            return Response(data={'detail': msg},
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class AetherSchemaView(SchemaView):

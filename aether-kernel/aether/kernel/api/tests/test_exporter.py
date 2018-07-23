@@ -16,6 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from openpyxl import load_workbook
+
 from django.http import FileResponse
 from django.test import TestCase
 
@@ -115,8 +117,8 @@ SAMPLE_LABELS = {
 }
 
 SAMPLE_ROW = {
-    'id': '1309afad-f55b-43fc-900e-4215ba782ee8',
-    'payload': {
+    '__id': '1309afad-f55b-43fc-900e-4215ba782ee8',
+    '__data': {
         'id': '6b90cfb6-0ee6-4035-94bc-fb7f3e56d790',
         '_id': 'my-test-form',
         'date': '2017-07-14T00:00:00',
@@ -280,8 +282,9 @@ class ExporterTest(TestCase):
 
     def test__generate_workbook(self):
         paths = filter_paths(SAMPLE_PATHS)
-        wb = generate(paths, SAMPLE_LABELS, [SAMPLE_ROW])
-        _id = SAMPLE_ROW['id']
+        xlsx_path = generate(paths, SAMPLE_LABELS, [SAMPLE_ROW])
+        wb = load_workbook(filename=xlsx_path)
+        _id = SAMPLE_ROW['__id']
 
         # check workbook content
         ws = wb['#']    # root content

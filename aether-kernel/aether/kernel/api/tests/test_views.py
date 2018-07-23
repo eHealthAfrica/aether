@@ -606,29 +606,6 @@ class ViewsTest(TestCase):
             'projectschema': None
         }, modified_entity, True)
 
-    def test_custom_viewset(self):
-        self.assertNotEqual(reverse('project-list'), reverse('project-fetch'))
-        self.assertEqual(reverse('project-fetch'), '/projects/fetch/')
-
-        self.assertNotEqual(reverse('project-detail', kwargs={'pk': 1}),
-                            reverse('project-details', kwargs={'pk': 1}))
-        self.assertEqual(reverse('project-details', kwargs={'pk': 1}), '/projects/1/details/')
-
-        project_id = str(self.project.pk)
-
-        response_get = self.client.get(reverse('project-list')).json()
-        response_post = self.client.post(reverse('project-fetch')).json()
-
-        self.assertEqual(response_get, response_post, 'same detail view')
-        self.assertEqual(len(response_get['results']), 1)
-        self.assertEqual(response_get['results'][0]['id'], project_id)
-
-        response_get = self.client.get(reverse('project-detail', kwargs={'pk': project_id})).json()
-        response_post = self.client.post(reverse('project-details', kwargs={'pk': project_id})).json()
-
-        self.assertEqual(response_get, response_post, 'same list view')
-        self.assertEqual(response_get['id'], project_id)
-
     def test_project_artefacts__endpoints(self):
         self.assertEqual(reverse('project-artefacts', kwargs={'pk': 1}), '/projects/1/artefacts/')
 
@@ -799,7 +776,7 @@ class ViewsTest(TestCase):
             paths=[],
             headers={},
             format='xlsx',
-            filename='submissions',
+            filename='export',
         )
 
     @mock.patch(
@@ -810,7 +787,7 @@ class ViewsTest(TestCase):
         response = self.client.post(reverse('submission-csv'), data=json.dumps({
             'paths': ['_id', '_rev'],
             'headers': {'_id': 'id', '_rev': 'rev'},
-            'filename': 'export',
+            'filename': 'submissions',
         }), content_type='application/json')
         self.assertEquals(response.status_code, 200)
         mock_export.assert_called_once_with(
@@ -819,7 +796,7 @@ class ViewsTest(TestCase):
             headers={'_id': 'id', '_rev': 'rev'},
             format='csv',
             separator=',',
-            filename='export',
+            filename='submissions',
         )
 
     def test_entities_export__endpoints(self):
@@ -850,7 +827,7 @@ class ViewsTest(TestCase):
             paths=['id', '_rev', 'name', 'dob', 'villageID'],
             headers={'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
             format='xlsx',
-            filename='entities',
+            filename='export',
         )
 
     @mock.patch(
@@ -866,5 +843,5 @@ class ViewsTest(TestCase):
             headers={'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
             format='csv',
             separator=',',
-            filename='entities',
+            filename='export',
         )
