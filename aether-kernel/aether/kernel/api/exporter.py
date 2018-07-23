@@ -26,7 +26,14 @@ import zipfile
 from openpyxl import Workbook, load_workbook
 
 from django.http import FileResponse
-from .avro_tools import ARRAY_PATH, MAP_PATH, UNION_PATH
+from django.db.models import F
+from django.utils.translation import ugettext as _
+
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.response import Response
+from rest_framework.decorators import action
+
+from .avro_tools import ARRAY_PATH, MAP_PATH, UNION_PATH, extract_jsonpaths_and_docs
 
 EXPORT_DIR = tempfile.mkdtemp()
 FILENAME_RE = '{name}-{ts}.{ext}'
@@ -35,28 +42,88 @@ CSV_CONTENT_TYPE = 'application/zip'
 XLSX_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 
+class ExporterViewSet(ModelViewSet):
+    '''
+    ModelViewSet that includes export endpoints ``xlsx`` and ``csv``.
+    '''
+
+    pk_field = 'id'
+    json_field = 'payload'
+    schema_field = None
+    schema_order = None
+
+    @action(detail=False, methods=['get', 'post'])
+    def xlsx(self, request, *args, **kwargs):
+        '''
+        Export the data as an XLSX file
+        Reachable at ``/{model}/xlsx/``
+        '''
+        return self.__export(request, format='xlsx')
+
+    @action(detail=False, methods=['get', 'post'])
+    def csv(self, request, *args, **kwargs):
+        '''
+        Export the data as a bunch of CSV files
+        Reachable at ``/{model}/csv/``
+        '''
+        separator = self.__get(request, 'separator', ',')
+        return self.__export(request, format='csv', separator=separator)
+
+    def __get(self, request, name, default=None):
+        return request.GET.get(name, dict(request.data).get(name, default))
+
+    def __export(self, request, format, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        data = queryset.annotate(__id=F(self.pk_field), __data=F(self.json_field)) \
+                       .values('__id', '__data')
+
+        # extract jsonpaths and docs from linked schemas definition
+        jsonpaths = []
+        docs = {}
+        if self.schema_field:
+            schemas = queryset.order_by(self.schema_order or self.schema_field) \
+                              .values(self.schema_field) \
+                              .distinct()
+            for schema in schemas:
+                extract_jsonpaths_and_docs(
+                    schema=schema.get(self.schema_field),
+                    jsonpaths=jsonpaths,
+                    docs=docs,
+                )
+
+        try:
+            return export_data(
+                data=data,
+                paths=self.__get(request, 'paths', []) or jsonpaths,
+                headers=self.__get(request, 'headers', {}) or docs,
+                format=format,
+                filename=self.__get(request, 'filename', 'export'),
+                **kwargs
+            )
+
+        except IOError as e:
+            msg = _('Got an error while creating the file: {error}').format(error=str(e))
+            return Response(data={'detail': msg}, status=500)
+
+
 def export_data(data, paths=[], headers={}, format='xlsx', filename='export', **kwargs):
     '''
     Generates an XLSX/ ZIP (of CSV files) file with the given data.
 
-    - ``data`` is a list of dictionaries with two keys ``id`` and ``payload``.
-    - ``paths`` is a list with the allowed payload jsonpaths.
-    - ``headers`` is a dictionary which keys are the payload jsonpaths
+    - ``data`` is a list of dictionaries with two keys ``__id`` and ``__data``.
+    - ``paths`` is a list with the allowed jsonpaths.
+    - ``headers`` is a dictionary which keys are the jsonpaths
       and the values the linked labels to use as header for that jsonpath.
     - ``format``, expected values ``xlsx`` (default) and ``csv``.
     '''
 
     # create workbook
-    wb = __generate_workbook(paths=paths, labels=headers, data=data)
-
-    xlsx_name = FILENAME_RE.format(name=filename, ts=datetime.now().isoformat(), ext='xlsx')
-    xlsx_path = EXPORT_DIR + '/' + xlsx_name
-    wb.save(xlsx_path)
-    wb.close()
+    xlsx_path = __generate_workbook(paths=paths, labels=headers, data=data)
 
     if format == 'csv':
-        return export_csv(xlsx_path, filename, kwargs.get('separator', ','))
+        return __export_csv(xlsx_path, filename, kwargs.get('separator', ','))
     else:
+        xlsx_name = FILENAME_RE.format(name=filename, ts=datetime.now().isoformat(), ext='xlsx')
         return __file_response(
             filepath=xlsx_path,
             filename=xlsx_name,
@@ -64,11 +131,11 @@ def export_data(data, paths=[], headers={}, format='xlsx', filename='export', **
         )
 
 
-def export_csv(wb_path, filename, separator=','):
+def __export_csv(wb_path, filename, separator=','):
     # convert XLSX file into several CSV files and return zip file
     zip_name = FILENAME_RE.format(name=filename, ts=datetime.now().isoformat(), ext='zip')
     zip_path = EXPORT_DIR + '/' + filename
-    with zipfile.ZipFile(zip_path, 'w') as myzip:
+    with zipfile.ZipFile(zip_path, 'w') as csv_zip:
         wb = load_workbook(filename=wb_path, read_only=True)
         for ws in wb.worksheets:
             csv_name = FILENAME_RE.format(name=filename, ts=ws.title, ext='csv')
@@ -79,7 +146,7 @@ def export_csv(wb_path, filename, separator=','):
                 for row in ws.rows:
                     c.writerow([cell.value or '' for cell in row])
             # include csv file in zip
-            myzip.write(csv_path, csv_name)
+            csv_zip.write(csv_path, csv_name)
         wb.close()
 
     return __file_response(
@@ -116,18 +183,18 @@ def __file_response(filepath, filename, content_type):
 def __generate_workbook(paths, labels, data):
     def add_header(options, header):
         if header not in options['headers']:
-            options['current_header'] += 1
-            col = options['current_header']
             options['headers'].append(header)
-            options['ws'].cell(row=1, column=col).value = __get_label(header, labels)
+            options['headers_label'].append(__get_label(header, labels))
 
     def get_current_options(group):
         if group not in skeleton:
+            ws = wb.create_sheet('#')
+            ws.append([])  # first row contains the headers, will be written afterwards
             skeleton[group] = {
-                'ws': wb.create_sheet('#'),
+                'ws': ws,
+                'ws_name': ws.title,
                 'headers': [],
-                'current_header': 0,
-                'current_row': 1,  # the first row is the header
+                'headers_label': [],
             }
         return skeleton.get(group)
 
@@ -171,25 +238,37 @@ def __generate_workbook(paths, labels, data):
                     walker(element, array_group)
 
         # append entry to current worksheet
-        current['current_row'] += 1
-        for i, header in enumerate(current['headers']):
-            current['ws'].cell(row=current['current_row'], column=i + 1).value = entry.get(header, '')
+        current['ws'].append([entry.get(header, '') for header in current.get('headers')])
 
-    # create workbook
-    wb = Workbook()
-    ws_default = wb.active
     skeleton = {}
     paths = __filter_paths(paths)
 
-    for row in data:
-        # filter row payload by given paths
-        payload = __parse_row(row['payload'], paths)
-        # include data in workbook
-        walker({'@id': str(row['id']), **payload}, '$')
+    # create workbook
+    wb = Workbook(write_only=True)
 
-    # remove first Sheet (added automatically when the workbook was created)
-    wb.remove(ws_default)
-    return wb
+    for row in data:
+        # filter row data by given paths
+        json_data = __parse_row(row['__data'], paths)
+        # include data in workbook
+        walker({'@id': str(row['__id']), **json_data}, '$')
+
+    # save it
+    xlsx_path = EXPORT_DIR + '/temp.xlsx'
+    wb.save(xlsx_path)
+    wb.close()
+
+    # open again and include real headers
+    wb = load_workbook(filename=xlsx_path)
+    for group in skeleton.keys():
+        current = skeleton[group]
+        ws = wb[current['ws_name']]
+        for i, header in enumerate(current['headers_label']):
+            ws.cell(row=1, column=i + 1).value = header
+
+    wb.save(xlsx_path)
+    wb.close()
+
+    return xlsx_path
 
 
 def __flatten_dict(obj):
@@ -217,13 +296,13 @@ def __parse_row(row, paths):
     if not paths:
         return flatten_row
 
-    payload = {}
+    new_row = {}
     for path in paths:
         for key in flatten_row.keys():
             if key == path or key.startswith(path + '.'):
-                payload[key] = flatten_row[key]
+                new_row[key] = flatten_row[key]
 
-    return payload
+    return new_row
 
 
 def __filter_paths(paths):
