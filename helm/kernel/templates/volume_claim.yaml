@@ -2,7 +2,7 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ .Release.Name }}-pvc
   annotations:
     volume.beta.kubernetes.io/storage-class: "aws-efs"
 spec:
@@ -16,7 +16,7 @@ spec:
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ .Release.Name }}-pvc
 spec:
   accessModes:
     - ReadWriteMany

@@ -1,10 +1,11 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: kernel-init
+  name: {{ .Release.Name }}-init-config
 data:
   init.sh: |
     #!/bin/bash
+    set -u
 
     psql -c "CREATE DATABASE $DB_NAME;"
     psql -c "CREATE USER $DB_USERNAME WITH PASSWORD '$DB_PASSWORD';"
