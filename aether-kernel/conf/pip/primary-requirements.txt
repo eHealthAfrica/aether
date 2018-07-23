@@ -51,6 +51,7 @@ google-cloud-storage
 
 # XLSX libraries
 openpyxl
+lxml
 
 
 # CAS libraries
