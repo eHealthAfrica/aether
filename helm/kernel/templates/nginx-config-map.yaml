@@ -1,3 +1,4 @@
+{{- $domainName := printf "%s.%s" .Release.Name .Values.domain -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -16,12 +17,13 @@ data:
       }
     }
 
+    {{- range $serverName := tuple $domainName .Release.Name }}
     server {
-      listen      {{ .Values.service.externalPort }};
+      server_name {{ $serverName }};
+
+      listen      {{ $.Values.service.externalPort }};
       charset     utf-8;
-      server_name {{ .Release.Name }}.{{ .Values.domain }}
-                  {{ .Release.Name }};
-      {{- if .Values.debug }}
+      {{- if $.Values.debug }}
       error_log   /var/log/nginx/error.log info;
       {{- else }}
       access_log  off;
@@ -30,9 +32,11 @@ data:
       # Max upload size
       client_max_body_size 75M;   # adjust to taste
 
+      {{- if eq $serverName $domainName }}
       if ($http_x_forwarded_proto != 'https') {
        return 301 https://$host$request_uri;
       }
+      {{- end }}
 
       location /static/ {
         alias /var/www/static/;
@@ -46,7 +50,7 @@ data:
 
       # Finally, send all non-media requests to the Django server.
       location / {
-        proxy_pass http://127.0.0.1:{{ .Values.app.port }};
+        proxy_pass http://127.0.0.1:{{ $.Values.app.port }};
         proxy_set_header        Host               $host;
         proxy_set_header        X-Real-IP          $remote_addr;
         proxy_set_header        X-Forwarded-For    $proxy_add_x_forwarded_for;
@@ -57,3 +61,4 @@ data:
         include    /etc/nginx/uwsgi_params; # or the uwsgi_params you installed manually
       }
     }
+    {{- end }}
