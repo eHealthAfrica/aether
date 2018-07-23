@@ -66,28 +66,37 @@ spec:
           - mountPath: /media
             name: {{ .Chart.Name }}
         - name: ui
-          image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+          # This default allows us to overwrite '.Chart.AppVersion' through the command line
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.pullPolicy }}
           args:
           - {{ .Values.app.command }}
           ports:
             - name: http
-              containerPort: {{ quote .Values.app.port }}
+              containerPort: {{ .Values.app.port }}
               protocol: TCP
           livenessProbe:
             httpGet:
               path: /health
               port: http
+              httpHeaders:
+              - name: X-Kubernetes-Health-Check
+                value: livenessProbe
           readinessProbe:
             httpGet:
               path: /health
               port: http
+              httpHeaders:
+              - name: X-Kubernetes-Health-Check
+                value: readinessProbe
           env:
           - name: DJANGO_SECRET_KEY
             valueFrom:
               secretKeyRef:
                 name: {{ .Values.app.secrets }}
                 key: ui-django-secret-key
+          - name: ADMIN_USERNAME
+            value: {{ .Values.app.adminUser }}
           - name: ADMIN_PASSWORD
             valueFrom:
               secretKeyRef:
@@ -102,18 +111,27 @@ spec:
             value: {{ .Values.app.rdsDbHost }}
           - name: PGUSER
             value: {{ .Values.app.rdsDbUser }}
+          - name: PGPORT
+            value: {{ quote .Values.app.rdsDbPort }}
           - name: DB_NAME
             value: {{ .Values.app.rdsDbName }}
           - name: AETHER_KERNEL_URL
             value: {{ .Values.app.kernelUrl }}
+          - name: AETHER_KERNEL_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.app.secrets }}
+                key: ui-kernel-token
           - name: DEBUG
             value: {{ if .Values.debug }}"1"{{ else }}""{{ end }}
           - name: WEB_SERVER_PORT
             value: {{ quote .Values.app.port }}
+          volumeMounts:
+          - mountPath: /var/www/static
+            name: static-assets-volume
       volumes:
       - name: {{ .Chart.Name }}
       - name: static-assets-volume
-        emptyDir: {}
       - name: nginx-config
         configMap:
           name: {{ .Release.Name }}-nginx-config

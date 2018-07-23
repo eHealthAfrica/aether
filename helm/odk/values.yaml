@@ -22,7 +22,8 @@ kernel_url: http://kernel
 kernel_url_test: http://kernel
 domain: aether.local
 trusted_origins: .aether.local
-testing: true
+debug: false
+testing: false
 webserverPort: 8000
 liveEdit:
   enabled: false
@@ -30,7 +31,7 @@ namespace:
   create: false
 application:
   command: start
-  secret: secrets
+  secret: odk-secrets
   data_mount: /media
   admin_user: admin
 database:

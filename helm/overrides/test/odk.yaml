@@ -1,6 +1,7 @@
 application:
   command: start_dev
 debug: true
+testing: true
 odk:
   repository: aether-odk
 release: latest

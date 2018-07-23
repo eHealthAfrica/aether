@@ -60,10 +60,7 @@ setup() {
     # check if required environment variables were set
     ./conf/check_vars.sh
 
-    until pg_isready -q; do
-        >&2 echo "Waiting for postgres..."
-        sleep 1
-    done
+    pg_isready
 
     if psql -c "" $DB_NAME; then
         echo "$DB_NAME database exists!"
