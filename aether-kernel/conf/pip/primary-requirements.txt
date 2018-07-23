@@ -41,6 +41,7 @@ spavro
 
 # XLSX libraries
 openpyxl
+lxml
 
 
 # UMS libraries

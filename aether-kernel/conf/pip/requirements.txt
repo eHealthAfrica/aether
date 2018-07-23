@@ -42,6 +42,7 @@ jdcal==1.4
 Jinja2==2.10
 jsonpath-ng==1.4.3
 jsonschema==2.6.0
+lxml==4.2.3
 MarkupSafe==1.0
 mccabe==0.6.1
 mock==2.0.0
