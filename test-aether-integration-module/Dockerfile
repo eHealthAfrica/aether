@@ -1,8 +1,12 @@
-FROM python:3.6
+FROM python:3.6-slim-jessie
 
 ################################################################################
 ## setup container
 ################################################################################
+
+RUN apt-get update -qq \
+    && apt-get -qq --yes --force-yes install gcc \
+    && pip install --upgrade pip
 
 ################################################################################
 ## install app
@@ -12,8 +16,7 @@ FROM python:3.6
 WORKDIR /code
 
 COPY ./conf/pip /code/conf/pip
-
-RUN pip3 install -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt
+RUN pip install -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt
 
 COPY ./ /code
 

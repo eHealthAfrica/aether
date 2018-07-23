@@ -25,14 +25,13 @@ function build_container() {
     $DC_TEST build "$1"-test
 }
 
-
 DC_TEST="docker-compose -f docker-compose-test.yml"
 
 
 echo "_____________________________________________ TESTING"
 
-# kill ALL containers and clean TEST ones
-./scripts/kill_all.sh
+
+./scripts/build_aether_utils_and_distribute.sh
 $DC_TEST down
 
 # start databases
@@ -45,8 +44,12 @@ build_container kernel
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
 
-build_container kafka
-build_container zookeeper
+
+echo "_____________________________________________ Testing client"
+build_container client
+$DC_TEST run client-test test
+
+
 echo "_____________________________________________ Starting Kafka"
 $DC_TEST up -d zookeeper-test kafka-test
 
