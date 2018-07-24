@@ -41,13 +41,16 @@ FILENAME_RE = '{name}-{ts}.{ext}'
 CSV_CONTENT_TYPE = 'application/zip'
 XLSX_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
+# Total number of rows on a worksheet (since Excel 2007): 1048576
+# https://support.office.com/en-us/article/Excel-specifications-and-limits-1672b34d-7043-467e-8e27-269d656771c3
+MAX_SIZE = 1048575  # the missing one is the header
+
 
 class ExporterViewSet(ModelViewSet):
     '''
     ModelViewSet that includes export endpoints ``xlsx`` and ``csv``.
     '''
 
-    pk_field = 'id'
     json_field = 'payload'
     schema_field = None
     schema_order = None
@@ -74,13 +77,21 @@ class ExporterViewSet(ModelViewSet):
 
     def __export(self, request, format, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        data = queryset.annotate(__id=F(self.pk_field), __data=F(self.json_field)) \
-                       .values('__id', '__data')
+        data = queryset.annotate(exporter_data=F(self.json_field))
+
+        # check pagination
+        current_page = int(self.__get(request, 'page', '1'))
+        page_size = int(self.__get(request, 'page_size', MAX_SIZE))
+
+        offset = (current_page - 1) * page_size
+        limit = min(data.count(), offset + page_size)
+        if offset >= limit:
+            return Response(status=204)  # NO-CONTENT
 
         # extract jsonpaths and docs from linked schemas definition
-        jsonpaths = []
-        docs = {}
-        if self.schema_field:
+        jsonpaths = self.__get(request, 'paths', [])
+        docs = self.__get(request, 'headers', {})
+        if self.schema_field and not jsonpaths:
             schemas = queryset.order_by(self.schema_order or self.schema_field) \
                               .values(self.schema_field) \
                               .distinct()
@@ -94,10 +105,12 @@ class ExporterViewSet(ModelViewSet):
         try:
             return export_data(
                 data=data,
-                paths=self.__get(request, 'paths', []) or jsonpaths,
-                headers=self.__get(request, 'headers', {}) or docs,
+                paths=jsonpaths,
+                headers=docs,
                 format=format,
                 filename=self.__get(request, 'filename', 'export'),
+                offset=offset,
+                limit=limit,
                 **kwargs
             )
 
@@ -106,11 +119,19 @@ class ExporterViewSet(ModelViewSet):
             return Response(data={'detail': msg}, status=500)
 
 
-def export_data(data, paths=[], headers={}, format='xlsx', filename='export', **kwargs):
+def export_data(data,
+                paths=[],
+                headers={},
+                format='xlsx',
+                filename='export',
+                offset=0,
+                limit=MAX_SIZE,
+                **kwargs
+                ):
     '''
     Generates an XLSX/ ZIP (of CSV files) file with the given data.
 
-    - ``data`` is a list of dictionaries with two keys ``__id`` and ``__data``.
+    - ``data`` is a queryset with two main properties ``pk`` and ``exporter_data``.
     - ``paths`` is a list with the allowed jsonpaths.
     - ``headers`` is a dictionary which keys are the jsonpaths
       and the values the linked labels to use as header for that jsonpath.
@@ -118,7 +139,13 @@ def export_data(data, paths=[], headers={}, format='xlsx', filename='export', **
     '''
 
     # create workbook
-    xlsx_path = __generate_workbook(paths=paths, labels=headers, data=data)
+    xlsx_path = __generate_workbook(
+        paths=paths,
+        labels=headers,
+        data=data,
+        offset=offset,
+        limit=limit,
+    )
 
     if format == 'csv':
         return __export_csv(xlsx_path, filename, kwargs.get('separator', ','))
@@ -180,7 +207,7 @@ def __file_response(filepath, filename, content_type):
 # @param {dict}  labels  - a dictionary with headers labels
 # @param {list}  data    - raw and flatten data
 #
-def __generate_workbook(paths, labels, data):
+def __generate_workbook(paths, labels, data, offset=0, limit=MAX_SIZE):
     def add_header(options, header):
         if header not in options['headers']:
             options['headers'].append(header)
@@ -244,13 +271,19 @@ def __generate_workbook(paths, labels, data):
     paths = __filter_paths(paths)
 
     # create workbook
-    wb = Workbook(write_only=True)
+    wb = Workbook(write_only=True, iso_dates=True)
 
-    for row in data:
-        # filter row data by given paths
-        json_data = __parse_row(row['__data'], paths)
-        # include data in workbook
-        walker({'@id': str(row['__id']), **json_data}, '$')
+    # paginate results to reduce memory usage
+    PAGE_SIZE = 500
+    data_from = offset
+    index = offset + 1
+    while data_from < limit:
+        data_to = min(data_from + PAGE_SIZE, limit)
+        for row in data[data_from:data_to]:
+            json_data = __parse_row(row.exporter_data, paths)
+            walker({'@': index, '@id': str(row.pk), **json_data}, '$')
+            index += 1
+        data_from = data_to
 
     # save it
     xlsx_path = EXPORT_DIR + '/temp.xlsx'
@@ -272,23 +305,14 @@ def __generate_workbook(paths, labels, data):
 
 
 def __flatten_dict(obj):
-    def flatten_item(item):
-        if isinstance(item, dict):
-            return __flatten_dict(item)
-        else:
-            return {'': item}
-
-    flat_dict = {}
-    for key, item in obj.items():
-        flat_item = flatten_item(item)
-
-        nested_item = {}
-        for k, v in flat_item.items():
-            nested_key = '.'.join([key, k]) if k else key
-            nested_item[nested_key] = v
-
-        flat_dict.update(nested_item)
-    return flat_dict
+    def _items():
+        for key, value in obj.items():
+            if isinstance(value, dict):
+                for subkey, subvalue in __flatten_dict(value).items():
+                    yield key + '.' + subkey, subvalue
+            else:
+                yield key, value
+    return dict(_items())
 
 
 def __parse_row(row, paths):
