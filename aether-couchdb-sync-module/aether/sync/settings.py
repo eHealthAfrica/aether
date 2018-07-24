@@ -29,7 +29,6 @@ from aether.common.conf.settings import INSTALLED_APPS
 # ------------------------------------------------------------------------------
 
 ROOT_URLCONF = 'aether.sync.urls'
-WSGI_APPLICATION = 'aether.sync.wsgi.application'
 
 # Allow cors for all origins but only for the sync endpoint
 CORS_URLS_REGEX = r'^/sync/.*$'
@@ -55,8 +54,8 @@ COUCHDB_USER = os.environ['COUCHDB_USER']
 COUCHDB_PASSWORD = os.environ['COUCHDB_PASSWORD']
 COUCHDB_DIR = './couchdb'
 
-REDIS_HOST = os.environ.get('REDIS_HOST', 'redis')
-REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
+REDIS_HOST = os.environ['REDIS_HOST']
+REDIS_PORT = os.environ['REDIS_PORT']
 REDIS_DB = os.environ.get('REDIS_DB', 0)
 REDIS_PASSWORD = os.environ['REDIS_PASSWORD']
 

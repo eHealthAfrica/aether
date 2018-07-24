@@ -18,7 +18,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-set -Eeuox pipefail
+set -Eeuo pipefail
 
 function kill_all() {
     echo "_____________________________________________ Killing containers"
@@ -50,13 +50,6 @@ echo "_____________________________________________ TESTING"
 
 kill_all
 
-
-echo "_____________________________________________ Common module"
-./scripts/build_common_and_distribute.sh
-
-echo "_____________________________________________ Aether utils"
-./scripts/build_aether_utils_and_distribute.sh
-
 echo "_____________________________________________ Starting database"
 $DC_TEST up -d db-test
 
@@ -65,10 +58,6 @@ prepare_and_test_container kernel
 
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
-
-# test a clean CLIENT TEST container
-$DC_TEST build client-test
-$DC_TEST run client-test test --noinput
 
 # test a clean ODK TEST container
 prepare_and_test_container odk
@@ -88,10 +77,5 @@ $DC_TEST run kernel-test manage loaddata aether/kernel/api/tests/fixtures/projec
 # test a clean SYNC TEST container
 prepare_and_test_container couchdb-sync
 
-# clean start for the next bunch of tests
 kill_all
-
-# execute INTEGRATION TEST
-./scripts/test_integration.sh
-
 echo "_____________________________________________ END"

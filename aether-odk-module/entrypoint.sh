@@ -31,7 +31,10 @@ show_help() {
 
     pip_freeze    : freeze pip dependencies and write to requirements.txt
 
-    setup_db      : create/migrate database
+    setup         : check required environment variables,
+                    create/migrate database and,
+                    create/update superuser using
+                        'ADMIN_USERNAME', 'ADMIN_PASSWORD', 'ADMIN_TOKEN'
 
     test          : run tests
     test_lint     : run flake8 tests
@@ -53,31 +56,24 @@ pip_freeze() {
     /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
 }
 
-setup_db() {
-    export PGPASSWORD=$RDS_PASSWORD
-    export PGHOST=$RDS_HOSTNAME
-    export PGUSER=$RDS_USERNAME
-    export PGPORT=$RDS_PORT
+setup() {
+    # check if required environment variables were set
+    ./conf/check_vars.sh
 
-    until pg_isready -q; do
-        >&2 echo "Waiting for postgres..."
-        sleep 1
-    done
+    pg_isready
 
-    if psql -c "" $RDS_DB_NAME; then
-        echo "$RDS_DB_NAME database exists!"
+    if psql -c "" $DB_NAME; then
+        echo "$DB_NAME database exists!"
     else
-        createdb -e $RDS_DB_NAME -e ENCODING=UTF8
-        echo "$RDS_DB_NAME database created!"
+        createdb -e $DB_NAME -e ENCODING=UTF8
+        echo "$DB_NAME database created!"
     fi
 
     # migrate data model if needed
     ./manage.py migrate --noinput
-}
 
-setup_admin() {
-  # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
-  ./manage.py setup_admin -p=$ADMIN_PASSWORD -t=$AETHER_ODK_TOKEN
+    # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
+    ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD -t=$ADMIN_TOKEN
 }
 
 test_flake8() {
@@ -113,48 +109,48 @@ case "$1" in
         pip_freeze
     ;;
 
-    setup_db )
-        setup_db
+    setup )
+        setup
     ;;
 
-    test)
-        setup_db
-        setup_admin
+    test )
+        setup
         test_flake8
         test_coverage "${@:2}"
     ;;
 
-    test_lint)
+    test_lint )
         test_flake8
     ;;
 
-    test_coverage)
+    test_coverage )
         test_coverage "${@:2}"
     ;;
 
     start )
-        setup_db
-        setup_admin
+        setup
 
         # media assets
         chown aether: /media
 
         # create static assets
-        ./manage.py collectstatic --noinput
+        ./manage.py collectstatic --noinput --clear --verbosity 0
         chmod -R 755 /var/www/static
 
-        # expose version number
-        cp VERSION /var/www/VERSION
-        # add git revision
-        cp /code/REVISION /var/www/REVISION
+        # expose version number (if exists)
+        cp ./VERSION /var/www/static/VERSION 2>/dev/null || :
+        # add git revision (if exists)
+        cp ./REVISION /var/www/static/REVISION 2>/dev/null || :
 
-        [ -z "$DEBUG" ] && DISABLE_LOGGING="true" || DISABLE_LOGGING="false"
-        /usr/local/bin/uwsgi --ini /code/conf/uwsgi.ini --disable-logging=$DISABLE_LOGGING
+        [ -z "$DEBUG" ] && LOGGING="--disable-logging" || LOGGING=""
+        /usr/local/bin/uwsgi \
+            --ini /code/conf/uwsgi.ini \
+            --http 0.0.0.0:$WEB_SERVER_PORT \
+            $LOGGING
     ;;
 
     start_dev )
-        setup_db
-        setup_admin
+        setup
 
         # media assets
         chown aether: /media
@@ -162,11 +158,11 @@ case "$1" in
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
 
-    help)
+    help )
         show_help
     ;;
 
-    *)
+    * )
         show_help
     ;;
 esac

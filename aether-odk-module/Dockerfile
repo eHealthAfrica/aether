@@ -1,4 +1,4 @@
-FROM python:3.6
+FROM python:3.6-slim-jessie
 
 ################################################################################
 ## setup container
@@ -6,7 +6,6 @@ FROM python:3.6
 
 COPY ./conf/docker/* /tmp/
 RUN /tmp/setup.sh
-
 
 ################################################################################
 ## install app
@@ -23,6 +22,7 @@ COPY ./ /code
 ################################################################################
 ## copy application version and create git revision
 ################################################################################
+
 ARG VERSION
 RUN echo $VERSION > VERSION
 ARG GIT_REVISION

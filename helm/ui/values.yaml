@@ -1,0 +1,26 @@
+replicaCount: 3
+pullPolicy: Always
+provider: aws
+debug: false
+# {{ .Release.Name }}{{ .Values.domain }}
+# domain: yourdomain.org
+
+image:
+  repository: "ehealthafrica/aether-ui"
+  # Use `--set image.tag` in the command line to overwrite the version
+  # tag: {{ .Chart.AppVersion }}
+
+ingress:
+  enabled: true
+  path: /
+
+app:
+  port: 8000
+  command: start
+  secrets: ui-secrets
+  rdsDbName: aether_ui
+  rdsDbUser: aether_ui
+  rdsDbPort: 5432
+  rdsDbHost: dev-k8s-eha-im.cpqsfknb8sgc.eu-west-1.rds.amazonaws.com
+  kernelUrl: "http://kernel"
+  adminUser: admin

@@ -1,0 +1,141 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app: {{ .Release.Name }}
+    chart: {{ template "ui.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+        release: {{ .Release.Name }}
+    spec:
+      initContainers:
+      - name: init
+        image: postgres:9.3-alpine
+        command: ['bash', '-c', './scripts/init.sh']
+        env:
+        - name: PGHOST
+          valueFrom :
+            secretKeyRef:
+              name: database-credentials
+              key: host
+        - name: PGUSER
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: user
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: password
+        - name: DB_NAME
+          value: {{ .Values.app.rdsDbName }}
+        - name: DB_USERNAME
+          value: {{ .Values.app.rdsDbUser }}
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.app.secrets }}
+              key: ui-database-password
+        volumeMounts:
+        - mountPath: /scripts
+          name: init-config
+        - mountPath: /media
+          name: {{ .Chart.Name }}
+      containers:
+        - name: nginx
+          image: nginx:stable-alpine
+          ports:
+          - containerPort: 80
+          volumeMounts:
+          - mountPath: /var/www/static
+            name: static-assets-volume
+          - mountPath: /etc/nginx/conf.d
+            name: nginx-config
+          - mountPath: /media
+            name: {{ .Chart.Name }}
+        - name: ui
+          # This default allows us to overwrite '.Chart.AppVersion' through the command line
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.pullPolicy }}
+          args:
+          - {{ .Values.app.command }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.app.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+              httpHeaders:
+              - name: X-Kubernetes-Health-Check
+                value: livenessProbe
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+              httpHeaders:
+              - name: X-Kubernetes-Health-Check
+                value: readinessProbe
+          env:
+          - name: DJANGO_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.app.secrets }}
+                key: ui-django-secret-key
+          - name: ADMIN_USERNAME
+            value: {{ .Values.app.adminUser }}
+          - name: ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.app.secrets }}
+                key: ui-django-admin-password
+          - name: PGPASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.app.secrets }}
+                key: ui-database-password
+          - name: PGHOST
+            value: {{ .Values.app.rdsDbHost }}
+          - name: PGUSER
+            value: {{ .Values.app.rdsDbUser }}
+          - name: PGPORT
+            value: {{ quote .Values.app.rdsDbPort }}
+          - name: DB_NAME
+            value: {{ .Values.app.rdsDbName }}
+          - name: AETHER_KERNEL_URL
+            value: {{ .Values.app.kernelUrl }}
+          - name: AETHER_KERNEL_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.app.secrets }}
+                key: ui-kernel-token
+          - name: DEBUG
+            value: {{ if .Values.debug }}"1"{{ else }}""{{ end }}
+          - name: WEB_SERVER_PORT
+            value: {{ quote .Values.app.port }}
+          volumeMounts:
+          - mountPath: /var/www/static
+            name: static-assets-volume
+      volumes:
+      - name: {{ .Chart.Name }}
+      - name: static-assets-volume
+      - name: nginx-config
+        configMap:
+          name: {{ .Release.Name }}-nginx-config
+      - name: init-config
+        configMap:
+          name: {{ .Release.Name }}-init-config
+          defaultMode: 0744

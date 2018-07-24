@@ -27,7 +27,6 @@ from aether.common.conf.settings import INSTALLED_APPS
 # ------------------------------------------------------------------------------
 
 ROOT_URLCONF = 'aether.odk.urls'
-WSGI_APPLICATION = 'aether.odk.wsgi.application'
 
 # Allow cors for all origins but only for the submission endpoint
 CORS_URLS_REGEX = r'^/submission/.*$'

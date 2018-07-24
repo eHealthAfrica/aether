@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+#
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -15,10 +17,24 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
+set -Eeuo pipefail
 
-import os
 
-from django.core.wsgi import get_wsgi_application
+case "$1" in
+    kubernetes)
+        ./scripts/kubernetes/run_travis.sh
+    ;;
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aether.ui.settings')
-application = get_wsgi_application()
+    dockercompose)
+        ./scripts/test_all.sh
+    ;;
+
+    integration)
+        ./scripts/test_integration.sh
+    ;;
+
+    *)
+        echo "$1"
+    ;;
+esac

@@ -17,9 +17,7 @@
 # under the License.
 
 import copy
-import random
 import requests
-import string
 
 from django.utils.translation import ugettext as _
 
@@ -50,7 +48,7 @@ def propagate_kernel_project(project):
         # do not update the mapping rules in case of the xform was already propagated
         # that might be the case that the user changed the default rules
         'action': 'create',
-        'name': __right_pad(project.name),
+        'name': project.name,
         'schemas': [],
         'mappings': [],
     }
@@ -82,7 +80,7 @@ def propagate_kernel_artefacts(xform):
         # do not update the mapping rules in case of the xform was already propagated
         # that might be the case that the user changed the default rules
         'action': 'create',
-        'name': __right_pad(xform.project.name),
+        'name': xform.project.name,
         'schemas': schemas,
         'mappings': [mapping],
     }
@@ -150,15 +148,14 @@ def __xform_to_artefacts(xform):
             'type': 'string',
         })
 
-    random_name = __right_pad(name)
     schema = {
         'id': item_id,
-        'name': random_name,
+        'name': name,
         'definition': definition,
     }
     mapping = {
         'id': item_id,
-        'name': random_name,
+        'name': name,
         'definition': {
             'entities': {name: item_id},
             'mapping': rules,
@@ -166,15 +163,6 @@ def __xform_to_artefacts(xform):
     }
 
     return [schema], mapping
-
-
-def __right_pad(value):
-    '''
-    Creates a random string of length 50 and appends it to the given value
-    '''
-    alphanum = string.ascii_letters + string.digits
-    pad = ''.join([random.choice(alphanum) for x in range(50)])
-    return (f'{value}__{pad}')[0:50]
 
 
 def __clean_name(value='Project'):

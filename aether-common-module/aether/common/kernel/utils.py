@@ -24,7 +24,7 @@ from ..conf.settings import logger
 
 
 def get_kernel_server_url():
-    if os.environ.get('TESTING', '').lower() == 'true':
+    if bool(os.environ.get('TESTING')):
         return os.environ.get('AETHER_KERNEL_URL_TEST')
     else:
         return os.environ.get('AETHER_KERNEL_URL')
@@ -36,7 +36,7 @@ def get_auth_header():
     '''
 
     if test_connection():
-        token = os.environ.get('AETHER_KERNEL_TOKEN', '')
+        token = os.environ.get('AETHER_KERNEL_TOKEN')
         return {'Authorization': 'Token {token}'.format(token=token)}
     return None
 
@@ -47,7 +47,7 @@ def test_connection():
     '''
 
     url = get_kernel_server_url()
-    token = os.environ.get('AETHER_KERNEL_TOKEN', '')
+    token = os.environ.get('AETHER_KERNEL_TOKEN')
 
     if url and token:
         try:

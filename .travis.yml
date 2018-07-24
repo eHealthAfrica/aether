@@ -1,23 +1,32 @@
 sudo: required
 language: python
 python:
-- '3.6'
+  - '3.6'
+
+# use matrix to parallelize tests
+matrix:
+  include:
+    - env: 'TEST_MODE=kubernetes'
+    - env: 'TEST_MODE=dockercompose'
+    - env: 'TEST_MODE=integration'
+
 services:
-- docker
+  - docker
+
 cache:
   directories:
-  - "$HOME/.cache/pip"
+    - "$HOME/.cache/pip"
+
 before_script:
-- docker login -u ehealthafricadevops -p $DOCKER_HUB_PASSWORD
-- "./scripts/generate-docker-compose-credentials.sh > .env"
-- "./scripts/build_aether_utils_and_distribute.sh"
-- "./scripts/build_common_and_distribute.sh"
+  - docker login -u ehealthafricadevops -p $DOCKER_HUB_PASSWORD
+  - ./scripts/generate-docker-compose-credentials.sh > .env
+  - ./scripts/build_common_and_distribute.sh
+
 script:
-# First, run the kernel and odk tests in a minikube cluster. If everything goes
-# well, run all tests in a docker-compose environment.
-- "./scripts/kubernetes/run_travis.sh && ./scripts/test_all.sh"
+  - ./scripts/test_travis.sh $TEST_MODE
+
 after_script:
-- "./scripts/kill_all.sh"
+  - "./scripts/kill_all.sh"
 
 deploy:
 - provider: script

@@ -1,5 +1,5 @@
 # ------------------------------------------------------------------------------
-# Config file for ALL containers:
+# Config file for these containers:
 #
 #  * Aether Kernel
 #  * ODK Module
@@ -54,9 +54,6 @@ services:
     extends:
       file: docker-compose-base.yml
       service: kernel-base
-    # uncomment to speed up common module development
-    # volumes:
-    #   - ./aether-common-module/aether/common:/code/aether/common
     depends_on:
       - db
     networks:
@@ -73,9 +70,6 @@ services:
     extends:
       file: docker-compose-base.yml
       service: odk-base
-    # uncomment to speed up common module development
-    # volumes:
-    #   - ./aether-common-module/aether/common:/code/aether/common
     depends_on:
       - db
       - kernel
@@ -93,9 +87,6 @@ services:
     extends:
       file: docker-compose-base.yml
       service: couchdb-sync-base
-    # uncomment to speed up common module development
-    # volumes:
-    #   - ./aether-common-module/aether/common:/code/aether/common
     depends_on: &sync-dependencies
       - couchdb
       - db
@@ -122,13 +113,9 @@ services:
     extends:
       file: docker-compose-base.yml
       service: ui-base
-    # uncomment to speed up common module development
-    # volumes:
-    #   - ./aether-common-module/aether/common:/code/aether/common
     depends_on:
       - db
       - kernel
-
       # UI depends on "ui-assets" to serve the assets with hot reloading (HMR)
       # to start "ui" without HMR execute first "docker-compose run ui-assets build"
       # - ui-assets

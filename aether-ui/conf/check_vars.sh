@@ -18,25 +18,20 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-set -e
-
-# Production specific functions
+set -Eeuo pipefail
 
 check_variable() {
-    if [ -n "$1" ];
+    if [ -z "$1" ];
     then
-        echo "$2 set!"
-    else
-        echo "Missing $2"
-        exit -1
+        echo "Missing $2 in Aether UI!"
+        exit 1
     fi
 }
 
-check_kernel() {
-    # check if KERNEL env variables were set
-    check_variable $AETHER_KERNEL_URL   "KERNEL url"
-    check_variable $AETHER_KERNEL_TOKEN "KERNEL token"
-}
+# Admin user
+check_variable $ADMIN_USERNAME      "Admin user username (ADMIN_USERNAME)"
+check_variable $ADMIN_PASSWORD      "Admin user password (ADMIN_PASSWORD)"
 
-check_kernel
-check_variable $ADMIN_PASSWORD "ADMIN password"
+# Aether kernel
+check_variable $AETHER_KERNEL_URL   "Aether KERNEL url (AETHER_KERNEL_URL)"
+check_variable $AETHER_KERNEL_TOKEN "Aether KERNEL token (AETHER_KERNEL_TOKEN)"

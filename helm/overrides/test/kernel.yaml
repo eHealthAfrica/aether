@@ -1,7 +1,13 @@
-application:
+replicaCount: 1
+app:
   command: start_dev
 debug: true
 kernel:
   repository: aether-kernel
-release: latest
+  tag: latest
 testing: true
+provider:
+  aws: false
+database:
+  host: db
+  user: postgres

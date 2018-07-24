@@ -29,7 +29,7 @@ returns
 { username: string, password: string, db: string, url: string }
 ```
 
-In order for a mobile client to gain access, it needs to send a token from a valid email account. In the admin interface, `http://localhost:8666/admin`, you can set valid email addresses under **MobileUser**. **DeviceDB** is handled by the backend and should usually not be touched.
+In order for a mobile client to gain access, it needs to send a token from a valid email account. In the admin interface, `http://localhost:8006/admin`, you can set valid email addresses under **MobileUser**. **DeviceDB** is handled by the backend and should usually not be touched.
 
 ### RQ Import Task
 

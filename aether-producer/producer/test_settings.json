@@ -6,7 +6,7 @@
     "window_size_sec" : 2,
     "postgres_pull_limit" : 250,
     "postgres_connection_info": {
-        "user" : "postgres",
+        "user" : "readonlyuser",
         "dbname" : "kernel-test",
         "port" : 5432,
         "host" : "db-test"

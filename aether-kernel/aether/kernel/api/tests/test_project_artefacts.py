@@ -246,36 +246,54 @@ class ProjectArtefactsTests(TestCase):
         self.assertNotEqual(results_4, results_retrieve,
                             'only returns the affected ids NEVER ALL OF THEM')
 
-    def test__upsert_project_artefacts__atomicity(self):
+    def test__upsert_project_artefacts__duplicated_name(self):
+        PROJECT_NAME = 'Project'
+        new_project = Project.objects.create(name=PROJECT_NAME)
+        project_id_2 = str(uuid.uuid4())
+        self.assertNotEqual(str(new_project.pk), project_id_2)
 
+        self.assertEqual(Project.objects.filter(pk=project_id_2).count(), 0)
+        generate(
+            project_id=project_id_2,
+            project_name=PROJECT_NAME,
+        )
+        self.assertEqual(Project.objects.filter(pk=project_id_2).count(), 1)
+        project_2 = Project.objects.get(pk=project_id_2)
+        self.assertEqual(PROJECT_NAME + '_1', project_2.name)
+
+        # once again
+        project_id_3 = str(uuid.uuid4())
+        self.assertNotEqual(str(new_project.pk), project_id_3)
+        self.assertEqual(Project.objects.filter(pk=project_id_3).count(), 0)
+        generate(
+            project_id=project_id_3,
+            project_name=PROJECT_NAME,
+        )
+        self.assertEqual(Project.objects.filter(pk=project_id_3).count(), 1)
+        project_3 = Project.objects.get(pk=project_id_3)
+        self.assertEqual(PROJECT_NAME + '_2', project_3.name)
+
+    def test__upsert_project_artefacts__atomicity(self):
         new_project = Project.objects.create(name='Project')
         project_id = str(uuid.uuid4())
         self.assertNotEqual(str(new_project.pk), project_id)
 
-        self.assertEqual(Project.objects.filter(pk=project_id).count(), 0)
-        with self.assertRaises(IntegrityError) as iep:
-            generate(
-                project_id=project_id,
-                project_name='Project',  # already in use
-            )
-        self.assertIsNotNone(iep)
-        self.assertIn('DETAIL:  Key (name)=(Project) already exists.', str(iep.exception))
-        self.assertEqual(Project.objects.filter(pk=project_id).count(), 0)
-
         # in the middle of the process with objects already created
         self.assertEqual(Project.objects.filter(pk=project_id).count(), 0)
         self.assertEqual(Schema.objects.all().count(), 0)
+        # we cannot append more chars to the name, its length is already 50
+        name_50 = 'Schema_0123456789_0123456789_0123456789_0123456789'
         with self.assertRaises(IntegrityError) as ies:
             generate(
                 project_id=project_id,
-                project_name='Project 2',  # not in use
+                project_name='Project',    # in use but will append `_1` to it.
                 schemas=[
-                    {'name': 'Schema'},    # this will be created
-                    {'name': 'Schema'},    # but this one will complain
+                    {'name': name_50},     # this will be created
+                    {'name': name_50},     # but this one will complain
                 ]
             )
         self.assertIsNotNone(ies)
-        self.assertIn('DETAIL:  Key (name)=(Schema) already exists.', str(ies.exception))
+        self.assertIn(f'DETAIL:  Key (name)=({name_50}) already exists.', str(ies.exception))
         # all the actions are reverted
         self.assertEqual(Project.objects.filter(pk=project_id).count(), 0)
         self.assertEqual(Schema.objects.all().count(), 0)

@@ -1,3 +1,5 @@
+#!/bin/bash
+#
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -15,20 +17,22 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
+set -Eeuo pipefail
 
-'''
-WSGI config for aether project.
+check_variable() {
+    if [ -z "$1" ];
+    then
+        echo "Missing $2 in Aether ODK!"
+        exit 1
+    fi
+}
 
-It exposes the WSGI callable as a module-level variable named ``application``.
+# Admin user
+check_variable $ADMIN_USERNAME      "Admin user username (ADMIN_USERNAME)"
+check_variable $ADMIN_PASSWORD      "Admin user password (ADMIN_PASSWORD)"
+check_variable $ADMIN_TOKEN         "Admin user password (ADMIN_TOKEN)"
 
-For more information on this file, see
-https://docs.djangoproject.com/en/dev/howto/deployment/wsgi/
-'''
-
-import os
-
-from django.core.wsgi import get_wsgi_application
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aether.kernel.settings')
-
-application = get_wsgi_application()
+# Aether kernel
+check_variable $AETHER_KERNEL_URL   "Aether KERNEL url (AETHER_KERNEL_URL)"
+check_variable $AETHER_KERNEL_TOKEN "Aether KERNEL token (AETHER_KERNEL_TOKEN)"

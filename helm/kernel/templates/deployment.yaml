@@ -1,19 +1,24 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ .Release.Name }}
   labels:
-    app: {{ .Chart.Name }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    release: {{ .Chart.Name }}
+    app: {{ .Release.Name }}
+    chart: {{ template "kernel.chart" . }}
+    release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
+  progressDeadlineSeconds: 180
   replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+      release: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: {{ .Chart.Name }}
-        release: {{ .Chart.Version }}
+        app: {{ .Release.Name }}
+        release: {{ .Release.Name }}
     spec:
       initContainers:
       - name: init
@@ -23,116 +28,124 @@ spec:
         - name: PGHOST
           valueFrom :
             secretKeyRef:
-              name: {{ .Values.database.secret }}
+              name: database-credentials
               key: host
         - name: PGUSER
           valueFrom:
             secretKeyRef:
-              name: {{ .Values.database.secret }}
+              name: database-credentials
               key: user
         - name: PGPASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ .Values.database.secret }}
+              name: database-credentials
               key: password
-        - name: RDS_USERNAME
+        - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ .Values.application.secret }}
-              key: kernel-database-user
-        - name: RDS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.application.secret }}
+              name: {{ .Values.app.secret }}
               key: kernel-database-password
-        - name: RDS_DB_NAME
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.application.secret }}
-              key: kernel-database-name
+        - name: DB_USERNAME
+          value: {{ .Values.app.rdsDbUser }}
+        - name: DB_NAME
+          value: {{ .Values.app.rdsDbName }}
         volumeMounts:
         - mountPath: /scripts
-          name: kernel-init
-        - name: {{ .Chart.Name }}
-          mountPath: {{ .Values.application.data_mount }}
+          name: init-config
+        - mountPath: /media
+          name: {{ .Release.Name }}-pvc
       containers:
-      - name: {{ .Chart.Name }}
-        image: "{{ .Values.kernel.repository }}:{{ .Values.release }}"
+      - name: nginx
+        image: nginx:stable-alpine
         ports:
-        - containerPort: 8000
+        - containerPort: {{ .Values.service.externalPort }}
+        volumeMounts:
+        - mountPath: /var/www/static
+          name: static-assets-volume
+        - mountPath: /etc/nginx/conf.d
+          name: nginx-config
+        - mountPath: /media
+          name: {{ .Release.Name }}-pvc
+      - name: kernel
+        image: "{{ .Values.kernel.repository }}:{{ .Values.kernel.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
         args:
-        - {{ .Values.application.command }}
+        - {{ .Values.app.command }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.app.port }}
+          protocol: TCP
         livenessProbe:
-          initialDelaySeconds: 5
-          periodSeconds: 10
           httpGet:
             path: /health
-            port: 8000
+            port: http
             httpHeaders:
             - name: X-Kubernetes-Health-Check
               value: livenessProbe
             - name: Host
-              value: {{ .Values.url }}
+              value: {{ .Release.Name }}.{{ .Values.domain }}
         readinessProbe:
-          initialDelaySeconds: 5
-          periodSeconds: 10
           httpGet:
             path: /health
-            port: 8000
+            port: http
             httpHeaders:
             - name: X-Kubernetes-Health-Check
-              value: check
+              value: readinessProbe
             - name: Host
-              value: {{ .Values.url }}
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
+              value: {{ .Release.Name }}.{{ .Values.domain }}
         env:
         - name: DEBUG
-          value:  {{ quote .Values.debug }}
+          value: {{ if .Values.debug }}"1"{{ else }}""{{ end }}
         - name: CAS_SERVER_URL
-          value: "https://{{ .Values.ums_url }}.ehealthafrica.org"
+          value: {{ .Values.ums_url }}
         - name: CSRF_COOKIE_DOMAIN
-          value: {{ .Values.domain }}
+          value: {{ .Release.Name }}.{{ .Values.domain }}
         - name: CSRF_TRUSTED_ORIGINS
-          value: {{ .Values.trusted_origins }}
+          value: {{ .Release.Name }}.{{ .Values.domain }}
         - name: HOSTNAME
-          value: "{{ .Values.url_prefix }}.{{ .Values.domain }}"
+          value: {{ .Release.Name }}.{{ .Values.domain }}
         - name: DJANGO_SECRET_KEY
           valueFrom:
             secretKeyRef:
-              name: {{ .Values.application.secret }}
+              name: {{ .Values.app.secret }}
               key: kernel-django-secret-key
+        - name: ADMIN_USERNAME
+          value: {{ .Values.app.admin_user }}
         - name: ADMIN_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ .Values.application.secret }}
-              key: kernel-admin-password
+              name: {{ .Values.app.secret }}
+              key: kernel-django-admin-password
+        - name: ADMIN_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.app.secret }}
+              key: admin-token
         - name: AETHER_KERNEL_TOKEN
           valueFrom:
             secretKeyRef:
-              name: {{ .Values.application.secret }}
+              name: {{ .Values.app.secret }}
               key: kernel-token
-        - name: RDS_USERNAME
+        - name: PGPASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ .Values.application.secret }}
-              key: kernel-database-user
-        - name: RDS_PORT
-          value: "5432"
-        - name: RDS_HOSTNAME
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.database.secret }}
-              key: host
-        - name: RDS_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: {{ .Values.application.secret }}
+              name: {{ .Values.app.secret }}
               key: kernel-database-password
-        - name: RDS_DB_NAME
+        - name: PGUSER
+          value: {{ .Values.database.user }}
+        - name: PGPORT
+          value: {{ quote .Values.database.port }}
+        - name: PGHOST
+          value: {{ .Values.database.host }}
+        - name: DB_NAME
+          value: {{ .Values.database.name }}
+        - name: KERNEL_READONLY_DB_USERNAME
+          value: {{ .Values.app.readonly_user }}
+        - name: KERNEL_READONLY_DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ .Values.application.secret }}
-              key: kernel-database-name
+              name: {{ .Values.app.secret }}
+              key: kernel-readonly-db-password
         - name: TESTING
           value: {{ quote .Values.testing }}
         # `WEB_SERVER_PORT` is kept around for compatibility with the old tests,
@@ -140,45 +153,22 @@ spec:
         # tests have been updated to run inside the cluster, `WEB_SERVER_PORT`
         # can be removed.
         - name: WEB_SERVER_PORT
-          value: {{ quote .Values.webserverPort }}
+          value: {{ quote .Values.app.port }}
         volumeMounts:
         - mountPath: /var/www/static
           name: static-assets-volume
-        - name: {{ .Chart.Name }}
-          mountPath: {{ .Values.application.data_mount }}
-        {{ if .Values.liveEdit.enabled }}
-        - name: code
-          mountPath: /code
-        {{ end }}
-      - name: nginx
-        image: nginx:stable-alpine
-        ports:
-        - containerPort: 80
-        volumeMounts:
-        - mountPath: /var/www/static
-          name: static-assets-volume
-        - mountPath: /etc/nginx/conf.d
-          name: kernel-nginx-config
-        - name: {{ .Chart.Name }}
-          mountPath: {{ .Values.application.data_mount }}
-      imagePullSecrets:
-      - name: regsecret
+        - name: {{ .Release.Name }}-pvc
+          mountPath: {{ .Values.app.data_mount }}
       volumes:
-      - name: {{ .Chart.Name }}
+      - name: {{ .Release.Name }}-pvc
         persistentVolumeClaim:
-          claimName: {{ .Chart.Name }}
+          claimName: {{ .Release.Name }}-pvc
       - name: static-assets-volume
         emptyDir: {}
-      - name: kernel-nginx-config
+      - name: nginx-config
         configMap:
-          name: kernel-nginx-config
-      - name: kernel-init
+          name: {{ .Release.Name }}-nginx-config
+      - name: init-config
         configMap:
-          name: kernel-init
+          name: {{ .Release.Name }}-init-config
           defaultMode: 0744
-      {{ if .Values.liveEdit.enabled }}
-      - name: code
-        hostPath:
-          path: /aether/aether-kernel
-      {{ end }}
-      restartPolicy: Always

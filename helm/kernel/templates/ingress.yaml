@@ -1,31 +1,27 @@
-{{- $serviceName := include "kernel.name" . -}}
-{{- $servicePort := .Values.service.externalPort -}}
+{{- if .Values.ingress.enabled -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: {{ template "kernel.name" . }}
+  name: {{ .Release.Name }}
   labels:
-    app: {{ template "kernel.name" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app: {{ .Release.Name }}
+    chart: {{ template "kernel.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
+{{- with .Values.ingress.annotations }}
   annotations:
-    {{- range $key, $value := .Values.ingress.annotations }}
-      {{ $key }}: {{ $value | quote }}
-    {{- end }}
+{{ toYaml . | indent 4 }}
+{{- end }}
 spec:
   tls:
   - hosts:
-    {{- range .Values.ingress.hosts }}
-    - {{ . }}
-    {{- end }}
+    - "{{ .Release.Name }}.{{ .Values.domain }}"
   rules:
-    {{- range $host := .Values.ingress.hosts }}
-    - host: {{ $host }}
+    - host: "{{ .Release.Name }}.{{ .Values.domain }}"
       http:
         paths:
           - path: /
             backend:
-              serviceName: {{ $serviceName }}
-              servicePort: {{ $servicePort }}
-    {{- end -}}
+              serviceName: {{ .Release.Name }}
+              servicePort: {{ .Values.service.externalPort }}
+{{- end }}

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -Eeuox pipefail
 
 source ./scripts/random_string.sh
 
