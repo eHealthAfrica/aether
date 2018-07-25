@@ -23,7 +23,6 @@ import psycogreen.gevent
 psycogreen.gevent.patch_psycopg()
 
 import ast
-from collections import UserDict
 from contextlib import contextmanager
 from datetime import datetime
 import gevent
@@ -56,17 +55,29 @@ from producer.db import Offset
 FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
-class Settings(UserDict):
+class Settings(dict):
     # A container for our settings
     def __init__(self, file_path=None):
-        self.data = {}
         self.load(file_path)
+
+    def get(self, key, default=None):
+        try:
+            return self.__getitem__(key)
+        except KeyError:
+            return default
+
+    def __getitem__(self, key):
+        result = os.environ.get(key.upper())
+        if result is None:
+            result = super().__getitem__(key)
+
+        return result
 
     def load(self, path):
         with open(path) as f:
             obj = json.load(f)
             for k in obj:
-                self.data[k] = obj.get(k)
+                self[k] = obj.get(k)
 
 
 class KernelHandler(object):
@@ -162,8 +173,8 @@ class ProducerManager(object):
                     with KernelHandler(self):
                         self.kernel = KernelClient(
                             url=self.settings['kernel_url'],
-                            username=os.environ['KERNEL_ADMIN_USERNAME'],
-                            password=os.environ['KERNEL_ADMIN_PASSWORD'],
+                            username=self.settings['kernel_admin_username'],
+                            password=self.settings['kernel_admin_password'],
                         )
                         self.logger.info('Connected to Aether.')
                         continue
@@ -240,10 +251,13 @@ class ProducerManager(object):
             self.app.debug = True
         pool_size = self.settings.get(
             'flask_settings', {}).get('max_connections', 1)
-        port = self.settings.get('flask_settings', {}).get('port', 5005)
+        server_ip = self.settings.get('server_ip', "")
+        server_port = self.settings.get('server_port', 5005)
         self.worker_pool = Pool(pool_size)
         self.http = WSGIServer(
-            ('', port), self.app.wsgi_app, spawn=self.worker_pool)
+            (server_ip, server_port),
+            self.app.wsgi_app, spawn=self.worker_pool
+        )
         self.http.start()
 
     # Exposed Request Endpoints
@@ -331,7 +345,10 @@ class TopicManager(object):
             # so the configuration can be updated.
             sys.exit(1)
         self.update_schema(schema)
-        self.producer = Producer(**self.context.settings.get('kafka_settings'))
+        kafka_settings = self.context.settings.get('kafka_settings')
+        # apply setting from root config to be able to use env variables
+        kafka_settings["bootstrap.servers"] = self.context.settings.get("kafka_bootstrap_servers")
+        self.producer = Producer(**kafka_settings)
         # Spawn worker and give to pool.
         self.context.threads.append(gevent.spawn(self.update_kafka))
 
