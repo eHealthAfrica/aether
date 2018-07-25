@@ -1,8 +1,10 @@
-application:
+replicaCount: 1
+pullPolicy: Never
+app:
   command: start_dev
 debug: true
-liveEdit:
-  enabled: true
 kernel:
   repository: aether-kernel
-release: latest
+  tag: latest
+provider:
+  aws: false

@@ -12,11 +12,12 @@ This document outlines how to set up a local kubernetes cluster using [minikube]
 If you are using ubuntu, you can probably make use of the installation process we use for Travis CI.
 
 To install minikube on ubuntu, run:
-```
+```bash
 sudo ./scripts/kubernetes/install_minikube.sh
 ```
+
 To install helm on ubuntu, run:
-```
+```bash
 sudo ./scripts/kubernetes/install_helm.sh --version v2.8.1
 ```
 
@@ -24,8 +25,7 @@ sudo ./scripts/kubernetes/install_helm.sh --version v2.8.1
 
 ### Secrets
 
-For local development with Kubernetes and Minikube, we need to create some secrets.
-
+For local development with Kubernetes and Minikube, we need to create some secrets:
 ```bash
 POSTGRES_PASSWORD=<postgres-password> ./scripts/generate-kubernetes-credentials.sh > helm/test-secrets.yaml
 POSTGRES_PASSWORD=<postgres-password> ./scripts/kubernetes/install_secrets.sh && ./scripts/kubernetes/start_cluster.sh ./helm/overrides/local
@@ -54,18 +54,18 @@ For each entry, add the address and the hostname at the bottom of your `/etc/hos
 
 ## Running the tests
 If you already have kernel and odk running, do:
-```
+```bash
 ./scripts/kubernetes/run_tests.sh test_all
 ```
 
 To test a single module, use `./run_tests.sh test_<module-name>`. For example:
-```
+```bash
 ./scripts/kubernetes/run_tests.sh test_kernel
 ./scripts/kubernetes/run_tests.sh test_odk
 ```
 
 To delete everything in the cluster, bring it back up and then run the tests, do:
-```
+```bash
 ./scripts/kubernetes/delete_all.sh && \
     ./scripts/kubernetes/install_secrets.sh && \
     ./scripts/kubernetes/start_cluster.sh ./helm/overrides/local && \
