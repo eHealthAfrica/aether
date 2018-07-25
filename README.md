@@ -224,6 +224,9 @@ environment variable `AETHER_KERNEL_TOKEN`.
 All development should be tested within the container, but developed in the host folder.
 Read the [docker-compose-base.yml](docker-compose-base.yml) file to see how it's mounted.
 
+#### Building on Aether
+To get started on building solutions on Aether, an [aether-bootstrap](https://github.com/eHealthAfrica/aether-bootstrap) repository has been created to serve as both an example and give you a head start. Visit the [Aether Website](http://aether.ehealthafrica.org) for more information on [Getting Started](http://aether.ehealthafrica.org/documentation/try/index.html).
+
 *[Return to TOC](#table-of-contents)*
 
 ## Deployment
