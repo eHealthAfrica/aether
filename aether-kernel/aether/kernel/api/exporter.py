@@ -77,7 +77,8 @@ class ExporterViewSet(ModelViewSet):
 
     def __export(self, request, format, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        data = queryset.annotate(exporter_data=F(self.json_field))
+        data = queryset.annotate(exporter_data=F(self.json_field)) \
+                       .values('pk', 'exporter_data')
 
         # check pagination
         current_page = int(self.__get(request, 'page', '1'))
@@ -280,8 +281,8 @@ def __generate_workbook(paths, labels, data, offset=0, limit=MAX_SIZE):
     while data_from < limit:
         data_to = min(data_from + PAGE_SIZE, limit)
         for row in data[data_from:data_to]:
-            json_data = __parse_row(row.exporter_data, paths)
-            walker({'@': index, '@id': str(row.pk), **json_data}, '$')
+            json_data = __parse_row(row.get('exporter_data'), paths)
+            walker({'@': index, '@id': str(row.get('pk')), **json_data}, '$')
             index += 1
         data_from = data_to
 

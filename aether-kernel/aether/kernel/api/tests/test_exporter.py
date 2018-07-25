@@ -340,8 +340,8 @@ class ExporterViewsTest(TestCase):
         self.client.logout()
 
     def test__generate_workbook(self):
-        data = models.Entity.objects.annotate(exporter_data=F('payload'))
-        xlsx_path = generate(EXAMPLE_PATHS, EXAMPLE_LABELS, data)
+        data = models.Entity.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
+        xlsx_path = generate(EXAMPLE_PATHS, EXAMPLE_LABELS, data, offset=0, limit=1)
         wb = load_workbook(filename=xlsx_path, read_only=True)
         _id = str(models.Entity.objects.first().pk)
 
