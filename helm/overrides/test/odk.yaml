@@ -1,8 +1,11 @@
-application:
+replicaCount: 1
+pullPolicy: Never
+odk:
+  repository: aether-odk
+  tag: latest
+app:
   command: start_dev
 debug: true
 testing: true
-odk:
-  repository: aether-odk
-release: latest
-testing: true
+provider:
+  aws: false
