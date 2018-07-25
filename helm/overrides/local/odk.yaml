@@ -1,4 +1,4 @@
-application:
+app:
   command: start_dev
 debug: true
 odk:
