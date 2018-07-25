@@ -4,3 +4,4 @@ debug: true
 odk:
   repository: aether-odk
 release: latest
+pullPolicy: Never

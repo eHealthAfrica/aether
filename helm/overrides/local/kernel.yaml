@@ -4,3 +4,4 @@ debug: true
 kernel:
   repository: aether-kernel
 release: latest
+pullPolicy: Never
