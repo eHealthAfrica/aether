@@ -19,12 +19,13 @@
 import copy
 import json
 import mock
+import zipfile
 
 from openpyxl import load_workbook
 
 from django.contrib.auth import get_user_model
 from django.db.models import F
-from django.http import FileResponse, HttpResponse
+from django.http import FileResponse
 from django.test import TestCase
 from django.urls import reverse
 
@@ -32,10 +33,10 @@ from .. import models
 from ..exporter import (
     __filter_paths as filter_paths,
     __flatten_dict as flatten_dict,
-    __generate_workbook as generate,
     __get_label as get_label,
     __parse_row as parse_row,
 
+    generate_file as generate,
     XLSX_CONTENT_TYPE,
     CSV_CONTENT_TYPE,
 )
@@ -339,9 +340,17 @@ class ExporterViewsTest(TestCase):
     def tearDown(self):
         self.client.logout()
 
-    def test__generate_workbook(self):
+    def test__generate__csv(self):
         data = models.Entity.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
-        xlsx_path = generate(EXAMPLE_PATHS, EXAMPLE_LABELS, data, offset=0, limit=1)
+        _, zip_path, _ = generate(data, paths=EXAMPLE_PATHS, labels=EXAMPLE_LABELS, format='csv', offset=0, limit=1)
+        zip_file = zipfile.ZipFile(zip_path, 'r')
+
+        self.assertEqual(zip_file.namelist(), ['export-#.csv', 'export-#-1.csv', 'export-#-2.csv'])
+        # content is checked in the following test
+
+    def test__generate__xlsx(self):
+        data = models.Entity.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
+        _, xlsx_path, _ = generate(data, paths=EXAMPLE_PATHS, labels=EXAMPLE_LABELS, format='xlsx', offset=0, limit=1)
         wb = load_workbook(filename=xlsx_path, read_only=True)
         _id = str(models.Entity.objects.first().pk)
 
@@ -369,18 +378,18 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(ws['R1'].value, 'ID')
 
         # check rows
-        self.assertEqual(ws['A2'].value, 1)
+        self.assertEqual(ws['A2'].value, '1')
         self.assertEqual(ws['B2'].value, _id)
         self.assertEqual(ws['C2'].value, 'CM')
         self.assertEqual(ws['D2'].value, None)
         self.assertEqual(ws['E2'].value, 'Name')
-        self.assertEqual(ws['F2'].value, 52.52469543)
-        self.assertEqual(ws['G2'].value, 13.39282687)
-        self.assertEqual(ws['H2'].value, 108)
-        self.assertEqual(ws['I2'].value, 22)
+        self.assertEqual(ws['F2'].value, '52.52469543')
+        self.assertEqual(ws['G2'].value, '13.39282687')
+        self.assertEqual(ws['H2'].value, '108')
+        self.assertEqual(ws['I2'].value, '22')
         self.assertEqual(ws['J2'].value, None)
-        self.assertEqual(ws['K2'].value, 3)
-        self.assertEqual(ws['L2'].value, 3.56)
+        self.assertEqual(ws['K2'].value, '3')
+        self.assertEqual(ws['L2'].value, '3.56')
         self.assertEqual(ws['M2'].value, '2017-07-14T00:00:00')
         self.assertEqual(ws['N2'].value, '2017-07-14T16:38:47.151000+02:00')
         self.assertEqual(ws['O2'].value, 'a')
@@ -388,7 +397,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(ws['Q2'].value, 'EN,FR')
         self.assertEqual(ws['R2'].value, '6b90cfb6-0ee6-4035-94bc-fb7f3e56d790')
 
-        ws1 = wb['#1']  # first array content
+        ws1 = wb['#-1']  # first array content
 
         # check headers
         self.assertEqual(ws1['A1'].value, '@')
@@ -398,25 +407,25 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(ws1['E1'].value, 'Indicate loop elements / # / Value')
 
         # check rows
-        self.assertEqual(ws1['A2'].value, 1)
+        self.assertEqual(ws1['A2'].value, '1')
         self.assertEqual(ws1['B2'].value, _id)
-        self.assertEqual(ws1['C2'].value, 0)
-        self.assertEqual(ws1['D2'].value, 1)
+        self.assertEqual(ws1['C2'].value, '0')
+        self.assertEqual(ws1['D2'].value, '1')
         self.assertEqual(ws1['E2'].value, 'One')
 
-        self.assertEqual(ws1['A3'].value, 1)
+        self.assertEqual(ws1['A3'].value, '1')
         self.assertEqual(ws1['B3'].value, _id)
-        self.assertEqual(ws1['C3'].value, 1)
-        self.assertEqual(ws1['D3'].value, 2)
+        self.assertEqual(ws1['C3'].value, '1')
+        self.assertEqual(ws1['D3'].value, '2')
         self.assertEqual(ws1['E3'].value, 'Two')
 
-        self.assertEqual(ws1['A4'].value, 1)
+        self.assertEqual(ws1['A4'].value, '1')
         self.assertEqual(ws1['B4'].value, _id)
-        self.assertEqual(ws1['C4'].value, 2)
-        self.assertEqual(ws1['D4'].value, 3)
+        self.assertEqual(ws1['C4'].value, '2')
+        self.assertEqual(ws1['D4'].value, '3')
         self.assertEqual(ws1['E4'].value, 'Three')
 
-        ws2 = wb['#2']  # second array content
+        ws2 = wb['#-2']  # second array content
 
         # check headers
         self.assertEqual(ws2['A1'].value, '@')
@@ -425,9 +434,9 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(ws2['D1'].value, 'Indicate one / # / Item')
 
         # check rows
-        self.assertEqual(ws2['A2'].value, 1)
+        self.assertEqual(ws2['A2'].value, '1')
         self.assertEqual(ws2['B2'].value, _id)
-        self.assertEqual(ws2['C2'].value, 0)
+        self.assertEqual(ws2['C2'].value, '0')
         self.assertEqual(ws2['D2'].value, 'one')
 
     # -----------------------------
@@ -439,7 +448,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(reverse('submission-csv'), '/submissions/csv/')
 
     @mock.patch(
-        'aether.kernel.api.views.exporter.export_data',
+        'aether.kernel.api.views.exporter.generate_file',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_submissions_export__error__mocked(self, mock_export):
@@ -451,16 +460,16 @@ class ExporterViewsTest(TestCase):
         mock_export.assert_called_once()
 
     @mock.patch(
-        'aether.kernel.api.views.exporter.export_data',
-        return_value=HttpResponse('bytes', status=200),
+        'aether.kernel.api.views.exporter.generate_file',
+        side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_submissions_export__xlsx__mocked(self, mock_export):
         response = self.client.get(reverse('submission-xlsx'))
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, 500)
         mock_export.assert_called_once_with(
             data=mock.ANY,
             paths=[],
-            headers={},
+            labels={},
             format='xlsx',
             filename='export',
             offset=0,
@@ -468,8 +477,8 @@ class ExporterViewsTest(TestCase):
         )
 
     @mock.patch(
-        'aether.kernel.api.views.exporter.export_data',
-        return_value=HttpResponse('bytes', status=200),
+        'aether.kernel.api.views.exporter.generate_file',
+        side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_submissions_export__csv__mocked(self, mock_export):
         for __ in range(13):
@@ -485,13 +494,12 @@ class ExporterViewsTest(TestCase):
             'page': 3,
             'page_size': 5,
         }), content_type='application/json')
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, 500)
         mock_export.assert_called_once_with(
             data=mock.ANY,
             paths=['_id', '_rev'],
-            headers={'_id': 'id', '_rev': 'rev'},
+            labels={'_id': 'id', '_rev': 'rev'},
             format='csv',
-            separator=',',
             filename='submissions',
             offset=10,
             limit=14,  # there was already one submission
@@ -506,7 +514,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(reverse('entity-csv'), '/entities/csv/')
 
     @mock.patch(
-        'aether.kernel.api.views.exporter.export_data',
+        'aether.kernel.api.views.exporter.generate_file',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_entities_export___error__mocked(self, mock_export):
@@ -518,16 +526,16 @@ class ExporterViewsTest(TestCase):
         mock_export.assert_called_once()
 
     @mock.patch(
-        'aether.kernel.api.views.exporter.export_data',
-        return_value=HttpResponse('data', status=200),
+        'aether.kernel.api.views.exporter.generate_file',
+        side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_entities_export__xlsx__mocked(self, mock_export):
         response = self.client.get(reverse('entity-xlsx'))
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, 500)
         mock_export.assert_called_once_with(
             data=mock.ANY,
             paths=['id', '_rev', 'name', 'dob', 'villageID'],
-            headers={'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
+            labels={'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
             format='xlsx',
             filename='export',
             offset=0,
@@ -546,18 +554,17 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(response['Content-Type'], XLSX_CONTENT_TYPE)
 
     @mock.patch(
-        'aether.kernel.api.views.exporter.export_data',
-        return_value=HttpResponse('data', status=200),
+        'aether.kernel.api.views.exporter.generate_file',
+        side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_entities_export__csv__mocked(self, mock_export):
         response = self.client.post(reverse('entity-csv'))
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, 500)
         mock_export.assert_called_once_with(
             data=mock.ANY,
             paths=['id', '_rev', 'name', 'dob', 'villageID'],
-            headers={'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
+            labels={'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
             format='csv',
-            separator=',',
             filename='export',
             offset=0,
             limit=1,

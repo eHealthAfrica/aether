@@ -97,6 +97,7 @@ of the most common ones with non default values. For more info take a look at th
 - `WEB_SERVER_PORT`: `8000` Web server port.
 - `ADMIN_TOKEN`: `kernel_admin_user_auth_token`
   to connect to it from other modules. It's used within the start up scripts.
+- `CSV_SEPARATOR`: `,` fields separator in the CSV export format.
 
 #### Aether ODK Module
 
