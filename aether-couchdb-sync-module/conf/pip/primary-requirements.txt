@@ -15,6 +15,7 @@
 #   django < 2
 #   django-cors-headers
 #   django-debug-toolbar
+#   django-prometheus
 #   djangorestframework
 #   djangorestframework-csv
 #   psycopg2-binary

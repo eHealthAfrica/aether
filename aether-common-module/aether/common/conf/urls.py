@@ -67,7 +67,6 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
         ], 'rest_framework')
 
     urlpatterns = [
-
         # `health` endpoints
         url(r'^health$', health, name='health'),
         url(r'^check-db$', check_db, name='check-db'),
@@ -84,6 +83,8 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
         # media files (basic auth)
         url(r'^media-basic/(?P<path>.*)$', basic_serve, name='media-basic'),
 
+        # monitoring
+        url('', include('django_prometheus.urls')),
     ]
 
     if settings.DEBUG:
