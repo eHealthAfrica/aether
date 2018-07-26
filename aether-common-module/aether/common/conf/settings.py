@@ -186,12 +186,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-CAS_VERSION = 3
-CAS_LOGOUT_COMPLETELY = True
 CAS_SERVER_URL = os.environ.get('CAS_SERVER_URL', '')
-HOSTNAME = os.environ.get('HOSTNAME', '')
-
-if CAS_SERVER_URL:
+if CAS_SERVER_URL:  # pragma: no cover
     INSTALLED_APPS += [
         # CAS libraries
         'django_cas_ng',
@@ -200,7 +196,11 @@ if CAS_SERVER_URL:
     AUTHENTICATION_BACKENDS += [
         'ums_client.backends.UMSRoleBackend',
     ]
-else:
+    CAS_VERSION = 3
+    CAS_LOGOUT_COMPLETELY = True
+    HOSTNAME = os.environ.get('HOSTNAME', '')
+
+else:  # pragma: no cover
     logger.info('No CAS enable!')
 
 
