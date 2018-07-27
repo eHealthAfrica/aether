@@ -1,6 +1,0 @@
-apiVersion: v1
-# Must exist in https://hub.docker.com/r/ehealthafrica/aether-kernel/tags/
-appVersion: "0.8.0"
-description: eHealthAfrica's Aether-Kernel Helm chart
-name: kernel
-version: 0.6.0
