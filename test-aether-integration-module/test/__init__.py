@@ -132,7 +132,7 @@ def generate_entities(aether_client, existing_schemas, existing_projectschemas):
             entity = manager.register(person)
             entities.append(entity)
     except Exception as err:
-        raise(err)
+        print(err)
     finally:
         try:
             if manager:
