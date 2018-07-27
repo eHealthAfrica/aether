@@ -49,7 +49,7 @@ class TestFilters(TestCase):
             # Request a list of all projects, filtered by `schema`.
             # This checks that ProjectFilter.schema exists and that
             # ProjectFilter has been correctly configured.
-            expected = set([str(e.project.id) for e in schema.projectschemas.all()])
+            expected = set([str(ps.project.id) for ps in schema.projectschemas.all()])
 
             # by id
             kwargs = {'schema': str(schema.id), 'fields': 'id', 'page_size': page_size}
@@ -82,7 +82,7 @@ class TestFilters(TestCase):
             # Request a list of all schemas, filtered by `project`.
             # This checks that SchemaFilter.project exists and that
             # SchemaFilter has been correctly configured.
-            expected = set([str(e.schema.id) for e in project.projectschemas.all()])
+            expected = set([str(ps.schema.id) for ps in project.projectschemas.all()])
 
             # by id
             kwargs = {'project': str(project.id), 'fields': 'id', 'page_size': page_size}
