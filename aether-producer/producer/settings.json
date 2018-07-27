@@ -10,7 +10,6 @@
     "postgres_port"   : 5432,
     "postgres_user"   : "readonlyuser",
     "postgres_dbname" : "aether",
-    "postgres_user"   : "postgres",
 
     "kernel_url"      : "http://kernel:8000",
     "kernel_admin_username" : "admin",
@@ -18,7 +17,7 @@
 
 
     "kafka_failure_wait_time" : 10,
-    "kafka_bootstrap_servers" : "kafka:29092",
+    "kafka_bootstrap_servers" : "kafka-test:29092",
 
     "kafka_settings" : {
         "acks" : 1,
@@ -35,7 +34,7 @@
         "socket.timeout.ms" : 10000
 
     },
-    "server_port" : 5005,
+    "server_port" : 9005,
     "server_ip"   : "",
 
     "flask_settings": {
