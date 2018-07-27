@@ -42,5 +42,7 @@ setup(
         'djangorestframework',
         'psycopg2-binary',
         'requests',
+        'django-storages',
+        'boto3'
     ],
 )

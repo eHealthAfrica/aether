@@ -160,7 +160,7 @@ case "$1" in
         rm -r -f /code/aether/ui/static/*.*
         # copy assets bundles folder into static folder
         cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
-        if [  ! -z $DJANGO_REMOTE_STORAGE ] && [ ! -z $REMOTE_STATIC_FILES ] ; then
+        if [  ! -z ${DJANGO_REMOTE_STORAGE:-} ] && [ ! -z ${REMOTE_STATIC_FILES:-} ] ; then
             echo "Collecting static files to" $DJANGO_REMOTE_STORAGE
             ./manage.py collectstatic --noinput
         fi

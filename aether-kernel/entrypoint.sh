@@ -154,7 +154,7 @@ case "$1" in
 
         # media assets
         chown aether: /media
-        if [  ! -z $DJANGO_REMOTE_STORAGE ] && [ ! -z $REMOTE_STATIC_FILES ] ; then
+        if [  ! -z ${DJANGO_REMOTE_STORAGE:-} ] && [ ! -z ${REMOTE_STATIC_FILES:-} ] ; then
             echo "Collecting static files to" $DJANGO_REMOTE_STORAGE
             ./manage.py collectstatic --noinput
         fi

@@ -20,8 +20,6 @@
 #   psycopg2-binary
 #   requests
 aether.common
-django-storages
-boto3
 
 
 # Django specific
