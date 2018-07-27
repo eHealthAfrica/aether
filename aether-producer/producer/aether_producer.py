@@ -329,7 +329,8 @@ class TopicManager(object):
         self.failed_changes = {}
         self.wait_time = self.context.settings.get('sleep_time', 2)
         self.window_size_sec = self.context.settings.get('window_size_sec', 3)
-        self.pg_creds = self.context.settings.get('postgres_connection_info')
+        pg_requires = ['user', 'dbname', 'port', 'host']
+        self.pg_creds = {key: self.context.settings.get("postgres_%s" % key) for key in pg_requires}
         self.kafka_failure_wait_time = self.context.settings.get(
             'kafka_failure_wait_time', 10)
         try:
