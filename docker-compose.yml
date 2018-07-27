@@ -55,7 +55,8 @@ services:
       file: docker-compose-base.yml
       service: kernel-base
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       internal:
         aliases:
@@ -71,8 +72,10 @@ services:
       file: docker-compose-base.yml
       service: odk-base
     depends_on:
-      - db
-      - kernel
+      db:
+        condition: service_healthy
+      kernel:
+        condition: service_started
     networks:
       internal:
         aliases:
@@ -88,10 +91,14 @@ services:
       file: docker-compose-base.yml
       service: couchdb-sync-base
     depends_on: &sync-dependencies
-      - couchdb
-      - db
-      - kernel
-      - redis
+      db:
+        condition: service_healthy
+      couchdb:
+        condition: service_started
+      kernel:
+        condition: service_started
+      redis:
+        condition: service_started
     networks:
       internal:
         aliases:
@@ -114,8 +121,10 @@ services:
       file: docker-compose-base.yml
       service: ui-base
     depends_on:
-      - db
-      - kernel
+      db:
+        condition: service_healthy
+      kernel:
+        condition: service_started
       # UI depends on "ui-assets" to serve the assets with hot reloading (HMR)
       # to start "ui" without HMR execute first "docker-compose run ui-assets build"
       # - ui-assets

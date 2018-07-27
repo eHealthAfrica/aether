@@ -24,6 +24,13 @@ services:
 
   postgres-base:
     image: postgres:9.6-alpine
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+    environment:
+      - PGUSER=postgres
 
   couchdb-base:
     image: couchdb:1.7.1
