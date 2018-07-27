@@ -5,7 +5,7 @@
     "log_level" : "DEBUG",
     "window_size_sec" : 2,
     "postgres_pull_limit" : 250,
-    
+
     "postgres_host"   : "db-test",
     "postgres_port"   : 5432,
     "postgres_user"   : "readonlyuser",
@@ -17,8 +17,8 @@
 
 
     "kafka_failure_wait_time" : 4,
+    "kafka_bootstrap_servers" : "kafka-test:29092",
     "kafka_settings" : {
-        "bootstrap.servers": "kafka-test:29092",
         "acks" : 1,
         "max.in.flight.requests.per.connection" : 1,
         "linger.ms" : 200,
@@ -36,7 +36,7 @@
 
     "server_port" : 9005,
     "server_ip"   : "",
-    
+
     "flask_settings": {
         "max_connections" : 3
     },
