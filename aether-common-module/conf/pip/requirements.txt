@@ -6,10 +6,12 @@
 
 django<2
 django-cors-headers
+django-storages
 djangorestframework
 djangorestframework-csv
 psycopg2-binary
 requests
+boto3
 
 # test libraries
 coverage

@@ -14,6 +14,7 @@
 # Aether common module, will also require:
 #   django < 2
 #   django-cors-headers
+#   django-storages
 #   django-debug-toolbar
 #   djangorestframework
 #   djangorestframework-csv
@@ -25,12 +26,14 @@ aether.common
 # Django specific
 django-filter<2  # https://django-filter.readthedocs.io/en/master/guide/migration.html#migrating-to-2-0
 django-model-utils
+django-storages
 django-reversion-compare
 djangorestframework-filters
 drf-dynamic-fields
 drf-openapi
 pygments
 python-dateutil
+boto3
 
 
 # AVRO + JSON libraries
