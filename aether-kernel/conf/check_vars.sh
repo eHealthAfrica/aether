@@ -33,5 +33,6 @@ check_variable "$ADMIN_USERNAME"    "Admin user username (ADMIN_USERNAME)"
 check_variable "$ADMIN_PASSWORD"    "Admin user password (ADMIN_PASSWORD)"
 check_variable "$ADMIN_TOKEN"       "Admin user password (ADMIN_TOKEN)"
 
-# set default value for DEBUG if missing
-export DEBUG="$DEBUG"
+# App requirements
+check_variable "$DB_NAME"           "Database name (DB_NAME)"
+check_variable "$WEB_SERVER_PORT"   "Web server port (WEB_SERVER_PORT)"

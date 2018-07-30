@@ -21,7 +21,7 @@
 set -Eeuo pipefail
 
 # Define help message
-show_help() {
+show_help () {
     echo """
     Commands
     ----------------------------------------------------------------------------
@@ -46,7 +46,7 @@ show_help() {
     """
 }
 
-pip_freeze() {
+pip_freeze () {
     pip install virtualenv
     rm -rf /tmp/env
 
@@ -57,7 +57,7 @@ pip_freeze() {
     /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
 }
 
-setup() {
+setup () {
     # check if required environment variables were set
     ./conf/check_vars.sh
 
@@ -77,11 +77,11 @@ setup() {
     ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD
 }
 
-test_lint() {
+test_lint () {
     flake8 ./aether --config=./conf/extras/flake8.cfg
 }
 
-test_coverage() {
+test_coverage () {
     export RCFILE=./conf/extras/coverage.rc
     export TESTING=true
 
@@ -92,6 +92,11 @@ test_coverage() {
     cat ./conf/extras/good_job.txt
 }
 
+
+# set DEBUG if missing
+set +u
+DEBUG="$DEBUG"
+set -u
 
 case "$1" in
     bash )
@@ -115,6 +120,7 @@ case "$1" in
     ;;
 
     test )
+        echo "DEBUG=$DEBUG"
         setup
         test_lint
         test_coverage

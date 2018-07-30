@@ -36,5 +36,6 @@ check_variable "$ADMIN_PASSWORD"      "Admin user password (ADMIN_PASSWORD)"
 check_variable "$AETHER_KERNEL_URL"   "Aether KERNEL url (AETHER_KERNEL_URL)"
 check_variable "$AETHER_KERNEL_TOKEN" "Aether KERNEL token (AETHER_KERNEL_TOKEN)"
 
-# set default value for DEBUG if missing
-export DEBUG="$DEBUG"
+# App requirements
+check_variable "$DB_NAME"             "Database name (DB_NAME)"
+check_variable "$WEB_SERVER_PORT"     "Web server port (WEB_SERVER_PORT)"

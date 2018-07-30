@@ -44,11 +44,11 @@ services:
       file: ./docker-compose-base.yml
       service: kernel-base
     environment:
-      MEDIA_ROOT: /tmp/
       DB_NAME: kernel-test
+      DEBUG: null # set to null to remove previous value
+      MEDIA_ROOT: /tmp/
       PGHOST: db-test
       TESTING: "true"
-      DEBUG: ""
       WEB_SERVER_PORT: 9000
     depends_on:
       - db-test
@@ -66,11 +66,11 @@ services:
       service: odk-base
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9000
-      MEDIA_ROOT: /tmp/
       DB_NAME: odk-test
+      DEBUG: null # set to null to remove previous value
+      MEDIA_ROOT: /tmp/
       PGHOST: db-test
       TESTING: "true"
-      DEBUG: ""
       WEB_SERVER_PORT: 9002
     depends_on:
       - db-test
@@ -90,12 +90,12 @@ services:
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9000
       COUCHDB_URL: http://couchdb-test:5984
-      MEDIA_ROOT: /tmp/
       DB_NAME: couchdb-sync-test
+      DEBUG: null # set to null to remove previous value
+      MEDIA_ROOT: /tmp/
       PGHOST: db-test
       REDIS_HOST: redis-test
       TESTING: "true"
-      DEBUG: ""
       WEB_SERVER_PORT: 9006
       GOOGLE_CLIENT_ID: secret_google_client_id
     depends_on:
@@ -118,9 +118,9 @@ services:
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9000
       DB_NAME: ui-test
+      DEBUG: null # set to null to remove previous value
       PGHOST: db-test
       TESTING: "true"
-      DEBUG: ""
       WEB_SERVER_PORT: 9004
     depends_on:
       - db-test

@@ -39,5 +39,7 @@ check_variable "$AETHER_KERNEL_TOKEN" "Aether KERNEL token (AETHER_KERNEL_TOKEN)
 # Google ID
 check_variable "$GOOGLE_CLIENT_ID"    "Google Client ID (GOOGLE_CLIENT_ID)"
 
-# set default value for DEBUG if missing
-export DEBUG="$DEBUG"
+# App requirements
+check_variable "$COUCHDB_URL"         "CouchDB url (COUCHDB_URL)"
+check_variable "$DB_NAME"             "Database name (DB_NAME)"
+check_variable "$WEB_SERVER_PORT"     "Web server port (WEB_SERVER_PORT)"
