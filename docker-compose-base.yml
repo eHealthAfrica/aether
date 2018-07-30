@@ -57,7 +57,7 @@ services:
       - ./.persistent_data/nginx:/var/log/nginx/
 
       # aether favicon
-      - ./local-setup/aether.ico:/media/eather.ico
+      - ./local-setup/aether.ico:/media/aether.ico
 
       # media folders per container
       - ./.persistent_data/kernel/media:/media/kernel
