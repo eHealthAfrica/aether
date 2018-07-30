@@ -34,7 +34,7 @@ ROOT_URLCONF = 'aether.sync.urls'
 CORS_URLS_REGEX = r'^/sync/.*$'
 
 # SECURITY WARNING: this should also be considered a secret:
-GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_ID = os.environ['GOOGLE_CLIENT_ID']
 
 FIXTURE_DIRS = (
     'aether/sync/fixtures/',
@@ -49,7 +49,7 @@ MIGRATION_MODULES = {
     'sync': 'aether.sync.api.migrations',
 }
 
-COUCHDB_URL = os.environ.get('COUCHDB_URL', 'http://couchdb:5984')
+COUCHDB_URL = os.environ['COUCHDB_URL']
 COUCHDB_USER = os.environ['COUCHDB_USER']
 COUCHDB_PASSWORD = os.environ['COUCHDB_PASSWORD']
 COUCHDB_DIR = './couchdb'
