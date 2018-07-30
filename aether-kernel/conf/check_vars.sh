@@ -18,7 +18,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-set -Eeuo pipefail
+set -Eeo pipefail
 
 check_variable() {
     if [ -z "$1" ];
@@ -32,3 +32,6 @@ check_variable() {
 check_variable $ADMIN_USERNAME    "Admin user username (ADMIN_USERNAME)"
 check_variable $ADMIN_PASSWORD    "Admin user password (ADMIN_PASSWORD)"
 check_variable $ADMIN_TOKEN       "Admin user password (ADMIN_TOKEN)"
+
+# set default value for DEBUG if missing
+DEBUG="$DEBUG"

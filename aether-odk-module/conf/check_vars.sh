@@ -18,7 +18,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-set -Eeuo pipefail
+set -Eeo pipefail
 
 check_variable() {
     if [ -z "$1" ];
@@ -36,3 +36,6 @@ check_variable $ADMIN_TOKEN         "Admin user password (ADMIN_TOKEN)"
 # Aether kernel
 check_variable $AETHER_KERNEL_URL   "Aether KERNEL url (AETHER_KERNEL_URL)"
 check_variable $AETHER_KERNEL_TOKEN "Aether KERNEL token (AETHER_KERNEL_TOKEN)"
+
+# set default value for DEBUG if missing
+DEBUG="$DEBUG"

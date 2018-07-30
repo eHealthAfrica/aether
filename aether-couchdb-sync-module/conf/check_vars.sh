@@ -18,7 +18,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-set -Eeuo pipefail
+set -Eeo pipefail
 
 check_variable() {
     if [ -z "$1" ];
@@ -38,3 +38,6 @@ check_variable $AETHER_KERNEL_TOKEN "Aether KERNEL token (AETHER_KERNEL_TOKEN)"
 
 # Google ID
 check_variable $GOOGLE_CLIENT_ID    "Google Client ID (GOOGLE_CLIENT_ID)"
+
+# set default value for DEBUG if missing
+DEBUG="$DEBUG"
