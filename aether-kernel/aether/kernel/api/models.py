@@ -21,8 +21,10 @@
 import uuid
 from datetime import datetime
 from hashlib import md5
+
 from django.contrib.postgres.fields import JSONField
 from django.db import models
+from django_prometheus.models import ExportModelOperationsMixin
 from model_utils.models import TimeStampedModel
 
 from .utils import json_prettified
@@ -71,7 +73,7 @@ Data model schema:
 '''
 
 
-class Project(TimeStampedModel):
+class Project(ExportModelOperationsMixin('kernel_project'), TimeStampedModel):
     '''
                 Table "public.kernel_project"
 
@@ -123,7 +125,7 @@ class Project(TimeStampedModel):
         ordering = ('-modified',)
 
 
-class Mapping(TimeStampedModel):
+class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
     '''
                 Table "public.kernel_mapping"
 
@@ -179,7 +181,7 @@ class Mapping(TimeStampedModel):
         ordering = ('-modified',)
 
 
-class Submission(TimeStampedModel):
+class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedModel):
     '''
                 Table "public.kernel_submission"
 
@@ -248,7 +250,7 @@ def __attachment_path__(instance, filename):
     )
 
 
-class Attachment(TimeStampedModel):
+class Attachment(ExportModelOperationsMixin('kernel_attachment'), TimeStampedModel):
     '''
                 Table "public.kernel_attachment"
 
@@ -318,7 +320,7 @@ class Attachment(TimeStampedModel):
         ordering = ['submission', 'submission_revision', 'name']
 
 
-class Schema(TimeStampedModel):
+class Schema(ExportModelOperationsMixin('kernel_schema'), TimeStampedModel):
     '''
                 Table "public.kernel_schema"
 
@@ -365,7 +367,7 @@ class Schema(TimeStampedModel):
         ordering = ('-modified',)
 
 
-class ProjectSchema(TimeStampedModel):
+class ProjectSchema(ExportModelOperationsMixin('kernel_projectschema'), TimeStampedModel):
     '''
                 Table "public.kernel_projectschema"
 
@@ -429,7 +431,7 @@ class ProjectSchema(TimeStampedModel):
         ordering = ('-modified',)
 
 
-class Entity(models.Model):
+class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
     '''
                 Table "public.kernel_entity"
 

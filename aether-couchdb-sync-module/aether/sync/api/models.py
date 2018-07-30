@@ -19,18 +19,19 @@
 from django.db import models
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
+from django_prometheus.models import ExportModelOperationsMixin
 
 from .couchdb_helpers import delete_user, generate_db_name
 
 
-class MobileUser(models.Model):
+class MobileUser(ExportModelOperationsMixin('couchdbsync_mobileuser'), models.Model):
     email = models.EmailField(unique=True)
 
     def __str__(self):
         return 'MobileUser: ' + self.email
 
 
-class DeviceDB(models.Model):
+class DeviceDB(ExportModelOperationsMixin('couchdbsync_devicedb'), models.Model):
     mobileuser = models.ForeignKey(MobileUser,
                                    on_delete=models.SET_NULL,
                                    null=True,
