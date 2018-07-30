@@ -29,15 +29,15 @@ check_variable() {
 }
 
 # Admin user
-check_variable $ADMIN_USERNAME      "Admin user username (ADMIN_USERNAME)"
-check_variable $ADMIN_PASSWORD      "Admin user password (ADMIN_PASSWORD)"
+check_variable "$ADMIN_USERNAME"      "Admin user username (ADMIN_USERNAME)"
+check_variable "$ADMIN_PASSWORD"      "Admin user password (ADMIN_PASSWORD)"
 
 # Aether kernel
-check_variable $AETHER_KERNEL_URL   "Aether KERNEL url (AETHER_KERNEL_URL)"
-check_variable $AETHER_KERNEL_TOKEN "Aether KERNEL token (AETHER_KERNEL_TOKEN)"
+check_variable "$AETHER_KERNEL_URL"   "Aether KERNEL url (AETHER_KERNEL_URL)"
+check_variable "$AETHER_KERNEL_TOKEN" "Aether KERNEL token (AETHER_KERNEL_TOKEN)"
 
 # Google ID
-check_variable $GOOGLE_CLIENT_ID    "Google Client ID (GOOGLE_CLIENT_ID)"
+check_variable "$GOOGLE_CLIENT_ID"    "Google Client ID (GOOGLE_CLIENT_ID)"
 
 # set default value for DEBUG if missing
-DEBUG="$DEBUG"
+export DEBUG="$DEBUG"

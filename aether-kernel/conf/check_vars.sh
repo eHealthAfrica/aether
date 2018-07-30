@@ -29,9 +29,9 @@ check_variable() {
 }
 
 # Admin user
-check_variable $ADMIN_USERNAME    "Admin user username (ADMIN_USERNAME)"
-check_variable $ADMIN_PASSWORD    "Admin user password (ADMIN_PASSWORD)"
-check_variable $ADMIN_TOKEN       "Admin user password (ADMIN_TOKEN)"
+check_variable "$ADMIN_USERNAME"    "Admin user username (ADMIN_USERNAME)"
+check_variable "$ADMIN_PASSWORD"    "Admin user password (ADMIN_PASSWORD)"
+check_variable "$ADMIN_TOKEN"       "Admin user password (ADMIN_TOKEN)"
 
 # set default value for DEBUG if missing
-DEBUG="$DEBUG"
+export DEBUG="$DEBUG"
