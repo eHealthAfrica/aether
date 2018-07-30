@@ -239,16 +239,17 @@ CUSTOM_STORAGE = os.environ.get('DJANGO_REMOTE_STORAGE', '')
 
 if CUSTOM_STORAGE:   # pragma: no cover
     INSTALLED_APPS += ['storages', ]
+    STATIC_FILES = bool(os.environ.get('REMOTE_STATIC_FILES'))
     if CUSTOM_STORAGE.lower() == 's3':
         DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
         AWS_AUTO_CREATE_BUCKET = True
-        AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', '')
-        AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '')
+        AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+        AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
         AWS_STORAGE_BUCKET_NAME = os.environ.get('BUCKET_NAME',
                                                  os.environ.get('HOSTNAME', 'aether-project'))
-        AWS_STATIC_FILES = bool(os.environ.get('REMOTE_STATIC_FILES'))
-        if AWS_STATIC_FILES:
+        if STATIC_FILES:
             STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
     logger.info('{} file system used!'.format(CUSTOM_STORAGE))
 else:
     logger.info('Default file system used!')
