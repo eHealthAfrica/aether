@@ -43,6 +43,9 @@ release_app () {
 # Login in dockerhub
 docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
 
+# Try to create the common aether network if it doesn't exist.
+docker network create aether_internal 2>/dev/null || true
+
 # Build dependencies
 ./scripts/build_aether_utils_and_distribute.sh
 ./scripts/build_common_and_distribute.sh
