@@ -20,17 +20,17 @@
 #
 set -Eeuo pipefail
 
-
 release_app () {
     APP_NAME=$1
     COMPOSE_PATH=$2
     AETHER_APP="aether-${1}"
-
     echo "version: $VERSION"
+
     echo "Building Docker image ${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
     docker-compose -f $COMPOSE_PATH build \
         --build-arg GIT_REVISION=$TRAVIS_COMMIT \
-        --build-arg VERSION=$VERSION $APP_NAME
+        --build-arg VERSION=$VERSION \
+        $APP_NAME
 
     docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
     docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:latest"
@@ -39,7 +39,6 @@ release_app () {
     docker push "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
     docker push "${IMAGE_REPO}/${AETHER_APP}:latest"
 }
-
 
 # Try to create the common aether network if it doesn't exist.
 docker network create aether_internal 2>/dev/null || true
