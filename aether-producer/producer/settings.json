@@ -10,6 +10,7 @@
     "postgres_port"   : 5432,
     "postgres_user"   : "readonlyuser",
     "postgres_dbname" : "aether",
+    "postgres_password" : "",
 
     "kernel_url"      : "http://kernel:8000",
     "kernel_admin_username" : "admin",
