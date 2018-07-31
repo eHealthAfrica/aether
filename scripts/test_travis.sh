@@ -20,6 +20,8 @@
 #
 set -Eeuo pipefail
 
+./scripts/generate-docker-compose-credentials.sh > .env
+./scripts/build_common_and_distribute.sh
 
 case "$1" in
     kubernetes)

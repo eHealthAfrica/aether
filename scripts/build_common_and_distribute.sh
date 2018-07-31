@@ -23,7 +23,7 @@ set -Eeuo pipefail
 DC_COMMON="docker-compose -f docker-compose-common.yml"
 
 # remove previous containers (clean start)
-./scripts/kill_all.sh
+$DC_COMMON kill
 $DC_COMMON down
 
 # create the distribution

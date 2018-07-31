@@ -23,7 +23,7 @@ set -Eeuo pipefail
 DC_CLIENT="docker-compose -f docker-compose-build-aether-utils.yml"
 
 # remove previous containers (clean start)
-./scripts/kill_all.sh
+$DC_CLIENT kill
 $DC_CLIENT down
 
 # create the client distribution
@@ -85,6 +85,5 @@ do
     mkdir -p ./$FOLDER/conf/pip/dependencies
     cp -r ./aether-utils/aether-saladbar/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
 done
-
 
 $DC_CLIENT kill

@@ -40,6 +40,9 @@ release_app () {
     docker push "${IMAGE_REPO}/${AETHER_APP}:latest"
 }
 
+# Login in dockerhub
+docker login -u ehealthafricadevops -p $DOCKER_HUB_PASSWORD
+
 # Build dependencies
 ./scripts/build_aether_utils_and_distribute.sh
 ./scripts/build_common_and_distribute.sh
