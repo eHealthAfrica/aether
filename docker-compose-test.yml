@@ -50,7 +50,8 @@ services:
       TESTING: "true"
       WEB_SERVER_PORT: 9000
     depends_on:
-      - db-test
+      db-test:
+        condition: service_healthy
     ports:
       - "9000:9000"
 

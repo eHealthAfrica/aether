@@ -39,9 +39,7 @@ echo "_____________________________________________ Starting database"
 $DC_TEST up -d db-test
 
 echo "_____________________________________________ Starting kernel"
-$DC_TEST build kernel-test
-$DC_TEST run   kernel-test setup
-$DC_TEST up -d kernel-test
+$DC_TEST up --build -d kernel-test
 
 if [[ $1 == "couchdb-sync" ]]
 then
