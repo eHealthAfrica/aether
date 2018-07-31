@@ -43,6 +43,7 @@ setup(
         'psycopg2-binary',
         'requests',
         'django-storages',
-        'boto3'
+        'boto3',
+        'boto'
     ],
 )

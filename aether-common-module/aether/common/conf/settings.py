@@ -243,11 +243,15 @@ if CUSTOM_STORAGE:   # pragma: no cover
     if CUSTOM_STORAGE.lower() == 's3':
         DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
         AWS_AUTO_CREATE_BUCKET = True
-        AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
-        AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
         AWS_STORAGE_BUCKET_NAME = os.environ['BUCKET_NAME']
         if STATIC_FILES:
             STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    elif CUSTOM_STORAGE.lower() == 'gcs':
+        DEFAULT_FILE_STORAGE = 'storages.backends.gs.GSBotoStorage'
+        GS_AUTO_CREATE_BUCKET = True
+        GS_BUCKET_NAME = os.environ['BUCKET_NAME']
+        if STATIC_FILES:
+            STATICFILES_STORAGE = 'storages.backends.gs.GSBotoStorage'
 
     logger.info('{} file system used!'.format(CUSTOM_STORAGE))
 else:

@@ -12,6 +12,7 @@ djangorestframework-csv
 psycopg2-binary
 requests
 boto3
+boto
 
 # test libraries
 coverage

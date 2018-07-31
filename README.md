@@ -135,11 +135,19 @@ of the most common ones with non default values. For more info take a look at th
   See more in https://developers.google.com/identity/protocols/OAuth2
 
 #### File Storage System (Used on Kernel, ODK and UI Modules)
-- `DJANGO_REMOTE_STORAGE` (optional): Used to specify a custom [Default file storage system](https://docs.djangoproject.com/en/2.0/ref/settings/#std:setting-DEFAULT_FILE_STORAGE). If not provided, defaults to the [Django default storage](https://docs.djangoproject.com/en/2.0/ref/files/storage/#django.core.files.storage.FileSystemStorage) Available options: S3, . More information [here](https://django-storages.readthedocs.io/en/latest/index.html)
+- `DJANGO_REMOTE_STORAGE` (optional): Used to specify a custom [Default file storage system](https://docs.djangoproject.com/en/2.0/ref/settings/#std:setting-DEFAULT_FILE_STORAGE). If not provided, defaults to the [Django default storage](https://docs.djangoproject.com/en/2.0/ref/files/storage/#django.core.files.storage.FileSystemStorage) Available options: S3, GCS. More information [here](https://django-storages.readthedocs.io/en/latest/index.html)
 - `REMOTE_STATIC_FILES` (optional): Set to "true" to collect static files to the selected `DJANGO_REMOTE_STORAGE`
-- `BUCKET_NAME` (optional): Name of the bucket to use for `DJANGO_REMOTE_STORAGE`. Must be unique on the storage provider. If not provided, it defaults to the `HOSTNAME` value. Bucket is automatically created if does not exist.
-- `AWS_ACCESS_KEY_ID`: AWS Access Key to your S3 account. Used when `DJANGO_REMOTE_STORAGE=S3`.
-- `AWS_SECRET_ACCESS_KEY`: AWS Secret Access Key to your S3 account. Used when `DJANGO_REMOTE_STORAGE=S3`.
+
+  ##### S3
+  - `BUCKET_NAME`: Name of the bucket to use on S3. Must be unique on S3. Bucket will be automatically created if the name is available.
+  - `AWS_ACCESS_KEY_ID`: AWS Access Key to your S3 account. Used when `DJANGO_REMOTE_STORAGE=S3`.
+  - `AWS_SECRET_ACCESS_KEY`: AWS Secret Access Key to your S3 account. Used when `DJANGO_REMOTE_STORAGE=S3`.
+ 
+  ##### Google Cloud Storage (GCS)
+  - `BUCKET_NAME`: Name of the bucket to use on GCS. Create bucket using [Google Cloud Console](https://console.cloud.google.com/) and set appropriate permissions
+  - `GS_ACCESS_KEY_ID`: Google Cloud Access Key. Used when `DJANGO_REMOTE_STORAGE=GCS`. [How to create Access Keys on Google Cloud Storage](https://cloud.google.com/storage/docs/migrating#keys)
+  - `GS_SECRET_ACCESS_KEY`: Google Cloud Secret Access Key. Used when `DJANGO_REMOTE_STORAGE=GCS`. [How to create Access Keys on Google Cloud Storage](https://cloud.google.com/storage/docs/migrating#keys)
+  
 
 **WARNING**
 
