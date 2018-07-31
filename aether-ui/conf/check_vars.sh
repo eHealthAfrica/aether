@@ -18,7 +18,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-set -Eeuo pipefail
+set -Eeo pipefail
 
 check_variable() {
     if [ -z "$1" ];
@@ -29,9 +29,13 @@ check_variable() {
 }
 
 # Admin user
-check_variable $ADMIN_USERNAME      "Admin user username (ADMIN_USERNAME)"
-check_variable $ADMIN_PASSWORD      "Admin user password (ADMIN_PASSWORD)"
+check_variable "$ADMIN_USERNAME"      "Admin user username (ADMIN_USERNAME)"
+check_variable "$ADMIN_PASSWORD"      "Admin user password (ADMIN_PASSWORD)"
 
 # Aether kernel
-check_variable $AETHER_KERNEL_URL   "Aether KERNEL url (AETHER_KERNEL_URL)"
-check_variable $AETHER_KERNEL_TOKEN "Aether KERNEL token (AETHER_KERNEL_TOKEN)"
+check_variable "$AETHER_KERNEL_URL"   "Aether KERNEL url (AETHER_KERNEL_URL)"
+check_variable "$AETHER_KERNEL_TOKEN" "Aether KERNEL token (AETHER_KERNEL_TOKEN)"
+
+# App requirements
+check_variable "$DB_NAME"             "Database name (DB_NAME)"
+check_variable "$WEB_SERVER_PORT"     "Web server port (WEB_SERVER_PORT)"

@@ -32,7 +32,7 @@ class ViewsTest(TestCase):
         result = utils.kernel_data_request('projects', 'get')
         self.assertIn('count', result)
         with self.assertRaises(Exception):
-            utils.kernel_data_request('projects', 'post', {'wrong-input': 'tests'})
+            utils.kernel_data_request('projectss', 'post', {'wrong-input': 'tests'})
 
     def test_create_new_kernel_object(self):
         pipeline = Pipeline.objects.create(
