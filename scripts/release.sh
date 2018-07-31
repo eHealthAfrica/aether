@@ -41,7 +41,7 @@ release_app () {
 }
 
 # Login in dockerhub
-docker login -u ehealthafricadevops -p $DOCKER_HUB_PASSWORD
+docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
 
 # Build dependencies
 ./scripts/build_aether_utils_and_distribute.sh
