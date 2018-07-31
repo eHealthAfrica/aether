@@ -73,11 +73,18 @@ INSTALLED_APPS = [
     # CORS checking
     'corsheaders',
 
+    # Monitoring
+    'django_prometheus',
+
     # aether apps
     'aether.common',
 ]
 
 MIDDLEWARE = [
+    # Make sure this stays as the 1st middleware
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+
+    # All middlewares go here
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -86,6 +93,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    # Make sure this stays as the last middleware
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 TEMPLATES = [
@@ -142,7 +152,7 @@ REST_FRAMEWORK = {
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django_prometheus.db.backends.postgresql',
         'NAME': os.environ['DB_NAME'],
         'PASSWORD': os.environ['PGPASSWORD'],
         'USER': os.environ['PGUSER'],
