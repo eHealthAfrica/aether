@@ -1,9 +1,6 @@
 [
   {
     "fields": {
-      "rdf_definition": "[]",
-      "jsonld_context": "[]",
-      "salad_schema": "[]",
       "name": "demo",
       "revision": "1"
     },
@@ -76,10 +73,6 @@
     "fields": {
       "schema": "a29f1777-946e-4db1-95a8-a4378242b7b7",
       "project": "d3ee41be-e696-424b-8b45-ab6a0d787f6a",
-      "is_encrypted": false,
-      "masked_fields": "[]",
-      "transport_rule": "[]",
-      "mandatory_fields": "[]",
       "name": "Person"
     },
     "pk": "75bcf79d-b97d-4dbf-8f0d-414b8c0c0d75",

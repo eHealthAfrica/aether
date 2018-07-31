@@ -20,14 +20,13 @@
 #
 set -Eeuo pipefail
 
-./scripts/build_aether_utils_and_distribute.sh
-
 DC_TEST="docker-compose -f docker-compose-test.yml"
 $DC_TEST down
 
+./scripts/build_aether_utils_and_distribute.sh
+
 echo "_____________________________________________ TESTING"
 
-# start databases
 echo "_____________________________________________ Starting Database"
 $DC_TEST up -d db-test
 
@@ -44,7 +43,6 @@ $DC_TEST up -d zookeeper-test kafka-test
 echo "_____________________________________________ Starting Producer"
 $DC_TEST up --build -d producer-test
 
-# test a clean INGEGRATION TEST container
 echo "_____________________________________________ Starting Integration Tests"
 $DC_TEST build integration-test
 $DC_TEST run   integration-test test

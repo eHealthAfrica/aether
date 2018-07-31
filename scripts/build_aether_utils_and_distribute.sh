@@ -23,7 +23,6 @@ set -Eeuo pipefail
 DC_CLIENT="docker-compose -f docker-compose-build-aether-utils.yml"
 
 # remove previous containers (clean start)
-$DC_CLIENT kill
 $DC_CLIENT down
 
 # create the client distribution

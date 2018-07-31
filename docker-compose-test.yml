@@ -44,17 +44,15 @@ services:
       file: ./docker-compose-base.yml
       service: kernel-base
     environment:
-      DB_NAME: kernel-test
+      DB_NAME: test-kernel
       DEBUG: null # set to null to remove previous value
       MEDIA_ROOT: /tmp/
       PGHOST: db-test
       TESTING: "true"
       WEB_SERVER_PORT: 9000
-    depends_on:
-      db-test:
-        condition: service_healthy
     ports:
       - "9000:9000"
+    command: start
 
 
   # ---------------------------------
@@ -67,17 +65,15 @@ services:
       service: odk-base
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9000
-      DB_NAME: odk-test
+      DB_NAME: test-odk
       DEBUG: null # set to null to remove previous value
       MEDIA_ROOT: /tmp/
       PGHOST: db-test
       TESTING: "true"
       WEB_SERVER_PORT: 9002
-    depends_on:
-      - db-test
-      - kernel-test
     ports:
       - "9002:9002"
+    command: start
 
 
   # ---------------------------------
@@ -91,21 +87,17 @@ services:
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9000
       COUCHDB_URL: http://couchdb-test:5984
-      DB_NAME: couchdb-sync-test
+      DB_NAME: test-couchdb-sync
       DEBUG: null # set to null to remove previous value
+      GOOGLE_CLIENT_ID: secret_google_client_id
       MEDIA_ROOT: /tmp/
       PGHOST: db-test
       REDIS_HOST: redis-test
       TESTING: "true"
       WEB_SERVER_PORT: 9006
-      GOOGLE_CLIENT_ID: secret_google_client_id
-    depends_on:
-      - couchdb-test
-      - db-test
-      - kernel-test
-      - redis-test
     ports:
       - "9006:9006"
+    command: start
 
 
   # ---------------------------------
@@ -118,16 +110,14 @@ services:
       service: ui-base
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9000
-      DB_NAME: ui-test
+      DB_NAME: test-ui
       DEBUG: null # set to null to remove previous value
       PGHOST: db-test
       TESTING: "true"
       WEB_SERVER_PORT: 9004
-    depends_on:
-      - db-test
-      - kernel-test
     ports:
       - "9004:9004"
+    command: start
 
   ui-assets-test:
     extends:
@@ -147,27 +137,6 @@ services:
       KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
     volumes:
       - ./aether-utils/aether-client:/code
-    depends_on:
-      - kernel-test
-
-
-  # ---------------------------------
-  # Aether Integration Tests
-  # ---------------------------------
-
-  integration-test:
-    image: aether/integration
-    build: ./test-aether-integration-module
-    environment:
-      KERNEL_ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
-      KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
-    volumes:
-      - ./test-aether-integration-module:/code
-    depends_on:
-      - db-test
-      - kernel-test
-      - kafka-test
-      - producer-test
 
 
   # ---------------------------------
@@ -183,8 +152,6 @@ services:
     extends:
       file: ./docker-compose-base.yml
       service: kafka-base
-    depends_on:
-      - zookeeper-test
     links:
       - zookeeper-test
     environment:
@@ -212,3 +179,17 @@ services:
       - kafka-test
       - zookeeper-test
     command: start_test
+
+
+  # ---------------------------------
+  # Aether Integration Tests
+  # ---------------------------------
+
+  integration-test:
+    image: aether/integration
+    build: ./test-aether-integration-module
+    environment:
+      KERNEL_ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
+      KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
+    volumes:
+      - ./test-aether-integration-module:/code

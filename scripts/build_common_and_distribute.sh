@@ -23,12 +23,11 @@ set -Eeuo pipefail
 DC_COMMON="docker-compose -f docker-compose-common.yml"
 
 # remove previous containers (clean start)
-$DC_COMMON kill
 $DC_COMMON down
 
 # create the distribution
 $DC_COMMON build common
-$DC_COMMON run   common build
+$DC_COMMON run common build
 
 PCK_FILE=aether.common-0.0.0-py2.py3-none-any.whl
 

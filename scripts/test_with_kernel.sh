@@ -20,17 +20,7 @@
 #
 set -Eeuo pipefail
 
-if [ -n "$1" ];
-then
-    # expected values: `odk`, `couchdb-sync`, `ui`, `client`
-    echo "Executing tests for $1 container"
-else
-    echo "Nothing to do."
-    exit 0
-fi
-
 DC_TEST="docker-compose -f docker-compose-test.yml"
-$DC_TEST kill
 $DC_TEST down
 
 echo "_____________________________________________ TESTING $1 container"
@@ -39,16 +29,18 @@ echo "_____________________________________________ Starting database"
 $DC_TEST up -d db-test
 
 echo "_____________________________________________ Starting kernel"
-$DC_TEST up --build -d kernel-test
+$DC_TEST build kernel-test
+$DC_TEST run   kernel-test setup
+$DC_TEST up -d kernel-test
 
 if [[ $1 == "couchdb-sync" ]]
 then
+    echo "_____________________________________________ Starting auxiliary databases"
+    $DC_TEST up -d couchdb-test redis-test
+
     fixture=aether/kernel/api/tests/fixtures/project.json
     $DC_TEST run kernel-test manage loaddata $fixture
     echo "_____________________________________________ Loaded initial data in kernel"
-
-    echo "_____________________________________________ Starting auxiliary databases"
-    $DC_TEST up -d couchdb-test redis-test
 fi
 
 if [[ $1 == "ui" ]]
@@ -56,7 +48,7 @@ then
     $DC_TEST build ui-assets-test
     $DC_TEST run   ui-assets-test test
     $DC_TEST run   ui-assets-test build
-    echo "_____________________________________________ Tested and built assets"
+    echo "_____________________________________________ Tested and built ui assets"
 fi
 
 echo "_____________________________________________ Preparing $1 container"
