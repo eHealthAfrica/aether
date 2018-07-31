@@ -16,6 +16,7 @@
 #   django-cors-headers
 #   django-storages
 #   django-debug-toolbar
+#   django-prometheus
 #   djangorestframework
 #   djangorestframework-csv
 #   psycopg2-binary

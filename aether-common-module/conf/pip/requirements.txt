@@ -1,12 +1,14 @@
 ################################################################################
 #                                                                              #
 #                           Requirements for testing                           #
+#    (If you need production dependencies, add them to the `setup.py` file)    #
 #                                                                              #
 ################################################################################
 
 django<2
 django-cors-headers
 django-storages
+django-prometheus
 djangorestframework
 djangorestframework-csv
 psycopg2-binary

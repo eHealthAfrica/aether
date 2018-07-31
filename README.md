@@ -14,6 +14,7 @@
     - [Aether ODK Module](#aether-odk-module)
     - [Aether UI](#aether-ui)
     - [Aether CouchDB Sync Module](#aether-couchdb-sync-module)
+    - [File Storage System](#file-storage-system)
 - [Usage](#usage)
   - [Users & Authentication](#users--authentication)
     - [UMS settings for local development](#ums-settings-for-local-development)
@@ -134,7 +135,8 @@ of the most common ones with non default values. For more info take a look at th
   Token used to verify the device identity with Google.
   See more in https://developers.google.com/identity/protocols/OAuth2
 
-#### File Storage System (Used on Kernel, ODK and UI Modules)
+#### File Storage System
+(Used on Kernel, ODK and UI Modules)
 - `DJANGO_REMOTE_STORAGE` (optional): Used to specify a custom [Default file storage system](https://docs.djangoproject.com/en/2.0/ref/settings/#std:setting-DEFAULT_FILE_STORAGE). If not provided, defaults to the [Django default storage](https://docs.djangoproject.com/en/2.0/ref/files/storage/#django.core.files.storage.FileSystemStorage) Available options: S3, GCS. More information [here](https://django-storages.readthedocs.io/en/latest/index.html)
 - `REMOTE_STATIC_FILES` (optional): Set to "true" to collect static files to the selected `DJANGO_REMOTE_STORAGE`
 

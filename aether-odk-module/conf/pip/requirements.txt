@@ -20,6 +20,7 @@ django-cas-ng==3.5.9
 django-cors-headers==2.4.0
 django-debug-toolbar==1.9.1
 django-storages==1.6.6
+django-prometheus==1.0.15
 django-ums-client==0.2.6
 djangorestframework==3.8.2
 djangorestframework-csv==2.1.0
@@ -34,6 +35,7 @@ linecache2==1.0.0
 mccabe==0.6.1
 mock==2.0.0
 pbr==4.2.0
+prometheus-client==0.3.0
 psycopg2-binary==2.7.5
 pycodestyle==2.3.1
 pyflakes==1.6.0

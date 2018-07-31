@@ -32,9 +32,9 @@ SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-if DEBUG:  # pragma: no cover
+if DEBUG:
     logger.setLevel(logging.DEBUG)
-if TESTING:  # pragma: no cover
+if TESTING:
     logger.setLevel(logging.CRITICAL)
 
 LANGUAGE_CODE = 'en-us'
@@ -73,11 +73,18 @@ INSTALLED_APPS = [
     # CORS checking
     'corsheaders',
 
+    # Monitoring
+    'django_prometheus',
+
     # aether apps
     'aether.common',
 ]
 
 MIDDLEWARE = [
+    # Make sure this stays as the 1st middleware
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+
+    # All middlewares go here
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -86,6 +93,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    # Make sure this stays as the last middleware
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 TEMPLATES = [
@@ -142,7 +152,7 @@ REST_FRAMEWORK = {
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django_prometheus.db.backends.postgresql',
         'NAME': os.environ['DB_NAME'],
         'PASSWORD': os.environ['PGPASSWORD'],
         'USER': os.environ['PGUSER'],
@@ -183,7 +193,7 @@ CAS_LOGOUT_COMPLETELY = True
 CAS_SERVER_URL = os.environ.get('CAS_SERVER_URL', '')
 HOSTNAME = os.environ.get('HOSTNAME', '')
 
-if CAS_SERVER_URL:  # pragma: no cover
+if CAS_SERVER_URL:
     INSTALLED_APPS += [
         # CAS libraries
         'django_cas_ng',
@@ -192,7 +202,7 @@ if CAS_SERVER_URL:  # pragma: no cover
     AUTHENTICATION_BACKENDS += [
         'ums_client.backends.UMSRoleBackend',
     ]
-else:  # pragma: no cover
+else:
     logger.info('No CAS enable!')
 
 
@@ -200,7 +210,7 @@ else:  # pragma: no cover
 # ------------------------------------------------------------------------------
 
 SENTRY_DSN = os.environ.get('SENTRY_DSN')
-if SENTRY_DSN:  # pragma: no cover
+if SENTRY_DSN:
     INSTALLED_APPS += ['raven.contrib.django.raven_compat', ]
     MIDDLEWARE = [
         'raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware',
@@ -208,7 +218,7 @@ if SENTRY_DSN:  # pragma: no cover
 
     SENTRY_CLIENT = 'raven.contrib.django.raven_compat.DjangoClient'
     SENTRY_CELERY_LOGLEVEL = logging.INFO
-else:  # pragma: no cover
+else:
     logger.info('No SENTRY enable!')
 
 
@@ -223,13 +233,13 @@ CSRF_COOKIE_DOMAIN = os.environ.get('CSRF_COOKIE_DOMAIN', '.aether.org')
 CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', CSRF_COOKIE_DOMAIN).split(',')
 SESSION_COOKIE_DOMAIN = CSRF_COOKIE_DOMAIN
 
-if os.environ.get('DJANGO_USE_X_FORWARDED_HOST', False):      # pragma: no cover
+if os.environ.get('DJANGO_USE_X_FORWARDED_HOST', False):
     USE_X_FORWARDED_HOST = True
 
-if os.environ.get('DJANGO_USE_X_FORWARDED_PORT', False):      # pragma: no cover
+if os.environ.get('DJANGO_USE_X_FORWARDED_PORT', False):
     USE_X_FORWARDED_PORT = True
 
-if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):    # pragma: no cover
+if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Storage Configuration
@@ -260,7 +270,7 @@ else:
 # Debug Configuration
 # ------------------------------------------------------------------------------
 
-if not TESTING and DEBUG:  # pragma: no cover
+if not TESTING and DEBUG:
     INSTALLED_APPS += ['debug_toolbar', ]
     MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware', ]
 
