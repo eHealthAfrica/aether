@@ -21,6 +21,10 @@
     text-transform: uppercase;
     margin: .5rem 0;
     padding: .4em 1.2em;
+
+    &:first-child {
+      border-top: 0;
+    }
   }
 
   .active a {
@@ -40,6 +44,11 @@
     color: white;
     display: inline-block;
     padding: .2rem 0;
+  }
+
+  h2 {
+    font-weight: 600;
+    font-size: 1rem;
   }
 
   &>a {

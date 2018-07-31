@@ -22,7 +22,7 @@
   overflow: hidden;
   width: 7rem;
   height: 2rem;
-  margin-top: .1rem;
+  margin: .1rem 0 .3rem;
   background: url("../images/aether-white.svg") center center no-repeat;
   background-size: contain;
 }
@@ -40,6 +40,7 @@
   li {
     list-style: none;
     margin: 0 0.9vW;
+    border-bottom: 1px solid transparent;
   }
 
   a {
@@ -49,8 +50,8 @@
     padding: .8em  .1em .1em;
   }
 
-  li.active a:not(.btn),
-  li:hover a:not(.btn) {
+  li.active:not(.navbar-button),
+  li:hover:not(.navbar-button) {
     border-bottom: 1px solid rgba(white, .5);
   }
 
@@ -69,7 +70,8 @@
 }
 
 .contact .nav-item__contact,
-.support .nav-item__support {
+.support .nav-item__support,
+.community .nav-item__community  {
   border-bottom: 1px solid rgba(white, .5);
 }
 
@@ -83,15 +85,15 @@
   }
 }
 
-@media screen and (max-width: 640px) {
+@media screen and (max-width: 680px) {
 
   .navbar {
-    height: 6.5rem;
+    height: 7rem;
     padding: $unit*.6;
   }
 
   .navbar.fixed {
-    top: -3.5rem;
+    top: -3.2rem;
   }
 
   .navbar__nav {
@@ -100,6 +102,7 @@
     padding-top: .5rem;
     border-top: 1px solid rgba(white, .6);
     justify-content: center;
+    height: 3.2rem;
 
     .btn {
       padding: .6em 1.4em;
@@ -107,6 +110,10 @@
 
     li {
       margin: 0 2vW;
+    }
+
+    a {
+      padding: .2em .1em;
     }
   }
   .navbar-button {
@@ -116,8 +123,8 @@
   }
 
   .content {
-    margin-top: 3rem;
-    height: calc(100vH - 3rem);
+    margin-top: 3.8rem;
+    height: calc(100vH - 3.8rem);
   }
 }
 

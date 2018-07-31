@@ -14,7 +14,6 @@ layout: default
       <span class="caret"></span>
     </a>
     <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu2">
-      <li><a href="{{ '/support.html' | relative_url }}">Welcome</a></li>
     {% for item in site.data.list.toc %}
       <li class="doc-nav-title">{{ item.title }}</li>
         <ul class="{% for entry in item.subfolderitems %}{% if entry.url == page.url %}active-section{% endif %}{% endfor %}">
@@ -29,7 +28,7 @@ layout: default
   </div>
 
   <div class="doc-nav">
-    <a href="{{ '/support.html' | relative_url }}">Welcome</a>
+    <h2>Documentation</h2>
     {% for item in site.data.list.toc %}
       <a href="{{ item.url | relative_url }}"><h3 class="doc-nav-title">{{ item.title }}</h3></a>
         <ul class="{% for entry in item.subfolderitems %}{% if entry.url == page.url %}active-section{% endif %}{% endfor %}">
