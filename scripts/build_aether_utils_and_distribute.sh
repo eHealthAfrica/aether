@@ -20,71 +20,42 @@
 #
 set -Eeuo pipefail
 
-DC_CLIENT="docker-compose -f docker-compose-build-aether-utils.yml"
+DC_UTILS="docker-compose -f docker-compose-build-aether-utils.yml"
 
 # remove previous containers (clean start)
 ./scripts/kill_all.sh
-$DC_CLIENT down
+$DC_UTILS down
 
-# create the client distribution
-$DC_CLIENT build client
-$DC_CLIENT run client build
-
-PCK_FILE=aether.client-0.0.0-py2.py3-none-any.whl
-
-# distribute within the containers
-containers=( producer test-aether-integration )
-for container in "${containers[@]}"
+UTILS=( client mocker saladbar)
+for UTIL in "${UTILS[@]}"
 do
-    if [[ $container = "producer" ]]
+
+    # create the distribution
+    $DC_UTILS build $UTIL
+    $DC_UTILS run $UTIL build
+    PCK_FILE=aether.$UTIL-0.0.0-py2.py3-none-any.whl
+
+    if [[ $UTIL = "mocker" ]]
     then
-        FOLDER=aether-$container
+        SRC=mock-data
     else
-        FOLDER=$container-module
+        SRC=$UTIL
     fi
-    mkdir -p ./$FOLDER/conf/pip/dependencies
-    cp -r ./aether-utils/aether-client/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
-done
 
-# create the mocker distribution
-$DC_CLIENT build mocker
-$DC_CLIENT run mocker build
-
-PCK_FILE=aether.mocker-0.0.0-py2.py3-none-any.whl
-
-# distribute within the containers
-containers=( test-aether-integration )
-for container in "${containers[@]}"
-do
-    if [[ $container = "producer" ]]
+    if [[ $UTIL = "client" ]]
     then
-        FOLDER=aether-$container
+        FOLDERS=( test-aether-integration-module aether-producer )
     else
-        FOLDER=$container-module
+        FOLDERS=( test-aether-integration-module )
     fi
-    mkdir -p ./$FOLDER/conf/pip/dependencies
-    cp -r ./aether-utils/aether-mock-data/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
+
+    # distribute within the containers
+    for FOLDER in "${FOLDERS[@]}"
+    do
+        mkdir -p ./$FOLDER/conf/pip/dependencies
+        cp -r ./aether-utils/aether-$SRC/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
+    done
+
 done
-
-# create the saladbar distribution
-$DC_CLIENT build saladbar
-$DC_CLIENT run saladbar build
-
-PCK_FILE=aether.saladbar-0.0.0-py2.py3-none-any.whl
-
-# distribute within the containers
-containers=( test-aether-integration )
-for container in "${containers[@]}"
-do
-    if [[ $container = "producer" ]]
-    then
-        FOLDER=aether-$container
-    else
-        FOLDER=$container-module
-    fi
-    mkdir -p ./$FOLDER/conf/pip/dependencies
-    cp -r ./aether-utils/aether-saladbar/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
-done
-
 
 ./scripts/kill_all.sh
