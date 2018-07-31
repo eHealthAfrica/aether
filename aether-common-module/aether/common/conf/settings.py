@@ -245,8 +245,7 @@ if CUSTOM_STORAGE:   # pragma: no cover
         AWS_AUTO_CREATE_BUCKET = True
         AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
         AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
-        AWS_STORAGE_BUCKET_NAME = os.environ.get('BUCKET_NAME',
-                                                 os.environ.get('HOSTNAME', 'aether-project'))
+        AWS_STORAGE_BUCKET_NAME = os.environ['BUCKET_NAME']
         if STATIC_FILES:
             STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
