@@ -40,4 +40,4 @@ do
     cp -r ./aether-common-module/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
 done
 
-./scripts/kill_all.sh
+$DC_COMMON kill

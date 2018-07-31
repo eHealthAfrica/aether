@@ -20,49 +20,36 @@
 #
 set -Eeuo pipefail
 
-function build_container() {
-    echo "_____________________________________________ Building $1 container"
-    $DC_TEST build "$1"-test
-}
+./scripts/build_aether_utils_and_distribute.sh
 
 DC_TEST="docker-compose -f docker-compose-test.yml"
-
+$DC_TEST down
 
 echo "_____________________________________________ TESTING"
 
-
-./scripts/build_aether_utils_and_distribute.sh
-$DC_TEST down
-
 # start databases
-echo "_____________________________________________ Starting database"
+echo "_____________________________________________ Starting Database"
 $DC_TEST up -d db-test
 
-# start a clean KERNEL TEST container
-build_container kernel
+echo "_____________________________________________ Starting Kernel"
+$DC_TEST up --build -d kernel-test
 
-echo "_____________________________________________ Starting kernel"
-$DC_TEST up -d kernel-test
-
-
-echo "_____________________________________________ Testing client"
-build_container client
-$DC_TEST run client-test test
-
+echo "_____________________________________________ Testing Client"
+$DC_TEST build client-test
+$DC_TEST run   client-test test
 
 echo "_____________________________________________ Starting Kafka"
 $DC_TEST up -d zookeeper-test kafka-test
 
-build_container producer
 echo "_____________________________________________ Starting Producer"
-$DC_TEST up -d producer-test
+$DC_TEST up --build -d producer-test
 
 # test a clean INGEGRATION TEST container
 echo "_____________________________________________ Starting Integration Tests"
-build_container integration
-$DC_TEST run integration-test test
+$DC_TEST build integration-test
+$DC_TEST run   integration-test test
 
-# kill ALL containers
-./scripts/kill_all.sh
+echo "_____________________________________________ Killing TEST containers"
+$DC_TEST kill
 
 echo "_____________________________________________ END"

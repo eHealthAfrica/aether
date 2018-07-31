@@ -20,35 +20,19 @@
 #
 set -Eeuo pipefail
 
-function kill_all() {
-    echo "_____________________________________________ Killing containers"
-    ./scripts/kill_all.sh
-    $DC_TEST down
-}
-
-function build_container() {
+function prepare_and_test_container() {
     echo "_____________________________________________ Building $1 container"
     $DC_TEST build "$1"-test
-}
-
-function prepare_container() {
-    echo "_____________________________________________ Preparing $1 container"
-    build_container $1
     echo "_____________________________________________ $1 ready!"
-}
-
-function prepare_and_test_container() {
-    echo "_____________________________________________ Starting $1 tasks"
-    prepare_container $1
     $DC_TEST run "$1"-test test
-    echo "_____________________________________________ $1 tasks done"
+    echo "_____________________________________________ $1 tests passed"
 }
 
+./scripts/kill_all.sh
 DC_TEST="docker-compose -f docker-compose-test.yml"
+$DC_TEST down
 
 echo "_____________________________________________ TESTING"
-
-kill_all
 
 echo "_____________________________________________ Starting database"
 $DC_TEST up -d db-test
@@ -77,5 +61,7 @@ $DC_TEST run kernel-test manage loaddata aether/kernel/api/tests/fixtures/projec
 # test a clean SYNC TEST container
 prepare_and_test_container couchdb-sync
 
-kill_all
+echo "_____________________________________________ Killing TEST containers"
+$DC_TEST kill
+
 echo "_____________________________________________ END"

@@ -20,43 +20,34 @@
 #
 set -Eeuo pipefail
 
-function prepare_container() {
-    echo "_____________________________________________ Preparing $1 container"
-    $DC_TEST build "$1"-test
-    echo "_____________________________________________ $1 ready!"
-}
-
-
 if [ -n "$1" ];
 then
-    # take container name from argument, expected values `odk` or `couchdb-sync`
+    # expected values: `odk`, `couchdb-sync`, `ui`, `client`
     echo "Executing tests for $1 container"
-    container=$1
 else
     echo "Nothing to do."
     exit 0
 fi
 
-DC_TEST="docker-compose -f docker-compose-test.yml"
 
-# make sure that there is nothing up before starting
 ./scripts/kill_all.sh
+
+DC_TEST="docker-compose -f docker-compose-test.yml"
 $DC_TEST down
 
+echo "_____________________________________________ TESTING"
 
-echo "_____________________________________________ Starting databases"
+echo "_____________________________________________ Starting database"
 $DC_TEST up -d db-test
-if [[ $container = "couchdb-sync" ]]
+if [[ $1 = "couchdb-sync" ]]
 then
+    echo "_____________________________________________ Starting auxiliary databases"
     $DC_TEST up -d couchdb-test redis-test
 fi
 
-# prepare and start KERNEL container
-prepare_container kernel
-
 echo "_____________________________________________ Starting kernel"
-$DC_TEST up -d kernel-test
-if [[ $container == "couchdb-sync" ]]
+$DC_TEST up --build -d kernel-test
+if [[ $1 == "couchdb-sync" ]]
 then
     fixture=aether/kernel/api/tests/fixtures/project.json
     $DC_TEST run kernel-test manage loaddata $fixture
@@ -64,13 +55,15 @@ then
 fi
 
 
-# build test container
-prepare_container $container
+echo "_____________________________________________ Preparing $1 container"
+$DC_TEST build "$1"-test
+echo "_____________________________________________ $1 ready!"
 
-echo "_____________________________________________ Testing $container"
-$DC_TEST run "$container"-test test
+$DC_TEST run "$1"-test test
+echo "_____________________________________________ $1 tests passed!"
 
 
-./scripts/kill_all.sh
+echo "_____________________________________________ Killing TEST containers"
+$DC_TEST kill
 
 echo "_____________________________________________ END"

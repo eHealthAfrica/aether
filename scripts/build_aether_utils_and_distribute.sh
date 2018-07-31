@@ -87,4 +87,4 @@ do
 done
 
 
-./scripts/kill_all.sh
+$DC_CLIENT kill

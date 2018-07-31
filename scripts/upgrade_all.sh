@@ -20,25 +20,47 @@
 #
 set -Eeuo pipefail
 
-containers=( kernel odk couchdb-sync ui )
-
 # create the common module
 ./scripts/build_common_and_distribute.sh
 
+# default values
+build=no
+containers=( kernel odk couchdb-sync ui )
+
+while [[ $# -gt 0 ]]
+do
+    case "$1" in
+        -b|--build)
+            # build containers after upgrade
+            build=yes
+
+            shift # past argument
+        ;;
+
+        *)
+            # otherwise is the container name
+            containers=( "$1" )
+
+            shift # past argument
+        ;;
+    esac
+done
+
 
 for container in "${containers[@]}"
-do
-    :
+do :
 
     # upgrade pip dependencies
     echo "_____________________________________________ Updating $container"
     docker-compose run $container pip_freeze
+    echo "_____________________________________________ $container updated!"
 
-    echo "_____________________________________________ Rebuilding $container with updates"
-    # rebuild container
-    docker-compose build --no-cache $container
-
-    echo "_____________________________________________ $container updated and rebuilt!"
+    if [[ $build = "yes" ]]
+    then
+        echo "_____________________________________________ Rebuilding $container with updates"
+        docker-compose build --no-cache $container
+        echo "_____________________________________________ $container rebuilt!"
+    fi
 done
 
-./scripts/kill_all.sh
+docker-compose kill
