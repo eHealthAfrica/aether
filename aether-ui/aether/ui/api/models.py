@@ -20,12 +20,13 @@ import uuid
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
+from django_prometheus.models import ExportModelOperationsMixin
 from model_utils.models import TimeStampedModel
 
 from .utils import validate_pipeline
 
 
-class Pipeline(TimeStampedModel):
+class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, null=False, blank=False, unique=True)
 

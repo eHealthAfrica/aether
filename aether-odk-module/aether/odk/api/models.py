@@ -23,10 +23,11 @@ from hashlib import md5
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
-from django.urls import reverse
 from django.db import models, IntegrityError
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import ugettext as _
+from django_prometheus.models import ExportModelOperationsMixin
 
 from .xform_utils import (
     get_xform_data_from_xml,
@@ -63,7 +64,7 @@ Data model schema:
 '''
 
 
-class Project(models.Model):
+class Project(ExportModelOperationsMixin('odk_project'), models.Model):
     '''
     Database link of an Aether Kernel Project
 
@@ -184,7 +185,7 @@ def __validate_xml_data__(value):
         raise ValidationError(e)
 
 
-class XForm(models.Model):
+class XForm(ExportModelOperationsMixin('odk_xform'), models.Model):
     '''
     Database representation of an XForm.
 
@@ -423,7 +424,7 @@ def __media_path__(instance, filename):
     )
 
 
-class MediaFile(models.Model):
+class MediaFile(ExportModelOperationsMixin('odk_mediafile'), models.Model):
     '''
     Database representation of a media file linked to an XForm
 
