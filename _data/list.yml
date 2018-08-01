@@ -35,10 +35,8 @@ toc:
       # - page: Upgrading Aether
       #   url: /documentation/setup-deployment/upgrading.html
   - title: Aether UI User Guide
-    url: /documentation/ui/index.html
+    url: /documentation/ui/pipeline-intro.html
     subfolderitems:
-      - page: Basic Concepts
-        url: /documentation/ui/index.html
       - page: Introduction to the Interface
         url: /documentation/ui/pipeline-intro.html
       - page: Define your pipeline input
