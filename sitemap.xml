@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset
+      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
+
+
+<url>
+  <loc>http://aether.ehealthafrica.org/</loc>
+  <lastmod>2018-08-01T10:27:39+00:00</lastmod>
+  <priority>1.00</priority>
+</url>
+<url>
+  <loc>http://aether.ehealthafrica.org/documentation/introduction/index.html</loc>
+  <lastmod>2018-08-01T10:27:39+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>http://aether.ehealthafrica.org/community.html</loc>
+  <lastmod>2018-08-01T10:27:39+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>http://aether.ehealthafrica.org/contact.html</loc>
+  <lastmod>2018-08-01T10:27:39+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>http://aether.ehealthafrica.org/documentation/try/</loc>
+  <lastmod>2018-08-01T10:27:39+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>http://aether.ehealthafrica.org/index.html</loc>
+  <lastmod>2018-08-01T10:27:39+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>http://aether.ehealthafrica.org/documentation/try/index.html</loc>
+  <lastmod>2018-08-01T10:27:39+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>http://aether.ehealthafrica.org/documentation/try/walkthrough-core.html</loc>
+  <lastmod>2018-08-01T10:27:39+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>http://aether.ehealthafrica.org/documentation/try/walkthrough-connect.html</loc>
+  <lastmod>2018-08-01T10:27:39+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>http://aether.ehealthafrica.org/documentation/setup-deployment/index.html</loc>
+  <lastmod>2018-08-01T10:27:39+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>http://aether.ehealthafrica.org/documentation/ui/index.html</loc>
+  <lastmod>2018-08-01T10:27:39+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>http://aether.ehealthafrica.org/documentation/ui/pipeline-intro.html</loc>
+  <lastmod>2018-08-01T10:27:39+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>http://aether.ehealthafrica.org/documentation/ui/pipeline-input.html</loc>
+  <lastmod>2018-08-01T10:27:39+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>http://aether.ehealthafrica.org/documentation/ui/pipeline-output.html</loc>
+  <lastmod>2018-08-01T10:27:39+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>http://aether.ehealthafrica.org/documentation/ui/pipeline-mapping.html</loc>
+  <lastmod>2018-08-01T10:27:39+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>http://aether.ehealthafrica.org/documentation/ui/pipeline-publish.html</loc>
+  <lastmod>2018-08-01T10:27:39+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>http://aether.ehealthafrica.org/documentation/try/walkthrough-core</loc>
+  <lastmod>2018-08-01T10:27:39+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>http://aether.ehealthafrica.org/documentation/ui/</loc>
+  <lastmod>2018-08-01T10:27:39+00:00</lastmod>
+  <priority>0.51</priority>
+</url>
+<url>
+  <loc>http://aether.ehealthafrica.org/documentation/try/index</loc>
+  <lastmod>2018-08-01T10:27:39+00:00</lastmod>
+  <priority>0.51</priority>
+</url>
+<url>
+  <loc>http://aether.ehealthafrica.org/documentation/ui/pipeline-output</loc>
+  <lastmod>2018-08-01T10:27:39+00:00</lastmod>
+  <priority>0.51</priority>
+</url>
+
+
+</urlset>
