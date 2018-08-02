@@ -15,7 +15,7 @@ Control over your data is back to you!
 
 ## Access the Web Interface 
 
-Once you are up and running and you can access aether through `localhost:4000`.
+Once you are up and running and you can access aether through `http://ui.aether.local/`.
 Do you see the Aether Pipeline screen? Great, your setup is working!
 
 ## A new Pipeline
