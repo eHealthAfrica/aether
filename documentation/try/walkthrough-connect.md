@@ -1,6 +1,7 @@
 ---
 title: Aether - Try It - Aether Connect
 permalink: documentation/try/walkthrough-connect.html
+description: Aether Documentation – Try It for yourself
 ---
 
 # Adding Aether Connect

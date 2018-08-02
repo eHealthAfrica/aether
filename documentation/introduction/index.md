@@ -1,6 +1,7 @@
 ---
 title: Aether - Introduction
 permalink: documentation/introduction/index.html
+description: Aether Documentation – Introduction to Aether
 ---
 
 # What Is Aether?

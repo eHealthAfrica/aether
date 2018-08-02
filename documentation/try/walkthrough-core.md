@@ -1,6 +1,7 @@
 ---
 title: Aether - Setting Up an Aether-Based Solution
 permalink: documentation/try/walkthrough-core.html
+description: Aether Documentation – Try It for yourself
 ---
 
 # A Simple Aether-Based Solution

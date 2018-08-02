@@ -1,6 +1,7 @@
 ---
 title: Aether - Setup and Deployment
 permalink: documentation/setup-deployment/index.html
+description: Aether Documentation – Setup and Deployment Guide
 ---
 
 # Aether Setup and Deployment

@@ -1,6 +1,7 @@
 ---
 title: Aether - Try It
 permalink: documentation/try/index.html
+description: Aether Documentation – Try It for yourself
 ---
 
 # Try Aether For Yourself

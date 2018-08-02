@@ -1,6 +1,7 @@
 ---
 title: Aether - Create a pipeline
 permalink: documentation/ui/pipeline-mapping.html
+description: Aether Documentation – UI User Guide
 ---
 
 

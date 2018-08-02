@@ -1,6 +1,7 @@
 ---
 title: Aether - Publish a pipeline
 permalink: documentation/ui/pipeline-publish.html
+description: Aether Documentation – UI User Guide
 ---
 
 
