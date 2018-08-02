@@ -9,8 +9,6 @@ description: Aether Documentation – UI User Guide
 
 This is the part where you lay out the different Entity Types you want to generate.
 
-Learn more about Entity Types [here](index.html#entity-types).
-
 
 ## The ENTITY TYPES screen 
 
