@@ -12,7 +12,7 @@ A pipeline consists of a path that data takes through Aether, and the transforma
 
 These contracts are defined using _schemas_, and the transformed data is known as _entities_, for reasons that will, hopefully, soon become obvious.
 
-In the `assets` folder of the `aether-bootstrap` repository contains some sample data, some schemas and a set of mappings. For the purposes of this walkthrough, we’re going to copy and paste the contents of these files into the Aether UI (for a more detailed overview of the UI, check out its [documentation](/documentation/ui/)).
+In the `assets` folder of the `aether-bootstrap` repository contains some sample data, some schemas and a set of mappings. For the purposes of this walkthrough, we’re going to copy and paste the contents of these files into the Aether UI (for a more detailed overview of the UI, check out its [documentation](/documentation/ui/pipeline-intro.html)).
 
 You should already be set up, logged in and looking at a mostly empty **AUX//Pipelines** screen from the [previous step](index) 
 
