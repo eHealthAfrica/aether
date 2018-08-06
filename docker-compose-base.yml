@@ -37,6 +37,11 @@ services:
     environment:
       COUCHDB_USER: ${COUCHDB_USER}
       COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
+    healthcheck:
+      test: ["CMD", "curl", "-s", "http://localhost:5984"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
     volumes:
       # enable cors for mobile app in-browser development:
       - ./aether-couchdb-sync-module/couchdb/conf/config.ini:/usr/local/etc/couchdb/local.ini
@@ -46,6 +51,11 @@ services:
   redis-base:
     image: redis:alpine
     command: "redis-server --requirepass ${REDIS_PASSWORD}"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
 
   nginx-base:
     image: nginx:alpine
@@ -55,16 +65,16 @@ services:
       - ./local-setup/nginx/sites-enabled:/etc/nginx/sites-enabled
 
       # nginx log files
-      - ./.persistent_data/nginx:/var/log/nginx
+      - ./.persistent_data/nginx:/var/log/nginx/
+
+      # static folders per container
+      - ./.persistent_data/static:/static
 
       # media folders per container
       - ./.persistent_data/media:/media
 
       # aether favicon
       - ./local-setup/aether.ico:/media/aether.ico
-
-      # static folders per container
-      - ./.persistent_data/static:/static
     ports:
       - "80:80"
       # needed for ODK behind nginx (ODK Collect only accepts 443 and 8443 ports)
@@ -110,6 +120,11 @@ services:
       - ./.persistent_data/static/kernel:/var/www/static
     ports:
       - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-s", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
     command: start_dev
 
 
@@ -159,6 +174,14 @@ services:
       - "8002:8002"
       # standalone (without nginx)
       # - "8443:8443"
+    healthcheck:
+      # behind ngnix
+      test: ["CMD", "curl", "-s", "http://localhost:8002/health"]
+      # standalone (without nginx)
+      # test: ["CMD", "curl", "-s", "http://localhost:8443/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
     command: start_dev
 
 
@@ -210,6 +233,11 @@ services:
       - ./.persistent_data/static/sync:/var/www/static
     ports:
       - "8006:8006"
+    healthcheck:
+      test: ["CMD", "curl", "-s", "http://localhost:8006/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
     command: start_dev
 
   couchdb-sync-rq-base:
@@ -261,12 +289,22 @@ services:
       - ./.persistent_data/static/ui:/var/www/static
     ports:
       - "8004:8004"
+    healthcheck:
+      test: ["CMD", "curl", "-s", "http://localhost:8004/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
     command: start_dev
 
   ui-assets-base:
     build: ./aether-ui/aether/ui/assets
     stdin_open: true
     tty: true
+    healthcheck:
+      test: ["CMD", "curl", "-s", "http://localhost:3004"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
     volumes:
       #################################################
       #                    WARNING                    #

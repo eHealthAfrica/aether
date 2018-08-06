@@ -55,6 +55,18 @@ services:
     extends:
       file: docker-compose-base.yml
       service: nginx-base
+    depends_on:
+      db:
+        condition: service_healthy
+      kernel:
+        condition: service_healthy
+      # uncomment these lines depending on the started services
+      # odk:
+      #   condition: service_healthy
+      # couchdb-sync:
+      #   condition: service_healthy
+      # ui:
+      #   condition: service_healthy
     networks:
       - internal
 
@@ -88,7 +100,7 @@ services:
       db:
         condition: service_healthy
       kernel:
-        condition: service_started
+        condition: service_healthy
     networks:
       internal:
         aliases:
@@ -107,11 +119,11 @@ services:
       db:
         condition: service_healthy
       couchdb:
-        condition: service_started
-      kernel:
-        condition: service_started
+        condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
+      kernel:
+        condition: service_healthy
     networks:
       internal:
         aliases:
@@ -138,7 +150,10 @@ services:
       db:
         condition: service_healthy
       kernel:
-        condition: service_started
+        condition: service_healthy
+      # use this dependency with "start_dev" command and webpack (optional)
+      # ui-assets:
+      #   condition: service_healthy
     networks:
       internal:
         aliases:

@@ -51,8 +51,16 @@ services:
       PGHOST: db-test
       TESTING: "true"
       WEB_SERVER_PORT: 9000
+    depends_on:
+      db-test:
+        condition: service_healthy
     ports:
       - "9000:9000"
+    healthcheck:
+      test: ["CMD", "curl", "-s", "http://localhost:9000/health"]
+      interval: 25s
+      timeout: 3s
+      retries: 30
     command: start
 
 
@@ -72,8 +80,18 @@ services:
       PGHOST: db-test
       TESTING: "true"
       WEB_SERVER_PORT: 9002
+    depends_on:
+      db-test:
+        condition: service_healthy
+      kernel-test:
+        condition: service_healthy
     ports:
       - "9002:9002"
+    healthcheck:
+      test: ["CMD", "curl", "-s", "http://localhost:9002/health"]
+      interval: 25s
+      timeout: 3s
+      retries: 30
     command: start
 
 
@@ -96,8 +114,23 @@ services:
       REDIS_HOST: redis-test
       TESTING: "true"
       WEB_SERVER_PORT: 9006
+      GOOGLE_CLIENT_ID: secret_google_client_id
+    depends_on:
+      db-test:
+        condition: service_healthy
+      couchdb-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+      kernel-test:
+        condition: service_healthy
     ports:
       - "9006:9006"
+    healthcheck:
+      test: ["CMD", "curl", "-s", "http://localhost:9006/health"]
+      interval: 25s
+      timeout: 3s
+      retries: 30
     command: start
 
 
@@ -116,8 +149,18 @@ services:
       PGHOST: db-test
       TESTING: "true"
       WEB_SERVER_PORT: 9004
+    depends_on:
+      db-test:
+        condition: service_healthy
+      kernel-test:
+        condition: service_healthy
     ports:
       - "9004:9004"
+    healthcheck:
+      test: ["CMD", "curl", "-s", "http://localhost:9004/health"]
+      interval: 25s
+      timeout: 3s
+      retries: 30
     command: start
 
   ui-assets-test:
@@ -184,3 +227,12 @@ services:
       KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
     volumes:
       - ./test-aether-integration-module:/code
+    depends_on:
+      db-test:
+        condition: service_healthy
+      kernel-test:
+        condition: service_healthy
+      kafka-test:
+        condition: service_started
+      producer-test:
+        condition: service_started
