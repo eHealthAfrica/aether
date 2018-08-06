@@ -4,6 +4,6 @@ source = /code/aether
 omit = *migrations*, *tests*
 
 [report]
-omit = *migrations*, *tests*, *wsgi.py
+omit = *migrations*, *tests*, *settings.py
 show_missing = true
 fail_under = 80

@@ -58,13 +58,13 @@ class GenericClient(object):
         }
 
     def get(self, url):
-        req = requests.get(url, auth=self.auth, timeout=getattr(self, 'timeout'))
         try:
-            return req.json()
-        except Exception as jse:
+            req = requests.get(url, auth=self.auth, timeout=getattr(self, 'timeout'))
             ok = req.status_code in [requests.codes.ok, requests.codes.no_content]
             if not ok:
                 return None
+            return req.json()
+        except Exception as jse:
             return req.text  # TODO TEST
 
     def post(self, url, data):

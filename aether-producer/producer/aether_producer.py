@@ -249,10 +249,12 @@ class ProducerManager(object):
         self.logger.setLevel(log_level)
         if log_level is "DEBUG":
             self.app.debug = True
+        self.app.config['JSONIFY_PRETTYPRINT_REGULAR'] = self.settings.get(
+            'flask_settings', {}).get('pretty_json_status', False)
         pool_size = self.settings.get(
             'flask_settings', {}).get('max_connections', 1)
         server_ip = self.settings.get('server_ip', "")
-        server_port = self.settings.get('server_port', 5005)
+        server_port = int(self.settings.get('server_port', 9005))
         self.worker_pool = Pool(pool_size)
         self.http = WSGIServer(
             (server_ip, server_port),
@@ -273,7 +275,7 @@ class ProducerManager(object):
             "topics": {k: v.get_status() for k, v in self.topic_managers.items()}
         }
         with self.app.app_context():
-            return jsonify(status)
+            return jsonify(**status)
 
 
 class TopicManager(object):
@@ -329,7 +331,7 @@ class TopicManager(object):
         self.failed_changes = {}
         self.wait_time = self.context.settings.get('sleep_time', 2)
         self.window_size_sec = self.context.settings.get('window_size_sec', 3)
-        pg_requires = ['user', 'dbname', 'port', 'host']
+        pg_requires = ['user', 'dbname', 'port', 'host', 'password']
         self.pg_creds = {key: self.context.settings.get("postgres_%s" % key) for key in pg_requires}
         self.kafka_failure_wait_time = self.context.settings.get(
             'kafka_failure_wait_time', 10)

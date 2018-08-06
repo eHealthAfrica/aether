@@ -10,6 +10,7 @@
     "postgres_port"   : 5432,
     "postgres_user"   : "readonlyuser",
     "postgres_dbname" : "kernel-test",
+    "postgres_password" : "",
 
     "kernel_url": "http://kernel-test:9000",
     "kernel_admin_username" : "admin",
