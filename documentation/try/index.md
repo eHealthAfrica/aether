@@ -41,6 +41,12 @@ git clone git@github.com:eHealthAfrica/aether-bootstrap.git
 cd aether-bootstrap
 ```
 
+If you are starting Aether for the first time, you will need to create some docker resources (networks and volumes) and generate credentials for all applications:
+
+```
+./scripts/initialise_docker_environment.sh
+```
+
 Now you just need to tell Docker to download the images and start them up:
 
 ```
