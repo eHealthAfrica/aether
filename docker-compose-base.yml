@@ -33,7 +33,7 @@ services:
       PGUSER: postgres
 
   couchdb-base:
-    image: couchdb:1.7.1
+    image: couchdb:1.7.2
     environment:
       COUCHDB_USER: ${COUCHDB_USER}
       COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
