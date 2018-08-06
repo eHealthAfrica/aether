@@ -273,7 +273,7 @@ class ProducerManager(object):
             "topics": {k: v.get_status() for k, v in self.topic_managers.items()}
         }
         with self.app.app_context():
-            return jsonify(status)
+            return jsonify(**status)
 
 
 class TopicManager(object):
