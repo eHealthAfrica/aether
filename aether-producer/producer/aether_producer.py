@@ -249,6 +249,7 @@ class ProducerManager(object):
         self.logger.setLevel(log_level)
         if log_level is "DEBUG":
             self.app.debug = True
+        self.app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
         pool_size = self.settings.get(
             'flask_settings', {}).get('max_connections', 1)
         server_ip = self.settings.get('server_ip', "")
