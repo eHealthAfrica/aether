@@ -55,34 +55,34 @@ class PaginationTests(TestCase):
         response = self.view(request)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(dict(response.data), {
-            'results': list(range(1, 31)),  # default `page_size` is 30
+            'results': list(range(1, 11)),  # default `page_size` is 10
             'previous': None,
             'next': 'http://testserver/?page=2',
             'count': self.count,
         })
 
     def test_setting_page_size(self):
-        request = factory.get('/', {'page_size': 10})
+        request = factory.get('/', {'page_size': 30})
         request.user = self.user
         response = self.view(request)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(dict(response.data), {
-            'results': list(range(1, 11)),
+            'results': list(range(1, 31)),
             'previous': None,
-            'next': 'http://testserver/?page=2&page_size=10',
+            'next': 'http://testserver/?page=2&page_size=30',
             'count': self.count,
         })
 
     def test_setting_page_size_over_maximum(self):
-        request = factory.get('/', {'page_size': 10485760})
+        request = factory.get('/', {'page_size': 10000})
         request.user = self.user
         response = self.view(request)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(dict(response.data), {
-            'results': list(range(1, 1048576)),  # max `page_size` is 1048575
+            'results': list(range(1, 5001)),  # max `page_size` is 5000
             'previous': None,
             # parameter value is not updated
-            'next': 'http://testserver/?page=2&page_size=10485760',
+            'next': 'http://testserver/?page=2&page_size=10000',
             'count': self.count,
         })
 
@@ -92,7 +92,7 @@ class PaginationTests(TestCase):
         response = self.view(request)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(dict(response.data), {
-            'results': list(range(1, 31)),  # default `page_size` is 30
+            'results': list(range(1, 11)),  # default `page_size` is 10
             'previous': None,
             # parameter value is not updated
             'next': 'http://testserver/?page=2&page_size=0',

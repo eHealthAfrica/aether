@@ -9,7 +9,6 @@ django<2
 django-cors-headers
 django-prometheus
 djangorestframework
-djangorestframework-csv
 psycopg2-binary
 requests
 

@@ -30,7 +30,17 @@ from rest_framework.decorators import (
 )
 from rest_framework.renderers import JSONRenderer
 
-from . import models, serializers, filters, constants, utils, mapping_validation, project_artefacts
+from . import (
+    avro_tools,
+    constants,
+    exporter,
+    filters,
+    mapping_validation,
+    models,
+    project_artefacts,
+    serializers,
+    utils,
+)
 
 
 def get_entity_linked_data(entity, request, resolved, depth, start_depth=0):
@@ -54,38 +64,38 @@ def get_entity_linked_data(entity, request, resolved, depth, start_depth=0):
     return resolved
 
 
-class CustomViewSet(viewsets.ModelViewSet):
-
-    @action(detail=True, methods=['get', 'post'])
-    def details(self, request, pk=None, *args, **kwargs):
-        '''
-        Allow to retrieve data from a POST request.
-        Reachable at ``.../{model}/{pk}/details/``
-        '''
-
-        return self.retrieve(request, pk, *args, **kwargs)
-
-    @action(detail=False, methods=['get', 'post'])
-    def fetch(self, request, *args, **kwargs):
-        '''
-        Allow to list data from a POST request.
-        Reachable at ``.../{model}/fetch/``
-        '''
-
-        return self.list(request, *args, **kwargs)
-
-
-class ProjectViewSet(CustomViewSet):
+class ProjectViewSet(viewsets.ModelViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectSerializer
     filter_class = filters.ProjectFilter
+
+    @action(detail=True, methods=['get'], url_name='skeleton', url_path='schemas-skeleton')
+    def schemas_skeleton(self, request, pk=None, *args, **kwargs):
+        '''
+        Returns the schemas "skeleton" used by this project.
+
+        Reachable at ``/projects/{pk}/schemas-skeleton/``
+        '''
+
+        project = get_object_or_404(models.Project, pk=pk)
+
+        # extract jsonpaths and docs from linked schemas definition
+        jsonpaths = []
+        docs = {}
+        for project_schema in project.projectschemas.order_by('-created'):
+            avro_tools.extract_jsonpaths_and_docs(
+                schema=project_schema.schema.definition,
+                jsonpaths=jsonpaths,
+                docs=docs,
+            )
+        return Response(data={'jsonpaths': jsonpaths, 'docs': docs})
 
     @action(detail=True, methods=['get', 'patch'])
     def artefacts(self, request, pk=None, *args, **kwargs):
         '''
         Returns the list of project and its artefact ids by type.
 
-        Reachable at ``.../projects/{pk}/artefacts/``
+        Reachable at ``/projects/{pk}/artefacts/``
         '''
 
         if request.method == 'GET':
@@ -187,7 +197,7 @@ class ProjectStatsViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ('name',)
 
 
-class MappingViewSet(CustomViewSet):
+class MappingViewSet(viewsets.ModelViewSet):
     queryset = models.Mapping.objects.all()
     serializer_class = serializers.MappingSerializer
     filter_class = filters.MappingFilter
@@ -210,34 +220,38 @@ class MappingStatsViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ('name',)
 
 
-class SubmissionViewSet(CustomViewSet):
+class SubmissionViewSet(exporter.ExporterViewSet):
     queryset = models.Submission.objects.all()
     serializer_class = serializers.SubmissionSerializer
     filter_class = filters.SubmissionFilter
 
 
-class AttachmentViewSet(CustomViewSet):
+class AttachmentViewSet(viewsets.ModelViewSet):
     queryset = models.Attachment.objects.all()
     serializer_class = serializers.AttachmentSerializer
     filter_class = filters.AttachmentFilter
 
 
-class SchemaViewSet(CustomViewSet):
+class SchemaViewSet(viewsets.ModelViewSet):
     queryset = models.Schema.objects.all()
     serializer_class = serializers.SchemaSerializer
     filter_class = filters.SchemaFilter
 
 
-class ProjectSchemaViewSet(CustomViewSet):
+class ProjectSchemaViewSet(viewsets.ModelViewSet):
     queryset = models.ProjectSchema.objects.all()
     serializer_class = serializers.ProjectSchemaSerializer
     filter_class = filters.ProjectSchemaFilter
 
 
-class EntityViewSet(CustomViewSet):
+class EntityViewSet(exporter.ExporterViewSet):
     queryset = models.Entity.objects.all()
     serializer_class = serializers.EntitySerializer
     filter_class = filters.EntityFilter
+
+    # Exporter required fields
+    schema_field = 'projectschema__schema__definition'
+    schema_order = '-projectschema__schema__created'
 
     def retrieve(self, request, pk=None, *args, **kwargs):
         selected_record = get_object_or_404(models.Entity, pk=pk)
