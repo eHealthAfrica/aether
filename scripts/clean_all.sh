@@ -20,11 +20,11 @@
 #
 set -Eeuo pipefail
 
+echo "_____________________________________________ Removing ALL containers"
 
 for dc_file in $(find docker-compose*.yml 2> /dev/null)
-do
-    :
-
-    echo "Stopping and removing $dc_file containers"
+do :
+    echo "_____________________________________________ Stopping and removing $dc_file containers"
+    docker-compose -f $dc_file kill
     docker-compose -f $dc_file down
 done

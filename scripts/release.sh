@@ -40,6 +40,9 @@ release_app () {
     docker push "${IMAGE_REPO}/${AETHER_APP}:latest"
 }
 
+# Login in dockerhub
+docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
+
 # Try to create the common aether network if it doesn't exist.
 docker network create aether_internal 2>/dev/null || true
 

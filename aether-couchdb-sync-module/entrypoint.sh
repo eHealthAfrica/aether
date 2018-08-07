@@ -73,14 +73,14 @@ setup () {
     # migrate data model if needed
     ./manage.py migrate --noinput
 
+    # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
+    ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD
+
     until curl -s $COUCHDB_URL > /dev/null; do
         >&2 echo "Waiting for couchdb..."
         sleep 1
     done
     curl -s $COUCHDB_URL
-
-    # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
-    ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD
 }
 
 test_flake8 () {
