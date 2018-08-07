@@ -80,6 +80,10 @@ new WebpackDevServer(webpack(config), {
     timings: false,
     chunks: false,
     chunkModules: false
+  },
+  watchOptions: {
+    aggregateTimeout: 300,
+    poll: 1000
   }
 })
   .listen(WEBPACK_PORT, '0.0.0.0', () => {

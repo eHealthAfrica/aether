@@ -38,6 +38,7 @@ setup(
         'django<2',
         'django-cors-headers',
         'django-debug-toolbar',
+        'django-prometheus',
         'djangorestframework-csv',
         'djangorestframework',
         'psycopg2-binary',

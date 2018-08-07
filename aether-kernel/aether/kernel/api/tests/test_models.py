@@ -66,6 +66,7 @@ class ModelsTests(TransactionTestCase):
         self.assertEquals(str(submission), '{} - {}'.format(str(mapping), submission.id))
         self.assertNotEqual(models.Submission.objects.count(), 0)
         self.assertTrue(submission.payload_prettified is not None)
+        self.assertEqual(submission.project, project, 'submission inherits mapping project')
 
         attachment = models.Attachment.objects.create(
             submission=submission,
@@ -120,6 +121,47 @@ class ModelsTests(TransactionTestCase):
         self.assertEquals(str(entity), 'Entity {}'.format(entity.id))
         self.assertNotEqual(models.Entity.objects.count(), 0)
         self.assertTrue(entity.payload_prettified is not None)
+        self.assertEqual(entity.project, project, 'entity inherits submission project')
+
+        project_2 = models.Project.objects.create(
+            revision='rev 1',
+            name='a second project name',
+        )
+        projectschema_2 = models.ProjectSchema.objects.create(
+            name='sample second project schema',
+            is_encrypted=False,
+            project=project_2,
+            schema=schema
+        )
+        self.assertNotEqual(entity.submission.project, projectschema_2.project)
+        entity.projectschema = projectschema_2
+        with self.assertRaises(IntegrityError) as ie:
+            entity.save()
+
+        self.assertIsNotNone(ie)
+        self.assertIn('Submission and Project Schema MUST belong to the same Project',
+                      str(ie.exception))
+
+        # it works without submission
+        entity.submission = None
+        entity.save()
+        self.assertEqual(entity.project, project_2, 'entity inherits projectschema project')
+
+        # keeps last project
+        entity.projectschema = None
+        entity.save()
+        self.assertEqual(entity.project, project_2, 'entity keeps project')
+
+        # till new submission or new projectschema is set
+        entity.submission = submission
+        entity.projectschema = None
+        entity.save()
+        self.assertEqual(entity.project, project, 'entity inherits submission project')
+
+        entity.submission = None
+        entity.projectschema = projectschema
+        entity.save()
+        self.assertEqual(entity.project, project, 'entity inherits projectschema project')
 
     def test_models_ids(self):
 

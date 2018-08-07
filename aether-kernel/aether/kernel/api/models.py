@@ -21,8 +21,12 @@
 import uuid
 from datetime import datetime
 from hashlib import md5
+
 from django.contrib.postgres.fields import JSONField
 from django.db import models
+from django.db.utils import IntegrityError
+from django_prometheus.models import ExportModelOperationsMixin
+
 from model_utils.models import TimeStampedModel
 
 from .utils import json_prettified
@@ -49,62 +53,31 @@ Data model schema:
     | salad_schema     |      |   | definition       |   |   +::::::::::::::::::+   |   | md5sum              |
     | jsonld_context   |      |   +::::::::::::::::::+   +--<| mapping          |   |   +:::::::::::::::::::::+
     | rdf_definition   |      +--<| project          |       | map_revision     |   +--<| submission          |
-    +------------------+      |   +------------------+       +------------------+   |   | submission_revision |
-                              |                                                     |   +---------------------+
-                              |                                                     |
-    +------------------+      |   +------------------+       +------------------+   |
-    | Schema           |      |   | ProjectSchema    |       | Entity           |   |
-    +==================+      |   +==================+       +==================+   |
-    | id               |<--+  |   | id               |<--+   | id               |   |
-    | created          |   |  |   | created          |   |   | modified         |   |
-    | modified         |   |  |   | modified         |   |   | revision         |   |
-    | revision         |   |  |   | name             |   |   | payload          |   |
-    | name             |   |  |   | mandatory_fields |   |   | status           |   |
-    | definition       |   |  |   | transport_rule   |   |   +::::::::::::::::::+   |
-    | type             |   |  |   | masked_fields    |   |   | submission       |>--+
-    +------------------+   |  |   | is_encrypted     |   +--<| projectschema    |
-                           |  |   +::::::::::::::::::+       +------------------+
-                           |  +--<| project          |
+    +------------------+      |   +------------------+    +-<| project          |   |   | submission_revision |
+                              |                           |  +------------------+   |   +---------------------+
+                              |                           |                         |
+                              +---------------------------+                         |
+                              |                           |                         |
+    +------------------+      |   +------------------+    |  +------------------+   |
+    | Schema           |      |   | ProjectSchema    |    |  | Entity           |   |
+    +==================+      |   +==================+    |  +==================+   |
+    | id               |<--+  |   | id               |<-+ |  | id               |   |
+    | created          |   |  |   | created          |  | |  | modified         |   |
+    | modified         |   |  |   | modified         |  | |  | revision         |   |
+    | revision         |   |  |   | name             |  | |  | payload          |   |
+    | name             |   |  |   | mandatory_fields |  | |  | status           |   |
+    | definition       |   |  |   | transport_rule   |  | |  +::::::::::::::::::+   |
+    | type             |   |  |   | masked_fields    |  | |  | submission       |>--+
+    +------------------+   |  |   | is_encrypted     |  | +-<| project          |
+                           |  |   +::::::::::::::::::+  +---<| projectschema    |
+                           |  +--<| project          |       +------------------+
                            +-----<| schema           |
                                   +------------------+
 
 '''
 
 
-class Project(TimeStampedModel):
-    '''
-                Table "public.kernel_project"
-
-         Column     |           Type           | Modifiers
-    ----------------+--------------------------+-----------
-     id             | uuid                     | not null
-     revision       | text                     | not null
-     name           | character varying(50)    | not null
-     salad_schema   | text                     |
-     jsonld_context | text                     |
-     rdf_definition | text                     |
-     created        | timestamp with time zone | not null
-     modified       | timestamp with time zone | not null
-
-    Indexes:
-        "kernel_project_pkey" PRIMARY KEY, btree (id)
-        "kernel_project_name_###_uniq" UNIQUE CONSTRAINT, btree (name)
-        "kernel_project_name_###_like" btree (name varchar_pattern_ops)
-
-    Referenced by:
-        TABLE "kernel_mapping"
-            CONSTRAINT "kernel_mapping_project_id_###_fk_kernel_project_id"
-            FOREIGN KEY (project_id)
-            REFERENCES kernel_project(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-        TABLE "kernel_projectschema"
-            CONSTRAINT "kernel_projectschema_project_id_###_fk_kernel_project_id"
-            FOREIGN KEY (project_id)
-            REFERENCES kernel_project(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-    '''
+class Project(ExportModelOperationsMixin('kernel_project'), TimeStampedModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
@@ -120,43 +93,13 @@ class Project(TimeStampedModel):
     class Meta:
         app_label = 'kernel'
         default_related_name = 'projects'
-        ordering = ('-modified',)
+        ordering = ['-modified']
+        indexes = [
+            models.Index(fields=['-modified']),
+        ]
 
 
-class Mapping(TimeStampedModel):
-    '''
-                Table "public.kernel_mapping"
-
-       Column   |           Type           | Modifiers
-    ------------+--------------------------+-----------
-     id         | uuid                     | not null
-     name       | character varying(50)    | not null
-     definition | jsonb                    | not null
-     revision   | text                     | not null
-     project_id | uuid                     | not null
-     created    | timestamp with time zone | not null
-     modified   | timestamp with time zone | not null
-
-    Indexes:
-        "kernel_mapping_pkey" PRIMARY KEY, btree (id)
-        "kernel_mapping_name_###_uniq" UNIQUE CONSTRAINT, btree (name)
-        "kernel_mapping_name_###_like" btree (name varchar_pattern_ops)
-        "kernel_mapping_project_id_###" btree (project_id)
-
-    Foreign-key constraints:
-        "kernel_mapping_project_id_###_fk_kernel_project_id"
-            FOREIGN KEY (project_id)
-            REFERENCES kernel_project(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-    Referenced by:
-        TABLE "kernel_submission"
-            CONSTRAINT "kernel_submission_mapping_id_###_fk_kernel_mapping_id"
-            FOREIGN KEY (mapping_id)
-            REFERENCES kernel_mapping(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-    '''
+class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
@@ -176,47 +119,14 @@ class Mapping(TimeStampedModel):
     class Meta:
         app_label = 'kernel'
         default_related_name = 'mappings'
-        ordering = ('-modified',)
+        ordering = ['project__id', '-modified']
+        indexes = [
+            models.Index(fields=['project', '-modified']),
+            models.Index(fields=['-modified']),
+        ]
 
 
-class Submission(TimeStampedModel):
-    '''
-                Table "public.kernel_submission"
-
-        Column    |           Type           | Modifiers
-    --------------+--------------------------+-----------
-     id           | uuid                     | not null
-     revision     | text                     | not null
-     map_revision | text                     | not null
-     payload      | jsonb                    | not null
-     mapping_id   | uuid                     | not null
-     created      | timestamp with time zone | not null
-     modified     | timestamp with time zone | not null
-
-    Indexes:
-        "kernel_submission_pkey" PRIMARY KEY, btree (id)
-        "kernel_submission_mapping_id_###" btree (mapping_id)
-
-    Foreign-key constraints:
-        "kernel_submission_mapping_id_###_fk_kernel_mapping_id"
-            FOREIGN KEY (mapping_id)
-            REFERENCES kernel_mapping(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-    Referenced by:
-        TABLE "kernel_attachment"
-            CONSTRAINT "kernel_attachment_submission_id_###_fk_kernel_submission_id"
-            FOREIGN KEY (submission_id)
-            REFERENCES kernel_submission(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-        TABLE "kernel_entity"
-            CONSTRAINT "kernel_entity_submission_id_###_fk_kernel_submission_id"
-            FOREIGN KEY (submission_id)
-            REFERENCES kernel_submission(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-    '''
+class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
@@ -224,7 +134,14 @@ class Submission(TimeStampedModel):
     map_revision = models.TextField(default='1')
     payload = JSONField(blank=False, null=False)
 
-    mapping = models.ForeignKey(to=Mapping, related_name='submissions', on_delete=models.CASCADE)
+    mapping = models.ForeignKey(to=Mapping, on_delete=models.CASCADE)
+
+    # redundant but speed up queries
+    project = models.ForeignKey(to=Project, on_delete=models.CASCADE, blank=True, null=True)
+
+    def save(self, **kwargs):
+        self.project = self.mapping.project
+        super(Submission, self).save(**kwargs)
 
     @property
     def payload_prettified(self):
@@ -236,7 +153,11 @@ class Submission(TimeStampedModel):
     class Meta:
         app_label = 'kernel'
         default_related_name = 'submissions'
-        ordering = ('-modified',)
+        ordering = ['project__id', '-modified']
+        indexes = [
+            models.Index(fields=['project', '-modified']),
+            models.Index(fields=['-modified']),
+        ]
 
 
 def __attachment_path__(instance, filename):
@@ -248,32 +169,7 @@ def __attachment_path__(instance, filename):
     )
 
 
-class Attachment(TimeStampedModel):
-    '''
-                Table "public.kernel_attachment"
-
-           Column        |           Type           | Modifiers
-    ---------------------+--------------------------+-----------
-     id                  | uuid                     | not null
-     submission_revision | text                     | not null
-     name                | character varying(255)   | not null
-     attachment_file     | character varying(100)   | not null
-     md5sum              | character varying(36)    | not null
-     submission_id       | uuid                     | not null
-     created             | timestamp with time zone | not null
-     modified            | timestamp with time zone | not null
-
-    Indexes:
-        "kernel_attachment_pkey" PRIMARY KEY, btree (id)
-        "kernel_attachment_submission_id_###" btree (submission_id)
-
-    Foreign-key constraints:
-        "kernel_attachment_submission_id_###_fk_kernel_submission_id"
-            FOREIGN KEY (submission_id)
-            REFERENCES kernel_submission(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-    '''
+class Attachment(ExportModelOperationsMixin('kernel_attachment'), TimeStampedModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
 
@@ -315,35 +211,13 @@ class Attachment(TimeStampedModel):
     class Meta:
         app_label = 'kernel'
         default_related_name = 'attachments'
-        ordering = ['submission', 'submission_revision', 'name']
+        ordering = ['submission__id', 'name']
+        indexes = [
+            models.Index(fields=['submission', 'name']),
+        ]
 
 
-class Schema(TimeStampedModel):
-    '''
-                Table "public.kernel_schema"
-
-       Column   |           Type           | Modifiers
-    ------------+--------------------------+-----------
-     id         | uuid                     | not null
-     name       | character varying(50)    | not null
-     type       | character varying(50)    | not null
-     definition | jsonb                    | not null
-     revision   | text                     | not null
-     created    | timestamp with time zone | not null
-     modified   | timestamp with time zone | not null
-
-    Indexes:
-        "kernel_schema_pkey" PRIMARY KEY, btree (id)
-        "kernel_schema_name_###_uniq" UNIQUE CONSTRAINT, btree (name)
-        "kernel_schema_name_###_like" btree (name varchar_pattern_ops)
-
-    Referenced by:
-        TABLE "kernel_projectschema"
-            CONSTRAINT "kernel_projectschema_schema_id_###_fk_kernel_schema_id"
-            FOREIGN KEY (schema_id)
-            REFERENCES kernel_schema(id)
-            DEFERRABLE INITIALLY DEFERRED
-    '''
+class Schema(ExportModelOperationsMixin('kernel_schema'), TimeStampedModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
@@ -362,52 +236,13 @@ class Schema(TimeStampedModel):
     class Meta:
         app_label = 'kernel'
         default_related_name = 'schemas'
-        ordering = ('-modified',)
+        ordering = ['-modified']
+        indexes = [
+            models.Index(fields=['-modified']),
+        ]
 
 
-class ProjectSchema(TimeStampedModel):
-    '''
-                Table "public.kernel_projectschema"
-
-          Column      |           Type           | Modifiers
-    ------------------+--------------------------+-----------
-     id               | uuid                     | not null
-     name             | character varying(50)    | not null
-     mandatory_fields | text                     |
-     transport_rule   | text                     |
-     masked_fields    | text                     |
-     is_encrypted     | boolean                  | not null
-     project_id       | uuid                     | not null
-     schema_id        | uuid                     | not null
-     created          | timestamp with time zone | not null
-     modified         | timestamp with time zone | not null
-
-    Indexes:
-        "kernel_projectschema_pkey" PRIMARY KEY, btree (id)
-        "kernel_projectschema_name_###_uniq" UNIQUE CONSTRAINT, btree (name)
-        "kernel_projectschema_name_###_like" btree (name varchar_pattern_ops)
-        "kernel_projectschema_project_id_###" btree (project_id)
-        "kernel_projectschema_schema_id_###" btree (schema_id)
-
-    Foreign-key constraints:
-        "kernel_projectschema_project_id_###_fk_kernel_project_id"
-            FOREIGN KEY (project_id)
-            REFERENCES kernel_project(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-        "kernel_projectschema_schema_id_###_fk_kernel_schema_id"
-            FOREIGN KEY (schema_id)
-            REFERENCES kernel_schema(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-    Referenced by:
-        TABLE "kernel_entity"
-            CONSTRAINT "kernel_entity_projectschema_id_###_fk_kernel_project_id"
-            FOREIGN KEY (projectschema_id)
-            REFERENCES kernel_projectschema(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-    '''
+class ProjectSchema(ExportModelOperationsMixin('kernel_projectschema'), TimeStampedModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     name = models.CharField(max_length=50, null=False, unique=True)
@@ -426,40 +261,14 @@ class ProjectSchema(TimeStampedModel):
     class Meta:
         app_label = 'kernel'
         default_related_name = 'projectschemas'
-        ordering = ('-modified',)
+        ordering = ['project__id', '-modified']
+        indexes = [
+            models.Index(fields=['project', '-modified']),
+            models.Index(fields=['-modified']),
+        ]
 
 
-class Entity(models.Model):
-    '''
-                Table "public.kernel_entity"
-
-          Column      |          Type          | Modifiers
-    ------------------+------------------------+-----------
-     id               | uuid                   | not null
-     revision         | text                   | not null
-     payload          | jsonb                  | not null
-     status           | character varying(20)  | not null
-     modified         | character varying(100) | not null
-     projectschema_id | uuid                   |
-     submission_id    | uuid                   |
-
-    Indexes:
-        "kernel_entity_pkey" PRIMARY KEY, btree (id)
-        "kernel_entity_projectschema_id_###" btree (projectschema_id)
-        "kernel_entity_submission_id_###" btree (submission_id)
-
-    Foreign-key constraints:
-        "kernel_entity_projectschema_id_###_fk_kernel_project_id"
-            FOREIGN KEY (projectschema_id)
-            REFERENCES kernel_projectschema(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-        "kernel_entity_submission_id_###_fk_kernel_submission_id"
-            FOREIGN KEY (submission_id)
-            REFERENCES kernel_submission(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-    '''
+class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
@@ -471,7 +280,19 @@ class Entity(models.Model):
     projectschema = models.ForeignKey(to=ProjectSchema, on_delete=models.SET_NULL, null=True)
     submission = models.ForeignKey(to=Submission, on_delete=models.SET_NULL, blank=True, null=True)
 
+    # redundant but speed up queries
+    project = models.ForeignKey(to=Project, on_delete=models.SET_NULL, blank=True, null=True)
+
     def save(self, **kwargs):
+        if self.submission and self.projectschema:
+            if self.submission.project != self.projectschema.project:
+                raise IntegrityError('Submission and Project Schema MUST belong to the same Project')
+            self.project = self.submission.project
+        elif self.submission:
+            self.project = self.submission.project
+        elif self.projectschema:
+            self.project = self.projectschema.project
+
         if self.modified:
             self.modified = '{}-{}'.format(datetime.now().isoformat(), self.modified[27:None])
         else:
@@ -489,4 +310,8 @@ class Entity(models.Model):
         app_label = 'kernel'
         default_related_name = 'entities'
         verbose_name_plural = 'entities'
-        ordering = ('-modified',)
+        ordering = ['project__id', '-modified']
+        indexes = [
+            models.Index(fields=['project', '-modified']),
+            models.Index(fields=['-modified']),
+        ]
