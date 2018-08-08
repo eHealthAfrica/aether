@@ -18,7 +18,6 @@
 
 from django.conf import settings
 from django.test import TestCase
-from django.core.files.storage import default_storage
 
 
 class SettingsTest(TestCase):
@@ -33,7 +32,3 @@ class SettingsTest(TestCase):
         self.assertEqual(settings.SECURE_PROXY_SSL_HEADER, None)
 
         self.assertEqual(settings.ROOT_URLCONF, 'aether.common.urls')
-
-    def test_custom_storage_variables(self):
-        with self.settings(DEFAULT_FILE_STORAGE='storages.backends.s3boto3.S3Boto3Storage'):
-            self.assertEqual(str(default_storage.__class__), "<class 'storages.backends.s3boto3.S3Boto3Storage'>")
