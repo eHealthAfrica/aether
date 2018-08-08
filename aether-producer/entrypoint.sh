@@ -34,9 +34,16 @@ show_help() {
     start         : start in normal mode
     start_dev     : start for test/dev
     start_test    : start for test/dev
+    test_unit     : run tests
     """
 }
 
+test_unit() {
+    python ./setup.py test
+    cat /code/conf/extras/good_job.txt
+    rm -R .pytest_cache
+    rm -rf tests/__pycache__
+}
 
 case "$1" in
     bash )
@@ -75,6 +82,9 @@ case "$1" in
         ./manage.py test
     ;;
 
+    test_unit )
+        test_unit
+    ;;
 
     help)
         show_help
