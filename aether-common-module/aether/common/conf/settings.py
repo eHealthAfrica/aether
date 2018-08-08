@@ -254,6 +254,7 @@ elif DJANGO_STORAGE_BACKEND == 's3':
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     AWS_STORAGE_BUCKET_NAME = os.environ['BUCKET_NAME']
 elif DJANGO_STORAGE_BACKEND == 'gcs':
+    INSTALLED_APPS += ['storages']
     DEFAULT_FILE_STORAGE = 'storages.backends.gs.GSBotoStorage'
     GS_BUCKET_NAME = os.environ['BUCKET_NAME']
 else:

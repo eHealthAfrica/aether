@@ -35,16 +35,16 @@ setup(
 
     python_requires='>=3.6',
     install_requires=[
-        'django<2',
+        'boto',
+        'boto3',
         'django-cors-headers',
         'django-debug-toolbar',
         'django-prometheus',
-        'djangorestframework-csv',
+        'django-storages',
+        'django<2',
         'djangorestframework',
+        'djangorestframework-csv',
         'psycopg2-binary',
         'requests',
-        'django-storages',
-        'boto3',
-        'boto'
     ],
 )
