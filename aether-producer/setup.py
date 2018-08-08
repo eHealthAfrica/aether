@@ -25,7 +25,7 @@ setup(
     author_email='shawn.sarwar@ehealthafrica.org',
     decription='Kafka Producer for Aether',
     version='0.9.0',
-    setup_requires=['pytest-runner'],
+    setup_requires=['pytest'],
     tests_require=['pytest', 'sqlalchemy', 'requests', 'aether_producer'],
     url='https://github.com/eHealthAfrica/aether',
     keywords=['aet', 'aether', 'kafka', 'producer'],

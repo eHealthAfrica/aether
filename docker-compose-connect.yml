@@ -41,8 +41,8 @@ services:
     environment:
       PRODUCER_SETTINGS_FILE: /code/producer/settings.json
     links:
-      - kafka
-      - zookeeper
+     - kafka
+     - zookeeper
     ports:
       - "5005:5005"
     networks:

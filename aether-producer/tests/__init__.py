@@ -18,9 +18,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import logging
 import pytest
 
-from aether_producer.producer import *
+from app.producer import *
+Offset = db.Offset
+
+log = logging.getLogger()
 
 class MockProducerManager(ProducerManager):
 
@@ -29,10 +33,11 @@ class MockProducerManager(ProducerManager):
         self.killed = False
         self.kernel = None
         self.kafka = False
+        self.logger = log
         self.topic_managers = {}
 
 
 @pytest.mark.integration
 @pytest.fixture(scope='session')
 def ProducerManagerSettings():
-    return Settings('code/tests/conf/producer.json')
+    return Settings('/code/tests/conf/producer.json')

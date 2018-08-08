@@ -49,8 +49,8 @@ from spavro.io import DatumWriter, DatumReader
 from spavro.io import validate
 from urllib3.exceptions import MaxRetryError
 
-from producer import db
-from producer.db import Offset
+from . import db
+from .db import Offset
 
 FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 

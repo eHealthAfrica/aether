@@ -18,13 +18,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import requests
 
-from aether_producer.producer import db
-from aether_producer.producer.db import Offset
+import requests
+import uuid
 
 from . import *
-
 
 @pytest.mark.integration
 def test_manager_http_endpoint_service(ProducerManagerSettings):
@@ -33,7 +31,7 @@ def test_manager_http_endpoint_service(ProducerManagerSettings):
         man.serve()
         man.add_endpoints()
         sleep(1)
-        url = 'http://localhost:%s' % self.settings.get('server_port')
+        url = 'http://localhost:%s' % man.settings.get('server_port')
         r = requests.head(url + '/status')
         assert(r.status_code == 200)
         r = requests.head(url + '/healthcheck')
@@ -45,9 +43,11 @@ def test_manager_http_endpoint_service(ProducerManagerSettings):
 
 
 @pytest.mark.integration
-def test_initialize_database(ProducerManagerSettings):
+def test_initialize_database_get_set(ProducerManagerSettings):
     man = MockProducerManager(ProducerManagerSettings)
     man.init_db()
-    assert(Offset.get('fake_entry') is None)
-    new_offset = Offset.update('fake_entry', 'an_offset_value')
-    assert(Offset.get('fake_entry') is 'an_offset_value')
+    assert(Offset.get_offset('some_missing') is None)
+    value = str(uuid.uuid4())
+    new_offset = Offset.update('fake_entry', value)
+    assert(Offset.get_offset('fake_entry').offset_value == value)
+

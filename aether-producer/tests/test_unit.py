@@ -22,5 +22,4 @@ from . import *
 
 @pytest.mark.unit
 def t():
-    pass
-
+    assert(True)

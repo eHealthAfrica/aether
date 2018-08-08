@@ -207,7 +207,9 @@ services:
       KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
     ports:
       - "9005:9005"
-    links:
-      - kafka-test
-      - zookeeper-test
+    volumes:
+      - ./aether-producer/tests:/code/tests
+    # links:
+    #   - kafka-test
+    #   - zookeeper-test
     command: start_test
