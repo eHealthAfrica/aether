@@ -23,7 +23,7 @@ from autofixture import AutoFixture
 
 from aether.kernel.api import models
 
-ENTITIES_COUNT_RANGE = (10, 20)
+ENTITIES_COUNT_RANGE = (1, 3)
 SUBMISSIONS_COUNT_RANGE = (10, 20)
 
 
@@ -110,6 +110,7 @@ def generate_project(
             values=project_field_values,
         ),
     ).create_one()
+
     mapping = AutoFixture(
         model=models.Mapping,
         field_values=get_field_values(
@@ -120,6 +121,7 @@ def generate_project(
             values=mapping_field_values,
         ),
     ).create_one()
+
     schema = AutoFixture(
         model=models.Schema,
         field_values=get_field_values(
@@ -129,6 +131,7 @@ def generate_project(
             values=schema_field_values,
         ),
     ).create_one()
+
     projectschema = AutoFixture(
         model=models.ProjectSchema,
         field_values=get_field_values(
@@ -139,26 +142,27 @@ def generate_project(
             values=projectschema_field_values,
         ),
     ).create_one()
-    AutoFixture(
-        model=models.Submission,
-        field_values=get_field_values(
-            default=dict(
-                revision=1,
-                payload=submission_payload(),
-                mapping=mapping,
-                projectschema=projectschema,
+
+    for _ in range(random.randint(*SUBMISSIONS_COUNT_RANGE)):
+        submission = AutoFixture(
+            model=models.Submission,
+            field_values=get_field_values(
+                default=dict(
+                    payload=submission_payload(),
+                    mapping=mapping,
+                ),
+                values=submission_field_values,
             ),
-            values=submission_field_values,
-        ),
-    ).create(random.randint(*SUBMISSIONS_COUNT_RANGE))
-    AutoFixture(
-        model=models.Entity,
-        field_values=get_field_values(
-            default=dict(
-                revision=1,
-                payload=entity_payload(),
-                projectschema=projectschema,
+        ).create_one()
+
+        AutoFixture(
+            model=models.Entity,
+            field_values=get_field_values(
+                default=dict(
+                    payload=entity_payload(),
+                    projectschema=projectschema,
+                    submission=submission,
+                ),
+                values=entity_field_values,
             ),
-            values=entity_field_values,
-        ),
-    ).create(random.randint(*ENTITIES_COUNT_RANGE))
+        ).create(random.randint(*ENTITIES_COUNT_RANGE))

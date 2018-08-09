@@ -17,15 +17,21 @@
 # under the License.
 
 import django_filters.rest_framework as filters
+import uuid
 
 from . import models
 
 
 class ProjectFilter(filters.FilterSet):
     schema = filters.CharFilter(
-        name='projectschemas__schema',
-        lookup_expr='exact',
+        method='schema_filter',
     )
+
+    def schema_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(projectschemas__schema__pk=value)
+        else:
+            return queryset.filter(projectschemas__schema__name=value)
 
     class Meta:
         fields = '__all__'
@@ -34,6 +40,7 @@ class ProjectFilter(filters.FilterSet):
 
 class MappingFilter(filters.FilterSet):
     class Meta:
+        fields = '__all__'
         exclude = ('definition',)
         model = models.Mapping
 
@@ -41,14 +48,19 @@ class MappingFilter(filters.FilterSet):
 class SubmissionFilter(filters.FilterSet):
     instanceID = filters.CharFilter(
         name='payload__meta__instanceID',
-        lookup_expr='exact',
     )
     project = filters.CharFilter(
-        name='mapping__project',
-        lookup_expr='exact',
+        method='project_filter',
     )
 
+    def project_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(project__pk=value)
+        else:
+            return queryset.filter(project__name=value)
+
     class Meta:
+        fields = '__all__'
         exclude = ('payload',)
         model = models.Submission
 
@@ -61,9 +73,14 @@ class AttachmentFilter(filters.FilterSet):
 
 class SchemaFilter(filters.FilterSet):
     project = filters.CharFilter(
-        name='projectschemas__project',
-        lookup_expr='exact',
+        method='project_filter',
     )
+
+    def project_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(projectschemas__project__pk=value)
+        else:
+            return queryset.filter(projectschemas__project__name=value)
 
     class Meta:
         exclude = ('definition',)
@@ -77,15 +94,35 @@ class ProjectSchemaFilter(filters.FilterSet):
 
 
 class EntityFilter(filters.FilterSet):
-    project = filters.CharFilter(
-        name='projectschema__project',
-        lookup_expr='exact',
-    )
     schema = filters.CharFilter(
-        name='projectschema__schema',
-        lookup_expr='exact',
+        method='schema_filter',
+    )
+    project = filters.CharFilter(
+        method='project_filter',
     )
 
+    def project_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(project__pk=value)
+        else:
+            return queryset.filter(project__name=value)
+
+    def schema_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(projectschema__schema__pk=value)
+        else:
+            return queryset.filter(projectschema__schema__name=value)
+
     class Meta:
+        fields = '__all__'
         exclude = ('payload',)
         model = models.Entity
+
+
+def is_uuid(value):
+    try:
+        uuid.UUID(value)
+        return True
+    except ValueError:
+        # `value` is not a valid UUID
+        return False
