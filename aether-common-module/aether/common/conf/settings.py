@@ -257,7 +257,11 @@ elif DJANGO_STORAGE_BACKEND == 'gcs':
     DEFAULT_FILE_STORAGE = 'storages.backends.gs.GSBotoStorage'
     GS_BUCKET_NAME = os.environ['BUCKET_NAME']
 else:
-    msg = 'DJANGO_STORAGE_BACKEND "{}" is currently not supported'
+    msg = (
+        'Unrecognized value "{}" for environment variable '
+        'DJANGO_STORAGE_BACKEND. Expected one of the following: "filesystem", '
+        '"s3", "gcs"'
+    )
     raise Exception(msg.format(DJANGO_STORAGE_BACKEND))
 logger.info('Using storage backend "{}"'.format(DJANGO_STORAGE_BACKEND))
 
