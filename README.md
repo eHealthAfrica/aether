@@ -137,10 +137,10 @@ of the most common ones with non default values. For more info take a look at th
 
 #### File Storage System
 (Used on Kernel, ODK and UI Modules)
-- `DJANGO_STORAGE_BACKEND`: Used to specify a [Default file storage system](https://docs.djangoproject.com/en/1.11/ref/settings/#default-file-storage). Available options: filesystem, s3, gcs. More information [here](https://django-storages.readthedocs.io/en/latest/index.html).
+- `DJANGO_STORAGE_BACKEND`: Used to specify a [Default file storage system](https://docs.djangoproject.com/en/1.11/ref/settings/#default-file-storage). Available options: filesystem, s3, gcs. More information [here](https://django-storages.readthedocs.io/en/latest/index.html). Setting `DJANGO_STORAGE_BACKEND` is mandatory, even for local development (in which case "filesystem" would typically be used).
 
   ##### S3
-  - `BUCKET_NAME`: Name of the bucket to use on s3. Must be unique on s3. Bucket will be automatically created if the name is available.
+  - `BUCKET_NAME`: Name of the bucket to use on s3. Must be unique on s3.
   - `AWS_ACCESS_KEY_ID`: AWS Access Key to your s3 account. Used when `DJANGO_REMOTE_STORAGE=s3`.
   - `AWS_SECRET_ACCESS_KEY`: AWS Secret Access Key to your s3 account. Used when `DJANGO_REMOTE_STORAGE=s3`.
 
