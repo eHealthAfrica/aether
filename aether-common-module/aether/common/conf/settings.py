@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'django.contrib.sessions',
     'django.contrib.staticfiles',
+    'storages',
 
     # REST framework with auth token
     'rest_framework',
@@ -250,11 +251,9 @@ DJANGO_STORAGE_BACKEND = os.environ['DJANGO_STORAGE_BACKEND']
 if DJANGO_STORAGE_BACKEND == 'filesystem':
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 elif DJANGO_STORAGE_BACKEND == 's3':
-    INSTALLED_APPS += ['storages']
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     AWS_STORAGE_BUCKET_NAME = os.environ['BUCKET_NAME']
 elif DJANGO_STORAGE_BACKEND == 'gcs':
-    INSTALLED_APPS += ['storages']
     DEFAULT_FILE_STORAGE = 'storages.backends.gs.GSBotoStorage'
     GS_BUCKET_NAME = os.environ['BUCKET_NAME']
 else:
