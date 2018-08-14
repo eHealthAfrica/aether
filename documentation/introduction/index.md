@@ -25,4 +25,4 @@ In very broad brush strokes, Aether works in three stages:
 
 To do this, Aether works with _data contracts_: definitions that provide guarantees about the structure of the data that is output, so that dashbaords or other external systems can be confident of its integrity.
 
-More details about Aether, along with a short demo is available in this [13 minute video](https://drive.google.com/drive/folders/1wl0IjFASveRBCbbTywnvXKx-RwAvHB06).
+More details about Aether, along with a short demo is available in this [13 minute video](https://drive.google.com/open?id=1GipWwn1BnB4q_mMX-FCqU2pqlsbdkztS).
