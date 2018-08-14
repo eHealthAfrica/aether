@@ -37,7 +37,7 @@ You will also need to register some domains for local resolution on your compute
 The easiest way to start building an Aether-based solution is to use _Aether Bootstrap_. Begin by cloning this repository to your computer:
 
 ```
-git clone git@github.com:eHealthAfrica/aether-bootstrap.git
+git clone https://github.com/eHealthAfrica/gather-deploy.git
 cd aether-bootstrap
 ```
 
