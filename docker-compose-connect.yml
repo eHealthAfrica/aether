@@ -11,12 +11,12 @@ networks:
 services:
 
   # ---------------------------------
-  # Aether Kafka Containers
+  # Kafka & Zookeeper
   # ---------------------------------
 
   zookeeper:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: zookeeper-base
     restart: on-failure
     networks:
@@ -40,7 +40,7 @@ services:
 
   producer:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: aether-producer-base
     restart: on-failure
     links:

@@ -58,7 +58,7 @@ services:
       - "9000:9000"
     healthcheck:
       test: ["CMD", "curl", "-s", "http://localhost:9000/health"]
-      interval: 25s
+      interval: 5s
       timeout: 3s
       retries: 30
     command: start
@@ -89,7 +89,7 @@ services:
       - "9002:9002"
     healthcheck:
       test: ["CMD", "curl", "-s", "http://localhost:9002/health"]
-      interval: 25s
+      interval: 5s
       timeout: 3s
       retries: 30
     command: start
@@ -128,14 +128,14 @@ services:
       - "9006:9006"
     healthcheck:
       test: ["CMD", "curl", "-s", "http://localhost:9006/health"]
-      interval: 25s
+      interval: 5s
       timeout: 3s
       retries: 30
     command: start
 
 
   # ---------------------------------
-  # Aether UI container
+  # Aether UI
   # ---------------------------------
 
   ui-test:
@@ -158,7 +158,7 @@ services:
       - "9004:9004"
     healthcheck:
       test: ["CMD", "curl", "-s", "http://localhost:9004/health"]
-      interval: 25s
+      interval: 5s
       timeout: 3s
       retries: 30
     command: start
@@ -170,7 +170,7 @@ services:
 
 
   # ---------------------------------
-  # Aether Kafka Containers
+  # Kafka & Zookeeper
   # ---------------------------------
 
   zookeeper-test:

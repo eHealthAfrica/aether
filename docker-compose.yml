@@ -24,7 +24,7 @@ services:
 
   db:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: postgres-base
     volumes:
       # data volume
@@ -34,14 +34,14 @@ services:
 
   couchdb:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: couchdb-base
     networks:
       - internal
 
   redis:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: redis-base
     networks:
       - internal
@@ -56,8 +56,6 @@ services:
       file: docker-compose-base.yml
       service: nginx-base
     depends_on:
-      db:
-        condition: service_healthy
       kernel:
         condition: service_healthy
       # uncomment these lines depending on the started services
@@ -77,7 +75,7 @@ services:
 
   kernel:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: kernel-base
     depends_on:
       db:
@@ -94,7 +92,7 @@ services:
 
   odk:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: odk-base
     depends_on:
       db:
@@ -113,9 +111,9 @@ services:
 
   couchdb-sync:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: couchdb-sync-base
-    depends_on: &sync-dependencies
+    depends_on:
       db:
         condition: service_healthy
       couchdb:
@@ -131,9 +129,11 @@ services:
 
   couchdb-sync-rq:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: couchdb-sync-rq-base
-    depends_on: *sync-dependencies
+    depends_on:
+      couchdb-sync:
+        condition: service_healthy
     networks:
       - internal
 
@@ -144,7 +144,7 @@ services:
 
   ui:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: ui-base
     depends_on:
       db:
@@ -161,7 +161,7 @@ services:
 
   ui-assets:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: ui-assets-base
     networks:
       - internal
