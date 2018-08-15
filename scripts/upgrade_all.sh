@@ -57,7 +57,7 @@ do
     if [[ $build = "yes" ]]
     then
         echo "_____________________________________________ Rebuilding $container with updates"
-        docker-compose build --no-deps --no-cache $container
+        docker-compose build --no-cache $container
         echo "_____________________________________________ $container rebuilt!"
     fi
 done
