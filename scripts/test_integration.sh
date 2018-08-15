@@ -34,21 +34,26 @@ echo "_____________________________________________ TESTING"
 ./scripts/build_aether_utils_and_distribute.sh
 $DC_TEST down
 
-# start databases
 echo "_____________________________________________ Starting database"
 $DC_TEST up -d db-test
 
-# start a clean KERNEL TEST container
 build_container kernel
+
+# sometimes this is not as faster as we wanted... :'(
+until $DC_TEST run kernel-test eval pg_isready -q; do
+    >&2 echo "Waiting for db-test..."
+    sleep 2
+done
 
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
 
-
-echo "_____________________________________________ Testing client"
-build_container client
-$DC_TEST run client-test test
-
+# give time to kernel to start up
+KERNEL_HEALTH_URL="http://localhost:9000/health"
+until curl -s $KERNEL_HEALTH_URL > /dev/null; do
+    >&2 echo "Waiting for Kernel..."
+    sleep 2
+done
 
 echo "_____________________________________________ Starting Kafka"
 $DC_TEST up -d zookeeper-test kafka-test
@@ -57,12 +62,9 @@ build_container producer
 echo "_____________________________________________ Starting Producer"
 $DC_TEST up -d producer-test
 
-# test a clean INGEGRATION TEST container
 echo "_____________________________________________ Starting Integration Tests"
 build_container integration
 $DC_TEST run integration-test test
 
-# kill ALL containers
 ./scripts/kill_all.sh
-
 echo "_____________________________________________ END"

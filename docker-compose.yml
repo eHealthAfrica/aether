@@ -12,7 +12,8 @@ version: "2.1"
 networks:
   internal:  # alias as internal
     external:
-      name: aether_internal  # if this isn't explicitly set it inherits from the containing folder name (aether or not)
+      # if this isn't explicitly set it inherits from the containing folder name (aether or not)
+      name: aether_internal
 
 
 services:
@@ -42,6 +43,18 @@ services:
     extends:
       file: docker-compose-base.yml
       service: redis-base
+    networks:
+      - internal
+
+
+  # ---------------------------------
+  # NGINX container
+  # ---------------------------------
+
+  nginx:
+    extends:
+      file: docker-compose-base.yml
+      service: nginx-base
     networks:
       - internal
 
@@ -112,6 +125,7 @@ services:
     networks:
       - internal
 
+
   # ---------------------------------
   # Aether UI module
   # ---------------------------------
@@ -125,9 +139,6 @@ services:
         condition: service_healthy
       kernel:
         condition: service_started
-      # UI depends on "ui-assets" to serve the assets with hot reloading (HMR)
-      # to start "ui" without HMR execute first "docker-compose run ui-assets build"
-      # - ui-assets
     networks:
       internal:
         aliases:
@@ -137,17 +148,5 @@ services:
     extends:
       file: docker-compose-base.yml
       service: ui-assets-base
-    networks:
-      - internal
-
-
-  # ---------------------------------
-  # NGINX container
-  # ---------------------------------
-
-  nginx:
-    extends:
-      file: docker-compose-base.yml
-      service: nginx-base
     networks:
       - internal

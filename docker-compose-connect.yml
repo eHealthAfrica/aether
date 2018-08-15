@@ -3,6 +3,11 @@
 # ------------------------------------------------------------------------------
 version: "2.1"
 
+networks:
+  aether:
+    external:
+      name: aether_internal
+
 services:
 
   # ---------------------------------
@@ -38,18 +43,9 @@ services:
       file: docker-compose-base.yml
       service: aether-producer-base
     restart: on-failure
-    environment:
-      PRODUCER_SETTINGS_FILE: /code/producer/settings.json
     links:
       - kafka
       - zookeeper
-    ports:
-      - "5005:5005"
     networks:
       - aether
     command: start
-
-networks:
-  aether:
-    external:
-      name: aether_internal

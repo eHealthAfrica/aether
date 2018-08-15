@@ -20,43 +20,52 @@
 #
 set -Eeuo pipefail
 
-function prepare_container() {
-    echo "_____________________________________________ Preparing $1 container"
-    $DC_TEST build "$1"-test
-    echo "_____________________________________________ $1 ready!"
-}
-
-
-if [ -n "$1" ];
-then
-    # take container name from argument, expected values `odk` or `couchdb-sync`
-    echo "Executing tests for $1 container"
-    container=$1
-else
-    echo "Nothing to do."
-    exit 0
-fi
-
 DC_TEST="docker-compose -f docker-compose-test.yml"
 
-# make sure that there is nothing up before starting
 ./scripts/kill_all.sh
 $DC_TEST down
+
+if [[ $1 == "ui" ]]
+then
+    $DC_TEST build ui-assets-test
+    $DC_TEST run   ui-assets-test test
+    $DC_TEST run   ui-assets-test build
+    echo "_____________________________________________ Tested and built ui assets"
+fi
 
 
 echo "_____________________________________________ Starting databases"
 $DC_TEST up -d db-test
-if [[ $container = "couchdb-sync" ]]
+if [[ $1 = "couchdb-sync" ]]
 then
     $DC_TEST up -d couchdb-test redis-test
 fi
 
-# prepare and start KERNEL container
-prepare_container kernel
+# sometimes this is not as faster as we wanted... :'(
+$DC_TEST build kernel-test
+until $DC_TEST run kernel-test eval pg_isready -q; do
+    >&2 echo "Waiting for db-test..."
+    sleep 2
+done
 
-echo "_____________________________________________ Starting kernel"
-$DC_TEST up -d kernel-test
-if [[ $container == "couchdb-sync" ]]
+
+if [[ $1 != "kernel" ]]
+then
+    echo "_____________________________________________ Starting kernel"
+    # rename kernel test database in each case
+    export TEST_KERNEL_DB_NAME=test-kernel-"$1"
+    $DC_TEST up -d kernel-test
+
+    # give time to kernel to start up
+    KERNEL_HEALTH_URL="http://localhost:9000/health"
+    until curl -s $KERNEL_HEALTH_URL > /dev/null; do
+        >&2 echo "Waiting for Kernel..."
+        sleep 2
+    done
+fi
+
+
+if [[ $1 == "couchdb-sync" ]]
 then
     fixture=aether/kernel/api/tests/fixtures/project.json
     $DC_TEST run kernel-test manage loaddata $fixture
@@ -64,13 +73,11 @@ then
 fi
 
 
-# build test container
-prepare_container $container
-
-echo "_____________________________________________ Testing $container"
-$DC_TEST run "$container"-test test
+echo "_____________________________________________ Preparing $1 container"
+$DC_TEST build "$1"-test
+echo "_____________________________________________ $1 ready!"
+$DC_TEST run "$1"-test test
+echo "_____________________________________________ $1 tests passed!"
 
 
 ./scripts/kill_all.sh
-
-echo "_____________________________________________ END"
