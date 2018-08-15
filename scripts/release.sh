@@ -27,7 +27,7 @@ release_app () {
     echo "version: $VERSION"
 
     echo "Building Docker image ${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
-    docker-compose -f $COMPOSE_PATH build \
+    docker-compose -f $COMPOSE_PATH build --no-deps \
         --build-arg GIT_REVISION=$TRAVIS_COMMIT \
         --build-arg VERSION=$VERSION \
         $APP_NAME
