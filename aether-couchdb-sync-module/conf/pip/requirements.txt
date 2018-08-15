@@ -10,11 +10,11 @@
 ################################################################################
 
 aether.common==0.0.0
-certifi==2018.4.16
+certifi==2018.8.13
 chardet==3.0.4
 click==6.7
 coverage==4.5.1
-croniter==0.3.24
+croniter==0.3.25
 Django==1.11.15
 django-cas-ng==3.5.9
 django-cors-headers==2.4.0
