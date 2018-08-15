@@ -65,16 +65,16 @@ services:
       - ./local-setup/nginx/sites-enabled:/etc/nginx/sites-enabled
 
       # nginx log files
-      - ./.persistent_data/nginx:/var/log/nginx/
+      - ./.persistent_data/nginx:/var/log/nginx
 
       # static folders per container
       - ./.persistent_data/static:/static
 
+      # aether favicon
+      - ./local-setup/aether.ico:/static/aether.ico
+
       # media folders per container
       - ./.persistent_data/media:/media
-
-      # aether favicon
-      - ./local-setup/aether.ico:/media/aether.ico
     ports:
       - "80:80"
       # needed for ODK behind nginx (ODK Collect only accepts 443 and 8443 ports)
