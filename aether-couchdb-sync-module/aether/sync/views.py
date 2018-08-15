@@ -16,16 +16,20 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.conf.urls import include, url
+from django.http import JsonResponse
 
-from aether.common.conf.urls import generate_urlpatterns
-
-from .views import check_rq
+from django_rq import get_scheduler
 
 
-urlpatterns = generate_urlpatterns(kernel=True) + [
-    url(r'^check-rq$', check_rq, name='check-rq'),
+def check_rq(*args, **kwargs):
+    '''
+    Health check for RQ.
+    '''
 
-    url(r'^rq/', include('django_rq.urls')),
-    url(r'^sync/', include('aether.sync.api.urls', namespace='sync')),
-]
+    scheduler = get_scheduler('default')
+    jobs = scheduler.get_jobs()
+
+    if len(jobs) == 0:
+        return JsonResponse({}, status=500)
+
+    return JsonResponse({})

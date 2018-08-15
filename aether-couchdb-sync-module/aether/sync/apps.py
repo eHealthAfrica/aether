@@ -23,7 +23,7 @@ from django_rq import get_scheduler
 
 class Config(AppConfig):
     name = 'aether.sync'
-    verbose_name = 'Aether Sync'
+    verbose_name = 'Aether CouchDB-Sync'
 
     def ready(self):
         # schedule jobs

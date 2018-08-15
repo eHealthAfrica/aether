@@ -16,23 +16,43 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import mock
+
 from django.urls import reverse
 from django.test import TestCase
 
-from rest_framework import status
+
+class MockedScheduler():
+    def get_jobs(self):
+        return []
+
+
+def get_scheduler_mocked(*args, **kwargs):
+    return MockedScheduler()
 
 
 class TestViews(TestCase):
 
     def test__health_check(self):
         response = self.client.get(reverse('health'))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {})
 
     def test__kernel_check(self):
         response = self.client.get(reverse('check-kernel'))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.content.decode(),
             'Brought to you by eHealth Africa - good tech for hard places'
         )
+
+    def test__check_rq(self):
+        response = self.client.get(reverse('check-rq'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {})
+
+    @mock.patch('aether.sync.views.get_scheduler', side_effect=get_scheduler_mocked)
+    def test__check_rq__error(self, *args):
+        response = self.client.get(reverse('check-rq'))
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.json(), {})
