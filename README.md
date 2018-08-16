@@ -1,6 +1,6 @@
 # Aether
 
-> Survey collection and analytics
+> A free, open source development platform for data curation, exchange, and publication.
 
 ## Table of contents
 
@@ -16,7 +16,7 @@
     - [Aether CouchDB Sync Module](#aether-couchdb-sync-module)
 - [Usage](#usage)
   - [Users & Authentication](#users--authentication)
-    - [UMS settings for local development](#ums-settings-for-local-development)
+    - [Basic Authentication](#basic-authentication)
     - [Token Authentication](#token-authentication)
 - [Development](#development)
 - [Deployment](#deployment)
@@ -56,7 +56,7 @@ git clone git@github.com:eHealthAfrica/aether.git && cd aether
 ##### Build containers and start the applications
 
 ```bash
-docker-compose build && docker-compose up
+./scripts/build_aether_containers.sh && docker-compose up
 ```
 
 **IMPORTANT NOTE**: the docker-compose files are intended to be used exclusively
@@ -64,7 +64,7 @@ for local development. Never deploy these to publicly accessible servers.
 
 ##### Include this entry in your `/etc/hosts` file
 
-```
+```text
 127.0.0.1    kernel.aether.local odk.aether.local ui.aether.local sync.aether.local
 ```
 
@@ -185,26 +185,21 @@ To start any app/module separately:
 
 ### Users & Authentication
 
-The app defers part of the users management to
-[eHA UMS tool](https://github.com/eHealthAfrica/ums).
-
 Set the `HOSTNAME` and `CAS_SERVER_URL` environment variables if you want to
-activate the UMS integration in each container.
-
-#### UMS settings for local development
-
-The project is `aether-all` **Aether Suite**.
-
-The client services are:
-
-  - **Aether Kernel (local)** for `kernel.aether.local`.
-  - **Aether ODK (local)**  for `odk.aether.local`.
-  - **Aether UI (local)** for `ui.aether.local`.
-  - **Aether Sync (local)** for `sync.aether.local`.
+activate the CAS integration in the app.
+See more in [Django CAS client](https://github.com/mingchen/django-cas-ng).
 
 Other options are to log in via token, via basic authentication or via the
 standard django authentication process in the admin section.
+
 The available options depend on each container.
+
+*[Return to TOC](#table-of-contents)*
+
+#### Basic Authentication
+
+The communication between Aether ODK Module and ODK Collect is done via basic
+authentication.
 
 *[Return to TOC](#table-of-contents)*
 
@@ -225,7 +220,12 @@ All development should be tested within the container, but developed in the host
 Read the [docker-compose-base.yml](docker-compose-base.yml) file to see how it's mounted.
 
 #### Building on Aether
-To get started on building solutions on Aether, an [aether-bootstrap](https://github.com/eHealthAfrica/aether-bootstrap) repository has been created to serve as both an example and give you a head start. Visit the [Aether Website](http://aether.ehealthafrica.org) for more information on [Try it for yourself](http://aether.ehealthafrica.org/documentation/try/index.html).
+
+To get started on building solutions on Aether, an
+[aether-bootstrap](https://github.com/eHealthAfrica/aether-bootstrap) repository
+has been created to serve as both an example and give you a head start.
+Visit the [Aether Website](http://aether.ehealthafrica.org) for more information
+on [Try it for yourself](http://aether.ehealthafrica.org/documentation/try/index.html).
 
 *[Return to TOC](#table-of-contents)*
 
@@ -339,7 +339,7 @@ Look into [docker-compose-base.yml](docker-compose-base.yml), the variable
 #### Check outdated dependencies
 
 ```bash
-docker-compose run <container-name> eval pip list --outdated
+docker-compose run --no-deps <container-name> eval pip list --outdated
 ```
 
 #### Update requirements file
@@ -354,7 +354,7 @@ Do not forget to include new containers in the file.
 or
 
 ```bash
-docker-compose run <container-name> pip_freeze
+docker-compose run --no-deps <container-name> pip_freeze
 ```
 
 In this case `aether.common` is not rebuilt.
