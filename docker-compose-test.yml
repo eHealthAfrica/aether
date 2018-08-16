@@ -4,11 +4,10 @@
 #  * Aether Kernel
 #  * ODK Module
 #  * CouchDB Sync Module
-#  * Aether UI Module
-#  * Aether Client
-#  * Aether Integration Tests
-#  * Producer Module
+#  * Aether UI
 #  * Zookeper & Kafka
+#  * Aether Kafka Producer
+#  * Aether Integration Tests
 # ------------------------------------------------------------------------------
 
 version: "2.1"
@@ -56,11 +55,6 @@ services:
         condition: service_healthy
     ports:
       - "9000:9000"
-    healthcheck:
-      test: ["CMD", "curl", "-s", "http://localhost:9000/health"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
     command: start
 
 
@@ -87,11 +81,6 @@ services:
         condition: service_healthy
     ports:
       - "9002:9002"
-    healthcheck:
-      test: ["CMD", "curl", "-s", "http://localhost:9002/health"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
     command: start
 
 
@@ -126,11 +115,6 @@ services:
         condition: service_healthy
     ports:
       - "9006:9006"
-    healthcheck:
-      test: ["CMD", "curl", "-s", "http://localhost:9006/health"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
     command: start
 
 
@@ -156,11 +140,6 @@ services:
         condition: service_healthy
     ports:
       - "9004:9004"
-    healthcheck:
-      test: ["CMD", "curl", "-s", "http://localhost:9004/health"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
     command: start
 
   ui-assets-test:

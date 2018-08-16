@@ -1,10 +1,11 @@
 # ------------------------------------------------------------------------------
 # Config file for these containers:
 #
+#  * Databases + NGINX containers
 #  * Aether Kernel
 #  * ODK Module
 #  * CouchDB Sync Module
-#  * Aether UI Module
+#  * Aether UI & UI Assets
 # ------------------------------------------------------------------------------
 
 version: "2.1"
@@ -139,7 +140,7 @@ services:
 
 
   # ---------------------------------
-  # Aether UI module
+  # Aether UI
   # ---------------------------------
 
   ui:

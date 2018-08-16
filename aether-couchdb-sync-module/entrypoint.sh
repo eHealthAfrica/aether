@@ -43,6 +43,8 @@ show_help () {
     start         : start webserver behind nginx
     start_dev     : start webserver for development
     start_rq      : start rq worker and scheduler
+
+    health        : checks the system healthy
     """
 }
 
@@ -185,6 +187,11 @@ case "$1" in
 
         wait $scheduler
         wait $worker
+    ;;
+
+    health )
+        curl -s http://0.0.0.0:$WEB_SERVER_PORT/health && \
+        curl -s http://0.0.0.0:$WEB_SERVER_PORT/check-rq
     ;;
 
     help )
