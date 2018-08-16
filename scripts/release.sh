@@ -24,7 +24,6 @@ release_app () {
     APP_NAME=$1
     COMPOSE_PATH=$2
     AETHER_APP="aether-${1}"
-    echo "version: $VERSION"
 
     echo "Building Docker image ${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
     docker-compose -f $COMPOSE_PATH build \
@@ -32,13 +31,39 @@ release_app () {
         --build-arg VERSION=$VERSION \
         $APP_NAME
 
-    docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
-    docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:latest"
-
     echo "Pushing Docker image ${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
+    docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
     docker push "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
-    docker push "${IMAGE_REPO}/${AETHER_APP}:latest"
+
+    if [[ $VERSION != "alpha" ]]
+    then
+        echo "Pushing Docker image ${IMAGE_REPO}/${AETHER_APP}:latest"
+        docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:latest"
+        docker push "${IMAGE_REPO}/${AETHER_APP}:latest"
+    fi
 }
+
+# release version depending on TRAVIS_BRANCH/ TRAVIS_TAG
+if [[ $TRAVIS_TAG =~ ^[0-9]+\.[0-9]+[\.0-9]*$ ]]
+then
+    VERSION=$TRAVIS_TAG
+
+elif [[ $TRAVIS_BRANCH =~ ^release\-[0-9]+\.[0-9]+[\.0-9]*$ ]]
+then
+    # remove "release-" prefix and add "-rc" suffix
+    VERSION=${TRAVIS_BRANCH#"release-"}-rc
+
+elif [[ $TRAVIS_BRANCH = "develop" ]]
+then
+    VERSION='alpha'
+
+else
+    echo "Skipping a release because this branch is not permitted: ${TRAVIS_BRANCH}"
+    exit 0
+fi
+
+echo "Release version:  $VERSION"
+echo "Release revision: $TRAVIS_COMMIT"
 
 # Login in dockerhub with write permissions (repos are public)
 docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
@@ -61,12 +86,6 @@ CORE_APPS=( kernel odk couchdb-sync ui )
 CORE_COMPOSE='docker-compose.yml'
 CONNECT_APPS=( producer )
 CONNECT_COMPOSE='docker-compose-connect.yml'
-
-VERSION=$TRAVIS_BRANCH
-if [ -z "$TRAVIS_TAG" ];
-then
-    VERSION=${VERSION}-rc
-fi
 
 for APP in "${CORE_APPS[@]}"
 do
