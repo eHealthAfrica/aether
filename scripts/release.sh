@@ -50,8 +50,9 @@ then
 
 elif [[ $TRAVIS_BRANCH =~ ^release\-[0-9]+\.[0-9]+[\.0-9]*$ ]]
 then
-    # remove "release-" prefix and add "-rc" suffix
-    VERSION=${TRAVIS_BRANCH#"release-"}-rc
+    VERSION=`cat VERSION`
+    # append "-rc" suffix
+    VERSION=${VERSION}-rc
 
 elif [[ $TRAVIS_BRANCH = "develop" ]]
 then
