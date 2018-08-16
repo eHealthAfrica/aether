@@ -61,8 +61,8 @@ CORE_APPS=( kernel odk couchdb-sync ui )
 CORE_COMPOSE='docker-compose.yml'
 CONNECT_APPS=( producer )
 CONNECT_COMPOSE='docker-compose-connect.yml'
-VERSION=`cat VERSION`
 
+VERSION=$TRAVIS_BRANCH
 if [ -z "$TRAVIS_TAG" ];
 then
     VERSION=${VERSION}-rc
