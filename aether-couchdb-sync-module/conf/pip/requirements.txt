@@ -4,8 +4,11 @@
 #                                                                              #
 #                               DO NOT CHANGE !!!                              #
 #                                                                              #
-# To update this first update 'primary-requirements.txt'                       #
-# then run 'docker-compose run couchdb-sync pip_freeze'                        #
+# To check the outdated dependencies run                                       #
+#     docker-compose run --no-deps couchdb-sync eval pip list --outdated       #
+#                                                                              #
+# To update this first update "primary-requirements.txt" then run              #
+#     docker-compose run --no-deps couchdb-sync pip_freeze                     #
 #                                                                              #
 ################################################################################
 

@@ -4,8 +4,11 @@
 #                                                                              #
 #                               DO NOT CHANGE !!!                              #
 #                                                                              #
-# To update this first update 'primary-requirements.txt'                       #
-# then run 'docker-compose run odk pip_freeze'                                 #
+# To check the outdated dependencies run                                       #
+#     docker-compose run --no-deps odk eval pip list --outdated                #
+#                                                                              #
+# To update this first update "primary-requirements.txt" then run              #
+#     docker-compose run --no-deps odk pip_freeze                              #
 #                                                                              #
 ################################################################################
 

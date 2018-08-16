@@ -4,7 +4,11 @@
 #                                                                              #
 #                                 CHANGE ME !!!                                #
 #                                                                              #
-# Update me and then run 'docker-compose run couchdb-sync pip_freeze'          #
+# To check the outdated dependencies run                                       #
+#     docker-compose run --no-deps couchdb-sync eval pip list --outdated       #
+#                                                                              #
+# Update me and then run                                                       #
+#     docker-compose run --no-deps couchdb-sync pip_freeze                     #
 #                                                                              #
 ################################################################################
 
