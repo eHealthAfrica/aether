@@ -175,10 +175,10 @@ class ProjectStatsViewSet(viewsets.ReadOnlyModelViewSet):
                      .objects \
                      .values('id', 'name', 'created') \
                      .annotate(
-                         first_submission=Min('mappings__submissions__created'),
-                         last_submission=Max('mappings__submissions__created'),
-                         submissions_count=Count('mappings__submissions__id'),
-                         entities_count=Count('mappings__submissions__entities__id'),
+                         first_submission=Min('submissions__created'),
+                         last_submission=Max('submissions__created'),
+                         submissions_count=Count('submissions__id'),
+                         entities_count=Count('entities__id'),
                      )
     serializer_class = serializers.ProjectStatsSerializer
 
@@ -247,7 +247,7 @@ class EntityViewSet(CustomViewSet):
                 depth = int(depth)
                 if depth > constants.LINKED_DATA_MAX_DEPTH:
                     return Response({
-                        'description': 'Supported max depth is 3'
+                        'description': f'Supported max depth is {constants.LINKED_DATA_MAX_DEPTH}'
                     }, status=status.HTTP_400_BAD_REQUEST)
                 else:
                     selected_record.resolved = get_entity_linked_data(selected_record, request, {}, depth)

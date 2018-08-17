@@ -249,6 +249,8 @@ class ProducerManager(object):
         self.logger.setLevel(log_level)
         if log_level is "DEBUG":
             self.app.debug = True
+        self.app.config['JSONIFY_PRETTYPRINT_REGULAR'] = self.settings.get(
+            'flask_settings', {}).get('pretty_json_status', False)
         pool_size = self.settings.get(
             'flask_settings', {}).get('max_connections', 1)
         server_ip = self.settings.get('server_ip', "")
@@ -273,7 +275,7 @@ class ProducerManager(object):
             "topics": {k: v.get_status() for k, v in self.topic_managers.items()}
         }
         with self.app.app_context():
-            return jsonify(status)
+            return jsonify(**status)
 
 
 class TopicManager(object):

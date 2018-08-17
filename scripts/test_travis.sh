@@ -20,21 +20,23 @@
 #
 set -Eeuo pipefail
 
+./scripts/build_common_and_distribute.sh
 
 case "$1" in
     kubernetes)
         ./scripts/kubernetes/run_travis.sh
     ;;
 
-    dockercompose)
-        ./scripts/test_all.sh
-    ;;
-
     integration)
         ./scripts/test_integration.sh
     ;;
 
+    all)
+        ./scripts/test_all.sh
+    ;;
+
     *)
-        echo "$1"
+        # testing the given container
+        ./scripts/test_container.sh $1
     ;;
 esac

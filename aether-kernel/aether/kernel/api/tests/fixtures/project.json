@@ -1,88 +1,63 @@
 [
   {
+    "model": "kernel.schema",
+    "pk": "a29f1777-946e-4db1-95a8-a4378242b7b7",
     "fields": {
-      "rdf_definition": "[]",
-      "jsonld_context": "[]",
-      "salad_schema": "[]",
-      "name": "demo",
-      "revision": "1"
-    },
-    "pk": "d3ee41be-e696-424b-8b45-ab6a0d787f6a",
-    "model": "kernel.project"
+      "name": "Person",
+      "type": "",
+      "definition": {
+        "name": "Person",
+        "type": "record",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "jsonldPredicate": "@id"
+          },
+          {
+            "name": "firstName",
+            "type": ["null", "string"]
+          },
+          {
+            "name": "familyName",
+            "type": ["null", "string"]
+          }
+        ]
+      }
+    }
   },
   {
+    "model": "kernel.project",
+    "pk": "d3ee41be-e696-424b-8b45-ab6a0d787f6a",
     "fields": {
+      "name": "demo"
+    }
+  },
+  {
+    "model": "kernel.projectschema",
+    "pk": "75bcf79d-b97d-4dbf-8f0d-414b8c0c0d75",
+    "fields": {
+      "name": "Person",
+      "schema": "a29f1777-946e-4db1-95a8-a4378242b7b7",
+      "project": "d3ee41be-e696-424b-8b45-ab6a0d787f6a"
+    }
+  },
+  {
+    "model": "kernel.mapping",
+    "pk": "5faf2ee5-55b2-4de8-bdd9-628c491c69c6",
+    "fields": {
+      "name": "mapping-1",
       "project": "d3ee41be-e696-424b-8b45-ab6a0d787f6a",
-      "revision": "1",
       "definition": {
         "entities": {
           "Person": "75bcf79d-b97d-4dbf-8f0d-414b8c0c0d75"
         },
         "mapping": [
-          [
-            "#!uuid",
-            "Person.id"
-          ],
-          [
-            "firstname",
-            "Person.firstName"
-          ],
-          [
-            "lastname",
-            "Person.familyName"
-          ]
+          ["#!uuid", "Person.id"],
+          ["firstname", "Person.firstName"],
+          ["lastname", "Person.familyName"]
         ]
-      },
-      "name": "mapping-1"
-    },
-    "pk": "5faf2ee5-55b2-4de8-bdd9-628c491c69c6",
-    "model": "kernel.mapping"
-  },
-  {
-    "fields": {
-      "revision": "1",
-      "definition": {
-        "fields": [
-          {
-            "jsonldPredicate": "@id",
-            "type": "string",
-            "name": "id"
-          },
-          {
-            "type": [
-              "null",
-              "string"
-            ],
-            "name": "firstName"
-          },
-          {
-            "type": [
-              "null",
-              "string"
-            ],
-            "name": "familyName"
-          }
-        ],
-        "type": "record",
-        "name": "Person"
-      },
-      "type": "",
-      "name": "Person"
-    },
-    "pk": "a29f1777-946e-4db1-95a8-a4378242b7b7",
-    "model": "kernel.schema"
-  },
-  {
-    "fields": {
-      "schema": "a29f1777-946e-4db1-95a8-a4378242b7b7",
-      "project": "d3ee41be-e696-424b-8b45-ab6a0d787f6a",
-      "is_encrypted": false,
-      "masked_fields": "[]",
-      "transport_rule": "[]",
-      "mandatory_fields": "[]",
-      "name": "Person"
-    },
-    "pk": "75bcf79d-b97d-4dbf-8f0d-414b8c0c0d75",
-    "model": "kernel.projectschema"
+      }
+    }
   }
 ]
