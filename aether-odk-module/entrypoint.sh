@@ -162,6 +162,7 @@ case "$1" in
 
         # media assets
         chown aether: /media
+
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
 

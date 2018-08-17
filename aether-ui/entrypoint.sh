@@ -168,6 +168,7 @@ case "$1" in
         rm -r -f /code/aether/ui/static/*.*
         # copy assets bundles folder into static folder
         cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
+
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
 
