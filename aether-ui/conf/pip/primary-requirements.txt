@@ -4,7 +4,11 @@
 #                                                                              #
 #                                 CHANGE ME !!!                                #
 #                                                                              #
-# Update me and then run 'docker-compose run ui pip_freeze'                    #
+# To check the outdated dependencies run                                       #
+#     docker-compose run --no-deps ui eval pip list --outdated                 #
+#                                                                              #
+# Update me and then run                                                       #
+#     docker-compose run --no-deps ui pip_freeze                               #
 #                                                                              #
 ################################################################################
 

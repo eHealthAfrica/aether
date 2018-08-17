@@ -25,7 +25,7 @@ class AppsTests(TestCase):
 
     def test_app_config(self):
         # this is only valid in tests, the correct name is `aether.sync`
-        self.assertEquals(apps.get_app_config('sync').verbose_name, 'Aether Sync')
+        self.assertEquals(apps.get_app_config('sync').verbose_name, 'Aether CouchDB-Sync')
 
     def test_scheduler(self):
         scheduler = get_scheduler('default')
