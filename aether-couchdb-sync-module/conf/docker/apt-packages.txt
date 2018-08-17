@@ -1,3 +1,2 @@
-curl
 gettext-base
 postgresql-client-9.6
