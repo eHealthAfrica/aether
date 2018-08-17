@@ -32,7 +32,7 @@ def get_scheduler_mocked(*args, **kwargs):
     return MockedScheduler()
 
 
-class TestSetupAdminCommand(TestCase):
+class TestCheckRQCommand(TestCase):
 
     def setUp(self):
         # Redirect to /dev/null in order to not clutter the test log.
