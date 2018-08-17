@@ -1,5 +1,3 @@
-#!/bin/bash
-#
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -17,27 +15,21 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-set -Eeuo pipefail
 
-DC_UTILS="docker-compose -f docker-compose-build-aether-utils.yml"
+from django.http import JsonResponse
 
-# remove previous containers (clean start)
-./scripts/kill_all.sh
-$DC_UTILS down
+from django_rq import get_scheduler
 
-# create the distribution
-$DC_UTILS build common
-$DC_UTILS run   common build
 
-PCK_FILE=aether.common-0.0.0-py2.py3-none-any.whl
+def check_rq(*args, **kwargs):
+    '''
+    Health check for RQ.
+    '''
 
-# distribute within the containers
-FOLDERS=( aether-kernel aether-odk-module aether-couchdb-sync-module aether-ui )
-for FOLDER in "${FOLDERS[@]}"
-do
-    mkdir -p ./$FOLDER/conf/pip/dependencies
-    cp -r ./aether-common-module/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
-done
+    scheduler = get_scheduler('default')
+    jobs = scheduler.get_jobs()
 
-./scripts/kill_all.sh
+    if len(jobs) == 0:
+        return JsonResponse({}, status=500)
+
+    return JsonResponse({})

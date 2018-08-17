@@ -1,5 +1,5 @@
-#!/bin/bash
-#
+#!/usr/bin/env python
+
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -17,27 +17,30 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-set -Eeuo pipefail
 
-DC_UTILS="docker-compose -f docker-compose-build-aether-utils.yml"
+from django.core.management.base import BaseCommand
+from django.utils.translation import ugettext as _
 
-# remove previous containers (clean start)
-./scripts/kill_all.sh
-$DC_UTILS down
+from django_rq import get_scheduler
 
-# create the distribution
-$DC_UTILS build common
-$DC_UTILS run   common build
+MESSAGE_ERROR = _('RQ scheduler has no running workers.') + '\n'
+MESSAGE_OK = _('RQ scheduler running with {number} workers.') + '\n'
 
-PCK_FILE=aether.common-0.0.0-py2.py3-none-any.whl
 
-# distribute within the containers
-FOLDERS=( aether-kernel aether-odk-module aether-couchdb-sync-module aether-ui )
-for FOLDER in "${FOLDERS[@]}"
-do
-    mkdir -p ./$FOLDER/conf/pip/dependencies
-    cp -r ./aether-common-module/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
-done
+class Command(BaseCommand):
 
-./scripts/kill_all.sh
+    help = 'Health check for RQ.'
+
+    def handle(self, *args, **options):
+        '''
+        Health check for RQ.
+        '''
+
+        scheduler = get_scheduler('default')
+        jobs = scheduler.get_jobs()
+
+        if len(jobs) == 0:
+            self.stderr.write(MESSAGE_ERROR)
+            raise RuntimeError(MESSAGE_ERROR)
+
+        self.stdout.write(MESSAGE_OK.format(number=len(jobs)))

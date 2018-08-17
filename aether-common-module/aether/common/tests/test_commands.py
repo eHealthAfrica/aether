@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import mock
 import os
 
 from django.contrib.auth import get_user_model
@@ -27,6 +28,16 @@ from rest_framework.authtoken.models import Token
 
 
 UserModel = get_user_model().objects
+
+
+class MockRequestHeadOK:
+    def raise_for_status(self):
+        pass
+
+
+class MockRequestHeadError:
+    def raise_for_status(self):
+        raise Exception
 
 
 class TestSetupAdminCommand(TestCase):
@@ -71,3 +82,43 @@ class TestSetupAdminCommand(TestCase):
         call_command('setup_admin', '-p=adminadmin', '-t=12345', stdout=self.out)
         self.assertTrue(UserModel.filter(username='admin').exists())
         self.assertEqual(Token.objects.all().count(), 1)
+
+
+class TestCheckUrlCommand(TestCase):
+
+    def setUp(self):
+        # Redirect to /dev/null in order to not clutter the test log.
+        self.out = open(os.devnull, 'w')
+
+    def test__url_argument_is_required(self):
+        self.assertRaises(
+            CommandError,
+            call_command,
+            'check_url',
+            stdout=self.out,
+        )
+
+    @mock.patch('requests.head', return_value=MockRequestHeadOK())
+    def test__check_url__ok(self, *args):
+        try:
+            call_command('check_url', '--url=http://localhost', stdout=self.out, stderr=self.out)
+            self.assertTrue(True)
+        except Exception:
+            self.assertTrue(False)
+
+        try:
+            call_command('check_url', '-u=http://localhost', stdout=self.out, stderr=self.out)
+            self.assertTrue(True)
+        except Exception:
+            self.assertTrue(False)
+
+    @mock.patch('requests.head', return_value=MockRequestHeadError())
+    def test__check_url__error(self, *args):
+        self.assertRaises(
+            RuntimeError,
+            call_command,
+            'check_url',
+            '--url=http://localhost',
+            stdout=self.out,
+            stderr=self.out,
+        )

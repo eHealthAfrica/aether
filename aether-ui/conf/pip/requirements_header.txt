@@ -5,10 +5,10 @@
 #                               DO NOT CHANGE !!!                              #
 #                                                                              #
 # To check the outdated dependencies run                                       #
-#     'docker-compose run ui eval pip list --outdated'                         #
+#     docker-compose run --no-deps ui eval pip list --outdated                 #
 #                                                                              #
-# To update this first update 'primary-requirements.txt' then run              #
-#     'docker-compose run ui pip_freeze'                                       #
+# To update this first update "primary-requirements.txt" then run              #
+#     docker-compose run --no-deps ui pip_freeze                               #
 #                                                                              #
 ################################################################################
 

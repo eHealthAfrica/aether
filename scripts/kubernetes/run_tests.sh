@@ -27,8 +27,6 @@ test_kernel() {
 }
 
 test_odk() {
-    local fixture=aether/kernel/api/tests/fixtures/project_empty_schema.json
-    run_command kernel manage loaddata $fixture
     run_command odk test
 }
 
