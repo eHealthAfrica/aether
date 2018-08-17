@@ -89,7 +89,7 @@ See more in [README](/aether-common/README.md).
 
 Most of the environment variables are set to default values. This is the short list
 of the most common ones with non default values. For more info take a look at the file
-[docker-compose-base.yml](docker-compose-base.yml)
+[docker-compose-base.yml](docker-compose-base.yml).
 
 #### Aether Kernel
 
@@ -97,7 +97,7 @@ of the most common ones with non default values. For more info take a look at th
 - `HOSTNAME`: `kernel.aether.local` Used by UMS.
 - `DB_NAME`: `aether` Database name.
 - `WEB_SERVER_PORT`: `8000` Web server port.
-- `AETHER_KERNEL_TOKEN`: `kernel_admin_user_auth_token`
+- `ADMIN_TOKEN`: `kernel_admin_user_auth_token`
   to connect to it from other modules. It's used within the start up scripts.
 
 #### Aether ODK Module
@@ -315,6 +315,12 @@ This will stop ALL running containers and execute the containers tests.
 To execute tests in just one container.
 
 ```bash
+./scripts/test_container.sh <container-name>
+```
+
+or
+
+```bash
 docker-compose run <container-name> test
 
 ```
@@ -333,13 +339,6 @@ Before running `odk`, `ui` or `couchdb-sync` you should start the needed test co
 
 ```bash
 docker-compose -f docker-compose-test.yml up -d <container-name>-test
-```
-
-This script will start the auxiliary containers and execute the tests
-in `odk`, `ui` or `couchdb-sync`.
-
-```bash
-./scripts/test_with_kernel.sh <container-name>
 ```
 
 **WARNING**

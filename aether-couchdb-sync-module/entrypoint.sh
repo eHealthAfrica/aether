@@ -43,6 +43,9 @@ show_help () {
     start         : start webserver behind nginx
     start_dev     : start webserver for development
     start_rq      : start rq worker and scheduler
+
+    health        : checks the system healthy
+    health_rq     : checks the RQ healthy
     """
 }
 
@@ -73,14 +76,10 @@ setup () {
     # migrate data model if needed
     ./manage.py migrate --noinput
 
-    until curl -s $COUCHDB_URL > /dev/null; do
-        >&2 echo "Waiting for couchdb..."
-        sleep 1
-    done
-    curl -s $COUCHDB_URL
-
     # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
     ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD
+
+    ./manage.py check_url --url=$COUCHDB_URL
 }
 
 test_flake8 () {
@@ -189,6 +188,14 @@ case "$1" in
 
         wait $scheduler
         wait $worker
+    ;;
+
+    health )
+        ./manage.py check_url --url=http://0.0.0.0:$WEB_SERVER_PORT/health
+    ;;
+
+    health_rq )
+        ./manage.py check_rq
     ;;
 
     help )

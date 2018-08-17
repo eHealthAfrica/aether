@@ -136,9 +136,9 @@ def get_all_docs(url):
         resp.raise_for_status()
         return resp.json()
 
-    data = get_data(url)
-    results = data['results']
-    while 'next' in data and data['next']:
+    data = {'next': url}
+    results = []
+    while data.get('next'):
         data = get_data(data['next'])
         results += data['results']
 

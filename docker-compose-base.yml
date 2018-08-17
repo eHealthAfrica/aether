@@ -5,9 +5,9 @@
 #  * Aether Kernel
 #  * ODK Module
 #  * CouchDB Sync Module
-#  * Aether UI Module
-#  * Producer Module
+#  * Aether UI & UI Assets
 #  * Zookeper & Kafka
+#  * Aether Kafka Producer
 #
 # These container will be extended in the other DC files with dependencies and networks.
 # Volumes and environment variables can be overriden in those files too.
@@ -25,18 +25,23 @@ services:
   postgres-base:
     image: postgres:9.6-alpine
     healthcheck:
-      test: ["CMD", "pg_isready"]
-      interval: 1s
+      test: pg_isready
+      interval: 2s
       timeout: 3s
       retries: 30
     environment:
-      - PGUSER=postgres
+      PGUSER: postgres
 
   couchdb-base:
-    image: couchdb:1.7.1
+    image: couchdb:1.7.2
     environment:
       COUCHDB_USER: ${COUCHDB_USER}
       COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
+    healthcheck:
+      test: curl -s http://localhost:5984
+      interval: 2s
+      timeout: 3s
+      retries: 30
     volumes:
       # enable cors for mobile app in-browser development:
       - ./aether-couchdb-sync-module/couchdb/conf/config.ini:/usr/local/etc/couchdb/local.ini
@@ -46,25 +51,35 @@ services:
   redis-base:
     image: redis:alpine
     command: "redis-server --requirepass ${REDIS_PASSWORD}"
+    healthcheck:
+      test: redis-cli ping
+      interval: 2s
+      timeout: 3s
+      retries: 30
 
   nginx-base:
-    image: nginx:stable-alpine
+    image: nginx:alpine
+    healthcheck:
+      test: nginx -t
+      interval: 5s
+      timeout: 3s
+      retries: 30
     volumes:
       # local setup
       - ./local-setup/nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./local-setup/nginx/sites-enabled:/etc/nginx/sites-enabled
 
       # nginx log files
-      - ./.persistent_data/nginx:/var/log/nginx/
-
-      # aether favicon
-      - ./local-setup/aether.ico:/media/aether.ico
-
-      # media folders per container
-      - ./.persistent_data/media:/media
+      - ./.persistent_data/nginx:/var/log/nginx
 
       # static folders per container
       - ./.persistent_data/static:/static
+
+      # aether favicon
+      - ./local-setup/aether.ico:/static/aether.ico
+
+      # media folders per container
+      - ./.persistent_data/media:/media
     ports:
       - "80:80"
       # needed for ODK behind nginx (ODK Collect only accepts 443 and 8443 ports)
@@ -91,8 +106,10 @@ services:
 
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}
+
       KERNEL_READONLY_DB_USERNAME: ${KERNEL_READONLY_DB_USERNAME}
       KERNEL_READONLY_DB_PASSWORD: ${KERNEL_READONLY_DB_PASSWORD}
+
       DB_NAME: aether
       PGHOST: db
       PGPASSWORD: ${KERNEL_DB_PASSWORD}
@@ -108,6 +125,11 @@ services:
       - ./.persistent_data/static/kernel:/var/www/static
     ports:
       - "8000:8000"
+    healthcheck:
+      test: /code/entrypoint.sh health
+      interval: 5s
+      timeout: 3s
+      retries: 30
     command: start_dev
 
 
@@ -157,6 +179,11 @@ services:
       - "8002:8002"
       # standalone (without nginx)
       # - "8443:8443"
+    healthcheck:
+      test: /code/entrypoint.sh health
+      interval: 5s
+      timeout: 3s
+      retries: 30
     command: start_dev
 
 
@@ -208,17 +235,27 @@ services:
       - ./.persistent_data/static/sync:/var/www/static
     ports:
       - "8006:8006"
+    healthcheck:
+      test: /code/entrypoint.sh health
+      interval: 5s
+      timeout: 3s
+      retries: 30
     command: start_dev
 
   couchdb-sync-rq-base:
     image: aether-couchdb-sync
     environment: *sync-environment
     volumes: *sync-volumes
+    healthcheck:
+      test: /code/entrypoint.sh health_rq
+      interval: 5s
+      timeout: 3s
+      retries: 300
     command: start_rq
 
 
   # ---------------------------------
-  # Aether UI module
+  # Aether UI
   # ---------------------------------
 
   ui-base:
@@ -259,12 +296,22 @@ services:
       - ./.persistent_data/static/ui:/var/www/static
     ports:
       - "8004:8004"
+    healthcheck:
+      test: /code/entrypoint.sh health
+      interval: 5s
+      timeout: 3s
+      retries: 30
     command: start_dev
 
   ui-assets-base:
     build: ./aether-ui/aether/ui/assets
     stdin_open: true
     tty: true
+    healthcheck:
+      test: curl -s http://localhost:3004
+      interval: 5s
+      timeout: 3s
+      retries: 30
     volumes:
       #################################################
       #                    WARNING                    #
@@ -290,7 +337,6 @@ services:
 
   zookeeper-base:
     image: confluentinc/cp-zookeeper:latest
-    restart: on-failure
     environment:
       ZOOKEEPER_CLIENT_PORT: 32181
       ZOOKEEPER_TICK_TIME: 2000
@@ -299,7 +345,6 @@ services:
 
   kafka-base:
     image: confluentinc/cp-kafka:latest
-    restart: on-failure
     ports:
       - "29092:29092"
     environment:
@@ -319,13 +364,26 @@ services:
   aether-producer-base:
     image: aether-producer
     build: ./aether-producer
-    restart: on-failure
     stdin_open: true
     volumes:
      - ./aether-producer:/code
-     - ./aether-client:/code/aether-client
     environment:
       PYTHONUNBUFFERED: 1
+
+      # These variables will override the ones indicated in the settings file
+      KERNEL_URL: http://kernel:8000
       KERNEL_ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
       KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
+
+      POSTGRES_HOST: db
+      POSTGRES_DBNAME: aether
+      POSTGRES_USER: ${KERNEL_READONLY_DB_USERNAME}
+      POSTGRES_PASSWORD: ${KERNEL_READONLY_DB_PASSWORD}
+
+      SERVER_PORT: 5005
+
+      # default settings file
+      PRODUCER_SETTINGS_FILE: /code/producer/settings.json
+    ports:
+      - "5005:5005"
     command: start_dev

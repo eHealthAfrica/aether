@@ -20,8 +20,12 @@ from django.conf.urls import include, url
 
 from aether.common.conf.urls import generate_urlpatterns
 
+from .views import check_rq
+
 
 urlpatterns = generate_urlpatterns(kernel=True) + [
+    url(r'^check-rq$', check_rq, name='check-rq'),
+
     url(r'^rq/', include('django_rq.urls')),
     url(r'^sync/', include('aether.sync.api.urls', namespace='sync')),
 ]

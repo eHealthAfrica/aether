@@ -42,6 +42,8 @@ show_help () {
 
     start         : start webserver behind nginx
     start_dev     : start webserver for development
+
+    health        : checks the system healthy
     """
 }
 
@@ -165,6 +167,10 @@ case "$1" in
             ./manage.py collectstatic --noinput
         fi
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
+    ;;
+
+    health )
+        ./manage.py check_url --url=http://0.0.0.0:$WEB_SERVER_PORT/health
     ;;
 
     help )
