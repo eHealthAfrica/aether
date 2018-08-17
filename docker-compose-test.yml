@@ -50,9 +50,6 @@ services:
       PGHOST: db-test
       TESTING: "true"
       WEB_SERVER_PORT: 9000
-    depends_on:
-      db-test:
-        condition: service_healthy
     ports:
       - "9000:9000"
     command: start
@@ -74,11 +71,6 @@ services:
       PGHOST: db-test
       TESTING: "true"
       WEB_SERVER_PORT: 9002
-    depends_on:
-      db-test:
-        condition: service_healthy
-      kernel-test:
-        condition: service_healthy
     ports:
       - "9002:9002"
     command: start
@@ -104,15 +96,6 @@ services:
       TESTING: "true"
       WEB_SERVER_PORT: 9006
       GOOGLE_CLIENT_ID: secret_google_client_id
-    depends_on:
-      db-test:
-        condition: service_healthy
-      couchdb-test:
-        condition: service_healthy
-      redis-test:
-        condition: service_healthy
-      kernel-test:
-        condition: service_healthy
     ports:
       - "9006:9006"
     command: start
@@ -133,11 +116,6 @@ services:
       PGHOST: db-test
       TESTING: "true"
       WEB_SERVER_PORT: 9004
-    depends_on:
-      db-test:
-        condition: service_healthy
-      kernel-test:
-        condition: service_healthy
     ports:
       - "9004:9004"
     command: start
