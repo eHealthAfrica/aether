@@ -12,40 +12,44 @@ matrix:
   fast_finish: true
   include:
     - name: "Kubernetes tests (Kernel and ODK)"
+      stage: test
       env: 'TEST_MODE=kubernetes'
+
     - name: "Integration tests (Kernel with Kakfa/Zookeeper and Producer)"
+      stage: test
       env: 'TEST_MODE=integration'
+
     - name: "Aether Suite tests (Kernel, UI, ODK and CouchDB-Sync)"
+      stage: test
       env: 'TEST_MODE=all'
 
     # split containers one by one
     # - name: "Aether Kernel tests"
+    #   stage: test
     #   env: 'TEST_MODE=kernel'
     # - name: "Aether ODK module tests"
+    #   stage: test
     #   env: 'TEST_MODE=odk'
     # - name: "Aether CouchDB-Sync module tests"
+    #   stage: test
     #   env: 'TEST_MODE=couchdb-sync'
     # - name: "Aether UI tests"
+    #   stage: test
     #   env: 'TEST_MODE=ui'
 
     # execute only to deploy
     - name: "Aether release"
       stage: deploy
-      script: echo "After tests passed"
+      script: ./scripts/release.sh
+
+
+install: true
 
 before_script:
   - ./scripts/generate-docker-compose-credentials.sh > .env
 
 script:
   - ./scripts/test_travis.sh $TEST_MODE
-
-deploy:
-  - provider: script
-    script: ./scripts/release.sh
-    skip_cleanup: true
-    on:
-      all_branches: true
-      all_tags: true
 
 after_script:
   - ./scripts/kill_all.sh
