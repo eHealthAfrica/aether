@@ -133,6 +133,14 @@ services:
       file: ./docker-compose-base.yml
       service: couchdb-sync-rq-base
     depends_on:
+      db:
+        condition: service_healthy
+      couchdb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kernel:
+        condition: service_healthy
       couchdb-sync:
         condition: service_healthy
     networks:

@@ -45,6 +45,7 @@ show_help () {
     start_rq      : start rq worker and scheduler
 
     health        : checks the system healthy
+    health_rq     : checks the RQ healthy
     """
 }
 
@@ -190,8 +191,11 @@ case "$1" in
     ;;
 
     health )
-        curl -s http://0.0.0.0:$WEB_SERVER_PORT/health && \
-        curl -s http://0.0.0.0:$WEB_SERVER_PORT/check-rq
+        curl -s http://0.0.0.0:$WEB_SERVER_PORT/health
+    ;;
+
+    health_rq )
+        ./manage.py check_rq
     ;;
 
     help )

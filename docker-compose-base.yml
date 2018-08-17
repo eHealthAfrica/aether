@@ -247,7 +247,10 @@ services:
     environment: *sync-environment
     volumes: *sync-volumes
     healthcheck:
-      disable: true
+      test: /code/entrypoint.sh health_rq
+      interval: 5s
+      timeout: 3s
+      retries: 30
     command: start_rq
 
 
