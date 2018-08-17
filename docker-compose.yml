@@ -49,28 +49,6 @@ services:
 
 
   # ---------------------------------
-  # NGINX container
-  # ---------------------------------
-
-  nginx:
-    extends:
-      file: docker-compose-base.yml
-      service: nginx-base
-    depends_on:
-      kernel:
-        condition: service_healthy
-      # uncomment these lines depending on the started services
-      # odk:
-      #   condition: service_healthy
-      # couchdb-sync:
-      #   condition: service_healthy
-      # ui:
-      #   condition: service_healthy
-    networks:
-      - internal
-
-
-  # ---------------------------------
   # Aether Kernel
   # ---------------------------------
 
@@ -88,6 +66,35 @@ services:
 
 
   # ---------------------------------
+  # Aether UI
+  # ---------------------------------
+
+  ui-assets:
+    extends:
+      file: ./docker-compose-base.yml
+      service: ui-assets-base
+    networks:
+      - internal
+
+  ui:
+    extends:
+      file: ./docker-compose-base.yml
+      service: ui-base
+    depends_on:
+      db:
+        condition: service_healthy
+      kernel:
+        condition: service_started
+      # use this dependency with "start_dev" command and webpack (optional)
+      # ui-assets:
+      #   condition: service_started
+    networks:
+      internal:
+        aliases:
+          - ui.aether.local
+
+
+  # ---------------------------------
   # ODK module
   # ---------------------------------
 
@@ -99,7 +106,7 @@ services:
       db:
         condition: service_healthy
       kernel:
-        condition: service_healthy
+        condition: service_started
     networks:
       internal:
         aliases:
@@ -122,7 +129,7 @@ services:
       redis:
         condition: service_healthy
       kernel:
-        condition: service_healthy
+        condition: service_started
     networks:
       internal:
         aliases:
@@ -140,37 +147,30 @@ services:
       redis:
         condition: service_healthy
       kernel:
-        condition: service_healthy
+        condition: service_started
       couchdb-sync:
-        condition: service_healthy
+        condition: service_started
     networks:
       - internal
 
 
   # ---------------------------------
-  # Aether UI
+  # NGINX container
   # ---------------------------------
 
-  ui:
+  nginx:
     extends:
       file: ./docker-compose-base.yml
-      service: ui-base
+      service: nginx-base
     depends_on:
-      db:
-        condition: service_healthy
       kernel:
         condition: service_healthy
-      # use this dependency with "start_dev" command and webpack (optional)
-      # ui-assets:
+      # uncomment these lines depending on the started services
+      # odk:
       #   condition: service_healthy
-    networks:
-      internal:
-        aliases:
-          - ui.aether.local
-
-  ui-assets:
-    extends:
-      file: ./docker-compose-base.yml
-      service: ui-assets-base
+      # couchdb-sync:
+      #   condition: service_healthy
+      # ui:
+      #   condition: service_healthy
     networks:
       - internal

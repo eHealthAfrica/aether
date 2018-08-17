@@ -27,7 +27,7 @@ services:
     healthcheck:
       test: pg_isready
       interval: 2s
-      timeout: 10s
+      timeout: 3s
       retries: 30
     environment:
       PGUSER: postgres
@@ -40,7 +40,7 @@ services:
     healthcheck:
       test: curl -s http://localhost:5984
       interval: 2s
-      timeout: 10s
+      timeout: 3s
       retries: 30
     volumes:
       # enable cors for mobile app in-browser development:
@@ -54,16 +54,16 @@ services:
     healthcheck:
       test: redis-cli ping
       interval: 2s
-      timeout: 10s
+      timeout: 3s
       retries: 30
 
   nginx-base:
     image: nginx:alpine
     healthcheck:
       test: nginx -t
-      interval: 15s
-      timeout: 10s
-      retries: 300
+      interval: 5s
+      timeout: 3s
+      retries: 30
     volumes:
       # local setup
       - ./local-setup/nginx/nginx.conf:/etc/nginx/nginx.conf
@@ -128,8 +128,8 @@ services:
     healthcheck:
       test: /code/entrypoint.sh health
       interval: 5s
-      timeout: 10s
-      retries: 300
+      timeout: 3s
+      retries: 30
     command: start_dev
 
 
@@ -181,9 +181,9 @@ services:
       # - "8443:8443"
     healthcheck:
       test: /code/entrypoint.sh health
-      interval: 10s
-      timeout: 10s
-      retries: 300
+      interval: 5s
+      timeout: 3s
+      retries: 30
     command: start_dev
 
 
@@ -237,9 +237,9 @@ services:
       - "8006:8006"
     healthcheck:
       test: /code/entrypoint.sh health
-      interval: 10s
-      timeout: 10s
-      retries: 300
+      interval: 5s
+      timeout: 3s
+      retries: 30
     command: start_dev
 
   couchdb-sync-rq-base:
@@ -248,8 +248,8 @@ services:
     volumes: *sync-volumes
     healthcheck:
       test: /code/entrypoint.sh health_rq
-      interval: 15s
-      timeout: 10s
+      interval: 5s
+      timeout: 3s
       retries: 300
     command: start_rq
 
@@ -299,7 +299,7 @@ services:
     healthcheck:
       test: /code/entrypoint.sh health
       interval: 5s
-      timeout: 10s
+      timeout: 3s
       retries: 30
     command: start_dev
 
@@ -309,9 +309,9 @@ services:
     tty: true
     healthcheck:
       test: curl -s http://localhost:3004
-      interval: 10s
-      timeout: 10s
-      retries: 300
+      interval: 5s
+      timeout: 3s
+      retries: 30
     volumes:
       #################################################
       #                    WARNING                    #
