@@ -53,14 +53,13 @@ Now you just need to tell Docker to download the images and start them up:
 docker-compose up
 ```
 
-Once the console output has stopped, you should be able to access the Aether UI in your browser. Use these credentials to log in:
-```
-http://ui.aether.local/
-```
+Once the console output has stopped, you should be able to access the Aether UI in your browser at [http://ui.aether.local/](http://ui.aether.local/). Use these credentials to log in:
+
 - _Username:_ **admin**
 - _Password:_ **adminadmin**
 
-If you see this screen, you are all configured and ready to move on.
+If you see this screen, you are all configured and ready to move on:
+
 ![AUX](/images/screenshots/pipelines-overview-start.png)
 
 Now let’s [start creating our first Aether-based solution](walkthrough-core).
