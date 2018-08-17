@@ -17,8 +17,9 @@
 # under the License.
 
 import mock
+import os
 
-from django.urls import reverse
+from django.core.management import call_command
 from django.test import TestCase
 
 
@@ -31,28 +32,26 @@ def get_scheduler_mocked(*args, **kwargs):
     return MockedScheduler()
 
 
-class TestViews(TestCase):
+class TestCheckRQCommand(TestCase):
 
-    def test__health_check(self):
-        response = self.client.get(reverse('health'))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {})
-
-    def test__kernel_check(self):
-        response = self.client.get(reverse('check-kernel'))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.content.decode(),
-            'Brought to you by eHealth Africa - good tech for hard places'
-        )
+    def setUp(self):
+        # Redirect to /dev/null in order to not clutter the test log.
+        self.out = open(os.devnull, 'w')
 
     def test__check_rq(self):
-        response = self.client.get(reverse('check-rq'))
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {})
+        try:
+            call_command('check_rq', stdout=self.out, stderr=self.out)
+            self.assertTrue(True)
+        except Exception:
+            self.assertTrue(False)
 
-    @mock.patch('aether.sync.views.get_scheduler', side_effect=get_scheduler_mocked)
+    @mock.patch('aether.sync.management.commands.check_rq.get_scheduler',
+                side_effect=get_scheduler_mocked)
     def test__check_rq__error(self, *args):
-        response = self.client.get(reverse('check-rq'))
-        self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.json(), {})
+        self.assertRaises(
+            RuntimeError,
+            call_command,
+            'check_rq',
+            stdout=self.out,
+            stderr=self.out,
+        )

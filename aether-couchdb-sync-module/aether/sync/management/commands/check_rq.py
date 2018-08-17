@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -16,16 +18,29 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.conf.urls import include, url
+from django.core.management.base import BaseCommand
+from django.utils.translation import ugettext as _
 
-from aether.common.conf.urls import generate_urlpatterns
+from django_rq import get_scheduler
 
-from .views import check_rq
+MESSAGE_ERROR = _('RQ scheduler has no running workers.') + '\n'
+MESSAGE_OK = _('RQ scheduler running with {number} workers.') + '\n'
 
 
-urlpatterns = generate_urlpatterns(kernel=True) + [
-    url(r'^check-rq$', check_rq, name='check-rq'),
+class Command(BaseCommand):
 
-    url(r'^rq/', include('django_rq.urls')),
-    url(r'^sync/', include('aether.sync.api.urls', namespace='sync')),
-]
+    help = 'Health check for RQ.'
+
+    def handle(self, *args, **options):
+        '''
+        Health check for RQ.
+        '''
+
+        scheduler = get_scheduler('default')
+        jobs = scheduler.get_jobs()
+
+        if len(jobs) == 0:
+            self.stderr.write(MESSAGE_ERROR)
+            raise RuntimeError(MESSAGE_ERROR)
+
+        self.stdout.write(MESSAGE_OK.format(number=len(jobs)))

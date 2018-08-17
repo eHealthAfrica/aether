@@ -4,11 +4,10 @@
 #  * Aether Kernel
 #  * ODK Module
 #  * CouchDB Sync Module
-#  * Aether UI Module
-#  * Aether Client
-#  * Aether Integration Tests
-#  * Producer Module
+#  * Aether UI
 #  * Zookeper & Kafka
+#  * Aether Kafka Producer
+#  * Aether Integration Tests
 # ------------------------------------------------------------------------------
 
 version: "2.1"
@@ -96,13 +95,14 @@ services:
       REDIS_HOST: redis-test
       TESTING: "true"
       WEB_SERVER_PORT: 9006
+      GOOGLE_CLIENT_ID: secret_google_client_id
     ports:
       - "9006:9006"
     command: start
 
 
   # ---------------------------------
-  # Aether UI container
+  # Aether UI
   # ---------------------------------
 
   ui-test:
@@ -127,7 +127,7 @@ services:
 
 
   # ---------------------------------
-  # Aether Kafka Containers
+  # Kafka & Zookeeper
   # ---------------------------------
 
   zookeeper-test:
@@ -184,3 +184,12 @@ services:
       KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
     volumes:
       - ./test-aether-integration-module:/code
+    depends_on:
+      db-test:
+        condition: service_healthy
+      kernel-test:
+        condition: service_healthy
+      kafka-test:
+        condition: service_started
+      producer-test:
+        condition: service_started

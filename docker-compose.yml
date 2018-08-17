@@ -1,10 +1,11 @@
 # ------------------------------------------------------------------------------
 # Config file for these containers:
 #
+#  * Databases + NGINX containers
 #  * Aether Kernel
 #  * ODK Module
 #  * CouchDB Sync Module
-#  * Aether UI Module
+#  * Aether UI & UI Assets
 # ------------------------------------------------------------------------------
 
 version: "2.1"
@@ -24,7 +25,7 @@ services:
 
   db:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: postgres-base
     volumes:
       # data volume
@@ -34,27 +35,15 @@ services:
 
   couchdb:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: couchdb-base
     networks:
       - internal
 
   redis:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: redis-base
-    networks:
-      - internal
-
-
-  # ---------------------------------
-  # NGINX container
-  # ---------------------------------
-
-  nginx:
-    extends:
-      file: docker-compose-base.yml
-      service: nginx-base
     networks:
       - internal
 
@@ -65,7 +54,7 @@ services:
 
   kernel:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: kernel-base
     depends_on:
       db:
@@ -77,12 +66,41 @@ services:
 
 
   # ---------------------------------
+  # Aether UI
+  # ---------------------------------
+
+  ui-assets:
+    extends:
+      file: ./docker-compose-base.yml
+      service: ui-assets-base
+    networks:
+      - internal
+
+  ui:
+    extends:
+      file: ./docker-compose-base.yml
+      service: ui-base
+    depends_on:
+      db:
+        condition: service_healthy
+      kernel:
+        condition: service_started
+      # use this dependency with "start_dev" command and webpack (optional)
+      # ui-assets:
+      #   condition: service_started
+    networks:
+      internal:
+        aliases:
+          - ui.aether.local
+
+
+  # ---------------------------------
   # ODK module
   # ---------------------------------
 
   odk:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: odk-base
     depends_on:
       db:
@@ -101,16 +119,16 @@ services:
 
   couchdb-sync:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: couchdb-sync-base
-    depends_on: &sync-dependencies
+    depends_on:
       db:
         condition: service_healthy
       couchdb:
-        condition: service_started
-      kernel:
-        condition: service_started
+        condition: service_healthy
       redis:
+        condition: service_healthy
+      kernel:
         condition: service_started
     networks:
       internal:
@@ -119,34 +137,40 @@ services:
 
   couchdb-sync-rq:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: couchdb-sync-rq-base
-    depends_on: *sync-dependencies
+    depends_on:
+      db:
+        condition: service_healthy
+      couchdb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kernel:
+        condition: service_started
+      couchdb-sync:
+        condition: service_started
     networks:
       - internal
 
 
   # ---------------------------------
-  # Aether UI module
+  # NGINX container
   # ---------------------------------
 
-  ui:
+  nginx:
     extends:
-      file: docker-compose-base.yml
-      service: ui-base
+      file: ./docker-compose-base.yml
+      service: nginx-base
     depends_on:
-      db:
-        condition: service_healthy
       kernel:
-        condition: service_started
-    networks:
-      internal:
-        aliases:
-          - ui.aether.local
-
-  ui-assets:
-    extends:
-      file: docker-compose-base.yml
-      service: ui-assets-base
+        condition: service_healthy
+      # uncomment these lines depending on the started services
+      # odk:
+      #   condition: service_healthy
+      # couchdb-sync:
+      #   condition: service_healthy
+      # ui:
+      #   condition: service_healthy
     networks:
       - internal

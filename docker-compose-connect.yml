@@ -1,6 +1,10 @@
 # ------------------------------------------------------------------------------
-# Kafka and Aether Producer
+# Config file for these containers:
+#
+#  * Zookeper & Kafka
+#  * Aether Kafka Producer
 # ------------------------------------------------------------------------------
+
 version: "2.1"
 
 networks:
@@ -11,12 +15,12 @@ networks:
 services:
 
   # ---------------------------------
-  # Aether Kafka Containers
+  # Kafka & Zookeeper
   # ---------------------------------
 
   zookeeper:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: zookeeper-base
     restart: on-failure
     networks:
@@ -40,7 +44,7 @@ services:
 
   producer:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: aether-producer-base
     restart: on-failure
     links:

@@ -51,7 +51,7 @@ for container in "${containers[@]}"
 do
     # upgrade pip dependencies
     echo "_____________________________________________ Updating $container"
-    docker-compose run $container pip_freeze
+    docker-compose run --no-deps $container pip_freeze
     echo "_____________________________________________ $container updated!"
 
     if [[ $build = "yes" ]]
