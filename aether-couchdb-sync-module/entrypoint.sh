@@ -79,7 +79,7 @@ setup () {
     # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
     ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD
 
-    curl -s $COUCHDB_URL
+    ./manage.py check_url --url=$COUCHDB_URL
 }
 
 test_flake8 () {
@@ -191,7 +191,7 @@ case "$1" in
     ;;
 
     health )
-        curl -s http://0.0.0.0:$WEB_SERVER_PORT/health
+        ./manage.py check_url --url=http://0.0.0.0:$WEB_SERVER_PORT/health
     ;;
 
     health_rq )
