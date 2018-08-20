@@ -75,9 +75,6 @@ services:
       # static folders per container
       - ./.persistent_data/static:/static
 
-      # aether favicon
-      - ./local-setup/aether.ico:/static/aether.ico
-
       # media folders per container
       - ./.persistent_data/media:/media
     ports:
@@ -284,11 +281,8 @@ services:
       PGPORT: 5432
       PGUSER: postgres
 
-      # use this value with "start_dev" command and webpack
+      # use this value with "start_dev" command and webpack otherwise comment it out
       STATIC_ROOT: /code/aether/ui/assets/bundles
-      # use this value with "start_dev" command and without webpack
-      # STATIC_ROOT: /code/aether/ui/static
-
       WEB_SERVER_PORT: 8004
     volumes:
       - ./aether-ui:/code

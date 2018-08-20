@@ -79,6 +79,16 @@ setup () {
 
     # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
     ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD -t=$ADMIN_TOKEN
+
+    STATIC_ROOT=/var/www/static
+    # create static assets
+    ./manage.py collectstatic --noinput --clear --verbosity 0
+    chmod -R 755 $STATIC_ROOT
+
+    # expose version number (if exists)
+    cp ./VERSION $STATIC_ROOT/VERSION   2>/dev/null || :
+    # add git revision (if exists)
+    cp ./REVISION $STATIC_ROOT/REVISION 2>/dev/null || :
 }
 
 test_flake8 () {
@@ -142,15 +152,6 @@ case "$1" in
 
         # media assets
         chown aether: /media
-
-        # create static assets
-        ./manage.py collectstatic --noinput --clear --verbosity 0
-        chmod -R 755 /var/www/static
-
-        # expose version number (if exists)
-        cp ./VERSION /var/www/static/VERSION 2>/dev/null || :
-        # add git revision (if exists)
-        cp ./REVISION /var/www/static/REVISION 2>/dev/null || :
 
         [ -z "$DEBUG" ] && LOGGING="--disable-logging" || LOGGING=""
         /usr/local/bin/uwsgi \
