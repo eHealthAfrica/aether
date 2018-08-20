@@ -12,6 +12,7 @@ services:
       TESTING: "true"
       # required environment variables
       DJANGO_SECRET_KEY: secret
+      DJANGO_STORAGE_BACKEND: filesystem
       PGPASSWORD: secretsecret
       PGUSER: dbuser
       PGHOST: db-test
