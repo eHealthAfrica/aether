@@ -2,7 +2,7 @@
     "offset_db_url": "sqlite:///offset.db",
     "start_delay": 5,
     "sleep_time": 10,
-    "log_level": "ERROR",
+    "log_level": "DEBUG",
     "window_size_sec": 2,
 
     "postgres_pull_limit": 250,
@@ -17,7 +17,7 @@
     "kernel_admin_password": "",
 
     "kafka_failure_wait_time": 10,
-    "kafka_bootstrap_servers": "kafka:29092",
+    "kafka_url": "kafka:29092",
     "kafka_settings": {
         "acks": 1,
         "max.in.flight.requests.per.connection": 1,

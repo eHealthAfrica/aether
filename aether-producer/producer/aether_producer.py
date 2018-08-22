@@ -33,6 +33,7 @@ import logging
 import os
 import psycopg2
 from psycopg2 import sql
+import requests
 import signal
 import spavro.schema
 import sys
@@ -43,6 +44,7 @@ from flask import Flask, Response, request, abort, jsonify
 from gevent.pywsgi import WSGIServer
 from confluent_kafka import Producer, Consumer, KafkaException
 from psycopg2.extras import DictCursor
+
 from requests.exceptions import ConnectionError
 from spavro.datafile import DataFileWriter, DataFileReader
 from spavro.io import DatumWriter, DatumReader
@@ -156,9 +158,25 @@ class ProducerManager(object):
 
     # Connectivity
 
+    def kafka_available(self):
+        kafka_url = "http://%s" % self.settings["kafka_url"]
+        try:
+            res = requests.head(kafka_url)
+            return True
+        except ConnectionError as rce:
+            # Requests has the same exception type for both failed to resolve
+            # and ConnectionResetError. Kafka resets the connection as it doesn't
+            # support HEAD, but we know it's there and the port is correct.
+            if "ConnectionResetError" in str(rce):
+                return True
+            else:
+                self.logger.debug("Could not connect to Kafka on url: %s" % kafka_url)
+                self.logger.debug("Connection problem: %s" % rce)
+                return False
+
     # Connect to sqlite
     def init_db(self):
-        url = self.settings.get('offset_db_url')
+        url = self.settings['offset_db_url']
         db.init(url)
         self.logger.info("OffsetDB initialized at %s" % url)
 
@@ -269,9 +287,17 @@ class ProducerManager(object):
             return Response({"healthy": True})
 
     def request_status(self):
+        # True and False were confusing to users.
+        # Since we only know if data has made it into Kafka, not if Kafka is available.
+        # We need a better explanation of the state.
+        kafka_explainations = {
+            True: "SUBMISSION_ONGOING",
+            False: "DATA_NOT_BEING_SUBMITTED"
+        }
         status = {
-            "kernel": self.kernel is not None,  # This is a real object
-            "kafka": self.kafka is not False,   # This is just a status flag
+            "kernel_connected": self.kernel is not None,  # This is a real object
+            "kafka_container_accessible": self.kafka_available(),
+            "kafka_submission_status": kafka_explainations.get(self.kafka),   # This is just a status flag
             "topics": {k: v.get_status() for k, v in self.topic_managers.items()}
         }
         with self.app.app_context():
@@ -350,7 +376,7 @@ class TopicManager(object):
         self.update_schema(schema)
         kafka_settings = self.context.settings.get('kafka_settings')
         # apply setting from root config to be able to use env variables
-        kafka_settings["bootstrap.servers"] = self.context.settings.get("kafka_bootstrap_servers")
+        kafka_settings["bootstrap.servers"] = self.context.settings.get("kafka_url")
         self.producer = Producer(**kafka_settings)
         # Spawn worker and give to pool.
         self.context.threads.append(gevent.spawn(self.update_kafka))
@@ -452,6 +478,11 @@ class TopicManager(object):
         # Waits for all messages to be accepted or timeout in TopicManager.wait_for_kafka
 
         while not self.context.killed:
+
+            if not self.context.kafka_available():
+                self.logger.debug('Kafka Container not accessible, waiting.')
+                self.context.safe_sleep(self.wait_time)
+                continue
 
             self.offset = self.get_offset()
             if not self.updates_available():
