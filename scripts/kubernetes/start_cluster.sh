@@ -27,12 +27,12 @@ helm install stable/postgresql \
 # Wait for the deployment to reach a "Running" state.
 kubectl rollout status deployment db
 
-# Install kernel
-helm install eha/kernel \
-     --name kernel \
-     --values=./$VALUES_DIR/kernel.yaml
+# Install aether-kernel
+helm install eha/aether-kernel \
+     --name aether-kernel \
+     --values=./$VALUES_DIR/aether-kernel.yaml
 # Wait for the deployment to reach a "Running" state.
-kubectl rollout status deployment kernel
+kubectl rollout status deployment aether-kernel
 
 # Install odk
 helm install eha/odk \
