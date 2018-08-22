@@ -25,6 +25,7 @@ psycogreen.gevent.patch_psycopg()
 import ast
 from contextlib import contextmanager
 from datetime import datetime
+import enum
 import gevent
 from gevent.pool import Pool
 import io
@@ -82,6 +83,12 @@ class Settings(dict):
                 self[k] = obj.get(k)
 
 
+class KafkaStatus(enum.Enum):
+    SUBMISSION_PENDING = 1
+    SUBMISSION_FAILURE = 2
+    SUBMISSION_SUCCESS = 3
+
+
 class KernelHandler(object):
     # Context for Kernel, which nulls kernel for reconnection if an error occurs
     # Errors of type ignored_exceptions are logged but don't null kernel
@@ -124,7 +131,7 @@ class ProducerManager(object):
         self.init_db()
         # Clear objects and start
         self.kernel = None
-        self.kafka = False
+        self.kafka = KafkaStatus.SUBMISSION_PENDING
         self.topic_managers = {}
         self.run()
 
@@ -287,17 +294,10 @@ class ProducerManager(object):
             return Response({"healthy": True})
 
     def request_status(self):
-        # True and False were confusing to users.
-        # Since we only know if data has made it into Kafka, not if Kafka is available.
-        # We need a better explanation of the state.
-        kafka_explainations = {
-            True: "SUBMISSION_ONGOING",
-            False: "DATA_NOT_BEING_SUBMITTED"
-        }
         status = {
             "kernel_connected": self.kernel is not None,  # This is a real object
             "kafka_container_accessible": self.kafka_available(),
-            "kafka_submission_status": kafka_explainations.get(self.kafka),   # This is just a status flag
+            "kafka_submission_status": str(self.kafka),   # This is just a status flag
             "topics": {k: v.get_status() for k, v in self.topic_managers.items()}
         }
         with self.app.app_context():
@@ -600,7 +600,7 @@ class TopicManager(object):
             self.handle_kafka_errors(change_set_size, all_failed=False)
         self.clear_changeset()
         # Once we're satisfied, we set the new offset past the processed messages
-        self.context.kafka = True
+        self.context.kafka = KafkaStatus.SUBMISSION_SUCCESS
         self.set_offset(end_offset)
         # Sleep so that elements passed in the current window become eligible
         self.context.safe_sleep(self.window_size_sec)
@@ -633,7 +633,7 @@ class TopicManager(object):
 
         self.status["last_errors_set"] = last_error_set
         if all_failed:
-            self.context.kafka = False
+            self.context.kafka = KafkaStatus.SUBMISSION_FAILURE
         return
 
     def clear_changeset(self):
