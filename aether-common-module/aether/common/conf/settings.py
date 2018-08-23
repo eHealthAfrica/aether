@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'django.contrib.sessions',
     'django.contrib.staticfiles',
+    'storages',
 
     # REST framework with auth token
     'rest_framework',
@@ -245,27 +246,25 @@ if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):
 # Storage Configuration
 # ------------------------------------------------------------------------------
 
-CUSTOM_STORAGE = os.environ.get('DJANGO_REMOTE_STORAGE', '')
+DJANGO_STORAGE_BACKEND = os.environ['DJANGO_STORAGE_BACKEND']
 
-if CUSTOM_STORAGE:   # pragma: no cover
-    INSTALLED_APPS += ['storages', ]
-    STATIC_FILES = bool(os.environ.get('REMOTE_STATIC_FILES'))
-    if CUSTOM_STORAGE.lower() == 's3':
-        DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-        AWS_AUTO_CREATE_BUCKET = True
-        AWS_STORAGE_BUCKET_NAME = os.environ['BUCKET_NAME']
-        if STATIC_FILES:
-            STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    elif CUSTOM_STORAGE.lower() == 'gcs':
-        DEFAULT_FILE_STORAGE = 'storages.backends.gs.GSBotoStorage'
-        GS_AUTO_CREATE_BUCKET = True
-        GS_BUCKET_NAME = os.environ['BUCKET_NAME']
-        if STATIC_FILES:
-            STATICFILES_STORAGE = 'storages.backends.gs.GSBotoStorage'
-
-    logger.info('{} file system used!'.format(CUSTOM_STORAGE))
+if DJANGO_STORAGE_BACKEND == 'filesystem':
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+elif DJANGO_STORAGE_BACKEND == 's3':
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    AWS_STORAGE_BUCKET_NAME = os.environ['BUCKET_NAME']
+elif DJANGO_STORAGE_BACKEND == 'gcs':
+    DEFAULT_FILE_STORAGE = 'storages.backends.gs.GSBotoStorage'
+    GS_BUCKET_NAME = os.environ['BUCKET_NAME']
 else:
-    logger.info('Default file system used!')
+    msg = (
+        'Unrecognized value "{}" for environment variable '
+        'DJANGO_STORAGE_BACKEND. Expected one of the following: "filesystem", '
+        '"s3", "gcs"'
+    )
+    raise Exception(msg.format(DJANGO_STORAGE_BACKEND))
+logger.info('Using storage backend "{}"'.format(DJANGO_STORAGE_BACKEND))
+
 
 # Debug Configuration
 # ------------------------------------------------------------------------------

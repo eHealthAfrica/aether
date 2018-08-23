@@ -7,8 +7,8 @@ python:
 matrix:
   fast_finish: true
   include:
-    - name: "Kubernetes tests (Kernel and ODK)"
-      env: 'TEST_MODE=kubernetes'
+    # - name: "Kubernetes tests (Kernel and ODK)"
+    #   env: 'TEST_MODE=kubernetes'
     - name: "Integration tests (Kernel with Kakfa/Zookeeper and Producer)"
       env: 'TEST_MODE=integration'
     - name: "Aether Suite tests (Kernel, UI, ODK and CouchDB-Sync)"
