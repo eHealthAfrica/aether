@@ -158,7 +158,7 @@ services:
       service: aether-producer-base
     environment:
       # These variables will override the ones indicated in the settings file
-      KAFKA_BOOTSTRAP_SERVERS: kafka-test:29092
+      KAFKA_URL: kafka-test:29092
       KERNEL_URL: http://kernel-test:9000
       OFFSET_DB_URL: sqlite:///test-offset.db
       POSTGRES_DBNAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
