@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'django.contrib.sessions',
     'django.contrib.staticfiles',
+    'storages',
 
     # REST framework with auth token
     'rest_framework',
@@ -241,6 +242,28 @@ if os.environ.get('DJANGO_USE_X_FORWARDED_PORT', False):
 
 if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Storage Configuration
+# ------------------------------------------------------------------------------
+
+DJANGO_STORAGE_BACKEND = os.environ['DJANGO_STORAGE_BACKEND']
+
+if DJANGO_STORAGE_BACKEND == 'filesystem':
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+elif DJANGO_STORAGE_BACKEND == 's3':
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    AWS_STORAGE_BUCKET_NAME = os.environ['BUCKET_NAME']
+elif DJANGO_STORAGE_BACKEND == 'gcs':
+    DEFAULT_FILE_STORAGE = 'storages.backends.gs.GSBotoStorage'
+    GS_BUCKET_NAME = os.environ['BUCKET_NAME']
+else:
+    msg = (
+        'Unrecognized value "{}" for environment variable '
+        'DJANGO_STORAGE_BACKEND. Expected one of the following: "filesystem", '
+        '"s3", "gcs"'
+    )
+    raise Exception(msg.format(DJANGO_STORAGE_BACKEND))
+logger.info('Using storage backend "{}"'.format(DJANGO_STORAGE_BACKEND))
 
 
 # Debug Configuration

@@ -18,6 +18,7 @@
 # Aether common module, will also require:
 #   django < 2
 #   django-cors-headers
+#   django-storages
 #   django-debug-toolbar
 #   django-prometheus
 #   djangorestframework
