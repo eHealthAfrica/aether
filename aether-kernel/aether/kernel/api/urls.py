@@ -28,10 +28,11 @@ router.register('projects', views.ProjectViewSet)
 router.register('projects-stats',
                 views.ProjectStatsViewSet,
                 base_name='projects_stats')
+router.register('mappingset', views.MappingSetViewSet)
+router.register('mappingsets-stats',
+                views.MappingSetStatsViewSet,
+                base_name='mappingsets_stats')
 router.register('mappings', views.MappingViewSet)
-router.register('mappings-stats',
-                views.MappingStatsViewSet,
-                base_name='mappings_stats')
 router.register('projectschemas', views.ProjectSchemaViewSet)
 router.register('submissions', views.SubmissionViewSet)
 router.register('attachments', views.AttachmentViewSet)

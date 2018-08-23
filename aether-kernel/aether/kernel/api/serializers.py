@@ -75,11 +75,11 @@ class ProjectSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         read_only=True,
         view_name='project-detail',
     )
-    mappings_url = FilteredHyperlinkedRelatedField(
+    mappingset_url = FilteredHyperlinkedRelatedField(
         lookup_field='project',
         read_only=True,
-        source='mappings',
-        view_name='mapping-list',
+        source='mappingsets',
+        view_name='mappingset-list',
     )
     projectschemas_url = FilteredHyperlinkedRelatedField(
         lookup_field='project',
@@ -98,16 +98,11 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         read_only=True,
         view_name='mapping-detail',
     )
-    project_url = serializers.HyperlinkedRelatedField(
-        read_only=True,
-        source='project',
-        view_name='project-detail',
-    )
-    submissions_url = FilteredHyperlinkedRelatedField(
+    mappingsetmappings_url = FilteredHyperlinkedRelatedField(
         lookup_field='mapping',
         read_only=True,
-        source='submissions',
-        view_name='submission-list',
+        source='mappingsetmappings',
+        view_name='mappingsetmapping-list',
     )
 
     def validate_definition(self, value):
@@ -116,6 +111,56 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     class Meta:
         model = models.Mapping
+        fields = '__all__'
+
+
+class MappingSetSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        read_only=True,
+        view_name='mappingset-detail',
+    )
+    project_url = serializers.HyperlinkedRelatedField(
+        read_only=True,
+        source='project',
+        view_name='project-detail',
+    )
+    mappingsetmappings_url = FilteredHyperlinkedRelatedField(
+        lookup_field='mappingset',
+        read_only=True,
+        source='mappingsets',
+        view_name='mappingset-list',
+    )
+    submissions_url = FilteredHyperlinkedRelatedField(
+        lookup_field='mappingset',
+        read_only=True,
+        source='submissions',
+        view_name='submission-list',
+    )
+
+    class Meta:
+        model = models.MappingSet
+        fields = '__all__'
+
+
+class MappingSetMappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        read_only=True,
+        view_name='mappingsetmapping-detail',
+    )
+    mappingset_url = serializers.HyperlinkedRelatedField(
+        read_only=True,
+        source='mappingsets',
+        view_name='mappingset-list',
+    )
+    mapping_url = FilteredHyperlinkedRelatedField(
+        lookup_field='mapping',
+        read_only=True,
+        source='mappings',
+        view_name='mappings-list',
+    )
+
+    class Meta:
+        model = models.MappingSetMapping
         fields = '__all__'
 
 
@@ -133,9 +178,9 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='submission-detail',
         read_only=True
     )
-    mapping_url = serializers.HyperlinkedRelatedField(
-        view_name='mapping-detail',
-        source='mapping',
+    mappingset_url = serializers.HyperlinkedRelatedField(
+        view_name='mappingset-detail',
+        source='mappingset',
         read_only=True,
     )
     entities_url = FilteredHyperlinkedRelatedField(
@@ -355,18 +400,19 @@ class ProjectStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         )
 
 
-class MappingStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class MappingSetStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     first_submission = serializers.DateTimeField()
     last_submission = serializers.DateTimeField()
     submissions_count = serializers.IntegerField()
     entities_count = serializers.IntegerField()
 
     class Meta:
-        model = models.Mapping
+        model = models.MappingSet
         fields = (
-            'id', 'name', 'definition', 'created',
+            'id', 'name', 'created',
             'first_submission', 'last_submission',
             'submissions_count', 'entities_count',
+            'mappingsetmappings_mappings_count',
         )
 
 

@@ -29,13 +29,23 @@ class ProjectAdmin(CompareVersionAdmin):
 
 class MappingAdmin(CompareVersionAdmin):
     form = forms.MappingForm
+    list_display = ('id', 'name', 'revision',)
+    readonly_fields = ('id',)
+
+
+class MappingSetAdmin(CompareVersionAdmin):
     list_display = ('id', 'name', 'revision', 'project',)
+    readonly_fields = ('id',)
+
+
+class MappingSetMappingAdmin(CompareVersionAdmin):
+    list_display = ('id', 'name', 'mappingset', 'mapping',)
     readonly_fields = ('id',)
 
 
 class SubmissionAdmin(CompareVersionAdmin):
     form = forms.SubmissionForm
-    list_display = ('id', 'revision', 'mapping', 'map_revision',)
+    list_display = ('id', 'revision', 'mappingset', 'mapset_revision',)
     readonly_fields = ('id',)
 
 
