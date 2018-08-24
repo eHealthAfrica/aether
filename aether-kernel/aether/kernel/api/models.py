@@ -106,7 +106,6 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), TimeStampedMod
     name = models.CharField(max_length=50, null=False, unique=True)
 
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
-    mappings = JSONField(blank=False, null=False)
 
     @property
     def definition_prettified(self):
@@ -152,14 +151,12 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
 class MappingSetMapping(ExportModelOperationsMixin('kernel_mappingsetmapping'), TimeStampedModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    name = models.CharField(max_length=50, null=False, unique=True)
 
     mapping = models.ForeignKey(to=Mapping, on_delete=models.CASCADE)
     mappingset = models.ForeignKey(to=MappingSet, on_delete=models.CASCADE)
 
-    @property
-    def definition_prettified(self):
-        return json_prettified(self.definition)
+    name = models.CharField(max_length=105, null=False, unique=True,
+        default='{} - {}'.format(mappingset.name, mapping.name))
 
     def __str__(self):
         return self.name
@@ -179,7 +176,6 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedMod
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
 
-    mapset_revision = models.TextField(default='1')
     payload = JSONField(blank=False, null=False)
 
     mappingset = models.ForeignKey(to=MappingSet, on_delete=models.CASCADE)
@@ -196,7 +192,7 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedMod
         return json_prettified(self.payload)
 
     def __str__(self):
-        return '{} - {}'.format(str(self.mapping), self.id)
+        return '{} - {}'.format(str(self.mappingset), self.id)
 
     class Meta:
         app_label = 'kernel'
@@ -204,6 +200,28 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedMod
         ordering = ['project__id', '-modified']
         indexes = [
             models.Index(fields=['project', '-modified']),
+            models.Index(fields=['-modified']),
+        ]
+
+
+class SubmissionMapping(ExportModelOperationsMixin('kernel_submissionmapping'), TimeStampedModel):
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    revision = models.TextField(default='1')
+
+    mapping = models.ForeignKey(to=Mapping, on_delete=models.CASCADE)
+    map_revision = models.TextField(default='1')
+    submission = models.ForeignKey(to=Submission, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return '{} - {}'.format(str(self.submission), self.id)
+
+    class Meta:
+        app_label = 'kernel'
+        default_related_name = 'submissionmappings'
+        ordering = ['submission__id', '-modified']
+        indexes = [
+            models.Index(fields=['submission', '-modified']),
             models.Index(fields=['-modified']),
         ]
 

@@ -105,6 +105,13 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='mappingsetmapping-list',
     )
 
+    submissionmappings_url = FilteredHyperlinkedRelatedField(
+        lookup_field='mapping',
+        read_only=True,
+        source='submissionmappings',
+        view_name='submissionmapping-list',
+    )
+
     def validate_definition(self, value):
         validators.validate_mapping_definition(value)
         return value
@@ -127,8 +134,8 @@ class MappingSetSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     mappingsetmappings_url = FilteredHyperlinkedRelatedField(
         lookup_field='mappingset',
         read_only=True,
-        source='mappingsets',
-        view_name='mappingset-list',
+        source='mappingsetsmappings',
+        view_name='mappingsetsmapping-list',
     )
     submissions_url = FilteredHyperlinkedRelatedField(
         lookup_field='mappingset',
@@ -149,14 +156,13 @@ class MappingSetMappingSerializer(DynamicFieldsMixin, serializers.ModelSerialize
     )
     mappingset_url = serializers.HyperlinkedRelatedField(
         read_only=True,
-        source='mappingsets',
-        view_name='mappingset-list',
+        source='mappingset',
+        view_name='mappingset-detail',
     )
     mapping_url = FilteredHyperlinkedRelatedField(
-        lookup_field='mapping',
         read_only=True,
-        source='mappings',
-        view_name='mappings-list',
+        source='mapping',
+        view_name='mapping-detail',
     )
 
     class Meta:
@@ -181,6 +187,12 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     mappingset_url = serializers.HyperlinkedRelatedField(
         view_name='mappingset-detail',
         source='mappingset',
+        read_only=True,
+    )
+    submissionmapping_url = serializers.HyperlinkedRelatedField(
+        lookup_field='submission',
+        view_name='submissionmapping-list',
+        source='submissionmappings',
         read_only=True,
     )
     entities_url = FilteredHyperlinkedRelatedField(
@@ -212,6 +224,27 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     class Meta:
         model = models.Submission
+        fields = '__all__'
+
+
+class SubmissionMappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        read_only=True,
+        view_name='submissionmapping-detail',
+    )
+    submission_url = serializers.HyperlinkedRelatedField(
+        read_only=True,
+        source='submission',
+        view_name='submission-detail',
+    )
+    mapping_url = FilteredHyperlinkedRelatedField(
+        read_only=True,
+        source='mapping',
+        view_name='mapping-detail',
+    )
+
+    class Meta:
+        model = models.SubmissionMapping
         fields = '__all__'
 
 
@@ -412,7 +445,6 @@ class MappingSetStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer)
             'id', 'name', 'created',
             'first_submission', 'last_submission',
             'submissions_count', 'entities_count',
-            'mappingsetmappings_mappings_count',
         )
 
 

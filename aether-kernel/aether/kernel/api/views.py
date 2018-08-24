@@ -228,6 +228,12 @@ class SubmissionViewSet(CustomViewSet):
     filter_class = filters.SubmissionFilter
 
 
+class SubmissionMappingViewSet(CustomViewSet):
+    queryset = models.SubmissionMapping.objects.all()
+    serializer_class = serializers.SubmissionMappingSerializer
+    filter_class = filters.SubmissionMappingFilter
+
+
 class AttachmentViewSet(CustomViewSet):
     queryset = models.Attachment.objects.all()
     serializer_class = serializers.AttachmentSerializer
