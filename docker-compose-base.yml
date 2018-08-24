@@ -103,6 +103,7 @@ services:
 
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}
+      DJANGO_STORAGE_BACKEND: filesystem
 
       KERNEL_READONLY_DB_USERNAME: ${KERNEL_READONLY_DB_USERNAME}
       KERNEL_READONLY_DB_PASSWORD: ${KERNEL_READONLY_DB_PASSWORD}
@@ -154,6 +155,7 @@ services:
 
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${ODK_DJANGO_SECRET_KEY}
+      DJANGO_STORAGE_BACKEND: filesystem
 
       DB_NAME: odk
       PGHOST: db
@@ -209,6 +211,7 @@ services:
 
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${COUCHDB_SYNC_DJANGO_SECRET_KEY}
+      DJANGO_STORAGE_BACKEND: filesystem
 
       COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
       COUCHDB_URL: http://couchdb:5984
@@ -274,6 +277,7 @@ services:
 
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${UI_DJANGO_SECRET_KEY}
+      DJANGO_STORAGE_BACKEND: filesystem
 
       DB_NAME: ui
       PGHOST: db
