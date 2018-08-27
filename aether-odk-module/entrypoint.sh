@@ -86,6 +86,12 @@ setup () {
     cp ./VERSION $STATIC_ROOT/VERSION   2>/dev/null || :
     # add git revision (if exists)
     cp ./REVISION $STATIC_ROOT/REVISION 2>/dev/null || :
+
+    # media assets storage
+    if [ "$DJANGO_STORAGE_BACKEND" == "filesystem" ]; then
+        echo "Filesystem storage in ${MEDIA_ROOT:-/media}"
+        chown aether: ${MEDIA_ROOT:-/media}
+    fi
 }
 
 test_flake8 () {
@@ -148,9 +154,6 @@ case "$1" in
     start )
         setup
 
-        # media assets
-        chown aether: /media
-
         [ -z "$DEBUG" ] && LOGGING="--disable-logging" || LOGGING=""
         /usr/local/bin/uwsgi \
             --ini /code/conf/uwsgi.ini \
@@ -160,9 +163,6 @@ case "$1" in
 
     start_dev )
         setup
-
-        # media assets
-        chown aether: /media
 
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;

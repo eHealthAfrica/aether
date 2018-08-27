@@ -152,9 +152,6 @@ case "$1" in
     start )
         setup
 
-        # media assets
-        chown aether: /media
-
         [ -z "$DEBUG" ] && LOGGING="--disable-logging" || LOGGING=""
         /usr/local/bin/uwsgi \
             --ini /code/conf/uwsgi.ini \
