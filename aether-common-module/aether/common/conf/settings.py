@@ -82,10 +82,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    # Make sure this stays as the 1st middleware
-    'django_prometheus.middleware.PrometheusBeforeMiddleware',
-
-    # All middlewares go here
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -94,9 +90,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
-    # Make sure this stays as the last middleware
-    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 TEMPLATES = [
@@ -189,11 +182,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-CAS_VERSION = 3
-CAS_LOGOUT_COMPLETELY = True
-CAS_SERVER_URL = os.environ.get('CAS_SERVER_URL', '')
-HOSTNAME = os.environ.get('HOSTNAME', '')
-
+CAS_SERVER_URL = os.environ.get('CAS_SERVER_URL')
 if CAS_SERVER_URL:
     INSTALLED_APPS += [
         # CAS libraries
@@ -203,8 +192,12 @@ if CAS_SERVER_URL:
     AUTHENTICATION_BACKENDS += [
         'ums_client.backends.UMSRoleBackend',
     ]
+    CAS_VERSION = 3
+    CAS_LOGOUT_COMPLETELY = True
+    HOSTNAME = os.environ.get('HOSTNAME', '')
+
 else:
-    logger.info('No CAS enable!')
+    logger.info('No CAS enabled!')
 
 
 # Sentry Configuration
@@ -219,8 +212,9 @@ if SENTRY_DSN:
 
     SENTRY_CLIENT = 'raven.contrib.django.raven_compat.DjangoClient'
     SENTRY_CELERY_LOGLEVEL = logging.INFO
+
 else:
-    logger.info('No SENTRY enable!')
+    logger.info('No SENTRY enabled!')
 
 
 # Security Configuration
@@ -243,6 +237,7 @@ if os.environ.get('DJANGO_USE_X_FORWARDED_PORT', False):
 if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+
 # Storage Configuration
 # ------------------------------------------------------------------------------
 
@@ -258,11 +253,11 @@ elif DJANGO_STORAGE_BACKEND == 'gcs':
     GS_BUCKET_NAME = os.environ['BUCKET_NAME']
 else:
     msg = (
-        'Unrecognized value "{}" for environment variable '
-        'DJANGO_STORAGE_BACKEND. Expected one of the following: "filesystem", '
-        '"s3", "gcs"'
+        'Unrecognized value "{}" for environment variable DJANGO_STORAGE_BACKEND.'
+        ' Expected one of the following: "filesystem", "s3", "gcs"'
     )
-    raise Exception(msg.format(DJANGO_STORAGE_BACKEND))
+    raise RuntimeError(msg.format(DJANGO_STORAGE_BACKEND))
+
 logger.info('Using storage backend "{}"'.format(DJANGO_STORAGE_BACKEND))
 
 
@@ -277,6 +272,20 @@ if not TESTING and DEBUG:
         'SHOW_TOOLBAR_CALLBACK': lambda _: True,
         'SHOW_TEMPLATE_CONTEXT': True,
     }
+
+
+# Prometheus Configuration
+# ------------------------------------------------------------------------------
+
+MIDDLEWARE = [
+    # Make sure this stays as the first middleware
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+
+    *MIDDLEWARE,
+
+    # Make sure this stays as the last middleware
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
+]
 
 
 # Local Configuration

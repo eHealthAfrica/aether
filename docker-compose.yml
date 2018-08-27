@@ -11,10 +11,17 @@
 version: "2.1"
 
 networks:
-  internal:  # alias as internal
+  # docker network create aether_internal
+  internal:
     external:
       # if this isn't explicitly set it inherits from the containing folder name (aether or not)
       name: aether_internal
+
+volumes:
+  # docker volume create aether_database_data
+  database_data:
+    external:
+      name: aether_database_data
 
 
 services:
@@ -28,8 +35,7 @@ services:
       file: ./docker-compose-base.yml
       service: postgres-base
     volumes:
-      # data volume
-      - ./.persistent_data/db/data:/var/lib/postgresql/data
+      - database_data:/var/lib/postgresql/data
     networks:
       - internal
 

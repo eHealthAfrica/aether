@@ -340,7 +340,7 @@ def xform_get_manifest(request, pk):
     return Response(
         data={
             'media_files': xform.media_files.all(),
-            # use `/media-basic` entrypoint to use Basic Authentication not UMS or Django
+            # use `/media-basic` entrypoint to use Basic Authentication not CAS or Django
             'host': request.build_absolute_uri().replace(
                 request.get_full_path(), settings.MEDIA_BASIC_URL),
         },
