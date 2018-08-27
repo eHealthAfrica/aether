@@ -81,7 +81,7 @@ To create a new version and distribute it:
 ./scripts/build_common_and_distribute.sh
 ```
 
-See more in [README](/aether-common/README.md).
+See more in [README](/aether-common-module/README.md).
 
 *[Return to TOC](#table-of-contents)*
 
