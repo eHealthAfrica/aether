@@ -16,20 +16,27 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django import template
+
+# from aether.odk import settings
+
 from django.conf import settings
-from django.test import TestCase
-from django.core.files.storage import default_storage
+
+register = template.Library()
 
 
-class SettingsTest(TestCase):
+def get_absolute_url(scheme, host, media_url, file_path):
+    return f'{scheme}://{host}{media_url}{file_path}'
 
-    def test_default_variables(self):
 
-        self.assertTrue(settings.TESTING)
-        self.assertFalse(settings.DEBUG)
-
-        self.assertFalse(settings.USE_X_FORWARDED_HOST)
-        self.assertFalse(settings.USE_X_FORWARDED_PORT)
-        self.assertEqual(settings.SECURE_PROXY_SSL_HEADER, None)
-
-        self.assertEqual(settings.ROOT_URLCONF, 'aether.common.urls')
+@register.simple_tag(takes_context=True)
+def get_file_url(context, media_file):
+    if settings.DJANGO_STORAGE_BACKEND == 'filesystem':
+        request = context['request']
+        return get_absolute_url(
+            scheme=request.scheme,
+            host=request.get_host(),
+            media_url=settings.MEDIA_BASIC_URL,
+            file_path=media_file.name,
+        )
+    return media_file.url

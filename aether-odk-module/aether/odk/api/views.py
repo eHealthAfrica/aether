@@ -338,12 +338,7 @@ def xform_get_manifest(request, pk):
             requested_version=version, current_version=xform.version))
 
     return Response(
-        data={
-            'media_files': xform.media_files.all(),
-            # use `/media-basic` entrypoint to use Basic Authentication not UMS or Django
-            'host': request.build_absolute_uri().replace(
-                request.get_full_path(), settings.MEDIA_BASIC_URL),
-        },
+        data={'media_files': xform.media_files.all()},
         template_name='xformManifest.xml',
         content_type='text/xml',
         headers={'X-OpenRosa-Version': '1.0'},

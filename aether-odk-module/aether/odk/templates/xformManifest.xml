@@ -1,3 +1,4 @@
+{% load odk_tags %}
 <?xml version='1.0' encoding='UTF-8' ?>
 {# https://docs.opendatakit.org/openrosa-form-list/ #}
 <manifest xmlns="http://openrosa.org/xforms/xformsManifest">
@@ -5,7 +6,7 @@
   <mediaFile>
     <filename>{{ media_file.name }}</filename>
     <hash>{{ media_file.hash }}</hash>
-    <downloadUrl>{{ host }}{{ media_file.media_file }}</downloadUrl>
+    <downloadUrl>{% get_file_url media_file.media_file %}</downloadUrl>
   </mediaFile>
   {% endfor %}
 </manifest>
