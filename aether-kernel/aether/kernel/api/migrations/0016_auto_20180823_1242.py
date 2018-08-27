@@ -32,7 +32,6 @@ class Migration(migrations.Migration):
                 'ordering': ['project__id', '-modified'],
                 'default_related_name': 'mappingsets',
             },
-            bases=(django_prometheus.models.Mixin, models.Model),
         ),
         migrations.CreateModel(
             name='MappingSetMapping',
@@ -46,7 +45,6 @@ class Migration(migrations.Migration):
                 'ordering': ['mappingset__id', '-modified'],
                 'default_related_name': 'mappingssetmappings',
             },
-            bases=(django_prometheus.models.Mixin, models.Model),
         ),
         migrations.AlterModelOptions(
             name='mapping',
@@ -87,7 +85,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='submission',
             name='mappingset',
-            field=models.ForeignKey(default=632832826323, on_delete=django.db.models.deletion.CASCADE, related_name='submissions', to='kernel.MappingSet'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='submissions', to='kernel.MappingSet'),
             preserve_default=False,
         ),
         migrations.AddIndex(

@@ -606,7 +606,8 @@ def extract_create_entities(submission_payload, mapping_definition, schemas):
 
 
 def run_entity_extraction(submission):
-    # Get the mapping definition from the submission (submission.mapping.definition):
+    # Get the mapping set from the submission (submission.mappingset):
+    mapping_set_mappings = submission.mappingset.mappingsetmappings
     mapping_definition = submission.mapping.definition
     # Get the primary key of the projectschema
     # entity_pks = list(mapping_definition['entities'].values())

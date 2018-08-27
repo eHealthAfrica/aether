@@ -87,6 +87,7 @@ class MappingSetFilter(filters.FilterSet):
 
     class Meta:
         fields = '__all__'
+        exclude = ('input',)
         model = models.MappingSet
 
 

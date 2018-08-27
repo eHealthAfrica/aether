@@ -174,3 +174,16 @@ services:
       #   condition: service_healthy
     networks:
       - internal
+
+  pgadmin:
+    image: dpage/pgadmin4
+    depends_on:
+      - db
+    ports:
+      - "80:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pg@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    restart: unless-stopped
+    networks:
+      - internal
