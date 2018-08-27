@@ -93,8 +93,6 @@ of the most common ones with non default values. For more info take a look at th
 
 #### Aether Kernel
 
-- `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
-- `HOSTNAME`: `kernel.aether.local` Used by UMS.
 - `DB_NAME`: `aether` Database name.
 - `WEB_SERVER_PORT`: `8000` Web server port.
 - `ADMIN_TOKEN`: `kernel_admin_user_auth_token`
@@ -102,8 +100,6 @@ of the most common ones with non default values. For more info take a look at th
 
 #### Aether ODK Module
 
-- `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
-- `HOSTNAME`: `odk.aether.local` Used by UMS.
 - `DB_NAME`: `odk` Database name.
 - `WEB_SERVER_PORT`: `8002` Web server port.
 - `AETHER_KERNEL_TOKEN`: `kernel_admin_user_auth_token` Token to connect to kernel server.
@@ -114,8 +110,6 @@ of the most common ones with non default values. For more info take a look at th
 
 #### Aether UI
 
-- `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
-- `HOSTNAME`: `ui.aether.local` Used by UMS.
 - `DB_NAME`: `ui` Database name.
 - `WEB_SERVER_PORT`: `8004` Web server port.
 - `AETHER_KERNEL_TOKEN`: `kernel_admin_user_auth_token` Token to connect to kernel server.
@@ -124,8 +118,6 @@ of the most common ones with non default values. For more info take a look at th
 
 #### Aether CouchDB Sync Module
 
-- `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
-- `HOSTNAME`: `sync.aether.local` Used by UMS.
 - `DB_NAME`: `couchdb-sync` Database name.
 - `WEB_SERVER_PORT`: `8006` Web server port.
 - `AETHER_KERNEL_TOKEN`: `kernel_admin_user_auth_token` Token to connect to kernel server.
@@ -257,7 +249,7 @@ on [Try it for yourself](http://aether.ehealthafrica.org/documentation/try/index
 ## Deployment
 
 Set the `HOSTNAME` and `CAS_SERVER_URL` environment variables if you want to
-activate the UMS integration in each container.
+activate the CAS integration in each container.
 
 Set the `AETHER_KERNEL_TOKEN` and `AETHER_KERNEL_URL` environment variables when
 starting the `aether-odk-module` to have ODK Collect submissions posted to Aether Kernel.
