@@ -136,7 +136,7 @@ of the most common ones with non default values. For more info take a look at th
   See more in https://developers.google.com/identity/protocols/OAuth2
 
 #### File Storage System
-(Used on Kernel, ODK and UI Modules)
+(Used on Kernel and ODK Module)
 
 - `DJANGO_STORAGE_BACKEND`: Used to specify a [Default file storage system](https://docs.djangoproject.com/en/1.11/ref/settings/#default-file-storage).
   Available options: filesystem, s3, gcs. More information [here](https://django-storages.readthedocs.io/en/latest/index.html).

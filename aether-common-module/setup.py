@@ -42,8 +42,6 @@ setup(
 
     python_requires='>=3.6',
     install_requires=[
-        'boto',
-        'boto3',
         'django<2',
         'django-cors-headers',
         'django-debug-toolbar',
