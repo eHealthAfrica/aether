@@ -14,6 +14,7 @@ matrix:
     #  - name: "Kubernetes tests (Kernel and ODK)"
     #    stage: test
     #    env: 'TEST_MODE=kubernetes'
+
     - name: "Integration tests (Kernel with Kakfa/Zookeeper and Producer)"
       stage: test
       env: 'TEST_MODE=integration'

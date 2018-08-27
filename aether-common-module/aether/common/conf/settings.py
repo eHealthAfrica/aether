@@ -236,6 +236,7 @@ if os.environ.get('DJANGO_USE_X_FORWARDED_PORT', False):
 if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+
 # Storage Configuration
 # ------------------------------------------------------------------------------
 
@@ -251,11 +252,11 @@ elif DJANGO_STORAGE_BACKEND == 'gcs':
     GS_BUCKET_NAME = os.environ['BUCKET_NAME']
 else:
     msg = (
-        'Unrecognized value "{}" for environment variable '
-        'DJANGO_STORAGE_BACKEND. Expected one of the following: "filesystem", '
-        '"s3", "gcs"'
+        'Unrecognized value "{}" for environment variable DJANGO_STORAGE_BACKEND.'
+        ' Expected one of the following: "filesystem", "s3", "gcs"'
     )
-    raise Exception(msg.format(DJANGO_STORAGE_BACKEND))
+    raise RuntimeError(msg.format(DJANGO_STORAGE_BACKEND))
+
 logger.info('Using storage backend "{}"'.format(DJANGO_STORAGE_BACKEND))
 
 
