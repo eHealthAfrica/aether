@@ -18,9 +18,9 @@
 # Aether common module, will also require:
 #   django < 2
 #   django-cors-headers
-#   django-storages
 #   django-debug-toolbar
 #   django-prometheus
+#   django-storages
 #   djangorestframework
 #   djangorestframework-csv
 #   psycopg2-binary
@@ -45,7 +45,12 @@ jsonschema
 spavro
 
 
-# UMS libraries
+# Storage
+boto3
+google-cloud-storage
+
+
+# CAS libraries
 django-cas-ng
 django-ums-client
 
