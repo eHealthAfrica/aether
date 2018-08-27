@@ -182,11 +182,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-CAS_VERSION = 3
-CAS_LOGOUT_COMPLETELY = True
-CAS_SERVER_URL = os.environ.get('CAS_SERVER_URL', '')
-HOSTNAME = os.environ.get('HOSTNAME', '')
-
+CAS_SERVER_URL = os.environ.get('CAS_SERVER_URL')
 if CAS_SERVER_URL:
     INSTALLED_APPS += [
         # CAS libraries
@@ -196,8 +192,12 @@ if CAS_SERVER_URL:
     AUTHENTICATION_BACKENDS += [
         'ums_client.backends.UMSRoleBackend',
     ]
+    CAS_VERSION = 3
+    CAS_LOGOUT_COMPLETELY = True
+    HOSTNAME = os.environ.get('HOSTNAME', '')
+
 else:
-    logger.info('No CAS enable!')
+    logger.info('No CAS enabled!')
 
 
 # Sentry Configuration
@@ -212,8 +212,9 @@ if SENTRY_DSN:
 
     SENTRY_CLIENT = 'raven.contrib.django.raven_compat.DjangoClient'
     SENTRY_CELERY_LOGLEVEL = logging.INFO
+
 else:
-    logger.info('No SENTRY enable!')
+    logger.info('No SENTRY enabled!')
 
 
 # Security Configuration
