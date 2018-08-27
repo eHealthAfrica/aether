@@ -82,10 +82,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    # Make sure this stays as the 1st middleware
-    'django_prometheus.middleware.PrometheusBeforeMiddleware',
-
-    # All middlewares go here
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -94,9 +90,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
-    # Make sure this stays as the last middleware
-    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 TEMPLATES = [
@@ -277,6 +270,20 @@ if not TESTING and DEBUG:
         'SHOW_TOOLBAR_CALLBACK': lambda _: True,
         'SHOW_TEMPLATE_CONTEXT': True,
     }
+
+
+# Prometheus Configuration
+# ------------------------------------------------------------------------------
+
+MIDDLEWARE = [
+    # Make sure this stays as the first middleware
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+
+    *MIDDLEWARE,
+
+    # Make sure this stays as the last middleware
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
+]
 
 
 # Local Configuration
