@@ -95,12 +95,12 @@ services:
     environment:
       # Uncomment these lines to enable single sign on if you use CAS
       # CAS_SERVER_URL: https://your.cas.server
-      # CSRF_COOKIE_DOMAIN: .aether.local
+      # HOSTNAME: kernel.aether.local
 
+      CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}
       DJANGO_STORAGE_BACKEND: filesystem
-      HOSTNAME: kernel.aether.local
 
       ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
@@ -144,12 +144,12 @@ services:
     environment:
       # Uncomment these lines to enable single sign on if you use CAS
       # CAS_SERVER_URL: https://your.cas.server
-      # CSRF_COOKIE_DOMAIN: .aether.local
+      # HOSTNAME: odk.aether.local
 
+      CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${ODK_DJANGO_SECRET_KEY}
       DJANGO_STORAGE_BACKEND: filesystem
-      HOSTNAME: odk.aether.local
 
       ADMIN_USERNAME: ${ODK_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${ODK_ADMIN_PASSWORD}
@@ -200,12 +200,12 @@ services:
     environment: &sync-environment
       # Uncomment these lines to enable single sign on if you use CAS
       # CAS_SERVER_URL: https://your.cas.server
-      # CSRF_COOKIE_DOMAIN: .aether.local
+      # HOSTNAME: sync.aether.local
 
+      CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${COUCHDB_SYNC_DJANGO_SECRET_KEY}
       DJANGO_STORAGE_BACKEND: filesystem
-      HOSTNAME: sync.aether.local
 
       ADMIN_USERNAME: ${COUCHDB_SYNC_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${COUCHDB_SYNC_ADMIN_PASSWORD}
@@ -269,12 +269,12 @@ services:
     environment:
       # Uncomment these lines to enable single sign on if you use CAS
       # CAS_SERVER_URL: https://your.cas.server
-      # CSRF_COOKIE_DOMAIN: .aether.local
+      # HOSTNAME: ui.aether.local
 
+      CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${UI_DJANGO_SECRET_KEY}
       DJANGO_STORAGE_BACKEND: filesystem
-      HOSTNAME: ui.aether.local
 
       ADMIN_USERNAME: ${UI_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${UI_ADMIN_PASSWORD}
