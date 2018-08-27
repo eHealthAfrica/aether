@@ -21,8 +21,6 @@ from django.test import TestCase, override_settings
 from django.test.client import RequestFactory
 
 
-from aether.odk.templatetags import odk_tags
-
 class MediaFileMock:
     name = 'mediafile-name'
     url = 'mediafile-url'
@@ -39,7 +37,7 @@ class TestTemplateTags(TestCase):
         )
         request = factory.get('/')
         context = Context({
-            'request': factory.get('/'),
+            'request': request,
             'media_file': media_file,
         })
         return Template(template).render(context)
@@ -55,4 +53,3 @@ class TestTemplateTags(TestCase):
         expected = MediaFileMock.url
         result = self.render_get_file_url()
         self.assertEqual(expected, result)
-

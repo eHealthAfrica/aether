@@ -18,7 +18,6 @@
 
 from django.conf import settings
 from django.test import TestCase
-from django.core.files.storage import default_storage
 
 
 class SettingsTest(TestCase):
