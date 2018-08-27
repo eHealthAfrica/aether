@@ -1,10 +1,30 @@
 {% extends "rest_framework/login_base.html" %}
 
+{% comment 'LICENSE' %}
+Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+
+See the NOTICE file distributed with this work for additional information
+regarding copyright ownership.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+{% endcomment %}
+
 {% load render_bundle from webpack_loader %}
 {% load static %}
 
 {% block branding %}
-  <div class="top-nav-logo" title="aether" href="#/">
+  <div class="top-nav-logo" title="aether" href="/">
     <div class="logo-container">
       <div class="flipper">
         <div class="front"></div>
@@ -16,6 +36,7 @@
 {% endblock %}
 
 {% block style %}
+  <link rel="shortcut icon" href="{% static 'aether/images/aether.png' %}"/>
   {% if dev_mode %}
     {# this is for CSS Hot reloading in development (render as another JS file) #}
     {% render_bundle 'styles' %}
@@ -23,6 +44,7 @@
     {# render as CSS file #}
     {% render_bundle 'styles' 'css' %}
   {% endif %}
+
   <style>
     body {
       background: #50aef3;
@@ -44,13 +66,18 @@
     }
     .btn {
       background: rgba(255, 255, 255, 0.15);
-      box-shadow: 1px 1px 0 rgba(255, 255, 255, 0.1) inset, -1px -1px 0 rgba(45, 49, 70, 0.3) inset, 0 0 4px rgba(45, 49, 70, 0.1);
+      box-shadow: 1px 1px 0 rgba(255, 255, 255, 0.1) inset,
+                  -1px -1px 0 rgba(45, 49, 70, 0.3) inset,
+                  0 0 4px rgba(45, 49, 70, 0.1);
       color: #fff;
       font-size: 1rem;
       margin-top: 1rem;
       padding: 1em 3em;
     }
     .btn:hover {
-      box-shadow: 1px 1px 0 rgba(255, 255, 255, 0.1) inset, -1px -1px 0 rgba(45, 49, 70, 0.3) inset, 0 0 4px rgba(45, 49, 70, 0.1);    }
+      box-shadow: 1px 1px 0 rgba(255, 255, 255, 0.1) inset,
+                  -1px -1px 0 rgba(45, 49, 70, 0.3) inset,
+                  0 0 4px rgba(45, 49, 70, 0.1);
+    }
   </style>
 {% endblock %}

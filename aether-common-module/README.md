@@ -116,7 +116,9 @@ Default URLs included:
   - the `/health` URL. Always responds with `200` status and an empty JSON object `{}`.
   - the `/check-db` URL. Responds with `500` status if the database is not available.
   - the `/admin` section URLs.
-  - the `/accounts` URLs, checks if the REST Framework ones or the CAS ones.
+  - the `/accounts` URLs, checks if the REST Framework ones, using the templates
+    indicated in `LOGIN_TEMPLATE` and `LOGGED_OUT_TEMPLATE` environment variables,
+    or the CAS ones.
   - the `debug toolbar` URLs only in DEBUG mode.
   - the `/media` URLS. The endpoint gives protected access (only to logged in users) to media files.
   - the `/media-basic` URLS. The endpoint gives protected access

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends "admin/base_site.html" %}
 
 {% comment 'LICENSE' %}
 Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
@@ -21,23 +21,27 @@ under the License.
 {% endcomment %}
 
 {% load i18n %}
-{% load render_bundle from webpack_loader %}
-{% load ui_tags %}
+{% load static %}
 
+{% block title %}aether{% endblock %}
 
-{% block title %}{{ app_name }} - {% trans 'Pipelines' %}{% endblock title %}
+{% block extrahead %}
+    <link rel="shortcut icon" href="{% static 'aether/images/aether.png' %}"/>
+{% endblock %}
 
+{% block extrastyle %}
+    {% include 'aether/styles.html' %}
+{% endblock %}
+
+{% block branding %}{% endblock %}
+{% block breadcrumbs %}{% endblock %}
+{% block content_title %}{% endblock %}
 
 {% block content %}
+    {% include 'aether/branding.html' %}
 
-  <span
-    id="logged-in-user-info"
-    data-user-id="{{ request.user.id }}"
-    data-user-name="{{ request.user|get_fullname }}"
-    class="invisible"></span>
-
-  <div id="pipeline-app"></div>
-
-  {% render_bundle 'pipeline' %}
-
-{% endblock content %}
+    <div class="logout-info">
+        <p>{% trans 'Thank you for using Aether.' %}</p>
+        <p><a href="{% url 'rest_framework:login' %}?next=/">{% trans 'Log in again' %}</a></p>
+    </div>
+{% endblock %}

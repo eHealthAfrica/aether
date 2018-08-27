@@ -199,6 +199,9 @@ if CAS_SERVER_URL:
 else:
     logger.info('No CAS enabled!')
 
+    LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login.html')
+    LOGGED_OUT_TEMPLATE = os.environ.get('LOGGED_OUT_TEMPLATE', 'aether/logged_out.html')
+
 
 # Sentry Configuration
 # ------------------------------------------------------------------------------
