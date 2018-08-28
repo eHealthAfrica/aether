@@ -186,7 +186,7 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), TimeStampedMod
 
     @property
     def attachment_path(self):
-        return self.attachment_file.path
+        return self.attachment_file.url
 
     def __str__(self):
         return self.name

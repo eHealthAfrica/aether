@@ -121,7 +121,11 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 class AttachmentSerializerNested(DynamicFieldsMixin, serializers.ModelSerializer):
     name = serializers.CharField(read_only=True)
-    url = serializers.CharField(read_only=True, source='attachment_path')
+    url = serializers.SerializerMethodField()
+
+    def get_url(self, obj):
+        request = self.context.get('request')
+        return request.build_absolute_uri(obj.attachment_file.url)
 
     class Meta:
         model = models.Attachment
