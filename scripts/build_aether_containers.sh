@@ -47,10 +47,13 @@ docker-compose run   ui-assets build
 
 VERSION=`git rev-parse --abbrev-ref HEAD`
 GIT_REVISION=`git rev-parse HEAD`
-SUITE=( kernel ui odk couchdb-sync )
+CONTAINERS=( kernel ui odk couchdb-sync )
 
 # build Aether Suite
-docker-compose build \
-    --build-arg GIT_REVISION=$GIT_REVISION \
-    --build-arg VERSION=$VERSION \
-    $SUITE
+for container in "${CONTAINERS[@]}"
+do
+    docker-compose build \
+        --build-arg GIT_REVISION=$GIT_REVISION \
+        --build-arg VERSION=$VERSION \
+        $container
+done
