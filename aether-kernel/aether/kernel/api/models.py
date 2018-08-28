@@ -184,9 +184,12 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), TimeStampedMod
     submission = models.ForeignKey(to=Submission, on_delete=models.CASCADE)
     submission_revision = models.TextField()
 
-    # @property
-    # def attachment_path(self):
-    #     return self.attachment_file.url
+    @property
+    def attachment_url(self):
+        if self.attachment_file.url.startswith('http'):
+            return self.attachment_file.url
+        from django.conf import settings
+        return f'http://{settings.HOSTNAME}{self.attachment_file.url}'
 
     def __str__(self):
         return self.name
