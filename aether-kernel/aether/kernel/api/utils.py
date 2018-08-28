@@ -607,40 +607,47 @@ def extract_create_entities(submission_payload, mapping_definition, schemas):
 
 def run_entity_extraction(submission):
     # Get the mapping set from the submission (submission.mappingset):
-    mapping_set_mappings = submission.mappingset.mappingsetmappings
-    mapping_definition = submission.mapping.definition
-    # Get the primary key of the projectschema
-    # entity_pks = list(mapping_definition['entities'].values())
-    entity_ps_ids = mapping_definition.get('entities')
-    # Save submission and exit early if mapping does not specify any entities.
-    if not entity_ps_ids:
+    mapping_set_mappings = models.MappingSetMapping.objects.filter(mappingset=submission.mappingset.id)
+    for mappingsetmapping in mapping_set_mappings:
+        mapping_definition = mappingsetmapping.mapping.definition
+        # Get the primary key of the projectschema
+        # entity_pks = list(mapping_definition['entities'].values())
+        entity_ps_ids = mapping_definition.get('entities')
+        # Save submission and exit early if mapping does not specify any entities.
+        if not entity_ps_ids:
+            submission.save()
+            return
+        # Get the schema of the projectschema
+        project_schemas = {
+            name: models.ProjectSchema.objects.get(pk=_id) for name, _id in
+            entity_ps_ids.items()
+        }
+        schemas = {
+            name: ps.schema.definition for name, ps in
+            project_schemas.items()
+        }
         submission.save()
-        return
-    # Get the schema of the projectschema
-    project_schemas = {
-        name: models.ProjectSchema.objects.get(pk=_id) for name, _id in
-        entity_ps_ids.items()
-    }
-    schemas = {
-        name: ps.schema.definition for name, ps in
-        project_schemas.items()
-    }
-    submission.save()
-    _, entities = extract_create_entities(
-        submission_payload=submission.payload,
-        mapping_definition=mapping_definition,
-        schemas=schemas,
-    )
-    for entity in entities:
-        projectschema_name = entity.projectschema_name
-        projectschema = project_schemas[projectschema_name]
-        entity_instance = models.Entity(
-            payload=entity.payload,
-            status=entity.status,
-            projectschema=projectschema,
-            submission=submission,
+        submission_mapping_instance = models.SubmissionMapping(
+            mapping=mappingsetmapping.mapping,
+            map_revision=mappingsetmapping.mapping.revision,
+            submission=submission
         )
-        entity_instance.save()
+        submission_mapping_instance.save()
+        _, entities = extract_create_entities(
+            submission_payload=submission.payload,
+            mapping_definition=mapping_definition,
+            schemas=schemas,
+        )
+        for entity in entities:
+            projectschema_name = entity.projectschema_name
+            projectschema = project_schemas[projectschema_name]
+            entity_instance = models.Entity(
+                payload=entity.payload,
+                status=entity.status,
+                projectschema=projectschema,
+                submission=submission,
+            )
+            entity_instance.save()
 
 
 def merge_objects(source, target, direction):

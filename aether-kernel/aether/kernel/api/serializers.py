@@ -134,8 +134,8 @@ class MappingSetSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     mappingsetmappings_url = FilteredHyperlinkedRelatedField(
         lookup_field='mappingset',
         read_only=True,
-        source='mappingsetsmappings',
-        view_name='mappingsetsmapping-list',
+        source='mappingsetmappings',
+        view_name='mappingsetmapping-list',
     )
     submissions_url = FilteredHyperlinkedRelatedField(
         lookup_field='mappingset',
@@ -159,7 +159,7 @@ class MappingSetMappingSerializer(DynamicFieldsMixin, serializers.ModelSerialize
         source='mappingset',
         view_name='mappingset-detail',
     )
-    mapping_url = FilteredHyperlinkedRelatedField(
+    mapping_url = serializers.HyperlinkedRelatedField(
         read_only=True,
         source='mapping',
         view_name='mapping-detail',
@@ -189,7 +189,7 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         source='mappingset',
         read_only=True,
     )
-    submissionmapping_url = serializers.HyperlinkedRelatedField(
+    submissionmapping_url = FilteredHyperlinkedRelatedField(
         lookup_field='submission',
         view_name='submissionmapping-list',
         source='submissionmappings',
@@ -237,7 +237,7 @@ class SubmissionMappingSerializer(DynamicFieldsMixin, serializers.ModelSerialize
         source='submission',
         view_name='submission-detail',
     )
-    mapping_url = FilteredHyperlinkedRelatedField(
+    mapping_url = serializers.HyperlinkedRelatedField(
         read_only=True,
         source='mapping',
         view_name='mapping-detail',

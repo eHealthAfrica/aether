@@ -83,6 +83,9 @@ def generate_project(
         projectschema_field_values=None,
         submission_field_values=None,
         entity_field_values=None,
+        mappingset_field_values=None,
+        mappingsetmapping_field_values=None,
+        submissionmapping_field_values=None
 ):
     '''
     Generate an Aether Project.
@@ -111,14 +114,14 @@ def generate_project(
         ),
     ).create_one()
 
-    mapping = AutoFixture(
-        model=models.Mapping,
+    mappingset = AutoFixture(
+        model=models.MappingSet,
         field_values=get_field_values(
             default=dict(
-                definition=mapping_definition(),
                 project=project,
+                input=[],
             ),
-            values=mapping_field_values,
+            values=mappingset_field_values,
         ),
     ).create_one()
 
@@ -149,7 +152,7 @@ def generate_project(
             field_values=get_field_values(
                 default=dict(
                     payload=submission_payload(),
-                    mapping=mapping,
+                    mappingset=mappingset,
                 ),
                 values=submission_field_values,
             ),

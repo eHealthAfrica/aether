@@ -22,7 +22,7 @@ import string
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
 
-from .models import Project, Schema, ProjectSchema, Mapping
+from .models import Project, Schema, ProjectSchema, Mapping, MappingSetMapping, MappingSet
 
 
 def get_project_artefacts(project):
@@ -35,14 +35,18 @@ def get_project_artefacts(project):
         'schemas': set(),
         'project_schemas': set(),
         'mappings': set(),
+        'mappingsets': set(),
+        'mappingset_mappings': set()
     }
+    for mappingset in MappingSet.objects.filter(project=project):
+        results['mappingsets'].add(str(mappingset.pk))
+        for mappingset_mapping in MappingSetMapping.objects.filter(mappingset=mappingset):
+            results['mappingset_mappings'].add(str(mappingset_mapping.pk))
+            results['mappings'].add(str(mappingset_mapping.mapping.pk))
 
     for project_schema in ProjectSchema.objects.filter(project=project):
         results['schemas'].add(str(project_schema.schema.pk))
         results['project_schemas'].add(str(project_schema.pk))
-
-    for mapping in Mapping.objects.filter(project=project):
-        results['mappings'].add(str(mapping.pk))
 
     return results
 
@@ -54,9 +58,10 @@ def upsert_project_artefacts(
     project_name=None,
     schemas=[],
     mappings=[],
+    mapping_set=None  # Only one mapping set object per project for now.
 ):
     '''
-    Creates or updates the project and its artefacts: schemas, project schemas and mappings.
+    Creates or updates the project and its artefacts: schemas, project schemas mappingsets and mappings.
 
     Returns the list of project and its affected artefact ids by type.
     '''
@@ -66,6 +71,8 @@ def upsert_project_artefacts(
         'schemas': set(),
         'project_schemas': set(),
         'mappings': set(),
+        'mappingsets': set(),
+        'mappingset_mappings': set()
     }
 
     # 1. create/update the project
@@ -105,24 +112,46 @@ def upsert_project_artefacts(
             )
         results['project_schemas'].add(str(project_schema.pk))
 
-    # 3. create/update the list of mappings
-    for raw_mapping in mappings:
-        # in case of no mappings rules were indicated, do not update them.
-        ignore_fields = ['name']
-        if raw_mapping.get('definition') is None:
-            ignore_fields.append('definition')
-
-        mapping = __upsert_instance(
-            model=Mapping,
-            pk=raw_mapping.get('id'),
-            ignore_fields=ignore_fields,
+    # 3. create/update the mappingset
+    if mapping_set:
+        mappingset = __upsert_instance(
+            model=MappingSet,
+            ignore_fields=['name'],
+            pk=mapping_set.get('id'),
             action=action,
-            name=raw_mapping.get('name', __random_name()),
-            definition=raw_mapping.get('definition', {'mappings': []}),
-            project=project,
+            name=mapping_set.get('name', __random_name()),
+            input=mapping_set.get('input', {}),
+            project=project
         )
-        results['mappings'].add(str(mapping.pk))
+        results['mappingsets'].add(str(mappingset.pk))
 
+        # 4. create/update the mappings
+        for raw_mapping in mappings:
+            # in case of no mappings rules were indicated, do not update them.
+            ignore_fields = ['name']
+            if raw_mapping.get('definition') is None:
+                ignore_fields.append('definition')
+
+            mapping = __upsert_instance(
+                model=Mapping,
+                pk=raw_mapping.get('id'),
+                ignore_fields=ignore_fields,
+                action=action,
+                name=raw_mapping.get('name', __random_name()),
+                definition=raw_mapping.get('definition', {'mappings': []}),
+            )
+            results['mappings'].add(str(mapping.pk))
+
+            # link mappings to the mapping set via mappingsetmappings
+            try:
+                mappingset_mapping = MappingSetMapping.objects.get(mapping=mapping, mappingset=mappingset)
+            except ObjectDoesNotExist:
+                mappingset_mapping = __upsert_instance(
+                    model=MappingSetMapping,
+                    mappingset=mappingset,
+                    mapping=mapping,
+                )
+            results['mappingset_mappings'].add(str(mappingset_mapping.pk))
     return results
 
 

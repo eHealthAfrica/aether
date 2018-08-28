@@ -129,7 +129,7 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
     name = models.CharField(max_length=50, null=False, unique=True)
-
+    is_active = models.BooleanField(default=False)
     definition = JSONField(blank=False, null=False)
 
     @property
@@ -155,15 +155,19 @@ class MappingSetMapping(ExportModelOperationsMixin('kernel_mappingsetmapping'), 
     mapping = models.ForeignKey(to=Mapping, on_delete=models.CASCADE)
     mappingset = models.ForeignKey(to=MappingSet, on_delete=models.CASCADE)
 
-    name = models.CharField(max_length=105, null=False, unique=True,
-        default='{} - {}'.format(mappingset.name, mapping.name))
+    name = models.CharField(max_length=105, unique=True, blank=True)
 
     def __str__(self):
         return self.name
 
+    def save(self, **kwargs):
+        if not self.name:
+            self.name = '{} - {}'.format(self.mappingset.name, self.mapping.name)
+        super(MappingSetMapping, self).save(**kwargs)
+
     class Meta:
         app_label = 'kernel'
-        default_related_name = 'mappingssetmappings'
+        default_related_name = 'mappingsetmappings'
         ordering = ['mappingset__id', '-modified']
         indexes = [
             models.Index(fields=['mappingset', '-modified']),
