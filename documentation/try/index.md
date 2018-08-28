@@ -24,7 +24,7 @@ You will need a computer running Linux, Mac OSX or a cloud based Linux VM (such 
 - Docker
     - [Docker Compose](https://docs.docker.com/compose/) installed setup with at least 3GB limit
 - The following ports should be available on your machine:  
-80, 8000, 8004, 8443
+80, 8000, 8004, 8443, 5000
 
 You will also need to register some domains for local resolution on your computer. This means editing your hosts file. On Mac/Linux this is at `/etc/hosts`; Modify the line that starts with `127.0.0.1` to include:
 
