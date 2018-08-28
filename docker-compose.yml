@@ -31,7 +31,10 @@ services:
       # data volume
       - ./.persistent_data/db/data:/var/lib/postgresql/data
     networks:
-      - internal
+      internal:
+        aliases:
+          - kernel.aether.local
+
 
   couchdb:
     extends:
@@ -172,18 +175,5 @@ services:
       #   condition: service_healthy
       # ui:
       #   condition: service_healthy
-    networks:
-      - internal
-
-  pgadmin:
-    image: dpage/pgadmin4
-    depends_on:
-      - db
-    ports:
-      - "80:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: pg@gmail.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    restart: unless-stopped
     networks:
       - internal
