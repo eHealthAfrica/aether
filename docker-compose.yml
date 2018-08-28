@@ -31,9 +31,7 @@ services:
       # data volume
       - ./.persistent_data/db/data:/var/lib/postgresql/data
     networks:
-      internal:
-        aliases:
-          - kernel.aether.local
+      - internal
 
 
   couchdb:
