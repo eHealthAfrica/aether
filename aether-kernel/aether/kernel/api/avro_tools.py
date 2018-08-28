@@ -54,22 +54,22 @@ UNION = 'union'
 # - primitive: null, boolean, int, long, float, double, bytes, string
 # - complex: record, map, array, union, enum, fixed
 PRIMITIVE_TYPES = [
-  NULL,
-  BOOLEAN,
-  INT,
-  LONG,
-  FLOAT,
-  DOUBLE,
-  BYTES,
-  STRING,
+    NULL,
+    BOOLEAN,
+    INT,
+    LONG,
+    FLOAT,
+    DOUBLE,
+    BYTES,
+    STRING,
 
-  # these ones are not primitives but internally work as:
-  # bytes when is serialized or string once is deserialized
-  #   {"type": "enum", "name": "e", "symbols": ["A", "B", "C", "D"]}
-  ENUM,
-  # bytes with fixed length
-  #   {"type": "fixed", "size": 16, "name": "f"}
-  FIXED,
+    # these ones are not primitives but internally work as:
+    # bytes when is serialized or string once is deserialized
+    #   {"type": "enum", "name": "e", "symbols": ["A", "B", "C", "D"]}
+    ENUM,
+    # bytes with fixed length
+    #   {"type": "fixed", "size": 16, "name": "f"}
+    FIXED,
 ]
 
 # indicates the complex field type within the full jsonpath
