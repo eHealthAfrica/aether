@@ -184,9 +184,9 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), TimeStampedMod
     submission = models.ForeignKey(to=Submission, on_delete=models.CASCADE)
     submission_revision = models.TextField()
 
-    @property
-    def attachment_path(self):
-        return self.attachment_file.url
+    # @property
+    # def attachment_path(self):
+    #     return self.attachment_file.url
 
     def __str__(self):
         return self.name
