@@ -465,6 +465,13 @@ class MediaFile(ExportModelOperationsMixin('odk_mediafile'), models.Model):
     def hash(self):
         return 'md5:{}'.format(self.md5sum)
 
+    @property
+    def media_file_url(self):
+        if self.media_file.url.startswith('http'):
+            return self.media_file.url
+        from django.conf import settings
+        return f'http://{settings.HOSTNAME}{self.media_file.url}'
+
     def save(self, *args, **kwargs):
         # calculate hash
         md5hash = md5()
