@@ -104,7 +104,7 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), TimeStampedMod
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
     name = models.CharField(max_length=50, null=False, unique=True)
-    input = JSONField(blank=False, null=False)
+    input = JSONField(null=True, blank=True)
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
 
     @property
