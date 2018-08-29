@@ -134,7 +134,7 @@ def generate_file(data, paths=[], labels={}, format='csv', filename='export', of
 
     - ``data`` is a queryset with two main properties ``pk`` and ``exporter_data``.
     - ``paths`` is a list with the allowed jsonpaths.
-    - ``labels`` is a dictionary which keys are the jsonpaths
+    - ``labels`` is a dictionary whose keys are the jsonpaths
       and the values the linked labels to use as header for that jsonpath.
     - ``format``, expected values ``xlsx`` or ``csv``.
     '''
@@ -178,7 +178,7 @@ def __prepare_xlsx(csv_options, filename):
 # Parses data and includes them in the csv files.
 #
 # Steps per data row:
-#   1. Flatten the row into a one level object with it’s path as key.
+#   1. Flatten the row into a one level object with its path as key.
 #   2. Identifies row attributes, key name starts with "@".
 #   3. If one of the row keys contains an array, instead of flatten it
 #      creates a new csv group and includes there the array entries
@@ -195,7 +195,10 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE):
             options['headers_label'].append(__get_label(header, labels))
 
     def append_entry(options, entry):
-        options['csv_file'].writerow([entry.get(header, '') for header in options.get('headers')])
+        options['csv_file'].writerow([
+            entry.get(header, '')
+            for header in options.get('headers')
+        ])
 
     def get_current_options(group):
         if group not in csv_options:
