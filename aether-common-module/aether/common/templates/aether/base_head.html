@@ -1,5 +1,3 @@
-{% extends "rest_framework/base.html" %}
-
 {% comment 'LICENSE' %}
 Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 
@@ -20,25 +18,17 @@ specific language governing permissions and limitations
 under the License.
 {% endcomment %}
 
-{% load i18n %}
+{% load static %}
 
-{% block title %}{{ app_name }}{% endblock %}
+<meta charset="utf-8">
 
-{% block meta %}
-    {% include 'aether/base_head.html' %}
-{% endblock %}
+<meta http-equiv="x-ua-compatible" content="ie=edge">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
-{% block style %}
-    {% include 'aether/styles.html' %}
-{% endblock %}
+<meta name="robots" content="NONE,NOARCHIVE" />
 
-{% block body %}
-    <body>
-        {% include 'aether/branding.html' with classname='auth-brand' link='#' %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="A free, open source development platform for data curation, exchange, and publication">
+<meta name="author" content="eHealth Africa">
 
-        <div class="logout-info">
-            <p>{% trans 'Thank you for using Aether.' %}</p>
-            <p><a href="{% url 'rest_framework:login' %}?next=/">{% trans 'Log in again' %}</a></p>
-        </div>
-    </body>
-{% endblock %}
+<link rel="shortcut icon" href="{% static 'aether/images/aether.png' %}"/>

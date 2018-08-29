@@ -1,4 +1,4 @@
-{% extends "rest_framework/base.html" %}
+{% extends "rest_framework/api.html" %}
 
 {% comment 'LICENSE' %}
 Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
@@ -22,23 +22,13 @@ under the License.
 
 {% load i18n %}
 
-{% block title %}{{ app_name }}{% endblock %}
+{% block title %}{{ app_name }} - {% trans 'API' %}{% endblock %}
 
 {% block meta %}
     {% include 'aether/base_head.html' %}
-{% endblock %}
-
-{% block style %}
     {% include 'aether/styles.html' %}
 {% endblock %}
 
-{% block body %}
-    <body>
-        {% include 'aether/branding.html' with classname='auth-brand' link='#' %}
-
-        <div class="logout-info">
-            <p>{% trans 'Thank you for using Aether.' %}</p>
-            <p><a href="{% url 'rest_framework:login' %}?next=/">{% trans 'Log in again' %}</a></p>
-        </div>
-    </body>
+{% block branding %}
+    {% include 'aether/branding.html' with classname='navbar-brand' link='http://aether.ehealthafrica.org' %}
 {% endblock %}

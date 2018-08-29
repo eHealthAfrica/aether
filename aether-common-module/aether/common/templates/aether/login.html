@@ -22,10 +22,13 @@ under the License.
 
 {% load static %}
 
-{% block title %}aether{% endblock %}
+{% block title %}{{ app_name }}{% endblock %}
+
+{% block meta %}
+    {% include 'aether/base_head.html' %}
+{% endblock %}
 
 {% block style %}
-    <link rel="shortcut icon" href="{% static 'aether/images/aether.png' %}"/>
     {% include 'aether/styles.html' %}
 {% endblock %}
 

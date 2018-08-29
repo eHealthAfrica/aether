@@ -19,18 +19,11 @@ under the License.
 {% endcomment %}
 
 {% load render_bundle from webpack_loader %}
-{% load static %}
 
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="author" content="">
-
-    <link rel="shortcut icon" href="{% static 'aether/images/aether.png' %}"/>
+    {% include 'aether/base_head.html' %}
 
     {# This is the block for the page TITLE, redefine it in the child template #}
     <title>{% block title %}{{ app_name }}{% endblock title %}</title>

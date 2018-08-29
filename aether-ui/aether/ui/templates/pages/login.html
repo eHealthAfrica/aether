@@ -23,10 +23,10 @@ under the License.
 {% load render_bundle from webpack_loader %}
 {% load static %}
 
-{% block title %}aether{% endblock %}
+{% block title %}{{ app_name }}{% endblock %}
 
 {% block branding %}
-  <div class="top-nav-logo" title="aether" href="/">
+  <div class="top-nav-logo" title="{{ app_name }}" href="/">
     <div class="logo-container">
       <div class="flipper">
         <div class="front"></div>
