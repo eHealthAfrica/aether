@@ -100,7 +100,8 @@ until docker-compose run kernel eval pg_isready -q; do
 done
 
 
-for app in ( kernel ui odk couchdb-sync )
+CONTAINERS=( kernel ui odk couchdb-sync )
+for app in "${CONTAINERS[@]}"
 do
     docker-compose run $app setup
 done
