@@ -29,6 +29,7 @@ DEBUG = bool(os.environ.get('DEBUG'))
 TESTING = bool(os.environ.get('TESTING'))
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
+APP_NAME = os.environ.get('APP_NAME', 'aether')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -104,6 +105,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'aether.common.context_processors.aether_context',
             ],
         },
     },
@@ -116,8 +118,8 @@ TEMPLATES = [
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
-        'rest_framework.renderers.AdminRenderer',
+        'aether.common.drf.renderers.CustomBrowsableAPIRenderer',
+        'aether.common.drf.renderers.CustomAdminRenderer',
         'aether.common.drf.renderers.CustomCSVRenderer',
     ),
     'DEFAULT_PARSER_CLASSES': (

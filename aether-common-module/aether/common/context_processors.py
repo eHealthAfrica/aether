@@ -20,7 +20,7 @@
 from django.conf import settings
 
 
-def ui_context(request):
+def aether_context(request):
 
     context = {
         'dev_mode': settings.DEBUG,

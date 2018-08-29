@@ -22,15 +22,13 @@ import os
 # ------------------------------------------------------------------------------
 
 from aether.common.conf.settings import *  # noqa
-from aether.common.conf.settings import INSTALLED_APPS, TEMPLATES, STATIC_ROOT
+from aether.common.conf.settings import INSTALLED_APPS, STATIC_ROOT
 
 
 # UI Configuration
 # ------------------------------------------------------------------------------
 
 ROOT_URLCONF = 'aether.ui.urls'
-
-APP_NAME = 'aether'
 
 # Javascript/CSS Files:
 WEBPACK_LOADER = {
@@ -46,10 +44,6 @@ WEBPACK_LOADER = {
 INSTALLED_APPS += [
     'webpack_loader',
     'aether.ui',
-]
-
-TEMPLATES[0]['OPTIONS']['context_processors'] += [
-    'aether.ui.context_processors.ui_context',
 ]
 
 MIGRATION_MODULES = {
