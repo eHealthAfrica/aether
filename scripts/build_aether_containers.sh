@@ -49,11 +49,20 @@ VERSION=`git rev-parse --abbrev-ref HEAD`
 GIT_REVISION=`git rev-parse HEAD`
 CONTAINERS=( kernel ui odk couchdb-sync )
 
+# speed up first start up
+docker-compose up -d db
+
 # build Aether Suite
 for container in "${CONTAINERS[@]}"
 do
+    # build container
     docker-compose build \
         --build-arg GIT_REVISION=$GIT_REVISION \
         --build-arg VERSION=$VERSION \
         $container
+
+    # setup container (model migration, admin user, static content...)
+    docker-compose run $container setup
 done
+
+docker-compose kill

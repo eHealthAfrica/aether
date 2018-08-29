@@ -86,51 +86,66 @@ then
     echo "**** Building containers                                          ****"
     echo "**********************************************************************"
 
-    docker-compose build
+    ./scripts/build_aether_containers.sh
 fi
+
+
+echo "**********************************************************************"
+echo "**** Starting PostgreSQL                                          ****"
+echo "**********************************************************************"
+docker-compose up -d db
+until docker-compose run kernel eval pg_isready -q; do
+    >&2 echo "Waiting for db..."
+    sleep 2
+done
+
+
+for app in ( kernel ui odk couchdb-sync )
+do
+    docker-compose run $app setup
+done
+
+echo "**********************************************************************"
+echo "**** Starting NGINX                                               ****"
+echo "**********************************************************************"
+docker-compose up -d --no-deps nginx
 
 
 case $container in
 
     kernel)
         echo "**********************************************************************"
-        echo "**** Starting PostgreSQL                                          ****"
-        echo "**** Starting NGINX                                               ****"
         echo "**** Starting Kernel app                                          ****"
         echo "**********************************************************************"
 
-        docker-compose up db kernel nginx
+        docker-compose up kernel
     ;;
 
     odk)
         echo "**********************************************************************"
-        echo "**** Starting PostgreSQL                                          ****"
-        echo "**** Starting NGINX                                               ****"
         echo "**** Starting Kernel app                                          ****"
         echo "**** Starting ODK module                                          ****"
         echo "**********************************************************************"
 
-        docker-compose up db kernel odk nginx
+        docker-compose up kernel odk
     ;;
 
     sync|couchdb-sync)
         echo "**********************************************************************"
-        echo "**** Starting PostgreSQL                                          ****"
         echo "**** Starting CouchDB                                             ****"
         echo "**** Starting Redis                                               ****"
         echo "**** Starting RQ                                                  ****"
-        echo "**** Starting NGINX                                               ****"
+        echo "**********************************************************************"
         echo "**** Starting Kernel app                                          ****"
         echo "**** Starting CouchDB-Sync module                                 ****"
         echo "**********************************************************************"
 
-        docker-compose up db couchdb redis kernel couchdb-sync couchdb-sync-rq nginx
+        docker-compose up -d couchdb redis
+        docker-compose up kernel couchdb-sync couchdb-sync-rq
     ;;
 
     ui)
         echo "**********************************************************************"
-        echo "**** Starting PostgreSQL                                          ****"
-        echo "**** Starting NGINX                                               ****"
         echo "**** Starting Kernel app                                          ****"
         echo "**** Starting UI module                                           ****"
         echo "**** Starting UI assets HMR                                       ****"
@@ -141,11 +156,10 @@ case $container in
 
     *)
         echo "**********************************************************************"
-        echo "**** Starting PostgreSQL                                          ****"
         echo "**** Starting CouchDB                                             ****"
         echo "**** Starting Redis                                               ****"
         echo "**** Starting RQ                                                  ****"
-        echo "**** Starting NGINX                                               ****"
+        echo "**********************************************************************"
         echo "**** Starting Kernel app                                          ****"
         echo "**** Starting ODK module                                          ****"
         echo "**** Starting CouchDB-Sync module                                 ****"
