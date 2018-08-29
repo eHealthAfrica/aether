@@ -174,7 +174,7 @@ class AttachmentSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     name = serializers.CharField(allow_null=True, default=None)
     submission_revision = serializers.CharField(allow_null=True, default=None)
 
-    url = serializers.HyperlinkedIdentityField('attachment-detail', read_only=True)
+    url = serializers.CharField(read_only=True, source='attachment_url')
     submission_url = serializers.HyperlinkedRelatedField(
         'submission-detail',
         source='submission',

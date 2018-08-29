@@ -17,9 +17,6 @@
 # under the License.
 
 from django import template
-
-# from aether.odk import settings
-
 from django.conf import settings
 
 register = template.Library()
