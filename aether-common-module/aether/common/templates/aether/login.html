@@ -24,14 +24,11 @@ under the License.
 
 {% block title %}aether{% endblock %}
 
-{% block extrahead %}
-    <link rel="shortcut icon" href="{% static 'aether/images/aether.png' %}"/>
-{% endblock %}
-
 {% block style %}
+    <link rel="shortcut icon" href="{% static 'aether/images/aether.png' %}"/>
     {% include 'aether/styles.html' %}
 {% endblock %}
 
 {% block branding %}
-    {% include 'aether/branding.html' %}
+    {% include 'aether/branding.html' with classname='auth-brand' link='#' %}
 {% endblock %}
