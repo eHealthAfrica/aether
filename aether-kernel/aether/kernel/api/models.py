@@ -29,6 +29,8 @@ from django_prometheus.models import ExportModelOperationsMixin
 
 from model_utils.models import TimeStampedModel
 
+from aether.common.utils import resolve_file_url
+
 from .utils import json_prettified
 
 STATUS_CHOICES = (
@@ -186,10 +188,7 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), TimeStampedMod
 
     @property
     def attachment_url(self):
-        if self.attachment_file.url.startswith('http'):
-            return self.attachment_file.url
-        from django.conf import settings
-        return f'http://{settings.HOSTNAME}{self.attachment_file.url}'
+        return resolve_file_url(self.attachment_file.url)
 
     def __str__(self):
         return self.name
