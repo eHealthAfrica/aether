@@ -24,29 +24,29 @@ services:
 
   postgres-base:
     image: postgres:9.6-alpine
+    environment:
+      PGUSER: postgres
     healthcheck:
       test: pg_isready
       interval: 2s
       timeout: 3s
       retries: 30
-    environment:
-      PGUSER: postgres
 
   couchdb-base:
     image: couchdb:1.7.2
     environment:
       COUCHDB_USER: ${COUCHDB_USER}
       COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
-    healthcheck:
-      test: curl -s http://localhost:5984
-      interval: 2s
-      timeout: 3s
-      retries: 30
     volumes:
       # enable cors for mobile app in-browser development:
       - ./aether-couchdb-sync-module/couchdb/conf/config.ini:/usr/local/etc/couchdb/local.ini
     ports:
       - "5984:5984"
+    healthcheck:
+      test: curl -s http://localhost:5984
+      interval: 2s
+      timeout: 3s
+      retries: 30
 
   redis-base:
     image: redis:alpine
@@ -59,11 +59,6 @@ services:
 
   nginx-base:
     image: nginx:alpine
-    healthcheck:
-      test: nginx -t
-      interval: 5s
-      timeout: 3s
-      retries: 30
     volumes:
       # local setup
       - ./local-setup/nginx/nginx.conf:/etc/nginx/nginx.conf
@@ -81,6 +76,11 @@ services:
       - "80:80"
       # needed for ODK behind nginx (ODK Collect only accepts 443 and 8443 ports)
       - "8443:8443"
+    healthcheck:
+      test: nginx -t
+      interval: 5s
+      timeout: 3s
+      retries: 30
 
 
   # ---------------------------------
@@ -124,12 +124,12 @@ services:
       - ./.persistent_data/static/kernel:/var/www/static
     ports:
       - "8000:8000"
+    command: start_dev
     healthcheck:
       test: /code/entrypoint.sh health
       interval: 5s
       timeout: 3s
       retries: 30
-    command: start_dev
 
 
   # ---------------------------------
@@ -180,12 +180,12 @@ services:
       - "8002:8002"
       # standalone (without nginx)
       # - "8443:8443"
+    command: start_dev
     healthcheck:
       test: /code/entrypoint.sh health
       interval: 5s
       timeout: 3s
       retries: 30
-    command: start_dev
 
 
   # ---------------------------------
@@ -238,23 +238,23 @@ services:
       - ./.persistent_data/static/sync:/var/www/static
     ports:
       - "8006:8006"
+    command: start_dev
     healthcheck:
       test: /code/entrypoint.sh health
       interval: 5s
       timeout: 3s
       retries: 30
-    command: start_dev
 
   couchdb-sync-rq-base:
     image: aether-couchdb-sync
     environment: *sync-environment
     volumes: *sync-volumes
+    command: start_rq
     healthcheck:
       test: /code/entrypoint.sh health_rq
       interval: 5s
       timeout: 3s
       retries: 300
-    command: start_rq
 
 
   # ---------------------------------
@@ -301,22 +301,17 @@ services:
       - ./.persistent_data/static/ui:/var/www/static
     ports:
       - "8004:8004"
+    command: start_dev
     healthcheck:
       test: /code/entrypoint.sh health
       interval: 5s
       timeout: 3s
       retries: 30
-    command: start_dev
 
   ui-assets-base:
     build: ./aether-ui/aether/ui/assets
     stdin_open: true
     tty: true
-    healthcheck:
-      test: curl -s http://localhost:3004
-      interval: 5s
-      timeout: 3s
-      retries: 30
     volumes:
       #################################################
       #                    WARNING                    #
@@ -334,6 +329,11 @@ services:
     ports:
       - "3004:3004"
     command: start_dev
+    healthcheck:
+      test: curl -s http://localhost:3004
+      interval: 5s
+      timeout: 3s
+      retries: 30
 
 
   # ---------------------------------
