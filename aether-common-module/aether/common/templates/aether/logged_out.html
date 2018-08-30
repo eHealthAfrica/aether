@@ -25,20 +25,20 @@ under the License.
 {% block title %}{{ app_name }}{% endblock %}
 
 {% block meta %}
-    {% include 'aether/base_head.html' %}
+  {% include 'aether/base_head.html' %}
 {% endblock %}
 
 {% block style %}
-    {% include 'aether/styles.html' %}
+  {% include 'aether/styles.html' %}
 {% endblock %}
 
 {% block body %}
-    <body>
-        {% include 'aether/branding.html' with classname='auth-brand' link='#' %}
+  <body>
+    {% include 'aether/branding.html' with classname='auth-brand' link='#' %}
 
-        <div class="logout-info">
-            <p>{% trans 'Thank you for using Aether.' %}</p>
-            <p><a href="{% url 'rest_framework:login' %}?next=/">{% trans 'Log in again' %}</a></p>
-        </div>
-    </body>
+    <div class="logout-info">
+      <p>{% trans 'Thank you for using Aether.' %}</p>
+      <p><a href="{% url 'rest_framework:login' %}?next=/">{% trans 'Log in again' %}</a></p>
+    </div>
+  </body>
 {% endblock %}
