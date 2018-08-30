@@ -36,7 +36,7 @@
 # default values
 kill=no
 build=no
-container=all
+app=
 
 while [[ $# -gt 0 ]]
 do
@@ -57,7 +57,7 @@ do
 
         *)
             # otherwise is the container name
-            container="$1"
+            app="$1"
 
             shift # past argument
         ;;
@@ -94,68 +94,35 @@ fi
 
 
 echo "----------------------------------------------------------------------"
-echo "---- Starting databases                                           ----"
-echo "----------------------------------------------------------------------"
-docker-compose up -d db
-case $container in
-    kernel|odk|ui)
-        # nothing to do
-    ;;
-    *)
-        docker-compose up -d couchdb
-        docker-compose up -d redis
-    ;;
-esac
-echo ""
-
-
-echo "----------------------------------------------------------------------"
 echo "---- Starting containers                                          ----"
 echo "----------------------------------------------------------------------"
 
-docker-compose up -d kernel
-
-case $container in
+# check given container name
+case $app in
     kernel)
-        # nothing to do
+        CONTAINERS=(db kernel nginx)
     ;;
-
     odk)
-        docker-compose up -d odk
+        CONTAINERS=(db kernel odk nginx)
     ;;
-
-    sync|couchdb-sync)
-        docker-compose up -d couchdb-sync
-        docker-compose up -d couchdb-sync-rq
-    ;;
-
     ui)
-        docker-compose up -d ui-assets
-        docker-compose up -d ui
+        CONTAINERS=(db kernel ui-assets ui nginx)
     ;;
-
+    sync|couchdb-sync)
+        app=couchdb-sync
+        CONTAINERS=(db couchdb redis kernel couchdb-sync couchdb-sync-rq nginx)
+    ;;
     *)
-        docker-compose up -d odk
-
-        docker-compose up -d couchdb-sync
-        docker-compose up -d couchdb-sync-rq
-
-        docker-compose up -d ui-assets
-        docker-compose up -d ui
+        app=
+        CONTAINERS=(db couchdb redis kernel odk ui-assets ui couchdb-sync couchdb-sync-rq nginx)
     ;;
-
 esac
-echo ""
 
-
-echo "----------------------------------------------------------------------"
-echo "---- Starting NGINX                                               ----"
-echo "----------------------------------------------------------------------"
-docker-compose kill nginx
-docker-compose up -d nginx
-echo ""
-
-sleep 5
+for container in "${CONTAINERS[@]}"
+do
+    docker-compose up -d $container
+    docker-compose logs --tail 20 $container
+done
 
 echo ""
 docker-compose ps
@@ -164,3 +131,5 @@ echo ""
 docker ps
 echo "----------------------------------------------------------------------"
 echo ""
+
+docker-compose logs -f $app
