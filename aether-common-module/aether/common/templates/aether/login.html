@@ -25,13 +25,94 @@ under the License.
 {% block title %}{{ app_name }}{% endblock %}
 
 {% block meta %}
-  {% include 'aether/base_head.html' %}
+  {% include 'aether/meta.html' %}
+  <link rel="shortcut icon" href="{% static 'aether/images/aether.png' %}"/>
 {% endblock %}
 
 {% block style %}
-  {% include 'aether/styles.html' %}
+  <link rel="stylesheet" type="text/css" href="{% static 'aether/css/styles.css' %}"/>
+
+  <style>
+    .container {
+      -moz-osx-font-smoothing: grayscale;
+      -webkit-font-smoothing: antialiased;
+
+      background: #50aef3;
+      background-image: linear-gradient(to right, #50aef3, #7175dd);
+      color: #fff;
+      font-family: 'Open Sans', Helvetica, Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.3em;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-control {
+      display: block;
+      width: 100%;
+      height: calc(2.25rem + 2px);
+      font-size: 1rem;
+      line-height: 1.5;
+      color: #495057;
+      background-color: #fff;
+      border: 0;
+      border-radius: 0.25rem;
+
+      -webkit-box-sizing: border-box;
+      -moz-box-sizing: border-box;
+      box-sizing: border-box;
+    }
+    .form-control::-ms-expand {
+      background-color: transparent;
+      border: 0;
+    }
+    .form-control:focus {
+      color: #495057;
+      background-color: #fff;
+      border-color: #80bdff;
+      outline: 0;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    .form-control::placeholder {
+      color: #6c757d;
+      opacity: 1;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    input,
+    input:focus,
+    input:active {
+      outline: 0;
+    }
+
+    input[type='password'],
+    input[type='text'] {
+      background: #faf9fc;
+      box-shadow: 1px 1px 1px rgba(45, 49, 70, 0.1) inset, 1px 1px 0 rgba(255, 255, 255, 0.1);
+      color: #495057;
+      padding: 0 .8em;
+    }
+    input[type='password'].error,
+    input[type='text'].error {
+      background: rgba(210, 91, 105, 0.1);
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.15);
+      border: 0;
+      box-shadow: 1px 1px 0 rgba(255, 255, 255, 0.1) inset, -1px -1px 0 rgba(45, 49, 70, 0.3) inset, 0 0 4px rgba(45, 49, 70, 0.1);
+      color: #fff;
+      text-transform: uppercase;
+    }
+  </style>
 {% endblock %}
 
 {% block branding %}
-  {% include 'aether/branding.html' with classname='auth-brand' link='#' %}
+  {% include 'aether/branding.html' with classname='brand' link='#' %}
 {% endblock %}
