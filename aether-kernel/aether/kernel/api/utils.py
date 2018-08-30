@@ -606,10 +606,10 @@ def extract_create_entities(submission_payload, mapping_definition, schemas):
 
 
 def run_entity_extraction(submission):
-    # Get the mapping set from the submission (submission.mappingset):
-    mapping_set_mappings = models.MappingSetMapping.objects.filter(mappingset=submission.mappingset.id)
-    for mappingsetmapping in mapping_set_mappings:
-        mapping_definition = mappingsetmapping.mapping.definition
+    # Extract entity for each mapping in the submission.mappingset
+    mappings = submission.mappingset.mappings.all()
+    for mapping in mappings:
+        mapping_definition = mapping.definition
         # Get the primary key of the projectschema
         # entity_pks = list(mapping_definition['entities'].values())
         entity_ps_ids = mapping_definition.get('entities')
@@ -627,12 +627,6 @@ def run_entity_extraction(submission):
             project_schemas.items()
         }
         submission.save()
-        submission_mapping_instance = models.SubmissionMapping(
-            mapping=mappingsetmapping.mapping,
-            map_revision=mappingsetmapping.mapping.revision,
-            submission=submission
-        )
-        submission_mapping_instance.save()
         _, entities = extract_create_entities(
             submission_payload=submission.payload,
             mapping_definition=mapping_definition,

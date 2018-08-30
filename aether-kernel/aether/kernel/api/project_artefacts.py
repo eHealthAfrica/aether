@@ -22,7 +22,7 @@ import string
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
 
-from .models import Project, Schema, ProjectSchema, Mapping, MappingSetMapping, MappingSet
+from .models import Project, Schema, ProjectSchema, Mapping, MappingSet
 
 
 def get_project_artefacts(project):
@@ -35,14 +35,12 @@ def get_project_artefacts(project):
         'schemas': set(),
         'project_schemas': set(),
         'mappings': set(),
-        'mappingsets': set(),
-        'mappingset_mappings': set()
+        'mappingsets': set()
     }
     for mappingset in MappingSet.objects.filter(project=project):
         results['mappingsets'].add(str(mappingset.pk))
-        for mappingset_mapping in MappingSetMapping.objects.filter(mappingset=mappingset):
-            results['mappingset_mappings'].add(str(mappingset_mapping.pk))
-            results['mappings'].add(str(mappingset_mapping.mapping.pk))
+        for mapping in mappingset.mappings.all():
+            results['mappings'].add(str(mapping.pk))
 
     for project_schema in ProjectSchema.objects.filter(project=project):
         results['schemas'].add(str(project_schema.schema.pk))
@@ -71,8 +69,7 @@ def upsert_project_artefacts(
         'schemas': set(),
         'project_schemas': set(),
         'mappings': set(),
-        'mappingsets': set(),
-        'mappingset_mappings': set()
+        'mappingsets': set()
     }
 
     # 1. create/update the project
@@ -139,19 +136,10 @@ def upsert_project_artefacts(
                 action=action,
                 name=raw_mapping.get('name', __random_name()),
                 definition=raw_mapping.get('definition', {'mappings': []}),
+                is_read_only=raw_mapping.get('is_read_only', False)
             )
             results['mappings'].add(str(mapping.pk))
-
-            # link mappings to the mapping set via mappingsetmappings
-            try:
-                mappingset_mapping = MappingSetMapping.objects.get(mapping=mapping, mappingset=mappingset)
-            except ObjectDoesNotExist:
-                mappingset_mapping = __upsert_instance(
-                    model=MappingSetMapping,
-                    mappingset=mappingset,
-                    mapping=mapping,
-                )
-            results['mappingset_mappings'].add(str(mappingset_mapping.pk))
+            mappingset.mappings.add(mapping)
     return results
 
 

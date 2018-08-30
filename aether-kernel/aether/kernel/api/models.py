@@ -99,12 +99,38 @@ class Project(ExportModelOperationsMixin('kernel_project'), TimeStampedModel):
         ]
 
 
+class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    revision = models.TextField(default='1')
+    name = models.CharField(max_length=50, null=False, unique=True)
+    definition = JSONField(blank=False, null=False)
+    is_active = models.BooleanField(default=False)
+    is_read_only = models.BooleanField(default=False)
+
+    @property
+    def definition_prettified(self):
+        return json_prettified(self.definition)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        app_label = 'kernel'
+        default_related_name = 'mappings'
+        ordering = ['-modified']
+        indexes = [
+            models.Index(fields=['-modified']),
+        ]
+
+
 class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), TimeStampedModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
     name = models.CharField(max_length=50, null=False, unique=True)
     input = JSONField(null=True, blank=True)
+    mappings = models.ManyToManyField(to=Mapping, blank=True)
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
 
     @property
@@ -120,30 +146,6 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), TimeStampedMod
         ordering = ['project__id', '-modified']
         indexes = [
             models.Index(fields=['project', '-modified']),
-            models.Index(fields=['-modified']),
-        ]
-
-
-class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    revision = models.TextField(default='1')
-    name = models.CharField(max_length=50, null=False, unique=True)
-    is_active = models.BooleanField(default=False)
-    definition = JSONField(blank=False, null=False)
-
-    @property
-    def definition_prettified(self):
-        return json_prettified(self.definition)
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        app_label = 'kernel'
-        default_related_name = 'mappings'
-        ordering = ['-modified']
-        indexes = [
             models.Index(fields=['-modified']),
         ]
 
@@ -204,28 +206,6 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedMod
         ordering = ['project__id', '-modified']
         indexes = [
             models.Index(fields=['project', '-modified']),
-            models.Index(fields=['-modified']),
-        ]
-
-
-class SubmissionMapping(ExportModelOperationsMixin('kernel_submissionmapping'), TimeStampedModel):
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    revision = models.TextField(default='1')
-
-    mapping = models.ForeignKey(to=Mapping, on_delete=models.CASCADE)
-    map_revision = models.TextField(default='1')
-    submission = models.ForeignKey(to=Submission, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return '{} - {}'.format(str(self.submission), self.id)
-
-    class Meta:
-        app_label = 'kernel'
-        default_related_name = 'submissionmappings'
-        ordering = ['submission__id', '-modified']
-        indexes = [
-            models.Index(fields=['submission', '-modified']),
             models.Index(fields=['-modified']),
         ]
 

@@ -46,17 +46,11 @@ class MappingFilter(filters.FilterSet):
         method='submission_filter',
     )
 
-    def submission_filter(self, queryset, name, value):
-        if is_uuid(value):
-            return queryset.filter(submissionmappings__submission__pk=value)
-        else:
-            return queryset.filter(submissionmappings__submission__name=value)
-
     def mappingset_filter(self, queryset, name, value):
         if is_uuid(value):
-            return queryset.filter(mappingsetmappings__mappingset__pk=value)
+            return queryset.filter(mappingset__pk=value)
         else:
-            return queryset.filter(mappingsetmappings__mappingset__name=value)
+            return queryset.filter(mappingset__name=value)
 
     class Meta:
         fields = '__all__'
@@ -68,16 +62,6 @@ class MappingSetFilter(filters.FilterSet):
     project = filters.CharFilter(
         method='project_filter',
     )
-
-    mapping = filters.CharFilter(
-        method='mapping_filter',
-    )
-
-    def mapping_filter(self, queryset, name, value):
-        if is_uuid(value):
-            return queryset.filter(mappingsetmappings__mapping__pk=value)
-        else:
-            return queryset.filter(mappingsetmappings__mapping__name=value)
 
     def project_filter(self, queryset, name, value):
         if is_uuid(value):
@@ -91,12 +75,6 @@ class MappingSetFilter(filters.FilterSet):
         model = models.MappingSet
 
 
-class MappingSetMappingFilter(filters.FilterSet):
-    class Meta:
-        fields = '__all__'
-        model = models.MappingSetMapping
-
-
 class SubmissionFilter(filters.FilterSet):
     instanceID = filters.CharFilter(
         name='payload__meta__instanceID',
@@ -107,15 +85,6 @@ class SubmissionFilter(filters.FilterSet):
     mappingset = filters.CharFilter(
         method='mappingset_filter',
     )
-    mapping = filters.CharFilter(
-        method='mapping_filter',
-    )
-
-    def mapping_filter(self, queryset, name, value):
-        if is_uuid(value):
-            return queryset.filter(submissionmappings__mapping__pk=value)
-        else:
-            return queryset.filter(submissionmappings__mapping__name=value)
 
     def project_filter(self, queryset, name, value):
         if is_uuid(value):
@@ -133,12 +102,6 @@ class SubmissionFilter(filters.FilterSet):
         fields = '__all__'
         exclude = ('payload',)
         model = models.Submission
-
-
-class SubmissionMappingFilter(filters.FilterSet):
-    class Meta:
-        fields = '__all__'
-        model = models.SubmissionMapping
 
 
 class AttachmentFilter(filters.FilterSet):

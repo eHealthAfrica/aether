@@ -33,10 +33,8 @@ router.register('mappingsets-stats',
                 views.MappingSetStatsViewSet,
                 base_name='mappingsets_stats')
 router.register('mappings', views.MappingViewSet)
-router.register('mappingsetmappings', views.MappingSetMappingViewSet)
 router.register('projectschemas', views.ProjectSchemaViewSet)
 router.register('submissions', views.SubmissionViewSet)
-router.register('submissionmappings', views.SubmissionMappingViewSet)
 router.register('attachments', views.AttachmentViewSet)
 router.register('entities', views.EntityViewSet)
 router.register('schemas', views.SchemaViewSet)
