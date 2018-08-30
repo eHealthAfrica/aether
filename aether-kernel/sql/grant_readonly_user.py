@@ -17,7 +17,7 @@
 # under the License.
 
 '''
-Create a readonly user in the kernel database.
+Grant a user readonly permissions in the kernel database.
 
 Background: aether producers can query the kernel database via psycopg2,
 bypassing the safety checks django provides. They only need read permissions
@@ -31,19 +31,8 @@ import os
 import psycopg2
 from psycopg2 import sql
 
-# Create a readonly user with username "{role}" if none exists.
-# Grant read permission for relevant tables.
-CREATE_READONLY_USER = '''
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = {rolename})
-  THEN
-      CREATE ROLE {role} WITH LOGIN ENCRYPTED PASSWORD {password}
-      INHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION;
-  END IF;
-END
-$$ LANGUAGE plpgsql;
-
+# Grant read permission for relevant tables to $KERNEL_READONLY_DB_USERNAME.
+GRANT_READONLY_USER = '''
 REVOKE ALL PRIVILEGES ON DATABASE {database} FROM {role} CASCADE;
 
 GRANT CONNECT ON DATABASE {database} TO {role};
@@ -70,13 +59,10 @@ def main():
 
     with psycopg2.connect(**postgres_credentials) as conn:
         role = os.environ['KERNEL_READONLY_DB_USERNAME']
-        password = os.environ['KERNEL_READONLY_DB_PASSWORD']
         cursor = conn.cursor()
-        query = sql.SQL(CREATE_READONLY_USER).format(
+        query = sql.SQL(GRANT_READONLY_USER).format(
             database=sql.Identifier(dbname),
             role=sql.Identifier(role),
-            rolename=sql.Literal(role),
-            password=sql.Literal(password),
         )
         cursor.execute(query)
 
