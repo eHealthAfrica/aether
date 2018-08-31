@@ -364,7 +364,7 @@ class MappingStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     class Meta:
         model = models.Mapping
         fields = (
-            'id', 'name', 'definition', 'created',
+            'id', 'name', 'created',
             'first_submission', 'last_submission',
             'submissions_count', 'entities_count',
         )
