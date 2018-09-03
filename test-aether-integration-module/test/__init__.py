@@ -39,7 +39,7 @@ kernel_credentials = {
 kernel_retry = 15
 kernel_retry_time = 1
 
-SEED_ENTITIES = os.environ['ENERATED_ENTITY_COUNT']
+SEED_ENTITIES = int(os.environ['GENERATED_ENTITY_COUNT'])
 SEED_TYPE = "Person"
 
 
