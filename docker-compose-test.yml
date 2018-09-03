@@ -169,9 +169,6 @@ services:
       - "9005:9005"
     volumes:
       - ./aether-producer/tests:/code/tests
-    # links:
-    #   - kafka-test
-    #   - zookeeper-test
     command: start
 
 
