@@ -461,7 +461,6 @@ class ViewsTest(TestCase):
         self.assertEquals(json['submissions_count'], submissions_count)
         entities_count = models.Entity.objects.filter(submission__mappingset=mappingset.pk).count()
         self.assertEquals(json['entities_count'], entities_count)
-        print('TERS', json)
         self.assertLessEqual(
             dateutil.parser.parse(json['first_submission']),
             dateutil.parser.parse(json['last_submission']),
