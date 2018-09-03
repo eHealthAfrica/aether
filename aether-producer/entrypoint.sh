@@ -27,19 +27,16 @@ show_help() {
     ----------------------------------------------------------------------------
     bash          : run bash
     eval          : eval shell command
-    manage        : invoke manage.py commands
 
     pip_freeze    : freeze pip dependencies and write to requirements.txt
 
-    start         : start in normal mode
-    start_dev     : start for test/dev
-    start_test    : start for test/dev
+    start         : start producer with settings from file at environment path: PRODUCER_SETTINGS_FILE
     test_unit     : run tests
     """
 }
 
 test_unit() {
-    python ./setup.py test
+    pytest -m unit
     cat /code/conf/extras/good_job.txt
     rm -R .pytest_cache
     rm -rf tests/__pycache__
@@ -52,10 +49,6 @@ case "$1" in
 
     eval )
         eval "${@:2}"
-    ;;
-
-    manage )
-        ./manage.py "${@:2}"
     ;;
 
     pip_freeze )
@@ -72,14 +65,6 @@ case "$1" in
 
     start )
         ./manage.py
-    ;;
-
-    start_dev )
-        ./manage.py test
-    ;;
-
-    start_test )
-        ./manage.py test
     ;;
 
     test_unit )
