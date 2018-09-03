@@ -90,7 +90,7 @@ def producer_status():
     for x in range(max_retry):
         try:
             status = requests.get(url).json()
-            kafka = status.get('kafka')
+            kafka = status.get('kafka_container_accessible')
             if not kafka:
                 raise ValueError('Kafka not connected yet')
             person = status.get('topics', {}).get(SEED_TYPE, {})
