@@ -28,7 +28,9 @@ def resolve_file_url(url):
         # set to "filesytem" and files (attachments, media files etc.) are stored on
         # the filesystem and served via nginx. Example URL:
         # http://odk.aether.local/media/<path-to-file>.
-        return f'http://{settings.HOSTNAME}{url}'
+        ssl_header = settings.SECURE_PROXY_SSL_HEADER
+        scheme = ssl_header[1] if ssl_header else 'http'
+        return f'{scheme}://{settings.HOSTNAME}{url}'
     # When the environment variable DJANGO_REMOTE_STORAGE is set to "s3" or
     # "gcs", all file urls will be absolute. Example:
     # https://abcd.s3.amazonaws.com/<file-name>?AWSAccessKeyId=ABC&Signature=ABC%3D&Expires=1534775613.
