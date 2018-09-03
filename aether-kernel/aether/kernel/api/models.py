@@ -99,38 +99,12 @@ class Project(ExportModelOperationsMixin('kernel_project'), TimeStampedModel):
         ]
 
 
-class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    revision = models.TextField(default='1')
-    name = models.CharField(max_length=50, null=False, unique=True)
-    definition = JSONField(blank=False, null=False)
-    is_active = models.BooleanField(default=True)
-    is_read_only = models.BooleanField(default=False)
-
-    @property
-    def definition_prettified(self):
-        return json_prettified(self.definition)
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        app_label = 'kernel'
-        default_related_name = 'mappings'
-        ordering = ['-modified']
-        indexes = [
-            models.Index(fields=['-modified']),
-        ]
-
-
 class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), TimeStampedModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
     name = models.CharField(max_length=50, null=False, unique=True)
     input = JSONField(null=True, blank=True)
-    mappings = models.ManyToManyField(to=Mapping, blank=True)
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
 
     @property
@@ -291,6 +265,40 @@ class ProjectSchema(ExportModelOperationsMixin('kernel_projectschema'), TimeStam
         ]
 
 
+class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    revision = models.TextField(default='1')
+    name = models.CharField(max_length=50, null=False, unique=True)
+    definition = JSONField(blank=False, null=False)
+    mappingset = models.ForeignKey(to=MappingSet, on_delete=models.CASCADE)
+    projectschemas = models.ManyToManyField(to=ProjectSchema)
+    is_active = models.BooleanField(default=True)
+    is_read_only = models.BooleanField(default=False)
+
+    def save(self, **kwargs):
+        entities = self.definition.get('entities')
+        if entities:
+            for entity in entities:
+                self.projectschemas.add(ProjectSchema.objects.get(pk=entities[entity]))
+        super(Mapping, self).save(**kwargs)
+
+    @property
+    def definition_prettified(self):
+        return json_prettified(self.definition)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        app_label = 'kernel'
+        default_related_name = 'mappings'
+        ordering = ['-modified']
+        indexes = [
+            models.Index(fields=['-modified']),
+        ]
+
+
 class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
@@ -302,6 +310,8 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
 
     projectschema = models.ForeignKey(to=ProjectSchema, on_delete=models.SET_NULL, null=True)
     submission = models.ForeignKey(to=Submission, on_delete=models.SET_NULL, blank=True, null=True)
+    mapping = models.ForeignKey(to=Mapping, on_delete=models.SET_NULL, null=True)
+    mapping_revision = models.TextField(blank=False, null=False)
 
     # redundant but speed up queries
     project = models.ForeignKey(to=Project, on_delete=models.SET_NULL, blank=True, null=True)

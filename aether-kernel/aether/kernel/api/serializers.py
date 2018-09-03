@@ -98,18 +98,17 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         read_only=True,
         view_name='mapping-detail',
     )
-    mappingset_url = FilteredHyperlinkedRelatedField(
-        lookup_field='mapping',
+    mappingset_url = serializers.HyperlinkedIdentityField(
         read_only=True,
         source='mappingset',
         view_name='mappingset-detail',
     )
 
-    submissionmappings_url = FilteredHyperlinkedRelatedField(
+    projectschemas_url = FilteredHyperlinkedRelatedField(
         lookup_field='mapping',
         read_only=True,
-        source='submissionmappings',
-        view_name='submissionmapping-list',
+        source='projectschemas',
+        view_name='projectschema-list',
     )
 
     def validate_definition(self, value):
@@ -163,15 +162,14 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='submission-detail',
         read_only=True
     )
+    project_url = serializers.HyperlinkedRelatedField(
+        view_name='project-detail',
+        source='project',
+        read_only=True,
+    )
     mappingset_url = serializers.HyperlinkedRelatedField(
         view_name='mappingset-detail',
         source='mappingset',
-        read_only=True,
-    )
-    submissionmapping_url = FilteredHyperlinkedRelatedField(
-        lookup_field='submission',
-        view_name='submissionmapping-list',
-        source='submissionmappings',
         read_only=True,
     )
     entities_url = FilteredHyperlinkedRelatedField(
@@ -265,6 +263,12 @@ class ProjectSchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         source='entities',
         view_name='entity-list',
     )
+    mappings_url = FilteredHyperlinkedRelatedField(
+        lookup_field='projectschema',
+        read_only=True,
+        source='mappings',
+        view_name='mapping-list',
+    )
 
     class Meta:
         model = models.ProjectSchema
@@ -281,6 +285,11 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         read_only=True,
         source='projectschema',
         view_name='projectschema-detail',
+    )
+    submission_url = serializers.HyperlinkedRelatedField(
+        read_only=True,
+        source='submission',
+        view_name='submission-detail',
     )
     merge = serializers.ChoiceField(MERGE_CHOICES, default=m_options.overwrite.value)
     resolved = serializers.JSONField(default={})

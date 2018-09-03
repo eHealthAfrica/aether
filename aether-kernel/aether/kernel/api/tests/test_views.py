@@ -83,7 +83,7 @@ class ViewsTest(TestCase):
             project=self.project,
             schema=self.schema
         )
-
+        EXAMPLE_MAPPING['entities']['Person'] = str(self.projectschema.pk)
         self.mappingset = models.MappingSet.objects.create(
             name='a sample mapping set',
             input={},
@@ -97,10 +97,9 @@ class ViewsTest(TestCase):
         self.mapping = models.Mapping.objects.create(
             name='mapping1',
             definition=mapping_definition,
-            revision='a sample revision field'
+            revision='a sample revision field',
+            mappingset=self.mappingset
         )
-
-        self.mappingset.mappings.add(self.mapping)
 
         self.submission = models.Submission.objects.create(
             revision='a sample revision',
@@ -114,7 +113,9 @@ class ViewsTest(TestCase):
             payload=self.entity_payload,
             status='a sample status',
             projectschema=self.projectschema,
-            submission=self.submission
+            submission=self.submission,
+            mapping=self.mapping,
+            mapping_revision=self.mapping.revision
         )
 
     def tearDown(self):
@@ -145,16 +146,17 @@ class ViewsTest(TestCase):
             'jsonld_context': 'Sample JSONLD context',
             'rdf_definition': 'Sample RDF definition',
         })
-        self.helper_create_object('mapping-list', {
-            'name': 'Mapping name',
-            'definition': EXAMPLE_MAPPING,
-            'revision': 'Sample mapping revision'
-        })
         self.helper_create_object('mappingset-list', {
             'name': 'Mapping Set name',
             'revision': 'Sample mapping set revision',
-            'project': str(self.project.pk),
-            'mappings': [str(self.mapping.pk)]
+            'project': str(self.project.pk)
+        })
+        self.helper_create_object('mapping-list', {
+            'name': 'Mapping name',
+            'definition': EXAMPLE_MAPPING,
+            'revision': 'Sample mapping revision',
+            'mappingset': str(self.mappingset.pk),
+            'projectschemas': [str(self.projectschema.pk)]
         })
         self.helper_create_object('submission-list', {
             'revision': 'Sample submission revision',
@@ -183,6 +185,8 @@ class ViewsTest(TestCase):
             'status': 'Publishable',
             'projectschema': str(self.projectschema.pk),
             'submission': str(self.submission.pk),
+            'mapping': str(self.mapping.pk),
+            'mapping_revision': self.mapping.revision,
         })
         test_schema_id = json.loads(self.helper_create_object('schema-list', {
             'name': 'GameToken',
@@ -207,6 +211,8 @@ class ViewsTest(TestCase):
             'status': 'Publishable',
             'projectschema': str(self.test_project_schema.pk),
             'submission': str(self.submission.pk),
+            'mapping': str(self.mapping.pk),
+            'mapping_revision': self.mapping.revision,
         })
         self.helper_create_object('entity-list', {
             'revision': '1',
@@ -214,6 +220,8 @@ class ViewsTest(TestCase):
             'status': 'Publishable',
             'projectschema': str(self.test_project_schema.pk),
             'submission': str(self.submission.pk),
+            'mapping': str(self.mapping.pk),
+            'mapping_revision': self.mapping.revision,
         }, True)
 
     # TEST READ
@@ -249,7 +257,9 @@ class ViewsTest(TestCase):
         self.helper_update_object_id('mapping-detail', {
             'name': 'Mapping name 2',
             'definition': {},
-            'revision': 'Sample mapping revision'
+            'revision': 'Sample mapping revision',
+            'projectschemas': [str(self.projectschema.pk)],
+            'mappingset': str(self.mappingset.pk),
         }, self.mapping)
         self.helper_update_object_id('mappingset-detail', {
             'name': 'Mapping set name 2',
@@ -268,6 +278,8 @@ class ViewsTest(TestCase):
             'payload': updated_example_payload,
             'status': 'Publishable',
             'projectschema': str(self.projectschema.pk),
+            'mapping': str(self.mapping.pk),
+            'mapping_revision': self.mapping.revision,
         }, self.entity)
         updated_example_payload = EXAMPLE_SOURCE_DATA_ENTITY
         updated_example_payload['name'] = 'Test last name updated'
@@ -278,6 +290,8 @@ class ViewsTest(TestCase):
             'merge': 'first_write_wins',
             'status': 'Publishable',
             'projectschema': str(self.projectschema.pk),
+            'mapping': str(self.mapping.pk),
+            'mapping_revision': self.mapping.revision,
         }, self.entity)
         returned_entity = models.Entity.objects.get(pk=self.entity.pk)
         self.assertEqual(self.entity_payload['name'], returned_entity.payload['name'])
@@ -290,6 +304,9 @@ class ViewsTest(TestCase):
             'merge': 'last_write_wins',
             'status': 'Publishable',
             'projectschema': str(self.projectschema.pk),
+            'submission': str(self.submission.pk),
+            'mapping': str(self.mapping.pk),
+            'mapping_revision': self.mapping.revision,
         }, self.entity)
         returned_entity = models.Entity.objects.get(pk=self.entity.pk)
         self.assertNotEqual(self.entity_payload['name'], returned_entity.payload['name'])
@@ -359,22 +376,22 @@ class ViewsTest(TestCase):
             'name': 'mapping set',
             'revision': 'Sample mapping set revision',
             'project': str(self.project.pk),
-            'input': {},
-            'mappings': []
+            'input': {}
         }
+        mappingset_response = self.helper_create_object(
+            view_name='mappingset-list',
+            data=mappingset,
+        )
         mapping = {
             'name': 'Empty mapping',
             'definition': {},
             'revision': 'Sample mapping revision',
+            'mappingset': mappingset_response.json()['id'],
+            'projectschemas': [str(self.projectschema.pk)],
         }
-        mapping_response = self.helper_create_object(
+        self.helper_create_object(
             view_name='mapping-list',
             data=mapping,
-        )
-        mappingset['mappings'].append(mapping_response.json()['id'])
-        mappingset_response = self.helper_create_object(
-            view_name='mappingset-list',
-            data=mappingset,
         )
         submission = {
             'mappingset': mappingset_response.json()['id'],
@@ -402,11 +419,10 @@ class ViewsTest(TestCase):
             response = self.helper_create_object('mapping-list', {
                 'name': str(uuid.uuid4()),  # random name
                 'definition': {},
-                'revision': 'Sample mapping revision'
+                'revision': 'Sample mapping revision',
+                'mappingset': str(mappingset.pk),
+                'projectschemas': [str(self.projectschema.pk)],
             })
-            mapping_id = response.json()['id']
-            temp_mapping = models.Mapping.objects.get(pk=mapping_id)
-            mappingset.mappings.add(temp_mapping)
             for __ in range(10):
                 self.helper_create_object('submission-list', {
                     'revision': 'Sample submission revision',
@@ -434,32 +450,14 @@ class ViewsTest(TestCase):
         )
 
     def test_mapping_set_stats_view(self):
-        mapping = models.Mapping.objects.create(
-            name='a mapping',
-            definition={},
-            revision='revision 1'
-        )
-        mappingset = models.MappingSet.objects.create(
-            name='a mapping set with stats',
-            revision='revision 1',
-            input={},
-            project=self.project
-        )
-        mappingset.mappings.add(mapping)
-        for _ in range(10):
-            self.helper_create_object('submission-list', {
-                'revision': 'Sample submission revision',
-                'payload': EXAMPLE_SOURCE_DATA,
-                'mappingset': str(mappingset.pk),
-            })
-        url = reverse('mappingsets_stats-detail', kwargs={'pk': mappingset.pk})
+        url = reverse('mappingsets_stats-detail', kwargs={'pk': self.mappingset.pk})
         response = self.client.get(url, format='json')
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         json = response.json()
-        self.assertEquals(json['id'], str(mappingset.pk))
-        submissions_count = models.Submission.objects.filter(mappingset=mappingset.pk).count()
+        self.assertEquals(json['id'], str(self.mappingset.pk))
+        submissions_count = models.Submission.objects.filter(mappingset=self.mappingset.pk).count()
         self.assertEquals(json['submissions_count'], submissions_count)
-        entities_count = models.Entity.objects.filter(submission__mappingset=mappingset.pk).count()
+        entities_count = models.Entity.objects.filter(submission__mappingset=self.mappingset.pk).count()
         self.assertEquals(json['entities_count'], entities_count)
         self.assertLessEqual(
             dateutil.parser.parse(json['first_submission']),

@@ -42,8 +42,8 @@ class MappingFilter(filters.FilterSet):
     mappingset = filters.CharFilter(
         method='mappingset_filter',
     )
-    submission = filters.CharFilter(
-        method='submission_filter',
+    projectschema = filters.CharFilter(
+        method='projectschema_filter',
     )
 
     def mappingset_filter(self, queryset, name, value):
@@ -51,6 +51,12 @@ class MappingFilter(filters.FilterSet):
             return queryset.filter(mappingset__pk=value)
         else:
             return queryset.filter(mappingset__name=value)
+
+    def projectschema_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(projectschema__pk=value)
+        else:
+            return queryset.filter(projectschema__name=value)
 
     class Meta:
         fields = '__all__'

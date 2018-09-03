@@ -39,7 +39,7 @@ def get_project_artefacts(project):
     }
     for mappingset in MappingSet.objects.filter(project=project):
         results['mappingsets'].add(str(mappingset.pk))
-        for mapping in mappingset.mappings.all():
+        for mapping in Mapping.objects.filter(mappingset=mappingset):
             results['mappings'].add(str(mapping.pk))
 
     for project_schema in ProjectSchema.objects.filter(project=project):
@@ -136,10 +136,11 @@ def upsert_project_artefacts(
                 action=action,
                 name=raw_mapping.get('name', __random_name()),
                 definition=raw_mapping.get('definition', {'mappings': []}),
-                is_read_only=raw_mapping.get('is_read_only', False)
+                mappingset=mappingset,
+                is_read_only=raw_mapping.get('is_read_only', False),
+                is_active=raw_mapping.get('is_active', True)
             )
             results['mappings'].add(str(mapping.pk))
-            mappingset.mappings.add(mapping)
     return results
 
 

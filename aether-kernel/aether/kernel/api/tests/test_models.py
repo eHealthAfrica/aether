@@ -60,7 +60,8 @@ class ModelsTests(TransactionTestCase):
         mapping = models.Mapping.objects.create(
             name='sample mapping',
             definition={},
-            revision='a sample revision field'
+            revision='a sample revision field',
+            mappingset=mappingset
         )
         self.assertEquals(str(mapping), mapping.name)
         self.assertNotEqual(models.Mapping.objects.count(), 0)

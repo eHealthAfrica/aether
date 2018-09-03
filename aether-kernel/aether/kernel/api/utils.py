@@ -607,7 +607,7 @@ def extract_create_entities(submission_payload, mapping_definition, schemas):
 
 def run_entity_extraction(submission):
     # Extract entity for each mapping in the submission.mappingset
-    mappings = submission.mappingset.mappings.all()
+    mappings = models.Mapping.objects.filter(mappingset=submission.mappingset)
     for mapping in mappings:
         if mapping.is_active:
             mapping_definition = mapping.definition
@@ -641,6 +641,8 @@ def run_entity_extraction(submission):
                     status=entity.status,
                     projectschema=projectschema,
                     submission=submission,
+                    mapping=mapping,
+                    mapping_revision=mapping.revision
                 )
                 entity_instance.save()
 
