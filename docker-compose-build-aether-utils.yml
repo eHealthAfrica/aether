@@ -6,6 +6,24 @@ version: "2.1"
 
 services:
 
+  common:
+    build: ./aether-common-module
+    environment:
+      TESTING: "true"
+      # required environment variables
+      DJANGO_SECRET_KEY: secret
+      PGPASSWORD: secretsecret
+      PGUSER: dbuser
+      PGHOST: db-test
+      PGPORT: "9999"
+      DB_NAME: common
+      # required by kernel module
+      AETHER_KERNEL_URL_TEST: http://kernel-test
+    volumes:
+      - ./aether-common-module:/code
+    command: build
+
+
   client:
     build: ./aether-utils/aether-client
     environment:
@@ -14,6 +32,7 @@ services:
       - ./aether-utils/aether-client:/code
     command: build
 
+
   mocker:
     build: ./aether-utils/aether-mock-data
     environment:
@@ -21,6 +40,7 @@ services:
     volumes:
       - ./aether-utils/aether-mock-data:/code
     command: build
+
 
   saladbar:
     build: ./aether-utils/aether-saladbar
