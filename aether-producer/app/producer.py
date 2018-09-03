@@ -195,12 +195,9 @@ class ProducerManager(object):
                 if not self.kernel:
                     self.logger.info('Connecting to Aether...')
                     with KernelHandler(self):
-                        try:
-                            res = requests.head("%s/healthcheck" % self.settings['kernel_url'])
-                            if res.status_code != 404:
-                                self.logger.info('Kernel available without credentials.')
-                        except ConnectionError as cer:
-                            raise(cer)
+                        res = requests.head("%s/healthcheck" % self.settings['kernel_url'])
+                        if res.status_code != 404:
+                            self.logger.info('Kernel available without credentials.')
                         try:
                             self.kernel = KernelClient(
                                 url=self.settings['kernel_url'],
