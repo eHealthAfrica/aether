@@ -37,6 +37,13 @@ class MockProducerManager(ProducerManager):
         self.topic_managers = {}
 
 
+class ObjectWithKernel(object):
+
+    def __init__(self, initial_kernel_value=None):
+        self.kernel = initial_kernel_value
+        self.logger = log
+
+
 @pytest.mark.integration
 @pytest.fixture(scope='session')
 def ProducerManagerSettings():

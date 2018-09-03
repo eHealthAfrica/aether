@@ -49,14 +49,14 @@ from spavro.io import DatumWriter, DatumReader
 from spavro.io import validate
 from urllib3.exceptions import MaxRetryError
 
-from . import db
-from .db import Offset
+from producer import db
+from producer.db import Offset
+
+FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
 class Settings(dict):
     # A container for our settings
-    # Any setting set via ENV takes precedence over the same value in the file.
-
     def __init__(self, file_path=None):
         self.load(file_path)
 

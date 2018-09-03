@@ -25,18 +25,35 @@ show_help() {
     echo """
     Commands
     ----------------------------------------------------------------------------
-    bash          : run bash
-    eval          : eval shell command
+    bash              : run bash
+    eval              : eval shell command
 
-    pip_freeze    : freeze pip dependencies and write to requirements.txt
+    pip_freeze        : freeze pip dependencies and write to requirements.txt
 
-    start         : start producer with settings from file at environment path: PRODUCER_SETTINGS_FILE
-    test_unit     : run tests
+    start             : start producer with settings from file at environment path: PRODUCER_SETTINGS_FILE
+
+    test_all          : run unit and integration tests.
+    test_integration  : run integration tests
+    test_unit         : run unit tests
     """
 }
 
 test_unit() {
     pytest -m unit
+    cat /code/conf/extras/good_job.txt
+    rm -R .pytest_cache
+    rm -rf tests/__pycache__
+}
+
+test_integration() {
+    pytest -m integration
+    cat /code/conf/extras/good_job.txt
+    rm -R .pytest_cache
+    rm -rf tests/__pycache__
+}
+
+test_all() {
+    pytest
     cat /code/conf/extras/good_job.txt
     rm -R .pytest_cache
     rm -rf tests/__pycache__
@@ -69,6 +86,14 @@ case "$1" in
 
     test_unit )
         test_unit
+    ;;
+
+    test_integration )
+        test_integration
+    ;;
+
+    test_all )
+        test_all
     ;;
 
     help)
