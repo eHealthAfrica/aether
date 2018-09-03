@@ -20,6 +20,16 @@ from django.conf import settings
 
 
 def resolve_file_url(url):
+    '''
+    Make all file urls absolute.
+    '''
     if url.startswith('/'):
+        # For local development, the environment variable DJANGO_REMOTE_STORAGE is
+        # set to "filesytem" and files (attachments, media files etc.) are stored on
+        # the filesystem and served via nginx. Example URL:
+        # http://odk.aether.local/media/<path-to-file>.
         return f'http://{settings.HOSTNAME}{url}'
+    # When the environment variable DJANGO_REMOTE_STORAGE is set to "s3" or
+    # "gcs", all file urls will be absolute. Example:
+    # https://abcd.s3.amazonaws.com/<file-name>?AWSAccessKeyId=ABC&Signature=ABC%3D&Expires=1534775613.
     return url
