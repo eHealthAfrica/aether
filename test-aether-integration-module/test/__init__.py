@@ -29,7 +29,7 @@ import aether.saladbar.wizard as wizard
 from .consumer import get_consumer, read
 
 
-KERNEL_URL = "http://kernel-test:9000/v1"
+KERNEL_URL = os.environ['KERNEL_URL']
 
 kernel_credentials = {
     "username": os.environ['KERNEL_ADMIN_USERNAME'],
@@ -39,7 +39,7 @@ kernel_credentials = {
 kernel_retry = 15
 kernel_retry_time = 1
 
-SEED_ENTITIES = 1234
+SEED_ENTITIES = os.environ['ENERATED_ENTITY_COUNT']
 SEED_TYPE = "Person"
 
 
@@ -85,8 +85,8 @@ def existing_projectschemas(aether_client):
 
 @pytest.fixture(scope="function")
 def producer_status():
-    max_retry = 30
-    url = "http://producer-test:9005/status"
+    max_retry = 10
+    url = os.environ['PRODUCER_STATUS_URL']
     for x in range(max_retry):
         try:
             status = requests.get(url).json()
@@ -96,7 +96,7 @@ def producer_status():
             person = status.get('topics', {}).get(SEED_TYPE, {})
             ok_count = person.get('last_changeset_status', {}).get('succeeded')
             if ok_count:
-                sleep(10)
+                sleep(5)
                 return ok_count
             else:
                 sleep(1)

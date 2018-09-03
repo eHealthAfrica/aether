@@ -182,6 +182,9 @@ services:
     environment:
       KERNEL_ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
       KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
+      KERNEL_URL: http://kernel-test:9000
+      GENERATED_ENTITY_COUNT: 1234
+      PRODUCER_STATUS_URL: http://producer-test:9005/status
     volumes:
       - ./test-aether-integration-module:/code
     depends_on:
