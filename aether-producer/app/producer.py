@@ -195,13 +195,24 @@ class ProducerManager(object):
                 if not self.kernel:
                     self.logger.info('Connecting to Aether...')
                     with KernelHandler(self):
-                        self.kernel = KernelClient(
-                            url=self.settings['kernel_url'],
-                            username=self.settings['kernel_admin_username'],
-                            password=self.settings['kernel_admin_password'],
-                        )
-                        self.logger.info('Connected to Aether.')
-                        continue
+                        try:
+                            res = requests.head("%s/healthcheck" % self.settings['kernel_url'])
+                            if res.status_code != 404:
+                                self.logger.info('Kernel available without credentials.')
+                        except ConnectionError as cer:
+                            raise(cer)
+                        try:
+                            self.kernel = KernelClient(
+                                url=self.settings['kernel_url'],
+                                username=self.settings['kernel_admin_username'],
+                                password=self.settings['kernel_admin_password'],
+                            )
+                            self.logger.info('Connected to Aether.')
+                            continue
+                        except UnboundLocalError:
+                            # This is an unclear error from AetherClient
+                            raise ConnectionError("Bad Credentials passed to Aether")
+
                 self.safe_sleep(self.settings['start_delay'])
 
             except ConnectionError as ce:
@@ -233,7 +244,10 @@ class ProducerManager(object):
             else:
                 schemas = []
                 with KernelHandler(self):
-                    self.kernel.refresh()
+                    try:
+                        self.kernel.refresh()
+                    except UnboundLocalError:  # this happens on kernel lost.
+                        raise ConnectionError('Lost Kernel Connection')
                     schemas = [
                         schema for schema in self.kernel.Resource.Schema]
                 for schema in schemas:
