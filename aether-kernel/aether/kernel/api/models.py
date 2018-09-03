@@ -187,7 +187,7 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), TimeStampedMod
     submission_revision = models.TextField()
 
     @property
-    def attachment_url(self):
+    def attachment_file_url(self):
         return resolve_file_url(self.attachment_file.url)
 
     def __str__(self):

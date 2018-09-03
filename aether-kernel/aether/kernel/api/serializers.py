@@ -121,7 +121,7 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 class AttachmentSerializerNested(DynamicFieldsMixin, serializers.ModelSerializer):
     name = serializers.CharField(read_only=True)
-    url = serializers.CharField(read_only=True, source='attachment_url')
+    url = serializers.CharField(read_only=True, source='attachment_file_url')
 
     class Meta:
         model = models.Attachment
@@ -174,7 +174,8 @@ class AttachmentSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     name = serializers.CharField(allow_null=True, default=None)
     submission_revision = serializers.CharField(allow_null=True, default=None)
 
-    url = serializers.CharField(read_only=True, source='attachment_url')
+    url = serializers.HyperlinkedIdentityField('attachment-detail', read_only=True)
+    attachment_file_url = serializers.CharField(read_only=True)
     submission_url = serializers.HyperlinkedRelatedField(
         'submission-detail',
         source='submission',
