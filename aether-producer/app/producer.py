@@ -25,6 +25,7 @@ psycogreen.gevent.patch_psycopg()
 import ast
 from contextlib import contextmanager
 from datetime import datetime
+import enum
 import gevent
 from gevent.pool import Pool
 import io
@@ -33,6 +34,7 @@ import logging
 import os
 import psycopg2
 from psycopg2 import sql
+import requests
 import signal
 import spavro.schema
 import sys
@@ -80,6 +82,12 @@ class Settings(dict):
                 self[k] = obj.get(k)
 
 
+class KafkaStatus(enum.Enum):
+    SUBMISSION_PENDING = 1
+    SUBMISSION_FAILURE = 2
+    SUBMISSION_SUCCESS = 3
+
+
 class KernelHandler(object):
     # Context for Kernel, which nulls kernel for reconnection if an error occurs
     # Errors of type ignored_exceptions are logged but don't null kernel
@@ -122,7 +130,7 @@ class ProducerManager(object):
         self.init_db()
         # Clear objects and start
         self.kernel = None
-        self.kafka = False
+        self.kafka = KafkaStatus.SUBMISSION_PENDING
         self.topic_managers = {}
         self.run()
 
@@ -156,9 +164,25 @@ class ProducerManager(object):
 
     # Connectivity
 
+    def kafka_available(self):
+        kafka_url = "http://%s" % self.settings["kafka_url"]
+        try:
+            res = requests.head(kafka_url)
+            return True
+        except ConnectionError as rce:
+            # Requests has the same exception type for both failed to resolve
+            # and ConnectionResetError. Kafka resets the connection as it doesn't
+            # support HEAD, but we know it's there and the port is correct.
+            if "ConnectionResetError" in str(rce):
+                return True
+            else:
+                self.logger.debug("Could not connect to Kafka on url: %s" % kafka_url)
+                self.logger.debug("Connection problem: %s" % rce)
+                return False
+
     # Connect to sqlite
     def init_db(self):
-        url = self.settings.get('offset_db_url')
+        url = self.settings['offset_db_url']
         db.init(url)
         self.logger.info("OffsetDB initialized at %s" % url)
 
@@ -270,8 +294,9 @@ class ProducerManager(object):
 
     def request_status(self):
         status = {
-            "kernel": self.kernel is not None,  # This is a real object
-            "kafka": self.kafka is not False,   # This is just a status flag
+            "kernel_connected": self.kernel is not None,  # This is a real object
+            "kafka_container_accessible": self.kafka_available(),
+            "kafka_submission_status": str(self.kafka),   # This is just a status flag
             "topics": {k: v.get_status() for k, v in self.topic_managers.items()}
         }
         with self.app.app_context():
@@ -350,7 +375,7 @@ class TopicManager(object):
         self.update_schema(schema)
         kafka_settings = self.context.settings.get('kafka_settings')
         # apply setting from root config to be able to use env variables
-        kafka_settings["bootstrap.servers"] = self.context.settings.get("kafka_bootstrap_servers")
+        kafka_settings["bootstrap.servers"] = self.context.settings.get("kafka_url")
         self.producer = Producer(**kafka_settings)
         # Spawn worker and give to pool.
         self.context.threads.append(gevent.spawn(self.update_kafka))
@@ -452,6 +477,11 @@ class TopicManager(object):
         # Waits for all messages to be accepted or timeout in TopicManager.wait_for_kafka
 
         while not self.context.killed:
+
+            if not self.context.kafka_available():
+                self.logger.debug('Kafka Container not accessible, waiting.')
+                self.context.safe_sleep(self.wait_time)
+                continue
 
             self.offset = self.get_offset()
             if not self.updates_available():
@@ -569,7 +599,7 @@ class TopicManager(object):
             self.handle_kafka_errors(change_set_size, all_failed=False)
         self.clear_changeset()
         # Once we're satisfied, we set the new offset past the processed messages
-        self.context.kafka = True
+        self.context.kafka = KafkaStatus.SUBMISSION_SUCCESS
         self.set_offset(end_offset)
         # Sleep so that elements passed in the current window become eligible
         self.context.safe_sleep(self.window_size_sec)
@@ -602,7 +632,7 @@ class TopicManager(object):
 
         self.status["last_errors_set"] = last_error_set
         if all_failed:
-            self.context.kafka = False
+            self.context.kafka = KafkaStatus.SUBMISSION_FAILURE
         return
 
     def clear_changeset(self):
