@@ -190,18 +190,21 @@ def __prepare_xlsx(csv_options, filename):
 #
 def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE):
     def add_header(options, header):
-        if header not in options['headers']:
+        if header not in options['headers_set']:
+            options['headers_set'].add(header)
             options['headers'].append(header)
-            options['headers_label'].append(__get_label(header, labels))
 
     def append_entry(options, entry):
         options['csv_file'].writerow([
             entry.get(header, '')
-            for header in options.get('headers')
+            for header in options['headers']
         ])
 
-    def get_current_options(group):
-        if group not in csv_options:
+    def get_current_options(group, header_ids):
+        try:
+            return csv_options[group]
+        except KeyError:
+            # new
             title = '#' if group == '$' else f'#-{len(csv_options.keys())}'
             csv_path = f'{EXPORT_DIR}/temp-{title}.csv'
             f = open(csv_path, 'w', newline='')
@@ -212,31 +215,21 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE):
                 'csv_path': csv_path,
                 'csv_file': c,
                 'title': title,
-                'headers': [],
-                'headers_label': [],
+
+                'headers_set': set(),  # faster search but breaks insertion order
+                'headers': list(header_ids),
             }
-        return csv_options.get(group)
+
+            return csv_options.get(group)
 
     def get_full_key(key, group):
         return key if group == '$' else f'{group}.{key}'
 
-    def walker(item, group):
-        current = get_current_options(group)
+    def walker(item, item_ids, group):
+        current = get_current_options(group, item_ids.keys())
 
-        attrs = [k for k in item.keys() if k.startswith('@')]
-        non_attrs = [k for k in item.keys() if not k.startswith('@')]
-
-        # @attributes
-        attributes = {}
-        for key in attrs:
-            value = item[key]
-            add_header(current, key)
-            attributes[key] = value
-
-        entry = {**attributes}
-
-        # non attributes
-        for key in non_attrs:
+        entry = {**item_ids}
+        for key in item.keys():
             value = item[key]
             full_key = get_full_key(key, group)
 
@@ -247,14 +240,15 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE):
             else:
                 # create array group and walk array elements in it
                 array_group = f'{full_key}.{ARRAY_PATH}'
-                for i, val in enumerate(value):
-                    obj = __flatten_dict(val if isinstance(val, dict) else {'value': val})
-                    element = {
-                        **attributes,           # identifies the parent
+                i = 0
+                for val in value:
+                    i += 1
+                    element = __flatten_dict(val) if isinstance(val, dict) else {'value': val}
+                    element_ids = {
+                        **item_ids,             # identifies the parent
                         f'@.{array_group}': i,  # identifies the element
-                        **obj,
                     }
-                    walker(element, array_group)
+                    walker(element, element_ids, array_group)
 
         append_entry(current, entry)
 
@@ -264,16 +258,16 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE):
 
     # paginate results to reduce memory usage
     data_from = offset
-    index = offset + 1
+    index = offset
     while data_from < limit:
         data_to = min(data_from + PAGE_SIZE, limit)
         for row in data[data_from:data_to]:
-            json_data = __parse_row(row.get('exporter_data'), paths)
-            walker({'@': index, '@id': str(row.get('pk')), **json_data}, '$')
             index += 1
+            json_data = __flatten_dict(row.get('exporter_data'))
+            walker(json_data, {'@': index, '@id': str(row.get('pk'))}, '$')
         data_from = data_to
 
-    # include real headers
+    # include headers and row columns in order
     for group in csv_options.keys():
         current = csv_options[group]
         current['file'].close()
@@ -284,11 +278,30 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE):
         rows_path = current['csv_path']
         current['csv_path'] = csv_path
 
+        # create headers in order
+        if group != '$' or not paths:
+            headers = current['headers']
+        else:
+            headers = ['@', '@id']
+            for path in paths:
+                for header in current['headers']:
+                    if header == path or header.startswith(path + '.'):
+                        headers.append(header)
+
         with open(rows_path, newline='') as fr, open(csv_path, 'w', newline='') as fw:
-            r = csv.reader(fr)
+            r = csv.DictReader(fr, fieldnames=current['headers'])
             w = csv.writer(fw)
-            w.writerow(current['headers_label'])
-            w.writerows(r)
+
+            w.writerow([
+                __get_label(header, labels)
+                for header in headers
+            ])
+
+            for row in r:
+                w.writerow([
+                    row.get(header, '')
+                    for header in headers
+                ])
 
     return csv_options
 
@@ -302,20 +315,6 @@ def __flatten_dict(obj):
             else:
                 yield key, value
     return dict(_items())
-
-
-def __parse_row(row, paths):
-    flatten_row = __flatten_dict(row)
-    if not paths:
-        return flatten_row
-
-    new_row = {}
-    for path in paths:
-        for key in flatten_row.keys():
-            if key == path or key.startswith(path + '.'):
-                new_row[key] = flatten_row[key]
-
-    return new_row
 
 
 def __filter_paths(paths):

@@ -34,7 +34,6 @@ from ..exporter import (
     __filter_paths as filter_paths,
     __flatten_dict as flatten_dict,
     __get_label as get_label,
-    __parse_row as parse_row,
 
     generate_file as generate,
     XLSX_CONTENT_TYPE,
@@ -240,26 +239,6 @@ class ExporterTest(TestCase):
         self.assertEqual(filter_paths(paths), expected)
         self.assertEqual(filter_paths(filter_paths(paths)), expected)
 
-    def test__parse_row(self):
-        row = {
-            'a': {
-                'b': 1,
-                'z': 'z',
-            },
-            'c': {
-                'd': [{'f': 2}],
-            },
-        }
-
-        self.assertEqual(parse_row(row, ['z']), {})
-        self.assertEqual(parse_row(row, []), {'a.b': 1, 'a.z': 'z', 'c.d': [{'f': 2}]})
-
-        self.assertEqual(parse_row(row, ['a']), {'a.b': 1, 'a.z': 'z'})
-        self.assertEqual(parse_row(row, ['a.b']), {'a.b': 1})
-        self.assertEqual(parse_row(row, ['a', 'b', 'a.g']), {'a.b': 1, 'a.z': 'z'})
-
-        self.assertEqual(parse_row(row, ['c']), {'c.d': [{'f': 2}]})
-
     def test__get_label(self):
         labels = {
             'a': 'Root',
@@ -409,19 +388,19 @@ class ExporterViewsTest(TestCase):
         # check rows
         self.assertEqual(ws1['A2'].value, '1')
         self.assertEqual(ws1['B2'].value, _id)
-        self.assertEqual(ws1['C2'].value, '0')
+        self.assertEqual(ws1['C2'].value, '1')
         self.assertEqual(ws1['D2'].value, '1')
         self.assertEqual(ws1['E2'].value, 'One')
 
         self.assertEqual(ws1['A3'].value, '1')
         self.assertEqual(ws1['B3'].value, _id)
-        self.assertEqual(ws1['C3'].value, '1')
+        self.assertEqual(ws1['C3'].value, '2')
         self.assertEqual(ws1['D3'].value, '2')
         self.assertEqual(ws1['E3'].value, 'Two')
 
         self.assertEqual(ws1['A4'].value, '1')
         self.assertEqual(ws1['B4'].value, _id)
-        self.assertEqual(ws1['C4'].value, '2')
+        self.assertEqual(ws1['C4'].value, '3')
         self.assertEqual(ws1['D4'].value, '3')
         self.assertEqual(ws1['E4'].value, 'Three')
 
@@ -436,7 +415,7 @@ class ExporterViewsTest(TestCase):
         # check rows
         self.assertEqual(ws2['A2'].value, '1')
         self.assertEqual(ws2['B2'].value, _id)
-        self.assertEqual(ws2['C2'].value, '0')
+        self.assertEqual(ws2['C2'].value, '1')
         self.assertEqual(ws2['D2'].value, 'one')
 
     # -----------------------------
