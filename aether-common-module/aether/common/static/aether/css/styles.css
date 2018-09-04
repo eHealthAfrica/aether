@@ -109,7 +109,8 @@ body {
 }
 
 .navbar-brand span {
+  font-family: "Open Sans", Helvetica, Arial, sans-serif;
   display: inline-block;
-  margin-left: 36px;
+  margin-left: 32px;
   line-height: 24px;
 }
