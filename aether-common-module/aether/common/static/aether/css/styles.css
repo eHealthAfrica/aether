@@ -18,7 +18,7 @@
  * under the License.
  */
 
-@import url(https://fonts.googleapis.com/css?family=Open+Sans);
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:300,400,600);
 
 body {
   -moz-osx-font-smoothing: grayscale;
@@ -39,17 +39,17 @@ body {
   position: relative;
   transition: opacity .4s;
   width: 2.4rem;
-  padding-left: 2rem;
 }
 .brand span {
   color: #fff;
   display: inline-block;
-  font-size: 32px;
+  font-size: 28px;
+  font-weight: 300;
   line-height: 46px;
   margin: 0 60px;
 }
 .brand span b {
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .logo-container {
