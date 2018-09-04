@@ -258,8 +258,8 @@ To get started on building solutions on Aether, an [aether-bootstrap](https://gi
 
 The environment variable `HOSTNAME` is required.
 
-Set the environment variable `CAS_SERVER_URL` if you want to activate the UMS integration 
-in all django projects. Note that the UMS integration [also requires `HOSTNAME` to be set](https://github.com/eHealthAfrica/ums/blob/0561eeea74ebc1d937d58e5f212014bfeed4d6e8/documentation/django-ums-client.md#quick-start):
+Set the `HOSTNAME` and `CAS_SERVER_URL` environment variables if you want to activate the
+UMS integration in each container.
 
 Set the `AETHER_KERNEL_TOKEN` and `AETHER_KERNEL_URL` environment variables when
 starting the `aether-odk-module` to have ODK Collect submissions posted to Aether Kernel.
