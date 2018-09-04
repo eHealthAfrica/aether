@@ -69,19 +69,49 @@
   margin-bottom: 4rem;
 }
 
-.pipeline-previews {
-  display: grid;
-  grid-template-columns: auto auto auto;
-  margin: 0 -1rem;
+.pipeline-preview {
+  border-top: 1px dashed rgba($white, .2);
+  display: flex;
+  padding: 1.4rem 0;
 }
 
-.pipeline-preview {
-  @include card;
-  position: relative;
-  margin: 1rem;
+.preview-input {
+  background: rgba($background-color, .2);
+  padding: 1rem;
+  border-radius: $border-radius;
+  margin-right: .8rem;
+  width: 25%;
+  transition: box-shadow .5s, background .5s;
+
+  .badge {
+    margin-left: 0;
+  }
+
+  &:hover {
+    cursor: pointer;
+    background: rgba($background-color, .3);
+    box-shadow: 1px 1px 2px $shadow-color;
+  }
+}
+
+.input-heading {
+  font-size: $font-size-m;
+  font-weight: 300;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+  align-items: center;
+}
+
+.preview-contracts {
+  width: 75%;
+}
+
+.preview-contract {
+  @include card;
+  margin-bottom: .8rem;
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
   transition: box-shadow .5s;
 
   &:hover {
@@ -95,18 +125,22 @@
   }
 }
 
-.preview-heading {
+.contract-heading {
   color: $action-color;
   font-weight: 300;
   font-size: $font-size-xl;
-  padding-bottom: .3rem;
-  margin-bottom: auto;
+  margin-bottom: .5rem;
   transition: color .3s;
 }
 
+.contract-summaries {
+  display: flex;
+  margin-left: auto;
+}
+
 .summary-entity-types {
-  margin: 1rem;
-  margin-bottom: 0;
+  margin-left: 1rem;
+  margin-top: 0;
   font-size: $font-size-m;
   font-weight: 300;
 
@@ -117,7 +151,7 @@
 
 .summary-errors {
   margin: 1rem;
-  margin-bottom: 0;
+  margin-top: 0;
   font-size: $font-size-m;
   font-weight: 300;
 
@@ -130,10 +164,10 @@
   }
 }
 
-.pipeline-publish {
-  margin-top: 1rem;
+.contract-publish {
   padding-top: 1rem;
   border-top: 1px dotted $grey;
+  width: 100%;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -158,7 +192,11 @@
 }
 
 .pipeline-new {
-  margin: 1rem 0;
+  margin: 1.4rem 0;
+
+  .new-input {
+    min-width: 25%;
+  }
 }
 
 @keyframes show-form {
@@ -179,8 +217,7 @@
 .pipeline-form {
   display: flex;
   align-items: center;
-  border-bottom: 1px dashed rgba($white, .2);
-  padding: 2rem 0 3rem;
+  padding: 2rem 0;
   animation: show-form .5s;
   overflow: hidden;
 
@@ -233,9 +270,6 @@
 
 @media screen and (max-width: 1000px) {
 
-  .pipeline-previews {
-    grid-template-columns: auto auto;
-  }
 
   .pipeline-form {
     flex-wrap: wrap;
@@ -274,18 +308,4 @@
     }
   }
 
-}
-
-@media screen and (max-width: 576px) {
-
-  .pipeline-previews {
-    grid-template-columns: auto;
-  }
-}
-
-@media screen and (min-width: 1800px) {
-
-  .pipeline-previews {
-    grid-template-columns: auto auto auto auto;
-  }
 }

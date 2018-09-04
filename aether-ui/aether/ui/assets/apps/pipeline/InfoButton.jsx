@@ -14,7 +14,8 @@ class InfoButton extends Component {
     }
   }
 
-  setInfoModal (visible) {
+  setInfoModal (visible, event) {
+    event.stopPropagation()
     this.setState({
       showInfo: visible
     })

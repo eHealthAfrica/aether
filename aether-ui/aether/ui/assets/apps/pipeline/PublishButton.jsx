@@ -106,18 +106,21 @@ class PublishButton extends Component {
     })
   }
 
-  setPublishOptionsModal (visible) {
+  setPublishOptionsModal (visible, event) {
+    event.stopPropagation()
     this.setState({
       showPublishOptions: visible
     })
   }
 
-  publishOverwrite () {
-    this.setPublishOptionsModal(false)
+  publishOverwrite (event) {
+    event.stopPropagation()
+    this.setPublishOptionsModal.bind(this, false)
     this.props.publishPipeline(this.props.pipeline.id, PROJECT_NAME, true)
   }
 
-  publish () {
+  publish (event) {
+    event.stopPropagation()
     this.props.selectedPipelineChanged(this.props.pipeline)
     this.props.publishPipeline(this.props.pipeline.id)
   }
@@ -132,7 +135,7 @@ class PublishButton extends Component {
         <button type='button' className={this.props.className} onClick={this.publish.bind(this)}>
           <FormattedMessage
             id='pipeline.navbar.breadcrumb.publish'
-            defaultMessage='Publish pipeline'
+            defaultMessage='Publish'
           />
         </button>
       </div>

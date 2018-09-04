@@ -51,12 +51,12 @@ class NewPipeline extends Component {
     return (
       <button
         type='button'
-        className='btn btn-c btn-big'
+        className='btn btn-c btn-big new-input'
         onClick={() => this.setState({ view: 'form' })}>
         <span className='details-title'>
           <FormattedMessage
             id='pipeline.new.button.new'
-            defaultMessage='New pipeline'
+            defaultMessage='New input'
           />
         </span>
       </button>

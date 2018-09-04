@@ -108,43 +108,69 @@ class PipelineList extends Component {
         } header={this.state.errorHeader} show={this.state.showError}>
           {this.state.errorMessage}
         </Modal>
-        <div
-          onClick={() => { this.onSelectPipeline(pipeline) }}>
-          <h2 className='preview-heading'>{pipeline.name}</h2>
-
-          <div className='summary-entity-types'>
-            <span className='badge badge-b badge-big'>
-              { pipeline.entity_types ? pipeline.entity_types.length : 0 }
+        <div className='preview-input'>
+          <div className='input-heading'>
+            <span className='badge badge-c badge-big'>
+              <i className='fas fa-file fa-sm'/>
             </span>
-            <FormattedMessage
-              id='pipeline.list.entity.types'
-              defaultMessage='Entity-Types'
-            />
-          </div>
-
-          <div className='summary-errors'>
-            <span className={`badge badge-b badge-big
-            ${pipeline && pipeline.mapping_errors.length && 'error'}`}>
-              { pipeline.mapping_errors ? pipeline.mapping_errors.length : 0 }
-            </span>
-            <FormattedMessage
-              id='pipeline.list.errors'
-              defaultMessage='Errors'
-            />
+              {pipeline.name}
           </div>
         </div>
-        <div className='pipeline-publish'>
-          <div className='status-publish'>
-            <FormattedMessage
-              id='pipeline.list.publish-status'
-              defaultMessage={pipeline.published_on ? `Published on ${moment(pipeline.published_on).format('MMMM DD')}`
-                : 'Not published'}
-            />
-            { pipeline.published_on &&
-              <InfoButton pipeline={pipeline} />
-            }
+        <div className='preview-contracts'>
+
+          <div className='preview-contract'
+            onClick={() => { this.onSelectPipeline(pipeline) }}>
+            <h2 className='contract-heading'>{pipeline.name}</h2>
+
+            <div className='contract-summaries'>
+              <div className='summary-entity-types'>
+                <span className='badge badge-b badge-big'>
+                  { pipeline.entity_types ? pipeline.entity_types.length : 0 }
+                </span>
+                <FormattedMessage
+                  id='pipeline.list.entity.types'
+                  defaultMessage='Entity-Types'
+                />
+              </div>
+
+              <div className='summary-errors'>
+                <span className={`badge badge-b badge-big
+                ${pipeline && pipeline.mapping_errors.length && 'error'}`}>
+                  { pipeline.mapping_errors ? pipeline.mapping_errors.length : 0 }
+                </span>
+                <FormattedMessage
+                  id='pipeline.list.errors'
+                  defaultMessage='Errors'
+                />
+              </div>
+            </div>
+
+            <div className='contract-publish'>
+              <div className='status-publish'>
+                <FormattedMessage
+                  id='pipeline.list.publish-status'
+                  defaultMessage={pipeline.published_on ? `Published on ${moment(pipeline.published_on).format('MMMM DD')}`
+                    : 'Not published'}
+                />
+                { pipeline.published_on &&
+                  <InfoButton pipeline={pipeline} />
+                }
+              </div>
+              <PublishButton pipeline={pipeline} className='btn btn-w btn-publish' />
+            </div>
           </div>
-          <PublishButton pipeline={pipeline} className='btn btn-w btn-publish' />
+
+          <button
+            type='button'
+            className='btn btn-c'>
+            <span className='details-title'>
+              <FormattedMessage
+                id='contract.add.button.add'
+                defaultMessage='Add contract'
+              />
+            </span>
+          </button>
+
         </div>
 
       </div>
