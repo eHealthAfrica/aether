@@ -40,6 +40,7 @@ body {
   transition: opacity .4s;
   width: 2.4rem;
 }
+
 .brand span {
   color: #fff;
   display: inline-block;
@@ -48,6 +49,7 @@ body {
   line-height: 46px;
   margin: 0 60px;
 }
+
 .brand span b {
   font-weight: 600;
 }
@@ -105,6 +107,7 @@ body {
   height: 24px;
   width: 24px;
 }
+
 .navbar-brand span {
   display: inline-block;
   margin-left: 36px;
