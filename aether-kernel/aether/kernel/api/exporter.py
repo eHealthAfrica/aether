@@ -139,29 +139,29 @@ def generate_file(data, paths=[], labels={}, format='csv', filename='export', of
     - ``format``, expected values ``xlsx`` or ``csv``.
     '''
 
-    csv_options = __generate_csv_files(data, paths, labels, offset, limit)
+    csv_files = __generate_csv_files(data, paths, labels, offset, limit)
     if format == 'xlsx':
-        return __prepare_xlsx(csv_options, filename)
+        return __prepare_xlsx(csv_files, filename)
     else:
-        return __prepare_zip(csv_options, filename)
+        return __prepare_zip(csv_files, filename)
 
 
-def __prepare_zip(csv_options, filename):
+def __prepare_zip(csv_files, filename):
     zip_name = FILENAME_RE.format(name=filename, ts=datetime.now().isoformat(), ext='zip')
     zip_path = EXPORT_DIR + '/' + filename
     with zipfile.ZipFile(zip_path, 'w') as csv_zip:
-        for options in csv_options.values():
-            csv_name = FILENAME_RE.format(name=filename, ts=options['title'], ext='csv')
-            csv_zip.write(options['csv_path'], csv_name)
+        for key, value in csv_files.items():
+            csv_name = FILENAME_RE.format(name=filename, ts=key, ext='csv')
+            csv_zip.write(value, csv_name)
 
     return zip_name, zip_path, CSV_CONTENT_TYPE
 
 
-def __prepare_xlsx(csv_options, filename):
+def __prepare_xlsx(csv_files, filename):
     wb = Workbook(write_only=True, iso_dates=True)
-    for options in csv_options.values():
-        ws = wb.create_sheet(options['title'])
-        with open(options['csv_path'], newline='') as f:
+    for key, value in csv_files.items():
+        ws = wb.create_sheet(key)
+        with open(value, newline='') as f:
             reader = csv.reader(f, delimiter=CSV_SEPARATOR)
             for line in reader:
                 ws.append(line)
@@ -268,42 +268,51 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE):
         data_from = data_to
 
     # include headers and row columns in order
+    csv_files = {}
     for group in csv_options.keys():
         current = csv_options[group]
         current['file'].close()
-        del current['file']
 
         title = current['title']
         csv_path = f'{EXPORT_DIR}/{title}.csv'
         rows_path = current['csv_path']
-        current['csv_path'] = csv_path
 
         # create headers in order
-        if group != '$' or not paths:
+        headers = None
+        if not paths:
             headers = current['headers']
         else:
-            headers = ['@', '@id']
-            for path in paths:
-                for header in current['headers']:
-                    if header == path or header.startswith(path + '.'):
-                        headers.append(header)
+            if group == '$':
+                headers = ['@', '@id']
+                for path in paths:
+                    for header in current['headers']:
+                        if header == path or header.startswith(path + '.'):
+                            headers.append(header)
+            else:
+                # check that the group is in the paths list
+                for path in paths:
+                    if group == path or group.startswith(path + '.'):
+                        headers = current['headers']
+                        break
 
-        with open(rows_path, newline='') as fr, open(csv_path, 'w', newline='') as fw:
-            r = csv.DictReader(fr, fieldnames=current['headers'])
-            w = csv.writer(fw)
+        if headers:
+            with open(rows_path, newline='') as fr, open(csv_path, 'w', newline='') as fw:
+                r = csv.DictReader(fr, fieldnames=current['headers'])
+                w = csv.writer(fw)
 
-            w.writerow([
-                __get_label(header, labels)
-                for header in headers
-            ])
-
-            for row in r:
                 w.writerow([
-                    row.get(header, '')
+                    __get_label(header, labels)
                     for header in headers
                 ])
 
-    return csv_options
+                for row in r:
+                    w.writerow([
+                        row.get(header, '')
+                        for header in headers
+                    ])
+            csv_files[title] = csv_path
+
+    return csv_files
 
 
 def __flatten_dict(obj):

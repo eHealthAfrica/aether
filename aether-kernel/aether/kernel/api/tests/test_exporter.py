@@ -320,12 +320,23 @@ class ExporterViewsTest(TestCase):
         self.client.logout()
 
     def test__generate__csv(self):
+        # without paths
+        data = models.Entity.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
+        _, zip_path, _ = generate(data, paths=[], labels=EXAMPLE_LABELS, format='csv', offset=0, limit=1)
+        zip_file = zipfile.ZipFile(zip_path, 'r')
+        self.assertEqual(zip_file.namelist(), ['export-#.csv', 'export-#-1.csv', 'export-#-2.csv'])
+
+        # with the whole paths list
         data = models.Entity.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
         _, zip_path, _ = generate(data, paths=EXAMPLE_PATHS, labels=EXAMPLE_LABELS, format='csv', offset=0, limit=1)
         zip_file = zipfile.ZipFile(zip_path, 'r')
-
         self.assertEqual(zip_file.namelist(), ['export-#.csv', 'export-#-1.csv', 'export-#-2.csv'])
-        # content is checked in the following test
+
+        # without `iterate_one` in paths
+        paths = [path for path in EXAMPLE_PATHS if not path.startswith('iterate_one')]
+        _, zip_path, _ = generate(data, paths=paths, labels=EXAMPLE_LABELS, format='csv', offset=0, limit=1)
+        zip_file = zipfile.ZipFile(zip_path, 'r')
+        self.assertEqual(zip_file.namelist(), ['export-#.csv', 'export-#-1.csv'])
 
     def test__generate__xlsx(self):
         data = models.Entity.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
