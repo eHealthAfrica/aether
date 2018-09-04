@@ -25,27 +25,25 @@ set -Eeuox pipefail
 # define variables
 ################################################################################
 
-# Do not buffer stdout so we see log output immediatly
-export PYTHONUNBUFFERED=true
+POSTGRES_PACKAGE=postgresql-client-9.6
 
 
 ################################################################################
 # install packages
 ################################################################################
 
-# install missing packages in slim distribution
-apt-get update -qq
-apt-get -qq --yes --force-yes install wget gcc
-
+# install missing packages of slim distribution and required ones
 PACKAGE_LIST=/tmp/apt-packages.txt
 if [ -f "$PACKAGE_LIST" ]; then
-    # Add postgres apt repo to get more recent postgres versions
-    echo 'deb http://apt.postgresql.org/pub/repos/apt/ jessie-pgdg main' > /etc/apt/sources.list.d/pgdg.list
-    wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-
     apt-get update -qq
     apt-get -qq --yes --force-yes install `cat $PACKAGE_LIST`
 fi
+
+# add postgres apt repo to get more recent postgres versions
+echo 'deb http://apt.postgresql.org/pub/repos/apt/ jessie-pgdg main' > /etc/apt/sources.list.d/pgdg.list
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+apt-get update -qq
+apt-get -qq --yes --force-yes install $POSTGRES_PACKAGE
 
 # upgrade pip
 pip install --upgrade pip

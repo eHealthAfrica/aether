@@ -1,6 +1,6 @@
 # Aether
 
-> Survey collection and analytics
+> A free, open source development platform for data curation, exchange, and publication.
 
 ## Table of contents
 
@@ -17,7 +17,7 @@
     - [File Storage System](#file-storage-system)
 - [Usage](#usage)
   - [Users & Authentication](#users--authentication)
-    - [UMS settings for local development](#ums-settings-for-local-development)
+    - [Basic Authentication](#basic-authentication)
     - [Token Authentication](#token-authentication)
 - [Development](#development)
 - [Deployment](#deployment)
@@ -57,7 +57,7 @@ git clone git@github.com:eHealthAfrica/aether.git && cd aether
 ##### Build containers and start the applications
 
 ```bash
-docker-compose build && docker-compose up
+./scripts/build_aether_containers.sh && docker-compose up
 ```
 
 **IMPORTANT NOTE**: the docker-compose files are intended to be used exclusively
@@ -65,7 +65,7 @@ for local development. Never deploy these to publicly accessible servers.
 
 ##### Include this entry in your `/etc/hosts` file
 
-```
+```text
 127.0.0.1    kernel.aether.local odk.aether.local ui.aether.local sync.aether.local
 ```
 
@@ -81,7 +81,7 @@ To create a new version and distribute it:
 ./scripts/build_common_and_distribute.sh
 ```
 
-See more in [README](/aether-common/README.md).
+See more in [README](/aether-common-module/README.md).
 
 *[Return to TOC](#table-of-contents)*
 
@@ -93,8 +93,6 @@ of the most common ones with non default values. For more info take a look at th
 
 #### Aether Kernel
 
-- `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
-- `HOSTNAME`: `kernel.aether.local` Used by UMS.
 - `DB_NAME`: `aether` Database name.
 - `WEB_SERVER_PORT`: `8000` Web server port.
 - `ADMIN_TOKEN`: `kernel_admin_user_auth_token`
@@ -102,8 +100,6 @@ of the most common ones with non default values. For more info take a look at th
 
 #### Aether ODK Module
 
-- `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
-- `HOSTNAME`: `odk.aether.local` Used by UMS.
 - `DB_NAME`: `odk` Database name.
 - `WEB_SERVER_PORT`: `8002` Web server port.
 - `AETHER_KERNEL_TOKEN`: `kernel_admin_user_auth_token` Token to connect to kernel server.
@@ -114,8 +110,6 @@ of the most common ones with non default values. For more info take a look at th
 
 #### Aether UI
 
-- `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
-- `HOSTNAME`: `ui.aether.local` Used by UMS.
 - `DB_NAME`: `ui` Database name.
 - `WEB_SERVER_PORT`: `8004` Web server port.
 - `AETHER_KERNEL_TOKEN`: `kernel_admin_user_auth_token` Token to connect to kernel server.
@@ -124,8 +118,6 @@ of the most common ones with non default values. For more info take a look at th
 
 #### Aether CouchDB Sync Module
 
-- `CAS_SERVER_URL`: `https://ums-dev.ehealthafrica.org` Used by UMS.
-- `HOSTNAME`: `sync.aether.local` Used by UMS.
 - `DB_NAME`: `couchdb-sync` Database name.
 - `WEB_SERVER_PORT`: `8006` Web server port.
 - `AETHER_KERNEL_TOKEN`: `kernel_admin_user_auth_token` Token to connect to kernel server.
@@ -136,23 +128,29 @@ of the most common ones with non default values. For more info take a look at th
   See more in https://developers.google.com/identity/protocols/OAuth2
 
 #### File Storage System
-(Used on Kernel, ODK and UI Modules)
+(Used on Kernel and ODK Module)
 
 - `DJANGO_STORAGE_BACKEND`: Used to specify a [Default file storage system](https://docs.djangoproject.com/en/1.11/ref/settings/#default-file-storage).
-  Available options: filesystem, s3, gcs. More information [here](https://django-storages.readthedocs.io/en/latest/index.html).
-  Setting `DJANGO_STORAGE_BACKEND` is mandatory, even for local development
-(in which case "filesystem" would typically be used).
+  Available options: `filesystem`, `s3`, `gcs`.
+  More information [here](https://django-storages.readthedocs.io/en/latest/index.html).
+  Setting `DJANGO_STORAGE_BACKEND` is **mandatory**, even for local development
+  (in which case "filesystem" would typically be used).
 
-##### S3
+##### File system (`DJANGO_REMOTE_STORAGE=filesystem`)
 
-- `BUCKET_NAME`: Name of the bucket to use on s3. Must be unique on s3.
+- `MEDIA_ROOT`: `/media` the local folder in which all the media assets will be stored.
+
+##### S3 (`DJANGO_REMOTE_STORAGE=s3`)
+
+- `BUCKET_NAME`: Name of the bucket to use on s3 (**mandatory**). Must be unique on s3.
 - `AWS_ACCESS_KEY_ID`: AWS Access Key to your s3 account. Used when `DJANGO_REMOTE_STORAGE=s3`.
 - `AWS_SECRET_ACCESS_KEY`: AWS Secret Access Key to your s3 account. Used when `DJANGO_REMOTE_STORAGE=s3`.
 
-##### Google Cloud Storage (gcs)
+##### Google Cloud Storage (`DJANGO_REMOTE_STORAGE=gcs`)
 
-- `BUCKET_NAME`: Name of the bucket to use on gcs. Create bucket using
-  [Google Cloud Console](https://console.cloud.google.com/) and set appropriate permissions
+- `BUCKET_NAME`: Name of the bucket to use on gcs (**mandatory**).
+  Create bucket using [Google Cloud Console](https://console.cloud.google.com/)
+  and set appropriate permissions.
 - `GS_ACCESS_KEY_ID`: Google Cloud Access Key. Used when `DJANGO_REMOTE_STORAGE=gcs`.
   [How to create Access Keys on Google Cloud Storage](https://cloud.google.com/storage/docs/migrating#keys)
 - `GS_SECRET_ACCESS_KEY`: Google Cloud Secret Access Key. Used when `DJANGO_REMOTE_STORAGE=gcs`.
@@ -210,26 +208,21 @@ To start any app/module separately:
 
 ### Users & Authentication
 
-The app defers part of the users management to
-[eHA UMS tool](https://github.com/eHealthAfrica/ums).
-
 Set the `HOSTNAME` and `CAS_SERVER_URL` environment variables if you want to
-activate the UMS integration in each container.
-
-#### UMS settings for local development
-
-The project is `aether-all` **Aether Suite**.
-
-The client services are:
-
-  - **Aether Kernel (local)** for `kernel.aether.local`.
-  - **Aether ODK (local)**  for `odk.aether.local`.
-  - **Aether UI (local)** for `ui.aether.local`.
-  - **Aether Sync (local)** for `sync.aether.local`.
+activate the CAS integration in the app.
+See more in [Django CAS client](https://github.com/mingchen/django-cas-ng).
 
 Other options are to log in via token, via basic authentication or via the
 standard django authentication process in the admin section.
+
 The available options depend on each container.
+
+*[Return to TOC](#table-of-contents)*
+
+#### Basic Authentication
+
+The communication between Aether ODK Module and ODK Collect is done via basic
+authentication.
 
 *[Return to TOC](#table-of-contents)*
 
@@ -250,14 +243,19 @@ All development should be tested within the container, but developed in the host
 Read the [docker-compose-base.yml](docker-compose-base.yml) file to see how it's mounted.
 
 #### Building on Aether
-To get started on building solutions on Aether, an [aether-bootstrap](https://github.com/eHealthAfrica/aether-bootstrap) repository has been created to serve as both an example and give you a head start. Visit the [Aether Website](http://aether.ehealthafrica.org) for more information on [Try it for yourself](http://aether.ehealthafrica.org/documentation/try/index.html).
+
+To get started on building solutions on Aether, an
+[aether-bootstrap](https://github.com/eHealthAfrica/aether-bootstrap) repository
+has been created to serve as both an example and give you a head start.
+Visit the [Aether Website](http://aether.ehealthafrica.org) for more information
+on [Try it for yourself](http://aether.ehealthafrica.org/documentation/try/index.html).
 
 *[Return to TOC](#table-of-contents)*
 
 ## Deployment
 
-Set the `HOSTNAME` and `CAS_SERVER_URL` environment variables if you want to activate the
-UMS integration in each container.
+Set the `HOSTNAME` and `CAS_SERVER_URL` environment variables if you want to
+activate the CAS integration in each container.
 
 Set the `AETHER_KERNEL_TOKEN` and `AETHER_KERNEL_URL` environment variables when
 starting the `aether-odk-module` to have ODK Collect submissions posted to Aether Kernel.
@@ -366,7 +364,7 @@ Look into [docker-compose-base.yml](docker-compose-base.yml), the variable
 #### Check outdated dependencies
 
 ```bash
-docker-compose run <container-name> eval pip list --outdated
+docker-compose run --no-deps <container-name> eval pip list --outdated
 ```
 
 #### Update requirements file
@@ -381,7 +379,7 @@ Do not forget to include new containers in the file.
 or
 
 ```bash
-docker-compose run <container-name> pip_freeze
+docker-compose run --no-deps <container-name> pip_freeze
 ```
 
 In this case `aether.common` is not rebuilt.
