@@ -275,11 +275,15 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
     is_active = models.BooleanField(default=True)
     is_read_only = models.BooleanField(default=False)
 
+    # redundant but speed up queries
+    project = models.ForeignKey(to=Project, on_delete=models.CASCADE, blank=True, null=True)
+
     def save(self, **kwargs):
-        entities = self.definition.get('entities')
-        if entities:
-            for entity in entities:
-                self.projectschemas.add(ProjectSchema.objects.get(pk=entities[entity]))
+        self.project = self.mappingset.project
+        entities = self.definition.get('entities', {})
+        for entity_pk in entities.values():
+            self.projectschemas.add(ProjectSchema.objects.get(pk=entity_pk, project=self.project))
+
         super(Mapping, self).save(**kwargs)
 
     @property
