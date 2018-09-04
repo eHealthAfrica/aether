@@ -38,42 +38,41 @@ STATUS_CHOICES = (
 
 
 '''
-
 Data model schema:
 
-
-    +------------------+          +------------------+       +------------------+       +---------------------+
-    | Project          |          | Mapping          |       | Submission       |       | Attachment          |
-    +==================+          +==================+       +==================+       +=====================+
-    | id               |<-----+   | id               |<--+   | id               |<--+   | id                  |
-    | created          |      |   | created          |   |   | created          |   |   | created             |
-    | modified         |      |   | modified         |   |   | modified         |   |   | modified            |
-    | revision         |      |   | revision         |   |   | revision         |   |   | name                |
-    | name             |      |   | name             |   |   | payload          |   |   | attachment_file     |
-    | salad_schema     |      |   | definition       |   |   +::::::::::::::::::+   |   | md5sum              |
-    | jsonld_context   |      |   +::::::::::::::::::+   +--<| mapping          |   |   +:::::::::::::::::::::+
-    | rdf_definition   |      +--<| project          |       | map_revision     |   +--<| submission          |
-    +------------------+      |   +------------------+    +-<| project          |   |   | submission_revision |
-                              |                           |  +------------------+   |   +---------------------+
-                              |                           |                         |
-                              +---------------------------+                         |
-                              |                           |                         |
-    +------------------+      |   +------------------+    |  +------------------+   |
-    | Schema           |      |   | ProjectSchema    |    |  | Entity           |   |
-    +==================+      |   +==================+    |  +==================+   |
-    | id               |<--+  |   | id               |<-+ |  | id               |   |
-    | created          |   |  |   | created          |  | |  | modified         |   |
-    | modified         |   |  |   | modified         |  | |  | revision         |   |
-    | revision         |   |  |   | name             |  | |  | payload          |   |
-    | name             |   |  |   | mandatory_fields |  | |  | status           |   |
-    | definition       |   |  |   | transport_rule   |  | |  +::::::::::::::::::+   |
-    | type             |   |  |   | masked_fields    |  | |  | submission       |>--+
-    +------------------+   |  |   | is_encrypted     |  | +-<| project          |
-                           |  |   +::::::::::::::::::+  +---<| projectschema    |
-                           |  +--<| project          |       +------------------+
-                           +-----<| schema           |
-                                  +------------------+
-
+    +------------------+          +------------------+         +------------------+       +------------------+
+    | Project          |          | MappingSet       |         | Submission       |       | Attachment       |
+    +==================+          +==================+         +==================+       +==================+
+    | id               |<-----+   | id               |<----+   | id               |<---+  | id               |
+    | created          |      |   | created          |     |   | created          |    |  | created          |
+    | modified         |      |   | modified         |     |   | modified         |    |  | modified         |
+    | revision         |      |   | revision         |     |   | revision         |    |  | name             |
+    | name             |      |   | name             |     |   | payload          |    |  | attachment_file  |
+    | salad_schema     |      |   | input            |     |   +::::::::::::::::::+    |  | md5sum           |
+    | jsonld_context   |      |   +::::::::::::::::::+     +--<| mappingset       |    |  +::::::::::::::::::+
+    | rdf_definition   |      +--<| project          |     |   | project(**)      |    +-<| submission       |
+    +------------------+      |   +------------------+     |   +------------------+    |  | submission_rev   |
+                              |                            |                           |  +------------------+
+                              |                            |                           |
+                              |                            |                           |
+                              |                            |                           |
+    +------------------+      |   +------------------+     |   +------------------+    |  +------------------+
+    | Schema           |      |   | ProjectSchema    |     |   | Mapping          |    |  | Entity           |
+    +==================+      |   +==================+     |   +==================+    |  +==================+
+    | id               |<--+  |   | id               |<--+ |   | id               |<-+ |  | id               |
+    | created          |   |  |   | created          |   | |   | created          |  | |  | modified         |
+    | modified         |   |  |   | modified         |   | |   | modified         |  | |  | revision         |
+    | revision         |   |  |   | name             |   | |   | revision         |  | |  | payload          |
+    | name             |   |  |   | mandatory_fields |   | |   | name             |  | |  | status           |
+    | definition       |   |  |   | transport_rule   |   | |   | definition       |  | |  +::::::::::::::::::+
+    | type             |   |  |   | masked_fields    |   | |   | is_active        |  | +-<| submission       |
+    +------------------+   |  |   | is_encrypted     |   | |   | is_read_only     |  +---<| mapping          |
+                           |  |   +::::::::::::::::::+   | |   +::::::::::::::::::+       | mapping_rev      |
+                           |  +--<| project          |   | +--<| mappingset       |   +--<| projectschema    |
+                           +-----<| schema           |   +---<<| projectschemas   |   |   | project(**)      |
+                                  +------------------+   |     | project(**)      |   |   +------------------+
+                                                         |     +------------------+   |
+                                                         +----------------------------+
 '''
 
 
