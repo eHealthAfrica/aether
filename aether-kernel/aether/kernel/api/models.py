@@ -29,6 +29,8 @@ from django_prometheus.models import ExportModelOperationsMixin
 
 from model_utils.models import TimeStampedModel
 
+from aether.common.utils import resolve_file_url
+
 from .utils import json_prettified
 
 STATUS_CHOICES = (
@@ -185,8 +187,8 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), TimeStampedMod
     submission_revision = models.TextField()
 
     @property
-    def attachment_path(self):
-        return self.attachment_file.path
+    def attachment_file_url(self):
+        return resolve_file_url(self.attachment_file.url)
 
     def __str__(self):
         return self.name
