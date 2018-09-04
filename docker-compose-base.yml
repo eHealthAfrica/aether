@@ -75,9 +75,6 @@ services:
       # static folders per container
       - ./.persistent_data/static:/static
 
-      # aether favicon
-      - ./local-setup/aether.ico:/static/aether.ico
-
       # media folders per container
       - ./.persistent_data/media:/media
     ports:
@@ -96,17 +93,18 @@ services:
     stdin_open: true
     tty: true
     environment:
-      ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
-      ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
-      ADMIN_TOKEN: ${KERNEL_ADMIN_TOKEN}
+      # Uncomment these lines to enable single sign on if you use CAS
+      # CAS_SERVER_URL: https://your.cas.server
+      # HOSTNAME: kernel.aether.local
 
-      CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
-      HOSTNAME: kernel.aether.local
-
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}
       DJANGO_STORAGE_BACKEND: filesystem
+
+      ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
+      ADMIN_TOKEN: ${KERNEL_ADMIN_TOKEN}
 
       KERNEL_READONLY_DB_USERNAME: ${KERNEL_READONLY_DB_USERNAME}
       KERNEL_READONLY_DB_PASSWORD: ${KERNEL_READONLY_DB_PASSWORD}
@@ -144,6 +142,15 @@ services:
     stdin_open: true
     tty: true
     environment:
+      # Uncomment these lines to enable single sign on if you use CAS
+      # CAS_SERVER_URL: https://your.cas.server
+      # HOSTNAME: odk.aether.local
+
+      CSRF_COOKIE_DOMAIN: .aether.local
+      DEBUG: "true"
+      DJANGO_SECRET_KEY: ${ODK_DJANGO_SECRET_KEY}
+      DJANGO_STORAGE_BACKEND: filesystem
+
       ADMIN_USERNAME: ${ODK_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${ODK_ADMIN_PASSWORD}
       ADMIN_TOKEN: ${ODK_ADMIN_TOKEN}
@@ -151,14 +158,6 @@ services:
       AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
       AETHER_KERNEL_URL: http://kernel:8000
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000
-
-      CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
-      CSRF_COOKIE_DOMAIN: .aether.local
-      HOSTNAME: odk.aether.local
-
-      DEBUG: "true"
-      DJANGO_SECRET_KEY: ${ODK_DJANGO_SECRET_KEY}
-      DJANGO_STORAGE_BACKEND: filesystem
 
       DB_NAME: odk
       PGHOST: db
@@ -199,6 +198,15 @@ services:
     stdin_open: true
     tty: true
     environment: &sync-environment
+      # Uncomment these lines to enable single sign on if you use CAS
+      # CAS_SERVER_URL: https://your.cas.server
+      # HOSTNAME: sync.aether.local
+
+      CSRF_COOKIE_DOMAIN: .aether.local
+      DEBUG: "true"
+      DJANGO_SECRET_KEY: ${COUCHDB_SYNC_DJANGO_SECRET_KEY}
+      DJANGO_STORAGE_BACKEND: filesystem
+
       ADMIN_USERNAME: ${COUCHDB_SYNC_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${COUCHDB_SYNC_ADMIN_PASSWORD}
 
@@ -207,14 +215,6 @@ services:
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000
 
       GOOGLE_CLIENT_ID: ${COUCHDB_SYNC_GOOGLE_CLIENT_ID}
-
-      CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
-      CSRF_COOKIE_DOMAIN: .aether.local
-      HOSTNAME: sync.aether.local
-
-      DEBUG: "true"
-      DJANGO_SECRET_KEY: ${COUCHDB_SYNC_DJANGO_SECRET_KEY}
-      DJANGO_STORAGE_BACKEND: filesystem
 
       COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
       COUCHDB_URL: http://couchdb:5984
@@ -267,6 +267,15 @@ services:
     stdin_open: true
     tty: true
     environment:
+      # Uncomment these lines to enable single sign on if you use CAS
+      # CAS_SERVER_URL: https://your.cas.server
+      # HOSTNAME: ui.aether.local
+
+      CSRF_COOKIE_DOMAIN: .aether.local
+      DEBUG: "true"
+      DJANGO_SECRET_KEY: ${UI_DJANGO_SECRET_KEY}
+      DJANGO_STORAGE_BACKEND: filesystem
+
       ADMIN_USERNAME: ${UI_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${UI_ADMIN_PASSWORD}
 
@@ -274,25 +283,14 @@ services:
       AETHER_KERNEL_URL: http://kernel:8000
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000
 
-      CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
-      CSRF_COOKIE_DOMAIN: .aether.local
-      HOSTNAME: ui.aether.local
-
-      DEBUG: "true"
-      DJANGO_SECRET_KEY: ${UI_DJANGO_SECRET_KEY}
-      DJANGO_STORAGE_BACKEND: filesystem
-
       DB_NAME: ui
       PGHOST: db
       PGPASSWORD: ${UI_DB_PASSWORD}
       PGPORT: 5432
       PGUSER: postgres
 
-      # use this value with "start_dev" command and webpack
+      # use this value with "start_dev" command and webpack otherwise comment it out
       STATIC_ROOT: /code/aether/ui/assets/bundles
-      # use this value with "start_dev" command and without webpack
-      # STATIC_ROOT: /code/aether/ui/static
-
       WEB_SERVER_PORT: 8004
     volumes:
       - ./aether-ui:/code

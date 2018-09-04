@@ -20,6 +20,7 @@
 #   django-cors-headers
 #   django-debug-toolbar
 #   django-prometheus
+#   django-storages
 #   djangorestframework
 #   djangorestframework-csv
 #   psycopg2-binary
@@ -33,7 +34,7 @@ django-webpack-loader
 drf-dynamic-fields
 
 
-# UMS libraries
+# CAS libraries
 django-cas-ng
 django-ums-client
 
