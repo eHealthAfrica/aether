@@ -54,9 +54,9 @@ class MappingFilter(filters.FilterSet):
 
     def projectschema_filter(self, queryset, name, value):
         if is_uuid(value):
-            return queryset.filter(projectschema__pk=value)
+            return queryset.filter(projectschemas__pk=value)
         else:
-            return queryset.filter(projectschema__name=value)
+            return queryset.filter(projectschemas__name=value)
 
     class Meta:
         fields = '__all__'
