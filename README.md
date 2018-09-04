@@ -136,24 +136,24 @@ of the most common ones with non default values. For more info take a look at th
   Setting `DJANGO_STORAGE_BACKEND` is **mandatory**, even for local development
   (in which case "filesystem" would typically be used).
 
-##### File system (`DJANGO_REMOTE_STORAGE=filesystem`)
+##### File system (`DJANGO_STORAGE_BACKEND=filesystem`)
 
-- `MEDIA_ROOT`: `/media` the local folder in which all the media assets will be stored.
+- `MEDIA_ROOT`: `/media` the local folder in which all the media assets will be stored. The files will be served at `$HOSTNAME/media/<file-name>`.
 
-##### S3 (`DJANGO_REMOTE_STORAGE=s3`)
+##### S3 (`DJANGO_STORAGE_BACKEND=s3`)
 
 - `BUCKET_NAME`: Name of the bucket to use on s3 (**mandatory**). Must be unique on s3.
-- `AWS_ACCESS_KEY_ID`: AWS Access Key to your s3 account. Used when `DJANGO_REMOTE_STORAGE=s3`.
-- `AWS_SECRET_ACCESS_KEY`: AWS Secret Access Key to your s3 account. Used when `DJANGO_REMOTE_STORAGE=s3`.
+- `AWS_ACCESS_KEY_ID`: AWS Access Key to your s3 account. Used when `DJANGO_STORAGE_BACKEND=s3`.
+- `AWS_SECRET_ACCESS_KEY`: AWS Secret Access Key to your s3 account. Used when `DJANGO_STORAGE_BACKEND=s3`.
 
-##### Google Cloud Storage (`DJANGO_REMOTE_STORAGE=gcs`)
+##### Google Cloud Storage (`DJANGO_STORAGE_BACKEND=gcs`)
 
 - `BUCKET_NAME`: Name of the bucket to use on gcs (**mandatory**).
   Create bucket using [Google Cloud Console](https://console.cloud.google.com/)
   and set appropriate permissions.
-- `GS_ACCESS_KEY_ID`: Google Cloud Access Key. Used when `DJANGO_REMOTE_STORAGE=gcs`.
+- `GS_ACCESS_KEY_ID`: Google Cloud Access Key. Used when `DJANGO_STORAGE_BACKEND=gcs`.
   [How to create Access Keys on Google Cloud Storage](https://cloud.google.com/storage/docs/migrating#keys)
-- `GS_SECRET_ACCESS_KEY`: Google Cloud Secret Access Key. Used when `DJANGO_REMOTE_STORAGE=gcs`.
+- `GS_SECRET_ACCESS_KEY`: Google Cloud Secret Access Key. Used when `DJANGO_STORAGE_BACKEND=gcs`.
   [How to create Access Keys on Google Cloud Storage](https://cloud.google.com/storage/docs/migrating#keys)
 
 
@@ -268,6 +268,8 @@ visit the entrypoint `/check-kernel` in the odk server (no credentials needed).
 If the response is `Always Look on the Bright Side of Life!!!`
 it's not possible to connect, on the other hand if the message is
 `Brought to you by eHealth Africa - good tech for hard places` everything goes fine.
+
+The environment variable `HOSTNAME` is required when `DJANGO_STORAGE_BACKEND` is set to "filesystem".
 
 This also applies for `aether-ui` and `aether-couchdb-sync-module`.
 
