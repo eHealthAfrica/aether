@@ -256,8 +256,6 @@ To get started on building solutions on Aether, an [aether-bootstrap](https://gi
 
 ## Deployment
 
-The environment variable `HOSTNAME` is required.
-
 Set the `HOSTNAME` and `CAS_SERVER_URL` environment variables if you want to activate the
 UMS integration in each container.
 
@@ -272,6 +270,8 @@ visit the entrypoint `/check-kernel` in the odk server (no credentials needed).
 If the response is `Always Look on the Bright Side of Life!!!`
 it's not possible to connect, on the other hand if the message is
 `Brought to you by eHealth Africa - good tech for hard places` everything goes fine.
+
+The environment variable `HOSTNAME` is required when `DJANGO_STORAGE_BACKEND` is set to "filesystem".
 
 This also applies for `aether-ui` and `aether-couchdb-sync-module`.
 
