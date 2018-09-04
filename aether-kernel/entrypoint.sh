@@ -74,9 +74,6 @@ setup () {
     # migrate data model if needed
     ./manage.py migrate --noinput
 
-    # Create readonly database user
-    python /code/sql/create_readonly_user.py
-
     # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
     ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD -t=$ADMIN_TOKEN
 }
