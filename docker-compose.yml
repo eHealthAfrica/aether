@@ -147,9 +147,9 @@ services:
       redis:
         condition: service_healthy
       kernel:
-        condition: service_started
+        condition: service_healthy
       couchdb-sync:
-        condition: service_started
+        condition: service_healthy
     networks:
       - internal
 
@@ -166,11 +166,13 @@ services:
       kernel:
         condition: service_healthy
       # uncomment these lines depending on the started services
-      # odk:
-      #   condition: service_healthy
-      # couchdb-sync:
-      #   condition: service_healthy
-      # ui:
-      #   condition: service_healthy
+      odk:
+        condition: service_healthy
+      couchdb-sync:
+        condition: service_healthy
+      ui:
+        condition: service_healthy
+      couchdb-sync:
+        condition: service_healthy
     networks:
       - internal
