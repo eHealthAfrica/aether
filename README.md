@@ -167,28 +167,31 @@ The tests clean up will **DELETE ALL MAPPINGS!!!**
 ## Usage
 
 ```bash
-docker-compose up --build    # this will update the containers if needed
+./scripts/docker_start.sh [options] [app]
 ```
 
-or
+Arguments:
+  `--force` | `-f`  will kill running containers
+  `--killl` | `-k`  will kill running containers
+  `--build` | `-b`  will build containers before starting them
 
-```bash
-./scripts/docker_start.sh    # starts all
-```
+  `app`
+    Expected values: `kernel`, `odk`, `ui`, `couchdb-sync` or `sync`.
+    Another value will start all containers.
 
 This will start:
 
-- **Aether Kernel** on `http://kernel.aether.local:8000`
-  and create a superuser `admin` with the needed TOKEN.
+- **Aether Kernel** on `http://kernel.aether.local`
+  and create a superuser `$ADMIN_USERNAME` with the given credentials.
 
-- **Aether ODK Module** on `http://odk.aether.local:8002`
-  and create a superuser `admin` with the needed TOKEN.
+- **Aether ODK Module** on `http://odk.aether.local`
+  and create a superuser `$ADMIN_USERNAME` with the given credentials.
 
-- **Aether UI** on `http://ui.aether.local:8004`
-  and create a superuser `admin`.
+- **Aether UI** on `http://ui.aether.local`
+  and create a superuser `$ADMIN_USERNAME` with the given credentials.
 
-- **Aether CouchDB Sync Module** on `http://sync.aether.local:8006`
-  and create a superuser `admin`.
+- **Aether CouchDB Sync Module** on `http://sync.aether.local`
+  and create a superuser `$ADMIN_USERNAME` with the given credentials.
 
 If you generated an `.env` file during installation, passwords for all superusers can be found there.
 

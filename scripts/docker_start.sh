@@ -25,22 +25,23 @@
 #
 # arguments:
 #   --force | -f  will kill running containers
+#   --killl | -k  will kill running containers
 #   --build | -b  will build containers
 
 #   <app>
-#      Expected values: kernel, odk, couchdb-sync or sync.
-#      Any other value will start all containers.
+#      Expected values: kernel, odk, ui, couchdb-sync or sync.
+#      Another value will start all containers.
 #
 
 # default values
 kill=no
 build=no
-container=all
+app=
 
 while [[ $# -gt 0 ]]
 do
     case "$1" in
-        -f|--force)
+        -f|--force|-k|--kill)
             # stop all containers
             kill=yes
 
@@ -56,7 +57,7 @@ do
 
         *)
             # otherwise is the container name
-            container="$1"
+            app="$1"
 
             shift # past argument
         ;;
@@ -64,94 +65,71 @@ do
 done
 
 
-# just show what's running
 echo ""
 docker-compose ps
+echo "----------------------------------------------------------------------"
 echo ""
 
 
 if [[ $kill = "yes" ]]
 then
-    echo "**********************************************************************"
-    echo "**** Killing containers                                           ****"
-    echo "**********************************************************************"
+    echo "----------------------------------------------------------------------"
+    echo "---- Killing containers                                           ----"
+    echo "----------------------------------------------------------------------"
 
     ./scripts/kill_all.sh
+    echo ""
 fi
 
 
 if [[ $build = "yes" ]]
 then
-    echo "**********************************************************************"
-    echo "**** Building containers                                          ****"
-    echo "**********************************************************************"
+    echo "----------------------------------------------------------------------"
+    echo "---- Building containers                                          ----"
+    echo "----------------------------------------------------------------------"
 
-    docker-compose build
+    ./scripts/build_aether_containers.sh
+    echo ""
 fi
 
 
-case $container in
+echo "----------------------------------------------------------------------"
+echo "---- Starting containers                                          ----"
+echo "----------------------------------------------------------------------"
 
+# check given container name
+case $app in
     kernel)
-        echo "**********************************************************************"
-        echo "**** Starting PostgreSQL                                          ****"
-        echo "**** Starting NGINX                                               ****"
-        echo "**** Starting Kernel app                                          ****"
-        echo "**********************************************************************"
-
-        docker-compose up db kernel nginx
+        CONTAINERS=(db kernel nginx)
     ;;
-
     odk)
-        echo "**********************************************************************"
-        echo "**** Starting PostgreSQL                                          ****"
-        echo "**** Starting NGINX                                               ****"
-        echo "**** Starting Kernel app                                          ****"
-        echo "**** Starting ODK module                                          ****"
-        echo "**********************************************************************"
-
-        docker-compose up db kernel odk nginx
+        CONTAINERS=(db kernel odk nginx)
     ;;
-
-    sync|couchdb-sync)
-        echo "**********************************************************************"
-        echo "**** Starting PostgreSQL                                          ****"
-        echo "**** Starting CouchDB                                             ****"
-        echo "**** Starting Redis                                               ****"
-        echo "**** Starting RQ                                                  ****"
-        echo "**** Starting NGINX                                               ****"
-        echo "**** Starting Kernel app                                          ****"
-        echo "**** Starting CouchDB-Sync module                                 ****"
-        echo "**********************************************************************"
-
-        docker-compose up db couchdb redis kernel couchdb-sync couchdb-sync-rq nginx
-    ;;
-
     ui)
-        echo "**********************************************************************"
-        echo "**** Starting PostgreSQL                                          ****"
-        echo "**** Starting NGINX                                               ****"
-        echo "**** Starting Kernel app                                          ****"
-        echo "**** Starting UI module                                           ****"
-        echo "**** Starting UI assets HMR                                       ****"
-        echo "**********************************************************************"
-
-        docker-compose up db kernel ui ui-assets nginx
+        CONTAINERS=(db kernel ui-assets ui nginx)
     ;;
-
+    sync|couchdb-sync)
+        app=couchdb-sync
+        CONTAINERS=(db couchdb redis kernel couchdb-sync couchdb-sync-rq nginx)
+    ;;
     *)
-        echo "**********************************************************************"
-        echo "**** Starting PostgreSQL                                          ****"
-        echo "**** Starting CouchDB                                             ****"
-        echo "**** Starting Redis                                               ****"
-        echo "**** Starting RQ                                                  ****"
-        echo "**** Starting NGINX                                               ****"
-        echo "**** Starting Kernel app                                          ****"
-        echo "**** Starting ODK module                                          ****"
-        echo "**** Starting CouchDB-Sync module                                 ****"
-        echo "**********************************************************************"
-
-        docker-compose up
+        app=
+        CONTAINERS=(db couchdb redis kernel odk ui-assets ui couchdb-sync couchdb-sync-rq nginx)
     ;;
-
 esac
+
+for container in "${CONTAINERS[@]}"
+do
+    docker-compose up -d $container
+    docker-compose logs --tail 20 $container
+done
+
+echo ""
+docker-compose ps
+echo "----------------------------------------------------------------------"
+echo ""
+docker ps
+echo "----------------------------------------------------------------------"
+echo ""
+
+docker-compose logs -f $app
