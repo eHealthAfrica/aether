@@ -64,6 +64,7 @@ $DC_TEST up -d producer-test
 
 echo "_____________________________________________ Starting Integration Tests"
 build_container integration
+$DC_TEST run kernel-test eval python /code/sql/create_readonly_user.py
 $DC_TEST run integration-test test
 
 ./scripts/kill_all.sh
