@@ -28,5 +28,6 @@ class ContextProcessorsTests(TestCase):
 
         self.assertEqual(aether_context(request), {
             'dev_mode': False,
-            'app_name': 'aether',
+            'app_name': 'aether-test',
+            'app_link': 'http://aether-link-test',
         })

@@ -41,7 +41,7 @@ under the License.
 
 {% block content %}
   <div class="logout-info">
-    <p>{% trans 'Thank you for using Aether.' %}</p>
+    <p>{% blocktrans %}Thank you for using {{app_name}}.{% endblocktrans %}</p>
     <p><a href="{% url 'rest_framework:login' %}?next=/">{% trans 'Log in again' %}</a></p>
   </div>
 {% endblock %}

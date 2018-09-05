@@ -30,6 +30,7 @@ TESTING = bool(os.environ.get('TESTING'))
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
 APP_NAME = os.environ.get('APP_NAME', 'aether')
+APP_LINK = os.environ.get('APP_LINK', 'http://aether.ehealthafrica.org')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -196,7 +197,7 @@ if CAS_SERVER_URL:
     ]
     CAS_VERSION = 3
     CAS_LOGOUT_COMPLETELY = True
-    HOSTNAME = os.environ.get('HOSTNAME', '')
+    HOSTNAME = os.environ['HOSTNAME']
 
 else:
     logger.info('No CAS enabled!')
