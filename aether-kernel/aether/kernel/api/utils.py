@@ -620,8 +620,8 @@ def run_entity_extraction(submission):
                 return
             # Get the schema of the projectschema
             project_schemas = {
-                name: models.ProjectSchema.objects.get(pk=_id) for name, _id in
-                entity_ps_ids.items()
+                name: models.ProjectSchema.objects.get(pk=_id) 
+                for name, _id in entity_ps_ids.items()
             }
             schemas = {
                 name: ps.schema.definition
