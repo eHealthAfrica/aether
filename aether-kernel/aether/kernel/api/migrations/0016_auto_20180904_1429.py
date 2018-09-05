@@ -53,14 +53,6 @@ class Migration(migrations.Migration):
                 'default_related_name': 'mappingsets',
             },
         ),
-        migrations.AlterModelOptions(
-            name='mapping',
-            options={'ordering': ['-modified']},
-        ),
-        migrations.RemoveIndex(
-            model_name='mapping',
-            name='kernel_mapp_project_0cb3fd_idx',
-        ),
         migrations.RemoveField(
             model_name='submission',
             name='map_revision',

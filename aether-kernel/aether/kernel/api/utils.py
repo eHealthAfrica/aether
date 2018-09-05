@@ -624,8 +624,8 @@ def run_entity_extraction(submission):
                 entity_ps_ids.items()
             }
             schemas = {
-                name: ps.schema.definition for name, ps in
-                project_schemas.items()
+                name: ps.schema.definition
+                for name, ps in project_schemas.items()
             }
             submission.save()
             _, entities = extract_create_entities(
