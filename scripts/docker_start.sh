@@ -18,6 +18,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+set -Eeuo pipefail
 
 # start the indicated app/module with the necessary dependencies
 #
@@ -97,31 +98,63 @@ echo "----------------------------------------------------------------------"
 echo "---- Starting containers                                          ----"
 echo "----------------------------------------------------------------------"
 
-# check given container name
 case $app in
     kernel)
-        CONTAINERS=(db kernel nginx)
+        PRE_CONTAINERS=(db)
+        SETUP_CONTAINERS=(kernel)
+        POST_CONTAINERS=(nginx)
     ;;
+
     odk)
-        CONTAINERS=(db kernel odk nginx)
+        PRE_CONTAINERS=(db)
+        SETUP_CONTAINERS=(kernel odk)
+        POST_CONTAINERS=(nginx)
     ;;
+
     ui)
-        CONTAINERS=(db kernel ui-assets ui nginx)
+        PRE_CONTAINERS=(ui-assets db)
+        SETUP_CONTAINERS=(kernel ui)
+        POST_CONTAINERS=(nginx)
     ;;
+
     sync|couchdb-sync)
         app=couchdb-sync
-        CONTAINERS=(db couchdb redis kernel couchdb-sync couchdb-sync-rq nginx)
+
+        PRE_CONTAINERS=(db couchdb redis)
+        SETUP_CONTAINERS=(kernel couchdb-sync)
+        POST_CONTAINERS=(couchdb-sync-rq nginx)
     ;;
+
     *)
         app=
-        CONTAINERS=(db couchdb redis kernel odk ui-assets ui couchdb-sync couchdb-sync-rq nginx)
+
+        PRE_CONTAINERS=(ui-assets db couchdb redis)
+        SETUP_CONTAINERS=(kernel odk ui couchdb-sync)
+        POST_CONTAINERS=(couchdb-sync-rq nginx)
     ;;
 esac
 
-for container in "${CONTAINERS[@]}"
+start_container () {
+    docker-compose kill $1
+    docker-compose up -d $1
+    sleep 2
+    docker-compose logs --tail 20 $1
+}
+
+for container in "${PRE_CONTAINERS[@]}"
 do
-    docker-compose up -d $container
-    docker-compose logs --tail 20 $container
+    start_container $container
+done
+
+for container in "${SETUP_CONTAINERS[@]}"
+do
+    docker-compose run $container setup
+    start_container $container
+done
+
+for container in "${POST_CONTAINERS[@]}"
+do
+    start_container $container
 done
 
 echo ""
