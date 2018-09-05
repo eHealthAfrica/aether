@@ -33,6 +33,7 @@ services:
     networks:
       - internal
 
+
   couchdb:
     extends:
       file: ./docker-compose-base.yml

@@ -75,11 +75,11 @@ class ProjectSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         read_only=True,
         view_name='project-detail',
     )
-    mappings_url = FilteredHyperlinkedRelatedField(
+    mappingset_url = FilteredHyperlinkedRelatedField(
         lookup_field='project',
         read_only=True,
-        source='mappings',
-        view_name='mapping-list',
+        source='mappingsets',
+        view_name='mappingset-list',
     )
     projectschemas_url = FilteredHyperlinkedRelatedField(
         lookup_field='project',
@@ -98,16 +98,17 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         read_only=True,
         view_name='mapping-detail',
     )
-    project_url = serializers.HyperlinkedRelatedField(
+    mappingset_url = serializers.HyperlinkedIdentityField(
         read_only=True,
-        source='project',
-        view_name='project-detail',
+        source='mappingset',
+        view_name='mappingset-detail',
     )
-    submissions_url = FilteredHyperlinkedRelatedField(
+
+    projectschemas_url = FilteredHyperlinkedRelatedField(
         lookup_field='mapping',
         read_only=True,
-        source='submissions',
-        view_name='submission-list',
+        source='projectschemas',
+        view_name='projectschema-list',
     )
 
     def validate_definition(self, value):
@@ -116,6 +117,34 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     class Meta:
         model = models.Mapping
+        fields = '__all__'
+
+
+class MappingSetSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        read_only=True,
+        view_name='mappingset-detail',
+    )
+    project_url = serializers.HyperlinkedRelatedField(
+        read_only=True,
+        source='project',
+        view_name='project-detail',
+    )
+    mappings_url = FilteredHyperlinkedRelatedField(
+        lookup_field='mappingset',
+        read_only=True,
+        source='mappings',
+        view_name='mapping-list',
+    )
+    submissions_url = FilteredHyperlinkedRelatedField(
+        lookup_field='mappingset',
+        read_only=True,
+        source='submissions',
+        view_name='submission-list',
+    )
+
+    class Meta:
+        model = models.MappingSet
         fields = '__all__'
 
 
@@ -133,9 +162,14 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='submission-detail',
         read_only=True
     )
-    mapping_url = serializers.HyperlinkedRelatedField(
-        view_name='mapping-detail',
-        source='mapping',
+    project_url = serializers.HyperlinkedRelatedField(
+        view_name='project-detail',
+        source='project',
+        read_only=True,
+    )
+    mappingset_url = serializers.HyperlinkedRelatedField(
+        view_name='mappingset-detail',
+        source='mappingset',
         read_only=True,
     )
     entities_url = FilteredHyperlinkedRelatedField(
@@ -229,6 +263,12 @@ class ProjectSchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         source='entities',
         view_name='entity-list',
     )
+    mappings_url = FilteredHyperlinkedRelatedField(
+        lookup_field='projectschema',
+        read_only=True,
+        source='mappings',
+        view_name='mapping-list',
+    )
 
     class Meta:
         model = models.ProjectSchema
@@ -245,6 +285,11 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         read_only=True,
         source='projectschema',
         view_name='projectschema-detail',
+    )
+    submission_url = serializers.HyperlinkedRelatedField(
+        read_only=True,
+        source='submission',
+        view_name='submission-detail',
     )
     merge = serializers.ChoiceField(MERGE_CHOICES, default=m_options.overwrite.value)
     resolved = serializers.JSONField(default={})
@@ -355,16 +400,16 @@ class ProjectStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         )
 
 
-class MappingStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class MappingSetStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     first_submission = serializers.DateTimeField()
     last_submission = serializers.DateTimeField()
     submissions_count = serializers.IntegerField()
     entities_count = serializers.IntegerField()
 
     class Meta:
-        model = models.Mapping
+        model = models.MappingSet
         fields = (
-            'id', 'name', 'definition', 'created',
+            'id', 'name', 'created',
             'first_submission', 'last_submission',
             'submissions_count', 'entities_count',
         )

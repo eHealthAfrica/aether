@@ -21,7 +21,7 @@ import uuid
 from django.db.utils import IntegrityError
 from django.test import TestCase
 
-from ..models import Project, Schema, ProjectSchema, Mapping
+from ..models import Project, Schema, ProjectSchema, Mapping, MappingSet
 from ..project_artefacts import (
     get_project_artefacts as retrieve,
     upsert_project_artefacts as generate,
@@ -60,30 +60,29 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(project_2.revision, '2', 'ignores new revision value if updates the object')
 
         # creates with foreign keys
-        mapping_0 = upsert(Mapping, pk=None, ignore_fields=[],
-                           name='Mapping None', project=project_1, definition={})
+        mappingset_0 = upsert(MappingSet, pk=None, ignore_fields=[],
+                              name='Mappingset None', project=project_1, input=[])
 
-        self.assertIsNotNone(mapping_0)
-        self.assertIsNotNone(mapping_0.pk)
-        self.assertEqual(mapping_0.name, 'Mapping None')
-        self.assertEqual(mapping_0.project, project_2)
+        self.assertIsNotNone(mappingset_0)
+        self.assertIsNotNone(mappingset_0.pk)
+        self.assertEqual(mappingset_0.name, 'Mappingset None')
+        self.assertEqual(mappingset_0.project, project_2)
 
         # updates indicated fields, keeps the rest
-        mapping_1 = upsert(Mapping, pk=mapping_0.pk, ignore_fields=['name'],
-                           definition={'mapping': []}, unknown=True)
+        mappingset_1 = upsert(MappingSet, pk=mappingset_0.pk, ignore_fields=['name'],
+                              unknown=True)
 
-        self.assertEqual(mapping_1.pk, mapping_0.pk)
-        self.assertEqual(mapping_1.name, 'Mapping None')
-        self.assertEqual(mapping_1.project, project_1)
-        self.assertEqual(mapping_1.definition, {'mapping': []})
+        self.assertEqual(mappingset_1.pk, mappingset_0.pk)
+        self.assertEqual(mappingset_1.name, 'Mappingset None')
+        self.assertEqual(mappingset_1.project, project_1)
 
         # does not update with action 'create'
-        mapping_2 = upsert(Mapping, pk=mapping_0.pk, ignore_fields=[], action='create',
-                           name='Mapping Two', project=project_1, definition={})
+        mappingset_2 = upsert(MappingSet, pk=mappingset_0.pk, ignore_fields=[], action='create',
+                              name='Mappingset Two', project=project_1)
 
-        self.assertEqual(mapping_2.pk, mapping_0.pk)
-        self.assertEqual(mapping_2.name, 'Mapping None')
-        self.assertEqual(mapping_2.project, project_2)
+        self.assertEqual(mappingset_2.pk, mappingset_0.pk)
+        self.assertEqual(mappingset_2.name, 'Mappingset None')
+        self.assertEqual(mappingset_2.project, project_2)
 
     def test__upsert_project_artefacts__project(self):
 
@@ -96,7 +95,7 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(results['project'], str(project_id))
         self.assertEqual(results['schemas'], set())
         self.assertEqual(results['project_schemas'], set())
-        self.assertEqual(results['mappings'], set())
+        self.assertEqual(results['mappingsets'], set())
 
         new_project = Project.objects.get(pk=project_id)
         self.assertIsNotNone(new_project.name)
@@ -195,10 +194,11 @@ class ProjectArtefactsTests(TestCase):
     def test__upsert_project_artefacts__mappings(self):
         project = Project.objects.create(name='Project')
         mapping_id = str(uuid.uuid4())
+        mappingset_id = str(uuid.uuid4())
 
         results_1 = generate(project_id=project.pk, project_name=project.name, mappings=[
             {'id': mapping_id, 'name': 'Mapping'},
-        ])
+        ], mapping_set={'id': mappingset_id, 'name': 'Mapping Set'})
         results_retrieve = retrieve(project=project)
         self.assertEqual(results_1, results_retrieve)
 
@@ -215,7 +215,7 @@ class ProjectArtefactsTests(TestCase):
         results_2 = generate(project_id=project.pk, project_name=project.name, mappings=[
             # in this case nothing changes
             {'id': mapping_id, 'name': 'Mapping 2'},
-        ])
+        ], mapping_set={'id': mappingset_id, 'name': 'Mapping Set 2'})
         self.assertEqual(results_1, results_2)
 
         mapping.refresh_from_db()
@@ -226,7 +226,7 @@ class ProjectArtefactsTests(TestCase):
         results_3 = generate(project_id=project.pk, project_name=project.name, mappings=[
             # in this case the definition is updated
             {'id': mapping_id, 'definition': {}},
-        ])
+        ], mapping_set={'id': mappingset_id, 'name': 'Mapping Set 2'})
         self.assertEqual(results_1, results_3)
 
         mapping.refresh_from_db()

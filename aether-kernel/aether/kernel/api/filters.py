@@ -39,16 +39,32 @@ class ProjectFilter(filters.FilterSet):
 
 
 class MappingFilter(filters.FilterSet):
+    mappingset = filters.CharFilter(
+        method='mappingset_filter',
+    )
+    projectschema = filters.CharFilter(
+        method='projectschema_filter',
+    )
+
+    def mappingset_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(mappingset__pk=value)
+        else:
+            return queryset.filter(mappingset__name=value)
+
+    def projectschema_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(projectschemas__in=[value])
+        else:
+            return queryset.filter(projectschemas__name__in=[value])
+
     class Meta:
         fields = '__all__'
         exclude = ('definition',)
         model = models.Mapping
 
 
-class SubmissionFilter(filters.FilterSet):
-    instanceID = filters.CharFilter(
-        name='payload__meta__instanceID',
-    )
+class MappingSetFilter(filters.FilterSet):
     project = filters.CharFilter(
         method='project_filter',
     )
@@ -58,6 +74,35 @@ class SubmissionFilter(filters.FilterSet):
             return queryset.filter(project__pk=value)
         else:
             return queryset.filter(project__name=value)
+
+    class Meta:
+        fields = '__all__'
+        exclude = ('input',)
+        model = models.MappingSet
+
+
+class SubmissionFilter(filters.FilterSet):
+    instanceID = filters.CharFilter(
+        name='payload__meta__instanceID',
+    )
+    project = filters.CharFilter(
+        method='project_filter',
+    )
+    mappingset = filters.CharFilter(
+        method='mappingset_filter',
+    )
+
+    def project_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(project__pk=value)
+        else:
+            return queryset.filter(project__name=value)
+
+    def mappingset_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(mappingset__pk=value)
+        else:
+            return queryset.filter(mappingset__name=value)
 
     class Meta:
         fields = '__all__'

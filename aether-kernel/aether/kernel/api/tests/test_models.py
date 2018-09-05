@@ -47,11 +47,21 @@ class ModelsTests(TransactionTestCase):
         self.assertEquals(str(project), project.name)
         self.assertNotEqual(models.Project.objects.count(), 0)
 
+        mappingset = models.MappingSet.objects.create(
+            revision='a sample revision',
+            name='a sample mapping set',
+            input={},
+            project=project
+        )
+        self.assertEquals(str(mappingset), mappingset.name)
+        self.assertNotEqual(models.MappingSet.objects.count(), 0)
+        self.assertEquals(str(mappingset.project), str(project))
+
         mapping = models.Mapping.objects.create(
             name='sample mapping',
             definition={},
             revision='a sample revision field',
-            project=project
+            mappingset=mappingset
         )
         self.assertEquals(str(mapping), mapping.name)
         self.assertNotEqual(models.Mapping.objects.count(), 0)
@@ -59,11 +69,10 @@ class ModelsTests(TransactionTestCase):
 
         submission = models.Submission.objects.create(
             revision='a sample revision',
-            map_revision='a sample map revision',
             payload={},
-            mapping=mapping
+            mappingset=mappingset
         )
-        self.assertEquals(str(submission), '{} - {}'.format(str(mapping), submission.id))
+        self.assertEquals(str(submission), '{} - {}'.format(str(mappingset), submission.id))
         self.assertNotEqual(models.Submission.objects.count(), 0)
         self.assertTrue(submission.payload_prettified is not None)
         self.assertEqual(submission.project, project, 'submission inherits mapping project')

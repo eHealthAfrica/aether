@@ -187,27 +187,33 @@ class ProjectStatsViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ('name',)
 
 
-class MappingViewSet(CustomViewSet):
-    queryset = models.Mapping.objects.all()
-    serializer_class = serializers.MappingSerializer
-    filter_class = filters.MappingFilter
+class MappingSetViewSet(CustomViewSet):
+    queryset = models.MappingSet.objects.all()
+    serializer_class = serializers.MappingSetSerializer
+    filter_class = filters.MappingSetFilter
 
 
-class MappingStatsViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.Mapping \
+class MappingSetStatsViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = models.MappingSet \
                      .objects \
-                     .values('id', 'name', 'created', 'definition') \
+                     .values('id', 'name', 'created') \
                      .annotate(
                          first_submission=Min('submissions__created'),
                          last_submission=Max('submissions__created'),
                          submissions_count=Count('submissions__id'),
                          entities_count=Count('submissions__entities__id'),
                      )
-    serializer_class = serializers.MappingStatsSerializer
+    serializer_class = serializers.MappingSetStatsSerializer
 
     search_fields = ('name',)
     ordering_fields = ('name', 'created',)
     ordering = ('name',)
+
+
+class MappingViewSet(CustomViewSet):
+    queryset = models.Mapping.objects.all()
+    serializer_class = serializers.MappingSerializer
+    filter_class = filters.MappingFilter
 
 
 class SubmissionViewSet(CustomViewSet):
