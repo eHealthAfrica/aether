@@ -289,9 +289,6 @@ services:
       PGPORT: 5432
       PGUSER: postgres
 
-      # custom login page
-      LOGIN_TEMPLATE: pages/login.html
-
       # use this value with "start_dev" command and webpack otherwise comment it out
       STATIC_ROOT: /code/aether/ui/assets/bundles
       WEB_SERVER_PORT: 8004
