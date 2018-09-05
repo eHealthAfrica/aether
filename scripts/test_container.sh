@@ -65,14 +65,6 @@ then
 fi
 
 
-if [[ $1 == "couchdb-sync" ]]
-then
-    fixture=aether/kernel/api/tests/fixtures/project.json
-    $DC_TEST run kernel-test manage loaddata $fixture
-    echo "_____________________________________________ Loaded initial data in kernel"
-fi
-
-
 echo "_____________________________________________ Preparing $1 container"
 $DC_TEST build "$1"-test
 echo "_____________________________________________ $1 ready!"
