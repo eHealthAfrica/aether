@@ -24,6 +24,7 @@ from autofixture import AutoFixture
 from aether.kernel.api import models
 
 ENTITIES_COUNT_RANGE = (1, 3)
+MAPPINGS_COUNT_RANGE = (1, 6)
 SUBMISSIONS_COUNT_RANGE = (10, 20)
 
 
@@ -83,9 +84,7 @@ def generate_project(
         projectschema_field_values=None,
         submission_field_values=None,
         entity_field_values=None,
-        mappingset_field_values=None,
-        mappingsetmapping_field_values=None,
-        submissionmapping_field_values=None
+        mappingset_field_values=None
 ):
     '''
     Generate an Aether Project.
@@ -119,7 +118,7 @@ def generate_project(
         field_values=get_field_values(
             default=dict(
                 project=project,
-                input=[],
+                input={},
             ),
             values=mappingset_field_values,
         ),
@@ -145,6 +144,19 @@ def generate_project(
             values=projectschema_field_values,
         ),
     ).create_one()
+
+    mapping_def = mapping_definition()
+    mapping_def['entities']['Test'] = str(projectschema.pk)
+    AutoFixture(
+        model=models.Mapping,
+        field_values=get_field_values(
+            default=dict(
+                mappingset=mappingset,
+                definition=mapping_def,
+            ),
+            values=mapping_field_values,
+        ),
+    ).create(random.randint(*MAPPINGS_COUNT_RANGE))
 
     for _ in range(random.randint(*SUBMISSIONS_COUNT_RANGE)):
         submission = AutoFixture(

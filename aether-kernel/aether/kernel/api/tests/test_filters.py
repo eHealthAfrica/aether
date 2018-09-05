@@ -244,3 +244,90 @@ class TestFilters(TestCase):
             self.assertEqual(response['count'], len(expected))
             result_by_name = set([r['id'] for r in response['results']])
             self.assertEqual(expected, result_by_name, 'by name')
+
+    def test_mapping_filter__by_mappingset(self):
+        url = reverse(viewname='mapping-list')
+        # Generate projects.
+        for _ in range(random.randint(5, 10)):
+            generate_project()
+        page_size = models.Mapping.objects.count()
+        # Get a list of all mappings.
+        for mappingset in models.MappingSet.objects.all():
+            expected = set([str(e.id) for e in models.Mapping.objects.filter(mappingset=mappingset)])
+            # by id
+            kwargs = {'mappingset': str(mappingset.id), 'fields': 'id', 'page_size': page_size}
+            response = json.loads(
+                self.client.get(url, kwargs, format='json').content
+            )
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result)
+
+            # by name
+            kwargs = {'mappingset': mappingset.name, 'fields': 'id', 'page_size': page_size}
+            response = json.loads(
+                self.client.get(url, kwargs, format='json').content
+            )
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result)
+
+    def test_mapping_filter__by_projectschema(self):
+        url = reverse(viewname='mapping-list')
+        # Generate projects.
+        for _ in range(random.randint(5, 10)):
+            generate_project()
+        page_size = models.Mapping.objects.count()
+        # Get a list of all mappings.
+        for projectschema in models.ProjectSchema.objects.all():
+            expected = set([str(e.id) for e in models.Mapping.objects.filter(projectschemas__in=[projectschema])])
+            # by id
+            kwargs = {'projectschema': str(projectschema.id), 'fields': 'id', 'page_size': page_size}
+            response = json.loads(
+                self.client.get(url, kwargs, format='json').content
+            )
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result)
+
+            # by name
+            kwargs = {'projectschema': projectschema.name, 'fields': 'id', 'page_size': page_size}
+            response = json.loads(
+                self.client.get(url, kwargs, format='json').content
+            )
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result)
+
+    def test_mappingset_filter__by_project(self):
+        url = reverse(viewname='mappingset-list')
+        # Generate projects.
+        for _ in range(random.randint(5, 10)):
+            generate_project()
+        page_size = models.MappingSet.objects.count()
+        # Get a list of all mapping sets.
+        for project in models.Project.objects.all():
+            expected = set([str(s.id) for s in project.mappingsets.all()])
+            # by id
+            kwargs = {'project': str(project.id), 'fields': 'id', 'page_size': page_size}
+            response = json.loads(
+                self.client.get(url, kwargs, format='json').content
+            )
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result)
+
+            # by name
+            kwargs = {'project': project.name, 'fields': 'id', 'page_size': page_size}
+            response = json.loads(
+                self.client.get(url, kwargs, format='json').content
+            )
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result)

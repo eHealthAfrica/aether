@@ -65,10 +65,6 @@ class Migration(migrations.Migration):
             model_name='submission',
             name='map_revision',
         ),
-        migrations.RemoveField(
-            model_name='submission',
-            name='mapping',
-        ),
         migrations.AddField(
             model_name='entity',
             name='mapping',
@@ -126,4 +122,8 @@ class Migration(migrations.Migration):
             index=models.Index(fields=['-modified'], name='kernel_mapp_modifie_46a12a_idx'),
         ),
         migrations.RunPython(migrate_current_mappings_to_mappingsets, migrations.RunPython.noop),
+        migrations.RemoveField(
+            model_name='submission',
+            name='mapping',
+        ),
     ]

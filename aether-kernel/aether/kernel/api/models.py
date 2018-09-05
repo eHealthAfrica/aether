@@ -281,6 +281,7 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
     def save(self, **kwargs):
         self.project = self.mappingset.project
         entities = self.definition.get('entities', {})
+        self.projectschemas.clear()
         for entity_pk in entities.values():
             self.projectschemas.add(ProjectSchema.objects.get(pk=entity_pk, project=self.project))
 
@@ -296,8 +297,9 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
     class Meta:
         app_label = 'kernel'
         default_related_name = 'mappings'
-        ordering = ['-modified']
+        ordering = ['project__id', '-modified']
         indexes = [
+            models.Index(fields=['project', '-modified']),
             models.Index(fields=['-modified']),
         ]
 
