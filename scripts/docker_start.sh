@@ -21,16 +21,16 @@
 
 # start the indicated app/module with the necessary dependencies
 #
-#   docker_start.sh [--force | -f] [--build | -b] <app>
+#   ./scripts/docker_start.sh [--force | --kill | -f | -k] [--build | -b] <name>
 #
 # arguments:
-#   --force | -f  will kill running containers
-#   --killl | -k  will kill running containers
-#   --build | -b  will build containers
+#   --force | -f   will kill all running containers
+#   --kill  | -k   alias of the above
+#   --build | -b   will kill and build containers before start
 
-#   <app>
+#   <name>
 #      Expected values: kernel, odk, ui, couchdb-sync or sync.
-#      Another value will start all containers.
+#      Any other value will start all containers.
 #
 
 # default values

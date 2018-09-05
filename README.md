@@ -57,7 +57,12 @@ git clone git@github.com:eHealthAfrica/aether.git && cd aether
 ##### Build containers and start the applications
 
 ```bash
-./scripts/build_aether_containers.sh && docker-compose up
+./scripts/build_aether_containers.sh && ./scripts/docker_start.sh
+```
+or
+
+```bash
+./scripts/docker_start.sh --build
 ```
 
 **IMPORTANT NOTE**: the docker-compose files are intended to be used exclusively
@@ -138,7 +143,8 @@ of the most common ones with non default values. For more info take a look at th
 
 ##### File system (`DJANGO_STORAGE_BACKEND=filesystem`)
 
-- `MEDIA_ROOT`: `/media` the local folder in which all the media assets will be stored. The files will be served at `$HOSTNAME/media/<file-name>`.
+- `MEDIA_ROOT`: `/media` the local folder in which all the media assets will be stored.
+  The files will be served at `$HOSTNAME/media/<file-name>`.
 
 ##### S3 (`DJANGO_STORAGE_BACKEND=s3`)
 
@@ -167,17 +173,18 @@ The tests clean up will **DELETE ALL MAPPINGS!!!**
 ## Usage
 
 ```bash
-./scripts/docker_start.sh [options] [app]
+./scripts/docker_start.sh [--force | --kill | -f | -k] [--build | -b] <name>
 ```
 
 Arguments:
-  `--force` | `-f`  will kill running containers
-  `--killl` | `-k`  will kill running containers
-  `--build` | `-b`  will build containers before starting them
+  `--force` | `-f`  will kill all running containers before start again
+  `--kill`  | `-k`  alias of the above
+  `--build` | `-b`  will kill and build containers before start
 
-  `app`
-    Expected values: `kernel`, `odk`, `ui`, `couchdb-sync` or `sync`.
-    Another value will start all containers.
+  `name`
+    Expected values: `kernel`, `odk`, `ui`, `couchdb-sync` or `sync`
+    (alias of `couchdb-sync`).
+    Any other value will start all containers.
 
 This will start:
 
