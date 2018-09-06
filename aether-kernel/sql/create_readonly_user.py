@@ -31,27 +31,27 @@ import os
 import psycopg2
 from psycopg2 import sql
 
-# Create a readonly user with username "{role}" if none exists.
+# Create a readonly user with username "{role_id}" if none exists.
 # Grant read permission for relevant tables.
 CREATE_READONLY_USER = '''
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = {rolename})
+  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = {role_literal})
   THEN
-      CREATE ROLE {role} WITH LOGIN ENCRYPTED PASSWORD {password}
+      CREATE ROLE {role_id} WITH LOGIN ENCRYPTED PASSWORD {password}
       INHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION;
   END IF;
 END
 $$ LANGUAGE plpgsql;
 
-REVOKE ALL PRIVILEGES ON DATABASE {database} FROM {role} CASCADE;
+REVOKE ALL PRIVILEGES ON DATABASE {database} FROM {role_id} CASCADE;
 
-GRANT CONNECT ON DATABASE {database} TO {role};
-GRANT USAGE ON SCHEMA public TO {role};
-GRANT SELECT ON kernel_entity TO {role};
-GRANT SELECT ON kernel_mapping TO {role};
-GRANT SELECT ON kernel_projectschema TO {role};
-GRANT SELECT ON kernel_schema TO {role};
+GRANT CONNECT ON DATABASE {database} TO {role_id};
+GRANT USAGE ON SCHEMA public TO {role_id};
+GRANT SELECT ON kernel_entity TO {role_id};
+GRANT SELECT ON kernel_mapping TO {role_id};
+GRANT SELECT ON kernel_projectschema TO {role_id};
+GRANT SELECT ON kernel_schema TO {role_id};
 '''
 
 
@@ -76,8 +76,8 @@ def main():
         cursor = conn.cursor()
         query = sql.SQL(CREATE_READONLY_USER).format(
             database=sql.Identifier(dbname),
-            role=sql.Identifier(ro_user),
-            rolename=sql.Literal(ro_user),
+            role_id=sql.Identifier(ro_user),
+            role_literal=sql.Literal(ro_user),
             password=sql.Literal(ro_password),
         )
         cursor.execute(query)
