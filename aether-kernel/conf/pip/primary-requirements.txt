@@ -20,6 +20,7 @@
 #   django-cors-headers
 #   django-debug-toolbar
 #   django-prometheus
+#   django-storages
 #   djangorestframework
 #   djangorestframework-csv
 #   psycopg2-binary
@@ -44,7 +45,12 @@ jsonschema
 spavro
 
 
-# UMS libraries
+# Storage
+boto3
+google-cloud-storage
+
+
+# CAS libraries
 django-cas-ng
 django-ums-client
 
