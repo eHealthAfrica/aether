@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='entity',
             name='projectschema',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='entities', to='kernel.ProjectSchema'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='entities', to='kernel.ProjectSchema'),
         ),
         migrations.AlterField(
             model_name='entity',

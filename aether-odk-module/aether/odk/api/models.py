@@ -72,61 +72,6 @@ class Project(ExportModelOperationsMixin('odk_project'), models.Model):
 
     The needed and common data is stored here, like the list of granted surveyors.
 
-
-    ----------------------------------------------------------------------------
-
-            Table "public.odk_project"
-
-       Column   | Type | Modifiers
-    ------------+------+-----------
-     project_id | uuid | not null
-     name       | text |
-
-    Indexes:
-        "odk_project_pkey" PRIMARY KEY, btree (project_id)
-
-    Referenced by:
-        TABLE "odk_project_surveyors"
-            CONSTRAINT "odk_project_surveyor_project_id_###_fk_odk_project_project_id"
-            FOREIGN KEY (project_id)
-            REFERENCES odk_project(project_id)
-            DEFERRABLE INITIALLY DEFERRED
-
-        TABLE "odk_xform"
-            CONSTRAINT "odk_xform_project_id_###_fk_odk_project_project_id"
-            FOREIGN KEY (project_id)
-            REFERENCES odk_project(project_id)
-            DEFERRABLE INITIALLY DEFERRED
-
-    ----------------------------------------------------------------------------
-
-            Table "public.odk_project_surveyors"
-
-       Column   |  Type   |                             Modifiers
-    ------------+---------+-------------------------------------------------------------------
-     id         | integer | not null default nextval('odk_project_surveyors_id_seq'::regclass)
-     project_id | uuid    | not null
-     user_id    | integer | not null
-
-    Indexes:
-        "odk_project_surveyors_pkey" PRIMARY KEY, btree (id)
-        "odk_project_surveyors_survey_id_user_id_###_uniq" UNIQUE CONSTRAINT, btree (project_id, user_id)
-        "odk_project_surveyors_survey_id_###" btree (project_id)
-        "odk_project_surveyors_user_id_###" btree (user_id)
-
-    Foreign-key constraints:
-        "odk_project_surveyor_project_id_###_fk_odk_project_project_id"
-            FOREIGN KEY (project_id)
-            REFERENCES odk_project(project_id)
-            DEFERRABLE INITIALLY DEFERRED
-
-        "odk_project_surveyors_user_id_###_fk_auth_user_id"
-            FOREIGN KEY (user_id)
-            REFERENCES auth_user(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-    ----------------------------------------------------------------------------
-
     '''
 
     # This is needed to submit data to kernel
@@ -138,7 +83,7 @@ class Project(ExportModelOperationsMixin('odk_project'), models.Model):
         help_text=_('This ID corresponds to an Aether Kernel project ID.'),
     )
 
-    name = models.TextField(null=True, blank=True, default='', verbose_name=_('name'))
+    name = models.TextField(blank=True, null=True, default='', verbose_name=_('name'))
 
     # the list of granted surveyors
     surveyors = models.ManyToManyField(
@@ -200,77 +145,6 @@ class XForm(ExportModelOperationsMixin('odk_xform'), models.Model):
         - one Schema and
         - one ProjectSchema.
 
-
-    ----------------------------------------------------------------------------
-
-            Table "public.odk_xform"
-
-       Column    |           Type           |                       Modifiers
-    -------------+--------------------------+--------------------------------------------------------
-     id          | integer                  | not null default nextval('odk_xform_id_seq'::regclass)
-     title       | text                     | not null
-     form_id     | text                     | not null
-     xml_data    | text                     | not null
-     description | text                     |
-     created_at  | timestamp with time zone | not null
-     project_id  | uuid                     | not null
-     md5sum      | character varying(36)    | not null
-     version     | text                     | not null
-     avro_schema | jsonb                    |
-     kernel_id   | uuid                     | not null
-
-    Indexes:
-        "odk_xform_pkey" PRIMARY KEY, btree (id)
-        "odk_xform_survey_id_###" btree (project_id)
-
-    Foreign-key constraints:
-        "odk_xform_project_id_###_fk_odk_project_project_id"
-            FOREIGN KEY (project_id)
-            REFERENCES odk_project(project_id)
-            DEFERRABLE INITIALLY DEFERRED
-
-    Referenced by:
-        TABLE "odk_mediafile"
-            CONSTRAINT "odk_mediafile_xform_id_###_fk_odk_xform_id"
-            FOREIGN KEY (xform_id)
-            REFERENCES odk_xform(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-        TABLE "odk_xform_surveyors"
-            CONSTRAINT "odk_xform_surveyors_xform_id_###_fk_odk_xform_id"
-            FOREIGN KEY (xform_id)
-            REFERENCES odk_xform(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-    ----------------------------------------------------------------------------
-
-            Table "public.odk_xform_surveyors"
-
-      Column  |  Type   |                            Modifiers
-    ----------+---------+------------------------------------------------------------------
-     id       | integer | not null default nextval('odk_xform_surveyors_id_seq'::regclass)
-     xform_id | integer | not null
-     user_id  | integer | not null
-
-    Indexes:
-        "odk_xform_surveyors_pkey" PRIMARY KEY, btree (id)
-        "odk_xform_surveyors_xform_id_user_id_###_uniq" UNIQUE CONSTRAINT, btree (xform_id, user_id)
-        "odk_xform_surveyors_user_id_###" btree (user_id)
-        "odk_xform_surveyors_xform_id_###" btree (xform_id)
-
-    Foreign-key constraints:
-        "odk_xform_surveyors_user_id_###_fk_auth_user_id"
-            FOREIGN KEY (user_id)
-            REFERENCES auth_user(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-        "odk_xform_surveyors_xform_id_###_fk_odk_xform_id"
-            FOREIGN KEY (xform_id)
-            REFERENCES odk_xform(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-    ----------------------------------------------------------------------------
-
     '''
 
     # This is needed to submit data to kernel
@@ -282,7 +156,7 @@ class XForm(ExportModelOperationsMixin('odk_xform'), models.Model):
 
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
 
-    description = models.TextField(default='', null=True, blank=True, verbose_name=_('xForm description'))
+    description = models.TextField(blank=True, null=True, default='', verbose_name=_('xForm description'))
     created_at = models.DateTimeField(default=timezone.now, editable=False, verbose_name=_('created at'))
     modified_at = models.DateTimeField(default=timezone.now, verbose_name=_('modified at'))
 
@@ -308,7 +182,7 @@ class XForm(ExportModelOperationsMixin('odk_xform'), models.Model):
     # taken from xml_data
     title = models.TextField(default='', editable=False, verbose_name=_('xForm title'))
     form_id = models.TextField(default='', editable=False, verbose_name=_('xForm ID'))
-    version = models.TextField(default='0', blank=True, verbose_name=_('xForm version'))
+    version = models.TextField(blank=True, default='0', verbose_name=_('xForm version'))
     md5sum = models.CharField(default='', editable=False, max_length=36, verbose_name=_('xForm md5sum'))
     avro_schema = JSONField(blank=True, null=True, editable=False, verbose_name=_('AVRO schema'))
 
@@ -429,31 +303,6 @@ def __media_path__(instance, filename):
 class MediaFile(ExportModelOperationsMixin('odk_mediafile'), models.Model):
     '''
     Database representation of a media file linked to an XForm
-
-
-    ----------------------------------------------------------------------------
-
-            Table "public.odk_mediafile"
-
-       Column   |          Type          |                         Modifiers
-    ------------+------------------------+------------------------------------------------------------
-     id         | integer                | not null default nextval('odk_mediafile_id_seq'::regclass)
-     name       | text                   | not null
-     media_file | character varying(100) | not null
-     md5sum     | character varying(36)  | not null
-     xform_id   | integer                | not null
-
-    Indexes:
-        "odk_mediafile_pkey" PRIMARY KEY, btree (id)
-        "odk_mediafile_xform_id_###" btree (xform_id)
-
-    Foreign-key constraints:
-        "odk_mediafile_xform_id_###_fk_odk_xform_id"
-            FOREIGN KEY (xform_id)
-            REFERENCES odk_xform(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-    ----------------------------------------------------------------------------
 
     '''
 

@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
             name='Survey',
             fields=[
                 ('mapping_id', models.UUIDField(default=uuid.uuid4, primary_key=True, serialize=False)),
-                ('name', models.TextField(blank=True, default='', null=True)),
+                ('name', models.TextField(blank=True, null=True, default='')),
                 ('surveyors', models.ManyToManyField(blank=True, related_name='surveys', to=settings.AUTH_USER_MODEL)),
             ],
         ),
@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
                 ('title', models.TextField(default='', editable=False)),
                 ('form_id', models.TextField(default='', editable=False)),
                 ('xml_data', models.TextField(blank=True, validators=[aether.odk.api.models.__validate_xml_data__])),
-                ('description', models.TextField(blank=True, default='', null=True)),
+                ('description', models.TextField(blank=True, null=True, default='')),
                 ('created_at', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
                 ('survey', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='xforms', to='odk.Survey')),
                 ('surveyors', models.ManyToManyField(blank=True, related_name='xforms', to=settings.AUTH_USER_MODEL)),
