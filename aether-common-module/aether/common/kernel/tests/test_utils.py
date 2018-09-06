@@ -140,7 +140,7 @@ class UtilsTests(TestCase):
             )
 
     @mock.patch.dict('os.environ', AETHER_ENV_MOCK)
-    def test_submit_to_kernel__without_mapping_id(self):
+    def test_submit_to_kernel__without_submission_fk(self):
         self.assertRaises(
             Exception,
             utils.submit_to_kernel,
