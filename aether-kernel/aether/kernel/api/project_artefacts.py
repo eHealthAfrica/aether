@@ -34,8 +34,8 @@ def get_project_artefacts(project):
         'project': str(project.pk),
         'schemas': set(),
         'project_schemas': set(),
+        'mappingsets': set(),
         'mappings': set(),
-        'mappingsets': set()
     }
     for mappingset in MappingSet.objects.filter(project=project):
         results['mappingsets'].add(str(mappingset.pk))
@@ -55,11 +55,15 @@ def upsert_project_artefacts(
     project_id=None,
     project_name=None,
     schemas=[],
+    mappingsets=[],
     mappings=[],
-    mapping_set=None  # Only one mapping set object per project for now.
 ):
     '''
-    Creates or updates the project and its artefacts: schemas, project schemas mappingsets and mappings.
+    Creates or updates the project and its artefacts:
+        schemas,
+        project schemas,
+        mapping sets and
+        mappings.
 
     Returns the list of project and its affected artefact ids by type.
     '''
@@ -68,8 +72,8 @@ def upsert_project_artefacts(
         'project': None,
         'schemas': set(),
         'project_schemas': set(),
+        'mappingsets': set(),
         'mappings': set(),
-        'mappingsets': set()
     }
 
     # 1. create/update the project
@@ -109,38 +113,61 @@ def upsert_project_artefacts(
             )
         results['project_schemas'].add(str(project_schema.pk))
 
-    # 3. create/update the mappingset
-    if mapping_set:
+    # 3. create/update the mapping sets
+    for raw_mappingset in mappingsets:
+        ignore_fields = ['name']
+        if raw_mappingset.get('input') is None:
+            # in case of no input were indicated, do not update it.
+            ignore_fields.append('input')
+
         mappingset = __upsert_instance(
             model=MappingSet,
-            ignore_fields=['name'],
-            pk=mapping_set.get('id'),
+            pk=raw_mappingset.get('id'),
+            ignore_fields=ignore_fields,
             action=action,
-            name=mapping_set.get('name', __random_name()),
-            input=mapping_set.get('input', {}),
-            project=project
+            name=raw_mappingset.get('name', __random_name()),
+            input=raw_mappingset.get('input', {}),
+            project=project,
         )
         results['mappingsets'].add(str(mappingset.pk))
 
-        # 4. create/update the mappings
-        for raw_mapping in mappings:
-            # in case of no mappings rules were indicated, do not update them.
-            ignore_fields = ['name']
-            if raw_mapping.get('definition') is None:
-                ignore_fields.append('definition')
+    # 4. create/update the mappings
+    for raw_mapping in mappings:
+        ignore_fields = ['name']
+        if raw_mapping.get('definition') is None:
+            # in case of no mapping rules were indicated, do not update them.
+            ignore_fields.append('definition')
 
-            mapping = __upsert_instance(
-                model=Mapping,
-                pk=raw_mapping.get('id'),
-                ignore_fields=ignore_fields,
+        mapping_name = raw_mapping.get('name', __random_name())
+
+        # check for the mapping set
+        mappingset_id = raw_mapping.get('mappingset', raw_mapping.get('id'))
+        try:
+            mappingset = MappingSet.objects.get(pk=mappingset_id)
+        except ObjectDoesNotExist:
+            mappingset = __upsert_instance(
+                model=MappingSet,
+                pk=mappingset_id,
+                ignore_fields=['name'],
                 action=action,
-                name=raw_mapping.get('name', __random_name()),
-                definition=raw_mapping.get('definition', {'mappings': []}),
-                mappingset=mappingset,
-                is_read_only=raw_mapping.get('is_read_only', False),
-                is_active=raw_mapping.get('is_active', True)
+                name=mapping_name,  # use same name as mapping
+                input=raw_mapping.get('input', {}),
+                project=project,
             )
-            results['mappings'].add(str(mapping.pk))
+        results['mappingsets'].add(str(mappingset.pk))
+
+        mapping = __upsert_instance(
+            model=Mapping,
+            pk=raw_mapping.get('id'),
+            ignore_fields=ignore_fields,
+            action=action,
+            name=mapping_name,
+            definition=raw_mapping.get('definition', {'mappings': []}),
+            mappingset=mappingset,
+            is_read_only=raw_mapping.get('is_read_only', False),
+            is_active=raw_mapping.get('is_active', True),
+        )
+        results['mappings'].add(str(mapping.pk))
     return results
 
 
@@ -188,7 +215,7 @@ def __upsert_instance(model, pk=None, ignore_fields=[], action='upsert', **value
             setattr(item, k, v)
 
     if is_new or action != 'create':
-        # if is new first check that the same name is not there
+        # with new instances first check that the same name is not there
         # otherwise append a numeric suffix or a random string to it
         if is_new:
             item.name = __right_pad(model, item.name)
