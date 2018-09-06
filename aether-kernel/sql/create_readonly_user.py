@@ -60,12 +60,14 @@ def main():
     host = os.environ['PGHOST']
     port = os.environ['PGPORT']
     root_user = os.environ['PGUSER']
+    root_password = os.environ['PGPASSWORD']
 
     postgres_credentials = {
         'dbname': dbname,
         'host': host,
         'port': port,
         'user': root_user,
+        'password': root_password,
     }
 
     with psycopg2.connect(**postgres_credentials) as conn:
