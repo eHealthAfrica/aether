@@ -56,6 +56,7 @@ class KernelUtilsTest(CustomTestCase):
 
         self.KERNEL_HEADERS = get_auth_header()
         self.PROJECT_URL = f'{self.kernel_url}/projects/{str(self.project.project_id)}/'
+        self.ENTITIES_URL = f'{self.kernel_url}/entities/project={str(self.project.project_id)}'
 
         self.MAPPING_URL_1 = f'{self.kernel_url}/mappings/{self.KERNEL_ID_1}/'
         self.SCHEMA_URL_1 = f'{self.kernel_url}/schemas/{self.KERNEL_ID_1}/'
@@ -81,6 +82,7 @@ class KernelUtilsTest(CustomTestCase):
         super(KernelUtilsTest, self).tearDown()
 
         # delete the test objects created in kernel testing server
+        requests.delete(self.ENTITIES_URL, headers=self.KERNEL_HEADERS)
         requests.delete(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
         requests.delete(self.SCHEMA_URL_1, headers=self.KERNEL_HEADERS)
         requests.delete(self.SCHEMA_URL_2, headers=self.KERNEL_HEADERS)

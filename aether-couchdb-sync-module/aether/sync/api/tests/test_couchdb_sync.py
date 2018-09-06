@@ -40,10 +40,8 @@ headers_testing = kernel_utils.get_auth_header()
 device_id = 'test_import-from-couch'
 
 
-def get_aether_submissions(fk):
+def get_aether_submissions():
     url = kernel_utils.get_submissions_url()
-    if fk:
-        url + f'?{SUBMISSION_FK}={fk}'
     return kernel_utils.get_all_docs(url)
 
 
@@ -126,6 +124,7 @@ class CouchDbSyncTestCase(TestCase):
         }
 
     def tearDown(self):
+        requests.delete(f'{self.KERNEL_URL}/entities/project={self.KERNEL_ID}', headers=headers_testing)
         requests.delete(f'{self.KERNEL_URL}/projects/{self.KERNEL_ID}/', headers=headers_testing)
         requests.delete(f'{self.KERNEL_URL}/schemas/{self.KERNEL_ID}/', headers=headers_testing)
         clean_couch()
@@ -204,19 +203,23 @@ class CouchDbSyncTestCase(TestCase):
         device.save()
         create_db(device_id)
 
+        docs = get_aether_submissions()
+        self.assertEqual(len(docs), 0, 'Nothing in Kernel yet')
+
         resp = couchdb.put('{}/{}'.format(device.db_name, self.example_doc['_id']),
                            json=self.example_doc)
         self.assertEqual(resp.status_code, 201, 'The example document got created')
 
         import_synced_devices()
 
-        data = get_aether_submissions(self.KERNEL_ID)
-        posted = data[0]  # Aether responds with the latest post first
+        docs = get_aether_submissions()
+        self.assertEqual(len(docs), 1, 'Something was created in Kernel')
 
+        posted = docs[0]  # Aether responds with the latest post first
         self.assertEqual(
             posted[SUBMISSION_FK],
             self.KERNEL_ID,
-            'Survey posted to the correct id',
+            'Submission posted to the correct id',
         )
         for key in ['_id', 'firstname', 'lastname']:
             self.assertEqual(
@@ -242,7 +245,13 @@ class CouchDbSyncTestCase(TestCase):
                            json=self.example_doc)
         self.assertEqual(resp.status_code, 201, 'The example document got created')
 
+        docs = get_aether_submissions()
+        self.assertEqual(len(docs), 0, 'Nothing in Kernel yet')
+
         import_synced_devices()
+
+        docs = get_aether_submissions()
+        self.assertEqual(len(docs), 1, 'Something was created in Kernel')
 
         # reset the user to test the meta doc mechanism
         device.last_synced_seq = 0
@@ -250,7 +259,7 @@ class CouchDbSyncTestCase(TestCase):
 
         import_synced_devices()
 
-        docs = get_aether_submissions(self.KERNEL_ID)
+        docs = get_aether_submissions()
         self.assertEqual(len(docs), 1, 'Document is not imported a second time')
 
     def test_update_document(self):
@@ -266,7 +275,7 @@ class CouchDbSyncTestCase(TestCase):
 
         import_synced_devices()
 
-        docs = get_aether_submissions(self.KERNEL_ID)
+        docs = get_aether_submissions()
         submission_id = docs[0]['id']
 
         doc_to_update = couchdb.get(doc_url).json()
@@ -277,15 +286,15 @@ class CouchDbSyncTestCase(TestCase):
 
         import_synced_devices()
 
-        updated = get_aether_submissions(self.KERNEL_ID)[0]
+        updated = get_aether_submissions()[0]
         self.assertEqual(updated['id'], submission_id, 'updated same doc')
         self.assertEqual(
             updated['payload']['_id'],
             self.example_doc['_id'],
-            f'updated {SUBMISSION_FK} submission',
+            'updated submission',
         )
-        self.assertEqual(updated['payload']['firstname'], 'Rey', f'updated {SUBMISSION_FK} submission')
-        self.assertEqual(updated['payload']['lastname'], '(Unknown)', f'updated {SUBMISSION_FK} submission')
+        self.assertEqual(updated['payload']['firstname'], 'Rey', 'updated submission')
+        self.assertEqual(updated['payload']['lastname'], '(Unknown)', 'updated submission')
 
         # check the written meta document
         status = get_meta_doc(device.db_name, self.example_doc['_id'])
@@ -316,7 +325,7 @@ class CouchDbSyncTestCase(TestCase):
             import_synced_devices()
             mock_post_to_aether.assert_called()
 
-        docs = get_aether_submissions(self.KERNEL_ID)
+        docs = get_aether_submissions()
         self.assertEqual(len(docs), 0, 'doc did not get imported to aether')
         status = get_meta_doc(device.db_name, self.example_doc['_id'])
 
