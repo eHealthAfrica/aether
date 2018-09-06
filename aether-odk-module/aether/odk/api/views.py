@@ -40,6 +40,7 @@ from aether.common.kernel.utils import (
     get_attachments_url,
     get_auth_header,
     get_submissions_url,
+    submit_to_kernel,
 )
 from ..settings import logger
 
@@ -511,13 +512,9 @@ def xform_submission(request):
         # `submission_id`.
         if previous_submissions_count == 0:
             submission_id = None
-            response = requests.post(
-                submissions_url,
-                json={
-                    'mapping': str(xform.kernel_id),
-                    'payload': data,
-                },
-                headers=auth_header,
+            response = submit_to_kernel(
+                submission=data,
+                submission_fk=str(xform.kernel_id),
             )
             submission_content = response.content.decode('utf-8')
 
