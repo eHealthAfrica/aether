@@ -105,12 +105,14 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), TimeStampedMod
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
     name = models.CharField(max_length=50, null=False, unique=True)
+
     input = JSONField(null=True, blank=True)
+
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
 
     @property
-    def definition_prettified(self):
-        return json_prettified(self.definition)
+    def input_prettified(self):
+        return json_prettified(self.input)
 
     def __str__(self):
         return self.name
@@ -271,11 +273,13 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
     name = models.CharField(max_length=50, null=False, unique=True)
+
     definition = JSONField(blank=False, null=False)
-    mappingset = models.ForeignKey(to=MappingSet, on_delete=models.CASCADE)
-    projectschemas = models.ManyToManyField(to=ProjectSchema)
     is_active = models.BooleanField(default=True)
     is_read_only = models.BooleanField(default=False)
+
+    mappingset = models.ForeignKey(to=MappingSet, on_delete=models.CASCADE)
+    projectschemas = models.ManyToManyField(to=ProjectSchema)
 
     # redundant but speed up queries
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, blank=True, null=True)

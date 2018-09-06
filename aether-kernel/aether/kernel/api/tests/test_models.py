@@ -56,6 +56,7 @@ class ModelsTests(TransactionTestCase):
         self.assertEquals(str(mappingset), mappingset.name)
         self.assertNotEqual(models.MappingSet.objects.count(), 0)
         self.assertEquals(str(mappingset.project), str(project))
+        self.assertTrue(mappingset.input_prettified is not None)
 
         mapping = models.Mapping.objects.create(
             name='sample mapping',
@@ -85,6 +86,7 @@ class ModelsTests(TransactionTestCase):
         self.assertEquals(attachment.name, 'sample.txt')
         self.assertEquals(attachment.md5sum, '900150983cd24fb0d6963f7d28e17f72')
         self.assertEquals(attachment.submission_revision, submission.revision)
+        self.assertTrue(attachment.attachment_file_url.endswith(attachment.attachment_file.url))
 
         attachment_2 = models.Attachment.objects.create(
             submission=submission,
