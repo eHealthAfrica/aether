@@ -185,15 +185,16 @@ class Pipeline extends Component {
             <div
               className='pipeline-nav-item__output'
               onClick={() => this.toggleOutput()}>
-              <div className='badge badge-small' />
-              { this.props.selectedPipeline.mapping.length > 0 &&
-                <span className={`status ${this.props.selectedPipeline.mapping_errors.length > 0
-                  ? 'red' : 'green'}`} /> }
+              <div className='badge'>                
+                <i className='fas fa-caret-right'/>
+              </div>
               <FormattedMessage
                 id='pipeline.navbar.output'
                 defaultMessage='Output'
               />
-              <div className='output-toggle' />
+              { this.props.selectedPipeline.mapping.length > 0 &&
+                <span className={`status ${this.props.selectedPipeline.mapping_errors.length > 0
+                ? 'red' : 'green'}`} /> }
             </div>
           </div>
 
@@ -227,6 +228,7 @@ class Pipeline extends Component {
   toggleFullscreen () {
     if (!this.state.fullscreen) {
       this.setState({ fullscreen: true })
+      this.setState({ showOutput: false })
     } else {
       this.setState({ fullscreen: false })
     }

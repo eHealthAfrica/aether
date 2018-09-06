@@ -30,7 +30,7 @@ $pipeline-nav-height: 4rem;
 $input-nav-width: 6rem;
 $entityTypes-nav-width: 11rem;
 $mapping-nav-width: 9rem;
-$output-nav-width: 8rem;
+$output-nav-width: 10rem;
 
 .pipeline {
   background: $white;
@@ -97,7 +97,7 @@ $output-nav-width: 8rem;
   display: none;
 
   &::before {
-    @include shadow-flat-dark;
+    // @include shadow-flat-dark;
     content: '';
     display: block;
     position: absolute;
@@ -141,9 +141,12 @@ $output-nav-width: 8rem;
   }
 }
 
+.fullscreen .pipeline-nav-items {
+  width: 100%;
+}
+
 .fullscreen .fullscreen-toggle {
   margin-left: calc(100% - 19rem);
-  border-right: 1px solid $grey;
 
   &::before {
     display: none;
@@ -216,26 +219,7 @@ div.pipeline-nav-item__contracts {
 }
 
 div.pipeline-nav-item__output {
-
-  text-align: right;
-  justify-content: flex-end;
-  padding-right: 2rem;
   width: $output-nav-width;
-  position: relative;
-
-  .output-toggle {
-    width: 0;
-    height: 0;
-    border-top: .4rem solid transparent;
-    border-bottom: .4rem solid transparent;
-    border-left: .6rem solid $action-color;
-
-    position: absolute;
-    top: .8rem;
-    right: .6rem;
-
-    transition: right $transition-speed;
-  }
 }
 
 .pipeline-sections {
@@ -267,6 +251,9 @@ div[class^='pipeline-section__'],
   .badge {
     @include bg-gradient;
     opacity: 1;
+    .fa-caret-right {
+      transform: rotate(90deg);
+    }
   }
 
   .fullscreen-toggle {
@@ -329,7 +316,8 @@ div[class^='pipeline-section__'],
 .pipeline--entityTypes .fullscreen {
 
   div.pipeline-nav-item__input,
-  div.pipeline-nav-item__mapping {
+  div.pipeline-nav-item__mapping,
+  div.pipeline-nav-item__output {
     width: 0;
   }
 
@@ -380,7 +368,8 @@ div[class^='pipeline-section__'],
 .pipeline--mapping .fullscreen {
 
   div.pipeline-nav-item__input,
-  div.pipeline-nav-item__entityTypes {
+  div.pipeline-nav-item__entityTypes,
+  div.pipeline-nav-item__output {
     width: 0;
   }
 
@@ -408,11 +397,8 @@ div[class^='pipeline-section__'],
   }
 
   div.pipeline-nav-item__output {
+    @include selected;
     width: $output-width;
-
-    .output-toggle {
-      right: calc(100% - 1.6rem);
-    }
   }
 
   .pipeline-sections {
