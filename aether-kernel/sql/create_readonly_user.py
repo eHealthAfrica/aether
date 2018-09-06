@@ -28,8 +28,15 @@ access to all environment variables available in that context.
 '''
 
 import os
+import logging
 import psycopg2
 from psycopg2 import sql
+
+DEBUG = os.environ.get('DEBUG')
+LEVEL = logging.DEBUG if DEBUG else logging.WARNING
+
+logging.basicConfig(level=LEVEL)
+logger = logging.getLogger(__name__)
 
 # Create a readonly user with username "{role_id}" if none exists.
 # Grant read permission for relevant tables.
@@ -62,6 +69,13 @@ def main():
     root_user = os.environ['PGUSER']
     root_password = os.environ['PGPASSWORD']
 
+    logger.debug('db://{user}:{pwrd}@{host}:{port}/{dbname}'.format(
+        user=root_user,
+        pwrd=(len(root_password) * '*'),
+        host=host,
+        port=port,
+        dbname=dbname,
+    ))
     postgres_credentials = {
         'dbname': dbname,
         'host': host,
