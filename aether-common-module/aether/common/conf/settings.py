@@ -256,7 +256,7 @@ elif DJANGO_STORAGE_BACKEND == 's3':
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     AWS_STORAGE_BUCKET_NAME = os.environ['BUCKET_NAME']
 elif DJANGO_STORAGE_BACKEND == 'gcs':
-    DEFAULT_FILE_STORAGE = 'storages.backends.gs.GSBotoStorage'
+    DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
     GS_BUCKET_NAME = os.environ['BUCKET_NAME']
 else:
     msg = (
