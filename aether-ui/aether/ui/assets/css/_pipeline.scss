@@ -209,6 +209,12 @@ div.pipeline-nav-item__mapping {
   width: $mapping-nav-width;
 }
 
+div.pipeline-nav-item__contracts {
+  position: absolute;
+  right: 1rem;
+  display: none;
+}
+
 div.pipeline-nav-item__output {
 
   text-align: right;
@@ -282,6 +288,16 @@ div[class^='pipeline-section__'],
     color: $text-color;
   }
 
+  div.pipeline-nav-item__contracts {
+    display: block;
+  }
+
+  div.pipeline-nav-item__entityTypes,
+  div.pipeline-nav-item__mapping,
+  div.pipeline-nav-item__output {
+    display: none;
+  }
+
   div.pipeline-section__input {
     width: 100%;
   }
@@ -310,7 +326,7 @@ div[class^='pipeline-section__'],
   }
 }
 
-.pipeline--entityTypes.fullscreen {
+.pipeline--entityTypes .fullscreen {
 
   div.pipeline-nav-item__input,
   div.pipeline-nav-item__mapping {
@@ -361,7 +377,7 @@ div[class^='pipeline-section__'],
   }
 }
 
-.pipeline--mapping.fullscreen {
+.pipeline--mapping .fullscreen {
 
   div.pipeline-nav-item__input,
   div.pipeline-nav-item__entityTypes {

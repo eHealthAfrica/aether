@@ -79,7 +79,7 @@ class Pipeline extends Component {
     }
 
     return (
-      <div className={'pipelines-container show-pipeline'}>
+      <div className={`pipelines-container show-pipeline pipeline--${this.state.pipelineView}`}>
         <NavBar showBreadcrumb>
           <div className='breadcrumb-links'>
             <Link to='/'>
@@ -107,7 +107,7 @@ class Pipeline extends Component {
           </div>
         </NavBar>
 
-        <div className={`pipeline pipeline--${this.state.pipelineView} ${this.state.showOutput ? 'show-output' : ''} ${this.state.fullscreen ? 'fullscreen' : ''}`}>
+        <div className={`pipeline ${this.state.showOutput ? 'show-output' : ''} ${this.state.fullscreen ? 'fullscreen' : ''}`}>
           <div className='pipeline-tabs'>
             <div className='pipeline-tab active'>
               {this.props.selectedPipeline.name}
@@ -129,8 +129,10 @@ class Pipeline extends Component {
             <div className='pipeline-nav-items'>
               <div
                 className='pipeline-nav-item__input'
-                onClick={() => this.setState({ pipelineView: 'input' })}>
-                <div className='badge'>1</div>
+                onClick={() => this.viewInput()}>
+                <div className='badge'>
+                  <i className='fas fa-file'/>
+                </div>
                 <FormattedMessage
                   id='pipeline.navbar.input'
                   defaultMessage='Input'
@@ -139,7 +141,9 @@ class Pipeline extends Component {
               <div
                 className='pipeline-nav-item__entityTypes'
                 onClick={() => this.setState({ pipelineView: 'entityTypes' })}>
-                <div className='badge'>2</div>
+                <div className='badge'>
+                  <i className='fas fa-caret-right'/>
+                </div>
                 <FormattedMessage
                   id='pipeline.navbar.entity.types'
                   defaultMessage='Entity Types'
@@ -153,7 +157,9 @@ class Pipeline extends Component {
               <div
                 className='pipeline-nav-item__mapping'
                 onClick={() => this.setState({ pipelineView: 'mapping' })}>
-                <div className='badge'>3</div>
+                <div className='badge'>
+                  <i className='fas fa-caret-right'/>
+                </div>
                 <FormattedMessage
                   id='pipeline.navbar.mapping'
                   defaultMessage='Mapping'
@@ -163,6 +169,17 @@ class Pipeline extends Component {
                   onClick={() => this.toggleFullscreen()}>
                   <span>{this.state.fullscreen ? 'close' : 'fullscreen'}</span>
                 </div>
+              </div>
+              <div
+                className='pipeline-nav-item__contracts'
+                onClick={() => this.setState({ pipelineView: 'entityTypes' })}>
+                <div className='badge'>                
+                  <i className='fas fa-caret-right'/>
+                </div>
+                <FormattedMessage
+                  id='pipeline.navbar.contracts'
+                  defaultMessage='Contracts'
+                />
               </div>
             </div>
             <div
@@ -213,6 +230,11 @@ class Pipeline extends Component {
     } else {
       this.setState({ fullscreen: false })
     }
+  }
+
+  viewInput () {
+    this.setState({ showOutput: false })
+    this.setState({ pipelineView: 'input' })
   }
 }
 
