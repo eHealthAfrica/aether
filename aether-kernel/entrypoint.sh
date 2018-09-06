@@ -74,11 +74,24 @@ setup () {
     # migrate data model if needed
     ./manage.py migrate --noinput
 
-    # Create readonly database user
-    python /code/sql/create_readonly_user.py
-
     # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
     ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD -t=$ADMIN_TOKEN
+
+    STATIC_ROOT=/var/www/static
+    # create static assets
+    ./manage.py collectstatic --noinput --clear --verbosity 0
+    chmod -R 755 $STATIC_ROOT
+
+    # expose version number (if exists)
+    cp ./VERSION $STATIC_ROOT/VERSION   2>/dev/null || :
+    # add git revision (if exists)
+    cp ./REVISION $STATIC_ROOT/REVISION 2>/dev/null || :
+
+    # media assets storage
+    if [ "$DJANGO_STORAGE_BACKEND" == "filesystem" ]; then
+        echo "Filesystem storage in ${MEDIA_ROOT:-/media}"
+        chown aether: ${MEDIA_ROOT:-/media}
+    fi
 }
 
 test_flake8 () {
@@ -140,18 +153,6 @@ case "$1" in
     start )
         setup
 
-        # media assets
-        chown aether: /media
-
-        # create static assets
-        ./manage.py collectstatic --noinput --clear --verbosity 0
-        chmod -R 755 /var/www/static
-
-        # expose version number (if exists)
-        cp ./VERSION /var/www/static/VERSION 2>/dev/null || :
-        # add git revision (if exists)
-        cp ./REVISION /var/www/static/REVISION 2>/dev/null || :
-
         [ -z "$DEBUG" ] && LOGGING="--disable-logging" || LOGGING=""
         /usr/local/bin/uwsgi \
             --ini /code/conf/uwsgi.ini \
@@ -162,8 +163,6 @@ case "$1" in
     start_dev )
         setup
 
-        # media assets
-        chown aether: /media
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
 

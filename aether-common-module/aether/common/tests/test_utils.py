@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-#
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -17,10 +15,14 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-set -Eeuo pipefail
 
-for dc_file in $(find docker-compose*.yml 2> /dev/null)
-do
-    docker-compose -f $dc_file down
-done
+from django.test import TestCase
+from aether.common.utils import resolve_file_url
+
+
+class UtilsTest(TestCase):
+    def test_resolve_file_url(self):
+        absolute_url = 'http://test.com/test/'
+        relative_url = '/test/'
+        self.assertEqual(resolve_file_url(absolute_url), absolute_url)
+        self.assertEqual(resolve_file_url(relative_url), 'http://example.com/test/')

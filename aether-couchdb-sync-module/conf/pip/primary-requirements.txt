@@ -20,6 +20,7 @@
 #   django-cors-headers
 #   django-debug-toolbar
 #   django-prometheus
+#   django-storages
 #   djangorestframework
 #   djangorestframework-csv
 #   psycopg2-binary
@@ -38,7 +39,7 @@ rq
 rq-scheduler
 
 
-# UMS libraries
+# CAS libraries
 django-cas-ng
 django-ums-client
 

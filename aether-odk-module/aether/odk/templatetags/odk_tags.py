@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-#
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -17,10 +15,25 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-set -Eeuo pipefail
 
-for dc_file in $(find docker-compose*.yml 2> /dev/null)
-do
-    docker-compose -f $dc_file down
-done
+from django import template
+from django.conf import settings
+
+register = template.Library()
+
+
+def get_absolute_url(scheme, host, media_url, file_path):
+    return f'{scheme}://{host}{media_url}{file_path}'
+
+
+@register.simple_tag(takes_context=True)
+def get_file_url(context, media_file):
+    if settings.DJANGO_STORAGE_BACKEND == 'filesystem':
+        request = context['request']
+        return get_absolute_url(
+            scheme=request.scheme,
+            host=request.get_host(),
+            media_url=settings.MEDIA_BASIC_URL,
+            file_path=media_file.name,
+        )
+    return media_file.url
