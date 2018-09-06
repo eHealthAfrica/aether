@@ -124,7 +124,6 @@ class CouchDbSyncTestCase(TestCase):
         }
 
     def tearDown(self):
-        requests.delete(f'{self.KERNEL_URL}/entities/project={self.KERNEL_ID}', headers=headers_testing)
         requests.delete(f'{self.KERNEL_URL}/projects/{self.KERNEL_ID}/', headers=headers_testing)
         requests.delete(f'{self.KERNEL_URL}/schemas/{self.KERNEL_ID}/', headers=headers_testing)
         clean_couch()
