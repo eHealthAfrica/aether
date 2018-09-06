@@ -40,9 +40,42 @@ $output-nav-width: 8rem;
   top: $navbar-height-xs;
   bottom: 0;
   width: 100vw;
-  transition: top .2s;
+  transition: top .4s .5s;
   animation: slide-up .6s;
-  z-index: 2;
+  z-index: 4;
+}
+
+.pipeline-tabs {
+  position:absolute;
+  top: $navbar-height-xs * -1;
+  height: $navbar-height-xs; 
+  border-bottom: 1px solid transparent;
+  margin-left: 20vw;
+  display: flex;
+  transition: margin-left $transition-speed;
+}
+
+.pipeline-tab {
+  padding: .3rem .8rem;
+
+  .settings-button {
+    @include shadow-flat-dark;
+    padding: .1em .4em;
+    margin-left: 2rem;
+    display: none;
+  }
+
+  &.active {
+    background: lighten($dark-blue, 5);
+
+    .settings-button {
+      display: inline-block;
+    }
+
+    .status {
+      display: none;
+    }
+  }
 }
 
 .pipeline-nav {
@@ -197,24 +230,6 @@ div.pipeline-nav-item__output {
 
     transition: right $transition-speed;
   }
-
-  .status {
-    @include shadow-cutout-dark;
-    border-radius: 50%;
-    width: .8em;
-    height: .8em;
-    content: '';
-    display: block;
-    margin-right: .5em;
-  }
-
-  .red {
-    background-color: $red;
-  }
-
-  .green {
-    background-color: $green;
-  }
 }
 
 .pipeline-sections {
@@ -256,6 +271,10 @@ div[class^='pipeline-section__'],
 // INPUT
 
 .pipeline--input {
+
+  .pipeline-tabs {
+    margin-left: 100vw;
+  }
 
   div.pipeline-nav-item__input {
     @include selected;

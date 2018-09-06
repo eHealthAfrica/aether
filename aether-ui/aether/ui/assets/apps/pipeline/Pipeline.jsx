@@ -108,6 +108,23 @@ class Pipeline extends Component {
         </NavBar>
 
         <div className={`pipeline pipeline--${this.state.pipelineView} ${this.state.showOutput ? 'show-output' : ''} ${this.state.fullscreen ? 'fullscreen' : ''}`}>
+          <div className='pipeline-tabs'>
+            <div className='pipeline-tab active'>
+              {this.props.selectedPipeline.name}
+              <span className='status green'></span>
+              <div className='btn btn-d settings-button'>
+                <i className='fas fa-ellipsis-h'/>
+              </div>
+            </div>
+            <div className='pipeline-tab'>
+              another contract
+              <span className='status green'></span>
+              <div className='btn btn-d settings-button'>
+                <i className='fas fa-ellipsis-h'/>
+              </div>
+            </div>
+
+          </div>
           <div className='pipeline-nav'>
             <div className='pipeline-nav-items'>
               <div

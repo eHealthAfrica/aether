@@ -20,14 +20,14 @@
 
 .top-nav {
   padding: 2rem;
-  transition: padding .2s;
+  transition: padding .4s .5s;
   justify-content: flex-start;
   align-items: baseline;
   z-index: 3;
 }
 
 .top-nav:hover + .pipeline {
-  top: 60px;
+  top: 72px;
 }
 
 @keyframes fade-in {
@@ -43,6 +43,7 @@
   display: flex;
   align-items: baseline;
   flex: 1 1 auto;
+  transition: opacity .4s .4s;
 
   a {
     text-transform: uppercase;
@@ -121,11 +122,10 @@
 
 .show-pipeline {
   .top-nav {
-    padding: .2rem 1rem;
+    padding: .3rem .8rem;
   }
 
   .top-nav:hover {
-    padding: 1rem;
 
     .top-nav-breadcrumb,
     .top-nav-logo,
@@ -145,7 +145,8 @@
     width: 24px;
   }
 
-  .top-nav-logo {
+  .top-nav-logo,
+  .top-nav-breadcrumb {
     opacity: 0;
   }
 
