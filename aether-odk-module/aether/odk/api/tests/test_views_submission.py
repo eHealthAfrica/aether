@@ -132,7 +132,7 @@ class PostSubmissionTests(CustomTestCase):
         self.ATTACHMENTS_URL = common_kernel_utils.get_attachments_url()
         self.PROJECT_URL = f'{kernel_url}/projects/{str(self.xform.project.project_id)}/'
         self.SCHEMA_URL = f'{kernel_url}/schemas/{str(self.xform.kernel_id)}/'
-        self.ENTITIES_URL = f'{self.kernel_url}/entities/project={str(self.xform.project.project_id)}'
+        self.ENTITIES_URL = f'{kernel_url}/entities/project={str(self.xform.project.project_id)}'
 
     def tearDown(self):
         super(PostSubmissionTests, self).tearDown()
