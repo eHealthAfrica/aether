@@ -65,8 +65,7 @@ def generate_user_id(device_id):
     Generates CouchDB user (uses ``device_id`` but removes special chars).
     '''
 
-    clean_id = filter_id(device_id)
-    return f'org.couchdb.user:{clean_id}'
+    return f'org.couchdb.user:{filter_id(device_id)}'
 
 
 def generate_db_name(device_id):
@@ -74,8 +73,7 @@ def generate_db_name(device_id):
     Generates device CouchDB name (uses ``device_id`` but removes special chars).
     '''
 
-    clean_id = filter_id(device_id)
-    return f'device_{filter_id(clean_id)}'
+    return f'device_{filter_id(device_id)}'
 
 
 def create_db(device_id):
