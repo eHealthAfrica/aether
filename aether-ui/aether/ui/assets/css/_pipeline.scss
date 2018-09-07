@@ -49,24 +49,39 @@ $output-nav-width: 10rem;
   position:absolute;
   top: $navbar-height-xs * -1;
   height: $navbar-height-xs; 
-  border-bottom: 1px solid transparent;
-  margin-left: 20vw;
+  left: $column-width;
+  width: calc(100% - #{$column-width});
   display: flex;
-  transition: margin-left $transition-speed;
+  transition: left $transition-speed;
 }
 
 .pipeline-tab {
-  padding: .3rem .8rem;
+  padding: .4rem .8rem;
+  display: flex;
+  align-items: center;
+  height: $navbar-height-xs;
 
   .settings-button {
-    @include shadow-flat-dark;
-    padding: .1em .4em;
+
+    padding: 0;
     margin-left: 2rem;
     display: none;
+
+    i {
+      box-shadow: none;
+      width: 1.6rem;
+      height: 1.6rem;
+      padding: .3em;
+    }
+
+    &.active {
+      color: $white;
+    }
   }
 
   &.active {
     background: lighten($dark-blue, 5);
+    border-bottom: 1px solid rgba($white, .1);
 
     .settings-button {
       display: inline-block;
@@ -93,7 +108,6 @@ $output-nav-width: 10rem;
   margin-left: 1rem;
   align-items: center;
   transition: margin-left $transition-speed;
-  color: $action-color;
   display: none;
 
   &::before {
@@ -266,12 +280,17 @@ div[class^='pipeline-section__'],
 .pipeline--input {
 
   .pipeline-tabs {
-    margin-left: 100vw;
+    left: 100vw;
+  }
+
+  div.pipeline-nav-items {
+    width: 100%;
   }
 
   div.pipeline-nav-item__input {
     @include selected;
     width: calc(100% - (#{$entityTypes-nav-width} + #{$mapping-nav-width}));
+    width: 100%;
     color: $text-color;
   }
 
@@ -282,7 +301,7 @@ div[class^='pipeline-section__'],
   div.pipeline-nav-item__entityTypes,
   div.pipeline-nav-item__mapping,
   div.pipeline-nav-item__output {
-    display: none;
+    width: 0;
   }
 
   div.pipeline-section__input {

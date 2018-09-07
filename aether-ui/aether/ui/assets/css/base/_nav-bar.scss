@@ -55,36 +55,6 @@
   }
 }
 
-.top-nav-publish {
-  margin-left: auto;
-  display: flex;
-  align-items: baseline;
-
-  .status-publish {
-    font-size: $font-size-xs;
-    margin-right: 1rem;
-    opacity: 0;
-    transition: opacity .4s;
-  }
-
-  .published-info-icon {
-    font-size: 1.3em;
-    margin-left: .4em;
-    cursor: pointer;
-  }
-}
-
-.btn-publish {
-  transition: all .4s;
-  padding: .3em 1.2em;
-}
-
-.top-nav:not(:hover) .btn-publish {
-  padding: .2em 1.2em;
-  line-height: 1.3em;
-}
-
-
 .top-nav-user {
   @include label;
   transition: opacity .4s;

@@ -111,6 +111,10 @@ textarea {
     @include shadow-cutout-dark;
     background: rgba($text-color, .3);
     color: $white;
+
+    &::Placeholder {
+      color: rgba($white, .4);
+    }
   }
 
   &.error {

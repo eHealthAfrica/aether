@@ -40,6 +40,7 @@ class Pipeline extends Component {
 
     this.state = {
       pipelineView: 'input',
+      showSettings: false,
       showOutput: false,
       fullscreen: false
     }
@@ -91,20 +92,6 @@ class Pipeline extends Component {
             <span> // </span>
             { selectedPipeline.name }
           </div>
-          <div className='top-nav-publish'>
-            <div className='status-publish'>
-              <FormattedMessage
-                id='pipeline.publish-status'
-                defaultMessage={this.props.selectedPipeline.published_on
-                  ? `Published on ${moment(this.props.selectedPipeline.published_on).format('MMMM DD, YYYY HH:mm')}`
-                  : 'Not published'}
-              />
-              {this.props.selectedPipeline.published_on &&
-                <InfoButton pipeline={this.props.selectedPipeline} />
-              }
-            </div>
-            <PublishButton pipeline={this.props.selectedPipeline} className='btn btn-c btn-publish' />
-          </div>
         </NavBar>
 
         <div className={`pipeline ${this.state.showOutput ? 'show-output' : ''} ${this.state.fullscreen ? 'fullscreen' : ''}`}>
@@ -112,14 +99,18 @@ class Pipeline extends Component {
             <div className='pipeline-tab active'>
               {this.props.selectedPipeline.name}
               <span className='status green'></span>
-              <div className='btn btn-d settings-button'>
+              <div 
+                className={`btn-icon settings-button ${this.state.showSettings ? 'active' : ''}`}
+                onClick={() => this.toggleSettings()}>
                 <i className='fas fa-ellipsis-h'/>
               </div>
             </div>
             <div className='pipeline-tab'>
               another contract
               <span className='status green'></span>
-              <div className='btn btn-d settings-button'>
+              <div 
+                className='btn btn-d settings-button'
+                onClick={() => this.toggleSettings()}>
                 <i className='fas fa-ellipsis-h'/>
               </div>
             </div>
@@ -212,9 +203,22 @@ class Pipeline extends Component {
           <div className='pipeline-output'>
             <Output />
           </div>
+
+          { this.state.showSettings && 
+            this.renderSettings()
+          }
+
         </div>
       </div>
     )
+  }
+
+  toggleSettings () {
+    if (!this.state.showSettings) {
+      this.setState({ showSettings: true })
+    } else {
+      this.setState({ showSettings: false })
+    }
   }
 
   toggleOutput () {
@@ -237,6 +241,87 @@ class Pipeline extends Component {
   viewInput () {
     this.setState({ showOutput: false })
     this.setState({ pipelineView: 'input' })
+  }
+
+
+  renderSettings () {
+    return (
+      <div className='pipeline-settings'>
+        <div
+          className='btn-icon close-button'
+          onClick={() => this.toggleSettings()}>
+          <i className='fas fa-times'></i>
+          <span>close settings</span>
+        </div>
+
+        <form className='contract-form'>
+          <div className='form-group'>
+            <label className='form-label'>
+              <FormattedMessage
+                id='contract.new.name'
+                defaultMessage='Contract name'
+              />
+            </label>
+            <input
+              type='text'
+              required
+              name='name'
+              className='input-d contract-name'
+              placeholder={this.props.selectedPipeline.name}
+            />
+          </div>
+
+          <div className='settings-section'>
+            <label className='form-label'>
+              <FormattedMessage
+                id='settings.puplish.title'
+                defaultMessage='Publish status'
+              />
+            </label>
+            <div className='status-publish'>
+              <FormattedMessage
+                id='pipeline.publish-status'
+                defaultMessage={this.props.selectedPipeline.published_on
+                  ? `Published on ${moment(this.props.selectedPipeline.published_on).format('MMMM DD, YYYY HH:mm')}`
+                  : 'Not published'}
+              />
+              <PublishButton pipeline={this.props.selectedPipeline} className='btn btn-d btn-publish' />
+            </div>
+            
+            <label className='form-label'>
+              <FormattedMessage
+                id='settings.submission.title'
+                defaultMessage='Submission URL'
+              />
+            </label>
+
+            <a className='submission-url' href=''>blabla URL</a>
+          </div>
+          <button
+            type='button'
+            className='btn btn-d btn-big'>
+            <span className='details-title'>
+              <FormattedMessage
+                id='pipeline.new.button.cancel'
+                defaultMessage='Cancel'
+              />
+            </span>
+          </button>
+          <button
+            type='submit'
+            className='btn btn-d btn-primary btn-big ml-4'>
+            <span className='details-title'>
+              <FormattedMessage
+                id='contract.save'
+                defaultMessage='Save'
+              />
+            </span>
+          </button>
+        </form>
+
+      </div>
+    )
+
   }
 }
 

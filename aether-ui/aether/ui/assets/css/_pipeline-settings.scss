@@ -18,34 +18,60 @@
  * under the License.
  */
 
-// ************************************
-// third-party styles
-// ************************************
+ @keyframes show {
+  0% {
+    opacity: 0;
+  }
 
-@import '~bootstrap/scss/bootstrap';
+  50% {
+    opacity: 0;
+  }
 
+  100% {
+    opacity: 1;
+  }
+}
 
-// ************************************
-// custom styles
-// ************************************
+.pipeline-settings {
+  background: lighten($dark-blue, 5);
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: $column-width;
+  right: 0;
+  z-index: 3;
+  animation: show .5s;
+  padding: .6rem 1rem;
 
-@import 'base/fonts';
-@import 'base/settings';
-@import 'base/color-codes';
-@import 'base/mixins';
-@import 'base/global';
-@import 'base/buttons';
-@import 'base/nav-bar';
-@import 'base/logo';
-@import 'base/loading-spinner';
-@import 'base/modal';
-@import 'base/messages';
-@import 'pipelines';
-@import 'pipeline';
-@import 'pipeline-settings';
-@import 'section-input';
-@import 'section-entity-types';
-@import 'section-mapping';
-@import 'section-output';
+  .status-publish {
+    margin: 2rem 0 3rem;
+  }
 
-@import 'base/styleguide';
+  .btn-publish {
+    margin-top: 1rem;
+  }
+
+  .submission-url {
+    color: $action-color-b;
+  }
+}
+
+.fullscreen .pipeline-settings {
+  left: 0;
+}
+
+.contract-form {
+  margin: 3rem 2.3rem 1rem;
+
+  .contract-name {
+    font-size: $font-size-l;
+    font-weight: 300;
+    width: 100%;
+  }
+}
+
+.settings-section {
+  margin: 2rem 0;
+  padding: 2rem 0;
+  border-top: 1px dashed rgba($light-grey, .4);
+}
