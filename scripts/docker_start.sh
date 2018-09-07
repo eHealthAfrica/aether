@@ -25,9 +25,9 @@ set -Eeuo pipefail
 #   ./scripts/docker_start.sh [--force | --kill | -f | -k] [--build | -b] <name>
 #
 # arguments:
-#   --force | -f   will kill all running containers
-#   --kill  | -k   alias of the above
-#   --build | -b   will kill and build containers before start
+#   --kill  | -k   kill all running containers before start
+#   --build | -b   kill and build all containers before start
+#   --force | -f   ensure that the container will be restarted if needed
 
 #   <name>
 #      Expected values: kernel, odk, ui, couchdb-sync or sync.
@@ -36,13 +36,14 @@ set -Eeuo pipefail
 
 # default values
 kill=no
+force=no
 build=no
 app=
 
 while [[ $# -gt 0 ]]
 do
     case "$1" in
-        -f|--force|-k|--kill)
+        -k|--kill)
             # stop all containers
             kill=yes
 
@@ -56,6 +57,13 @@ do
             shift # past argument
         ;;
 
+        -f|--force)
+            # force restart container
+            force=yes
+
+            shift # past argument
+        ;;
+
         *)
             # otherwise is the container name
             app="$1"
@@ -65,6 +73,10 @@ do
     esac
 done
 
+
+# Try to create the Aether network+volume if missing
+docker network create aether_internal       2>/dev/null || true
+docker volume  create aether_database_data  2>/dev/null || true
 
 echo ""
 docker-compose ps
@@ -135,8 +147,10 @@ case $app in
 esac
 
 start_container () {
-    docker-compose kill $1
-    docker-compose up -d $1
+    if [[ $force = "yes" ]]; then
+        docker-compose kill $1
+    fi
+    docker-compose up --no-deps -d $1
     sleep 2
     docker-compose logs --tail 20 $1
 }

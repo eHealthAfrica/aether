@@ -172,14 +172,16 @@ The tests clean up will **DELETE ALL MAPPINGS!!!**
 
 ## Usage
 
+Start the indicated app/module with the necessary dependencies:
+
 ```bash
-./scripts/docker_start.sh [--force | --kill | -f | -k] [--build | -b] <name>
+./scripts/docker_start.sh [--kill | -k] [--build | -b] [--force | -f] <name>
 ```
 
 Arguments:
-  `--force` | `-f`  will kill all running containers before start again
-  `--kill`  | `-k`  alias of the above
-  `--build` | `-b`  will kill and build containers before start
+  `--kill`  | `-k`  kill all running containers before start
+  `--build` | `-b`  kill and build all containers before start
+  `--force` | `-f`  ensure that the container will be restarted if it was already running
 
   `name`
     Expected values: `kernel`, `odk`, `ui`, `couchdb-sync` or `sync`
