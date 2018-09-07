@@ -20,7 +20,6 @@
 
 .top-nav {
   padding: 2rem;
-  transition: padding .4s .5s;
   justify-content: flex-start;
   align-items: baseline;
   z-index: 3;
@@ -39,11 +38,13 @@
   animation: fade-in .6s;
   letter-spacing: .06em;
   font-size: $font-size-s;
-  opacity: .6;
   display: flex;
   align-items: baseline;
   flex: 1 1 auto;
-  transition: opacity .4s .4s;
+
+  .breadcrumb-links {
+    transition: opacity .4s .4s;
+  }
 
   a {
     text-transform: uppercase;
@@ -97,7 +98,7 @@
 
   .top-nav:hover {
 
-    .top-nav-breadcrumb,
+    .breadcrumb-links,
     .top-nav-logo,
     .status-publish {
       opacity: 1;
@@ -115,8 +116,7 @@
     width: 24px;
   }
 
-  .top-nav-logo,
-  .top-nav-breadcrumb {
+  .breadcrumb-links {
     opacity: 0;
   }
 
@@ -126,7 +126,7 @@
 }
 .pipeline--input {
 
-  .top-nav-breadcrumb {
+  .breadcrumb-links {
     opacity: 1;
   }
 }

@@ -46,7 +46,7 @@ $output-nav-width: 10rem;
 }
 
 .pipeline-tabs {
-  position:absolute;
+  position: absolute;
   top: $navbar-height-xs * -1;
   height: $navbar-height-xs; 
   left: $column-width;
@@ -93,13 +93,20 @@ $output-nav-width: 10rem;
   }
 }
 
+.new-contract {
+  margin-left: auto;
+  transition: opacity .4s;
+  align-self: center;
+  margin-right: .3rem;
+}
+
 .pipeline-nav {
   display: flex;
   position: absolute;
   width: 100%;
   align-items: baseline;
   justify-content: space-between;
-  z-index: 3;
+  z-index: 4;
 }
 
 .fullscreen-toggle {
@@ -425,6 +432,7 @@ div[class^='pipeline-section__'],
   }
 
   .pipeline-output {
-    width: $output-width;
+    width: calc(#{$output-width} + .2vw);
+    border-left: 1px solid rgba($black, .5);
   }
 }

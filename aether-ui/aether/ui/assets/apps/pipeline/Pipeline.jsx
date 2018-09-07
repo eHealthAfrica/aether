@@ -114,6 +114,16 @@ class Pipeline extends Component {
                 <i className='fas fa-ellipsis-h'/>
               </div>
             </div>
+            <button
+              type='button'
+              className='btn btn-c btn-sm new-contract'>
+              <span className='details-title'>
+                <FormattedMessage
+                  id='contract.add.button.add'
+                  defaultMessage='Add contract'
+                />
+              </span>
+          </button>
 
           </div>
           <div className='pipeline-nav'>
