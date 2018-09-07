@@ -164,7 +164,7 @@ class ModelsTests(CustomTestCase):
         )
         self.assertEqual(media.name, 'sample.txt', 'takes file name')
         self.assertEqual(media.md5sum, '900150983cd24fb0d6963f7d28e17f72')
-        self.assertEqual(str(media), 'xForm - Test - xform-id-test - sample.txt')
+        self.assertEqual(str(media), 'sample.txt')
 
         media.media_file = SimpleUploadedFile('sample2.txt', b'abcd')
         media.save()
