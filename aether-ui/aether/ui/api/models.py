@@ -29,12 +29,31 @@ from .utils import validate_pipeline
 class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, null=False, blank=False, unique=True)
-
+    project = models.UUIDField(blank=True, null=True)
     # this is the avro schema
     schema = JSONField(blank=True, null=True, default={})
 
     # this is an example of the data using the avro schema
     input = JSONField(blank=True, null=True, default={})
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        read_only_contracts = self.contracts.filter(is_read_only=True)
+        if read_only_contracts:
+            raise Exception('Input is readonly for this pipeline')
+        super(Pipeline, self).save(*args, **kwargs)
+
+    class Meta:
+        app_label = 'ui'
+        default_related_name = 'pipelines'
+        ordering = ('name',)
+
+
+class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100, null=False, blank=False, unique=True)
 
     # the list of available entity types (avro schemas)
     entity_types = JSONField(blank=True, null=True, default=[])
@@ -72,6 +91,10 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
     output = JSONField(blank=True, null=True, editable=False)
     kernel_refs = JSONField(blank=True, null=True, editable=False)
     published_on = models.DateTimeField(blank=True, editable=False, null=True)
+    is_active = models.BooleanField(default=True)
+    is_read_only = models.BooleanField(default=False)
+
+    pipeline = models.ForeignKey(to=Pipeline, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
@@ -81,9 +104,13 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
         self.mapping_errors = errors
         self.output = output
 
-        super(Pipeline, self).save(*args, **kwargs)
+        super(Contract, self).save(*args, **kwargs)
 
     class Meta:
         app_label = 'ui'
-        default_related_name = 'pipelines'
-        ordering = ('name',)
+        default_related_name = 'contracts'
+        ordering = ['pipeline__id', '-modified']
+        indexes = [
+            models.Index(fields=['pipeline', '-modified']),
+            models.Index(fields=['-modified']),
+        ]

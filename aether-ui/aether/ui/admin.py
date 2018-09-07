@@ -23,9 +23,16 @@ from .api import models
 
 class PipelineAdmin(admin.ModelAdmin):
 
+    list_display = ('name',)
+    search_fields = ('name',)
+    ordering = list_display
+
+class ContractAdmin(admin.ModelAdmin):
+
     list_display = ('name', 'published_on',)
     search_fields = ('name',)
     ordering = list_display
 
 
 admin.site.register(models.Pipeline, PipelineAdmin)
+admin.site.register(models.Contract, ContractAdmin)

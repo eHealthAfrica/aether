@@ -379,12 +379,11 @@ def overwrite_kernel_schema(pipeline, schema_name, schema_data, projectname, out
     return outcome
 
 
-def is_linked_to_pipeline(object_name, id):
+def linked_pipeline_object(object_name, id):
     kwargs = {
         '{0}__{1}'.format('kernel_refs', object_name): id
     }
-    linked_pipeline = models.Pipeline.objects.filter(**kwargs)
-    return True if len(linked_pipeline) else False
+    return models.Pipeline.objects.filter(**kwargs)
 
 
 def convert_mappings(mapping_from_kernel):
@@ -396,7 +395,7 @@ def convert_mappings(mapping_from_kernel):
 
 def convert_entity_types(entities_from_kernel):
     result = {'schemas': [], 'ids': {}}
-    for entity, entity_id in entities_from_kernel.items():
+    for _, entity_id in entities_from_kernel.items():
         project_schema = kernel_data_request(f'projectschemas/{entity_id}/')
         schema = kernel_data_request(f'schemas/{project_schema["schema"]}/')
         result['schemas'].append(schema['definition'])
@@ -404,26 +403,46 @@ def convert_entity_types(entities_from_kernel):
     return result
 
 
-def create_new_pipeline_from_kernel(kernel_object):
-    entity_types = convert_entity_types(kernel_object['definition']['entities'])
+def create_new_pipeline_from_kernel(mappingset):
+    mappings = kernel_data_request('mappings/?mappingset={}'.format(mappingset['id']))['results']
     new_pipeline = models.Pipeline.objects.create(
-        name=kernel_object['name'],
-        mapping=convert_mappings(kernel_object['definition']['mapping']),
-        entity_types=entity_types['schemas'],
-        kernel_refs={
-            'project': kernel_object['project'],
-            'schema': entity_types['ids'],
-            'projectschema': kernel_object['definition']['entities'],
-            'mapping': kernel_object['id']
-        }
+        id=mappingset['id'],
+        name=mappingset['name'],
+        input=mappingset['input'],
+        project=mappingset['project']
     )
+    for mapping in mappings:
+        entity_types = convert_entity_types(mapping['definition']['entities'])
+        models.Contract.objects.create(
+            id=mapping['id'],
+            name=mapping['name'],
+            mapping=convert_mappings(mapping['definition']['mapping']),
+            entity_types=entity_types['schemas'],
+            pipeline=new_pipeline,
+            is_active=str_to_bool(mapping['is_active']),
+            is_read_only=str_to_bool(mapping['is_read_only']),
+            kernel_refs={
+                'schema': entity_types['ids'],
+                'projectschema': mapping['definition']['entities'],
+                'mapping': mapping['id']
+            }
+        )               
     return new_pipeline
 
 
 def kernel_to_pipeline():
-    mappings = kernel_data_request('mappings/')['results']
+    mappingsets = kernel_data_request('mappingsets/')['results']
     pipelines = []
-    for mapping in mappings:
-        if not is_linked_to_pipeline('mapping', mapping['id']):
-            pipelines.append(create_new_pipeline_from_kernel(mapping))
+    for mappingset in mappingsets:
+        if not linked_pipeline_object('mappingset', mappingset['id']):
+            pipelines.append(create_new_pipeline_from_kernel(mappingset))
     return pipelines
+
+def str_to_bool(s):
+    s = s.lower()
+    if s == 'true':
+        return True
+    elif s == 'false':
+        return False
+    else:
+        raise ValueError("Cannot covert {} to a bool".format(s))

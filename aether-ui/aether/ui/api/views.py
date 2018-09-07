@@ -86,6 +86,12 @@ class PipelineViewSet(viewsets.ModelViewSet):
             return Response(outcome, status=HTTPStatus.OK)
 
 
+class ContractViewSet(viewsets.ModelViewSet):
+    queryset = models.Contract.objects.all()
+    serializer_class = serializers.ContractSerializer
+    ordering = ('name',)
+
+
 @api_view(['GET'])
 def get_kernel_url(request):
     return Response(utils.get_kernel_server_url())

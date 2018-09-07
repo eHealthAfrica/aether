@@ -23,6 +23,7 @@ from . import views
 
 router = routers.DefaultRouter()
 router.register('pipelines', views.PipelineViewSet)
+router.register('contracts', views.ContractViewSet)
 
 urlpatterns = router.urls + [
   url(r'^kernel-url/$',
