@@ -9,7 +9,7 @@ services:
       TESTING: "true"
 
       # required environment variables
-      DJANGO_SECRET_KEY: secret
+      DJANGO_SECRET_KEY: django_secret_key
 
       DJANGO_STORAGE_BACKEND: filesystem
       HOSTNAME: example.com
@@ -22,6 +22,7 @@ services:
 
       # required by kernel module
       AETHER_KERNEL_URL_TEST: http://kernel-test
+      AETHER_KERNEL_TOKEN: kernel_secret_token
 
     volumes:
       - ./:/code

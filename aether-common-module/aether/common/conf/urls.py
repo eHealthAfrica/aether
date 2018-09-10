@@ -112,7 +112,7 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
 
     if kernel:
         from aether.common.kernel.views import check_kernel
-        from aether.common.kernel.utils import get_kernel_server_url
+        from aether.common.kernel.utils import get_kernel_server_url, get_kernel_server_token
 
         # checks if Kernel server is available
         urlpatterns += [
@@ -128,5 +128,8 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
         else:
             msg = _('Environment variable "AETHER_KERNEL_URL" is not set')
         assert get_kernel_server_url(), msg
+
+        msg_token = _('Environment variable "AETHER_KERNEL_TOKEN" is not set')
+        assert get_kernel_server_token(), msg_token
 
     return urlpatterns
