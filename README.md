@@ -57,7 +57,12 @@ git clone git@github.com:eHealthAfrica/aether.git && cd aether
 ##### Build containers and start the applications
 
 ```bash
-./scripts/build_aether_containers.sh && docker-compose up
+./scripts/build_aether_containers.sh && ./scripts/docker_start.sh
+```
+or
+
+```bash
+./scripts/docker_start.sh --build
 ```
 
 **IMPORTANT NOTE**: the docker-compose files are intended to be used exclusively
@@ -139,7 +144,8 @@ of the most common ones with non default values. For more info take a look at th
 
 ##### File system (`DJANGO_STORAGE_BACKEND=filesystem`)
 
-- `MEDIA_ROOT`: `/media` the local folder in which all the media assets will be stored. The files will be served at `$HOSTNAME/media/<file-name>`.
+- `MEDIA_ROOT`: `/media` the local folder in which all the media assets will be stored.
+  The files will be served at `$HOSTNAME/media/<file-name>`.
 
 ##### S3 (`DJANGO_STORAGE_BACKEND=s3`)
 
@@ -167,29 +173,35 @@ The tests clean up will **DELETE ALL MAPPINGS!!!**
 
 ## Usage
 
-```bash
-docker-compose up --build    # this will update the containers if needed
-```
-
-or
+Start the indicated app/module with the necessary dependencies:
 
 ```bash
-./scripts/docker_start.sh    # starts all
+./scripts/docker_start.sh [--kill | -k] [--build | -b] [--force | -f] <name>
 ```
+
+Arguments:
+  `--kill`  | `-k`  kill all running containers before start
+  `--build` | `-b`  kill and build all containers before start
+  `--force` | `-f`  ensure that the container will be restarted if it was already running
+
+  `name`
+    Expected values: `kernel`, `odk`, `ui`, `couchdb-sync` or `sync`
+    (alias of `couchdb-sync`).
+    Any other value will start all containers.
 
 This will start:
 
-- **Aether Kernel** on `http://kernel.aether.local:8000`
-  and create a superuser `admin` with the needed TOKEN.
+- **Aether Kernel** on `http://kernel.aether.local`
+  and create a superuser `$ADMIN_USERNAME` with the given credentials.
 
-- **Aether ODK Module** on `http://odk.aether.local:8002`
-  and create a superuser `admin` with the needed TOKEN.
+- **Aether ODK Module** on `http://odk.aether.local`
+  and create a superuser `$ADMIN_USERNAME` with the given credentials.
 
-- **Aether UI** on `http://ui.aether.local:8004`
-  and create a superuser `admin`.
+- **Aether UI** on `http://ui.aether.local`
+  and create a superuser `$ADMIN_USERNAME` with the given credentials.
 
-- **Aether CouchDB Sync Module** on `http://sync.aether.local:8006`
-  and create a superuser `admin`.
+- **Aether CouchDB Sync Module** on `http://sync.aether.local`
+  and create a superuser `$ADMIN_USERNAME` with the given credentials.
 
 If you generated an `.env` file during installation, passwords for all superusers can be found there.
 
