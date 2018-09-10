@@ -18,30 +18,32 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+set -Eeuo pipefail
 
 # start the indicated app/module with the necessary dependencies
 #
-#   docker_start.sh [--force | -f] [--build | -b] <app>
+#   ./scripts/docker_start.sh [--force | --kill | -f | -k] [--build | -b] <name>
 #
 # arguments:
-#   --force | -f  will kill running containers
-#   --killl | -k  will kill running containers
-#   --build | -b  will build containers
+#   --kill  | -k   kill all running containers before start
+#   --build | -b   kill and build all containers before start
+#   --force | -f   ensure that the container will be restarted if needed
 
-#   <app>
+#   <name>
 #      Expected values: kernel, odk, ui, couchdb-sync or sync.
-#      Another value will start all containers.
+#      Any other value will start all containers.
 #
 
 # default values
 kill=no
+force=no
 build=no
 app=
 
 while [[ $# -gt 0 ]]
 do
     case "$1" in
-        -f|--force|-k|--kill)
+        -k|--kill)
             # stop all containers
             kill=yes
 
@@ -55,6 +57,13 @@ do
             shift # past argument
         ;;
 
+        -f|--force)
+            # force restart container
+            force=yes
+
+            shift # past argument
+        ;;
+
         *)
             # otherwise is the container name
             app="$1"
@@ -64,6 +73,10 @@ do
     esac
 done
 
+
+# Try to create the Aether network+volume if missing
+docker network create aether_internal       2>/dev/null || true
+docker volume  create aether_database_data  2>/dev/null || true
 
 echo ""
 docker-compose ps
@@ -97,31 +110,65 @@ echo "----------------------------------------------------------------------"
 echo "---- Starting containers                                          ----"
 echo "----------------------------------------------------------------------"
 
-# check given container name
 case $app in
     kernel)
-        CONTAINERS=(db kernel nginx)
+        PRE_CONTAINERS=(db)
+        SETUP_CONTAINERS=(kernel)
+        POST_CONTAINERS=(nginx)
     ;;
+
     odk)
-        CONTAINERS=(db kernel odk nginx)
+        PRE_CONTAINERS=(db)
+        SETUP_CONTAINERS=(kernel odk)
+        POST_CONTAINERS=(nginx)
     ;;
+
     ui)
-        CONTAINERS=(db kernel ui-assets ui nginx)
+        PRE_CONTAINERS=(ui-assets db)
+        SETUP_CONTAINERS=(kernel ui)
+        POST_CONTAINERS=(nginx)
     ;;
+
     sync|couchdb-sync)
         app=couchdb-sync
-        CONTAINERS=(db couchdb redis kernel couchdb-sync couchdb-sync-rq nginx)
+
+        PRE_CONTAINERS=(db couchdb redis)
+        SETUP_CONTAINERS=(kernel couchdb-sync)
+        POST_CONTAINERS=(couchdb-sync-rq nginx)
     ;;
+
     *)
         app=
-        CONTAINERS=(db couchdb redis kernel odk ui-assets ui couchdb-sync couchdb-sync-rq nginx)
+
+        PRE_CONTAINERS=(ui-assets db couchdb redis)
+        SETUP_CONTAINERS=(kernel odk ui couchdb-sync)
+        POST_CONTAINERS=(couchdb-sync-rq nginx)
     ;;
 esac
 
-for container in "${CONTAINERS[@]}"
+start_container () {
+    if [[ $force = "yes" ]]; then
+        docker-compose kill $1
+    fi
+    docker-compose up --no-deps -d $1
+    sleep 2
+    docker-compose logs --tail 20 $1
+}
+
+for container in "${PRE_CONTAINERS[@]}"
 do
-    docker-compose up -d $container
-    docker-compose logs --tail 20 $container
+    start_container $container
+done
+
+for container in "${SETUP_CONTAINERS[@]}"
+do
+    docker-compose run $container setup
+    start_container $container
+done
+
+for container in "${POST_CONTAINERS[@]}"
+do
+    start_container $container
 done
 
 echo ""

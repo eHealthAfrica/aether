@@ -65,4 +65,7 @@ do
     docker-compose run $container setup
 done
 
+# kernel readonly user (used by Aether Producer)
+docker-compose run kernel eval python /code/sql/create_readonly_user.py
+
 docker-compose kill

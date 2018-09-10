@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 # Config file for these containers:
 #
-#  * Databases + NGINX containers
+#  * Databases + NGINX
 #  * Aether Kernel
 #  * ODK Module
 #  * CouchDB Sync Module
@@ -27,7 +27,7 @@ volumes:
 services:
 
   # ---------------------------------
-  # Database containers
+  # Databases
   # ---------------------------------
 
   db:
@@ -89,6 +89,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      # use this dependency with HRM, otherwise comment it out
+      ui-assets:
+        condition: service_healthy
     networks:
       internal:
         aliases:
@@ -142,6 +145,8 @@ services:
       couchdb:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      couchdb-sync:
         condition: service_healthy
     networks:
       - internal
