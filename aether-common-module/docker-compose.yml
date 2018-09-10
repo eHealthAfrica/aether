@@ -1,0 +1,29 @@
+version: "2.1"
+
+services:
+
+  common:
+    build: .
+
+    environment:
+      TESTING: "true"
+
+      # required environment variables
+      DJANGO_SECRET_KEY: secret
+
+      DJANGO_STORAGE_BACKEND: filesystem
+      HOSTNAME: example.com
+
+      PGPASSWORD: secretsecret
+      PGUSER: db-test-user
+      PGHOST: db-test
+      PGPORT: 9999
+      DB_NAME: common
+
+      # required by kernel module
+      AETHER_KERNEL_URL_TEST: http://kernel-test
+
+    volumes:
+      - ./:/code
+
+    command: build

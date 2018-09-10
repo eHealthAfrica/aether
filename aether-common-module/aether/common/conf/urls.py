@@ -18,14 +18,10 @@
 
 from django.conf import settings
 from django.contrib import admin
-from django.contrib.auth.decorators import login_required
 from django.conf.urls import include, url
+from django.utils.translation import ugettext as _
 
-from aether.common.auth.views import obtain_auth_token
-from aether.common.conf.views import basic_serve, media_serve
 from aether.common.health.views import health, check_db
-from aether.common.kernel.views import check_kernel
-from aether.common.kernel.utils import get_kernel_server_url
 
 
 def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
@@ -39,10 +35,16 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
         - the `/admin` section URLs.
         - the `/accounts` URLs, checks if the REST Framework ones or the CAS ones.
         - the `debug toolbar` URLs only in DEBUG mode.
-        - the `/media` URLS. The endpoint gives protected access
-          (only logged in users) to media files.
-        - the `/media-basic` URLS. The endpoint gives protected access
-          (only logged in users with basic authentication) to media files.
+
+    Based on `settings`:
+
+        - if `DJANGO_STORAGE_BACKEND` is `filesystem` then:
+
+            - the `/media/<path>` URLs. The endpoint gives protected access
+              (only logged in users) to media files.
+
+            - the `/media-basic/<path>` URLs. The endpoint gives protected access
+              (only logged in users with basic authentication) to media files.
 
     Based on the arguments:
 
@@ -77,15 +79,20 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
         # `accounts` management
         url(r'^accounts/', include(auth_urls, namespace='rest_framework')),
 
-        # media files (protected)
-        url(r'^media/(?P<path>.*)$', login_required(media_serve), name='media'),
-
-        # media files (basic auth)
-        url(r'^media-basic/(?P<path>.*)$', basic_serve, name='media-basic'),
-
         # monitoring
         url('', include('django_prometheus.urls')),
     ]
+
+    if settings.DJANGO_STORAGE_BACKEND == 'filesystem':
+        from django.contrib.auth.decorators import login_required
+        from aether.common.conf.views import basic_serve, media_serve
+
+        urlpatterns += [
+            # media files (protected)
+            url(r'^media/(?P<path>.*)$', login_required(media_serve), name='media'),
+            # media files (basic auth)
+            url(r'^media-basic/(?P<path>.*)$', basic_serve, name='media-basic'),
+        ]
 
     if settings.DEBUG:
         if 'debug_toolbar' in settings.INSTALLED_APPS:
@@ -96,12 +103,17 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
             ]
 
     if token:
+        from aether.common.auth.views import obtain_auth_token
+
         # generates users token
         urlpatterns += [
             url('^accounts/token$', obtain_auth_token, name='token'),
         ]
 
     if kernel:
+        from aether.common.kernel.views import check_kernel
+        from aether.common.kernel.utils import get_kernel_server_url
+
         # checks if Kernel server is available
         urlpatterns += [
             url('^check-kernel$', check_kernel, name='check-kernel'),
@@ -112,9 +124,9 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
         # assertions, a deployment configuration missing e.g. `AETHER_KERNEL_URL`
         # will seem to be in order until `get_kernel_server_url()` is called.
         if settings.TESTING:
-            msg = 'Environment variable "AETHER_KERNEL_URL_TEST" is not set'
+            msg = _('Environment variable "AETHER_KERNEL_URL_TEST" is not set')
         else:
-            msg = 'Environment variable "AETHER_KERNEL_URL" is not set'
+            msg = _('Environment variable "AETHER_KERNEL_URL" is not set')
         assert get_kernel_server_url(), msg
 
     return urlpatterns
