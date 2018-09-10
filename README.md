@@ -179,8 +179,11 @@ Start the indicated app/module with the necessary dependencies:
 ```
 
 Arguments:
+
   `--kill`  | `-k`  kill all running containers before start
+
   `--build` | `-b`  kill and build all containers before start
+
   `--force` | `-f`  ensure that the container will be restarted if it was already running
 
   `name`
