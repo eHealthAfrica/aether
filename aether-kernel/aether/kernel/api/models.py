@@ -282,18 +282,16 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
     # redundant but speed up queries
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, blank=True, null=True)
 
-    def save(self, **kwargs):
+    def save(self,*args, **kwargs):
         self.project = self.mappingset.project
+        super(Mapping, self).save(*args, **kwargs)
         entities = self.definition.get('entities', {})
-        self.projectschemas.clear()
+        ps_list = []
         for entity_pk in entities.values():
-            print('ITEM', entity_pk)
             ps = ProjectSchema.objects.get(pk=entity_pk)
-            print(ps.name, str(ps.pk))
             if ps:
-                self.projectschemas.add(entity_pk)
-
-        super(Mapping, self).save(**kwargs)
+                ps_list.append(ps)
+        self.projectschemas.add(*ps_list)
 
     @property
     def definition_prettified(self):
@@ -310,6 +308,10 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
             models.Index(fields=['project', '-modified']),
             models.Index(fields=['-modified']),
         ]
+
+
+# @receiver(post_save, sender=Mapping, dispatch_uid="update_projectschemas_list")
+# def update_projectschemas(sender, instance, **kwargs):
 
 
 class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):

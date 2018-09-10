@@ -21,18 +21,6 @@ from rest_framework import serializers
 
 from . import models
 
-
-class PipelineSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField(
-        read_only=True,
-        view_name='pipeline-detail',
-    )
-
-    class Meta:
-        model = models.Pipeline
-        fields = '__all__'
-
-
 class ContractSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         read_only=True,
@@ -48,3 +36,17 @@ class ContractSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     class Meta:
         model = models.Contract
         fields = '__all__'
+
+
+class PipelineSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        read_only=True,
+        view_name='pipeline-detail',
+    )
+
+    contracts = ContractSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = models.Pipeline
+        fields = '__all__'
+

@@ -23,18 +23,20 @@ from django.db import models
 from django_prometheus.models import ExportModelOperationsMixin
 from model_utils.models import TimeStampedModel
 
-from .utils import validate_pipeline
+from .utils import validate_contract
 
 
 class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, null=False, blank=False, unique=True)
-    project = models.UUIDField(blank=True, null=True)
     # this is the avro schema
     schema = JSONField(blank=True, null=True, default={})
 
     # this is an example of the data using the avro schema
     input = JSONField(blank=True, null=True, default={})
+
+    #this is a reference to the linked kernel mappingset
+    mappingset = models.UUIDField(null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -100,7 +102,7 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
         return self.name
 
     def save(self, *args, **kwargs):
-        errors, output = validate_pipeline(self)
+        errors, output = validate_contract(self)
         self.mapping_errors = errors
         self.output = output
 
