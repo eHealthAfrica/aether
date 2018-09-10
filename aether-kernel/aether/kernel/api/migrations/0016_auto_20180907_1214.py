@@ -21,6 +21,7 @@ def migrate_current_mappings_to_mappingsets(apps, schema_editor):
             pk=mapping.pk,
             name=mapping.name,
             project=mapping.project,
+            input={},
         )
         mapping.mappingset = mappingset
         mapping.save()
@@ -78,26 +79,39 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='mapping',
             name='projectschemas',
-            field=models.ManyToManyField(related_name='mappings', to='kernel.ProjectSchema'),
+            field=models.ManyToManyField(related_name='mappings', to='kernel.ProjectSchema', blank=True, null=True),
         ),
+        migrations.AddField(
+            model_name='mapping',
+            name='mappingset',
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='mappings', to='kernel.MappingSet'),
+        ),
+        migrations.AddField(
+            model_name='submission',
+            name='mappingset',
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='submissions', to='kernel.MappingSet'),
+        ),
+        migrations.RunPython(migrate_current_mappings_to_mappingsets, migrations.RunPython.noop),
         migrations.AlterField(
             model_name='mapping',
             name='project',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='mappings', to='kernel.Project'),
         ),
-        migrations.AddField(
-            model_name='mapping',
-            name='mappingset',
-            field=models.ForeignKey(default='fbf3f351-ab4d-4ba4-9a84-ff390199e100', on_delete=django.db.models.deletion.CASCADE, related_name='mappings', to='kernel.MappingSet'),
-            preserve_default=False,
-        ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='submission',
             name='mappingset',
-            field=models.ForeignKey(default='fbf3f351-ab4d-4ba4-9a84-ff390199e100', on_delete=django.db.models.deletion.CASCADE, related_name='submissions', to='kernel.MappingSet'),
-            preserve_default=False,
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='submissions', to='kernel.MappingSet'),
         ),
-        migrations.RunPython(migrate_current_mappings_to_mappingsets, migrations.RunPython.noop),
+        migrations.AlterField(
+            model_name='mapping',
+            name='mappingset',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='mappings', to='kernel.MappingSet'),
+        ),
+        migrations.AlterField(
+            model_name='mapping',
+            name='projectschemas',
+            field=models.ManyToManyField(related_name='mappings', to='kernel.ProjectSchema', blank=True),
+        ),
         migrations.RemoveField(
             model_name='submission',
             name='map_revision',

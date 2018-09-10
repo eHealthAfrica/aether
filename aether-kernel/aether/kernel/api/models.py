@@ -146,7 +146,9 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedMod
         return json_prettified(self.payload)
 
     def __str__(self):
-        return '{} - {}'.format(str(self.mappingset), self.id)
+        return "%s (%s)" % (
+            str(self.mappingset), str(self.id),
+        )
 
     class Meta:
         app_label = 'kernel'
@@ -273,7 +275,7 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
     name = models.CharField(max_length=50, null=False, unique=True)
     definition = JSONField(blank=False, null=False)
     mappingset = models.ForeignKey(to=MappingSet, on_delete=models.CASCADE)
-    projectschemas = models.ManyToManyField(to=ProjectSchema)
+    projectschemas = models.ManyToManyField(to=ProjectSchema, blank=True)
     is_active = models.BooleanField(default=True)
     is_read_only = models.BooleanField(default=False)
 
@@ -285,7 +287,11 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
         entities = self.definition.get('entities', {})
         self.projectschemas.clear()
         for entity_pk in entities.values():
-            self.projectschemas.add(ProjectSchema.objects.get(pk=entity_pk, project=self.project))
+            print('ITEM', entity_pk)
+            ps = ProjectSchema.objects.get(pk=entity_pk)
+            print(ps.name, str(ps.pk))
+            if ps:
+                self.projectschemas.add(entity_pk)
 
         super(Mapping, self).save(**kwargs)
 
