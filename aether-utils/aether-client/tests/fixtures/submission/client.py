@@ -47,8 +47,10 @@ class Client(object):
 
     def create(self, data_type, obj):
         remote_function = 'create'
+        params = self.validate_call(
+            data_type, remote_function, validate_params=obj)
         return self.client.action(
-            self.schema, [data_type, remote_function], validate=False, params=obj)
+            self.schema, [data_type, remote_function], validate=False, params=params)
 
     # READ
 

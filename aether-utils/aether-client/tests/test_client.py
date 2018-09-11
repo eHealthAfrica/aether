@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -18,7 +16,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from aether import test
+from . import *  # noqa
 
-if __name__ == '__main__':
-    test.run()
+
+def test_1_check_fixtures(client, project, schemas, project_schemas):
+    client_schemas = list(client.get('schemas'))
+    assert len(schemas != 0)
+    assert(len(client_schemas) == len(schemas))
+    client_ps = list(client.get('projectschemas'))
+    assert len(client_ps != 0)
+    assert(len(client_ps) == len(schemas))

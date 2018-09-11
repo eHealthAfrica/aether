@@ -5,9 +5,16 @@ verify_ssl = true
 name = "pypi"
 
 
-[packages]
-
-
-
 [dev-packages]
 
+
+
+[packages]
+
+coreapi = "*"
+openapi-codec = "*"
+
+
+[requires]
+
+python_version = "3.5"

@@ -10,10 +10,9 @@
 #                                                                               #
 #################################################################################
 
-# main libraries
-requests
-
-
-# test libraries
-coverage
+coreapi
 flake8
+openapi-codec
+pytest
+pytest-runner
+requests

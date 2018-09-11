@@ -41,20 +41,16 @@ show_help() {
 }
 
 test_flake8() {
-    flake8 /code/. --config=/code/conf/extras/flake8.cfg
+    flake8 /code/. --config=/code/setup.cfg
 }
 
-test_coverage() {
-    export RCFILE=/code/conf/extras/coverage.rc
-    export TESTING=true
-    export DEBUG=false
-    coverage run    --rcfile="$RCFILE" manage.py test "${@:1}"
-    coverage report --rcfile="$RCFILE"
-    coverage erase
+test(){
+        python3 setup.py -q test "${@:1}"
 
-    cat /code/conf/extras/good_job.txt
+        cat /code/conf/extras/good_job.txt
+        rm -R ./*.egg*
+        rm -R .pytest_cache
 }
-
 
 case "$1" in
     bash )
@@ -82,15 +78,11 @@ case "$1" in
 
     test)
         test_flake8
-        test_coverage "${@:2}"
+        test
     ;;
 
     test_lint)
         test_flake8
-    ;;
-
-    test_coverage)
-        test_coverage "${@:2}"
     ;;
 
     build)
@@ -105,6 +97,7 @@ case "$1" in
         # remove useless content
         rm -rf build
         rm -rf aether.client.egg-info
+        rm -rf .eggs
     ;;
 
     help)

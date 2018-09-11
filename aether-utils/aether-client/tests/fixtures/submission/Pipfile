@@ -11,8 +11,8 @@ name = "pypi"
 
 [packages]
 
-coreapi = "*"
 openapi-codec = "*"
+coreapi = "*"
 
 
 [requires]
