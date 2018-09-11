@@ -118,7 +118,7 @@ class SchemaInput extends Component {
 
   notifyChange (event) {
     event.preventDefault()
-    const {formatMessage} = this.props.intl
+    const { formatMessage } = this.props.intl
     this.setState({
       error: null,
       errorHead: null
