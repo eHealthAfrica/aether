@@ -36,7 +36,10 @@ rules:
     - max-depth: 3
 
 
+  placeholder-in-extend:      0
   property-sort-order:        0
+  space-after-colon:          2
+
   no-color-literals:          0
   no-css-comments:            0
   no-duplicate-properties:    2
