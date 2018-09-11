@@ -47,10 +47,25 @@ docker-compose run   ui-assets build
 
 VERSION=`git rev-parse --abbrev-ref HEAD`
 GIT_REVISION=`git rev-parse HEAD`
-SUITE=( kernel ui odk couchdb-sync )
+CONTAINERS=( kernel ui odk couchdb-sync )
+
+# speed up first start up
+docker-compose up -d db
 
 # build Aether Suite
-docker-compose build \
-    --build-arg GIT_REVISION=$GIT_REVISION \
-    --build-arg VERSION=$VERSION \
-    $SUITE
+for container in "${CONTAINERS[@]}"
+do
+    # build container
+    docker-compose build \
+        --build-arg GIT_REVISION=$GIT_REVISION \
+        --build-arg VERSION=$VERSION \
+        $container
+
+    # setup container (model migration, admin user, static content...)
+    docker-compose run $container setup
+done
+
+# kernel readonly user (used by Aether Producer)
+docker-compose run kernel eval python /code/sql/create_readonly_user.py
+
+docker-compose kill

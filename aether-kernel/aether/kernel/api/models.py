@@ -147,9 +147,6 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedMod
     def payload_prettified(self):
         return json_prettified(self.payload)
 
-    def __str__(self):
-        return '{} - {}'.format(str(self.mappingset), self.id)
-
     class Meta:
         app_label = 'kernel'
         default_related_name = 'submissions'
@@ -346,9 +343,6 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
     @property
     def payload_prettified(self):
         return json_prettified(self.payload)
-
-    def __str__(self):
-        return 'Entity {}'.format(self.id)
 
     class Meta:
         app_label = 'kernel'
