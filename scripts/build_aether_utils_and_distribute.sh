@@ -21,6 +21,7 @@
 set -Eeuo pipefail
 
 DC_UTILS="docker-compose -f docker-compose-build-aether-utils.yml"
+VERSION=$(cat "VERSION")
 
 # remove previous containers (clean start)
 ./scripts/kill_all.sh
@@ -33,7 +34,7 @@ do
     # create the distribution
     $DC_UTILS build $UTIL
     $DC_UTILS run $UTIL build
-    PCK_FILE=aether.$UTIL-0.0.0-py2.py3-none-any.whl
+    PCK_FILE=aether.$UTIL-$VERSION-py2.py3-none-any.whl
 
     if [[ $UTIL = "mocker" ]]
     then
