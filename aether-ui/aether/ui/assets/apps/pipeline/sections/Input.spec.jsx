@@ -12,16 +12,16 @@ describe('makeOptionalField', () => {
   it('makes an AVRO field optional', () => {
     const tests = [
       [
-        {name: 'a', type: 'string'},
-        {name: 'a', type: ['null', 'string']}
+        { name: 'a', type: 'string' },
+        { name: 'a', type: ['null', 'string'] }
       ],
       [
-        {name: 'b', type: ['null', 'string']},
-        {name: 'b', type: ['null', 'string']}
+        { name: 'b', type: ['null', 'string'] },
+        { name: 'b', type: ['null', 'string'] }
       ],
       [
-        {name: 'c', type: ['int', 'string']},
-        {name: 'c', type: ['null', 'int', 'string']}
+        { name: 'c', type: ['int', 'string'] },
+        { name: 'c', type: ['null', 'int', 'string'] }
       ]
     ]
     tests.map(([args, result]) => {
