@@ -74,7 +74,7 @@ If you successfully logged into your Ubuntu EC2 instance, congratulations, the h
 * **Permissions 0644 for '/Users/dmoran/.ssh/eHA_FRA.pem' are too open.** - You did not successfully change permission for your .pem file.  Follow the instructions in **Select your key pair** step from above
 * **ssh: connect to host 18.197.111.229 port 22: Operation timed out** - Your instance is either not running or your VPC is not properly configured with port 22 open.  Verify that your instance is ready by following the **Wait for instance to be ready** step above.  Also, verify that you have followed **Step 6: Configure Security Group** exactly.  If you have an older AWS account, it is possible that your default VPC has been deleted and the one used above is not configured with a properly permissioned default gateway.  This article explains the situation and the solution: [Default VPC and Default Subnets](https://docs.aws.amazon.com/vpc/latest/userguide/default-vpc.html)
 
-## Installing Docker and Docker Compose on your Ubuntu EC2 instance
+## Installing Docker and Docker Compose
 At this point you should have a brand new Amazon EC2 Ubuntu Instance and are able to connect via secure shell.  The last preparation step is to install Docker and Docker Compose.  These steps will perform the installation but if you want more information about what you are installing, see the [Docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/) and [Docker Compose](https://docs.docker.com/compose/install/) install pages on the Docker web site.<BR/>
 If you are not already logged into your instance, follow the **Connect to your instance** steps above.
 
@@ -105,7 +105,7 @@ By default, the docker install does not add any users to the docker group.  This
 ```
 sudo usermod -aG docker $USER
 ```
-After the usermod command, you will have to `exit` and then relogin to your instance.
+After the usermod command, you will have to `exit` and then re-login to your instance.
 
 [![AWS EC2 Docker Compose](/images/aws-ec2-docker3.png)](/images/aws-ec2-docker3.png){: .scalable}**Install Docker Compose -** Get latest Docker Compose.  At the time of this writing, the latest version was 1.22.0.  Over time, you may want to [check the latest version](https://github.com/docker/compose/releases) and change `1.22.0` to that version.  After installing Docker Compose, verify that both it and Docker works.
 <p style="clear: both;"/>
@@ -121,9 +121,9 @@ docker-compose --version
 ```
 docker run hello-world
 ```  
-If you got a permission error running Docker's "Hello World" then you will have to prepend **sudo** to all docker commands or run the **usermod** statement from above.
+If you had a permission error running Docker's "Hello World" then you will have to prepend **sudo** to all docker commands or run the **usermod** statement from above.
 
-Your enviromnent should now be set up to try Aether or Gather.
+Congratulations!!! Your environment should now be set up to try Aether or Gather.
 
 <div style="margin-top: 2rem; text-align: center"><a href="http://gather.ehealthafrica.org/documentation/try/setup">- Return to Gather Set Up</a><br/>
 <a href="index#into-the-aether">- Return to Aether Set Up</a></div>
