@@ -403,7 +403,7 @@ def create_new_pipeline_from_kernel(mappingset):
         new_pipeline = models.Pipeline.objects.create(
             id=mappingset['id'],
             name=mappingset['name'],
-            input=mappingset['input'],
+            schema=mappingset['input'],
             mappingset=mappingset['id']
         )
     else:
@@ -424,8 +424,9 @@ def create_new_pipeline_from_kernel(mappingset):
                     'schema': entity_types['ids'],
                     'projectschema': mapping['definition']['entities'],
                     'mapping': mapping['id']
-                }
-            )              
+                },
+                published_on=mapping['modified']
+            )
     return new_pipeline
 
 

@@ -96,7 +96,7 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
     is_active = models.BooleanField(default=True)
     is_read_only = models.BooleanField(default=False)
 
-    pipeline = models.ForeignKey(to=Pipeline, on_delete=models.CASCADE)
+    pipeline = models.ForeignKey(to=Pipeline, on_delete=models.CASCADE, related_name='contracts')
 
     def __str__(self):
         return self.name

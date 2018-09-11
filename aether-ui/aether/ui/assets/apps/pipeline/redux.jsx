@@ -136,6 +136,37 @@ const parsePipeline = (pipeline) => {
 }
 
 const reducer = (state = INITIAL_PIPELINE, action) => {
+  const flattenPipelineContracts = pipelines => {
+    let results = []
+    if (pipelines.length) {
+      results = pipelines.map(row => (pipelineTranslator(row)))
+    }
+    return results
+  }
+  const pipelineTranslator = pipeline => {
+    const firstContract = pipeline.contracts.length && pipeline.contracts[0]
+    if (firstContract !== null) {
+      pipeline.entity_types = firstContract.entity_types
+      pipeline.mapping = firstContract.mapping
+      pipeline.mapping_errors = firstContract.mapping_errors
+      pipeline.output = firstContract.output
+      pipeline.kernel_refs = firstContract.kernel_refs
+      pipeline.published_on = firstContract.published_on
+      pipeline.contract_id = firstContract.id
+    }
+    else
+    {
+      pipeline.entity_types = []
+      pipeline.mapping = []
+      pipeline.mapping_errors = []
+      pipeline.output = {}
+      pipeline.kernel_refs = {}
+      pipeline.published_on = null
+      pipeline.contract_id = null
+    }
+    delete pipeline.contracts
+    return pipeline
+  }
   const newPipelineList = clone(state.pipelineList)
   state = { ...state, publishError: null, publishSuccess: null, isNewPipeline: false, error: null }
   switch (action.type) {
@@ -157,7 +188,7 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
     }
 
     case types.GET_ALL: {
-      return { ...state, pipelineList: action.payload.results || [] }
+      return { ...state, pipelineList: flattenPipelineContracts(action.payload.results) }
     }
 
     case types.PIPELINE_ERROR: {
@@ -183,7 +214,7 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
     }
 
     case types.GET_FROM_KERNEL: {
-      return { ...state, pipelineList: action.payload }
+      return { ...state, pipelineList: flattenPipelineContracts(action.payload) }
     }
 
     default:
