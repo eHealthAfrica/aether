@@ -27,7 +27,7 @@ VERSION=$(cat "VERSION")
 ./scripts/kill_all.sh
 $DC_UTILS down
 
-UTILS=( client mocker saladbar)
+UTILS=( client )
 for UTIL in "${UTILS[@]}"
 do
 
@@ -36,25 +36,13 @@ do
     $DC_UTILS run $UTIL build
     PCK_FILE=aether.$UTIL-$VERSION-py2.py3-none-any.whl
 
-    if [[ $UTIL = "mocker" ]]
-    then
-        SRC=mock-data
-    else
-        SRC=$UTIL
-    fi
-
-    if [[ $UTIL = "client" ]]
-    then
-        FOLDERS=( test-aether-integration-module aether-producer )
-    else
-        FOLDERS=( test-aether-integration-module )
-    fi
+    FOLDERS=( test-aether-integration-module aether-producer )
 
     # distribute within the containers
     for FOLDER in "${FOLDERS[@]}"
     do
         mkdir -p ./$FOLDER/conf/pip/dependencies
-        cp -r ./aether-utils/aether-$SRC/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
+        cp -r ./aether-utils/aether-$UTIL/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
     done
 
 done
