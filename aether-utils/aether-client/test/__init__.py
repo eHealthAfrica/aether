@@ -16,9 +16,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from test import fixtures as fix
 import os
 import pytest
-import fixtures as fix
 
 from aether.client import Client
 
@@ -58,5 +58,6 @@ def project_schemas(client, project, schemas):
         obj = dict(fix.project_schema_template)
         obj['name'] = schema['name']
         obj['project'] = project['id']
+        obj['schema'] = schema['id']
         ps_objects.append(client.create('projectschemas', obj))
     return ps_objects

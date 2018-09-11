@@ -17,12 +17,23 @@
 # under the License.
 
 from . import *  # noqa
+import requests
 
 
-def test_1_check_fixtures(client, project, schemas, project_schemas):
+def test_1_check_fixture_creation(client, project, schemas, project_schemas):
     client_schemas = list(client.get('schemas'))
-    assert len(schemas != 0)
+    assert len(schemas) != 0
     assert(len(client_schemas) == len(schemas))
     client_ps = list(client.get('projectschemas'))
-    assert len(client_ps != 0)
+    assert len(client_ps) != 0
     assert(len(client_ps) == len(schemas))
+
+
+def test_2_check_bad_url():
+    try:
+        c = Client("http://localhost/bad-url", "user", "pw")
+        c.get('projects')
+    except requests.exceptions.ConnectionError:
+        assert(True)
+    else:
+        assert(False)

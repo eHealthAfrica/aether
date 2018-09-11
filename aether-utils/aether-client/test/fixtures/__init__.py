@@ -37,7 +37,7 @@ project_template = {
 
 #Schemas
 
-schema_file =here+"/fixtures/schemas/schemas.avro"
+schema_file =here+"/schema/schemas.avro"
 schema_definitions = file_to_json("%s" % (schema_file))
 
 schema_template = {
@@ -65,7 +65,7 @@ mapping_template = {
     "revision": "1"
 }
 
-mapping_file =here+"/fixtures/mappings/mapping.json"
+mapping_file =here+"/mappings/mapping.json"
 mapping_definition = file_to_json("%s" % (mapping_file))
 
 # Submission
