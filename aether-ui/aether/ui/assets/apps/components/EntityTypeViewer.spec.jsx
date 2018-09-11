@@ -62,7 +62,7 @@ describe('EntityTypeViewer', () => {
   })
 
   it('should take entity type without fields', () => {
-    const entityTypeWithoutProperties = [{name: 'test-name', type: 'record', fields: []}]
+    const entityTypeWithoutProperties = [{ name: 'test-name', type: 'record', fields: [] }]
     const component = mountWithIntl(<EntityTypeViewer schema={entityTypeWithoutProperties} />)
     expect(component.html()).toContain('Entity has no properties')
   })
@@ -76,7 +76,9 @@ describe('EntityTypeViewer', () => {
         'name': 'Building'
       }
     })
-    const component = mountWithIntl(<EntityTypeViewer schema={entityTypeWithoutSymbols} highlight={['Person.firstName']} />)
+    const component = mountWithIntl(
+      <EntityTypeViewer schema={entityTypeWithoutSymbols} highlight={['Person.firstName']} />
+    )
     expect(component.html()).toContain('<span class="type"> enum</span>')
     expect(component.html()).toContain('<span class="name">building</span>')
   })
@@ -89,12 +91,14 @@ describe('EntityTypeViewer', () => {
         type: 'record',
         name: 'coordinates',
         fields: [
-          {name: 'Y', type: 'string'},
-          {name: 'X', type: 'int'}
+          { name: 'Y', type: 'string' },
+          { name: 'X', type: 'int' }
         ]
       }
     })
-    const component = mountWithIntl(<EntityTypeViewer schema={entityTypeDepth3} highlight={['Person.firstName']} />)
+    const component = mountWithIntl(
+      <EntityTypeViewer schema={entityTypeDepth3} highlight={['Person.firstName']} />
+    )
     expect(component.html()).toContain('location.cordinates.Y')
   })
 })

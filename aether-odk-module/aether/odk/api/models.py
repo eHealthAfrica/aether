@@ -407,7 +407,7 @@ class XForm(ExportModelOperationsMixin('odk_xform'), models.Model):
         self.version = '{:%Y%m%d%H}'.format(timezone.now())
 
     def __str__(self):
-        return '{} - {}'.format(str(self.title), self.form_id)
+        return '{} - {}'.format(self.title, self.form_id)
 
     class Meta:
         app_label = 'odk'
@@ -485,7 +485,7 @@ class MediaFile(ExportModelOperationsMixin('odk_mediafile'), models.Model):
         super(MediaFile, self).save(*args, **kwargs)
 
     def __str__(self):
-        return '{} - {}'.format(str(self.xform), self.name)
+        return self.name
 
     class Meta:
         app_label = 'odk'
