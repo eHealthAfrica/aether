@@ -51,12 +51,19 @@ class ViewsTest(TestCase):
         data = json.dumps({'name': 'Pipeline'})
         response = self.client.post(url, data=data, content_type='application/json')
         response_data = json.loads(response.content)
+        pipeline_id = response_data['id']
         self.assertEqual(response_data['name'], 'Pipeline')
-        # initial status without meaningful data
-        self.assertEqual(len(response_data['mapping_errors']), 0)
-        self.assertEqual(len(response_data['output']), 0)
 
-        url_patch = reverse('pipeline-detail', kwargs={'pk': response_data['id']})
+        url = reverse('contract-list')
+        data = json.dumps({'name': 'Contract', 'pipeline': pipeline_id})
+        contract_response = self.client.post(url, data=data, content_type='application/json')
+        contract_response_data = json.loads(contract_response.content)
+        self.assertEqual(contract_response_data['name'], 'Contract')
+        # initial status without meaningful data
+        self.assertEqual(len(contract_response_data['mapping_errors']), 0)
+        self.assertEqual(len(contract_response_data['output']), 0)
+
+        url_patch = reverse('pipeline-detail', kwargs={'pk': pipeline_id})
 
         # patching a property will not alter the rest
 

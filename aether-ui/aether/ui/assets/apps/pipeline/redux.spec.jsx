@@ -149,7 +149,7 @@ describe('Pipeline actions', () => {
     return store.dispatch(getPipelines())
       .then(() => {
         expect(store.getState().pipelineList).toEqual(
-          mockPipelines.results
+          mockPipelines.transformed
         )
       })
   })

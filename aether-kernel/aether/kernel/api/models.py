@@ -146,7 +146,7 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedMod
         return json_prettified(self.payload)
 
     def __str__(self):
-        return "%s (%s)" % (
+        return '%s - %s' % (
             str(self.mappingset), str(self.id),
         )
 
@@ -282,7 +282,7 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
     # redundant but speed up queries
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, blank=True, null=True)
 
-    def save(self,*args, **kwargs):
+    def save(self, *args, **kwargs):
         self.project = self.mappingset.project
         super(Mapping, self).save(*args, **kwargs)
         entities = self.definition.get('entities', {})

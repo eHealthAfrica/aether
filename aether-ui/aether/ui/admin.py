@@ -27,6 +27,7 @@ class PipelineAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     ordering = list_display
 
+
 class ContractAdmin(admin.ModelAdmin):
 
     list_display = ('name', 'published_on',)

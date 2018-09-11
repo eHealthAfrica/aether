@@ -138,7 +138,7 @@ const parsePipeline = (pipeline) => {
 const reducer = (state = INITIAL_PIPELINE, action) => {
   const flattenPipelineContracts = pipelines => {
     let results = []
-    if (pipelines.length) {
+    if (pipelines && pipelines.length) {
       results = pipelines.map(row => (pipelineTranslator(row)))
     }
     return results
@@ -150,12 +150,10 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
       pipeline.mapping = firstContract.mapping
       pipeline.mapping_errors = firstContract.mapping_errors
       pipeline.output = firstContract.output
-      pipeline.kernel_refs = firstContract.kernel_refs
-      pipeline.published_on = firstContract.published_on
+      pipeline.kernel_refs = firstContract.kernel_refs || {}
+      pipeline.published_on = firstContract.published_on || null
       pipeline.contract_id = firstContract.id
-    }
-    else
-    {
+    } else {
       pipeline.entity_types = []
       pipeline.mapping = []
       pipeline.mapping_errors = []

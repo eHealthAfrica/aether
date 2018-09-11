@@ -35,7 +35,7 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
     # this is an example of the data using the avro schema
     input = JSONField(blank=True, null=True, default={})
 
-    #this is a reference to the linked kernel mappingset
+    # this is a reference to the linked kernel mappingset
     mappingset = models.UUIDField(null=True, blank=True)
 
     def __str__(self):

@@ -20,6 +20,5 @@
 
 export default {
   PIPELINES_URL: '/api/pipelines/',
-  CONTRACTS_URL: '/api/contracts/',
   KERNEL_URL: '/api/kernel-url/'
 }
