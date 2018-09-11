@@ -1,7 +1,7 @@
 ---
-title: AWS Setup for Gather
+title: AWS Setup for Aether and Gather
 permalink: documentation/try/setup-aws.html
-description: Gather Documentation – Setting up AWS for Gather evaluation
+description: Aether Documentation – Setting up AWS for Aether and Gather evaluation
 ---
 # Set up AWS EC2 Instances for evaluating Aether and Gather
 Starting up an AWS instance and configuring it for use with the Aether and Gather evals is very easy once you have an AWS account.  If you are totally new to AWS and would like to try it out, start with the [Amazon EC2 Users Guide for Linux Instances](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/concepts.html) and then follow the instructions below.
@@ -125,5 +125,6 @@ If you got a permission error running Docker's "Hello World" then you will have 
 
 Your enviromnent should now be set up to try Aether or Gather.
 
-<div style="margin-top: 2rem; text-align: center"><a href="setup">Next Steps: Set Up and Deploy Gather</a></div>
+<div style="margin-top: 2rem; text-align: center"><a href="http://gather.ehealthafrica.org/documentation/try/setup">- Return to Gather Set Up</a><br/>
+<a href="index#into-the-aether">- Return to Aether Set Up</a></div>
 
