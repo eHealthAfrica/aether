@@ -196,6 +196,7 @@ services:
     image: aether/integration
     build: ./test-aether-integration-module
     environment:
+      KERNEL_URL: http://kernel-test:9000
       KERNEL_ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
       KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
     volumes:

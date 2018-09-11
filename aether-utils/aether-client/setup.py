@@ -22,6 +22,7 @@ from setuptools import setup, find_packages
 setup(
     name='aether.client',
     version=os.environ['VERSION'],
+    include_package_data=True,
     install_requires=[
         'coreapi',
         'requests',

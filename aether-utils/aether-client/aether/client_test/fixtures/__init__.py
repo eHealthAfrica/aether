@@ -59,8 +59,9 @@ project_schema_template = {
 
 # Mapping
 
+mapping_name = 'VaccineReport'
 mapping_template = {
-    "name": None,
+    "name": mapping_name,
     "definition": None,
     "revision": "1"
 }
@@ -75,3 +76,7 @@ submission_template = {
     "mapping_revision": 1,
     "payload": None
 }
+
+def get_submission_payloads():
+    submission_file = here+"/submission/submissions_1000.json"
+    return file_to_json("%s" % (submission_file))

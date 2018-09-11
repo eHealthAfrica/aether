@@ -52,7 +52,7 @@ def schemas(client, project):
 
 
 @pytest.fixture(scope='session')
-def project_schemas(client, project, schemas):
+def projectschemas(client, project, schemas):
     ps_objects = []
     for schema in schemas:
         obj = dict(fix.project_schema_template)
@@ -61,3 +61,14 @@ def project_schemas(client, project, schemas):
         obj['schema'] = schema['id']
         ps_objects.append(client.create('projectschemas', obj))
     return ps_objects
+
+
+@pytest.fixture(scope='session')
+def mapping(client, project, projectschemas):
+    obj = dict(fix.mapping_template)
+    _map = dict(fix.mapping_definition)
+    _map['entities'] = { ps['name'] : ps['id'] for ps in projectschemas}
+    obj['project'] = project['id']
+    obj['definition'] = _map
+    result = client.create('mappings', obj)
+    return result
