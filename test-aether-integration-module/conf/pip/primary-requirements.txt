@@ -9,8 +9,8 @@
 ######################################################################################################
 
 
-aet.consumer
-aether.client
+aet.consumer>=0.9.1
+aether.client>=0.9.0
 coreapi
 coverage
 flake8
