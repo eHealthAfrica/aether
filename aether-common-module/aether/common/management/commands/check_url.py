@@ -36,7 +36,7 @@ class Command(BaseCommand):
             '--url',
             '-u',
             type=str,
-            help='Indicate the url to check',
+            help=_('Indicate the url to check'),
             dest='url',
             action='store',
             required=True,
