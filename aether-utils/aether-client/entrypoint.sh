@@ -45,11 +45,10 @@ test_flake8() {
 }
 
 test(){
-        python3 setup.py -q test "${@:1}"
-
-        cat /code/conf/extras/good_job.txt
-        rm -R ./*.egg*
-        rm -R .pytest_cache
+    python3 setup.py -q test "${@:1}"
+    cat /code/conf/extras/good_job.txt
+    rm -R ./*.egg*
+    rm -R .pytest_cache
 }
 
 case "$1" in
@@ -63,17 +62,6 @@ case "$1" in
 
     manage )
         ./manage.py "${@:2}"
-    ;;
-
-    pip_freeze )
-        pip install virtualenv
-        rm -rf /tmp/env
-
-        virtualenv -p python3 /tmp/env/
-        /tmp/env/bin/pip install -r ./conf/pip/primary-requirements.txt --upgrade
-
-        cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
-        /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
     ;;
 
     test)
