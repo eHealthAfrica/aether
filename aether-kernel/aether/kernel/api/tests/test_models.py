@@ -63,7 +63,6 @@ class ModelsTests(TransactionTestCase):
             payload={},
             mapping=mapping
         )
-        self.assertEquals(str(submission), '{} - {}'.format(str(mapping), submission.id))
         self.assertNotEqual(models.Submission.objects.count(), 0)
         self.assertTrue(submission.payload_prettified is not None)
         self.assertEqual(submission.project, project, 'submission inherits mapping project')
@@ -76,7 +75,6 @@ class ModelsTests(TransactionTestCase):
         self.assertEquals(attachment.name, 'sample.txt')
         self.assertEquals(attachment.md5sum, '900150983cd24fb0d6963f7d28e17f72')
         self.assertEquals(attachment.submission_revision, submission.revision)
-        self.assertEquals(attachment.attachment_path, attachment.attachment_file.path)
 
         attachment_2 = models.Attachment.objects.create(
             submission=submission,
@@ -118,7 +116,6 @@ class ModelsTests(TransactionTestCase):
             projectschema=projectschema,
             submission=submission
         )
-        self.assertEquals(str(entity), 'Entity {}'.format(entity.id))
         self.assertNotEqual(models.Entity.objects.count(), 0)
         self.assertTrue(entity.payload_prettified is not None)
         self.assertEqual(entity.project, project, 'entity inherits submission project')

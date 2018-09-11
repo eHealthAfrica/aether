@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 # Config file for these containers:
 #
-#  * Databases + NGINX containers
+#  * Databases + NGINX
 #  * Aether Kernel
 #  * ODK Module
 #  * CouchDB Sync Module
@@ -11,16 +11,23 @@
 version: "2.1"
 
 networks:
-  internal:  # alias as internal
+  # docker network create aether_internal
+  internal:
     external:
       # if this isn't explicitly set it inherits from the containing folder name (aether or not)
       name: aether_internal
+
+volumes:
+  # docker volume create aether_database_data
+  database_data:
+    external:
+      name: aether_database_data
 
 
 services:
 
   # ---------------------------------
-  # Database containers
+  # Databases
   # ---------------------------------
 
   db:
@@ -28,8 +35,7 @@ services:
       file: ./docker-compose-base.yml
       service: postgres-base
     volumes:
-      # data volume
-      - ./.persistent_data/db/data:/var/lib/postgresql/data
+      - database_data:/var/lib/postgresql/data
     networks:
       - internal
 
@@ -83,11 +89,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      kernel:
-        condition: service_started
-      # use this dependency with "start_dev" command and webpack (optional)
-      # ui-assets:
-      #   condition: service_started
+      # use this dependency with HRM, otherwise comment it out
+      ui-assets:
+        condition: service_healthy
     networks:
       internal:
         aliases:
@@ -105,8 +109,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      kernel:
-        condition: service_started
     networks:
       internal:
         aliases:
@@ -128,8 +130,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      kernel:
-        condition: service_started
     networks:
       internal:
         aliases:
@@ -146,8 +146,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      kernel:
-        condition: service_healthy
       couchdb-sync:
         condition: service_healthy
     networks:
@@ -162,17 +160,5 @@ services:
     extends:
       file: ./docker-compose-base.yml
       service: nginx-base
-    depends_on:
-      kernel:
-        condition: service_healthy
-      # uncomment these lines depending on the started services
-      odk:
-        condition: service_healthy
-      couchdb-sync:
-        condition: service_healthy
-      ui:
-        condition: service_healthy
-      couchdb-sync:
-        condition: service_healthy
     networks:
       - internal

@@ -17,26 +17,31 @@
 # under the License.
 
 import os
+
+from io import open
 from setuptools import find_packages, setup
 
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
+
+
+def read(f):
+    return open(f, 'r', encoding='utf-8').read()
+
 
 setup(
     name='aether.common',
     version='0.0.0',
     description='A python module with common aether functionality',
+    long_description=read('README.md'),
+    long_description_content_type='text/markdown',
 
     url='https://github.com/eHealthAfrica/aether/',
     author='eHealth Africa',
     author_email='aether@ehealthafrica.org',
     license='Apache2 License',
 
-    packages=find_packages(),
-
     python_requires='>=3.6',
     install_requires=[
-        'boto',
-        'boto3',
         'django<2',
         'django-cors-headers',
         'django-debug-toolbar',
@@ -47,4 +52,7 @@ setup(
         'psycopg2-binary',
         'requests',
     ],
+
+    packages=find_packages(exclude=['*tests*']),
+    include_package_data=True,
 )

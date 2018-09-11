@@ -29,6 +29,8 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
+from aether.common.utils import resolve_file_url
+
 from .xform_utils import (
     get_xform_data_from_xml,
     parse_xform_to_avro_schema,
@@ -405,7 +407,7 @@ class XForm(ExportModelOperationsMixin('odk_xform'), models.Model):
         self.version = '{:%Y%m%d%H}'.format(timezone.now())
 
     def __str__(self):
-        return '{} - {}'.format(str(self.title), self.form_id)
+        return '{} - {}'.format(self.title, self.form_id)
 
     class Meta:
         app_label = 'odk'
@@ -465,6 +467,10 @@ class MediaFile(ExportModelOperationsMixin('odk_mediafile'), models.Model):
     def hash(self):
         return 'md5:{}'.format(self.md5sum)
 
+    @property
+    def media_file_url(self):
+        return resolve_file_url(self.media_file.url)
+
     def save(self, *args, **kwargs):
         # calculate hash
         md5hash = md5()
@@ -479,7 +485,7 @@ class MediaFile(ExportModelOperationsMixin('odk_mediafile'), models.Model):
         super(MediaFile, self).save(*args, **kwargs)
 
     def __str__(self):
-        return '{} - {}'.format(str(self.xform), self.name)
+        return self.name
 
     class Meta:
         app_label = 'odk'

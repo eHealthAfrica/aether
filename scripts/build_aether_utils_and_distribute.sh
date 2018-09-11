@@ -20,11 +20,9 @@
 #
 set -Eeuo pipefail
 
-DC_UTILS="docker-compose -f docker-compose-build-aether-utils.yml"
+DC_UTILS="docker-compose -f ./aether-utils/docker-compose.yml"
 VERSION=$(cat "VERSION")
 
-# remove previous containers (clean start)
-./scripts/kill_all.sh
 $DC_UTILS down
 
 UTILS=( client )
@@ -41,10 +39,17 @@ do
     # distribute within the containers
     for FOLDER in "${FOLDERS[@]}"
     do
-        mkdir -p ./$FOLDER/conf/pip/dependencies
-        cp -r ./aether-utils/aether-$UTIL/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
+        FILE=./aether-utils/aether-$UTIL/dist/$PCK_FILE
+        DEST=./$FOLDER/conf/pip/dependencies/
+
+        mkdir -p $DEST
+        cp -r $FILE $DEST
+
+        echo "----------------------------------------------------------------------"
+        echo "Distributed [$FILE] into [$DEST]"
+        echo "----------------------------------------------------------------------"
     done
 
 done
 
-./scripts/kill_all.sh
+$DC_UTILS kill
