@@ -19,6 +19,8 @@
 import os
 import requests
 
+from django.utils.translation import ugettext as _
+
 from . import errors
 from ..conf.settings import logger
 
@@ -30,14 +32,17 @@ def get_kernel_server_url():
         return os.environ.get('AETHER_KERNEL_URL')
 
 
+def get_kernel_server_token():
+    return os.environ.get('AETHER_KERNEL_TOKEN')
+
+
 def get_auth_header():
     '''
     Returns the Authorization Header if connection to Aether Kernel is possible
     '''
 
     if test_connection():
-        token = os.environ.get('AETHER_KERNEL_TOKEN')
-        return {'Authorization': 'Token {token}'.format(token=token)}
+        return {'Authorization': f'Token {get_kernel_server_token()}'}
     return None
 
 
@@ -47,19 +52,18 @@ def test_connection():
     '''
 
     url = get_kernel_server_url()
-    token = os.environ.get('AETHER_KERNEL_TOKEN')
+    token = get_kernel_server_token()
 
     if url and token:
         try:
             # check that the server is up
             h = requests.head(url)
             assert h.status_code == 403  # expected response 403 Forbidden
-            logger.info('Aether Kernel server ({url}) is up and responding!'.format(url=url))
+            logger.info(_('Aether Kernel server ({}) is up and responding!').format(url))
 
             try:
                 # check that the token is valid
-                g = requests.get(url,
-                                 headers={'Authorization': 'Token {token}'.format(token=token)})
+                g = requests.get(url, headers={'Authorization': f'Token {token}'})
                 assert g.status_code == 200, g.content
                 logger.info('Aether Kernel token is valid!')
 
@@ -67,14 +71,14 @@ def test_connection():
 
             except Exception:
                 logger.warning(
-                    'Aether Kernel token is not valid for Aether Kernel server ({url})'
-                    .format(url=url))
+                    _('Aether Kernel token is not valid for Aether Kernel server ({}).')
+                    .format(url))
         except Exception:
             logger.warning(
-                'Aether Kernel server ({url}) is not available.'
-                .format(url=url))
+                _('Aether Kernel server ({}) is not available.')
+                .format(url))
     else:
-        logger.warning('Aether Kernel server and/or token are not set.')
+        logger.warning(_('Aether Kernel server and/or token are not set.'))
 
     return False  # it's not possible to connect with kernel :(
 
@@ -85,8 +89,8 @@ def check_connection():
     '''
 
     if not test_connection():
-        return 'Always Look on the Bright Side of Life!!!'
-    return 'Brought to you by eHealth Africa - good tech for hard places'
+        return _('Always Look on the Bright Side of Life!!!')
+    return _('Brought to you by eHealth Africa - good tech for hard places')
 
 
 def get_mappings_url(mapping_id=''):
@@ -151,10 +155,10 @@ def submit_to_kernel(submission, submission_fk, submission_id=None):
     '''
 
     if submission is None:
-        raise errors.SubmissionError('Cannot push submission without content!')
+        raise errors.SubmissionError(_('Cannot make submission without content!'))
 
     if submission_fk is None:
-        raise errors.SubmissionError('Cannot push submission without mapping!')
+        raise errors.SubmissionError(_('Cannot make submission without mapping!'))
 
     if submission_id:
         # update existing doc
