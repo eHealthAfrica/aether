@@ -11,8 +11,6 @@
 
 aet.consumer
 aether.client
-aether.mocker
-aether.saladbar
 coreapi
 coverage
 flake8
