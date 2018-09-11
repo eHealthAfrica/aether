@@ -28,6 +28,7 @@ case "$1" in
     ;;
 
     integration)
+        ./scripts/build_aether_containers.sh
         ./scripts/test_integration.sh
     ;;
 

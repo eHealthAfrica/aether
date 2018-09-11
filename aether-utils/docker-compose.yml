@@ -7,20 +7,20 @@ version: "2.1"
 services:
 
   client:
-    build: ./aether-utils/aether-client
+    build: ./aether-client
     environment:
       TESTING: "true"
       VERSION: ${VERSION}
     volumes:
-      - ./aether-utils/aether-client:/code
+      - ./aether-client:/code
     command: build
 
 
   mocker:
-    build: ./aether-utils/aether-mock-data
+    build: ./aether-mock-data
     environment:
       TESTING: "true"
       VERSION: ${VERSION}
     volumes:
-      - ./aether-utils/aether-mock-data:/code
+      - ./aether-mock-data:/code
     command: build
