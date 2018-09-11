@@ -66,6 +66,7 @@ services:
       KERNEL_ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
       KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
       TESTING: "true"
+      VERSION: ${VERSION}
     command: test
 
 

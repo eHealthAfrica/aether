@@ -16,11 +16,17 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import os
 from setuptools import setup, find_packages
 
 setup(
     name='aether.client',
-    version='0.9.0',
+    version=os.environ['VERSION'],
+    install_requires=[
+        'coreapi',
+        'requests',
+        'openapi-codec'
+    ],
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
     packages=find_packages(),

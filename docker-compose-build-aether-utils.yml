@@ -29,6 +29,7 @@ services:
     build: ./aether-utils/aether-client
     environment:
       TESTING: "true"
+      VERSION: ${VERSION}
     volumes:
       - ./aether-utils/aether-client:/code
     command: build
@@ -38,6 +39,7 @@ services:
     build: ./aether-utils/aether-mock-data
     environment:
       TESTING: "true"
+      VERSION: ${VERSION}
     volumes:
       - ./aether-utils/aether-mock-data:/code
     command: build
@@ -47,6 +49,7 @@ services:
     build: ./aether-utils/aether-saladbar
     environment:
       TESTING: "true"
+      VERSION: ${VERSION}
     volumes:
       - ./aether-utils/aether-saladbar:/code
     command: build

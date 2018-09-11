@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from test import fixtures as fix
+from aether.client_test import fixtures as fix
 import os
 import pytest
 

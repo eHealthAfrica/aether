@@ -28,7 +28,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='aether.mocker',
-    version='0.0.0',
+    version=os.environ['VERSION'],
     install_requires=[
         "aether.client"
     ],
