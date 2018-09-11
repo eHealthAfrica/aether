@@ -71,10 +71,19 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
         login_view = views.LoginView.as_view(template_name=settings.LOGIN_TEMPLATE)
         logout_view = views.LogoutView.as_view(template_name=settings.LOGGED_OUT_TEMPLATE)
 
-    auth_urls = ([
+    auth_views = [
         url(r'^login/$', login_view, name='login'),
         url(r'^logout/$', logout_view, name='logout'),
-    ], 'rest_framework')
+    ]
+
+    if token:
+        from aether.common.auth.views import obtain_auth_token
+
+        # generates users token
+        auth_views += [
+            url('^token$', obtain_auth_token, name='token'),
+        ]
+    auth_urls = (auth_views, 'rest_framework')
 
     urlpatterns = [
         # `health` endpoints
@@ -109,14 +118,6 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
             urlpatterns += [
                 url(r'^__debug__/', include(debug_toolbar.urls)),
             ]
-
-    if token:
-        from aether.common.auth.views import obtain_auth_token
-
-        # generates users token
-        urlpatterns += [
-            url('^accounts/token$', obtain_auth_token, name='token'),
-        ]
 
     if kernel:
         from aether.common.kernel.views import check_kernel
