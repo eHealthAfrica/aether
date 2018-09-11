@@ -9,7 +9,7 @@ Starting up an AWS instance and configuring it for use with the Aether and Gathe
 This guide will take you through the steps required to create and configure an EC2 instance that can be used to evaluate and use Gather and Aether in a **Non Production** environment.  This guide doesn't setup strong security and does not provide any data backup or protection.  **When the EC2 instance terminates, all of your data will be lost.**   
 
 ## Overview of the setup process
-If you are already comfortable with configuring and running Amazon EC2 instances, just follow this list of steps and return to [Try Gather](/documentation/try/index#quick-test) or [Try Aether](https://aether.ehealthafrica.org/documentation/try/index.html#quick-test)
+If you are already comfortable with configuring and running Amazon EC2 instances, just follow this list of steps and return to [Try Gather](http://gather.ehealthafrica.org/documentation/try/setup) or [Try Aether](index#into-the-aether)
 * Create an EC2 Ubuntu instance with at least 2 processors, 8GB RAM and 8GB Storage **t3.large**
 * Configure your VPC to be accessible from the internet with these ports open: 22, 80, 8000, 8443 and 5000
 * Verify/Install git, Docker and Docker Compose. It helps if Docker can be [run as a non-root user](https://docs.docker.com/install/linux/linux-postinstall/)
