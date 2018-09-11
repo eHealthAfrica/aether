@@ -31,6 +31,9 @@ You will also need to register some domains for local resolution on your compute
 ```
 127.0.0.1       ui.aether.local kernel.aether.local
 ```
+## Eval using Amazon Web Services
+Using AWS is a great way to evaluate Gather without having to install anything on your own computer.  From start to finish, it only takes about an hour to spin up an EC2 instance, configure it and try the following exercises.  These [AWS setup instructions](setup-aws) will help you get started. It costs about $3.00 to start up an AWS EC2 instance and run it for 12 hours.
+
 
 ## Into the Aether
 

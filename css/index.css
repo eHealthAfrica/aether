@@ -1246,4 +1246,13 @@ p {
   .doc-content {
     font-size: .9em; } }
 
+  .scalable {
+    clear: both;
+    height: 124px;
+    width:  180px;
+    float:   left;
+    padding:  5px;
+    box-shadow: unset;
+  }
+
 /*# sourceMappingURL=index.css.map */
