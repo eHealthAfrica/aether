@@ -1,18 +1,22 @@
 import coreapi
 from coreapi.codecs import JSONCodec
 from openapi_codec import OpenAPICodec
+import requests
 
 
 class Client(object):
 
     def __init__(self, url, user, pw):
-        decoders = [OpenAPICodec(), JSONCodec()]
         self.user = user
         self.pw = pw
         self.kernel_url = url
         self.schema_url = '%s/v1/schema/?format=openapi' % self.kernel_url
         auth = coreapi.auth.BasicAuthentication(self.user, self.pw)
-        self.client = coreapi.Client(auth=auth, decoders=decoders)
+        decoders = [OpenAPICodec(), JSONCodec()]
+        session = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(max_retries=3)
+        session.mount('http://', adapter)
+        self.client = coreapi.Client(auth=auth, decoders=decoders, session=session)
         self.schema = self.client.get(self.schema_url)
 
     # UTILITIES

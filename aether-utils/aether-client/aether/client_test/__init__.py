@@ -41,7 +41,7 @@ def project(client):
 
 
 @pytest.fixture(scope='session')
-def schemas(client, project):
+def schemas(client):
     schemas = []
     for definition in fix.schema_definitions:
         obj = dict(fix.schema_template)
