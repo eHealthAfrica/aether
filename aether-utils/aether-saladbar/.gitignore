@@ -1,9 +1,0 @@
-build/
-dist/
-aether_saladbar.egg-info/
-aether/saladbar/schemas/*
-aether/saladbar/test-schemas/*
-!aether/saladbar/library/*/*/json
-!aether/saladbar/test-schemas/.gitignore
-!aether/saladbar/schemas/.gitignore
-Pipfile.lock
