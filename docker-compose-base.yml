@@ -142,7 +142,7 @@ services:
     stdin_open: true
     tty: true
     environment:
-      # Uncomment thi line to enable single sign on if you use CAS
+      # Uncomment this line to enable single sign on if you use CAS
       # CAS_SERVER_URL: https://your.cas.server
 
       CSRF_COOKIE_DOMAIN: .aether.local
