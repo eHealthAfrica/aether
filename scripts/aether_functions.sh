@@ -58,7 +58,7 @@ function build_ui_assets {
 function build_core_modules {
     VERSION=`git rev-parse --abbrev-ref HEAD`
     GIT_REVISION=`git rev-parse HEAD`
-    CONTAINERS=( kernel ui odk couchdb-sync )
+    CONTAINERS=($ARGS)
 
     # speed up first start up
     docker-compose up -d db
@@ -85,5 +85,7 @@ function create_readonly_user {
 }
 
 # Run function found at first command line arg
-n=1
-${!n}
+CALL=$1
+# If there are arguments they are also accessible
+ARGS=${@:2}
+$CALL $ARGS

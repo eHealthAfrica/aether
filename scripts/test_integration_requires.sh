@@ -31,7 +31,7 @@ ORDER=( "create_credentials"
         "build_aether_utils_and_distribute"
         "build_connect"
         "build_common_and_distribute"
-        "build_core_modules"
+        "build_core_modules kernel"
         "create_readonly_user"
         )
 for FN in "${ORDER[@]}";

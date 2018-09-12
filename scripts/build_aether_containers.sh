@@ -29,7 +29,7 @@ ORDER=( "create_credentials"
         "build_connect"
         "build_common_and_distribute"
         "build_ui_assets"
-        "build_core_modules"
+        "build_core_modules kernel ui odk couchdb-sync"
         "create_readonly_user"
         )
 for FN in "${ORDER[@]}";
