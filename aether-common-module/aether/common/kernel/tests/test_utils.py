@@ -140,12 +140,12 @@ class UtilsTests(TestCase):
             )
 
     @mock.patch.dict('os.environ', AETHER_ENV_MOCK)
-    def test_submit_to_kernel__without_submission_fk(self):
+    def test_submit_to_kernel__without_mappingset_id(self):
         self.assertRaises(
             Exception,
             utils.submit_to_kernel,
             submission={},
-            submission_fk=None,
+            mappingset_id=None,
         )
 
     @mock.patch.dict('os.environ', AETHER_ENV_MOCK)
@@ -154,14 +154,14 @@ class UtilsTests(TestCase):
             Exception,
             utils.submit_to_kernel,
             submission=None,
-            submission_fk=1,
+            mappingset_id=1,
         )
 
     @mock.patch('requests.put')
     @mock.patch('requests.post')
     @mock.patch.dict('os.environ', AETHER_ENV_MOCK)
     def test_submit_to_kernel__without_submission_id(self, mock_post, mock_put):
-        utils.submit_to_kernel(submission={'_id': 'a'}, submission_fk=1, submission_id=None)
+        utils.submit_to_kernel(submission={'_id': 'a'}, mappingset_id=1, submission_id=None)
         mock_put.assert_not_called()
         mock_post.assert_called()
 
@@ -169,7 +169,7 @@ class UtilsTests(TestCase):
     @mock.patch('requests.post')
     @mock.patch.dict('os.environ', AETHER_ENV_MOCK)
     def test_submit_to_kernel__with_submission_id(self, mock_post, mock_put):
-        utils.submit_to_kernel(submission={'_id': 'a'}, submission_fk=1, submission_id=1)
+        utils.submit_to_kernel(submission={'_id': 'a'}, mappingset_id=1, submission_id=1)
         mock_put.assert_called()
         mock_post.assert_not_called()
 

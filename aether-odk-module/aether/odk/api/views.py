@@ -514,7 +514,7 @@ def xform_submission(request):
             submission_id = None
             response = submit_to_kernel(
                 submission=data,
-                submission_fk=str(xform.kernel_id),
+                mappingset_id=str(xform.kernel_id),
             )
             submission_content = response.content.decode('utf-8')
 

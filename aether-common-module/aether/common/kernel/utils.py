@@ -149,7 +149,7 @@ def get_all_docs(url):
     return results
 
 
-def submit_to_kernel(submission, submission_fk, submission_id=None):
+def submit_to_kernel(submission, mappingset_id, submission_id=None):
     '''
     Make the submission to Aether Kernel mapping set
     '''
@@ -157,7 +157,7 @@ def submit_to_kernel(submission, submission_fk, submission_id=None):
     if submission is None:
         raise errors.SubmissionError(_('Cannot make submission without content!'))
 
-    if submission_fk is None:
+    if mappingset_id is None:
         raise errors.SubmissionError(_('Cannot make submission without mapping set!'))
 
     if submission_id:
@@ -174,7 +174,7 @@ def submit_to_kernel(submission, submission_fk, submission_id=None):
         url,
         json={
             'payload': submission,
-            'mappingset': submission_fk,
+            'mappingset': mappingset_id,
         },
         headers=get_auth_header(),
     )
