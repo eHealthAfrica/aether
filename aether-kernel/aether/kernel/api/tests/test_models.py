@@ -72,7 +72,6 @@ class ModelsTests(TransactionTestCase):
             payload={},
             mappingset=mappingset
         )
-        self.assertEquals(str(submission), '{} - {}'.format(str(mappingset), submission.id))
         self.assertNotEqual(models.Submission.objects.count(), 0)
         self.assertTrue(submission.payload_prettified is not None)
         self.assertEqual(submission.project, project, 'submission inherits mapping project')

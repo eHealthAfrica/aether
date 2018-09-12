@@ -145,11 +145,6 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedMod
     def payload_prettified(self):
         return json_prettified(self.payload)
 
-    def __str__(self):
-        return '%s - %s' % (
-            str(self.mappingset), str(self.id),
-        )
-
     class Meta:
         app_label = 'kernel'
         default_related_name = 'submissions'
@@ -284,13 +279,12 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
 
     def save(self, *args, **kwargs):
         self.project = self.mappingset.project
+        self.projectschemas.clear()
         super(Mapping, self).save(*args, **kwargs)
         entities = self.definition.get('entities', {})
         ps_list = []
         for entity_pk in entities.values():
-            ps = ProjectSchema.objects.get(pk=entity_pk)
-            if ps:
-                ps_list.append(ps)
+            ps_list.append(ProjectSchema.objects.get(pk=entity_pk, project=self.project))
         self.projectschemas.add(*ps_list)
 
     @property
@@ -308,10 +302,6 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
             models.Index(fields=['project', '-modified']),
             models.Index(fields=['-modified']),
         ]
-
-
-# @receiver(post_save, sender=Mapping, dispatch_uid="update_projectschemas_list")
-# def update_projectschemas(sender, instance, **kwargs):
 
 
 class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
