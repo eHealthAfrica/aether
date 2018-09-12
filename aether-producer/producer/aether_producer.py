@@ -40,7 +40,7 @@ import spavro.schema
 import sys
 import traceback
 
-from aether.client import KernelClient
+from aether.client import Client
 from flask import Flask, Response, request, abort, jsonify
 from gevent.pywsgi import WSGIServer
 from confluent_kafka import Producer, Consumer, KafkaException
@@ -196,10 +196,10 @@ class ProducerManager(object):
                 if not self.kernel:
                     self.logger.info('Connecting to Aether...')
                     with KernelHandler(self):
-                        self.kernel = KernelClient(
-                            url=self.settings['kernel_url'],
-                            username=self.settings['kernel_admin_username'],
-                            password=self.settings['kernel_admin_password'],
+                        self.kernel = Client(
+                            self.settings['kernel_url'],
+                            self.settings['kernel_admin_username'],
+                            self.settings['kernel_admin_password'],
                         )
                         self.logger.info('Connected to Aether.')
                         continue
@@ -234,24 +234,24 @@ class ProducerManager(object):
             else:
                 schemas = []
                 with KernelHandler(self):
-                    self.kernel.refresh()
                     schemas = [
-                        schema for schema in self.kernel.Resource.Schema]
+                        schema for schema in self.kernel.get('schemas')]
                 for schema in schemas:
-                    if not schema.name in self.topic_managers.keys():
+                    schema_name = schema['name']
+                    if not schema_name in self.topic_managers.keys():
                         self.logger.info(
-                            "New topic connected: %s" % schema.name)
-                        self.topic_managers[schema.name] = TopicManager(
+                            "New topic connected: %s" % schema_name)
+                        self.topic_managers[schema_name] = TopicManager(
                             self, schema)
                     else:
-                        topic_manager = self.topic_managers[schema.name]
+                        topic_manager = self.topic_managers[schema_name]
                         if topic_manager.schema_changed(schema):
                             topic_manager.update_schema(schema)
                             self.logger.debug(
-                                "Schema %s updated" % schema.name)
+                                "Schema %s updated" % schema_name)
                         else:
                             self.logger.debug(
-                                "Schema %s unchanged" % schema.name)
+                                "Schema %s unchanged" % schema_name)
                 # Time between checks for schema change
                 self.safe_sleep(self.settings['sleep_time'])
         self.logger.debug('No longer checking schemas')
@@ -345,7 +345,7 @@ class TopicManager(object):
     def __init__(self, server_handler, schema):
         self.context = server_handler
         self.logger = self.context.logger
-        self.name = schema.name
+        self.name = schema['name']
         self.offset = ""
         self.limit = self.context.settings.get('postgres_pull_limit', 100)
         self.status = {
@@ -440,7 +440,8 @@ class TopicManager(object):
         # We split this method from update_schema because schema_obj as it is can not
         # be compared for differences. literal_eval fixes this. As such, this is used
         # by the schema_changed() method.
-        return ast.literal_eval(str(schema_obj.definition))
+        # schema_obj is a nested OrderedDict, which needs to be stringified
+        return ast.literal_eval(json.dumps(schema_obj['definition']))
 
     def schema_changed(self, schema_candidate):
         # for use by ProducerManager.check_schemas()
