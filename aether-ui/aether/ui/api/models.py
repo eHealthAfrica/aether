@@ -44,7 +44,7 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
     def save(self, *args, **kwargs):
         read_only_contracts = self.contracts.filter(is_read_only=True)
         if read_only_contracts:
-            raise Exception('Input is readonly for this pipeline')
+            raise Exception('Pipeline is readonly')
         super(Pipeline, self).save(*args, **kwargs)
 
     class Meta:
