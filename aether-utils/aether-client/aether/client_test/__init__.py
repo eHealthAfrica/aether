@@ -67,7 +67,7 @@ def projectschemas(client, project, schemas):
 def mapping(client, project, projectschemas):
     obj = dict(fix.mapping_template)
     _map = dict(fix.mapping_definition)
-    _map['entities'] = { ps['name'] : ps['id'] for ps in projectschemas}
+    _map['entities'] = {ps['name']: ps['id'] for ps in projectschemas}
     obj['project'] = project['id']
     obj['definition'] = _map
     result = client.create('mappings', obj)

@@ -20,13 +20,15 @@ from . import *  # noqa
 import requests
 
 
-def test_1_check_fixture_creation(client, project, schemas, project_schemas):
+def test_1_check_fixture_creation(client, project, schemas, projectschemas, mapping):
+    assert(project['id'] is not None)
     client_schemas = list(client.get('schemas'))
     assert len(schemas) != 0
     assert(len(client_schemas) == len(schemas))
     client_ps = list(client.get('projectschemas'))
     assert len(client_ps) != 0
     assert(len(client_ps) == len(schemas))
+    assert(mapping['id'] is not None)
 
 
 def test_2_check_bad_url():
