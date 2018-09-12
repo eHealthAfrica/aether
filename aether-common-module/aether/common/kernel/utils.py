@@ -83,16 +83,6 @@ def test_connection():
     return False  # it's not possible to connect with kernel :(
 
 
-def check_connection():
-    '''
-    Check if the connection with Kernel server is possible
-    '''
-
-    if not test_connection():
-        return _('Always Look on the Bright Side of Life!!!')
-    return _('Brought to you by eHealth Africa - good tech for hard places')
-
-
 def get_mappings_url(mapping_id=''):
     '''
     Returns Aether Kernel url for the given mapping
