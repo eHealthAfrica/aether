@@ -28,7 +28,6 @@ ORDER=( "create_credentials"
         "build_aether_utils_and_distribute"
         "build_connect"
         "build_common_and_distribute"
-        "build_ui_assets"
         "build_core_modules"
         "create_readonly_user"
         )

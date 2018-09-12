@@ -39,8 +39,8 @@ do
     # distribute within the containers
     for FOLDER in "${FOLDERS[@]}"
     do
-        FILE=./aether-utils/aether-$UTIL/dist/$PCK_FILE
-        DEST=./$FOLDER/conf/pip/dependencies/
+        FILE=./aether-$UTIL/dist/$PCK_FILE
+        DEST=../$FOLDER/conf/pip/dependencies/
 
         mkdir -p $DEST
         cp -r $FILE $DEST
