@@ -21,6 +21,9 @@
 
 set -Eeuo pipefail
 
+# This script is a requisite for integration testing in Travis.
+# To test locally, you likely have already done the things this script does.
+
 AETHER_FUNCTIONS=scripts/aether_functions.sh
 
 ORDER=( "create_credentials"
