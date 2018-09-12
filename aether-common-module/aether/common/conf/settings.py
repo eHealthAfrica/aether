@@ -304,19 +304,19 @@ if DJANGO_STORAGE_BACKEND == 'filesystem':
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     HOSTNAME = os.environ['HOSTNAME']
     if not HOSTNAME:
-        raise RuntimeError('Missing HOSTNAME')
+        raise RuntimeError('Missing HOSTNAME environment variable!')
 
 elif DJANGO_STORAGE_BACKEND == 's3':
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     AWS_STORAGE_BUCKET_NAME = os.environ['BUCKET_NAME']
     if not AWS_STORAGE_BUCKET_NAME:
-        logger.critical('Missing BUCKET_NAME')
+        logger.critical('Missing BUCKET_NAME environment variable!')
 
 elif DJANGO_STORAGE_BACKEND == 'gcs':
     DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
     GS_BUCKET_NAME = os.environ['BUCKET_NAME']
     if not GS_BUCKET_NAME:
-        logger.critical('Missing BUCKET_NAME')
+        logger.critical('Missing BUCKET_NAME environment variable!')
 
 else:
     msg = (
