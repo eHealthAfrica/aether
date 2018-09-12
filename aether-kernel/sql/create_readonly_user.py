@@ -28,30 +28,37 @@ access to all environment variables available in that context.
 '''
 
 import os
+import logging
 import psycopg2
 from psycopg2 import sql
 
-# Create a readonly user with username "{role}" if none exists.
+DEBUG = os.environ.get('DEBUG')
+LEVEL = logging.DEBUG if DEBUG else logging.WARNING
+
+logging.basicConfig(level=LEVEL)
+logger = logging.getLogger(__name__)
+
+# Create a readonly user with username "{role_id}" if none exists.
 # Grant read permission for relevant tables.
 CREATE_READONLY_USER = '''
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = {rolename})
+  IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = {role_literal})
   THEN
-      CREATE ROLE {role} WITH LOGIN ENCRYPTED PASSWORD {password}
+      CREATE ROLE {role_id} WITH LOGIN ENCRYPTED PASSWORD {password}
       INHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION;
   END IF;
 END
 $$ LANGUAGE plpgsql;
 
-REVOKE ALL PRIVILEGES ON DATABASE {database} FROM {role} CASCADE;
+REVOKE ALL PRIVILEGES ON DATABASE {database} FROM {role_id} CASCADE;
 
-GRANT CONNECT ON DATABASE {database} TO {role};
-GRANT USAGE ON SCHEMA public TO {role};
-GRANT SELECT ON kernel_entity TO {role};
-GRANT SELECT ON kernel_mapping TO {role};
-GRANT SELECT ON kernel_projectschema TO {role};
-GRANT SELECT ON kernel_schema TO {role};
+GRANT CONNECT ON DATABASE {database} TO {role_id};
+GRANT USAGE ON SCHEMA public TO {role_id};
+GRANT SELECT ON kernel_entity TO {role_id};
+GRANT SELECT ON kernel_mapping TO {role_id};
+GRANT SELECT ON kernel_projectschema TO {role_id};
+GRANT SELECT ON kernel_schema TO {role_id};
 '''
 
 
@@ -59,24 +66,33 @@ def main():
     dbname = os.environ['DB_NAME']
     host = os.environ['PGHOST']
     port = os.environ['PGPORT']
-    user = os.environ['PGUSER']
+    root_user = os.environ['PGUSER']
+    root_password = os.environ['PGPASSWORD']
 
+    logger.debug('db://{user}:{pwrd}@{host}:{port}/{dbname}'.format(
+        user=root_user,
+        pwrd=(len(root_password) * '*'),
+        host=host,
+        port=port,
+        dbname=dbname,
+    ))
     postgres_credentials = {
         'dbname': dbname,
         'host': host,
         'port': port,
-        'user': user,
+        'user': root_user,
+        'password': root_password,
     }
 
     with psycopg2.connect(**postgres_credentials) as conn:
-        role = os.environ['KERNEL_READONLY_DB_USERNAME']
-        password = os.environ['KERNEL_READONLY_DB_PASSWORD']
+        ro_user = os.environ['KERNEL_READONLY_DB_USERNAME']
+        ro_password = os.environ['KERNEL_READONLY_DB_PASSWORD']
         cursor = conn.cursor()
         query = sql.SQL(CREATE_READONLY_USER).format(
             database=sql.Identifier(dbname),
-            role=sql.Identifier(role),
-            rolename=sql.Literal(role),
-            password=sql.Literal(password),
+            role_id=sql.Identifier(ro_user),
+            role_literal=sql.Literal(ro_user),
+            password=sql.Literal(ro_password),
         )
         cursor.execute(query)
 

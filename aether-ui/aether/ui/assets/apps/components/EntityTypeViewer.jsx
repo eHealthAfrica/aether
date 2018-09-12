@@ -70,7 +70,11 @@ const PropertyList = props => {
       })
       return PropertyList({
         highlight: props.highlight,
-        fields: [{...field, name: field.name, type: typeStringOptions.toString()}],
+        fields: [{
+          ...field,
+          name: field.name,
+          type: typeStringOptions.toString()
+        }],
         name: props.name,
         parent: props.parent,
         isNullable

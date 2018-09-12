@@ -20,7 +20,7 @@
 
 /* global describe, it, expect, afterEach */
 
-import nock from 'nock'
+const nock = require('nock')
 
 describe('test environment', () => {
   it('should set jsdom, range and window.fetch on its global object', () => {

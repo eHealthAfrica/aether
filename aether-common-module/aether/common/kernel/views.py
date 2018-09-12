@@ -17,8 +17,13 @@
 # under the License.
 
 from django.http import HttpResponse
+from django.utils.translation import ugettext as _
 
-from .utils import check_connection
+from .utils import test_connection
+
+
+BAD_RESPONSE = _('Always Look on the Bright Side of Life!!!')
+OK_RESPONSE = _('Brought to you by eHealth Africa - good tech for hard places')
 
 
 def check_kernel(*args, **kwargs):
@@ -26,4 +31,6 @@ def check_kernel(*args, **kwargs):
     Check if the connection with Kernel server is possible
     '''
 
-    return HttpResponse(check_connection())
+    if not test_connection():
+        return HttpResponse(BAD_RESPONSE, status=500)
+    return HttpResponse(OK_RESPONSE)
