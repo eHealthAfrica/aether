@@ -40,7 +40,7 @@ do
     for FOLDER in "${FOLDERS[@]}"
     do
         FILE=./aether-utils/aether-$UTIL/dist/$PCK_FILE
-        DEST=../$FOLDER/conf/pip/dependencies/
+        DEST=./$FOLDER/conf/pip/dependencies/
 
         mkdir -p $DEST
         cp -r $FILE $DEST
