@@ -48,7 +48,7 @@ under the License.
     {% endblock styles %}
   </head>
 
-  <body>
+  <body class="{% block body_class %}{% endblock %}">
     {% csrf_token %}
 
     {% block branding %}

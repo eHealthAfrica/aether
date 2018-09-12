@@ -100,7 +100,7 @@ body {
   transform: rotateY(180deg);
 }
 
-/* custom branding classes */
+/* navbar branding classes */
 .navbar-brand .back,
 .navbar-brand .front,
 .navbar-brand .logo-container {
@@ -113,4 +113,15 @@ body {
   display: inline-block;
   margin-left: 32px;
   line-height: 24px;
+}
+
+/* logged out info */
+.logout-info {
+  padding-left: 2rem;
+}
+
+.logout-info a,
+.logout-info a:visited {
+  color: #fff;
+  text-decoration: underline;
 }

@@ -22,26 +22,13 @@ under the License.
 
 {% load i18n %}
 
-{% block styles %}
-  <style>
-    .logout-info {
-      padding-left: 2rem;
-    }
-    .logout-info a,
-    .logout-info a:visited {
-      color: #fff;
-      text-decoration: underline;
-    }
-  </style>
-{% endblock %}
+{% block body_class %}logout-info{% endblock %}
 
 {% block branding %}
   {% include 'aether/branding.html' with classname='brand' link='#' %}
 {% endblock %}
 
 {% block content %}
-  <div class="logout-info">
-    <p>{% blocktrans %}Thank you for using {{app_name}}.{% endblocktrans %}</p>
-    <p><a href="{% url 'rest_framework:login' %}?next=/">{% trans 'Log in again' %}</a></p>
-  </div>
+  <p>{% blocktrans %}Thank you for using {{app_name}}.{% endblocktrans %}</p>
+  <p><a href="{% url 'rest_framework:login' %}?next=/">{% trans 'Log in again' %}</a></p>
 {% endblock %}
