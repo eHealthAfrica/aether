@@ -38,5 +38,3 @@ for FN in "${ORDER[@]}";
 do
     $AETHER_FUNCTIONS $FN
 done
-
-scripts/test_container.sh client
