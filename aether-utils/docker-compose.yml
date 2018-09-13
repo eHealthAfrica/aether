@@ -22,12 +22,3 @@ services:
     volumes:
       - ./aether-mock-data:/code
     command: build
-
-
-  saladbar:
-    build: ./aether-saladbar
-    environment:
-      TESTING: "true"
-    volumes:
-      - ./aether-saladbar:/code
-    command: build

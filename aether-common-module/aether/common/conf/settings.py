@@ -29,6 +29,9 @@ DEBUG = bool(os.environ.get('DEBUG'))
 TESTING = bool(os.environ.get('TESTING'))
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
+APP_NAME = os.environ.get('APP_NAME', 'aether')
+APP_LINK = os.environ.get('APP_LINK', 'http://aether.ehealthafrica.org')
+
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
@@ -96,6 +99,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'aether.common.context_processors.aether_context',
             ],
         },
     },
@@ -108,8 +112,8 @@ TEMPLATES = [
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
-        'rest_framework.renderers.AdminRenderer',
+        'aether.common.drf.renderers.CustomBrowsableAPIRenderer',
+        'aether.common.drf.renderers.CustomAdminRenderer',
         'aether.common.drf.renderers.CustomCSVRenderer',
     ),
     'DEFAULT_PARSER_CLASSES': (
@@ -268,10 +272,13 @@ if CAS_SERVER_URL:
     ]
     CAS_VERSION = 3
     CAS_LOGOUT_COMPLETELY = True
-    HOSTNAME = os.environ.get('HOSTNAME', '')
+    HOSTNAME = os.environ['HOSTNAME']
 
 else:
     logger.info('No CAS enabled!')
+
+    LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login.html')
+    LOGGED_OUT_TEMPLATE = os.environ.get('LOGGED_OUT_TEMPLATE', 'aether/logged_out.html')
 
 
 # Security Configuration
