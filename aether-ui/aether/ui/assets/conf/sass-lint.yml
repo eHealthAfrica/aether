@@ -56,4 +56,7 @@ rules:
   class-name-format:          0
   variable-name-format:       0
 
+  placeholder-in-extend:      0
+  space-after-colon:          2
+
   # see more: https://github.com/sasstools/sass-lint/tree/develop/docs/rules

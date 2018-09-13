@@ -24,7 +24,7 @@ DC_UTILS="docker-compose -f ./aether-utils/docker-compose.yml"
 
 $DC_UTILS down
 
-UTILS=( client mocker saladbar)
+UTILS=( client mocker )
 for UTIL in "${UTILS[@]}"
 do
 

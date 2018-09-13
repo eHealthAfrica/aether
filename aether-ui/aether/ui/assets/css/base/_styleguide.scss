@@ -55,10 +55,10 @@ $colors: (
   hover-color:      $hover-color,
   action-color-b:   $action-color-b
 );
-
 // sass-lint:enable no-color-keywords
 
 .styleguide {
+  background-color: $white !important; // sass-lint:disable-line no-important
 
   .container {
     border-bottom: 1px dotted #4a4a4a;
