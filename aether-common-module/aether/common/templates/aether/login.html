@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends "rest_framework/login_base.html" %}
 
 {% comment 'LICENSE' %}
 Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
@@ -20,24 +20,20 @@ specific language governing permissions and limitations
 under the License.
 {% endcomment %}
 
-{% load i18n %}
-{% load render_bundle from webpack_loader %}
-{% load ui_tags %}
+{% load static %}
 
+{% block title %}{{ app_name }}{% endblock %}
 
-{% block title %}{{ app_name }} - {% trans 'Pipelines' %}{% endblock title %}
+{% block meta %}
+  {% include 'aether/meta.html' %}
+  <link rel="shortcut icon" href="{% static 'aether/images/aether.png' %}"/>
+{% endblock %}
 
+{% block style %}
+  <link rel="stylesheet" type="text/css" href="{% static 'aether/css/styles.css' %}"/>
+  <link rel="stylesheet" type="text/css" href="{% static 'aether/css/authentication.css' %}"/>
+{% endblock %}
 
-{% block content %}
-
-  <span
-    id="logged-in-user-info"
-    data-user-id="{{ request.user.id }}"
-    data-user-name="{{ request.user|get_fullname }}"
-    class="invisible"></span>
-
-  <div id="pipeline-app"></div>
-
-  {% render_bundle 'pipeline' %}
-
-{% endblock content %}
+{% block branding %}
+  {% include 'aether/branding.html' with classname='brand' link='#' %}
+{% endblock %}
