@@ -16,7 +16,17 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from rest_framework import renderers
+
 from rest_framework_csv.renderers import CSVStreamingRenderer
+
+
+class CustomBrowsableAPIRenderer(renderers.BrowsableAPIRenderer):
+    template = 'aether/api.html'
+
+
+class CustomAdminRenderer(renderers.AdminRenderer):
+    template = 'aether/admin.html'
 
 
 class CustomCSVRenderer(CSVStreamingRenderer):
