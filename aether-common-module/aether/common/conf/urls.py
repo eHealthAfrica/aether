@@ -33,7 +33,9 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
         - the `/health` URL. Always responds with `200` status and an empty JSON object `{}`.
         - the `/check-db` URL. Responds with `500` status if the database is not available.
         - the `/admin` section URLs.
-        - the `/accounts` URLs, checks if the REST Framework ones or the CAS ones.
+        - the `/accounts` URLs, checks if the REST Framework ones, using the templates
+          indicated in `LOGIN_TEMPLATE` and `LOGGED_OUT_TEMPLATE` environment variables,
+          or the CAS ones.
         - the `debug toolbar` URLs only in DEBUG mode.
 
     Based on `settings`:
@@ -59,14 +61,29 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
 
     '''
 
-    auth_urls = 'rest_framework.urls'
+    # `accounts` management
     if settings.CAS_SERVER_URL:
-        import django_cas_ng.views
+        from django_cas_ng import views
+        login_view = views.login
+        logout_view = views.logout
+    else:
+        from django.contrib.auth import views
+        login_view = views.LoginView.as_view(template_name=settings.LOGIN_TEMPLATE)
+        logout_view = views.LogoutView.as_view(template_name=settings.LOGGED_OUT_TEMPLATE)
 
-        auth_urls = ([
-            url(r'^login/$', django_cas_ng.views.login, name='login'),
-            url(r'^logout/$', django_cas_ng.views.logout, name='logout'),
-        ], 'rest_framework')
+    auth_views = [
+        url(r'^login/$', login_view, name='login'),
+        url(r'^logout/$', logout_view, name='logout'),
+    ]
+
+    if token:
+        from aether.common.auth.views import obtain_auth_token
+
+        # generates users token
+        auth_views += [
+            url('^token$', obtain_auth_token, name='token'),
+        ]
+    auth_urls = (auth_views, 'rest_framework')
 
     urlpatterns = [
         # `health` endpoints
@@ -101,14 +118,6 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
             urlpatterns += [
                 url(r'^__debug__/', include(debug_toolbar.urls)),
             ]
-
-    if token:
-        from aether.common.auth.views import obtain_auth_token
-
-        # generates users token
-        urlpatterns += [
-            url('^accounts/token$', obtain_auth_token, name='token'),
-        ]
 
     if kernel:
         from aether.common.kernel.views import check_kernel

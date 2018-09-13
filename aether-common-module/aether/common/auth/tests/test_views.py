@@ -30,7 +30,7 @@ user_model = get_user_model().objects
 class ViewsTest(TestCase):
 
     def setUp(self):
-        self.token_url = reverse('token')
+        self.token_url = reverse('rest_framework:token')
 
     def test_obtain_auth_token__as_normal_user(self):
         username = 'user'

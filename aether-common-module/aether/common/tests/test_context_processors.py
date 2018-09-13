@@ -16,15 +16,18 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.test import RequestFactory, TestCase
 
-from django.conf import settings
+from ..context_processors import aether_context
 
 
-def ui_context(request):
+class ContextProcessorsTests(TestCase):
 
-    context = {
-        'dev_mode': settings.DEBUG,
-        'app_name': settings.APP_NAME,
-    }
+    def test_aether_context(self):
+        request = RequestFactory().get('/')
 
-    return context
+        self.assertEqual(aether_context(request), {
+            'dev_mode': False,
+            'app_name': 'aether-test',
+            'app_link': 'http://aether-link-test',
+        })
