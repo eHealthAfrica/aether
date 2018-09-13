@@ -260,7 +260,7 @@ class EntityViewSet(CustomViewSet):
 
 SchemaView = get_schema_view(
     openapi.Info(
-      title="Aether API",
+      title='Aether API',
       default_version='v1'
     ),
     public=True,
