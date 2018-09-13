@@ -37,6 +37,8 @@ $DC_TEST down
 echo "_____________________________________________ Starting database"
 $DC_TEST up -d db-test
 
+$DC_TEST build kernel-test
+
 until $DC_TEST run kernel-test eval pg_isready -q; do
     >&2 echo "Waiting for db-test..."
     sleep 2
