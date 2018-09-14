@@ -9,8 +9,10 @@ toc:
   - title: Try It For Yourself
     url: /documentation/try/index.html
     subfolderitems:
-      - page: Installing Aether Bootstrap
+      - page: Prerequisites
         url: /documentation/try/index.html
+      - page: Install and Configure
+        url: /documentation/try/install.html
       - page: Setting up an Aether-Based Solution
         url: /documentation/try/walkthrough-core.html
       - page: Adding Aether Connect

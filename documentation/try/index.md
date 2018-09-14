@@ -6,18 +6,13 @@ description: Aether Documentation – Try It for yourself
 
 # Try Aether For Yourself
 
-Aether is a platform. This means that it doesn’t do much on its own: it only makes sense to use it in the context of creating a solution. For this initial run-through, we’re going to create a simple solution that takes data collected in a microcensus and feeds it out to dashboards. We’ll start with some raw json input data, and create some mappings to transform it into a more useable state. 
-
-In the next step, we'll see how that data can then be fed through to CKAN by using Aether Connect, but first things first...
-
-We’ve created an `aether-bootstrap` repository to make it easy for you to get up and running with your first Aether-based solution. This contains a bunch of `docker-compose` files that will pull Docker images of the latest version of Aether from Docker Hub and start them up. 
+Aether is a platform. This means that it doesn’t do much on its own: it only makes sense to use it in the context of creating a solution. For this initial run-through, we’re going to create a simple solution that takes data collected in a microcensus and feeds it out to dashboards. We’ll start with some raw json input data, and create some mappings to transform it into a more useable state. After that, we'll see how that data can then be fed through to CKAN by using Aether Connect. But first things first...
 
 ## Prerequisites
-
 Since Aether is a development platform, these instructions assume that you are a Developer or DevOps type person with familiarity with the commandline, github and docker. There isn't any programming required but the instructions will be challenging if you are not used to scripts, config files, JSON and just generally performing system admin type tasks.  If this is not you, Gather may be more apropriate.
 [You can try Gather here](https://gather.ehealthafrica.org/documentation/try/).
 
-You will need a computer running Linux, Mac OSX or a cloud based Linux VM (such as AWS) with 8MB of RAM. These instructions have been tested on Ubuntu 16.04.x (we have seen issues with 14.x VMs) and Mac 10.13.x
+You will need a computer running Linux, macOS, a cloud based Linux VM (such as AWS) or Windows 10.  A minimum of 8GB of RAM is also required.  These instructions have been tested on Ubuntu 16.04.x, Mac 10.13.x and Windows 10 Pro (1607).
 
 - GitHub
     - [git](https://git-scm.com/) must be installed and available
@@ -26,43 +21,15 @@ You will need a computer running Linux, Mac OSX or a cloud based Linux VM (such 
 - The following ports should be available on your machine:  
 80, 8000, 8004, 8443, 5000
 
-You will also need to register some domains for local resolution on your computer. This means editing your hosts file. On Mac/Linux this is at `/etc/hosts`; Modify the line that starts with `127.0.0.1` to include:
+## Setup Help
+If you are unsure what all of the above means, we have some detailed steps that you can follow to get your computer configured to run these demos.  You will need an Intel based 64-bit computer with at least 8GB RAM.
 
-```
-127.0.0.1       ui.aether.local kernel.aether.local
-```
-## Eval using Amazon Web Services
-Using AWS is a great way to evaluate Gather without having to install anything on your own computer.  From start to finish, it only takes about an hour to spin up an EC2 instance, configure it and try the following exercises.  These [AWS setup instructions](setup-aws) will help you get started. It costs about $3.00 to start up an AWS EC2 instance and run it for 12 hours.
+**[Macintosh Setup Help](setup-mac)** for OS X El Capitan 10.11 and newer macOS releases.
 
+**[Windows Setup Help](setup-windows)** for Windows 10 and newer releases.
 
-## Into the Aether
+**[Linux Setup Help](setup-ubuntu)** for Ubuntu 16.04.x and newer releases.
 
-The easiest way to start building an Aether-based solution is to use _Aether Bootstrap_. Begin by cloning this repository to your computer:
+**[Amazon Web Services](setup-aws)** is a great way to evaluate Aether without having to install anything on your own computer.  From start to finish, it only takes about an hour to spin up an EC2 instance, configure it and try the following exercises.  The following link will take you to a set of instructions that will help you (even if you are a beginner) get started with AWS and configured to run Aether.  It costs about $3.00 to start up an AWS EC2 instance and run it for 12 hours.
 
-```
-git clone https://github.com/eHealthAfrica/aether-bootstrap.git
-cd aether-bootstrap
-```
-
-If you are starting Aether for the first time, you will need to create some docker resources (networks and volumes) and generate credentials for all applications:
-
-```
-./scripts/initialise_docker_environment.sh
-```
-
-Now you just need to tell Docker to download the images and start them up:
-
-```
-docker-compose up
-```
-
-Once the console output has stopped, you should be able to access the Aether UI in your browser at [http://ui.aether.local/](http://ui.aether.local/). Use these credentials to log in:
-
-- _Username:_ **admin**
-- _Password:_ **adminadmin**
-
-If you see this screen, you are all configured and ready to move on:
-
-![AUX](/images/screenshots/pipelines-overview-start.png)
-
-Now let’s [start creating our first Aether-based solution](walkthrough-core).
+<div style="margin-top: 2rem; text-align: center"><a href="install">Next Steps: Install Aether</a></div>

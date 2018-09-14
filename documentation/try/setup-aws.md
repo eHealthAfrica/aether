@@ -67,9 +67,11 @@ chmod 400 my-key-pair.pem
 
 [![AWS EC2 Connect](/images/aws-ec2-ssh.png)](/images/aws-ec2-ssh.png){: .scalable}**Connect to your instance -** Bring up a command line and enter the following command where **~/.ssh/Test_Keys.pem** is replaced by the location of your .pem file and **18.184.160.216** is replaced by the IP address of your instance.  If you are questioned about the authenticity of the host, answer **yes**.
 <p style="clear: both;"/>
+
 ```
 ssh -i "~/.ssh/Test_Keys.pem" ubuntu@18.184.160.216
 ``` 
+
 If you successfully logged into your Ubuntu EC2 instance, congratulations, the hard part is over and you can move to the next steps.  If you were not able to login to your instance, here are a few things to look at based on your error message:
 * **Permissions 0644 for '/Users/dmoran/.ssh/eHA_FRA.pem' are too open.** - You did not successfully change permission for your .pem file.  Follow the instructions in **Select your key pair** step from above
 * **ssh: connect to host 18.197.111.229 port 22: Operation timed out** - Your instance is either not running or your VPC is not properly configured with port 22 open.  Verify that your instance is ready by following the **Wait for instance to be ready** step above.  Also, verify that you have followed **Step 6: Configure Security Group** exactly.  If you have an older AWS account, it is possible that your default VPC has been deleted and the one used above is not configured with a properly permissioned default gateway.  This article explains the situation and the solution: [Default VPC and Default Subnets](https://docs.aws.amazon.com/vpc/latest/userguide/default-vpc.html)
@@ -80,51 +82,49 @@ If you are not already logged into your instance, follow the **Connect to your i
 
 [![AWS EC2 APT Update](/images/aws-ec2-docker1.png)](/images/aws-ec2-docker1.png){: .scalable}**Update package tool (apt) -** Update the _apt_ package index and verify that the necessary tools are installed on the system.  Add Docker’s official GPG key and setup the latest stable Docker repository. Finally, update the package index again for Docker. 
 <p style="clear: both;"/>
+
 ```
 sudo apt-get update
-```
-```
+
 sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
-```
-```
+
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-```
-```
+
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-```
-```
+
 sudo apt-get update
 ```
 
 <p style="clear: both;"/>
 
-[![AWS EC2 Docker](/images/aws-ec2-docker2.png)](/images/aws-ec2-docker2.png){: .scalable}**Install Docker -** `sudo apt-get install docker-ce` and answer `Y` when prompted to continue.  
+[![AWS EC2 Docker](/images/aws-ec2-docker2.png)](/images/aws-ec2-docker2.png){: .scalable}**Install Docker -** Execute the **apt-get** command below and answer **Y** when prompted to continue.  
 
-By default, the docker install does not add any users to the docker group.  This requires you to prepend all docker commands with `sudo` in order to have permission to execute them.  You can optionally add the Ubuntu user to the docker group to avoid this. For more information about the security implications of this, see [Manage Docker as a non-root user](https://docs.docker.com/install/linux/linux-postinstall).
+By default, the docker install does not add any users to the docker group.  This requires you to prepend all docker commands with **sudo** in order to have permission to execute them.  You can optionally run the **usermod** command below to add the **ubuntu** user to the docker group and not have to use **sudo**. For more information about the security implications of this, see [Manage Docker as a non-root user](https://docs.docker.com/install/linux/linux-postinstall).
 <p style="clear: both;"/>
+
 ```
+sudo apt-get install docker-ce
+
 sudo usermod -aG docker $USER
 ```
-After the usermod command, you will have to `exit` and then re-login to your instance.
+_After the usermod command, you will have to `exit` and then re-login to your instance._
 
-[![AWS EC2 Docker Compose](/images/aws-ec2-docker3.png)](/images/aws-ec2-docker3.png){: .scalable}**Install Docker Compose -** Get latest Docker Compose.  At the time of this writing, the latest version was 1.22.0.  Over time, you may want to [check the latest version](https://github.com/docker/compose/releases) and change `1.22.0` to that version.  After installing Docker Compose, verify that both it and Docker works.
+[![AWS EC2 Docker Compose](/images/aws-ec2-docker3.png)](/images/aws-ec2-docker3.png){: .scalable}**Install Docker Compose -** Get latest Docker Compose.  At the time of this writing, the latest version was 1.22.0.  Over time, you may want to [check the latest version](https://github.com/docker/compose/releases) and change **1.22.0** to that version.  After installing Docker Compose, verify that both it and Docker works.
 <p style="clear: both;"/>
+
 ```
 sudo curl -L https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
-```
-```
+
 sudo chmod +x /usr/local/bin/docker-compose
-```
-```
+
 docker-compose --version
-```
-```
+
 docker run hello-world
 ```  
-If you had a permission error running Docker's "Hello World" then you will have to prepend **sudo** to all docker commands or run the **usermod** statement from above.
+_If you had a permission error running Docker's "Hello World" then you didn't run the **usermod** statement from above or you didn't exit and log back in.  Otherwise, you will have to prepend **sudo** to all docker commands._
 
 Congratulations!!! Your environment should now be set up to try Aether or Gather.
 
-<div style="margin-top: 2rem; text-align: center"><a href="http://gather.ehealthafrica.org/documentation/try/setup">- Return to Gather Set Up</a><br/>
-<a href="index#into-the-aether">- Return to Aether Set Up</a></div>
+<div style="margin-top: 2rem; text-align: center"><a href="http://gather.ehealthafrica.org/documentation/try/setup">Continue to Gather Install</a><br/>
+<a href="install">Continue to Aether Install</a></div>
 
