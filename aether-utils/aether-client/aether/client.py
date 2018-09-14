@@ -1,30 +1,27 @@
-import coreapi
-from coreapi.codecs import JSONCodec
-from openapi_codec import OpenAPICodec
+from bravado.requests_client import RequestsClient
+from bravado.client import SwaggerClient
 import requests
 
 
-class Client(object):
+class Client(SwaggerClient):
 
     def __init__(self, url, user, pw):
         self.user = user
         self.pw = pw
         self.kernel_url = url
         self.schema_url = '%s/v1/schema/?format=openapi' % self.kernel_url
-        auth = coreapi.auth.BasicAuthentication(self.user, self.pw)
-        decoders = [OpenAPICodec(), JSONCodec()]
-        session = requests.Session()
-        adapter = requests.adapters.HTTPAdapter(max_retries=3)
-        session.mount('http://', adapter)
-        self.client = coreapi.Client(auth=auth, decoders=decoders, session=session)
-        self.schema = self.client.get(self.schema_url)
+
+        http_client = RequestsClient()
+        http_client.set_basic_auth(url, self.user, self.pw)
+        self.client = self.from_url(self.schema_url, http_client=http_client)
 
     # UTILITIES
 
     def validate_call(self, data_type, remote_function, sort_on=None, validate_params={}):
-        if data_type not in self.schema.keys():
+        if data_type not in dir(self.client):
             raise ValueError("No matching type: %s in API" % data_type)
-        if remote_function not in self.schema[data_type]:
+        full_fn_name = '%s_%s' % (data_type, remote_function)
+        if full_fn_name not in dir(getattr(self.client, arg)):
             raise ValueError('No %s function for type %s' %
                              (remote_function, data_type))
         fields = [i.name for i in self.schema[data_type]
