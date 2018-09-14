@@ -56,6 +56,6 @@ git --version
 
 Congratulations!!! Your environment should now be set up to try Aether or Gather.
 
-<div style="margin-top: 2rem; text-align: center"><a href="http://gather.ehealthafrica.org/documentation/try/setup">Continue to Gather Install</a><br/>
+<div style="margin-top: 2rem; text-align: center"><a href="http://gather.ehealthafrica.org/documentation/try/install">Continue to Gather Install</a><br/>
 <a href="install">Continue to Aether Install</a></div>
 
