@@ -30,6 +30,6 @@ If you are unsure what all of the above means, we have some detailed steps that 
 
 **[Linux Setup Help](setup-ubuntu)** for Ubuntu 16.04.x and newer releases.
 
-**[Amazon Web Services](setup-aws)** is a great way to evaluate Aether without having to install anything on your own computer.  From start to finish, it only takes about an hour to spin up an EC2 instance, configure it and try the following exercises.  The following link will take you to a set of instructions that will help you (even if you are a beginner) get started with AWS and configured to run Aether.  It costs about $3.00 to start up an AWS EC2 instance and run it for 12 hours.
+**[Amazon Web Services](setup-aws)** is a great way to evaluate Aether without having to install anything on your own computer.  From start to finish, it only takes about an hour to spin up an EC2 instance, configure it and try the following exercises.  This link will take you to a set of instructions that will help you (even if you are a beginner) get started with AWS and configured to run Aether.  It costs about $3.00 to start up an AWS EC2 instance and run it for 12 hours.
 
-<div style="margin-top: 2rem; text-align: center"><a href="install">Next Steps: Install Aether</a></div>
+<div style="margin-top: 2rem; text-align: center"><a href="install">Next Step: Install Aether</a></div>
