@@ -68,6 +68,8 @@ By default, the docker install does not add any users to the docker group.  This
 <p style="clear: both;"/>
 
 ```
+sudo apt-get install docker-ce
+
 sudo usermod -aG docker $USER
 ```
 _After the usermod command, you will have to `exit` and then re-login to your instance._
