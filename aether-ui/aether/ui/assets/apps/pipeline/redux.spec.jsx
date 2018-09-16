@@ -68,7 +68,7 @@ describe('Pipeline actions', () => {
     const newPipeline = { name: 'mock new name' }
     nock('http://localhost')
       .post('/api/pipelines/')
-      .reply(200, Object.assign(newPipeline, { id: 'mockid' }))
+      .reply(200, Object.assign(newPipeline, { id: 'mockid', 'contracts': [] }))
     expect(typeof addPipeline(newPipeline)).toEqual('object')
     return store.dispatch(addPipeline(newPipeline))
       .then(res => {
