@@ -25,6 +25,7 @@ import uuid
 from rest_framework import status
 
 from aether.common.kernel import utils
+from urllib.parse import urlparse
 
 
 from . import models
@@ -441,8 +442,15 @@ def linked_pipeline_object(object_name, id):
 
 
 def kernel_to_pipeline():
-    mappingsets = kernel_data_request('mappingsets/')['results']
+    mappingsets_response = kernel_data_request('mappingsets/')
     pipelines = []
-    for mappingset in mappingsets:
-        pipelines.append(create_new_pipeline_from_kernel(mappingset))
+    while True:
+        mappingsets = mappingsets_response['results']
+        for mappingset in mappingsets:
+            pipelines.append(create_new_pipeline_from_kernel(mappingset))
+        if mappingsets_response['next']:
+            url_segments = urlparse(mappingsets_response['next'])
+            mappingsets_response = kernel_data_request('{}?{}'.format(url_segments.path, url_segments.query)[1:])
+        else:
+            break
     return pipelines

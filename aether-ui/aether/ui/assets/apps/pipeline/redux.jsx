@@ -144,7 +144,7 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
     return results
   }
   const pipelineTranslator = pipeline => {
-    const firstContract = pipeline.contracts.length && pipeline.contracts[0]
+    const firstContract = (pipeline.contracts.length && pipeline.contracts[0]) || null
     if (firstContract !== null) {
       pipeline.entity_types = firstContract.entity_types
       pipeline.mapping = firstContract.mapping
@@ -170,7 +170,7 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
   switch (action.type) {
     case types.PIPELINE_ADD: {
       const newPipeline = parsePipeline(action.payload)
-      return { ...state, pipelineList: [newPipeline, ...newPipelineList], selectedPipeline: newPipeline, isNewPipeline: true }
+      return { ...state, pipelineList: [pipelineTranslator(newPipeline), ...newPipelineList], selectedPipeline: newPipeline, isNewPipeline: true }
     }
 
     case types.PIPELINE_UPDATE: {
