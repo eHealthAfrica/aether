@@ -28,7 +28,7 @@ router.register('projects', views.ProjectViewSet)
 router.register('projects-stats',
                 views.ProjectStatsViewSet,
                 base_name='projects_stats')
-router.register('mappingset', views.MappingSetViewSet)
+router.register('mappingsets', views.MappingSetViewSet)
 router.register('mappingsets-stats',
                 views.MappingSetStatsViewSet,
                 base_name='mappingsets_stats')

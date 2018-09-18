@@ -41,7 +41,10 @@ class PipelineViewSet(viewsets.ModelViewSet):
         '''
         This view gets kernel objects, transforms and loads into a pipeline
         '''
-        ui_utils.kernel_to_pipeline()
+        try:
+            ui_utils.kernel_to_pipeline()
+        except Exception:
+            pass
         pipelines = models.Pipeline.objects.all()
         serialized_data = serializers.PipelineSerializer(pipelines, context={'request': request}, many=True).data
         return Response(serialized_data, status=HTTPStatus.OK)
@@ -84,6 +87,12 @@ class PipelineViewSet(viewsets.ModelViewSet):
             serialized_data = serializers.PipelineSerializer(pipeline, context={'request': request}).data
             outcome['pipeline'] = serialized_data
             return Response(outcome, status=HTTPStatus.OK)
+
+
+class ContractViewSet(viewsets.ModelViewSet):
+    queryset = models.Contract.objects.all()
+    serializer_class = serializers.ContractSerializer
+    ordering = ('name',)
 
 
 @api_view(['GET'])
