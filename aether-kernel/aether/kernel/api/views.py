@@ -202,7 +202,7 @@ class ProjectStatsViewSet(viewsets.ReadOnlyModelViewSet):
                          first_submission=Min('submissions__created'),
                          last_submission=Max('submissions__created'),
                          submissions_count=Count('submissions__id', distinct=True),
-                         entities_count=Count('entities__id', distinct=True),
+                         entities_count=Count('submissions__entities__id', distinct=True),
                      )
     serializer_class = serializers.ProjectStatsSerializer
 
