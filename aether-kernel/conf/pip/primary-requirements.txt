@@ -33,7 +33,7 @@ django-model-utils
 django-reversion-compare
 djangorestframework-filters
 drf-dynamic-fields
-drf-openapi
+drf_yasg
 pygments
 python-dateutil
 

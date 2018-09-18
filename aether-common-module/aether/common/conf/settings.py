@@ -155,9 +155,9 @@ DATABASES = {
 # ------------------------------------------------------------------------------
 
 LOGGING_LEVEL = logging.INFO
+LOGGING_CLASS = 'logging.StreamHandler'
 if DEBUG:
     LOGGING_LEVEL = logging.DEBUG
-    LOGGING_CLASS = 'logging.StreamHandler'
 
 if TESTING:
     LOGGING_LEVEL = logging.CRITICAL

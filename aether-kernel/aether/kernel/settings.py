@@ -36,7 +36,7 @@ INSTALLED_APPS += [
     'reversion',
     'reversion_compare',
     'aether.kernel',
-    'drf_openapi',
+    'drf_yasg',
 ]
 
 MIGRATION_MODULES = {
