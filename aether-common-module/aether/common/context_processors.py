@@ -16,24 +16,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.contrib import admin
 
-from .api import models
-
-
-class PipelineAdmin(admin.ModelAdmin):
-
-    list_display = ('name',)
-    search_fields = ('name',)
-    ordering = list_display
+from django.conf import settings
 
 
-class ContractAdmin(admin.ModelAdmin):
+def aether_context(request):
 
-    list_display = ('name', 'published_on',)
-    search_fields = ('name',)
-    ordering = list_display
+    context = {
+        'dev_mode': settings.DEBUG,
+        'app_name': settings.APP_NAME,
+        'app_link': settings.APP_LINK,
+    }
 
-
-admin.site.register(models.Pipeline, PipelineAdmin)
-admin.site.register(models.Contract, ContractAdmin)
+    return context

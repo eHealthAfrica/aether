@@ -25,14 +25,15 @@ import uuid
 from rest_framework import status
 
 from aether.common.kernel import utils
+from urllib.parse import urlparse
 
 
 from . import models
 
 
-def validate_pipeline(pipeline):
+def validate_contract(contract):
     '''
-    Call kernel to check if the pipeline is valid and return the errors and
+    Call kernel to check if the contract is valid and return the errors and
     entities.
 
     The expected return format is a list with two values, the first one is
@@ -64,7 +65,7 @@ def validate_pipeline(pipeline):
 
     '''
 
-    if not pipeline.input or not pipeline.mapping or not pipeline.entity_types:
+    if not contract.pipeline.input or not contract.mapping or not contract.entity_types:
         return [], []
 
     # check kernel connection
@@ -104,18 +105,18 @@ def validate_pipeline(pipeline):
 
     entities = {}
     schemas = {}
-    for entity_type in pipeline.entity_types:
+    for entity_type in contract.entity_types:
         name = entity_type['name']
         entities[name] = None
         schemas[name] = entity_type
 
     mapping = [
         [rule['source'], rule['destination']]
-        for rule in pipeline.mapping
+        for rule in contract.mapping
     ]
 
     payload = {
-        'submission_payload': pipeline.input,
+        'submission_payload': contract.pipeline.input,
         'mapping_definition': {
             'entities': entities,
             'mapping': mapping,
@@ -379,14 +380,6 @@ def overwrite_kernel_schema(pipeline, schema_name, schema_data, projectname, out
     return outcome
 
 
-def is_linked_to_pipeline(object_name, id):
-    kwargs = {
-        '{0}__{1}'.format('kernel_refs', object_name): id
-    }
-    linked_pipeline = models.Pipeline.objects.filter(**kwargs)
-    return True if len(linked_pipeline) else False
-
-
 def convert_mappings(mapping_from_kernel):
     return [
         {'source': mapping[0], 'destination': mapping[1]}
@@ -396,7 +389,7 @@ def convert_mappings(mapping_from_kernel):
 
 def convert_entity_types(entities_from_kernel):
     result = {'schemas': [], 'ids': {}}
-    for entity, entity_id in entities_from_kernel.items():
+    for _, entity_id in entities_from_kernel.items():
         project_schema = kernel_data_request(f'projectschemas/{entity_id}/')
         schema = kernel_data_request(f'schemas/{project_schema["schema"]}/')
         result['schemas'].append(schema['definition'])
@@ -404,26 +397,60 @@ def convert_entity_types(entities_from_kernel):
     return result
 
 
-def create_new_pipeline_from_kernel(kernel_object):
-    entity_types = convert_entity_types(kernel_object['definition']['entities'])
-    new_pipeline = models.Pipeline.objects.create(
-        name=kernel_object['name'],
-        mapping=convert_mappings(kernel_object['definition']['mapping']),
-        entity_types=entity_types['schemas'],
-        kernel_refs={
-            'project': kernel_object['project'],
-            'schema': entity_types['ids'],
-            'projectschema': kernel_object['definition']['entities'],
-            'mapping': kernel_object['id']
-        }
-    )
+def create_new_pipeline_from_kernel(mappingset):
+    new_pipeline = linked_pipeline_object('mappingset', mappingset['id'])
+    mappings = kernel_data_request('mappings/?mappingset={}'.format(mappingset['id']))['results']
+    if not new_pipeline:
+        new_pipeline = models.Pipeline.objects.create(
+            id=mappingset['id'],
+            name=mappingset['name'],
+            schema=mappingset['input'],
+            mappingset=mappingset['id']
+        )
+    else:
+        new_pipeline = new_pipeline.first()
+    for mapping in mappings:
+        new_mapping = linked_pipeline_object('mapping', mapping['id'])
+        if not new_mapping:
+            entity_types = convert_entity_types(mapping['definition']['entities'])
+            models.Contract.objects.create(
+                id=mapping['id'],
+                name=mapping['name'],
+                mapping=convert_mappings(mapping['definition']['mapping']),
+                entity_types=entity_types['schemas'],
+                pipeline=new_pipeline,
+                is_active=mapping['is_active'],
+                is_read_only=mapping['is_read_only'],
+                kernel_refs={
+                    'schema': entity_types['ids'],
+                    'projectschema': mapping['definition']['entities'],
+                    'mapping': mapping['id']
+                },
+                published_on=mapping['modified']
+            )
     return new_pipeline
 
 
+def linked_pipeline_object(object_name, id):
+    if object_name is 'mappingset':
+        return models.Pipeline.objects.filter(mappingset=id)
+    else:
+        kwargs = {
+            '{0}__{1}'.format('kernel_refs', object_name): id
+        }
+        return models.Contract.objects.filter(**kwargs)
+
+
 def kernel_to_pipeline():
-    mappings = kernel_data_request('mappings/')['results']
+    mappingsets_response = kernel_data_request('mappingsets/')
     pipelines = []
-    for mapping in mappings:
-        if not is_linked_to_pipeline('mapping', mapping['id']):
-            pipelines.append(create_new_pipeline_from_kernel(mapping))
+    while True:
+        mappingsets = mappingsets_response['results']
+        for mappingset in mappingsets:
+            pipelines.append(create_new_pipeline_from_kernel(mappingset))
+        if mappingsets_response['next']:
+            url_segments = urlparse(mappingsets_response['next'])
+            mappingsets_response = kernel_data_request('{}?{}'.format(url_segments.path, url_segments.query)[1:])
+        else:
+            break
     return pipelines

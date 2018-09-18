@@ -276,19 +276,20 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
     is_read_only = models.BooleanField(default=False)
 
     mappingset = models.ForeignKey(to=MappingSet, on_delete=models.CASCADE)
-    projectschemas = models.ManyToManyField(to=ProjectSchema)
+    projectschemas = models.ManyToManyField(to=ProjectSchema, blank=True)
 
     # redundant but speed up queries
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, blank=True, null=True)
 
-    def save(self, **kwargs):
+    def save(self, *args, **kwargs):
         self.project = self.mappingset.project
-        entities = self.definition.get('entities', {})
         self.projectschemas.clear()
+        super(Mapping, self).save(*args, **kwargs)
+        entities = self.definition.get('entities', {})
+        ps_list = []
         for entity_pk in entities.values():
-            self.projectschemas.add(ProjectSchema.objects.get(pk=entity_pk, project=self.project))
-
-        super(Mapping, self).save(**kwargs)
+            ps_list.append(ProjectSchema.objects.get(pk=entity_pk, project=self.project))
+        self.projectschemas.add(*ps_list)
 
     @property
     def definition_prettified(self):

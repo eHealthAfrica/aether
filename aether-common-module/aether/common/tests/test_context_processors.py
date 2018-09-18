@@ -16,24 +16,18 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.contrib import admin
+from django.test import RequestFactory, TestCase
 
-from .api import models
-
-
-class PipelineAdmin(admin.ModelAdmin):
-
-    list_display = ('name',)
-    search_fields = ('name',)
-    ordering = list_display
+from ..context_processors import aether_context
 
 
-class ContractAdmin(admin.ModelAdmin):
+class ContextProcessorsTests(TestCase):
 
-    list_display = ('name', 'published_on',)
-    search_fields = ('name',)
-    ordering = list_display
+    def test_aether_context(self):
+        request = RequestFactory().get('/')
 
-
-admin.site.register(models.Pipeline, PipelineAdmin)
-admin.site.register(models.Contract, ContractAdmin)
+        self.assertEqual(aether_context(request), {
+            'dev_mode': False,
+            'app_name': 'aether-test',
+            'app_link': 'http://aether-link-test',
+        })

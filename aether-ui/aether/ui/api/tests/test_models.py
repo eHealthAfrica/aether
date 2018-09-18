@@ -23,7 +23,7 @@ from django.test import TestCase
 
 from aether.common.kernel import utils as kernel_utils
 
-from ..models import Pipeline
+from ..models import Pipeline, Contract
 
 
 INPUT_SAMPLE = {
@@ -91,49 +91,61 @@ class ModelsTests(TestCase):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
         )
+        contract = Contract.objects.create(
+            name='Contract test',
+            pipeline=pipeline
+        )
 
         # default
-        self.assertEqual(pipeline.mapping_errors, [])
-        self.assertEqual(pipeline.output, [])
+        self.assertEqual(contract.mapping_errors, [])
+        self.assertEqual(contract.output, [])
 
         # no input
         pipeline.input = {}
-        pipeline.mapping = [{'source': '#!uuid', 'destination': 'Person.id'}]
-        pipeline.entity_types = [ENTITY_SAMPLE]
+        contract.mapping = [{'source': '#!uuid', 'destination': 'Person.id'}]
+        contract.entity_types = [ENTITY_SAMPLE]
         pipeline.save()
-        self.assertEqual(pipeline.mapping_errors, [])
-        self.assertEqual(pipeline.output, [])
+        contract.save()
+        self.assertEqual(contract.mapping_errors, [])
+        self.assertEqual(contract.output, [])
 
         # no mapping rules
         pipeline.input = INPUT_SAMPLE
-        pipeline.mapping = []
-        pipeline.entity_types = [ENTITY_SAMPLE]
+        contract.mapping = []
+        contract.entity_types = [ENTITY_SAMPLE]
         pipeline.save()
-        self.assertEqual(pipeline.mapping_errors, [])
-        self.assertEqual(pipeline.output, [])
+        contract.save()
+        self.assertEqual(contract.mapping_errors, [])
+        self.assertEqual(contract.output, [])
 
         # no entity types
         pipeline.input = INPUT_SAMPLE
-        pipeline.mapping = [{'source': '#!uuid', 'destination': 'Person.id'}]
-        pipeline.entity_types = []
+        contract.mapping = [{'source': '#!uuid', 'destination': 'Person.id'}]
+        contract.entity_types = []
         pipeline.save()
-        self.assertEqual(pipeline.mapping_errors, [])
-        self.assertEqual(pipeline.output, [])
+        contract.save()
+        self.assertEqual(contract.mapping_errors, [])
+        self.assertEqual(contract.output, [])
 
     @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_false)
     def test__pipeline__save__test_connection_fail(self):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
             input=INPUT_SAMPLE,
+        )
+
+        contract = Contract.objects.create(
+            name='Contract test',
+            pipeline=pipeline,
             entity_types=[ENTITY_SAMPLE],
             mapping=[{'source': '#!uuid', 'destination': 'Person.id'}],
         )
 
         self.assertEqual(
-            pipeline.mapping_errors,
+            contract.mapping_errors,
             [{'description': 'It was not possible to connect to Aether Kernel.'}]
         )
-        self.assertEqual(pipeline.output, [])
+        self.assertEqual(contract.output, [])
 
     @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
     @mock.patch('requests.post', return_value=MockResponse(500, text='Internal Server Error'))
