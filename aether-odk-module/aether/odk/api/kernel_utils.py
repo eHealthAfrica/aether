@@ -159,7 +159,10 @@ def __xform_to_artefacts(xform):
         'definition': {
             'entities': {name: item_id},
             'mapping': rules,
-        }
+        },
+        # this is an auto-generated mapping that shouldn't be modified manually
+        'is_read_only': True,
+        'is_active': True,
     }
 
     return [schema], mapping
