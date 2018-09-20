@@ -29,7 +29,7 @@ import PublishButton from './PublishButton'
 import InfoButton from './InfoButton'
 
 import NewPipeline from './NewPipeline'
-import { addPipeline, selectedPipelineChanged, getPipelines, fetchPipelines } from './redux'
+import { addPipeline, selectedPipelineChanged, getPipelines, fetchPipelines, addInitialContract } from './redux'
 
 class PipelineList extends Component {
   constructor (props) {
@@ -58,8 +58,11 @@ class PipelineList extends Component {
         errorMessage: nextProps.error.message
       })
     }
-    if (nextProps.isNewPipeline) {
-      this.props.history.push(`/${nextProps.pipelineList[0].id}`)
+    if (nextProps.isNewPipeline && !nextProps.selectedPipeline.mapping) {
+      this.props.addInitialContract({ name: nextProps.selectedPipeline.name, pipeline: nextProps.selectedPipeline.id })
+    }
+    if (nextProps.isNewPipeline && nextProps.selectedPipeline.mapping) {
+      this.props.history.push(`/${nextProps.selectedPipeline.pipeline}/${nextProps.selectedPipeline.id}`)
     }
   }
 
@@ -157,14 +160,15 @@ class PipelineList extends Component {
 
   onSelectPipeline (pipeline) {
     this.props.selectedPipelineChanged(pipeline)
-    this.props.history.push(`/${pipeline.id}`)
+    this.props.history.push(`/${pipeline.pipeline}/${pipeline.id}`)
   }
 }
 
 const mapStateToProps = ({ pipelines }) => ({
   pipelineList: pipelines.pipelineList,
   error: pipelines.error,
-  isNewPipeline: pipelines.isNewPipeline
+  isNewPipeline: pipelines.isNewPipeline,
+  selectedPipeline: pipelines.selectedPipeline
 })
 
-export default connect(mapStateToProps, { getPipelines, selectedPipelineChanged, addPipeline, fetchPipelines, getKernelURL })(PipelineList)
+export default connect(mapStateToProps, { getPipelines, selectedPipelineChanged, addPipeline, fetchPipelines, getKernelURL, addInitialContract })(PipelineList)

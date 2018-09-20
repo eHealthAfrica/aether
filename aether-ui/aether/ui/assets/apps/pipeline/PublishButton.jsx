@@ -119,7 +119,7 @@ class PublishButton extends Component {
 
   publish () {
     this.props.selectedPipelineChanged(this.props.pipeline)
-    this.props.publishPipeline(this.props.pipeline.id)
+    this.props.publishPipeline(this.props.pipeline.pipeline, this.props.pipeline.id)
   }
 
   render () {

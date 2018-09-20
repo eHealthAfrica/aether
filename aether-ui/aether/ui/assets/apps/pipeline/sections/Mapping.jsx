@@ -23,7 +23,7 @@ import { FormattedMessage } from 'react-intl'
 import { connect } from 'react-redux'
 
 import { generateGUID, deepEqual } from '../../utils'
-import { updatePipeline } from '../redux'
+import { updateContract } from '../redux'
 
 class Mapping extends Component {
   constructor (props) {
@@ -77,7 +77,7 @@ class Mapping extends Component {
 
   notifyChange (event) {
     event.preventDefault()
-    this.props.updatePipeline({ ...this.props.selectedPipeline, mapping: this.state.mappingRules })
+    this.props.updateContract({ ...this.props.selectedPipeline, mapping: this.state.mappingRules })
   }
 
   notifyChangeJSON (event) {
@@ -86,7 +86,7 @@ class Mapping extends Component {
     this.setState({ jsonError: null })
     try {
       rules = this.JSONToMapping(this.state.mappingRulesInput)
-      this.props.updatePipeline({ ...this.props.selectedPipeline, mapping: rules })
+      this.props.updateContract({ ...this.props.selectedPipeline, mapping: rules })
       this.setState({ current_rules: JSON.parse(this.state.mappingRulesInput) })
     } catch (error) {
       this.setState({ jsonError: error.message })
@@ -322,4 +322,4 @@ const mapStateToProps = ({ pipelines }) => ({
   selectedPipeline: pipelines.selectedPipeline
 })
 
-export default connect(mapStateToProps, { updatePipeline })(Mapping)
+export default connect(mapStateToProps, { updateContract })(Mapping)

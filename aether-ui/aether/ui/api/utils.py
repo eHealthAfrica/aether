@@ -232,44 +232,52 @@ def create_project_schema_object(name, pipeline, schema_id, entity_name):
     return pipeline
 
 
-def publish_preflight(pipeline, project_name, outcome):
+def publish_preflight(pipeline, project_name, outcome, contract):
     '''
     Performs a check for possible pipeline publish errors against kernel
     '''
-    if pipeline.mapping_errors:
-        outcome['error'].append('Mappings have errors')
+    if contract.mapping_errors:
+        outcome['error'].append('{} mappings have errors'.format(contract.name))
         return outcome
-    for entity_type in pipeline.entity_types:
-        if is_object_linked(pipeline.kernel_refs, 'schema', entity_type['name']):
+    for entity_type in contract.entity_types:
+        if is_object_linked(contract.kernel_refs, 'schema', entity_type['name']):
             outcome['exists'].append({entity_type['name']: '{} schema with id {} exists'.format(
                                         entity_type['name'],
-                                        pipeline.kernel_refs['schema'][entity_type['name']])})
+                                        contract.kernel_refs['schema'][entity_type['name']])})
         else:
             get_by_name = kernel_data_request(f'schemas/?name={entity_type["name"]}')['results']
             if len(get_by_name):
                 outcome['exists'].append({entity_type['name']: 'Schema with name {} exists on kernel'.format(
                                         entity_type['name'])})
-        if not is_object_linked(pipeline.kernel_refs, 'projectSchema', entity_type['name']):
+        if not is_object_linked(contract.kernel_refs, 'projectSchema', entity_type['name']):
             get_by_name = kernel_data_request('projectschemas/?name={}-{}'.format(
-                                              project_name, entity_type['name']))['results']
+                                            project_name, entity_type['name']))['results']
             if len(get_by_name):
                 project_schema_name = '{}-{}'.format(project_name, entity_type['name'])
                 outcome['exists'].append({project_schema_name: 'Project schema {} exists on kernel'.format(
                                         project_schema_name)})
-    if is_object_linked(pipeline.kernel_refs, 'mapping'):
-        outcome['exists'].append({pipeline.name: 'Mapping with id {} exists'.format(
-                                        pipeline.kernel_refs['mapping'])})
+    if is_object_linked(contract.kernel_refs, 'mapping'):
+        outcome['exists'].append({contract.name: 'Mapping with id {} exists'.format(
+                                        contract.kernel_refs['mapping'])})
     else:
-        get_by_name = kernel_data_request(f'mappings/?name={pipeline.name}')['results']
+        get_by_name = kernel_data_request(f'mappings/?name={contract.name}')['results']
         if len(get_by_name):
-            outcome['exists'].append({pipeline.name: 'Pipeline (mapping) with name {} exists on kernel.'.format(
-                                    pipeline.name)})
+            outcome['exists'].append({contract.name: 'Pipeline (mapping) with name {} exists on kernel.'.format(
+                                    contract.name)})
+
+    if pipeline.mappingset:
+        try:
+            mappingset = kernel_data_request(f'mappingsets/{pipeline.mappingset}/', 'get')
+            if json.dumps(mappingset['input'], sort_keys=True) != json.dumps(pipeline.schema, sort_keys=True):
+                outcome['exists'].append({pipeline.name: 'Input data will be changed'})
+        except Exception as e:
+            print(str(e))
     return outcome
 
 
-def publish_pipeline(pipeline, projectname, overwrite=False):
+def publish_pipeline(pipeline, projectname, contract, overwrite=False):
     '''
-    Transform pipeline to kernel data and publish
+    Transform pipeline and contract to kernel artefacts and publish
     '''
     outcome = {
         'successful': [],

@@ -52,11 +52,12 @@ class PipelineViewSet(viewsets.ModelViewSet):
     @action(methods=['post'], detail=True)
     def publish(self, request, pk=None):
         '''
-        This view transform the supplied pipeline to kernal models,
+        This view transforms the supplied pipeline to kernal models,
         publish and update the pipeline with related kernel model ids.
         '''
         project_name = request.data.get('project_name', 'Aux')
         overwrite = request.data.get('overwrite', False)
+        contract_id = request.data.get('contract_id')
         outcome = {
             'successful': [],
             'error': [],
@@ -64,20 +65,21 @@ class PipelineViewSet(viewsets.ModelViewSet):
         }
         try:
             pipeline = get_object_or_404(models.Pipeline, pk=pk)
+            contract = get_object_or_404(models.Contract, pk=contract_id)
         except Exception as e:
             outcome['error'].append(str(e))
             return Response(outcome, status=HTTPStatus.BAD_REQUEST)
-        outcome = ui_utils.publish_preflight(pipeline, project_name, outcome)
+        outcome = ui_utils.publish_preflight(pipeline, project_name, outcome, contract)
 
         if outcome['error']:
             return Response(outcome, status=HTTPStatus.BAD_REQUEST)
         if outcome['exists']:
             if overwrite:
-                outcome = ui_utils.publish_pipeline(pipeline, project_name, True)
+                outcome = ui_utils.publish_pipeline(pipeline, project_name, contract, True)
             else:
                 return Response(outcome, status=HTTPStatus.BAD_REQUEST)
         else:
-            outcome = ui_utils.publish_pipeline(pipeline, project_name)
+            outcome = ui_utils.publish_pipeline(pipeline, project_name, contract)
 
         if outcome['error']:
             return Response(outcome, status=HTTPStatus.BAD_REQUEST)

@@ -46,28 +46,17 @@ class Pipeline extends Component {
   }
 
   componentDidMount () {
-    if (this.props.match && this.props.match.params && this.props.match.params.id) {
-      if (!this.props.selectedPipeline) {
-        if (this.props.pipelineList.length) {
-          this.props.getPipelineById(this.props.match.params.id)
-        } else {
-          this.props.getPipelines()
-        }
+    if (!this.props.selectedPipeline) {
+      if (this.props.match && this.props.match.params && this.props.match.params.cid) {
+        this.props.getPipelineById(this.props.match.params.pid, this.props.match.params.cid)
+      } else {
+        this.props.history.replace('/')
       }
     }
   }
 
   componentWillReceiveProps (nextProps) {
-    if (this.props.match.params.id !== nextProps.match.params.id) {
-      this.props.getPipelineById(nextProps.match.params.id)
-    }
-    if (nextProps.pipelineList !== this.props.pipelineList && !this.props.selectedPipeline) {
-      this.props.getPipelineById(this.props.match.params.id)
-    }
-    if (!nextProps.selectedPipeline && this.props.pipelineList.length) {
-      this.props.history.replace('/')
-    }
-    if (!this.props.pipelineList.length && !nextProps.pipelineList.length) {
+    if (!nextProps.selectedPipeline) {
       this.props.history.replace('/')
     }
   }
@@ -77,7 +66,6 @@ class Pipeline extends Component {
     if (!selectedPipeline) {
       return ''
     }
-
     return (
       <div className={'pipelines-container show-pipeline'}>
         <NavBar showBreadcrumb>

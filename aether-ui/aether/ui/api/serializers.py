@@ -28,7 +28,7 @@ class ContractSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='contract-detail',
     )
 
-    pipeline_url = serializers.HyperlinkedIdentityField(
+    pipeline_url = serializers.HyperlinkedRelatedField(
         read_only=True,
         source='pipeline',
         view_name='pipeline-detail',
