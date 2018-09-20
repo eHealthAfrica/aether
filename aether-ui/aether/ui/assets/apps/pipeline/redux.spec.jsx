@@ -144,7 +144,7 @@ describe('Pipeline actions', () => {
     nock('http://localhost')
       .get(`/api/pipelines/?limit=${MAX_PAGE_SIZE}`)
       .reply(200, mockPipelines)
-    store.dispatch({type: types.GET_ALL, payload: {}})
+    store.dispatch({ type: types.GET_ALL, payload: {} })
     expect(store.getState().pipelineList).toEqual([])
     return store.dispatch(getPipelines())
       .then(() => {

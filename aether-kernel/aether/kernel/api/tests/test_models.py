@@ -70,7 +70,7 @@ class ModelsTests(TransactionTestCase):
         submission = models.Submission.objects.create(
             revision='a sample revision',
             payload={},
-            mappingset=mappingset
+            mappingset=mappingset,
         )
         self.assertNotEqual(models.Submission.objects.count(), 0)
         self.assertTrue(submission.payload_prettified is not None)
@@ -125,7 +125,6 @@ class ModelsTests(TransactionTestCase):
             projectschema=projectschema,
             submission=submission
         )
-        self.assertEquals(str(entity), 'Entity {}'.format(entity.id))
         self.assertNotEqual(models.Entity.objects.count(), 0)
         self.assertTrue(entity.payload_prettified is not None)
         self.assertEqual(entity.project, project, 'entity inherits submission project')

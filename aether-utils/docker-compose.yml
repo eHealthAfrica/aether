@@ -1,0 +1,24 @@
+# ------------------------------------------------------------------------------
+# Aether Utilities containers to setup build of python modules
+# ------------------------------------------------------------------------------
+
+version: "2.1"
+
+services:
+
+  client:
+    build: ./aether-client
+    environment:
+      TESTING: "true"
+    volumes:
+      - ./aether-client:/code
+    command: build
+
+
+  mocker:
+    build: ./aether-mock-data
+    environment:
+      TESTING: "true"
+    volumes:
+      - ./aether-mock-data:/code
+    command: build

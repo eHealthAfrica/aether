@@ -277,7 +277,6 @@ class ProjectSchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 
 class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    lookup_field = 'merge'
     url = serializers.HyperlinkedIdentityField(
         view_name='entity-detail',
         read_only=True

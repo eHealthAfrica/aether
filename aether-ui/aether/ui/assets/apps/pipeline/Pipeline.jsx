@@ -62,7 +62,7 @@ class Pipeline extends Component {
   }
 
   render () {
-    const {selectedPipeline} = this.props
+    const { selectedPipeline } = this.props
     if (!selectedPipeline) {
       return ''
     }

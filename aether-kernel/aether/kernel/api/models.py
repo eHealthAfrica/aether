@@ -341,9 +341,6 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
     def payload_prettified(self):
         return json_prettified(self.payload)
 
-    def __str__(self):
-        return 'Entity {}'.format(self.id)
-
     class Meta:
         app_label = 'kernel'
         default_related_name = 'entities'
