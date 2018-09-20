@@ -194,17 +194,21 @@ class ProjectArtefactsTests(TestCase):
     def test__upsert_project_artefacts__mappings(self):
         project = Project.objects.create(name='Project')
         mapping_id = str(uuid.uuid4())
-        mappingset_id = str(uuid.uuid4())
 
-        results_1 = generate(project_id=project.pk, project_name=project.name, mappings=[
-            {'id': mapping_id, 'name': 'Mapping'},
-        ], mapping_set={'id': mappingset_id, 'name': 'Mapping Set'})
+        results_1 = generate(
+            project_id=project.pk,
+            project_name=project.name,
+            mappings=[
+                {'id': mapping_id, 'name': 'Mapping'},
+            ],
+        )
         results_retrieve = retrieve(project=project)
         self.assertEqual(results_1, results_retrieve)
 
         self.assertEqual(results_1['project'], str(project.pk))
         self.assertEqual(results_1['schemas'], set())
         self.assertEqual(results_1['project_schemas'], set())
+        self.assertEqual(results_1['mappingsets'], set([mapping_id]))
         self.assertEqual(results_1['mappings'], set([mapping_id]))
 
         mapping = Mapping.objects.get(pk=mapping_id)
@@ -212,10 +216,24 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(mapping.revision, '1')
         self.assertEqual(mapping.definition, {'mappings': []})
 
-        results_2 = generate(project_id=project.pk, project_name=project.name, mappings=[
-            # in this case nothing changes
-            {'id': mapping_id, 'name': 'Mapping 2'},
-        ], mapping_set={'id': mappingset_id, 'name': 'Mapping Set 2'})
+        # the method has also created the missing mappingset
+        mappingset = MappingSet.objects.get(pk=mapping_id)
+        self.assertEqual(mappingset.name, 'Mapping')
+        self.assertEqual(mappingset.revision, '1')
+        self.assertEqual(mappingset.input, {})
+
+        results_2 = generate(
+            project_id=project.pk,
+            project_name=project.name,
+            mappingsets=[
+                # in this case nothing changes
+                {'id': mapping_id, 'name': 'Mapping Set 2'}
+            ],
+            mappings=[
+                # in this case nothing changes
+                {'id': mapping_id, 'name': 'Mapping 2'},
+            ],
+        )
         self.assertEqual(results_1, results_2)
 
         mapping.refresh_from_db()
@@ -223,10 +241,21 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(mapping.revision, '1')
         self.assertEqual(mapping.definition, {'mappings': []})
 
-        results_3 = generate(project_id=project.pk, project_name=project.name, mappings=[
-            # in this case the definition is updated
-            {'id': mapping_id, 'definition': {}},
-        ], mapping_set={'id': mappingset_id, 'name': 'Mapping Set 2'})
+        mappingset.refresh_from_db()
+        self.assertEqual(mappingset.name, 'Mapping')
+        self.assertEqual(mappingset.input, {})
+
+        results_3 = generate(
+            project_id=project.pk,
+            project_name=project.name,
+            mappingsets=[
+                {'id': mapping_id, 'name': 'Mapping Set 2', 'input': {'name': 'a'}}
+            ],
+            mappings=[
+                # in this case the definition is updated and the given input ignored
+                {'id': mapping_id, 'definition': {}, 'input': {'name': 'b'}},
+            ],
+        )
         self.assertEqual(results_1, results_3)
 
         mapping.refresh_from_db()
@@ -234,11 +263,18 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(mapping.revision, '1')
         self.assertEqual(mapping.definition, {})
 
+        mappingset.refresh_from_db()
+        self.assertEqual(mappingset.input, {'name': 'a'})
+
         # creating a new empty mapping
-        results_4 = generate(project_id=project.pk, project_name=project.name, mappings=[
-            # It's possible to create empty mappings!!!
-            {},
-        ])
+        results_4 = generate(
+            project_id=project.pk,
+            project_name=project.name,
+            mappings=[
+                # It's possible to create empty mappings!!!
+                {},
+            ]
+        )
         self.assertNotEqual(results_1, results_4, 'only returns the affected ids')
         self.assertEqual(len(results_1['mappings']), 1)
 

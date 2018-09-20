@@ -145,6 +145,9 @@ class EntityFilter(filters.FilterSet):
     project = filters.CharFilter(
         method='project_filter',
     )
+    mapping = filters.CharFilter(
+        method='mapping_filter',
+    )
 
     def project_filter(self, queryset, name, value):
         if is_uuid(value):
@@ -157,6 +160,12 @@ class EntityFilter(filters.FilterSet):
             return queryset.filter(projectschema__schema__pk=value)
         else:
             return queryset.filter(projectschema__schema__name=value)
+
+    def mapping_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(mapping__pk=value)
+        else:
+            return queryset.filter(mapping__name=value)
 
     class Meta:
         fields = '__all__'
