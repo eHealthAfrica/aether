@@ -16,21 +16,18 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.http import HttpResponse
-from django.utils.translation import ugettext as _
+from django.test import RequestFactory, TestCase
 
-from .utils import test_connection
-
-
-BAD_RESPONSE = _('Always Look on the Bright Side of Life!!!')
-OK_RESPONSE = _('Brought to you by eHealth Africa - good tech for hard places')
+from ..context_processors import aether_context
 
 
-def check_kernel(*args, **kwargs):
-    '''
-    Check if the connection with Kernel server is possible
-    '''
+class ContextProcessorsTests(TestCase):
 
-    if not test_connection():
-        return HttpResponse(BAD_RESPONSE, status=500)
-    return HttpResponse(OK_RESPONSE)
+    def test_aether_context(self):
+        request = RequestFactory().get('/')
+
+        self.assertEqual(aether_context(request), {
+            'dev_mode': False,
+            'app_name': 'aether-test',
+            'app_link': 'http://aether-link-test',
+        })

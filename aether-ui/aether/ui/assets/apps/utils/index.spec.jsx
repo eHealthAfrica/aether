@@ -33,7 +33,7 @@ import {
 describe('utils', () => {
   describe('clone', () => {
     it('should clone an obj', () => {
-      const a = {foo: 11, bar: {baz: 22}}
+      const a = { foo: 11, bar: { baz: 22 } }
       const b = clone(a)
       expect(a).not.toBe(b)
       expect(b.foo).toBe(a.foo)
@@ -64,8 +64,8 @@ describe('utils', () => {
     })
 
     it('should compare objects', () => {
-      let a = {foo: 11, bar: 22, baz: {y: 4}}
-      let b = {bar: 22, foo: 11, baz: {y: 4}}
+      let a = { foo: 11, bar: 22, baz: { y: 4 } }
+      let b = { bar: 22, foo: 11, baz: { y: 4 } }
       expect(deepEqual(a, b)).toBeTruthy()
       b.baz.y = 5
       expect(deepEqual(a, b)).toBeFalsy()
@@ -86,8 +86,8 @@ describe('utils', () => {
     })
 
     it('should ignore null and undefined values', () => {
-      let a = {x: 1, y: null, z: undefined}
-      let b = {x: 1, z: null}
+      let a = { x: 1, y: null, z: undefined }
+      let b = { x: 1, z: null }
       expect(deepEqual(a, b, true)).toBeTruthy()
       expect(deepEqual(a, b)).toBeFalsy()
     })
@@ -100,7 +100,7 @@ describe('utils', () => {
       element.setAttribute('data-user-id', '1')
       element.setAttribute('data-user-name', 'user')
       document.body.appendChild(element)
-      expect(getLoggedInUser()).toEqual({id: 1, name: 'user'})
+      expect(getLoggedInUser()).toEqual({ id: 1, name: 'user' })
     })
   })
 
@@ -108,13 +108,13 @@ describe('utils', () => {
     it('traverses object and applies a function to each node', () => {
       let result = []
       const f = (node) => { result.push(node) }
-      const input = {a: [1, {b: [2, 3]}]}
+      const input = { a: [1, { b: [2, 3] }] }
       traverseObject(f, input)
       const expected = [
-        {'a': [1, {'b': [2, 3]}]},
-        [1, {'b': [2, 3]}],
+        { 'a': [1, { 'b': [2, 3] }] },
+        [1, { 'b': [2, 3] }],
         1,
-        {'b': [2, 3]},
+        { 'b': [2, 3] },
         [2, 3],
         2,
         3
@@ -129,20 +129,20 @@ describe('utils', () => {
       const generator = generateSchemaName(prefix)
       const schemas = [
         [
-          {type: 'enum'},
-          {type: 'enum', name: `${prefix}_0`}
+          { type: 'enum' },
+          { type: 'enum', name: `${prefix}_0` }
         ],
         [
-          {type: 'fixed'},
-          {type: 'fixed', name: `${prefix}_1`}
+          { type: 'fixed' },
+          { type: 'fixed', name: `${prefix}_1` }
         ],
         [
-          {type: 'record'},
-          {type: 'record', name: `${prefix}_2`}
+          { type: 'record' },
+          { type: 'record', name: `${prefix}_2` }
         ],
         [
-          {type: 'int'},
-          {type: 'int'}
+          { type: 'int' },
+          { type: 'int' }
         ]
       ]
       schemas.map(([input, output]) => {
@@ -154,7 +154,7 @@ describe('utils', () => {
 
   describe('generateSchema', () => {
     it('should generate a valid avro schema', () => {
-      const input = {a: [{b: 1}, {c: 1}]}
+      const input = { a: [{ b: 1 }, { c: 1 }] }
       const expected = {
         type: 'record',
         fields: [

@@ -29,13 +29,8 @@ DEBUG = bool(os.environ.get('DEBUG'))
 TESTING = bool(os.environ.get('TESTING'))
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-if DEBUG:
-    logger.setLevel(logging.DEBUG)
-if TESTING:
-    logger.setLevel(logging.CRITICAL)
+APP_NAME = os.environ.get('APP_NAME', 'aether')
+APP_LINK = os.environ.get('APP_LINK', 'http://aether.ehealthafrica.org')
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -104,6 +99,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'aether.common.context_processors.aether_context',
             ],
         },
     },
@@ -116,8 +112,8 @@ TEMPLATES = [
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
-        'rest_framework.renderers.AdminRenderer',
+        'aether.common.drf.renderers.CustomBrowsableAPIRenderer',
+        'aether.common.drf.renderers.CustomAdminRenderer',
         'aether.common.drf.renderers.CustomCSVRenderer',
     ),
     'DEFAULT_PARSER_CLASSES': (
@@ -153,6 +149,88 @@ DATABASES = {
         'HOST': os.environ['PGHOST'],
         'PORT': os.environ['PGPORT'],
         'TESTING': {'CHARSET': 'UTF8'},
+    },
+}
+
+
+# Logging Configuration
+# ------------------------------------------------------------------------------
+
+LOGGING_LEVEL = logging.INFO
+LOGGING_CLASS = 'logging.StreamHandler'
+if DEBUG:
+    LOGGING_LEVEL = logging.DEBUG
+
+if TESTING:
+    LOGGING_LEVEL = logging.CRITICAL
+    LOGGING_CLASS = 'logging.NullHandler'
+
+logger = logging.getLogger(__name__)
+logger.setLevel(LOGGING_LEVEL)
+
+
+SENTRY_DSN = os.environ.get('SENTRY_DSN')
+if SENTRY_DSN:
+    INSTALLED_APPS += ['raven.contrib.django.raven_compat', ]
+    MIDDLEWARE = [
+        'raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware',
+    ] + MIDDLEWARE
+
+    SENTRY_CLIENT = 'raven.contrib.django.raven_compat.DjangoClient'
+    SENTRY_CELERY_LOGLEVEL = LOGGING_LEVEL
+
+    LOGGING_CLASS = 'raven.contrib.django.raven_compat.handlers.SentryHandler'
+
+else:
+    logger.info('No SENTRY enabled!')
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'root': {
+        'level': LOGGING_LEVEL,
+        'handlers': ['aether_handler'],
+    },
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s  %(asctime)s  %(module)s  %(process)d  %(thread)d  %(message)s'
+        },
+    },
+    'handlers': {
+        'aether_handler': {
+            'level': LOGGING_LEVEL,
+            'class': LOGGING_CLASS,
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': LOGGING_LEVEL,
+            'class': 'logging.StreamHandler' if not TESTING else 'logging.NullHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'aether': {
+            'level': LOGGING_LEVEL,
+            'handlers': ['console', 'aether_handler'],
+            'propagate': False,
+        },
+        'django': {
+            'level': LOGGING_LEVEL,
+            'handlers': ['console', 'aether_handler'],
+            'propagate': False,
+        },
+        # These ones are available with Sentry enabled
+        'raven': {
+            'level': 'ERROR',
+            'handlers': ['console', 'aether_handler'],
+            'propagate': False,
+        },
+        'sentry.errors': {
+            'level': 'ERROR',
+            'handlers': ['console', 'aether_handler'],
+            'propagate': False,
+        },
     },
 }
 
@@ -194,27 +272,13 @@ if CAS_SERVER_URL:
     ]
     CAS_VERSION = 3
     CAS_LOGOUT_COMPLETELY = True
-    HOSTNAME = os.environ.get('HOSTNAME', '')
+    HOSTNAME = os.environ['HOSTNAME']
 
 else:
     logger.info('No CAS enabled!')
 
-
-# Sentry Configuration
-# ------------------------------------------------------------------------------
-
-SENTRY_DSN = os.environ.get('SENTRY_DSN')
-if SENTRY_DSN:
-    INSTALLED_APPS += ['raven.contrib.django.raven_compat', ]
-    MIDDLEWARE = [
-        'raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware',
-    ] + MIDDLEWARE
-
-    SENTRY_CLIENT = 'raven.contrib.django.raven_compat.DjangoClient'
-    SENTRY_CELERY_LOGLEVEL = logging.INFO
-
-else:
-    logger.info('No SENTRY enabled!')
+    LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login.html')
+    LOGGED_OUT_TEMPLATE = os.environ.get('LOGGED_OUT_TEMPLATE', 'aether/logged_out.html')
 
 
 # Security Configuration
@@ -246,12 +310,27 @@ DJANGO_STORAGE_BACKEND = os.environ['DJANGO_STORAGE_BACKEND']
 if DJANGO_STORAGE_BACKEND == 'filesystem':
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     HOSTNAME = os.environ['HOSTNAME']
+    if not HOSTNAME:
+        msg = 'Missing HOSTNAME environment variable!'
+        logger.critical(msg)
+        raise RuntimeError(msg)
+
 elif DJANGO_STORAGE_BACKEND == 's3':
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     AWS_STORAGE_BUCKET_NAME = os.environ['BUCKET_NAME']
+    if not AWS_STORAGE_BUCKET_NAME:
+        msg = 'Missing BUCKET_NAME environment variable!'
+        logger.critical(msg)
+        raise RuntimeError(msg)
+
 elif DJANGO_STORAGE_BACKEND == 'gcs':
     DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
     GS_BUCKET_NAME = os.environ['BUCKET_NAME']
+    if not GS_BUCKET_NAME:
+        msg = 'Missing BUCKET_NAME environment variable!'
+        logger.critical(msg)
+        raise RuntimeError(msg)
+
 else:
     msg = (
         'Unrecognized value "{}" for environment variable DJANGO_STORAGE_BACKEND.'
@@ -296,4 +375,4 @@ MIDDLEWARE = [
 try:
     from local_settings import *  # noqa
 except ImportError:
-    logger.info('No local settings!')
+    logger.debug('No local settings!')

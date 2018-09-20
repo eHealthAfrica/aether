@@ -16,21 +16,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.http import HttpResponse
-from django.utils.translation import ugettext as _
 
-from .utils import test_connection
+from django.conf import settings
 
 
-BAD_RESPONSE = _('Always Look on the Bright Side of Life!!!')
-OK_RESPONSE = _('Brought to you by eHealth Africa - good tech for hard places')
+def aether_context(request):
 
+    context = {
+        'dev_mode': settings.DEBUG,
+        'app_name': settings.APP_NAME,
+        'app_link': settings.APP_LINK,
+    }
 
-def check_kernel(*args, **kwargs):
-    '''
-    Check if the connection with Kernel server is possible
-    '''
-
-    if not test_connection():
-        return HttpResponse(BAD_RESPONSE, status=500)
-    return HttpResponse(OK_RESPONSE)
+    return context
