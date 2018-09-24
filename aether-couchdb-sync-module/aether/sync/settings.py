@@ -52,7 +52,7 @@ MIGRATION_MODULES = {
 COUCHDB_URL = os.environ['COUCHDB_URL']
 COUCHDB_USER = os.environ['COUCHDB_USER']
 COUCHDB_PASSWORD = os.environ['COUCHDB_PASSWORD']
-COUCHDB_DIR = './couchdb'
+COUCHDB_DIR = os.environ.get('COUCHDB_DIR', './couchdb')
 
 REDIS_HOST = os.environ['REDIS_HOST']
 REDIS_PORT = os.environ['REDIS_PORT']

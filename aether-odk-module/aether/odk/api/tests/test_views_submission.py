@@ -126,7 +126,7 @@ class PostSubmissionTests(CustomTestCase):
         self.assertTrue(common_kernel_utils.test_connection())
         self.KERNEL_HEADERS = common_kernel_utils.get_auth_header()
         kernel_url = common_kernel_utils.get_kernel_server_url()
-        self.MAPPINGSETS_URL = f'{kernel_url}/mappingsets/{str(self.xform.kernel_id)}/'
+        self.MAPPINGSET_URL = f'{kernel_url}/mappingsets/{str(self.xform.kernel_id)}/'
         self.SUBMISSIONS_URL = common_kernel_utils.get_submissions_url()
         self.ATTACHMENTS_URL = common_kernel_utils.get_attachments_url()
         # cleaning the house
@@ -144,7 +144,7 @@ class PostSubmissionTests(CustomTestCase):
 
     def helper_check_submission(self, succeed=True, attachments=0):
         response = requests.get(
-            self.MAPPINGSETS_URL + '?fields=submissions_url',
+            self.MAPPINGSET_URL + '?fields=submissions_url',
             headers=self.KERNEL_HEADERS,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
