@@ -147,7 +147,7 @@ class PipelineList extends Component {
               <InfoButton pipeline={pipeline} />
             }
           </div>
-          <PublishButton pipeline={pipeline} className='btn btn-w btn-publish' />
+          <PublishButton pipeline={pipeline} className='btn btn-w btn-publish' disabled={pipeline.is_read_only} />
         </div>
 
       </div>

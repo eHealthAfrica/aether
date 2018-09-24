@@ -29,7 +29,7 @@ import {
   generateGUID,
   generateSchema
 } from '../../utils'
-import { updatePipeline } from '../redux'
+import { updatePipeline, updateContract } from '../redux'
 
 // The input section has two subviews `SCHEMA_VIEW` and `DATA_VIEW`.
 // In the schema view, the user enters an avro schema representing their input.
@@ -179,6 +179,7 @@ class SchemaInput extends Component {
               onChange={this.onSchemaTextChanged.bind(this)}
               placeholder={msg}
               rows='10'
+              disabled={this.props.selectedPipeline.isInputReadOnly}
             />
           )}
         </FormattedMessage>
@@ -277,11 +278,12 @@ class DataInput extends Component {
               onChange={this.onDataChanged.bind(this)}
               placeholder={msg}
               rows='10'
+              disabled={this.props.selectedPipeline.isInputReadOnly}
             />
           )}
         </FormattedMessage>
 
-        <button type='submit' className='btn btn-w btn-primary mt-3' disabled={!this.hasChanged()}>
+        <button type='submit' className='btn btn-w btn-primary mt-3' disabled={this.props.selectedPipeline.isInputReadOnly || !this.hasChanged()}>
           <span className='details-title'>
             <FormattedMessage
               id='pipeline.input.data.button.add'
@@ -319,7 +321,7 @@ export class IdentityMapping extends Component {
     const schema = this.props.selectedPipeline.schema
     const mappingRules = deriveMappingRules(schema)
     const entityTypes = deriveEntityTypes(schema)
-    this.props.updatePipeline({
+    this.props.updateContract({
       ...this.props.selectedPipeline,
       mapping: mappingRules,
       entity_types: entityTypes
@@ -384,6 +386,7 @@ export class IdentityMapping extends Component {
             data-qa='input.identityMapping.btn-apply'
             className='btn btn-w'
             onClick={this.showModal}
+            disabled={this.props.selectedPipeline.is_read_only}
           >
             <FormattedMessage
               id='pipeline.input.identityMapping.btn-apply'
@@ -463,4 +466,4 @@ const mapStateToProps = ({ pipelines }) => ({
   selectedPipeline: pipelines.selectedPipeline
 })
 
-export default connect(mapStateToProps, { updatePipeline })(injectIntl(Input))
+export default connect(mapStateToProps, { updatePipeline, updateContract })(injectIntl(Input))

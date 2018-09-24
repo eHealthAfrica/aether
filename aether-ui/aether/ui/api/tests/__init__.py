@@ -189,7 +189,11 @@ PIPELINE_EXAMPLE = {
         'years': '43'
       }
     }
-  },
+  }
+}
+
+CONTRACT_EXAMPLE = {
+  'name': 'Contract 1',
   'entity_types': [
     {
       'name': 'PersonY',

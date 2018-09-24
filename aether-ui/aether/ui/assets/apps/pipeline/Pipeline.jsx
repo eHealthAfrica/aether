@@ -91,7 +91,7 @@ class Pipeline extends Component {
                 <InfoButton pipeline={this.props.selectedPipeline} />
               }
             </div>
-            <PublishButton pipeline={this.props.selectedPipeline} className='btn btn-c btn-publish' />
+            <PublishButton pipeline={this.props.selectedPipeline} className='btn btn-c btn-publish' disabled={this.props.selectedPipeline.is_read_only} />
           </div>
         </NavBar>
 

@@ -153,14 +153,18 @@ class ModelsTests(TestCase):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
             input=INPUT_SAMPLE,
+        )
+        contract = Contract.objects.create(
+            name='Contract test',
+            pipeline=pipeline,
             entity_types=[ENTITY_SAMPLE],
             mapping=[{'source': '#!uuid', 'destination': 'Person.id'}],
         )
         self.assertEqual(
-            pipeline.mapping_errors,
+            contract.mapping_errors,
             [{'description': f'It was not possible to validate the pipeline: Internal Server Error'}]
         )
-        self.assertEqual(pipeline.output, [])
+        self.assertEqual(contract.output, [])
         mock_post.assert_called_once()
         mock_post.assert_called_once_with(
             url=self.KERNEL_URL,
@@ -192,14 +196,17 @@ class ModelsTests(TestCase):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
             input=INPUT_SAMPLE,
+        )
+        contract = Contract.objects.create(
             entity_types=[malformed_schema],
             mapping=[{'source': '#!uuid', 'destination': 'Person.id'}],
+            pipeline=pipeline
         )
         self.assertEqual(
-            pipeline.mapping_errors,
+            contract.mapping_errors,
             [{'description': 'test'}]
         )
-        self.assertEqual(pipeline.output, [])
+        self.assertEqual(contract.output, [])
         mock_post.assert_called_once()
         mock_post.assert_called_once_with(
             url=self.KERNEL_URL,
@@ -230,11 +237,14 @@ class ModelsTests(TestCase):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
             input=INPUT_SAMPLE,
+        )
+        contract = Contract.objects.create(
             entity_types=[ENTITY_SAMPLE],
             mapping=[{'source': '#!uuid', 'destination': 'Person.id'}],
+            pipeline=pipeline
         )
-        self.assertEqual(pipeline.mapping_errors, [])
-        self.assertEqual(pipeline.output, [])
+        self.assertEqual(contract.mapping_errors, [])
+        self.assertEqual(contract.output, [])
         mock_post.assert_called_once()
         mock_post.assert_called_once_with(
             url=self.KERNEL_URL,
@@ -265,15 +275,18 @@ class ModelsTests(TestCase):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
             input=INPUT_SAMPLE,
+        )
+        contract = Contract.objects.create(
             entity_types=[ENTITY_SAMPLE],
             mapping=[
                 {'source': '#!uuid', 'destination': 'Person.id'},
                 {'source': '$.firstName', 'destination': 'Person.firstName'},
             ],
+            pipeline=pipeline
         )
 
-        self.assertEqual(pipeline.mapping_errors, 'something else')
-        self.assertEqual(pipeline.output, 'something')
+        self.assertEqual(contract.mapping_errors, 'something else')
+        self.assertEqual(contract.output, 'something')
         mock_post.assert_called_once()
         mock_post.assert_called_once_with(
             url=self.KERNEL_URL,
@@ -299,57 +312,66 @@ class ModelsTests(TestCase):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
             input=INPUT_SAMPLE,
+        )
+        contract = Contract.objects.create(
             entity_types=[ENTITY_SAMPLE],
             mapping=[
                 {'source': '#!uuid', 'destination': 'Person.id'},
                 {'source': '$.not_a_real_key', 'destination': 'Person.firstName'},
             ],
+            pipeline=pipeline
         )
 
-        self.assertEqual(pipeline.output, [], 'No output if there are errors')
-        self.assertEqual(pipeline.mapping_errors[0],
+        self.assertEqual(contract.output, [], 'No output if there are errors')
+        self.assertEqual(contract.mapping_errors[0],
                          {'path': '$.not_a_real_key', 'description': 'No match for path'})
 
         # the last entry is the extracted entity
         self.assertIn(
             'Expected type "string" at path "Person.firstName"',
-            pipeline.mapping_errors[1]['description'],
+            contract.mapping_errors[1]['description'],
         )
         expected_errors = [
             'No match for path',
             'Expected type "string" at path "Person.firstName"',
         ]
-        for expected, result in zip(expected_errors, pipeline.mapping_errors):
+        for expected, result in zip(expected_errors, contract.mapping_errors):
             self.assertIn(expected, result['description'])
 
     def test__pipeline_workflow__with_kernel__missing_id(self):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
             input=INPUT_SAMPLE,
+        )
+        contract = Contract.objects.create(
             entity_types=[ENTITY_SAMPLE],
             mapping=[{'source': '$.surname', 'destination': 'Person.firstName'}],
+            pipeline=pipeline
         )
 
         # error when there is no id rule for the entity
         self.assertIn(
             'is not a valid uuid',
-            pipeline.mapping_errors[0]['description'],
+            contract.mapping_errors[0]['description'],
         )
-        self.assertNotIn('path', pipeline.mapping_errors[0])
-        self.assertEqual(pipeline.output, [])
+        self.assertNotIn('path', contract.mapping_errors[0])
+        self.assertEqual(contract.output, [])
 
     def test__pipeline_workflow__with_kernel__no_errors(self):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
             input=INPUT_SAMPLE,
+        )
+        contract = Contract.objects.create(
             entity_types=[ENTITY_SAMPLE],
             mapping=[
                 {'source': '#!uuid', 'destination': 'Person.id'},
                 {'source': '$.surname', 'destination': 'Person.firstName'},
             ],
+            pipeline=pipeline
         )
 
-        self.assertEqual(pipeline.mapping_errors, [])
-        self.assertNotEqual(pipeline.output, [])
-        self.assertIsNotNone(pipeline.output[0]['id'], 'Generated id!')
-        self.assertEqual(pipeline.output[0]['firstName'], 'Smith')
+        self.assertEqual(contract.mapping_errors, [])
+        self.assertNotEqual(contract.output, [])
+        self.assertIsNotNone(contract.output[0]['id'], 'Generated id!')
+        self.assertEqual(contract.output[0]['firstName'], 'Smith')

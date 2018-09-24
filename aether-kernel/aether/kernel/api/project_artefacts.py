@@ -75,6 +75,7 @@ def upsert_project_artefacts(
         'mappingsets': set(),
         'mappings': set(),
     }
+    mapping_project_schemas = {}
 
     # 1. create/update the project
     project = __upsert_instance(
@@ -111,6 +112,7 @@ def upsert_project_artefacts(
                 schema=schema,
                 name=schema.name,
             )
+        mapping_project_schemas[schema.name] = str(project_schema.pk)
         results['project_schemas'].add(str(project_schema.pk))
 
     # 3. create/update the mapping sets
@@ -134,10 +136,14 @@ def upsert_project_artefacts(
     # 4. create/update the mappings
     for raw_mapping in mappings:
         ignore_fields = ['name']
-        if raw_mapping.get('definition') is None:
+        mapping_definition = raw_mapping.get('definition')
+        if mapping_definition is None:
             # in case of no mapping rules were indicated, do not update them.
             ignore_fields.append('definition')
-
+            mapping_definition = {'mappings': [], 'entities': {}}
+        else:
+            mapping_definition['mapping'] = mapping_definition.get('mapping', [])
+            mapping_definition['entities'] = mapping_project_schemas
         mapping_name = raw_mapping.get('name', __random_name())
 
         # check for the mapping set
@@ -162,10 +168,11 @@ def upsert_project_artefacts(
             ignore_fields=ignore_fields,
             action=action,
             name=mapping_name,
-            definition=raw_mapping.get('definition', {'mappings': []}),
+            definition=mapping_definition,
             mappingset=mappingset,
             is_read_only=raw_mapping.get('is_read_only', False),
             is_active=raw_mapping.get('is_active', True),
+            project=project,
         )
         results['mappings'].add(str(mapping.pk))
     return results

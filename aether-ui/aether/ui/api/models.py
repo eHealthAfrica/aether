@@ -22,7 +22,6 @@ from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django_prometheus.models import ExportModelOperationsMixin
 from model_utils.models import TimeStampedModel
-from django.core.exceptions import ValidationError
 
 from .utils import validate_contract
 
@@ -43,10 +42,10 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
         return self.name
 
     def save(self, *args, **kwargs):
-        read_only_contracts = self.contracts.filter(is_read_only=True)
-        if read_only_contracts:
-            raise ValidationError('Pipeline is readonly')
         super(Pipeline, self).save(*args, **kwargs)
+        # revalidate linked contracts against updated fields
+        contracts = Contract.objects.filter(pipeline=self)
+        [contract.save() for contract in contracts]
 
     class Meta:
         app_label = 'ui'

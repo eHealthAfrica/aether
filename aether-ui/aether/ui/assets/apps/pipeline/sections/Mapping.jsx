@@ -148,7 +148,7 @@ class Mapping extends Component {
                 <div className='rules-buttons'>
                   { this.renderAddNewRuleButton() }
 
-                  <button type='submit' className='btn btn-d btn-primary' disabled={!this.hasChanged()}>
+                  <button type='submit' className='btn btn-d btn-primary' disabled={this.props.selectedPipeline.is_read_only || !this.hasChanged()}>
                     <span className='details-title'>
                       <FormattedMessage
                         id='mapping.rules.button.ok'
@@ -186,7 +186,7 @@ class Mapping extends Component {
     }
 
     return (
-      <button type='button' className='btn btn-d btn-primary' onClick={addNewRule}>
+      <button type='button' className='btn btn-d btn-primary' onClick={addNewRule} disabled={this.props.selectedPipeline.is_read_only}>
         <FormattedMessage id='mapping.button.add' defaultMessage='Add rule' />
       </button>
     )
@@ -253,7 +253,8 @@ class Mapping extends Component {
         <button
           type='button'
           className='btn btn-d btn-flat btn-transparent'
-          onClick={removeRule}>
+          onClick={removeRule}
+          disabled={this.props.selectedPipeline.is_read_only}>
           <span className='details-title'>
             <FormattedMessage
               id='mapping.rule.button.delete'
@@ -299,6 +300,7 @@ class Mapping extends Component {
                   onChange={this.onMappingRulesTextChanged.bind(this)}
                   placeholder={message}
                   rows='10'
+                  disabled={this.props.selectedPipeline.is_read_only}
                 />
               )}
             </FormattedMessage>

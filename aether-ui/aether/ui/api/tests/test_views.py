@@ -23,10 +23,11 @@ import os
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.test import TestCase
+from django.db import transaction, IntegrityError
 
-from . import (PIPELINE_EXAMPLE, PIPELINE_EXAMPLE_WITH_MAPPING_ERRORS)
+from . import (PIPELINE_EXAMPLE, PIPELINE_EXAMPLE_WITH_MAPPING_ERRORS, CONTRACT_EXAMPLE)
 
-from ..models import Pipeline
+from ..models import Pipeline, Contract
 from .. import utils
 
 
@@ -86,22 +87,29 @@ class ViewsTest(TestCase):
         response_data = json.loads(response.content)
         pipeline_id = response_data['id']
         self.assertEqual(response_data['name'], 'Pipeline Example')
+        url = reverse('contract-list')
+        CONTRACT_EXAMPLE['pipeline'] = pipeline_id
+        data = json.dumps(CONTRACT_EXAMPLE)
+        response = self.client.post(url, data=data, content_type='application/json')
+        response_data = json.loads(response.content)
+        contract_id = response_data['id']
         url = reverse('pipeline-publish', args=[pipeline_id])
-        response = self.client.post(url, {'project_name': 'Aux'})
+        response = self.client.post(url, {'project_name': 'Aux', 'contract_id': contract_id})
         response_data = json.loads(response.content)
 
         # make sure kernel db is clean for this to pass
         self.assertEqual(response.status_code, 200)
         pipeline = Pipeline.objects.get(pk=pipeline_id)
-        self.assertEqual(len(pipeline.kernel_refs), 4)
-        self.assertEqual(len(pipeline.kernel_refs['schema']), 2)
+        contract = Contract.objects.get(pk=contract_id)
+        self.assertEqual(len(contract.kernel_refs), 4)
+        self.assertEqual(len(contract.kernel_refs['schema']), 2)
 
         outcome = {
                     'successful': [],
                     'error': [],
                     'exists': []
                 }
-        outcome = utils.publish_preflight(pipeline, 'Aux', outcome)
+        outcome = utils.publish_preflight(pipeline, 'Aux', outcome, contract)
         self.assertEqual(len(outcome['error']), 0)
         self.assertEqual(len(outcome['exists']), 3)
 
@@ -189,7 +197,7 @@ class ViewsTest(TestCase):
                     'error': [],
                     'exists': []
                 }
-        outcome = utils.publish_preflight(pipeline, 'Aux', outcome)
+        outcome = utils.publish_preflight(pipeline, 'Aux', outcome, contract)
         self.assertEqual(len(outcome['exists']), 5)
 
     def test_view_pipeline__publish(self):
@@ -198,40 +206,45 @@ class ViewsTest(TestCase):
             schema={'name': 'test', 'type': 'record', 'fields':
                     [{'name': 'name', 'type': 'string'}]},
             input={'test': {'name': 'myValue'}},
+        )
+        contract = Contract.objects.create(
             entity_types=[{'name': 'Test', 'type': 'record', 'fields':
                           [{'type': 'string', 'name': 'name'}, {'type': 'string', 'name': 'id'}]}],
             mapping=[{'source': 'test.name', 'destination': 'Test.name'},
                      {'source': '#!uuid', 'destination': 'Test.id'}],
-            output={'id': 'uuids', 'name': 'a-name'}
+            output={'id': 'uuids', 'name': 'a-name'},
+            pipeline=pipeline,
         )
-        outcome = utils.publish_pipeline(pipeline, 'Aux')
-        self.assertIn(outcome['successful'][0],
-                      'Existing Aux project used')
-        outcome = utils.publish_pipeline(pipeline, 'Aux')
-        self.assertEqual(len(outcome['error']), 2)
+        outcome = utils.publish_pipeline(pipeline, 'Aux', contract, {})
+        self.assertTrue('artefacts' in outcome)
         url = reverse('pipeline-publish', args=[str(pipeline.id)])
-        response = self.client.post(url, {'project_name': 'Aux', 'overwrite': True})
+        response = self.client.post(url, {'project_name': 'Aux', 'overwrite': True, 'contract_id': str(contract.pk)})
         response_data = json.loads(response.content)
-        self.assertEqual(len(response_data['successful']), 4)
+        self.assertTrue('artefacts' in outcome)
 
-        pipeline.kernel_refs = {}
-        pipeline.save()
+        contract.kernel_refs = {}
+        contract.save()
         url = reverse('pipeline-publish', args=[str(pipeline.id)])
-        response = self.client.post(url, {'project_name': 'Aux', 'overwrite': True})
+        response = self.client.post(url, {'project_name': 'Aux', 'overwrite': True, 'contract_id': str(contract.pk)})
         response_data = json.loads(response.content)
-        self.assertEqual(len(response_data['successful']), 3)
+        self.assertTrue('artefacts' in response_data)
+        contract = Contract.objects.get(pk=contract.pk)
+        self.assertTrue('project' in contract.kernel_refs)
 
     def test_view_pipeline_fetch(self):
         url = reverse('pipeline-fetch')
         response = self.client.post(url, content_type='application/json')
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 2)
-        self.assertEqual(len(response_data[0]['entity_types']), 2)
+        self.assertEqual(len(response_data[0]['contracts'][0]['entity_types']), 2)
 
         # Ensure linked mappings are not recreated
-        response = self.client.post(url, content_type='application/json')
-        response_data = json.loads(response.content)
-        self.assertEqual(len(response_data), 2)
+        with self.assertRaises(IntegrityError):
+            # roll back transaction to a clean state before letting the IntegrityError bubble up
+            with transaction.atomic():
+                response = self.client.post(url, content_type='application/json')
+                response_data = json.loads(response.content)
+                self.assertEqual(len(response_data), 2)
 
     def test_view_get_kernel_url(self):
         url = reverse('kernel-url')

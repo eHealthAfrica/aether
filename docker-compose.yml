@@ -88,7 +88,7 @@ services:
       file: ./docker-compose-base.yml
       service: ui-base
     depends_on:
-      db:
+      kernel:
         condition: service_healthy
       # use this dependency with HRM, otherwise comment it out
       ui-assets:

@@ -118,6 +118,7 @@ class EntityTypes extends Component {
                   onChange={this.onSchemaTextChanged.bind(this)}
                   placeholder={message}
                   rows='10'
+                  disabled={this.props.selectedPipeline.is_read_only}
                 />
               )}
             </FormattedMessage>

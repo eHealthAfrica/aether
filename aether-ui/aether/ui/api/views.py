@@ -58,11 +58,17 @@ class PipelineViewSet(viewsets.ModelViewSet):
         project_name = request.data.get('project_name', 'Aux')
         overwrite = request.data.get('overwrite', False)
         contract_id = request.data.get('contract_id')
+        objects_to_overwrite = request.data.get('ids', {})
         outcome = {
             'successful': [],
             'error': [],
-            'exists': []
+            'exists': [],
+            'ids': {
+                'mapping': {},
+                'schema': {},
+            }
         }
+        publish_result = {}
         try:
             pipeline = get_object_or_404(models.Pipeline, pk=pk)
             contract = get_object_or_404(models.Contract, pk=contract_id)
@@ -75,20 +81,22 @@ class PipelineViewSet(viewsets.ModelViewSet):
             return Response(outcome, status=HTTPStatus.BAD_REQUEST)
         if outcome['exists']:
             if overwrite:
-                outcome = ui_utils.publish_pipeline(pipeline, project_name, contract, True)
+                publish_result = ui_utils.publish_pipeline(pipeline, project_name, contract, objects_to_overwrite)
             else:
                 return Response(outcome, status=HTTPStatus.BAD_REQUEST)
         else:
-            outcome = ui_utils.publish_pipeline(pipeline, project_name, contract)
+            publish_result = ui_utils.publish_pipeline(pipeline, project_name, contract)
 
-        if outcome['error']:
-            return Response(outcome, status=HTTPStatus.BAD_REQUEST)
+        if 'error' in publish_result:
+            return Response(publish_result, status=HTTPStatus.BAD_REQUEST)
         else:
-            pipeline.published_on = timezone.now()
+            contract.published_on = timezone.now()
+            contract.kernel_refs = publish_result['artefacts']
+            contract.save()
+            pipeline.mappingset = contract.kernel_refs.get('mappingsets')[0]
             pipeline.save()
             serialized_data = serializers.PipelineSerializer(pipeline, context={'request': request}).data
-            outcome['pipeline'] = serialized_data
-            return Response(outcome, status=HTTPStatus.OK)
+            return Response(serialized_data, status=HTTPStatus.OK)
 
 
 class ContractViewSet(viewsets.ModelViewSet):
