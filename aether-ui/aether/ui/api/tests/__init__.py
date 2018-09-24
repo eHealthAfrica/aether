@@ -411,6 +411,15 @@ PIPELINE_EXAMPLE_WITH_MAPPING_ERRORS = {
       }
     ]
   },
+  'input': {
+    'person': {
+      'forename': 'Sejflsd Dljljkf'
+    }
+  }
+}
+
+CONTRACT_EXAMPLE_WITH_MAPPING_ERRORS = {
+  'name': 'contract with errors',
   'entity_types': [
     {
       'name': 'PersonZ',
@@ -442,10 +451,5 @@ PIPELINE_EXAMPLE_WITH_MAPPING_ERRORS = {
       'id': '0d8aebf3-50d0-4e77-a5ee-1045ffa5f29f',
       'firstName': 'Sejflsd Dljljkf'
     }
-  ],
-  'input': {
-    'person': {
-      'forename': 'Sejflsd Dljljkf'
-    }
-  }
+  ]
 }

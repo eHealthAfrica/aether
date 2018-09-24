@@ -142,8 +142,10 @@ def upsert_project_artefacts(
             ignore_fields.append('definition')
             mapping_definition = {'mappings': [], 'entities': {}}
         else:
-            mapping_definition['mapping'] = mapping_definition.get('mapping', [])
-            mapping_definition['entities'] = mapping_project_schemas
+            mapping_definition = {
+                'mapping': mapping_definition.get('mapping', []),
+                'entities': mapping_project_schemas,
+            }
         mapping_name = raw_mapping.get('name', __random_name())
 
         # check for the mapping set
