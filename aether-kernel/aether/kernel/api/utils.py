@@ -280,20 +280,22 @@ def action_none():
 
 
 constant_type_coercions = {
-    'int' : lambda x: int(x),
-    'boolean' : lambda x : bool(x),
-    'string' : lambda x : str(x),
-    'float' : lambda x: float(x),
+    'int': lambda x: int(x),
+    'boolean': lambda x: bool(x),
+    'string': lambda x: str(x),
+    'float': lambda x: float(x),
     'json': lambda x: json.loads(x)
 }
 
 
 def coerce(v, _type='string'):
+    # Takes a value and tries to cast it to _type.
+    # Optionally can parse JSON.
     try:
         fn = constant_type_coercions[_type]
     except KeyError:
-        raise ValueError('%s not in available types for constants, %s' % 
-            (_type, [i for i in constant_type_coercions.keys()],))
+        raise ValueError('%s not in available types for constants, %s' %
+                         (_type, [i for i in constant_type_coercions.keys()],))
     try:
         return fn(v)
     except ValueError as err:
@@ -302,7 +304,9 @@ def coerce(v, _type='string'):
 
 def action_constant(args):
     # Called via #!constant#args returns the arguments to be assigned as the
-    # value for the path
+    # value for the path WHERE:
+    # args[0] is the value to be used as the constant AND
+    # args[1] is the optional type of the output.
     try:
         _type = args[1]
     except IndexError:

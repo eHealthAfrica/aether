@@ -135,7 +135,7 @@ class UtilsTests(TestCase):
             not_included), 'Person should not found in this house.'
 
     def test_coercion(self):
-        test_cases = [    
+        test_cases = [
             ('a', 'string', 'a'),
             ('true', 'boolean', True),
             ('True', 'boolean', True),
@@ -148,16 +148,31 @@ class UtilsTests(TestCase):
             ('1', 'int', 1),
             ('1.00', 'float', 1.00),
             ('["a"]', 'json', ['a']),
-            ('{"hold": ["a"]}', 'json', {"hold": ["a"]}),
-            ('poop', 'float', 1.00),
+            ('{"hold": ["a"]}', 'json', {'hold': ['a']})
         ]
         for t in test_cases:
-            res = utils.coercion(t[0], t[1])
+            res = utils.coerce(t[0], t[1])
             self.assertTrue(res == t[2])
+        try:
+            utils.coerce('a_string', 'float')
+        except ValueError:
+            pass
+        else:
+            self.fail('Should have thrown an error')
+
+    def test_action_none(self):
+        self.assertTrue(utils.action_none() is None)
 
     def test_action_constant(self):
         args = ['154', 'int']
-        assertTrue(utils.action_constant(args) == 154)
+        self.assertTrue(utils.action_constant(args) == 154)
+        self.assertTrue(utils.action_constant(['154']) == '154')
+        try:
+            utils.action_constant(['a', 'bad_type'])
+        except ValueError:
+            pass
+        else:
+            self.fail('Should have thrown a type error on unsupported type')
 
     def test_anchor_references(self):
         source_data = EXAMPLE_NESTED_SOURCE_DATA
