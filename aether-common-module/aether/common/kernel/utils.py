@@ -141,7 +141,7 @@ def get_all_docs(url):
 
 def submit_to_kernel(submission, mappingset_id, submission_id=None):
     '''
-    Make the submission to Aether Kernel mapping set
+    Push the submission to Aether Kernel
     '''
 
     if submission is None:
