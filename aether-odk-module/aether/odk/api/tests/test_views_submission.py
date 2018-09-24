@@ -126,6 +126,7 @@ class PostSubmissionTests(CustomTestCase):
         self.assertTrue(common_kernel_utils.test_connection())
         self.KERNEL_HEADERS = common_kernel_utils.get_auth_header()
         kernel_url = common_kernel_utils.get_kernel_server_url()
+
         self.MAPPING_URL = common_kernel_utils.get_mappings_url(self.xform.kernel_id)
         self.SUBMISSIONS_URL = common_kernel_utils.get_submissions_url()
         self.ATTACHMENTS_URL = common_kernel_utils.get_attachments_url()

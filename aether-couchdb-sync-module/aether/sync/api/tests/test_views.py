@@ -46,10 +46,10 @@ def valid_token(token, client_id):
         'sub': '100377948646174944684',
         'iat': 1475594698,
         'email_verified': True,
-        'name': 'HAT Device11',
+        'name': 'Aether Device11',
         'aud': client_id,
         'picture': 'picture.png',
-        'given_name': 'HAT',
+        'given_name': 'AE',
         'exp': 1475598298,
     }
 
