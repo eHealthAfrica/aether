@@ -144,7 +144,7 @@ class UtilsTests(TestCase):
         self.assertRaises(
             Exception,
             utils.submit_to_kernel,
-            submission={},
+            submission={'a': 1},
             mapping_id=None,
         )
 
