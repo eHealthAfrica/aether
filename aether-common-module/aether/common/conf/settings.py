@@ -156,13 +156,11 @@ DATABASES = {
 # Logging Configuration
 # ------------------------------------------------------------------------------
 
-LOGGING_LEVEL = logging.INFO
+# https://docs.python.org/3.6/library/logging.html#levels
+LOGGING_LEVEL = os.environ.get('LOGGING_LEVEL', logging.INFO)
 LOGGING_CLASS = 'logging.StreamHandler'
-if DEBUG:
-    LOGGING_LEVEL = logging.DEBUG
 
 if TESTING:
-    LOGGING_LEVEL = logging.CRITICAL
     LOGGING_CLASS = 'logging.NullHandler'
 
 logger = logging.getLogger(__name__)
