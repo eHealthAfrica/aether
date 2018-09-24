@@ -134,6 +134,31 @@ class UtilsTests(TestCase):
         self.assertFalse(
             not_included), 'Person should not found in this house.'
 
+    def test_coercion(self):
+        test_cases = [    
+            ('a', 'string', 'a'),
+            ('true', 'boolean', True),
+            ('True', 'boolean', True),
+            ('T', 'boolean', True),
+            ('0', 'boolean', True),
+            (0, 'boolean', False),
+            (1, 'string', '1'),
+            ('1', 'json', 1),
+            (1, 'int', 1),
+            ('1', 'int', 1),
+            ('1.00', 'float', 1.00),
+            ('["a"]', 'json', ['a']),
+            ('{"hold": ["a"]}', 'json', {"hold": ["a"]}),
+            ('poop', 'float', 1.00),
+        ]
+        for t in test_cases:
+            res = utils.coercion(t[0], t[1])
+            self.assertTrue(res == t[2])
+
+    def test_action_constant(self):
+        args = ['154', 'int']
+        assertTrue(utils.action_constant(args) == 154)
+
     def test_anchor_references(self):
         source_data = EXAMPLE_NESTED_SOURCE_DATA
         source = 'data.houses[*].people[*]'
