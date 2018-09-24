@@ -18,7 +18,45 @@
 
 from django.contrib import admin
 
-from .api.models import MobileUser, DeviceDB
+from .api.models import MobileUser, DeviceDB, Schema
 
-admin.site.register(MobileUser)
-admin.site.register(DeviceDB)
+
+class MobileUserAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'id',
+        'email',
+    )
+    search_fields = ('email',)
+    ordering = list_display
+
+
+class DeviceDBAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'id',
+        'device_id',
+        'mobileuser',
+        'last_synced_seq',
+        'last_synced_date',
+        'last_synced_log_message',
+    )
+    readonly_fields = ('last_synced_date', 'last_synced_log_message', )
+    search_fields = ('device_id', 'mobileuser')
+    ordering = list_display
+
+
+class SchemaAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'id',
+        'name',
+        'kernel_id',
+    )
+    search_fields = ('name', 'kernel_id',)
+    ordering = list_display
+
+
+admin.site.register(MobileUser, MobileUserAdmin)
+admin.site.register(DeviceDB, DeviceDBAdmin)
+admin.site.register(Schema, SchemaAdmin)
