@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-
+#!/usr/bin/env bash
+#
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -17,8 +17,26 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
 
-from aether import test
+set -Eeuo pipefail
 
-if __name__ == '__main__':
-    test.run()
+# This script is a requisite for integration testing in Travis.
+# To test locally, you likely have already done the things this script does.
+
+AETHER_FUNCTIONS=scripts/aether_functions.sh
+
+ORDER=( "create_credentials"
+        "create_aether_docker_assets"
+        "build_aether_utils_and_distribute"
+        "build_connect"
+        "build_common_and_distribute"
+        "build_core_modules kernel"
+        "create_readonly_user"
+        )
+for FN in "${ORDER[@]}";
+do
+    $AETHER_FUNCTIONS $FN
+done
+
+scripts/test_container.sh client

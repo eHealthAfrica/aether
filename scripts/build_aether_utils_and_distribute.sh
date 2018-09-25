@@ -21,36 +21,25 @@
 set -Eeuo pipefail
 
 DC_UTILS="docker-compose -f ./aether-utils/docker-compose.yml"
+VERSION=$(cat "VERSION")
 
 $DC_UTILS down
 
-UTILS=( client mocker )
+UTILS=( client )
 for UTIL in "${UTILS[@]}"
 do
 
     # create the distribution
     $DC_UTILS build $UTIL
     $DC_UTILS run $UTIL build
-    PCK_FILE=aether.$UTIL-0.0.0-py2.py3-none-any.whl
+    PCK_FILE=aether.$UTIL-$VERSION-py2.py3-none-any.whl
 
-    if [[ $UTIL = "mocker" ]]
-    then
-        SRC=mock-data
-    else
-        SRC=$UTIL
-    fi
-
-    if [[ $UTIL = "client" ]]
-    then
-        FOLDERS=( test-aether-integration-module aether-producer )
-    else
-        FOLDERS=( test-aether-integration-module )
-    fi
+    FOLDERS=( test-aether-integration-module aether-producer )
 
     # distribute within the containers
     for FOLDER in "${FOLDERS[@]}"
     do
-        FILE=./aether-utils/aether-$SRC/dist/$PCK_FILE
+        FILE=./aether-utils/aether-$UTIL/dist/$PCK_FILE
         DEST=./$FOLDER/conf/pip/dependencies/
 
         mkdir -p $DEST

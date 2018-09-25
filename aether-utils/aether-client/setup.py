@@ -19,15 +19,17 @@
 import os
 from setuptools import setup, find_packages
 
-# allow setup.py to be run from any path
-os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
-
 setup(
     name='aether.client',
-    version='0.0.0',
+    version=os.environ['VERSION'],
+    include_package_data=True,
     install_requires=[
-        "requests"
+        'coreapi',
+        'requests',
+        'openapi-codec'
     ],
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest'],
     packages=find_packages(),
     namespace_packages=['aether']
 )

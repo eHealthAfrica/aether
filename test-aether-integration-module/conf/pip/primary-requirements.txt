@@ -9,10 +9,9 @@
 ######################################################################################################
 
 
-aet.consumer
-aether.client
-aether.mocker
-aether.saladbar
+aet.consumer>=0.9.1
+aether.client>=0.9.0
+coreapi
 coverage
 flake8
 kafka

@@ -10,6 +10,7 @@ services:
     build: ./aether-client
     environment:
       TESTING: "true"
+      VERSION: ${VERSION}
     volumes:
       - ./aether-client:/code
     command: build
@@ -19,6 +20,7 @@ services:
     build: ./aether-mock-data
     environment:
       TESTING: "true"
+      VERSION: ${VERSION}
     volumes:
       - ./aether-mock-data:/code
     command: build

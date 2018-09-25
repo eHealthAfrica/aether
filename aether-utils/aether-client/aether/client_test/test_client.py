@@ -16,18 +16,26 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import sys
-import unittest
-from time import sleep
+from . import *  # noqa
+import requests
 
 
-def run():
-    sleep(5)
-    loader = unittest.TestLoader()
-    suite = loader.discover(".", pattern="test_*.py")
-    result = not unittest.TextTestRunner(verbosity=1).run(suite).wasSuccessful()
-    sys.exit(result)
+def test_1_check_fixture_creation(client, project, schemas, projectschemas, mapping):
+    assert(project['id'] is not None)
+    client_schemas = list(client.get('schemas'))
+    assert len(schemas) != 0
+    assert(len(client_schemas) == len(schemas))
+    client_ps = list(client.get('projectschemas'))
+    assert len(client_ps) != 0
+    assert(len(client_ps) == len(schemas))
+    assert(mapping['id'] is not None)
 
 
-if __name__ == "__main__":
-    run()
+def test_2_check_bad_url():
+    try:
+        c = Client("http://localhost/bad-url", "user", "pw")
+        c.get('projects')
+    except requests.exceptions.ConnectionError:
+        assert(True)
+    else:
+        assert(False)

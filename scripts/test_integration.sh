@@ -20,6 +20,8 @@
 #
 set -Eeuo pipefail
 
+# build_aether_containers.sh MUST be run before attempting integration tests.
+
 function build_container() {
     echo "_____________________________________________ Building $1 container"
     $DC_TEST build "$1"-test
@@ -30,16 +32,13 @@ DC_TEST="docker-compose -f docker-compose-test.yml"
 
 echo "_____________________________________________ TESTING"
 
-
-./scripts/build_aether_utils_and_distribute.sh
 $DC_TEST down
 
 echo "_____________________________________________ Starting database"
 $DC_TEST up -d db-test
 
-build_container kernel
+$DC_TEST build kernel-test
 
-# sometimes this is not as faster as we wanted... :'(
 until $DC_TEST run kernel-test eval pg_isready -q; do
     >&2 echo "Waiting for db-test..."
     sleep 2

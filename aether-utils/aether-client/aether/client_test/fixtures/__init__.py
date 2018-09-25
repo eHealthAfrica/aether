@@ -19,8 +19,6 @@
 import json
 import os
 
-kernel_url = "http://kernel-test:9000"
-
 def file_to_json(path):
     with open(path) as f:
         return json.load(f)
@@ -29,60 +27,56 @@ here = os.path.dirname(os.path.realpath(__file__))
 
 #Projects
 project_name = "TestProject"
-project_def = file_to_json(here+"/fixtures/salad/salad.json")
-project_obj = {
+project_template = {
     "revision": "1",
-    "name": project_name,
-    "salad_schema": project_def,
+    "name": None,
+    "salad_schema": "{}",
     "jsonld_context": "[]",
     "rdf_definition": "[]"
 }
 
 #Schemas
-schema_objs = []
-schema_dir =here+"/fixtures/avro"
-schema_files = os.listdir(schema_dir)
 
+schema_file =here+"/schema/schemas.avro"
+schema_definitions = file_to_json("%s" % (schema_file))
 
-for filename in schema_files:
-    name = filename.split(".")[0]
-    definition = file_to_json("%s/%s" % (schema_dir, filename))
-    schema_obj = {
-        "name": "My"+name,
+schema_template = {
+        "name": None,
         "type": "record",
         "revision": "1",
-        "definition": definition
+        "definition": None
     }
-    schema_objs.append(schema_obj)
 
-schema_names = [fn.split(".")[0] for fn in schema_files]
+# Project Schemas
 
-# ProjectSchemas
-project_schema_objs = []
-for name in schema_names:
-    project_schema_obj = {
+project_schema_template = {
         "revision": "1",
-        "name": name,
+        "name": None,
         "masked_fields": "[]",
         "transport_rule": "[]",
         "mandatory_fields": "[]"
     }
-    project_schema_objs.append(project_schema_obj)
-
 
 # Mapping
-mapping_def = file_to_json(here+"/fixtures/mappings/form-mapping.json")
 
-mapping_obj = {
-    "name": "microcensus",
-    "definition": mapping_def,
+mapping_name = 'VaccineReport'
+mapping_template = {
+    "name": mapping_name,
+    "definition": None,
     "revision": "1"
 }
 
+mapping_file =here+"/mappings/mapping.json"
+mapping_definition = file_to_json("%s" % (mapping_file))
+
 # Submission
-submission_def = file_to_json(here+"/fixtures/submission/form_instance.json")
-submission_obj = {
+
+submission_template = {
     "revision": 1,
     "mapping_revision": 1,
-    "payload": submission_def
+    "payload": None
 }
+
+def get_submission_payloads():
+    submission_file = here+"/submission/submissions_1000.json"
+    return file_to_json("%s" % (submission_file))
