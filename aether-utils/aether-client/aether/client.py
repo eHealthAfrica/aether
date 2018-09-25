@@ -27,7 +27,7 @@ class Client(SwaggerClient):
         log.setLevel(log_level)
         spec_url = '%s/v1/schema/?format=openapi' % url
         http_client = RequestsClient()
-        domain = url.split('://')[1]
+        domain = url.split('://')[1].split(':')[0]  # TODO Use Regex
         http_client.set_basic_auth(domain, user, pw)
         loader = Loader(http_client, request_headers=None)
         try:

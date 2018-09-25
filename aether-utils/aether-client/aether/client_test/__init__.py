@@ -44,9 +44,11 @@ def project(client):
 def schemas(client):
     schemas = []
     for definition in fix.schema_definitions:
-        obj = dict(fix.schema_template)
-        obj['name'] = definition['name']
-        obj['definition'] = definition
+        obj = client.get_model('Schema')
+        obj.name = definition['name']
+        obj.type = 'record'
+        obj.revision = '1'
+        obj.definition = definition
         schemas.append(client.schemas.create(data=obj))
     return schemas
 
