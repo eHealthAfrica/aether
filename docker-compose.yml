@@ -90,8 +90,8 @@ services:
       db:
         condition: service_healthy
       # use this dependency with HRM, otherwise comment it out
-      ui-assets:
-        condition: service_healthy
+      # ui-assets:
+      #   condition: service_started
     networks:
       internal:
         aliases:
@@ -127,9 +127,9 @@ services:
       db:
         condition: service_healthy
       couchdb:
-        condition: service_healthy
+        condition: service_started
       redis:
-        condition: service_healthy
+        condition: service_started
     networks:
       internal:
         aliases:
@@ -143,11 +143,11 @@ services:
       db:
         condition: service_healthy
       couchdb:
-        condition: service_healthy
+        condition: service_started
       redis:
-        condition: service_healthy
+        condition: service_started
       couchdb-sync:
-        condition: service_healthy
+        condition: service_started
     networks:
       - internal
 

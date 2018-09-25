@@ -19,7 +19,9 @@
 import re
 import string
 import random
+
 from django.conf import settings
+from django.utils.translation import ugettext as _
 
 from ..couchdb import api, setup
 
@@ -45,26 +47,40 @@ def filter_id(device_id):
 
 def generate_password():
     '''
-    Generate a long password string
+    Generate a long password string.
+
     These passwords are never intended to be typed by hand, but rather
-    used behind the scene to authenticate the mobile app
+    used behind the scene to authenticate the mobile app.
 
     http://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits-in-python/23728630#23728630
     '''
+
     return ''.join(random.SystemRandom().choice(
         string.ascii_uppercase + string.digits + string.ascii_lowercase
     ) for _ in range(100))
 
 
 def generate_user_id(device_id):
-    return 'org.couchdb.user:{}'.format(filter_id(device_id))
+    '''
+    Generates CouchDB user (uses ``device_id`` but removes special chars).
+    '''
+
+    return f'org.couchdb.user:{filter_id(device_id)}'
 
 
 def generate_db_name(device_id):
-    return 'device_{}'.format(filter_id(device_id))
+    '''
+    Generates device CouchDB name (uses ``device_id`` but removes special chars).
+    '''
+
+    return f'device_{filter_id(device_id)}'
 
 
 def create_db(device_id):
+    '''
+    Creates device CouchDB database.
+    '''
+
     db_name = generate_db_name(device_id)
     # Create or update the couchdb db where only the user has access
     setup.setup_db(db_name, {
@@ -76,20 +92,22 @@ def create_db(device_id):
         },
         '_security': {
             'admins': {'names': [], 'roles': []},
-            'members': {'names': [], 'roles': [device_id]}
-        }
+            'members': {'names': [], 'roles': [device_id]},
+        },
     })
 
 
 def create_user(email, password, device_id):
     '''
-    Uses the device id as username
-    Creates a user for that username.
+    - Uses the device id as username.
+    - Creates a user for that username.
+    - Grants permission to sync this device.
     '''
+
     # couchdb stops empty username
     # should throw on invalid password,
     if password is None or password == '':
-        raise ValueError('No password Provided')
+        raise ValueError(_('No password Provided'))
 
     username = filter_id(device_id)
     user_id = generate_user_id(username)
@@ -102,18 +120,19 @@ def create_user(email, password, device_id):
         'type': 'user',
         # meta fields
         'email': email,
-        'mobile_user': True
+        'mobile_user': True,
     }
 
     # this raises HttpError 409 if user exists
-    r = api.put('_users/{}'.format(user_id), json=user_doc)
+    r = api.put(f'_users/{user_id}', json=user_doc)
     r.raise_for_status()
 
 
 def update_user(url, password, device_id, existing):
     '''
-    Update existing user with new password
+    Updates existing user with new password.
     '''
+
     del existing['derived_key']
     del existing['salt']
     existing['password'] = password
@@ -123,23 +142,24 @@ def update_user(url, password, device_id, existing):
 
 def create_or_update_user(email, device_id):
     '''
-    For devices not having a CouchDB user, creates a DB, and a couchdb user,
-    returns the credentials for that DB.
+    - For devices not having a CouchDB user, creates a DB, and a couchdb user,
+      and returns the credentials for that DB.
 
-    For devices with an existing user, generate a new password, update
-    the user and return the new credentials set.
+    - For devices with an existing user, generates a new password, updates the user,
+      and returns the new credentials set.
     '''
+
     if email is None or email == '':
-        raise ValueError('No email provided')
+        raise ValueError(_('No email provided'))
 
     if device_id is None or device_id == '':
-        raise ValueError('No Device ID provided')
+        raise ValueError(_('No Device ID provided'))
 
     username = filter_id(device_id)
     user_id = generate_user_id(device_id)
 
     if username == '' or username == settings.COUCHDB_USER:
-        raise ValueError('Invalid Device ID')
+        raise ValueError(_('Invalid Device ID'))
 
     user_url = '_users/{}'.format(user_id)
 
@@ -155,12 +175,16 @@ def create_or_update_user(email, device_id):
 
     return {
         'username': username,
-        'password': password
+        'password': password,
     }
 
 
 def delete_user(device_id):
-    # We need to retreive the revision to delete the user
+    '''
+    Removes user. Revokes sync access to any Device with this user account.
+    '''
+
+    # We need to retrieve the revision to delete the user
     user_url = '_users/' + generate_user_id(device_id)
     get_user = api.get(user_url)
 
@@ -168,5 +192,5 @@ def delete_user(device_id):
         return
 
     couch_user = get_user.json()
-    r = api.delete(user_url + '?rev={}'.format(couch_user['_rev']))
+    r = api.delete('{url}?rev={rev}'.format(url=user_url, rev=couch_user['_rev']))
     r.raise_for_status()

@@ -141,13 +141,14 @@ def get_all_docs(url):
 
 def submit_to_kernel(submission, mapping_id, submission_id=None):
     '''
-    Make the submission to Aether Kernel mapping
+    Push the submission to Aether Kernel
     '''
-    if mapping_id is None:
-        raise errors.SubmissionError(_('Cannot make submission without mapping!'))
 
     if submission is None:
         raise errors.SubmissionError(_('Cannot make submission without content!'))
+
+    if mapping_id is None:
+        raise errors.SubmissionError(_('Cannot make submission without mapping!'))
 
     if submission_id:
         # update existing doc
@@ -158,7 +159,7 @@ def submit_to_kernel(submission, mapping_id, submission_id=None):
         method = requests.post
         url = get_submissions_url()
 
-    logger.debug('{method} to {url}'.format(method=method, url=url))
+    logger.debug(f'{method} to {url}')
     return method(
         url,
         json={
