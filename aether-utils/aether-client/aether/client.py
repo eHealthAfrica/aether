@@ -13,11 +13,13 @@ import logging
 log = logging.getLogger(__name__)
 
 # An Exception Class to wrap all handled API exceptions
+
+
 class AetherAPIException(Exception):
     def __init__(self, *args, **kwargs):
-        msg = {k: v for k,v in kwargs.items()}
+        msg = {k: v for k, v in kwargs.items()}
         print(kwargs)
-        for k,v in kwargs.items():
+        for k, v in kwargs.items():
             setattr(self, k, v)
         super().__init__(msg)
 
@@ -39,10 +41,10 @@ class Client(SwaggerClient):
         except bravado.exception.HTTPBadGateway as bgwe:
             log.error('Server Unavailable')
             raise bgwe
-        # Our Swagger spec is apparently somewhat invalid.        
+        # Our Swagger spec is apparently somewhat invalid.
         config = {
             'validate_swagger_spec': False,
-            'validate_responses' : False
+            'validate_responses': False
         }
         # We take this from the from_url class method of SwaggerClient
         # Apply bravado config defaults
@@ -58,7 +60,6 @@ class Client(SwaggerClient):
         self.swagger_spec = swagger_spec
         super(Client, self).__init__(
             swagger_spec, also_return_response=self.__also_return_response)
-        
 
     def _get_resource(self, item):
         # We override this method to use our AetherDecorator class
@@ -82,10 +83,10 @@ class AetherDecorator(ResourceDecorator):
     def __init__(self, resource, also_return_response=True):
         self.name = resource.name
         self.handled_exceptions = [
-                                    bravado.exception.HTTPBadRequest,
-                                    bravado.exception.HTTPBadGateway,
-                                    bravado.exception.HTTPNotFound
-                                    ]
+            bravado.exception.HTTPBadRequest,
+            bravado.exception.HTTPBadGateway,
+            bravado.exception.HTTPNotFound
+        ]
         super(AetherDecorator, self).__init__(
             resource, also_return_response)
 
@@ -94,30 +95,31 @@ class AetherDecorator(ResourceDecorator):
 
     def __getattr__(self, name):
         fn = CallableOperation(
-                                getattr(self.resource, self._get_full_name(name)),
-                                self.also_return_response)
+            getattr(self.resource, self._get_full_name(name)),
+            self.also_return_response)
         # It was annoying to constantly call .response().result to get to the most
-        # valuable data. Also errors were being swallowed by the inner workings of 
+        # valuable data. Also errors were being swallowed by the inner workings of
         # Bravado. Wrapping the returned function handles this.
+
         def resultant_function(*args, **kwargs):
             # try:
-            future =  fn(*args, **kwargs)
+            future = fn(*args, **kwargs)
             # We just want to give the exception right back, but maintain
-            # access to the response object so that we can grab the error. 
+            # access to the response object so that we can grab the error.
             # When the exception is caught and handled normally, this is impossible.
             # Hence the lambda
             response = future.response(
-                                        fallback_result=lambda x: x,
-                                        exceptions_to_catch=tuple(self.handled_exceptions)
-                                        )
+                fallback_result=lambda x: x,
+                exceptions_to_catch=tuple(self.handled_exceptions)
+            )
             result = response.result
             if any([isinstance(result, i) for i in self.handled_exceptions]):
                 http_response = response.incoming_response
                 assert isinstance(http_response, bravado_core.response.IncomingResponse)
                 details = {
-                        'operation' : future.operation.operation_id,
-                        'status_code' : http_response.status_code,
-                    }
+                    'operation': future.operation.operation_id,
+                    'status_code': http_response.status_code,
+                }
                 try:
                     details['response'] = http_response.json()['name']
                 except KeyError as err:
@@ -138,7 +140,7 @@ class AetherDecorator(ResourceDecorator):
 
     def _verify_params(self, name, params):
         return all([self._verify_param(name, i) for i in params])
-    
+
     def __iter__(self):
         # show available rpc calls
         return iter([i.lstrip("%s_" % self.name) for i in self.__dir__()])
