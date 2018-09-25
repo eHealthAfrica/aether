@@ -1,127 +1,177 @@
+import bravado
+import bravado_core
+from bravado.client import SwaggerClient, ResourceDecorator, CallableOperation
+from bravado.config import BravadoConfig
+from bravado_core.spec import Spec
 from bravado.requests_client import RequestsClient
-from bravado.client import SwaggerClient
-import requests
+from bravado.swagger_model import Loader
+import json
+from requests.auth import HTTPBasicAuth
+
+import logging
+
+log = logging.getLogger(__name__)
+
+# An Exception Class to wrap all handled API exceptions
+class AetherAPIException(Exception):
+    def __init__(self, *args, **kwargs):
+        msg = {k: v for k,v in kwargs.items()}
+        print(kwargs)
+        for k,v in kwargs.items():
+            setattr(self, k, v)
+        super().__init__(msg)
 
 
 class Client(SwaggerClient):
 
-    def __init__(self, url, user, pw):
-        self.user = user
-        self.pw = pw
-        self.kernel_url = url
-        self.schema_url = '%s/v1/schema/?format=openapi' % self.kernel_url
-
+    def __init__(self, url, user, pw, log_level=logging.ERROR):
+        log.setLevel(log_level)
+        spec_url = '%s/v1/schema/?format=openapi' % url
         http_client = RequestsClient()
-        http_client.set_basic_auth(url, self.user, self.pw)
-        self.client = self.from_url(self.schema_url, http_client=http_client)
+        domain = url.split('://')[1]
+        http_client.set_basic_auth(domain, user, pw)
+        loader = Loader(http_client, request_headers=None)
+        try:
+            spec_dict = loader.load_spec(spec_url)
+        except bravado.exception.HTTPForbidden as forb:
+            log.error('Could not authenticate with provided credentials')
+            raise forb
+        except bravado.exception.HTTPBadGateway as bgwe:
+            log.error('Server Unavailable')
+            raise bgwe
+        # Our Swagger spec is apparently somewhat invalid.        
+        config = {
+            'validate_swagger_spec': False,
+            'validate_responses' : False
+        }
+        # We take this from the from_url class method of SwaggerClient
+        # Apply bravado config defaults
+        bravado_config = BravadoConfig.from_config_dict(config)
+        # remove bravado configs from config dict
+        for key in set(bravado_config._fields).intersection(set(config)):
+            del config[key]
+        # set bravado config object
+        config['bravado'] = bravado_config
+        swagger_spec = Spec.from_dict(
+            spec_dict, spec_url, http_client, config)
+        self.__also_return_response = True
+        self.swagger_spec = swagger_spec
+        super(Client, self).__init__(
+            swagger_spec, also_return_response=self.__also_return_response)
+        
 
-    # UTILITIES
+    def _get_resource(self, item):
+        # We override this method to use our AetherDecorator class
+        resource = self.swagger_spec.resources.get(item)
+        if not resource:
+            raise AttributeError(
+                'Resource {0} not found. Available resources: {1}'
+                .format(item, ', '.join(dir(self))))
 
-    def validate_call(self, data_type, remote_function, sort_on=None, validate_params={}):
-        if data_type not in dir(self.client):
-            raise ValueError("No matching type: %s in API" % data_type)
-        full_fn_name = '%s_%s' % (data_type, remote_function)
-        if full_fn_name not in dir(getattr(self.client, arg)):
-            raise ValueError('No %s function for type %s' %
-                             (remote_function, data_type))
-        fields = [i.name for i in self.schema[data_type]
-                  [remote_function].fields]
-        params = dict(validate_params)
-        if sort_on and sort_on in fields:
-            params['ordering'] = sort_on
-        if params:
-            for key in [i for i in params.keys()]:
-                if key not in fields:
-                    del params[key]
-        return params
+        # Wrap bravado-core's Resource and Operation objects in order to
+        # execute a service call via the http_client.
+        # Replaces with AetherSpecific handler
+        return AetherDecorator(resource, self.__also_return_response)
 
-    def list_types(self):
-        return self.schema.keys()
+    def __getitem__(self, name):
+        return getattr(self, name)
 
-    def get_functions_for_type(self, data_type):
-        if not self.schema.get(data_type):
-            raise ValueError("No matching type: %s in API" % data_type)
-        return self.schema[data_type]
 
-    # CREATE
+class AetherDecorator(ResourceDecorator):
 
-    def create(self, data_type, obj):
-        remote_function = 'create'
-        params = self.validate_call(
-            data_type, remote_function, validate_params=obj)
-        return self.client.action(
-            self.schema, [data_type, remote_function], validate=False, params=params)
+    def __init__(self, resource, also_return_response=True):
+        self.name = resource.name
+        self.handled_exceptions = [
+                                    bravado.exception.HTTPBadRequest,
+                                    bravado.exception.HTTPBadGateway,
+                                    bravado.exception.HTTPNotFound
+                                    ]
+        super(AetherDecorator, self).__init__(
+            resource, also_return_response)
 
-    # READ
+    def __getitem__(self, name):
+        return getattr(self, name)
 
-    def get_single(self, data_type, _id):
-        _iter = self.get(data_type, filter_params={
-            'id': _id
-        })
-        result = list(_iter)
-        if not result:
-            raise ValueError(
-                'No matching result in type %s for ID %s' % (data_type, _id))
-        if len(result) > 1:
-            raise ValueError(
-                'More than one result in type %s for ID %s' % (data_type, _id))
-        return result[0]
+    def __getattr__(self, name):
+        fn = CallableOperation(
+                                getattr(self.resource, self._get_full_name(name)),
+                                self.also_return_response)
+        # It was annoying to constantly call .response().result to get to the most
+        # valuable data. Also errors were being swallowed by the inner workings of 
+        # Bravado. Wrapping the returned function handles this.
+        def resultant_function(*args, **kwargs):
+            # try:
+            future =  fn(*args, **kwargs)
+            # We just want to give the exception right back, but maintain
+            # access to the response object so that we can grab the error. 
+            # When the exception is caught and handled normally, this is impossible.
+            # Hence the lambda
+            response = future.response(
+                                        fallback_result=lambda x: x,
+                                        exceptions_to_catch=tuple(self.handled_exceptions)
+                                        )
+            result = response.result
+            if any([isinstance(result, i) for i in self.handled_exceptions]):
+                http_response = response.incoming_response
+                assert isinstance(http_response, bravado_core.response.IncomingResponse)
+                details = {
+                        'operation' : future.operation.operation_id,
+                        'status_code' : http_response.status_code,
+                    }
+                try:
+                    details['response'] = http_response.json()['name']
+                except KeyError as err:
+                    details['response'] = str(result)
+                raise AetherAPIException(**details)
+            return result
 
-    def get_count(self, data_type, filter_params={}):
-        return self._count_paginated(data_type, filter_params)
+        return resultant_function
 
-    def get(self, data_type, start_page=1, sort_on='modified', filter_params={}):
-        remote_function = 'list'
-        return self._paginated(data_type, remote_function, start_page, sort_on, filter_params)
+    def _get_full_name(self, name):
+        return "%s_%s" % (self.name, name)
 
-    def _count_paginated(self, data_type, filter_params={}):
-        remote_function = 'list'
-        params = self.validate_call(
-            data_type, remote_function, validate_params=filter_params)
-        entities = self.client.action(
-            self.schema, [data_type, remote_function], validate=False, params=params)
-        return entities.get('count')
+    def _verify_param(self, name, param_name):
+        operation = getattr(self.resource, self._get_full_name(name))
+        if not param_name in operation.params:
+            raise ValueError("%s has no parameter %s" % (name, param_name))
+        return True
 
-    def _paginated(
-            self, data_type, remote_function,
-            start_page=1, sort_on='modified', filter_params={}):
+    def _verify_params(self, name, params):
+        return all([self._verify_param(name, i) for i in params])
+    
+    def __iter__(self):
+        # show available rpc calls
+        return iter([i.lstrip("%s_" % self.name) for i in self.__dir__()])
 
-        params = self.validate_call(
-            data_type, remote_function, sort_on, filter_params)
+    def paginated(self, remote_function, start_page=1, ordering='modified', **kwargs):
+        fn = getattr(self, remote_function)
+        params = dict(kwargs)
+        self._verify_params(remote_function, params.keys())
         page = start_page
+        params['page'] = page
+        params['ordering'] = ordering
         _next = True
         while _next:
             params['page'] = page
-            entities = self.client.action(
-                self.schema, [data_type, remote_function], validate=False, params=params)
-            _next = entities.get('next')
+            result = fn(**params)
+            _next = result.get('next')
             page += 1
-            results = entities.get('results')
+            results = result.get('results')
             if not results:
                 raise StopIteration
             for item in results:
                 yield(item)
 
-    '''
-    There is a bug in the COREAPI Transport layer that affects the following methods.
-    If there are two methods to access the same variable (id as both query and path),
-    the URL becomes malformed. I've tried to reconstruct the Generated Fields to address
-    this, but it's a) a huge fiddly pain b) doesn't work and c) create and read are what
-    the API Client currently does the most of.
-    '''
+    def count(self, remote_function, **kwargs):
+        fn = getattr(self, remote_function)
+        params = dict(kwargs)
+        self._verify_params(remote_function, params.keys())
+        result = fn(**params)
+        return result.get('count')
 
-    # UPDATE
-
-    def update(self, data_type, obj):
-        raise NotImplementedError(
-            'UPDATE is not well supported by COREAPI with this OpenAPICodec')
-
-    def partial_update(self, data_type, url, updates):
-        raise NotImplementedError(
-            'PARTIAL_UPDATE is not well supported by COREAPI with this OpenAPICodec')
-
-    # DELETE
-
-    def delete(self, data_type, _id):
-        raise NotImplementedError(
-            'DELETE is not well supported by COREAPI with this OpenAPICodec')
+    def first(self, remote_function, **kwargs):
+        fn = getattr(self, remote_function)
+        params = dict(kwargs)
+        self._verify_params(remote_function, params.keys())
+        result = fn(**params)
+        return result.get('results', [])[0]
