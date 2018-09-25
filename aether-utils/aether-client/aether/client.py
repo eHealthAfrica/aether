@@ -5,16 +5,13 @@ from bravado.config import BravadoConfig
 from bravado_core.spec import Spec
 from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
-import json
-from requests.auth import HTTPBasicAuth
-
 import logging
+
 
 log = logging.getLogger(__name__)
 
+
 # An Exception Class to wrap all handled API exceptions
-
-
 class AetherAPIException(Exception):
     def __init__(self, *args, **kwargs):
         msg = {k: v for k, v in kwargs.items()}
@@ -85,7 +82,8 @@ class AetherDecorator(ResourceDecorator):
         self.handled_exceptions = [
             bravado.exception.HTTPBadRequest,
             bravado.exception.HTTPBadGateway,
-            bravado.exception.HTTPNotFound
+            bravado.exception.HTTPNotFound,
+            bravado.exception.HTTPForbidden
         ]
         super(AetherDecorator, self).__init__(
             resource, also_return_response)
@@ -134,7 +132,7 @@ class AetherDecorator(ResourceDecorator):
 
     def _verify_param(self, name, param_name):
         operation = getattr(self.resource, self._get_full_name(name))
-        if not param_name in operation.params:
+        if param_name not in operation.params:
             raise ValueError("%s has no parameter %s" % (name, param_name))
         return True
 

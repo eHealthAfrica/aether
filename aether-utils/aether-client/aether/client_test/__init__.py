@@ -36,7 +36,7 @@ def client():
 def project(client):
     obj = dict(fix.project_template)
     obj['name'] = fix.project_name
-    result = client.create('projects', obj)
+    result = client.projects.create(data=obj)
     return result
 
 
@@ -47,7 +47,7 @@ def schemas(client):
         obj = dict(fix.schema_template)
         obj['name'] = definition['name']
         obj['definition'] = definition
-        schemas.append(client.create('schemas', obj))
+        schemas.append(client.schemas.create(data=obj))
     return schemas
 
 
@@ -56,10 +56,10 @@ def projectschemas(client, project, schemas):
     ps_objects = []
     for schema in schemas:
         obj = dict(fix.project_schema_template)
-        obj['name'] = schema['name']
+        obj['name'] = schema.name
         obj['project'] = project['id']
-        obj['schema'] = schema['id']
-        ps_objects.append(client.create('projectschemas', obj))
+        obj['schema'] = schema.id
+        ps_objects.append(client.projectschemas.create(data=obj))
     return ps_objects
 
 
@@ -67,8 +67,8 @@ def projectschemas(client, project, schemas):
 def mapping(client, project, projectschemas):
     obj = dict(fix.mapping_template)
     _map = dict(fix.mapping_definition)
-    _map['entities'] = {ps['name']: ps['id'] for ps in projectschemas}
+    _map['entities'] = {ps.name: ps.id for ps in projectschemas}
     obj['project'] = project['id']
     obj['definition'] = _map
-    result = client.create('mappings', obj)
+    result = client.mappings.create(data=obj)
     return result

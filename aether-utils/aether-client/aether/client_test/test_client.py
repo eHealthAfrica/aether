@@ -17,25 +17,35 @@
 # under the License.
 
 from . import *  # noqa
-import requests
+import bravado
 
 
 def test_1_check_fixture_creation(client, project, schemas, projectschemas, mapping):
-    assert(project['id'] is not None)
-    client_schemas = list(client.get('schemas'))
+    assert(project.id is not None)
+    client_schemas = list(client.schemas.paginated('list'))
     assert len(schemas) != 0
     assert(len(client_schemas) == len(schemas))
-    client_ps = list(client.get('projectschemas'))
+    client_ps = list(client.projectschemas.paginated('list'))
     assert len(client_ps) != 0
     assert(len(client_ps) == len(schemas))
-    assert(mapping['id'] is not None)
+    assert(mapping.id is not None)
 
 
 def test_2_check_bad_url():
     try:
         c = Client("http://localhost/bad-url", "user", "pw")
         c.get('projects')
-    except requests.exceptions.ConnectionError:
+    except bravado.exception.HTTPBadGateway:
+        assert(True)
+    else:
+        assert(False)
+
+
+def test_3_check_bad_credentials():
+    try:
+        c = Client(URL, "user", "pw")
+        c.get('projects')
+    except bravado.exception.HTTPForbidden:
         assert(True)
     else:
         assert(False)

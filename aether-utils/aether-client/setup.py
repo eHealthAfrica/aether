@@ -24,9 +24,7 @@ setup(
     version=os.environ['VERSION'],
     include_package_data=True,
     install_requires=[
-        'coreapi',
-        'requests',
-        'openapi-codec'
+        'bravado'
     ],
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],

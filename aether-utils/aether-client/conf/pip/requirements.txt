@@ -6,9 +6,7 @@
 #                                                                              #
 ################################################################################
 
-coreapi
+bravado
 flake8
-openapi-codec
 pytest
 pytest-runner
-requests
