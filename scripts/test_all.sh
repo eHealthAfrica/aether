@@ -22,9 +22,7 @@ set -Eeuo pipefail
 
 echo "_____________________________________________ TESTING"
 
-# TEMPORARY FIX: comment out UI tests
-# containers=( kernel ui odk couchdb-sync )
-containers=( kernel odk couchdb-sync )
+containers=( kernel ui odk couchdb-sync )
 
 for container in "${containers[@]}"
 do
