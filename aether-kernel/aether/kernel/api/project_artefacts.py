@@ -141,7 +141,7 @@ def upsert_project_artefacts(
             # in case of no mapping rules were indicated, do not update them.
             ignore_fields.append('definition')
             mapping_definition = {'mappings': [], 'entities': {}}
-        else:
+        elif 'entities' not in mapping_definition:
             used_schemas = []
             for mapping in mapping_definition.get('mapping', []):
                 schema_name = mapping[1].split('.')[0]

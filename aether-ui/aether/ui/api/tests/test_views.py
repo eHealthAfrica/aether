@@ -122,6 +122,14 @@ class ViewsTest(TransactionTestCase):
         contract = Contract.objects.get(pk=contract_id)
         self.assertEqual(len(contract.kernel_refs), 5)
         self.assertEqual(len(contract.kernel_refs['schemas']), 2)
+
+        response = self.client.post(url, {'project_name': 'Aux', 'contract_id': contract_id})
+        response_data = json.loads(response.content)
+        self.assertGreater(len(response_data['exists']), 0)
+        self.assertIn(response_data['exists'][1]['Screening'],
+                      '{} schema with id {} exists'.format('Screening',
+                                                           contract.kernel_refs['schemas']['Screening']))
+
         original_schema = pipeline.schema
         pipeline.schema = ENTITY_SAMPLE
         pipeline.save()
@@ -217,15 +225,6 @@ class ViewsTest(TransactionTestCase):
         contract3 = Contract.objects.get(pk=contract_id)
         contract3.kernel_refs = contract.kernel_refs
         contract3.save()
-        url = reverse('pipeline-publish', args=[pipeline_id])
-        response = self.client.post(url, {'project_name': 'Aux 1', 'contract_id': contract_id})
-        # Repeat publish
-        response = self.client.post(url, {'project_name': 'Aux 1', 'contract_id': contract_id})
-        response_data = json.loads(response.content)
-        self.assertGreater(len(response_data['exists']), 0)
-        self.assertIn(response_data['exists'][0]['Screening'],
-                      '{} schema with id {} exists'.format('Screening',
-                                                           contract3.kernel_refs['schemas']['Screening']))
 
         url = reverse('pipeline-publish', args=[str(pipeline_id) + 'wrong'])
         response = self.client.post(url, {'project_name': 'Aux 1'})

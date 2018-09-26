@@ -100,7 +100,7 @@ class PipelineList extends Component {
     return this.props.pipelineList.map(pipeline => (
       <div
         key={pipeline.id}
-        className='pipeline-preview'>
+        className={`pipeline-preview ${pipeline.is_read_only ? 'pipeline-readonly' : ''}`}>
         <Modal buttons={
           <button type='button' className='btn btn-w btn-primary' onClick={this.setErrorModal.bind(this, false)}>
             <FormattedMessage
