@@ -112,7 +112,7 @@ def upsert_project_artefacts(
                 schema=schema,
                 name=schema.name,
             )
-        mapping_project_schemas[schema.name] = str(project_schema.pk)
+        mapping_project_schemas[raw_schema.get('name', project_schema.name)] = str(project_schema.pk)
         results['project_schemas'].add(str(project_schema.pk))
 
     # 3. create/update the mapping sets
@@ -142,9 +142,17 @@ def upsert_project_artefacts(
             ignore_fields.append('definition')
             mapping_definition = {'mappings': [], 'entities': {}}
         else:
+            used_schemas = []
+            for mapping in mapping_definition.get('mapping', []):
+                schema_name = mapping[1].split('.')[0]
+                if not len(list(filter(lambda x: x == schema_name, used_schemas))):
+                    used_schemas.append(schema_name)
+            used_mapping_project_schemas = {}
+            for used_schema in used_schemas:
+                used_mapping_project_schemas[used_schema] = mapping_project_schemas.get(used_schema)
             mapping_definition = {
                 'mapping': mapping_definition.get('mapping', []),
-                'entities': mapping_project_schemas,
+                'entities': used_mapping_project_schemas,
             }
         mapping_name = raw_mapping.get('name', __random_name())
 

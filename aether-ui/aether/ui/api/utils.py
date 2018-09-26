@@ -24,7 +24,6 @@ import uuid
 from rest_framework import status
 
 from aether.common.kernel import utils
-from urllib.parse import urlparse
 
 
 from . import models
@@ -180,7 +179,7 @@ def is_object_linked(kernel_refs, object_name, entity_type_name=''):
                     return False
             else:
                 url = f'{object_name.lower()}/{kernel_refs[object_name]}/'
-            kernel_data_request(url, 'get')
+            kernel_data_request(url)
             return True
         except Exception:
             return False
@@ -223,8 +222,8 @@ def publish_preflight(pipeline, project_name, outcome, contract):
             mappingset = kernel_data_request(f'mappingsets/{pipeline.mappingset}/')
             if json.dumps(mappingset['input'], sort_keys=True) != json.dumps(pipeline.schema, sort_keys=True):
                 outcome['exists'].append({pipeline.name: 'Input data will be changed'})
-        except Exception as e:
-            print(str(e))
+        except Exception:
+            pass
     return outcome
 
 
@@ -239,12 +238,19 @@ def publish_pipeline(pipeline, projectname, contract, objects_to_overwrite={}):
     schemas = []
     outcome = {}
     try:
-        projects = kernel_data_request(f'projects/?name=Aux')['results']
+        projects = kernel_data_request(f'projects/?name={project_name}')['results']
         aux_project = projects[0] if len(projects) else {}
         project_id = aux_project.get('id', str(uuid.uuid4()))
-        project_name = aux_project.get('name', 'Aux')
+        project_name = aux_project.get('name', project_name)
     except Exception as e:
-        print(f'Error: {str(e)}')
+        pass
+    if contract.kernel_refs and 'project' in contract.kernel_refs:
+        try:
+            project = kernel_data_request(f'projects/{contract.kernel_refs["project"]}/')
+            project_id = project.get('id')
+            project_name = project.get('name')
+        except Exception:
+            pass
     mappingset = {}
     if pipeline.mappingset:
         try:
@@ -253,7 +259,6 @@ def publish_pipeline(pipeline, projectname, contract, objects_to_overwrite={}):
             mappingset['name'] = pipeline.name
             mappingset['input'] = pipeline.schema
         except Exception as e:
-            print(str(e))
             mappingset = {
                 'id': str(pipeline.mappingset),
                 'name': pipeline.name,
@@ -296,21 +301,15 @@ def publish_pipeline(pipeline, projectname, contract, objects_to_overwrite={}):
             'mappings': mappings
         }
         result = kernel_data_request(f'projects/{project_id}/artefacts/', 'patch', data)
-        if 'schemas' in result:
-            _schemas = {}
-            for id in result['schemas']:
-                try:
-                    schema_data = kernel_data_request(f'schemas/{id}/')
-                    schema_name = schema_data.get('name')
-                    _schemas[schema_name] = id
-                except Exception as ex:
-                    print(f'Error {str(ex)}')
-            result['schemas'] = _schemas
-        if 'mappings' in result and len(result['mappings']):
-            result['mappings'] = result['mappings'][0]
+        _schemas = {}
+        for id in result['schemas']:
+            schema_data = kernel_data_request(f'schemas/{id}/')
+            schema_name = schema_data.get('name')
+            _schemas[schema_name] = id
+        result['schemas'] = _schemas
+        result['mappings'] = result['mappings'][0]
         outcome['artefacts'] = result
     except Exception as e:
-        print(f'Error: {str(e)}')
         outcome['error'] = str(e)
     return outcome
 
@@ -333,8 +332,10 @@ def convert_entity_types(entities_from_kernel):
 
 
 def create_new_pipeline_from_kernel(mappingset):
-    new_pipeline = linked_pipeline_object('mappingset', mappingset['id'])
-    mappings = kernel_data_request('mappings/?mappingset={}'.format(mappingset['id']))['results']
+    mappingset_id = mappingset['id']
+    new_pipeline = linked_pipeline_object('mappingset', mappingset_id)
+    url = f'{utils.get_kernel_server_url()}/mappings/?mappingset={mappingset_id}'
+    mappings = utils.get_all_docs(url)
     if not new_pipeline and len(mappings):
         new_pipeline = models.Pipeline.objects.create(
             id=mappingset['id'],
@@ -345,7 +346,7 @@ def create_new_pipeline_from_kernel(mappingset):
     else:
         new_pipeline = new_pipeline.first()
     for mapping in mappings:
-        new_mapping = linked_pipeline_object('mapping', mapping['id'])
+        new_mapping = linked_pipeline_object('mappings', mapping['id'])
         if not new_mapping:
             entity_types = convert_entity_types(mapping['definition']['entities'])
             models.Contract.objects.create(
@@ -358,7 +359,7 @@ def create_new_pipeline_from_kernel(mappingset):
                 is_read_only=mapping['is_read_only'],
                 kernel_refs={
                     'schemas': entity_types['ids'],
-                    'mappings': [mapping['id']]
+                    'mappings': mapping['id']
                 },
                 published_on=mapping['modified']
             )
@@ -376,15 +377,9 @@ def linked_pipeline_object(object_name, id):
 
 
 def kernel_to_pipeline():
-    mappingsets_response = kernel_data_request('mappingsets/')
+    url = f'{utils.get_kernel_server_url()}/mappingsets/'
+    mappingsets = utils.get_all_docs(url)
     pipelines = []
-    while True:
-        mappingsets = mappingsets_response['results']
-        for mappingset in mappingsets:
-            pipelines.append(create_new_pipeline_from_kernel(mappingset))
-        if mappingsets_response['next']:
-            url_segments = urlparse(mappingsets_response['next'])
-            mappingsets_response = kernel_data_request('{}?{}'.format(url_segments.path, url_segments.query)[1:])
-        else:
-            break
+    for mappingset in mappingsets:
+        pipelines.append(create_new_pipeline_from_kernel(mappingset))
     return pipelines

@@ -218,47 +218,8 @@ CONTRACT_EXAMPLE = {
           'type': 'string'
         },
         {
-          'name': 'screening',
-          'type': {
-            'name': 'ScreeningType',
-            'type': 'enum',
-            'symbols': [
-              'maect',
-              'catt',
-              'pg',
-              'ctcwoo',
-              'ge',
-              'pl'
-            ]
-          }
-        },
-        {
-          'name': 'location',
-          'type': {
-            'name': 'GeoLocation',
-            'type': 'record',
-            'fields': [
-              {
-                'name': 'latitude',
-                'type': 'float'
-              },
-              {
-                'name': 'longitude',
-                'type': 'float'
-              }
-            ]
-          }
-        },
-        {
-          'name': 'result',
-          'type': {
-            'name': 'Result',
-            'type': 'enum',
-            'symbols': [
-              'positive',
-              'negative'
-            ]
-          }
+          'name': 'name',
+          'type': 'string'
         }
       ]
     }
@@ -271,6 +232,14 @@ CONTRACT_EXAMPLE = {
     {
       'source': 'person.forename',
       'destination': 'PersonY.firstName'
+    },
+    {
+      'source': '#!uuid',
+      'destination': 'Screening.id'
+    },
+    {
+      'source': 'person.forename',
+      'destination': 'Screening.name'
     }
   ],
   'mapping_errors': [],

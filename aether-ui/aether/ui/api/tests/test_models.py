@@ -86,6 +86,11 @@ class ModelsTests(TestCase):
             name='Pipeline test',
         )
         self.assertEqual(str(pipeline), 'Pipeline test')
+        contract = Contract.objects.create(
+            name='Contact test',
+            pipeline=pipeline
+        )
+        self.assertEqual(str(contract), 'Contact test')
 
     def test__pipeline__save__missing_requirements(self):
         pipeline = Pipeline.objects.create(

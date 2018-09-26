@@ -18,6 +18,7 @@
 
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
+from django.utils.translation import gettext as _
 
 from . import models
 
@@ -51,7 +52,7 @@ class PipelineSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         read_only_contracts = instance.contracts.filter(is_read_only=True)
         if read_only_contracts:
             raise serializers.ValidationError({
-                'description': 'Input is readonly'
+                'description': _('Input is readonly')
             })
         else:
             if 'input' in validated_data:

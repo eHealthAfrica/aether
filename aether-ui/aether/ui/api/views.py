@@ -41,10 +41,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
         '''
         This view gets kernel objects, transforms and loads into a pipeline
         '''
-        try:
-            ui_utils.kernel_to_pipeline()
-        except Exception:
-            pass
+        ui_utils.kernel_to_pipeline()
         pipelines = models.Pipeline.objects.all()
         serialized_data = serializers.PipelineSerializer(pipelines, context={'request': request}, many=True).data
         return Response(serialized_data, status=HTTPStatus.OK)
