@@ -219,6 +219,8 @@ class ViewsTest(TransactionTestCase):
         contract3.save()
         url = reverse('pipeline-publish', args=[pipeline_id])
         response = self.client.post(url, {'project_name': 'Aux 1', 'contract_id': contract_id})
+        # Repeat publish
+        response = self.client.post(url, {'project_name': 'Aux 1', 'contract_id': contract_id})
         response_data = json.loads(response.content)
         self.assertGreater(len(response_data['exists']), 0)
         self.assertIn(response_data['exists'][0]['Screening'],
