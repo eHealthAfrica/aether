@@ -187,7 +187,7 @@ def is_object_linked(kernel_refs, object_name, entity_type_name=''):
         return False
 
 
-def publish_preflight(pipeline, project_name, outcome, contract):
+def publish_preflight(pipeline, outcome, contract):
     '''
     Performs a check for possible pipeline publish errors against kernel
     '''
@@ -227,12 +227,11 @@ def publish_preflight(pipeline, project_name, outcome, contract):
     return outcome
 
 
-def publish_pipeline(pipeline, projectname, contract, objects_to_overwrite={}):
+def publish_pipeline(pipeline, project_name, contract, objects_to_overwrite={}):
     '''
     Transform pipeline and contract to kernel artefacts and publish
     '''
     project_id = str(uuid.uuid4())
-    project_name = 'Aux'
     mappingsets = []
     mappings = []
     schemas = []
@@ -241,7 +240,7 @@ def publish_pipeline(pipeline, projectname, contract, objects_to_overwrite={}):
         projects = kernel_data_request(f'projects/?name={project_name}')['results']
         aux_project = projects[0] if len(projects) else {}
         project_id = aux_project.get('id', str(uuid.uuid4()))
-        project_name = aux_project.get('name', project_name)
+        project_name = aux_project.get('name', 'Aux')
     except Exception as e:
         pass
     if contract.kernel_refs and 'project' in contract.kernel_refs:

@@ -135,7 +135,7 @@ class ViewsTest(TransactionTestCase):
                         'schema': {},
                     }
                 }
-        outcome = utils.publish_preflight(pipeline, 'Aux', outcome, contract)
+        outcome = utils.publish_preflight(pipeline, outcome, contract)
         self.assertEqual(len(outcome['error']), 0)
         self.assertEqual(len(outcome['exists']), 4)
         self.assertTrue('Pipeline Example' in outcome['exists'][3])
@@ -238,12 +238,12 @@ class ViewsTest(TransactionTestCase):
                         'schema': {},
                     }
                 }
-        outcome = utils.publish_preflight(pipeline, 'Aux', outcome, contract)
+        outcome = utils.publish_preflight(pipeline, outcome, contract)
         self.assertEqual(len(outcome['exists']), 3)
 
         pipeline.mappingset = 'c29811a0-ff8a-492f-a858-c6b7299c9de7'
         pipeline.save()
-        outcome = utils.publish_preflight(pipeline, 'Aux', outcome, contract)
+        outcome = utils.publish_preflight(pipeline, outcome, contract)
 
     def test_view_pipeline__publish(self):
         pipeline = Pipeline.objects.create(

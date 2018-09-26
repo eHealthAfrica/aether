@@ -72,7 +72,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
         except Exception as e:
             outcome['error'].append(str(e))
             return Response(outcome, status=HTTPStatus.BAD_REQUEST)
-        outcome = ui_utils.publish_preflight(pipeline, project_name, outcome, contract)
+        outcome = ui_utils.publish_preflight(pipeline, outcome, contract)
 
         if outcome['error']:
             return Response(outcome, status=HTTPStatus.BAD_REQUEST)
