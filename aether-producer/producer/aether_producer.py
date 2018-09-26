@@ -235,7 +235,7 @@ class ProducerManager(object):
                 schemas = []
                 with KernelHandler(self):
                     schemas = [
-                        schema for schema in self.kernel.get('schemas')]
+                        schema for schema in self.kernel.schemas.paginated('list')]
                 for schema in schemas:
                     schema_name = schema['name']
                     if not schema_name in self.topic_managers.keys():

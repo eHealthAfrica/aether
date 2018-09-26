@@ -57,8 +57,10 @@ def producer_status():
 def entities(client, projectschemas):
     entities = {}
     for ps in projectschemas:
-        name = ps.get("name")
-        entities[name] = [i for i in client.get('entities', filter_params={'name': name})]
+        name = ps["name"]
+        ps_id = ps.id
+        entities[name] = [i for i in client.entities.paginated(
+            'list', projectschema=ps_id)]
     return entities
 
 
@@ -71,8 +73,8 @@ def generate_entities(client, project, mapping):
         obj['payload'] = next(payloads)
         obj['mapping'] = mapping['id']
         obj['project'] = project['id']
-        res = client.create('submissions', obj)
-        for entity in client.get('entities', filter_params={'submission': res['id']}):
+        res = client.submissions.create(data=obj)
+        for entity in client.entities.paginated('list', submission=res['id']):
             entities.append(entity)
     return entities
 

@@ -45,8 +45,8 @@ def test_5_check_producer_status(producer_status):
 
 
 def test_6_check_stream_entities(read_people, entities):
-    kernel_messages = [msg.get("payload").get("id") for msg in entities.get(SEED_TYPE)]
-    kafka_messages = [msg.get("id") for msg in read_people]
+    kernel_messages = [msg.payload.get("id") for msg in entities.get(SEED_TYPE)]
+    kafka_messages = [msg['id'] for msg in read_people]
     failed = []
     for _id in kernel_messages:
         if _id not in kafka_messages:
