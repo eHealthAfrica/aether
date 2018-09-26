@@ -209,9 +209,3 @@ services:
     depends_on:
       db-test:
         condition: service_healthy
-      kernel-test:
-        condition: service_started
-      kafka-test:
-        condition: service_started
-      producer-test:
-        condition: service_started
