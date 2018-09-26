@@ -206,6 +206,3 @@ services:
       KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
     volumes:
       - ./test-aether-integration-module:/code
-    depends_on:
-      db-test:
-        condition: service_healthy
