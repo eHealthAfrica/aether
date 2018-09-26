@@ -84,7 +84,7 @@ Possible responses:
 - `Always Look on the Bright Side of Life!!!` ✘
 - `Brought to you by eHealth Africa - good tech for hard places` ✔
 
-#### To make submissions linked to an existing project artefact (mapping set).
+#### To push submissions linked to an existing project artefact (mapping set).
 
 ```python
 aether.common.kernel.utils.submit_to_kernel(submission, mappingset_id, submission_id=None)

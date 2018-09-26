@@ -39,7 +39,7 @@ services:
       COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
     volumes:
       # enable cors for mobile app in-browser development:
-      - ./aether-couchdb-sync-module/couchdb/conf/config.ini:/usr/local/etc/couchdb/local.ini
+      - ./local-setup/couchdb/config.ini:/usr/local/etc/couchdb/local.ini
     ports:
       - "5984:5984"
     healthcheck:

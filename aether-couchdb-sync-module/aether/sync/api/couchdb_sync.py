@@ -20,12 +20,14 @@ import re
 import requests
 
 from django.utils import timezone
+from django.utils.translation import ugettext as _
 
 from aether.common.kernel import utils as kernel_utils
-from .api.models import DeviceDB
-from .couchdb import utils, api
-from .settings import logger
-from . import errors
+
+from .models import DeviceDB, Schema
+from ..couchdb import utils, api
+from ..settings import logger
+from .. import errors
 
 
 SYNC_DOC = 'sync_doc'
@@ -63,19 +65,6 @@ def get_meta_doc(db_name, couchdb_id):
     return {}
 
 
-def get_surveys_mapping():
-    # first of all check if the connection is possible
-    if not kernel_utils.test_connection():
-        raise RuntimeError('Cannot connect to Aether Kernel server')
-
-    results = kernel_utils.get_all_docs(kernel_utils.get_mappings_url())
-
-    mapping = {}
-    for survey in results:
-        mapping[survey['name']] = survey['id']
-    return mapping
-
-
 def is_design_doc(doc):
     return re.match('^_design', doc['_id'])
 
@@ -85,7 +74,6 @@ def is_sync_doc(doc):
 
 
 def import_synced_devices():
-    mapping = get_surveys_mapping()
     results = []
 
     for device in DeviceDB.objects.all():
@@ -99,7 +87,7 @@ def import_synced_devices():
         try:
             data = utils.fetch_db_docs(device.db_name, device.last_synced_seq)
             docs = data['docs']
-            stats = import_synced_docs(docs, device.db_name, mapping)
+            stats = import_synced_docs(docs, device.db_name)
             result['stats'] = stats
         except Exception as e:
             logger.exception(e)
@@ -123,7 +111,7 @@ def import_synced_devices():
     return results
 
 
-def import_synced_docs(docs, db_name, mapping):
+def import_synced_docs(docs, db_name):
     stats = {
         'total': len(docs),
         'created': 0,
@@ -149,7 +137,7 @@ def import_synced_docs(docs, db_name, mapping):
         aether_id = status.get('aether_id') or False
 
         try:
-            resp = post_to_aether(doc, mapping, aether_id=aether_id)
+            resp = post_to_aether(doc, aether_id=aether_id)
             try:
                 resp.raise_for_status()
             except requests.exceptions.HTTPError as err:
@@ -183,19 +171,25 @@ def import_synced_docs(docs, db_name, mapping):
     return stats
 
 
-def post_to_aether(document, mapping, aether_id=False):
+def post_to_aether(document, aether_id=False):
     # first of all check if the connection is possible
     if not kernel_utils.test_connection():
-        raise RuntimeError('Cannot connect to Aether Kernel server')
+        raise RuntimeError(_('Cannot connect to Aether Kernel server'))
 
     try:
-        prefix = document['_id'].split('-')[0]
-        mapping_id = mapping.get(prefix)
+        schema_name = document['_id'].split('-')[0]
     except Exception:
         raise errors.SubmissionMappingError(
-            'Cannot submit document "{}"'.format(document['_id'])
+            _('Cannot submit document "{}"').format(document['_id'])
+        )
+
+    try:
+        schema = Schema.objects.get(name=schema_name)
+    except Schema.DoesNotExist:
+        raise errors.SubmissionMappingError(
+            _('Cannot submit document with schema "{}"').format(schema_name)
         )
 
     return kernel_utils.submit_to_kernel(submission=document,
-                                         mapping_id=mapping_id,
+                                         mappingset_id=str(schema.kernel_id),
                                          submission_id=aether_id)
