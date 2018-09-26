@@ -185,6 +185,11 @@ services:
     links:
       - kafka-test
       - zookeeper-test
+    depends_on:
+      db-test:
+        condition: service_healthy
+      kernel-test:
+        condition: service_started
     command: start_test
 
 
