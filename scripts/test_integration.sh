@@ -53,8 +53,6 @@ until curl -s $KERNEL_HEALTH_URL > /dev/null; do
     >&2 echo "Waiting for Kernel..."
     sleep 2
 done
-$DC_TEST run kernel-test eval python /code/sql/create_readonly_user.py
-
 echo "_____________________________________________ Starting Kafka"
 $DC_TEST up -d zookeeper-test kafka-test
 
