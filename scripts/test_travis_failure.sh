@@ -20,8 +20,6 @@
 #
 set -Eeuo pipefail
 
-./scripts/build_common_and_distribute.sh
-
 case "$1" in
     kubernetes)
         
