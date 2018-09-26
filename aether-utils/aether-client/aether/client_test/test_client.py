@@ -26,22 +26,60 @@ def test_1_check_fixture_creation(client, project, schemas, projectschemas, mapp
     assert len(schemas) != 0
     assert(len(client_schemas) == len(schemas))
     client_ps = list(client.projectschemas.paginated('list'))
-    assert len(client_ps) != 0
     assert(len(client_ps) == len(schemas))
     assert(mapping.id is not None)
 
 
-def test_2_check_bad_url():
+def test_2_count_schemas(client, schemas):
+    ct = client.schemas.count('list')
+    assert(ct == len(schemas))
+
+
+def test_3_first_schema(client, schemas):
+    first = client.schemas.first('list', ordering='modified')
+    assert(first.id == schemas[0].id)
+
+
+def test_4_iterate_schemas(client, schemas):
+    _schemas = list(client.schemas.paginated('list'))
+    assert(len(_schemas) == len(schemas))
+
+
+# After this point, the artifacts we cached are invalidated.
+def test_5_update_project(client):
+    project = client.projects.first('list')
+    new_name = 'a new name'
+    project.name = new_name
+    client.projects.update(id=project.id, data=project)
+    project = client.projects.first('list')
+    assert(project.name == new_name)
+
+
+def test_6_update_project_partial(client, project):
+    new_name = 'yet another new name'
+    pkg = {'name': new_name}
+    client.projects.partial_update(id=project.id, data=pkg)
+    retrieved = client.projects.first('list')
+    assert(retrieved.name == new_name)
+
+
+def test_7_delete_project(client, project):
+    client.projects.delete(id=project.id)
+    projects = list(client.projects.paginated('list'))
+    assert(len(projects) == 0)
+
+
+def test_8_check_bad_url():
     try:
         c = Client("http://localhost/bad-url", "user", "pw")
         c.get('projects')
-    except bravado.exception.HTTPBadGateway:
+    except bravado.exception.BravadoConnectionError:
         assert(True)
     else:
         assert(False)
 
 
-def test_3_check_bad_credentials():
+def test_9_check_bad_credentials():
     try:
         c = Client(URL, "user", "pw")
         c.get('projects')

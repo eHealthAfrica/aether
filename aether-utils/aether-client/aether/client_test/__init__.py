@@ -34,22 +34,24 @@ def client():
 
 @pytest.fixture(scope='session')
 def project(client):
+    # You can pass a dictionary directly to the client
     obj = dict(fix.project_template)
     obj['name'] = fix.project_name
-    result = client.projects.create(data=obj)
-    return result
+    project = client.projects.create(data=obj)
+    return project
 
 
 @pytest.fixture(scope='session')
 def schemas(client):
     schemas = []
     for definition in fix.schema_definitions:
-        obj = client.get_model('Schema')
-        obj.name = definition['name']
-        obj.type = 'record'
-        obj.revision = '1'
-        obj.definition = definition
-        schemas.append(client.schemas.create(data=obj))
+        # You can use a dictionary to populate a model as **kwargs
+        tpl = dict(fix.schema_template)
+        tpl['name'] = definition['name']
+        tpl['definition'] = definition
+        Schema = client.get_model('Schema')
+        schema = Schema(**tpl)
+        schemas.append(client.schemas.create(data=schema))
     return schemas
 
 
@@ -57,11 +59,15 @@ def schemas(client):
 def projectschemas(client, project, schemas):
     ps_objects = []
     for schema in schemas:
-        obj = dict(fix.project_schema_template)
-        obj['name'] = schema.name
-        obj['project'] = project['id']
-        obj['schema'] = schema.id
-        ps_objects.append(client.projectschemas.create(data=obj))
+        # You can also use the model constructor
+        PS = client.get_model('ProjectSchema')
+        ps = PS(
+            name=schema.name,
+            revision='1',
+            project=project.id,
+            schema=schema.id
+        )
+        ps_objects.append(client.projectschemas.create(data=ps))
     return ps_objects
 
 
