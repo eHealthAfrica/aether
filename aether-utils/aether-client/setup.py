@@ -25,7 +25,8 @@ setup(
     include_package_data=True,
     install_requires=[
         'bravado',
-        'requests'
+        'requests',
+        'requests[security]'
     ],
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],

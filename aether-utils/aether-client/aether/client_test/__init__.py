@@ -47,18 +47,12 @@ def schemas(client):
     schemas = []
     for definition in fix.schema_definitions:
         # You can use a dictionary to populate a model as **kwargs
-        for x in range(100):
-            try:
-                tpl = dict(fix.schema_template)
-                tpl['name'] = definition['name']
-                tpl['definition'] = definition
-                Schema = client.get_model('Schema')
-                schema = Schema(**tpl)
-                schemas.append(client.schemas.create(data=schema))
-                break
-            except Exception as err:
-                print(x, err)
-                sleep(.1)
+        tpl = dict(fix.schema_template)
+        tpl['name'] = definition['name']
+        tpl['definition'] = definition
+        Schema = client.get_model('Schema')
+        schema = Schema(**tpl)
+        schemas.append(client.schemas.create(data=schema))
 
     return schemas
 
@@ -68,20 +62,14 @@ def projectschemas(client, project, schemas):
     ps_objects = []
     for schema in schemas:
         # You can also use the model constructor
-        for x in range(100):
-            try:
-                PS = client.get_model('ProjectSchema')
-                ps = PS(
-                    name=schema.name,
-                    revision='1',
-                    project=project.id,
-                    schema=schema.id
-                )
-                ps_objects.append(client.projectschemas.create(data=ps))
-                break
-            except Exception as err:
-                print(x, err)
-                sleep(.1)
+        PS = client.get_model('ProjectSchema')
+        ps = PS(
+            name=schema.name,
+            revision='1',
+            project=project.id,
+            schema=schema.id
+        )
+        ps_objects.append(client.projectschemas.create(data=ps))
     return ps_objects
 
 
@@ -92,11 +80,5 @@ def mapping(client, project, projectschemas):
     _map['entities'] = {ps.name: ps.id for ps in projectschemas}
     obj['project'] = project['id']
     obj['definition'] = _map
-    for x in range(100):
-        try:
-            result = client.mappings.create(data=obj)
-            break
-        except Exception as err:
-            print(x, err)
-            sleep(.1)
+    result = client.mappings.create(data=obj)
     return result
