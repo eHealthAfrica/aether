@@ -26,7 +26,7 @@ def migrate_current_pipelines_to_contracts(apps, schema_editor):
                 output=pipeline.output,
                 kernel_refs=pipeline.kernel_refs,
             )
-            pipeline.mappingset = Pipeline.kernel_refs.get('mapping')
+            pipeline.mappingset = pipeline.kernel_refs.get('mapping') if pipeline.kernel_refs else None
             pipeline.save()
 
 
