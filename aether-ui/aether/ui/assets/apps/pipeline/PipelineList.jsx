@@ -113,6 +113,9 @@ class PipelineList extends Component {
         </Modal>
         <div
           onClick={() => { this.onSelectPipeline(pipeline) }}>
+          { pipeline.is_read_only &&
+            <span className='tag'>read-only</span>
+          }
           <h2 className='preview-heading'>{pipeline.name}</h2>
 
           <div className='summary-entity-types'>
@@ -147,7 +150,9 @@ class PipelineList extends Component {
               <InfoButton pipeline={pipeline} />
             }
           </div>
-          <PublishButton pipeline={pipeline} className='btn btn-w btn-publish' disabled={pipeline.is_read_only} />
+          { !pipeline.is_read_only &&
+            <PublishButton pipeline={pipeline} className='btn btn-w btn-publish' />
+          }
         </div>
 
       </div>

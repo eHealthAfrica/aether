@@ -70,6 +70,16 @@ small {
   @include shadow-cutout-white;
 }
 
+.tag {
+  font-size: $font-size-xxs;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: $white;
+  background: $grey;
+  border-radius: 1rem;
+  padding: 0 .4em;
+}
+
 .form-label {
   display: block;
   font-weight: 300;
