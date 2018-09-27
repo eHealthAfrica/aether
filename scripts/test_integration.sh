@@ -62,7 +62,7 @@ $DC_TEST up -d producer-test
 
 echo "_____________________________________________ Starting Integration Tests"
 build_container integration
-$DC_TEST run integration-test test
+$DC_TEST up integration-test
 
 ./scripts/kill_all.sh
 echo "_____________________________________________ END"

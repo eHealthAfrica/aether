@@ -26,11 +26,11 @@ case "$1" in
     ;;
 
     integration)
-        docker-compose -f docker-compose-test.yml logs
+        docker-compose -f docker-compose-test.yml logs -t --tail="all"
     ;;
 
     all)
-        docker-compose -f docker-compose-test.yml logs  
+        docker-compose -f docker-compose-test.yml logs -t --tail="all"
     ;;
 
 esac
