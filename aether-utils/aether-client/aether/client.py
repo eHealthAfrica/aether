@@ -9,6 +9,7 @@ import logging
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
+from time import sleep
 
 log = logging.getLogger(__name__)
 
@@ -149,15 +150,24 @@ class AetherDecorator(ResourceDecorator):
                 *args,
                 **kwargs
             ))
-            # We just want to give the exception right back, but maintain
-            # access to the response object so that we can grab the error.
-            # When the exception is caught and handled normally, this is impossible.
-            # Hence the lambda returning the exception itself when an exception occurs.
-            response = future.response(
-                timeout=1,
-                fallback_result=lambda x: x,
-                exceptions_to_catch=tuple(self.handled_exceptions)
-            )
+            # This is an attempt to fix an error that only occurs in travis where kernel
+            # connections are dropped.
+            for x in range(dropped_retries):
+                try:
+                    # We just want to give the exception right back, but maintain
+                    # access to the response object so that we can grab the error.
+                    # When the exception is caught and handled normally, this is impossible.
+                    # Hence the lambda returning the exception itself when an exception occurs.
+                    response = future.response(
+                        timeout=1,
+                        fallback_result=lambda x: x,
+                        exceptions_to_catch=tuple(self.handled_exceptions)
+                    )
+                    break
+                except bravado.exception.BravadoConnectionError as err:
+                    if x == dropped_retries - 1:
+                        raise err
+                    sleep(.25)
             result = response.result
             # If the result is an exception, we expose it's parts along with
             # content from the request response and raise it
