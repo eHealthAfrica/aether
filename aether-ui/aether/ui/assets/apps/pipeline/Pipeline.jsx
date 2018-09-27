@@ -67,7 +67,7 @@ class Pipeline extends Component {
       return ''
     }
     return (
-      <div className={'pipelines-container show-pipeline'}>
+      <div className={`pipelines-container show-pipeline ${selectedPipeline.is_read_only ? 'selected-pipeline-readonly' : ''}`}>
         <NavBar showBreadcrumb>
           <div className='breadcrumb-links'>
             <Link to='/'>
