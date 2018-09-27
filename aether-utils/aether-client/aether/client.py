@@ -25,7 +25,7 @@ class AetherAPIException(Exception):
 class RetrySession(requests.Session):
 
     def __init__(self,
-                 retries=5,
+                 retries=40,
                  backoff_factor=0.5,
                  status_forcelist=(500, 502, 504)):
 
