@@ -68,14 +68,20 @@ def projectschemas(client, project, schemas):
     ps_objects = []
     for schema in schemas:
         # You can also use the model constructor
-        PS = client.get_model('ProjectSchema')
-        ps = PS(
-            name=schema.name,
-            revision='1',
-            project=project.id,
-            schema=schema.id
-        )
-        ps_objects.append(client.projectschemas.create(data=ps))
+        for x in range(100):
+            try:
+                PS = client.get_model('ProjectSchema')
+                ps = PS(
+                    name=schema.name,
+                    revision='1',
+                    project=project.id,
+                    schema=schema.id
+                )
+                ps_objects.append(client.projectschemas.create(data=ps))
+                            break
+            except Exception as err:
+                print(x, err)
+                sleep(.1)
     return ps_objects
 
 

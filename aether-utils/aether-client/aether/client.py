@@ -163,17 +163,20 @@ class AetherDecorator(ResourceDecorator):
             # If the result is an exception, we expose it's parts along with
             # content from the request response and raise it
             if any([isinstance(result, i) for i in self.handled_exceptions]):
-                http_response = response.incoming_response
-                assert isinstance(http_response, bravado_core.response.IncomingResponse)
                 details = {
                     'operation': future.operation.operation_id,
-                    'status_code': http_response.status_code,
+                    'response': str(result)
                 }
+                if isinstance(result, bravado.exception.BravadoConnectionError):
+                    raise AetherAPIException(**details)
+                http_response = response.incoming_response
+                assert isinstance(http_response, bravado_core.response.IncomingResponse)
+                details['status_code'] = http_response.status_code
                 try:
                     details['response'] = http_response.json()
                 except Exception as err:
                     # JSON is unavailable, so we just use the original exception text.
-                    details['response'] = str(result)
+                    pass
                 raise AetherAPIException(**details)
             return result
         return resultant_function
