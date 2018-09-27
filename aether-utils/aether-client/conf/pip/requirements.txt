@@ -11,4 +11,3 @@ flake8
 pytest
 pytest-runner
 requests
-requests[security]

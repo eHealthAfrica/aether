@@ -23,28 +23,6 @@ class AetherAPIException(Exception):
         super().__init__(msg)
 
 
-class RetrySession(requests.Session):
-
-    def __init__(self,
-                 retries=3,
-                 backoff_factor=0.2,
-                 status_forcelist=(104, 500, 502)):
-
-        retry = Retry(
-            total=retries,
-            read=retries,
-            connect=retries,
-            status=retries,
-            method_whitelist=Retry.DEFAULT_METHOD_WHITELIST,
-            backoff_factor=backoff_factor,
-            status_forcelist=status_forcelist,
-        )
-        adapter = HTTPAdapter(max_retries=retry)
-        super(RetrySession, self).__init__()
-        self.mount('http://', adapter)
-        self.mount('https://', adapter)
-
-
 class Client(SwaggerClient):
 
     def __init__(self, url, user, pw, log_level=logging.ERROR, config=None, domain=None):
@@ -59,7 +37,6 @@ class Client(SwaggerClient):
         spec_url = '%s/v1/schema/?format=openapi' % url
 
         http_client = RequestsClient()
-        http_client.session = RetrySession()  # User a more complex failure strategy
         http_client.set_basic_auth(domain, user, pw)
         loader = Loader(http_client, request_headers=None)
         try:
@@ -151,7 +128,7 @@ class AetherDecorator(ResourceDecorator):
                 **kwargs
             ))
             # This is an attempt to fix an error that only occurs in travis where kernel
-            # connections are dropped.
+            # connections are dropped in transit or by kernel.
             dropped_retries = 5
             for x in range(dropped_retries):
                 try:
@@ -170,7 +147,7 @@ class AetherDecorator(ResourceDecorator):
                         log.error('failed after %s connections to %s' %
                                   (x, future.operation.operation_id))
                         raise(err)
-                    log.error('dropped connection %s to %s, retry' %
+                    log.debug('dropped connection %s to %s, retry' %
                               (x, future.operation.operation_id))
                     sleep(.25)
             result = response.result
