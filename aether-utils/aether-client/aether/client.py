@@ -1,3 +1,6 @@
+import logging
+from time import sleep
+
 import bravado
 import bravado_core
 from bravado.client import SwaggerClient, ResourceDecorator, CallableOperation, construct_request
@@ -5,13 +8,9 @@ from bravado.config import BravadoConfig
 from bravado_core.spec import Spec
 from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
-import logging
-import requests
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
-from time import sleep
 
-log = logging.getLogger(__name__)
+
+LOG = logging.getLogger(__name__)
 
 
 # An Exception Class to wrap all handled API exceptions
@@ -20,13 +19,13 @@ class AetherAPIException(Exception):
         msg = {k: v for k, v in kwargs.items()}
         for k, v in kwargs.items():
             setattr(self, k, v)
-        super().__init__(msg)
+        super(AetherAPIException, self).__init__(msg)
 
 
 class Client(SwaggerClient):
 
     def __init__(self, url, user, pw, log_level=logging.ERROR, config=None, domain=None):
-        log.setLevel(log_level)
+        LOG.setLevel(log_level)
         # Our Swagger spec is apparently somewhat problematic, so we default to no validation.
         config = config or {
             'validate_swagger_spec': False,
@@ -42,13 +41,13 @@ class Client(SwaggerClient):
         try:
             spec_dict = loader.load_spec(spec_url)
         except bravado.exception.HTTPForbidden as forb:
-            log.error('Could not authenticate with provided credentials')
+            LOG.error('Could not authenticate with provided credentials')
             raise forb
         except (
             bravado.exception.HTTPBadGateway,
             bravado.exception.BravadoConnectionError
         ) as bgwe:
-            log.error('Server Unavailable')
+            LOG.error('Server Unavailable')
             raise bgwe
 
         # We take this from the from_url class method of SwaggerClient
@@ -122,7 +121,7 @@ class AetherDecorator(ResourceDecorator):
             # try:
             future = fn(*args, **kwargs)
             # On debug, show outgoing requests
-            log.debug(show_request(
+            LOG.debug(show_request(
                 getattr(self.resource, self._get_full_name(name)),
                 *args,
                 **kwargs
@@ -144,10 +143,10 @@ class AetherDecorator(ResourceDecorator):
                     break
                 except bravado.exception.BravadoConnectionError as err:
                     if x == dropped_retries - 1:
-                        log.error('failed after %s connections to %s' %
+                        LOG.error('failed after %s connections to %s' %
                                   (x, future.operation.operation_id))
-                        raise(err)
-                    log.debug('dropped connection %s to %s, retry' %
+                        raise err
+                    LOG.debug('dropped connection %s to %s, retry' %
                               (x, future.operation.operation_id))
                     sleep(.25)
             result = response.result
@@ -204,7 +203,7 @@ class AetherDecorator(ResourceDecorator):
             if not results:
                 raise StopIteration
             for item in results:
-                yield(item)
+                yield item
 
     def count(self, remote_function, **kwargs):
         fn = getattr(self, remote_function)
