@@ -152,6 +152,7 @@ class AetherDecorator(ResourceDecorator):
             ))
             # This is an attempt to fix an error that only occurs in travis where kernel
             # connections are dropped.
+            dropped_retries = 5
             for x in range(dropped_retries):
                 try:
                     # We just want to give the exception right back, but maintain
@@ -166,9 +167,9 @@ class AetherDecorator(ResourceDecorator):
                     break
                 except bravado.exception.BravadoConnectionError as err:
                     if x == dropped_retries - 1:
-                        log.error('failed connection to %s' % future.operation_id)
+                        log.error('failed after %s connections to %s' % (x, future.operation_id)
                         raise err
-                    log.error('dropped connection to %s, retry' % future.operation_id)
+                    log.error('dropped connection %s to %s, retry' % (x, future.operation_id)
                     sleep(.25)
             result = response.result
             # If the result is an exception, we expose it's parts along with
