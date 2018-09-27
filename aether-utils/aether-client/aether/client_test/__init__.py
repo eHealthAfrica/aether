@@ -46,12 +46,19 @@ def schemas(client):
     schemas = []
     for definition in fix.schema_definitions:
         # You can use a dictionary to populate a model as **kwargs
-        tpl = dict(fix.schema_template)
-        tpl['name'] = definition['name']
-        tpl['definition'] = definition
-        Schema = client.get_model('Schema')
-        schema = Schema(**tpl)
-        schemas.append(client.schemas.create(data=schema))
+        for x in range(100):
+            try:
+                tpl = dict(fix.schema_template)
+                tpl['name'] = definition['name']
+                tpl['definition'] = definition
+                Schema = client.get_model('Schema')
+                schema = Schema(**tpl)
+                schemas.append(client.schemas.create(data=schema))
+                break
+            except Exception as err:
+                print(x, err)
+                sleep(.1)
+
     return schemas
 
 

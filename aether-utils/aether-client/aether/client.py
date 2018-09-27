@@ -25,7 +25,7 @@ class AetherAPIException(Exception):
 class RetrySession(requests.Session):
 
     def __init__(self,
-                 retries=40,
+                 retries=10,
                  backoff_factor=0.3,
                  status_forcelist=(104, 500, 502)):
 
@@ -33,6 +33,8 @@ class RetrySession(requests.Session):
             total=retries,
             read=retries,
             connect=retries,
+            status=retries,
+            method_whitelist=Retry.DEFAULT_METHOD_WHITELIST,
             backoff_factor=backoff_factor,
             status_forcelist=status_forcelist,
         )
@@ -122,7 +124,8 @@ class AetherDecorator(ResourceDecorator):
             bravado.exception.HTTPBadRequest,
             bravado.exception.HTTPBadGateway,
             bravado.exception.HTTPNotFound,
-            bravado.exception.HTTPForbidden
+            bravado.exception.HTTPForbidden,
+            bravado.exception.BravadoConnectionError
         ]
         super(AetherDecorator, self).__init__(
             resource, also_return_response)
@@ -152,7 +155,7 @@ class AetherDecorator(ResourceDecorator):
             # When the exception is caught and handled normally, this is impossible.
             # Hence the lambda returning the exception itself when an exception occurs.
             response = future.response(
-                timeout=0.5,
+                timeout=1,
                 fallback_result=lambda x: x,
                 exceptions_to_catch=tuple(self.handled_exceptions)
             )
