@@ -29,10 +29,9 @@ AETHER_FUNCTIONS=scripts/aether_functions.sh
 ORDER=( "create_credentials"
         "create_aether_docker_assets"
         "build_aether_utils_and_distribute"
-        "build_connect"
         "build_common_and_distribute"
-        "build_core_modules kernel"
-        "create_readonly_user"
+        "build_test_modules kernel-test producer-test integration-test"
+        "create_readonly_user_test"
         )
 for FN in "${ORDER[@]}";
 do

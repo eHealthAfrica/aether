@@ -32,14 +32,14 @@ DC_TEST="docker-compose -f docker-compose-test.yml"
 
 echo "_____________________________________________ TESTING"
 
-$DC_TEST down
+$DC_TEST kill
 
 echo "_____________________________________________ Starting database"
 $DC_TEST up -d db-test
 
-$DC_TEST build kernel-test
+build_container kernel
 
-until $DC_TEST run kernel-test eval pg_isready -q; do
+until $DC_TEST run --no-deps kernel-test eval pg_isready -q; do
     >&2 echo "Waiting for db-test..."
     sleep 2
 done
@@ -62,7 +62,7 @@ $DC_TEST up -d producer-test
 
 echo "_____________________________________________ Starting Integration Tests"
 build_container integration
-$DC_TEST up integration-test
+$DC_TEST run --no-deps integration-test test
 
 ./scripts/kill_all.sh
 echo "_____________________________________________ END"

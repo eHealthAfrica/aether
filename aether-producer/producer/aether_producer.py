@@ -388,10 +388,14 @@ class TopicManager(object):
             modified=sql.Literal(modified),
             schema_name=sql.Literal(self.name),
         )
-        with psycopg2.connect(**self.pg_creds) as conn:
-            cursor = conn.cursor(cursor_factory=DictCursor)
-            cursor.execute(query)
-            return sum([1 for i in cursor]) > 0
+        try:
+            with psycopg2.connect(**self.pg_creds) as conn:
+                cursor = conn.cursor(cursor_factory=DictCursor)
+                cursor.execute(query)
+                return sum([1 for i in cursor]) > 0
+        except psycopg2.OperationalError as pgerr:
+            self.logger.critical('Could not access Database to look for updates: %s' % pgerr)
+            return False
 
     def get_time_window_filter(self, query_time):
         # You can't always trust that a set from kernel made up of time window
