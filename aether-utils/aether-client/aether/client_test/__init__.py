@@ -78,7 +78,7 @@ def projectschemas(client, project, schemas):
                     schema=schema.id
                 )
                 ps_objects.append(client.projectschemas.create(data=ps))
-                            break
+                break
             except Exception as err:
                 print(x, err)
                 sleep(.1)
