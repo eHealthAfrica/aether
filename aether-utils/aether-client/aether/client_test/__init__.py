@@ -19,7 +19,6 @@
 from aether.client_test import fixtures as fix
 import os
 import pytest
-from time import sleep
 
 from aether.client import Client
 
