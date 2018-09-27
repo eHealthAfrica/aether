@@ -27,7 +27,7 @@ class RetrySession(requests.Session):
     def __init__(self,
                  retries=40,
                  backoff_factor=0.3,
-                 status_forcelist=(500, 502, 504)):
+                 status_forcelist=(104, 500, 502)):
 
         retry = Retry(
             total=retries,
