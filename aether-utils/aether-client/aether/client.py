@@ -167,9 +167,11 @@ class AetherDecorator(ResourceDecorator):
                     break
                 except bravado.exception.BravadoConnectionError as err:
                     if x == dropped_retries - 1:
-                        log.error('failed after %s connections to %s' % (x, future.operation_id))
+                        log.error('failed after %s connections to %s' %
+                                  (x, future.operation.operation_id))
                         raise(err)
-                    log.error('dropped connection %s to %s, retry' % (x, future.operation_id))
+                    log.error('dropped connection %s to %s, retry' %
+                              (x, future.operation.operation_id))
                     sleep(.25)
             result = response.result
             # If the result is an exception, we expose it's parts along with
