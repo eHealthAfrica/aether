@@ -78,6 +78,9 @@ class Pipeline extends Component {
             </Link>
             <span> // </span>
             { selectedPipeline.name }
+            { selectedPipeline.is_read_only &&
+              <span className='tag'>read-only</span>
+            }
           </div>
           <div className='top-nav-publish'>
             <div className='status-publish'>
@@ -91,7 +94,9 @@ class Pipeline extends Component {
                 <InfoButton pipeline={this.props.selectedPipeline} />
               }
             </div>
-            <PublishButton pipeline={this.props.selectedPipeline} className='btn btn-c btn-publish' disabled={this.props.selectedPipeline.is_read_only} />
+            { !this.props.selectedPipeline.is_read_only &&
+              <PublishButton pipeline={this.props.selectedPipeline} className='btn btn-c btn-publish' />
+            }
           </div>
         </NavBar>
 
