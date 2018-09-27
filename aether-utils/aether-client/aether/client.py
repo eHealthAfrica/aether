@@ -6,7 +6,9 @@ from bravado_core.spec import Spec
 from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
 import logging
-
+import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 log = logging.getLogger(__name__)
 
@@ -18,6 +20,26 @@ class AetherAPIException(Exception):
         for k, v in kwargs.items():
             setattr(self, k, v)
         super().__init__(msg)
+
+
+class RetrySession(requests.Session):
+
+    def __init__(self,
+                 retries=3,
+                 backoff_factor=0.3,
+                 status_forcelist=(500, 502, 504)):
+
+        retry = Retry(
+            total=retries,
+            read=retries,
+            connect=retries,
+            backoff_factor=backoff_factor,
+            status_forcelist=status_forcelist,
+        )
+        adapter = HTTPAdapter(max_retries=retry)
+        super(RetrySession, self).__init__()
+        self.mount('http://', adapter)
+        self.mount('https://', adapter)
 
 
 class Client(SwaggerClient):
@@ -34,6 +56,7 @@ class Client(SwaggerClient):
         spec_url = '%s/v1/schema/?format=openapi' % url
 
         http_client = RequestsClient()
+        http_client.session = RetrySession()  # User a more complex failure strategy
         http_client.set_basic_auth(domain, user, pw)
         loader = Loader(http_client, request_headers=None)
         try:

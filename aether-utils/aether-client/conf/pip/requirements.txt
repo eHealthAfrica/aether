@@ -10,3 +10,4 @@ bravado
 flake8
 pytest
 pytest-runner
+requests
