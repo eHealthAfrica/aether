@@ -26,7 +26,7 @@ class RetrySession(requests.Session):
 
     def __init__(self,
                  retries=40,
-                 backoff_factor=0.5,
+                 backoff_factor=0.3,
                  status_forcelist=(500, 502, 504)):
 
         retry = Retry(
@@ -152,6 +152,7 @@ class AetherDecorator(ResourceDecorator):
             # When the exception is caught and handled normally, this is impossible.
             # Hence the lambda returning the exception itself when an exception occurs.
             response = future.response(
+                timeout=0.5,
                 fallback_result=lambda x: x,
                 exceptions_to_catch=tuple(self.handled_exceptions)
             )
