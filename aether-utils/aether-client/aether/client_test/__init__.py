@@ -92,5 +92,11 @@ def mapping(client, project, projectschemas):
     _map['entities'] = {ps.name: ps.id for ps in projectschemas}
     obj['project'] = project['id']
     obj['definition'] = _map
-    result = client.mappings.create(data=obj)
+    for x in range(100):
+        try:
+            result = client.mappings.create(data=obj)
+            break
+        except Exception as err:
+            print(x, err)
+            sleep(.1)
     return result
