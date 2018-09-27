@@ -124,8 +124,7 @@ class AetherDecorator(ResourceDecorator):
             bravado.exception.HTTPBadRequest,
             bravado.exception.HTTPBadGateway,
             bravado.exception.HTTPNotFound,
-            bravado.exception.HTTPForbidden,
-            bravado.exception.BravadoConnectionError
+            bravado.exception.HTTPForbidden
         ]
         super(AetherDecorator, self).__init__(
             resource, also_return_response)
@@ -167,8 +166,6 @@ class AetherDecorator(ResourceDecorator):
                     'operation': future.operation.operation_id,
                     'response': str(result)
                 }
-                if isinstance(result, bravado.exception.BravadoConnectionError):
-                    raise AetherAPIException(**details)
                 http_response = response.incoming_response
                 assert isinstance(http_response, bravado_core.response.IncomingResponse)
                 details['status_code'] = http_response.status_code
