@@ -105,10 +105,12 @@ textarea {
   border-radius: $border-radius;
   background: $background-color;
   font-family: $body-font-family;
+  color: $dark-blue;
   padding: .8em;
 
   &:disabled {
-    background: $light-grey;
+    @include stripy($background-color, $white);
+    box-shadow: none;
     color: $grey;
   }
 
@@ -116,6 +118,12 @@ textarea {
     @include shadow-cutout-dark;
     background: rgba($text-color, .3);
     color: $white;
+
+    &:disabled {
+      @include stripy(rgba($text-color, .3), transparent);
+      box-shadow: none;
+      color: $grey;
+    }
   }
 
   &.error {
@@ -216,6 +224,25 @@ select:-webkit-autofill {
     border-radius: $border-radius $border-radius 0 0;
     color: $text-color;
     pointer-events: none;
+  }
+}
+
+.selected-pipeline-readonly {
+
+  .textarea-header,
+  .pipeline-section__entityTypes .textarea-header {
+    box-shadow: none;
+  }
+  .tabs .tab.selected {
+    box-shadow: none;
+  }
+
+  .pipeline-section__mapping .rule-input {
+    box-shadow: none;
+    &.source:before,
+    &.destination:before {
+      border: 0;
+    }
   }
 }
 

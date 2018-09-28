@@ -47,14 +47,14 @@
   color: $white;
 }
 
-@mixin stripy {
+@mixin stripy($bg, $stripe) {
   background: repeating-linear-gradient(
     -45deg,
-    $white,
-    $white 10%,
-    $light-grey 10%,
-    $light-grey 50%,
-    $white 50%) top left fixed;
+    $stripe,
+    $stripe 10%,
+    $bg 10%,
+    $bg 50%,
+    $stripe 50%) top left fixed;
   background-size: 8px 8px;
 }
 

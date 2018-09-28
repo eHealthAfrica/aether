@@ -96,7 +96,7 @@
 }
 
 .pipeline-readonly {
-  @include stripy;
+  @include stripy($light-grey, $white);
   .tag {
     position: relative;
     top: -.2rem;
