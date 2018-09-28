@@ -269,52 +269,44 @@ class Mapping extends Component {
   renderDefinition () {
     return (
       <div className='definition'>
-        <div className='definition-code'>
-          <form onSubmit={this.notifyChangeJSON.bind(this)}>
-            <label className='form-label'>
-              <FormattedMessage
-                id='mapping.empty.message'
-                defaultMessage='Paste mapping rules'
+        <form onSubmit={this.notifyChangeJSON.bind(this)}>
+
+          <div className='textarea-header'>
+            { this.state.jsonError &&
+              <div className='hint error-message'>
+                <h4 className='hint-title'>
+                  <FormattedMessage
+                    id='mapping.invalid.message'
+                    defaultMessage='You have provided invalid mapping rules.'
+                  />
+                </h4>
+                { this.state.jsonError }
+              </div>
+            }
+          </div>
+
+          <FormattedMessage id='mappingRules.placeholder' defaultMessage='Enter your mapping rules as an array'>
+            {message => (
+              <textarea
+                className={`input-d monospace ${this.state.error ? 'error' : ''}`}
+                value={this.state.mappingRulesInput}
+                onChange={this.onMappingRulesTextChanged.bind(this)}
+                placeholder={message}
+                rows='10'
+                disabled={this.props.selectedPipeline.is_read_only}
               />
-            </label>
+            )}
+          </FormattedMessage>
 
-            <div className='textarea-header'>
-              { this.state.jsonError &&
-                <div className='hint error-message'>
-                  <h4 className='hint-title'>
-                    <FormattedMessage
-                      id='mapping.invalid.message'
-                      defaultMessage='You have provided invalid mapping rules.'
-                    />
-                  </h4>
-                  { this.state.jsonError }
-                </div>
-              }
-            </div>
-
-            <FormattedMessage id='mappingRules.placeholder' defaultMessage='Enter your mapping rules as an array'>
-              {message => (
-                <textarea
-                  className={`input-d monospace ${this.state.error ? 'error' : ''}`}
-                  value={this.state.mappingRulesInput}
-                  onChange={this.onMappingRulesTextChanged.bind(this)}
-                  placeholder={message}
-                  rows='10'
-                  disabled={this.props.selectedPipeline.is_read_only}
-                />
-              )}
-            </FormattedMessage>
-
-            <button type='submit' className='btn btn-d btn-primary mt-3' disabled={!this.hasChangedJson()}>
-              <span className='details-title'>
-                <FormattedMessage
-                  id='mapping.button.ok'
-                  defaultMessage='Apply mapping rules to pipeline'
-                />
-              </span>
-            </button>
-          </form>
-        </div>
+          <button type='submit' className='btn btn-d btn-primary mt-3' disabled={!this.hasChangedJson()}>
+            <span className='details-title'>
+              <FormattedMessage
+                id='mapping.button.ok'
+                defaultMessage='Apply mapping rules to pipeline'
+              />
+            </span>
+          </button>
+        </form>
       </div>
     )
   }
