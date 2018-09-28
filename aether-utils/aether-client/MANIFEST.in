@@ -1,4 +1,4 @@
-include aether/client_test/fixtures/*
-include aether/client_test/fixtures/mappings/*
-include aether/client_test/fixtures/schema/*
-include aether/client_test/fixtures/submission/*
+include aether/client/fixtures/*
+include aether/client/fixtures/mappings/*
+include aether/client/fixtures/schema/*
+include aether/client/fixtures/submission/*

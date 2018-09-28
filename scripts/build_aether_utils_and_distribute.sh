@@ -25,7 +25,7 @@ export VERSION=$(cat "VERSION")
 
 $DC_UTILS down
 
-UTILS=client
+UTIL=client
 # create the distribution
 $DC_UTILS build $UTIL
 $DC_UTILS run $UTIL build

@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from . import *  # noqa
+from .test_fixtures import *  # noqa
 import bravado
 
 

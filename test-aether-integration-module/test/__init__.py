@@ -22,7 +22,8 @@ import pytest
 import requests
 
 # Register Test Project and provide access to artifacts through client test fixtures
-from aether.client.test import client, project, schemas, projectschemas, mapping, fixtures  # noqa
+from aether.client.test_fixtures import client, project, schemas, projectschemas, mapping  # noqa
+from aether.client import fixtures  # noqa
 
 from .consumer import get_consumer, read
 
