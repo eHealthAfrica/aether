@@ -59,6 +59,14 @@ cat <<STOP
 #   docker-compose restart {container-name}
 #
 
+
+# ------------------------------------------------------------------
+# Platform Versioning
+# ==================================================================
+VERSION=$( cat "VERSION")
+# ------------------------------------------------------------------
+
+
 # ------------------------------------------------------------------
 # Databases
 # ==================================================================
@@ -114,6 +122,5 @@ UI_ADMIN_USERNAME=admin
 UI_ADMIN_PASSWORD=$(gen_random_string)
 UI_DJANGO_SECRET_KEY=$(gen_random_string)
 UI_DB_PASSWORD=$(gen_random_string)
-VERSION=$( cat "VERSION")
 # ------------------------------------------------------------------
 EOF

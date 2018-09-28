@@ -13,6 +13,7 @@ services:
       VERSION: ${VERSION}
     volumes:
       - ./aether-client:/code
+      - ../VERSION:/code/VERSION
     command: build
 
 

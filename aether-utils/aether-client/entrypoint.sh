@@ -29,9 +29,6 @@ show_help() {
     bash          : run bash
     build         : build python wheel of library in /dist
     eval          : eval shell command
-    manage        : invoke manage.py commands
-
-    pip_freeze    : freeze pip dependencies and write to requirements.txt
 
     test          : run tests
     test_lint     : run flake8 tests
@@ -58,10 +55,6 @@ case "$1" in
 
     eval )
         eval "${@:2}"
-    ;;
-
-    manage )
-        ./manage.py "${@:2}"
     ;;
 
     test)

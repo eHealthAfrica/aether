@@ -25,31 +25,26 @@ export VERSION=$(cat "VERSION")
 
 $DC_UTILS down
 
-UTILS=( client )
-for UTIL in "${UTILS[@]}"
+UTILS=client
+# create the distribution
+$DC_UTILS build $UTIL
+$DC_UTILS run $UTIL build
+PCK_FILE=aether.$UTIL-$VERSION-py2.py3-none-any.whl
+
+FOLDERS=( test-aether-integration-module aether-producer )
+
+# distribute within the containers
+for FOLDER in "${FOLDERS[@]}"
 do
+    FILE=./aether-utils/aether-$UTIL/dist/$PCK_FILE
+    DEST=./$FOLDER/conf/pip/dependencies/
 
-    # create the distribution
-    $DC_UTILS build $UTIL
-    $DC_UTILS run $UTIL build
-    PCK_FILE=aether.$UTIL-$VERSION-py2.py3-none-any.whl
+    mkdir -p $DEST
+    cp -r $FILE $DEST
 
-    FOLDERS=( test-aether-integration-module aether-producer )
-
-    # distribute within the containers
-    for FOLDER in "${FOLDERS[@]}"
-    do
-        FILE=./aether-utils/aether-$UTIL/dist/$PCK_FILE
-        DEST=./$FOLDER/conf/pip/dependencies/
-
-        mkdir -p $DEST
-        cp -r $FILE $DEST
-
-        echo "----------------------------------------------------------------------"
-        echo "Distributed [$FILE] into [$DEST]"
-        echo "----------------------------------------------------------------------"
-    done
-
+    echo "----------------------------------------------------------------------"
+    echo "Distributed [$FILE] into [$DEST]"
+    echo "----------------------------------------------------------------------"
 done
 
 $DC_UTILS kill

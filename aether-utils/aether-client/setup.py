@@ -19,9 +19,12 @@
 import os
 from setuptools import setup, find_packages
 
+with open(os.path.join('./code', 'VERSION')) as version_file:
+    version = version_file.read().strip()
+
 setup(
     name='aether.client',
-    version=os.environ['VERSION'],
+    version=version
     include_package_data=True,
     install_requires=[
         'bravado',

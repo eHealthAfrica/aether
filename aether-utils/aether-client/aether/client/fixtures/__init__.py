@@ -19,43 +19,39 @@
 import json
 import os
 
+
 def file_to_json(path):
     with open(path) as f:
         return json.load(f)
 
+
 here = os.path.dirname(os.path.realpath(__file__))
 
-#Projects
+# Projects
 project_name = "TestProject"
 project_template = {
     "revision": "1",
-    "name": None,
-    "salad_schema": "{}",
-    "jsonld_context": "[]",
-    "rdf_definition": "[]"
+    "name": None
 }
 
-#Schemas
+# Schemas
 
-schema_file =here+"/schema/schemas.avro"
+schema_file = here + "/schema/schemas.avro"
 schema_definitions = file_to_json("%s" % (schema_file))
 
 schema_template = {
-        "name": None,
-        "type": "record",
-        "revision": "1",
-        "definition": None
-    }
+    "name": None,
+    "type": "record",
+    "revision": "1",
+    "definition": None
+}
 
 # Project Schemas
 
 project_schema_template = {
-        "revision": "1",
-        "name": None,
-        "masked_fields": "[]",
-        "transport_rule": "[]",
-        "mandatory_fields": "[]"
-    }
+    "revision": "1",
+    "name": None
+}
 
 # Mapping
 
@@ -66,7 +62,7 @@ mapping_template = {
     "revision": "1"
 }
 
-mapping_file =here+"/mappings/mapping.json"
+mapping_file = here + "/mappings/mapping.json"
 mapping_definition = file_to_json("%s" % (mapping_file))
 
 # Submission
@@ -77,6 +73,7 @@ submission_template = {
     "payload": None
 }
 
+
 def get_submission_payloads():
-    submission_file = here+"/submission/submissions_1000.json"
+    submission_file = here + "/submission/submissions_1000.json"
     return file_to_json("%s" % (submission_file))
