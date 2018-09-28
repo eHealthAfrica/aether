@@ -4,7 +4,7 @@ permalink: documentation/try/walkthrough-core.html
 description: Aether Documentation – Try It for yourself
 ---
 
-# A Simple Aether-Based Solution
+# An Aether-Based Solution
 
 We’re going to take raw JSON data that has been collected during a microcensus, and learn how to break that data into pieces that can then be sent to different destinations. In Aether we do this by creating a new _pipeline_. 
 
