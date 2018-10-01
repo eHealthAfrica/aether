@@ -23,6 +23,8 @@ for details.
 '''
 
 import collections
+import copy
+import uuid
 
 # Constants used by AvroValidator to distinguish between avro types
 # ``int`` and ``long``.
@@ -317,3 +319,63 @@ def validate(schema, data):
     Wrap AvroValidator in a function. Returns an instance of AvroValidator.
     '''
     return AvroValidator(schema, data)
+
+
+def avro_schema_to_passthrough_artefacts(item_id, avro_schema):
+    '''
+    Builds artefacts based on the indicated AVRO Schema.
+
+    One AVRO Schema should build:
+        - one Schema
+        - one Passthrough Mapping
+    '''
+
+    if not item_id:
+        item_id = str(uuid.uuid4())
+
+    definition = copy.deepcopy(avro_schema)
+    # assign default namespace
+    if not definition.get('namespace'):
+        definition['namespace'] = 'org.ehealthafrica.aether.schemas'
+
+    name = definition['name']
+    fields = definition['fields']
+
+    # create identity mapping rules using the AVRO schema fields (first level)
+    rules = [
+        [
+            '{}.{}'.format('$', f['name']),   # source
+            '{}.{}'.format(name, f['name']),  # destination
+        ]
+        for f in fields
+    ]
+
+    # entities need an "id" field,
+    # if this does not exist include it manually
+    id_or_none = next((x for x in fields if x['name'] == 'id'), None)
+    if id_or_none is None:
+        rules.append([
+            '#!uuid',  # this will generate an UUID during entity extractor step
+            f'{name}.id',
+        ])
+        definition['fields'].append({
+            'name': 'id',
+            'doc': 'UUID',
+            'type': 'string',
+        })
+
+    schema = {
+        'id': item_id,
+        'name': name,
+        'definition': definition,
+    }
+    mapping = {
+        'id': item_id,
+        'name': name,
+        'definition': {
+            'entities': {name: item_id},
+            'mapping': rules,
+        }
+    }
+
+    return schema, mapping
