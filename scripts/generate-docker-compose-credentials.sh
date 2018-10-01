@@ -103,7 +103,7 @@ STOP
 if [[ ${#COUCHDB_SYNC_GOOGLE_CLIENT_ID} > 0 ]]; then
 echo COUCHDB_SYNC_GOOGLE_CLIENT_ID=${COUCHDB_SYNC_GOOGLE_CLIENT_ID}
 fi
-cat <<EOF    
+cat <<EOF
 # ------------------------------------------------------------------
 
 
