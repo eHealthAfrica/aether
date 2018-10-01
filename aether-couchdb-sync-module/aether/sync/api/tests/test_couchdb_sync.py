@@ -25,7 +25,7 @@ from aether.common.kernel import utils as kernel_utils
 
 from ...couchdb import api as couchdb
 from ..couchdb_helpers import create_db
-from ..models import DeviceDB, Schema
+from ..models import DeviceDB, Project, Schema
 
 from ..couchdb_sync import (
     get_meta_doc,
@@ -112,6 +112,10 @@ class CouchDbSyncTestCase(TestCase):
         Schema.objects.create(
             name=self.SCHEMA_NAME,
             kernel_id=self.KERNEL_ID,
+            project=Project.objects.create(
+                name=self.SCHEMA_NAME,
+                project_id=self.KERNEL_ID,
+            ),
         )
 
         # An example document, which will eventually be submitted as `payload`

@@ -17,8 +17,10 @@
 # under the License.
 
 from django.contrib import admin
+from django.utils.translation import ugettext as _
 
-from .api.models import MobileUser, DeviceDB, Schema
+from .api.forms import SchemaForm
+from .api.models import MobileUser, DeviceDB, Project, Schema
 
 
 class MobileUserAdmin(admin.ModelAdmin):
@@ -46,17 +48,54 @@ class DeviceDBAdmin(admin.ModelAdmin):
     ordering = list_display
 
 
+class ProjectAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'project_id',
+        'name',
+    )
+    search_fields = ('name',)
+    ordering = list_display
+
+    fieldsets = (
+        (_('Aether Kernel'), {
+            'description': _('Please choose the Aether Kernel Project.'),
+            'fields': ['project_id', 'name', ]
+        }),
+    )
+
+
 class SchemaAdmin(admin.ModelAdmin):
 
+    form = SchemaForm
     list_display = (
         'id',
         'name',
+        'project',
         'kernel_id',
     )
     search_fields = ('name', 'kernel_id',)
     ordering = list_display
 
+    fieldsets = (
+        (_('Schema'), {
+            'description': _('Please indicate the basic data.'),
+            'fields': ['name', 'project', ]
+        }),
 
-admin.site.register(MobileUser, MobileUserAdmin)
+        (_('Aether Kernel'), {
+            'description': _('Please indicate the Aether Kernel artefacts.'),
+            'fields': ['kernel_id', ]
+        }),
+
+        (_('AVRO definition'), {
+            'description': _('Please upload an AVRO Schema file, or enter the AVRO Schema definition.'),
+            'fields': ['avro_file', 'avro_schema', ],
+        }),
+    )
+
+
 admin.site.register(DeviceDB, DeviceDBAdmin)
+admin.site.register(MobileUser, MobileUserAdmin)
+admin.site.register(Project, ProjectAdmin)
 admin.site.register(Schema, SchemaAdmin)

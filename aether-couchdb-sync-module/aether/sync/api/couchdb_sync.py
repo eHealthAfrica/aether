@@ -179,14 +179,14 @@ def post_to_aether(document, aether_id=False):
     try:
         schema_name = document['_id'].split('-')[0]
     except Exception:
-        raise errors.SubmissionMappingError(
+        raise errors.KernelSubmissionError(
             _('Cannot submit document "{}"').format(document['_id'])
         )
 
     try:
         schema = Schema.objects.get(name=schema_name)
     except Schema.DoesNotExist:
-        raise errors.SubmissionMappingError(
+        raise errors.KernelSubmissionError(
             _('Cannot submit document with schema "{}"').format(schema_name)
         )
 

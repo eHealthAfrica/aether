@@ -17,12 +17,14 @@
 # under the License.
 
 from django.conf import settings
+from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext as _
 from django.views.decorators.csrf import csrf_exempt
 
 from oauth2client import client, crypt
-from rest_framework import status
+from rest_framework import viewsets, status
 from rest_framework.decorators import (
+    action,
     api_view,
     authentication_classes,
     permission_classes,
@@ -32,9 +34,86 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
 from .couchdb_helpers import create_db, create_or_update_user
-from .models import MobileUser, DeviceDB
+from .models import Project, Schema, MobileUser, DeviceDB
+from .serializers import ProjectSerializer, SchemaSerializer
+from .kernel_utils import (
+    propagate_kernel_project,
+    propagate_kernel_artefacts,
+    KernelPropagationError,
+)
 
 from ..settings import logger
+
+
+class ProjectViewSet(viewsets.ModelViewSet):
+    '''
+    Create new Project entries.
+    '''
+
+    queryset = Project.objects \
+                      .prefetch_related('schemas') \
+                      .order_by('name')
+    serializer_class = ProjectSerializer
+    search_fields = ('name',)
+
+    @action(detail=True, methods=['patch'])
+    def propagates(self, request, pk=None, *args, **kwargs):
+        '''
+        Creates a copy of the project in Aether Kernel server.
+
+        Reachable at ``.../projects/{pk}/propagates/``
+        '''
+
+        project = get_object_or_404(Project, pk=pk)
+
+        try:
+            propagate_kernel_project(project)
+        except KernelPropagationError as kpe:
+            return Response(
+                data={'description': str(kpe)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return self.retrieve(request, pk, *args, **kwargs)
+
+
+class SchemaViewSet(viewsets.ModelViewSet):
+    '''
+    Create new Schema entries providing the AVRO schema via file or raw data.
+    '''
+
+    queryset = Schema.objects.order_by('name')
+    serializer_class = SchemaSerializer
+    search_fields = ('name', 'avro_schema',)
+
+    def get_queryset(self):
+        queryset = self.queryset
+
+        project_id = self.request.query_params.get('project_id', None)
+        if project_id is not None:
+            queryset = queryset.filter(project=project_id)
+
+        return queryset
+
+    @action(detail=True, methods=['patch'])
+    def propagates(self, request, pk=None, *args, **kwargs):
+        '''
+        Creates the artefacts of the schema in Aether Kernel server.
+
+        Reachable at ``.../schemas/{pk}/propagates/``
+        '''
+
+        schema = get_object_or_404(Schema, pk=pk)
+
+        try:
+            propagate_kernel_artefacts(schema)
+        except KernelPropagationError as kpe:
+            return Response(
+                data={'description': str(kpe)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return self.retrieve(request, pk, *args, **kwargs)
 
 
 # Sync credentials endpoint
