@@ -94,6 +94,16 @@ class ProjectViewSet(CustomViewSet):
         else:
             return self.__upsert_artefacts(request, pk)
 
+    @action(detail=True, methods=['patch'], url_path='avro-schemas')
+    def avro_schemas(self, request, pk=None, *args, **kwargs):
+        '''
+        Returns the list of project and its artefact ids by type.
+
+        Reachable at ``.../projects/{pk}/avro-schemas/``
+        '''
+
+        return self.__upsert_schemas(request, pk)
+
     def __retrieve_artefacts(self, request, pk=None):
         '''
         Returns the list of project and all its artefact ids by type.
@@ -166,6 +176,54 @@ class ProjectViewSet(CustomViewSet):
             project_name=data.get('name'),
             schemas=data.get('schemas', []),
             mappings=data.get('mappings', []),
+        )
+
+        return Response(data=results)
+
+    def __upsert_schemas(self, request, pk=None):
+        '''
+        Creates or updates the project and links it with the given AVRO schemas
+        and related artefacts: project schemas and passthrough mappings.
+
+        Returns the list of project and its affected artefact ids by type.
+
+        Indicating an ``id`` in any of the entries doesn't mean that
+        the instance must exists, but in case of not, a new one with that
+        id will be created.
+
+        Expected payload:
+
+            {
+                # this is optional, indicates the action to execute:
+                #   "create", creates the missing objects but does not update the existing ones
+                #   otherwise creates/updates the given objects
+                'action': 'upsert',
+
+                # this is optional, if missing the method will assign a random name
+                "name": "project name (optional but unique)",
+
+                # this is optional, for each entry the method will
+                # create/update a schema and also link it to the project
+                # (projectschema entry) creating the passthrough mapping
+                "avro_schemas": [
+                    {
+                        "id": "schema id (optional)",
+                        "definition": {
+                            # the avro schema
+                        }
+                    },
+                    # ...
+                ],
+            }
+
+        '''
+
+        data = request.data
+        results = project_artefacts.upsert_project_with_avro_schemas(
+            action=data.get('action', 'upsert'),
+            project_id=pk,
+            project_name=data.get('name'),
+            avro_schemas=data.get('avro_schemas', []),
         )
 
         return Response(data=results)
