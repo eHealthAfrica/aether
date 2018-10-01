@@ -63,8 +63,8 @@ services:
     environment:
       # use a different database when testing the integration with another container
       KERNEL_URL: http://kernel-test:9000
-      KERNEL_ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
-      KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
+      KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
+      KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
       TESTING: "true"
       VERSION: ${VERSION}
     command: test
@@ -197,8 +197,8 @@ services:
     build: ./test-aether-integration-module
     environment:
       KERNEL_URL: http://kernel-test:9000
-      KERNEL_ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
-      KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
+      KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
+      KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
     volumes:
       - ./test-aether-integration-module:/code
       - ./VERSION:/code/VERSION

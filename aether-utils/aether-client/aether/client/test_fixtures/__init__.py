@@ -23,8 +23,8 @@ import pytest
 from aether.client import Client
 
 URL = os.environ['KERNEL_URL']
-USER = os.environ['KERNEL_ADMIN_USERNAME']
-PW = os.environ['KERNEL_ADMIN_PASSWORD']
+USER = os.environ['KERNEL_USERNAME']
+PW = os.environ['KERNEL_PASSWORD']
 
 
 @pytest.fixture(scope='session')
