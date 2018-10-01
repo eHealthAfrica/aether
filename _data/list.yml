@@ -13,17 +13,19 @@ toc:
         url: /documentation/try/index.html
       - page: Install and Configure
         url: /documentation/try/install.html
-      - page: Setting up an Aether-Based Solution
+      - page: A Simple Aether-Based Solution
+        url: /documentation/try/first-mapping.html
+      - page: A More Complex Aether-Based Solution
         url: /documentation/try/walkthrough-core.html
       - page: Adding Aether Connect
         url: /documentation/try/walkthrough-connect.html
       # - page: Adding Gather
       #   url: /documentation/try/walkthrough-gather.html
-  - title: Setup and Deployment Guide
-    url: /documentation/setup-deployment/index.html
-    subfolderitems:
-      - page: Introduction
-        url: /documentation/setup-deployment/index.html
+# - title: Setup and Deployment Guide
+# url: /documentation/setup-deployment/index.html
+# subfolderitems:
+      # - page: Introduction
+      #  url: /documentation/setup-deployment/index.html
       # - page: Cloud Installation
       #   url: /documentation/setup-deployment/cloud-deployment.html
       # - page: Security
