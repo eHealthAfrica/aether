@@ -91,7 +91,7 @@ class KernelUtilsTest(CustomTestCase):
         with self.assertRaises(KernelPropagationError) as kpe:
             upsert_kernel(
                 project=self.project,
-                artefacts={'schemas': [], 'mappings': []},
+                artefacts={'avro_schemas': []},
             )
 
         self.assertIsNotNone(kpe)
@@ -108,7 +108,7 @@ class KernelUtilsTest(CustomTestCase):
         with self.assertRaises(KernelPropagationError) as kpe:
             upsert_kernel(
                 project=self.project,
-                artefacts={'schemas': [], 'mappings': []},
+                artefacts={'avro_schemas': []},
             )
 
         self.assertIsNotNone(kpe)
@@ -119,8 +119,8 @@ class KernelUtilsTest(CustomTestCase):
         self.assertIn(f'"{str(self.project.project_id)}"', str(kpe.exception), kpe)
         mock_auth.assert_called_once()
         mock_patch.assert_called_once_with(
-            url=f'{self.kernel_url}/projects/{str(self.project.project_id)}/artefacts/',
-            json={'schemas': [], 'mappings': []},
+            url=f'{self.kernel_url}/projects/{str(self.project.project_id)}/avro-schemas/',
+            json={'avro_schemas': []},
             headers={'Authorization': 'Token ABCDEFGH'},
         )
 
@@ -131,13 +131,13 @@ class KernelUtilsTest(CustomTestCase):
     def test__upsert_kernel_artefacts__ok(self, mock_auth, mock_patch):
         self.assertTrue(upsert_kernel(
             project=self.project,
-            artefacts={'schemas': [], 'mappings': []}
+            artefacts={'avro_schemas': []}
         ))
 
         mock_auth.assert_called_once()
         mock_patch.assert_called_once_with(
-            url=f'{self.kernel_url}/projects/{str(self.project.project_id)}/artefacts/',
-            json={'schemas': [], 'mappings': []},
+            url=f'{self.kernel_url}/projects/{str(self.project.project_id)}/avro-schemas/',
+            json={'avro_schemas': []},
             headers={'Authorization': 'Token ABCDEFGH'},
         )
 
