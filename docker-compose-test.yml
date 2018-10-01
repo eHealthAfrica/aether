@@ -201,4 +201,5 @@ services:
       KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
     volumes:
       - ./test-aether-integration-module:/code
+      - ./VERSION:/code/VERSION
     command: test
