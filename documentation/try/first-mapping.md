@@ -103,3 +103,5 @@ Let's fix that. First assign another UUID to Facility.rev as we did before. Next
 ![Input](/images/03b-mapping.png)
 
 You can now save this pipeline which will give you a submission URL. Data sent to this url will undergo this transformation and be saved in Aether as the entity type Facility. This is a very straight-forward example. We've added a few fields and taken `lat` and `lng` from the nested `location` object. In the next example, we'll tackle a more complex example that creates many entities from a single input document.
+
+<div style="margin-top: 2rem; text-align: center"><a href="walkthrough-core">Next Step: A More Complex Aether-Based Solution</a></div>
