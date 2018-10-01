@@ -229,7 +229,6 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
     # initial schema, with "id" and "version" attributes
     avro_schema = {
         'name': name,
-        'namespace': 'aether.odk.xforms',
         'doc': f'{title} (id: {form_id}, version: {version})',
         'type': 'record',
         'fields': [

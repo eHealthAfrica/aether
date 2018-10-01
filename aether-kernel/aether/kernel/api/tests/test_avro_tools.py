@@ -28,6 +28,7 @@ from aether.kernel.api.avro_tools import (
     AvroValidationError as error,
     AvroValidationException,
     validate,
+    NAMESPACE,
 )
 
 here = os.path.dirname(os.path.realpath(__file__))
@@ -577,7 +578,7 @@ class TestAvroTools(TestCase):
         self.assertIsNotNone(schema['id'])
         # include namespace and id field
         self.assertEqual(schema['definition'], {
-            'namespace': 'org.ehealthafrica.aether.schemas',
+            'namespace': NAMESPACE,
             'name': 'sample',
             'fields': [
                 {

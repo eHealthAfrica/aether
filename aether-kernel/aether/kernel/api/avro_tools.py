@@ -52,6 +52,8 @@ REQUEST = 'request'
 STRING = 'string'
 UNION = 'union'
 
+NAMESPACE = 'org.ehealthafrica.aether'
+
 
 class AvroValidationException(Exception):
     pass
@@ -336,7 +338,7 @@ def avro_schema_to_passthrough_artefacts(item_id, avro_schema):
     definition = copy.deepcopy(avro_schema)
     # assign default namespace
     if not definition.get('namespace'):
-        definition['namespace'] = 'org.ehealthafrica.aether.schemas'
+        definition['namespace'] = NAMESPACE
 
     name = definition['name']
     fields = definition['fields']

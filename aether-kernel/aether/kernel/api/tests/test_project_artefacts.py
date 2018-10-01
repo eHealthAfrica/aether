@@ -327,7 +327,7 @@ class ProjectArtefactsTests(TestCase):
 
         schema = Schema.objects.first()
         self.assertEqual(schema.definition, {
-            'namespace': 'org.ehealthafrica.aether.schemas',
+            'namespace': 'org.ehealthafrica.aether',
             'name': 'Person',
             'type': 'record',
             'fields': [

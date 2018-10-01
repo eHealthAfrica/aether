@@ -179,8 +179,6 @@ class KernelUtilsTest(TestCase):
         self.assertEqual(response.status_code, 200)
         kernel_mapping_1 = json.loads(response.content.decode('utf-8'))
         self.assertEqual(kernel_mapping_1['id'], self.KERNEL_ID_1)
-        self.assertEqual('org.ehealthafrica.aether.sync.schemas.sample',
-                         kernel_mapping_1['definition']['namespace'])
         # last rule is #!uuid
         self.assertEqual('#!uuid', kernel_mapping_1['definition']['mapping'][-1][0])
 
@@ -194,7 +192,6 @@ class KernelUtilsTest(TestCase):
         self.assertEqual(response.status_code, 200)
         kernel_mapping_2 = json.loads(response.content.decode('utf-8'))
         self.assertEqual(kernel_mapping_2['id'], self.KERNEL_ID_2)
-        self.assertEqual('my.name.space', kernel_mapping_1['definition']['namespace'])
         self.assertNotEqual('#!uuid', kernel_mapping_2['definition']['mapping'][-1][0])
 
         response = requests.get(self.SCHEMA_URL_2, headers=self.KERNEL_HEADERS)

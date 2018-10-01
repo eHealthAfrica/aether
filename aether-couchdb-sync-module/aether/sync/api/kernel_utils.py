@@ -16,7 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import copy
 import requests
 
 from django.utils.translation import ugettext as _
@@ -32,8 +31,6 @@ MSG_KERNEL_RESPONSE_ERR = _(
     'while trying to create/update the project artefacts "{project_id}".\n'
     'Response: {content}'
 )
-
-NAMESPACE = 'org.ehealthafrica.aether.sync.schemas'
 
 
 class KernelPropagationError(Exception):
@@ -52,8 +49,8 @@ def propagate_kernel_project(project):
         'avro_schemas': [],
     }
 
-    for json_schema in project.schemas.order_by('name'):
-        artefacts['avro_schemas'].append(__schema_to_artefacts(json_schema))
+    for schema in project.schemas.order_by('name'):
+        artefacts['avro_schemas'].append(__schema_to_artefacts(schema))
 
     __upsert_kernel_artefacts(project, artefacts)
 
@@ -61,7 +58,7 @@ def propagate_kernel_project(project):
     return True
 
 
-def propagate_kernel_artefacts(json_schema):
+def propagate_kernel_artefacts(schema):
     '''
     Creates/updates artefacts based on the indicated Schema in Aether Kernel.
 
@@ -74,11 +71,11 @@ def propagate_kernel_artefacts(json_schema):
 
     artefacts = {
         'action': 'create',
-        'name': json_schema.project.name,
-        'avro_schemas': [__schema_to_artefacts(json_schema)],
+        'name': schema.project.name,
+        'avro_schemas': [__schema_to_artefacts(schema)],
     }
 
-    __upsert_kernel_artefacts(json_schema.project, artefacts)
+    __upsert_kernel_artefacts(schema.project, artefacts)
 
     # indicates that the schema linked artefacts are in Kernel
     return True
@@ -108,22 +105,8 @@ def __upsert_kernel_artefacts(project, artefacts={}):
     return True
 
 
-def __schema_to_artefacts(json_schema):
-    definition = copy.deepcopy(json_schema.avro_schema)
-    # assign namespace based on project name
-    if not definition.get('namespace'):
-        definition['namespace'] = f'{NAMESPACE}.{__clean_name(json_schema.project.name)}'
-
+def __schema_to_artefacts(schema):
     return {
-        'id': str(json_schema.kernel_id),
-        'definition': definition,
+        'id': str(schema.kernel_id),
+        'definition': schema.avro_schema,
     }
-
-
-def __clean_name(value):
-    '''
-    Replaces any non alphanumeric character with spaces
-    Converts to title case
-    Removes spaces
-    '''
-    return ''.join([c if c.isalnum() else ' ' for c in value]).title().replace(' ', '')
