@@ -66,16 +66,17 @@ def entities(client, projectschemas):
 
 
 @pytest.fixture(scope="module")  # noqa
-def generate_entities(client, project, mappingset):
+def generate_entities(client, mappingset):
     payloads = iter(fixtures.get_submission_payloads())
     entities = []
     for i in range(FORMS_TO_SUBMIT):
-        obj = dict(fixtures.submission_template)
-        obj['payload'] = next(payloads)
-        obj['mappingset'] = mappingset['id']
-        obj['project'] = project['id']
-        res = client.submissions.create(data=obj)
-        for entity in client.entities.paginated('list', submission=res['id']):
+        Submission = client.get_model('Submission')
+        submission = Submission(
+            payload=next(payloads),
+            mappingset=mappingset.id
+        )
+        instance = client.submissions.create(data=submission)
+        for entity in client.entities.paginated('list', submission=instance.id):
             entities.append(entity)
     return entities
 
