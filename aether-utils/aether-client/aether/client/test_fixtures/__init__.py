@@ -73,11 +73,19 @@ def projectschemas(client, project, schemas):
 
 
 @pytest.fixture(scope='session')
-def mapping(client, project, projectschemas):
+def mappingset(client, project):
+    MappingSet = client.get_model('MappingSet')
+    mapping_set = MappingSet(name='test_mapping_set', project=project.id)
+    return client.mappingsets.create(data=mapping_set)
+
+
+@pytest.fixture(scope='session')
+def mapping(client, project, projectschemas, mappingset):
     obj = dict(fix.mapping_template)
     _map = dict(fix.mapping_definition)
     _map['entities'] = {ps.name: ps.id for ps in projectschemas}
     obj['project'] = project['id']
+    obj['mappingset'] = mappingset.id
     obj['definition'] = _map
     result = client.mappings.create(data=obj)
     return result
