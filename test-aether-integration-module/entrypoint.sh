@@ -61,6 +61,7 @@ case "$1" in
     pip_freeze )
 
         rm -rf /tmp/env
+        conf/pip/primary-requirements.sh > conf/pip/primary-requirements.txt
         pip3 install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
 
         cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
