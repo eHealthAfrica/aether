@@ -22,6 +22,9 @@ from django.utils.translation import ugettext as _
 
 from aether.common.kernel.utils import get_auth_header, get_kernel_server_url
 
+from ..errors import KernelPropagationError
+
+
 # list of messages that can be translated
 MSG_KERNEL_CONNECTION_ERR = _(
     'Connection with Aether Kernel server is not possible.'
@@ -31,10 +34,6 @@ MSG_KERNEL_RESPONSE_ERR = _(
     'while trying to create/update the project artefacts "{project_id}".\n'
     'Response: {content}'
 )
-
-
-class KernelPropagationError(Exception):
-    pass
 
 
 def propagate_kernel_project(project):

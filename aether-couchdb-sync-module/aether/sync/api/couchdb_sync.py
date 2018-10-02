@@ -24,6 +24,7 @@ from django.utils.translation import ugettext as _
 
 from aether.common.kernel import utils as kernel_utils
 
+from .kernel_utils import propagate_kernel_artefacts
 from .models import DeviceDB, Schema
 from ..couchdb import utils, api
 from ..settings import logger
@@ -185,7 +186,9 @@ def post_to_aether(document, aether_id=False):
 
     try:
         schema = Schema.objects.get(name=schema_name)
-    except Schema.DoesNotExist:
+        # make sure that the schema was propagated to kernel before
+        propagate_kernel_artefacts(schema)
+    except (Schema.DoesNotExist, errors.KernelPropagationError):
         raise errors.KernelSubmissionError(
             _('Cannot submit document with schema "{}"').format(schema_name)
         )

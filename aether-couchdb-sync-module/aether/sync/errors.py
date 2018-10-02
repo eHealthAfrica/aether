@@ -27,3 +27,7 @@ class CouchDBInitializationError(Exception):
 
 class KernelSubmissionError(Exception):
     pass
+
+
+class KernelPropagationError(Exception):
+    pass
