@@ -120,6 +120,10 @@ class AetherDecorator(ResourceDecorator):
             bravado.exception.HTTPNotFound,
             bravado.exception.HTTPForbidden
         ]
+        self.retry_exceptions = [
+            bravado.exception.BravadoTimeoutError,
+            bravado.exception.BravadoConnectionError
+        ]
         super(AetherDecorator, self).__init__(
             resource, also_return_response)
 
@@ -147,8 +151,7 @@ class AetherDecorator(ResourceDecorator):
             # connections are dropped in transit or by kernel.
             dropped_retries = 5
             connection_exceptions = (  # Errors in connection worthy of a retry
-                bravado.exception.BravadoTimeoutError,
-                bravado.exception.BravadoConnectionError
+                
             )
             for x in range(dropped_retries):
                 try:
@@ -162,14 +165,15 @@ class AetherDecorator(ResourceDecorator):
                         exceptions_to_catch=tuple(self.handled_exceptions)
                     )
                     break
-                except connection_exceptions as err:
+                except tuple(self.retry_exceptions) as err:
+                    LOG.debug("error %s in connection to client" % (err))
                     if x == dropped_retries - 1:
                         LOG.error('failed after %s connections to %s' %
                                   (x, future.operation.operation_id))
                         raise err
                     LOG.debug('dropped connection %s to %s, retry' %
                               (x, future.operation.operation_id))
-                    sleep(.25)
+                    sleep(.25 + (.25 * x))
             result = response.result
             # If the result is an exception, we expose it's parts along with
             # content from the request response and raise it
