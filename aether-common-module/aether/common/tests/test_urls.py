@@ -45,7 +45,7 @@ class UtilsTest(TestCase):
 
     def test__urls__accounts_token(self):
         self.assertEqual(
-            reverse('token'),
+            reverse('rest_framework:token'),
             '/accounts/token',
             'There is a "/accounts/token" endpoint'
         )

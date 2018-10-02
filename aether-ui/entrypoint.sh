@@ -45,6 +45,7 @@ show_help () {
     start_dev     : start webserver for development
 
     health        : checks the system healthy
+    check_kernel  : checks communication with kernel
     """
 }
 
@@ -77,6 +78,21 @@ setup () {
 
     # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
     ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD
+
+    # cleaning
+    rm -r -f /code/aether/ui/static/*.*
+    # copy assets bundles folder into static folder
+    cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
+
+    STATIC_ROOT=/var/www/static
+    # create static assets
+    ./manage.py collectstatic --noinput --clear --verbosity 0
+    chmod -R 755 $STATIC_ROOT
+
+    # expose version number (if exists)
+    cp ./VERSION $STATIC_ROOT/VERSION   2>/dev/null || :
+    # add git revision (if exists)
+    cp ./REVISION $STATIC_ROOT/REVISION 2>/dev/null || :
 }
 
 test_lint () {
@@ -143,17 +159,6 @@ case "$1" in
     start )
         setup
 
-        # create static assets
-        rm -r -f /code/aether/ui/static/*.*
-        cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
-        ./manage.py collectstatic --noinput --clear --verbosity 0
-        chmod -R 755 /var/www/static
-
-        # expose version number (if exists)
-        cp ./VERSION /var/www/static/VERSION 2>/dev/null || :
-        # add git revision (if exists)
-        cp ./REVISION /var/www/static/REVISION 2>/dev/null || :
-
         [ -z "$DEBUG" ] && LOGGING="--disable-logging" || LOGGING=""
         /usr/local/bin/uwsgi \
             --ini /code/conf/uwsgi.ini \
@@ -164,16 +169,15 @@ case "$1" in
     start_dev )
         setup
 
-        # cleaning
-        rm -r -f /code/aether/ui/static/*.*
-        # copy assets bundles folder into static folder
-        cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
-
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
 
     health )
         ./manage.py check_url --url=http://0.0.0.0:$WEB_SERVER_PORT/health
+    ;;
+
+    check_kernel )
+        ./manage.py check_url --url=$AETHER_KERNEL_URL --token=$AETHER_KERNEL_TOKEN
     ;;
 
     help )

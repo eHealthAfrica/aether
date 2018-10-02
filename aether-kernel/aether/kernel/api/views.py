@@ -19,8 +19,9 @@
 from django.db.models import Count, Min, Max
 from django.shortcuts import get_object_or_404
 
-from drf_openapi.views import SchemaView
-from rest_framework import viewsets, permissions, status
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+from rest_framework import viewsets, permissions, status, versioning
 from rest_framework.response import Response
 from rest_framework.decorators import (
     action,
@@ -177,8 +178,8 @@ class ProjectStatsViewSet(viewsets.ReadOnlyModelViewSet):
                      .annotate(
                          first_submission=Min('submissions__created'),
                          last_submission=Max('submissions__created'),
-                         submissions_count=Count('submissions__id'),
-                         entities_count=Count('entities__id'),
+                         submissions_count=Count('submissions__id', distinct=True),
+                         entities_count=Count('entities__id', distinct=True),
                      )
     serializer_class = serializers.ProjectStatsSerializer
 
@@ -200,8 +201,8 @@ class MappingStatsViewSet(viewsets.ReadOnlyModelViewSet):
                      .annotate(
                          first_submission=Min('submissions__created'),
                          last_submission=Max('submissions__created'),
-                         submissions_count=Count('submissions__id'),
-                         entities_count=Count('submissions__entities__id'),
+                         submissions_count=Count('submissions__id', distinct=True),
+                         entities_count=Count('submissions__entities__id', distinct=True),
                      )
     serializer_class = serializers.MappingStatsSerializer
 
@@ -257,8 +258,18 @@ class EntityViewSet(CustomViewSet):
         return Response(serializer_class.data)
 
 
+SchemaView = get_schema_view(
+    openapi.Info(
+      title='Aether API',
+      default_version='v1'
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny, ),
+)
+
+
 class AetherSchemaView(SchemaView):
-    permission_classes = (permissions.AllowAny, )
+    versioning_class = versioning.URLPathVersioning
 
 
 def run_mapping_validation(submission_payload, mapping_definition, schemas):

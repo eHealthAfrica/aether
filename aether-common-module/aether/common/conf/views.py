@@ -30,6 +30,16 @@ from rest_framework.permissions import IsAuthenticated
 def media_serve(request, path, *args, **kwargs):  # pragma: no cover
     '''
     Redirect the request to the path used by nginx for protected media.
+
+        server {
+            # ...
+
+            # Protected media
+            location ${MEDIA_INTERNAL_URL} {
+                internal;
+                alias ${MEDIA_ROOT};
+            }
+        }
     '''
 
     response = HttpResponse(status=200, content_type='')

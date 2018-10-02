@@ -24,46 +24,31 @@ services:
 
   postgres-base:
     image: postgres:9.6-alpine
+    environment:
+      PGUSER: postgres
     healthcheck:
       test: pg_isready
       interval: 2s
       timeout: 3s
       retries: 30
-    environment:
-      PGUSER: postgres
 
   couchdb-base:
     image: couchdb:1.7.2
     environment:
       COUCHDB_USER: ${COUCHDB_USER}
       COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
-    healthcheck:
-      test: curl -s http://localhost:5984
-      interval: 2s
-      timeout: 3s
-      retries: 30
     volumes:
       # enable cors for mobile app in-browser development:
-      - ./aether-couchdb-sync-module/couchdb/conf/config.ini:/usr/local/etc/couchdb/local.ini
+      - ./local-setup/couchdb/config.ini:/usr/local/etc/couchdb/local.ini
     ports:
       - "5984:5984"
 
   redis-base:
     image: redis:alpine
     command: "redis-server --requirepass ${REDIS_PASSWORD}"
-    healthcheck:
-      test: redis-cli ping
-      interval: 2s
-      timeout: 3s
-      retries: 30
 
   nginx-base:
     image: nginx:alpine
-    healthcheck:
-      test: nginx -t
-      interval: 5s
-      timeout: 3s
-      retries: 30
     volumes:
       # local setup
       - ./local-setup/nginx/nginx.conf:/etc/nginx/nginx.conf
@@ -75,15 +60,17 @@ services:
       # static folders per container
       - ./.persistent_data/static:/static
 
-      # aether favicon
-      - ./local-setup/aether.ico:/static/aether.ico
-
       # media folders per container
       - ./.persistent_data/media:/media
     ports:
       - "80:80"
       # needed for ODK behind nginx (ODK Collect only accepts 443 and 8443 ports)
       - "8443:8443"
+    healthcheck:
+      test: nginx -t
+      interval: 5s
+      timeout: 3s
+      retries: 30
 
 
   # ---------------------------------
@@ -96,17 +83,20 @@ services:
     stdin_open: true
     tty: true
     environment:
-      ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
-      ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
-      ADMIN_TOKEN: ${KERNEL_ADMIN_TOKEN}
+      # Uncomment this line to enable single sign on if you use CAS
+      # CAS_SERVER_URL: https://your.cas.server
 
-      CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
       CSRF_COOKIE_DOMAIN: .aether.local
-      HOSTNAME: kernel.aether.local
-
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}
       DJANGO_STORAGE_BACKEND: filesystem
+      HOSTNAME: kernel.aether.local
+
+      APP_NAME: Aether Kernel
+
+      ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
+      ADMIN_TOKEN: ${KERNEL_ADMIN_TOKEN}
 
       KERNEL_READONLY_DB_USERNAME: ${KERNEL_READONLY_DB_USERNAME}
       KERNEL_READONLY_DB_PASSWORD: ${KERNEL_READONLY_DB_PASSWORD}
@@ -126,13 +116,8 @@ services:
       - ./.persistent_data/static/kernel:/var/www/static
     ports:
       - "8000:8000"
-    healthcheck:
-      test: /code/entrypoint.sh health
-      interval: 5s
-      timeout: 3s
-      retries: 30
     command: start_dev
-
+    
 
   # ---------------------------------
   # ODK module
@@ -144,6 +129,17 @@ services:
     stdin_open: true
     tty: true
     environment:
+      # Uncomment this line to enable single sign on if you use CAS
+      # CAS_SERVER_URL: https://your.cas.server
+
+      CSRF_COOKIE_DOMAIN: .aether.local
+      DEBUG: "true"
+      DJANGO_SECRET_KEY: ${ODK_DJANGO_SECRET_KEY}
+      DJANGO_STORAGE_BACKEND: filesystem
+      HOSTNAME: odk.aether.local
+
+      APP_NAME: Aether ODK
+
       ADMIN_USERNAME: ${ODK_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${ODK_ADMIN_PASSWORD}
       ADMIN_TOKEN: ${ODK_ADMIN_TOKEN}
@@ -151,14 +147,6 @@ services:
       AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
       AETHER_KERNEL_URL: http://kernel:8000
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000
-
-      CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
-      CSRF_COOKIE_DOMAIN: .aether.local
-      HOSTNAME: odk.aether.local
-
-      DEBUG: "true"
-      DJANGO_SECRET_KEY: ${ODK_DJANGO_SECRET_KEY}
-      DJANGO_STORAGE_BACKEND: filesystem
 
       DB_NAME: odk
       PGHOST: db
@@ -181,11 +169,6 @@ services:
       - "8002:8002"
       # standalone (without nginx)
       # - "8443:8443"
-    healthcheck:
-      test: /code/entrypoint.sh health
-      interval: 5s
-      timeout: 3s
-      retries: 30
     command: start_dev
 
 
@@ -199,6 +182,17 @@ services:
     stdin_open: true
     tty: true
     environment: &sync-environment
+      # Uncomment this line to enable single sign on if you use CAS
+      # CAS_SERVER_URL: https://your.cas.server
+
+      CSRF_COOKIE_DOMAIN: .aether.local
+      DEBUG: "true"
+      DJANGO_SECRET_KEY: ${COUCHDB_SYNC_DJANGO_SECRET_KEY}
+      DJANGO_STORAGE_BACKEND: filesystem
+      HOSTNAME: sync.aether.local
+
+      APP_NAME: Aether CouchDB-Sync
+
       ADMIN_USERNAME: ${COUCHDB_SYNC_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${COUCHDB_SYNC_ADMIN_PASSWORD}
 
@@ -207,14 +201,6 @@ services:
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000
 
       GOOGLE_CLIENT_ID: ${COUCHDB_SYNC_GOOGLE_CLIENT_ID}
-
-      CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
-      CSRF_COOKIE_DOMAIN: .aether.local
-      HOSTNAME: sync.aether.local
-
-      DEBUG: "true"
-      DJANGO_SECRET_KEY: ${COUCHDB_SYNC_DJANGO_SECRET_KEY}
-      DJANGO_STORAGE_BACKEND: filesystem
 
       COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}
       COUCHDB_URL: http://couchdb:5984
@@ -238,22 +224,12 @@ services:
       - ./.persistent_data/static/sync:/var/www/static
     ports:
       - "8006:8006"
-    healthcheck:
-      test: /code/entrypoint.sh health
-      interval: 5s
-      timeout: 3s
-      retries: 30
     command: start_dev
 
   couchdb-sync-rq-base:
     image: aether-couchdb-sync
     environment: *sync-environment
     volumes: *sync-volumes
-    healthcheck:
-      test: /code/entrypoint.sh health_rq
-      interval: 5s
-      timeout: 3s
-      retries: 300
     command: start_rq
 
 
@@ -267,6 +243,17 @@ services:
     stdin_open: true
     tty: true
     environment:
+      # Uncomment this line to enable single sign on if you use CAS
+      # CAS_SERVER_URL: https://your.cas.server
+
+      CSRF_COOKIE_DOMAIN: .aether.local
+      DEBUG: "true"
+      DJANGO_SECRET_KEY: ${UI_DJANGO_SECRET_KEY}
+      DJANGO_STORAGE_BACKEND: filesystem
+      HOSTNAME: ui.aether.local
+
+      APP_NAME: Aether
+
       ADMIN_USERNAME: ${UI_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${UI_ADMIN_PASSWORD}
 
@@ -274,25 +261,14 @@ services:
       AETHER_KERNEL_URL: http://kernel:8000
       AETHER_KERNEL_URL_TEST: http://kernel-test:9000
 
-      CAS_SERVER_URL: https://ums-dev.ehealthafrica.org
-      CSRF_COOKIE_DOMAIN: .aether.local
-      HOSTNAME: ui.aether.local
-
-      DEBUG: "true"
-      DJANGO_SECRET_KEY: ${UI_DJANGO_SECRET_KEY}
-      DJANGO_STORAGE_BACKEND: filesystem
-
       DB_NAME: ui
       PGHOST: db
       PGPASSWORD: ${UI_DB_PASSWORD}
       PGPORT: 5432
       PGUSER: postgres
 
-      # use this value with "start_dev" command and webpack
+      # use this value with "start_dev" command and webpack otherwise comment it out
       STATIC_ROOT: /code/aether/ui/assets/bundles
-      # use this value with "start_dev" command and without webpack
-      # STATIC_ROOT: /code/aether/ui/static
-
       WEB_SERVER_PORT: 8004
     volumes:
       - ./aether-ui:/code
@@ -300,22 +276,12 @@ services:
       - ./.persistent_data/static/ui:/var/www/static
     ports:
       - "8004:8004"
-    healthcheck:
-      test: /code/entrypoint.sh health
-      interval: 5s
-      timeout: 3s
-      retries: 30
     command: start_dev
 
   ui-assets-base:
     build: ./aether-ui/aether/ui/assets
     stdin_open: true
     tty: true
-    healthcheck:
-      test: curl -s http://localhost:3004
-      interval: 5s
-      timeout: 3s
-      retries: 30
     volumes:
       #################################################
       #                    WARNING                    #
