@@ -120,6 +120,7 @@ class AetherDecorator(ResourceDecorator):
             bravado.exception.HTTPNotFound,
             bravado.exception.HTTPForbidden
         ]
+        # Errors in connection worthy of a retry
         self.retry_exceptions = [
             bravado.exception.BravadoTimeoutError,
             bravado.exception.BravadoConnectionError
@@ -150,9 +151,6 @@ class AetherDecorator(ResourceDecorator):
             # This is an attempt to fix an error that only occurs in travis where kernel
             # connections are dropped in transit or by kernel.
             dropped_retries = 5
-            connection_exceptions = (  # Errors in connection worthy of a retry
-                
-            )
             for x in range(dropped_retries):
                 try:
                     # We just want to give the exception right back, but maintain
