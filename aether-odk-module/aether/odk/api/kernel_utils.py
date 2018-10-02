@@ -43,7 +43,13 @@ class KernelPropagationError(Exception):
 def propagate_kernel_project(project):
     '''
     Creates a copy of the indicated project in Aether Kernel
-    and creates/updates its linked artefacts.
+    and creates/updates its linked artefacts based on the given AVRO schemas.
+
+    One AVRO schema should create/update in Kernel:
+        - one Project,
+        - one Mapping,
+        - one Schema and
+        - one ProjectSchema.
     '''
 
     artefacts = {
@@ -53,7 +59,7 @@ def propagate_kernel_project(project):
     }
 
     for xform in project.xforms.order_by('-modified_at'):
-        artefacts['avro_schemas'].append(__xform_to_artefacts(xform))
+        artefacts['avro_schemas'].append(__parse_xform(xform))
 
     __upsert_kernel_artefacts(project, artefacts)
 
@@ -64,18 +70,12 @@ def propagate_kernel_project(project):
 def propagate_kernel_artefacts(xform):
     '''
     Creates/updates artefacts based on the indicated xForm in Aether Kernel.
-
-    One XForm should create/update in Kernel:
-        - one Project,
-        - one Mapping,
-        - one Schema and
-        - one ProjectSchema.
     '''
 
     artefacts = {
         'action': 'create',
         'name': xform.project.name,
-        'avro_schemas': [__xform_to_artefacts(xform)],
+        'avro_schemas': [__parse_xform(xform)],
     }
 
     __upsert_kernel_artefacts(xform.project, artefacts)
@@ -108,7 +108,7 @@ def __upsert_kernel_artefacts(project, artefacts={}):
     return True
 
 
-def __xform_to_artefacts(xform):
+def __parse_xform(xform):
     definition = copy.deepcopy(xform.avro_schema)
     # assign namespace based on project name
     definition['namespace'] = f'{NAMESPACE}.{__clean_name(xform.project.name)}'

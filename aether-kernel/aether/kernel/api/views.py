@@ -84,7 +84,10 @@ class ProjectViewSet(CustomViewSet):
     @action(detail=True, methods=['get', 'patch'])
     def artefacts(self, request, pk=None, *args, **kwargs):
         '''
-        Returns the list of project and its artefact ids by type.
+        PATCH: Creates or updates the project and its artefacts:
+        schemas, project schemas and mappings.
+
+        PATCH|GET: Returns the list of project and affected artefact ids by type.
 
         Reachable at ``.../projects/{pk}/artefacts/``
         '''
@@ -97,7 +100,10 @@ class ProjectViewSet(CustomViewSet):
     @action(detail=True, methods=['patch'], url_path='avro-schemas')
     def avro_schemas(self, request, pk=None, *args, **kwargs):
         '''
-        Returns the list of project and its artefact ids by type.
+        Creates or updates the project and links it with the given AVRO schemas
+        and related artefacts: project schemas and passthrough mappings.
+
+        Returns the list of project and its affected artefact ids by type.
 
         Reachable at ``.../projects/{pk}/avro-schemas/``
         '''

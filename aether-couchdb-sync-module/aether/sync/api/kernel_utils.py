@@ -40,7 +40,13 @@ class KernelPropagationError(Exception):
 def propagate_kernel_project(project):
     '''
     Creates a copy of the indicated project in Aether Kernel
-    and creates/updates its linked artefacts.
+    and creates/updates its linked artefacts based on the given AVRO schemas.
+
+    One AVRO schema should create/update in Kernel:
+        - one Project,
+        - one Mapping,
+        - one Schema and
+        - one ProjectSchema.
     '''
 
     artefacts = {
@@ -50,7 +56,7 @@ def propagate_kernel_project(project):
     }
 
     for schema in project.schemas.order_by('name'):
-        artefacts['avro_schemas'].append(__schema_to_artefacts(schema))
+        artefacts['avro_schemas'].append(__parse_schema(schema))
 
     __upsert_kernel_artefacts(project, artefacts)
 
@@ -61,18 +67,12 @@ def propagate_kernel_project(project):
 def propagate_kernel_artefacts(schema):
     '''
     Creates/updates artefacts based on the indicated Schema in Aether Kernel.
-
-    One JSON Schema should create/update in Kernel:
-        - one Project,
-        - one Mapping,
-        - one Schema and
-        - one Project Schema.
     '''
 
     artefacts = {
         'action': 'create',
         'name': schema.project.name,
-        'avro_schemas': [__schema_to_artefacts(schema)],
+        'avro_schemas': [__parse_schema(schema)],
     }
 
     __upsert_kernel_artefacts(schema.project, artefacts)
@@ -105,7 +105,7 @@ def __upsert_kernel_artefacts(project, artefacts={}):
     return True
 
 
-def __schema_to_artefacts(schema):
+def __parse_schema(schema):
     return {
         'id': str(schema.kernel_id),
         'definition': schema.avro_schema,
