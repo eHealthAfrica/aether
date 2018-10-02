@@ -199,10 +199,10 @@ class ProducerManager(object):
                         if res.status_code != 404:
                             self.logger.info('Kernel available without credentials.')
                         try:
-                            self.kernel = KernelClient(
-                                url=self.settings['kernel_url'],
-                                username=self.settings['kernel_username'],
-                                password=self.settings['kernel_password'],
+                            self.kernel = Client(
+                                self.settings['kernel_url'],
+                                self.settings['kernel_username'],
+                                self.settings['kernel_password'],
                             )
                             self.logger.info('Connected to Aether.')
                             continue
