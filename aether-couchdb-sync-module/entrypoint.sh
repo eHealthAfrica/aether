@@ -46,6 +46,7 @@ show_help () {
 
     health        : checks the system healthy
     health_rq     : checks the RQ healthy
+    check_kernel  : checks communication with kernel
     """
 }
 
@@ -194,6 +195,10 @@ case "$1" in
 
     health_rq )
         ./manage.py check_rq
+    ;;
+
+    check_kernel )
+        ./manage.py check_url --url=$AETHER_KERNEL_URL --token=$AETHER_KERNEL_TOKEN
     ;;
 
     help )

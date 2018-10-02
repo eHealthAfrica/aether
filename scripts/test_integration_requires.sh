@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+#
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -15,19 +17,23 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
 
-import sys
-import unittest
-from time import sleep
+set -Eeuo pipefail
 
+# This script is a requisite for integration testing in Travis.
+# To test locally, you likely have already done the things this script does.
 
-def run():
-    sleep(5)
-    loader = unittest.TestLoader()
-    suite = loader.discover(".", pattern="test_*.py")
-    result = not unittest.TextTestRunner(verbosity=1).run(suite).wasSuccessful()
-    sys.exit(result)
+AETHER_FUNCTIONS=scripts/aether_functions.sh
 
-
-if __name__ == "__main__":
-    run()
+ORDER=( "create_credentials"
+        "create_aether_docker_assets"
+        "build_aether_utils_and_distribute"
+        "build_common_and_distribute"
+        "build_test_modules kernel-test producer-test integration-test"
+        "create_readonly_user_test"
+        )
+for FN in "${ORDER[@]}";
+do
+    $AETHER_FUNCTIONS $FN
+done
