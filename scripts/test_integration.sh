@@ -20,6 +20,8 @@
 #
 set -Eeuo pipefail
 
+# build_aether_containers.sh MUST be run before attempting integration tests.
+
 function build_container() {
     echo "_____________________________________________ Building $1 container"
     $DC_TEST build "$1"-test
@@ -30,17 +32,14 @@ DC_TEST="docker-compose -f docker-compose-test.yml"
 
 echo "_____________________________________________ TESTING"
 
-
-./scripts/build_aether_utils_and_distribute.sh
-$DC_TEST down
+$DC_TEST kill
 
 echo "_____________________________________________ Starting database"
 $DC_TEST up -d db-test
 
 build_container kernel
 
-# sometimes this is not as faster as we wanted... :'(
-until $DC_TEST run kernel-test eval pg_isready -q; do
+until $DC_TEST run --no-deps kernel-test eval pg_isready -q; do
     >&2 echo "Waiting for db-test..."
     sleep 2
 done
@@ -54,8 +53,6 @@ until curl -s $KERNEL_HEALTH_URL > /dev/null; do
     >&2 echo "Waiting for Kernel..."
     sleep 2
 done
-$DC_TEST run kernel-test eval python /code/sql/create_readonly_user.py
-
 echo "_____________________________________________ Starting Kafka"
 $DC_TEST up -d zookeeper-test kafka-test
 
@@ -65,7 +62,7 @@ $DC_TEST up -d producer-test
 
 echo "_____________________________________________ Starting Integration Tests"
 build_container integration
-$DC_TEST run integration-test test
+$DC_TEST run --no-deps integration-test test
 
 ./scripts/kill_all.sh
 echo "_____________________________________________ END"

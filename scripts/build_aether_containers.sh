@@ -19,53 +19,20 @@
 # under the License.
 #
 
-# Generate credentials if missing
-if [ -e ".env" ]; then
-    echo "[.env] file already exists! Remove it if you want to generate a new one."
-else
-    ./scripts/generate-docker-compose-credentials.sh > .env
-fi
-
 set -Eeuo pipefail
 
-# Try to create the Aether network+volume if missing
-docker network create aether_internal       2>/dev/null || true
-docker volume  create aether_database_data  2>/dev/null || true
+AETHER_FUNCTIONS=scripts/aether_functions.sh
 
-# build Aether utilities
-./scripts/build_aether_utils_and_distribute.sh
-
-# build Aether Connect
-docker-compose -f docker-compose-connect.yml build
-
-# build Aether Common python module
-./scripts/build_common_and_distribute.sh
-
-# build Aether UI assets
-docker-compose build ui-assets
-docker-compose run   ui-assets build
-
-VERSION=`git rev-parse --abbrev-ref HEAD`
-GIT_REVISION=`git rev-parse HEAD`
-CONTAINERS=( kernel ui odk couchdb-sync )
-
-# speed up first start up
-docker-compose up -d db
-
-# build Aether Suite
-for container in "${CONTAINERS[@]}"
+ORDER=( "create_credentials"
+        "create_aether_docker_assets"
+        "build_aether_utils_and_distribute"
+        "build_connect"
+        "build_common_and_distribute"
+        "build_ui_assets"
+        "build_core_modules kernel ui odk couchdb-sync"
+        "create_readonly_user"
+        )
+for FN in "${ORDER[@]}";
 do
-    # build container
-    docker-compose build \
-        --build-arg GIT_REVISION=$GIT_REVISION \
-        --build-arg VERSION=$VERSION \
-        $container
-
-    # setup container (model migration, admin user, static content...)
-    docker-compose run $container setup
+    $AETHER_FUNCTIONS $FN
 done
-
-# kernel readonly user (used by Aether Producer)
-docker-compose run kernel eval python /code/sql/create_readonly_user.py
-
-docker-compose kill
