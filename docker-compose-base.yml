@@ -342,8 +342,8 @@ services:
 
       # These variables will override the ones indicated in the settings file
       KERNEL_URL: http://kernel:8000
-      KERNEL_ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
-      KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
+      KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
+      KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
 
       POSTGRES_HOST: db
       POSTGRES_DBNAME: aether

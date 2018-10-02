@@ -23,12 +23,15 @@ import sys
 if sys.version_info < (3,0):
     sys.exit('aether data mocker requires Python 3.x')
 
+with open(os.path.join('/code', 'VERSION')) as version_file:
+    version = version_file.read().strip()
+
 # allow setup.py to be run from any path
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='aether.mocker',
-    version='0.0.0',
+    version=version,
     install_requires=[
         "aether.client"
     ],

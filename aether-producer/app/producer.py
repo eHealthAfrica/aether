@@ -40,7 +40,7 @@ import spavro.schema
 import sys
 import traceback
 
-from aether.client import KernelClient
+from aether.client import Client
 from flask import Flask, Response, request, abort, jsonify
 from gevent.pywsgi import WSGIServer
 from confluent_kafka import Producer, Consumer, KafkaException
@@ -201,15 +201,14 @@ class ProducerManager(object):
                         try:
                             self.kernel = KernelClient(
                                 url=self.settings['kernel_url'],
-                                username=self.settings['kernel_admin_username'],
-                                password=self.settings['kernel_admin_password'],
+                                username=self.settings['kernel_username'],
+                                password=self.settings['kernel_password'],
                             )
                             self.logger.info('Connected to Aether.')
                             continue
                         except UnboundLocalError:
                             # This is an unclear error from AetherClient
                             raise ConnectionError("Bad Credentials passed to Aether")
-
                 self.safe_sleep(self.settings['start_delay'])
 
             except ConnectionError as ce:
@@ -241,27 +240,24 @@ class ProducerManager(object):
             else:
                 schemas = []
                 with KernelHandler(self):
-                    try:
-                        self.kernel.refresh()
-                    except UnboundLocalError:  # this happens on kernel lost.
-                        raise ConnectionError('Lost Kernel Connection')
                     schemas = [
-                        schema for schema in self.kernel.Resource.Schema]
+                        schema for schema in self.kernel.schemas.paginated('list')]
                 for schema in schemas:
-                    if not schema.name in self.topic_managers.keys():
+                    schema_name = schema['name']
+                    if not schema_name in self.topic_managers.keys():
                         self.logger.info(
-                            "New topic connected: %s" % schema.name)
-                        self.topic_managers[schema.name] = TopicManager(
+                            "New topic connected: %s" % schema_name)
+                        self.topic_managers[schema_name] = TopicManager(
                             self, schema)
                     else:
-                        topic_manager = self.topic_managers[schema.name]
+                        topic_manager = self.topic_managers[schema_name]
                         if topic_manager.schema_changed(schema):
                             topic_manager.update_schema(schema)
                             self.logger.debug(
-                                "Schema %s updated" % schema.name)
+                                "Schema %s updated" % schema_name)
                         else:
                             self.logger.debug(
-                                "Schema %s unchanged" % schema.name)
+                                "Schema %s unchanged" % schema_name)
                 # Time between checks for schema change
                 self.safe_sleep(self.settings['sleep_time'])
         self.logger.debug('No longer checking schemas')
@@ -355,7 +351,7 @@ class TopicManager(object):
     def __init__(self, server_handler, schema):
         self.context = server_handler
         self.logger = self.context.logger
-        self.name = schema.name
+        self.name = schema['name']
         self.offset = ""
         self.limit = self.context.settings.get('postgres_pull_limit', 100)
         self.status = {
@@ -398,10 +394,14 @@ class TopicManager(object):
             modified=sql.Literal(modified),
             schema_name=sql.Literal(self.name),
         )
-        with psycopg2.connect(**self.pg_creds) as conn:
-            cursor = conn.cursor(cursor_factory=DictCursor)
-            cursor.execute(query)
-            return sum([1 for i in cursor]) > 0
+        try:
+            with psycopg2.connect(**self.pg_creds) as conn:
+                cursor = conn.cursor(cursor_factory=DictCursor)
+                cursor.execute(query)
+                return sum([1 for i in cursor]) > 0
+        except psycopg2.OperationalError as pgerr:
+            self.logger.critical('Could not access Database to look for updates: %s' % pgerr)
+            return False
 
     def get_time_window_filter(self, query_time):
         # You can't always trust that a set from kernel made up of time window
@@ -450,7 +450,8 @@ class TopicManager(object):
         # We split this method from update_schema because schema_obj as it is can not
         # be compared for differences. literal_eval fixes this. As such, this is used
         # by the schema_changed() method.
-        return ast.literal_eval(str(schema_obj.definition))
+        # schema_obj is a nested OrderedDict, which needs to be stringified
+        return ast.literal_eval(json.dumps(schema_obj['definition']))
 
     def schema_changed(self, schema_candidate):
         # for use by ProducerManager.check_schemas()

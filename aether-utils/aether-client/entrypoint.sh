@@ -29,9 +29,6 @@ show_help() {
     bash          : run bash
     build         : build python wheel of library in /dist
     eval          : eval shell command
-    manage        : invoke manage.py commands
-
-    pip_freeze    : freeze pip dependencies and write to requirements.txt
 
     test          : run tests
     test_lint     : run flake8 tests
@@ -41,20 +38,15 @@ show_help() {
 }
 
 test_flake8() {
-    flake8 /code/. --config=/code/conf/extras/flake8.cfg
+    flake8 /code/. --config=/code/setup.cfg
 }
 
-test_coverage() {
-    export RCFILE=/code/conf/extras/coverage.rc
-    export TESTING=true
-    export DEBUG=false
-    coverage run    --rcfile="$RCFILE" manage.py test "${@:1}"
-    coverage report --rcfile="$RCFILE"
-    coverage erase
-
+test(){
+    python3 setup.py -q test "${@:1}"
     cat /code/conf/extras/good_job.txt
+    rm -R ./*.egg*
+    rm -R .pytest_cache
 }
-
 
 case "$1" in
     bash )
@@ -65,32 +57,13 @@ case "$1" in
         eval "${@:2}"
     ;;
 
-    manage )
-        ./manage.py "${@:2}"
-    ;;
-
-    pip_freeze )
-        pip install virtualenv
-        rm -rf /tmp/env
-
-        virtualenv -p python3 /tmp/env/
-        /tmp/env/bin/pip install -r ./conf/pip/primary-requirements.txt --upgrade
-
-        cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
-        /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
-    ;;
-
     test)
         test_flake8
-        test_coverage "${@:2}"
+        test
     ;;
 
     test_lint)
         test_flake8
-    ;;
-
-    test_coverage)
-        test_coverage "${@:2}"
     ;;
 
     build)
@@ -105,6 +78,7 @@ case "$1" in
         # remove useless content
         rm -rf build
         rm -rf aether.client.egg-info
+        rm -rf .eggs
     ;;
 
     help)

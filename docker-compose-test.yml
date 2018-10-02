@@ -54,6 +54,22 @@ services:
       - "9000:9000"
     command: start
 
+  # ---------------------------------
+  # Aether Kernel Client
+  # ---------------------------------
+
+  client-test:
+    build: ./aether-utils/aether-client
+    environment:
+      # use a different database when testing the integration with another container
+      KERNEL_URL: http://kernel-test:9000
+      KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
+      KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
+      TESTING: "true"
+      VERSION: ${VERSION}
+    command: test
+
+
 
   # ---------------------------------
   # ODK module
@@ -180,19 +196,11 @@ services:
     image: aether/integration
     build: ./test-aether-integration-module
     environment:
-      KERNEL_ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
-      KERNEL_ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
-      KERNEL_URL: http://kernel-test:9000
-      GENERATED_ENTITY_COUNT: 1234
       PRODUCER_STATUS_URL: http://producer-test:9005/status
+      KERNEL_URL: http://kernel-test:9000
+      KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
+      KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
     volumes:
       - ./test-aether-integration-module:/code
-    depends_on:
-      db-test:
-        condition: service_healthy
-      kernel-test:
-        condition: service_healthy
-      kafka-test:
-        condition: service_started
-      producer-test:
-        condition: service_started
+      - ./VERSION:/code/VERSION
+    command: test
