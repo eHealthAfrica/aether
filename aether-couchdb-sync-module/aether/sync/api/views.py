@@ -57,11 +57,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
     search_fields = ('name',)
 
     @action(detail=True, methods=['patch'])
-    def propagates(self, request, pk=None, *args, **kwargs):
+    def propagate(self, request, pk=None, *args, **kwargs):
         '''
         Creates a copy of the project in Aether Kernel server.
 
-        Reachable at ``.../projects/{pk}/propagates/``
+        Reachable at ``.../projects/{pk}/propagate/``
         '''
 
         project = get_object_or_404(Project, pk=pk)
@@ -96,11 +96,11 @@ class SchemaViewSet(viewsets.ModelViewSet):
         return queryset
 
     @action(detail=True, methods=['patch'])
-    def propagates(self, request, pk=None, *args, **kwargs):
+    def propagate(self, request, pk=None, *args, **kwargs):
         '''
         Creates the artefacts of the schema in Aether Kernel server.
 
-        Reachable at ``.../schemas/{pk}/propagates/``
+        Reachable at ``.../schemas/{pk}/propagate/``
         '''
 
         schema = get_object_or_404(Schema, pk=pk)

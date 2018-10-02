@@ -43,12 +43,12 @@ class KernelViewsTests(TestCase):
         self.client.logout()
 
     def test__project_propagation(self):
-        url_404 = reverse('api:project-propagates', kwargs={'pk': uuid.uuid4()})
+        url_404 = reverse('api:project-propagate', kwargs={'pk': uuid.uuid4()})
         response = self.client.patch(url_404)
         self.assertEqual(response.status_code, 404)
 
         project = Project.objects.create(name='sample')
-        url = reverse('api:project-propagates', kwargs={'pk': project.pk})
+        url = reverse('api:project-propagate', kwargs={'pk': project.pk})
 
         with mock.patch('aether.sync.api.views.propagate_kernel_project',
                         return_value=True) as mock_kernel:
@@ -63,7 +63,7 @@ class KernelViewsTests(TestCase):
             mock_kernel.assert_called_once()
 
     def test__schema_propagation(self):
-        url_404 = reverse('api:schema-propagates', kwargs={'pk': 0})
+        url_404 = reverse('api:schema-propagate', kwargs={'pk': 0})
         response = self.client.patch(url_404)
         self.assertEqual(response.status_code, 404)
 
@@ -72,7 +72,7 @@ class KernelViewsTests(TestCase):
             project=Project.objects.create(name='sample'),
             avro_schema={},
         )
-        url = reverse('api:schema-propagates', kwargs={'pk': schema.pk})
+        url = reverse('api:schema-propagate', kwargs={'pk': schema.pk})
 
         with mock.patch('aether.sync.api.views.propagate_kernel_artefacts',
                         return_value=True) as mock_kernel:
