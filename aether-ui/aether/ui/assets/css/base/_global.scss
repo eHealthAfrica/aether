@@ -233,14 +233,16 @@ select:-webkit-autofill {
   .pipeline-section__entityTypes .textarea-header {
     box-shadow: none;
   }
+
   .tabs .tab.selected {
     box-shadow: none;
   }
 
   .pipeline-section__mapping .rule-input {
     box-shadow: none;
-    &.source:before,
-    &.destination:before {
+
+    &.source::before,
+    &.destination::before {
       border: 0;
     }
   }

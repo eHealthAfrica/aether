@@ -114,7 +114,12 @@ class PipelineList extends Component {
         <div
           onClick={() => { this.onSelectPipeline(pipeline) }}>
           { pipeline.is_read_only &&
-            <span className='tag'>read-only</span>
+            <span className='tag'>
+              <FormattedMessage
+                id='pipeline.navbar.input'
+                defaultMessage='read-only'
+              />
+            </span>
           }
           <h2 className='preview-heading'>{pipeline.name}</h2>
 
@@ -176,4 +181,11 @@ const mapStateToProps = ({ pipelines }) => ({
   selectedPipeline: pipelines.selectedPipeline
 })
 
-export default connect(mapStateToProps, { getPipelines, selectedPipelineChanged, addPipeline, fetchPipelines, getKernelURL, addInitialContract })(PipelineList)
+export default connect(mapStateToProps, {
+  getPipelines,
+  selectedPipelineChanged,
+  addPipeline,
+  fetchPipelines,
+  getKernelURL,
+  addInitialContract
+})(PipelineList)

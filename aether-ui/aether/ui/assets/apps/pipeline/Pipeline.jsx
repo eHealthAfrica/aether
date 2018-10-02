@@ -79,7 +79,12 @@ class Pipeline extends Component {
             <span> // </span>
             { selectedPipeline.name }
             { selectedPipeline.is_read_only &&
-              <span className='tag'>read-only</span>
+              <span className='tag'>
+                <FormattedMessage
+                  id='pipeline.list.read-only'
+                  defaultMessage='read-only'
+                />
+              </span>
             }
           </div>
           <div className='top-nav-publish'>

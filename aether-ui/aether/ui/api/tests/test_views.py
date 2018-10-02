@@ -133,17 +133,7 @@ class ViewsTest(TransactionTestCase):
         original_schema = pipeline.schema
         pipeline.schema = ENTITY_SAMPLE
         pipeline.save()
-
-        outcome = {
-                    'successful': [],
-                    'error': [],
-                    'exists': [],
-                    'ids': {
-                        'mapping': {},
-                        'schema': {},
-                    }
-                }
-        outcome = utils.publish_preflight(pipeline, outcome, contract)
+        outcome = utils.publish_preflight(contract)
         self.assertEqual(len(outcome['error']), 0)
         self.assertEqual(len(outcome['exists']), 4)
         self.assertTrue('Pipeline Example' in outcome['exists'][3])
@@ -230,21 +220,13 @@ class ViewsTest(TransactionTestCase):
         response = self.client.post(url, {'project_name': 'Aux 1'})
         response_data = json.loads(response.content)
         self.assertIn('is not a valid UUID', response_data['error'][0])
-        outcome = {
-                    'successful': [],
-                    'error': [],
-                    'exists': [],
-                    'ids': {
-                        'mapping': {},
-                        'schema': {},
-                    }
-                }
-        outcome = utils.publish_preflight(pipeline, outcome, contract)
-        self.assertEqual(len(outcome['exists']), 3)
+
+        outcome = utils.publish_preflight(contract)
+        self.assertEqual(len(outcome['exists']), 4)
 
         pipeline.mappingset = 'c29811a0-ff8a-492f-a858-c6b7299c9de7'
         pipeline.save()
-        outcome = utils.publish_preflight(pipeline, outcome, contract)
+        outcome = utils.publish_preflight(contract)
 
     def test_view_pipeline__publish(self):
         pipeline = Pipeline.objects.create(
@@ -298,7 +280,7 @@ class ViewsTest(TransactionTestCase):
             },
             pipeline=pipeline,
         )
-        outcome = utils.publish_pipeline(pipeline, 'Aux', contract, {})
+        outcome = utils.publish_pipeline('Aux', contract, {})
         self.assertTrue('artefacts' in outcome)
         url = reverse('pipeline-publish', args=[str(pipeline.id)])
         response = self.client.post(url, {'project_name': 'Aux', 'overwrite': True, 'contract_id': str(contract.pk)})
@@ -388,7 +370,7 @@ class ViewsTest(TransactionTestCase):
 
         with mock.patch('requests.get') as m:
             m.side_effect = Exception()
-            response = utils.publish_pipeline(pipeline, 'Aux', contract, {})
+            response = utils.publish_pipeline('Aux', contract, {})
 
         pipeline2 = Pipeline.objects.create(
             name='Pipeline 2 test',
@@ -431,5 +413,5 @@ class ViewsTest(TransactionTestCase):
             pipeline=pipeline_empty,
             name='contract empty',
         )
-        outcome = utils.publish_pipeline(pipeline_empty, 'Aux', contract_empty)
+        outcome = utils.publish_pipeline('Aux', contract_empty)
         self.assertTrue('artefacts' in outcome)

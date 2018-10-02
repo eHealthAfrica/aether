@@ -22,6 +22,7 @@ import requests
 import uuid
 
 from rest_framework import status
+from django.utils.translation import gettext as lang_translator
 
 from aether.common.kernel import utils
 
@@ -146,7 +147,7 @@ def validate_contract(contract):
         return (errors, [])
     else:
         data = resp.text
-        description = f'It was not possible to validate the pipeline: {str(data)}'
+        description = f'{lang_translator("It was not possible to validate the pipeline: ")}{str(data)}'
         errors = [{'description': description}]
         return (errors, [])
 
@@ -187,47 +188,87 @@ def is_object_linked(kernel_refs, object_name, entity_type_name=''):
         return False
 
 
-def publish_preflight(pipeline, outcome, contract):
+def publish_preflight(contract):
     '''
     Performs a check for possible pipeline publish errors against kernel
     '''
+    outcome = {
+        'successful': [],
+        'error': [],
+        'exists': [],
+        'ids': {
+            'mapping': {},
+            'schema': {},
+        }
+    }
+
     if contract.mapping_errors:
-        outcome['error'].append('{} mappings have errors'.format(contract.name))
+        outcome['error'].append(lang_translator('{} mappings have errors'.format(contract.name)))
         return outcome
     for entity_type in contract.entity_types:
         if is_object_linked(contract.kernel_refs, 'schemas', entity_type['name']):
-            outcome['exists'].append({entity_type['name']: '{} schema with id {} exists'.format(
-                                        entity_type['name'],
-                                        contract.kernel_refs['schemas'][entity_type['name']])})
+            outcome['exists'].append(
+                {
+                    entity_type['name']: lang_translator(
+                        '{} schema with id {} exists'.format(
+                            entity_type['name'],
+                            contract.kernel_refs['schemas'][entity_type['name']]
+                        )
+                    )
+                }
+            )
             outcome['ids']['schema'][entity_type['name']] = contract.kernel_refs['schemas'][entity_type['name']]
         else:
             get_by_name = kernel_data_request(f'schemas/?name={entity_type["name"]}')['results']
             if len(get_by_name):
-                outcome['exists'].append({entity_type['name']: 'Schema with name {} exists on kernel'.format(
-                                        entity_type['name'])})
+                outcome['exists'].append(
+                    {
+                        entity_type['name']: lang_translator(
+                            'Schema with name {} exists on kernel'.format(
+                                entity_type['name']
+                            )
+                        )
+                    }
+                )
                 outcome['ids']['schema'][entity_type['name']] = get_by_name[0]['id']
     if is_object_linked(contract.kernel_refs, 'mappings'):
-        outcome['exists'].append({contract.name: 'Mapping with id {} exists'.format(
-                                        contract.kernel_refs['mappings'])})
+        outcome['exists'].append(
+            {
+                contract.name: lang_translator(
+                    'Mapping with id {} exists'.format(
+                        contract.kernel_refs['mappings']
+                    )
+                )
+            }
+        )
         outcome['ids']['mapping'][contract.name] = contract.kernel_refs['mappings']
     else:
         get_by_name = kernel_data_request(f'mappings/?name={contract.name}')['results']
         if len(get_by_name):
-            outcome['exists'].append({contract.name: 'Pipeline (mapping) with name {} exists on kernel.'.format(
-                                    contract.name)})
+            outcome['exists'].append(
+                {
+                    contract.name: lang_translator(
+                        'Pipeline (mapping) with name {} exists on kernel.'.format(
+                            contract.name
+                        )
+                    )
+                }
+            )
             outcome['ids']['mapping'][contract.name] = get_by_name[0]['id']
 
-    if pipeline.mappingset:
+    if contract.pipeline.mappingset:
         try:
-            mappingset = kernel_data_request(f'mappingsets/{pipeline.mappingset}/')
-            if json.dumps(mappingset['input'], sort_keys=True) != json.dumps(pipeline.schema, sort_keys=True):
-                outcome['exists'].append({pipeline.name: 'Input data will be changed'})
+            mappingset = kernel_data_request(f'mappingsets/{contract.pipeline.mappingset}/')
+            if json.dumps(mappingset['input'], sort_keys=True) != json.dumps(contract.pipeline.schema, sort_keys=True):
+                outcome['exists'].append({
+                    contract.pipeline.name: lang_translator('Input data will be changed')
+                })
         except Exception:
             pass
     return outcome
 
 
-def publish_pipeline(pipeline, project_name, contract, objects_to_overwrite={}):
+def publish_pipeline(project_name, contract, objects_to_overwrite={}):
     '''
     Transform pipeline and contract to kernel artefacts and publish
     '''
@@ -251,23 +292,23 @@ def publish_pipeline(pipeline, project_name, contract, objects_to_overwrite={}):
         except Exception:
             pass
     mappingset = {}
-    if pipeline.mappingset:
+    if contract.pipeline.mappingset:
         try:
-            mappingset = kernel_data_request(f'mappingsets/{pipeline.mappingset}/')
+            mappingset = kernel_data_request(f'mappingsets/{contract.pipeline.mappingset}/')
             project_id = mappingset.get('project')
-            mappingset['name'] = pipeline.name
-            mappingset['input'] = pipeline.schema
+            mappingset['name'] = contract.pipeline.name
+            mappingset['input'] = contract.pipeline.schema
         except Exception as e:
             mappingset = {
-                'id': str(pipeline.mappingset),
-                'name': pipeline.name,
-                'input': pipeline.schema,
+                'id': str(contract.pipeline.mappingset),
+                'name': contract.pipeline.name,
+                'input': contract.pipeline.schema,
             }
     else:
         mappingset = {
             'id': str(uuid.uuid4()),
-            'name': pipeline.name,
-            'input': pipeline.schema,
+            'name': contract.pipeline.name,
+            'input': contract.pipeline.schema,
         }
     mappingsets.append(mappingset)
     [
@@ -378,7 +419,5 @@ def linked_pipeline_object(object_name, id):
 def kernel_to_pipeline():
     url = f'{utils.get_kernel_server_url()}/mappingsets/'
     mappingsets = utils.get_all_docs(url)
-    pipelines = []
     for mappingset in mappingsets:
-        pipelines.append(create_new_pipeline_from_kernel(mappingset))
-    return pipelines
+        create_new_pipeline_from_kernel(mappingset)

@@ -56,33 +56,26 @@ class PipelineViewSet(viewsets.ModelViewSet):
         overwrite = request.data.get('overwrite', False)
         contract_id = request.data.get('contract_id')
         objects_to_overwrite = request.data.get('ids', {})
-        outcome = {
-            'successful': [],
-            'error': [],
-            'exists': [],
-            'ids': {
-                'mapping': {},
-                'schema': {},
-            }
-        }
+
         publish_result = {}
         try:
             pipeline = get_object_or_404(models.Pipeline, pk=pk)
             contract = get_object_or_404(models.Contract, pk=contract_id)
         except Exception as e:
+            outcome = {'error': []}
             outcome['error'].append(str(e))
             return Response(outcome, status=HTTPStatus.BAD_REQUEST)
-        outcome = ui_utils.publish_preflight(pipeline, outcome, contract)
+        outcome = ui_utils.publish_preflight(contract)
 
-        if outcome['error']:
+        if 'error' in outcome and len(outcome['error']):
             return Response(outcome, status=HTTPStatus.BAD_REQUEST)
-        if outcome['exists']:
+        if 'exists' in outcome and len(outcome['exists']):
             if overwrite:
-                publish_result = ui_utils.publish_pipeline(pipeline, project_name, contract, objects_to_overwrite)
+                publish_result = ui_utils.publish_pipeline(project_name, contract, objects_to_overwrite)
             else:
                 return Response(outcome, status=HTTPStatus.BAD_REQUEST)
         else:
-            publish_result = ui_utils.publish_pipeline(pipeline, project_name, contract)
+            publish_result = ui_utils.publish_pipeline(project_name, contract)
 
         if 'error' in publish_result:
             return Response(publish_result, status=HTTPStatus.BAD_REQUEST)
