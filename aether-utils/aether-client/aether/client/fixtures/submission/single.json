@@ -1,0 +1,37 @@
+{
+  "facility_id": "fce912d2-af6a-430b-b8f9-254f733f1fce",
+  "facility_name": "SomeFacility",
+  "report_datetime": "2018-09-01",
+  "levels": {
+    "vaccines": [
+      {
+        "type": "IPV",
+        "count": 1
+      },
+      {
+        "type": "DTPHibHepB",
+        "count": 2
+      },
+      {
+        "type": "Measles",
+        "count": 3
+      },
+      {
+        "type": "Rubella",
+        "count": 3
+      },
+      {
+        "type": "Rotavirus",
+        "count": 3
+      },
+      {
+        "type": "Pneumocococcal",
+        "count": 3
+      },
+      {
+        "type": "BCG",
+        "count": 3
+      }
+    ]
+  }
+}

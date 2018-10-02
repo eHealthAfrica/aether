@@ -333,6 +333,10 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
                 instance.status = validated_data.pop('status')
             if 'projectschema' in validated_data and validated_data['projectschema'] is not None:
                 instance.projectschema = validated_data.pop('projectschema')
+            elif instance.projectschema is not None:
+                pass  # We can use the existing projectschema.
+                # This is helpful in situations where a user only has the ID and payload
+                # and wants to make an update to an existing entity.
             else:
                 raise serializers.ValidationError({
                     'description': 'Project schema must be specified'

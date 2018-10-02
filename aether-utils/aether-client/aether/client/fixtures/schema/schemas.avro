@@ -1,0 +1,76 @@
+[
+  {
+    "doc": "Health Facility",
+    "name": "Facility",
+    "type": "record",
+    "fields": [
+      {
+        "doc": "ID",
+        "name": "id",
+        "type": "string",
+        "jsonldPredicate": "@id"
+      },
+      {
+        "doc": "REV",
+        "name": "rev",
+        "type": "string"
+      },
+      {
+        "type": "string",
+        "name": "name"
+      },
+      {
+        "type": "float",
+        "name": "lat"
+      },
+      {
+        "type": "float",
+        "name": "lng"
+      }
+    ],
+    "namespace": "eha.demo"
+  },
+  {
+    "doc": "Current Stock Level",
+    "name": "CurrentStock",
+    "type": "record",
+    "fields": [
+      {
+        "doc": "ID",
+        "name": "id",
+        "type": "string",
+        "jsonldPredicate": "@id"
+      },
+      {
+        "doc": "Revision",
+        "name": "rev",
+        "type": "string"
+      },
+      {
+        "doc": "ID of Reporting Facility",
+        "name": "facility_id",
+        "type": "string",
+        "jsonldPredicate": {
+          "_id": "eha.demo.Facility",
+          "_type": "@id"
+        }
+      },
+      {
+        "doc": "Date of report",
+        "name": "date",
+        "type": "string"
+      },
+      {
+        "doc": "Type Code for this Commodity",
+        "type": "string",
+        "name": "type"
+      },
+      {
+        "doc": "Current count of stock available",
+        "type": "int",
+        "name": "count"
+      }
+    ],
+    "namespace": "eha.demo"
+  }
+]

@@ -1,0 +1,30 @@
+{
+    "entities": {
+    },
+    "mapping": [
+        [
+            "facility_id",
+            "CurrentStock.facility_id"
+        ],
+        [
+            "#!uuid",
+            "CurrentStock.id"
+        ],
+        [
+            "#!uuid",
+            "CurrentStock.rev"
+        ],
+        [
+            "levels.vaccines[*].type",
+            "CurrentStock.type"
+        ],
+        [
+            "levels.vaccines[*].count",
+            "CurrentStock.count"
+        ],
+        [
+            "report_datetime",
+            "CurrentStock.date"
+        ]
+    ]
+}
