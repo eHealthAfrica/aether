@@ -12,6 +12,7 @@ services:
       TESTING: "true"
     volumes:
       - ./aether-client:/code
+      - ../VERSION:/code/VERSION
     command: build
 
 
@@ -21,4 +22,5 @@ services:
       TESTING: "true"
     volumes:
       - ./aether-mock-data:/code
+      - ../VERSION:/code/VERSION
     command: build
