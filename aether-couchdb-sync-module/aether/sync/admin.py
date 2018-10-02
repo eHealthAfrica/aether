@@ -16,11 +16,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.utils.translation import ugettext as _
 
 from .api.forms import SchemaForm
 from .api.models import MobileUser, DeviceDB, Project, Schema
+from .api.kernel_utils import (
+    KernelPropagationError,
+    propagate_kernel_artefacts,
+    propagate_kernel_project,
+)
 
 
 class MobileUserAdmin(admin.ModelAdmin):
@@ -50,6 +55,21 @@ class DeviceDBAdmin(admin.ModelAdmin):
 
 class ProjectAdmin(admin.ModelAdmin):
 
+    def propagate(self, request, queryset):  # pragma: no cover
+        try:
+            for item in queryset:
+                propagate_kernel_project(item)
+            self.message_user(
+                request,
+                _('Propagated selected projects to Aether Kernel'),
+                level=messages.INFO
+            )
+        except KernelPropagationError as e:
+            self.message_user(request, str(e), level=messages.ERROR)
+
+    propagate.short_description = _('Propagate selected projects to Aether Kernel')
+
+    actions = ['propagate']
     list_display = (
         'project_id',
         'name',
@@ -67,6 +87,21 @@ class ProjectAdmin(admin.ModelAdmin):
 
 class SchemaAdmin(admin.ModelAdmin):
 
+    def propagate(self, request, queryset):  # pragma: no cover
+        try:
+            for item in queryset:
+                propagate_kernel_artefacts(item)
+            self.message_user(
+                request,
+                _('Propagated selected schemas to Aether Kernel'),
+                level=messages.INFO
+            )
+        except KernelPropagationError as e:
+            self.message_user(request, str(e), level=messages.ERROR)
+
+    propagate.short_description = _('Propagate selected schemas to Aether Kernel')
+
+    actions = ['propagate']
     form = SchemaForm
     list_display = (
         'id',
