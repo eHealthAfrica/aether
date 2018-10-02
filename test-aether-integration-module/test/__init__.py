@@ -65,7 +65,7 @@ def entities(client, projectschemas):
     return entities
 
 
-@pytest.fixture(scope="module")  # noqa
+@pytest.fixture(scope="function")  # noqa
 def generate_entities(client, mappingset):
     payloads = iter(fixtures.get_submission_payloads())
     entities = []

@@ -24,27 +24,28 @@ from . import *
 ####################################################################################
 
 
-def test_1_register_schemas(project):
-    assert(project['id'] is not None)  # Try to use the test mode of the wizard
+def test_1_check_fixtures(project, schemas, projectschemas, mapping, mappingset):
+    for asset in [project, mapping, mappingset]:
+        assert(asset.id is not None)
+    for sch in schemas:
+        assert(sch.id is not None)
+    for ps in projectschemas:
+        assert(ps.id is not None)
 
 
-def test_2_check_schemas(schemas):
-    assert(len(schemas) > 0)
-
-
-def test_3_generate_entities(generate_entities):
+def test_2_generate_entities(generate_entities):
     assert(len(generate_entities) == SEED_ENTITIES)
 
 
-def test_4_check_updated_count(entities):
+def test_3_check_updated_count(entities):
     assert(len(entities.get(SEED_TYPE)) >= SEED_ENTITIES)
 
 
-def test_5_check_producer_status(producer_status):
+def test_4_check_producer_status(producer_status):
     assert(producer_status > 0)
 
 
-def test_6_check_stream_entities(read_people, entities):
+def test_5_check_stream_entities(read_people, entities):
     kernel_messages = [msg.payload.get("id") for msg in entities.get(SEED_TYPE)]
     kafka_messages = [msg['id'] for msg in read_people]
     failed = []
