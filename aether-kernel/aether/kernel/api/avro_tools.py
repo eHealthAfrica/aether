@@ -343,7 +343,7 @@ def avro_schema_to_passthrough_artefacts(item_id, avro_schema):
     name = definition['name']
     fields = definition['fields']
 
-    # create identity mapping rules using the AVRO schema fields (first level)
+    # create passthrough mapping rules using the AVRO schema fields (first level)
     rules = [
         [
             '{}.{}'.format('$', f['name']),   # source

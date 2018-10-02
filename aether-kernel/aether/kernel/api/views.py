@@ -213,7 +213,7 @@ class ProjectViewSet(CustomViewSet):
                 # (projectschema entry) creating the passthrough mapping
                 "avro_schemas": [
                     {
-                        "id": "schema id (optional)",
+                        "id": "schema id (optional and shared with ALL the linked artefacts)",
                         "definition": {
                             # the avro schema
                         }
