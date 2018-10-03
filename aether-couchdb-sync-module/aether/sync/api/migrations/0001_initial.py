@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('device_id', models.TextField(unique=True)),
                 ('last_synced_date', models.DateTimeField(null=True)),
-                ('last_synced_seq', models.TextField(default=0, null=True)),
+                ('last_synced_seq', models.TextField(default='0', null=True)),
                 ('last_synced_log_message', models.TextField(null=True)),
             ],
         ),

@@ -16,6 +16,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='xform',
             name='avro_schema',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, editable=False, null=True),
+            field=django.contrib.postgres.fields.jsonb.JSONField(null=True, blank=True, editable=False),
         ),
     ]
