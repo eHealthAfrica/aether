@@ -126,9 +126,6 @@ class ViewsTest(TransactionTestCase):
         response = self.client.post(url, {'project_name': 'Aux', 'contract_id': contract_id})
         response_data = json.loads(response.content)
         self.assertGreater(len(response_data['exists']), 0)
-        self.assertIn(response_data['exists'][1]['Screening'],
-                      '{} schema with id {} exists'.format('Screening',
-                                                           contract.kernel_refs['schemas']['Screening']))
 
         original_schema = pipeline.schema
         pipeline.schema = ENTITY_SAMPLE
