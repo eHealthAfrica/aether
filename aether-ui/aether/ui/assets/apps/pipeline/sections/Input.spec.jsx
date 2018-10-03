@@ -94,43 +94,37 @@ describe('deriveMappingRules', () => {
 })
 
 describe('<IdentityMapping />', () => {
-  it('opens modal', () => {
-    const component = mountWithIntl(<input.IdentityMapping />)
-    expect(component.find(Modal).length).toEqual(0)
-    findByDataQa(component, 'input.identityMapping.btn-apply').simulate('click')
-    expect(component.find(Modal).length).toEqual(1)
-  })
-
+  const selectedPipeline = {
+    schema: {
+      type: 'record',
+      name: 'Test',
+      fields: [
+        {
+          name: 'a',
+          type: ['null', 'string']
+        }
+      ]
+    },
+    is_read_only: false
+  }
   it('triggers pipeline updates and closes modal', () => {
-    const selectedPipeline = {
-      schema: {
-        type: 'record',
-        name: 'Test',
-        fields: [
-          {
-            name: 'a',
-            type: ['null', 'string']
-          }
-        ]
-      }
-    }
-    const updatePipeline = sinon.spy()
+    const updateContract = sinon.spy()
     const component = mountWithIntl(
       <input.IdentityMapping
         selectedPipeline={selectedPipeline}
-        updatePipeline={updatePipeline}
+        updateContract={updateContract}
       />
     )
     expect(component.find(Modal).length).toEqual(0)
     findByDataQa(component, 'input.identityMapping.btn-apply').simulate('click')
     expect(component.find(Modal).length).toEqual(1)
     findByDataQa(component, 'input.identityMapping.btn-confirm').simulate('click')
-    expect(updatePipeline.callCount).toEqual(1)
+    expect(updateContract.callCount).toEqual(1)
     const {
       schema,
       mapping,
       entity_types: entityTypes
-    } = updatePipeline.args[0][0]
+    } = updateContract.args[0][0]
     expect(selectedPipeline.schema)
       .toEqual(schema)
     expect(selectedPipeline.schema.fields.length)
@@ -146,5 +140,12 @@ describe('<IdentityMapping />', () => {
     expect(entityTypes[0])
       .toEqual(selectedPipeline.schema)
     expect(component.find(Modal).length).toEqual(0)
+  })
+
+  it('opens modal', () => {
+    const component = mountWithIntl(<input.IdentityMapping selectedPipeline={selectedPipeline} />)
+    expect(component.find(Modal).length).toEqual(0)
+    findByDataQa(component, 'input.identityMapping.btn-apply').simulate('click')
+    expect(component.find(Modal).length).toEqual(1)
   })
 })

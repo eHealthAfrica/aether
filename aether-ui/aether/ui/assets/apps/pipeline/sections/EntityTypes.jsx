@@ -25,7 +25,7 @@ import avro from 'avsc'
 
 import { EntityTypeViewer } from '../../components'
 import { deepEqual } from '../../utils'
-import { updatePipeline } from '../redux'
+import { updateContract } from '../redux'
 
 class EntityTypes extends Component {
   constructor (props) {
@@ -62,7 +62,7 @@ class EntityTypes extends Component {
       // validate schemas
       const schemas = JSON.parse(this.state.entityTypesSchema)
       schemas.forEach(schema => { avro.parse(schema, { noAnonymousTypes: true }) })
-      this.props.updatePipeline({ ...this.props.selectedPipeline, entity_types: schemas })
+      this.props.updateContract({ ...this.props.selectedPipeline, entity_types: schemas })
     } catch (error) {
       this.setState({ error: error.message })
     }
@@ -118,6 +118,7 @@ class EntityTypes extends Component {
                   onChange={this.onSchemaTextChanged.bind(this)}
                   placeholder={message}
                   rows='10'
+                  disabled={this.props.selectedPipeline.is_read_only}
                 />
               )}
             </FormattedMessage>
@@ -141,4 +142,4 @@ const mapStateToProps = ({ pipelines }) => ({
   selectedPipeline: pipelines.selectedPipeline
 })
 
-export default connect(mapStateToProps, { updatePipeline })(EntityTypes)
+export default connect(mapStateToProps, { updateContract })(EntityTypes)

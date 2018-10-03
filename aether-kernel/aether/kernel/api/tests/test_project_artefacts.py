@@ -214,7 +214,7 @@ class ProjectArtefactsTests(TestCase):
         mapping = Mapping.objects.get(pk=mapping_id)
         self.assertEqual(mapping.name, 'Mapping')
         self.assertEqual(mapping.revision, '1')
-        self.assertEqual(mapping.definition, {'mappings': []})
+        self.assertEqual(mapping.definition, {'mappings': [], 'entities': {}})
 
         # the method has also created the missing mappingset
         mappingset = MappingSet.objects.get(pk=mapping_id)
@@ -239,7 +239,7 @@ class ProjectArtefactsTests(TestCase):
         mapping.refresh_from_db()
         self.assertEqual(mapping.name, 'Mapping')
         self.assertEqual(mapping.revision, '1')
-        self.assertEqual(mapping.definition, {'mappings': []})
+        self.assertEqual(mapping.definition, {'mappings': [], 'entities': {}})
 
         mappingset.refresh_from_db()
         self.assertEqual(mappingset.name, 'Mapping')
@@ -261,7 +261,7 @@ class ProjectArtefactsTests(TestCase):
         mapping.refresh_from_db()
         self.assertEqual(mapping.name, 'Mapping')
         self.assertEqual(mapping.revision, '1')
-        self.assertEqual(mapping.definition, {})
+        self.assertEqual(mapping.definition, {'mapping': [], 'entities': {}})
 
         mappingset.refresh_from_db()
         self.assertEqual(mappingset.input, {'name': 'a'})

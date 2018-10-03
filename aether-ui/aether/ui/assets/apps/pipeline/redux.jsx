@@ -23,21 +23,25 @@
 
 import { clone } from '../utils'
 import urls from '../utils/urls'
+import ApiClient from '../utils/api'
 import { PROJECT_NAME, MAX_PAGE_SIZE } from '../utils/constants'
 
 export const types = {
   PIPELINE_ADD: 'pipeline_add',
   PIPELINE_UPDATE: 'pipeline_update',
-  PIPELINE_PUBLISH_SUCCESS: 'pipeline_publish_success',
   PIPELINE_PUBLISH_ERROR: 'pipeline_publish_error',
+  PIPELINE_PUBLISH_SUCCESS: 'pipeline_publish_success',
   PIPELINE_LIST_CHANGED: 'pipeline_list_changed',
   SELECTED_PIPELINE_CHANGED: 'selected_pipeline_changed',
+  PIPELINE_BY_ID: 'pipeline_by_id',
   GET_ALL: 'pipeline_get_all',
   PIPELINE_ERROR: 'pipeline_error',
   GET_BY_ID: 'pipeline_get_by_id',
   PIPELINE_NOT_FOUND: 'pipeline_not_found',
   GET_FROM_KERNEL: 'get_from_kernel',
-  GET_FROM_KERNEL_ERROR: 'get_from_kernel_error'
+  GET_FROM_KERNEL_ERROR: 'get_from_kernel_error',
+  CONTRACT_ERROR: 'contract_error',
+  CONTRACT_ADD_FIRST: 'contract_add_first'
 }
 
 export const INITIAL_PIPELINE = {
@@ -50,6 +54,8 @@ export const INITIAL_PIPELINE = {
   isNewPipeline: false
 }
 
+let currentContractId = null
+
 export const addPipeline = ({ name }) => ({
   types: ['', types.PIPELINE_ADD, types.PIPELINE_ERROR],
   promise: client => client.post(
@@ -58,28 +64,34 @@ export const addPipeline = ({ name }) => ({
     { data: { name } })
 })
 
-export const getPipelineById = id => ({
-  types: ['', types.PIPELINE_UPDATE, types.PIPELINE_NOT_FOUND],
-  promise: client => client.get(
-    `${urls.PIPELINES_URL}${id}/`,
-    { 'Content-Type': 'application/json' }
-  )
-})
+export const getPipelineById = (pid, cid) => {
+  currentContractId = cid
+  return {
+    types: ['', types.PIPELINE_BY_ID, types.PIPELINE_NOT_FOUND],
+    promise: client => client.get(
+      `${urls.PIPELINES_URL}${pid}/`,
+      { 'Content-Type': 'application/json' }
+    )
+  }
+}
 
-export const updatePipeline = pipeline => ({
-  types: ['', types.PIPELINE_UPDATE, types.PIPELINE_ERROR],
-  promise: client => client.put(
-    `${urls.PIPELINES_URL}${pipeline.id}/`,
-    { 'Content-Type': 'application/json' },
-    { data: pipeline }
-  )
-})
+export const updatePipeline = pipeline => {
+  currentContractId = pipeline.id
+  return {
+    types: ['', types.PIPELINE_BY_ID, types.PIPELINE_ERROR],
+    promise: client => client.put(
+      `${urls.PIPELINES_URL}${pipeline.pipeline}/`,
+      { 'Content-Type': 'application/json' },
+      { data: pipeline }
+    )
+  }
+}
 
-export const publishPipeline = (id, projectName = PROJECT_NAME, overwrite = false) => ({
+export const publishPipeline = (pid, cid, projectName = PROJECT_NAME, overwrite = false, ids = {}) => ({
   types: ['', types.PIPELINE_PUBLISH_SUCCESS, types.PIPELINE_PUBLISH_ERROR],
-  promise: client => client.post(`${urls.PIPELINES_URL}${id}/publish/`,
+  promise: client => client.post(`${urls.PIPELINES_URL}${pid}/publish/`,
     { 'Content-Type': 'application/json' },
-    { data: { project_name: projectName, overwrite } }
+    { data: { project_name: projectName, overwrite, contract_id: cid, ids } }
   )
 })
 
@@ -102,6 +114,32 @@ export const fetchPipelines = () => ({
   promise: client => client.post(
     `${urls.PIPELINES_URL}fetch/?limit=${MAX_PAGE_SIZE}`,
     { 'Content-Type': 'application/json' })
+})
+
+export const updateContract = pipeline => dispatch => {
+  const client = new ApiClient()
+  client.put(
+    `${urls.CONTRACTS_URL}${pipeline.id}/`,
+    { 'Content-Type': 'application/json' },
+    { data: pipeline }
+  )
+    .then(res => {
+      contractToPipeline(res, dispatch)
+    })
+    .catch(err => {
+      dispatch({
+        type: types.CONTRACT_ERROR,
+        error: err
+      })
+    })
+}
+
+export const addInitialContract = ({ name, pipeline }) => ({
+  types: ['', types.CONTRACT_ADD_FIRST, types.CONTRACT_ERROR],
+  promise: client => client.post(
+    `${urls.CONTRACTS_URL}`,
+    { 'Content-Type': 'application/json' },
+    { data: { name, pipeline, is_active: false } })
 })
 
 const parsePipeline = (pipeline) => {
@@ -135,50 +173,88 @@ const parsePipeline = (pipeline) => {
   }
 }
 
+const pipelineTranslator = (pipeline) => {
+  const convertedPipelines = []
+  if (pipeline.contracts.length) {
+    const readOnlyMappings = pipeline.contracts.filter(x => (x.is_read_only))
+    let isInputReadOnly = false
+    if (readOnlyMappings.length) {
+      isInputReadOnly = true
+    }
+    pipeline.contracts.map(contract => {
+      convertedPipelines.push(
+        parsePipeline({
+          ...contract,
+          pipeline: pipeline.id,
+          input: pipeline.input,
+          schema: pipeline.schema,
+          mappingset: pipeline.mappingset,
+          isInputReadOnly
+        })
+      )
+    })
+  } else {
+    convertedPipelines.push(
+      {
+        pipeline: pipeline.id,
+        mapping_errors: [],
+        entity_types: [],
+        mapping: [],
+        isInputReadOnly: false,
+        ...pipeline
+      }
+    )
+  }
+  return convertedPipelines
+}
+
+const contractToPipeline = (contract, dispatch) => {
+  const client = new ApiClient()
+  client.get(contract.pipeline_url)
+    .then(res => {
+      currentContractId = contract.id
+      dispatch({
+        type: types.PIPELINE_BY_ID,
+        payload: res
+      })
+    })
+    .catch(err => {
+      dispatch({
+        type: types.CONTRACT_ERROR,
+        error: err
+      })
+    })
+}
+
 const reducer = (state = INITIAL_PIPELINE, action) => {
   const flattenPipelineContracts = pipelines => {
     let results = []
-    if (pipelines && pipelines.length) {
-      results = pipelines.map(row => (pipelineTranslator(row)))
-    }
+    pipelines.forEach(pipeline => {
+      results = [...results, ...pipelineTranslator(pipeline)]
+    })
     return results
-  }
-  const pipelineTranslator = pipeline => {
-    const firstContract = (pipeline.contracts.length && pipeline.contracts[0]) || null
-    if (firstContract !== null) {
-      pipeline.entity_types = firstContract.entity_types
-      pipeline.mapping = firstContract.mapping
-      pipeline.mapping_errors = firstContract.mapping_errors
-      pipeline.output = firstContract.output
-      pipeline.kernel_refs = firstContract.kernel_refs || {}
-      pipeline.published_on = firstContract.published_on || null
-      pipeline.contract_id = firstContract.id
-    } else {
-      pipeline.entity_types = []
-      pipeline.mapping = []
-      pipeline.mapping_errors = []
-      pipeline.output = {}
-      pipeline.kernel_refs = {}
-      pipeline.published_on = null
-      pipeline.contract_id = null
-    }
-    delete pipeline.contracts
-    return pipeline
   }
   const newPipelineList = clone(state.pipelineList)
   state = { ...state, publishError: null, publishSuccess: null, isNewPipeline: false, error: null }
   switch (action.type) {
     case types.PIPELINE_ADD: {
-      const newPipeline = parsePipeline(action.payload)
-      return { ...state, pipelineList: [pipelineTranslator(newPipeline), ...newPipelineList], selectedPipeline: newPipeline, isNewPipeline: true }
+      const newPipeline = pipelineTranslator(action.payload)
+      return { ...state, pipelineList: [...newPipeline, ...newPipelineList], selectedPipeline: action.payload, isNewPipeline: true }
     }
 
-    case types.PIPELINE_UPDATE: {
-      const updatedPipeline = parsePipeline({ ...state.selectedPipeline, ...action.payload })
-      const index = newPipelineList.findIndex(x => x.id === updatedPipeline.id)
-      newPipelineList[index] = updatedPipeline
-
-      return { ...state, pipelineList: newPipelineList, selectedPipeline: updatedPipeline }
+    case types.PIPELINE_BY_ID: {
+      const gottenPipelines = pipelineTranslator(action.payload)
+      const currentPipeline = gottenPipelines.find(x => x.id === currentContractId)
+      gottenPipelines.forEach(pipeline => {
+        const index = newPipelineList.findIndex(x => x.id === pipeline.id)
+        if (index >= 0) {
+          newPipelineList[index] = pipeline
+        } else {
+          newPipelineList.push(pipeline)
+        }
+      })
+      currentContractId = null
+      return { ...state, pipelineList: newPipelineList, selectedPipeline: currentPipeline }
     }
 
     case types.SELECTED_PIPELINE_CHANGED: {
@@ -197,22 +273,38 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
       return { ...state, notFound: action.error, selectedPipeline: null }
     }
 
-    case types.PIPELINE_PUBLISH_SUCCESS: {
-      if (action.payload.pipeline) {
-        const updatedPipeline = parsePipeline({ ...state.selectedPipeline, ...action.payload.pipeline })
-        const index = newPipelineList.findIndex(x => x.id === action.payload.pipeline.id)
-        newPipelineList[index] = updatedPipeline
-        return { ...state, publishSuccess: action.payload.successful, pipelineList: newPipelineList, selectedPipeline: updatedPipeline }
-      }
-      return { ...state, publishSuccess: action.payload.successful }
-    }
-
     case types.PIPELINE_PUBLISH_ERROR: {
       return { ...state, publishError: action.error.error }
     }
 
+    case types.PIPELINE_PUBLISH_SUCCESS: {
+      const updatedPipelines = pipelineTranslator(action.payload)
+      const currentPipeline = updatedPipelines.find(x => x.id === state.selectedPipeline.id)
+      updatedPipelines.forEach(pipeline => {
+        const index = newPipelineList.findIndex(x => x.id === pipeline.id)
+        newPipelineList[index] = pipeline
+      })
+      return { ...state, pipelineList: newPipelineList, selectedPipeline: currentPipeline, publishSuccess: true }
+    }
+
     case types.GET_FROM_KERNEL: {
       return { ...state, pipelineList: flattenPipelineContracts(action.payload) }
+    }
+
+    case types.CONTRACT_ADD_FIRST: {
+      const index = newPipelineList.findIndex(x => x.id === action.payload.pipeline)
+      let pipeline = { ...newPipelineList[index] }
+      if (pipeline) {
+        pipeline.contracts = [action.payload, ...pipeline.contracts]
+        const newPipelines = pipelineTranslator(pipeline)
+        return { ...state, pipelineList: [...newPipelines, ...newPipelineList.splice(index, 1)], selectedPipeline: newPipelines[0] || {}, isNewPipeline: true }
+      } else {
+        return { ...state, error: 'Could not find a linked pipeline' }
+      }
+    }
+
+    case types.CONTRACT_ERROR: {
+      return { ...state, error: action.error }
     }
 
     default:

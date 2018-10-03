@@ -81,7 +81,7 @@
   margin: 1rem;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: space-between;
   transition: box-shadow .5s;
 
   &:hover {
@@ -92,6 +92,15 @@
     .preview-heading {
       color: darken($hover-color, 10);
     }
+  }
+}
+
+.pipeline-readonly {
+  @include stripy($light-grey, $white);
+
+  .tag {
+    position: relative;
+    top: -.2rem;
   }
 }
 

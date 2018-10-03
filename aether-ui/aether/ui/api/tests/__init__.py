@@ -189,7 +189,11 @@ PIPELINE_EXAMPLE = {
         'years': '43'
       }
     }
-  },
+  }
+}
+
+CONTRACT_EXAMPLE = {
+  'name': 'Contract 1',
   'entity_types': [
     {
       'name': 'PersonY',
@@ -214,47 +218,8 @@ PIPELINE_EXAMPLE = {
           'type': 'string'
         },
         {
-          'name': 'screening',
-          'type': {
-            'name': 'ScreeningType',
-            'type': 'enum',
-            'symbols': [
-              'maect',
-              'catt',
-              'pg',
-              'ctcwoo',
-              'ge',
-              'pl'
-            ]
-          }
-        },
-        {
-          'name': 'location',
-          'type': {
-            'name': 'GeoLocation',
-            'type': 'record',
-            'fields': [
-              {
-                'name': 'latitude',
-                'type': 'float'
-              },
-              {
-                'name': 'longitude',
-                'type': 'float'
-              }
-            ]
-          }
-        },
-        {
-          'name': 'result',
-          'type': {
-            'name': 'Result',
-            'type': 'enum',
-            'symbols': [
-              'positive',
-              'negative'
-            ]
-          }
+          'name': 'name',
+          'type': 'string'
         }
       ]
     }
@@ -267,6 +232,14 @@ PIPELINE_EXAMPLE = {
     {
       'source': 'person.forename',
       'destination': 'PersonY.firstName'
+    },
+    {
+      'source': '#!uuid',
+      'destination': 'Screening.id'
+    },
+    {
+      'source': 'person.forename',
+      'destination': 'Screening.name'
     }
   ],
   'mapping_errors': [],
@@ -407,6 +380,15 @@ PIPELINE_EXAMPLE_WITH_MAPPING_ERRORS = {
       }
     ]
   },
+  'input': {
+    'person': {
+      'forename': 'Sejflsd Dljljkf'
+    }
+  }
+}
+
+CONTRACT_EXAMPLE_WITH_MAPPING_ERRORS = {
+  'name': 'contract with errors',
   'entity_types': [
     {
       'name': 'PersonZ',
@@ -438,10 +420,5 @@ PIPELINE_EXAMPLE_WITH_MAPPING_ERRORS = {
       'id': '0d8aebf3-50d0-4e77-a5ee-1045ffa5f29f',
       'firstName': 'Sejflsd Dljljkf'
     }
-  ],
-  'input': {
-    'person': {
-      'forename': 'Sejflsd Dljljkf'
-    }
-  }
+  ]
 }

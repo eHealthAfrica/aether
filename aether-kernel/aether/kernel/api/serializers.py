@@ -98,7 +98,7 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         read_only=True,
         view_name='mapping-detail',
     )
-    mappingset_url = serializers.HyperlinkedIdentityField(
+    mappingset_url = serializers.HyperlinkedRelatedField(
         read_only=True,
         source='mappingset',
         view_name='mappingset-detail',
