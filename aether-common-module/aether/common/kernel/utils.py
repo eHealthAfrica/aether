@@ -150,6 +150,9 @@ def submit_to_kernel(submission, submission_fk, submission_id=None):
     if submission_fk is None:
         raise errors.SubmissionError('Cannot push submission without mapping!')
 
+    if mapping_id is None:
+        raise errors.SubmissionError(_('Cannot make submission without mapping!'))
+
     if submission_id:
         # update existing doc
         method = requests.put

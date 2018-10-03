@@ -44,6 +44,7 @@ show_help () {
     start_dev     : start webserver for development
 
     health        : checks the system healthy
+    check_kernel  : checks communication with kernel
     """
 }
 
@@ -169,6 +170,10 @@ case "$1" in
 
     health )
         ./manage.py check_url --url=http://0.0.0.0:$WEB_SERVER_PORT/health
+    ;;
+
+    check_kernel )
+        ./manage.py check_url --url=$AETHER_KERNEL_URL --token=$AETHER_KERNEL_TOKEN
     ;;
 
     help )
