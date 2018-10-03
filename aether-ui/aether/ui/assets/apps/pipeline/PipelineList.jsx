@@ -116,7 +116,7 @@ class PipelineList extends Component {
           { pipeline.is_read_only &&
             <span className='tag'>
               <FormattedMessage
-                id='pipeline.navbar.input'
+                id='pipeline.read-only.indicator'
                 defaultMessage='read-only'
               />
             </span>

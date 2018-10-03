@@ -305,7 +305,7 @@ class ViewsTest(TransactionTestCase):
         self.assertEqual(len(response_data), 4)
         self.assertEqual(len(response_data[1]['contracts'][0]['entity_types']), 2)
 
-        # Ensure linked mappings are not recreated]
+        # Ensure linked mappings are not recreated
         response = self.client.post(url, content_type='application/json')
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 4)

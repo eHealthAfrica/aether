@@ -35,6 +35,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
     queryset = models.Pipeline.objects.all()
     serializer_class = serializers.PipelineSerializer
     ordering = ('name',)
+    pagination_class = None
 
     @action(methods=['post'], detail=False)
     def fetch(self, request):
@@ -42,9 +43,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
         This view gets kernel objects, transforms and loads into a pipeline
         '''
         ui_utils.kernel_to_pipeline()
-        pipelines = models.Pipeline.objects.all()
-        serialized_data = serializers.PipelineSerializer(pipelines, context={'request': request}, many=True).data
-        return Response(serialized_data, status=HTTPStatus.OK)
+        return self.list(request)
 
     @action(methods=['post'], detail=True)
     def publish(self, request, pk=None):
