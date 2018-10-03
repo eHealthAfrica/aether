@@ -82,7 +82,7 @@ class Project(ExportModelOperationsMixin('kernel_project'), TimeStampedModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
-    name = models.CharField(max_length=50, null=False, unique=True)
+    name = models.CharField(max_length=50, unique=True)
 
     salad_schema = models.TextField(null=True, blank=True)
     jsonld_context = models.TextField(null=True, blank=True)
@@ -104,7 +104,7 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), TimeStampedMod
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
-    name = models.CharField(max_length=50, null=False, unique=True)
+    name = models.CharField(max_length=50, unique=True)
 
     input = JSONField(null=True, blank=True)
 
@@ -132,12 +132,12 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedMod
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
 
-    payload = JSONField(blank=False, null=False)
+    payload = JSONField()
 
     mappingset = models.ForeignKey(to=MappingSet, on_delete=models.CASCADE)
 
     # redundant but speed up queries
-    project = models.ForeignKey(to=Project, on_delete=models.CASCADE, blank=True, null=True)
+    project = models.ForeignKey(to=Project, on_delete=models.CASCADE, null=True, blank=True)
 
     def save(self, **kwargs):
         self.project = self.mappingset.project
@@ -218,10 +218,10 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), TimeStampedModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
-    name = models.CharField(max_length=50, null=False, unique=True)
+    name = models.CharField(max_length=50, unique=True)
 
     type = models.CharField(max_length=50)
-    definition = JSONField(blank=False, null=False)
+    definition = JSONField()
 
     @property
     def definition_prettified(self):
@@ -242,7 +242,7 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), TimeStampedModel):
 class ProjectSchema(ExportModelOperationsMixin('kernel_projectschema'), TimeStampedModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    name = models.CharField(max_length=50, null=False, unique=True)
+    name = models.CharField(max_length=50, unique=True)
 
     mandatory_fields = models.TextField(null=True, blank=True)
     transport_rule = models.TextField(null=True, blank=True)
@@ -269,9 +269,9 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
-    name = models.CharField(max_length=50, null=False, unique=True)
+    name = models.CharField(max_length=50, unique=True)
 
-    definition = JSONField(blank=False, null=False)
+    definition = JSONField()
     is_active = models.BooleanField(default=True)
     is_read_only = models.BooleanField(default=False)
 
@@ -313,17 +313,17 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
 
-    payload = JSONField(blank=False, null=False)
+    payload = JSONField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
     modified = models.CharField(max_length=100, editable=False)
 
-    projectschema = models.ForeignKey(to=ProjectSchema, on_delete=models.SET_NULL, null=True)
-    submission = models.ForeignKey(to=Submission, on_delete=models.SET_NULL, blank=True, null=True)
-    mapping = models.ForeignKey(to=Mapping, on_delete=models.SET_NULL, null=True)
-    mapping_revision = models.TextField(blank=False, null=False)
+    projectschema = models.ForeignKey(to=ProjectSchema, on_delete=models.SET_NULL, null=True, blank=True)
+    submission = models.ForeignKey(to=Submission, on_delete=models.SET_NULL, null=True, blank=True)
+    mapping = models.ForeignKey(to=Mapping, on_delete=models.SET_NULL, null=True, blank=True)
+    mapping_revision = models.TextField()
 
     # redundant but speed up queries
-    project = models.ForeignKey(to=Project, on_delete=models.SET_NULL, blank=True, null=True)
+    project = models.ForeignKey(to=Project, on_delete=models.SET_NULL, null=True, blank=True)
 
     def save(self, **kwargs):
         if self.submission and self.projectschema:

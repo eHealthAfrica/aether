@@ -28,12 +28,12 @@ from .utils import validate_contract
 
 class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100, null=False, blank=False, unique=True)
+    name = models.CharField(max_length=100, unique=True)
     # this is the avro schema
-    schema = JSONField(blank=True, null=True, default={})
+    schema = JSONField(null=True, blank=True, default=dict)
 
     # this is an example of the data using the avro schema
-    input = JSONField(blank=True, null=True, default={})
+    input = JSONField(null=True, blank=True, default=dict)
 
     # this is a reference to the linked kernel mappingset
     mappingset = models.UUIDField(null=True, blank=True)
@@ -55,10 +55,10 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
 
 class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100, null=False, blank=False, unique=True)
+    name = models.CharField(max_length=100, unique=True)
 
     # the list of available entity types (avro schemas)
-    entity_types = JSONField(blank=True, null=True, default=[])
+    entity_types = JSONField(null=True, blank=True, default=list)
 
     # this represents the list of mapping rules
     # {
@@ -69,7 +69,7 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
     #      {'id': ###, 'source': 'jsonpath-input-n', 'destination: 'jsonpath-entity-type-n'},
     #    ]
     # }
-    mapping = JSONField(blank=True, null=True, default=[])
+    mapping = JSONField(null=True, blank=True, default=list)
 
     # these represent the list of entities and errors returned by the
     # `validate-mapping` endpoint in kernel.
@@ -89,10 +89,10 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
     #      }
     #    ]
     # }
-    mapping_errors = JSONField(blank=True, null=True, editable=False)
-    output = JSONField(blank=True, null=True, editable=False)
-    kernel_refs = JSONField(blank=True, null=True, editable=False)
-    published_on = models.DateTimeField(blank=True, editable=False, null=True)
+    mapping_errors = JSONField(null=True, blank=True, editable=False)
+    output = JSONField(null=True, blank=True, editable=False)
+    kernel_refs = JSONField(null=True, blank=True, editable=False)
+    published_on = models.DateTimeField(null=True, blank=True, editable=False)
     is_active = models.BooleanField(default=True)
     is_read_only = models.BooleanField(default=False)
 

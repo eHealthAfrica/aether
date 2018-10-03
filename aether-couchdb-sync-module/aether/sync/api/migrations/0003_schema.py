@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.TextField(unique=True)),
-                ('kernel_id', models.UUIDField(null=False, blank=False)),
+                ('kernel_id', models.UUIDField()),
             ],
             options={
                 'ordering': ['name'],
