@@ -20,32 +20,32 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='pipeline',
             name='entity_types',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, default=[], null=True),
+            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True, default=list),
         ),
         migrations.AddField(
             model_name='pipeline',
             name='input',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, default={}, null=True),
+            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True, default=dict),
         ),
         migrations.AddField(
             model_name='pipeline',
             name='mapping',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, default=[], null=True),
+            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True, default=list),
         ),
         migrations.AddField(
             model_name='pipeline',
             name='mapping_errors',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, editable=False, null=True),
+            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True, editable=False),
         ),
         migrations.AddField(
             model_name='pipeline',
             name='output',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, editable=False, null=True),
+            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True, editable=False),
         ),
         migrations.AddField(
             model_name='pipeline',
             name='schema',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, default={}, null=True),
+            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True, default=dict),
         ),
         migrations.AlterField(
             model_name='pipeline',

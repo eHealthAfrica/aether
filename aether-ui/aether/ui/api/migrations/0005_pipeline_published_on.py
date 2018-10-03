@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='pipeline',
             name='published_on',
-            field=models.DateTimeField(blank=True, editable=False, null=True),
+            field=models.DateTimeField(blank=True, null=True, editable=False),
         ),
     ]

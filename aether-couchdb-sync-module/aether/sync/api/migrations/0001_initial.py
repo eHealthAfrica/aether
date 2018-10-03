@@ -18,9 +18,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('device_id', models.TextField(unique=True)),
-                ('last_synced_date', models.DateTimeField(null=True)),
-                ('last_synced_seq', models.TextField(default=0, null=True)),
-                ('last_synced_log_message', models.TextField(null=True)),
+                ('last_synced_date', models.DateTimeField(blank=True, null=True)),
+                ('last_synced_seq', models.TextField(blank=True, null=True, default='0')),
+                ('last_synced_log_message', models.TextField(blank=True, null=True)),
             ],
         ),
         migrations.CreateModel(

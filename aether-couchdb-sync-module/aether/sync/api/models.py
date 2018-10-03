@@ -41,7 +41,7 @@ class Schema(ExportModelOperationsMixin('couchdbsync_schema'), models.Model):
     # else if they are linked to Mapping Sets the the mapping set id...
     # This value should be replaced every time the Kernel data model changes or
     # the relation between the App Schema and Kernel Artefact does.
-    kernel_id = models.UUIDField(null=False, blank=False)
+    kernel_id = models.UUIDField()
 
     def __str__(self):
         return self.name
@@ -86,16 +86,12 @@ class DeviceDB(ExportModelOperationsMixin('couchdbsync_devicedb'), models.Model)
     '''
 
     device_id = models.TextField(unique=True)
-    mobileuser = models.ForeignKey(
-        to=MobileUser,
-        on_delete=models.SET_NULL,
-        null=True,
-    )
+    mobileuser = models.ForeignKey(to=MobileUser, on_delete=models.SET_NULL, blank=True, null=True)
 
     # used to log the sync execution
-    last_synced_date = models.DateTimeField(null=True)
-    last_synced_seq = models.TextField(null=True, default=0)
-    last_synced_log_message = models.TextField(null=True)
+    last_synced_date = models.DateTimeField(blank=True, null=True)
+    last_synced_seq = models.TextField(blank=True, null=True, default='0')
+    last_synced_log_message = models.TextField(blank=True, null=True)
 
     @property
     def db_name(self):

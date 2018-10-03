@@ -16,6 +16,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='pipeline',
             name='kernel_refs',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, editable=False, null=True),
+            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True, editable=False),
         ),
     ]

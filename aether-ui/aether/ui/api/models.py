@@ -28,16 +28,16 @@ from .utils import validate_pipeline
 
 class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100, null=False, blank=False, unique=True)
+    name = models.CharField(max_length=100, unique=True)
 
     # this is the avro schema
-    schema = JSONField(blank=True, null=True, default={})
+    schema = JSONField(blank=True, null=True, default=dict)
 
     # this is an example of the data using the avro schema
-    input = JSONField(blank=True, null=True, default={})
+    input = JSONField(blank=True, null=True, default=dict)
 
     # the list of available entity types (avro schemas)
-    entity_types = JSONField(blank=True, null=True, default=[])
+    entity_types = JSONField(blank=True, null=True, default=list)
 
     # this represents the list of mapping rules
     # {
@@ -48,7 +48,7 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
     #      {'id': ###, 'source': 'jsonpath-input-n', 'destination: 'jsonpath-entity-type-n'},
     #    ]
     # }
-    mapping = JSONField(blank=True, null=True, default=[])
+    mapping = JSONField(blank=True, null=True, default=list)
 
     # these represent the list of entities and errors returned by the
     # `validate-mapping` endpoint in kernel.
@@ -71,7 +71,7 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
     mapping_errors = JSONField(blank=True, null=True, editable=False)
     output = JSONField(blank=True, null=True, editable=False)
     kernel_refs = JSONField(blank=True, null=True, editable=False)
-    published_on = models.DateTimeField(blank=True, editable=False, null=True)
+    published_on = models.DateTimeField(blank=True, null=True, editable=False)
 
     def __str__(self):
         return self.name

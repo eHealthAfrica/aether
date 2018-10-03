@@ -35,8 +35,8 @@ class Migration(migrations.Migration):
             name='UserTokens',
             fields=[
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, related_name='app_tokens', serialize=False, to=settings.AUTH_USER_MODEL)),
-                ('kernel_token', models.CharField(blank=True, max_length=40, null=True)),
-                ('odk_token', models.CharField(blank=True, max_length=40, null=True)),
+                ('kernel_token', models.CharField(blank=True, null=True, max_length=40)),
+                ('odk_token', models.CharField(blank=True, null=True, max_length=40)),
             ],
             options={
                 'default_related_name': 'app_tokens',
