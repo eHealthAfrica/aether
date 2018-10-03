@@ -19,15 +19,19 @@
 import os
 from setuptools import setup, find_packages
 
-# allow setup.py to be run from any path
-os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
+with open(os.path.join('/code', 'VERSION')) as version_file:
+    version = version_file.read().strip()
 
 setup(
     name='aether.client',
-    version='0.0.0',
+    version=version,
+    include_package_data=True,
     install_requires=[
-        "requests"
+        'bravado',
+        'requests'
     ],
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest'],
     packages=find_packages(),
     namespace_packages=['aether']
 )

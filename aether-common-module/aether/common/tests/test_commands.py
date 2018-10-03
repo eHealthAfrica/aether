@@ -112,6 +112,12 @@ class TestCheckUrlCommand(TestCase):
         except Exception:
             self.assertTrue(False)
 
+        try:
+            call_command('check_url', '-u=http://localhost', '-t=token-1234', stdout=self.out, stderr=self.out)
+            self.assertTrue(True)
+        except Exception:
+            self.assertTrue(False)
+
     @mock.patch('requests.head', return_value=MockRequestHeadError())
     def test__check_url__error(self, *args):
         self.assertRaises(

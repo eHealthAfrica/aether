@@ -54,6 +54,9 @@ script:
 after_script:
   - ./scripts/kill_all.sh
 
+after_failure:
+  - ./scripts/test_travis_failure.sh $TEST_MODE
+  
 # TODO: move this secured global env var to Travis settings
 env:
   global:
