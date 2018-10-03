@@ -183,7 +183,7 @@ class XForm(ExportModelOperationsMixin('odk_xform'), models.Model):
     form_id = models.TextField(default='', editable=False, verbose_name=_('xForm ID'))
     version = models.TextField(default='0', blank=True, verbose_name=_('xForm version'))
     md5sum = models.CharField(default='', editable=False, max_length=36, verbose_name=_('xForm md5sum'))
-    avro_schema = JSONField(blank=True, null=True, editable=False, verbose_name=_('AVRO schema'))
+    avro_schema = JSONField(null=True, blank=True, editable=False, verbose_name=_('AVRO schema'))
 
     @property
     def hash(self):

@@ -83,7 +83,7 @@ class Project(ExportModelOperationsMixin('kernel_project'), TimeStampedModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
-    name = models.CharField(max_length=50, null=False, unique=True)
+    name = models.CharField(max_length=50, unique=True)
 
     salad_schema = models.TextField(null=True, blank=True)
     jsonld_context = models.TextField(null=True, blank=True)
@@ -105,9 +105,9 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
-    name = models.CharField(max_length=50, null=False, unique=True)
+    name = models.CharField(max_length=50, unique=True)
 
-    definition = JSONField(blank=False, null=False)
+    definition = JSONField()
 
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
 
@@ -134,12 +134,12 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedMod
     revision = models.TextField(default='1')
 
     map_revision = models.TextField(default='1')
-    payload = JSONField(blank=False, null=False)
+    payload = JSONField()
 
     mapping = models.ForeignKey(to=Mapping, on_delete=models.CASCADE)
 
     # redundant but speed up queries
-    project = models.ForeignKey(to=Project, on_delete=models.CASCADE, blank=True, null=True)
+    project = models.ForeignKey(to=Project, on_delete=models.CASCADE, null=True, blank=True)
 
     def save(self, **kwargs):
         self.project = self.mapping.project
@@ -220,10 +220,10 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), TimeStampedModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
-    name = models.CharField(max_length=50, null=False, unique=True)
+    name = models.CharField(max_length=50, unique=True)
 
     type = models.CharField(max_length=50)
-    definition = JSONField(blank=False, null=False)
+    definition = JSONField()
 
     @property
     def definition_prettified(self):
@@ -244,7 +244,7 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), TimeStampedModel):
 class ProjectSchema(ExportModelOperationsMixin('kernel_projectschema'), TimeStampedModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    name = models.CharField(max_length=50, null=False, unique=True)
+    name = models.CharField(max_length=50, unique=True)
 
     mandatory_fields = models.TextField(null=True, blank=True)
     transport_rule = models.TextField(null=True, blank=True)
@@ -272,15 +272,15 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
 
-    payload = JSONField(blank=False, null=False)
+    payload = JSONField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
     modified = models.CharField(max_length=100, editable=False)
 
-    projectschema = models.ForeignKey(to=ProjectSchema, on_delete=models.SET_NULL, null=True)
-    submission = models.ForeignKey(to=Submission, on_delete=models.SET_NULL, blank=True, null=True)
+    projectschema = models.ForeignKey(to=ProjectSchema, on_delete=models.SET_NULL, null=True, blank=True)
+    submission = models.ForeignKey(to=Submission, on_delete=models.SET_NULL, null=True, blank=True)
 
     # redundant but speed up queries
-    project = models.ForeignKey(to=Project, on_delete=models.SET_NULL, blank=True, null=True)
+    project = models.ForeignKey(to=Project, on_delete=models.SET_NULL, null=True, blank=True)
 
     def save(self, **kwargs):
         if self.submission and self.projectschema:

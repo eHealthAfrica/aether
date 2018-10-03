@@ -156,6 +156,7 @@ class DeviceDB(ExportModelOperationsMixin('couchdbsync_devicedb'), models.Model)
     mobileuser = models.ForeignKey(
         to=MobileUser,
         on_delete=models.SET_NULL,
+        blank=True,
         null=True,
         verbose_name=_('mobile user'),
     )
