@@ -229,9 +229,11 @@ const contractToPipeline = (contract, dispatch) => {
 const reducer = (state = INITIAL_PIPELINE, action) => {
   const flattenPipelineContracts = pipelines => {
     let results = []
-    pipelines.forEach(pipeline => {
-      results = [...results, ...pipelineTranslator(pipeline)]
-    })
+    if (pipelines && pipelines.length) {
+      pipelines.forEach(pipeline => {
+        results = [...results, ...pipelineTranslator(pipeline)]
+      })
+    }
     return results
   }
   const newPipelineList = clone(state.pipelineList)
