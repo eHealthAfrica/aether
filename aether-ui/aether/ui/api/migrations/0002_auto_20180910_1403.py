@@ -16,6 +16,10 @@ def migrate_current_pipelines_to_contracts(apps, schema_editor):
         Contract = apps.get_model('ui', 'Contract')
 
         for pipeline in Pipeline.objects.all():
+            if 'schema' in pipeline.kernel_refs:
+                pipeline.kernel_refs['schemas'] = pipeline.kernel_refs['schema']
+            if 'mapping' in pipeline.kernel_refs:
+                pipeline.kernel_refs['mappings'] = pipeline.kernel_refs['mapping']
             Contract.objects.create(
                 pk=pipeline.pk,
                 name=pipeline.name,
