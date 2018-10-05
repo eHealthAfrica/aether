@@ -299,7 +299,8 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
       if (pipeline) {
         pipeline.contracts = [action.payload, ...pipeline.contracts]
         const newPipelines = pipelineTranslator(pipeline)
-        return { ...state, pipelineList: [...newPipelines, ...newPipelineList.splice(index, 1)], selectedPipeline: newPipelines[0] || {}, isNewPipeline: true }
+        const removedInitialPipeline = newPipelineList.filter(e => e !== newPipelineList[index])
+        return { ...state, pipelineList: [...newPipelines, ...removedInitialPipeline], selectedPipeline: newPipelines[0] || {}, isNewPipeline: true }
       } else {
         return { ...state, error: 'Could not find a linked pipeline' }
       }
