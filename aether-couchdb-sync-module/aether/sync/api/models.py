@@ -89,7 +89,7 @@ class Schema(ExportModelOperationsMixin('couchdbsync_schema'), models.Model):
     :ivar JSON    avro_schema: AVRO schema that represents the JSON schema used in the Mobile App.
     '''
 
-    name = models.TextField(unique=True, verbose_name=_('name'))
+    name = models.TextField(unique=True, blank=True, verbose_name=_('name'))
 
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
 
@@ -108,6 +108,12 @@ class Schema(ExportModelOperationsMixin('couchdbsync_schema'), models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.name:
+            # try to get it from the AVRO schema
+            self.name = self.avro_schema.get('name')
+        super(Schema, self).save(*args, **kwargs)
 
     class Meta:
         app_label = 'sync'

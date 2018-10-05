@@ -170,3 +170,9 @@ class ModelsTests(ApiTestCase):
 
         schema = Schema.objects.create(name=name, project=project)
         self.assertEqual(str(schema), name)
+
+        schema_2 = Schema.objects.create(
+            project=project,
+            avro_schema={'name': 'name'}
+        )
+        self.assertEqual(str(schema_2), 'name')

@@ -78,7 +78,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='schema',
             name='name',
-            field=models.TextField(unique=True, verbose_name='name'),
+            field=models.TextField(blank=True, unique=True, verbose_name='name'),
         ),
 
         migrations.AddField(

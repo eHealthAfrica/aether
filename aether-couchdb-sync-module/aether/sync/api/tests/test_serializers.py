@@ -61,7 +61,7 @@ class SerializersTests(TestCase):
             data={
                 'project': self.KERNEL_ID,
                 'kernel_id': self.KERNEL_ID,
-                'name': 'person',
+                # 'name': 'person',  # take name from AVRO schema
                 'avro_schema': AVRO_SAMPLE,
             },
             context={'request': self.request},
@@ -70,6 +70,7 @@ class SerializersTests(TestCase):
         schema.save()
 
         self.assertEqual(schema.data['avro_schema'], AVRO_SAMPLE)
+        self.assertEqual(schema.data['name'], 'Person')
 
     def test_schema_serializer__with_file(self):
         schema = SchemaSerializer(
