@@ -24,6 +24,8 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from .models import Project, Schema, ProjectSchema, Mapping, MappingSet
 
+NAME_MAX_SIZE = 50
+
 
 def get_project_artefacts(project):
     '''
@@ -75,6 +77,8 @@ def upsert_project_artefacts(
         'mappingsets': set(),
         'mappings': set(),
     }
+    # keeps the list of created project schemas and their ids
+    # with those the list of used entities in the mapping rules can be filled
     mapping_project_schemas = {}
 
     # 1. create/update the project
@@ -112,8 +116,9 @@ def upsert_project_artefacts(
                 schema=schema,
                 name=schema.name,
             )
-        mapping_project_schemas[raw_schema.get('name', project_schema.name)] = str(project_schema.pk)
         results['project_schemas'].add(str(project_schema.pk))
+        # by default use the given name, otherwise the generated one
+        mapping_project_schemas[raw_schema.get('name', project_schema.name)] = str(project_schema.pk)
 
     # 3. create/update the mapping sets
     for raw_mappingset in mappingsets:
@@ -136,14 +141,19 @@ def upsert_project_artefacts(
     # 4. create/update the mappings
     for raw_mapping in mappings:
         ignore_fields = ['name']
+        mapping_name = raw_mapping.get('name', __random_name())
+
         mapping_definition = raw_mapping.get('definition')
         if mapping_definition is None:
             # in case of no mapping rules were indicated, do not update them.
             ignore_fields.append('definition')
-            mapping_definition = {'mappings': [], 'entities': {}}
+            mapping_definition = {'mapping': [], 'entities': {}}
+
         elif 'entities' not in mapping_definition:
+            # find out the list of used entities (project schemas) within these rules
             used_schemas = []
             for mapping in mapping_definition.get('mapping', []):
+                # [ '$.property_name', 'EntityName.another_property_name' ]
                 schema_name = mapping[1].split('.')[0]
                 if not len(list(filter(lambda x: x == schema_name, used_schemas))):
                     used_schemas.append(schema_name)
@@ -154,7 +164,6 @@ def upsert_project_artefacts(
                 'mapping': mapping_definition.get('mapping', []),
                 'entities': used_mapping_project_schemas,
             }
-        mapping_name = raw_mapping.get('name', __random_name())
 
         # check for the mapping set
         mappingset_id = raw_mapping.get('mappingset', raw_mapping.get('id'))
@@ -164,7 +173,6 @@ def upsert_project_artefacts(
             mappingset = __upsert_instance(
                 model=MappingSet,
                 pk=mappingset_id,
-                ignore_fields=['name'],
                 action=action,
                 name=mapping_name,  # use same name as mapping
                 input=raw_mapping.get('input', {}),
@@ -185,6 +193,7 @@ def upsert_project_artefacts(
             project=project,
         )
         results['mappings'].add(str(mapping.pk))
+
     return results
 
 
@@ -231,11 +240,12 @@ def __upsert_instance(model, pk=None, ignore_fields=[], action='upsert', **value
         if k in fields:
             setattr(item, k, v)
 
+    # with new instances first check that the same name is not already in use
+    # otherwise append a numeric suffix or a random string to it
+    if is_new:
+        item.name = __right_pad(model, item.name)
+
     if is_new or action != 'create':
-        # with new instances first check that the same name is not there
-        # otherwise append a numeric suffix or a random string to it
-        if is_new:
-            item.name = __right_pad(model, item.name)
         item.save()
 
     item.refresh_from_db()
@@ -248,21 +258,28 @@ def __random_name():
     '''
     # Names are unique so we try to avoid annoying errors with duplicated names.
     alphanum = string.ascii_letters + string.digits
-    return ''.join([random.choice(alphanum) for x in range(50)])
+    return ''.join([random.choice(alphanum) for x in range(NAME_MAX_SIZE)])
 
 
-def __right_pad(model, value):
+def __right_pad(model, name):
     '''
-    Creates a numeric or a random string suffix for the given value
+    Creates a numeric or a random string suffix for the given name
     '''
+    SEP = '-'
+
     numeric_suffix = 0
-    new_value = value
+    new_name = name.strip()
 
-    while model.objects.filter(name=new_value[:50]).exists():
-        if len(new_value) > 50:
-            # in case of name size overflow
-            return (f'{value} - {__random_name()}')[:50]
+    while model.objects.filter(name=new_name[:NAME_MAX_SIZE]).exists():
+        if len(new_name) > NAME_MAX_SIZE:  # in case of name size overflow
+            break
         numeric_suffix += 1
-        new_value = f'{value}_{numeric_suffix}'
+        new_name = f'{name}{SEP}{numeric_suffix}'
 
-    return new_value[:50]
+    if model.objects.filter(name=new_name[:NAME_MAX_SIZE]).exists():
+        # we cannot add any suffix to the name and is already in use
+        # solution, take only a piece of the name and append a random string
+        piece = name[:(NAME_MAX_SIZE - 17)]  # 16 random chars should be enough
+        return (f'{piece}{SEP}{__random_name()}')[:NAME_MAX_SIZE]
+
+    return new_name[:NAME_MAX_SIZE]
