@@ -16,13 +16,15 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.conf.urls import url
+from rest_framework.routers import DefaultRouter
 
 from . import views
 
+router = DefaultRouter()
 
-app_name = 'sync'
+router.register('projects', views.ProjectViewSet)
+router.register('schemas', views.SchemaViewSet)
 
-urlpatterns = [
-    url(r'^signin$', view=views.signin, name='signin'),
-]
+app_name = 'api'
+
+urlpatterns = router.urls

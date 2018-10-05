@@ -24,9 +24,11 @@ from django.test import TestCase
 from spavro.schema import parse as parse_schema
 
 from aether.kernel.api.avro_tools import (
+    avro_schema_to_passthrough_artefacts as parser,
+    AvroValidationError as error,
     AvroValidationException,
     validate,
-    AvroValidationError as error,
+    NAMESPACE,
 )
 
 here = os.path.dirname(os.path.realpath(__file__))
@@ -566,3 +568,80 @@ class TestAvroValidator(TestCase):
             validate(schema, 2)
         message = str(err.exception)
         self.assertIn('Could not validate', message)
+
+
+class TestAvroTools(TestCase):
+
+    def test__avro_schema_to_passthrough_artefacts__defaults(self):
+        schema, mapping = parser(None, {'name': 'sample', 'fields': []})
+
+        self.assertIsNotNone(schema['id'])
+        # include namespace and id field
+        self.assertEqual(schema['definition'], {
+            'namespace': NAMESPACE,
+            'name': 'sample',
+            'fields': [
+                {
+                    'doc': 'UUID',
+                    'name': 'id',
+                    'type': 'string',
+                },
+            ]
+        })
+
+        self.assertEqual(mapping, {
+            'id': schema['id'],
+            'name': 'sample',
+            'definition': {
+                'entities': {'sample': schema['id']},
+                'mapping': [['#!uuid', 'sample.id']],
+            }
+        })
+
+    def test__avro_schema_to_passthrough_artefacts__non_defaults(self):
+        schema, mapping = parser('1', {
+            'name': 'sample2',
+            'namespace': 'my.namespace',
+            'fields': [
+                {
+                    'doc': 'My ID',
+                    'name': 'id',
+                    'type': 'int',
+                },
+                {
+                    'doc': 'UUID',
+                    'name': 'id2',
+                    'type': 'string',
+                },
+            ]
+        })
+
+        self.assertEqual(schema['id'], '1')
+        self.assertEqual(schema['definition'], {
+            'namespace': 'my.namespace',
+            'name': 'sample2',
+            'fields': [
+                {
+                    'doc': 'My ID',
+                    'name': 'id',
+                    'type': 'int',
+                },
+                {
+                    'doc': 'UUID',
+                    'name': 'id2',
+                    'type': 'string',
+                },
+            ]
+        })
+
+        self.assertEqual(mapping, {
+            'id': '1',
+            'name': 'sample2',
+            'definition': {
+                'entities': {'sample2': '1'},
+                'mapping': [
+                    ['$.id', 'sample2.id'],
+                    ['$.id2', 'sample2.id2'],
+                ],
+            }
+        })

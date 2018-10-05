@@ -34,7 +34,7 @@ show_help () {
     setup         : check required environment variables,
                     create/migrate database and,
                     create/update superuser using
-                        'ADMIN_USERNAME', 'ADMIN_PASSWORD'
+                        'ADMIN_USERNAME', 'ADMIN_PASSWORD', 'ADMIN_TOKEN'
 
     test          : run tests
     test_lint     : run flake8 tests
@@ -78,7 +78,7 @@ setup () {
     ./manage.py migrate --noinput
 
     # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
-    ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD
+    ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD -t=$ADMIN_TOKEN
 
     ./manage.py check_url --url=$COUCHDB_URL
 

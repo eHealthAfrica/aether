@@ -687,7 +687,6 @@ class XFormUtilsAvroTests(CustomTestCase):
 
         expected = {
             'name': 'Nested_Repeats_Test_0',
-            'namespace': 'aether.odk.xforms',
             'doc': 'nested repeats test (id: nested_repeats_test, version: 0)',
             'type': 'record',
             'fields': [
@@ -771,7 +770,6 @@ class XFormUtilsAvroTests(CustomTestCase):
 
         expected = {
             'name': 'WrongNames_0',
-            'namespace': 'aether.odk.xforms',
             'doc': 'forcing validation error (id: wrong-names, version: 0)',
             'type': 'record',
             'fields': [

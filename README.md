@@ -107,17 +107,17 @@ of the most common ones with non default values. For more info take a look at th
 
 - `DB_NAME`: `odk` Database name.
 - `WEB_SERVER_PORT`: `8002` Web server port.
-- `AETHER_KERNEL_TOKEN`: `kernel_admin_user_auth_token` Token to connect to kernel server.
+- `ADMIN_TOKEN`: `odk_admin_user_auth_token`
+  to connect to it from other modules. It's used within the start up scripts.
+- `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
 - `AETHER_KERNEL_URL`: `http://kernel:8000` Aether Kernel Server url.
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9000` Aether Kernel Testing Server url.
-- `AETHER_ODK_TOKEN`: `odk_admin_user_auth_token`
-  to connect to it from other modules. It's used within the start up scripts.
 
 #### Aether UI
 
 - `DB_NAME`: `ui` Database name.
 - `WEB_SERVER_PORT`: `8004` Web server port.
-- `AETHER_KERNEL_TOKEN`: `kernel_admin_user_auth_token` Token to connect to kernel server.
+- `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
 - `AETHER_KERNEL_URL`: `http://kernel:8000` Aether Kernel Server url.
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9000` Aether Kernel Testing Server url.
 
@@ -125,7 +125,9 @@ of the most common ones with non default values. For more info take a look at th
 
 - `DB_NAME`: `couchdb-sync` Database name.
 - `WEB_SERVER_PORT`: `8006` Web server port.
-- `AETHER_KERNEL_TOKEN`: `kernel_admin_user_auth_token` Token to connect to kernel server.
+- `ADMIN_TOKEN`: `sync_admin_user_auth_token`
+  to connect to it from other modules. It's used within the start up scripts.
+- `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
 - `AETHER_KERNEL_URL`: `http://kernel:8000` Aether Kernel Server url.
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9000` Aether Kernel Testing Server url.
 - `GOOGLE_CLIENT_ID`: `generate_it_in_your_google_developer_console`
@@ -223,8 +225,8 @@ Set the `HOSTNAME` and `CAS_SERVER_URL` environment variables if you want to
 activate the CAS integration in the app.
 See more in [Django CAS client](https://github.com/mingchen/django-cas-ng).
 
-Other options are to log in via token, via basic authentication or via the
-standard django authentication process in the admin section.
+Other options are to log in via token authentication, via basic authentication
+or via the standard django authentication.
 
 The available options depend on each container.
 
@@ -232,8 +234,8 @@ The available options depend on each container.
 
 #### Basic Authentication
 
-The communication between Aether ODK Module and ODK Collect is done via basic
-authentication.
+The communication between Aether ODK Module and ODK Collect is done via
+[basic authentication](http://www.django-rest-framework.org/api-guide/authentication/#basicauthentication).
 
 *[Return to TOC](#table-of-contents)*
 
@@ -244,7 +246,8 @@ The communication between the containers is done via
 
 In the case of `aether-odk-module`, `aether-ui` and `aether-couchdb-sync-module`
 there is a global token to connect to `aether-kernel` set in the **required**
-environment variable `AETHER_KERNEL_TOKEN`.
+environment variable `AETHER_KERNEL_TOKEN`. Take in mind that this token
+belongs to an active `aether-kernel` user but not necessarily to an admin user.
 
 *[Return to TOC](#table-of-contents)*
 
