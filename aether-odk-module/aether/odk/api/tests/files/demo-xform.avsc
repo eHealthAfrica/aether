@@ -1,6 +1,5 @@
 {
   "name": "MyTestForm_Test10",
-  "namespace": "aether.odk.xforms",
   "doc": "My Test Form (id: my-test-form, version: Test-1.0)",
   "type": "record",
   "fields": [
