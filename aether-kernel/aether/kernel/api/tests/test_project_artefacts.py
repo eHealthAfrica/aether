@@ -416,7 +416,8 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(Project.objects.count(), 1)
         self.assertEqual(Schema.objects.count(), 1)
         self.assertEqual(ProjectSchema.objects.count(), 1)
-        self.assertEqual(Mapping.objects.count(), 1)
+        self.assertEqual(MappingSet.objects.count(), 1)
+        self.assertEqual(Mapping.objects.count(), 2, 'The passthrough mapping and the empty one')
 
         schema = Schema.objects.first()
         self.assertEqual(schema.definition, {
@@ -439,6 +440,41 @@ class ProjectArtefactsTests(TestCase):
                 },
             ]
         })
+
+        there_is_passthrough = False
+        there_is_empty = False
+        for mapping in Mapping.objects.all():
+            if schema.id == mapping.id:
+                # the passthrough mapping
+                there_is_passthrough = True
+                self.assertEqual(mapping.definition, {
+                    'entities': {
+                        'Person': str(schema.id),
+                    },
+                    'mapping': [
+                        ['$.first_name', 'Person.first_name'],
+                        ['$.last_name', 'Person.last_name'],
+                        ['#!uuid', 'Person.id'],
+                    ]
+                })
+            else:
+                # the empty mapping
+                there_is_empty = True
+                self.assertEqual(mapping.definition, {'mapping': [], 'entities': {}})
+
+        self.assertTrue(there_is_passthrough)
+        self.assertTrue(there_is_empty)
+
+        # if we try again, it's not creating a new empty mapping
+        # delete both mappings
+        Mapping.objects.all().delete()
+
+        # generate again (update, not create)
+        generate_from_avro(
+            project_id=str(Project.objects.first().pk),
+            avro_schemas=[{'definition': avro_schema, 'id': str(schema.id)}],
+        )
+        self.assertEqual(Mapping.objects.count(), 1, 'Only the passthrough mapping')
 
         mapping = Mapping.objects.first()
         self.assertEqual(schema.id, mapping.id)

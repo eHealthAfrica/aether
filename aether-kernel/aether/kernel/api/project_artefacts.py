@@ -215,10 +215,20 @@ def upsert_project_with_avro_schemas(
     schemas = []
     mappings = []
 
-    for raw_schema in avro_schemas:
-        schema, mapping = parser(raw_schema.get('id'), raw_schema.get('definition'))
+    for avro_schema in avro_schemas:
+        schema, mapping = parser(avro_schema.get('id'), avro_schema.get('definition'))
         schemas.append(schema)
         mappings.append(mapping)
+
+        # Include an empty mapping if the schema is new
+        id = schema.get('id')
+        if not Schema.objects.filter(pk=id).exists():
+            mappings.append({
+                # even being the same name it's going to append the suffix `-1`
+                'name': schema.get('name'),
+                # the passthrough mapping has created a mappingset with this id
+                'mappingset': id,
+            })
 
     return upsert_project_artefacts(
         action=action,
