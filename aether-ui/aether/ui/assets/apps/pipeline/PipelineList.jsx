@@ -43,9 +43,7 @@ class PipelineList extends Component {
   }
 
   componentWillMount () {
-    if (!this.props.pipelineList.length) {
-      this.props.getPipelines()
-    }
+    this.props.getPipelines()
     this.props.fetchPipelines()
     this.props.getKernelURL()
   }

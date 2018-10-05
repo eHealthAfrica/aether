@@ -20,6 +20,8 @@ def migrate_current_pipelines_to_contracts(apps, schema_editor):
                 pipeline.kernel_refs['schemas'] = pipeline.kernel_refs['schema']
             if 'mapping' in pipeline.kernel_refs:
                 pipeline.kernel_refs['mappings'] = pipeline.kernel_refs['mapping']
+            if 'projectschema' in pipeline.kernel_refs:
+                pipeline.kernel_refs['projectschemas'] = pipeline.kernel_refs['projectschema']
             Contract.objects.create(
                 pk=pipeline.pk,
                 name=pipeline.name,
