@@ -63,7 +63,7 @@ cat <<STOP
 # ------------------------------------------------------------------
 # Platform Versioning
 # ==================================================================
-VERSION=$( cat "VERSION")
+VERSION=$( cat "VERSION" )
 # ------------------------------------------------------------------
 
 
@@ -105,13 +105,14 @@ ODK_DB_PASSWORD=$(gen_random_string)
 # ==================================================================
 COUCHDB_SYNC_ADMIN_USERNAME=admin
 COUCHDB_SYNC_ADMIN_PASSWORD=$(gen_random_string)
+COUCHDB_SYNC_ADMIN_TOKEN=$(gen_random_string)
 COUCHDB_SYNC_DJANGO_SECRET_KEY=$(gen_random_string)
 COUCHDB_SYNC_DB_PASSWORD=$(gen_random_string)
 STOP
 if [[ ${#COUCHDB_SYNC_GOOGLE_CLIENT_ID} > 0 ]]; then
 echo COUCHDB_SYNC_GOOGLE_CLIENT_ID=${COUCHDB_SYNC_GOOGLE_CLIENT_ID}
 fi
-cat <<EOF    
+cat <<EOF
 # ------------------------------------------------------------------
 
 

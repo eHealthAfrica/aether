@@ -25,7 +25,7 @@ from aether.common.kernel import utils as kernel_utils
 
 from ...couchdb import api as couchdb
 from ..couchdb_helpers import create_db
-from ..models import DeviceDB, Schema
+from ..models import DeviceDB, Project, Schema
 
 from ..couchdb_sync import (
     get_meta_doc,
@@ -55,63 +55,34 @@ class CouchDbSyncTestCase(TestCase):
 
         # use same ID for all artefacts
         self.KERNEL_ID = str(uuid.uuid4())
-
         self.KERNEL_URL = kernel_utils.get_kernel_server_url()
-        artefacts_url = f'{self.KERNEL_URL}/projects/{self.KERNEL_ID}/artefacts/'
-        artefacts = {
-            'action': 'create',
-            'name': 'CouchDB-Sync module TEST',
-            'schemas': [
-                {
-                    'id': self.KERNEL_ID,
-                    'name': 'CouchDB-Sync TEST - Person',
-                    'definition': {
-                        'name': 'Person',
-                        'type': 'record',
-                        'fields': [
-                            {
-                                'name': 'id',
-                                'type': 'string',
-                            },
-                            {
-                                'name': 'firstName',
-                                'type': ['null', 'string'],
-                            },
-                            {
-                                'name': 'familyName',
-                                'type': ['null', 'string'],
-                            }
-                        ]
-                    },
-                    'type': 'record',
-                },
-            ],
-            'mappings': [
-                {
-                    'id': self.KERNEL_ID,
-                    'name': 'CouchDB-Sync TEST - Mapping',
-                    'definition': {
-                        'entities': {
-                            'Person': self.KERNEL_ID,
-                        },
-                        'mapping': [
-                            ['#!uuid', 'Person.id'],
-                            ['firstname', 'Person.firstName'],
-                            ['lastname', 'Person.familyName'],
-                        ],
-                    },
-                },
-            ],
-        }
-
-        response = requests.patch(artefacts_url, json=artefacts, headers=headers_testing)
-        response.raise_for_status()
-
-        # create the schema relation with Aether Kernel
         self.SCHEMA_NAME = 'example'
+
         Schema.objects.create(
             name=self.SCHEMA_NAME,
             kernel_id=self.KERNEL_ID,
+            project=Project.objects.create(
+                name=self.SCHEMA_NAME,
+                project_id=self.KERNEL_ID,
+            ),
+            avro_schema={
+                'name': 'Person',
+                'type': 'record',
+                'fields': [
+                    {
+                        'name': 'id',
+                        'type': 'string',
+                    },
+                    {
+                        'name': 'firstName',
+                        'type': ['null', 'string'],
+                    },
+                    {
+                        'name': 'familyName',
+                        'type': ['null', 'string'],
+                    }
+                ]
+            }
         )
 
         # An example document, which will eventually be submitted as `payload`

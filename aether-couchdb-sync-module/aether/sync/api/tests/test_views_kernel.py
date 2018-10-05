@@ -16,16 +16,18 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import uuid
 import mock
 
 from django.contrib.auth import get_user_model
+from django.test import TestCase
 from django.urls import reverse
 
-from . import CustomTestCase
 from ..kernel_utils import KernelPropagationError
+from ..models import Project, Schema
 
 
-class KernelViewsTests(CustomTestCase):
+class KernelViewsTests(TestCase):
 
     def setUp(self):
         super(KernelViewsTests, self).setUp()
@@ -41,40 +43,44 @@ class KernelViewsTests(CustomTestCase):
         self.client.logout()
 
     def test__project_propagation(self):
-        url_404 = reverse('project-propagate', kwargs={'pk': self.helper_create_uuid()})
+        url_404 = reverse('api:project-propagate', kwargs={'pk': uuid.uuid4()})
         response = self.client.patch(url_404)
         self.assertEqual(response.status_code, 404)
 
-        project = self.helper_create_project()
-        url = reverse('project-propagate', kwargs={'pk': project.pk})
+        project = Project.objects.create(name='sample')
+        url = reverse('api:project-propagate', kwargs={'pk': project.pk})
 
-        with mock.patch('aether.odk.api.views.propagate_kernel_project',
+        with mock.patch('aether.sync.api.views.propagate_kernel_project',
                         return_value=True) as mock_kernel:
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 200)
             mock_kernel.assert_called_once()
 
-        with mock.patch('aether.odk.api.views.propagate_kernel_project',
+        with mock.patch('aether.sync.api.views.propagate_kernel_project',
                         side_effect=[KernelPropagationError]) as mock_kernel:
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 400)
             mock_kernel.assert_called_once()
 
-    def test__xform_propagation(self):
-        url_404 = reverse('xform-propagate', kwargs={'pk': 0})
+    def test__schema_propagation(self):
+        url_404 = reverse('api:schema-propagate', kwargs={'pk': 0})
         response = self.client.patch(url_404)
         self.assertEqual(response.status_code, 404)
 
-        xform = self.helper_create_xform()
-        url = reverse('xform-propagate', kwargs={'pk': xform.pk})
+        schema = Schema.objects.create(
+            name='sample',
+            project=Project.objects.create(name='sample'),
+            avro_schema={},
+        )
+        url = reverse('api:schema-propagate', kwargs={'pk': schema.pk})
 
-        with mock.patch('aether.odk.api.views.propagate_kernel_artefacts',
+        with mock.patch('aether.sync.api.views.propagate_kernel_artefacts',
                         return_value=True) as mock_kernel:
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 200)
             mock_kernel.assert_called_once()
 
-        with mock.patch('aether.odk.api.views.propagate_kernel_artefacts',
+        with mock.patch('aether.sync.api.views.propagate_kernel_artefacts',
                         side_effect=[KernelPropagationError]) as mock_kernel:
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 400)

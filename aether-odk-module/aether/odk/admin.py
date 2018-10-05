@@ -18,15 +18,35 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.utils.translation import ugettext as _
 
 from .api.models import Project, XForm, MediaFile
 from .api.forms import ProjectForm, XFormForm
+from .api.kernel_utils import (
+    KernelPropagationError,
+    propagate_kernel_artefacts,
+    propagate_kernel_project,
+)
 
 
 class ProjectAdmin(admin.ModelAdmin):
 
+    def propagate(self, request, queryset):  # pragma: no cover
+        try:
+            for item in queryset:
+                propagate_kernel_project(item)
+            self.message_user(
+                request,
+                _('Propagated selected projects to Aether Kernel'),
+                level=messages.INFO
+            )
+        except KernelPropagationError as e:
+            self.message_user(request, str(e), level=messages.ERROR)
+
+    propagate.short_description = _('Propagate selected projects to Aether Kernel')
+
+    actions = ['propagate']
     form = ProjectForm
     list_display = (
         'project_id',
@@ -52,6 +72,21 @@ class ProjectAdmin(admin.ModelAdmin):
 
 class XFormAdmin(admin.ModelAdmin):
 
+    def propagate(self, request, queryset):  # pragma: no cover
+        try:
+            for item in queryset:
+                propagate_kernel_artefacts(item)
+            self.message_user(
+                request,
+                _('Propagated selected xForms to Aether Kernel'),
+                level=messages.INFO
+            )
+        except KernelPropagationError as e:
+            self.message_user(request, str(e), level=messages.ERROR)
+
+    propagate.short_description = _('Propagate selected xForms to Aether Kernel')
+
+    actions = ['propagate']
     form = XFormForm
     list_display = (
         'id',
