@@ -18,7 +18,6 @@
 
 import uuid
 
-from django.db.utils import IntegrityError
 from django.test import TestCase
 
 from ..models import Project, Schema, ProjectSchema, Mapping, MappingSet
@@ -61,7 +60,7 @@ class ProjectArtefactsTests(TestCase):
 
         # creates with foreign keys
         mappingset_0 = upsert(MappingSet, pk=None, ignore_fields=[],
-                              name='Mappingset None', project=project_1, input=[])
+                              name='Mappingset None', project=project_1, input={})
 
         self.assertIsNotNone(mappingset_0)
         self.assertIsNotNone(mappingset_0.pk)
@@ -214,7 +213,7 @@ class ProjectArtefactsTests(TestCase):
         mapping = Mapping.objects.get(pk=mapping_id)
         self.assertEqual(mapping.name, 'Mapping')
         self.assertEqual(mapping.revision, '1')
-        self.assertEqual(mapping.definition, {'mappings': [], 'entities': {}})
+        self.assertEqual(mapping.definition, {'mapping': [], 'entities': {}})
 
         # the method has also created the missing mappingset
         mappingset = MappingSet.objects.get(pk=mapping_id)
@@ -239,7 +238,7 @@ class ProjectArtefactsTests(TestCase):
         mapping.refresh_from_db()
         self.assertEqual(mapping.name, 'Mapping')
         self.assertEqual(mapping.revision, '1')
-        self.assertEqual(mapping.definition, {'mappings': [], 'entities': {}})
+        self.assertEqual(mapping.definition, {'mapping': [], 'entities': {}})
 
         mappingset.refresh_from_db()
         self.assertEqual(mappingset.name, 'Mapping')
@@ -282,6 +281,57 @@ class ProjectArtefactsTests(TestCase):
         self.assertNotEqual(results_4, results_retrieve,
                             'only returns the affected ids NEVER ALL OF THEM')
 
+        # mapping with rules indicating the entities
+        generate(
+            project_id=project.pk,
+            project_name=project.name,
+            schemas=[
+                {'name': 'Person', 'definition': {}},
+                {'name': 'Contact', 'definition': {}},
+            ],
+            mappings=[
+                {
+                    'id': mapping_id,
+                    'definition': {
+                        'mapping': [
+                            ['$.id', 'Person.id'],
+                            ['$.name', 'Person.name'],
+                            ['$.id', 'Contact.id'],
+                        ],
+                        'entities': {}
+                    }
+                },
+            ]
+        )
+        mapping.refresh_from_db()
+        self.assertEqual(mapping.definition['entities'], {})
+
+        # mapping with rules but without indicating the entities
+        generate(
+            project_id=project.pk,
+            project_name=project.name,
+            schemas=[
+                {'name': 'Person', 'definition': {}},
+                {'name': 'Contact', 'definition': {}},
+            ],
+            mappings=[
+                {
+                    'id': mapping_id,
+                    'definition': {
+                        'mapping': [
+                            ['$.id', 'Person.id'],
+                            ['$.name', 'Person.name'],
+                            ['$.id', 'Contact.id'],
+                        ]
+                    }
+                },
+            ]
+        )
+        mapping.refresh_from_db()
+        self.assertNotEqual(mapping.definition['entities'], {})
+        self.assertIn('Person', mapping.definition['entities'])
+        self.assertIn('Contact', mapping.definition['entities'])
+
     def test__upsert_project_artefacts__duplicated_name(self):
         PROJECT_NAME = 'Project'
         new_project = Project.objects.create(name=PROJECT_NAME)
@@ -295,7 +345,7 @@ class ProjectArtefactsTests(TestCase):
         )
         self.assertEqual(Project.objects.filter(pk=project_id_2).count(), 1)
         project_2 = Project.objects.get(pk=project_id_2)
-        self.assertEqual(PROJECT_NAME + '_1', project_2.name)
+        self.assertEqual(PROJECT_NAME + '-1', project_2.name)
 
         # once again
         project_id_3 = str(uuid.uuid4())
@@ -307,9 +357,9 @@ class ProjectArtefactsTests(TestCase):
         )
         self.assertEqual(Project.objects.filter(pk=project_id_3).count(), 1)
         project_3 = Project.objects.get(pk=project_id_3)
-        self.assertEqual(PROJECT_NAME + '_2', project_3.name)
+        self.assertEqual(PROJECT_NAME + '-2', project_3.name)
 
-    def test__upsert_project_artefacts__atomicity(self):
+    def test__upsert_project_artefacts__long_name(self):
         new_project = Project.objects.create(name='Project')
         project_id = str(uuid.uuid4())
         self.assertNotEqual(str(new_project.pk), project_id)
@@ -319,17 +369,24 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(Schema.objects.all().count(), 0)
         # we cannot append more chars to the name, its length is already 50
         name_50 = 'Schema_0123456789_0123456789_0123456789_0123456789'
-        with self.assertRaises(IntegrityError) as ies:
-            generate(
-                project_id=project_id,
-                project_name='Project',    # in use but will append `_1` to it.
-                schemas=[
-                    {'name': name_50},     # this will be created
-                    {'name': name_50},     # but this one will complain
-                ]
-            )
-        self.assertIsNotNone(ies)
-        self.assertIn(f'DETAIL:  Key (name)=({name_50}) already exists.', str(ies.exception))
-        # all the actions are reverted
-        self.assertEqual(Project.objects.filter(pk=project_id).count(), 0)
-        self.assertEqual(Schema.objects.all().count(), 0)
+        schema_1_id = str(uuid.uuid4())
+        schema_2_id = str(uuid.uuid4())
+        generate(
+            project_id=project_id,
+            project_name='Project',    # in use but will append `-1` to it.
+            schemas=[
+                {'id': schema_1_id, 'name': name_50},  # this will be created with the given name
+                {'id': schema_2_id, 'name': name_50},  # this will be created with another name
+            ]
+        )
+        project_2 = Project.objects.get(pk=project_id)
+        self.assertEqual('Project-1', project_2.name)
+
+        schema_1 = Schema.objects.get(pk=schema_1_id)
+        self.assertEqual(schema_1.name, name_50)
+
+        schema_2 = Schema.objects.get(pk=schema_2_id)
+        self.assertNotEqual(schema_2.name, name_50)
+        self.assertEqual(schema_2.name[:33], name_50[:33])
+        self.assertEqual(schema_2.name[33], '-')
+        self.assertNotEqual(schema_2.name[34:], name_50[34:])
