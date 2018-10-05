@@ -25,6 +25,7 @@ from ..models import Project, Schema, ProjectSchema, Mapping
 from ..project_artefacts import (
     get_project_artefacts as retrieve,
     upsert_project_artefacts as generate,
+    upsert_project_with_avro_schemas as generate_from_avro,
     __upsert_instance as upsert,
 )
 
@@ -297,3 +298,64 @@ class ProjectArtefactsTests(TestCase):
         # all the actions are reverted
         self.assertEqual(Project.objects.filter(pk=project_id).count(), 0)
         self.assertEqual(Schema.objects.all().count(), 0)
+
+    def test__upsert_project_with_avro_schemas(self):
+        self.assertEqual(Project.objects.count(), 0)
+        self.assertEqual(Schema.objects.count(), 0)
+
+        avro_schema = {
+            'name': 'Person',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'first_name',
+                    'type': 'string',
+                },
+                {
+                    'name': 'last_name',
+                    'type': 'string',
+                },
+            ]
+        }
+
+        generate_from_avro(avro_schemas=[{'definition': avro_schema}])
+
+        self.assertEqual(Project.objects.count(), 1)
+        self.assertEqual(Schema.objects.count(), 1)
+        self.assertEqual(ProjectSchema.objects.count(), 1)
+        self.assertEqual(Mapping.objects.count(), 1)
+
+        schema = Schema.objects.first()
+        self.assertEqual(schema.definition, {
+            'namespace': 'org.ehealthafrica.aether',
+            'name': 'Person',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'first_name',
+                    'type': 'string',
+                },
+                {
+                    'name': 'last_name',
+                    'type': 'string',
+                },
+                {
+                    'doc': 'UUID',
+                    'name': 'id',
+                    'type': 'string',
+                },
+            ]
+        })
+
+        mapping = Mapping.objects.first()
+        self.assertEqual(schema.id, mapping.id)
+        self.assertEqual(mapping.definition, {
+            'entities': {
+                'Person': str(schema.id),
+            },
+            'mapping': [
+                ['$.first_name', 'Person.first_name'],
+                ['$.last_name', 'Person.last_name'],
+                ['#!uuid', 'Person.id'],
+            ]
+        })

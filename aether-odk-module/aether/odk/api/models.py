@@ -71,7 +71,6 @@ class Project(ExportModelOperationsMixin('odk_project'), models.Model):
     Database link of an Aether Kernel Project
 
     The needed and common data is stored here, like the list of granted surveyors.
-
     '''
 
     # This is needed to submit data to kernel
@@ -303,7 +302,6 @@ def __media_path__(instance, filename):
 class MediaFile(ExportModelOperationsMixin('odk_mediafile'), models.Model):
     '''
     Database representation of a media file linked to an XForm
-
     '''
 
     xform = models.ForeignKey(to=XForm, on_delete=models.CASCADE, verbose_name=_('xForm'))

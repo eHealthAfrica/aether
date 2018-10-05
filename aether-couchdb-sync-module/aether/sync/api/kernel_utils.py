@@ -16,12 +16,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import copy
 import requests
 
 from django.utils.translation import ugettext as _
 
 from aether.common.kernel.utils import get_auth_header, get_kernel_server_url
+
+from ..errors import KernelPropagationError
+
 
 # list of messages that can be translated
 MSG_KERNEL_CONNECTION_ERR = _(
@@ -32,12 +34,6 @@ MSG_KERNEL_RESPONSE_ERR = _(
     'while trying to create/update the project artefacts "{project_id}".\n'
     'Response: {content}'
 )
-
-NAMESPACE = 'org.ehealthafrica.aether.odk.xforms'
-
-
-class KernelPropagationError(Exception):
-    pass
 
 
 def propagate_kernel_project(project):
@@ -58,8 +54,8 @@ def propagate_kernel_project(project):
         'avro_schemas': [],
     }
 
-    for xform in project.xforms.order_by('-modified_at'):
-        artefacts['avro_schemas'].append(__parse_xform(xform))
+    for schema in project.schemas.order_by('name'):
+        artefacts['avro_schemas'].append(__parse_schema(schema))
 
     __upsert_kernel_artefacts(project, artefacts)
 
@@ -67,20 +63,20 @@ def propagate_kernel_project(project):
     return True
 
 
-def propagate_kernel_artefacts(xform):
+def propagate_kernel_artefacts(schema):
     '''
-    Creates/updates artefacts based on the indicated xForm in Aether Kernel.
+    Creates/updates artefacts based on the indicated Schema in Aether Kernel.
     '''
 
     artefacts = {
         'action': 'create',
-        'name': xform.project.name,
-        'avro_schemas': [__parse_xform(xform)],
+        'name': schema.project.name,
+        'avro_schemas': [__parse_schema(schema)],
     }
 
-    __upsert_kernel_artefacts(xform.project, artefacts)
+    __upsert_kernel_artefacts(schema.project, artefacts)
 
-    # indicates that the xform linked artefacts are in Kernel
+    # indicates that the schema linked artefacts are in Kernel
     return True
 
 
@@ -108,21 +104,8 @@ def __upsert_kernel_artefacts(project, artefacts={}):
     return True
 
 
-def __parse_xform(xform):
-    definition = copy.deepcopy(xform.avro_schema)
-    # assign namespace based on project name
-    definition['namespace'] = f'{NAMESPACE}.{__clean_name(xform.project.name)}'
-
+def __parse_schema(schema):
     return {
-        'id': str(xform.kernel_id),
-        'definition': definition,
+        'id': str(schema.kernel_id),
+        'definition': schema.avro_schema,
     }
-
-
-def __clean_name(value):
-    '''
-    Replaces any non alphanumeric character with spaces
-    Converts to title case
-    Removes spaces
-    '''
-    return ''.join([c if c.isalnum() else ' ' for c in value]).title().replace(' ', '')

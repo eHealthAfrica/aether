@@ -22,7 +22,7 @@ set -Eeuo pipefail
 
 case "$1" in
     kubernetes)
-        
+
     ;;
 
     integration)
@@ -32,5 +32,4 @@ case "$1" in
     all)
         docker-compose -f docker-compose-test.yml logs -t --tail="all"
     ;;
-
 esac

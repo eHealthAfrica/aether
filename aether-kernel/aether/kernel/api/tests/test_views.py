@@ -635,6 +635,24 @@ class ViewsTest(TestCase):
             'project': project_id, 'schemas': [], 'project_schemas': [], 'mappings': []
         })
 
+    def test_project__avro_schemas__endpoints(self):
+        self.assertEqual(reverse('project-avro-schemas', kwargs={'pk': 1}), '/projects/1/avro-schemas/')
+
+        project_id = str(uuid.uuid4())
+        url = reverse('project-avro-schemas', kwargs={'pk': project_id})
+
+        # create project and artefacts
+        response_patch = self.client.patch(
+            url,
+            json.dumps({'name': f'Project {project_id}'}),
+            content_type='application/json'
+        ).json()
+        self.assertEqual(response_patch, {
+            'project': project_id, 'schemas': [], 'project_schemas': [], 'mappings': []
+        })
+        project = models.Project.objects.get(pk=project_id)
+        self.assertEqual(project.name, f'Project {project_id}')
+
     def test_schema_validate_definition__success(self):
         view_name = 'schema-list'
         url = reverse(view_name)

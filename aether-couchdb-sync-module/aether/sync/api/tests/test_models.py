@@ -22,7 +22,7 @@ from django.db import IntegrityError
 from ...couchdb import api
 from . import ApiTestCase
 from .. import couchdb_helpers
-from ..models import MobileUser, DeviceDB, Schema
+from ..models import MobileUser, DeviceDB, Project, Schema
 
 
 class ModelsTests(ApiTestCase):
@@ -161,9 +161,18 @@ class ModelsTests(ApiTestCase):
 
         self.assertEqual(devicedb.db_name, db_name)
 
-    def test_schema_create(self):
+    def test_project_and_schema_create(self):
         name = 'village'
         id = uuid.uuid4()
 
-        schema = Schema.objects.create(name=name, kernel_id=id)
+        project = Project.objects.create(name=name, project_id=id)
+        self.assertEqual(str(project), f'{id} - {name}')
+
+        schema = Schema.objects.create(name=name, project=project)
         self.assertEqual(str(schema), name)
+
+        schema_2 = Schema.objects.create(
+            project=project,
+            avro_schema={'name': 'name'}
+        )
+        self.assertEqual(str(schema_2), 'name')

@@ -121,7 +121,7 @@ services:
     ports:
       - "8000:8000"
     command: start_dev
-    
+
 
   # ---------------------------------
   # ODK module
@@ -199,6 +199,7 @@ services:
 
       ADMIN_USERNAME: ${COUCHDB_SYNC_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${COUCHDB_SYNC_ADMIN_PASSWORD}
+      ADMIN_TOKEN: ${COUCHDB_SYNC_ADMIN_TOKEN}
 
       AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
       AETHER_KERNEL_URL: http://kernel:8000

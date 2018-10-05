@@ -25,12 +25,17 @@ from spavro.schema import parse as parse_schema
 
 from . import EXAMPLE_SCHEMA
 from aether.kernel.api.avro_tools import (
+    # used in validation tests
+    AvroValidationError as error,
     AvroValidationException,
     validate,
-    AvroValidationError as error,
+    # used in passthrough tests
+    NAMESPACE,
+    avro_schema_to_passthrough_artefacts as parser,
+    # used in extractor tests
     is_nullable,
     __is_leaf as is_leaf,
-    extract_jsonpaths_and_docs as extract
+    extract_jsonpaths_and_docs as extract,
 )
 
 here = os.path.dirname(os.path.realpath(__file__))
@@ -570,6 +575,83 @@ class TestAvroValidator(TestCase):
             validate(schema, 2)
         message = str(err.exception)
         self.assertIn('Could not validate', message)
+
+
+class TestAvroTools(TestCase):
+
+    def test__avro_schema_to_passthrough_artefacts__defaults(self):
+        schema, mapping = parser(None, {'name': 'sample', 'fields': []})
+
+        self.assertIsNotNone(schema['id'])
+        # include namespace and id field
+        self.assertEqual(schema['definition'], {
+            'namespace': NAMESPACE,
+            'name': 'sample',
+            'fields': [
+                {
+                    'doc': 'UUID',
+                    'name': 'id',
+                    'type': 'string',
+                },
+            ]
+        })
+
+        self.assertEqual(mapping, {
+            'id': schema['id'],
+            'name': 'sample',
+            'definition': {
+                'entities': {'sample': schema['id']},
+                'mapping': [['#!uuid', 'sample.id']],
+            }
+        })
+
+    def test__avro_schema_to_passthrough_artefacts__non_defaults(self):
+        schema, mapping = parser('1', {
+            'name': 'sample2',
+            'namespace': 'my.namespace',
+            'fields': [
+                {
+                    'doc': 'My ID',
+                    'name': 'id',
+                    'type': 'int',
+                },
+                {
+                    'doc': 'UUID',
+                    'name': 'id2',
+                    'type': 'string',
+                },
+            ]
+        })
+
+        self.assertEqual(schema['id'], '1')
+        self.assertEqual(schema['definition'], {
+            'namespace': 'my.namespace',
+            'name': 'sample2',
+            'fields': [
+                {
+                    'doc': 'My ID',
+                    'name': 'id',
+                    'type': 'int',
+                },
+                {
+                    'doc': 'UUID',
+                    'name': 'id2',
+                    'type': 'string',
+                },
+            ]
+        })
+
+        self.assertEqual(mapping, {
+            'id': '1',
+            'name': 'sample2',
+            'definition': {
+                'entities': {'sample2': '1'},
+                'mapping': [
+                    ['$.id', 'sample2.id'],
+                    ['$.id2', 'sample2.id2'],
+                ],
+            }
+        })
 
 
 class TestAvroExtractor(TestCase):

@@ -120,7 +120,6 @@ services:
       REDIS_HOST: redis-test
       TESTING: "true"
       WEB_SERVER_PORT: 9006
-      GOOGLE_CLIENT_ID: secret_google_client_id
     ports:
       - "9006:9006"
     command: start

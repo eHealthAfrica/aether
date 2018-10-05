@@ -20,18 +20,30 @@ import json
 import mock
 import requests
 
+from django.test import TestCase
+
 from aether.common.kernel.utils import get_auth_header, get_kernel_server_url
 
-from . import CustomTestCase, MockResponse
 from ..kernel_utils import (
     propagate_kernel_project,
     propagate_kernel_artefacts,
     KernelPropagationError,
     __upsert_kernel_artefacts as upsert_kernel,
 )
+from ..models import Project, Schema
 
 
-class KernelUtilsTest(CustomTestCase):
+class MockResponse:
+    def __init__(self, status_code, json_data=None):
+        self.json_data = json_data
+        self.status_code = status_code
+        self.content = json.dumps(json_data).encode('utf-8')
+
+    def json(self):
+        return self.json_data
+
+
+class KernelUtilsTest(TestCase):
 
     def setUp(self):
         super(KernelUtilsTest, self).setUp()
@@ -39,20 +51,31 @@ class KernelUtilsTest(CustomTestCase):
         self.kernel_url = get_kernel_server_url()
 
         # create project entry
-        self.project = self.helper_create_project()
+        self.project = Project.objects.create(name='sample')
 
-        # create xForm entries
-        self.xform_1 = self.helper_create_xform(
-            project_id=self.project.project_id,
-            xml_data=self.samples['xform']['xml-ok'],     # this form does not have any "id"
+        # create schemas entries
+        self.schema_1 = Schema.objects.create(
+            name='no-id',
+            project=self.project,
+            avro_schema={
+                'name': 'NoId',
+                'type': 'record',
+                'fields': [],
+            },
         )
-        self.xform_2 = self.helper_create_xform(
-            project_id=self.project.project_id,
-            xml_data=self.samples['xform']['xml-ok-id'],  # this form does have an "id"
+        self.schema_2 = Schema.objects.create(
+            name='id',
+            project=self.project,
+            avro_schema={
+                'namespace': 'my.name.space',
+                'name': 'Id',
+                'type': 'record',
+                'fields': [{'name': 'id', 'type': 'string'}],
+            },
         )
 
-        self.KERNEL_ID_1 = str(self.xform_1.kernel_id)
-        self.KERNEL_ID_2 = str(self.xform_2.kernel_id)
+        self.KERNEL_ID_1 = str(self.schema_1.kernel_id)
+        self.KERNEL_ID_2 = str(self.schema_2.kernel_id)
 
         self.KERNEL_HEADERS = get_auth_header()
         self.PROJECT_URL = f'{self.kernel_url}/projects/{str(self.project.project_id)}/'
@@ -86,7 +109,7 @@ class KernelUtilsTest(CustomTestCase):
         requests.delete(self.SCHEMA_URL_2, headers=self.KERNEL_HEADERS)
 
     @mock.patch('requests.patch', return_value=MockResponse(status_code=400))
-    @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value=None)
+    @mock.patch('aether.sync.api.kernel_utils.get_auth_header', return_value=None)
     def test__upsert_kernel_artefacts__no_connection(self, mock_auth, mock_patch):
         with self.assertRaises(KernelPropagationError) as kpe:
             upsert_kernel(
@@ -101,7 +124,7 @@ class KernelUtilsTest(CustomTestCase):
         mock_patch.assert_not_called()
 
     @mock.patch('requests.patch', return_value=MockResponse(status_code=400))
-    @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value={
+    @mock.patch('aether.sync.api.kernel_utils.get_auth_header', return_value={
         'Authorization': 'Token ABCDEFGH'
     })
     def test__upsert_kernel_artefacts__unexpected_error(self, mock_auth, mock_patch):
@@ -125,7 +148,7 @@ class KernelUtilsTest(CustomTestCase):
         )
 
     @mock.patch('requests.patch', return_value=MockResponse(status_code=200))
-    @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value={
+    @mock.patch('aether.sync.api.kernel_utils.get_auth_header', return_value={
         'Authorization': 'Token ABCDEFGH'
     })
     def test__upsert_kernel_artefacts__ok(self, mock_auth, mock_patch):
@@ -151,7 +174,7 @@ class KernelUtilsTest(CustomTestCase):
         self.assertEqual(kernel_project['id'], str(self.project.project_id))
         self.assertIn(self.project.name, kernel_project['name'])
 
-        # creates the artefacts for the xForm 1
+        # creates the artefacts for the schema 1
         response = requests.get(self.MAPPING_URL_1, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 200)
         kernel_mapping_1 = json.loads(response.content.decode('utf-8'))
@@ -164,7 +187,7 @@ class KernelUtilsTest(CustomTestCase):
         kernel_schema_1 = json.loads(response.content.decode('utf-8'))
         self.assertEqual(kernel_schema_1['id'], self.KERNEL_ID_1)
 
-        # creates the artefacts for the xForm 2
+        # creates the artefacts for the schema 2
         response = requests.get(self.MAPPING_URL_2, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 200)
         kernel_mapping_2 = json.loads(response.content.decode('utf-8'))
@@ -178,7 +201,7 @@ class KernelUtilsTest(CustomTestCase):
 
     def test__propagate_kernel_artefacts(self):
 
-        self.assertTrue(propagate_kernel_artefacts(self.xform_1))
+        self.assertTrue(propagate_kernel_artefacts(self.schema_1))
 
         response = requests.get(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 200)
@@ -186,7 +209,7 @@ class KernelUtilsTest(CustomTestCase):
         self.assertEqual(kernel_project['id'], str(self.project.project_id))
         self.assertIn(self.project.name, kernel_project['name'])
 
-        # creates the artefacts for the xForm 1
+        # creates the artefacts for the schema 1
         response = requests.get(self.MAPPING_URL_1, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 200)
         kernel_mapping_1 = json.loads(response.content.decode('utf-8'))
@@ -197,7 +220,7 @@ class KernelUtilsTest(CustomTestCase):
         kernel_schema_1 = json.loads(response.content.decode('utf-8'))
         self.assertEqual(kernel_schema_1['id'], self.KERNEL_ID_1)
 
-        # does not create the artefacts for the xForm 2
+        # does not create the artefacts for the schema 2
         response = requests.get(self.MAPPING_URL_2, headers=self.KERNEL_HEADERS)
         self.assertEqual(response.status_code, 404)
 

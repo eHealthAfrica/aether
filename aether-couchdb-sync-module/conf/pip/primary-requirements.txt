@@ -27,6 +27,10 @@
 aether.common
 
 
+# Django specific
+drf-dynamic-fields
+
+
 # OAuth
 oauth2client
 
