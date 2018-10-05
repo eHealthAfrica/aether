@@ -192,6 +192,8 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     def create(self, validated_data):
         try:
             submission = models.Submission(**validated_data)
+            submission.save()
+
             utils.run_entity_extraction(submission)
             return submission
         except Exception as e:
