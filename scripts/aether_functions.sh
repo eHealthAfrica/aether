@@ -95,7 +95,7 @@ function build_test_modules {
             $container
 
         # setup container (model migration, admin user, static content...)
-        docker-compose -f docker-compose-test.yml run --no-deps $container setup 
+        docker-compose -f docker-compose-test.yml run --no-deps $container setup
     done
 }
 

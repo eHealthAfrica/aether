@@ -23,6 +23,7 @@ from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
 
 from .models import Project, Schema, ProjectSchema, Mapping
+from .avro_tools import avro_schema_to_passthrough_artefacts as parser
 
 
 def get_project_artefacts(project):
@@ -56,7 +57,8 @@ def upsert_project_artefacts(
     mappings=[],
 ):
     '''
-    Creates or updates the project and its artefacts: schemas, project schemas and mappings.
+    Creates or updates the project and its artefacts:
+    schemas, project schemas and mappings.
 
     Returns the list of project and its affected artefact ids by type.
     '''
@@ -124,6 +126,36 @@ def upsert_project_artefacts(
         results['mappings'].add(str(mapping.pk))
 
     return results
+
+
+def upsert_project_with_avro_schemas(
+    action='upsert',
+    project_id=None,
+    project_name=None,
+    avro_schemas=[],
+):
+    '''
+    Creates or updates the project and links it with the given AVRO schemas
+    and related artefacts: project schemas and passthrough mappings.
+
+    Returns the list of project and its affected artefact ids by type.
+    '''
+
+    schemas = []
+    mappings = []
+
+    for raw_schema in avro_schemas:
+        schema, mapping = parser(raw_schema.get('id'), raw_schema.get('definition'))
+        schemas.append(schema)
+        mappings.append(mapping)
+
+    return upsert_project_artefacts(
+        action=action,
+        project_id=project_id,
+        project_name=project_name,
+        schemas=schemas,
+        mappings=mappings,
+    )
 
 
 def __upsert_instance(model, pk=None, ignore_fields=[], action='upsert', **values):

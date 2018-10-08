@@ -78,9 +78,9 @@ def http_error(token, client_id):
 
 
 @override_settings(GOOGLE_CLIENT_ID='test-client-id')
-class ViewsTests(ApiTestCase):
+class SigninViewTests(ApiTestCase):
     fixtures = ['mobile_users.json']
-    url = reverse('sync:signin')
+    url = reverse('signin')
 
     def test_register_url(self):
         self.assertTrue(self.url, msg='The sync url is defined')
