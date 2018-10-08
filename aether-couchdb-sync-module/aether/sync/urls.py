@@ -24,7 +24,7 @@ from .api.views import signin
 from .views import check_rq
 
 
-urlpatterns = generate_urlpatterns(kernel=True) + [
+urlpatterns = generate_urlpatterns(token=True, kernel=True) + [
     url(r'^', include('aether.sync.api.urls')),
 
     url(r'^check-rq$', check_rq, name='check-rq'),
