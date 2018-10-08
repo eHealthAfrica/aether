@@ -4,9 +4,10 @@
 #                                                                              #
 #                               DO NOT CHANGE !!!                              #
 #                                                                              #
-# To update this first update 'primary-requirements.txt'                       #
+# To update this first update 'primary-requirements.txt' then run              #
 #                                                                              #
-# docker-compose -f docker-compose-connect.yml run producer pip_freeze         #
+# docker-compose -f docker-compose-connect.yml run \                           #
+#                --no-deps producer pip_freeze                                 #
 #                                                                              #
 ################################################################################
 
