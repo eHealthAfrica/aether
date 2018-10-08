@@ -16,6 +16,7 @@ RUN apt-get update -qq \
 WORKDIR /code
 
 COPY ./conf/pip /code/conf/pip
+RUN /code/conf/pip/primary-requirements.sh > /code/conf/pip/requirements.txt
 RUN pip install -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt
 
 COPY ./ /code
