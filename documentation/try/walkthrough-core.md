@@ -24,6 +24,7 @@ The first thing you see is the input screen. This is where you tell Aether what 
 For this walkthrough, we’re going to do the latter. Open the `sample-data.json` file from the `assets` folder, copy the contents, and paste it into the text area. It should now look like this:
 
 ![Input data](/images/walkthrough-1.png)
+{: .screenshot}
 
 At the bottom of the screen is a button labelled _DERIVE DATA FROM SCHEMA_. Click this, and Aether will generate an AVRO schema for you. The structure of the sample data is now shown in the sidebar.
 
@@ -32,6 +33,7 @@ At the bottom of the screen is a button labelled _DERIVE DATA FROM SCHEMA_. Clic
 Now we’re going to add some _entity type definitions_. These are (more) schemas that constitute the _data contracts_ we mentioned earlier. Click on _ENTITY TYPES_, open `all.json` in `assets/schemas` and copy and paste everything into the text area where it says _Enter your schemas_. Click _ADD TO PIPELINE_.
 
 ![Entity types](/images/walkthrough-2.png)
+{: .screenshot}
 
 ## Defining Our Mappings
 
@@ -40,6 +42,7 @@ The third and final step is to create the mapping rules that specify how the inp
 Open up `mapping.json` from `assets/mappings/` and copy the contents. In the UI, click on _MAPPING_, and then go to the tab labelled _JSON_. Paste everything into the text area and click on _APPLY MAPPING RULES TO PIPELINE_.
 
 ![Mappings](/images/walkthrough-3.png)
+{: .screenshot}
 
 
 Fields in the _INPUT_ and _ENTITY TYPES_ sidebars are now highlighted to indicate mappings between them; if you click on the _Mapping rules_ tab you can see the individual mapping rules.

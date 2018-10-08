@@ -50,6 +50,7 @@ Once the console output has stopped, you should be able to access the Aether UI 
 If you see this screen, you are all configured and ready to move on:
 
 ![AUX](/images/screenshots/pipelines-overview-start.png)
+{: .screenshot}
 
 Now let’s [start creating our first Aether-based solution](first-mapping).
 
