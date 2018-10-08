@@ -1,12 +1,18 @@
 ################################################################################
 #                                                                              #
 #                           Requirements for testing                           #
-#    (If you need production dependencies, add them to the `setup.py` file)    #
 #                                                                              #
 ################################################################################
 
-bravado
+aet.consumer>=0.9.1
+aether.client
+
+kafka
+requests
+spavro
+
+coverage
 flake8
+mock
 pytest
 pytest-runner
-requests
