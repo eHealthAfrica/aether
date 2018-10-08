@@ -30,7 +30,6 @@ ORDER=( "create_credentials"
         "create_aether_docker_assets"
         "build_aether_utils_and_distribute"
         "build_common_and_distribute"
-        "freeze_test_module integration-test"
         "build_test_modules kernel-test producer-test integration-test"
         "create_readonly_user_test"
         )

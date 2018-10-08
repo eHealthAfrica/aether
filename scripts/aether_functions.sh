@@ -99,16 +99,6 @@ function build_test_modules {
     done
 }
 
-function freeze_test_module {
-    CONTAINERS=($ARGS)
-    for container in "${CONTAINERS[@]}"
-    do
-        # build container
-        docker-compose -f docker-compose-test.yml run \
-            $container pip_freeze
-    done
-}
-
 # kernel readonly user (used by Aether Producer)
 function create_readonly_user {
     docker-compose run --no-deps kernel eval python /code/sql/create_readonly_user.py
