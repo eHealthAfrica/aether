@@ -19,26 +19,30 @@
 # under the License.
 
 cat <<EOF
-######################################################################################################
-#                                                                                                    #
-#                             Primary requirements                                                   #
-#                                                                                                    #
-#                                 CHANGE ME !!!                                                      #
-#                                                                                                    #
-# Update me and then run 'docker-compose -f docker-compose-test.yml run integration-test pip_freeze' #
-#                                                                                                    #
-######################################################################################################
+################################################################################
+#                                                                              #
+#                             Primary requirements                             #
+#                                                                              #
+#                                 CHANGE ME !!!                                #
+#                                                                              #
+# Update me and then run                                                       #
+#  docker-compose -f docker-compose-test.yml \                                 #
+#                 run --no-deps integration-test pip_freeze                    #
+#                                                                              #
+################################################################################
 
 
 aet.consumer>=0.9.1
 aether.client>=$( cat "VERSION")
+
+kafka
+requests
+spavro
+
 coverage
 flake8
-kafka
 mock
 pytest
 pytest-runner
-requests
-spavro
 
 EOF

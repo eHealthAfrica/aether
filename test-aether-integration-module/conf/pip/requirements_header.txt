@@ -1,10 +1,13 @@
-#########################################################################################
-#                                                                              		#
-#                              Frozen requirements                             		#
-#                                                                              		#
-#                               DO NOT CHANGE !!!                              		#
-#                                                                              		#
-# To update this first update 'primary-requirements.txt'                       		#
-# then run 'docker-compose -f docker-compose-test.yml run integration-test pip_freeze'	#
-#                                                                              		#
-#########################################################################################
+################################################################################
+#                                                                              #
+#                              Frozen requirements                             #
+#                                                                              #
+#                               DO NOT CHANGE !!!                              #
+#                                                                              #
+# To update this first update 'primary-requirements.txt' then run              #
+#                                                                              #
+#   docker-compose -f docker-compose-test.yml \                                #
+#                  run --no-deps integration-test pip_freeze                   #
+#                                                                              #
+################################################################################
+
