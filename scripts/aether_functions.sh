@@ -99,14 +99,12 @@ function build_test_modules {
     done
 }
 
-function freeze_module {
+function freeze_test_module {
     CONTAINERS=($ARGS)
-    container in "${CONTAINERS[@]}"
+    for container in "${CONTAINERS[@]}"
     do
         # build container
-        docker-compose -f docker-compose.yml run \
-            --build-arg GIT_REVISION=$GIT_REVISION \
-            --build-arg VERSION=$VERSION \
+        docker-compose -f docker-compose-test.yml run \
             $container pip_freeze
     done
 }
