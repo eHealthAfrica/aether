@@ -29,7 +29,7 @@ aether.common
 
 
 # Django specific
-django-filter<2  # https://django-filter.readthedocs.io/en/master/guide/migration.html#migrating-to-2-0
+django-filter
 django-model-utils
 django-reversion-compare
 djangorestframework-filters

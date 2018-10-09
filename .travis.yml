@@ -11,15 +11,7 @@ services:
 matrix:
   fast_finish: true
   include:
-    #  - name: "Kubernetes tests (Kernel and ODK)"
-    #    stage: test
-    #    env: 'TEST_MODE=kubernetes'
-
-    - name: "Integration tests (Kernel with Kakfa/Zookeeper and Producer)"
-      stage: test
-      env: 'TEST_MODE=integration'
-
-    - name: "Aether Suite tests (Kernel, UI, ODK and CouchDB-Sync)"
+    - name: "Aether CORE tests (Kernel, Client, UI, ODK and CouchDB-Sync)"
       stage: test
       env: 'TEST_MODE=all'
 
@@ -27,15 +19,30 @@ matrix:
     # - name: "Aether Kernel tests"
     #   stage: test
     #   env: 'TEST_MODE=kernel'
+
+    # - name: "Aether Client tests"
+    #   stage: test
+    #   env: 'TEST_MODE=client'
+
     # - name: "Aether ODK module tests"
     #   stage: test
     #   env: 'TEST_MODE=odk'
+
     # - name: "Aether CouchDB-Sync module tests"
     #   stage: test
     #   env: 'TEST_MODE=couchdb-sync'
+
     # - name: "Aether UI tests"
     #   stage: test
     #   env: 'TEST_MODE=ui'
+
+    - name: "Integration tests (Kernel with Kakfa/Zookeeper and Producer)"
+      stage: test
+      env: 'TEST_MODE=integration'
+
+    #  - name: "Kubernetes tests (Kernel and ODK)"
+    #    stage: test
+    #    env: 'TEST_MODE=kubernetes'
 
     # execute only to deploy
     - name: "Aether release"
@@ -56,7 +63,7 @@ after_script:
 
 after_failure:
   - ./scripts/test_travis_failure.sh $TEST_MODE
-  
+
 # TODO: move this secured global env var to Travis settings
 env:
   global:
