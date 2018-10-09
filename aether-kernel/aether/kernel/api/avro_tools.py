@@ -59,11 +59,6 @@ UNION = 'union'
 
 NAMESPACE = 'org.ehealthafrica.aether'
 
-MIN_INT = -64000
-MAX_INT = 64000
-MIN_LONG = -(1 << 63)
-MAX_LONG = (1 << 63) - 1
-
 
 def random_string():
     return ''.join(random.choice(ascii_letters) for i in range(random.randint(1, 30)))
@@ -96,13 +91,13 @@ def random_avro(schema):
         return urandom(schema.get('size', 8))
 
     if avro_type == INT:
-        return random.randint(MIN_INT, MAX_INT)
+        return random.randint(INT_MIN_VALUE, INT_MAX_VALUE)
 
     if avro_type == LONG:
-        return random.randint(MIN_LONG, MAX_LONG)
+        return random.randint(LONG_MIN_VALUE, LONG_MAX_VALUE)
 
     if avro_type in [FLOAT, DOUBLE]:
-        return random.random() + random.randint(MIN_INT, MAX_INT)
+        return random.random() + random.randint(INT_MIN_VALUE, INT_MAX_VALUE)
 
     if avro_type == STRING:
         if name == 'id':
