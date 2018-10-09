@@ -33,7 +33,16 @@ from rest_framework.decorators import (
 )
 from rest_framework.renderers import JSONRenderer
 
-from . import models, serializers, filters, constants, utils, mapping_validation, project_artefacts
+from . import (
+    avro_tools,
+    constants,
+    filters,
+    mapping_validation,
+    models,
+    project_artefacts,
+    serializers,
+    utils,
+)
 
 
 def get_entity_linked_data(entity, request, resolved, depth, start_depth=0):
@@ -82,6 +91,35 @@ class ProjectViewSet(CustomViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectSerializer
     filter_class = filters.ProjectFilter
+
+    @action(detail=True, methods=['get'], url_name='skeleton', url_path='schemas-skeleton')
+    def schemas_skeleton(self, request, pk=None, *args, **kwargs):
+        '''
+        Returns the schemas "skeleton" used by this project.
+
+        Reachable at ``/projects/{pk}/schemas-skeleton/``
+        '''
+
+        project = get_object_or_404(models.Project, pk=pk)
+
+        # extract jsonpaths and docs from linked schemas definition
+        jsonpaths = []
+        docs = {}
+        name = None
+        for project_schema in project.projectschemas.order_by('-created'):
+            if not name:  # take the last project schema
+                name = f'{project.name}-{project_schema.schema.name}'
+            avro_tools.extract_jsonpaths_and_docs(
+                schema=project_schema.schema.definition,
+                jsonpaths=jsonpaths,
+                docs=docs,
+            )
+
+        return Response(data={
+            'jsonpaths': jsonpaths,
+            'docs': docs,
+            'name': name or project.name,
+        })
 
     @action(detail=True, methods=['get', 'patch'])
     def artefacts(self, request, pk=None, *args, **kwargs):
@@ -167,6 +205,9 @@ class ProjectViewSet(CustomViewSet):
                     {
                         "id": "mapping set id (optional)",
                         "name": "mapping set name (optional but unique)",
+                        "schema": {
+                            # the avro schema
+                        },
                         "input": {
                             # sample
                         }
@@ -190,6 +231,9 @@ class ProjectViewSet(CustomViewSet):
                         # used to link the mapping with its mapping set
                         "mappingset": "mapping set id",
                         # used only to create the mapping set (if missing)
+                        "schema": {
+                            # the avro schema
+                        },
                         "input": {
                             # sample
                         }
@@ -355,11 +399,61 @@ class SchemaViewSet(CustomViewSet):
     serializer_class = serializers.SchemaSerializer
     filter_class = filters.SchemaFilter
 
+    @action(detail=True, methods=['get'])
+    def skeleton(self, request, pk=None, *args, **kwargs):
+        '''
+        Returns the schema "skeleton".
+
+        Reachable at ``/schema/{pk}/skeleton/``
+        '''
+
+        schema = get_object_or_404(models.Schema, pk=pk)
+
+        # extract jsonpaths and docs from the schema definition
+        jsonpaths = []
+        docs = {}
+
+        avro_tools.extract_jsonpaths_and_docs(
+            schema=schema.definition,
+            jsonpaths=jsonpaths,
+            docs=docs,
+        )
+        return Response(data={
+            'jsonpaths': jsonpaths,
+            'docs': docs,
+            'name': schema.name,
+        })
+
 
 class ProjectSchemaViewSet(CustomViewSet):
     queryset = models.ProjectSchema.objects.all()
     serializer_class = serializers.ProjectSchemaSerializer
     filter_class = filters.ProjectSchemaFilter
+
+    @action(detail=True, methods=['get'])
+    def skeleton(self, request, pk=None, *args, **kwargs):
+        '''
+        Returns the schema "skeleton".
+
+        Reachable at ``/projectschemas/{pk}/skeleton/``
+        '''
+
+        project_schema = get_object_or_404(models.ProjectSchema, pk=pk)
+
+        # extract jsonpaths and docs from the schema definition
+        jsonpaths = []
+        docs = {}
+
+        avro_tools.extract_jsonpaths_and_docs(
+            schema=project_schema.schema.definition,
+            jsonpaths=jsonpaths,
+            docs=docs,
+        )
+        return Response(data={
+            'jsonpaths': jsonpaths,
+            'docs': docs,
+            'name': f'{project_schema.project.name}-{project_schema.schema.name}',
+        })
 
 
 class EntityViewSet(PayloadFilterMixin, CustomViewSet):
