@@ -35,7 +35,7 @@ from rest_framework.throttling import AnonRateThrottle
 
 from .couchdb_helpers import create_db, create_or_update_user
 from .models import Project, Schema, MobileUser, DeviceDB
-from .serializers import ProjectSerializer, SchemaSerializer
+from .serializers import ProjectSerializer, SchemaSerializer, MobileUserSerializer
 from .kernel_utils import (
     propagate_kernel_project,
     propagate_kernel_artefacts,
@@ -114,6 +114,16 @@ class SchemaViewSet(viewsets.ModelViewSet):
             )
 
         return self.retrieve(request, pk, *args, **kwargs)
+
+
+class MobileUserViewSet(viewsets.ModelViewSet):
+    '''
+    Create new Mobile User entries.
+    '''
+
+    queryset = MobileUser.objects.order_by('email')
+    serializer_class = MobileUserSerializer
+    search_fields = ('email',)
 
 
 # Sync credentials endpoint
