@@ -74,7 +74,15 @@ export const deriveMappingRules = (schema) => {
       destination: `${schema.name}.${field.name}`
     }
   }
-  return schema.fields.map(fieldToMappingRule)
+  const rules = schema.fields.map(fieldToMappingRule)
+  if (!schema.fields.find(field => field.name === 'id')) {
+    rules.append({
+      id: generateGUID(),
+      source: `#!uuid`,
+      destination: `${schema.name}.id`
+    })
+  }
+  return rules
 }
 
 const MESSAGES = defineMessages({
@@ -85,15 +93,6 @@ const MESSAGES = defineMessages({
   regularError: {
     defaultMessage: 'You have provided an invalid AVRO schema.',
     id: 'pipeline.input.schema.invalid.message.head'
-  },
-
-  idErrorMissing: {
-    defaultMessage: 'The AVRO schema MUST have an "id" field with type "string".',
-    id: 'pipeline.input.schema.invalid.message.id.missing'
-  },
-  idErrorType: {
-    defaultMessage: 'The "id" field type MUST be "string".',
-    id: 'pipeline.input.schema.invalid.message.id.type'
   }
 })
 
@@ -137,29 +136,14 @@ class SchemaInput extends Component {
       const schema = JSON.parse(this.state.inputSchema)
       const type = avro.parse(schema, { noAnonymousTypes: true })
 
-      // check if there is an "id" field
-      const idField = schema.fields.find(field => field.name === 'id')
-      if (idField) {
-        if (idField.type !== 'string') {
-          // we enforce it to be string and not nullable
-          this.setState({
-            error: formatMessage(MESSAGES.idErrorType),
-            errorHead: formatMessage(MESSAGES.regularError)
-          })
-          return
-        }
-      } else {
-        this.setState({
-          error: formatMessage(MESSAGES.idErrorMissing),
-          errorHead: formatMessage(MESSAGES.regularError)
-        })
-        return
-      }
-
       // generate a new input sample
       try {
         const input = type.random()
-        input.id = generateGUID() // make it more UUID
+        // check if there is an "id" field
+        const idField = schema.fields.find(field => field.name === 'id')
+        if (idField && idField.type === 'string') {
+          input.id = generateGUID() // make it more UUID
+        }
         this.props.updatePipeline({ ...this.props.selectedPipeline, schema, input })
       } catch (error) {
         this.setState({
@@ -261,7 +245,7 @@ class DataInput extends Component {
       // Validate data and generate avro schema from input
       const input = JSON.parse(this.state.inputData)
       // check if there is an "id" field with an UUID content
-      const schema = generateSchema({ id: generateGUID(), ...input })
+      const schema = generateSchema(input)
       this.props.updatePipeline({
         ...this.props.selectedPipeline,
         schema,
