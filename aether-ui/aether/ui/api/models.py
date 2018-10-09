@@ -63,10 +63,10 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
     # this represents the list of mapping rules
     # {
     #    "mapping": [
-    #      {'id': ###, 'source': 'jsonpath-input-1', 'destination: 'jsonpath-entity-type-1'},
-    #      {'id': ###, 'source': 'jsonpath-input-2', 'destination: 'jsonpath-entity-type-2'},
+    #      {"id": ###, "source": "jsonpath-input-1", "destination": "jsonpath-entity-type-1"},
+    #      {"id": ###, "source": "jsonpath-input-2", "destination": "jsonpath-entity-type-2"},
     #      ...
-    #      {'id': ###, 'source': 'jsonpath-input-n', 'destination: 'jsonpath-entity-type-n'},
+    #      {"id": ###, "source": "jsonpath-input-n", "destination": "jsonpath-entity-type-n"},
     #    ]
     # }
     mapping = JSONField(null=True, blank=True, default=list)
@@ -79,19 +79,29 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
     #      {...},
     #    ],
     #    "mapping_errors": [
-    #      {"path": 'jsonpath-input-a', "description": 'No match for path'},
-    #      {"path": 'jsonpath-entity-type-b', "description": 'No match for path'},
+    #      {"path": "jsonpath-input-a", "description": "No match for path"},
+    #      {"path": "jsonpath-entity-type-b", "description": "No match for path"},
     #      ...
     #      # Summary of the error with the extracted entity
     #      {
-    #        "description": 'Extracted record did not conform to registered schema',
-    #        "data": {"id": 'uuid:####', ...}
+    #        "description": "Extracted record did not conform to registered schema",
+    #        "data": {"id": "uuid:####", ...}
     #      }
     #    ]
     # }
     mapping_errors = JSONField(null=True, blank=True, editable=False)
     output = JSONField(null=True, blank=True, editable=False)
+
+    # these contain the information related to the linked artefacts in kernel
+    # {
+    #     "mappings": uuid,
+    #     "schemas": {
+    #         "entity name": uuid,
+    #         ...
+    #     },
+    # }
     kernel_refs = JSONField(null=True, blank=True, editable=False)
+
     published_on = models.DateTimeField(null=True, blank=True, editable=False)
     is_active = models.BooleanField(default=True)
     is_read_only = models.BooleanField(default=False)
