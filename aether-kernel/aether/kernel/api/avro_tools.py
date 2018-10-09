@@ -22,9 +22,14 @@ function from the official avro python library. See class docstring
 for details.
 '''
 
-import collections
-import copy
-import uuid
+import random
+
+from collections import namedtuple
+from copy import deepcopy
+from os import urandom
+from string import ascii_letters
+from uuid import uuid4
+
 
 # Constants used by AvroValidator to distinguish between avro types
 # ``int`` and ``long``.
@@ -54,6 +59,92 @@ UNION = 'union'
 
 NAMESPACE = 'org.ehealthafrica.aether'
 
+MIN_INT = -64000
+MAX_INT = 64000
+MIN_LONG = -(1 << 63)
+MAX_LONG = (1 << 63) - 1
+
+
+def random_string():
+    return ''.join(random.choice(ascii_letters) for i in range(random.randint(1, 30)))
+
+
+def random_avro(schema):
+    '''
+    Generates a random value based on the given AVRO schema.
+    '''
+
+    name = schema.get('name')
+    avro_type = schema['type']
+    if isinstance(avro_type, list):  # UNION or NULLABLE
+        # ["null", "int", "string", {"type: "record", ...}]
+        avro_type = [t for t in avro_type if t != NULL]  # ignore NULL
+        if len(avro_type) == 1:  # it was NULLABLE
+            avro_type = avro_type[0]
+
+    if __has_type(avro_type):  # {"type": {"type": "zzz", ...}}
+        schema = avro_type
+        avro_type = avro_type.get('type')
+
+    if avro_type == NULL:
+        return None
+
+    if avro_type == BOOLEAN:
+        return True if random.random() > 0.5 else False
+
+    if avro_type in [BYTES, FIXED]:
+        return urandom(schema.get('size', 8))
+
+    if avro_type == INT:
+        return random.randint(MIN_INT, MAX_INT)
+
+    if avro_type == LONG:
+        return random.randint(MIN_LONG, MAX_LONG)
+
+    if avro_type in [FLOAT, DOUBLE]:
+        return random.random() + random.randint(MIN_INT, MAX_INT)
+
+    if avro_type == STRING:
+        if name == 'id':
+            return str(uuid4())  # "id" fields contain an UUID
+        return random_string()
+
+    if avro_type == ENUM:
+        return random.choice(schema['symbols'])
+
+    if avro_type == RECORD:
+        return {
+            f['name']: random_avro(f)
+            for f in schema.get('fields', [])
+        }
+
+    if avro_type == MAP:
+        values = schema.get('values')
+        map_type = values if __has_type(values) else {'type': values}
+        return {
+            random_string(): random_avro(map_type)
+            for i in range(random.randint(1, 5))
+        }
+
+    if avro_type == ARRAY:
+        items = schema.get('items')
+        array_type = items if __has_type(items) else {'type': items}
+        return [
+            random_avro(array_type)
+            for i in range(random.randint(1, 5))
+        ]
+
+    if isinstance(avro_type, list):  # UNION
+        # choose one random type and generate value
+        # ["int", "string", {"type: "record", ...}]
+        ut = avro_type[random.randint(0, len(avro_type) - 1)]
+        ut = ut if __has_type(ut) else {'type': ut}
+        return random_avro(ut)
+
+    # TODO: named types  ¯\_(ツ)_/¯
+
+    return None
+
 
 class AvroValidationException(Exception):
     pass
@@ -70,7 +161,7 @@ class AvroValidationException(Exception):
 #
 #     indicates that the expected type at path "$.a.b" was a union of
 #     'null' and 'string'. The actual value was 1.
-AvroValidationError = collections.namedtuple(
+AvroValidationError = namedtuple(
     'AvroValidationError',
     ['expected', 'datum', 'path'],
 )
@@ -333,9 +424,11 @@ def avro_schema_to_passthrough_artefacts(item_id, avro_schema):
     '''
 
     if not item_id:
-        item_id = str(uuid.uuid4())
+        item_id = str(uuid4())
 
-    definition = copy.deepcopy(avro_schema)
+    definition = deepcopy(avro_schema)
+    sample = random_avro(definition)
+
     # assign default namespace
     if not definition.get('namespace'):
         definition['namespace'] = NAMESPACE
@@ -381,6 +474,11 @@ def avro_schema_to_passthrough_artefacts(item_id, avro_schema):
         # this is an auto-generated mapping that shouldn't be modified manually
         'is_read_only': True,
         'is_active': True,
+        'input': sample,  # include a data sample
     }
 
     return schema, mapping
+
+
+def __has_type(avro_type):
+    return isinstance(avro_type, dict) and avro_type.get('type')

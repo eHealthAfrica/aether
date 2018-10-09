@@ -19,6 +19,7 @@
 import collections
 import json
 import os
+import uuid
 
 from django.test import TestCase
 from spavro.schema import parse as parse_schema
@@ -29,6 +30,7 @@ from aether.kernel.api.avro_tools import (
     AvroValidationException,
     validate,
     NAMESPACE,
+    random_avro,
 )
 
 here = os.path.dirname(os.path.realpath(__file__))
@@ -573,13 +575,14 @@ class TestAvroValidator(TestCase):
 class TestAvroTools(TestCase):
 
     def test__avro_schema_to_passthrough_artefacts__defaults(self):
-        schema, mapping = parser(None, {'name': 'sample', 'fields': []})
+        schema, mapping = parser(None, {'name': 'sample', 'type': 'record', 'fields': []})
 
         self.assertIsNotNone(schema['id'])
         # include namespace and id field
         self.assertEqual(schema['definition'], {
             'namespace': NAMESPACE,
             'name': 'sample',
+            'type': 'record',
             'fields': [
                 {
                     'doc': 'UUID',
@@ -598,12 +601,14 @@ class TestAvroTools(TestCase):
             },
             'is_read_only': True,
             'is_active': True,
+            'input': {},
         })
 
     def test__avro_schema_to_passthrough_artefacts__non_defaults(self):
         schema, mapping = parser('1', {
             'name': 'sample2',
             'namespace': 'my.namespace',
+            'type': 'record',
             'fields': [
                 {
                     'doc': 'My ID',
@@ -622,6 +627,7 @@ class TestAvroTools(TestCase):
         self.assertEqual(schema['definition'], {
             'namespace': 'my.namespace',
             'name': 'sample2',
+            'type': 'record',
             'fields': [
                 {
                     'doc': 'My ID',
@@ -636,6 +642,13 @@ class TestAvroTools(TestCase):
             ]
         })
 
+        input = mapping.pop('input')
+        self.assertIsNotNone(input)
+        self.assertIn('id', input)
+        self.assertTrue(isinstance(input['id'], int))
+        self.assertIn('id2', input)
+        self.assertTrue(isinstance(input['id2'], str))
+
         self.assertEqual(mapping, {
             'id': '1',
             'name': 'sample2',
@@ -649,3 +662,149 @@ class TestAvroTools(TestCase):
             'is_read_only': True,
             'is_active': True,
         })
+
+
+class TestAvroRandom(TestCase):
+
+    def test_random_avro__null(self):
+        self.assertIsNone(random_avro({'type': 'null'}))
+
+    def test_random_avro__boolean(self):
+        self.assertTrue(isinstance(random_avro({'type': 'boolean'}), bool))
+
+    def test_random_avro__int(self):
+        self.assertTrue(isinstance(random_avro({'type': 'int'}), int))
+
+    def test_random_avro__long(self):
+        self.assertTrue(isinstance(random_avro({'type': 'long'}), int))
+
+    def test_random_avro__float(self):
+        self.assertTrue(isinstance(random_avro({'type': 'float'}), float))
+
+    def test_random_avro__double(self):
+        self.assertTrue(isinstance(random_avro({'type': 'double'}), float))
+
+    def test_random_avro__string(self):
+        self.assertTrue(isinstance(random_avro({'type': 'string'}), str))
+
+    def test_random_avro__string__UUID(self):
+        value = random_avro({'type': 'string', 'name': 'id'})
+        self.assertTrue(isinstance(value, str))
+        try:
+            uuid.UUID(value)
+            self.assertTrue(True)
+        except ValueError:  # `value` is not a valid UUID
+            self.assertTrue(False)
+
+    def test_random_avro__bytes(self):
+        self.assertTrue(isinstance(random_avro({'type': 'bytes'}), bytes))
+
+    def test_random_avro__fixed(self):
+        self.assertTrue(isinstance(random_avro({'type': 'fixed', 'size': 16}), bytes))
+
+    def test_random_avro__enum(self):
+        symbols = ['a', 'b', 'c']
+        value = random_avro({'type': 'enum', 'symbols': symbols})
+        self.assertTrue(isinstance(value, str))
+        self.assertIn(value, symbols)
+
+    def test_random_avro__record(self):
+        value = random_avro({
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'a',
+                    'type': 'null',
+                },
+                {
+                    'name': 'b',
+                    'type': 'null',
+                },
+                {
+                    'name': 'c',
+                    'type': 'null',
+                },
+            ]
+        })
+        self.assertEqual(value, {'a': None, 'b': None, 'c': None})
+
+    def test_random_avro__map(self):
+        value = random_avro({'type': 'map', 'values': 'int'})
+        self.assertTrue(isinstance(value, dict))
+        for k, v in value.items():
+            self.assertTrue(isinstance(k, str))
+            self.assertTrue(isinstance(v, int))
+
+        symbols = ['a', 'b', 'c']
+        value = random_avro({'type': 'map', 'values': {'type': 'enum', 'symbols': symbols}})
+        for k, v in value.items():
+            self.assertTrue(isinstance(k, str))
+            self.assertTrue(isinstance(v, str))
+            self.assertIn(v, symbols)
+
+    def test_random_avro__array(self):
+        value = random_avro({'type': 'array', 'items': 'int'})
+        self.assertTrue(isinstance(value, list))
+        for v in value:
+            self.assertTrue(isinstance(v, int))
+
+        symbols = ['a', 'b', 'c']
+        value = random_avro({'type': 'array', 'items': {'type': 'enum', 'symbols': symbols}})
+        self.assertTrue(isinstance(value, list))
+        for v in value:
+            self.assertTrue(isinstance(v, str))
+            self.assertIn(v, symbols)
+
+    def test_random_avro__union__nullable(self):
+        self.assertTrue(isinstance(random_avro({'type': ['null', 'boolean']}), bool))
+        self.assertTrue(isinstance(random_avro({'type': ['int', 'null']}), int))
+        self.assertTrue(isinstance(random_avro({'type': ['null', {'type': 'fixed', 'size': 16}]}), bytes))
+
+    def test_random_avro__union__not_nullable(self):
+        value = random_avro({'type': ['boolean', 'null', 'int']})
+        self.assertIsNotNone(value)
+        self.assertTrue(isinstance(value, (int, bool)))
+
+    def test_random_avro__named(self):
+        self.assertIsNone(random_avro({'type': 'custom'}))
+
+    def test_random_avro__complex(self):
+        value = random_avro({
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'iterate',
+                    'type': [
+                        'null',
+                        {
+                            'type': 'array',
+                            'items': {
+                                'name': 'iterate',
+                                'type': 'record',
+                                'fields': [
+                                    {
+                                        'name': 'index',
+                                        'type': ['null', 'int'],
+                                    },
+                                    {
+                                        'name': 'value',
+                                        'type': ['null', 'string'],
+                                    },
+                                ]
+                            },
+                        },
+                    ],
+                },
+            ],
+        })
+
+        self.assertIsNotNone(value)
+        self.assertTrue(isinstance(value, dict))
+        self.assertIn('iterate', value)
+        iterate = value['iterate']
+        self.assertTrue(isinstance(iterate, list))
+        self.assertTrue(len(iterate) > 0)
+        for item in iterate:
+            self.assertTrue(isinstance(item, dict))
+            self.assertTrue(isinstance(item['index'], int))
+            self.assertTrue(isinstance(item['value'], str))
