@@ -250,7 +250,6 @@ class DataInput extends Component {
     try {
       // Validate data and generate avro schema from input
       const input = JSON.parse(this.state.inputData)
-      // check if there is an "id" field with an UUID content
       const schema = generateSchema(input)
       this.props.updatePipeline({
         ...this.props.selectedPipeline,
