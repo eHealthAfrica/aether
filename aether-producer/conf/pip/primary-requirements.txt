@@ -6,11 +6,12 @@
 #                                                                              #
 # Update me and then run                                                       #
 #                                                                              #
-# docker-compose -f docker-compose-connect.yml run producer pip_freeze         #
+# docker-compose -f docker-compose-connect.yml run \                           #
+#                --no-deps producer pip_freeze                                 #
 #                                                                              #
 ################################################################################
 
-aether.client>=0.9.0
+aether.client>=0.10.0
 confluent_kafka
 flask
 gevent

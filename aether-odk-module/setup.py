@@ -23,7 +23,6 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='aether.odk',
-    version='0.0.0',
     description='A python module with Aether ODK functionality',
 
     url='https://github.com/eHealthAfrica/aether/',
