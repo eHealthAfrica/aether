@@ -52,9 +52,17 @@ describe('deriveEntityTypes', () => {
       ]
     }
     const result = input.deriveEntityTypes(schema)
+    expect(result[0].fields[0].name).toEqual('a')
     expect(result[0].fields[0].type).toEqual(['null', 'int'])
+
+    expect(result[0].fields[1].name).toEqual('b')
     expect(result[0].fields[1].type).toEqual(['null', 'string'])
+
+    expect(result[0].fields[2].name).toEqual('c')
     expect(result[0].fields[2].type).toEqual(['null', 'string', 'int'])
+
+    expect(result[0].fields[3].name).toEqual('id')
+    expect(result[0].fields[3].type).toEqual('string')
   })
 })
 
@@ -90,11 +98,13 @@ describe('deriveMappingRules', () => {
       expect(mappingRule.source).toEqual(result[i].source)
       expect(mappingRule.destination).toEqual(result[i].destination)
     })
+    expect(result[2].source).toEqual('#!uuid')
+    expect(result[2].destination).toEqual('Test.id')
   })
 })
 
 describe('<IdentityMapping />', () => {
-  const selectedPipeline = {
+  const pipeline = {
     schema: {
       type: 'record',
       name: 'Test',
@@ -103,15 +113,17 @@ describe('<IdentityMapping />', () => {
           name: 'a',
           type: ['null', 'string']
         }
+        // there is no "id" field !!!
       ]
     },
     is_read_only: false
   }
+
   it('triggers pipeline updates and closes modal', () => {
     const updateContract = sinon.spy()
     const component = mountWithIntl(
       <input.IdentityMapping
-        selectedPipeline={selectedPipeline}
+        selectedPipeline={pipeline}
         updateContract={updateContract}
       />
     )
@@ -120,30 +132,37 @@ describe('<IdentityMapping />', () => {
     expect(component.find(Modal).length).toEqual(1)
     findByDataQa(component, 'input.identityMapping.btn-confirm').simulate('click')
     expect(updateContract.callCount).toEqual(1)
-    const {
-      schema,
-      mapping,
-      entity_types: entityTypes
-    } = updateContract.args[0][0]
-    expect(selectedPipeline.schema)
-      .toEqual(schema)
-    expect(selectedPipeline.schema.fields.length)
-      .toEqual(mapping.length)
-    expect(`$.${selectedPipeline.schema.fields[0].name}`)
-      .toEqual(mapping[0].source)
-    expect(mapping[0].destination)
-      .toEqual(
-        `${selectedPipeline.schema.name}.${selectedPipeline.schema.fields[0].name}`
-      )
-    expect(entityTypes.length)
-      .toEqual(selectedPipeline.schema.fields.length)
-    expect(entityTypes[0])
-      .toEqual(selectedPipeline.schema)
+
+    const { mapping, entity_types: entityTypes } = updateContract.args[0][0]
+
+    expect(mapping[0].source).toEqual('$.a')
+    expect(mapping[0].destination).toEqual('Test.a')
+
+    // added the "id" rule
+    expect(mapping[1].source).toEqual('#!uuid')
+    expect(mapping[1].destination).toEqual('Test.id')
+
+    expect(entityTypes.length).toEqual(1) // only one Entity Type
+    expect(entityTypes[0]).toEqual({
+      type: 'record',
+      name: 'Test',
+      fields: [
+        {
+          name: 'a',
+          type: ['null', 'string']
+        },
+        {
+          name: 'id',
+          type: 'string'
+        }
+      ]
+    })
+
     expect(component.find(Modal).length).toEqual(0)
   })
 
   it('opens modal', () => {
-    const component = mountWithIntl(<input.IdentityMapping selectedPipeline={selectedPipeline} />)
+    const component = mountWithIntl(<input.IdentityMapping selectedPipeline={pipeline} />)
     expect(component.find(Modal).length).toEqual(0)
     findByDataQa(component, 'input.identityMapping.btn-apply').simulate('click')
     expect(component.find(Modal).length).toEqual(1)
