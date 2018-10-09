@@ -85,6 +85,15 @@ const MESSAGES = defineMessages({
   regularError: {
     defaultMessage: 'You have provided an invalid AVRO schema.',
     id: 'pipeline.input.schema.invalid.message.head'
+  },
+
+  idErrorMissing: {
+    defaultMessage: 'The AVRO schema MUST have an "id" field with type "string".',
+    id: 'pipeline.input.schema.invalid.message.id.missing'
+  },
+  idErrorType: {
+    defaultMessage: 'The "id" field type MUST be "string".',
+    id: 'pipeline.input.schema.invalid.message.id.type'
   }
 })
 
@@ -127,17 +136,37 @@ class SchemaInput extends Component {
       // validate schema
       const schema = JSON.parse(this.state.inputSchema)
       const type = avro.parse(schema, { noAnonymousTypes: true })
+
+      // check if there is an "id" field
+      const idField = schema.fields.find(field => field.name === 'id')
+      if (idField) {
+        if (idField.type !== 'string') {
+          // we enforce it to be string and not nullable
+          this.setState({
+            error: formatMessage(MESSAGES.idErrorType),
+            errorHead: formatMessage(MESSAGES.regularError)
+          })
+          return
+        }
+      } else {
+        this.setState({
+          error: formatMessage(MESSAGES.idErrorMissing),
+          errorHead: formatMessage(MESSAGES.regularError)
+        })
+        return
+      }
+
       // generate a new input sample
-      let input = {}
       try {
-        input = type.random()
+        const input = type.random()
+        input.id = generateGUID() // make it more UUID
+        this.props.updatePipeline({ ...this.props.selectedPipeline, schema, input })
       } catch (error) {
         this.setState({
           error: error.message,
           errorHead: formatMessage(MESSAGES.recursiveError)
         })
       }
-      this.props.updatePipeline({ ...this.props.selectedPipeline, schema, input })
     } catch (error) {
       this.setState({
         error: error.message,
@@ -231,7 +260,8 @@ class DataInput extends Component {
     try {
       // Validate data and generate avro schema from input
       const input = JSON.parse(this.state.inputData)
-      const schema = generateSchema(input)
+      // check if there is an "id" field with an UUID content
+      const schema = generateSchema({ id: generateGUID(), ...input })
       this.props.updatePipeline({
         ...this.props.selectedPipeline,
         schema,
