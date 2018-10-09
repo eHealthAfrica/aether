@@ -63,7 +63,13 @@ export const makeOptionalField = (field) => {
 
 export const deriveEntityTypes = (schema) => {
   const fields = schema.fields.map(makeOptionalField)
-  return [{ ...schema, fields: fields }]
+  if (!fields.find(field => field.name === 'id')) {
+    fields.append({
+      name: 'id',
+      type: 'string'
+    })
+  }
+  return [{ ...schema, fields }]
 }
 
 export const deriveMappingRules = (schema) => {
