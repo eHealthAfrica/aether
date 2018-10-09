@@ -22,7 +22,7 @@ from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
-from .models import Project, Schema
+from .models import Project, Schema, MobileUser
 
 
 class SchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
@@ -58,4 +58,11 @@ class ProjectSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Project
+        fields = '__all__'
+
+
+class MobileUserSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+
+    class Meta:
+        model = MobileUser
         fields = '__all__'
