@@ -64,6 +64,10 @@ export const makeOptionalField = (field) => {
 export const deriveEntityTypes = (schema) => {
   const fields = schema.fields.map(makeOptionalField)
   if (!fields.find(field => field.name === 'id')) {
+    // DETECTED CONFLICT
+    // the "id" must be an string if the schema defines it with
+    // another type the validation could fail
+    // this step only includes it if missing but does not change the type to "string"
     fields.push({
       name: 'id',
       type: 'string'
@@ -145,9 +149,8 @@ class SchemaInput extends Component {
       // generate a new input sample
       try {
         const input = type.random()
-        // check if there is an "id" field
-        const idField = schema.fields.find(field => field.name === 'id')
-        if (idField && idField.type === 'string') {
+        // check if there is a string "id" field
+        if (schema.fields.find(field => field.name === 'id' && field.type === 'string')) {
           input.id = generateGUID() // make it more UUID
         }
         this.props.updatePipeline({ ...this.props.selectedPipeline, schema, input })
