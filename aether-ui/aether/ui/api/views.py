@@ -35,6 +35,7 @@ class PipelineViewSet(viewsets.ModelViewSet):
     queryset = models.Pipeline.objects.all()
     serializer_class = serializers.PipelineSerializer
     ordering = ('name',)
+    pagination_class = None
 
     @action(methods=['post'], detail=False)
     def fetch(self, request):
@@ -42,48 +43,55 @@ class PipelineViewSet(viewsets.ModelViewSet):
         This view gets kernel objects, transforms and loads into a pipeline
         '''
         ui_utils.kernel_to_pipeline()
-        pipelines = models.Pipeline.objects.all()
-        serialized_data = serializers.PipelineSerializer(pipelines, context={'request': request}, many=True).data
-        return Response(serialized_data, status=HTTPStatus.OK)
+        return self.list(request)
 
     @action(methods=['post'], detail=True)
     def publish(self, request, pk=None):
         '''
-        This view transform the supplied pipeline to kernal models,
+        This view transforms the supplied pipeline to kernal models,
         publish and update the pipeline with related kernel model ids.
         '''
         project_name = request.data.get('project_name', 'Aux')
         overwrite = request.data.get('overwrite', False)
-        outcome = {
-            'successful': [],
-            'error': [],
-            'exists': []
-        }
+        contract_id = request.data.get('contract_id')
+        objects_to_overwrite = request.data.get('ids', {})
+
+        publish_result = {}
         try:
             pipeline = get_object_or_404(models.Pipeline, pk=pk)
+            contract = get_object_or_404(models.Contract, pk=contract_id)
         except Exception as e:
+            outcome = {'error': []}
             outcome['error'].append(str(e))
             return Response(outcome, status=HTTPStatus.BAD_REQUEST)
-        outcome = ui_utils.publish_preflight(pipeline, project_name, outcome)
+        outcome = ui_utils.publish_preflight(contract)
 
-        if outcome['error']:
+        if 'error' in outcome and len(outcome['error']):
             return Response(outcome, status=HTTPStatus.BAD_REQUEST)
-        if outcome['exists']:
+        if 'exists' in outcome and len(outcome['exists']):
             if overwrite:
-                outcome = ui_utils.publish_pipeline(pipeline, project_name, True)
+                publish_result = ui_utils.publish_pipeline(project_name, contract, objects_to_overwrite)
             else:
                 return Response(outcome, status=HTTPStatus.BAD_REQUEST)
         else:
-            outcome = ui_utils.publish_pipeline(pipeline, project_name)
+            publish_result = ui_utils.publish_pipeline(project_name, contract)
 
-        if outcome['error']:
-            return Response(outcome, status=HTTPStatus.BAD_REQUEST)
+        if 'error' in publish_result:
+            return Response(publish_result, status=HTTPStatus.BAD_REQUEST)
         else:
-            pipeline.published_on = timezone.now()
+            contract.published_on = timezone.now()
+            contract.kernel_refs = publish_result['artefacts']
+            contract.save()
+            pipeline.mappingset = contract.kernel_refs.get('mappingsets')[0]
             pipeline.save()
             serialized_data = serializers.PipelineSerializer(pipeline, context={'request': request}).data
-            outcome['pipeline'] = serialized_data
-            return Response(outcome, status=HTTPStatus.OK)
+            return Response(serialized_data, status=HTTPStatus.OK)
+
+
+class ContractViewSet(viewsets.ModelViewSet):
+    queryset = models.Contract.objects.all()
+    serializer_class = serializers.ContractSerializer
+    ordering = ('name',)
 
 
 @api_view(['GET'])

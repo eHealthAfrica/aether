@@ -22,8 +22,11 @@ import string
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
 
-from .models import Project, Schema, ProjectSchema, Mapping
+from .models import Project, Schema, ProjectSchema, MappingSet, Mapping
 from .avro_tools import avro_schema_to_passthrough_artefacts as parser
+
+
+NAME_MAX_SIZE = 50
 
 
 def get_project_artefacts(project):
@@ -35,15 +38,17 @@ def get_project_artefacts(project):
         'project': str(project.pk),
         'schemas': set(),
         'project_schemas': set(),
+        'mappingsets': set(),
         'mappings': set(),
     }
+    for mappingset in MappingSet.objects.filter(project=project):
+        results['mappingsets'].add(str(mappingset.pk))
+        for mapping in Mapping.objects.filter(mappingset=mappingset):
+            results['mappings'].add(str(mapping.pk))
 
     for project_schema in ProjectSchema.objects.filter(project=project):
         results['schemas'].add(str(project_schema.schema.pk))
         results['project_schemas'].add(str(project_schema.pk))
-
-    for mapping in Mapping.objects.filter(project=project):
-        results['mappings'].add(str(mapping.pk))
 
     return results
 
@@ -54,11 +59,15 @@ def upsert_project_artefacts(
     project_id=None,
     project_name=None,
     schemas=[],
+    mappingsets=[],
     mappings=[],
 ):
     '''
     Creates or updates the project and its artefacts:
-    schemas, project schemas and mappings.
+        schemas,
+        project schemas,
+        mapping sets and
+        mappings.
 
     Returns the list of project and its affected artefact ids by type.
     '''
@@ -67,8 +76,12 @@ def upsert_project_artefacts(
         'project': None,
         'schemas': set(),
         'project_schemas': set(),
+        'mappingsets': set(),
         'mappings': set(),
     }
+    # keeps the list of created project schemas and their ids
+    # with those the list of used entities in the mapping rules can be filled
+    mapping_project_schemas = {}
 
     # 1. create/update the project
     project = __upsert_instance(
@@ -106,21 +119,79 @@ def upsert_project_artefacts(
                 name=schema.name,
             )
         results['project_schemas'].add(str(project_schema.pk))
+        # by default use the given name, otherwise the generated one
+        mapping_project_schemas[raw_schema.get('name', project_schema.name)] = str(project_schema.pk)
 
-    # 3. create/update the list of mappings
-    for raw_mapping in mappings:
-        # in case of no mappings rules were indicated, do not update them.
+    # 3. create/update the mapping sets
+    for raw_mappingset in mappingsets:
         ignore_fields = ['name']
-        if raw_mapping.get('definition') is None:
+        if raw_mappingset.get('input') is None:
+            # in case of no input were indicated, do not update it.
+            ignore_fields.append('input')
+
+        mappingset = __upsert_instance(
+            model=MappingSet,
+            pk=raw_mappingset.get('id'),
+            ignore_fields=ignore_fields,
+            action=action,
+            name=raw_mappingset.get('name', __random_name()),
+            input=raw_mappingset.get('input', {}),
+            project=project,
+        )
+        results['mappingsets'].add(str(mappingset.pk))
+
+    # 4. create/update the mappings
+    for raw_mapping in mappings:
+        ignore_fields = ['name']
+        mapping_name = raw_mapping.get('name', __random_name())
+
+        mapping_definition = raw_mapping.get('definition')
+        if mapping_definition is None:
+            # in case of no mapping rules were indicated, do not update them.
             ignore_fields.append('definition')
+            mapping_definition = {'mapping': [], 'entities': {}}
+
+        elif 'entities' not in mapping_definition:
+            # find out the list of used entities (project schemas) within these rules
+            used_schemas = []
+            for mapping in mapping_definition.get('mapping', []):
+                # [ '$.property_name', 'EntityName.another_property_name' ]
+                schema_name = mapping[1].split('.')[0]
+                if not len(list(filter(lambda x: x == schema_name, used_schemas))):
+                    used_schemas.append(schema_name)
+            used_mapping_project_schemas = {}
+            for used_schema in used_schemas:
+                used_mapping_project_schemas[used_schema] = mapping_project_schemas.get(used_schema)
+            mapping_definition = {
+                'mapping': mapping_definition.get('mapping', []),
+                'entities': used_mapping_project_schemas,
+            }
+
+        # check for the mapping set
+        mappingset_id = raw_mapping.get('mappingset', raw_mapping.get('id'))
+        try:
+            mappingset = MappingSet.objects.get(pk=mappingset_id)
+        except ObjectDoesNotExist:
+            mappingset = __upsert_instance(
+                model=MappingSet,
+                pk=mappingset_id,
+                action=action,
+                name=mapping_name,  # use same name as mapping
+                input=raw_mapping.get('input', {}),
+                project=project,
+            )
+        results['mappingsets'].add(str(mappingset.pk))
 
         mapping = __upsert_instance(
             model=Mapping,
             pk=raw_mapping.get('id'),
             ignore_fields=ignore_fields,
             action=action,
-            name=raw_mapping.get('name', __random_name()),
-            definition=raw_mapping.get('definition', {'mappings': []}),
+            name=mapping_name,
+            definition=mapping_definition,
+            mappingset=mappingset,
+            is_read_only=raw_mapping.get('is_read_only', False),
+            is_active=raw_mapping.get('is_active', True),
             project=project,
         )
         results['mappings'].add(str(mapping.pk))
@@ -144,10 +215,20 @@ def upsert_project_with_avro_schemas(
     schemas = []
     mappings = []
 
-    for raw_schema in avro_schemas:
-        schema, mapping = parser(raw_schema.get('id'), raw_schema.get('definition'))
+    for avro_schema in avro_schemas:
+        schema, mapping = parser(avro_schema.get('id'), avro_schema.get('definition'))
         schemas.append(schema)
         mappings.append(mapping)
+
+        # Include an empty mapping if the schema is new
+        id = schema.get('id')
+        if not Schema.objects.filter(pk=id).exists():
+            mappings.append({
+                # even being the same name it's going to append the suffix `-1`
+                'name': schema.get('name'),
+                # the passthrough mapping has created a mappingset with this id
+                'mappingset': id,
+            })
 
     return upsert_project_artefacts(
         action=action,
@@ -201,11 +282,12 @@ def __upsert_instance(model, pk=None, ignore_fields=[], action='upsert', **value
         if k in fields:
             setattr(item, k, v)
 
+    # with new instances first check that the same name is not already in use
+    # otherwise append a numeric suffix or a random string to it
+    if is_new:
+        item.name = __right_pad(model, item.name)
+
     if is_new or action != 'create':
-        # if is new first check that the same name is not there
-        # otherwise append a numeric suffix or a random string to it
-        if is_new:
-            item.name = __right_pad(model, item.name)
         item.save()
 
     item.refresh_from_db()
@@ -218,21 +300,28 @@ def __random_name():
     '''
     # Names are unique so we try to avoid annoying errors with duplicated names.
     alphanum = string.ascii_letters + string.digits
-    return ''.join([random.choice(alphanum) for x in range(50)])
+    return ''.join([random.choice(alphanum) for x in range(NAME_MAX_SIZE)])
 
 
-def __right_pad(model, value):
+def __right_pad(model, name):
     '''
-    Creates a numeric or a random string suffix for the given value
+    Creates a numeric or a random string suffix for the given name
     '''
+    SEP = '-'
+
     numeric_suffix = 0
-    new_value = value
+    new_name = name.strip()
 
-    while model.objects.filter(name=new_value[:50]).exists():
-        if len(new_value) > 50:
-            # in case of name size overflow
-            return (f'{value} - {__random_name()}')[:50]
+    while model.objects.filter(name=new_name[:NAME_MAX_SIZE]).exists():
+        if len(new_name) > NAME_MAX_SIZE:  # in case of name size overflow
+            break
         numeric_suffix += 1
-        new_value = f'{value}_{numeric_suffix}'
+        new_name = f'{name}{SEP}{numeric_suffix}'
 
-    return new_value[:50]
+    if model.objects.filter(name=new_name[:NAME_MAX_SIZE]).exists():
+        # we cannot add any suffix to the name and is already in use
+        # solution, take only a piece of the name and append a random string
+        piece = name[:(NAME_MAX_SIZE - 17)]  # 16 random chars should be enough
+        return (f'{piece}{SEP}{__random_name()}')[:NAME_MAX_SIZE]
+
+    return new_name[:NAME_MAX_SIZE]

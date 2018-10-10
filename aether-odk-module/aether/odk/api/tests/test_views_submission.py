@@ -126,23 +126,25 @@ class PostSubmissionTests(CustomTestCase):
         self.assertTrue(common_kernel_utils.test_connection())
         self.KERNEL_HEADERS = common_kernel_utils.get_auth_header()
         kernel_url = common_kernel_utils.get_kernel_server_url()
-
-        self.MAPPING_URL = common_kernel_utils.get_mappings_url(self.xform.kernel_id)
+        self.MAPPINGSET_URL = f'{kernel_url}/mappingsets/{str(self.xform.kernel_id)}/'
         self.SUBMISSIONS_URL = common_kernel_utils.get_submissions_url()
         self.ATTACHMENTS_URL = common_kernel_utils.get_attachments_url()
+        # cleaning the house
         self.PROJECT_URL = f'{kernel_url}/projects/{str(self.xform.project.project_id)}/'
         self.SCHEMA_URL = f'{kernel_url}/schemas/{str(self.xform.kernel_id)}/'
+        self.ENTITIES_URL = f'{kernel_url}/entities/?project={str(self.xform.project.project_id)}'
 
     def tearDown(self):
         super(PostSubmissionTests, self).tearDown()
 
         # delete the test objects created in kernel testing server
+        requests.delete(self.ENTITIES_URL, headers=self.KERNEL_HEADERS)
         requests.delete(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
         requests.delete(self.SCHEMA_URL, headers=self.KERNEL_HEADERS)
 
     def helper_check_submission(self, succeed=True, attachments=0):
         response = requests.get(
-            self.MAPPING_URL + '?fields=submissions_url',
+            self.MAPPINGSET_URL + '?fields=submissions_url',
             headers=self.KERNEL_HEADERS,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)

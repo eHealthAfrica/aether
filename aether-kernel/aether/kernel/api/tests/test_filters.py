@@ -137,6 +137,39 @@ class TestFilters(TestCase):
             result_by_name = set([r['id'] for r in response['results']])
             self.assertEqual(expected, result_by_name, 'by name')
 
+    def test_entity_filter__by_mapping(self):
+        url = reverse(viewname='entity-list')
+        # Generate projects.
+        for _ in range(random.randint(10, 20)):
+            generate_project()
+        page_size = models.Entity.objects.count()
+        # Get a list of all mappings.
+        for mapping in models.Mapping.objects.all():
+            # Request a list of all entities, filtered by `mapping`.
+            # This checks that EntityFilter.mapping exists and that
+            # EntityFilter has been correctly configured.
+            expected = set([str(e.id) for e in mapping.entities.all()])
+
+            # by id
+            kwargs = {'mapping': str(mapping.id), 'fields': 'id', 'page_size': page_size}
+            response = json.loads(
+                self.client.get(url, kwargs, format='json').content
+            )
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result_by_id = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result_by_id, 'by id')
+
+            # by name
+            kwargs = {'mapping': mapping.name, 'fields': 'id', 'page_size': page_size}
+            response = json.loads(
+                self.client.get(url, kwargs, format='json').content
+            )
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result_by_name = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result_by_name, 'by name')
+
     def test_entity_filter__by_schema(self):
         url = reverse(viewname='entity-list')
         # Generate projects.
@@ -244,3 +277,123 @@ class TestFilters(TestCase):
             self.assertEqual(response['count'], len(expected))
             result_by_name = set([r['id'] for r in response['results']])
             self.assertEqual(expected, result_by_name, 'by name')
+
+    def test_submission_filter__by_mappingset(self):
+        url = reverse(viewname='submission-list')
+        # Generate projects.
+        for _ in range(random.randint(10, 20)):
+            generate_project()
+        page_size = models.Submission.objects.count()
+        # Get a list of all mapping sets.
+        for mappingset in models.MappingSet.objects.all():
+            # Request a list of all submissions, filtered by `mappingset`.
+            # This checks that SubmissionFilter.mappingset exists and that
+            # SubmissionFilter has been correctly configured.
+            expected = set([str(e.id) for e in mappingset.submissions.all()])
+
+            # by id
+            kwargs = {'mappingset': str(mappingset.id), 'fields': 'id', 'page_size': page_size}
+            response = json.loads(
+                self.client.get(url, kwargs, format='json').content
+            )
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result_by_id = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result_by_id, 'by id')
+
+            # by name
+            kwargs = {'mappingset': mappingset.name, 'fields': 'id', 'page_size': page_size}
+            response = json.loads(
+                self.client.get(url, kwargs, format='json').content
+            )
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result_by_name = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result_by_name, 'by name')
+
+    def test_mapping_filter__by_mappingset(self):
+        url = reverse(viewname='mapping-list')
+        # Generate projects.
+        for _ in range(random.randint(5, 10)):
+            generate_project()
+        page_size = models.Mapping.objects.count()
+        # Get a list of all mapping sets.
+        for mappingset in models.MappingSet.objects.all():
+            expected = set([str(e.id) for e in mappingset.mappings.all()])
+            # by id
+            kwargs = {'mappingset': str(mappingset.id), 'fields': 'id', 'page_size': page_size}
+            response = json.loads(
+                self.client.get(url, kwargs, format='json').content
+            )
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result)
+
+            # by name
+            kwargs = {'mappingset': mappingset.name, 'fields': 'id', 'page_size': page_size}
+            response = json.loads(
+                self.client.get(url, kwargs, format='json').content
+            )
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result)
+
+    def test_mapping_filter__by_projectschema(self):
+        url = reverse(viewname='mapping-list')
+        # Generate projects.
+        for _ in range(random.randint(5, 10)):
+            generate_project()
+        page_size = models.Mapping.objects.count()
+        # Get a list of all project schemas.
+        for projectschema in models.ProjectSchema.objects.all():
+            expected = set([str(e.id) for e in projectschema.mappings.all()])
+            # by id
+            kwargs = {'projectschema': str(projectschema.id), 'fields': 'id', 'page_size': page_size}
+            response = json.loads(
+                self.client.get(url, kwargs, format='json').content
+            )
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result)
+
+            # by name
+            kwargs = {'projectschema': projectschema.name, 'fields': 'id', 'page_size': page_size}
+            response = json.loads(
+                self.client.get(url, kwargs, format='json').content
+            )
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result)
+
+    def test_mappingset_filter__by_project(self):
+        url = reverse(viewname='mappingset-list')
+        # Generate projects.
+        for _ in range(random.randint(5, 10)):
+            generate_project()
+        page_size = models.MappingSet.objects.count()
+        # Get a list of all projects.
+        for project in models.Project.objects.all():
+            expected = set([str(s.id) for s in project.mappingsets.all()])
+            # by id
+            kwargs = {'project': str(project.id), 'fields': 'id', 'page_size': page_size}
+            response = json.loads(
+                self.client.get(url, kwargs, format='json').content
+            )
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result)
+
+            # by name
+            kwargs = {'project': project.name, 'fields': 'id', 'page_size': page_size}
+            response = json.loads(
+                self.client.get(url, kwargs, format='json').content
+            )
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result)

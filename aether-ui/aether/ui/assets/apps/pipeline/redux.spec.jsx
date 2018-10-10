@@ -68,7 +68,7 @@ describe('Pipeline actions', () => {
     const newPipeline = { name: 'mock new name' }
     nock('http://localhost')
       .post('/api/pipelines/')
-      .reply(200, Object.assign(newPipeline, { id: 'mockid' }))
+      .reply(200, Object.assign(newPipeline, { id: 'mockid', 'contracts': [] }))
     expect(typeof addPipeline(newPipeline)).toEqual('object')
     return store.dispatch(addPipeline(newPipeline))
       .then(res => {
@@ -80,8 +80,10 @@ describe('Pipeline actions', () => {
 
   it('should dispatch an update action and update redux store', () => {
     const pipeline = {
-      'id': 2,
-      'name': 'Pipeline Mock 2 UPDATED',
+      'id': '1243563231',
+      'pipeline': 2,
+      'name': 'contract 2',
+      'isInputReadOnly': false,
       'mapping_errors': null,
       'mapping': [],
       'output': null,
@@ -112,21 +114,22 @@ describe('Pipeline actions', () => {
 
   it('should try updating pipeline with wrong id and fail', () => {
     const wrongPipeline = {
-      'id': 100,
+      'id': 1001,
       'name': 'None existant pipeline ',
       'mapping_errors': null,
       'mapping': [],
       'output': null,
       'entity_types': [],
       'schema': null,
-      'input': null
+      'input': null,
+      'pipeline': 100
     }
     nock('http://localhost')
       .get(`/api/pipelines/?limit=${MAX_PAGE_SIZE}`)
       .reply(200, mockPipelines)
 
     nock('http://localhost')
-      .put(`/api/pipelines/${wrongPipeline.id}/`)
+      .put(`/api/pipelines/${wrongPipeline.pipeline}/`)
       .reply(404)
     expect(typeof updatePipeline(wrongPipeline)).toEqual('object')
     return store.dispatch(getPipelines())
@@ -144,12 +147,12 @@ describe('Pipeline actions', () => {
     nock('http://localhost')
       .get(`/api/pipelines/?limit=${MAX_PAGE_SIZE}`)
       .reply(200, mockPipelines)
-    store.dispatch({ type: types.GET_ALL, payload: {} })
+    store.dispatch({ type: types.GET_ALL, payload: { results: [] } })
     expect(store.getState().pipelineList).toEqual([])
     return store.dispatch(getPipelines())
       .then(() => {
         expect(store.getState().pipelineList).toEqual(
-          mockPipelines.results
+          mockPipelines.transformed
         )
       })
   })
@@ -178,49 +181,45 @@ describe('Pipeline actions', () => {
       })
   })
 
-  it('should dispatch an action to get pipeline by id and set it as selected pipeline in the redux store', () => {
+  it('should dispatch an action to get pipeline and contract by id and set it as selected pipeline in the redux store', () => {
     const pipeline = {
-      'id': 1,
-      'name': 'Pipeline Mock 1 From API',
-      'mapping_errors': null,
-      'mapping': [],
-      'output': null,
-      'entity_types': [],
+      'id': 3,
+      'name': 'Pipeline Mock 3',
+      'contracts': [{
+        'mapping_errors': null,
+        'mapping': [],
+        'output': null,
+        'entity_types': [],
+        'id': '124356323',
+        'name': 'contract 3'
+      }],
       'schema': null,
-      'input': null,
-      'highlightDestination': [],
-      'highlightSource': {}
+      'input': null
     }
-    nock('http://localhost')
-      .get(`/api/pipelines/?limit=${MAX_PAGE_SIZE}`)
-      .reply(200, mockPipelines)
     nock('http://localhost')
       .get(`/api/pipelines/${pipeline.id}/`)
       .reply(200, pipeline)
-    expect(typeof getPipelineById(pipeline.id)).toEqual('object')
-    return store.dispatch(getPipelines())
+    expect(typeof getPipelineById(pipeline.id, pipeline.contracts[0].id)).toEqual('object')
+    return store.dispatch(getPipelineById(pipeline.id, pipeline.contracts[0].id))
       .then(() => {
-        return store.dispatch(getPipelineById(pipeline.id))
-          .then(() => {
-            expect(store.getState().selectedPipeline).toEqual(
-              pipeline
-            )
-          })
+        expect(store.getState().selectedPipeline).toEqual(
+          mockPipelines.transformed[2]
+        )
       })
   })
 
   it('should dispatch a publish pipeline action and save response in the redux store', () => {
-    const expected = {
-      successful: ['Passed 1', 'Passed 2']
-    }
+    const pipeline = mockPipelines.results[0]
+    const selectedPipe = mockPipelines.transformed[0]
     nock('http://localhost')
       .post('/api/pipelines/1/publish/')
-      .reply(200, expected)
-    expect(typeof publishPipeline(1)).toEqual('object')
-    return store.dispatch(publishPipeline(1))
+      .reply(200, pipeline)
+    expect(typeof publishPipeline(pipeline.id, pipeline.contracts[0].id)).toEqual('object')
+    store.dispatch(selectedPipelineChanged(selectedPipe))
+    return store.dispatch(publishPipeline(pipeline.id, pipeline.contracts[0].id))
       .then(() => {
         expect(store.getState().publishSuccess).toEqual(
-          expected.successful
+          true
         )
         expect(store.getState().publishError).toEqual(
           null

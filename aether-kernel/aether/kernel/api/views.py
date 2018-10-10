@@ -123,7 +123,9 @@ class ProjectViewSet(CustomViewSet):
     def __upsert_artefacts(self, request, pk=None):
         '''
         Creates or updates the project and its artefacts:
-        schemas, project schemas and mappings.
+        schemas, project schemas, mapping sets and mappings.
+
+        Note: this method will never DELETE any artefact.
 
         Returns the list of project and affected artefact ids by type.
 
@@ -157,6 +159,18 @@ class ProjectViewSet(CustomViewSet):
                     # ...
                 ],
 
+                # this is also optional, contains the list of input samples
+                # used to validate the mapping rules
+                "mappingsets": [
+                    {
+                        "id": "mapping set id (optional)",
+                        "name": "mapping set name (optional but unique)",
+                        "input": {
+                            # sample
+                        }
+                    }
+                ]
+
                 # also optional
                 "mappings": [
                     {
@@ -167,6 +181,15 @@ class ProjectViewSet(CustomViewSet):
                             "mapping": [
                                 # the mapping rules
                             ]
+                        },
+                        "is_read_only": true | false,
+                        "is_active": true | false,
+
+                        # used to link the mapping with its mapping set
+                        "mappingset": "mapping set id",
+                        # used only to create the mapping set (if missing)
+                        "input": {
+                            # sample
                         }
                     },
                     # ...
@@ -181,6 +204,7 @@ class ProjectViewSet(CustomViewSet):
             project_id=pk,
             project_name=data.get('name'),
             schemas=data.get('schemas', []),
+            mappingsets=data.get('mappingsets', []),
             mappings=data.get('mappings', []),
         )
 
@@ -243,9 +267,32 @@ class ProjectStatsViewSet(viewsets.ReadOnlyModelViewSet):
                          first_submission=Min('submissions__created'),
                          last_submission=Max('submissions__created'),
                          submissions_count=Count('submissions__id', distinct=True),
-                         entities_count=Count('entities__id', distinct=True),
+                         entities_count=Count('submissions__entities__id', distinct=True),
                      )
     serializer_class = serializers.ProjectStatsSerializer
+
+    search_fields = ('name',)
+    ordering_fields = ('name', 'created',)
+    ordering = ('name',)
+
+
+class MappingSetViewSet(CustomViewSet):
+    queryset = models.MappingSet.objects.all()
+    serializer_class = serializers.MappingSetSerializer
+    filter_class = filters.MappingSetFilter
+
+
+class MappingSetStatsViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = models.MappingSet \
+                     .objects \
+                     .values('id', 'name', 'created') \
+                     .annotate(
+                         first_submission=Min('submissions__created'),
+                         last_submission=Max('submissions__created'),
+                         submissions_count=Count('submissions__id', distinct=True),
+                         entities_count=Count('submissions__entities__id', distinct=True),
+                     )
+    serializer_class = serializers.MappingSetStatsSerializer
 
     search_fields = ('name',)
     ordering_fields = ('name', 'created',)
@@ -256,23 +303,6 @@ class MappingViewSet(CustomViewSet):
     queryset = models.Mapping.objects.all()
     serializer_class = serializers.MappingSerializer
     filter_class = filters.MappingFilter
-
-
-class MappingStatsViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.Mapping \
-                     .objects \
-                     .values('id', 'name', 'created', 'definition') \
-                     .annotate(
-                         first_submission=Min('submissions__created'),
-                         last_submission=Max('submissions__created'),
-                         submissions_count=Count('submissions__id', distinct=True),
-                         entities_count=Count('submissions__entities__id', distinct=True),
-                     )
-    serializer_class = serializers.MappingStatsSerializer
-
-    search_fields = ('name',)
-    ordering_fields = ('name', 'created',)
-    ordering = ('name',)
 
 
 class SubmissionViewSet(CustomViewSet):

@@ -22,7 +22,7 @@ import pytest
 import requests
 
 # Register Test Project and provide access to artifacts through client test fixtures
-from aether.client.test_fixtures import client, project, schemas, projectschemas, mapping  # noqa
+from aether.client.test_fixtures import client, project, schemas, projectschemas, mapping, mappingset  # noqa
 from aether.client import fixtures  # noqa
 
 from .consumer import get_consumer, read
@@ -65,17 +65,18 @@ def entities(client, projectschemas):
     return entities
 
 
-@pytest.fixture(scope="module")  # noqa
-def generate_entities(client, project, mapping):
+@pytest.fixture(scope="function")  # noqa
+def generate_entities(client, mappingset):
     payloads = iter(fixtures.get_submission_payloads())
     entities = []
     for i in range(FORMS_TO_SUBMIT):
-        obj = dict(fixtures.submission_template)
-        obj['payload'] = next(payloads)
-        obj['mapping'] = mapping['id']
-        obj['project'] = project['id']
-        res = client.submissions.create(data=obj)
-        for entity in client.entities.paginated('list', submission=res['id']):
+        Submission = client.get_model('Submission')
+        submission = Submission(
+            payload=next(payloads),
+            mappingset=mappingset.id
+        )
+        instance = client.submissions.create(data=submission)
+        for entity in client.entities.paginated('list', submission=instance.id):
             entities.append(entity)
     return entities
 

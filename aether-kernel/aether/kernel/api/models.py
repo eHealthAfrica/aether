@@ -40,42 +40,41 @@ STATUS_CHOICES = (
 
 
 '''
-
 Data model schema:
 
-
-    +------------------+          +------------------+       +------------------+       +---------------------+
-    | Project          |          | Mapping          |       | Submission       |       | Attachment          |
-    +==================+          +==================+       +==================+       +=====================+
-    | id               |<-----+   | id               |<--+   | id               |<--+   | id                  |
-    | created          |      |   | created          |   |   | created          |   |   | created             |
-    | modified         |      |   | modified         |   |   | modified         |   |   | modified            |
-    | revision         |      |   | revision         |   |   | revision         |   |   | name                |
-    | name             |      |   | name             |   |   | payload          |   |   | attachment_file     |
-    | salad_schema     |      |   | definition       |   |   +::::::::::::::::::+   |   | md5sum              |
-    | jsonld_context   |      |   +::::::::::::::::::+   +--<| mapping          |   |   +:::::::::::::::::::::+
-    | rdf_definition   |      +--<| project          |       | map_revision     |   +--<| submission          |
-    +------------------+      |   +------------------+    +-<| project          |   |   | submission_revision |
-                              |                           |  +------------------+   |   +---------------------+
-                              |                           |                         |
-                              +---------------------------+                         |
-                              |                           |                         |
-    +------------------+      |   +------------------+    |  +------------------+   |
-    | Schema           |      |   | ProjectSchema    |    |  | Entity           |   |
-    +==================+      |   +==================+    |  +==================+   |
-    | id               |<--+  |   | id               |<-+ |  | id               |   |
-    | created          |   |  |   | created          |  | |  | modified         |   |
-    | modified         |   |  |   | modified         |  | |  | revision         |   |
-    | revision         |   |  |   | name             |  | |  | payload          |   |
-    | name             |   |  |   | mandatory_fields |  | |  | status           |   |
-    | definition       |   |  |   | transport_rule   |  | |  +::::::::::::::::::+   |
-    | type             |   |  |   | masked_fields    |  | |  | submission       |>--+
-    +------------------+   |  |   | is_encrypted     |  | +-<| project          |
-                           |  |   +::::::::::::::::::+  +---<| projectschema    |
-                           |  +--<| project          |       +------------------+
-                           +-----<| schema           |
-                                  +------------------+
-
+    +------------------+          +------------------+         +------------------+       +------------------+
+    | Project          |          | MappingSet       |         | Submission       |       | Attachment       |
+    +==================+          +==================+         +==================+       +==================+
+    | id               |<-----+   | id               |<----+   | id               |<---+  | id               |
+    | created          |      |   | created          |     |   | created          |    |  | created          |
+    | modified         |      |   | modified         |     |   | modified         |    |  | modified         |
+    | revision         |      |   | revision         |     |   | revision         |    |  | name             |
+    | name             |      |   | name             |     |   | payload          |    |  | attachment_file  |
+    | salad_schema     |      |   | input            |     |   +::::::::::::::::::+    |  | md5sum           |
+    | jsonld_context   |      |   +::::::::::::::::::+     +--<| mappingset       |    |  +::::::::::::::::::+
+    | rdf_definition   |      +--<| project          |     |   | project(**)      |    +-<| submission       |
+    +------------------+      |   +------------------+     |   +------------------+    |  | submission_rev   |
+                              |                            |                           |  +------------------+
+                              |                            |                           |
+                              |                            |                           |
+                              |                            |                           |
+    +------------------+      |   +------------------+     |   +------------------+    |  +------------------+
+    | Schema           |      |   | ProjectSchema    |     |   | Mapping          |    |  | Entity           |
+    +==================+      |   +==================+     |   +==================+    |  +==================+
+    | id               |<--+  |   | id               |<--+ |   | id               |<-+ |  | id               |
+    | created          |   |  |   | created          |   | |   | created          |  | |  | modified         |
+    | modified         |   |  |   | modified         |   | |   | modified         |  | |  | revision         |
+    | revision         |   |  |   | name             |   | |   | revision         |  | |  | payload          |
+    | name             |   |  |   | mandatory_fields |   | |   | name             |  | |  | status           |
+    | definition       |   |  |   | transport_rule   |   | |   | definition       |  | |  +::::::::::::::::::+
+    | type             |   |  |   | masked_fields    |   | |   | is_active        |  | +-<| submission       |
+    +------------------+   |  |   | is_encrypted     |   | |   | is_read_only     |  +---<| mapping          |
+                           |  |   +::::::::::::::::::+   | |   +::::::::::::::::::+       | mapping_rev      |
+                           |  +--<| project          |   | +--<| mappingset       |   +--<| projectschema    |
+                           +-----<| schema           |   +---<<| projectschemas   |   |   | project(**)      |
+                                  +------------------+   |     | project(**)      |   |   +------------------+
+                                                         |     +------------------+   |
+                                                         +----------------------------+
 '''
 
 
@@ -101,26 +100,26 @@ class Project(ExportModelOperationsMixin('kernel_project'), TimeStampedModel):
         ]
 
 
-class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
+class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), TimeStampedModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
     name = models.CharField(max_length=50, unique=True)
 
-    definition = JSONField()
+    input = JSONField(null=True, blank=True)
 
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
 
     @property
-    def definition_prettified(self):
-        return json_prettified(self.definition)
+    def input_prettified(self):
+        return json_prettified(self.input)
 
     def __str__(self):
         return self.name
 
     class Meta:
         app_label = 'kernel'
-        default_related_name = 'mappings'
+        default_related_name = 'mappingsets'
         ordering = ['project__id', '-modified']
         indexes = [
             models.Index(fields=['project', '-modified']),
@@ -133,16 +132,15 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedMod
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     revision = models.TextField(default='1')
 
-    map_revision = models.TextField(default='1')
     payload = JSONField()
 
-    mapping = models.ForeignKey(to=Mapping, on_delete=models.CASCADE)
+    mappingset = models.ForeignKey(to=MappingSet, on_delete=models.CASCADE)
 
     # redundant but speed up queries
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, null=True, blank=True)
 
     def save(self, **kwargs):
-        self.project = self.mapping.project
+        self.project = self.mappingset.project
         super(Submission, self).save(**kwargs)
 
     @property
@@ -267,6 +265,49 @@ class ProjectSchema(ExportModelOperationsMixin('kernel_projectschema'), TimeStam
         ]
 
 
+class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    revision = models.TextField(default='1')
+    name = models.CharField(max_length=50, unique=True)
+
+    definition = JSONField()
+    is_active = models.BooleanField(default=True)
+    is_read_only = models.BooleanField(default=False)
+
+    mappingset = models.ForeignKey(to=MappingSet, on_delete=models.CASCADE)
+    projectschemas = models.ManyToManyField(to=ProjectSchema, blank=True)
+
+    # redundant but speed up queries
+    project = models.ForeignKey(to=Project, on_delete=models.CASCADE, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        self.project = self.mappingset.project
+        self.projectschemas.clear()
+        super(Mapping, self).save(*args, **kwargs)
+        entities = self.definition.get('entities', {})
+        ps_list = []
+        for entity_pk in entities.values():
+            ps_list.append(ProjectSchema.objects.get(pk=entity_pk, project=self.project))
+        self.projectschemas.add(*ps_list)
+
+    @property
+    def definition_prettified(self):
+        return json_prettified(self.definition)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        app_label = 'kernel'
+        default_related_name = 'mappings'
+        ordering = ['project__id', '-modified']
+        indexes = [
+            models.Index(fields=['project', '-modified']),
+            models.Index(fields=['-modified']),
+        ]
+
+
 class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
@@ -278,6 +319,8 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
 
     projectschema = models.ForeignKey(to=ProjectSchema, on_delete=models.SET_NULL, null=True, blank=True)
     submission = models.ForeignKey(to=Submission, on_delete=models.SET_NULL, null=True, blank=True)
+    mapping = models.ForeignKey(to=Mapping, on_delete=models.SET_NULL, null=True, blank=True)
+    mapping_revision = models.TextField()
 
     # redundant but speed up queries
     project = models.ForeignKey(to=Project, on_delete=models.SET_NULL, null=True, blank=True)
