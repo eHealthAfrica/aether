@@ -297,18 +297,23 @@ class ExporterViewsTest(TestCase):
             project=project,
             schema=schema,
         )
-        mapping_definition = assign_mapping_entities(
-            mapping=EXAMPLE_MAPPING,
-            projectschemas=[projectschema],
+        mappingset = models.MappingSet.objects.create(
+            name='mappingset1',
+            input={},
+            project=project,
         )
-        mapping = models.Mapping.objects.create(
+        models.Mapping.objects.create(
             name='mapping1',
-            definition=mapping_definition,
+            definition=assign_mapping_entities(
+                mapping=EXAMPLE_MAPPING,
+                projectschemas=[projectschema],
+            ),
+            mappingset=mappingset,
             project=project,
         )
         submission = models.Submission.objects.create(
             payload=EXAMPLE_SOURCE_DATA,
-            mapping=mapping,
+            mappingset=mappingset,
         )
         models.Entity.objects.create(
             payload=EXAMPLE_PAYLOAD,
@@ -474,7 +479,7 @@ class ExporterViewsTest(TestCase):
         for __ in range(13):
             models.Submission.objects.create(
                 payload=EXAMPLE_SOURCE_DATA,
-                mapping=models.Mapping.objects.first(),
+                mappingset=models.MappingSet.objects.first(),
             )
 
         response = self.client.post(reverse('submission-csv'), data=json.dumps({
