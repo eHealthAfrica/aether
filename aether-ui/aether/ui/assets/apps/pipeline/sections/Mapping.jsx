@@ -23,7 +23,7 @@ import { FormattedMessage } from 'react-intl'
 import { connect } from 'react-redux'
 
 import { generateGUID, deepEqual } from '../../utils'
-import { updatePipeline } from '../redux'
+import { updateContract } from '../redux'
 
 class Mapping extends Component {
   constructor (props) {
@@ -77,7 +77,7 @@ class Mapping extends Component {
 
   notifyChange (event) {
     event.preventDefault()
-    this.props.updatePipeline({ ...this.props.selectedPipeline, mapping: this.state.mappingRules })
+    this.props.updateContract({ ...this.props.selectedPipeline, mapping: this.state.mappingRules })
   }
 
   notifyChangeJSON (event) {
@@ -86,7 +86,7 @@ class Mapping extends Component {
     this.setState({ jsonError: null })
     try {
       rules = this.JSONToMapping(this.state.mappingRulesInput)
-      this.props.updatePipeline({ ...this.props.selectedPipeline, mapping: rules })
+      this.props.updateContract({ ...this.props.selectedPipeline, mapping: rules })
       this.setState({ current_rules: JSON.parse(this.state.mappingRulesInput) })
     } catch (error) {
       this.setState({ jsonError: error.message })
@@ -148,7 +148,7 @@ class Mapping extends Component {
                 <div className='rules-buttons'>
                   { this.renderAddNewRuleButton() }
 
-                  <button type='submit' className='btn btn-d btn-primary' disabled={!this.hasChanged()}>
+                  <button type='submit' className='btn btn-d btn-primary' disabled={this.props.selectedPipeline.is_read_only || !this.hasChanged()}>
                     <span className='details-title'>
                       <FormattedMessage
                         id='mapping.rules.button.ok'
@@ -186,7 +186,7 @@ class Mapping extends Component {
     }
 
     return (
-      <button type='button' className='btn btn-d btn-primary' onClick={addNewRule}>
+      <button type='button' className='btn btn-d btn-primary' onClick={addNewRule} disabled={this.props.selectedPipeline.is_read_only}>
         <FormattedMessage id='mapping.button.add' defaultMessage='Add rule' />
       </button>
     )
@@ -253,7 +253,8 @@ class Mapping extends Component {
         <button
           type='button'
           className='btn btn-d btn-flat btn-transparent'
-          onClick={removeRule}>
+          onClick={removeRule}
+          disabled={this.props.selectedPipeline.is_read_only}>
           <span className='details-title'>
             <FormattedMessage
               id='mapping.rule.button.delete'
@@ -268,51 +269,44 @@ class Mapping extends Component {
   renderDefinition () {
     return (
       <div className='definition'>
-        <div className='definition-code'>
-          <form onSubmit={this.notifyChangeJSON.bind(this)}>
-            <label className='form-label'>
-              <FormattedMessage
-                id='mapping.empty.message'
-                defaultMessage='Paste mapping rules'
+        <form onSubmit={this.notifyChangeJSON.bind(this)}>
+
+          <div className='textarea-header'>
+            { this.state.jsonError &&
+              <div className='hint error-message'>
+                <h4 className='hint-title'>
+                  <FormattedMessage
+                    id='mapping.invalid.message'
+                    defaultMessage='You have provided invalid mapping rules.'
+                  />
+                </h4>
+                { this.state.jsonError }
+              </div>
+            }
+          </div>
+
+          <FormattedMessage id='mappingRules.placeholder' defaultMessage='Enter your mapping rules as an array'>
+            {message => (
+              <textarea
+                className={`input-d monospace ${this.state.error ? 'error' : ''}`}
+                value={this.state.mappingRulesInput}
+                onChange={this.onMappingRulesTextChanged.bind(this)}
+                placeholder={message}
+                rows='10'
+                disabled={this.props.selectedPipeline.is_read_only}
               />
-            </label>
+            )}
+          </FormattedMessage>
 
-            <div className='textarea-header'>
-              { this.state.jsonError &&
-                <div className='hint error-message'>
-                  <h4 className='hint-title'>
-                    <FormattedMessage
-                      id='mapping.invalid.message'
-                      defaultMessage='You have provided invalid mapping rules.'
-                    />
-                  </h4>
-                  { this.state.jsonError }
-                </div>
-              }
-            </div>
-
-            <FormattedMessage id='mappingRules.placeholder' defaultMessage='Enter your mapping rules as an array'>
-              {message => (
-                <textarea
-                  className={`input-d monospace ${this.state.error ? 'error' : ''}`}
-                  value={this.state.mappingRulesInput}
-                  onChange={this.onMappingRulesTextChanged.bind(this)}
-                  placeholder={message}
-                  rows='10'
-                />
-              )}
-            </FormattedMessage>
-
-            <button type='submit' className='btn btn-d btn-primary mt-3' disabled={!this.hasChangedJson()}>
-              <span className='details-title'>
-                <FormattedMessage
-                  id='mapping.button.ok'
-                  defaultMessage='Apply mapping rules to pipeline'
-                />
-              </span>
-            </button>
-          </form>
-        </div>
+          <button type='submit' className='btn btn-d btn-primary mt-3' disabled={!this.hasChangedJson()}>
+            <span className='details-title'>
+              <FormattedMessage
+                id='mapping.button.ok'
+                defaultMessage='Apply mapping rules to pipeline'
+              />
+            </span>
+          </button>
+        </form>
       </div>
     )
   }
@@ -322,4 +316,4 @@ const mapStateToProps = ({ pipelines }) => ({
   selectedPipeline: pipelines.selectedPipeline
 })
 
-export default connect(mapStateToProps, { updatePipeline })(Mapping)
+export default connect(mapStateToProps, { updateContract })(Mapping)

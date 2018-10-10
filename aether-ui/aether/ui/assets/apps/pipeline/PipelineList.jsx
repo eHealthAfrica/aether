@@ -29,7 +29,7 @@ import PublishButton from './PublishButton'
 import InfoButton from './InfoButton'
 
 import NewPipeline from './NewPipeline'
-import { addPipeline, selectedPipelineChanged, getPipelines, fetchPipelines } from './redux'
+import { addPipeline, selectedPipelineChanged, getPipelines, fetchPipelines, addInitialContract } from './redux'
 
 class PipelineList extends Component {
   constructor (props) {
@@ -46,8 +46,11 @@ class PipelineList extends Component {
     if (!this.props.pipelineList.length) {
       this.props.getPipelines()
     }
-    this.props.fetchPipelines()
     this.props.getKernelURL()
+  }
+
+  componentDidMount () {
+    this.props.fetchPipelines()
   }
 
   componentWillReceiveProps (nextProps) {
@@ -58,8 +61,11 @@ class PipelineList extends Component {
         errorMessage: nextProps.error.message
       })
     }
-    if (nextProps.isNewPipeline) {
-      this.props.history.push(`/${nextProps.pipelineList[0].id}`)
+    if (nextProps.isNewPipeline && !nextProps.selectedPipeline.mapping) {
+      this.props.addInitialContract({ name: nextProps.selectedPipeline.name, pipeline: nextProps.selectedPipeline.id })
+    }
+    if (nextProps.isNewPipeline && nextProps.selectedPipeline.mapping) {
+      this.props.history.push(`/${nextProps.selectedPipeline.pipeline}/${nextProps.selectedPipeline.id}`)
     }
   }
 
@@ -97,7 +103,7 @@ class PipelineList extends Component {
     return this.props.pipelineList.map(pipeline => (
       <div
         key={pipeline.id}
-        className='pipeline-preview'>
+        className={`pipeline-preview ${pipeline.is_read_only ? 'pipeline-readonly' : ''}`}>
         <Modal buttons={
           <button type='button' className='btn btn-w btn-primary' onClick={this.setErrorModal.bind(this, false)}>
             <FormattedMessage
@@ -110,6 +116,14 @@ class PipelineList extends Component {
         </Modal>
         <div
           onClick={() => { this.onSelectPipeline(pipeline) }}>
+          { pipeline.is_read_only &&
+            <span className='tag'>
+              <FormattedMessage
+                id='pipeline.read-only.indicator'
+                defaultMessage='read-only'
+              />
+            </span>
+          }
           <h2 className='preview-heading'>{pipeline.name}</h2>
 
           <div className='summary-entity-types'>
@@ -144,7 +158,9 @@ class PipelineList extends Component {
               <InfoButton pipeline={pipeline} />
             }
           </div>
-          <PublishButton pipeline={pipeline} className='btn btn-w btn-publish' />
+          { !pipeline.is_read_only &&
+            <PublishButton pipeline={pipeline} className='btn btn-w btn-publish' />
+          }
         </div>
 
       </div>
@@ -157,14 +173,22 @@ class PipelineList extends Component {
 
   onSelectPipeline (pipeline) {
     this.props.selectedPipelineChanged(pipeline)
-    this.props.history.push(`/${pipeline.id}`)
+    this.props.history.push(`/${pipeline.pipeline}/${pipeline.id}`)
   }
 }
 
 const mapStateToProps = ({ pipelines }) => ({
   pipelineList: pipelines.pipelineList,
   error: pipelines.error,
-  isNewPipeline: pipelines.isNewPipeline
+  isNewPipeline: pipelines.isNewPipeline,
+  selectedPipeline: pipelines.selectedPipeline
 })
 
-export default connect(mapStateToProps, { getPipelines, selectedPipelineChanged, addPipeline, fetchPipelines, getKernelURL })(PipelineList)
+export default connect(mapStateToProps, {
+  getPipelines,
+  selectedPipelineChanged,
+  addPipeline,
+  fetchPipelines,
+  getKernelURL,
+  addInitialContract
+})(PipelineList)

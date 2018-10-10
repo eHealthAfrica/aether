@@ -19,13 +19,20 @@
  */
 
 import React, { Component } from 'react'
-import { FormattedMessage } from 'react-intl'
+import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
 import { connect } from 'react-redux'
 import avro from 'avsc'
 
 import { EntityTypeViewer } from '../../components'
 import { deepEqual } from '../../utils'
-import { updatePipeline } from '../redux'
+import { updateContract } from '../redux'
+
+const MESSAGES = defineMessages({
+  missingIdError: {
+    defaultMessage: 'The AVRO schemas MUST have an "id" field with type "string".',
+    id: 'entitytype.missing.id.message'
+  }
+})
 
 class EntityTypes extends Component {
   constructor (props) {
@@ -57,12 +64,19 @@ class EntityTypes extends Component {
 
   notifyChange (event) {
     event.preventDefault()
+    const { formatMessage } = this.props.intl
 
     try {
       // validate schemas
       const schemas = JSON.parse(this.state.entityTypesSchema)
-      schemas.forEach(schema => { avro.parse(schema, { noAnonymousTypes: true }) })
-      this.props.updatePipeline({ ...this.props.selectedPipeline, entity_types: schemas })
+      schemas.forEach(schema => {
+        avro.parse(schema, { noAnonymousTypes: true })
+        // all entity types must have an "id" field with type "string"
+        if (!schema.fields.find(field => field.name === 'id' && field.type === 'string')) {
+          throw new Error(formatMessage(MESSAGES.missingIdError))
+        }
+      })
+      this.props.updateContract({ ...this.props.selectedPipeline, entity_types: schemas })
     } catch (error) {
       this.setState({ error: error.message })
     }
@@ -118,6 +132,7 @@ class EntityTypes extends Component {
                   onChange={this.onSchemaTextChanged.bind(this)}
                   placeholder={message}
                   rows='10'
+                  disabled={this.props.selectedPipeline.is_read_only}
                 />
               )}
             </FormattedMessage>
@@ -141,4 +156,4 @@ const mapStateToProps = ({ pipelines }) => ({
   selectedPipeline: pipelines.selectedPipeline
 })
 
-export default connect(mapStateToProps, { updatePipeline })(EntityTypes)
+export default connect(mapStateToProps, { updateContract })(injectIntl(EntityTypes))

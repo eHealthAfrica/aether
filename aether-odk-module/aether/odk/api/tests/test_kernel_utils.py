@@ -156,6 +156,8 @@ class KernelUtilsTest(CustomTestCase):
         self.assertEqual(response.status_code, 200)
         kernel_mapping_1 = json.loads(response.content.decode('utf-8'))
         self.assertEqual(kernel_mapping_1['id'], self.KERNEL_ID_1)
+        self.assertTrue(kernel_mapping_1['is_read_only'])
+        self.assertTrue(kernel_mapping_1['is_active'])
         # last rule is #!uuid
         self.assertEqual('#!uuid', kernel_mapping_1['definition']['mapping'][-1][0])
 
@@ -169,6 +171,8 @@ class KernelUtilsTest(CustomTestCase):
         self.assertEqual(response.status_code, 200)
         kernel_mapping_2 = json.loads(response.content.decode('utf-8'))
         self.assertEqual(kernel_mapping_2['id'], self.KERNEL_ID_2)
+        self.assertTrue(kernel_mapping_2['is_read_only'])
+        self.assertTrue(kernel_mapping_2['is_active'])
         self.assertNotEqual('#!uuid', kernel_mapping_2['definition']['mapping'][-1][0])
 
         response = requests.get(self.SCHEMA_URL_2, headers=self.KERNEL_HEADERS)

@@ -194,5 +194,5 @@ def post_to_aether(document, aether_id=False):
         )
 
     return kernel_utils.submit_to_kernel(submission=document,
-                                         mapping_id=str(schema.kernel_id),
+                                         mappingset_id=str(schema.kernel_id),
                                          submission_id=aether_id)
