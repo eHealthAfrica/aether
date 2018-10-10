@@ -368,8 +368,8 @@ class EntityViewSet(exporter.ExporterViewSet):
 
 SchemaView = get_schema_view(
     openapi.Info(
-      title='Aether API',
-      default_version='v1'
+        title='Aether API',
+        default_version='v1'
     ),
     public=True,
     permission_classes=(permissions.AllowAny, ),
