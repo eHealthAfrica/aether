@@ -61,6 +61,7 @@ class ExporterViewSet(ModelViewSet):
     def xlsx(self, request, *args, **kwargs):
         '''
         Export the data as an XLSX file
+
         Reachable at ``/{model}/xlsx/``
         '''
         return self.__export(request, format='xlsx')
@@ -69,6 +70,7 @@ class ExporterViewSet(ModelViewSet):
     def csv(self, request, *args, **kwargs):
         '''
         Export the data as a bunch of CSV files
+
         Reachable at ``/{model}/csv/``
         '''
         return self.__export(request, format='csv')
