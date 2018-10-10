@@ -63,7 +63,17 @@ export const makeOptionalField = (field) => {
 
 export const deriveEntityTypes = (schema) => {
   const fields = schema.fields.map(makeOptionalField)
-  return [{ ...schema, fields: fields }]
+  if (!fields.find(field => field.name === 'id')) {
+    // DETECTED CONFLICT
+    // the "id" must be an string if the schema defines it with
+    // another type the validation could fail
+    // this step only includes it if missing but does not change the type to "string"
+    fields.push({
+      name: 'id',
+      type: 'string'
+    })
+  }
+  return [{ ...schema, fields }]
 }
 
 export const deriveMappingRules = (schema) => {
@@ -74,7 +84,15 @@ export const deriveMappingRules = (schema) => {
       destination: `${schema.name}.${field.name}`
     }
   }
-  return schema.fields.map(fieldToMappingRule)
+  const rules = schema.fields.map(fieldToMappingRule)
+  if (!schema.fields.find(field => field.name === 'id')) {
+    rules.push({
+      id: generateGUID(),
+      source: `#!uuid`,
+      destination: `${schema.name}.id`
+    })
+  }
+  return rules
 }
 
 const MESSAGES = defineMessages({
@@ -127,17 +145,21 @@ class SchemaInput extends Component {
       // validate schema
       const schema = JSON.parse(this.state.inputSchema)
       const type = avro.parse(schema, { noAnonymousTypes: true })
+
       // generate a new input sample
-      let input = {}
       try {
-        input = type.random()
+        const input = type.random()
+        // check if there is a string "id" field
+        if (schema.fields.find(field => field.name === 'id' && field.type === 'string')) {
+          input.id = generateGUID() // make it more UUID
+        }
+        this.props.updatePipeline({ ...this.props.selectedPipeline, schema, input })
       } catch (error) {
         this.setState({
           error: error.message,
           errorHead: formatMessage(MESSAGES.recursiveError)
         })
       }
-      this.props.updatePipeline({ ...this.props.selectedPipeline, schema, input })
     } catch (error) {
       this.setState({
         error: error.message,
