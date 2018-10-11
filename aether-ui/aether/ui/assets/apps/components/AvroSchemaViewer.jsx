@@ -138,7 +138,7 @@ class AvroSchemaViewer extends Component {
     }
 
     try {
-      avro.parse(this.props.schema, { noAnonymousTypes: true })
+      avro.parse(this.props.schema, { noAnonymousTypes: true, wrapUnions: false })
       return (
         <div className='input-schema'>
           { this.schemaToMarkup(clone(this.props.schema)) }
