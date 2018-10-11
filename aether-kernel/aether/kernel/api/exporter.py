@@ -92,6 +92,9 @@ class ExporterViewSet(ModelViewSet):
         if offset >= limit:
             return Response(status=204)  # NO-CONTENT
 
+        # use the first instance to build the filename
+        filename = self.__get(request, 'filename', queryset.first().name or 'export')
+
         # extract jsonpaths and docs from linked schemas definition
         jsonpaths = self.__get(request, 'paths', [])
         docs = self.__get(request, 'headers', {})
@@ -112,7 +115,7 @@ class ExporterViewSet(ModelViewSet):
                 paths=jsonpaths,
                 labels=docs,
                 format=format,
-                filename=self.__get(request, 'filename', 'export'),
+                filename=filename,
                 offset=offset,
                 limit=limit,
             )

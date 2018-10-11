@@ -302,7 +302,7 @@ class ExporterViewsTest(TestCase):
             input={},
             project=project,
         )
-        models.Mapping.objects.create(
+        mapping = models.Mapping.objects.create(
             name='mapping1',
             definition=assign_mapping_entities(
                 mapping=EXAMPLE_MAPPING,
@@ -319,6 +319,7 @@ class ExporterViewsTest(TestCase):
             payload=EXAMPLE_PAYLOAD,
             projectschema=projectschema,
             submission=submission,
+            mapping=mapping,
         )
 
     def tearDown(self):
@@ -466,7 +467,7 @@ class ExporterViewsTest(TestCase):
             paths=[],
             labels={},
             format='xlsx',
-            filename='export',
+            filename='project1-mappingset1',
             offset=0,
             limit=1,
         )
@@ -532,7 +533,7 @@ class ExporterViewsTest(TestCase):
             paths=['id', '_rev', 'name', 'dob', 'villageID'],
             labels={'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
             format='xlsx',
-            filename='export',
+            filename='project1-Person',
             offset=0,
             limit=1,
         )
@@ -560,7 +561,7 @@ class ExporterViewsTest(TestCase):
             paths=['id', '_rev', 'name', 'dob', 'villageID'],
             labels={'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
             format='csv',
-            filename='export',
+            filename='project1-Person',
             offset=0,
             limit=1,
         )
