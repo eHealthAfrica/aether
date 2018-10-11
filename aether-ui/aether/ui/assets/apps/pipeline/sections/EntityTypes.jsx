@@ -70,7 +70,7 @@ class EntityTypes extends Component {
       // validate schemas
       const schemas = JSON.parse(this.state.entityTypesSchema)
       schemas.forEach(schema => {
-        avro.parse(schema, { noAnonymousTypes: true })
+        avro.parse(schema, { noAnonymousTypes: true, wrapUnions: false })
         // all entity types must have an "id" field with type "string"
         if (!schema.fields.find(field => field.name === 'id' && field.type === 'string')) {
           throw new Error(formatMessage(MESSAGES.missingIdError))
