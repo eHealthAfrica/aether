@@ -422,6 +422,7 @@ def avro_schema_to_passthrough_artefacts(item_id, avro_schema):
         item_id = str(uuid4())
 
     definition = deepcopy(avro_schema)
+    sample = random_avro(definition)
 
     # assign default namespace
     if not definition.get('namespace'):
@@ -468,7 +469,8 @@ def avro_schema_to_passthrough_artefacts(item_id, avro_schema):
         # this is an auto-generated mapping that shouldn't be modified manually
         'is_read_only': True,
         'is_active': True,
-        'input': definition,  # include avro schema
+        'input': sample,  # include a data sample
+        'schema': definition,  # include avro schema
     }
 
     return schema, mapping

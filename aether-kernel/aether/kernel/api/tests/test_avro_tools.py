@@ -602,6 +602,18 @@ class TestAvroTools(TestCase):
             'is_read_only': True,
             'is_active': True,
             'input': {},
+            'schema': {
+                'fields': [
+                    {
+                        'doc': 'UUID',
+                        'name': 'id',
+                        'type': 'string'
+                    }
+                ],
+                'name': 'sample',
+                'namespace': 'org.ehealthafrica.aether',
+                'type': 'record'
+            },
         })
 
     def test__avro_schema_to_passthrough_artefacts__non_defaults(self):
@@ -661,6 +673,23 @@ class TestAvroTools(TestCase):
             },
             'is_read_only': True,
             'is_active': True,
+            'schema': {
+                'fields': [
+                    {
+                        'doc': 'My ID',
+                        'name': 'id',
+                        'type': 'int'
+                    },
+                    {
+                        'doc': 'UUID',
+                        'name': 'id2',
+                        'type': 'string'
+                    }
+                ],
+                'name': 'sample2',
+                'namespace': 'my.namespace',
+                'type': 'record'
+            },
         })
 
 
