@@ -144,7 +144,7 @@ class SchemaInput extends Component {
     try {
       // validate schema
       const schema = JSON.parse(this.state.inputSchema)
-      const type = avro.parse(schema, { noAnonymousTypes: true })
+      const type = avro.parse(schema, { noAnonymousTypes: true, wrapUnions: false })
 
       // generate a new input sample
       try {
