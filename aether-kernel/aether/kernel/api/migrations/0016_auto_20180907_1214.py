@@ -47,7 +47,7 @@ class Migration(migrations.Migration):
                 ('id', models.UUIDField(default=uuid.uuid4, primary_key=True, serialize=False)),
                 ('revision', models.TextField(default='1')),
                 ('name', models.CharField(max_length=50, unique=True)),
-                ('input', django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True)),
+                ('input', django.contrib.postgres.fields.jsonb.JSONField(null=True, blank=True)),
                 ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='mappingsets', to='kernel.Project')),
             ],
             options={
@@ -58,7 +58,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='entity',
             name='mapping',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='entities', to='kernel.Mapping'),
+            field=models.ForeignKey(null=True, blank=True, on_delete=django.db.models.deletion.SET_NULL, related_name='entities', to='kernel.Mapping'),
         ),
         migrations.AddField(
             model_name='entity',
@@ -79,23 +79,23 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='mapping',
             name='projectschemas',
-            field=models.ManyToManyField(related_name='mappings', to='kernel.ProjectSchema', blank=True, null=True),
+            field=models.ManyToManyField(related_name='mappings', to='kernel.ProjectSchema', null=True, blank=True),
         ),
         migrations.AddField(
             model_name='mapping',
             name='mappingset',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='mappings', to='kernel.MappingSet'),
+            field=models.ForeignKey(null=True, blank=True, on_delete=django.db.models.deletion.CASCADE, related_name='mappings', to='kernel.MappingSet'),
         ),
         migrations.AddField(
             model_name='submission',
             name='mappingset',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='submissions', to='kernel.MappingSet'),
+            field=models.ForeignKey(null=True, blank=True, on_delete=django.db.models.deletion.CASCADE, related_name='submissions', to='kernel.MappingSet'),
         ),
         migrations.RunPython(migrate_current_mappings_to_mappingsets, migrations.RunPython.noop),
         migrations.AlterField(
             model_name='mapping',
             name='project',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='mappings', to='kernel.Project'),
+            field=models.ForeignKey(null=True, blank=True, on_delete=django.db.models.deletion.CASCADE, related_name='mappings', to='kernel.Project'),
         ),
         migrations.AlterField(
             model_name='submission',
@@ -110,7 +110,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='mapping',
             name='projectschemas',
-            field=models.ManyToManyField(related_name='mappings', to='kernel.ProjectSchema', blank=True),
+            field=models.ManyToManyField(related_name='mappings', to='kernel.ProjectSchema', blank=True, editable=False),
         ),
         migrations.RemoveField(
             model_name='submission',
