@@ -422,7 +422,7 @@ def avro_schema_to_passthrough_artefacts(item_id, avro_schema):
         item_id = str(uuid4())
 
     definition = deepcopy(avro_schema)
-    sample = random_avro(definition)
+    sample = random_avro(avro_schema)
 
     # assign default namespace
     if not definition.get('namespace'):
@@ -470,7 +470,7 @@ def avro_schema_to_passthrough_artefacts(item_id, avro_schema):
         'is_read_only': True,
         'is_active': True,
         'input': sample,  # include a data sample
-        'schema': definition,  # include avro schema
+        'schema': avro_schema,  # include avro schema
     }
 
     return schema, mapping
