@@ -801,4 +801,38 @@ class ViewsTest(TestCase):
         self.assertEqual(json, {
             'jsonpaths': ['id', '_rev', 'name', 'dob', 'villageID'],
             'docs': {'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
+            'name': 'a project name-schema1',
+        })
+
+    def test_project__schemas_skeleton__no_linked_data(self):
+        self.assertEqual(reverse('project-skeleton', kwargs={'pk': 1}),
+                         '/projects/1/schemas-skeleton/')
+
+        project = models.Project.objects.create(name='Alone')
+        response = self.client.get(reverse('project-skeleton', kwargs={'pk': project.pk}))
+        self.assertEquals(response.status_code, 200)
+        json = response.json()
+        self.assertEqual(json, {
+            'jsonpaths': [],
+            'docs': {},
+            'name': 'Alone',
+        })
+
+        models.ProjectSchema.objects.create(
+            name='1st',
+            project=project,
+            schema=models.Schema.objects.create(name='First', definition={}),
+        )
+        models.ProjectSchema.objects.create(
+            name='2nd',
+            project=project,
+            schema=models.Schema.objects.create(name='Second', definition={}),
+        )
+        response = self.client.get(reverse('project-skeleton', kwargs={'pk': project.pk}))
+        self.assertEquals(response.status_code, 200)
+        json = response.json()
+        self.assertEqual(json, {
+            'jsonpaths': [],
+            'docs': {},
+            'name': 'Alone-Second',
         })

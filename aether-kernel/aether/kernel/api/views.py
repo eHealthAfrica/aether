@@ -83,13 +83,19 @@ class ProjectViewSet(viewsets.ModelViewSet):
         # extract jsonpaths and docs from linked schemas definition
         jsonpaths = []
         docs = {}
+        name = None
         for project_schema in project.projectschemas.order_by('-created'):
+            if not name:  # take the last project schema
+                name = f'{project.name}-{project_schema.schema.name}'
             avro_tools.extract_jsonpaths_and_docs(
                 schema=project_schema.schema.definition,
                 jsonpaths=jsonpaths,
                 docs=docs,
             )
-        return Response(data={'jsonpaths': jsonpaths, 'docs': docs})
+        if not name:
+            name = project.name
+
+        return Response(data={'jsonpaths': jsonpaths, 'docs': docs, 'name': name})
 
     @action(detail=True, methods=['get', 'patch'])
     def artefacts(self, request, pk=None, *args, **kwargs):
