@@ -54,7 +54,7 @@ class CachedParser(object):
     def parse(path):
         # we never need to call parse directly; use find()
         if path not in CachedParser.cache.keys():
-            CachedParser.cache[path] = jsonpath_ng_ext_parse.parse(path)
+            CachedParser.cache[path] = jsonpath_ng_ext_parse(path)
         return CachedParser.cache[path]
 
     @staticmethod
