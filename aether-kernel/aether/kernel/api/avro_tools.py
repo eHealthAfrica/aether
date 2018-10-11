@@ -468,7 +468,7 @@ def avro_schema_to_passthrough_artefacts(item_id, avro_schema):
         # this is an auto-generated mapping that shouldn't be modified manually
         'is_read_only': True,
         'is_active': True,
-        'input': definition,  # include a data sample
+        'input': definition,  # include avro schema
     }
 
     return schema, mapping
