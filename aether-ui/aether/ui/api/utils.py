@@ -380,7 +380,8 @@ def create_new_pipeline_from_kernel(mappingset):
         new_pipeline = models.Pipeline.objects.create(
             id=mappingset['id'],
             name=mappingset['name'],
-            schema=mappingset['input'],
+            schema=mappingset['schema'],
+            input=mappingset['input'],
             mappingset=mappingset['id']
         )
     else:

@@ -129,6 +129,10 @@ def upsert_project_artefacts(
             # in case of no input were indicated, do not update it.
             ignore_fields.append('input')
 
+        if raw_mappingset.get('schema') is None:
+            # in case of no schema is indicated, do not update it.
+            ignore_fields.append('schema')
+
         mappingset = __upsert_instance(
             model=MappingSet,
             pk=raw_mappingset.get('id'),
@@ -136,6 +140,7 @@ def upsert_project_artefacts(
             action=action,
             name=raw_mappingset.get('name', __random_name()),
             input=raw_mappingset.get('input', {}),
+            schema=raw_mappingset.get('schema', {}),
             project=project,
         )
         results['mappingsets'].add(str(mappingset.pk))
@@ -178,6 +183,7 @@ def upsert_project_artefacts(
                 action=action,
                 name=mapping_name,  # use same name as mapping
                 input=raw_mapping.get('input', {}),
+                schema=raw_mapping.get('schema', {}),
                 project=project,
             )
         results['mappingsets'].add(str(mappingset.pk))

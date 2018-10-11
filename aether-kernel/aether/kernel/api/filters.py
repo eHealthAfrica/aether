@@ -77,7 +77,7 @@ class MappingSetFilter(filters.FilterSet):
 
     class Meta:
         fields = '__all__'
-        exclude = ('input',)
+        exclude = ('input', 'schema',)
         model = models.MappingSet
 
 
