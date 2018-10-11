@@ -437,7 +437,7 @@ class MockingManager(object):
         type_id = self.schema_id.get(name)
         ps_id = self.project_schema.get(type_id)
         data = self.payload_to_data(ps_id, payload)
-        res = self.client.entities.create(**data)
+        res = self.client.entities.create(data=data)
         # res = self.type_client[type_name].submit(data)
         log.debug("Created instance # %s of type %s" % (self.type_count[name], name))
         return data
