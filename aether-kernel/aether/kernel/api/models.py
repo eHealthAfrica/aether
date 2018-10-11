@@ -106,6 +106,7 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), TimeStampedMod
     name = models.CharField(max_length=50, unique=True)
 
     input = JSONField(null=True, blank=True)
+    schema = JSONField(null=True, blank=True)
 
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
 
