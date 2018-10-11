@@ -31,6 +31,17 @@ import {
 } from '../../utils'
 import { updatePipeline, updateContract } from '../redux'
 
+// In-house workaround to the avsc library to avoid null values
+// in case of union types
+avro.types.UnwrappedUnionType.prototype.random = () => {
+  const types = this.types.filter(({ typeName }) => typeName !== 'null')
+  if (types.length === 0) {
+    return null
+  }
+  const index = Math.floor(Math.random() * types.length)
+  return types[index].random()
+}
+
 // The input section has two subviews `SCHEMA_VIEW` and `DATA_VIEW`.
 // In the schema view, the user enters an avro schema representing their input.
 // Sample data is derived from that schema and displayed in the `DataInput`
@@ -144,7 +155,7 @@ class SchemaInput extends Component {
     try {
       // validate schema
       const schema = JSON.parse(this.state.inputSchema)
-      const type = avro.parse(schema, { noAnonymousTypes: true })
+      const type = avro.parse(schema, { noAnonymousTypes: true, wrapUnions: false })
 
       // generate a new input sample
       try {
