@@ -603,15 +603,8 @@ class TestAvroTools(TestCase):
             'is_active': True,
             'input': {},
             'schema': {
-                'fields': [
-                    {
-                        'doc': 'UUID',
-                        'name': 'id',
-                        'type': 'string'
-                    }
-                ],
+                'fields': [],
                 'name': 'sample',
-                'namespace': 'org.ehealthafrica.aether',
                 'type': 'record'
             },
         })
