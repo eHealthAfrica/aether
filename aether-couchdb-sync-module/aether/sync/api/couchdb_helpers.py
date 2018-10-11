@@ -86,8 +86,14 @@ def create_db(device_id):
     setup.setup_db(db_name, {
         '_id': '_design/sync',
         'views': {
+            'data': {
+                'map': 'function (doc) { if (!doc.type || doc.type !== "sync_doc") { emit(doc._id, doc._rev); } }'
+            },
             'errors': {
                 'map': 'function (doc) { if (doc.error) { emit(doc.time, doc.error); } }'
+            },
+            'log': {
+                'map': 'function (doc) { if (doc.type === "sync_doc") { emit(doc.time, doc.aether_id || doc.error); } }'
             }
         },
         '_security': {
