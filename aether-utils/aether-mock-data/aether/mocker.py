@@ -32,7 +32,7 @@ from uuid import uuid4
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-from aether.client import KernelClient
+from aether.client import Client
 
 
 class Generic(object):
@@ -386,23 +386,20 @@ class MockFn(namedtuple("MockFn", ("fn", "args"))):
 
 class MockingManager(object):
 
-    def __init__(self, kernel_url=None, kernel_credentials=None):
+    def __init__(self, kernel_url=None, user=None, pw=None):
         # connects to Aether and gets available schemas.
         # constructs a DataMocker for each type
-        if not kernel_url:
-            kernel_url = "http://kernel.aether.local:8000/v1"
-        if not kernel_credentials:
-            kernel_credentials = {
-                "username": os.environ['KERNEL_ADMIN_USERNAME'],
-                "password": os.environ['KERNEL_ADMIN_PASSWORD']
-            }
-        self.client = KernelClient(kernel_url, **kernel_credentials)
+        _url = kernel_url or "http://kernel.aether.local:8000/v1"
+        _user = user or os.environ['KERNEL_ADMIN_USERNAME'],
+        _pw = pw or os.environ['KERNEL_ADMIN_PASSWORD']
+        
+        self.client = Client(_url, _user, _pw)
         self.types = {}
         self.alias = {}
         self.names = {}
         self.project_schema = {}
         self.schema_id = {}
-        self.type_client = {}
+        # self.type_client = {}
         self.type_count = {}
         signal.signal(signal.SIGTERM, self.kill)
         signal.signal(signal.SIGINT, self.kill)
@@ -440,7 +437,8 @@ class MockingManager(object):
         type_id = self.schema_id.get(name)
         ps_id = self.project_schema.get(type_id)
         data = self.payload_to_data(ps_id, payload)
-        res = self.type_client[type_name].submit(data)
+        res = self.client.entities.create(**data)
+        # res = self.type_client[type_name].submit(data)
         log.debug("Created instance # %s of type %s" % (self.type_count[name], name))
         return data
 
@@ -451,7 +449,7 @@ class MockingManager(object):
             "id": payload['id'],
             "payload": payload,
             "projectschema": ps_id,
-            "revision": 1,
+            "mapping_revision": "None",
             "status": "Publishable"
         }
         return data
@@ -459,7 +457,7 @@ class MockingManager(object):
     def load(self):
         # loads schemas and project schemas from aether client
         log.debug("Loading schemas from Aether Kernel")
-        for schema in self.client.Resource.Schema:
+        for schema in client.schemas.paginated('list'):
             name = schema.get("name")
             log.debug("Loading schema for type %s \n%s" % (name, schema))
             _id = schema.get('id')
@@ -485,9 +483,9 @@ class MockingManager(object):
             self.schema_id[name] = _id
             self.schema_id[full_name] = _id
             self.schema_id[_id] = name
-            self.type_client[name] = self.client.Entity.get(name, strict=False)
+            # self.type_client[name] = self.client.Entity.get(name, strict=False)  # TODO Replace
 
-        for ps in self.client.Resource.ProjectSchema:
+        for ps in client.projectschemas.paginated('list'):
             schema_id = ps.get('schema')
             _id = ps.get('id')
             self.project_schema[schema_id] = _id
