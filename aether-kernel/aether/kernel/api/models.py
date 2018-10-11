@@ -146,6 +146,10 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedMod
     def payload_prettified(self):
         return json_prettified(self.payload)
 
+    @property
+    def name(self):
+        return f'{self.project.name}-{self.mappingset.name}'
+
     class Meta:
         app_label = 'kernel'
         default_related_name = 'submissions'
@@ -343,6 +347,22 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
     @property
     def payload_prettified(self):
         return json_prettified(self.payload)
+
+    @property
+    def name(self):
+        # try to build a name for the extracted entity base on the linked data
+        if self.projectschema and self.mapping:
+            # find in the mapping definition the name used by this project schema
+            for k, v in self.mapping.definition.get('entities', {}).items():
+                if v == str(self.projectschema.pk):
+                    return f'{self.project.name}-{k}'
+
+        if self.submission:
+            return self.submission.name
+
+        if self.project:
+            return self.project.name
+        return None
 
     class Meta:
         app_label = 'kernel'
