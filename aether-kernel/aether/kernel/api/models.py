@@ -57,7 +57,6 @@ Data model schema:
                               |                            |                           |  +------------------+
                               |                            |                           |
                               |                            |                           |
-                              |                            |                           |
     +------------------+      |   +------------------+     |   +------------------+    |  +------------------+
     | Schema           |      |   | ProjectSchema    |     |   | Mapping          |    |  | Entity           |
     +==================+      |   +==================+     |   +==================+    |  +==================+
@@ -276,10 +275,10 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
     is_read_only = models.BooleanField(default=False)
 
     mappingset = models.ForeignKey(to=MappingSet, on_delete=models.CASCADE)
-    projectschemas = models.ManyToManyField(to=ProjectSchema, blank=True)
+    projectschemas = models.ManyToManyField(to=ProjectSchema, blank=True, editable=False)
 
     # redundant but speed up queries
-    project = models.ForeignKey(to=Project, on_delete=models.CASCADE, blank=True, null=True)
+    project = models.ForeignKey(to=Project, on_delete=models.CASCADE, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         self.project = self.mappingset.project
