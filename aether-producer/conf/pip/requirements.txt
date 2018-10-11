@@ -41,7 +41,7 @@ six==1.11.0
 spavro==1.1.20
 SQLAlchemy==1.2.12
 strict-rfc3339==0.7
-swagger-spec-validator==2.4.0
+swagger-spec-validator==2.4.1
 urllib3==1.23
 webcolors==1.8.1
 Werkzeug==0.14.1
