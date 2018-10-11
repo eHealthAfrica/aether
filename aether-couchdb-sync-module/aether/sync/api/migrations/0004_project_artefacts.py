@@ -63,7 +63,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='devicedb',
             name='mobileuser',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='devices', to='sync.MobileUser', verbose_name='mobile user'),
+            field=models.ForeignKey(null=True, blank=True, on_delete=django.db.models.deletion.SET_NULL, related_name='devices', to='sync.MobileUser', verbose_name='mobile user'),
         ),
         migrations.AlterField(
             model_name='mobileuser',
