@@ -408,7 +408,7 @@ class TestFilters(TestCase):
         payloads = [
             {'a': 1},
             {'a': {'b': 'abcde'}},
-            {'a': {'b': {'c': [1,2,3]}}}
+            {'a': {'b': {'c': [1, 2, 3]}}}
         ]
         gen_payload = generators.ChoicesGenerator(values=payloads)
         generate_project(submission_field_values={'payload': gen_payload})

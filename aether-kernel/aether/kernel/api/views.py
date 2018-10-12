@@ -313,7 +313,7 @@ class SubmissionViewSet(CustomViewSet):
     filter_class = filters.SubmissionFilter
 
     def get_queryset(self):
-        queryset = models.Submission.objects.all()
+        queryset = self.queryset
         for k, v in self.request.query_params.items():
             if k.startswith('payload__'):
                 try:
@@ -322,6 +322,7 @@ class SubmissionViewSet(CustomViewSet):
                     kwargs = {k: v}
                 queryset = queryset.filter(**kwargs)
         return queryset
+
 
 class AttachmentViewSet(CustomViewSet):
     queryset = models.Attachment.objects.all()
