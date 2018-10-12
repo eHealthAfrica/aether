@@ -31,6 +31,7 @@ from model_utils.models import TimeStampedModel
 
 from aether.common.utils import resolve_file_url
 
+from .constants import NAMESPACE
 from .utils import json_prettified
 
 STATUS_CHOICES = (
@@ -220,8 +221,12 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), TimeStampedModel):
     revision = models.TextField(default='1')
     name = models.CharField(max_length=50, unique=True)
 
-    type = models.CharField(max_length=50)
+    type = models.CharField(max_length=50, default=NAMESPACE)
     definition = JSONField()
+
+    # this field is used to group different schemas created automatically
+    # from different sources but that share a common structure
+    family = models.TextField(null=True, blank=True)
 
     @property
     def definition_prettified(self):
