@@ -78,3 +78,8 @@ $('a[href^=#]').on('click', function(e){
     },'slow');
 
 });
+
+$('.scalable').on('click', function(e){
+  e.preventDefault();
+  $(this).toggleClass('open');
+});
