@@ -45,27 +45,6 @@ from . import (
 )
 
 
-def get_entity_linked_data(entity, request, resolved, depth, start_depth=0):
-    while (start_depth < depth):
-        start_depth = start_depth + 1
-        schema_definition_fields = entity.projectschema.schema.definition['fields']
-        jsonld_fields = [item for item in schema_definition_fields if item.get('jsonldPredicate')]
-        for item in jsonld_fields:
-            try:
-                if item['jsonldPredicate'].get('_id'):
-                    linked_data_ref = entity.payload.get(item['name'])
-                    linked_entity = models.Entity.objects.filter(payload__id=linked_data_ref).first()
-                    linked_entity_schema_name = linked_entity.projectschema.schema.name
-                    if linked_entity_schema_name not in resolved:
-                        resolved[linked_entity_schema_name] = {}
-                    resolved[linked_entity_schema_name][linked_data_ref] = serializers.EntityLDSerializer(
-                        linked_entity, context={'request': request}).data
-                    get_entity_linked_data(linked_entity, request, resolved, depth, start_depth)
-            except Exception:
-                pass
-    return resolved
-
-
 class CustomViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get', 'post'])
@@ -474,27 +453,55 @@ class EntityViewSet(PayloadFilterMixin, CustomViewSet):
     filter_class = filters.EntityFilter
 
     def retrieve(self, request, pk=None, *args, **kwargs):
-        selected_record = get_object_or_404(models.Entity, pk=pk)
+        def get_entity_linked_data(entity, request, resolved, depth, start_depth=0):
+            if (start_depth >= depth):
+                return resolved
+
+            jsonld_field_names = [
+                field['name']
+                for field in entity.projectschema.schema.definition.get('fields')
+                if field.get('jsonldPredicate')
+            ]
+
+            for field_name in jsonld_field_names:
+                try:
+                    linked_data_ref = entity.payload.get(field_name)
+                    linked_entity = models.Entity.objects.filter(payload__id=linked_data_ref).first()
+                    linked_entity_schema_name = linked_entity.projectschema.schema.name
+
+                    resolved[linked_entity_schema_name] = resolved.get(linked_entity_schema_name, {})
+                    resolved[linked_entity_schema_name][linked_data_ref] = serializers.EntityLDSerializer(
+                        linked_entity,
+                        context={'request': request},
+                    ).data
+
+                    # continue with next nested level
+                    get_entity_linked_data(linked_entity, request, resolved, depth, start_depth + 1)
+                except Exception:
+                    pass
+            return resolved
+
+        instance = get_object_or_404(models.Entity, pk=pk)
         depth = request.query_params.get('depth')
         if depth:
             try:
                 depth = int(depth)
                 if depth > constants.LINKED_DATA_MAX_DEPTH:
-                    return Response({
-                        'description': f'Supported max depth is {constants.LINKED_DATA_MAX_DEPTH}'
-                    }, status=status.HTTP_400_BAD_REQUEST)
+                    return Response(
+                        {'description': f'Supported max depth is {constants.LINKED_DATA_MAX_DEPTH}'},
+                        status=status.HTTP_400_BAD_REQUEST)
                 else:
-                    selected_record.resolved = get_entity_linked_data(selected_record, request, {}, depth)
+                    instance.resolved = get_entity_linked_data(instance, request, {}, depth)
             except Exception as e:
                 return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
-        serializer_class = serializers.EntitySerializer(selected_record, context={'request': request})
-        return Response(serializer_class.data)
+
+        return Response(serializers.EntitySerializer(instance, context={'request': request}).data)
 
 
 SchemaView = get_schema_view(
     openapi.Info(
-      title='Aether API',
-      default_version='v1'
+        title='Aether API',
+        default_version='v1',
     ),
     public=True,
     permission_classes=(permissions.AllowAny, ),
@@ -503,25 +510,6 @@ SchemaView = get_schema_view(
 
 class AetherSchemaView(SchemaView):
     versioning_class = versioning.URLPathVersioning
-
-
-def run_mapping_validation(submission_payload, mapping_definition, schemas):
-    submission_data, entities = utils.extract_create_entities(
-        submission_payload,
-        mapping_definition,
-        schemas,
-    )
-    validation_result = mapping_validation.validate_mappings(
-        submission_payload=submission_payload,
-        schemas=schemas,
-        mapping_definition=mapping_definition,
-    )
-    jsonpath_errors = [error._asdict() for error in validation_result]
-    type_errors = submission_data['aether_errors']
-    return (
-        jsonpath_errors + type_errors,
-        entities,
-    )
 
 
 @api_view(['POST'])
@@ -540,11 +528,30 @@ def validate_mappings(request):
     (jsonpaths) align with both the source (`submission_payload`) and the
     target (`entities`).
     '''
-    serializer = serializers.MappingValidationSerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def run_mapping_validation(submission_payload, mapping_definition, schemas):
+        submission_data, entities = utils.extract_create_entities(
+            submission_payload,
+            mapping_definition,
+            schemas,
+        )
+        validation_result = mapping_validation.validate_mappings(
+            submission_payload=submission_payload,
+            schemas=schemas,
+            mapping_definition=mapping_definition,
+        )
+
+        jsonpath_errors = [error._asdict() for error in validation_result]
+        type_errors = submission_data['aether_errors']
+
+        return jsonpath_errors + type_errors, entities
+
+    instance = serializers.MappingValidationSerializer(data=request.data)
+    if not instance.is_valid():
+        return Response(instance.errors, status=status.HTTP_400_BAD_REQUEST)
+
     try:
-        errors, entities = run_mapping_validation(**serializer.data)
+        errors, entities = run_mapping_validation(**instance.data)
         return Response({
             'entities': [entity.payload for entity in entities],
             'mapping_errors': errors,
