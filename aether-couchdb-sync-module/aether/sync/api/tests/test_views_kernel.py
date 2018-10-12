@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import json
 import uuid
 import mock
 
@@ -54,13 +55,13 @@ class KernelViewsTests(TestCase):
                         return_value=True) as mock_kernel:
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 200)
-            mock_kernel.assert_called_once()
+            mock_kernel.assert_called_once_with(project=project, family=None)
 
         with mock.patch('aether.sync.api.views.propagate_kernel_project',
                         side_effect=[KernelPropagationError]) as mock_kernel:
-            response = self.client.patch(url)
+            response = self.client.patch(url, json.dumps({'family': 'testing'}), content_type='application/json')
             self.assertEqual(response.status_code, 400)
-            mock_kernel.assert_called_once()
+            mock_kernel.assert_called_once_with(project=project, family='testing')
 
     def test__schema_propagation(self):
         url_404 = reverse('api:schema-propagate', kwargs={'pk': 0})
@@ -78,10 +79,10 @@ class KernelViewsTests(TestCase):
                         return_value=True) as mock_kernel:
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 200)
-            mock_kernel.assert_called_once()
+            mock_kernel.assert_called_once_with(schema=schema, family=None)
 
         with mock.patch('aether.sync.api.views.propagate_kernel_artefacts',
                         side_effect=[KernelPropagationError]) as mock_kernel:
-            response = self.client.patch(url)
+            response = self.client.patch(url, json.dumps({'family': 'testing'}), content_type='application/json')
             self.assertEqual(response.status_code, 400)
-            mock_kernel.assert_called_once()
+            mock_kernel.assert_called_once_with(schema=schema, family='testing')
