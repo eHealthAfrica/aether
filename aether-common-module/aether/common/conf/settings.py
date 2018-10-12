@@ -158,15 +158,12 @@ DATABASES = {
 
 # https://docs.python.org/3.6/library/logging.html#levels
 LOGGING_LEVEL = os.environ.get('LOGGING_LEVEL', logging.INFO)
-LOGGING_CLASS = 'logging.StreamHandler'
-
-if TESTING:
-    LOGGING_CLASS = 'logging.NullHandler'
+LOGGING_CLASS = 'logging.StreamHandler' if not TESTING else 'logging.NullHandler'
 
 logger = logging.getLogger(__name__)
 logger.setLevel(LOGGING_LEVEL)
 
-
+SENTRY_CLASS = 'logging.NullHandler'
 SENTRY_DSN = os.environ.get('SENTRY_DSN')
 if SENTRY_DSN:
     INSTALLED_APPS += ['raven.contrib.django.raven_compat', ]
@@ -174,10 +171,8 @@ if SENTRY_DSN:
         'raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware',
     ] + MIDDLEWARE
 
+    SENTRY_CLASS = 'raven.contrib.django.raven_compat.handlers.SentryHandler'
     SENTRY_CLIENT = 'raven.contrib.django.raven_compat.DjangoClient'
-    SENTRY_CELERY_LOGLEVEL = LOGGING_LEVEL
-
-    LOGGING_CLASS = 'raven.contrib.django.raven_compat.handlers.SentryHandler'
 
 else:
     logger.info('No SENTRY enabled!')
@@ -188,7 +183,7 @@ LOGGING = {
     'disable_existing_loggers': True,
     'root': {
         'level': LOGGING_LEVEL,
-        'handlers': ['aether_handler'],
+        'handlers': ['console'],
     },
     'formatters': {
         'verbose': {
@@ -196,37 +191,37 @@ LOGGING = {
         },
     },
     'handlers': {
-        'aether_handler': {
+        'console': {
             'level': LOGGING_LEVEL,
             'class': LOGGING_CLASS,
             'formatter': 'verbose',
         },
-        'console': {
-            'level': LOGGING_LEVEL,
-            'class': 'logging.StreamHandler' if not TESTING else 'logging.NullHandler',
+        'sentry_handler': {
+            'level': logging.ERROR,
+            'class': SENTRY_CLASS,
             'formatter': 'verbose',
         },
     },
     'loggers': {
         'aether': {
             'level': LOGGING_LEVEL,
-            'handlers': ['console', 'aether_handler'],
+            'handlers': ['console', 'sentry_handler'],
             'propagate': False,
         },
         'django': {
             'level': LOGGING_LEVEL,
-            'handlers': ['console', 'aether_handler'],
+            'handlers': ['console', 'sentry_handler'],
             'propagate': False,
         },
         # These ones are available with Sentry enabled
         'raven': {
-            'level': 'ERROR',
-            'handlers': ['console', 'aether_handler'],
+            'level': logging.ERROR,
+            'handlers': ['console', 'sentry_handler'],
             'propagate': False,
         },
         'sentry.errors': {
-            'level': 'ERROR',
-            'handlers': ['console', 'aether_handler'],
+            'level': logging.ERROR,
+            'handlers': ['console', 'sentry_handler'],
             'propagate': False,
         },
     },
