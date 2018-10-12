@@ -140,13 +140,17 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedMod
     # redundant but speed up queries
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, null=True, blank=True)
 
-    def save(self, **kwargs):
-        self.project = self.mappingset.project
-        super(Submission, self).save(**kwargs)
-
     @property
     def payload_prettified(self):
         return json_prettified(self.payload)
+
+    @property
+    def name(self):
+        return f'{self.mappingset.project.name}-{self.mappingset.name}'
+
+    def save(self, **kwargs):
+        self.project = self.mappingset.project
+        super(Submission, self).save(**kwargs)
 
     class Meta:
         app_label = 'kernel'
@@ -231,6 +235,10 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), TimeStampedModel):
     @property
     def definition_prettified(self):
         return json_prettified(self.definition)
+
+    @property
+    def family_name(self):
+        return self.family or self.definition.get('name', self.name)
 
     def __str__(self):
         return self.name
@@ -330,6 +338,26 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
     # redundant but speed up queries
     project = models.ForeignKey(to=Project, on_delete=models.SET_NULL, null=True, blank=True)
 
+    @property
+    def payload_prettified(self):
+        return json_prettified(self.payload)
+
+    @property
+    def name(self):
+        # try to build a name for the extracted entity base on the linked data
+        if self.projectschema and self.mapping:
+            # find in the mapping definition the name used by this project schema
+            for k, v in self.mapping.definition.get('entities', {}).items():
+                if v == str(self.projectschema.pk):
+                    return f'{self.project.name}-{k}'
+        if self.projectschema:
+            return f'{self.project.name}-{self.projectschema.schema.family_name}'
+        if self.submission:
+            return self.submission.name
+        if self.project:
+            return self.project.name
+        return None
+
     def save(self, **kwargs):
         if self.submission and self.projectschema:
             if self.submission.project != self.projectschema.project:
@@ -345,10 +373,6 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
         else:
             self.modified = '{}-{}'.format(datetime.now().isoformat(), self.id)
         super(Entity, self).save(**kwargs)
-
-    @property
-    def payload_prettified(self):
-        return json_prettified(self.payload)
 
     class Meta:
         app_label = 'kernel'
