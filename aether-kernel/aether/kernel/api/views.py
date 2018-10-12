@@ -261,6 +261,37 @@ class ProjectViewSet(CustomViewSet):
         return Response(data=results)
 
 
+class PayloadFilterMixin(object):
+    def get_queryset(self):
+        '''
+        Adds a dynamic filter to a viewset. Any query
+        parameter prefixed by "payload__" will filter entries
+        based on the contents of <ViewSet>.payload.
+
+        Example:
+        The URL "/submissions?payload__a__b__c=1" will yield
+        the queryset
+
+            models.Submission.objects.filter(payload__a__b__c=1)
+
+        and return a list of submissions with a JSON payload like
+
+            '{"a": {"b": {"c": 1}}}'
+
+        Note that it is possible to compare not just strings, but
+        numbers, lists and objects as well.
+        '''
+        queryset = self.queryset
+        for k, v in self.request.query_params.items():
+            if k.startswith('payload__'):
+                try:
+                    kwargs = {k: json.loads(v)}
+                except json.decoder.JSONDecodeError:
+                    kwargs = {k: v}
+                queryset = queryset.filter(**kwargs)
+        return queryset
+
+
 class ProjectStatsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Project \
                      .objects \
@@ -307,21 +338,10 @@ class MappingViewSet(CustomViewSet):
     filter_class = filters.MappingFilter
 
 
-class SubmissionViewSet(CustomViewSet):
+class SubmissionViewSet(PayloadFilterMixin, CustomViewSet):
     queryset = models.Submission.objects.all()
     serializer_class = serializers.SubmissionSerializer
     filter_class = filters.SubmissionFilter
-
-    def get_queryset(self):
-        queryset = self.queryset
-        for k, v in self.request.query_params.items():
-            if k.startswith('payload__'):
-                try:
-                    kwargs = {k: json.loads(v)}
-                except json.decoder.JSONDecodeError:
-                    kwargs = {k: v}
-                queryset = queryset.filter(**kwargs)
-        return queryset
 
 
 class AttachmentViewSet(CustomViewSet):
@@ -342,7 +362,7 @@ class ProjectSchemaViewSet(CustomViewSet):
     filter_class = filters.ProjectSchemaFilter
 
 
-class EntityViewSet(CustomViewSet):
+class EntityViewSet(PayloadFilterMixin, CustomViewSet):
     queryset = models.Entity.objects.all()
     serializer_class = serializers.EntitySerializer
     filter_class = filters.EntityFilter
