@@ -97,7 +97,7 @@ class ProjectViewSet(CustomViewSet):
         '''
         Returns the schemas "skeleton" used by this project.
 
-        Reachable at ``/projects/{pk}/schemas-skeleton/``
+        Reachable at ``/projects/{pk}/schemas-skeleton/?family=<<family_name>>``
         '''
 
         project = get_object_or_404(models.Project, pk=pk)
@@ -106,11 +106,18 @@ class ProjectViewSet(CustomViewSet):
         jsonpaths = []
         docs = {}
         name = None
-        for project_schema in project.projectschemas.order_by('-created'):
-            if not name:  # take the last project schema
-                name = f'{project.name}-{project_schema.schema.name}'
+
+        family = request.GET.get('family')
+        schemas = [
+            ps.schema
+            for ps in project.projectschemas.order_by('-created')
+            if not family or ps.schema.family == family
+        ]
+        for schema in schemas:
+            if not name:
+                name = f'{project.name}-{schema.family_name}'
             avro_tools.extract_jsonpaths_and_docs(
-                schema=project_schema.schema.definition,
+                schema=schema.definition,
                 jsonpaths=jsonpaths,
                 docs=docs,
             )
@@ -278,6 +285,9 @@ class ProjectViewSet(CustomViewSet):
                 # this is optional, if missing the method will assign a random name
                 "name": "project name (optional but unique)",
 
+                # this is optional, all the schemas created/updated will be assigned to this family
+                "family": "family name",
+
                 # this is optional, for each entry the method will
                 # create/update a schema and also link it to the project
                 # (projectschema entry) creating the passthrough mapping
@@ -300,6 +310,7 @@ class ProjectViewSet(CustomViewSet):
             project_id=pk,
             project_name=data.get('name'),
             avro_schemas=data.get('avro_schemas', []),
+            family=data.get('family'),
         )
 
         return Response(data=results)
@@ -421,7 +432,7 @@ class SchemaViewSet(CustomViewSet):
         return Response(data={
             'jsonpaths': jsonpaths,
             'docs': docs,
-            'name': schema.name,
+            'name': schema.family_name,
         })
 
 
@@ -439,20 +450,21 @@ class ProjectSchemaViewSet(CustomViewSet):
         '''
 
         project_schema = get_object_or_404(models.ProjectSchema, pk=pk)
+        schema = project_schema.schema
 
         # extract jsonpaths and docs from the schema definition
         jsonpaths = []
         docs = {}
 
         avro_tools.extract_jsonpaths_and_docs(
-            schema=project_schema.schema.definition,
+            schema=schema.definition,
             jsonpaths=jsonpaths,
             docs=docs,
         )
         return Response(data={
             'jsonpaths': jsonpaths,
             'docs': docs,
-            'name': f'{project_schema.project.name}-{project_schema.schema.name}',
+            'name': f'{project_schema.project.name}-{schema.family_name}',
         })
 
 

@@ -70,8 +70,9 @@ class ViewsTest(TestCase):
 
         self.schema = models.Schema.objects.create(
             name='schema1',
+            type='People',
             definition=EXAMPLE_SCHEMA,
-            revision='a sample revision'
+            revision='a sample revision',
         )
 
         self.projectschema = models.ProjectSchema.objects.create(
@@ -81,13 +82,14 @@ class ViewsTest(TestCase):
             masked_fields='a sample masked field',
             is_encrypted=False,
             project=self.project,
-            schema=self.schema
+            schema=self.schema,
         )
         EXAMPLE_MAPPING['entities']['Person'] = str(self.projectschema.pk)
         self.mappingset = models.MappingSet.objects.create(
             name='a sample mapping set',
             input={},
-            project=self.project
+            schema={},
+            project=self.project,
         )
 
         mapping_definition = assign_mapping_entities(
@@ -98,14 +100,14 @@ class ViewsTest(TestCase):
             name='mapping1',
             definition=mapping_definition,
             revision='a sample revision field',
-            mappingset=self.mappingset
+            mappingset=self.mappingset,
         )
 
         self.submission = models.Submission.objects.create(
             revision='a sample revision',
             payload=EXAMPLE_SOURCE_DATA,
             mappingset=self.mappingset,
-            project=self.project
+            project=self.project,
         )
 
         self.entity = models.Entity.objects.create(
@@ -115,7 +117,7 @@ class ViewsTest(TestCase):
             projectschema=self.projectschema,
             submission=self.submission,
             mapping=self.mapping,
-            mapping_revision=self.mapping.revision
+            mapping_revision=self.mapping.revision,
         )
 
     def tearDown(self):
@@ -595,19 +597,11 @@ class ViewsTest(TestCase):
         )
         location_projectschema = models.ProjectSchema.objects.create(
             name='Location',
-            mandatory_fields=[],
-            transport_rule=[],
-            masked_fields=[],
-            is_encrypted=False,
             project=self.project,
             schema=location_schema
         )
         household_projectschema = models.ProjectSchema.objects.create(
             name='Household',
-            mandatory_fields=[],
-            transport_rule=[],
-            masked_fields=[],
-            is_encrypted=False,
             project=self.project,
             schema=household_schema
         )
@@ -620,11 +614,11 @@ class ViewsTest(TestCase):
             projectschema=household_projectschema
         )
         linked_entity = self.helper_read_linked_data_entities('entity-detail', household_entity, 2)
+        self.assertIsNotNone(
+            json.loads(linked_entity.content)['resolved'][location_schema.name][location_entity.payload['id']]
+        )
         self.helper_read_linked_data_entities('entity-detail', household_entity, 4)
         self.helper_read_linked_data_entities('entity-detail', household_entity, 'two')
-        self.assertIsNotNone(
-            json.loads(linked_entity.content)['resolved']
-            [location_schema.name][location_entity.payload['id']])
 
     def test_api_no_cascade_delete_on_entity(self):
         self.helper_delete_object_pk('schema-detail', self.schema)
@@ -824,7 +818,7 @@ class ViewsTest(TestCase):
         self.assertEqual(json, {
             'jsonpaths': ['id', '_rev', 'name', 'dob', 'villageID'],
             'docs': {'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
-            'name': 'a project name-schema1',
+            'name': 'a project name-Person',
         })
 
     def test_project__schemas_skeleton__no_linked_data(self):
@@ -870,7 +864,7 @@ class ViewsTest(TestCase):
         self.assertEqual(json, {
             'jsonpaths': ['id', '_rev', 'name', 'dob', 'villageID'],
             'docs': {'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
-            'name': 'schema1',
+            'name': 'Person',
         })
 
     def test_projectschema__skeleton(self):
@@ -883,5 +877,5 @@ class ViewsTest(TestCase):
         self.assertEqual(json, {
             'jsonpaths': ['id', '_rev', 'name', 'dob', 'villageID'],
             'docs': {'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
-            'name': 'a project name-schema1',
+            'name': 'a project name-Person',
         })
