@@ -23,7 +23,7 @@ import re
 import string
 import uuid
 
-import jsonpath_ng
+from jsonpath_ng.ext import parse as jsonpath_ng_ext_parse
 from spavro.schema import parse as parse_schema
 from spavro.io import validate
 
@@ -54,7 +54,7 @@ class CachedParser(object):
     def parse(path):
         # we never need to call parse directly; use find()
         if path not in CachedParser.cache.keys():
-            CachedParser.cache[path] = jsonpath_ng.parse(path)
+            CachedParser.cache[path] = jsonpath_ng_ext_parse(path)
         return CachedParser.cache[path]
 
     @staticmethod
