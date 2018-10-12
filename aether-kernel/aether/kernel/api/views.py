@@ -16,6 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import json
+
 from django.db.models import Count, Min, Max
 from django.shortcuts import get_object_or_404
 
@@ -310,6 +312,16 @@ class SubmissionViewSet(CustomViewSet):
     serializer_class = serializers.SubmissionSerializer
     filter_class = filters.SubmissionFilter
 
+    def get_queryset(self):
+        queryset = models.Submission.objects.all()
+        for k, v in self.request.query_params.items():
+            if k.startswith('payload__'):
+                try:
+                    kwargs = {k: json.loads(v)}
+                except json.decoder.JSONDecodeError:
+                    kwargs = {k: v}
+                queryset = queryset.filter(**kwargs)
+        return queryset
 
 class AttachmentViewSet(CustomViewSet):
     queryset = models.Attachment.objects.all()
