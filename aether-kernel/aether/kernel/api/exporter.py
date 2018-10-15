@@ -101,6 +101,16 @@ class ExporterViewSet(ModelViewSet):
         return queryset
 
     @action(detail=False, methods=['get', 'post'])
+    def query(self, request, *args, **kwargs):
+        '''
+        Allow to list data from a POST request.
+
+        Reachable at ``.../{model}/query/``
+        '''
+
+        return self.list(request, *args, **kwargs)
+
+    @action(detail=False, methods=['get', 'post'])
     def xlsx(self, request, *args, **kwargs):
         '''
         Export the data as an XLSX file
