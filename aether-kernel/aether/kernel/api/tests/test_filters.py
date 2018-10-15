@@ -397,3 +397,55 @@ class TestFilters(TestCase):
             self.assertEqual(response['count'], len(expected))
             result = set([r['id'] for r in response['results']])
             self.assertEqual(expected, result)
+
+    def test_submission_filter__payload(self):
+        url = reverse(viewname='submission-list')
+        filters = [
+            {'payload__a': '1'},
+            {'payload__a__b': '"abcde"'},
+            {'payload__a__b__c': '[1,2,3]'},
+        ]
+        payloads = [
+            {'a': 1},
+            {'a': {'b': 'abcde'}},
+            {'a': {'b': {'c': [1, 2, 3]}}}
+        ]
+        gen_payload = generators.ChoicesGenerator(values=payloads)
+        generate_project(submission_field_values={'payload': gen_payload})
+        filtered_submissions_count = 0
+        for kwargs, payload in zip(filters, payloads):
+            response = self.client.get(url, kwargs, format='json')
+            submissions = json.loads(response.content)['results']
+            for submission in submissions:
+                self.assertEqual(submission['payload'], payload)
+                filtered_submissions_count += 1
+        self.assertEqual(
+            len(models.Submission.objects.all()),
+            filtered_submissions_count,
+        )
+
+    def test_entity_filter__payload(self):
+        url = reverse(viewname='entity-list')
+        filters = [
+            {'payload__a': '1'},
+            {'payload__a__b': '"abcde"'},
+            {'payload__a__b__c': '[1,2,3]'},
+        ]
+        payloads = [
+            {'a': 1},
+            {'a': {'b': 'abcde'}},
+            {'a': {'b': {'c': [1, 2, 3]}}}
+        ]
+        gen_payload = generators.ChoicesGenerator(values=payloads)
+        generate_project(entity_field_values={'payload': gen_payload})
+        filtered_entities_count = 0
+        for kwargs, payload in zip(filters, payloads):
+            response = self.client.get(url, kwargs, format='json')
+            entities = json.loads(response.content)['results']
+            for entity in entities:
+                self.assertEqual(entity['payload'], payload)
+                filtered_entities_count += 1
+        self.assertEqual(
+            len(models.Entity.objects.all()),
+            filtered_entities_count,
+        )
