@@ -42,7 +42,7 @@ class PaginationTests(TestCase):
         self.user = get_user_model().objects.create_user(username, email, password)
         self.assertTrue(self.client.login(username=username, password=password))
 
-        self.count = 10485760
+        self.count = 5000
         self.view = generics.ListAPIView.as_view(
             serializer_class=PassThroughSerializer,
             queryset=range(1, self.count + 1),
@@ -62,14 +62,14 @@ class PaginationTests(TestCase):
         })
 
     def test_setting_page_size(self):
-        request = factory.get('/', {'page_size': 30})
+        request = factory.get('/', {'page_size': 20})
         request.user = self.user
         response = self.view(request)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(dict(response.data), {
-            'results': list(range(1, 31)),
+            'results': list(range(1, 21)),
             'previous': None,
-            'next': 'http://testserver/?page=2&page_size=30',
+            'next': 'http://testserver/?page=2&page_size=20',
             'count': self.count,
         })
 
@@ -79,7 +79,7 @@ class PaginationTests(TestCase):
         response = self.view(request)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(dict(response.data), {
-            'results': list(range(1, 5001)),  # max `page_size` is 5000
+            'results': list(range(1, 31)),  # max `page_size` is 30
             'previous': None,
             # parameter value is not updated
             'next': 'http://testserver/?page=2&page_size=10000',

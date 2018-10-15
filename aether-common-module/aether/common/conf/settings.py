@@ -132,6 +132,8 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
     ),
     'DEFAULT_PAGINATION_CLASS': 'aether.common.drf.pagination.CustomPagination',
+    'PAGE_SIZE': int(os.environ.get('PAGE_SIZE', 10)),
+    'MAX_PAGE_SIZE': int(os.environ.get('MAX_PAGE_SIZE', 5000)),
 }
 
 

@@ -16,10 +16,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.conf import settings
 from rest_framework.pagination import PageNumberPagination
 
 
 class CustomPagination(PageNumberPagination):
-    page_size = 10
+    page_size = settings.REST_FRAMEWORK['PAGE_SIZE']
     page_size_query_param = 'page_size'
-    max_page_size = 5000
+    max_page_size = settings.REST_FRAMEWORK['MAX_PAGE_SIZE']
