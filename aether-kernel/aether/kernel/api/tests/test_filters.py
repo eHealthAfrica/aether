@@ -20,7 +20,7 @@ import json
 import random
 import uuid
 
-from autofixture.generators import CallableGenerator, StringGenerator
+from autofixture import generators
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -230,7 +230,7 @@ class TestFilters(TestCase):
         # Generate projects.
         for _ in range(random.randint(5, 10)):
             generate_project(schema_field_values={
-                'family': CallableGenerator(StringGenerator(min_length=10, max_length=30)),
+                'family': generators.CallableGenerator(generators.StringGenerator(min_length=10, max_length=30)),
             })
         page_size = models.Entity.objects.count()
         # Get a list of all schemas.
@@ -258,7 +258,7 @@ class TestFilters(TestCase):
 
         url = reverse(viewname='submission-list')
         generate_project(submission_field_values={
-            'payload': CallableGenerator(gen_submission_payload),
+            'payload': generators.CallableGenerator(gen_submission_payload),
         })
         for submission in models.Submission.objects.all():
             instance_id = submission.payload['meta']['instanceID']
