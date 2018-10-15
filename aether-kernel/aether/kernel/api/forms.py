@@ -20,6 +20,7 @@ import json
 
 from django import forms
 from django.core.exceptions import ValidationError
+from django.utils.translation import ugettext as _
 
 from .utils import json_printable
 
@@ -49,7 +50,7 @@ class JSONField(forms.CharField):   # pragma: no cover
         try:
             return str_to_json(value)
         except Exception as e:
-            raise ValidationError('Invalid JSON format {}'.format(str(e)))
+            raise ValidationError(_('Invalid JSON format {}').format(str(e)))
 
 
 class MappingForm(forms.ModelForm):
