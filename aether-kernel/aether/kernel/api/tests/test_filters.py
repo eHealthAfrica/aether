@@ -230,20 +230,20 @@ class TestFilters(TestCase):
         # Generate projects.
         for _ in range(random.randint(5, 10)):
             generate_project(schema_field_values={
-                'family': generators.CallableGenerator(generators.StringGenerator(min_length=10, max_length=30)),
+                'family': generators.StringGenerator(min_length=10, max_length=30),
             })
         page_size = models.Entity.objects.count()
-        # Get a list of all schemas.
-        for schema in models.Schema.objects.all():
-            self.assertIsNotNone(schema.family)
+        # Get a list of all schema families.
+        for family in models.Schema.objects.exclude(family=None).values_list('family', flat=True).distinct():
+            self.assertIsNotNone(family)
 
-            # Request a list of all entities, filtered by `schema`.
+            # Request a list of all entities, filtered by `family`.
             # This checks that EntityFilter.family exists and that
             # EntityFilter has been correctly configured.
-            expected = set([str(e.id) for e in models.Entity.objects.filter(projectschema__schema=schema)])
+            expected = set([str(e.id) for e in models.Entity.objects.filter(projectschema__schema__family=family)])
 
             # by id
-            kwargs = {'family': schema.family, 'fields': 'id', 'page_size': page_size}
+            kwargs = {'family': family, 'fields': 'id', 'page_size': page_size}
             response = json.loads(
                 self.client.get(url, kwargs, format='json').content
             )
@@ -463,7 +463,10 @@ class TestFilters(TestCase):
             {'a': {'b': {'c': [1, 2, 3]}}}
         ]
         gen_payload = generators.ChoicesGenerator(values=payloads)
-        generate_project(entity_field_values={'payload': gen_payload})
+        generate_project(
+            submission_field_values={'payload': gen_payload},
+            entity_field_values={'payload': gen_payload},
+        )
         filtered_entities_count = 0
         for kwargs, payload in zip(filters, payloads):
             response = self.client.get(url, kwargs, format='json')
