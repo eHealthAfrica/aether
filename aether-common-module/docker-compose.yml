@@ -28,6 +28,9 @@ services:
       APP_NAME: aether-test
       APP_LINK: http://aether-link-test
 
+      # pagination
+      PAGE_SIZE: 10
+      MAX_PAGE_SIZE: 30
     volumes:
       - ./:/code
 

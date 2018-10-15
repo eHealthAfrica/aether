@@ -174,6 +174,7 @@ class ModelsTests(TransactionTestCase):
         self.assertEqual(entity.name, None)
 
         # till new submission or new projectschema is set
+        entity.project = project_2  # this is going to be replaced
         entity.submission = submission
         entity.projectschema = None
         entity.save()

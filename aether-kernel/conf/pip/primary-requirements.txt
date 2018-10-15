@@ -22,7 +22,6 @@
 #   django-prometheus
 #   django-storages
 #   djangorestframework
-#   djangorestframework-csv
 #   psycopg2-binary
 #   requests
 aether.common
@@ -47,6 +46,11 @@ spavro
 # Storage
 boto3
 google-cloud-storage
+
+
+# XLSX libraries
+openpyxl
+lxml
 
 
 # CAS libraries

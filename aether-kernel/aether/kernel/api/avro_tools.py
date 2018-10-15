@@ -506,6 +506,7 @@ def avro_schema_to_passthrough_artefacts(item_id, avro_schema):
 def is_nullable(avro_type):
     '''
     Indicates if the given AVRO type accept null values or just another type (but only one)
+
     {"type": [ "null", nullable_type ]} or {"type": [ nullable_type, "null" ]}
     '''
     return isinstance(avro_type, list) and len(avro_type) == 2 and NULL in avro_type
@@ -589,6 +590,7 @@ def __is_leaf(avro_type):
         - map
         - tagged union
         - named type  ¯\_(ツ)_/¯
+
     '''
     return (
         # Real primitives: {"type": "aaa"}

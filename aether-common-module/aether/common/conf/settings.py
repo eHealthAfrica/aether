@@ -64,7 +64,6 @@ INSTALLED_APPS = [
     # REST framework with auth token
     'rest_framework',
     'rest_framework.authtoken',
-    'rest_framework_csv',
 
     # CORS checking
     'corsheaders',
@@ -114,7 +113,6 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'aether.common.drf.renderers.CustomBrowsableAPIRenderer',
         'aether.common.drf.renderers.CustomAdminRenderer',
-        'aether.common.drf.renderers.CustomCSVRenderer',
     ),
     'DEFAULT_PARSER_CLASSES': (
         'rest_framework.parsers.JSONParser',
@@ -134,6 +132,8 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
     ),
     'DEFAULT_PAGINATION_CLASS': 'aether.common.drf.pagination.CustomPagination',
+    'PAGE_SIZE': int(os.environ.get('PAGE_SIZE', 10)),
+    'MAX_PAGE_SIZE': int(os.environ.get('MAX_PAGE_SIZE', 5000)),
 }
 
 

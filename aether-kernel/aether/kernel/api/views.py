@@ -16,8 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
-
 from django.db.models import Count, Min, Max
 from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext as _
@@ -37,6 +35,7 @@ from rest_framework.renderers import JSONRenderer
 from . import (
     avro_tools,
     constants,
+    exporter,
     filters,
     mapping_validation,
     models,
@@ -46,28 +45,7 @@ from . import (
 )
 
 
-class CustomViewSet(viewsets.ModelViewSet):
-
-    @action(detail=True, methods=['get', 'post'])
-    def details(self, request, pk=None, *args, **kwargs):
-        '''
-        Allow to retrieve data from a POST request.
-        Reachable at ``.../{model}/{pk}/details/``
-        '''
-
-        return self.retrieve(request, pk, *args, **kwargs)
-
-    @action(detail=False, methods=['get', 'post'])
-    def fetch(self, request, *args, **kwargs):
-        '''
-        Allow to list data from a POST request.
-        Reachable at ``.../{model}/fetch/``
-        '''
-
-        return self.list(request, *args, **kwargs)
-
-
-class ProjectViewSet(CustomViewSet):
+class ProjectViewSet(viewsets.ModelViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectSerializer
     filter_class = filters.ProjectFilter
@@ -116,7 +94,7 @@ class ProjectViewSet(CustomViewSet):
 
         PATCH|GET: Returns the list of project and affected artefact ids by type.
 
-        Reachable at ``.../projects/{pk}/artefacts/``
+        Reachable at ``/projects/{pk}/artefacts/``
         '''
 
         if request.method == 'GET':
@@ -296,37 +274,6 @@ class ProjectViewSet(CustomViewSet):
         return Response(data=results)
 
 
-class PayloadFilterMixin(object):
-    def get_queryset(self):
-        '''
-        Adds a dynamic filter to a viewset. Any query
-        parameter prefixed by "payload__" will filter entries
-        based on the contents of <ViewSet>.payload.
-
-        Example:
-        The URL "/submissions?payload__a__b__c=1" will yield
-        the queryset
-
-            models.Submission.objects.filter(payload__a__b__c=1)
-
-        and return a list of submissions with a JSON payload like
-
-            '{"a": {"b": {"c": 1}}}'
-
-        Note that it is possible to compare not just strings, but
-        numbers, lists and objects as well.
-        '''
-        queryset = self.queryset
-        for k, v in self.request.query_params.items():
-            if k.startswith('payload__'):
-                try:
-                    kwargs = {k: json.loads(v)}
-                except json.decoder.JSONDecodeError:
-                    kwargs = {k: v}
-                queryset = queryset.filter(**kwargs)
-        return queryset
-
-
 class ProjectStatsViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = models.Project \
                      .objects \
@@ -344,7 +291,7 @@ class ProjectStatsViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ('name',)
 
 
-class MappingSetViewSet(CustomViewSet):
+class MappingSetViewSet(viewsets.ModelViewSet):
     queryset = models.MappingSet.objects.all()
     serializer_class = serializers.MappingSetSerializer
     filter_class = filters.MappingSetFilter
@@ -367,25 +314,25 @@ class MappingSetStatsViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ('name',)
 
 
-class MappingViewSet(CustomViewSet):
+class MappingViewSet(viewsets.ModelViewSet):
     queryset = models.Mapping.objects.all()
     serializer_class = serializers.MappingSerializer
     filter_class = filters.MappingFilter
 
 
-class SubmissionViewSet(PayloadFilterMixin, CustomViewSet):
+class SubmissionViewSet(exporter.ExporterViewSet):
     queryset = models.Submission.objects.all()
     serializer_class = serializers.SubmissionSerializer
     filter_class = filters.SubmissionFilter
 
 
-class AttachmentViewSet(CustomViewSet):
+class AttachmentViewSet(viewsets.ModelViewSet):
     queryset = models.Attachment.objects.all()
     serializer_class = serializers.AttachmentSerializer
     filter_class = filters.AttachmentFilter
 
 
-class SchemaViewSet(CustomViewSet):
+class SchemaViewSet(viewsets.ModelViewSet):
     queryset = models.Schema.objects.all()
     serializer_class = serializers.SchemaSerializer
     filter_class = filters.SchemaFilter
@@ -416,7 +363,7 @@ class SchemaViewSet(CustomViewSet):
         })
 
 
-class ProjectSchemaViewSet(CustomViewSet):
+class ProjectSchemaViewSet(viewsets.ModelViewSet):
     queryset = models.ProjectSchema.objects.all()
     serializer_class = serializers.ProjectSchemaSerializer
     filter_class = filters.ProjectSchemaFilter
@@ -448,10 +395,14 @@ class ProjectSchemaViewSet(CustomViewSet):
         })
 
 
-class EntityViewSet(PayloadFilterMixin, CustomViewSet):
+class EntityViewSet(exporter.ExporterViewSet):
     queryset = models.Entity.objects.all()
     serializer_class = serializers.EntitySerializer
     filter_class = filters.EntityFilter
+
+    # Exporter required fields
+    schema_field = 'projectschema__schema__definition'
+    schema_order = '-projectschema__schema__created'
 
     def retrieve(self, request, pk=None, *args, **kwargs):
         def get_entity_linked_data(entity, request, resolved, depth, start_depth=0):
