@@ -18,6 +18,7 @@
 
 from datetime import datetime
 import csv
+import json
 import os
 import re
 import tempfile
@@ -57,6 +58,48 @@ class ExporterViewSet(ModelViewSet):
     schema_field = None
     schema_order = None
 
+    def get_queryset(self):
+        '''
+        Adds a dynamic filter to a viewset. Any query
+        parameter prefixed by "{json_field}__" will filter entries
+        based on the contents of <ViewSet>.<json_field>.
+
+        Example:
+        The URL "/submissions?payload__a__b__c=1" will yield
+        the queryset
+
+            models.Submission.objects.filter(payload__a__b__c=1)
+
+        and return a list of submissions with a JSON payload like
+
+            '{"a": {"b": {"c": 1}}}'
+
+        Note that it is possible to compare not just strings, but
+        numbers, lists and objects as well.
+        '''
+
+        json_filter = f'{self.json_field}__'
+        filters = [
+            # GET method: query params
+            (k, v)
+            for k, v in self.request.query_params.items()
+            if k.startswith(json_filter)
+        ] + [
+            # POST method: data content
+            (k, v)
+            for k, v in self.request.data.items()
+            if k.startswith(json_filter)
+        ]
+
+        queryset = self.queryset
+        for k, v in filters:
+            try:
+                kwargs = {k: json.loads(v)}
+            except json.decoder.JSONDecodeError:
+                kwargs = {k: v}
+            queryset = queryset.filter(**kwargs)
+        return queryset
+
     @action(detail=False, methods=['get', 'post'])
     def xlsx(self, request, *args, **kwargs):
         '''
@@ -76,7 +119,7 @@ class ExporterViewSet(ModelViewSet):
         return self.__export(request, format='csv')
 
     def __get(self, request, name, default=None):
-        return request.GET.get(name, dict(request.data).get(name, default))
+        return request.query_params.get(name, dict(request.data).get(name, default))
 
     def __export(self, request, format):
         queryset = self.filter_queryset(self.get_queryset())
