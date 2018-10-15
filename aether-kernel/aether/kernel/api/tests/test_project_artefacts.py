@@ -145,6 +145,8 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(schema.name, 'Schema')
         self.assertEqual(schema.revision, '1')
         self.assertEqual(schema.definition, {})
+        self.assertEqual(schema.type, 'org.ehealthafrica.aether')
+        self.assertIsNone(schema.family)
 
         project_schema = ProjectSchema.objects.get(pk=project_schema_id)
         self.assertEqual(project_schema.project, project)
@@ -160,12 +162,14 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(schema.name, 'Schema')
         self.assertEqual(schema.revision, '1')
         self.assertEqual(schema.definition, {})
+        self.assertEqual(schema.type, 'org.ehealthafrica.aether')
+        self.assertIsNone(schema.family)
 
         # delete project schema
         project_schema.delete()
         results_3 = generate(project_id=project.pk, project_name=project.name, schemas=[
             # in this case the definition is updated and the deleted project schema re-generated
-            {'id': schema_id, 'definition': {'name': 'Schema'}},
+            {'id': schema_id, 'definition': {'name': 'Schema'}, 'type': 't', 'family': 'f'},
         ])
         self.assertEqual(results_1, results_3, 'generates a new project schema with the schema id')
         self.assertEqual(results_3['project'], str(project.pk))
@@ -177,6 +181,8 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(schema.name, 'Schema')
         self.assertEqual(schema.revision, '1')
         self.assertEqual(schema.definition, {'name': 'Schema'})
+        self.assertEqual(schema.type, 't')
+        self.assertEqual(schema.family, 'f')
 
         # creating a new empt schema
         results_4 = generate(project_id=project.pk, project_name=project.name, schemas=[
@@ -249,7 +255,18 @@ class ProjectArtefactsTests(TestCase):
             project_id=project.pk,
             project_name=project.name,
             mappingsets=[
-                {'id': mapping_id, 'name': 'Mapping Set 2', 'input': {'name': 'a'}}
+                {
+                    'id': mapping_id,
+                    'name': 'Mapping Set 2',
+                    'schema': {
+                        'name': 'Name',
+                        'type': 'record',
+                        'fields': [
+                            {'name': 'name', 'type': 'string'},
+                        ],
+                    },
+                    'input': {'name': 'a'},
+                }
             ],
             mappings=[
                 # in this case the definition is updated and the given input ignored
@@ -264,6 +281,13 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(mapping.definition, {'mapping': [], 'entities': {}})
 
         mappingset.refresh_from_db()
+        self.assertEqual(mappingset.schema, {
+            'name': 'Name',
+            'type': 'record',
+            'fields': [
+                {'name': 'name', 'type': 'string'},
+            ],
+        })
         self.assertEqual(mappingset.input, {'name': 'a'})
 
         # creating a new empty mapping
@@ -411,7 +435,7 @@ class ProjectArtefactsTests(TestCase):
             ]
         }
 
-        generate_from_avro(avro_schemas=[{'definition': avro_schema}])
+        generate_from_avro(avro_schemas=[{'definition': avro_schema}], family='test')
 
         self.assertEqual(Project.objects.count(), 1)
         self.assertEqual(Schema.objects.count(), 1)
@@ -420,6 +444,8 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(Mapping.objects.count(), 2, 'The passthrough mapping and the empty one')
 
         schema = Schema.objects.first()
+        self.assertEqual(schema.family, 'test')
+        self.assertEqual(schema.type, 'org.ehealthafrica.aether')
         self.assertEqual(schema.definition, {
             'namespace': 'org.ehealthafrica.aether',
             'name': 'Person',
@@ -474,6 +500,10 @@ class ProjectArtefactsTests(TestCase):
             project_id=str(Project.objects.first().pk),
             avro_schemas=[{'definition': avro_schema, 'id': str(schema.id)}],
         )
+
+        schema.refresh_from_db()
+        self.assertEqual(schema.family, 'test')
+
         self.assertEqual(Mapping.objects.count(), 1, 'Only the passthrough mapping')
 
         mapping = Mapping.objects.first()

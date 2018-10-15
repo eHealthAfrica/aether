@@ -19,6 +19,8 @@
 # Common settings
 # ------------------------------------------------------------------------------
 
+import os
+
 from aether.common.conf.settings import *  # noqa
 from aether.common.conf.settings import INSTALLED_APPS, REST_FRAMEWORK
 
@@ -45,3 +47,5 @@ REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'] = [
     'django_filters.rest_framework.DjangoFilterBackend',
     *REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'],
 ]
+
+CSV_SEPARATOR = os.environ.get('CSV_SEPARATOR', ',')

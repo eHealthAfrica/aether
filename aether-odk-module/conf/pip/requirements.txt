@@ -27,7 +27,6 @@ django-prometheus==1.0.15
 django-storages==1.7.1
 django-ums-client==0.2.6
 djangorestframework==3.8.2
-djangorestframework-csv==2.1.0
 docutils==0.14
 drf-dynamic-fields==0.3.0
 flake8==3.5.0

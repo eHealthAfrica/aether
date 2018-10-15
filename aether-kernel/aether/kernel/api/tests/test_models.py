@@ -40,9 +40,6 @@ class ModelsTests(TransactionTestCase):
         project = models.Project.objects.create(
             revision='rev 1',
             name='a project name',
-            salad_schema='a sample salad schema',
-            jsonld_context='sample context',
-            rdf_definition='a sample rdf definition'
         )
         self.assertEquals(str(project), project.name)
         self.assertNotEqual(models.Project.objects.count(), 0)
@@ -50,8 +47,9 @@ class ModelsTests(TransactionTestCase):
         mappingset = models.MappingSet.objects.create(
             revision='a sample revision',
             name='a sample mapping set',
+            schema={},
             input={},
-            project=project
+            project=project,
         )
         self.assertEquals(str(mappingset), mappingset.name)
         self.assertNotEqual(models.MappingSet.objects.count(), 0)
@@ -62,11 +60,12 @@ class ModelsTests(TransactionTestCase):
             name='sample mapping',
             definition={},
             revision='a sample revision field',
-            mappingset=mappingset
+            mappingset=mappingset,
         )
         self.assertEquals(str(mapping), mapping.name)
         self.assertNotEqual(models.Mapping.objects.count(), 0)
         self.assertTrue(mapping.definition_prettified is not None)
+        self.assertEqual(mapping.projectschemas.count(), 0, 'No entities in definition')
 
         submission = models.Submission.objects.create(
             revision='a sample revision',
@@ -76,10 +75,11 @@ class ModelsTests(TransactionTestCase):
         self.assertNotEqual(models.Submission.objects.count(), 0)
         self.assertTrue(submission.payload_prettified is not None)
         self.assertEqual(submission.project, project, 'submission inherits mapping project')
+        self.assertEqual(submission.name, 'a project name-a sample mapping set')
 
         attachment = models.Attachment.objects.create(
             submission=submission,
-            attachment_file=SimpleUploadedFile('sample.txt', b'abc')
+            attachment_file=SimpleUploadedFile('sample.txt', b'abc'),
         )
         self.assertEquals(str(attachment), attachment.name)
         self.assertEquals(attachment.name, 'sample.txt')
@@ -91,7 +91,7 @@ class ModelsTests(TransactionTestCase):
             submission=submission,
             submission_revision='next revision',
             name='sample_2.txt',
-            attachment_file=SimpleUploadedFile('sample_12345678.txt', b'abcd')
+            attachment_file=SimpleUploadedFile('sample_12345678.txt', b'abcd'),
         )
         self.assertEquals(str(attachment_2), attachment_2.name)
         self.assertEquals(attachment_2.name, 'sample_2.txt')
@@ -102,20 +102,25 @@ class ModelsTests(TransactionTestCase):
         schema = models.Schema.objects.create(
             name='sample schema',
             definition={},
-            revision='a sample revision'
+            revision='a sample revision',
         )
         self.assertEquals(str(schema), schema.name)
         self.assertNotEqual(models.Schema.objects.count(), 0)
         self.assertTrue(schema.definition_prettified is not None)
+        self.assertEqual(schema.family_name, 'sample schema')
+
+        schema.definition = {'name': 'Person'}
+        schema.save()
+        self.assertEqual(schema.family_name, 'Person')
+
+        schema.family = 'People'
+        schema.save()
+        self.assertEqual(schema.family_name, 'People')
 
         projectschema = models.ProjectSchema.objects.create(
             name='sample project schema',
-            mandatory_fields='a sample mandatory fields',
-            transport_rule='a sample transport rule',
-            masked_fields='a sample masked field',
-            is_encrypted=False,
             project=project,
-            schema=schema
+            schema=schema,
         )
         self.assertEquals(str(projectschema), projectschema.name)
         self.assertNotEqual(models.ProjectSchema.objects.count(), 0)
@@ -125,11 +130,13 @@ class ModelsTests(TransactionTestCase):
             payload={},
             status='a sample status',
             projectschema=projectschema,
-            submission=submission
+            mapping=mapping,
+            submission=submission,
         )
         self.assertNotEqual(models.Entity.objects.count(), 0)
         self.assertTrue(entity.payload_prettified is not None)
         self.assertEqual(entity.project, project, 'entity inherits submission project')
+        self.assertEqual(entity.name, f'{project.name}-{schema.family_name}')
 
         project_2 = models.Project.objects.create(
             revision='rev 1',
@@ -139,7 +146,7 @@ class ModelsTests(TransactionTestCase):
             name='sample second project schema',
             is_encrypted=False,
             project=project_2,
-            schema=schema
+            schema=schema,
         )
         self.assertNotEqual(entity.submission.project, projectschema_2.project)
         entity.projectschema = projectschema_2
@@ -154,22 +161,49 @@ class ModelsTests(TransactionTestCase):
         entity.submission = None
         entity.save()
         self.assertEqual(entity.project, project_2, 'entity inherits projectschema project')
+        self.assertEqual(entity.name, f'{project_2.name}-{schema.family_name}')
 
         # keeps last project
         entity.projectschema = None
         entity.save()
         self.assertEqual(entity.project, project_2, 'entity keeps project')
+        self.assertEqual(entity.name, entity.project.name)
+
+        entity.project = None
+        entity.save()
+        self.assertEqual(entity.name, None)
 
         # till new submission or new projectschema is set
+        entity.project = project_2  # this is going to be replaced
         entity.submission = submission
         entity.projectschema = None
         entity.save()
         self.assertEqual(entity.project, project, 'entity inherits submission project')
+        self.assertEqual(entity.name, entity.submission.name)
 
         entity.submission = None
         entity.projectschema = projectschema
         entity.save()
         self.assertEqual(entity.project, project, 'entity inherits projectschema project')
+        self.assertEqual(entity.name, f'{project.name}-{schema.family_name}')
+
+        # try to build entity name with mapping entity entries
+        projectschema_3 = models.ProjectSchema.objects.create(
+            name='sample project schema 3',
+            project=project,
+            schema=schema,
+        )
+
+        self.assertEqual(mapping.projectschemas.count(), 0)
+        mapping.definition = {
+            'entities': {
+                'None': str(projectschema_3.pk),
+                'Some': str(entity.projectschema.pk),
+            }
+        }
+        mapping.save()
+        self.assertEqual(mapping.projectschemas.count(), 2)
+        self.assertEqual(entity.name, f'{entity.project.name}-Some')
 
     def test_models_ids(self):
 
