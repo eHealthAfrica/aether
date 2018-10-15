@@ -438,9 +438,11 @@ class TestFilters(TestCase):
         ]
         gen_payload = generators.ChoicesGenerator(values=payloads)
         generate_project(submission_field_values={'payload': gen_payload})
+        page_size = models.Submission.objects.count()
+
         filtered_submissions_count = 0
         for kwargs, payload in zip(filters, payloads):
-            response = self.client.get(url, kwargs, format='json')
+            response = self.client.get(url, {'page_size': page_size, **kwargs}, format='json')
             submissions = json.loads(response.content)['results']
             for submission in submissions:
                 self.assertEqual(submission['payload'], payload)
@@ -463,13 +465,12 @@ class TestFilters(TestCase):
             {'a': {'b': {'c': [1, 2, 3]}}}
         ]
         gen_payload = generators.ChoicesGenerator(values=payloads)
-        generate_project(
-            submission_field_values={'payload': gen_payload},
-            entity_field_values={'payload': gen_payload},
-        )
+        generate_project(entity_field_values={'payload': gen_payload})
+        page_size = models.Entity.objects.count()
+
         filtered_entities_count = 0
         for kwargs, payload in zip(filters, payloads):
-            response = self.client.get(url, kwargs, format='json')
+            response = self.client.get(url, {'page_size': page_size, **kwargs}, format='json')
             entities = json.loads(response.content)['results']
             for entity in entities:
                 self.assertEqual(entity['payload'], payload)
