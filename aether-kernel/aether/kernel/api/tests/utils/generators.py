@@ -24,8 +24,8 @@ from autofixture import AutoFixture
 from aether.kernel.api import models
 
 ENTITIES_COUNT_RANGE = (1, 3)
-MAPPINGS_COUNT_RANGE = (1, 6)
-SUBMISSIONS_COUNT_RANGE = (10, 20)
+MAPPINGS_COUNT_RANGE = (1, 3)
+SUBMISSIONS_COUNT_RANGE = (5, 10)
 
 
 def schema_definition():
@@ -58,9 +58,9 @@ def entity_payload():
     }
 
 
-def mapping_definition():
+def mapping_definition(entity_test_pk):
     return {
-        'entities': {'Test': 1},
+        'entities': {'Test': str(entity_test_pk)},
         'mapping': [
             ['#!uuid', 'Test.id'],
             ['$.test_field', 'Test.test_field'],
@@ -78,13 +78,13 @@ def get_field_values(default, values=None):
 
 
 def generate_project(
-        project_field_values=None,
-        mapping_field_values=None,
-        schema_field_values=None,
-        projectschema_field_values=None,
-        submission_field_values=None,
-        entity_field_values=None,
-        mappingset_field_values=None
+    project_field_values=None,
+    schema_field_values=None,
+    projectschema_field_values=None,
+    mappingset_field_values=None,
+    mapping_field_values=None,
+    submission_field_values=None,
+    entity_field_values=None,
 ):
     '''
     Generate an Aether Project.
@@ -113,17 +113,6 @@ def generate_project(
         ),
     ).create_one()
 
-    mappingset = AutoFixture(
-        model=models.MappingSet,
-        field_values=get_field_values(
-            default=dict(
-                project=project,
-                input={},
-            ),
-            values=mappingset_field_values,
-        ),
-    ).create_one()
-
     schema = AutoFixture(
         model=models.Schema,
         field_values=get_field_values(
@@ -145,39 +134,53 @@ def generate_project(
         ),
     ).create_one()
 
-    mapping_def = mapping_definition()
-    mapping_def['entities']['Test'] = str(projectschema.pk)
-    AutoFixture(
-        model=models.Mapping,
-        field_values=get_field_values(
-            default=dict(
-                mappingset=mappingset,
-                definition=mapping_def,
-            ),
-            values=mapping_field_values,
-        ),
-    ).create(random.randint(*MAPPINGS_COUNT_RANGE))
-
-    for _ in range(random.randint(*SUBMISSIONS_COUNT_RANGE)):
-        submission = AutoFixture(
-            model=models.Submission,
+    for _ in range(random.randint(*MAPPINGS_COUNT_RANGE)):
+        mappingset = AutoFixture(
+            model=models.MappingSet,
             field_values=get_field_values(
                 default=dict(
-                    payload=submission_payload(),
-                    mappingset=mappingset,
+                    project=project,
+                    schema=schema_definition(),
+                    input={'test_field': 'abc'},
                 ),
-                values=submission_field_values,
+                values=mappingset_field_values,
             ),
         ).create_one()
 
-        AutoFixture(
-            model=models.Entity,
+        mapping = AutoFixture(
+            model=models.Mapping,
             field_values=get_field_values(
                 default=dict(
-                    payload=entity_payload(),
-                    projectschema=projectschema,
-                    submission=submission,
+                    mappingset=mappingset,
+                    definition=mapping_definition(projectschema.pk),
                 ),
-                values=entity_field_values,
+                values=mapping_field_values,
             ),
-        ).create(random.randint(*ENTITIES_COUNT_RANGE))
+        ).create_one()
+
+        for _ in range(random.randint(*SUBMISSIONS_COUNT_RANGE)):
+            submission = AutoFixture(
+                model=models.Submission,
+                field_values=get_field_values(
+                    default=dict(
+                        payload=submission_payload(),
+                        project=project,
+                        mappingset=mappingset,
+                    ),
+                    values=submission_field_values,
+                ),
+            ).create_one()
+
+            AutoFixture(
+                model=models.Entity,
+                field_values=get_field_values(
+                    default=dict(
+                        payload=entity_payload(),
+                        project=project,
+                        projectschema=projectschema,
+                        mapping=mapping,
+                        submission=submission,
+                    ),
+                    values=entity_field_values,
+                ),
+            ).create(random.randint(*ENTITIES_COUNT_RANGE))

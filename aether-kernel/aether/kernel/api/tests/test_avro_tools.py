@@ -24,12 +24,23 @@ import uuid
 from django.test import TestCase
 from spavro.schema import parse as parse_schema
 
+from . import EXAMPLE_SCHEMA
 from aether.kernel.api.avro_tools import (
-    avro_schema_to_passthrough_artefacts as parser,
+    # used in validation tests
     AvroValidationError as error,
     AvroValidationException,
     validate,
+
+    # used in passthrough tests
     NAMESPACE,
+    avro_schema_to_passthrough_artefacts as parser,
+
+    # used in extractor tests
+    is_nullable,
+    __is_leaf as is_leaf,
+    extract_jsonpaths_and_docs as extract,
+
+    # used in random tests
     random_avro,
 )
 
@@ -572,7 +583,7 @@ class TestAvroValidator(TestCase):
         self.assertIn('Could not validate', message)
 
 
-class TestAvroTools(TestCase):
+class TestAvroPassthrough(TestCase):
 
     def test__avro_schema_to_passthrough_artefacts__defaults(self):
         schema, mapping = parser(None, {'name': 'sample', 'type': 'record', 'fields': []})
@@ -830,3 +841,415 @@ class TestAvroRandom(TestCase):
             self.assertTrue(isinstance(item, dict))
             self.assertTrue(isinstance(item['index'], int))
             self.assertTrue(isinstance(item['value'], str))
+
+
+class TestAvroExtractor(TestCase):
+
+    def test__is_nullable(self):
+        # should return false if type is not a union
+        self.assertFalse(is_nullable({'type': 'array', 'items': 'another_type'}))
+        self.assertFalse(is_nullable({'type': 'record'}))
+        self.assertFalse(is_nullable({'type': 'map'}))
+        self.assertFalse(is_nullable('null'))
+        self.assertFalse(is_nullable({'type': 'null'}))
+
+        # should return true only if type is a union fo two elements, one of them "null"
+        self.assertFalse(is_nullable(['boolean', 'int']))
+        self.assertFalse(is_nullable(['float', {'type': 'enum'}]))
+        self.assertFalse(is_nullable(['string', 'int', {'type': 'record'}]))
+        self.assertFalse(is_nullable(['null', 'int', {'type': 'record'}]))
+
+        self.assertTrue(is_nullable(['null', 'int']))
+        self.assertTrue(is_nullable(['null', {'type': 'enum'}]))
+
+    def test__is_leaf(self):
+        # should flag basic primitives as leaf
+        self.assertTrue(is_leaf('null'))
+        self.assertTrue(is_leaf('boolean'))
+        self.assertTrue(is_leaf('int'))
+        self.assertTrue(is_leaf('long'))
+        self.assertTrue(is_leaf('float'))
+        self.assertTrue(is_leaf('double'))
+        self.assertTrue(is_leaf('bytes'))
+        self.assertTrue(is_leaf('string'))
+        self.assertTrue(is_leaf('enum'))
+        self.assertTrue(is_leaf('fixed'))
+
+        self.assertTrue(is_leaf({'type': 'null'}))
+        self.assertTrue(is_leaf({'type': 'boolean'}))
+        self.assertTrue(is_leaf({'type': 'int'}))
+        self.assertTrue(is_leaf({'type': 'long'}))
+        self.assertTrue(is_leaf({'type': 'float'}))
+        self.assertTrue(is_leaf({'type': 'double'}))
+        self.assertTrue(is_leaf({'type': 'bytes'}))
+        self.assertTrue(is_leaf({'type': 'string'}))
+        self.assertTrue(is_leaf({'type': 'enum'}))
+        self.assertTrue(is_leaf({'type': 'fixed'}))
+
+        # should not flag complex types
+        self.assertFalse(is_leaf({'type': 'record'}))
+        self.assertFalse(is_leaf({'type': 'map'}))
+        self.assertFalse(is_leaf({'type': 'array', 'items': {'type': 'map'}}))
+        self.assertFalse(is_leaf({'type': 'array', 'items': 'named_type'}))
+        self.assertFalse(is_leaf(['null', 'int', {'type': 'record'}]))
+
+        # should flag certain complex types
+        self.assertTrue(is_leaf(['null', 'int']))
+        self.assertTrue(is_leaf(['null', {'type': 'enum'}]))
+        self.assertTrue(is_leaf({'type': 'array', 'items': 'long'}))
+
+    def test__extract__with_doc(self):
+        # should get take the "doc" property as doc
+        schema = {
+            'name': 'root',
+            'doc': 'The root',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'first',
+                    'doc': 'The first',
+                    # nullable primitive
+                    'type': ['null', 'boolean']
+                }
+            ]
+        }
+
+        paths = []
+        docs = {}
+        extract(schema, paths, docs)
+
+        self.assertEqual(paths, ['first'])
+        self.assertEqual(docs, {'first': 'The first'})
+
+    def test__extract__without_doc(self):
+        # should no create any doc entry if no "doc"
+        schema = {
+            'name': 'root',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'first',
+                    # "enum" types are handled as primitives
+                    'type': {
+                        'name': 'coords',
+                        # this is ignored, it belongs to the named type "coords"
+                        'doc': '3D axes',
+                        'type': 'enum',
+                        'symbols': ['x', 'y', 'z']
+                    }
+                }
+            ]
+        }
+
+        paths = []
+        docs = {}
+        extract(schema, paths, docs)
+
+        self.assertEqual(paths, ['first'])
+        self.assertEqual(docs, {})
+
+    def test__extract__with_initial_values(self):
+        # should not overwrite initial values
+        schema = {
+            'name': 'root',
+            'doc': 'The root',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'first',
+                    'doc': 'The first',
+                    'type': ['null', 'boolean']
+                },
+                {
+                    'name': 'second',
+                    'doc': 'The first',
+                    'type': 'string'
+                }
+            ]
+        }
+
+        # initial paths and docs
+        paths = ['zero', 'first']
+        docs = {
+            'unknown': 'who knows?',  # there is no path for it but...
+            'first': 'The Second'
+        }
+        extract(schema, paths, docs)
+
+        self.assertEqual(paths, ['zero', 'first', 'second'])
+        self.assertEqual(docs, {
+            'unknown': 'who knows?',  # still there
+            'first': 'The Second',    # not replaced
+            'second': 'The first',    # added
+        })
+
+    def test__extract__record_type(self):
+        # should build nested paths
+        schema = {
+            'name': 'root',
+            'doc': 'The root',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'first',
+                    'type': 'record',
+                    'fields': [
+                        {
+                            'name': 'second',
+                            'doc': 'leaf',
+                            'type': ['null', 'boolean']
+                        },
+                        {
+                            'name': 'fourth',
+                            'type': [
+                                'null',
+                                {
+                                    # it's the same name because it's nullable
+                                    'name': 'fourth',
+                                    'type': 'record',
+                                    'fields': [
+                                        {
+                                            'name': 'fifth',
+                                            'type': 'string'
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+
+        paths = []
+        docs = {}
+        extract(schema, paths, docs)
+
+        self.assertEqual(paths, ['first', 'first.second', 'first.fourth', 'first.fourth.fifth'])
+        self.assertEqual(docs, {'first.second': 'leaf'})
+
+    def test__extract__map_type(self):
+        # should build map jsonpaths with "*"
+        schema = {
+            'name': 'root',
+            'doc': 'The root',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'a',
+                    'type': 'record',
+                    'fields': [
+                        {
+                            # it's the same name because it's nullable
+                            'name': 'b',
+                            'doc': 'Dictionary I',
+                            'type': [
+                                'null',
+                                {
+                                    'name': 'b',
+                                    'type': 'map',
+                                    'values': 'long'
+                                }
+                            ]
+                        },
+                        {
+                            'name': 'c',
+                            'doc': 'Dictionary II',
+                            'type': 'map',
+                            'values': {
+                                'name': 'nullable_string',
+                                'type': ['null', 'string']
+                            }
+                        },
+                        {
+                            'name': 'd',
+                            'doc': 'Dictionary III (with children)',
+                            'type': 'map',
+                            'values': {
+                                'name': 'it_does_not_matter',
+                                'type': 'record',
+                                'fields': [
+                                    {
+                                        'name': 'e',
+                                        'doc': 'child',
+                                        'type': 'string'
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            'name': 'f',
+                            'doc': 'Dictionary IV',
+                            'type': 'map',
+                            'values': 'named_type'
+                        }
+                    ]
+                }
+            ]
+        }
+
+        paths = []
+        docs = {}
+        extract(schema, paths, docs)
+
+        self.assertEqual(paths, [
+            'a',
+            'a.b',
+            'a.b.*',
+            'a.c',
+            'a.c.*',
+            'a.d',
+            'a.d.*',
+            'a.d.*.e',
+            'a.f',
+            'a.f.*',
+        ])
+        self.assertEqual(docs, {
+            'a.b': 'Dictionary I',
+            'a.c': 'Dictionary II',
+            'a.d': 'Dictionary III (with children)',
+            'a.d.*.e': 'child',
+            'a.f': 'Dictionary IV',
+        })
+
+    def test__extract__array_type(self):
+        # should build array jsonpaths with "#"
+        schema = {
+            'name': 'root',
+            'doc': 'The root',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'a',
+                    'type': 'record',
+                    'fields': [
+                        {
+                            'name': 'b',
+                            'doc': 'List I',
+                            'type': [
+                                'null',
+                                {
+                                    # it's the same name because it's nullable
+                                    'name': 'b',
+                                    'type': 'array',
+                                    'items': 'long'
+                                }
+                            ]
+                        },
+                        {
+                            'name': 'c',
+                            'doc': 'List II',
+                            'type': 'array',
+                            'items': {
+                                'name': 'nullable_string',
+                                'type': ['null', 'string']
+                            }
+                        },
+                        {
+                            'name': 'd',
+                            'doc': 'List III (with children)',
+                            'type': 'array',
+                            'items': {
+                                'name': 'it_does_not_matter',
+                                'type': 'record',
+                                'fields': [
+                                    {
+                                        'name': 'e',
+                                        'doc': 'child',
+                                        'type': 'string'
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            'name': 'f',
+                            'doc': 'List IV',
+                            'type': 'array',
+                            'items': 'named_type'
+                        }
+                    ]
+                }
+            ]
+        }
+
+        paths = []
+        docs = {}
+        extract(schema, paths, docs)
+
+        self.assertEqual(paths, [
+            'a',
+            'a.b',
+            # 'a.b.#',  # array of primitives are treated as leafs
+            'a.c',
+            # 'a.c.#',  # array of primitives are treated as leafs
+            'a.d',
+            'a.d.#',
+            'a.d.#.e',
+            'a.f',
+            'a.f.#',
+        ])
+        self.assertEqual(docs, {
+            'a.b': 'List I',
+            'a.c': 'List II',
+            'a.d': 'List III (with children)',
+            'a.d.#.e': 'child',
+            'a.f': 'List IV',
+        })
+
+    def test__extract__union_type(self):
+        # should build union jsonpaths as tagged unions
+        schema = {
+            'name': 'root',
+            'doc': 'The root',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'a',
+                    'type': 'record',
+                    'fields': [
+                        {
+                            'name': 'b',
+                            'doc': 'Union I',
+                            'type': [
+                                'null',
+                                'long',
+                                'string',
+                                {'name': 'axes', 'type': 'enum', 'symbols': ['x', 'y', 'z'], 'doc': 'axes'},
+                                {'type': 'map', 'values': 'int', 'doc': 'coords'}
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+
+        paths = []
+        docs = {}
+        extract(schema, paths, docs)
+
+        self.assertEqual(paths, [
+            'a',
+            'a.b',
+            'a.b.?',
+            'a.b.?.*',
+        ])
+        self.assertEqual(docs, {'a.b': 'Union I'})
+
+    def test__extract__example(self):
+        paths = []
+        docs = {}
+        extract(EXAMPLE_SCHEMA, paths, docs)
+
+        self.assertEqual(paths, [
+            'id',
+            '_rev',
+            'name',
+            'dob',
+            'villageID',
+        ])
+        self.assertEqual(docs, {
+            'id': 'ID',
+            '_rev': 'REVISION',
+            'name': 'NAME',
+            'villageID': 'VILLAGE',
+        })
