@@ -67,7 +67,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project = get_object_or_404(Project, pk=pk)
 
         try:
-            propagate_kernel_project(project)
+            propagate_kernel_project(project=project, family=request.data.get('family'))
         except KernelPropagationError as kpe:
             return Response(
                 data={'description': str(kpe)},
@@ -106,7 +106,7 @@ class SchemaViewSet(viewsets.ModelViewSet):
         schema = get_object_or_404(Schema, pk=pk)
 
         try:
-            propagate_kernel_artefacts(schema)
+            propagate_kernel_artefacts(schema=schema, family=request.data.get('family'))
         except KernelPropagationError as kpe:
             return Response(
                 data={'description': str(kpe)},

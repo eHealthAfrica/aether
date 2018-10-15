@@ -54,7 +54,7 @@ class MappingFilter(filters.FilterSet):
 
     def projectschema_filter(self, queryset, name, value):
         if is_uuid(value):
-            return queryset.filter(projectschemas__in=[value])
+            return queryset.filter(projectschemas__pk__in=[value])
         else:
             return queryset.filter(projectschemas__name__in=[value])
 
@@ -147,6 +147,9 @@ class EntityFilter(filters.FilterSet):
     )
     mapping = filters.CharFilter(
         method='mapping_filter',
+    )
+    family = filters.CharFilter(
+        field_name='projectschema__schema__family',
     )
 
     def project_filter(self, queryset, name, value):

@@ -27,12 +27,12 @@ from . import constants, models, utils, validators
 import urllib
 
 
-m_options = constants.MergeOptions
+M_OPTIONS = constants.MergeOptions
 
 MERGE_CHOICES = (
-    (m_options.overwrite.value, 'Overwrite (Do not merge)'),
-    (m_options.lww.value, 'Last Write Wins (Target to Source)'),
-    (m_options.fww.value, 'First Write Wins (Source to Target)')
+    (M_OPTIONS.overwrite.value, 'Overwrite (Do not merge)'),
+    (M_OPTIONS.lww.value, 'Last Write Wins (Target to Source)'),
+    (M_OPTIONS.fww.value, 'First Write Wins (Source to Target)')
 )
 
 
@@ -293,7 +293,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         source='submission',
         view_name='submission-detail',
     )
-    merge = serializers.ChoiceField(MERGE_CHOICES, default=m_options.overwrite.value)
+    merge = serializers.ChoiceField(MERGE_CHOICES, default=M_OPTIONS.overwrite.value)
     resolved = serializers.JSONField(default={})
 
     # this will return all linked attachment files
@@ -352,10 +352,9 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
                 merge_value = self.context['request'].query_params['merge']
             elif 'merge' in validated_data:
                 merge_value = validated_data.pop('merge')
-            if (merge_value == m_options.fww.value
-                    or merge_value == m_options.lww.value):
-                instance.payload = \
-                    utils.merge_objects(instance.payload, target_payload, merge_value)
+            if (merge_value == M_OPTIONS.fww.value
+                    or merge_value == M_OPTIONS.lww.value):
+                instance.payload = utils.merge_objects(instance.payload, target_payload, merge_value)
             else:
                 instance.payload = target_payload
             try:
@@ -384,7 +383,7 @@ class EntityLDSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         source='projectschema',
         view_name='projectschema-detail',
     )
-    merge = serializers.ChoiceField(MERGE_CHOICES, default=m_options.overwrite.value)
+    merge = serializers.ChoiceField(MERGE_CHOICES, default=M_OPTIONS.overwrite.value)
 
     class Meta:
         model = models.Entity

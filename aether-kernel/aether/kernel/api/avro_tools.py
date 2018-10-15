@@ -30,6 +30,8 @@ from os import urandom
 from string import ascii_letters
 from uuid import uuid4
 
+from .constants import NAMESPACE
+
 
 # Constants used by AvroValidator to distinguish between avro types
 # ``int`` and ``long``.
@@ -61,13 +63,13 @@ UNION = 'union'
 # - primitive: null, boolean, int, long, float, double, bytes, string
 # - complex: record, map, array, union, enum, fixed
 PRIMITIVE_TYPES = [
-    NULL,
     BOOLEAN,
+    BYTES,
+    DOUBLE,
+    FLOAT,
     INT,
     LONG,
-    FLOAT,
-    DOUBLE,
-    BYTES,
+    NULL,
     STRING,
 
     # these ones are not primitives but internally work as:
@@ -83,8 +85,6 @@ PRIMITIVE_TYPES = [
 ARRAY_PATH = '#'
 MAP_PATH = '*'
 UNION_PATH = '?'
-
-NAMESPACE = 'org.ehealthafrica.aether'
 
 
 def random_string():
@@ -584,11 +584,13 @@ def __is_leaf(avro_type):
         - primitive or
         - array of primitives or
         - "nullable" primitive
+
     Otherwise False
         - record
         - map
         - tagged union
-        - named type ¯\_(ツ)_/¯
+        - named type  ¯\_(ツ)_/¯
+
     '''
     return (
         # Real primitives: {"type": "aaa"}
