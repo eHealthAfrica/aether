@@ -503,7 +503,7 @@ def xform_submission(request):
         previous_submissions_response = requests.get(
             submissions_url,
             headers=auth_header,
-            params={'instanceID': instance_id},
+            params={'payload__meta__instanceID': instance_id},
         )
         previous_submissions = json.loads(previous_submissions_response.content.decode('utf-8'))
         previous_submissions_count = previous_submissions['count']

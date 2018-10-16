@@ -18,7 +18,6 @@
 
 import json
 import random
-import uuid
 
 from autofixture import generators
 from django.contrib.auth import get_user_model
@@ -251,25 +250,6 @@ class TestFilters(TestCase):
             self.assertEqual(response['count'], len(expected))
             result_by_id = set([r['id'] for r in response['results']])
             self.assertEqual(expected, result_by_id, 'by family')
-
-    def test_submission_filter__by_instanceID(self):
-        def gen_submission_payload():
-            return {'meta': {'instanceID': str(uuid.uuid4())}}
-
-        url = reverse(viewname='submission-list')
-        generate_project(submission_field_values={
-            'payload': generators.CallableGenerator(gen_submission_payload),
-        })
-        for submission in models.Submission.objects.all():
-            instance_id = submission.payload['meta']['instanceID']
-            kwargs = {'instanceID': instance_id}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
-            self.assertEqual(response['count'], 1)
-            result = response['results'][0]
-            self.assertEqual(result['id'], str(submission.pk), 'by instanceID')
-            self.assertEqual(result['payload']['meta']['instanceID'], instance_id)
 
     def test_submission_filter__by_project(self):
         url = reverse(viewname='submission-list')
