@@ -23,8 +23,8 @@ from ...setup import setup_couchdb
 
 
 class Command(BaseCommand):
-    help = _('Setup couchdb')
+    help = _('Set up couchdb')
 
     def handle(self, *args, **options):
         setup_couchdb()
-        self.stdout.write(_('Couchdb setup done.'))
+        self.stdout.write(_('Couchdb set up done.'))
