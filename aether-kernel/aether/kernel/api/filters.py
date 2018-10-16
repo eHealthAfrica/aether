@@ -82,9 +82,6 @@ class MappingSetFilter(filters.FilterSet):
 
 
 class SubmissionFilter(filters.FilterSet):
-    instanceID = filters.CharFilter(
-        field_name='payload__meta__instanceID',
-    )
     project = filters.CharFilter(
         method='project_filter',
     )
