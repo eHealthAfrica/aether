@@ -26,13 +26,14 @@ import json
 
 from jsonschema.validators import Draft4Validator
 
+from django.utils.translation import ugettext as _
 from rest_framework import serializers
 from spavro.schema import parse, SchemaParseException
 
-MESSAGE_REQUIRED_ID = 'A schema is required to have a field "id" of type "string"'
+MESSAGE_REQUIRED_ID = _('A schema is required to have a field "id" of type "string"')
 
 mapping_definition_schema = {
-    'description': (
+    'description': _(
         'A mapping definition is either an empty object or an object with two '
         'required properties: "entities" and "mapping". '
         'An empty object will not trigger entity extraction.'

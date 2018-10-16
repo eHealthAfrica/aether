@@ -26,6 +26,7 @@ import random
 
 from collections import namedtuple
 from copy import deepcopy
+from django.utils.translation import ugettext as _
 from os import urandom
 from string import ascii_letters
 from uuid import uuid4
@@ -193,7 +194,11 @@ def format_validation_error(error):
     '''
     Format an AvroValidationError.
     '''
-    return f'Expected type "{error.expected}" at path "{error.path}". Actual value: {error.datum}'
+    return _('Expected type "{expected}" at path "{path}". Actual value: {datum}').format(
+        expected=error.expected,
+        path=error.path,
+        datum=error.datum,
+    )
 
 
 class AvroValidator(object):
@@ -425,7 +430,10 @@ class AvroValidator(object):
         if schema.type in [RECORD, ERROR, REQUEST]:
             return self.validate_record(schema, datum, path)
         raise AvroValidationException(
-            f'Could not validate datum "{datum}" against "{schema}"'
+            _('Could not validate datum "{datum}" against "{schema}"').format(
+                datum=datum,
+                schema=schema,
+            )
         )
 
 

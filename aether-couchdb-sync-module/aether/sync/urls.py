@@ -27,7 +27,7 @@ from .views import check_rq
 urlpatterns = generate_urlpatterns(token=True, kernel=True) + [
     url(r'^', include('aether.sync.api.urls')),
 
-    url(r'^check-rq$', check_rq, name='check-rq'),
+    url(r'^check-rq$', view=check_rq, name='check-rq'),
     url(r'^rq/', include('django_rq.urls')),
 
     # used by the Aether Mobile App
