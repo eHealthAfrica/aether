@@ -47,6 +47,17 @@
   color: $white;
 }
 
+@mixin stripy($bg, $stripe) {
+  background: repeating-linear-gradient(
+    -45deg,
+    $stripe,
+    $stripe 10%,
+    $bg 10%,
+    $bg 50%,
+    $stripe 50%) top left fixed;
+  background-size: 8px 8px;
+}
+
 @mixin shadow-flat-dark {
   box-shadow: -1px -1px 0 rgba($black, .2), 1px 1px 0 rgba($white, .1) inset, -1px -1px 0 rgba($black, .2) inset, 1px 1px 0 rgba($white, .1);
 }

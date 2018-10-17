@@ -23,11 +23,12 @@ import re
 import string
 import uuid
 
-import jsonpath_ng
+from jsonpath_ng.ext import parse as jsonpath_ng_ext_parse
 from spavro.schema import parse as parse_schema
 from spavro.io import validate
 
 from django.utils.safestring import mark_safe
+from django.utils.translation import ugettext as _
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import JsonLexer
@@ -54,7 +55,7 @@ class CachedParser(object):
     def parse(path):
         # we never need to call parse directly; use find()
         if path not in CachedParser.cache.keys():
-            CachedParser.cache[path] = jsonpath_ng.parse(path)
+            CachedParser.cache[path] = jsonpath_ng_ext_parse(path)
         return CachedParser.cache[path]
 
     @staticmethod
@@ -97,7 +98,7 @@ def json_prettified(value, indent=2):
     Function to display pretty version of our json data
     https://www.pydanny.com/pretty-formatting-json-django-admin.html
     '''
-    return __prettified__(json.dumps(value, sort_keys=True, indent=indent), JsonLexer())
+    return __prettified__(json.dumps(value, indent=indent), JsonLexer())
 
 
 def code_prettified(value):
@@ -123,8 +124,7 @@ def json_printable(obj):
         return obj
 
 
-custom_jsonpath_wildcard_regex = re.compile(
-    '(\$\.)*([a-zA-Z0-9_-]+\.)*?[a-zA-Z0-9_-]+\*')
+custom_jsonpath_wildcard_regex = re.compile('(\$\.)*([a-zA-Z0-9_-]+\.)*?[a-zA-Z0-9_-]+\*')
 incomplete_json_path_regex = re.compile('[a-zA-Z0-9_-]+\*')
 
 
@@ -294,12 +294,17 @@ def coerce(v, _type='string'):
     try:
         fn = constant_type_coercions[_type]
     except KeyError:
-        raise ValueError('%s not in available types for constants, %s' %
-                         (_type, [i for i in constant_type_coercions.keys()],))
+        raise ValueError(_('{type} not in available types for constants, {constants}').format(
+            type=_type,
+            constants=[i for i in constant_type_coercions.keys()],
+        ))
     try:
         return fn(v)
     except ValueError as err:
-        raise ValueError('value: %s could not be coerced to type %s' % (v, _type))
+        raise ValueError(_('value: {value} could not be coerced to type {type}').format(
+            value=v,
+            type=_type,
+        ))
 
 
 def action_constant(args):
@@ -333,14 +338,14 @@ def anchor_reference(source, context, source_data, instance_number):
         if len(obj_matches) >= instance_number:
             this_obj = obj_matches[instance_number].value
         else:
-            raise ValueError('source: %s unresolved' % (source))
+            raise ValueError(_('source: {} unresolved').format(str(source)))
         obj_matches = find_by_jsonpath(source_data, context)
         if not obj_matches:
-            raise ValueError('context: %s unresolved' % (context))
+            raise ValueError(_('context: {} unresolved').format(str(context)))
         for idx, match in enumerate(obj_matches):
             if object_contains(this_obj, match.value):
                 return idx
-        raise ValueError('Object match not found in context')
+        raise ValueError(_('Object match not found in context'))
     except Exception as err:
         logger.error(err)
         return -1
@@ -372,7 +377,7 @@ def resolve_entity_reference(
         if idx >= 0:
             return matches[idx].value
     if len(matches) < 1:
-        raise ValueError('path %s has no matches; aborting' % entity_jsonpath)
+        raise ValueError(_('path {} has no matches; aborting').format(entity_jsonpath))
     if len(matches) < 2:
         # single value
         return matches[0].value
@@ -467,7 +472,7 @@ def extractor_action(
     elif action == 'constant':
         return action_constant(args)
     else:
-        raise ValueError('No action with name %s' % action)
+        raise ValueError(_('No action with name {}').format(action))
 
 
 def extract_entity(entity_type, entities, requirements, data, entity_stub):
@@ -521,7 +526,7 @@ def validate_entity_payload_id(entity_payload):
         uuid.UUID(id_, version=4)
         return None
     except (ValueError, AttributeError, TypeError):
-        return {'description': 'Entity id "{}" is not a valid uuid'.format(id_)}
+        return {'description': _('Entity id "{}" is not a valid uuid').format(id_)}
 
 
 def validate_avro(schema, datum):
@@ -635,40 +640,43 @@ def extract_create_entities(submission_payload, mapping_definition, schemas):
 
 
 def run_entity_extraction(submission):
-    # Get the mapping definition from the submission (submission.mapping.definition):
-    mapping_definition = submission.mapping.definition
-    # Get the primary key of the projectschema
-    # entity_pks = list(mapping_definition['entities'].values())
-    entity_ps_ids = mapping_definition.get('entities')
-    # Save submission and exit early if mapping does not specify any entities.
-    if not entity_ps_ids:
-        submission.save()
-        return
-    # Get the schema of the projectschema
-    project_schemas = {
-        name: models.ProjectSchema.objects.get(pk=_id) for name, _id in
-        entity_ps_ids.items()
-    }
-    schemas = {
-        name: ps.schema.definition for name, ps in
-        project_schemas.items()
-    }
-    submission.save()
-    _, entities = extract_create_entities(
-        submission_payload=submission.payload,
-        mapping_definition=mapping_definition,
-        schemas=schemas,
-    )
-    for entity in entities:
-        projectschema_name = entity.projectschema_name
-        projectschema = project_schemas[projectschema_name]
-        entity_instance = models.Entity(
-            payload=entity.payload,
-            status=entity.status,
-            projectschema=projectschema,
-            submission=submission,
+    # Extract entity for each mapping in the submission.mappingset
+    mappings = submission.mappingset \
+                         .mappings \
+                         .filter(is_active=True) \
+                         .exclude(definition={}) \
+                         .exclude(definition__entities__isnull=True) \
+                         .exclude(definition__entities={})
+
+    for mapping in mappings:
+        # Get the primary key of the projectschema
+        entity_ps_ids = mapping.definition.get('entities')
+        # Get the schema of the projectschema
+        project_schemas = {
+            name: models.ProjectSchema.objects.get(pk=_id)
+            for name, _id in entity_ps_ids.items()
+        }
+        schemas = {
+            name: ps.schema.definition
+            for name, ps in project_schemas.items()
+        }
+        _, entities = extract_create_entities(
+            submission_payload=submission.payload,
+            mapping_definition=mapping.definition,
+            schemas=schemas,
         )
-        entity_instance.save()
+        for entity in entities:
+            projectschema_name = entity.projectschema_name
+            projectschema = project_schemas[projectschema_name]
+            entity_instance = models.Entity(
+                payload=entity.payload,
+                status=entity.status,
+                projectschema=projectschema,
+                submission=submission,
+                mapping=mapping,
+                mapping_revision=mapping.revision
+            )
+            entity_instance.save()
 
 
 def merge_objects(source, target, direction):
@@ -699,7 +707,7 @@ def validate_payload(schema_definition, payload):
         avro_schema = parse_schema(json.dumps(schema_definition))
         valid = validate(avro_schema, payload)
         if not valid:
-            msg = 'Extracted record did not conform to registered schema'
+            msg = _('Extracted record did not conform to registered schema')
             raise EntityValidationError(msg)
         return True
     except Exception as err:

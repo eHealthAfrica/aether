@@ -23,18 +23,39 @@ from django.db import models
 from django_prometheus.models import ExportModelOperationsMixin
 from model_utils.models import TimeStampedModel
 
-from .utils import validate_pipeline
+from .utils import validate_contract
 
 
 class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, unique=True)
-
     # this is the avro schema
     schema = JSONField(null=True, blank=True, default=dict)
 
     # this is an example of the data using the avro schema
     input = JSONField(null=True, blank=True, default=dict)
+
+    # this is a reference to the linked kernel mappingset
+    mappingset = models.UUIDField(null=True, blank=True)
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        super(Pipeline, self).save(*args, **kwargs)
+        # revalidate linked contracts against updated fields
+        contracts = Contract.objects.filter(pipeline=self)
+        [contract.save() for contract in contracts]
+
+    class Meta:
+        app_label = 'ui'
+        default_related_name = 'pipelines'
+        ordering = ('name',)
+
+
+class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100, unique=True)
 
     # the list of available entity types (avro schemas)
     entity_types = JSONField(null=True, blank=True, default=list)
@@ -42,10 +63,10 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
     # this represents the list of mapping rules
     # {
     #    "mapping": [
-    #      {'id': ###, 'source': 'jsonpath-input-1', 'destination: 'jsonpath-entity-type-1'},
-    #      {'id': ###, 'source': 'jsonpath-input-2', 'destination: 'jsonpath-entity-type-2'},
+    #      {"id": ###, "source": "jsonpath-input-1", "destination": "jsonpath-entity-type-1"},
+    #      {"id": ###, "source": "jsonpath-input-2", "destination": "jsonpath-entity-type-2"},
     #      ...
-    #      {'id': ###, 'source': 'jsonpath-input-n', 'destination: 'jsonpath-entity-type-n'},
+    #      {"id": ###, "source": "jsonpath-input-n", "destination": "jsonpath-entity-type-n"},
     #    ]
     # }
     mapping = JSONField(null=True, blank=True, default=list)
@@ -58,32 +79,50 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
     #      {...},
     #    ],
     #    "mapping_errors": [
-    #      {"path": 'jsonpath-input-a', "description": 'No match for path'},
-    #      {"path": 'jsonpath-entity-type-b', "description": 'No match for path'},
+    #      {"path": "jsonpath-input-a", "description": "No match for path"},
+    #      {"path": "jsonpath-entity-type-b", "description": "No match for path"},
     #      ...
     #      # Summary of the error with the extracted entity
     #      {
-    #        "description": 'Extracted record did not conform to registered schema',
-    #        "data": {"id": 'uuid:####', ...}
+    #        "description": "Extracted record did not conform to registered schema",
+    #        "data": {"id": "uuid:####", ...}
     #      }
     #    ]
     # }
     mapping_errors = JSONField(null=True, blank=True, editable=False)
     output = JSONField(null=True, blank=True, editable=False)
+
+    # these contain the information related to the linked artefacts in kernel
+    # {
+    #     "mappings": uuid,
+    #     "schemas": {
+    #         "entity name": uuid,
+    #         ...
+    #     },
+    # }
     kernel_refs = JSONField(null=True, blank=True, editable=False)
+
     published_on = models.DateTimeField(null=True, blank=True, editable=False)
+    is_active = models.BooleanField(default=True)
+    is_read_only = models.BooleanField(default=False)
+
+    pipeline = models.ForeignKey(to=Pipeline, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
 
     def save(self, *args, **kwargs):
-        errors, output = validate_pipeline(self)
+        errors, output = validate_contract(self)
         self.mapping_errors = errors
         self.output = output
 
-        super(Pipeline, self).save(*args, **kwargs)
+        super(Contract, self).save(*args, **kwargs)
 
     class Meta:
         app_label = 'ui'
-        default_related_name = 'pipelines'
-        ordering = ('name',)
+        default_related_name = 'contracts'
+        ordering = ['pipeline__id', '-modified']
+        indexes = [
+            models.Index(fields=['pipeline', '-modified']),
+            models.Index(fields=['-modified']),
+        ]

@@ -22,17 +22,15 @@
 #   django-prometheus
 #   django-storages
 #   djangorestframework
-#   djangorestframework-csv
 #   psycopg2-binary
 #   requests
 aether.common
 
 
 # Django specific
-django-filter<2  # https://django-filter.readthedocs.io/en/master/guide/migration.html#migrating-to-2-0
+django-filter
 django-model-utils
 django-reversion-compare
-djangorestframework-filters
 drf-dynamic-fields
 drf_yasg
 pygments
@@ -48,6 +46,11 @@ spavro
 # Storage
 boto3
 google-cloud-storage
+
+
+# XLSX libraries
+openpyxl
+lxml
 
 
 # CAS libraries

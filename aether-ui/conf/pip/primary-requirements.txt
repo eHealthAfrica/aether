@@ -22,7 +22,6 @@
 #   django-prometheus
 #   django-storages
 #   djangorestframework
-#   djangorestframework-csv
 #   psycopg2-binary
 #   requests
 aether.common
@@ -30,7 +29,7 @@ aether.common
 
 # Django specific
 django-model-utils
-django-webpack-loader
+django-webpack-loader  # load JS assets
 drf-dynamic-fields
 
 

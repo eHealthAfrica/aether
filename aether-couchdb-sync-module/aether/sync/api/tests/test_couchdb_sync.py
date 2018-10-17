@@ -35,7 +35,7 @@ from ..couchdb_sync import (
 from . import clean_couch
 
 
-SUBMISSION_FK = 'mapping'
+SUBMISSION_FK = 'mappingset'
 headers_testing = kernel_utils.get_auth_header()
 device_id = 'test_import-from-couch'
 

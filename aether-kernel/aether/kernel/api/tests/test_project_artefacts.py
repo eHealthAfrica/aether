@@ -18,10 +18,9 @@
 
 import uuid
 
-from django.db.utils import IntegrityError
 from django.test import TestCase
 
-from ..models import Project, Schema, ProjectSchema, Mapping
+from ..models import Project, Schema, ProjectSchema, Mapping, MappingSet
 from ..project_artefacts import (
     get_project_artefacts as retrieve,
     upsert_project_artefacts as generate,
@@ -61,30 +60,29 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(project_2.revision, '2', 'ignores new revision value if updates the object')
 
         # creates with foreign keys
-        mapping_0 = upsert(Mapping, pk=None, ignore_fields=[],
-                           name='Mapping None', project=project_1, definition={})
+        mappingset_0 = upsert(MappingSet, pk=None, ignore_fields=[],
+                              name='Mappingset None', project=project_1, input={})
 
-        self.assertIsNotNone(mapping_0)
-        self.assertIsNotNone(mapping_0.pk)
-        self.assertEqual(mapping_0.name, 'Mapping None')
-        self.assertEqual(mapping_0.project, project_2)
+        self.assertIsNotNone(mappingset_0)
+        self.assertIsNotNone(mappingset_0.pk)
+        self.assertEqual(mappingset_0.name, 'Mappingset None')
+        self.assertEqual(mappingset_0.project, project_2)
 
         # updates indicated fields, keeps the rest
-        mapping_1 = upsert(Mapping, pk=mapping_0.pk, ignore_fields=['name'],
-                           definition={'mapping': []}, unknown=True)
+        mappingset_1 = upsert(MappingSet, pk=mappingset_0.pk, ignore_fields=['name'],
+                              unknown=True)
 
-        self.assertEqual(mapping_1.pk, mapping_0.pk)
-        self.assertEqual(mapping_1.name, 'Mapping None')
-        self.assertEqual(mapping_1.project, project_1)
-        self.assertEqual(mapping_1.definition, {'mapping': []})
+        self.assertEqual(mappingset_1.pk, mappingset_0.pk)
+        self.assertEqual(mappingset_1.name, 'Mappingset None')
+        self.assertEqual(mappingset_1.project, project_1)
 
         # does not update with action 'create'
-        mapping_2 = upsert(Mapping, pk=mapping_0.pk, ignore_fields=[], action='create',
-                           name='Mapping Two', project=project_1, definition={})
+        mappingset_2 = upsert(MappingSet, pk=mappingset_0.pk, ignore_fields=[], action='create',
+                              name='Mappingset Two', project=project_1)
 
-        self.assertEqual(mapping_2.pk, mapping_0.pk)
-        self.assertEqual(mapping_2.name, 'Mapping None')
-        self.assertEqual(mapping_2.project, project_2)
+        self.assertEqual(mappingset_2.pk, mappingset_0.pk)
+        self.assertEqual(mappingset_2.name, 'Mappingset None')
+        self.assertEqual(mappingset_2.project, project_2)
 
     def test__upsert_project_artefacts__project(self):
 
@@ -97,7 +95,7 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(results['project'], str(project_id))
         self.assertEqual(results['schemas'], set())
         self.assertEqual(results['project_schemas'], set())
-        self.assertEqual(results['mappings'], set())
+        self.assertEqual(results['mappingsets'], set())
 
         new_project = Project.objects.get(pk=project_id)
         self.assertIsNotNone(new_project.name)
@@ -147,6 +145,8 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(schema.name, 'Schema')
         self.assertEqual(schema.revision, '1')
         self.assertEqual(schema.definition, {})
+        self.assertEqual(schema.type, 'org.ehealthafrica.aether')
+        self.assertIsNone(schema.family)
 
         project_schema = ProjectSchema.objects.get(pk=project_schema_id)
         self.assertEqual(project_schema.project, project)
@@ -162,12 +162,14 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(schema.name, 'Schema')
         self.assertEqual(schema.revision, '1')
         self.assertEqual(schema.definition, {})
+        self.assertEqual(schema.type, 'org.ehealthafrica.aether')
+        self.assertIsNone(schema.family)
 
         # delete project schema
         project_schema.delete()
         results_3 = generate(project_id=project.pk, project_name=project.name, schemas=[
             # in this case the definition is updated and the deleted project schema re-generated
-            {'id': schema_id, 'definition': {'name': 'Schema'}},
+            {'id': schema_id, 'definition': {'name': 'Schema'}, 'type': 't', 'family': 'f'},
         ])
         self.assertEqual(results_1, results_3, 'generates a new project schema with the schema id')
         self.assertEqual(results_3['project'], str(project.pk))
@@ -179,6 +181,8 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(schema.name, 'Schema')
         self.assertEqual(schema.revision, '1')
         self.assertEqual(schema.definition, {'name': 'Schema'})
+        self.assertEqual(schema.type, 't')
+        self.assertEqual(schema.family, 'f')
 
         # creating a new empt schema
         results_4 = generate(project_id=project.pk, project_name=project.name, schemas=[
@@ -197,55 +201,161 @@ class ProjectArtefactsTests(TestCase):
         project = Project.objects.create(name='Project')
         mapping_id = str(uuid.uuid4())
 
-        results_1 = generate(project_id=project.pk, project_name=project.name, mappings=[
-            {'id': mapping_id, 'name': 'Mapping'},
-        ])
+        results_1 = generate(
+            project_id=project.pk,
+            project_name=project.name,
+            mappings=[
+                {'id': mapping_id, 'name': 'Mapping'},
+            ],
+        )
         results_retrieve = retrieve(project=project)
         self.assertEqual(results_1, results_retrieve)
 
         self.assertEqual(results_1['project'], str(project.pk))
         self.assertEqual(results_1['schemas'], set())
         self.assertEqual(results_1['project_schemas'], set())
+        self.assertEqual(results_1['mappingsets'], set([mapping_id]))
         self.assertEqual(results_1['mappings'], set([mapping_id]))
 
         mapping = Mapping.objects.get(pk=mapping_id)
         self.assertEqual(mapping.name, 'Mapping')
         self.assertEqual(mapping.revision, '1')
-        self.assertEqual(mapping.definition, {'mappings': []})
+        self.assertEqual(mapping.definition, {'mapping': [], 'entities': {}})
 
-        results_2 = generate(project_id=project.pk, project_name=project.name, mappings=[
-            # in this case nothing changes
-            {'id': mapping_id, 'name': 'Mapping 2'},
-        ])
+        # the method has also created the missing mappingset
+        mappingset = MappingSet.objects.get(pk=mapping_id)
+        self.assertEqual(mappingset.name, 'Mapping')
+        self.assertEqual(mappingset.revision, '1')
+        self.assertEqual(mappingset.input, {})
+
+        results_2 = generate(
+            project_id=project.pk,
+            project_name=project.name,
+            mappingsets=[
+                # in this case nothing changes
+                {'id': mapping_id, 'name': 'Mapping Set 2'}
+            ],
+            mappings=[
+                # in this case nothing changes
+                {'id': mapping_id, 'name': 'Mapping 2'},
+            ],
+        )
         self.assertEqual(results_1, results_2)
 
         mapping.refresh_from_db()
         self.assertEqual(mapping.name, 'Mapping')
         self.assertEqual(mapping.revision, '1')
-        self.assertEqual(mapping.definition, {'mappings': []})
+        self.assertEqual(mapping.definition, {'mapping': [], 'entities': {}})
 
-        results_3 = generate(project_id=project.pk, project_name=project.name, mappings=[
-            # in this case the definition is updated
-            {'id': mapping_id, 'definition': {}},
-        ])
+        mappingset.refresh_from_db()
+        self.assertEqual(mappingset.name, 'Mapping')
+        self.assertEqual(mappingset.input, {})
+
+        results_3 = generate(
+            project_id=project.pk,
+            project_name=project.name,
+            mappingsets=[
+                {
+                    'id': mapping_id,
+                    'name': 'Mapping Set 2',
+                    'schema': {
+                        'name': 'Name',
+                        'type': 'record',
+                        'fields': [
+                            {'name': 'name', 'type': 'string'},
+                        ],
+                    },
+                    'input': {'name': 'a'},
+                }
+            ],
+            mappings=[
+                # in this case the definition is updated and the given input ignored
+                {'id': mapping_id, 'definition': {}, 'input': {'name': 'b'}},
+            ],
+        )
         self.assertEqual(results_1, results_3)
 
         mapping.refresh_from_db()
         self.assertEqual(mapping.name, 'Mapping')
         self.assertEqual(mapping.revision, '1')
-        self.assertEqual(mapping.definition, {})
+        self.assertEqual(mapping.definition, {'mapping': [], 'entities': {}})
+
+        mappingset.refresh_from_db()
+        self.assertEqual(mappingset.schema, {
+            'name': 'Name',
+            'type': 'record',
+            'fields': [
+                {'name': 'name', 'type': 'string'},
+            ],
+        })
+        self.assertEqual(mappingset.input, {'name': 'a'})
 
         # creating a new empty mapping
-        results_4 = generate(project_id=project.pk, project_name=project.name, mappings=[
-            # It's possible to create empty mappings!!!
-            {},
-        ])
+        results_4 = generate(
+            project_id=project.pk,
+            project_name=project.name,
+            mappings=[
+                # It's possible to create empty mappings!!!
+                {},
+            ]
+        )
         self.assertNotEqual(results_1, results_4, 'only returns the affected ids')
         self.assertEqual(len(results_1['mappings']), 1)
 
         results_retrieve = retrieve(project=project)
         self.assertNotEqual(results_4, results_retrieve,
                             'only returns the affected ids NEVER ALL OF THEM')
+
+        # mapping with rules indicating the entities
+        generate(
+            project_id=project.pk,
+            project_name=project.name,
+            schemas=[
+                {'name': 'Person', 'definition': {}},
+                {'name': 'Contact', 'definition': {}},
+            ],
+            mappings=[
+                {
+                    'id': mapping_id,
+                    'definition': {
+                        'mapping': [
+                            ['$.id', 'Person.id'],
+                            ['$.name', 'Person.name'],
+                            ['$.id', 'Contact.id'],
+                        ],
+                        'entities': {}
+                    }
+                },
+            ]
+        )
+        mapping.refresh_from_db()
+        self.assertEqual(mapping.definition['entities'], {})
+
+        # mapping with rules but without indicating the entities
+        generate(
+            project_id=project.pk,
+            project_name=project.name,
+            schemas=[
+                {'name': 'Person', 'definition': {}},
+                {'name': 'Contact', 'definition': {}},
+            ],
+            mappings=[
+                {
+                    'id': mapping_id,
+                    'definition': {
+                        'mapping': [
+                            ['$.id', 'Person.id'],
+                            ['$.name', 'Person.name'],
+                            ['$.id', 'Contact.id'],
+                        ]
+                    }
+                },
+            ]
+        )
+        mapping.refresh_from_db()
+        self.assertNotEqual(mapping.definition['entities'], {})
+        self.assertIn('Person', mapping.definition['entities'])
+        self.assertIn('Contact', mapping.definition['entities'])
 
     def test__upsert_project_artefacts__duplicated_name(self):
         PROJECT_NAME = 'Project'
@@ -260,7 +370,7 @@ class ProjectArtefactsTests(TestCase):
         )
         self.assertEqual(Project.objects.filter(pk=project_id_2).count(), 1)
         project_2 = Project.objects.get(pk=project_id_2)
-        self.assertEqual(PROJECT_NAME + '_1', project_2.name)
+        self.assertEqual(PROJECT_NAME + '-1', project_2.name)
 
         # once again
         project_id_3 = str(uuid.uuid4())
@@ -272,9 +382,9 @@ class ProjectArtefactsTests(TestCase):
         )
         self.assertEqual(Project.objects.filter(pk=project_id_3).count(), 1)
         project_3 = Project.objects.get(pk=project_id_3)
-        self.assertEqual(PROJECT_NAME + '_2', project_3.name)
+        self.assertEqual(PROJECT_NAME + '-2', project_3.name)
 
-    def test__upsert_project_artefacts__atomicity(self):
+    def test__upsert_project_artefacts__long_name(self):
         new_project = Project.objects.create(name='Project')
         project_id = str(uuid.uuid4())
         self.assertNotEqual(str(new_project.pk), project_id)
@@ -284,20 +394,27 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(Schema.objects.all().count(), 0)
         # we cannot append more chars to the name, its length is already 50
         name_50 = 'Schema_0123456789_0123456789_0123456789_0123456789'
-        with self.assertRaises(IntegrityError) as ies:
-            generate(
-                project_id=project_id,
-                project_name='Project',    # in use but will append `_1` to it.
-                schemas=[
-                    {'name': name_50},     # this will be created
-                    {'name': name_50},     # but this one will complain
-                ]
-            )
-        self.assertIsNotNone(ies)
-        self.assertIn(f'DETAIL:  Key (name)=({name_50}) already exists.', str(ies.exception))
-        # all the actions are reverted
-        self.assertEqual(Project.objects.filter(pk=project_id).count(), 0)
-        self.assertEqual(Schema.objects.all().count(), 0)
+        schema_1_id = str(uuid.uuid4())
+        schema_2_id = str(uuid.uuid4())
+        generate(
+            project_id=project_id,
+            project_name='Project',    # in use but will append `-1` to it.
+            schemas=[
+                {'id': schema_1_id, 'name': name_50},  # this will be created with the given name
+                {'id': schema_2_id, 'name': name_50},  # this will be created with another name
+            ]
+        )
+        project_2 = Project.objects.get(pk=project_id)
+        self.assertEqual('Project-1', project_2.name)
+
+        schema_1 = Schema.objects.get(pk=schema_1_id)
+        self.assertEqual(schema_1.name, name_50)
+
+        schema_2 = Schema.objects.get(pk=schema_2_id)
+        self.assertNotEqual(schema_2.name, name_50)
+        self.assertEqual(schema_2.name[:33], name_50[:33])
+        self.assertEqual(schema_2.name[33], '-')
+        self.assertNotEqual(schema_2.name[34:], name_50[34:])
 
     def test__upsert_project_with_avro_schemas(self):
         self.assertEqual(Project.objects.count(), 0)
@@ -318,14 +435,17 @@ class ProjectArtefactsTests(TestCase):
             ]
         }
 
-        generate_from_avro(avro_schemas=[{'definition': avro_schema}])
+        generate_from_avro(avro_schemas=[{'definition': avro_schema}], family='test')
 
         self.assertEqual(Project.objects.count(), 1)
         self.assertEqual(Schema.objects.count(), 1)
         self.assertEqual(ProjectSchema.objects.count(), 1)
-        self.assertEqual(Mapping.objects.count(), 1)
+        self.assertEqual(MappingSet.objects.count(), 1)
+        self.assertEqual(Mapping.objects.count(), 2, 'The passthrough mapping and the empty one')
 
         schema = Schema.objects.first()
+        self.assertEqual(schema.family, 'test')
+        self.assertEqual(schema.type, 'org.ehealthafrica.aether')
         self.assertEqual(schema.definition, {
             'namespace': 'org.ehealthafrica.aether',
             'name': 'Person',
@@ -346,6 +466,45 @@ class ProjectArtefactsTests(TestCase):
                 },
             ]
         })
+
+        there_is_passthrough = False
+        there_is_empty = False
+        for mapping in Mapping.objects.all():
+            if schema.id == mapping.id:
+                # the passthrough mapping
+                there_is_passthrough = True
+                self.assertEqual(mapping.definition, {
+                    'entities': {
+                        'Person': str(schema.id),
+                    },
+                    'mapping': [
+                        ['$.first_name', 'Person.first_name'],
+                        ['$.last_name', 'Person.last_name'],
+                        ['#!uuid', 'Person.id'],
+                    ]
+                })
+            else:
+                # the empty mapping
+                there_is_empty = True
+                self.assertEqual(mapping.definition, {'mapping': [], 'entities': {}})
+
+        self.assertTrue(there_is_passthrough)
+        self.assertTrue(there_is_empty)
+
+        # if we try again, it's not creating a new empty mapping
+        # delete both mappings
+        Mapping.objects.all().delete()
+
+        # generate again (update, not create)
+        generate_from_avro(
+            project_id=str(Project.objects.first().pk),
+            avro_schemas=[{'definition': avro_schema, 'id': str(schema.id)}],
+        )
+
+        schema.refresh_from_db()
+        self.assertEqual(schema.family, 'test')
+
+        self.assertEqual(Mapping.objects.count(), 1, 'Only the passthrough mapping')
 
         mapping = Mapping.objects.first()
         self.assertEqual(schema.id, mapping.id)

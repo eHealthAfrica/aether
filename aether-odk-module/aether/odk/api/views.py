@@ -40,6 +40,7 @@ from aether.common.kernel.utils import (
     get_attachments_url,
     get_auth_header,
     get_submissions_url,
+    submit_to_kernel,
 )
 from ..settings import logger
 
@@ -127,7 +128,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project = get_object_or_404(Project, pk=pk)
 
         try:
-            propagate_kernel_project(project)
+            propagate_kernel_project(project=project, family=request.data.get('family'))
         except KernelPropagationError as kpe:
             return Response(
                 data={'description': str(kpe)},
@@ -173,7 +174,7 @@ class XFormViewSet(viewsets.ModelViewSet):
         xform.save()  # creates avro schema if missing
 
         try:
-            propagate_kernel_artefacts(xform)
+            propagate_kernel_artefacts(xform=xform, family=request.data.get('family'))
         except KernelPropagationError as kpe:
             return Response(
                 data={'description': str(kpe)},
@@ -502,7 +503,7 @@ def xform_submission(request):
         previous_submissions_response = requests.get(
             submissions_url,
             headers=auth_header,
-            params={'instanceID': instance_id},
+            params={'payload__meta__instanceID': instance_id},
         )
         previous_submissions = json.loads(previous_submissions_response.content.decode('utf-8'))
         previous_submissions_count = previous_submissions['count']
@@ -511,13 +512,9 @@ def xform_submission(request):
         # `submission_id`.
         if previous_submissions_count == 0:
             submission_id = None
-            response = requests.post(
-                submissions_url,
-                json={
-                    'mapping': str(xform.kernel_id),
-                    'payload': data,
-                },
-                headers=auth_header,
+            response = submit_to_kernel(
+                submission=data,
+                mappingset_id=str(xform.kernel_id),
             )
             submission_content = response.content.decode('utf-8')
 
