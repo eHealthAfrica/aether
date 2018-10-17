@@ -14,7 +14,7 @@ RUN pip install --upgrade pip
 WORKDIR /code
 
 COPY ./conf/pip /code/conf/pip
-RUN pip install -r /code/conf/pip/requirements.txt
+RUN pip install -q -r /code/conf/pip/requirements.txt
 
 COPY ./ /code
 
