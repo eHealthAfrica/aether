@@ -80,8 +80,10 @@ module.exports = (custom) => ({
 
     // needed by `django-webpack-loader`
     new BundleTracker({
-      path: BUNDLES_DIR,
-      filename: 'webpack-stats.json'
+      filename: 'webpack-stats.json',
+      indent: (custom.production ? 0 : 2),
+      logTime: true,
+      path: BUNDLES_DIR
     }),
 
     // Environment variables
