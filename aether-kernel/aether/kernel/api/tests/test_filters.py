@@ -378,6 +378,35 @@ class TestFilters(TestCase):
             result = set([r['id'] for r in response['results']])
             self.assertEqual(expected, result)
 
+    def test_projectschema_filter__by_mapping(self):
+        url = reverse(viewname='projectschema-list')
+        # Generate projects.
+        for _ in range(random.randint(5, 10)):
+            generate_project()
+        page_size = models.Mapping.objects.count()
+        # Get a list of all mappings.
+        for mapping in models.Mapping.objects.all():
+            expected = set([str(ps.id) for ps in mapping.projectschemas.all()])
+            # by id
+            kwargs = {'mapping': str(mapping.id), 'fields': 'id', 'page_size': page_size}
+            response = json.loads(
+                self.client.get(url, kwargs, format='json').content
+            )
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result)
+
+            # by name
+            kwargs = {'mapping': mapping.name, 'fields': 'id', 'page_size': page_size}
+            response = json.loads(
+                self.client.get(url, kwargs, format='json').content
+            )
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result)
+
     def test_mappingset_filter__by_project(self):
         url = reverse(viewname='mappingset-list')
         # Generate projects.
