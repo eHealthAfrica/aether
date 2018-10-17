@@ -54,9 +54,9 @@ class MappingFilter(filters.FilterSet):
 
     def projectschema_filter(self, queryset, name, value):
         if is_uuid(value):
-            return queryset.filter(projectschemas__pk__in=[value])
+            return queryset.filter(projectschemas__pk=value)
         else:
-            return queryset.filter(projectschemas__name__in=[value])
+            return queryset.filter(projectschemas__name=value)
 
     class Meta:
         fields = '__all__'
@@ -130,6 +130,16 @@ class SchemaFilter(filters.FilterSet):
 
 
 class ProjectSchemaFilter(filters.FilterSet):
+    mapping = filters.CharFilter(
+        method='mapping_filter',
+    )
+
+    def mapping_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(mappings__pk=value)
+        else:
+            return queryset.filter(mappings__name=value)
+
     class Meta:
         fields = '__all__'
         model = models.ProjectSchema
@@ -147,6 +157,7 @@ class EntityFilter(filters.FilterSet):
     )
     family = filters.CharFilter(
         field_name='projectschema__schema__family',
+        lookup_expr='iexact',  # case-insensitive
     )
 
     def project_filter(self, queryset, name, value):

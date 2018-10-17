@@ -70,7 +70,8 @@ class ViewsTest(TestCase):
 
         self.schema = models.Schema.objects.create(
             name='schema1',
-            type='People',
+            type='eha.test.schemas',
+            family='Person',
             definition=EXAMPLE_SCHEMA,
             revision='a sample revision',
         )
@@ -135,9 +136,9 @@ class ViewsTest(TestCase):
         data = json.dumps(data)
         response = self.client.post(url, data, content_type='application/json')
         if is_negative:
-            self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST, response.content)
         else:
-            self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+            self.assertEquals(response.status_code, status.HTTP_201_CREATED, response.content)
         return response
 
     def test_api_create_instance(self):
@@ -250,7 +251,7 @@ class ViewsTest(TestCase):
         updated_data = json.dumps(updated_data)
         response = self.client.put(url, updated_data, content_type='application/json')
         if is_negative:
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.status_code)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.content)
         else:
             self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
         return response
@@ -407,49 +408,77 @@ class ViewsTest(TestCase):
         )
 
     def test_project_stats_view(self):
-        project = models.Project.objects.create(
-            revision='rev 1',
-            name='a project with stats',
-        )
-        mappingset = models.MappingSet.objects.create(
-            name=str(uuid.uuid4()),  # random name
-            revision='Sample mapping set revision',
-            project=project,
-            input={}
+        # cleaning data
+        models.Submission.objects.all().delete()
+        self.assertEqual(models.Submission.objects.count(), 0)
+        models.Entity.objects.all().delete()
+        self.assertEqual(models.Entity.objects.count(), 0)
+
+        projectschema_2 = models.ProjectSchema.objects.create(
+            name='a project schema with stats',
+            project=self.project,
+            schema=models.Schema.objects.create(
+                name='another schema',
+                type='eha.test.schemas',
+                family='AnotherPerson',
+                definition=EXAMPLE_SCHEMA,
+                revision='a sample revision',
+            ),
         )
         for _ in range(4):
-            response = self.helper_create_object('mapping-list', {
-                'name': str(uuid.uuid4()),  # random name
-                'definition': {},
-                'revision': 'Sample mapping revision',
-                'mappingset': str(mappingset.pk),
-                'projectschemas': [str(self.projectschema.pk)],
-            })
-            for __ in range(10):
-                self.helper_create_object('submission-list', {
-                    'revision': 'Sample submission revision',
+            for __ in range(5):
+                # this will also trigger the entities extraction
+                response = self.helper_create_object('submission-list', {
                     'payload': EXAMPLE_SOURCE_DATA,
-                    'mappingset': str(mappingset.pk),
+                    'mappingset': str(self.mappingset.pk),
                 })
-        url = reverse('projects_stats-detail', kwargs={'pk': project.pk})
+                submission = response.json()
+                # create entities for projectschema_2
+                self.helper_create_object('entity-list', {
+                    'status': 'Publishable',
+                    'payload': EXAMPLE_SOURCE_DATA_ENTITY,
+                    'projectschema': str(projectschema_2.pk),
+                    'submission': submission['id'],
+                    'mapping': str(self.mapping.pk),
+                    'mapping_revision': self.mapping.revision,
+                })
+
+        submissions_count = models.Submission \
+                                  .objects \
+                                  .filter(mappingset__project=self.project.pk) \
+                                  .count()
+        self.assertEqual(submissions_count, 20)
+
+        entities_count = models.Entity \
+                               .objects \
+                               .filter(submission__mappingset__project=self.project.pk) \
+                               .count()
+        self.assertEqual(entities_count, 80)
+
+        url = reverse('projects_stats-detail', kwargs={'pk': self.project.pk})
         response = self.client.get(url, format='json')
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         json = response.json()
-        self.assertEquals(json['id'], str(project.pk))
-        submissions_count = models.Submission \
-                                  .objects \
-                                  .filter(mappingset__project=project.pk) \
-                                  .count()
+        self.assertEquals(json['id'], str(self.project.pk))
         self.assertEquals(json['submissions_count'], submissions_count)
-        entities_count = models.Entity \
-                               .objects \
-                               .filter(submission__mappingset__project=project.pk) \
-                               .count()
         self.assertEquals(json['entities_count'], entities_count)
         self.assertLessEqual(
             dateutil.parser.parse(json['first_submission']),
             dateutil.parser.parse(json['last_submission']),
         )
+
+        # let's try with the family filter
+        response = self.client.get(f'{url}?family=AnotherPerson', format='json')
+        json = response.json()
+        self.assertEquals(json['submissions_count'], submissions_count)
+        self.assertNotEqual(json['entities_count'], entities_count)
+        self.assertEquals(json['entities_count'], 20)
+
+        # let's try again but with an unexistent family
+        response = self.client.get(f'{url}?family=unknown', format='json')
+        json = response.json()
+        self.assertEquals(json['submissions_count'], submissions_count)
+        self.assertEquals(json['entities_count'], 0, 'No entities in this family')
 
     def test_mapping_set_stats_view(self):
         url = reverse('mappingsets_stats-detail', kwargs={'pk': self.mappingset.pk})

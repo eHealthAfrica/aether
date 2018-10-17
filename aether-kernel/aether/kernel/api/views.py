@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.db.models import Count, Min, Max
+from django.db.models import Count, Min, Max, Case, When
 from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext as _
 
@@ -274,44 +274,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return Response(data=results)
 
 
-class ProjectStatsViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.Project \
-                     .objects \
-                     .values('id', 'name', 'created') \
-                     .annotate(
-                         first_submission=Min('submissions__created'),
-                         last_submission=Max('submissions__created'),
-                         submissions_count=Count('submissions__id', distinct=True),
-                         entities_count=Count('submissions__entities__id', distinct=True),
-                     )
-    serializer_class = serializers.ProjectStatsSerializer
-
-    search_fields = ('name',)
-    ordering_fields = ('name', 'created',)
-    ordering = ('name',)
-
-
 class MappingSetViewSet(viewsets.ModelViewSet):
     queryset = models.MappingSet.objects.all()
     serializer_class = serializers.MappingSetSerializer
     filter_class = filters.MappingSetFilter
-
-
-class MappingSetStatsViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.MappingSet \
-                     .objects \
-                     .values('id', 'name', 'created') \
-                     .annotate(
-                         first_submission=Min('submissions__created'),
-                         last_submission=Max('submissions__created'),
-                         submissions_count=Count('submissions__id', distinct=True),
-                         entities_count=Count('submissions__entities__id', distinct=True),
-                     )
-    serializer_class = serializers.MappingSetStatsSerializer
-
-    search_fields = ('name',)
-    ordering_fields = ('name', 'created',)
-    ordering = ('name',)
 
 
 class MappingViewSet(viewsets.ModelViewSet):
@@ -448,6 +414,58 @@ class EntityViewSet(exporter.ExporterViewSet):
                 return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializers.EntitySerializer(instance, context={'request': request}).data)
+
+
+class SubmissionStatsMixin(object):
+
+    search_fields = ('name',)
+    ordering_fields = ('name', 'created',)
+    ordering = ('name',)
+
+    def get_queryset(self):
+        family = self.request.query_params.get('family')
+        if family:  # filter entities by schema family
+            # Django 1: use Case+When
+            entities_count = Count(
+                Case(
+                    When(
+                        submissions__entities__projectschema__schema__family=family,
+                        then='submissions__entities__id',
+                    ),
+                ),
+                distinct=True,
+            )
+            # Django 2: filter in Count
+            # (replace code above with this block when we upgrade to Django 2)
+            # entities_count = Count(
+            #     expression='submissions__entities__id',
+            #     distinct=True,
+            #     filter=Q(submissions__entities__projectschema__schema__family=family),
+            # )
+        else:
+            entities_count = Count(
+                expression='submissions__entities__id',
+                distinct=True,
+            )
+
+        return self.model.objects \
+                   .values('id', 'name', 'created') \
+                   .annotate(
+                       first_submission=Min('submissions__created'),
+                       last_submission=Max('submissions__created'),
+                       submissions_count=Count('submissions__id', distinct=True),
+                       entities_count=entities_count,
+                   )
+
+
+class ProjectStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
+    model = models.Project  # required by SubmissionStatsMixin
+    serializer_class = serializers.ProjectStatsSerializer
+
+
+class MappingSetStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
+    model = models.MappingSet  # required by SubmissionStatsMixin
+    serializer_class = serializers.MappingSetStatsSerializer
 
 
 SchemaView = get_schema_view(
