@@ -17,6 +17,7 @@
 # under the License.
 
 import collections
+import fnmatch
 import json
 import logging
 import re
@@ -154,20 +155,20 @@ def find_by_jsonpath(obj, path):
         #     prefix = 'dose-'
         #     standard_jsonpath = '*.id'
 
-        split_pos = match.end() - 1
-        prefix = path[:split_pos].replace('$.', '')
+        prefix = path[:match.end()].replace('$.', '')  #clean part of path
+        #replace any indexed portion with a wildcard for use in fnmatch filtering
+        # because a valid jsonpath like item[0] is reported as item.[0] when matched
+        # by jsonpath-ng
+        wild_path = re.sub('(\[.*\])+', '*', prefix)
         illegal = incomplete_json_path_regex.search(path)
         standard_jsonpath = path[:illegal.start()] + '*' + path[illegal.end():]
 
         # Perform an standard jsonpath search.
-        result = []
         matches = CachedParser.find(standard_jsonpath, obj)
-        for item in matches:
-            full_path = str(item.full_path)
-            # Only include item if its full path starts with `prefix`.
-            if full_path.startswith(prefix):
-                result.append(item)
-        return result
+        # filter matching jsonpathes for adherence to partial wildpath
+        matching_paths = fnmatch.filter([str(i.full_path) for i in matches], wild_path)
+        return [i for i in matches if str(i.full_path) in matching_paths]
+        
     else:
         # Otherwise, perform a standard jsonpath search of `obj`.
         matches = CachedParser.find(path, obj)
