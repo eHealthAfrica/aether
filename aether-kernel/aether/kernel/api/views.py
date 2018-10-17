@@ -436,6 +436,7 @@ class SubmissionStatsMixin(object):
                 distinct=True,
             )
             # Django 2: filter in Count
+            # (replace code above with this block when we upgrade to Django 2)
             # entities_count = Count(
             #     expression='submissions__entities__id',
             #     distinct=True,
