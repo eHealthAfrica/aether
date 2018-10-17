@@ -18,6 +18,7 @@
 
 import json
 import random
+import string
 
 from autofixture import generators
 from django.contrib.auth import get_user_model
@@ -229,7 +230,7 @@ class TestFilters(TestCase):
         # Generate projects.
         for _ in range(random.randint(5, 10)):
             generate_project(schema_field_values={
-                'family': generators.StringGenerator(min_length=10, max_length=30),
+                'family': generators.StringGenerator(min_length=10, max_length=30, chars=string.ascii_letters),
             })
         page_size = models.Entity.objects.count()
         # Get a list of all schema families.
