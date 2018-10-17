@@ -25,6 +25,7 @@ router = DefaultRouter()
 router.register('projects', views.ProjectViewSet)
 router.register('schemas', views.SchemaViewSet)
 router.register('mobile-users', views.MobileUserViewSet)
+router.register('sync-users', views.MobileUserViewSet)  # alias
 
 app_name = 'api'
 
