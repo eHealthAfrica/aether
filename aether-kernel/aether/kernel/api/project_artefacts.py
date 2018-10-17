@@ -22,6 +22,7 @@ import string
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
 
+from .constants import NAMESPACE
 from .models import Project, Schema, ProjectSchema, MappingSet, Mapping
 from .avro_tools import avro_schema_to_passthrough_artefacts as parser
 
@@ -95,14 +96,23 @@ def upsert_project_artefacts(
 
     # 2. create/update the list of schemas and assign them to the project
     for raw_schema in schemas:
+        ignore_fields = ['name']
+        if raw_schema.get('family') is None:
+            # in case of no "family" were indicated, do not update it.
+            ignore_fields.append('family')
+        if raw_schema.get('type') is None:
+            # in case of no "type" were indicated, do not update it.
+            ignore_fields.append('type')
+
         schema = __upsert_instance(
             model=Schema,
             pk=raw_schema.get('id'),
-            ignore_fields=['name'],
+            ignore_fields=ignore_fields,
             action=action,
             name=raw_schema.get('name', __random_name()),
             definition=raw_schema.get('definition', {}),
-            type=raw_schema.get('type', 'record'),
+            type=raw_schema.get('type', NAMESPACE),
+            family=raw_schema.get('family'),
         )
         results['schemas'].add(str(schema.pk))
 
@@ -126,8 +136,11 @@ def upsert_project_artefacts(
     for raw_mappingset in mappingsets:
         ignore_fields = ['name']
         if raw_mappingset.get('input') is None:
-            # in case of no input were indicated, do not update it.
+            # in case of no "input" were indicated, do not update it.
             ignore_fields.append('input')
+        if raw_mappingset.get('schema') is None:
+            # in case of no "schema" is indicated, do not update it.
+            ignore_fields.append('schema')
 
         mappingset = __upsert_instance(
             model=MappingSet,
@@ -136,6 +149,7 @@ def upsert_project_artefacts(
             action=action,
             name=raw_mappingset.get('name', __random_name()),
             input=raw_mappingset.get('input', {}),
+            schema=raw_mappingset.get('schema', {}),
             project=project,
         )
         results['mappingsets'].add(str(mappingset.pk))
@@ -178,6 +192,7 @@ def upsert_project_artefacts(
                 action=action,
                 name=mapping_name,  # use same name as mapping
                 input=raw_mapping.get('input', {}),
+                schema=raw_mapping.get('schema', {}),
                 project=project,
             )
         results['mappingsets'].add(str(mappingset.pk))
@@ -204,6 +219,7 @@ def upsert_project_with_avro_schemas(
     project_id=None,
     project_name=None,
     avro_schemas=[],
+    family=None,
 ):
     '''
     Creates or updates the project and links it with the given AVRO schemas
@@ -217,6 +233,9 @@ def upsert_project_with_avro_schemas(
 
     for avro_schema in avro_schemas:
         schema, mapping = parser(avro_schema.get('id'), avro_schema.get('definition'))
+        if family:
+            schema['family'] = family
+
         schemas.append(schema)
         mappings.append(mapping)
 

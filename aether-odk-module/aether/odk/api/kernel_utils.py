@@ -40,7 +40,7 @@ class KernelPropagationError(Exception):
     pass
 
 
-def propagate_kernel_project(project):
+def propagate_kernel_project(project, family=None):
     '''
     Creates a copy of the indicated project in Aether Kernel
     and creates/updates its linked artefacts based on the given AVRO schemas.
@@ -55,6 +55,7 @@ def propagate_kernel_project(project):
     artefacts = {
         'action': 'create',
         'name': project.name,
+        'family': family,
         'avro_schemas': [],
     }
 
@@ -67,7 +68,7 @@ def propagate_kernel_project(project):
     return True
 
 
-def propagate_kernel_artefacts(xform):
+def propagate_kernel_artefacts(xform, family=None):
     '''
     Creates/updates artefacts based on the indicated xForm in Aether Kernel.
     '''
@@ -75,6 +76,7 @@ def propagate_kernel_artefacts(xform):
     artefacts = {
         'action': 'create',
         'name': xform.project.name,
+        'family': family,
         'avro_schemas': [__parse_xform(xform)],
     }
 

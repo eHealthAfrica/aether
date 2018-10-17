@@ -18,21 +18,22 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.utils.translation import ugettext as _
+from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 from rest_framework.reverse import reverse
-from drf_dynamic_fields import DynamicFieldsMixin
 
 from . import constants, models, utils, validators
 
 import urllib
 
 
-m_options = constants.MergeOptions
+M_OPTIONS = constants.MergeOptions
 
 MERGE_CHOICES = (
-    (m_options.overwrite.value, 'Overwrite (Do not merge)'),
-    (m_options.lww.value, 'Last Write Wins (Target to Source)'),
-    (m_options.fww.value, 'First Write Wins (Source to Target)')
+    (M_OPTIONS.overwrite.value, _('Overwrite (Do not merge)')),
+    (M_OPTIONS.lww.value, _('Last Write Wins (Target to Source)')),
+    (M_OPTIONS.fww.value, _('First Write Wins (Source to Target)'))
 )
 
 
@@ -198,7 +199,7 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
             return submission
         except Exception as e:
             raise serializers.ValidationError({
-                'description': 'Submission validation failed >> ' + str(e)
+                'description': _('Submission validation failed >> {}').format(str(e))
             })
 
     class Meta:
@@ -293,7 +294,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         source='submission',
         view_name='submission-detail',
     )
-    merge = serializers.ChoiceField(MERGE_CHOICES, default=m_options.overwrite.value)
+    merge = serializers.ChoiceField(MERGE_CHOICES, default=M_OPTIONS.overwrite.value)
     resolved = serializers.JSONField(default={})
 
     # this will return all linked attachment files
@@ -324,7 +325,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
             return entity
         except Exception as e:
             raise serializers.ValidationError({
-                'description': 'Submission validation failed >> ' + str(e)
+                'description': _('Submission validation failed >> {}').format(str(e))
             })
 
     def update(self, instance, validated_data):
@@ -341,7 +342,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
                 # and wants to make an update to an existing entity.
             else:
                 raise serializers.ValidationError({
-                    'description': 'Project schema must be specified'
+                    'description': _('Project schema must be specified')
                 })
             if 'payload' in validated_data:
                 target_payload = validated_data.pop('payload')
@@ -352,10 +353,9 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
                 merge_value = self.context['request'].query_params['merge']
             elif 'merge' in validated_data:
                 merge_value = validated_data.pop('merge')
-            if (merge_value == m_options.fww.value
-                    or merge_value == m_options.lww.value):
-                instance.payload = \
-                    utils.merge_objects(instance.payload, target_payload, merge_value)
+            if (merge_value == M_OPTIONS.fww.value
+                    or merge_value == M_OPTIONS.lww.value):
+                instance.payload = utils.merge_objects(instance.payload, target_payload, merge_value)
             else:
                 instance.payload = target_payload
             try:
@@ -366,7 +366,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
             return instance
         except Exception as e:
             raise serializers.ValidationError({
-                'description': 'Submission validation failed >> ' + str(e)
+                'description': _('Submission validation failed >> {}').format(str(e))
             })
 
     class Meta:
@@ -384,7 +384,7 @@ class EntityLDSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         source='projectschema',
         view_name='projectschema-detail',
     )
-    merge = serializers.ChoiceField(MERGE_CHOICES, default=m_options.overwrite.value)
+    merge = serializers.ChoiceField(MERGE_CHOICES, default=M_OPTIONS.overwrite.value)
 
     class Meta:
         model = models.Entity
@@ -429,7 +429,7 @@ class MappingValidationSerializer(serializers.Serializer):
     def validate_schemas(self, value):
         if not isinstance(value, dict):
             raise serializers.ValidationError(
-                'Value {value} is not an Object'.format(value=value)
+                _('Value {} is not an Object').format(value)
             )
         for schema in value.values():
             validators.validate_avro_schema(schema)

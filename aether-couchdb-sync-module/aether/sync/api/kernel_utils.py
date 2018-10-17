@@ -36,7 +36,7 @@ MSG_KERNEL_RESPONSE_ERR = _(
 )
 
 
-def propagate_kernel_project(project):
+def propagate_kernel_project(project, family=None):
     '''
     Creates a copy of the indicated project in Aether Kernel
     and creates/updates its linked artefacts based on the given AVRO schemas.
@@ -51,6 +51,7 @@ def propagate_kernel_project(project):
     artefacts = {
         'action': 'create',
         'name': project.name,
+        'family': family,
         'avro_schemas': [],
     }
 
@@ -63,7 +64,7 @@ def propagate_kernel_project(project):
     return True
 
 
-def propagate_kernel_artefacts(schema):
+def propagate_kernel_artefacts(schema, family=None):
     '''
     Creates/updates artefacts based on the indicated Schema in Aether Kernel.
     '''
@@ -71,6 +72,7 @@ def propagate_kernel_artefacts(schema):
     artefacts = {
         'action': 'create',
         'name': schema.project.name,
+        'family': family,
         'avro_schemas': [__parse_schema(schema)],
     }
 

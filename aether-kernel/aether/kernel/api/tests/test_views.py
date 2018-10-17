@@ -70,8 +70,9 @@ class ViewsTest(TestCase):
 
         self.schema = models.Schema.objects.create(
             name='schema1',
+            type='People',
             definition=EXAMPLE_SCHEMA,
-            revision='a sample revision'
+            revision='a sample revision',
         )
 
         self.projectschema = models.ProjectSchema.objects.create(
@@ -81,13 +82,14 @@ class ViewsTest(TestCase):
             masked_fields='a sample masked field',
             is_encrypted=False,
             project=self.project,
-            schema=self.schema
+            schema=self.schema,
         )
         EXAMPLE_MAPPING['entities']['Person'] = str(self.projectschema.pk)
         self.mappingset = models.MappingSet.objects.create(
             name='a sample mapping set',
             input={},
-            project=self.project
+            schema={},
+            project=self.project,
         )
 
         mapping_definition = assign_mapping_entities(
@@ -98,14 +100,14 @@ class ViewsTest(TestCase):
             name='mapping1',
             definition=mapping_definition,
             revision='a sample revision field',
-            mappingset=self.mappingset
+            mappingset=self.mappingset,
         )
 
         self.submission = models.Submission.objects.create(
             revision='a sample revision',
             payload=EXAMPLE_SOURCE_DATA,
             mappingset=self.mappingset,
-            project=self.project
+            project=self.project,
         )
 
         self.entity = models.Entity.objects.create(
@@ -115,7 +117,7 @@ class ViewsTest(TestCase):
             projectschema=self.projectschema,
             submission=self.submission,
             mapping=self.mapping,
-            mapping_revision=self.mapping.revision
+            mapping_revision=self.mapping.revision,
         )
 
     def tearDown(self):
@@ -595,19 +597,11 @@ class ViewsTest(TestCase):
         )
         location_projectschema = models.ProjectSchema.objects.create(
             name='Location',
-            mandatory_fields=[],
-            transport_rule=[],
-            masked_fields=[],
-            is_encrypted=False,
             project=self.project,
             schema=location_schema
         )
         household_projectschema = models.ProjectSchema.objects.create(
             name='Household',
-            mandatory_fields=[],
-            transport_rule=[],
-            masked_fields=[],
-            is_encrypted=False,
             project=self.project,
             schema=household_schema
         )
@@ -620,11 +614,11 @@ class ViewsTest(TestCase):
             projectschema=household_projectschema
         )
         linked_entity = self.helper_read_linked_data_entities('entity-detail', household_entity, 2)
+        self.assertIsNotNone(
+            json.loads(linked_entity.content)['resolved'][location_schema.name][location_entity.payload['id']]
+        )
         self.helper_read_linked_data_entities('entity-detail', household_entity, 4)
         self.helper_read_linked_data_entities('entity-detail', household_entity, 'two')
-        self.assertIsNotNone(
-            json.loads(linked_entity.content)['resolved']
-            [location_schema.name][location_entity.payload['id']])
 
     def test_api_no_cascade_delete_on_entity(self):
         self.helper_delete_object_pk('schema-detail', self.schema)
@@ -637,29 +631,6 @@ class ViewsTest(TestCase):
             'status': 'Publishable',
             'projectschema': None
         }, modified_entity, True)
-
-    def test_custom_viewset(self):
-        self.assertNotEqual(reverse('project-list'), reverse('project-fetch'))
-        self.assertEqual(reverse('project-fetch'), '/projects/fetch/')
-
-        self.assertNotEqual(reverse('project-detail', kwargs={'pk': 1}),
-                            reverse('project-details', kwargs={'pk': 1}))
-        self.assertEqual(reverse('project-details', kwargs={'pk': 1}), '/projects/1/details/')
-
-        project_id = str(self.project.pk)
-
-        response_get = self.client.get(reverse('project-list')).json()
-        response_post = self.client.post(reverse('project-fetch')).json()
-
-        self.assertEqual(response_get, response_post, 'same detail view')
-        self.assertEqual(len(response_get['results']), 1)
-        self.assertEqual(response_get['results'][0]['id'], project_id)
-
-        response_get = self.client.get(reverse('project-detail', kwargs={'pk': project_id})).json()
-        response_post = self.client.post(reverse('project-details', kwargs={'pk': project_id})).json()
-
-        self.assertEqual(response_get, response_post, 'same list view')
-        self.assertEqual(response_get['id'], project_id)
 
     def test_project_artefacts__endpoints(self):
         self.assertEqual(reverse('project-artefacts', kwargs={'pk': 1}), '/projects/1/artefacts/')
@@ -813,3 +784,75 @@ class ViewsTest(TestCase):
                 response_content['definition'][0],
             )
             self.assertEqual(response.status_code, 400)
+
+    def test_project__schemas_skeleton(self):
+        self.assertEqual(reverse('project-skeleton', kwargs={'pk': 1}),
+                         '/projects/1/schemas-skeleton/')
+
+        response = self.client.get(reverse('project-skeleton', kwargs={'pk': self.project.pk}))
+        self.assertEquals(response.status_code, 200)
+        json = response.json()
+        self.assertEqual(json, {
+            'jsonpaths': ['id', '_rev', 'name', 'dob', 'villageID'],
+            'docs': {'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
+            'name': 'a project name-Person',
+        })
+
+    def test_project__schemas_skeleton__no_linked_data(self):
+        self.assertEqual(reverse('project-skeleton', kwargs={'pk': 1}),
+                         '/projects/1/schemas-skeleton/')
+
+        project = models.Project.objects.create(name='Alone')
+        response = self.client.get(reverse('project-skeleton', kwargs={'pk': project.pk}))
+        self.assertEquals(response.status_code, 200)
+        json = response.json()
+        self.assertEqual(json, {
+            'jsonpaths': [],
+            'docs': {},
+            'name': 'Alone',
+        })
+
+        models.ProjectSchema.objects.create(
+            name='1st',
+            project=project,
+            schema=models.Schema.objects.create(name='First', definition={}),
+        )
+        models.ProjectSchema.objects.create(
+            name='2nd',
+            project=project,
+            schema=models.Schema.objects.create(name='Second', definition={}),
+        )
+        response = self.client.get(reverse('project-skeleton', kwargs={'pk': project.pk}))
+        self.assertEquals(response.status_code, 200)
+        json = response.json()
+        self.assertEqual(json, {
+            'jsonpaths': [],
+            'docs': {},
+            'name': 'Alone-Second',
+        })
+
+    def test_schema__skeleton(self):
+        self.assertEqual(reverse('schema-skeleton', kwargs={'pk': 1}),
+                         '/schemas/1/skeleton/')
+
+        response = self.client.get(reverse('schema-skeleton', kwargs={'pk': self.schema.pk}))
+        self.assertEquals(response.status_code, 200)
+        json = response.json()
+        self.assertEqual(json, {
+            'jsonpaths': ['id', '_rev', 'name', 'dob', 'villageID'],
+            'docs': {'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
+            'name': 'Person',
+        })
+
+    def test_projectschema__skeleton(self):
+        self.assertEqual(reverse('projectschema-skeleton', kwargs={'pk': 1}),
+                         '/projectschemas/1/skeleton/')
+
+        response = self.client.get(reverse('projectschema-skeleton', kwargs={'pk': self.projectschema.pk}))
+        self.assertEquals(response.status_code, 200)
+        json = response.json()
+        self.assertEqual(json, {
+            'jsonpaths': ['id', '_rev', 'name', 'dob', 'villageID'],
+            'docs': {'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
+            'name': 'a project name-Person',
+        })

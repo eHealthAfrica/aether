@@ -26,9 +26,12 @@ import random
 
 from collections import namedtuple
 from copy import deepcopy
+from django.utils.translation import ugettext as _
 from os import urandom
 from string import ascii_letters
 from uuid import uuid4
+
+from .constants import NAMESPACE
 
 
 # Constants used by AvroValidator to distinguish between avro types
@@ -57,7 +60,32 @@ REQUEST = 'request'
 STRING = 'string'
 UNION = 'union'
 
-NAMESPACE = 'org.ehealthafrica.aether'
+# AVRO types:
+# - primitive: null, boolean, int, long, float, double, bytes, string
+# - complex: record, map, array, union, enum, fixed
+PRIMITIVE_TYPES = [
+    BOOLEAN,
+    BYTES,
+    DOUBLE,
+    FLOAT,
+    INT,
+    LONG,
+    NULL,
+    STRING,
+
+    # these ones are not primitives but internally work as:
+    # bytes when is serialized or string once is deserialized
+    #   {"type": "enum", "name": "e", "symbols": ["A", "B", "C", "D"]}
+    ENUM,
+    # bytes with fixed length
+    #   {"type": "fixed", "size": 16, "name": "f"}
+    FIXED,
+]
+
+# indicates the complex field type within the full jsonpath
+ARRAY_PATH = '#'
+MAP_PATH = '*'
+UNION_PATH = '?'
 
 
 def random_string():
@@ -166,7 +194,11 @@ def format_validation_error(error):
     '''
     Format an AvroValidationError.
     '''
-    return f'Expected type "{error.expected}" at path "{error.path}". Actual value: {error.datum}'
+    return _('Expected type "{expected}" at path "{path}". Actual value: {datum}').format(
+        expected=error.expected,
+        path=error.path,
+        datum=error.datum,
+    )
 
 
 class AvroValidator(object):
@@ -398,7 +430,10 @@ class AvroValidator(object):
         if schema.type in [RECORD, ERROR, REQUEST]:
             return self.validate_record(schema, datum, path)
         raise AvroValidationException(
-            f'Could not validate datum "{datum}" against "{schema}"'
+            _('Could not validate datum "{datum}" against "{schema}"').format(
+                datum=datum,
+                schema=schema,
+            )
         )
 
 
@@ -422,7 +457,7 @@ def avro_schema_to_passthrough_artefacts(item_id, avro_schema):
         item_id = str(uuid4())
 
     definition = deepcopy(avro_schema)
-    sample = random_avro(definition)
+    sample = random_avro(avro_schema)
 
     # assign default namespace
     if not definition.get('namespace'):
@@ -470,9 +505,114 @@ def avro_schema_to_passthrough_artefacts(item_id, avro_schema):
         'is_read_only': True,
         'is_active': True,
         'input': sample,  # include a data sample
+        'schema': avro_schema,  # include avro schema
     }
 
     return schema, mapping
+
+
+def is_nullable(avro_type):
+    '''
+    Indicates if the given AVRO type accept null values or just another type (but only one)
+
+    {"type": [ "null", nullable_type ]} or {"type": [ nullable_type, "null" ]}
+    '''
+    return isinstance(avro_type, list) and len(avro_type) == 2 and NULL in avro_type
+
+
+def extract_jsonpaths_and_docs(schema, jsonpaths, docs):
+    '''
+    Extracts the "doc" properties of the AVRO schema and generates
+    the list of possible jsonpaths
+
+    Arguments:
+    - ``schema``    - The AVRO schema.
+    - ``jsonpaths`` - The initial jsonpaths, the extracted jsonpaths will be added here.
+    - ``docs``      - The initial docs, the extracted docs will be added here.
+
+    Assumption: the given schema is a valid schema.
+    '''
+    def walker(avro_type, parent=None):
+        jsonpath = ''
+        # using '$' to detect the root type
+        if avro_type.get('name') != '$':
+            jsonpath = avro_type.get('name', '')
+            if parent:
+                jsonpath = f'{parent}.{jsonpath}'
+            if jsonpath not in jsonpaths:
+                jsonpaths.append(jsonpath)
+            if jsonpath not in docs and avro_type.get('doc'):
+                docs[jsonpath] = avro_type.get('doc')
+
+        current = avro_type
+
+        # "nullable"
+        # { "type": [ "null", nullable_type ]} or { "type": [ nullable_type, "null" ]}
+        if __has_type(avro_type) and is_nullable(avro_type.get('type')):
+            current = [child for child in current.get('type') if child != NULL][0]
+
+        if __is_leaf(current):
+            # leaf... nothing else to do
+            return
+
+        current_type_value = current.get('type')
+        if current_type_value == RECORD:
+            for child in current.get('fields'):
+                walker(child, jsonpath)
+
+        elif current_type_value == MAP:
+            # indicate that the next property can be any with "*" name
+            values = current.get('values')
+            map_type = values if __has_type(values) else {'type': values}
+            walker({**map_type, 'name': MAP_PATH}, jsonpath)
+
+        elif current_type_value == ARRAY:
+            # indicate that the next property can be any int with "#"
+            items = current.get('items')
+            array_type = items if __has_type(items) else {'type': items}
+            walker({**array_type, 'name': ARRAY_PATH}, jsonpath)
+
+        elif isinstance(current_type_value, list):
+            # indicate that the next property came from an union with "?"
+            # union but not nullable :scream:
+            for child in current_type_value:
+                if not __is_leaf(child):
+                    walker({**child, 'name': UNION_PATH, 'doc': None}, jsonpath)
+
+        # TODO: named types  ¯\_(ツ)_/¯
+
+    walker({**schema, 'name': '$'})
+
+
+def __is_leaf(avro_type):
+    '''
+    Indicates if the given AVRO type corresponds to an object leaf
+
+    returns True if type is
+        - primitive or
+        - array of primitives or
+        - "nullable" primitive
+
+    Otherwise False
+        - record
+        - map
+        - tagged union
+        - named type  ¯\_(ツ)_/¯
+
+    '''
+    return (
+        # Real primitives: {"type": "aaa"}
+        avro_type in PRIMITIVE_TYPES or
+
+        # Complex types but taken as primitives: {"type": {"type": "zzz"}}
+        (__has_type(avro_type) and __is_leaf(avro_type.get('type'))) or
+
+        # Array of primitives {"type": "array", "items": "aaa"}
+        (__has_type(avro_type) and avro_type.get('type') == ARRAY and __is_leaf(avro_type.get('items'))) or
+
+        # Nullable primitive ["null", "aaa"]
+        (is_nullable(avro_type) and len([True for avro_child in avro_type if __is_leaf(avro_child)]) == 2)
+    )
 
 
 def __has_type(avro_type):

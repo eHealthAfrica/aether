@@ -18,7 +18,6 @@
 
 import json
 import random
-import uuid
 
 from autofixture import generators
 from django.contrib.auth import get_user_model
@@ -41,7 +40,7 @@ class TestFilters(TestCase):
     def test_project_filter__by_schema(self):
         url = reverse(viewname='project-list')
         # Generate projects.
-        for _ in range(random.randint(10, 20)):
+        for _ in range(random.randint(5, 10)):
             generate_project()
         page_size = models.Project.objects.count()
         # Get a list of all schemas.
@@ -49,7 +48,7 @@ class TestFilters(TestCase):
             # Request a list of all projects, filtered by `schema`.
             # This checks that ProjectFilter.schema exists and that
             # ProjectFilter has been correctly configured.
-            expected = set([str(e.project.id) for e in schema.projectschemas.all()])
+            expected = set([str(ps.project.id) for ps in schema.projectschemas.all()])
 
             # by id
             kwargs = {'schema': str(schema.id), 'fields': 'id', 'page_size': page_size}
@@ -74,7 +73,7 @@ class TestFilters(TestCase):
     def test_schema_filter__by_project(self):
         url = reverse(viewname='schema-list')
         # Generate projects.
-        for _ in range(random.randint(10, 20)):
+        for _ in range(random.randint(5, 10)):
             generate_project()
         page_size = models.Schema.objects.count()
         # Get a list of all projects.
@@ -82,7 +81,7 @@ class TestFilters(TestCase):
             # Request a list of all schemas, filtered by `project`.
             # This checks that SchemaFilter.project exists and that
             # SchemaFilter has been correctly configured.
-            expected = set([str(e.schema.id) for e in project.projectschemas.all()])
+            expected = set([str(ps.schema.id) for ps in project.projectschemas.all()])
 
             # by id
             kwargs = {'project': str(project.id), 'fields': 'id', 'page_size': page_size}
@@ -107,7 +106,7 @@ class TestFilters(TestCase):
     def test_entity_filter__by_project(self):
         url = reverse(viewname='entity-list')
         # Generate projects.
-        for _ in range(random.randint(10, 20)):
+        for _ in range(random.randint(5, 10)):
             generate_project()
         page_size = models.Entity.objects.count()
         # Get a list of all projects.
@@ -140,7 +139,7 @@ class TestFilters(TestCase):
     def test_entity_filter__by_mapping(self):
         url = reverse(viewname='entity-list')
         # Generate projects.
-        for _ in range(random.randint(10, 20)):
+        for _ in range(random.randint(5, 10)):
             generate_project()
         page_size = models.Entity.objects.count()
         # Get a list of all mappings.
@@ -173,7 +172,7 @@ class TestFilters(TestCase):
     def test_entity_filter__by_schema(self):
         url = reverse(viewname='entity-list')
         # Generate projects.
-        for _ in range(random.randint(10, 20)):
+        for _ in range(random.randint(5, 10)):
             generate_project()
         page_size = models.Entity.objects.count()
         # Get a list of all schemas.
@@ -223,32 +222,39 @@ class TestFilters(TestCase):
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result = set([r['id'] for r in response['results']])
-            self.assertEqual(expected, result)
+            self.assertEqual(expected, result, 'by submission')
 
-    def test_submission_filter__by_instanceID(self):
-        def gen_submission_payload():
-            return {'meta': {'instanceID': str(uuid.uuid4())}}
-        submission_field_values = {
-            'payload': generators.CallableGenerator(gen_submission_payload)
-        }
-        generate_project(submission_field_values=submission_field_values)
-        url = reverse(viewname='submission-list')
-        for submission in models.Submission.objects.all():
-            instance_id = submission.payload['meta']['instanceID']
-            kwargs = {'instanceID': instance_id}
+    def test_entity_filter__by_family(self):
+        url = reverse(viewname='entity-list')
+        # Generate projects.
+        for _ in range(random.randint(5, 10)):
+            generate_project(schema_field_values={
+                'family': generators.StringGenerator(min_length=10, max_length=30),
+            })
+        page_size = models.Entity.objects.count()
+        # Get a list of all schema families.
+        for family in models.Schema.objects.exclude(family=None).values_list('family', flat=True).distinct():
+            self.assertIsNotNone(family)
+
+            # Request a list of all entities, filtered by `family`.
+            # This checks that EntityFilter.family exists and that
+            # EntityFilter has been correctly configured.
+            expected = set([str(e.id) for e in models.Entity.objects.filter(projectschema__schema__family=family)])
+
+            # by id
+            kwargs = {'family': family, 'fields': 'id', 'page_size': page_size}
             response = json.loads(
                 self.client.get(url, kwargs, format='json').content
             )
-            self.assertEqual(response['count'], 1)
-            self.assertEqual(
-                response['results'][0]['payload']['meta']['instanceID'],
-                instance_id,
-            )
+            # Check both sets of ids for equality.
+            self.assertEqual(response['count'], len(expected))
+            result_by_id = set([r['id'] for r in response['results']])
+            self.assertEqual(expected, result_by_id, 'by family')
 
     def test_submission_filter__by_project(self):
         url = reverse(viewname='submission-list')
         # Generate projects.
-        for _ in range(random.randint(10, 20)):
+        for _ in range(random.randint(5, 10)):
             generate_project()
         page_size = models.Submission.objects.count()
         # Get a list of all projects.
@@ -281,7 +287,7 @@ class TestFilters(TestCase):
     def test_submission_filter__by_mappingset(self):
         url = reverse(viewname='submission-list')
         # Generate projects.
-        for _ in range(random.randint(10, 20)):
+        for _ in range(random.randint(5, 10)):
             generate_project()
         page_size = models.Submission.objects.count()
         # Get a list of all mapping sets.
@@ -397,3 +403,114 @@ class TestFilters(TestCase):
             self.assertEqual(response['count'], len(expected))
             result = set([r['id'] for r in response['results']])
             self.assertEqual(expected, result)
+
+    def test_submission_filter__by_payload(self):
+        url = reverse(viewname='submission-list')
+        filters = [
+            {'payload__a': '1'},
+            {'payload__a__b': '"abcde"'},
+            {'payload__a__b__c': '[1,2,3]'},
+        ]
+        payloads = [
+            {'a': 1, 'z': 3},
+            {'a': {'b': 'abcde'}, 'z': 3},
+            {'a': {'b': {'c': [1, 2, 3]}}, 'z': 3}
+        ]
+        gen_payload = generators.ChoicesGenerator(values=payloads)
+        generate_project(submission_field_values={'payload': gen_payload})
+        page_size = models.Submission.objects.count()
+
+        filtered_submissions_count = 0
+        for kwargs, payload in zip(filters, payloads):
+            response = self.client.get(url,
+                                       {'fields': 'payload', 'page_size': page_size, **kwargs},
+                                       format='json')
+            submissions = json.loads(response.content)['results']
+            for submission in submissions:
+                self.assertEqual(submission['payload'], payload)
+                filtered_submissions_count += 1
+        self.assertEqual(
+            len(models.Submission.objects.all()),
+            filtered_submissions_count,
+        )
+
+    def test_entity_filter__by_payload(self):
+        url = reverse(viewname='entity-list')
+        filters = [
+            {'payload__a': '[1'},  # raise json.decoder.JSONDecodeError
+            {'payload__a': '1'},
+            {'payload__a__b': '"abcde"'},
+            {'payload__a__b__c': '[1,2,3]'},
+        ]
+        payloads = [
+            {'a': '[1', 'z': 3},  # but it's fine
+            {'a': 1, 'z': 3},
+            {'a': {'b': 'abcde'}, 'z': 3},
+            {'a': {'b': {'c': [1, 2, 3]}}, 'z': 3}
+        ]
+        gen_payload = generators.ChoicesGenerator(values=payloads)
+        generate_project(entity_field_values={'payload': gen_payload})
+        page_size = models.Entity.objects.count()
+
+        filtered_entities_count = 0
+        for kwargs, payload in zip(filters, payloads):
+            response = self.client.get(url,
+                                       {'fields': 'payload', 'page_size': page_size, **kwargs},
+                                       format='json')
+            entities = json.loads(response.content)['results']
+            for entity in entities:
+                self.assertEqual(entity['payload'], payload)
+                filtered_entities_count += 1
+        self.assertEqual(
+            len(models.Entity.objects.all()),
+            filtered_entities_count,
+        )
+
+    def test_entity_filter__by_payload__error(self):
+        url = reverse(viewname='entity-list')
+        filters = [
+            {'payload__a': '[1'},  # raise json.decoder.JSONDecodeError
+        ]
+        payloads = [
+            {'a': 1, 'z': 3},
+        ]
+        gen_payload = generators.ChoicesGenerator(values=payloads)
+        generate_project(entity_field_values={'payload': gen_payload})
+        page_size = models.Entity.objects.count()
+
+        for kwargs, payload in zip(filters, payloads):
+            response = self.client.get(url,
+                                       {'fields': 'payload', 'page_size': page_size, **kwargs},
+                                       format='json')
+            self.assertEqual(json.loads(response.content)['count'], 0)
+
+    def test_entity_filter__by_payload__post(self):
+        url = reverse(viewname='entity-query')
+        filters = [
+            {'payload__a': '1'},
+            {'payload__a__b': '"abcde"'},
+            {'payload__a__b__c': '[1,2,3]'},
+        ]
+        payloads = [
+            {'a': 1, 'z': 3},
+            {'a': {'b': 'abcde'}, 'z': 3},
+            {'a': {'b': {'c': [1, 2, 3]}}, 'z': 3}
+        ]
+        gen_payload = generators.ChoicesGenerator(values=payloads)
+        generate_project(entity_field_values={'payload': gen_payload})
+        page_size = models.Entity.objects.count()
+
+        filtered_entities_count = 0
+        for kwargs, payload in zip(filters, payloads):
+            response = self.client.post(f'{url}?page_size={page_size}&fields=payload',
+                                        json.dumps(kwargs),
+                                        content_type='application/json',
+                                        )
+            entities = json.loads(response.content)['results']
+            for entity in entities:
+                self.assertEqual(entity['payload'], payload)
+                filtered_entities_count += 1
+        self.assertEqual(
+            len(models.Entity.objects.all()),
+            filtered_entities_count,
+        )
