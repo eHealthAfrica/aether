@@ -56,14 +56,25 @@ class CachedParser(object):
     def parse(path):
         # we never need to call parse directly; use find()
         if path not in CachedParser.cache.keys():
-            CachedParser.cache[path] = jsonpath_ng_ext_parse(path)
+            try:
+                CachedParser.cache[path] = jsonpath_ng_ext_parse(path)
+            except Exception as err:  # jsonpath-ng raises the base exception type
+                new_err = 'exception parsing path %s : %s', (path, err)
+                logger.error(new_err)
+                raise EntityValidationError(new_err) from err
+
         return CachedParser.cache[path]
 
     @staticmethod
     def find(path, obj):
         # find is an optimized call with a potentially cached parse object.
         parser = CachedParser.parse(path)
-        return parser.find(obj)
+        try:
+            return parser.find(obj)
+        except Exception as err:  # jsonpath-ng raises the base exception type
+            new_err = 'exception finding path %s : %s', (path, err)
+            logger.error(new_err)
+            raise EntityValidationError(new_err) from err
 
 
 class EntityValidationError(Exception):
@@ -125,7 +136,7 @@ def json_printable(obj):
         return obj
 
 
-custom_jsonpath_wildcard_regex = re.compile('(\$\.)+([a-zA-Z0-9_-]*(\[.*\])*\.)?[a-zA-Z0-9_-]+\*')
+custom_jsonpath_wildcard_regex = re.compile('(\$)?(\.)?([a-zA-Z0-9_-]*(\[.*\])*\.)?[a-zA-Z0-9_-]+\*')
 incomplete_json_path_regex = re.compile('[a-zA-Z0-9_-]+\*')
 
 
@@ -155,8 +166,9 @@ def find_by_jsonpath(obj, path):
         #     prefix = 'dose-'
         #     standard_jsonpath = '*.id'
 
-        prefix = path[:match.end()].replace('$.', '')  #clean part of path
-        #replace any indexed portion with a wildcard for use in fnmatch filtering
+        # first part of path before wildcard
+        prefix = path[:match.end()].replace('$.', '')
+        # replace any indexed portion with a wildcard for use in fnmatch filtering
         # because a valid jsonpath like item[0] is reported as item.[0] when matched
         # by jsonpath-ng
         wild_path = re.sub('(\[.*\])+', '*', prefix)
@@ -168,7 +180,7 @@ def find_by_jsonpath(obj, path):
         # filter matching jsonpathes for adherence to partial wildpath
         matching_paths = fnmatch.filter([str(i.full_path) for i in matches], wild_path)
         return [i for i in matches if str(i.full_path) in matching_paths]
-        
+
     else:
         # Otherwise, perform a standard jsonpath search of `obj`.
         matches = CachedParser.find(path, obj)

@@ -23,7 +23,8 @@ from django.test import TestCase
 from .. import utils
 from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA,
                EXAMPLE_NESTED_SOURCE_DATA, EXAMPLE_REQUIREMENTS,
-               EXAMPLE_ENTITY_DEFINITION, EXAMPLE_FIELD_MAPPINGS, EXAMPLE_ENTITY)
+               EXAMPLE_ENTITY_DEFINITION, EXAMPLE_FIELD_MAPPINGS, EXAMPLE_ENTITY,
+               EXAMPLE_PARTIAL_WILDCARDS)
 
 
 class UtilsTests(TestCase):
@@ -122,6 +123,18 @@ class UtilsTests(TestCase):
         resolved_count = utils.resolve_source_reference(
             path, entities, entity_name, 0, field, data)
         self.assertEquals(resolved_count, 3)
+
+    def test_keyed_object_partial_wildcard(self):
+        data = EXAMPLE_PARTIAL_WILDCARDS
+        expected = [
+            ('$.households[0].name*', 2),
+            ('$.households[1].name*', 1),
+            ('$.households[*].name*', 3),
+            ('$.households[0].name1', 1),
+            ('$.households[*].name1', 2)
+        ]
+        for path, matches in expected:
+            self.assertEquals(len(utils.find_by_jsonpath(data, path)), matches), (path, matches)
 
     def test_object_contains(self):
         data = EXAMPLE_NESTED_SOURCE_DATA
