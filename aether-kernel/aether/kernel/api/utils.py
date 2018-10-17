@@ -59,7 +59,9 @@ class CachedParser(object):
             try:
                 CachedParser.cache[path] = jsonpath_ng_ext_parse(path)
             except Exception as err:  # jsonpath-ng raises the base exception type
-                new_err = 'exception parsing path %s : %s', (path, err)
+                new_err = _('exception parsing path {path} : {error} ').format(
+                    path=path, error=err
+                )
                 logger.error(new_err)
                 raise EntityValidationError(new_err) from err
 
@@ -69,12 +71,7 @@ class CachedParser(object):
     def find(path, obj):
         # find is an optimized call with a potentially cached parse object.
         parser = CachedParser.parse(path)
-        try:
-            return parser.find(obj)
-        except Exception as err:  # jsonpath-ng raises the base exception type
-            new_err = 'exception finding path %s : %s', (path, err)
-            logger.error(new_err)
-            raise EntityValidationError(new_err) from err
+        return parser.find(obj)
 
 
 class EntityValidationError(Exception):
@@ -136,7 +133,14 @@ def json_printable(obj):
         return obj
 
 
+# RegEx for jsonpaths containing a partial wildcard as a key:
+# $.path.to[*].key_* where the matching path might be $.path.to[1].key_1
+# or with invertes position:
+# $.path.key_*.to[*].field for $.path.key_27.to[1].field
 custom_jsonpath_wildcard_regex = re.compile('(\$)?(\.)?([a-zA-Z0-9_-]*(\[.*\])*\.)?[a-zA-Z0-9_-]+\*')
+# RegEx for the part of a JSONPath matching the previous RegEx which is non-compliant with the
+# JSONPath spec.
+# Ex: key_* in the path $.path.key_*.to[*].field
 incomplete_json_path_regex = re.compile('[a-zA-Z0-9_-]+\*')
 
 

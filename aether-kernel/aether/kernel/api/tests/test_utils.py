@@ -126,6 +126,13 @@ class UtilsTests(TestCase):
 
     def test_keyed_object_partial_wildcard(self):
         data = EXAMPLE_PARTIAL_WILDCARDS
+        bad_path = '$households[0].name*'  # missing '.' after $
+        try:
+            utils.find_by_jsonpath(data, bad_path)
+        except utils.EntityValidationError:
+            pass
+        else:
+            self.fail('Should have thrown an error')
         expected = [
             ('$.households[0].name*', 2),
             ('$.households[1].name*', 1),
