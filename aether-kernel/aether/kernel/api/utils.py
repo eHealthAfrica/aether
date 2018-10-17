@@ -17,6 +17,7 @@
 # under the License.
 
 import collections
+import fnmatch
 import json
 import logging
 import re
@@ -55,7 +56,15 @@ class CachedParser(object):
     def parse(path):
         # we never need to call parse directly; use find()
         if path not in CachedParser.cache.keys():
-            CachedParser.cache[path] = jsonpath_ng_ext_parse(path)
+            try:
+                CachedParser.cache[path] = jsonpath_ng_ext_parse(path)
+            except Exception as err:  # jsonpath-ng raises the base exception type
+                new_err = _('exception parsing path {path} : {error} ').format(
+                    path=path, error=err
+                )
+                logger.error(new_err)
+                raise EntityValidationError(new_err) from err
+
         return CachedParser.cache[path]
 
     @staticmethod
@@ -124,7 +133,14 @@ def json_printable(obj):
         return obj
 
 
-custom_jsonpath_wildcard_regex = re.compile('(\$\.)*([a-zA-Z0-9_-]+\.)*?[a-zA-Z0-9_-]+\*')
+# RegEx for jsonpaths containing a partial wildcard as a key:
+# $.path.to[*].key_* where the matching path might be $.path.to[1].key_1
+# or with invertes position:
+# $.path.key_*.to[*].field for $.path.key_27.to[1].field
+custom_jsonpath_wildcard_regex = re.compile('(\$)?(\.)?([a-zA-Z0-9_-]*(\[.*\])*\.)?[a-zA-Z0-9_-]+\*')
+# RegEx for the part of a JSONPath matching the previous RegEx which is non-compliant with the
+# JSONPath spec.
+# Ex: key_* in the path $.path.key_*.to[*].field
 incomplete_json_path_regex = re.compile('[a-zA-Z0-9_-]+\*')
 
 
@@ -154,20 +170,21 @@ def find_by_jsonpath(obj, path):
         #     prefix = 'dose-'
         #     standard_jsonpath = '*.id'
 
-        split_pos = match.end() - 1
-        prefix = path[:split_pos].replace('$.', '')
+        # first part of path before wildcard
+        prefix = path[:match.end()].replace('$.', '')
+        # replace any indexed portion with a wildcard for use in fnmatch filtering
+        # because a valid jsonpath like item[0] is reported as item.[0] when matched
+        # by jsonpath-ng
+        wild_path = re.sub('(\[.*\])+', '*', prefix)
         illegal = incomplete_json_path_regex.search(path)
         standard_jsonpath = path[:illegal.start()] + '*' + path[illegal.end():]
 
         # Perform an standard jsonpath search.
-        result = []
         matches = CachedParser.find(standard_jsonpath, obj)
-        for item in matches:
-            full_path = str(item.full_path)
-            # Only include item if its full path starts with `prefix`.
-            if full_path.startswith(prefix):
-                result.append(item)
-        return result
+        # filter matching jsonpathes for adherence to partial wildpath
+        matching_paths = fnmatch.filter([str(i.full_path) for i in matches], wild_path)
+        return [i for i in matches if str(i.full_path) in matching_paths]
+
     else:
         # Otherwise, perform a standard jsonpath search of `obj`.
         matches = CachedParser.find(path, obj)

@@ -146,6 +146,23 @@ EXAMPLE_NESTED_SOURCE_DATA = {
     },
 }
 
+EXAMPLE_PARTIAL_WILDCARDS = {
+    'households': [
+        {
+            'address': '74 Whyioughta St.',
+            'name1': 'Larry',
+            'number1': 1,
+            'name2': 'Curly',
+            'number2': 2
+        },
+        {
+            'address': '1600 Ipoke Ave',
+            'name1': 'Moe',
+            'number1': 3
+        }
+    ]
+}
+
 EXAMPLE_SOURCE_DATA_ENTITY = {
     'villageID': 'somevillageID',
     'name': 'Person-Valid',
