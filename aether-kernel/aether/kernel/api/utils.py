@@ -124,7 +124,7 @@ def json_printable(obj):
         return obj
 
 
-custom_jsonpath_wildcard_regex = re.compile('(\$\.)*([a-zA-Z0-9_-]+\.)*?[a-zA-Z0-9_-]+\*')
+custom_jsonpath_wildcard_regex = re.compile('(\$\.)+([a-zA-Z0-9_-]*(\[.*\])*\.)?[a-zA-Z0-9_-]+\*')
 incomplete_json_path_regex = re.compile('[a-zA-Z0-9_-]+\*')
 
 
