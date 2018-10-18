@@ -866,7 +866,7 @@ class ViewsTest(TestCase):
 
         # try with passthrough parameter
         # (it checks the existence of the parameter not the parameter value)
-        response = self.client.get(f'{url}?passthrough=0')
+        response = self.client.get(f'{url}?passthrough')
         self.assertEquals(response.status_code, 200)
         json = response.json()
         self.assertEqual(json, {
@@ -895,7 +895,7 @@ class ViewsTest(TestCase):
                 revision='a sample revision',
             ),
         )
-        response = self.client.get(f'{url}?passthrough=false')
+        response = self.client.get(f'{url}?passthrough=')
         self.assertEquals(response.status_code, 200)
         json = response.json()
         self.assertEqual(json, {

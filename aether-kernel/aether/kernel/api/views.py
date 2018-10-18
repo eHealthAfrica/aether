@@ -57,6 +57,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
         Returns the schemas "skeleton" used by this project.
 
         Reachable at ``/projects/{pk}/schemas-skeleton/?passthrough=true&family=<<string>>``
+
+        These endpoints return the same result:
+
+            ``/projects/{pk}/schemas-skeleton/?passthrough``
+            ``/projects/{pk}/schemas-skeleton/?passthrough=``
+            ``/projects/{pk}/schemas-skeleton/?passthrough=false``
+            ``/projects/{pk}/schemas-skeleton/?passthrough=true``
+            ``/projects/{pk}/schemas-skeleton/?family={pk}``
+
         '''
 
         project = get_object_or_404(models.Project, pk=pk)
