@@ -261,7 +261,7 @@ class TestFilters(TestCase):
             generate_project()
         entities_count = models.Entity.objects.count()
 
-        kwargs = {'passthrough': 1, 'fields': 'id', 'page_size': entities_count}
+        kwargs = {'passthrough': 'true', 'fields': 'id', 'page_size': entities_count}
         response = json.loads(
             self.client.get(url, kwargs, format='json').content
         )
@@ -309,7 +309,7 @@ class TestFilters(TestCase):
         self.assertEqual(expected, result, 'by passthrough')
 
         # by family
-        kwargs = {'family': str(project.pk), 'fields': 'id', 'page_size': entities_count}
+        kwargs = {'passthrough': 'false', 'family': str(project.pk), 'fields': 'id', 'page_size': entities_count}
         response = json.loads(
             self.client.get(url, kwargs, format='json').content
         )

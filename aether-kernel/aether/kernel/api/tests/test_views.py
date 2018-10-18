@@ -488,8 +488,7 @@ class ViewsTest(TestCase):
         self.assertEquals(json['entities_count'], 20)
 
         # let's try with the passthrough filter
-        # (it checks the existence of the parameter not the parameter value)
-        response = self.client.get(f'{url}?passthrough=no', format='json')
+        response = self.client.get(f'{url}?passthrough=true', format='json')
         json = response.json()
         self.assertEquals(json['submissions_count'], submissions_count)
         self.assertNotEqual(json['entities_count'], entities_count)
@@ -865,8 +864,7 @@ class ViewsTest(TestCase):
         })
 
         # try with passthrough parameter
-        # (it checks the existence of the parameter not the parameter value)
-        response = self.client.get(f'{url}?passthrough')
+        response = self.client.get(f'{url}?passthrough=true')
         self.assertEquals(response.status_code, 200)
         json = response.json()
         self.assertEqual(json, {
@@ -895,7 +893,7 @@ class ViewsTest(TestCase):
                 revision='a sample revision',
             ),
         )
-        response = self.client.get(f'{url}?passthrough=')
+        response = self.client.get(f'{url}?passthrough=true')
         self.assertEquals(response.status_code, 200)
         json = response.json()
         self.assertEqual(json, {
