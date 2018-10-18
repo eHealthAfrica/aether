@@ -53,7 +53,6 @@ def propagate_kernel_project(project, family=None):
     '''
 
     artefacts = {
-        'action': 'create',
         'name': project.name,
         'family': family,
         'avro_schemas': [],
@@ -74,7 +73,6 @@ def propagate_kernel_artefacts(xform, family=None):
     '''
 
     artefacts = {
-        'action': 'create',
         'name': xform.project.name,
         'family': family,
         'avro_schemas': [__parse_xform(xform)],

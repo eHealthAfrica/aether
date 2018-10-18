@@ -157,7 +157,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 # this is optional, indicates the action to execute:
                 #   "create", creates the missing objects but does not update the existing ones
                 #   otherwise creates/updates the given objects
-                'action': 'upsert',
+                'action': 'create|upsert',
 
                 # this is optional, if missing the method will assign a random name
                 "name": "project name (optional but unique)",
@@ -251,7 +251,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 # this is optional, indicates the action to execute:
                 #   "create", creates the missing objects but does not update the existing ones
                 #   otherwise creates/updates the given objects
-                'action': 'upsert',
+                'action': 'create|upsert',
 
                 # this is optional, if missing the method will assign a random name
                 "name": "project name (optional but unique)",
@@ -284,7 +284,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             project_id=pk,
             project_name=data.get('name'),
             avro_schemas=data.get('avro_schemas', []),
-            family=data.get('family', pk),
+            family=data.get('family') or pk,
         )
 
         return Response(data=results)
