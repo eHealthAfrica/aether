@@ -16,6 +16,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.db.models import TextField
+from django.db.models.functions import Cast
+
 import django_filters.rest_framework as filters
 import uuid
 
@@ -159,6 +162,9 @@ class EntityFilter(filters.FilterSet):
         field_name='projectschema__schema__family',
         lookup_expr='iexact',  # case-insensitive
     )
+    passthrough = filters.CharFilter(
+        method='passthrough__filter',
+    )
 
     def project_filter(self, queryset, name, value):
         if is_uuid(value):
@@ -177,6 +183,9 @@ class EntityFilter(filters.FilterSet):
             return queryset.filter(mapping__pk=value)
         else:
             return queryset.filter(mapping__name=value)
+
+    def passthrough__filter(self, queryset, name, value):
+        return queryset.filter(projectschema__schema__family=Cast('project__pk', TextField()))
 
     class Meta:
         fields = '__all__'

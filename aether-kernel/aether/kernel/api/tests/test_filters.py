@@ -254,6 +254,39 @@ class TestFilters(TestCase):
             result_by_id = set([r['id'] for r in response['results']])
             self.assertEqual(expected, result_by_id, 'by family')
 
+    def test_entity_filter__by_passthrough(self):
+        url = reverse(viewname='entity-list')
+        # Generate projects.
+        for _ in range(random.randint(5, 10)):
+            generate_project()
+        page_size = models.Entity.objects.count()
+
+        kwargs = {'passthrough': 1, 'fields': 'id', 'page_size': page_size}
+        response = json.loads(
+            self.client.get(url, kwargs, format='json').content
+        )
+        self.assertEqual(response['count'], 0, 'there are no passthrough entities')
+
+        # there are at least 5 schemas
+        # Mark the first 3 as passthrough schemas
+        expected = set()
+        for schema in models.Schema.objects.all()[0:3]:
+            project = schema.projectschemas.first().project
+            schema.family = str(project.pk)
+            schema.save()
+            expected.update([str(e.id) for e in models.Entity.objects.filter(projectschema__schema=schema)])
+
+        self.assertNotEqual(len(expected), 0, 'there are passthrough entities')
+        self.assertNotEqual(page_size, len(expected), 'there are even more entities')
+        kwargs = {'passthrough': 1, 'fields': 'id', 'page_size': page_size}
+        response = json.loads(
+            self.client.get(url, kwargs, format='json').content
+        )
+        # Check both sets of ids for equality.
+        self.assertEqual(response['count'], len(expected))
+        result = set([r['id'] for r in response['results']])
+        self.assertEqual(expected, result, 'by passthrough')
+
     def test_submission_filter__by_project(self):
         url = reverse(viewname='submission-list')
         # Generate projects.
