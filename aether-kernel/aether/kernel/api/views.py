@@ -73,7 +73,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         name = None
 
         if request.query_params.get('passthrough', 'false') == 'true':
-            # the passthrough schemas are indentified with the project id
+            # the passthrough schemas are identified with the project id
             family = str(project.id)
         else:
             family = request.query_params.get('family')
