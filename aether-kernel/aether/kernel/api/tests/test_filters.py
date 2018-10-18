@@ -271,10 +271,15 @@ class TestFilters(TestCase):
         # Mark the first 3 as passthrough schemas
         expected = set()
         for schema in models.Schema.objects.all()[0:3]:
-            project = schema.projectschemas.first().project
+            projectschema = schema.projectschemas.first()
+            project = projectschema.project
             schema.family = str(project.pk)
             schema.save()
-            expected.update([str(e.id) for e in models.Entity.objects.filter(projectschema__schema=schema)])
+            mapping = projectschema.mappings.first()
+            mapping.is_read_only = True  # one of the mappings is read only
+            mapping.save()
+
+            expected.update([str(e.id) for e in models.Entity.objects.filter(mapping=mapping)])
 
         self.assertNotEqual(len(expected), 0, 'there are passthrough entities')
         self.assertNotEqual(entities_count, len(expected), 'there are even more entities')
@@ -288,15 +293,21 @@ class TestFilters(TestCase):
 
         # generating chaos
         # take one of the projects and assign all schema families with its pk
-        project = models.Project.objects.first()
+        project = models.Project.objects.last()
         expected = set()
         for schema in models.Schema.objects.all():
             schema.family = str(project.pk)
             schema.save()
 
-            own_project = schema.projectschemas.first().project
+            projectschema = schema.projectschemas.first()
+            own_project = projectschema.project
             if own_project == project:  # the only passthrough schema
-                expected = set([str(e.id) for e in models.Entity.objects.filter(projectschema__schema=schema)])
+                # take only one of the mappings
+                mapping = projectschema.mappings.first()
+                mapping.is_read_only = True  # one of the mappings is read only
+                mapping.save()
+
+                expected = set([str(e.id) for e in models.Entity.objects.filter(mapping=mapping)])
 
         self.assertNotEqual(len(expected), 0, 'there are passthrough entities')
         self.assertNotEqual(entities_count, len(expected), 'there are even more entities')

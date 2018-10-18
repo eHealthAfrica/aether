@@ -85,7 +85,9 @@ class ViewsTest(TestCase):
             project=self.project,
             schema=self.schema,
         )
+        # update the fake value with a real one
         EXAMPLE_MAPPING['entities']['Person'] = str(self.projectschema.pk)
+
         self.mappingset = models.MappingSet.objects.create(
             name='a sample mapping set',
             input={},
@@ -421,39 +423,56 @@ class ViewsTest(TestCase):
                 name='another schema',
                 type='eha.test.schemas',
                 family=str(self.project.pk),  # identifies passthrough schemas
-                definition=EXAMPLE_SCHEMA,
+                definition={
+                    'name': 'Person',
+                    'type': 'record',
+                    'fields': [{'name': 'id', 'type': 'string'}]
+                },
                 revision='a sample revision',
             ),
         )
+        mapping_2 = models.Mapping.objects.create(
+            name='a read only mapping with stats',
+            definition={
+                'entities': {'Person': str(projectschema_2.pk)},
+                'mapping': [['#!uuid', 'Person.id']],
+            },
+            mappingset=self.mappingset,
+            is_read_only=True,
+        )
+
         for _ in range(4):
             for __ in range(5):
-                # this will also trigger the entities extraction (3 entities per submission)
-                response = self.helper_create_object('submission-list', {
+                # this will also trigger the entities extraction
+                # (4 entities per submission -> 3 for self.projectschema + 1 for projectschema_2)
+                self.helper_create_object('submission-list', {
                     'payload': EXAMPLE_SOURCE_DATA,
                     'mappingset': str(self.mappingset.pk),
-                })
-                submission = response.json()
-                # create entities for projectschema_2
-                self.helper_create_object('entity-list', {
-                    'status': 'Publishable',
-                    'payload': EXAMPLE_SOURCE_DATA_ENTITY,
-                    'projectschema': str(projectschema_2.pk),
-                    'submission': submission['id'],
-                    'mapping': str(self.mapping.pk),
-                    'mapping_revision': self.mapping.revision,
                 })
 
         submissions_count = models.Submission \
                                   .objects \
-                                  .filter(mappingset__project=self.project.pk) \
+                                  .filter(mappingset__project=self.project) \
                                   .count()
         self.assertEqual(submissions_count, 20)
 
         entities_count = models.Entity \
                                .objects \
-                               .filter(submission__mappingset__project=self.project.pk) \
+                               .filter(submission__mappingset__project=self.project) \
                                .count()
         self.assertEqual(entities_count, 80)
+
+        family_person_entities_count = models.Entity \
+                                             .objects \
+                                             .filter(mapping=self.mapping) \
+                                             .count()
+        self.assertEqual(family_person_entities_count, 60)
+
+        passthrough_entities_count = models.Entity \
+                                           .objects \
+                                           .filter(mapping=mapping_2) \
+                                           .count()
+        self.assertEqual(passthrough_entities_count, 20)
 
         url = reverse('projects_stats-detail', kwargs={'pk': self.project.pk})
         response = self.client.get(url, format='json')
@@ -472,7 +491,7 @@ class ViewsTest(TestCase):
         json = response.json()
         self.assertEquals(json['submissions_count'], submissions_count)
         self.assertNotEqual(json['entities_count'], entities_count)
-        self.assertEquals(json['entities_count'], 60)
+        self.assertEquals(json['entities_count'], family_person_entities_count)
 
         # let's try again but with an unexistent family
         response = self.client.get(f'{url}?family=unknown', format='json')
@@ -485,14 +504,14 @@ class ViewsTest(TestCase):
         json = response.json()
         self.assertEquals(json['submissions_count'], submissions_count)
         self.assertNotEqual(json['entities_count'], entities_count)
-        self.assertEquals(json['entities_count'], 20)
+        self.assertEquals(json['entities_count'], passthrough_entities_count)
 
         # let's try with the passthrough filter
         response = self.client.get(f'{url}?passthrough=true', format='json')
         json = response.json()
         self.assertEquals(json['submissions_count'], submissions_count)
         self.assertNotEqual(json['entities_count'], entities_count)
-        self.assertEquals(json['entities_count'], 20)
+        self.assertEquals(json['entities_count'], passthrough_entities_count)
 
     def test_mapping_set_stats_view(self):
         url = reverse('mappingsets_stats-detail', kwargs={'pk': self.mappingset.pk})
@@ -694,7 +713,10 @@ class ViewsTest(TestCase):
             content_type='application/json'
         ).json()
         self.assertEqual(response_patch, {
-            'project': project_id, 'schemas': [], 'project_schemas': [], 'mappings': [],
+            'project': project_id,
+            'schemas': [],
+            'project_schemas': [],
+            'mappings': [],
             'mappingsets': []
         })
         project = models.Project.objects.get(pk=project_id)
@@ -703,7 +725,10 @@ class ViewsTest(TestCase):
         # try to retrieve again
         response_get = self.client.get(url).json()
         self.assertEqual(response_get, {
-            'project': project_id, 'schemas': [], 'project_schemas': [], 'mappings': [],
+            'project': project_id,
+            'schemas': [],
+            'project_schemas': [],
+            'mappings': [],
             'mappingsets': []
         })
 
