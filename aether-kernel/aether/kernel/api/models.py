@@ -344,6 +344,7 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), TimeStampedModel):
 
     # this field is used to group different schemas created automatically
     # from different sources but that share a common structure
+    # the passthrough schemas will contain the project id as family
     family = models.TextField(null=True, blank=True, verbose_name=_('schema family'))
 
     @property
@@ -351,8 +352,8 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), TimeStampedModel):
         return json_prettified(self.definition)
 
     @property
-    def family_name(self):
-        return self.family or self.definition.get('name', self.name)
+    def schema_name(self):
+        return self.definition.get('name', self.name)
 
     def __str__(self):
         return self.name
@@ -560,7 +561,7 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
                 if v == str(self.projectschema.pk):
                     return f'{self.project.name}-{k}'
         if self.projectschema:
-            return f'{self.project.name}-{self.projectschema.schema.family_name}'
+            return f'{self.project.name}-{self.projectschema.schema.schema_name}'
         if self.submission:
             return self.submission.name
         if self.project:

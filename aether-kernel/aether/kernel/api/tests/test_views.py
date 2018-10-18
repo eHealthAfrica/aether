@@ -420,14 +420,14 @@ class ViewsTest(TestCase):
             schema=models.Schema.objects.create(
                 name='another schema',
                 type='eha.test.schemas',
-                family='AnotherPerson',
+                family=str(self.project.pk),  # identifies passthrough schemas
                 definition=EXAMPLE_SCHEMA,
                 revision='a sample revision',
             ),
         )
         for _ in range(4):
             for __ in range(5):
-                # this will also trigger the entities extraction
+                # this will also trigger the entities extraction (3 entities per submission)
                 response = self.helper_create_object('submission-list', {
                     'payload': EXAMPLE_SOURCE_DATA,
                     'mappingset': str(self.mappingset.pk),
@@ -468,17 +468,32 @@ class ViewsTest(TestCase):
         )
 
         # let's try with the family filter
-        response = self.client.get(f'{url}?family=AnotherPerson', format='json')
+        response = self.client.get(f'{url}?family=Person', format='json')
         json = response.json()
         self.assertEquals(json['submissions_count'], submissions_count)
         self.assertNotEqual(json['entities_count'], entities_count)
-        self.assertEquals(json['entities_count'], 20)
+        self.assertEquals(json['entities_count'], 60)
 
         # let's try again but with an unexistent family
         response = self.client.get(f'{url}?family=unknown', format='json')
         json = response.json()
         self.assertEquals(json['submissions_count'], submissions_count)
         self.assertEquals(json['entities_count'], 0, 'No entities in this family')
+
+        # let's try with using the project id
+        response = self.client.get(f'{url}?family={str(self.project.pk)}', format='json')
+        json = response.json()
+        self.assertEquals(json['submissions_count'], submissions_count)
+        self.assertNotEqual(json['entities_count'], entities_count)
+        self.assertEquals(json['entities_count'], 20)
+
+        # let's try with the passthrough filter
+        # (it checks the existence of the parameter not the parameter value)
+        response = self.client.get(f'{url}?passthrough=no', format='json')
+        json = response.json()
+        self.assertEquals(json['submissions_count'], submissions_count)
+        self.assertNotEqual(json['entities_count'], entities_count)
+        self.assertEquals(json['entities_count'], 20)
 
     def test_mapping_set_stats_view(self):
         url = reverse('mappingsets_stats-detail', kwargs={'pk': self.mappingset.pk})
@@ -817,14 +832,77 @@ class ViewsTest(TestCase):
     def test_project__schemas_skeleton(self):
         self.assertEqual(reverse('project-skeleton', kwargs={'pk': 1}),
                          '/projects/1/schemas-skeleton/')
-
-        response = self.client.get(reverse('project-skeleton', kwargs={'pk': self.project.pk}))
+        url = reverse('project-skeleton', kwargs={'pk': self.project.pk})
+        response = self.client.get(url)
         self.assertEquals(response.status_code, 200)
         json = response.json()
         self.assertEqual(json, {
             'jsonpaths': ['id', '_rev', 'name', 'dob', 'villageID'],
             'docs': {'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
             'name': 'a project name-Person',
+            'schemas': 1,
+        })
+
+        # try with family parameter
+        response = self.client.get(f'{url}?family=Person')
+        self.assertEquals(response.status_code, 200)
+        json = response.json()
+        self.assertEqual(json, {
+            'jsonpaths': ['id', '_rev', 'name', 'dob', 'villageID'],
+            'docs': {'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
+            'name': 'a project name-Person',
+            'schemas': 1,
+        })
+
+        response = self.client.get(f'{url}?family=City')
+        self.assertEquals(response.status_code, 200)
+        json = response.json()
+        self.assertEqual(json, {
+            'jsonpaths': [],
+            'docs': {},
+            'name': 'a project name',
+            'schemas': 0,
+        })
+
+        # try with passthrough parameter
+        # (it checks the existence of the parameter not the parameter value)
+        response = self.client.get(f'{url}?passthrough=0')
+        self.assertEquals(response.status_code, 200)
+        json = response.json()
+        self.assertEqual(json, {
+            'jsonpaths': [],
+            'docs': {},
+            'name': 'a project name',
+            'schemas': 0,
+        })
+
+        # create and assign passthrough schema
+        models.ProjectSchema.objects.create(
+            name='a passthrough project schema',
+            project=self.project,
+            schema=models.Schema.objects.create(
+                name='passthrough schema',
+                type='eha.test.schemas',
+                family=str(self.project.pk),  # identifies passthrough schemas
+                definition={
+                    'name': 'passthrough',
+                    'type': 'record',
+                    'fields': [{
+                        'name': 'one',
+                        'type': 'string',
+                    }]
+                },
+                revision='a sample revision',
+            ),
+        )
+        response = self.client.get(f'{url}?passthrough=false')
+        self.assertEquals(response.status_code, 200)
+        json = response.json()
+        self.assertEqual(json, {
+            'jsonpaths': ['one'],
+            'docs': {},  # "one" field does not have "doc"
+            'name': 'a project name-passthrough',
+            'schemas': 1,
         })
 
     def test_project__schemas_skeleton__no_linked_data(self):
@@ -839,6 +917,7 @@ class ViewsTest(TestCase):
             'jsonpaths': [],
             'docs': {},
             'name': 'Alone',
+            'schemas': 0,
         })
 
         models.ProjectSchema.objects.create(
@@ -858,6 +937,7 @@ class ViewsTest(TestCase):
             'jsonpaths': [],
             'docs': {},
             'name': 'Alone-Second',
+            'schemas': 2,
         })
 
     def test_schema__skeleton(self):
