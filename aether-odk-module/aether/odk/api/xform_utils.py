@@ -349,7 +349,9 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         else:
             parent['fields'].append({
                 'name': current_name,
-                # make fields not required to avoid problems with workflow conditions
+                # Since an Avro schema does not contain the same branching logic as an XForm,
+                # a field that is mandatory in a form is not actually always present,
+                # and therefore cannot be required in the schema.
                 'type': __get_avro_primitive_type(current_type, required=False),
                 'doc': current_doc,
             })
