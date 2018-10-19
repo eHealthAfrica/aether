@@ -683,7 +683,7 @@ class ViewsTest(TestCase):
         self.helper_read_linked_data_entities('entity-detail', household_entity, 'two')
 
     def test_api_no_cascade_delete_on_entity(self):
-        self.helper_delete_object_pk('schema-detail', self.schema)
+        self.helper_delete_object_pk('projectschema-detail', self.projectschema)
         modified_entity = models.Entity.objects.get(pk=self.entity.pk)
         self.assertIsNone(modified_entity.projectschema)
         # Test updating entity without a projectschema

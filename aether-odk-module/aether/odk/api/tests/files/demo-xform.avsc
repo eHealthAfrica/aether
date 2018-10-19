@@ -17,15 +17,15 @@
     },
     {
       "name": "starttime",
-      "type": "string"
+      "type": [ "null", "string" ]
     },
     {
       "name": "endtime",
-      "type": "string"
+      "type": [ "null", "string" ]
     },
     {
       "name": "deviceid",
-      "type": "string"
+      "type": [ "null", "string" ]
     },
     {
       "name": "country",
@@ -54,12 +54,12 @@
             {
               "name": "latitude",
               "doc": "latitude",
-              "type": "float"
+              "type": [ "null", "float" ]
             },
             {
               "name": "longitude",
               "doc": "longitude",
-              "type": "float"
+              "type": [ "null", "float" ]
             },
             {
               "name": "altitude",
@@ -87,12 +87,12 @@
             {
               "name": "latitude",
               "doc": "latitude",
-              "type": "float"
+              "type": [ "null", "float" ]
             },
             {
               "name": "longitude",
               "doc": "longitude",
-              "type": "float"
+              "type": [ "null", "float" ]
             },
             {
               "name": "altitude",
@@ -135,7 +135,7 @@
     },
     {
       "name": "option",
-      "type": "string",
+      "type": [ "null", "string" ],
       "doc": "Choice (A/B)"
     },
     {

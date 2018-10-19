@@ -181,7 +181,7 @@ class TestFilters(TestCase):
             # Request a list of all entities, filtered by `schema`.
             # This checks that EntityFilter.schema exists and that
             # EntityFilter has been correctly configured.
-            expected = set([str(e.id) for e in models.Entity.objects.filter(projectschema__schema=schema)])
+            expected = set([str(e.id) for e in schema.entities.all()])
 
             # by id
             kwargs = {'schema': str(schema.id), 'fields': 'id', 'page_size': entities_count}
@@ -275,6 +275,7 @@ class TestFilters(TestCase):
             project = projectschema.project
             schema.family = str(project.pk)
             schema.save()
+
             mapping = projectschema.mappings.first()
             mapping.is_read_only = True  # one of the mappings is read only
             mapping.save()

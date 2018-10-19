@@ -44,38 +44,38 @@ STATUS_CHOICES = (
 '''
 Data model schema:
 
-    +------------------+          +------------------+         +------------------+       +------------------+
-    | Project          |          | MappingSet       |         | Submission       |       | Attachment       |
-    +==================+          +==================+         +==================+       +==================+
-    | id               |<-----+   | id               |<----+   | id               |<---+  | id               |
-    | created          |      |   | created          |     |   | created          |    |  | created          |
-    | modified         |      |   | modified         |     |   | modified         |    |  | modified         |
-    | revision         |      |   | revision         |     |   | revision         |    |  | name             |
-    | name             |      |   | name             |     |   | payload          |    |  | attachment_file  |
-    | salad_schema     |      |   | input            |     |   +::::::::::::::::::+    |  | md5sum           |
-    | jsonld_context   |      |   +::::::::::::::::::+     +--<| mappingset       |    |  +::::::::::::::::::+
-    | rdf_definition   |      +--<| project          |     |   | project(**)      |    +-<| submission       |
-    +------------------+      |   +------------------+     |   +------------------+    |  | submission_rev   |
-                              |                            |                           |  +------------------+
+    +------------------+          +------------------+         +------------------+        +------------------+
+    | Project          |          | MappingSet       |         | Submission       |        | Attachment       |
+    +==================+          +==================+         +==================+        +==================+
+    | id               |<-----+   | id               |<----+   | id               |<---+   | id               |
+    | created          |      |   | created          |     |   | created          |    |   | created          |
+    | modified         |      |   | modified         |     |   | modified         |    |   | modified         |
+    | revision         |      |   | revision         |     |   | revision         |    |   | name             |
+    | name             |      |   | name             |     |   | payload          |    |   | attachment_file  |
+    | salad_schema     |      |   | input            |     |   +::::::::::::::::::+    |   | md5sum           |
+    | jsonld_context   |      |   +::::::::::::::::::+     +--<| mappingset       |    |   +::::::::::::::::::+
+    | rdf_definition   |      +--<| project          |     |   | project(**)      |    +--<| submission       |
+    +------------------+      |   +------------------+     |   +------------------+    |   | submission_rev   |
+                              |                            |                           |   +------------------+
                               |                            |                           |
                               |                            |                           |
-    +------------------+      |   +------------------+     |   +------------------+    |  +------------------+
-    | Schema           |      |   | ProjectSchema    |     |   | Mapping          |    |  | Entity           |
-    +==================+      |   +==================+     |   +==================+    |  +==================+
-    | id               |<--+  |   | id               |<--+ |   | id               |<-+ |  | id               |
-    | created          |   |  |   | created          |   | |   | created          |  | |  | modified         |
-    | modified         |   |  |   | modified         |   | |   | modified         |  | |  | revision         |
-    | revision         |   |  |   | name             |   | |   | revision         |  | |  | payload          |
-    | name             |   |  |   | mandatory_fields |   | |   | name             |  | |  | status           |
-    | definition       |   |  |   | transport_rule   |   | |   | definition       |  | |  +::::::::::::::::::+
-    | type             |   |  |   | masked_fields    |   | |   | is_active        |  | +-<| submission       |
-    | family           |   |  |   | is_encrypted     |   | |   | is_read_only     |  +---<| mapping          |
-    +------------------+   |  |   +::::::::::::::::::+   | |   +::::::::::::::::::+       | mapping_rev      |
-                           |  +--<| project          |   | +--<| mappingset       |   +--<| projectschema    |
-                           +-----<| schema           |   +---<<| projectschemas   |   |   | project(**)      |
-                                  +------------------+   |     | project(**)      |   |   +------------------+
-                                                         |     +------------------+   |
-                                                         +----------------------------+
+    +------------------+      |   +------------------+     |   +------------------+    |   +------------------+
+    | Schema           |      |   | ProjectSchema    |     |   | Mapping          |    |   | Entity           |
+    +==================+      |   +==================+     |   +==================+    |   +==================+
+    | id               |<--+  |   | id               |<--+ |   | id               |<-+ |   | id               |
+    | created          |   |  |   | created          |   | |   | created          |  | |   | modified         |
+    | modified         |   |  |   | modified         |   | |   | modified         |  | |   | revision         |
+    | revision         |   |  |   | name             |   | |   | revision         |  | |   | payload          |
+    | name             |   |  |   | mandatory_fields |   | |   | name             |  | |   | status           |
+    | definition       |   |  |   | transport_rule   |   | |   | definition       |  | |   +::::::::::::::::::+
+    | type             |   |  |   | masked_fields    |   | |   | is_active        |  | +--<| submission       |
+    | family           |   |  |   | is_encrypted     |   | |   | is_read_only     |  +----<| mapping          |
+    +------------------+   |  |   +::::::::::::::::::+   | |   +::::::::::::::::::+        | mapping_rev      |
+                           |  +--<| project          |   | +--<| mappingset       |  +----<| projectschema    |
+                           +-----<| schema           |   +---<<| projectschemas   |  |     | project(**)      |
+                                  +------------------+   |     | project(**)      |  |     | schema(**)       |
+                                                         |     +------------------+  |     +------------------+
+                                                         +---------------------------+
 '''
 
 
@@ -133,6 +133,18 @@ class Project(ExportModelOperationsMixin('kernel_project'), TimeStampedModel):
 
     def __str__(self):
         return self.name
+
+    def delete(self, *args, **kwargs):
+        # find the linked passthrough schemas
+        for schema in Schema.objects.filter(family=str(self.pk)):
+            # delete the schema if is not used in more projects
+            if schema.projectschemas.exclude(project=self).count() == 0:
+                schema.delete()
+            else:
+                schema.family = None  # remove passthrough flag
+                schema.save()
+
+        super(Project, self).delete(*args, **kwargs)
 
     class Meta:
         app_label = 'kernel'
@@ -507,6 +519,7 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
     :ivar text           mapping_revision:  Mapping revision at the moment of the extraction.
     :ivar ProjectSchema  projectschema:     The AVRO schema of the extracted data.
     :ivar Project        project:           Project (redundant but speed up queries).
+    :ivar Schema         schema :           Schema (redundant but speed up queries).
 
     '''
 
@@ -540,12 +553,23 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
     )
 
     # redundant but speed up queries
+    # WARNING:  the project deletion has consequences
     project = models.ForeignKey(
         to=Project,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
         verbose_name=_('project'),
+    )
+
+    # redundant but speed up queries
+    # WARNING:  the schema deletion has consequences
+    schema = models.ForeignKey(
+        to=Schema,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name=_('schema'),
     )
 
     @property
@@ -561,7 +585,7 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
                 if v == str(self.projectschema.pk):
                     return f'{self.project.name}-{k}'
         if self.projectschema:
-            return f'{self.project.name}-{self.projectschema.schema.schema_name}'
+            return f'{self.project.name}-{self.schema.schema_name}'
         if self.submission:
             return self.submission.name
         if self.project:
@@ -569,14 +593,16 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
         return None
 
     def save(self, **kwargs):
+        if self.projectschema:  # redundant values taken from project schema
+            self.project = self.projectschema.project
+            self.schema = self.projectschema.schema
+
         if self.submission and self.projectschema:
             if self.submission.project != self.projectschema.project:
                 raise IntegrityError(_('Submission and Project Schema MUST belong to the same Project'))
             self.project = self.submission.project
         elif self.submission:
             self.project = self.submission.project
-        elif self.projectschema:
-            self.project = self.projectschema.project
 
         if self.modified:
             self.modified = '{}-{}'.format(datetime.now().isoformat(), self.modified[27:None])
