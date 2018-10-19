@@ -237,3 +237,87 @@ class ModelsTests(TransactionTestCase):
         second_project = models.Project.objects.get(pk=second_id)
         self.assertIsNotNone(second_project)
         self.assertEqual(second_project.name, 'a second project name')
+
+    def test_model_deletion(self):
+
+        project = models.Project.objects.create(
+            name='project',
+        )
+        schema = models.Schema.objects.create(
+            name='schema',
+            definition={},
+        )
+        projectschema = models.ProjectSchema.objects.create(
+            name='project schema',
+            project=project,
+            schema=schema,
+        )
+        entity = models.Entity.objects.create(
+            payload={},
+            status='Publishable',
+            projectschema=projectschema,
+        )
+
+        entity_2 = models.Entity.objects.create(
+            payload={},
+            status='Publishable',
+            schema=schema,
+        )
+
+        # delete the project will not delete the schema but one of the entities
+        project.delete()
+
+        self.assertTrue(models.Schema.objects.filter(pk=schema.pk).exists())
+        self.assertFalse(models.Entity.objects.filter(pk=entity.pk).exists(), 'project CASCADE action')
+        self.assertTrue(models.Entity.objects.filter(pk=entity_2.pk).exists(), 'Not linked to the project')
+        self.assertFalse(models.Project.objects.filter(pk=project.pk).exists())
+        self.assertFalse(models.ProjectSchema.objects.filter(pk=projectschema.pk).exists())
+
+        # repeat again but this time the schema is a passthrough schema
+
+        project = models.Project.objects.create(
+            name='project',
+        )
+        projectschema = models.ProjectSchema.objects.create(
+            name='project schema',
+            project=project,
+            schema=schema,
+        )
+        schema.family = str(project.pk)
+        schema.save()
+
+        # delete the project will delete the schema and the entity
+        project.delete()
+
+        self.assertFalse(models.Schema.objects.filter(pk=schema.pk).exists())
+        self.assertFalse(models.Entity.objects.filter(pk=entity_2.pk).exists(), 'schema CASCADE action')
+        self.assertFalse(models.Project.objects.filter(pk=project.pk).exists())
+        self.assertFalse(models.ProjectSchema.objects.filter(pk=projectschema.pk).exists())
+
+        # one more time but with more agents in the loop
+
+        project = models.Project.objects.create(
+            name='project',
+        )
+        schema = models.Schema.objects.create(
+            name='schema',
+            definition={},
+            family=str(project.pk),
+        )
+        projectschema = models.ProjectSchema.objects.create(
+            name='project schema',
+            project=project,
+            schema=schema,
+        )
+        models.ProjectSchema.objects.create(
+            name='project schema 2',
+            project=models.Project.objects.create(name='project 2'),
+            schema=schema,
+        )
+
+        # delete the project will not delete the schema but clean the family content
+        project.delete()
+
+        self.assertTrue(models.Schema.objects.filter(pk=schema.pk).exists())
+        schema.refresh_from_db()
+        self.assertIsNone(schema.family)
