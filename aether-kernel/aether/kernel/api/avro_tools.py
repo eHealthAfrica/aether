@@ -260,6 +260,8 @@ class AvroValidator(object):
         failed validation.
         '''
         typename = AvroValidator.get_schema_typename(schema)
+        if isinstance(datum, str):
+            datum = f'"{datum}"'
         error = AvroValidationError(expected=typename, datum=datum, path=path)
         self.errors.append(error)
         return False
