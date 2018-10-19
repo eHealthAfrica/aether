@@ -186,7 +186,10 @@ class EntityFilter(filters.FilterSet):
 
     def passthrough__filter(self, queryset, name, value):
         if value == 'true':
-            return queryset.filter(projectschema__schema__family=Cast('project__pk', TextField()))
+            return queryset.filter(
+                projectschema__schema__family=Cast('project__pk', TextField()),
+                mapping__is_read_only=True,
+            )
         return queryset
 
     class Meta:
