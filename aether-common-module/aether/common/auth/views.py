@@ -44,7 +44,7 @@ def obtain_auth_token(request):
     user_model = UserModel.objects
 
     try:
-        username = request.POST['username']
+        username = request.data['username']
 
         # gets the existing user or creates a new one
         try:
