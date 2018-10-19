@@ -323,22 +323,22 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
                             {
                                 'name': 'latitude',
                                 'doc': _('latitude'),
-                                'type': __get_avro_primitive_type('float', True),
+                                'type': __get_avro_primitive_type('float', required=False),
                             },
                             {
                                 'name': 'longitude',
                                 'doc': _('longitude'),
-                                'type': __get_avro_primitive_type('float', True),
+                                'type': __get_avro_primitive_type('float', required=False),
                             },
                             {
                                 'name': 'altitude',
                                 'doc': _('altitude'),
-                                'type': __get_avro_primitive_type('float', False),
+                                'type': __get_avro_primitive_type('float', required=False),
                             },
                             {
                                 'name': 'accuracy',
                                 'doc': _('accuracy'),
-                                'type': __get_avro_primitive_type('float', False),
+                                'type': __get_avro_primitive_type('float', required=False),
                             },
                         ],
                     },
@@ -349,7 +349,10 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         else:
             parent['fields'].append({
                 'name': current_name,
-                'type': __get_avro_primitive_type(current_type, definition.get('required')),
+                # Since an Avro schema does not contain the same branching logic as an XForm,
+                # a field that is mandatory in a form is not actually always present,
+                # and therefore cannot be required in the schema.
+                'type': __get_avro_primitive_type(current_type, required=False),
                 'doc': current_doc,
             })
 
