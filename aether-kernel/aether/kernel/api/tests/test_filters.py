@@ -181,7 +181,7 @@ class TestFilters(TestCase):
             # Request a list of all entities, filtered by `schema`.
             # This checks that EntityFilter.schema exists and that
             # EntityFilter has been correctly configured.
-            expected = set([str(e.id) for e in models.Entity.objects.filter(projectschema__schema=schema)])
+            expected = set([str(e.id) for e in schema.entities.all()])
 
             # by id
             kwargs = {'schema': str(schema.id), 'fields': 'id', 'page_size': entities_count}
@@ -274,7 +274,7 @@ class TestFilters(TestCase):
             project = schema.projectschemas.first().project
             schema.family = str(project.pk)
             schema.save()
-            expected.update([str(e.id) for e in models.Entity.objects.filter(projectschema__schema=schema)])
+            expected.update([str(e.id) for e in schema.entities.all()])
 
         self.assertNotEqual(len(expected), 0, 'there are passthrough entities')
         self.assertNotEqual(entities_count, len(expected), 'there are even more entities')
@@ -296,7 +296,7 @@ class TestFilters(TestCase):
 
             own_project = schema.projectschemas.first().project
             if own_project == project:  # the only passthrough schema
-                expected = set([str(e.id) for e in models.Entity.objects.filter(projectschema__schema=schema)])
+                expected = set([str(e.id) for e in schema.entities.all()])
 
         self.assertNotEqual(len(expected), 0, 'there are passthrough entities')
         self.assertNotEqual(entities_count, len(expected), 'there are even more entities')
