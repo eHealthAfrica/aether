@@ -70,7 +70,8 @@ class ViewsTest(TestCase):
 
         self.schema = models.Schema.objects.create(
             name='schema1',
-            type='People',
+            type='eha.test.schemas',
+            family='Person',
             definition=EXAMPLE_SCHEMA,
             revision='a sample revision',
         )
@@ -84,7 +85,9 @@ class ViewsTest(TestCase):
             project=self.project,
             schema=self.schema,
         )
+        # update the fake value with a real one
         EXAMPLE_MAPPING['entities']['Person'] = str(self.projectschema.pk)
+
         self.mappingset = models.MappingSet.objects.create(
             name='a sample mapping set',
             input={},
@@ -135,9 +138,9 @@ class ViewsTest(TestCase):
         data = json.dumps(data)
         response = self.client.post(url, data, content_type='application/json')
         if is_negative:
-            self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST, response.content)
         else:
-            self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+            self.assertEquals(response.status_code, status.HTTP_201_CREATED, response.content)
         return response
 
     def test_api_create_instance(self):
@@ -250,7 +253,7 @@ class ViewsTest(TestCase):
         updated_data = json.dumps(updated_data)
         response = self.client.put(url, updated_data, content_type='application/json')
         if is_negative:
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.status_code)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.content)
         else:
             self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
         return response
@@ -407,49 +410,108 @@ class ViewsTest(TestCase):
         )
 
     def test_project_stats_view(self):
-        project = models.Project.objects.create(
-            revision='rev 1',
-            name='a project with stats',
+        # cleaning data
+        models.Submission.objects.all().delete()
+        self.assertEqual(models.Submission.objects.count(), 0)
+        models.Entity.objects.all().delete()
+        self.assertEqual(models.Entity.objects.count(), 0)
+
+        projectschema_2 = models.ProjectSchema.objects.create(
+            name='a project schema with stats',
+            project=self.project,
+            schema=models.Schema.objects.create(
+                name='another schema',
+                type='eha.test.schemas',
+                family=str(self.project.pk),  # identifies passthrough schemas
+                definition={
+                    'name': 'Person',
+                    'type': 'record',
+                    'fields': [{'name': 'id', 'type': 'string'}]
+                },
+                revision='a sample revision',
+            ),
         )
-        mappingset = models.MappingSet.objects.create(
-            name=str(uuid.uuid4()),  # random name
-            revision='Sample mapping set revision',
-            project=project,
-            input={}
+        mapping_2 = models.Mapping.objects.create(
+            name='a read only mapping with stats',
+            definition={
+                'entities': {'Person': str(projectschema_2.pk)},
+                'mapping': [['#!uuid', 'Person.id']],
+            },
+            mappingset=self.mappingset,
+            is_read_only=True,
         )
+
         for _ in range(4):
-            response = self.helper_create_object('mapping-list', {
-                'name': str(uuid.uuid4()),  # random name
-                'definition': {},
-                'revision': 'Sample mapping revision',
-                'mappingset': str(mappingset.pk),
-                'projectschemas': [str(self.projectschema.pk)],
-            })
-            for __ in range(10):
+            for __ in range(5):
+                # this will also trigger the entities extraction
+                # (4 entities per submission -> 3 for self.projectschema + 1 for projectschema_2)
                 self.helper_create_object('submission-list', {
-                    'revision': 'Sample submission revision',
                     'payload': EXAMPLE_SOURCE_DATA,
-                    'mappingset': str(mappingset.pk),
+                    'mappingset': str(self.mappingset.pk),
                 })
-        url = reverse('projects_stats-detail', kwargs={'pk': project.pk})
+
+        submissions_count = models.Submission \
+                                  .objects \
+                                  .filter(mappingset__project=self.project) \
+                                  .count()
+        self.assertEqual(submissions_count, 20)
+
+        entities_count = models.Entity \
+                               .objects \
+                               .filter(submission__mappingset__project=self.project) \
+                               .count()
+        self.assertEqual(entities_count, 80)
+
+        family_person_entities_count = models.Entity \
+                                             .objects \
+                                             .filter(mapping=self.mapping) \
+                                             .count()
+        self.assertEqual(family_person_entities_count, 60)
+
+        passthrough_entities_count = models.Entity \
+                                           .objects \
+                                           .filter(mapping=mapping_2) \
+                                           .count()
+        self.assertEqual(passthrough_entities_count, 20)
+
+        url = reverse('projects_stats-detail', kwargs={'pk': self.project.pk})
         response = self.client.get(url, format='json')
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         json = response.json()
-        self.assertEquals(json['id'], str(project.pk))
-        submissions_count = models.Submission \
-                                  .objects \
-                                  .filter(mappingset__project=project.pk) \
-                                  .count()
+        self.assertEquals(json['id'], str(self.project.pk))
         self.assertEquals(json['submissions_count'], submissions_count)
-        entities_count = models.Entity \
-                               .objects \
-                               .filter(submission__mappingset__project=project.pk) \
-                               .count()
         self.assertEquals(json['entities_count'], entities_count)
         self.assertLessEqual(
             dateutil.parser.parse(json['first_submission']),
             dateutil.parser.parse(json['last_submission']),
         )
+
+        # let's try with the family filter
+        response = self.client.get(f'{url}?family=Person', format='json')
+        json = response.json()
+        self.assertEquals(json['submissions_count'], submissions_count)
+        self.assertNotEqual(json['entities_count'], entities_count)
+        self.assertEquals(json['entities_count'], family_person_entities_count)
+
+        # let's try again but with an unexistent family
+        response = self.client.get(f'{url}?family=unknown', format='json')
+        json = response.json()
+        self.assertEquals(json['submissions_count'], submissions_count)
+        self.assertEquals(json['entities_count'], 0, 'No entities in this family')
+
+        # let's try with using the project id
+        response = self.client.get(f'{url}?family={str(self.project.pk)}', format='json')
+        json = response.json()
+        self.assertEquals(json['submissions_count'], submissions_count)
+        self.assertNotEqual(json['entities_count'], entities_count)
+        self.assertEquals(json['entities_count'], passthrough_entities_count)
+
+        # let's try with the passthrough filter
+        response = self.client.get(f'{url}?passthrough=true', format='json')
+        json = response.json()
+        self.assertEquals(json['submissions_count'], submissions_count)
+        self.assertNotEqual(json['entities_count'], entities_count)
+        self.assertEquals(json['entities_count'], passthrough_entities_count)
 
     def test_mapping_set_stats_view(self):
         url = reverse('mappingsets_stats-detail', kwargs={'pk': self.mappingset.pk})
@@ -651,7 +713,10 @@ class ViewsTest(TestCase):
             content_type='application/json'
         ).json()
         self.assertEqual(response_patch, {
-            'project': project_id, 'schemas': [], 'project_schemas': [], 'mappings': [],
+            'project': project_id,
+            'schemas': [],
+            'project_schemas': [],
+            'mappings': [],
             'mappingsets': []
         })
         project = models.Project.objects.get(pk=project_id)
@@ -660,7 +725,10 @@ class ViewsTest(TestCase):
         # try to retrieve again
         response_get = self.client.get(url).json()
         self.assertEqual(response_get, {
-            'project': project_id, 'schemas': [], 'project_schemas': [], 'mappings': [],
+            'project': project_id,
+            'schemas': [],
+            'project_schemas': [],
+            'mappings': [],
             'mappingsets': []
         })
 
@@ -788,14 +856,76 @@ class ViewsTest(TestCase):
     def test_project__schemas_skeleton(self):
         self.assertEqual(reverse('project-skeleton', kwargs={'pk': 1}),
                          '/projects/1/schemas-skeleton/')
-
-        response = self.client.get(reverse('project-skeleton', kwargs={'pk': self.project.pk}))
+        url = reverse('project-skeleton', kwargs={'pk': self.project.pk})
+        response = self.client.get(url)
         self.assertEquals(response.status_code, 200)
         json = response.json()
         self.assertEqual(json, {
             'jsonpaths': ['id', '_rev', 'name', 'dob', 'villageID'],
             'docs': {'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
             'name': 'a project name-Person',
+            'schemas': 1,
+        })
+
+        # try with family parameter
+        response = self.client.get(f'{url}?family=Person')
+        self.assertEquals(response.status_code, 200)
+        json = response.json()
+        self.assertEqual(json, {
+            'jsonpaths': ['id', '_rev', 'name', 'dob', 'villageID'],
+            'docs': {'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
+            'name': 'a project name-Person',
+            'schemas': 1,
+        })
+
+        response = self.client.get(f'{url}?family=City')
+        self.assertEquals(response.status_code, 200)
+        json = response.json()
+        self.assertEqual(json, {
+            'jsonpaths': [],
+            'docs': {},
+            'name': 'a project name',
+            'schemas': 0,
+        })
+
+        # try with passthrough parameter
+        response = self.client.get(f'{url}?passthrough=true')
+        self.assertEquals(response.status_code, 200)
+        json = response.json()
+        self.assertEqual(json, {
+            'jsonpaths': [],
+            'docs': {},
+            'name': 'a project name',
+            'schemas': 0,
+        })
+
+        # create and assign passthrough schema
+        models.ProjectSchema.objects.create(
+            name='a passthrough project schema',
+            project=self.project,
+            schema=models.Schema.objects.create(
+                name='passthrough schema',
+                type='eha.test.schemas',
+                family=str(self.project.pk),  # identifies passthrough schemas
+                definition={
+                    'name': 'passthrough',
+                    'type': 'record',
+                    'fields': [{
+                        'name': 'one',
+                        'type': 'string',
+                    }]
+                },
+                revision='a sample revision',
+            ),
+        )
+        response = self.client.get(f'{url}?passthrough=true')
+        self.assertEquals(response.status_code, 200)
+        json = response.json()
+        self.assertEqual(json, {
+            'jsonpaths': ['one'],
+            'docs': {},  # "one" field does not have "doc"
+            'name': 'a project name-passthrough',
+            'schemas': 1,
         })
 
     def test_project__schemas_skeleton__no_linked_data(self):
@@ -810,6 +940,7 @@ class ViewsTest(TestCase):
             'jsonpaths': [],
             'docs': {},
             'name': 'Alone',
+            'schemas': 0,
         })
 
         models.ProjectSchema.objects.create(
@@ -829,6 +960,7 @@ class ViewsTest(TestCase):
             'jsonpaths': [],
             'docs': {},
             'name': 'Alone-Second',
+            'schemas': 2,
         })
 
     def test_schema__skeleton(self):

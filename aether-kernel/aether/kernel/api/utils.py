@@ -17,6 +17,7 @@
 # under the License.
 
 import collections
+import fnmatch
 import json
 import logging
 import re
@@ -28,6 +29,7 @@ from spavro.schema import parse as parse_schema
 from spavro.io import validate
 
 from django.utils.safestring import mark_safe
+from django.utils.translation import ugettext as _
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import JsonLexer
@@ -54,7 +56,15 @@ class CachedParser(object):
     def parse(path):
         # we never need to call parse directly; use find()
         if path not in CachedParser.cache.keys():
-            CachedParser.cache[path] = jsonpath_ng_ext_parse(path)
+            try:
+                CachedParser.cache[path] = jsonpath_ng_ext_parse(path)
+            except Exception as err:  # jsonpath-ng raises the base exception type
+                new_err = _('exception parsing path {path} : {error} ').format(
+                    path=path, error=err
+                )
+                logger.error(new_err)
+                raise EntityValidationError(new_err) from err
+
         return CachedParser.cache[path]
 
     @staticmethod
@@ -97,7 +107,7 @@ def json_prettified(value, indent=2):
     Function to display pretty version of our json data
     https://www.pydanny.com/pretty-formatting-json-django-admin.html
     '''
-    return __prettified__(json.dumps(value, sort_keys=True, indent=indent), JsonLexer())
+    return __prettified__(json.dumps(value, indent=indent), JsonLexer())
 
 
 def code_prettified(value):
@@ -123,8 +133,14 @@ def json_printable(obj):
         return obj
 
 
-custom_jsonpath_wildcard_regex = re.compile(
-    '(\$\.)*([a-zA-Z0-9_-]+\.)*?[a-zA-Z0-9_-]+\*')
+# RegEx for jsonpaths containing a partial wildcard as a key:
+# $.path.to[*].key_* where the matching path might be $.path.to[1].key_1
+# or with invertes position:
+# $.path.key_*.to[*].field for $.path.key_27.to[1].field
+custom_jsonpath_wildcard_regex = re.compile('(\$)?(\.)?([a-zA-Z0-9_-]*(\[.*\])*\.)?[a-zA-Z0-9_-]+\*')
+# RegEx for the part of a JSONPath matching the previous RegEx which is non-compliant with the
+# JSONPath spec.
+# Ex: key_* in the path $.path.key_*.to[*].field
 incomplete_json_path_regex = re.compile('[a-zA-Z0-9_-]+\*')
 
 
@@ -154,20 +170,21 @@ def find_by_jsonpath(obj, path):
         #     prefix = 'dose-'
         #     standard_jsonpath = '*.id'
 
-        split_pos = match.end() - 1
-        prefix = path[:split_pos].replace('$.', '')
+        # first part of path before wildcard
+        prefix = path[:match.end()].replace('$.', '')
+        # replace any indexed portion with a wildcard for use in fnmatch filtering
+        # because a valid jsonpath like item[0] is reported as item.[0] when matched
+        # by jsonpath-ng
+        wild_path = re.sub('(\[.*\])+', '*', prefix)
         illegal = incomplete_json_path_regex.search(path)
         standard_jsonpath = path[:illegal.start()] + '*' + path[illegal.end():]
 
         # Perform an standard jsonpath search.
-        result = []
         matches = CachedParser.find(standard_jsonpath, obj)
-        for item in matches:
-            full_path = str(item.full_path)
-            # Only include item if its full path starts with `prefix`.
-            if full_path.startswith(prefix):
-                result.append(item)
-        return result
+        # filter matching jsonpathes for adherence to partial wildpath
+        matching_paths = fnmatch.filter([str(i.full_path) for i in matches], wild_path)
+        return [i for i in matches if str(i.full_path) in matching_paths]
+
     else:
         # Otherwise, perform a standard jsonpath search of `obj`.
         matches = CachedParser.find(path, obj)
@@ -294,12 +311,17 @@ def coerce(v, _type='string'):
     try:
         fn = constant_type_coercions[_type]
     except KeyError:
-        raise ValueError('%s not in available types for constants, %s' %
-                         (_type, [i for i in constant_type_coercions.keys()],))
+        raise ValueError(_('{type} not in available types for constants, {constants}').format(
+            type=_type,
+            constants=[i for i in constant_type_coercions.keys()],
+        ))
     try:
         return fn(v)
     except ValueError as err:
-        raise ValueError('value: %s could not be coerced to type %s' % (v, _type))
+        raise ValueError(_('value: {value} could not be coerced to type {type}').format(
+            value=v,
+            type=_type,
+        ))
 
 
 def action_constant(args):
@@ -333,14 +355,14 @@ def anchor_reference(source, context, source_data, instance_number):
         if len(obj_matches) >= instance_number:
             this_obj = obj_matches[instance_number].value
         else:
-            raise ValueError('source: %s unresolved' % (source))
+            raise ValueError(_('source: {} unresolved').format(str(source)))
         obj_matches = find_by_jsonpath(source_data, context)
         if not obj_matches:
-            raise ValueError('context: %s unresolved' % (context))
+            raise ValueError(_('context: {} unresolved').format(str(context)))
         for idx, match in enumerate(obj_matches):
             if object_contains(this_obj, match.value):
                 return idx
-        raise ValueError('Object match not found in context')
+        raise ValueError(_('Object match not found in context'))
     except Exception as err:
         logger.error(err)
         return -1
@@ -372,7 +394,7 @@ def resolve_entity_reference(
         if idx >= 0:
             return matches[idx].value
     if len(matches) < 1:
-        raise ValueError('path %s has no matches; aborting' % entity_jsonpath)
+        raise ValueError(_('path {} has no matches; aborting').format(entity_jsonpath))
     if len(matches) < 2:
         # single value
         return matches[0].value
@@ -467,7 +489,7 @@ def extractor_action(
     elif action == 'constant':
         return action_constant(args)
     else:
-        raise ValueError('No action with name %s' % action)
+        raise ValueError(_('No action with name {}').format(action))
 
 
 def extract_entity(entity_type, entities, requirements, data, entity_stub):
@@ -521,7 +543,7 @@ def validate_entity_payload_id(entity_payload):
         uuid.UUID(id_, version=4)
         return None
     except (ValueError, AttributeError, TypeError):
-        return {'description': 'Entity id "{}" is not a valid uuid'.format(id_)}
+        return {'description': _('Entity id "{}" is not a valid uuid').format(id_)}
 
 
 def validate_avro(schema, datum):
@@ -702,7 +724,7 @@ def validate_payload(schema_definition, payload):
         avro_schema = parse_schema(json.dumps(schema_definition))
         valid = validate(avro_schema, payload)
         if not valid:
-            msg = 'Extracted record did not conform to registered schema'
+            msg = _('Extracted record did not conform to registered schema')
             raise EntityValidationError(msg)
         return True
     except Exception as err:

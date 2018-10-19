@@ -54,7 +54,8 @@ class ModelsTests(TransactionTestCase):
         self.assertEquals(str(mappingset), mappingset.name)
         self.assertNotEqual(models.MappingSet.objects.count(), 0)
         self.assertEquals(str(mappingset.project), str(project))
-        self.assertTrue(mappingset.input_prettified is not None)
+        self.assertIsNotNone(mappingset.input_prettified)
+        self.assertIsNotNone(mappingset.schema_prettified)
 
         mapping = models.Mapping.objects.create(
             name='sample mapping',
@@ -64,7 +65,7 @@ class ModelsTests(TransactionTestCase):
         )
         self.assertEquals(str(mapping), mapping.name)
         self.assertNotEqual(models.Mapping.objects.count(), 0)
-        self.assertTrue(mapping.definition_prettified is not None)
+        self.assertIsNotNone(mapping.definition_prettified)
         self.assertEqual(mapping.projectschemas.count(), 0, 'No entities in definition')
 
         submission = models.Submission.objects.create(
@@ -73,7 +74,7 @@ class ModelsTests(TransactionTestCase):
             mappingset=mappingset,
         )
         self.assertNotEqual(models.Submission.objects.count(), 0)
-        self.assertTrue(submission.payload_prettified is not None)
+        self.assertIsNotNone(submission.payload_prettified)
         self.assertEqual(submission.project, project, 'submission inherits mapping project')
         self.assertEqual(submission.name, 'a project name-a sample mapping set')
 
@@ -106,16 +107,12 @@ class ModelsTests(TransactionTestCase):
         )
         self.assertEquals(str(schema), schema.name)
         self.assertNotEqual(models.Schema.objects.count(), 0)
-        self.assertTrue(schema.definition_prettified is not None)
-        self.assertEqual(schema.family_name, 'sample schema')
+        self.assertIsNotNone(schema.definition_prettified)
+        self.assertEqual(schema.schema_name, 'sample schema')
 
         schema.definition = {'name': 'Person'}
         schema.save()
-        self.assertEqual(schema.family_name, 'Person')
-
-        schema.family = 'People'
-        schema.save()
-        self.assertEqual(schema.family_name, 'People')
+        self.assertEqual(schema.schema_name, 'Person')
 
         projectschema = models.ProjectSchema.objects.create(
             name='sample project schema',
@@ -134,9 +131,9 @@ class ModelsTests(TransactionTestCase):
             submission=submission,
         )
         self.assertNotEqual(models.Entity.objects.count(), 0)
-        self.assertTrue(entity.payload_prettified is not None)
+        self.assertIsNotNone(entity.payload_prettified)
         self.assertEqual(entity.project, project, 'entity inherits submission project')
-        self.assertEqual(entity.name, f'{project.name}-{schema.family_name}')
+        self.assertEqual(entity.name, f'{project.name}-{schema.schema_name}')
 
         project_2 = models.Project.objects.create(
             revision='rev 1',
@@ -161,7 +158,7 @@ class ModelsTests(TransactionTestCase):
         entity.submission = None
         entity.save()
         self.assertEqual(entity.project, project_2, 'entity inherits projectschema project')
-        self.assertEqual(entity.name, f'{project_2.name}-{schema.family_name}')
+        self.assertEqual(entity.name, f'{project_2.name}-{schema.schema_name}')
 
         # keeps last project
         entity.projectschema = None
@@ -185,7 +182,7 @@ class ModelsTests(TransactionTestCase):
         entity.projectschema = projectschema
         entity.save()
         self.assertEqual(entity.project, project, 'entity inherits projectschema project')
-        self.assertEqual(entity.name, f'{project.name}-{schema.family_name}')
+        self.assertEqual(entity.name, f'{project.name}-{schema.schema_name}')
 
         # try to build entity name with mapping entity entries
         projectschema_3 = models.ProjectSchema.objects.create(

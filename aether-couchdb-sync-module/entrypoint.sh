@@ -51,7 +51,7 @@ show_help () {
 }
 
 pip_freeze () {
-    pip install virtualenv
+    pip install -q virtualenv
     rm -rf /tmp/env
 
     virtualenv -p python3 /tmp/env/

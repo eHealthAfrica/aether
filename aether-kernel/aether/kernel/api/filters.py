@@ -16,6 +16,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.db.models import TextField
+from django.db.models.functions import Cast
+
 import django_filters.rest_framework as filters
 import uuid
 
@@ -54,9 +57,9 @@ class MappingFilter(filters.FilterSet):
 
     def projectschema_filter(self, queryset, name, value):
         if is_uuid(value):
-            return queryset.filter(projectschemas__pk__in=[value])
+            return queryset.filter(projectschemas__pk=value)
         else:
-            return queryset.filter(projectschemas__name__in=[value])
+            return queryset.filter(projectschemas__name=value)
 
     class Meta:
         fields = '__all__'
@@ -82,9 +85,6 @@ class MappingSetFilter(filters.FilterSet):
 
 
 class SubmissionFilter(filters.FilterSet):
-    instanceID = filters.CharFilter(
-        field_name='payload__meta__instanceID',
-    )
     project = filters.CharFilter(
         method='project_filter',
     )
@@ -133,6 +133,16 @@ class SchemaFilter(filters.FilterSet):
 
 
 class ProjectSchemaFilter(filters.FilterSet):
+    mapping = filters.CharFilter(
+        method='mapping_filter',
+    )
+
+    def mapping_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(mappings__pk=value)
+        else:
+            return queryset.filter(mappings__name=value)
+
     class Meta:
         fields = '__all__'
         model = models.ProjectSchema
@@ -150,6 +160,10 @@ class EntityFilter(filters.FilterSet):
     )
     family = filters.CharFilter(
         field_name='projectschema__schema__family',
+        lookup_expr='iexact',  # case-insensitive
+    )
+    passthrough = filters.CharFilter(
+        method='passthrough__filter',
     )
 
     def project_filter(self, queryset, name, value):
@@ -169,6 +183,14 @@ class EntityFilter(filters.FilterSet):
             return queryset.filter(mapping__pk=value)
         else:
             return queryset.filter(mapping__name=value)
+
+    def passthrough__filter(self, queryset, name, value):
+        if value == 'true':
+            return queryset.filter(
+                projectschema__schema__family=Cast('project__pk', TextField()),
+                mapping__is_read_only=True,
+            )
+        return queryset
 
     class Meta:
         fields = '__all__'

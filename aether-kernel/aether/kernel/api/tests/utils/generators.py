@@ -153,6 +153,7 @@ def generate_project(
                 default=dict(
                     mappingset=mappingset,
                     definition=mapping_definition(projectschema.pk),
+                    projectschemas=[projectschema],
                 ),
                 values=mapping_field_values,
             ),

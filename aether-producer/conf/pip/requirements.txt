@@ -11,15 +11,15 @@
 #                                                                              #
 ################################################################################
 
-aether.client>=0.10.0
+aether.client>=0.11.0
 bravado==10.1.0
 bravado-core==5.0.7
-certifi==2018.8.24
+certifi==2018.10.15
 chardet==3.0.4
 Click==7.0
 confluent-kafka==0.11.5
 Flask==1.0.2
-gevent==1.3.6
+gevent==1.3.7
 greenlet==0.4.15
 idna==2.7
 itsdangerous==0.24
