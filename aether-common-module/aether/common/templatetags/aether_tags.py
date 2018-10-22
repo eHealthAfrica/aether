@@ -26,6 +26,7 @@ register = template.Library()
 def get_fullname(user):
     '''
     Returns a readable name of the user.
+
     - ``first_name`` + ``last_name``
     - ``name``
     - ``username``
