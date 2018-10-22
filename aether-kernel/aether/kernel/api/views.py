@@ -404,7 +404,7 @@ class EntityViewSet(exporter.ExporterViewSet):
                     linked_entity_schema_name = linked_entity.projectschema.schema.name
 
                     resolved[linked_entity_schema_name] = resolved.get(linked_entity_schema_name, {})
-                    resolved[linked_entity_schema_name][linked_data_ref] = serializers.EntityLDSerializer(
+                    resolved[linked_entity_schema_name][linked_data_ref] = self.serializer_class(
                         linked_entity,
                         context={'request': request},
                     ).data
@@ -429,7 +429,7 @@ class EntityViewSet(exporter.ExporterViewSet):
             except Exception as e:
                 return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(serializers.EntitySerializer(instance, context={'request': request}).data)
+        return Response(self.serializer_class(instance, context={'request': request}).data)
 
 
 class SubmissionStatsMixin(object):

@@ -35,7 +35,8 @@ from aether.common.utils import resolve_file_url
 from .constants import NAMESPACE
 from .utils import json_prettified
 
-STATUS_CHOICES = (
+
+ENTITY_STATUS_CHOICES = (
     ('Pending Approval', _('Pending Approval')),
     ('Publishable', _('Publishable')),
 )
@@ -527,7 +528,7 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
     revision = models.TextField(default='1', verbose_name=_('revision'))
 
     payload = JSONField(verbose_name=_('payload'))
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, verbose_name=_('status'))
+    status = models.CharField(max_length=20, choices=ENTITY_STATUS_CHOICES, verbose_name=_('status'))
     modified = models.CharField(max_length=100, editable=False, verbose_name=_('modified'))
 
     submission = models.ForeignKey(

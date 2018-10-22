@@ -17,11 +17,10 @@
 # under the License.
 
 import copy
-import json
 import dateutil.parser
-import uuid
-
+import json
 import mock
+import uuid
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -276,7 +275,22 @@ class ViewsTest(TestCase):
             'payload': {},
             'mappingset': str(self.mappingset.pk)
         }, self.submission)
-        updated_example_payload = EXAMPLE_SOURCE_DATA_ENTITY
+        self.helper_update_object_id('entity-detail', {
+            'revision': 'Sample entity revision updated',
+            # complains without projectschema
+            # 'projectschema': str(self.projectschema.pk),
+        }, self.entity, True)
+        self.helper_update_object_id('entity-detail', {
+            'revision': 'Sample entity revision updated',
+            # complains with non-valid payload
+            'payload': {'id': 1},
+            'merge': 'overwrite',
+            'status': 'Publishable',
+            'projectschema': str(self.projectschema.pk),
+            'mapping': str(self.mapping.pk),
+            'mapping_revision': self.mapping.revision,
+        }, self.entity, True)
+        updated_example_payload = dict(EXAMPLE_SOURCE_DATA_ENTITY)
         updated_example_payload['name'] = 'Person name updated'
         self.helper_update_object_id('entity-detail', {
             'revision': 'Sample entity revision updated',
@@ -286,7 +300,7 @@ class ViewsTest(TestCase):
             'mapping': str(self.mapping.pk),
             'mapping_revision': self.mapping.revision,
         }, self.entity)
-        updated_example_payload = EXAMPLE_SOURCE_DATA_ENTITY
+        updated_example_payload = dict(EXAMPLE_SOURCE_DATA_ENTITY)
         updated_example_payload['name'] = 'Test last name updated'
         updated_example_payload['new_prop'] = 'Test prop updated'
         self.helper_update_object_id('entity-detail', {
@@ -569,11 +583,7 @@ class ViewsTest(TestCase):
                 'Person': EXAMPLE_SCHEMA,
             },
         })
-        response = self.client.post(
-            url,
-            data=data,
-            content_type='application/json'
-        )
+        response = self.client.post(url, data=data, content_type='application/json')
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data['entities']), 0)
         expected = [
@@ -582,9 +592,7 @@ class ViewsTest(TestCase):
             'Expected type "string" at path "Person.dob". Actual value: None',
             'Expected type "string" at path "Person.villageID". Actual value: None',
         ]
-        result = [
-            error['description'] for error in response_data['mapping_errors']
-        ]
+        result = [error['description'] for error in response_data['mapping_errors']]
         self.assertEqual(expected, result)
 
     def test_example_entity_extraction__400_BAD_REQUEST(self):
@@ -604,18 +612,25 @@ class ViewsTest(TestCase):
                     # "not_a_field" is not a field of `Person`
                     ['data.village', 'Person.not_a_field'],
                 ],
-                # "schemas" are missing
             },
         })
-        response = self.client.post(
-            url,
-            data=data,
-            content_type='application/json'
-        )
+        response = self.client.post(url, data=data, content_type='application/json')
         response_data = json.loads(response.content)
         self.assertEquals(response.status_code, 400)
         self.assertIn('This field is required', response_data['schemas'][0])
         self.assertIn('This field is required', response_data['submission_payload'][0])
+
+        # try again with wrong schemas
+        data = json.dumps({
+            'submission_payload': EXAMPLE_SOURCE_DATA,
+            'mapping_definition': EXAMPLE_MAPPING,
+            # "schemas" must be a dictionary
+            'schemas': [],
+        })
+        response = self.client.post(url, data=data, content_type='application/json')
+        response_data = json.loads(response.content)
+        self.assertEquals(response.status_code, 400)
+        self.assertEquals('Value [] is not an Object', response_data['schemas'][0])
 
     def test_example_entity_extraction__500_INTERNAL_SERVER_ERROR(self):
         '''
@@ -642,7 +657,7 @@ class ViewsTest(TestCase):
                 self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             else:
                 self.assertEqual(response.status_code, status.HTTP_200_OK)
-        except Exception as e:
+        except Exception:
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         return response
 
@@ -710,14 +725,14 @@ class ViewsTest(TestCase):
         response_patch = self.client.patch(
             url,
             json.dumps({'name': f'Project {project_id}'}),
-            content_type='application/json'
+            content_type='application/json',
         ).json()
         self.assertEqual(response_patch, {
             'project': project_id,
             'schemas': [],
             'project_schemas': [],
             'mappings': [],
-            'mappingsets': []
+            'mappingsets': [],
         })
         project = models.Project.objects.get(pk=project_id)
         self.assertEqual(project.name, f'Project {project_id}')
@@ -729,7 +744,7 @@ class ViewsTest(TestCase):
             'schemas': [],
             'project_schemas': [],
             'mappings': [],
-            'mappingsets': []
+            'mappingsets': [],
         })
 
     def test_project__avro_schemas__endpoints(self):
@@ -742,7 +757,7 @@ class ViewsTest(TestCase):
         response_patch = self.client.patch(
             url,
             json.dumps({'name': f'Project {project_id}'}),
-            content_type='application/json'
+            content_type='application/json',
         ).json()
         self.assertEqual(response_patch, {
             'project': project_id,
@@ -755,8 +770,7 @@ class ViewsTest(TestCase):
         self.assertEqual(project.name, f'Project {project_id}')
 
     def test_schema_validate_definition__success(self):
-        view_name = 'schema-list'
-        url = reverse(view_name)
+        url = reverse('schema-list')
         data = json.dumps({
             'name': 'Test',
             'type': 'test',
@@ -775,44 +789,44 @@ class ViewsTest(TestCase):
         self.assertEqual(response.status_code, 201)
 
         good_complex_schemas = [
-            json.dumps(  # Has a union type as it's base, but it otherwise ok.
+            # Has a union type as it's base, but it otherwise ok.
+            {
+                'name': 'Test-ab',
+                'type': 'test',
+                'definition': [
                     {
-                        'name': 'Test-ab',
-                        'type': 'test',
-                        'definition': [{
-                            'name': 'Test-a',
-                            'type': 'record',
-                            'aetherBaseSchema': True,
-                            'fields': [
-                                {
-                                    'name': 'id',
-                                    'type': 'string'
-                                }
-                            ]
-                        }, {
-                            'name': 'AProperty',
-                            'type': 'record',
-                            'fields': [
-                                {
-                                    'name': 'other_type',
-                                    'type': 'string'
-                                }
-                            ]
-                        }
+                        'name': 'Test-a',
+                        'type': 'record',
+                        'aetherBaseSchema': True,
+                        'fields': [
+                            {
+                                'name': 'id',
+                                'type': 'string'
+                            }
+                        ]
+                    },
+                    {
+                        'name': 'AProperty',
+                        'type': 'record',
+                        'fields': [
+                            {
+                                'name': 'other_type',
+                                'type': 'string'
+                            }
                         ]
                     }
-            )
+                ]
+            }
         ]
 
         for schema in good_complex_schemas:
-            response = self.client.post(url, schema, content_type='application/json')
+            response = self.client.post(url, json.dumps(schema), content_type='application/json')
             self.assertEqual(response.status_code, 201)
 
     def test_schema_validate_definition__errors(self):
-        view_name = 'schema-list'
-        url = reverse(view_name)
+        url = reverse('schema-list')
         bad_schemas = [
-            json.dumps({
+            {
                 'name': 'Test',
                 'type': 'test',
                 'definition': {
@@ -820,14 +834,15 @@ class ViewsTest(TestCase):
                     'type': 'record',
                     'aetherBaseSchema': True,
                     'fields': [
+                        # missing field "id"
                         {
-                            'name': 'a',  # missing key "id"
+                            'name': 'a',
                             'type': 'string'
                         }
                     ]
                 }
-            }),
-            json.dumps({
+            },
+            {
                 'name': 'Test',
                 'type': 'test',
                 'definition': {
@@ -841,11 +856,11 @@ class ViewsTest(TestCase):
                         }
                     ]
                 }
-            })
+            }
         ]
 
         for schema in bad_schemas:
-            response = self.client.post(url, schema, content_type='application/json')
+            response = self.client.post(url, json.dumps(schema), content_type='application/json')
             response_content = json.loads(response.content)
             self.assertIn(
                 validators.MESSAGE_REQUIRED_ID,
