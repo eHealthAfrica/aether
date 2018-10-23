@@ -145,7 +145,8 @@ function git_branch_commit_and_release() {
     echo ${BRANCH_OR_TAG_VALUE} > VERSION
     git add VERSION
     # make Travis CI skip this build
-    git commit -m "Version updated to ${BRANCH_OR_TAG_VALUE} [ci skip]"
+    COMMIT_MESSAGE="chore: Update VERSION file to ${BRANCH_OR_TAG_VALUE} [ci skip]"
+    git commit -m COMMIT_MESSAGE
     if ! git push --quiet --follow-tags ${REMOTE} ${COMMIT_BRANCH} > /dev/null 2>&1; then
         echo "Failed to push git changes to" $TRAVIS_BRANCH
         exit 1
@@ -168,7 +169,7 @@ function git_branch_commit_and_release() {
         echo "Updating develop branch version to " ${BRANCH_OR_TAG_VALUE}
         echo ${BRANCH_OR_TAG_VALUE} > VERSION
         git add VERSION
-        git commit -m "Version updated to ${BRANCH_OR_TAG_VALUE} [ci skip]" #Skip travis build on develop commit
+        git commit -m COMMIT_MESSAGE #Skip travis build on develop commit
         git push ${REMOTE} develop
     else
         echo "Develop branch VERSION value is not updated"
@@ -184,7 +185,6 @@ then
 
     # Release with unified branch and file versions
     git_branch_commit_and_release ${FILE_VERSION} $TRAVIS_TAG tag
-    exit 0
 
 elif [[ $TRAVIS_BRANCH =~ ^release\-[0-9]+\.[0-9]+[\.0-9]*$ ]]
 then
@@ -195,12 +195,10 @@ then
     BRANCH_VERSION=${ver_number[1]}
     # Release with unified branch and file versions
     git_branch_commit_and_release ${FILE_VERSION} ${BRANCH_VERSION} branch rc
-    exit 0
 elif [[ $TRAVIS_BRANCH = "develop" ]]
 then
     VERSION='alpha'
     release_process
 else
     echo "Skipping a release because this branch is not permitted: ${TRAVIS_BRANCH}"
-    exit 0
 fi
