@@ -16,7 +16,7 @@ An example of this type of entity extraction is [normalizing](https://en.wikiped
 
 In Aether speak, we call this process a **pipeline**.  A pipeline consists of a path that data takes through Aether, and the transformations that it goes through along the way. Within a pipeline, we define one or more _data contracts_ that specify the format of the transformed data, along with rules that define how the input data is transformed to comply with those contracts.
 
-You should already be set up, logged in and looking at a mostly empty **AUX//Pipelines** screen from the [previous step](index)
+You should already be set up, logged in and looking at a mostly empty **Aether//Pipelines** screen from the [previous step](index)
 
 ![AUX](/images/screenshots/pipelines-overview-start.png)
 {: .screenshot}
