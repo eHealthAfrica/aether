@@ -19,7 +19,6 @@
 from django.db.models import Count, Min, Max, TextField, Q, Case, When
 from django.db.models.functions import Cast
 from django.shortcuts import get_object_or_404
-from django.utils.translation import ugettext as _
 
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -411,23 +410,27 @@ class EntityViewSet(exporter.ExporterViewSet):
 
                     # continue with next nested level
                     get_entity_linked_data(linked_entity, request, resolved, depth, start_depth + 1)
-                except Exception:
+                except Exception:  # pragma: no cover
                     pass
             return resolved
 
+        try:
+            depth = request.query_params.get('depth', '0')
+            depth = int(depth)
+            if depth < 0:
+                depth = 0
+            if depth > constants.LINKED_DATA_MAX_DEPTH:
+                # instead of raising an error change the value to the MAXIMUM
+                depth = constants.LINKED_DATA_MAX_DEPTH
+        except Exception:
+            depth = 0
+
         instance = get_object_or_404(models.Entity, pk=pk)
-        depth = request.query_params.get('depth')
-        if depth:
-            try:
-                depth = int(depth)
-                if depth > constants.LINKED_DATA_MAX_DEPTH:
-                    return Response(
-                        {'description': _('Supported max depth is {}').format(constants.LINKED_DATA_MAX_DEPTH)},
-                        status=status.HTTP_400_BAD_REQUEST)
-                else:
-                    instance.resolved = get_entity_linked_data(instance, request, {}, depth)
-            except Exception as e:
-                return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        try:
+            if depth:
+                instance.resolved = get_entity_linked_data(instance, request, {}, depth)
+        except Exception as e:  # pragma: no cover
+            instance.resolved = {}
 
         return Response(self.serializer_class(instance, context={'request': request}).data)
 

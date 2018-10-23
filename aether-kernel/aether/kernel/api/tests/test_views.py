@@ -27,12 +27,16 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from .. import models, constants, validators, utils
+from .. import models, validators, utils
 
 from . import (
-    EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA,
-    SAMPLE_LOCATION_SCHEMA_DEFINITION, SAMPLE_HOUSEHOLD_SCHEMA_DEFINITION,
-    SAMPLE_LOCATION_DATA, SAMPLE_HOUSEHOLD_DATA,
+    EXAMPLE_MAPPING,
+    EXAMPLE_SCHEMA,
+    EXAMPLE_SOURCE_DATA,
+    SAMPLE_HOUSEHOLD_DATA,
+    SAMPLE_HOUSEHOLD_SCHEMA_DEFINITION,
+    SAMPLE_LOCATION_DATA,
+    SAMPLE_LOCATION_SCHEMA_DEFINITION,
 )
 
 
@@ -333,18 +337,11 @@ class ViewsTest(TestCase):
             self.assertEquals(response.status_code, 500)
 
     # Test resolving linked entities
-    def helper_read_linked_data_entities(self, view_name, obj, depth):
-        url = reverse(view_name, kwargs={'pk': obj.pk}) + '?depth=' + str(depth)
+    def helper_read_linked_data_entities(self, obj, depth):
+        url = reverse('entity-detail', kwargs={'pk': obj.pk}) + '?depth=' + str(depth)
         response = self.client.get(url, format='json')
-        try:
-            int(depth)
-            if depth > constants.LINKED_DATA_MAX_DEPTH:
-                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            else:
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
-        except Exception:
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        return response
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
+        return json.loads(response.content)
 
     def test_read_linked_data(self):
         location_schema = models.Schema.objects.create(
@@ -375,12 +372,25 @@ class ViewsTest(TestCase):
             projectschema=household_projectschema,
             status='Publishable',
         )
-        linked_entity = self.helper_read_linked_data_entities('entity-detail', household_entity, 2)
-        self.assertIsNotNone(
-            json.loads(linked_entity.content)['resolved'][location_schema.name][location_entity.payload['id']]
-        )
-        self.helper_read_linked_data_entities('entity-detail', household_entity, 4)
-        self.helper_read_linked_data_entities('entity-detail', household_entity, 'two')
+
+        entity_depth_0 = self.helper_read_linked_data_entities(household_entity, 0)
+        self.assertEqual(entity_depth_0['resolved'], {})
+
+        entity_depth_2 = self.helper_read_linked_data_entities(household_entity, 2)
+        self.assertNotEqual(entity_depth_2['resolved'], {})
+        resolved = entity_depth_2['resolved']
+        self.assertEqual(resolved['Location'][location_entity.payload['id']]['payload'], location_entity.payload)
+        self.assertEqual(resolved['Household'][household_entity.payload['id']]['payload'], household_entity.payload)
+
+        entity_depth_3 = self.helper_read_linked_data_entities(household_entity, 3)
+        entity_depth_4 = self.helper_read_linked_data_entities(household_entity, 4)
+        self.assertEqual(entity_depth_3, entity_depth_4, 'in case of depth > 3 ... return depth 3')
+
+        entity_two = self.helper_read_linked_data_entities(household_entity, 'two')
+        self.assertEqual(entity_depth_0, entity_two, 'in case of depth error... return simple entity')
+
+        entity_neg = self.helper_read_linked_data_entities(household_entity, -1)
+        self.assertEqual(entity_depth_0, entity_neg, 'in case of depth<0 ... return simple entity')
 
     def test_project_artefacts__endpoints(self):
         self.assertEqual(reverse('project-artefacts', kwargs={'pk': 1}), '/projects/1/artefacts/')
