@@ -25,7 +25,7 @@ django-prometheus==1.0.15
 django-storages==1.7.1
 django-ums-client==0.2.6
 django-webpack-loader==0.6.0
-djangorestframework==3.8.2
+djangorestframework==3.9.0
 drf-dynamic-fields==0.3.0
 flake8==3.5.0
 flake8-quotes==1.0.0
@@ -41,8 +41,8 @@ pyflakes==1.6.0
 python-cas==1.4.0
 pytz==2018.5
 raven==6.9.0
-requests==2.19.1
+requests==2.20.0
 six==1.11.0
 sqlparse==0.2.4
-urllib3==1.23
+urllib3==1.24
 uWSGI==2.0.17.1
