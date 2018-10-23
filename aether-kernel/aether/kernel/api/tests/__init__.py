@@ -270,12 +270,13 @@ SAMPLE_HOUSEHOLD_SCHEMA_DEFINITION = {
 }
 
 SAMPLE_LOCATION_DATA = {
+    'id': '00f3f1ae-abab-448b-b12f-f9c1839465ab',
     'lat': 6.951801,
     'lng': -2.7539059999999997,
-    'id': '00f3f1ae-abab-448b-b12f-f9c1839465ab',
 }
 
 SAMPLE_HOUSEHOLD_DATA = {
+    'id': 'bdc639fe-b142-4587-b2e9-4dc1a51f9a5c',
     'locationID': '00f3f1ae-abab-448b-b12f-f9c1839465ab',
 }
 

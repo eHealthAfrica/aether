@@ -113,10 +113,6 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='projectschema-list',
     )
 
-    def validate_definition(self, value):
-        validators.validate_mapping_definition(value)
-        return value
-
     class Meta:
         model = models.Mapping
         fields = '__all__'
@@ -231,11 +227,6 @@ class SchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='projectschema-list',
     )
 
-    def validate_definition(self, value):
-        validators.validate_avro_schema(value)
-        validators.validate_id_field(value)
-        return value
-
     class Meta:
         model = models.Schema
         fields = '__all__'
@@ -305,47 +296,27 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     )
 
     def create(self, validated_data):
+        # remove helper field
+        validated_data.pop('merge')
         try:
-            utils.validate_payload(
-                schema_definition=validated_data['projectschema'].schema.definition,
-                payload=validated_data['payload'],
-            )
+            return super(EntitySerializer, self).create(validated_data)
         except Exception as e:
             raise serializers.ValidationError(e)
-
-        # remove helper fields
-        validated_data.pop('merge')
-        return super(EntitySerializer, self).create(validated_data)
 
     def update(self, instance, validated_data):
         # find out payload
-        direction = self.context['request'].query_params.get('merge', validated_data.get('merge'))
-        target = validated_data.get('payload', {})
+        direction = validated_data.pop('merge', DEFAULT_MERGE)
         if direction in (MERGE_OPTIONS.fww.value, MERGE_OPTIONS.lww.value):
-            payload = utils.merge_objects(source=instance.payload, target=target, direction=direction)
-        else:
-            payload = target
-
-        # update `instance` fields with `validated_data` values
-        fields = [
-            f.name
-            for f in models.Entity._meta.fields
-            if f.name in validated_data.keys() and validated_data.get(f.name)
-        ]
-        for field in fields:
-            setattr(instance, field, validated_data.get(field))
+            validated_data['payload'] = utils.merge_objects(
+                source=instance.payload,
+                target=validated_data.get('payload', {}),
+                direction=direction,
+            )
 
         try:
-            utils.validate_payload(
-                schema_definition=instance.projectschema.schema.definition,
-                payload=payload,
-            )
-            instance.payload = payload
+            return super(EntitySerializer, self).update(instance, validated_data)
         except Exception as e:
             raise serializers.ValidationError(e)
-
-        instance.save()
-        return instance
 
     class Meta:
         model = models.Entity
@@ -384,15 +355,5 @@ class MappingSetStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer)
 
 class MappingValidationSerializer(serializers.Serializer):
     submission_payload = serializers.JSONField()
-    mapping_definition = serializers.JSONField()
-    schemas = serializers.JSONField()
-
-    def validate_schemas(self, value):
-        if not isinstance(value, dict):
-            raise serializers.ValidationError(
-                _('Value {} is not an Object').format(value)
-            )
-        for schema in value.values():
-            validators.validate_avro_schema(schema)
-            validators.validate_id_field(schema)
-        return value
+    mapping_definition = serializers.JSONField(validators=[validators.validate_mapping_definition])
+    schemas = serializers.JSONField(validators=[validators.validate_schemas])

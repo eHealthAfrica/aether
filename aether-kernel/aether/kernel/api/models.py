@@ -23,8 +23,8 @@ from datetime import datetime
 from hashlib import md5
 
 from django.contrib.postgres.fields import JSONField
-from django.db import models
-from django.db.utils import IntegrityError
+from django.core.exceptions import ValidationError
+from django.db import models, IntegrityError
 from django.utils.translation import ugettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
@@ -33,7 +33,12 @@ from model_utils.models import TimeStampedModel
 from aether.common.utils import resolve_file_url
 
 from .constants import NAMESPACE
-from .utils import json_prettified
+from .utils import json_prettified, validate_payload, EntityValidationError
+from .validators import (
+    validate_avro_schema,
+    validate_mapping_definition,
+    validate_schema_definition,
+)
 
 
 ENTITY_STATUS_CHOICES = (
@@ -176,7 +181,12 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), TimeStampedMod
     revision = models.TextField(default='1', verbose_name=_('revision'))
     name = models.CharField(max_length=50, unique=True, verbose_name=_('name'))
 
-    schema = JSONField(null=True, blank=True, verbose_name=_('AVRO schema'))
+    schema = JSONField(
+        null=True,
+        blank=True,
+        validators=[validate_avro_schema],
+        verbose_name=_('AVRO schema'),
+    )
     input = JSONField(null=True, blank=True, verbose_name=_('input sample'))
 
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
@@ -246,9 +256,9 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedMod
     def name(self):
         return f'{self.mappingset.project.name}-{self.mappingset.name}'
 
-    def save(self, **kwargs):
+    def save(self, *args, **kwargs):
         self.project = self.mappingset.project
-        super(Submission, self).save(**kwargs)
+        super(Submission, self).save(*args, **kwargs)
 
     class Meta:
         app_label = 'kernel'
@@ -353,7 +363,7 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), TimeStampedModel):
     name = models.CharField(max_length=50, unique=True, verbose_name=_('name'))
 
     type = models.CharField(max_length=50, default=NAMESPACE, verbose_name=_('schema type'))
-    definition = JSONField(verbose_name=_('AVRO schema'))
+    definition = JSONField(validators=[validate_schema_definition], verbose_name=_('AVRO schema'))
 
     # this field is used to group different schemas created automatically
     # from different sources but that share a common structure
@@ -450,7 +460,7 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
     revision = models.TextField(default='1', verbose_name=_('revision'))
     name = models.CharField(max_length=50, unique=True, verbose_name=_('name'))
 
-    definition = JSONField(verbose_name=_('mapping rules'))
+    definition = JSONField(validators=[validate_mapping_definition], verbose_name=_('mapping rules'))
     is_active = models.BooleanField(default=True, verbose_name=_('active?'))
     is_read_only = models.BooleanField(default=False, verbose_name=_('read only?'))
 
@@ -477,8 +487,16 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
 
     def save(self, *args, **kwargs):
         self.project = self.mappingset.project
-        self.projectschemas.clear()
+
+        try:
+            # this will call the fields validators in our case `validate_mapping_definition`
+            self.full_clean()
+        except ValidationError as ve:
+            raise IntegrityError(ve)
+
         super(Mapping, self).save(*args, **kwargs)
+
+        self.projectschemas.clear()
         entities = self.definition.get('entities', {})
         ps_list = []
         for entity_pk in entities.values():
@@ -545,7 +563,7 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
         blank=True,
         verbose_name=_('mapping'),
     )
-    mapping_revision = models.TextField(verbose_name=_('mapping revision'))
+    mapping_revision = models.TextField(null=True, blank=True, verbose_name=_('mapping revision'))
     projectschema = models.ForeignKey(
         to=ProjectSchema,
         on_delete=models.SET_NULL,
@@ -593,23 +611,54 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
             return self.project.name
         return None
 
-    def save(self, **kwargs):
+    def clean(self):
+        super(Entity, self).clean()
+
+        # check linked projects
+        project_ids = set()
+        possible_project = None
+        if self.projectschema:
+            project_ids.add(self.projectschema.project.pk)
+            possible_project = self.projectschema.project
+        if self.submission:
+            project_ids.add(self.submission.project.pk)
+            possible_project = self.submission.project
+        if self.mapping:
+            project_ids.add(self.mapping.project.pk)
+            possible_project = self.mapping.project
+
+        if len(project_ids) > 1:
+            raise ValidationError(_('Submission, Mapping and Project Schema MUST belong to the same Project'))
+        elif len(project_ids) == 1:
+            self.project = possible_project
+
         if self.projectschema:  # redundant values taken from project schema
-            self.project = self.projectschema.project
             self.schema = self.projectschema.schema
 
-        if self.submission and self.projectschema:
-            if self.submission.project != self.projectschema.project:
-                raise IntegrityError(_('Submission and Project Schema MUST belong to the same Project'))
-            self.project = self.submission.project
-        elif self.submission:
-            self.project = self.submission.project
+        if self.mapping and not self.mapping_revision:
+            self.mapping_revision = self.mapping.revision
 
         if self.modified:
             self.modified = '{}-{}'.format(datetime.now().isoformat(), self.modified[27:None])
         else:
             self.modified = '{}-{}'.format(datetime.now().isoformat(), self.id)
-        super(Entity, self).save(**kwargs)
+
+        if self.schema:
+            try:
+                validate_payload(
+                    schema_definition=self.schema.definition,
+                    payload=self.payload,
+                )
+            except EntityValidationError as eve:
+                raise ValidationError({'payload': [str(eve)]})
+
+    def save(self, *args, **kwargs):
+        try:
+            self.full_clean()
+        except ValidationError as ve:
+            raise IntegrityError(ve)
+
+        super(Entity, self).save(*args, **kwargs)
 
     class Meta:
         app_label = 'kernel'

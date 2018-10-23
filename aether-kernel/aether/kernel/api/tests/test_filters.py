@@ -540,40 +540,38 @@ class TestFilters(TestCase):
             filtered_submissions_count,
         )
 
-    def test_entity_filter__by_payload(self):
-        url = reverse(viewname='entity-list')
+    def test_submission_filter__by_payload__post(self):
+        url = reverse(viewname='submission-query')
         filters = [
-            {'payload__a': '[1'},  # raise json.decoder.JSONDecodeError
             {'payload__a': '1'},
             {'payload__a__b': '"abcde"'},
             {'payload__a__b__c': '[1,2,3]'},
         ]
         payloads = [
-            {'a': '[1', 'z': 3},  # but it's fine
             {'a': 1, 'z': 3},
             {'a': {'b': 'abcde'}, 'z': 3},
             {'a': {'b': {'c': [1, 2, 3]}}, 'z': 3}
         ]
         gen_payload = generators.ChoicesGenerator(values=payloads)
-        generate_project(entity_field_values={'payload': gen_payload})
-        entities_count = models.Entity.objects.count()
+        generate_project(submission_field_values={'payload': gen_payload})
+        submissions_count = models.Submission.objects.count()
 
-        filtered_entities_count = 0
+        filtered_submissions_count = 0
         for kwargs, payload in zip(filters, payloads):
             response = self.client.get(url,
-                                       {'fields': 'payload', 'page_size': entities_count, **kwargs},
+                                       {'fields': 'payload', 'page_size': submissions_count, **kwargs},
                                        format='json')
-            entities = json.loads(response.content)['results']
-            for entity in entities:
-                self.assertEqual(entity['payload'], payload)
-                filtered_entities_count += 1
+            submissions = json.loads(response.content)['results']
+            for submission in submissions:
+                self.assertEqual(submission['payload'], payload)
+                filtered_submissions_count += 1
         self.assertEqual(
-            len(models.Entity.objects.all()),
-            filtered_entities_count,
+            len(models.Submission.objects.all()),
+            filtered_submissions_count,
         )
 
-    def test_entity_filter__by_payload__error(self):
-        url = reverse(viewname='entity-list')
+    def test_submission_filter__by_payload__error(self):
+        url = reverse(viewname='submission-list')
         filters = [
             {'payload__a': '[1'},  # raise json.decoder.JSONDecodeError
         ]
@@ -581,42 +579,11 @@ class TestFilters(TestCase):
             {'a': 1, 'z': 3},
         ]
         gen_payload = generators.ChoicesGenerator(values=payloads)
-        generate_project(entity_field_values={'payload': gen_payload})
-        entities_count = models.Entity.objects.count()
+        generate_project(submission_field_values={'payload': gen_payload})
+        submissions_count = models.Submission.objects.count()
 
         for kwargs, payload in zip(filters, payloads):
             response = self.client.get(url,
-                                       {'fields': 'payload', 'page_size': entities_count, **kwargs},
+                                       {'fields': 'payload', 'page_size': submissions_count, **kwargs},
                                        format='json')
             self.assertEqual(json.loads(response.content)['count'], 0)
-
-    def test_entity_filter__by_payload__post(self):
-        url = reverse(viewname='entity-query')
-        filters = [
-            {'payload__a': '1'},
-            {'payload__a__b': '"abcde"'},
-            {'payload__a__b__c': '[1,2,3]'},
-        ]
-        payloads = [
-            {'a': 1, 'z': 3},
-            {'a': {'b': 'abcde'}, 'z': 3},
-            {'a': {'b': {'c': [1, 2, 3]}}, 'z': 3}
-        ]
-        gen_payload = generators.ChoicesGenerator(values=payloads)
-        generate_project(entity_field_values={'payload': gen_payload})
-        entities_count = models.Entity.objects.count()
-
-        filtered_entities_count = 0
-        for kwargs, payload in zip(filters, payloads):
-            response = self.client.post(f'{url}?page_size={entities_count}&fields=payload',
-                                        json.dumps(kwargs),
-                                        content_type='application/json',
-                                        )
-            entities = json.loads(response.content)['results']
-            for entity in entities:
-                self.assertEqual(entity['payload'], payload)
-                filtered_entities_count += 1
-        self.assertEqual(
-            len(models.Entity.objects.all()),
-            filtered_entities_count,
-        )
