@@ -16,12 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-PATH_DIR = '/code/aether/kernel/api/tests/files/'
-
-SCHEMA_FILE_EMPTY = PATH_DIR + 'empty_schema.json'
-SCHEMA_FILE_SAMPLE = PATH_DIR + 'sample_schema.json'
-SCHEMA_FILE_ERROR = PATH_DIR + 'err_schema.json'
-
 EXAMPLE_MAPPING = {
     'entities': {
         'Person': '1',
@@ -278,95 +272,4 @@ SAMPLE_LOCATION_DATA = {
 SAMPLE_HOUSEHOLD_DATA = {
     'id': 'bdc639fe-b142-4587-b2e9-4dc1a51f9a5c',
     'locationID': '00f3f1ae-abab-448b-b12f-f9c1839465ab',
-}
-
-EXAMPLE_GAMETOKEN_SCHEMA = {
-    'fields': [
-        {
-            'jsonldPredicate': '@id',
-            'type': 'string',
-            'name': 'id',
-            'inherited_from': 'http://game.eha.org/BaseModel',
-        },
-        {
-            'type': 'string',
-            'name': 'rev',
-            'inherited_from': 'http://game.eha.org/BaseModel',
-        },
-        {
-            'doc': 'A description of the thing.',
-            'jsonldPredicate': 'http://game.eha.org/description',
-            'type': [
-                'null',
-                'string',
-                {
-                    'items': 'string',
-                    'type': 'array',
-                },
-            ],
-            'name': 'description',
-        },
-        {
-            'doc': 'A token value, true for positive, false for negative',
-            'jsonldPredicate': 'http://game.eha.org/tokenValue',
-            'type': [
-                'null',
-                'boolean',
-            ],
-            'name': 'tokenValue',
-        },
-        {
-            'doc': 'The time something was created',
-            'jsonldPredicate': 'http://game.eha.org/generationTime',
-            'type': [
-                'null',
-                'string',
-                {
-                    'items': 'string',
-                    'type': 'array',
-                },
-            ],
-            'name': 'generationTime'
-        },
-        {
-            'doc': 'A hash to maintain the integrity of generated tokens.',
-            'jsonldPredicate': 'http://game.eha.org/securityHash',
-            'type': [
-                'null',
-                'string',
-                {
-                    'items': 'string',
-                    'type': 'array',
-                },
-            ],
-            'name': 'securityHash'
-        },
-        {
-            'doc': 'A common name for this entity.',
-            'jsonldPredicate': 'http://game.eha.org/name',
-            'type': [
-                'null',
-                'string',
-                {
-                    'items': 'string',
-                    'type': 'array',
-                },
-            ],
-            'name': 'name'
-        }
-    ],
-    'type': 'record',
-    'name': 'http://game.eha.org/GameToken',
-    'extends': 'http://game.eha.org/BaseModel',
-  }
-
-EXAMPLE_VALID_PAYLOAD = {
-    'id': 'bdc639fe-b142-4587-b2e9-4dc1a51f9a5d',
-    'rev': 'some1srevision',
-}
-
-EXAMPLE_INVALID_PAYLOAD = {
-    'id': 'bdc639fe-b142-4587-b2e9-4dc1a51f9a5c',
-    'rev': 'some1srevision',
-    'tokenValue': 'shouldhavebeenaboolean!',
 }

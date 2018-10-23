@@ -16,9 +16,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import copy
 import json
 import mock
+import os
 import zipfile
 
 from openpyxl import load_workbook
@@ -29,7 +29,7 @@ from django.http import FileResponse
 from django.test import TestCase
 from django.urls import reverse
 
-from .. import models
+from .. import models, project_artefacts, utils
 from ..exporter import (
     __filter_paths as filter_paths,
     __flatten_dict as flatten_dict,
@@ -40,7 +40,9 @@ from ..exporter import (
     CSV_CONTENT_TYPE,
 )
 
-from . import EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA
+
+here = os.path.dirname(os.path.realpath(__file__))
+
 
 EXAMPLE_PATHS = [
     '_id',
@@ -124,69 +126,6 @@ EXAMPLE_LABELS = {
     'iterate_none.#.nothing': 'None',
     'id': 'ID',
 }
-
-EXAMPLE_PAYLOAD = {
-    'id': '6b90cfb6-0ee6-4035-94bc-fb7f3e56d790',
-    '_id': 'my-test-form',
-    'date': '2017-07-14T00:00:00',
-    'lang': 'EN,FR',
-    'meta': {
-        'instanceID': 'uuid:cef69d9d-ebd9-408f-8bc6-9d418bb083d9',
-        'instanceName': 'Something_that_is_not_None',
-    },
-    'name': 'Name',
-    'image': None,
-    'number': 3,
-    'option': 'a',
-    'region': None,
-    'country': 'CM',
-    'endtime': '2017-07-14T16:38:47.151000+02:00',
-    'iterate': [
-        {
-            'index': 1,
-            'value': 'One',
-        },
-        {
-            'index': 2,
-            'value': 'Two',
-        },
-        {
-            'index': 3,
-            'value': 'Three',
-        },
-    ],
-    'number2': 3.56,
-    '_version': 'test-1.0',
-    'datetime': '2017-07-14T16:38:47.151000+02:00',
-    'deviceid': '355217062209730',
-    'location': {
-        'accuracy': 22,
-        'altitude': 108,
-        'latitude': 52.52469543,
-        'longitude': 13.39282687,
-    },
-    'option_a': {
-        'choice_a': 'A',
-    },
-    'option_b': None,
-    'starttime': '2017-07-14T16:37:08.966000+02:00',
-    'iterate_one': [
-        {
-            'item': 'one',
-        },
-    ],
-    'iterate_none': [],
-    'location_none': None,
-}
-
-
-def assign_mapping_entities(mapping, projectschemas):
-    entities = {}
-    for projectschema in projectschemas:
-        entities[projectschema.schema.definition['name']] = str(projectschema.pk)
-    mapping_ = copy.deepcopy(mapping)
-    mapping_['entities'] = entities
-    return mapping_
 
 
 class ExporterTest(TestCase):
@@ -285,55 +224,46 @@ class ExporterViewsTest(TestCase):
         self.user = get_user_model().objects.create_user(username, email, password)
         self.assertTrue(self.client.login(username=username, password=password))
 
+        with open(os.path.join(here, 'files/export.avsc'), 'rb') as infile:
+            EXAMPLE_SCHEMA = json.load(infile)
+
+        with open(os.path.join(here, 'files/export.json'), 'rb') as infile:
+            EXAMPLE_PAYLOAD = json.load(infile)
+
         project = models.Project.objects.create(
             name='project1',
         )
-        schema = models.Schema.objects.create(
-            name='schema1',
-            definition=EXAMPLE_SCHEMA,
-        )
-        projectschema = models.ProjectSchema.objects.create(
-            name='projectschema1',
-            project=project,
-            schema=schema,
-        )
-        mappingset = models.MappingSet.objects.create(
-            name='mappingset1',
-            input={},
-            project=project,
-        )
-        mapping = models.Mapping.objects.create(
-            name='mapping1',
-            definition=assign_mapping_entities(
-                mapping=EXAMPLE_MAPPING,
-                projectschemas=[projectschema],
-            ),
-            mappingset=mappingset,
-            project=project,
+
+        # create artefacts for the AVRO schema
+        artefacts_id = str(project.pk)
+        project_artefacts.upsert_project_with_avro_schemas(
+            project_id=artefacts_id,
+            avro_schemas=[{
+                'id': artefacts_id,
+                'name': 'export',
+                'definition': EXAMPLE_SCHEMA,
+            }],
         )
         submission = models.Submission.objects.create(
-            payload=EXAMPLE_SOURCE_DATA,
-            mappingset=mappingset,
-        )
-        models.Entity.objects.create(
             payload=EXAMPLE_PAYLOAD,
-            projectschema=projectschema,
-            submission=submission,
-            mapping=mapping,
+            mappingset=models.MappingSet.objects.get(pk=artefacts_id),
         )
+        # extract entities
+        utils.run_entity_extraction(submission)
+        self.assertEqual(models.Entity.objects.count(), 1)
 
     def tearDown(self):
         self.client.logout()
 
     def test__generate__csv(self):
         # without paths
-        data = models.Entity.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
+        data = models.Submission.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
         _, zip_path, _ = generate(data, paths=[], labels=EXAMPLE_LABELS, format='csv', offset=0, limit=1)
         zip_file = zipfile.ZipFile(zip_path, 'r')
         self.assertEqual(zip_file.namelist(), ['export-#.csv', 'export-#-1.csv', 'export-#-2.csv'])
 
         # with the whole paths list
-        data = models.Entity.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
+        data = models.Submission.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
         _, zip_path, _ = generate(data, paths=EXAMPLE_PATHS, labels=EXAMPLE_LABELS, format='csv', offset=0, limit=1)
         zip_file = zipfile.ZipFile(zip_path, 'r')
         self.assertEqual(zip_file.namelist(), ['export-#.csv', 'export-#-1.csv', 'export-#-2.csv'])
@@ -345,10 +275,10 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(zip_file.namelist(), ['export-#.csv', 'export-#-1.csv'])
 
     def test__generate__xlsx(self):
-        data = models.Entity.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
+        data = models.Submission.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
         _, xlsx_path, _ = generate(data, paths=EXAMPLE_PATHS, labels=EXAMPLE_LABELS, format='xlsx', offset=0, limit=1)
         wb = load_workbook(filename=xlsx_path, read_only=True)
-        _id = str(models.Entity.objects.first().pk)
+        _id = str(models.Submission.objects.first().pk)
 
         # check workbook content
         ws = wb['#']    # root content
@@ -467,7 +397,7 @@ class ExporterViewsTest(TestCase):
             paths=[],
             labels={},
             format='xlsx',
-            filename='project1-mappingset1',
+            filename='project1-export',
             offset=0,
             limit=1,
         )
@@ -477,9 +407,9 @@ class ExporterViewsTest(TestCase):
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_submissions_export__csv__mocked(self, mock_export):
-        for __ in range(13):
+        for i in range(13):
             models.Submission.objects.create(
-                payload=EXAMPLE_SOURCE_DATA,
+                payload={'name': f'Person-{i}'},
                 mappingset=models.MappingSet.objects.first(),
             )
 
@@ -530,10 +460,10 @@ class ExporterViewsTest(TestCase):
         self.assertEquals(response.status_code, 500)
         mock_export.assert_called_once_with(
             data=mock.ANY,
-            paths=['id', '_rev', 'name', 'dob', 'villageID'],
-            labels={'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
+            paths=mock.ANY,
+            labels=mock.ANY,
             format='xlsx',
-            filename='project1-Person',
+            filename='project1-export',
             offset=0,
             limit=1,
         )
@@ -558,10 +488,10 @@ class ExporterViewsTest(TestCase):
         self.assertEquals(response.status_code, 500)
         mock_export.assert_called_once_with(
             data=mock.ANY,
-            paths=['id', '_rev', 'name', 'dob', 'villageID'],
-            labels={'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
+            paths=mock.ANY,
+            labels=mock.ANY,
             format='csv',
-            filename='project1-Person',
+            filename='project1-export',
             offset=0,
             limit=1,
         )
