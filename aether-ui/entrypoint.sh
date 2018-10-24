@@ -36,10 +36,9 @@ show_help () {
                     create/update superuser using
                         'ADMIN_USERNAME', 'ADMIN_PASSWORD'
 
-    test          : run ALL tests
-    test_lint     : run flake8, standardjs and sass lint tests
-    test_coverage : run python tests with coverage output
-    test_py       : alias of test_coverage
+    test          : run tests
+    test_lint     : run flake8 tests
+    test_coverage : run tests with coverage output
 
     start         : start webserver behind nginx
     start_dev     : start webserver for development
@@ -141,7 +140,7 @@ case "$1" in
         echo "DEBUG=$DEBUG"
         setup
         test_lint
-        test_coverage
+        test_coverage "${@:2}"
     ;;
 
     test_lint )
@@ -149,10 +148,6 @@ case "$1" in
     ;;
 
     test_coverage )
-        test_coverage "${@:2}"
-    ;;
-
-    test_py )
         test_coverage "${@:2}"
     ;;
 

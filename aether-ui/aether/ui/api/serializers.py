@@ -16,9 +16,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
+
 from rest_framework import serializers
-from django.utils.translation import gettext as _
 
 from . import models
 
@@ -49,22 +50,10 @@ class PipelineSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     contracts = ContractSerializer(many=True, read_only=True)
 
     def update(self, instance, validated_data):
-        read_only_contracts = instance.contracts.filter(is_read_only=True)
-        if read_only_contracts:
-            raise serializers.ValidationError({
-                'description': _('Input is readonly')
-            })
-        else:
-            if 'input' in validated_data:
-                instance.input = validated_data.get('input')
-            if 'schema' in validated_data:
-                instance.schema = validated_data.get('schema')
-            if 'name' in validated_data:
-                instance.name = validated_data.get('name')
-            if 'mappingset' in validated_data:
-                instance.mappingset = validated_data.get('mappingset')
-            instance.save()
-            return instance
+        if instance.contracts.filter(is_read_only=True).count() > 0:
+            raise serializers.ValidationError({'description': _('Input is readonly')})
+
+        return super(PipelineSerializer, self).update(instance, validated_data)
 
     class Meta:
         model = models.Pipeline
