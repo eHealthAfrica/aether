@@ -429,7 +429,7 @@ class EntityViewSet(exporter.ExporterViewSet):
         try:
             if depth:
                 instance.resolved = get_entity_linked_data(instance, request, {}, depth)
-        except Exception as e:  # pragma: no cover
+        except Exception:  # pragma: no cover
             instance.resolved = {}
 
         return Response(self.serializer_class(instance, context={'request': request}).data)
