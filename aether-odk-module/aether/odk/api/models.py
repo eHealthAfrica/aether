@@ -128,7 +128,7 @@ def __validate_xml_data__(value):
     try:
         validate_xform(value)
     except Exception as e:
-        raise ValidationError(e)
+        raise ValidationError(str(e))
 
 
 class XForm(ExportModelOperationsMixin('odk_xform'), models.Model):
