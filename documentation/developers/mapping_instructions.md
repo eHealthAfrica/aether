@@ -126,7 +126,7 @@ As you can see, the Destination instruction `House.address` looks like a JSONPat
   }
 ]
 ```
-`House` specifies the type of the object and tells Aether how to validate and where to save the data. It's not, strictly speaking, part of a valid JSONPath. This is why we don't use the `$` convention for Destination paths.
+`House` specifies the type of the object and tells Aether how to validate and where to save the data. It's not, strictly speaking, part of a valid JSONPath. This is why we don't use the `$` convention for destination paths.
 
 Similarly, we can resolve the names of our Stooges.
 
@@ -199,7 +199,7 @@ For more information about how the extractor interprets instructions and why fil
 - *args:* `none`
 - *explanation:*
 
-    Generates a random UUID (version 4) which can be assigned as a string to a field. Beyond generating the ID, this is saved as part of the original submission document in a section titled `aether_extractor_enrichment` so that if extraction is performed a second time against the same dataset, the same IDs will be used. This expects that the order of the entities within a type will not change. See [_Extractor Mechanism_](#user-content-extractor-mechanism) for more information on instruction ordering.
+    Generates a random UUID (version 4) which can be assigned as a string to a field. Beyond generating the ID, this is saved as part of the original submission document in a section titled `aether_extractor_enrichment` so that if extraction is performed a second time against the same dataset, the same IDs will be used as long as the the order of the submission data do not change. See [_Extractor Mechanism_](#user-content-extractor-mechanism) for more information on instruction ordering.
 
 - *example:* 
 ```json
@@ -259,7 +259,7 @@ For more information about how the extractor interprets instructions and why fil
     - 3: (optional) An anchor reference in the source to the referenced entity
 - *explanation and example:*
 
-    The simple case (not using the optional anchor references) of entitiy reference looks at the output of an Entity created in a previous mapping set and copies the value of the field. This is often required when an ID is generated for an entity during extraction, and a reference must be kept using that new ID from other entities.
+    The simple case (not using the optional anchor references) of entity reference looks at the output of an Entity created in a previous mapping set and copies the value of the field. This is often required when an ID is generated for an entity during extraction, and a reference must be kept using that new ID from other entities.
 
     For example, one might want to reference the newly created ID of a house in each resident's record.
 
@@ -332,7 +332,7 @@ For more information about how the extractor interprets instructions and why fil
   }
 ]
     ```
-        - Households
+        - Houses
 
     ```json
     [
@@ -399,7 +399,7 @@ For more information about how the extractor interprets instructions and why fil
 ]
     ```
     So, using #!entity-reference, how can we make sure everyone is assigned to the proper house? An anchor reference.
-    The first argument should be the path within the source that describes the output entity, in this case a Person. A path that best represents a person in the source is `households[*].names[*]`. The second argument decribes the source of the information in the source document, in this case it's a House, so the proper path would be `households[*]`. As a full command, we get:
+    The first argument should be the path within the source that describes the output entity, in this case a Person. A path that best represents a person in the source is `households[*].names[*]`. The second argument decribes the source of the information in the source document, in this case it's a House, so the proper path would be `households[*]`. When we add the arguments together, we get:
     
     ```
     src:    #!entity-reference#House[*].id#households[*].names[*]#households[*]
@@ -439,7 +439,7 @@ For more information about how the extractor interprets instructions and why fil
 <a name="extractor-mechanism"></a>
 ## Extractor Mechanism
 
-As stated previously, Mapping instruction sets are executed in order. If the extractor encounters an error on an instruction, it caches that instruction ID and continues down the list. Once finished with the list, it will reattempt the instructions that had errors. It will continue to retry until either all instructions have been completed _or_ a round occurs where none of the cached erroneous instructions were able to be completed. If there are errors at the end of extraction, they are reported.
+As stated previously, Mapping instruction sets are executed in order. If the extractor encounters an error on an instruction, it caches that instruction and continues down the list. Once finished with the list, it will reattempt the instructions that had errors. It will continue to retry until either all instructions have been completed _or_ a round occurs where none of the cached erroneous instructions were able to be completed. If there are errors at the end of extraction, they are reported.
 
 Let's introduce some new artifacts so we can illustrate the process from the extractor point of view.
 
@@ -567,7 +567,7 @@ Let's start with a suboptimal mapping:
 </details>
 
 ---
-<details>
+<details open>
     <summary><i>First Pass Details <b>(Hide/Show)</b></i></summary>
 
 The first thing the extractor does is try to size the output requirements. In this case, based on the mappings and input, we can figure out that there will be 5 output entities; 4 `People` and 1 `Household`. We'll refer to the current state of the output at each mapping step.
@@ -650,7 +650,7 @@ Households
     {}
 ]
 ```
-This is a straight copy from a path that exists so it succeeds. Since there's only one value from `$.family_name` instead of four, the extractor guesses (correctly) that we should apply the same value to all Person objects. If this were just for the first Person, we could force the extractor to acknowledge this by adding the following instuction directly after: `["#!none", "Person.last_name"]`, which would set the `last_name` of everyone but the first (Buster) to null.
+This is a straight copy from a path that exists so it succeeds. Since there's only one value from `$.family_name` instead of four, the extractor guesses (correctly) that we should apply the same value to all Person objects. If this were just for the first Person, we could force the extractor to acknowledge this by adding the following instruction directly after: `["#!none", "Person.last_name"]`, which would set the `last_name` of everyone but the first (Buster) to null.
 
 Instruction
 
@@ -688,7 +688,7 @@ Households
 ]
 ```
 
-Again, this is a straight copy, so it behaves as expected. Do notice that the adults filled the first two spots. Had we switched the order of this instruction with the next one, the children would be first.
+Again, this is a straight copy, so it behaves as expected. Do notice that the adults filled the first two spots. If we switched the order of this instruction with the next one, the children would be first.
 
 
 Instruction
@@ -873,7 +873,7 @@ _Failed Functions_
 ```
 
 ---
-<details>
+<details open>
     <summary><i>Second Pass Details <b>(Hide/Show)</b></i></summary>
 
 Instruction
