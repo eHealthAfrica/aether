@@ -147,7 +147,7 @@ One annoying antipattern shows up in our sample input, the use of numbered keys 
 src:    $.households[*].number* 
 dst:    Person.name
 ```
-We would expect this to yield:
+Yields:
 
 ```json
 [
