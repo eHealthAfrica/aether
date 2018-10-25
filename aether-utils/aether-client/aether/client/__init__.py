@@ -198,6 +198,8 @@ class AetherDecorator(ResourceDecorator):
 
     def _verify_param(self, name, param_name):
         operation = getattr(self.resource, self._get_full_name(name))
+        if param_name.startswith('payload'):  # allow searching for arbitrary fields in the payload
+            return True
         if param_name not in operation.params:
             raise ValueError("%s has no parameter %s" % (name, param_name))
         return True
