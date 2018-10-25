@@ -98,7 +98,9 @@ Let's construct an example that we can use to illustrates our mappings. We want 
 <a name="jsonpath-function"></a>
 ## JSONPath Functions
 
-JSONPath functions are based on the [jsonpath-ng](https://github.com/h2non/jsonpath-ng) implementation of the [JSONPath](https://goessner.net/articles/JsonPath/) specification. It's advisable to review both sets of documentation before continuing. JSONPath instructions are used to specify a location in the Source. It's conventional to start a JSONPath with the character `$`. We use a similar syntax for the destination, but we do not support the full syntax for reasons we'll discuss in a minute.
+The JSONPath functions used by Aether are based on the [jsonpath-ng](https://github.com/h2non/jsonpath-ng) implementation of the [JSONPath](https://goessner.net/articles/JsonPath/) specification. We recommend reviewing both sets of documentation before you continue. 
+
+JSONPath instructions are used to specify a location in the Source. It's conventional to start a JSONPath with the character `$`. We use a similar syntax for the destination, but we do not support the full syntax for reasons we'll discuss in a minute.
 
 ---
 #### Simple JSONPath based copy operations
