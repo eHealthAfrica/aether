@@ -141,7 +141,7 @@ This yields the expected:
 ---
 #### JSONPath extensions
 
-One annoying antipattern shows up in our sample input, the use of numbered keys like `number1` `number2` related keys in an object. JSONPath natively has no answer for this using the typical wildcard `*` operator. We've gone beyond the specification to enable the handling though. For example:
+One annoying antipattern shows up in our sample input, the use of numbered keys such as `number1`, `number2` in an object. JSONPath has no native answer for this using the standard wildcard `*` operator, so we've gone beyond the specification. For example:
 
 ```
 src:    $.households[*].number* 
