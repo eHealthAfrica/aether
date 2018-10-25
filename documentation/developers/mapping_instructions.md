@@ -368,7 +368,7 @@ For more information about how the extractor interprets instructions and why fil
 <a name="extractor-mechanism"></a>
 ## Extractor Mechanism
 
-As stated previously, Mapping instruction sets are executed in order. If the extractor encounters an error on an instruction, it caches that instuction it and continues down the list. Once finished with the list, it will reattempt the instuctions that had errors. It will continue to retry until either all instuctions have been completed _or_ a round occurs where none of the cached erroneous instuctions were able to be completed. If there are errors at the end of extraction, the errors are reported.
+As stated previously, Mapping instruction sets are executed in order. If the extractor encounters an error on an instruction, it caches that instruction ID and continues down the list. Once finished with the list, it will reattempt the instructions that had errors. It will continue to retry until either all instructions have been completed _or_ a round occurs where none of the cached erroneous instructions were able to be completed. If there are errors at the end of extraction, they are reported.
 
 Let's introduce some new artifacts so we can illustrate the process from the extractor point of view.
 
