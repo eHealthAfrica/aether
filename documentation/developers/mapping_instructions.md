@@ -563,7 +563,7 @@ Households
     {}
 ]
 ```
-This is a straght copy from a path that exists so it succeeds. Since there's only one value from `$.family_name` instead of four, the extractor guesses (correctly) that we should apply the same value to all Person objects. If this were just for the first Person, we could force the extractor to acknowledge this by adding the following instuction directly after: `["#!none", "Person.last_name"]`, which would set the `last_name` of everyone but the first (Buster) to null.
+This is a straight copy from a path that exists so it succeeds. Since there's only one value from `$.family_name` instead of four, the extractor guesses (correctly) that we should apply the same value to all Person objects. If this were just for the first Person, we could force the extractor to acknowledge this by adding the following instuction directly after: `["#!none", "Person.last_name"]`, which would set the `last_name` of everyone but the first (Buster) to null.
 
 Instruction
 
