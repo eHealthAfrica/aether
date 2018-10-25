@@ -62,7 +62,8 @@ from .xform_utils import get_instance_data_from_xml, parse_submission
 
 # list of messages that can be translated
 MSG_XFORM_VERSION_WARNING = _(
-    'Requesting {requested_version} xform version, current is {current_version}'
+    'Requesting {requested_version} xform version, '
+    'while current is {current_version}.'
 )
 MSG_KERNEL_CONNECTION_ERR = _(
     'Connection with Aether Kernel is not possible.'
@@ -77,17 +78,21 @@ MSG_SUBMISSION_MISSING_INSTANCE_ID_ERR = _(
     'Instance ID is missing in submission.'
 )
 MSG_SUBMISSION_XFORM_UNAUTHORIZED_ERR = _(
-    'xForm entry {form_id} unauthorized.'
+    'xForm entry "{form_id}" unauthorized.'
 )
 MSG_SUBMISSION_XFORM_NOT_FOUND_ERR = _(
-    'xForm entry {form_id} no found.'
+    'xForm entry "{form_id}" no found.'
 )
 MSG_SUBMISSION_XFORM_VERSION_WARNING = _(
-    'Sending response to {submission_version} xform version, current is {current_version}'
+    'Sending response to {submission_version} version of the xForm "{form_id}", '
+    'while current is {current_version}.'
 )
 MSG_SUBMISSION_KERNEL_ARTEFACTS_ERR = _(
     'Unexpected error from Aether Kernel '
     'while checking the xForm artefacts "{form_id}".'
+)
+MSG_SUBMISSION_KERNEL_EXISTENT_INSTANCE_ID = _(
+    'There is already a submission "{id}" in Aether Kernel with instance ID "{instance}".'
 )
 MSG_SUBMISSION_KERNEL_SUBMIT_ERR = _(
     'Unexpected response {status} from Aether Kernel '
@@ -103,6 +108,9 @@ MSG_SUBMISSION_SUBMIT_ERR = _(
 )
 MSG_SUBMISSION_SUBMIT_SUCCESS = _(
     'Successfully submitted data of the xForm "{form_id}" to Aether Kernel.'
+)
+MSG_SUBMISSION_SUBMIT_SUCCESS_ID = _(
+    'The submission with instance ID "{instance}" has ID "{id}" in Aether Kernel.'
 )
 
 
@@ -476,7 +484,7 @@ def xform_submission(request):
     # check sent version with current one
     if version < xform.version:  # pragma: no cover
         logger.warning(MSG_SUBMISSION_XFORM_VERSION_WARNING.format(
-            submission_version=version, current_version=xform.version))
+            submission_version=version, current_version=xform.version, form_id=form_id))
 
     # make sure that the xForm artefacts already exist in Aether Kernel
     try:
@@ -507,8 +515,9 @@ def xform_submission(request):
         )
         previous_submissions = json.loads(previous_submissions_response.content.decode('utf-8'))
         previous_submissions_count = previous_submissions['count']
+
         # If there are no previous submissions with the same instance id as
-        # the current submission, save this submission and assign its id to
+        # the current submission, post this submission and assign its id to
         # `submission_id`.
         if previous_submissions_count == 0:
             submission_id = None
@@ -535,11 +544,16 @@ def xform_submission(request):
             # If there is one field with non ascii characters, the usual
             # response.json() will throw a `UnicodeDecodeError`.
             submission_id = json.loads(submission_content).get('id')
+
         # If there already exists a submission with for this instance id, we
         # need to retrieve its submission id in order to be able to associate
         # attachments with it.
         else:
             submission_id = previous_submissions['results'][0]['id']
+
+            msg = MSG_SUBMISSION_KERNEL_EXISTENT_INSTANCE_ID.format(instance=instance_id, id=submission_id)
+            logger.warning(msg)
+            logger.warning(previous_submissions['results'][0])
 
         # Submit attachments (if any) to the submission.
         attachments_url = get_attachments_url()
@@ -576,6 +590,9 @@ def xform_submission(request):
                         content_type='text/xml',
                         headers={'X-OpenRosa-Version': '1.0'},
                     )
+
+        msg = MSG_SUBMISSION_SUBMIT_SUCCESS_ID.format(instance=instance_id, id=submission_id)
+        logger.info(msg)
 
         return Response(
             data={
