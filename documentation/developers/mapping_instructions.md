@@ -10,7 +10,7 @@ Mapping instructions are executed in order. To see how we handle missing referen
 
 There are two general types of instructions: JSONPath and it's extensions, and Extractor Functions. 
 ##### [_JSONPath Functions_](#user-content-jsonpath-function)
-Looks something like this: `$.path.to.somewhere[*].attribue`
+Look something like this: `$.path.to.somewhere[*].attribue`
 ##### [_Extractor Functions_](#user-content-extractor-function) 
 Look something like this: `#!uuid` or `#!constant#male#string`
 
