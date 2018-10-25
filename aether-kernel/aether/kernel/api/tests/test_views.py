@@ -27,7 +27,8 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from .. import models, validators, utils
+from aether.kernel.api import models
+from aether.kernel.api.entity_extractor import run_entity_extraction
 
 from . import (
     EXAMPLE_MAPPING,
@@ -95,7 +96,7 @@ class ViewsTest(TestCase):
         )
 
         # extract entities
-        utils.run_entity_extraction(self.submission)
+        run_entity_extraction(self.submission)
         self.entity = models.Entity.objects.first()
 
     def tearDown(self):
@@ -325,7 +326,7 @@ class ViewsTest(TestCase):
         '''
         Unexpected mapping or extraction failures should return status code 500.
         '''
-        with mock.patch('aether.kernel.api.mapping_validation.validate_mappings') as m:
+        with mock.patch('aether.kernel.api.views.validate_mappings') as m:
             m.side_effect = Exception()
             url = reverse('validate-mappings')
             data = json.dumps({
@@ -546,7 +547,7 @@ class ViewsTest(TestCase):
             response = self.client.post(url, json.dumps(schema), content_type='application/json')
             response_content = json.loads(response.content)
             self.assertIn(
-                validators.MESSAGE_REQUIRED_ID,
+                'A schema is required to have a field "id" of type "string"',
                 response_content['definition'][0],
             )
             self.assertEqual(response.status_code, 400)

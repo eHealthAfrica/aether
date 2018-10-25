@@ -167,3 +167,70 @@ class ValidatorsTest(TestCase):
             validators.validate_schemas([self.schema])
         message = str(err.exception)
         self.assertIn(' is not an Object', message)
+
+    def test_validate_entity_payload__success(self):
+        schema_definition = {
+            'name': 'Test',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'a_string',
+                    'type': 'string',
+                },
+            ],
+        }
+        payload = {'a_string': 'test'}
+        result = validators.validate_entity_payload(
+            schema_definition=schema_definition,
+            payload=payload,
+        )
+        self.assertTrue(result)
+
+    def test_validate_entity_payload__error(self):
+        schema_definition = {
+            'name': 'Test',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': 'a_string',
+                    'type': 'string'
+                }
+            ],
+        }
+        payloads = [
+            {},
+            {'a_string': 1},
+            {'a': 'b'},
+        ]
+        for payload in payloads:
+            with self.assertRaises(ValidationError) as err:
+                validators.validate_entity_payload(
+                    schema_definition=schema_definition,
+                    payload=payload,
+                )
+            msg = 'did not conform to registered schema'
+            self.assertIn(msg, err.exception.args[0])
+
+    def test_validate_entities__error(self):
+        entity_list = [
+            {},
+            {'a_string': 1},
+            {'a': 'b'},
+        ]
+        entities = {
+            'Test': entity_list,
+        }
+        schemas = {
+            'Test': {
+                'name': 'Test',
+                'type': 'record',
+                'fields': [
+                    {
+                        'name': 'a_string',
+                        'type': 'string'
+                    }
+                ],
+            },
+        }
+        result = validators.validate_entities(entities=entities, schemas=schemas)
+        self.assertEquals(len(result.validation_errors), len(entity_list) * 2)

@@ -33,9 +33,11 @@ from model_utils.models import TimeStampedModel
 from aether.common.utils import resolve_file_url
 
 from .constants import NAMESPACE
-from .utils import json_prettified, validate_payload, EntityValidationError
+from .utils import json_prettified
+
 from .validators import (
     validate_avro_schema,
+    validate_entity_payload,
     validate_mapping_definition,
     validate_schema_definition,
 )
@@ -645,12 +647,12 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
 
         if self.schema:
             try:
-                validate_payload(
+                validate_entity_payload(
                     schema_definition=self.schema.definition,
                     payload=self.payload,
                 )
-            except EntityValidationError as eve:
-                raise ValidationError({'payload': [str(eve)]})
+            except ValidationError as ve:
+                raise ValidationError({'payload': [str(ve)]})
 
     def save(self, *args, **kwargs):
         try:
