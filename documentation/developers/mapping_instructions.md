@@ -4,7 +4,7 @@ A mapping is a set of instructions that when executed transform a source documen
 
 Each mapping is made up of two instuctions, the first describing a source and the second a destination. The destination instruction will always be a reference to one of the entities we're trying to create. The source instruction can pull data from a few places, the most typical will be the source document. However, we can also use it to pull data from entities that have been created previously in the mapping, or to generate a new UUID, or to apply a constant not found found in the source document.
 
-Mapping instructions are executed in order. To see how we handle missing references and other issues, see the section, [_Extractor Mechanism_](#user-content-extractor-mechanism) for more information.
+Mapping instructions are executed in order. To see how we handle missing references and other issues, see the section, [_Extractor Mechanism_](#user-content-extractor-mechanism).
 
 #### Types of Mappings
 
