@@ -167,7 +167,7 @@ Filtering is an advanced feature and can change the order of the filtered field 
   - Always apply filters in the same order.
   - Apply the same filter for all properties of a given type.
 
-For more information about how the extractor interprets instructions, and why filtering order matters see the section titled [_Extractor Mechanism_](#user-content-extractor-mechanism).
+For more information about how the extractor interprets instructions and why filtering order matters, see the section titled [_Extractor Mechanism_](#user-content-extractor-mechanism).
 
 <a name="extractor-function"></a>
 ## Extractor Functions
