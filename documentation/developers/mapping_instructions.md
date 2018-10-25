@@ -160,7 +160,7 @@ Yields:
 ---
 #### JSONPath filtering and other functions
 
-As we use the extended parser in `jsonpath-ng` there are a number of functional improvements that you can leverage. A reference is available [here](https://github.com/h2non/jsonpath-ng#extensions).
+Because we use `jsonpath-ng`'s extended parser, there are a number of functional improvements that you can leverage. A reference is available [here](https://github.com/h2non/jsonpath-ng#extensions).
 
 Filtering is an advanced feature and can change the order of the filtered field in the output entities. If you're creating more than one entity of a particular type, you must be sure that your outputs properly align to the source document as you're creating your mapping. The best way to do this is to:
   - Apply non-overlapping filtering to all instances of any filtered type.
