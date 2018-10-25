@@ -19,21 +19,16 @@
 import uuid
 
 from django.db.utils import IntegrityError
-from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
+
 from django.test import TransactionTestCase
 
 from .. import models
 
+from . import EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA, EXAMPLE_SOURCE_DATA_ENTITY, EXAMPLE_MAPPING
+
 
 class ModelsTests(TransactionTestCase):
-
-    def setUp(self):
-        username = 'test'
-        email = 'test@example.com'
-        password = 'testtest'
-
-        self.user = get_user_model().objects.create_user(username, email, password)
 
     def test_models(self):
 
@@ -44,11 +39,33 @@ class ModelsTests(TransactionTestCase):
         self.assertEquals(str(project), project.name)
         self.assertNotEqual(models.Project.objects.count(), 0)
 
+        schema = models.Schema.objects.create(
+            name='sample schema',
+            definition={},
+            revision='a sample revision',
+        )
+        self.assertEquals(str(schema), schema.name)
+        self.assertNotEqual(models.Schema.objects.count(), 0)
+        self.assertIsNotNone(schema.definition_prettified)
+        self.assertEqual(schema.schema_name, 'sample schema')
+
+        schema.definition = EXAMPLE_SCHEMA
+        schema.save()
+        self.assertEqual(schema.schema_name, 'Person')
+
+        projectschema = models.ProjectSchema.objects.create(
+            name='sample project schema',
+            project=project,
+            schema=schema,
+        )
+        self.assertEquals(str(projectschema), projectschema.name)
+        self.assertNotEqual(models.ProjectSchema.objects.count(), 0)
+
         mappingset = models.MappingSet.objects.create(
             revision='a sample revision',
             name='a sample mapping set',
-            schema={},
-            input={},
+            schema=EXAMPLE_SCHEMA,
+            input=EXAMPLE_SOURCE_DATA,
             project=project,
         )
         self.assertEquals(str(mappingset), mappingset.name)
@@ -59,7 +76,7 @@ class ModelsTests(TransactionTestCase):
 
         mapping = models.Mapping.objects.create(
             name='sample mapping',
-            definition={},
+            definition={'entities': {}, 'mapping': []},
             revision='a sample revision field',
             mappingset=mappingset,
         )
@@ -68,9 +85,22 @@ class ModelsTests(TransactionTestCase):
         self.assertIsNotNone(mapping.definition_prettified)
         self.assertEqual(mapping.projectschemas.count(), 0, 'No entities in definition')
 
+        mapping_definition = dict(EXAMPLE_MAPPING)
+        mapping_definition['entities']['Person'] = str(projectschema.pk)
+        mapping.definition = mapping_definition
+        mapping.save()
+        self.assertEqual(mapping.projectschemas.count(), 1)
+
+        # check mapping definition validation
+        mapping.definition = {'entities': {'a': str(uuid.uuid4())}}
+        with self.assertRaises(IntegrityError) as err:
+            mapping.save()
+        message = str(err.exception)
+        self.assertIn('is not valid under any of the given schemas', message)
+
         submission = models.Submission.objects.create(
             revision='a sample revision',
-            payload={},
+            payload=EXAMPLE_SOURCE_DATA,
             mappingset=mappingset,
         )
         self.assertNotEqual(models.Submission.objects.count(), 0)
@@ -100,32 +130,20 @@ class ModelsTests(TransactionTestCase):
         self.assertEquals(attachment_2.submission_revision, 'next revision')
         self.assertNotEqual(attachment_2.submission_revision, submission.revision)
 
-        schema = models.Schema.objects.create(
-            name='sample schema',
-            definition={},
-            revision='a sample revision',
-        )
-        self.assertEquals(str(schema), schema.name)
-        self.assertNotEqual(models.Schema.objects.count(), 0)
-        self.assertIsNotNone(schema.definition_prettified)
-        self.assertEqual(schema.schema_name, 'sample schema')
-
-        schema.definition = {'name': 'Person'}
-        schema.save()
-        self.assertEqual(schema.schema_name, 'Person')
-
-        projectschema = models.ProjectSchema.objects.create(
-            name='sample project schema',
-            project=project,
-            schema=schema,
-        )
-        self.assertEquals(str(projectschema), projectschema.name)
-        self.assertNotEqual(models.ProjectSchema.objects.count(), 0)
+        with self.assertRaises(IntegrityError) as err:
+            models.Entity.objects.create(
+                revision='a sample revision',
+                payload=EXAMPLE_SOURCE_DATA,  # this is the submission payload without ID
+                status='Publishable',
+                projectschema=projectschema,
+            )
+        message = str(err.exception)
+        self.assertIn('Extracted record did not conform to registered schema', message)
 
         entity = models.Entity.objects.create(
             revision='a sample revision',
-            payload={},
-            status='a sample status',
+            payload=EXAMPLE_SOURCE_DATA_ENTITY,
+            status='Publishable',
             projectschema=projectschema,
             mapping=mapping,
             submission=submission,
@@ -134,6 +152,8 @@ class ModelsTests(TransactionTestCase):
         self.assertIsNotNone(entity.payload_prettified)
         self.assertEqual(entity.project, project, 'entity inherits submission project')
         self.assertEqual(entity.name, f'{project.name}-{schema.schema_name}')
+        self.assertEqual(entity.mapping_revision, mapping.revision,
+                         'entity takes mapping revision if missing')
 
         project_2 = models.Project.objects.create(
             revision='rev 1',
@@ -151,11 +171,12 @@ class ModelsTests(TransactionTestCase):
             entity.save()
 
         self.assertIsNotNone(ie)
-        self.assertIn('Submission and Project Schema MUST belong to the same Project',
+        self.assertIn('Submission, Mapping and Project Schema MUST belong to the same Project',
                       str(ie.exception))
 
         # it works without submission
         entity.submission = None
+        entity.mapping = None
         entity.save()
         self.assertEqual(entity.project, project_2, 'entity inherits projectschema project')
         self.assertEqual(entity.name, f'{project_2.name}-{schema.schema_name}')
@@ -174,14 +195,18 @@ class ModelsTests(TransactionTestCase):
         entity.project = project_2  # this is going to be replaced
         entity.submission = submission
         entity.projectschema = None
+        entity.schema = None
         entity.save()
         self.assertEqual(entity.project, project, 'entity inherits submission project')
         self.assertEqual(entity.name, entity.submission.name)
 
+        entity.mapping = mapping
+        entity.save()
+        self.assertEqual(entity.project, project, 'entity inherits mapping project')
+
         entity.submission = None
         entity.projectschema = projectschema
         entity.save()
-        self.assertEqual(entity.project, project, 'entity inherits projectschema project')
         self.assertEqual(entity.name, f'{project.name}-{schema.schema_name}')
 
         # try to build entity name with mapping entity entries
@@ -191,12 +216,13 @@ class ModelsTests(TransactionTestCase):
             schema=schema,
         )
 
-        self.assertEqual(mapping.projectschemas.count(), 0)
+        self.assertEqual(mapping.projectschemas.count(), 1)
         mapping.definition = {
             'entities': {
                 'None': str(projectschema_3.pk),
                 'Some': str(entity.projectschema.pk),
-            }
+            },
+            'mapping': [],
         }
         mapping.save()
         self.assertEqual(mapping.projectschemas.count(), 2)
@@ -245,7 +271,7 @@ class ModelsTests(TransactionTestCase):
         )
         schema = models.Schema.objects.create(
             name='schema',
-            definition={},
+            definition=EXAMPLE_SCHEMA,
         )
         projectschema = models.ProjectSchema.objects.create(
             name='project schema',
@@ -253,13 +279,13 @@ class ModelsTests(TransactionTestCase):
             schema=schema,
         )
         entity = models.Entity.objects.create(
-            payload={},
+            payload=EXAMPLE_SOURCE_DATA_ENTITY,
             status='Publishable',
             projectschema=projectschema,
         )
 
         entity_2 = models.Entity.objects.create(
-            payload={},
+            payload=EXAMPLE_SOURCE_DATA_ENTITY,
             status='Publishable',
             schema=schema,
         )

@@ -16,23 +16,18 @@
 # specific language governing permissions and limitations
 # under the License.
 
-'''
-All public functions in this file raise
-rest_framework.serializers.ValidationError when validation fails. They are
-intended to be used inside of serializer classes to validate incoming data.
-'''
-
 import json
 
-from jsonschema.validators import Draft4Validator
-
+from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext as _
-from rest_framework import serializers
+
+from jsonschema.validators import Draft4Validator
 from spavro.schema import parse, SchemaParseException
+
 
 MESSAGE_REQUIRED_ID = _('A schema is required to have a field "id" of type "string"')
 
-mapping_definition_schema = {
+MAPPING_DEFINITION_SCHEMA = {
     'description': _(
         'A mapping definition is either an empty object or an object with two '
         'required properties: "entities" and "mapping". '
@@ -70,18 +65,18 @@ mapping_definition_schema = {
     ]
 }
 
-mapping_definition_validator = Draft4Validator(mapping_definition_schema)
+mapping_definition_validator = Draft4Validator(MAPPING_DEFINITION_SCHEMA)
 
 
 def validate_avro_schema(value):
     '''
     Attempt to parse ``value`` into an Avro schema.
-    Raise ``serializers.ValidationError`` on error.
+    Raise ``ValidationError`` on error.
     '''
     try:
         parse(json.dumps(value))
     except SchemaParseException as e:
-        raise serializers.ValidationError(str(e))
+        raise ValidationError(str(e))
 
 
 def _has_valid_id_field(schema):
@@ -89,45 +84,57 @@ def _has_valid_id_field(schema):
     Check if ``schema`` has a top-level field "id" of type "string".
     If top level is a union type, check all child schemas.
     '''
-    id_field_type = None
-    schema_statuses = []
-    if not isinstance(schema, list):
-        schemas = [schema]
-    else:
-        schemas = schema
-    for schema in schemas:
-        id_field_type = None
-        if not schema.get('aetherBaseSchema', False):
-            schema_statuses.append(True)
-            continue
-        for field in schema.get('fields', []):
-            if field.get('name', None) == 'id':
-                id_field_type = field.get('type', None)
-                break
 
-        schema_statuses.append(id_field_type and id_field_type == 'string')
-    # True if All of the statuses were True
-    return all(schema_statuses)
+    if isinstance(schema, list):
+        schemas = [s for s in schema if s.get('aetherBaseSchema')]
+        if len(schemas) != 1:
+            return False
+        schema = schemas[0]
+
+    for field in schema.get('fields', []):
+        if field.get('name', None) == 'id':
+            return field.get('type', None) == 'string'
+
+    return False
 
 
 def validate_id_field(schema):
     '''
-    If ``schema`` does not have a top-level field "id" of type "string", raise
-    ``serializers.ValidationError``.
+    If ``schema`` does not have a top-level field "id" of type "string",
+    raise ``ValidationError``.
     '''
     if not _has_valid_id_field(schema):
-        raise serializers.ValidationError(MESSAGE_REQUIRED_ID)
+        raise ValidationError(MESSAGE_REQUIRED_ID)
+
+
+def validate_schema_definition(value):
+    '''
+    Attempt to parse ``value`` into an Avro schema and checks if it has
+    a top-level field "id" of type "string.
+    Raise ``ValidationError`` on error.
+    '''
+    validate_avro_schema(value)
+    validate_id_field(value)
 
 
 def validate_mapping_definition(value):
     '''
-    If ``value`` does not conform to the mapping definition schema, raise
-    ``serializers.ValidationError``.
+    If ``value`` does not conform to the mapping definition schema,
+    raise ``ValidationError``.
     '''
     errors = sorted(
         mapping_definition_validator.iter_errors(value),
         key=lambda e: e.path,
     )
     if errors:
-        error_messages = [e.message for e in errors]
-        raise serializers.ValidationError(error_messages)
+        raise ValidationError([e.message for e in errors])
+
+
+def validate_schemas(value):
+    if not isinstance(value, dict):
+        raise ValidationError(_('Value {} is not an Object').format(value))
+
+    for schema in value.values():
+        validate_schema_definition(schema)
+
+    return value

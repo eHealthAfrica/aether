@@ -92,9 +92,10 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
     mapping_errors = JSONField(null=True, blank=True, editable=False)
     output = JSONField(null=True, blank=True, editable=False)
 
-    # these contain the information related to the linked artefacts in kernel
+    # this contains the information related to the linked artefacts in kernel
     # {
-    #     "mappings": uuid,
+    #     "project": uuid,
+    #     "mapping": uuid,
     #     "schemas": {
     #         "entity name": uuid,
     #         ...
