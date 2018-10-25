@@ -328,7 +328,7 @@ For more information about how the extractor interprets instructions and why fil
     ]
     ```
     So, using #!entity-reference, how can we make sure everyone is assigned to the proper house? An anchor reference.
-    The first argument should be the path within the source that describes the output entity, in this case a Person. A path that best represents a person in the source is `households[*].names[*]`. The second argument decribes the source of the information in the source document, in this case it's a House, so the proper path would be `households[*]`. As an full command, we get:
+    The first argument should be the path within the source that describes the output entity, in this case a Person. A path that best represents a person in the source is `households[*].names[*]`. The second argument decribes the source of the information in the source document, in this case it's a House, so the proper path would be `households[*]`. As a full command, we get:
     
     ```
     src:    #!entity-reference#House[*].id#households[*].names[*]#households[*]
