@@ -36,10 +36,9 @@ show_help () {
                     create/update superuser using
                         'ADMIN_USERNAME', 'ADMIN_PASSWORD'
 
-    test          : run ALL tests
-    test_lint     : run flake8, standardjs and sass lint tests
-    test_coverage : run python tests with coverage output
-    test_py       : alias of test_coverage
+    test          : run tests
+    test_lint     : run flake8 tests
+    test_coverage : run tests with coverage output
 
     start         : start webserver behind nginx
     start_dev     : start webserver for development
@@ -54,7 +53,7 @@ pip_freeze () {
     rm -rf /tmp/env
 
     virtualenv -p python3 /tmp/env/
-    /tmp/env/bin/pip install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
+    /tmp/env/bin/pip install -q -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
 
     cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
     /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
@@ -141,7 +140,7 @@ case "$1" in
         echo "DEBUG=$DEBUG"
         setup
         test_lint
-        test_coverage
+        test_coverage "${@:2}"
     ;;
 
     test_lint )
@@ -149,10 +148,6 @@ case "$1" in
     ;;
 
     test_coverage )
-        test_coverage "${@:2}"
-    ;;
-
-    test_py )
         test_coverage "${@:2}"
     ;;
 

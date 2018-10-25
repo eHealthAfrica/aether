@@ -16,12 +16,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import copy
-import json
 import dateutil.parser
-import uuid
-
+import json
 import mock
+import uuid
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -29,21 +27,17 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from .. import models, constants, validators
+from .. import models, validators, utils
 
-from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA,
-               SAMPLE_LOCATION_SCHEMA_DEFINITION, SAMPLE_HOUSEHOLD_SCHEMA_DEFINITION,
-               SAMPLE_LOCATION_DATA, SAMPLE_HOUSEHOLD_DATA, EXAMPLE_GAMETOKEN_SCHEMA,
-               EXAMPLE_VALID_PAYLOAD, EXAMPLE_SOURCE_DATA_ENTITY, EXAMPLE_INVALID_PAYLOAD)
-
-
-def assign_mapping_entities(mapping, projectschemas):
-    entities = {}
-    for projectschema in projectschemas:
-        entities[projectschema.schema.definition['name']] = str(projectschema.pk)
-    mapping_ = copy.deepcopy(mapping)
-    mapping_['entities'] = entities
-    return mapping_
+from . import (
+    EXAMPLE_MAPPING,
+    EXAMPLE_SCHEMA,
+    EXAMPLE_SOURCE_DATA,
+    SAMPLE_HOUSEHOLD_DATA,
+    SAMPLE_HOUSEHOLD_SCHEMA_DEFINITION,
+    SAMPLE_LOCATION_DATA,
+    SAMPLE_LOCATION_SCHEMA_DEFINITION,
+)
 
 
 class ViewsTest(TestCase):
@@ -63,9 +57,6 @@ class ViewsTest(TestCase):
         self.project = models.Project.objects.create(
             revision='rev 1',
             name='a project name',
-            salad_schema='a sample salad schema',
-            jsonld_context='sample context',
-            rdf_definition='a sample rdf definition'
         )
 
         self.schema = models.Schema.objects.create(
@@ -73,20 +64,16 @@ class ViewsTest(TestCase):
             type='eha.test.schemas',
             family='Person',
             definition=EXAMPLE_SCHEMA,
-            revision='a sample revision',
         )
 
         self.projectschema = models.ProjectSchema.objects.create(
             name='a project schema name',
-            mandatory_fields='a sample mandatory fields',
-            transport_rule='a sample transport rule',
-            masked_fields='a sample masked field',
-            is_encrypted=False,
             project=self.project,
             schema=self.schema,
         )
         # update the fake value with a real one
-        EXAMPLE_MAPPING['entities']['Person'] = str(self.projectschema.pk)
+        mapping_definition = dict(EXAMPLE_MAPPING)
+        mapping_definition['entities']['Person'] = str(self.projectschema.pk)
 
         self.mappingset = models.MappingSet.objects.create(
             name='a sample mapping set',
@@ -95,319 +82,35 @@ class ViewsTest(TestCase):
             project=self.project,
         )
 
-        mapping_definition = assign_mapping_entities(
-            mapping=EXAMPLE_MAPPING,
-            projectschemas=[self.projectschema],
-        )
         self.mapping = models.Mapping.objects.create(
             name='mapping1',
             definition=mapping_definition,
-            revision='a sample revision field',
             mappingset=self.mappingset,
         )
 
         self.submission = models.Submission.objects.create(
-            revision='a sample revision',
             payload=EXAMPLE_SOURCE_DATA,
             mappingset=self.mappingset,
             project=self.project,
         )
 
-        self.entity = models.Entity.objects.create(
-            revision='a sample revision',
-            payload=self.entity_payload,
-            status='a sample status',
-            projectschema=self.projectschema,
-            submission=self.submission,
-            mapping=self.mapping,
-            mapping_revision=self.mapping.revision,
-        )
+        # extract entities
+        utils.run_entity_extraction(self.submission)
+        self.entity = models.Entity.objects.first()
 
     def tearDown(self):
         self.project.delete()
         self.client.logout()
 
-    def get_count(self, view_name):
-        url = reverse(view_name)
-        response = self.client.get(url)
-        return json.loads(response.content).get('count')
-
-    # TEST CREATE:
-    def helper_create_object(self, view_name, data, is_negative=False):
-        url = reverse(view_name)
-        data = json.dumps(data)
-        response = self.client.post(url, data, content_type='application/json')
-        if is_negative:
+    def helper_create_object(self, view_name, data, might_fail=False):
+        response = self.client.post(reverse(view_name),
+                                    json.dumps(data),
+                                    content_type='application/json')
+        if might_fail:
             self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST, response.content)
         else:
             self.assertEquals(response.status_code, status.HTTP_201_CREATED, response.content)
         return response
-
-    def test_api_create_instance(self):
-        self.helper_create_object('project-list', {
-            'name': 'Project name',
-            'revision': 'Sample project revision',
-            'salad_schema': 'Sample project SALAD schema',
-            'jsonld_context': 'Sample JSONLD context',
-            'rdf_definition': 'Sample RDF definition',
-        })
-        self.helper_create_object('mappingset-list', {
-            'name': 'Mapping Set name',
-            'revision': 'Sample mapping set revision',
-            'project': str(self.project.pk)
-        })
-        self.helper_create_object('mapping-list', {
-            'name': 'Mapping name',
-            'definition': EXAMPLE_MAPPING,
-            'revision': 'Sample mapping revision',
-            'mappingset': str(self.mappingset.pk),
-            'projectschemas': [str(self.projectschema.pk)]
-        })
-        self.helper_create_object('submission-list', {
-            'revision': 'Sample submission revision',
-            'payload': EXAMPLE_SOURCE_DATA,
-            'mappingset': str(self.mappingset.pk),
-            'project': str(self.project.pk)
-        })
-        self.helper_create_object('schema-list', {
-            'name': 'Schema name',
-            'type': 'Type',
-            'definition': EXAMPLE_SCHEMA,
-            'revision': 'a sample revision',
-        })
-        self.helper_create_object('projectschema-list', {
-            'name': 'Project Schema name',
-            'mandatory_fields': 'Sample projectschema mandatory fields',
-            'transport_rule': 'Sample projectschema transport rule',
-            'masked_fields': 'Sample projectschema masked fields',
-            'isEncrypted': True,
-            'project': str(self.project.pk),
-            'schema': str(self.schema.pk),
-        })
-        self.helper_create_object('entity-list', {
-            'revision': 'Sample entity revision',
-            'payload': EXAMPLE_SOURCE_DATA_ENTITY,
-            'status': 'Publishable',
-            'projectschema': str(self.projectschema.pk),
-            'submission': str(self.submission.pk),
-            'mapping': str(self.mapping.pk),
-            'mapping_revision': self.mapping.revision,
-        })
-        test_schema_id = json.loads(self.helper_create_object('schema-list', {
-            'name': 'GameToken',
-            'type': 'record',
-            'definition': EXAMPLE_GAMETOKEN_SCHEMA,
-            'revision': '1',
-        }).content)['id']
-        self.test_schema = models.Schema.objects.get(pk=test_schema_id)
-        test_project_schema_id = json.loads(self.helper_create_object('projectschema-list', {
-            'name': 'Project Schema 2',
-            'mandatory_fields': 'Sample projectschema mandatory fields',
-            'transport_rule': 'Sample projectschema transport rule',
-            'masked_fields': 'Sample projectschema masked fields',
-            'isEncrypted': True,
-            'project': str(self.project.pk),
-            'schema': str(self.test_schema.pk),
-        }).content)['id']
-        self.test_project_schema = models.ProjectSchema.objects.get(pk=test_project_schema_id)
-        self.helper_create_object('entity-list', {
-            'revision': '1',
-            'payload': EXAMPLE_VALID_PAYLOAD,
-            'status': 'Publishable',
-            'projectschema': str(self.test_project_schema.pk),
-            'submission': str(self.submission.pk),
-            'mapping': str(self.mapping.pk),
-            'mapping_revision': self.mapping.revision,
-        })
-        self.helper_create_object('entity-list', {
-            'revision': '1',
-            'payload': EXAMPLE_INVALID_PAYLOAD,
-            'status': 'Publishable',
-            'projectschema': str(self.test_project_schema.pk),
-            'submission': str(self.submission.pk),
-            'mapping': str(self.mapping.pk),
-            'mapping_revision': self.mapping.revision,
-        }, True)
-
-    # TEST READ
-
-    def helper_read_object_id(self, view_name, obj):
-        url = reverse(view_name, kwargs={'pk': obj.pk})
-        response = self.client.get(url, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        return response
-
-    def test_api_read_instance(self):
-        self.helper_read_object_id('mappingset-detail', self.mappingset)
-        self.helper_read_object_id('mapping-detail', self.mapping)
-        self.helper_read_object_id('submission-detail', self.submission)
-        self.helper_read_object_id('entity-detail', self.entity)
-        self.helper_read_object_id('project-detail', self.project)
-        self.helper_read_object_id('schema-detail', self.schema)
-        self.helper_read_object_id('projectschema-detail', self.projectschema)
-
-    # TEST UPDATE
-
-    def helper_update_object_id(self, view_name, updated_data, obj, is_negative=False):
-        url = reverse(view_name, kwargs={'pk': obj.pk})
-        updated_data = json.dumps(updated_data)
-        response = self.client.put(url, updated_data, content_type='application/json')
-        if is_negative:
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.content)
-        else:
-            self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
-        return response
-
-    def test_api_update_instance_id(self):
-        self.helper_update_object_id('mapping-detail', {
-            'name': 'Mapping name 2',
-            'definition': {},
-            'revision': 'Sample mapping revision',
-            'projectschemas': [str(self.projectschema.pk)],
-            'mappingset': str(self.mappingset.pk),
-        }, self.mapping)
-        self.helper_update_object_id('mappingset-detail', {
-            'name': 'Mapping set name 2',
-            'revision': 'Sample mapping set revision',
-            'project': str(self.project.pk)
-        }, self.mappingset)
-        self.helper_update_object_id('submission-detail', {
-            'revision': 'Sample submission revision updated',
-            'payload': {},
-            'mappingset': str(self.mappingset.pk)
-        }, self.submission)
-        updated_example_payload = EXAMPLE_SOURCE_DATA_ENTITY
-        updated_example_payload['name'] = 'Person name updated'
-        self.helper_update_object_id('entity-detail', {
-            'revision': 'Sample entity revision updated',
-            'payload': updated_example_payload,
-            'status': 'Publishable',
-            'projectschema': str(self.projectschema.pk),
-            'mapping': str(self.mapping.pk),
-            'mapping_revision': self.mapping.revision,
-        }, self.entity)
-        updated_example_payload = EXAMPLE_SOURCE_DATA_ENTITY
-        updated_example_payload['name'] = 'Test last name updated'
-        updated_example_payload['new_prop'] = 'Test prop updated'
-        self.helper_update_object_id('entity-detail', {
-            'revision': 'Sample entity revision updated',
-            'payload': updated_example_payload,
-            'merge': 'first_write_wins',
-            'status': 'Publishable',
-            'projectschema': str(self.projectschema.pk),
-            'mapping': str(self.mapping.pk),
-            'mapping_revision': self.mapping.revision,
-        }, self.entity)
-        returned_entity = models.Entity.objects.get(pk=self.entity.pk)
-        self.assertEqual(self.entity_payload['name'], returned_entity.payload['name'])
-        self.assertIsNotNone(returned_entity.payload['new_prop'])
-        updated_example_payload['name'] = 'Test last name updated'
-        updated_example_payload['new_prop2'] = 'Test prop updated'
-        self.helper_update_object_id('entity-detail', {
-            'revision': 'Sample entity revision updated',
-            'payload': updated_example_payload,
-            'merge': 'last_write_wins',
-            'status': 'Publishable',
-            'projectschema': str(self.projectschema.pk),
-            'submission': str(self.submission.pk),
-            'mapping': str(self.mapping.pk),
-            'mapping_revision': self.mapping.revision,
-        }, self.entity)
-        returned_entity = models.Entity.objects.get(pk=self.entity.pk)
-        self.assertNotEqual(self.entity_payload['name'], returned_entity.payload['name'])
-        self.assertIsNotNone(returned_entity.payload['new_prop2'])
-        invalid_example_payload = dict(EXAMPLE_SOURCE_DATA_ENTITY)
-        del invalid_example_payload['villageID']
-        self.helper_update_object_id('entity-detail', {
-            'revision': 'Sample entity revision updated',
-            'payload': invalid_example_payload,
-            'status': 'Publishable',
-            'projectschema': str(self.projectschema.pk),
-        }, self.entity, True)
-        self.helper_update_object_id('project-detail', {
-            'name': 'Project name 2',
-            'revision': 'Sample project revision',
-            'salad_schema': 'Sample project SALAD schema',
-            'jsonld_context': 'Sample JSONLD context',
-            'rdf_definition': 'Sample RDF definition'
-        }, self.project)
-        self.helper_update_object_id('schema-detail', {
-            'name': 'Schema name 2',
-            'type': 'Type',
-            'definition': EXAMPLE_SCHEMA,
-            'revision': 'Sample schema revision',
-        }, self.schema)
-        self.helper_update_object_id('projectschema-detail', {
-            'name': 'Project Schema name 2',
-            'mandatory_fields': 'Sample projectschema mandatory fields updated',
-            'transport_rule': 'Sample projectschema transport rule',
-            'masked_fields': 'Sample projectschema masked fields',
-            'isEncrypted': True,
-            'project': str(self.project.pk),
-            'schema': str(self.schema.pk)
-        }, self.projectschema)
-
-    # TEST DELETE
-
-    def helper_delete_object_pk(self, view_name, obj):
-        url = reverse(view_name, kwargs={'pk': obj.pk})
-        response = self.client.delete(url, format='json', follow=True)
-        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
-        return response
-
-    def test_api_delete_project(self):
-        self.helper_delete_object_pk('project-detail', self.project)
-
-    def test_api_delete_schema(self):
-        self.helper_delete_object_pk('schema-detail', self.schema)
-
-    def test_api_delete_projectschema(self):
-        self.helper_delete_object_pk('projectschema-detail', self.projectschema)
-
-    def test_api_delete_mapping(self):
-        self.helper_delete_object_pk('mapping-detail', self.mapping)
-
-    def test_api_delete_mappingset(self):
-        self.helper_delete_object_pk('mappingset-detail', self.mappingset)
-
-    def test_api_delete_submission(self):
-        self.helper_delete_object_pk('submission-detail', self.submission)
-
-    def test_api_delete_entity(self):
-        self.helper_delete_object_pk('entity-detail', self.entity)
-
-    def test_api_submission_with_empty_mapping(self):
-        mappingset = {
-            'name': 'mapping set',
-            'revision': 'Sample mapping set revision',
-            'project': str(self.project.pk),
-            'input': {}
-        }
-        mappingset_response = self.helper_create_object(
-            view_name='mappingset-list',
-            data=mappingset,
-        )
-        mapping = {
-            'name': 'Empty mapping',
-            'definition': {},
-            'revision': 'Sample mapping revision',
-            'mappingset': mappingset_response.json()['id'],
-            'projectschemas': [str(self.projectschema.pk)],
-        }
-        self.helper_create_object(
-            view_name='mapping-list',
-            data=mapping,
-        )
-        submission = {
-            'mappingset': mappingset_response.json()['id'],
-            'payload': {
-                'a': 1
-            }
-        }
-        self.helper_create_object(
-            view_name='submission-list',
-            data=submission,
-        )
 
     def test_project_stats_view(self):
         # cleaning data
@@ -528,7 +231,7 @@ class ViewsTest(TestCase):
             dateutil.parser.parse(json['last_submission']),
         )
 
-    def test_example_entity_extraction__success(self):
+    def test_validate_mappings__success(self):
         '''
         Assert that valid mappings validate and no errors are accumulated.
         '''
@@ -546,7 +249,7 @@ class ViewsTest(TestCase):
         )
         self.assertEqual(len(response_data['mapping_errors']), 0)
 
-    def test_example_entity_extraction__failure(self):
+    def test_validate_mappings__failure(self):
         '''
         Assert that errors are collected when invalid entities are created.
         '''
@@ -555,7 +258,7 @@ class ViewsTest(TestCase):
             'submission_payload': EXAMPLE_SOURCE_DATA,
             'mapping_definition': {
                 'entities': {
-                    'Person': 1,
+                    'Person': str(self.projectschema),
                 },
                 'mapping': [
                     ['#!uuid', 'Person.id'],
@@ -569,25 +272,19 @@ class ViewsTest(TestCase):
                 'Person': EXAMPLE_SCHEMA,
             },
         })
-        response = self.client.post(
-            url,
-            data=data,
-            content_type='application/json'
-        )
+        response = self.client.post(url, data=data, content_type='application/json')
         response_data = json.loads(response.content)
-        self.assertEqual(len(response_data['entities']), 0)
+        self.assertEqual(len(response_data['entities']), 0, response_data)
         expected = [
             'Could not find schema "person"',
             'No match for path',
             'Expected type "string" at path "Person.dob". Actual value: None',
             'Expected type "string" at path "Person.villageID". Actual value: None',
         ]
-        result = [
-            error['description'] for error in response_data['mapping_errors']
-        ]
+        result = [error['description'] for error in response_data['mapping_errors']]
         self.assertEqual(expected, result)
 
-    def test_example_entity_extraction__400_BAD_REQUEST(self):
+    def test_validate_mappings__400_BAD_REQUEST(self):
         '''
         Invalid requests should return status code 400.
         '''
@@ -604,20 +301,27 @@ class ViewsTest(TestCase):
                     # "not_a_field" is not a field of `Person`
                     ['data.village', 'Person.not_a_field'],
                 ],
-                # "schemas" are missing
             },
         })
-        response = self.client.post(
-            url,
-            data=data,
-            content_type='application/json'
-        )
+        response = self.client.post(url, data=data, content_type='application/json')
         response_data = json.loads(response.content)
         self.assertEquals(response.status_code, 400)
         self.assertIn('This field is required', response_data['schemas'][0])
         self.assertIn('This field is required', response_data['submission_payload'][0])
 
-    def test_example_entity_extraction__500_INTERNAL_SERVER_ERROR(self):
+        # try again with wrong schemas
+        data = json.dumps({
+            'submission_payload': EXAMPLE_SOURCE_DATA,
+            'mapping_definition': EXAMPLE_MAPPING,
+            # "schemas" must be a dictionary
+            'schemas': [],
+        })
+        response = self.client.post(url, data=data, content_type='application/json')
+        response_data = json.loads(response.content)
+        self.assertEquals(response.status_code, 400)
+        self.assertEquals('Value [] is not an Object', response_data['schemas'][0])
+
+    def test_validate_mappings__500_INTERNAL_SERVER_ERROR(self):
         '''
         Unexpected mapping or extraction failures should return status code 500.
         '''
@@ -633,66 +337,60 @@ class ViewsTest(TestCase):
             self.assertEquals(response.status_code, 500)
 
     # Test resolving linked entities
-    def helper_read_linked_data_entities(self, view_name, obj, depth):
-        url = reverse(view_name, kwargs={'pk': obj.pk}) + '?depth=' + str(depth)
+    def helper_read_linked_data_entities(self, obj, depth):
+        url = reverse('entity-detail', kwargs={'pk': obj.pk}) + '?depth=' + str(depth)
         response = self.client.get(url, format='json')
-        try:
-            int(depth)
-            if depth > constants.LINKED_DATA_MAX_DEPTH:
-                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            else:
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
-        except Exception as e:
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        return response
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
+        return json.loads(response.content)
 
     def test_read_linked_data(self):
         location_schema = models.Schema.objects.create(
             name='Location',
             definition=SAMPLE_LOCATION_SCHEMA_DEFINITION,
-            revision='1'
         )
         household_schema = models.Schema.objects.create(
             name='Household',
             definition=SAMPLE_HOUSEHOLD_SCHEMA_DEFINITION,
-            revision='1'
         )
         location_projectschema = models.ProjectSchema.objects.create(
             name='Location',
             project=self.project,
-            schema=location_schema
+            schema=location_schema,
         )
         household_projectschema = models.ProjectSchema.objects.create(
             name='Household',
             project=self.project,
-            schema=household_schema
+            schema=household_schema,
         )
         location_entity = models.Entity.objects.create(
             payload=SAMPLE_LOCATION_DATA,
-            projectschema=location_projectschema
+            projectschema=location_projectschema,
+            status='Publishable',
         )
         household_entity = models.Entity.objects.create(
             payload=SAMPLE_HOUSEHOLD_DATA,
-            projectschema=household_projectschema
+            projectschema=household_projectschema,
+            status='Publishable',
         )
-        linked_entity = self.helper_read_linked_data_entities('entity-detail', household_entity, 2)
-        self.assertIsNotNone(
-            json.loads(linked_entity.content)['resolved'][location_schema.name][location_entity.payload['id']]
-        )
-        self.helper_read_linked_data_entities('entity-detail', household_entity, 4)
-        self.helper_read_linked_data_entities('entity-detail', household_entity, 'two')
 
-    def test_api_no_cascade_delete_on_entity(self):
-        self.helper_delete_object_pk('projectschema-detail', self.projectschema)
-        modified_entity = models.Entity.objects.get(pk=self.entity.pk)
-        self.assertIsNone(modified_entity.projectschema)
-        # Test updating entity without a projectschema
-        self.helper_update_object_id('entity-detail', {
-            'revision': modified_entity.revision,
-            'payload': modified_entity.payload,
-            'status': 'Publishable',
-            'projectschema': None
-        }, modified_entity, True)
+        entity_depth_0 = self.helper_read_linked_data_entities(household_entity, 0)
+        self.assertEqual(entity_depth_0['resolved'], {})
+
+        entity_depth_2 = self.helper_read_linked_data_entities(household_entity, 2)
+        self.assertNotEqual(entity_depth_2['resolved'], {})
+        resolved = entity_depth_2['resolved']
+        self.assertEqual(resolved['Location'][location_entity.payload['id']]['payload'], location_entity.payload)
+        self.assertEqual(resolved['Household'][household_entity.payload['id']]['payload'], household_entity.payload)
+
+        entity_depth_3 = self.helper_read_linked_data_entities(household_entity, 3)
+        entity_depth_4 = self.helper_read_linked_data_entities(household_entity, 4)
+        self.assertEqual(entity_depth_3, entity_depth_4, 'in case of depth > 3 ... return depth 3')
+
+        entity_two = self.helper_read_linked_data_entities(household_entity, 'two')
+        self.assertEqual(entity_depth_0, entity_two, 'in case of depth error... return simple entity')
+
+        entity_neg = self.helper_read_linked_data_entities(household_entity, -1)
+        self.assertEqual(entity_depth_0, entity_neg, 'in case of depth<0 ... return simple entity')
 
     def test_project_artefacts__endpoints(self):
         self.assertEqual(reverse('project-artefacts', kwargs={'pk': 1}), '/projects/1/artefacts/')
@@ -710,14 +408,14 @@ class ViewsTest(TestCase):
         response_patch = self.client.patch(
             url,
             json.dumps({'name': f'Project {project_id}'}),
-            content_type='application/json'
+            content_type='application/json',
         ).json()
         self.assertEqual(response_patch, {
             'project': project_id,
             'schemas': [],
             'project_schemas': [],
             'mappings': [],
-            'mappingsets': []
+            'mappingsets': [],
         })
         project = models.Project.objects.get(pk=project_id)
         self.assertEqual(project.name, f'Project {project_id}')
@@ -729,7 +427,7 @@ class ViewsTest(TestCase):
             'schemas': [],
             'project_schemas': [],
             'mappings': [],
-            'mappingsets': []
+            'mappingsets': [],
         })
 
     def test_project__avro_schemas__endpoints(self):
@@ -742,7 +440,7 @@ class ViewsTest(TestCase):
         response_patch = self.client.patch(
             url,
             json.dumps({'name': f'Project {project_id}'}),
-            content_type='application/json'
+            content_type='application/json',
         ).json()
         self.assertEqual(response_patch, {
             'project': project_id,
@@ -755,8 +453,7 @@ class ViewsTest(TestCase):
         self.assertEqual(project.name, f'Project {project_id}')
 
     def test_schema_validate_definition__success(self):
-        view_name = 'schema-list'
-        url = reverse(view_name)
+        url = reverse('schema-list')
         data = json.dumps({
             'name': 'Test',
             'type': 'test',
@@ -775,44 +472,44 @@ class ViewsTest(TestCase):
         self.assertEqual(response.status_code, 201)
 
         good_complex_schemas = [
-            json.dumps(  # Has a union type as it's base, but it otherwise ok.
+            # Has a union type as it's base, but it otherwise ok.
+            {
+                'name': 'Test-ab',
+                'type': 'test',
+                'definition': [
                     {
-                        'name': 'Test-ab',
-                        'type': 'test',
-                        'definition': [{
-                            'name': 'Test-a',
-                            'type': 'record',
-                            'aetherBaseSchema': True,
-                            'fields': [
-                                {
-                                    'name': 'id',
-                                    'type': 'string'
-                                }
-                            ]
-                        }, {
-                            'name': 'AProperty',
-                            'type': 'record',
-                            'fields': [
-                                {
-                                    'name': 'other_type',
-                                    'type': 'string'
-                                }
-                            ]
-                        }
+                        'name': 'Test-a',
+                        'type': 'record',
+                        'aetherBaseSchema': True,
+                        'fields': [
+                            {
+                                'name': 'id',
+                                'type': 'string'
+                            }
+                        ]
+                    },
+                    {
+                        'name': 'AProperty',
+                        'type': 'record',
+                        'fields': [
+                            {
+                                'name': 'other_type',
+                                'type': 'string'
+                            }
                         ]
                     }
-            )
+                ]
+            }
         ]
 
         for schema in good_complex_schemas:
-            response = self.client.post(url, schema, content_type='application/json')
+            response = self.client.post(url, json.dumps(schema), content_type='application/json')
             self.assertEqual(response.status_code, 201)
 
     def test_schema_validate_definition__errors(self):
-        view_name = 'schema-list'
-        url = reverse(view_name)
+        url = reverse('schema-list')
         bad_schemas = [
-            json.dumps({
+            {
                 'name': 'Test',
                 'type': 'test',
                 'definition': {
@@ -820,14 +517,15 @@ class ViewsTest(TestCase):
                     'type': 'record',
                     'aetherBaseSchema': True,
                     'fields': [
+                        # missing field "id"
                         {
-                            'name': 'a',  # missing key "id"
+                            'name': 'a',
                             'type': 'string'
                         }
                     ]
                 }
-            }),
-            json.dumps({
+            },
+            {
                 'name': 'Test',
                 'type': 'test',
                 'definition': {
@@ -841,11 +539,11 @@ class ViewsTest(TestCase):
                         }
                     ]
                 }
-            })
+            }
         ]
 
         for schema in bad_schemas:
-            response = self.client.post(url, schema, content_type='application/json')
+            response = self.client.post(url, json.dumps(schema), content_type='application/json')
             response_content = json.loads(response.content)
             self.assertIn(
                 validators.MESSAGE_REQUIRED_ID,

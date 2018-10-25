@@ -66,18 +66,18 @@ def validate_setter(schemas, path):
     path_segments = path.split('.')
     try:
         schema_name, field_name = path_segments
-    except ValueError as e:
+    except ValueError:
         return Failure(path, INVALID_PATH)
 
     try:
         schema_definition = schemas[schema_name]
-    except KeyError as e:
+    except KeyError:
         message = no_schema(schema_name)
         return Failure(path, message)
 
     try:
         spavro.schema.parse(json.dumps(schema_definition))
-    except spavro.schema.SchemaParseException as e:
+    except spavro.schema.SchemaParseException:
         message = invalid_schema(schema_name)
         return Failure(path, message)
 
