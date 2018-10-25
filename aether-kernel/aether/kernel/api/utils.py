@@ -137,11 +137,11 @@ def json_printable(obj):
 # $.path.to[*].key_* where the matching path might be $.path.to[1].key_1
 # or with invertes position:
 # $.path.key_*.to[*].field for $.path.key_27.to[1].field
-custom_jsonpath_wildcard_regex = re.compile('(\$)?(\.)?([a-zA-Z0-9_-]*(\[.*\])*\.)?[a-zA-Z0-9_-]+\*')
+custom_jsonpath_wildcard_regex = re.compile(r'(\$)?(\.)?([a-zA-Z0-9_-]*(\[.*\])*\.)?[a-zA-Z0-9_-]+\*')
 # RegEx for the part of a JSONPath matching the previous RegEx which is non-compliant with the
 # JSONPath spec.
 # Ex: key_* in the path $.path.key_*.to[*].field
-incomplete_json_path_regex = re.compile('[a-zA-Z0-9_-]+\*')
+incomplete_json_path_regex = re.compile(r'[a-zA-Z0-9_-]+\*')
 
 
 def find_by_jsonpath(obj, path):
@@ -175,7 +175,7 @@ def find_by_jsonpath(obj, path):
         # replace any indexed portion with a wildcard for use in fnmatch filtering
         # because a valid jsonpath like item[0] is reported as item.[0] when matched
         # by jsonpath-ng
-        wild_path = re.sub('(\[.*\])+', '*', prefix)
+        wild_path = re.sub(r'(\[.*\])+', '*', prefix)
         illegal = incomplete_json_path_regex.search(path)
         standard_jsonpath = path[:illegal.start()] + '*' + path[illegal.end():]
 
@@ -317,7 +317,7 @@ def coerce(v, _type='string'):
         ))
     try:
         return fn(v)
-    except ValueError as err:
+    except ValueError:
         raise ValueError(_('value: {value} could not be coerced to type {type}').format(
             value=v,
             type=_type,
@@ -432,7 +432,7 @@ def get_or_make_uuid(entity_type, field_name, instance_number, source_data):
         try:
             value = source_data.get(base, {}).get(
                 entity_type).get(field_name)[instance_number]
-        except IndexError as e:
+        except IndexError:
             source_data[base][entity_type][field_name].append(value)
         finally:
             return value

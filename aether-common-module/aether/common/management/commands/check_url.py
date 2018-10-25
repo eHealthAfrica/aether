@@ -68,6 +68,7 @@ class Command(BaseCommand):
             response.raise_for_status()
             self.stdout.write(MESSAGE_OK.format(url=url))
 
-        except Exception as e:
+        except Exception as err:
             self.stderr.write(MESSAGE_ERROR.format(url=url))
+            self.stderr.write(str(err))
             raise RuntimeError(MESSAGE_ERROR.format(url=url))

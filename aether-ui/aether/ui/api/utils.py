@@ -282,7 +282,7 @@ def publish_pipeline(project_name, contract, objects_to_overwrite={}):
         aux_project = projects[0] if len(projects) else {}
         project_id = aux_project.get('id', str(uuid.uuid4()))
         project_name = aux_project.get('name', 'Aux')
-    except Exception as e:
+    except Exception:
         pass
     if contract.kernel_refs and 'project' in contract.kernel_refs:
         try:
@@ -298,7 +298,7 @@ def publish_pipeline(project_name, contract, objects_to_overwrite={}):
             project_id = mappingset.get('project')
             mappingset['name'] = contract.pipeline.name
             mappingset['input'] = contract.pipeline.schema
-        except Exception as e:
+        except Exception:
             mappingset = {
                 'id': str(contract.pipeline.mappingset),
                 'name': contract.pipeline.name,

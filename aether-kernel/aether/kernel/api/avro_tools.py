@@ -596,7 +596,7 @@ def __is_leaf(avro_type):
         - record
         - map
         - tagged union
-        - named type  ¯\_(ツ)_/¯
+        - named type
 
     '''
     return (

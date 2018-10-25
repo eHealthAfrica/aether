@@ -185,7 +185,7 @@ class AetherDecorator(ResourceDecorator):
                 details['status_code'] = http_response.status_code
                 try:
                     details['response'] = http_response.json()
-                except Exception as err:
+                except Exception:
                     # JSON is unavailable, so we just use the original exception text.
                     pass
                 raise AetherAPIException(**details)
