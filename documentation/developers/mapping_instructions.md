@@ -2,7 +2,7 @@
 
 A mapping is a set of instructions that when executed transform a source document into one or more entities. We call this process "entity extraction", and it's how Aether turns submissions into normalized entities.
 
-Each mapping is made up of two instuctions, the first describing a source and the second a destination. The destination instruction will always be a reference to one of the entities we're trying to create. The source instruction can pull data from a few places, the most typical will be the source document. However, we can also use it to pull data from entities that have been created previously in the mapping, or to generate a new UUID, or to apply a constant not found found in the source document.
+Each mapping is made up of two instuctions, the first describing a source and the second a destination. The destination instruction will always be a reference to one of the entities we're trying to create. The source instruction can pull data from a few places, the most typical will be the source document. However, we can also use it to pull data from entities that have been created previously in the mapping, or to generate a new UUID, or to apply a constant not found in the source document.
 
 Mapping instructions are executed in order. To see how we handle missing references and other issues, see the section, [_Extractor Mechanism_](#user-content-extractor-mechanism).
 
@@ -14,31 +14,31 @@ Look something like this: `$.path.to.somewhere[*].attribue`
 ##### [_Extractor Functions_](#user-content-extractor-function) 
 Look something like this: `#!uuid` or `#!constant#male#string`
 
-Let's construct an example that we can use to illustrates our mappings. We want to normalize this into two linked types. A Stooge who lives in a house, and a House with an address. We have a form with contact information that arrives in the following (pretty horrible) format:
+Let's construct an example that we can use to illustrate our mappings. We want to normalize this into two linked types. A Stooge who lives in a house, and a House with an address. We have a form with contact information that arrives in the following (pretty horrible) format:
 
 <details open>
     <summary><i>Input <b>(Hide/Show)</b></i></summary>
 
 ```json
 {
-    "households": [
-        {
-        "names": [
-            "Larry",
-            "Curly"
-        ],
-        "address": "74 Whyioughta St.",
-        "number1": 1,
-        "number2": 2
-        },
-        {
-        "names": [
-            "Moe"
-        ],
-        "address": "1600 Ipoke Ave",
-        "number1": 3
-        }
-    ]
+  "households": [
+    {
+      "names": [
+        "Larry",
+        "Curly"
+      ],
+      "address": "74 Whyioughta St.",
+      "number1": 1,
+      "number2": 2
+    },
+    {
+      "names": [
+        "Moe"
+      ],
+      "address": "1600 Ipoke Ave",
+      "number1": 3
+    }
+  ]
 }
 
 ```
@@ -48,48 +48,51 @@ Let's construct an example that we can use to illustrates our mappings. We want 
     <summary><i>Schema <b>(Hide/Show)</b></i></summary><br>
 
 ```json
-[{
-        "name": "Stooge",
-        "type": "record",
-        "fields": [{
-                "name": "id",
-                "type": "string",
-                "jsonldPredicate": "@id"
-            },
-            {
-                "name": "name",
-                "type": "string"
-            },
-            {
-                "name": "number",
-                "type": "int"
-            },
-            {
-                "name": "house",
-                "type": "string",
-                "jsonldPredicate": {
-                    "_id": "eha.aether.jokes.House",
-                    "_type": "@id"
-                }
-            }
-        ],
-        "namespace": "eha.aether.jokes"
-    },
-    {
-        "name": "House",
-        "type": "record",
-        "fields": [{
-                "name": "id",
-                "type": "string",
-                "jsonldPredicate": "@id"
-            },
-            {
-                "name": "address",
-                "type": "string"
-            }
-        ],
-        "namespace": "eha.aether.jokes"
-    }
+[
+  {
+    "name": "Stooge",
+    "type": "record",
+    "fields": [
+      {
+        "name": "id",
+        "type": "string",
+        "jsonldPredicate": "@id"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "number",
+        "type": "int"
+      },
+      {
+        "name": "house",
+        "type": "string",
+        "jsonldPredicate": {
+          "_id": "eha.aether.jokes.House",
+          "_type": "@id"
+        }
+      }
+    ],
+    "namespace": "eha.aether.jokes"
+  },
+  {
+    "name": "House",
+    "type": "record",
+    "fields": [
+      {
+        "name": "id",
+        "type": "string",
+        "jsonldPredicate": "@id"
+      },
+      {
+        "name": "address",
+        "type": "string"
+      }
+    ],
+    "namespace": "eha.aether.jokes"
+  }
 ]
 ```
 
@@ -115,8 +118,12 @@ As you can see, the Destination instruction `House.address` looks like a JSONPat
 
 ```json
 [
-    {"address" : "74 Whyioughta St."},
-    {"address" : "1600 Ipoke Ave"}
+  {
+    "address": "74 Whyioughta St."
+  },
+  {
+    "address": "1600 Ipoke Ave"
+  }
 ]
 ```
 `House` specifies the type of the object and tells Aether how to validate and where to save the data. It's not, strictly speaking, part of a valid JSONPath. This is why we don't use the `$` convention for Destination paths.
@@ -132,9 +139,15 @@ This yields the expected:
 
 ```json
 [
-    {"name" : "Larry"},
-    {"name" : "Curly"},
-    {"name" : "Moe"}
+  {
+    "name": "Larry"
+  },
+  {
+    "name": "Curly"
+  },
+  {
+    "name": "Moe"
+  }
 ]
 ```
 
@@ -151,9 +164,18 @@ Yields:
 
 ```json
 [
-    {"name" : "Larry", "number": 1},
-    {"name" : "Curly", "number": 2},
-    {"name" : "Moe", "number": 3}
+  {
+    "name": "Larry",
+    "number": 1
+  },
+  {
+    "name": "Curly",
+    "number": 2
+  },
+  {
+    "name": "Moe",
+    "number": 3
+  }
 ]
 ```
 
@@ -181,7 +203,10 @@ For more information about how the extractor interprets instructions and why fil
 
 - *example:* 
 ```json
-    ["#!uuid", "Person.id"]
+[
+  "#!uuid",
+  "Person.id"
+]
 ```
 ---
 
@@ -202,11 +227,26 @@ For more information about how the extractor interprets instructions and why fil
 - *examples:*
 ```json
 [
-    ["#!constant#1#int", "Person.revision"],
-    ["#!constant#registered", "Patient.status"],
-    ["#!constant#pending_approval#string", "Message.approved"],
-    ["#!constant#false#boolean", "Message.is_public"],
-    ["#!constant#{\"received\":[], \"sent\":[]}#json", "Queue.archived"],
+  [
+    "#!constant#1#int",
+    "Person.revision"
+  ],
+  [
+    "#!constant#registered",
+    "Patient.status"
+  ],
+  [
+    "#!constant#pending_approval#string",
+    "Message.approved"
+  ],
+  [
+    "#!constant#false#boolean",
+    "Message.is_public"
+  ],
+  [
+    "#!constant#{\"received\":[], \"sent\":[]}#json",
+    "Queue.archived"
+  ]
 ]
 ```
 ---
@@ -227,39 +267,70 @@ For more information about how the extractor interprets instructions and why fil
         People
 
     ```json
-    [
-        {"name" : "Buster", "last_name": "Keaton"},
-        {"name" : "Grace", "last_name": "Keaton"},
-        {"name": "Ace", "last_name": "Keaton"},
-        {"name": "Franklin", "last_name": "Keaton"}
-    ]
+[
+  {
+    "name": "Buster",
+    "last_name": "Keaton"
+  },
+  {
+    "name": "Grace",
+    "last_name": "Keaton"
+  },
+  {
+    "name": "Ace",
+    "last_name": "Keaton"
+  },
+  {
+    "name": "Franklin",
+    "last_name": "Keaton"
+  }
+]
     ```
         Houses
 
     ```json
-    [
-        {"id": "e08bafe3-f9af-4412-8e00-93acfc0d68ea", "address": "1000 Chortle Way"}
-    ]
+[
+  {
+    "id": "e08bafe3-f9af-4412-8e00-93acfc0d68ea",
+    "address": "1000 Chortle Way"
+  }
+]
     ```
 
     Mapping:
     ```json  
-    [
-        "#!entity-reference#$.House[*].id",
-        "Person.house"
-    ]
+[
+  "#!entity-reference#$.House[*].id",
+  "Person.house"
+]
     ```
     
     New Output Entity State:
         - People
 
     ```json
-    [
-        {"name" : "Buster", "last_name": "Keaton", "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"},
-        {"name" : "Grace", "last_name": "Keaton", "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"},
-        {"name": "Ace", "last_name": "Keaton", "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"},
-        {"name": "Franklin", "last_name": "Keaton", "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"}
-    ]
+[
+  {
+    "name": "Buster",
+    "last_name": "Keaton",
+    "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"
+  },
+  {
+    "name": "Grace",
+    "last_name": "Keaton",
+    "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"
+  },
+  {
+    "name": "Ace",
+    "last_name": "Keaton",
+    "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"
+  },
+  {
+    "name": "Franklin",
+    "last_name": "Keaton",
+    "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"
+  }
+]
     ```
         - Households
 
@@ -270,62 +341,62 @@ For more information about how the extractor interprets instructions and why fil
     ```
     Using the reference anchors would be a requirement when there are complex relationships in the source data that need to be respected in the extracted entities. For example look at this source data.
     ```json
+{
+  "households": [
     {
-        "households": [
-            {
-            "names": [
-                "Larry",
-                "Curly"
-            ],
-            "address": "74 Whyioughta St.",
-            "number1": 1,
-            "number2": 2
-            },
-            {
-            "names": [
-                "Moe"
-            ],
-            "address": "1600 Ipoke Ave",
-            "number1": 3
-            }
-        ]
+      "names": [
+        "Larry",
+        "Curly"
+      ],
+      "address": "74 Whyioughta St.",
+      "number1": 1,
+      "number2": 2
+    },
+    {
+      "names": [
+        "Moe"
+      ],
+      "address": "1600 Ipoke Ave",
+      "number1": 3
     }
+  ]
+}
     ```
 
     At our current step in extraction, we have all the information we need, except for a reference for the house of each person.
 
     Stooges:
     ```json
-    [
-        {
-            "id": "a7a1f889-9223-44a2-bbea-b41a415c2989",
-            "name": "Larry",
-            "number": 1
-        },
-        {
-            "id": "40188061-1942-4041-ae1c-1e1d99221698",
-            "name": "Curly",
-            "number": 2
-        },
-        {
-            "id": "767f38e8-ce3c-41ee-bd4f-cc1c41bbbde9",
-            "name": "Moe",
-            "number": 3
-        }
-    ]
+[
+  {
+    "id": "a7a1f889-9223-44a2-bbea-b41a415c2989",
+    "name": "Larry",
+    "number": 1
+  },
+  {
+    "id": "40188061-1942-4041-ae1c-1e1d99221698",
+    "name": "Curly",
+    "number": 2
+  },
+  {
+    "id": "767f38e8-ce3c-41ee-bd4f-cc1c41bbbde9",
+    "name": "Moe",
+    "number": 3
+  }
+]
     ```
     Houses:
     ```json
-    [
-        {
-            "id": "2aff48d8-917a-4c9b-814d-99639a220773",
-            "address": "74 Whyioughta St."
-        },
-        {
-            "id": "a4354016-1a5a-47ef-9d14-01217f33ff2e",
-            "address": "1600 Ipoke Ave"
-        }
-    ]
+[
+  {
+    "id": "2aff48d8-917a-4c9b-814d-99639a220773",
+    "address": "74 Whyioughta St."
+  },
+  {
+    "id": "a4354016-1a5a-47ef-9d14-01217f33ff2e",
+    "address": "1600 Ipoke Ave"
+  }
+]
     ```
     So, using #!entity-reference, how can we make sure everyone is assigned to the proper house? An anchor reference.
     The first argument should be the path within the source that describes the output entity, in this case a Person. A path that best represents a person in the source is `households[*].names[*]`. The second argument decribes the source of the information in the source document, in this case it's a House, so the proper path would be `households[*]`. As a full command, we get:
@@ -336,26 +407,26 @@ For more information about how the extractor interprets instructions and why fil
     ```
     The new values of the Stooges will have them properly referenced to their respective houses:
     ```json
-    [
-        {
-            "id": "a7a1f889-9223-44a2-bbea-b41a415c2989",
-            "name": "Larry",
-            "number": 1,
-            "house": "2aff48d8-917a-4c9b-814d-99639a220773"
-        },
-        {
-            "id": "40188061-1942-4041-ae1c-1e1d99221698",
-            "name": "Curly",
-            "number": 2,
-            "house": "2aff48d8-917a-4c9b-814d-99639a220773"
-        },
-        {
-            "id": "767f38e8-ce3c-41ee-bd4f-cc1c41bbbde9",
-            "name": "Moe",
-            "number": 3,
-            "house": "a4354016-1a5a-47ef-9d14-01217f33ff2e"
-        }
-    ]
+[
+  {
+    "id": "a7a1f889-9223-44a2-bbea-b41a415c2989",
+    "name": "Larry",
+    "number": 1,
+    "house": "2aff48d8-917a-4c9b-814d-99639a220773"
+  },
+  {
+    "id": "40188061-1942-4041-ae1c-1e1d99221698",
+    "name": "Curly",
+    "number": 2,
+    "house": "2aff48d8-917a-4c9b-814d-99639a220773"
+  },
+  {
+    "id": "767f38e8-ce3c-41ee-bd4f-cc1c41bbbde9",
+    "name": "Moe",
+    "number": 3,
+    "house": "a4354016-1a5a-47ef-9d14-01217f33ff2e"
+  }
+]
     ```
 
     Notice that Larry and Curly still live together, and Moe still lives alone.
@@ -377,16 +448,24 @@ Let's introduce some new artifacts so we can illustrate the process from the ext
     
 ```json
 {
-    "family_name": "Keaton",
-    "address":"1000 Chortle Way",
-    "adults": [
-        {"name": "Buster"},
-        {"name": "Grace"}
-    ],
-    "children" : [
-        {"name": "Ace"},
-        {"name": "Franklin"}
-    ]
+  "family_name": "Keaton",
+  "address": "1000 Chortle Way",
+  "adults": [
+    {
+      "name": "Buster"
+    },
+    {
+      "name": "Grace"
+    }
+  ],
+  "children": [
+    {
+      "name": "Ace"
+    },
+    {
+      "name": "Franklin"
+    }
+  ]
 }
 ```
 
@@ -507,33 +586,33 @@ People
 Households
 ```json
 [
-    {}
+  {}
 ]
 ```
 
 Instruction
 
 ```json
-  [
-    "#!entity-reference#$.House[*].id",
-    "Person.house"
-  ]
+[
+  "#!entity-reference#$.House[*].id",
+  "Person.house"
+]
 ```
 _Resulting Objects_
 
 People
 ```json
 [
-    {},
-    {},
-    {},
-    {}
+  {},
+  {},
+  {},
+  {}
 ]
 ```
 Households
 ```json
 [
-    {}
+  {}
 ]
 ```
 We don't have anything to reference in `$.House[*.id]` so this fails and is cached.
@@ -551,10 +630,18 @@ _Resulting Objects_
 People
 ```json
 [
-    {"last_name": "Keaton"},
-    {"last_name": "Keaton"},
-    {"last_name": "Keaton"},
-    {"last_name": "Keaton"}
+  {
+    "last_name": "Keaton"
+  },
+  {
+    "last_name": "Keaton"
+  },
+  {
+    "last_name": "Keaton"
+  },
+  {
+    "last_name": "Keaton"
+  }
 ]
 ```
 Households
@@ -568,26 +655,36 @@ This is a straight copy from a path that exists so it succeeds. Since there's on
 Instruction
 
 ```json
-  [
-    "$.adults[*].name",
-    "Person.name"
-  ]
+[
+  "$.adults[*].name",
+  "Person.name"
+]
 ```
 _Resulting Objects_
 
 People
 ```json
 [
-    {"name" : "Buster", "last_name": "Keaton"},
-    {"name" : "Grace", "last_name": "Keaton"},
-    {"last_name": "Keaton"},
-    {"last_name": "Keaton"}
+  {
+    "name": "Buster",
+    "last_name": "Keaton"
+  },
+  {
+    "name": "Grace",
+    "last_name": "Keaton"
+  },
+  {
+    "last_name": "Keaton"
+  },
+  {
+    "last_name": "Keaton"
+  }
 ]
 ```
 Households
 ```json
 [
-    {}
+  {}
 ]
 ```
 
@@ -597,52 +694,78 @@ Again, this is a straight copy, so it behaves as expected. Do notice that the ad
 Instruction
 
 ```json
-  [
-    "$.children[*].name",
-    "Person.name"
-  ]
+[
+  "$.children[*].name",
+  "Person.name"
+]
 ```
 _Resulting Objects_
 
 People
 ```json
 [
-    {"name" : "Buster", "last_name": "Keaton"},
-    {"name" : "Grace", "last_name": "Keaton"},
-    {"name": "Ace", "last_name": "Keaton"},
-    {"name": "Franklin", "last_name": "Keaton"}
+  {
+    "name": "Buster",
+    "last_name": "Keaton"
+  },
+  {
+    "name": "Grace",
+    "last_name": "Keaton"
+  },
+  {
+    "name": "Ace",
+    "last_name": "Keaton"
+  },
+  {
+    "name": "Franklin",
+    "last_name": "Keaton"
+  }
 ]
 ```
 Households
 ```json
 [
-    {}
+  {}
 ]
 ```
 
 Instruction
 
 ```json
-  [
-    "$.address",
-    "House.address"
-  ]
+[
+  "$.address",
+  "House.address"
+]
 ```
 _Resulting Objects_
 
 People
 ```json
 [
-    {"name" : "Buster", "last_name": "Keaton"},
-    {"name" : "Grace", "last_name": "Keaton"},
-    {"name": "Ace", "last_name": "Keaton"},
-    {"name": "Franklin", "last_name": "Keaton"}
+  {
+    "name": "Buster",
+    "last_name": "Keaton"
+  },
+  {
+    "name": "Grace",
+    "last_name": "Keaton"
+  },
+  {
+    "name": "Ace",
+    "last_name": "Keaton"
+  },
+  {
+    "name": "Franklin",
+    "last_name": "Keaton"
+  }
 ]
 ```
 Households
 ```json
 [
-    {"address": "1000 Chortle Way"}
+  {
+    "address": "1000 Chortle Way"
+  }
 ]
 ```
 We've finally populated `Household` with something.
@@ -650,26 +773,44 @@ We've finally populated `Household` with something.
 Instruction
 
 ```json
-  [
-    "#!uuid",
-    "Person.id"
-  ]
+[
+  "#!uuid",
+  "Person.id"
+]
 ```
 _Resulting Objects_
 
 People
 ```json
 [
-    {"id": "d10f36af-6fd5-4e41-8711-dc8ba21649d0", "name" : "Buster", "last_name": "Keaton"},
-    {"id": "5b3dd77c-769f-413f-a73b-f5ac74d7a3d5", "name" : "Grace", "last_name": "Keaton"},
-    {"id": "3e572230-24b6-45c7-b402-9504b4e13e56", "name": "Ace", "last_name": "Keaton"},
-    {"id": "62d6585e-d884-48a3-ad9f-53601f238f9a", "name": "Franklin", "last_name": "Keaton"}
+  {
+    "id": "d10f36af-6fd5-4e41-8711-dc8ba21649d0",
+    "name": "Buster",
+    "last_name": "Keaton"
+  },
+  {
+    "id": "5b3dd77c-769f-413f-a73b-f5ac74d7a3d5",
+    "name": "Grace",
+    "last_name": "Keaton"
+  },
+  {
+    "id": "3e572230-24b6-45c7-b402-9504b4e13e56",
+    "name": "Ace",
+    "last_name": "Keaton"
+  },
+  {
+    "id": "62d6585e-d884-48a3-ad9f-53601f238f9a",
+    "name": "Franklin",
+    "last_name": "Keaton"
+  }
 ]
 ```
 Households
 ```json
 [
-    {"address": "1000 Chortle Way"}
+  {
+    "address": "1000 Chortle Way"
+  }
 ]
 ```
 The UUID function adds its values to the id field of `Person` without any issue.
@@ -678,10 +819,10 @@ The UUID function adds its values to the id field of `Person` without any issue.
 Instruction
 
 ```json
-  [
-    "#!uuid",
-    "House.id"
-  ]
+[
+  "#!uuid",
+  "House.id"
+]
 ```
 </details>
 
@@ -690,16 +831,35 @@ _Resulting Objects_
 People
 ```json
 [
-    {"id": "d10f36af-6fd5-4e41-8711-dc8ba21649d0", "name" : "Buster", "last_name": "Keaton"},
-    {"id": "5b3dd77c-769f-413f-a73b-f5ac74d7a3d5", "name" : "Grace", "last_name": "Keaton"},
-    {"id": "3e572230-24b6-45c7-b402-9504b4e13e56", "name": "Ace", "last_name": "Keaton"},
-    {"id": "62d6585e-d884-48a3-ad9f-53601f238f9a", "name": "Franklin", "last_name": "Keaton"}
+  {
+    "id": "d10f36af-6fd5-4e41-8711-dc8ba21649d0",
+    "name": "Buster",
+    "last_name": "Keaton"
+  },
+  {
+    "id": "5b3dd77c-769f-413f-a73b-f5ac74d7a3d5",
+    "name": "Grace",
+    "last_name": "Keaton"
+  },
+  {
+    "id": "3e572230-24b6-45c7-b402-9504b4e13e56",
+    "name": "Ace",
+    "last_name": "Keaton"
+  },
+  {
+    "id": "62d6585e-d884-48a3-ad9f-53601f238f9a",
+    "name": "Franklin",
+    "last_name": "Keaton"
+  }
 ]
 ```
 Households
 ```json
 [
-    {"id": "e08bafe3-f9af-4412-8e00-93acfc0d68ea", "address": "1000 Chortle Way"}
+  {
+    "id": "e08bafe3-f9af-4412-8e00-93acfc0d68ea",
+    "address": "1000 Chortle Way"
+  }
 ]
 ```
 
@@ -719,10 +879,10 @@ _Failed Functions_
 Instruction
 
 ```json
-  [
-    "#!entity-reference#$.House[*].id",
-    "Person.house"
-  ]
+ [
+  "#!entity-reference#$.House[*].id",
+  "Person.house"
+]
 ```
 
 We can now resolve the Entity Reference as `House[*].id` has a value.
@@ -734,17 +894,38 @@ _Resulting Objects_
 People
 ```json
 [
-    {"id": "d10f36af-6fd5-4e41-8711-dc8ba21649d0", "name" : "Buster", "last_name": "Keaton", "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"},
-    {"id": "5b3dd77c-769f-413f-a73b-f5ac74d7a3d5", "name" : "Grace", "last_name": "Keaton", "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"},
-    {"id": "3e572230-24b6-45c7-b402-9504b4e13e56", "name": "Ace", "last_name": "Keaton", "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"},
-    {"id": "62d6585e-d884-48a3-ad9f-53601f238f9a", "name": "Franklin", "last_name": "Keaton", "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"}
+  {
+    "id": "d10f36af-6fd5-4e41-8711-dc8ba21649d0",
+    "name": "Buster",
+    "last_name": "Keaton",
+    "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"
+  },
+  {
+    "id": "5b3dd77c-769f-413f-a73b-f5ac74d7a3d5",
+    "name": "Grace",
+    "last_name": "Keaton",
+    "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"
+  },
+  {
+    "id": "3e572230-24b6-45c7-b402-9504b4e13e56",
+    "name": "Ace",
+    "last_name": "Keaton",
+    "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"
+  },
+  {
+    "id": "62d6585e-d884-48a3-ad9f-53601f238f9a",
+    "name": "Franklin",
+    "last_name": "Keaton",
+    "house": "e08bafe3-f9af-4412-8e00-93acfc0d68ea"
+  }
 ]
 ```
 Households
 ```json
 [
-    {"id": "e08bafe3-f9af-4412-8e00-93acfc0d68ea", "address": "1000 Chortle Way"}
+  {
+    "id": "e08bafe3-f9af-4412-8e00-93acfc0d68ea",
+    "address": "1000 Chortle Way"
+  }
 ]
 ```
-
-
