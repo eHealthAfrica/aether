@@ -365,6 +365,59 @@ def xform_submission(request):
     Response specification:
     https://docs.opendatakit.org/openrosa-http/#openrosa-responses
 
+    Any time a request is received the following steps are executed:
+
+    1. Checks if the connection with Aether Kernel is possible.
+       Otherwise responds with a 424 (failed dependency) status code.
+
+    2. Checks if the request content includes as a FILE
+       in the ``xml_submission_file`` param.
+       Otherwise responds with a 422 (unprocessable entity) status code.
+
+    3. Reads and parses the file content (from XML to JSON format).
+       If fails responds with a 422 (unprocessable entity) status code.
+
+    4. Checks if the content has a `meta.instanceID` value.
+       This check is part of the OpenRosa spec.
+       Otherwise responds with a 422 (unprocessable entity) status code.
+
+    5. Checks if the xForm linked to the request exists in Aether ODK.
+       Otherwise responds with a 404 (not found) status code.
+
+    6. Checks if the request user is a granted surveyor of the xForm.
+       Otherwise responds with a 401 (unauthorized) status code.
+
+    7. Compares the content xForm version with the current xForm version.
+       Warns if the content one is older than the current one and continues.
+
+    8. Propagates xForm artefacts to Aether Kernel.
+       (This creates all the required artefacts in Aether Kernel
+       that receive the request content and extract the linked entities)
+       If fails responds with a 424 (failed dependency) status code.
+
+    Note: Any error beyond this point will respond with a 400 (bad request) status code.
+          Also it will delete any submission or attachment linked to this request
+          in Aether Kernel.
+
+    9. Checks if the request instance ID is already in any Aether Kernel submission.
+       As part of the OpenRosa specs, submissions with big attachments could be
+       split in several requests depending on the size of the attachments.
+       In all of the cases the ``xml_submission_file`` FILE is included in the
+       request.
+
+    9.1. If there is no submission in Aether Kernel with this instance ID,
+         submits the parsed JSON content to Aether Kernel.
+         Also submits the original XML content as an attachment of the submission.
+
+    9.2. If there is at least one submission (there should be only one)
+         warns about it and continues.
+
+    10. Checks if there are more FILE entries in the request.
+
+    10.1. If there are more files submits them as attachments linked to
+          this submission to Aether Kernel.
+
+    11. Responds with a 201 (created) status code.
     '''
 
     # first of all check if the connection is possible
