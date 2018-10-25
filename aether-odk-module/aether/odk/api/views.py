@@ -370,7 +370,7 @@ def xform_submission(request):
     1. Checks if the connection with Aether Kernel is possible.
        Otherwise responds with a 424 (failed dependency) status code.
 
-    2. Checks if the request content includes as a FILE
+    2. Checks if the request includes content as a FILE
        in the ``xml_submission_file`` param.
        Otherwise responds with a 422 (unprocessable entity) status code.
 
