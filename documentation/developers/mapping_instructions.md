@@ -6,7 +6,7 @@ Each mapping is made up of two instuctions, the first describing a source and th
 
 Mapping instructions are executed in order. To see how we handle missing references and other issues, see the section, [_Extractor Mechanism_](#user-content-extractor-mechanism).
 
-#### Types of Mappings
+#### Types of Mapping
 
 There are two general types of instructions: JSONPath and it's extensions, and Extractor Functions. 
 ##### [_JSONPath Functions_](#user-content-jsonpath-function)
