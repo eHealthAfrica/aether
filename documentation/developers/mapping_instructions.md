@@ -447,7 +447,7 @@ Let's introduce some new artifacts so we can illustrate the process from the ext
 
 ##### Steps
 
-Let's start with a suboptimal mappings
+Let's start with a suboptimal mapping:
 
 <details open>
     <summary><i>Mapping <b>(Hide/Show)</b></i></summary>
