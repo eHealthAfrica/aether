@@ -120,12 +120,21 @@ class SchemaFilter(filters.FilterSet):
     project = filters.CharFilter(
         method='project_filter',
     )
+    mapping = filters.CharFilter(
+        method='mapping_filter',
+    )
 
     def project_filter(self, queryset, name, value):
         if is_uuid(value):
             return queryset.filter(projectschemas__project__pk=value)
         else:
             return queryset.filter(projectschemas__project__name=value)
+
+    def mapping_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(projectschemas__mappings__pk=value)
+        else:
+            return queryset.filter(projectschemas__mappings__name=value)
 
     class Meta:
         exclude = ('definition',)

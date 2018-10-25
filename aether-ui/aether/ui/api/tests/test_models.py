@@ -92,7 +92,7 @@ class ModelsTests(TestCase):
         )
         self.assertEqual(str(contract), 'Contact test')
 
-    def test__pipeline__save__missing_requirements(self):
+    def test__pipeline__and__contract__save__missing_requirements(self):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
         )
@@ -133,7 +133,7 @@ class ModelsTests(TestCase):
         self.assertEqual(contract.output, [])
 
     @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_false)
-    def test__pipeline__save__test_connection_fail(self):
+    def test__contract__save__test_connection_fail(self):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
             input=INPUT_SAMPLE,
@@ -154,7 +154,7 @@ class ModelsTests(TestCase):
 
     @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
     @mock.patch('requests.post', return_value=MockResponse(500, text='Internal Server Error'))
-    def test__pipeline__save__with_server_error(self, mock_post):
+    def test__contract__save__with_server_error(self, mock_post):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
             input=INPUT_SAMPLE,
@@ -178,7 +178,7 @@ class ModelsTests(TestCase):
                 'submission_payload': INPUT_SAMPLE,
                 'mapping_definition': {
                     'entities': {
-                        'Person': None,
+                        'Person': mock.ANY,
                     },
                     'mapping': [
                         ['#!uuid', 'Person.id'],
@@ -196,7 +196,7 @@ class ModelsTests(TestCase):
                     'entities': [],
                     'mapping_errors': ['test']
                 }))
-    def test__pipeline__save__with_bad_request(self, mock_post):
+    def test__contract__save__with_bad_request(self, mock_post):
         malformed_schema = {'name': 'Person'}
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
@@ -220,7 +220,7 @@ class ModelsTests(TestCase):
                 'submission_payload': INPUT_SAMPLE,
                 'mapping_definition': {
                     'entities': {
-                        'Person': None,
+                        'Person': mock.ANY,
                     },
                     'mapping': [
                         ['#!uuid', 'Person.id'],
@@ -238,7 +238,7 @@ class ModelsTests(TestCase):
                     'entities_2': 'something',
                     'mapping_errors_2': 'something else',
                 }))
-    def test__pipeline__save__with_wrong_response(self, mock_post):
+    def test__contract__save__with_wrong_response(self, mock_post):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
             input=INPUT_SAMPLE,
@@ -258,7 +258,7 @@ class ModelsTests(TestCase):
                 'submission_payload': INPUT_SAMPLE,
                 'mapping_definition': {
                     'entities': {
-                        'Person': None,
+                        'Person': mock.ANY,
                     },
                     'mapping': [
                         ['#!uuid', 'Person.id'],
@@ -276,7 +276,7 @@ class ModelsTests(TestCase):
                     'entities': 'something',
                     'mapping_errors': 'something else',
                 }))
-    def test__pipeline__save__validated(self, mock_post):
+    def test__contract__save__validated(self, mock_post):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
             input=INPUT_SAMPLE,
@@ -300,7 +300,7 @@ class ModelsTests(TestCase):
                 'submission_payload': INPUT_SAMPLE,
                 'mapping_definition': {
                     'entities': {
-                        'Person': None,
+                        'Person': mock.ANY,
                     },
                     'mapping': [
                         ['#!uuid', 'Person.id'],
@@ -313,7 +313,7 @@ class ModelsTests(TestCase):
             },
         )
 
-    def test__pipeline_workflow__with_kernel__wrong_rules(self):
+    def test__pipeline__and__contract__workflow__with_kernel__wrong_rules(self):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
             input=INPUT_SAMPLE,
@@ -343,7 +343,7 @@ class ModelsTests(TestCase):
         for expected, result in zip(expected_errors, contract.mapping_errors):
             self.assertIn(expected, result['description'])
 
-    def test__pipeline_workflow__with_kernel__missing_id(self):
+    def test__pipeline__and__contract__workflow__with_kernel__missing_id(self):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
             input=INPUT_SAMPLE,
@@ -362,7 +362,7 @@ class ModelsTests(TestCase):
         self.assertNotIn('path', contract.mapping_errors[0])
         self.assertEqual(contract.output, [])
 
-    def test__pipeline_workflow__with_kernel__no_errors(self):
+    def test__pipeline__and__contract__workflow__with_kernel__success(self):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
             input=INPUT_SAMPLE,

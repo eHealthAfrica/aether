@@ -332,7 +332,20 @@ class TestAvroValidator(TestCase):
                 expected_errors=[
                     error(expected='int', datum='"not-an-int"', path='Test.test')
                 ],
-            )
+            ),
+            AvroValidatorTest(
+                fields=[{
+                    'name': 'test',
+                    'type': {
+                        'type': 'map',
+                        'values': 'int'
+                    }
+                }],
+                datum={'test': 'not-a-map'},
+                expected_errors=[
+                    error(expected='map', datum='not-a-map', path='Test.test')
+                ],
+            ),
         ])
 
     def test_validate_union(self):
@@ -425,6 +438,36 @@ class TestAvroValidator(TestCase):
                     error(expected='string', datum=1, path='Test.test.a'),
                     error(expected='int', datum=['a-string'], path='Test.test.b'),
                     error(expected='string', datum=2, path='Test.test.c[1]'),
+                ],
+            ),
+            AvroValidatorTest(
+                fields=[{
+                    'name': 'test',
+                    'type': {
+                        'name': 'TestRecord',
+                        'type': 'record',
+                        'fields': [
+                            {
+                                'name': 'a',
+                                'type': 'string'
+                            },
+                            {
+                                'name': 'b',
+                                'type': 'int'
+                            },
+                            {
+                                'name': 'c',
+                                'type': {
+                                    'type': 'array',
+                                    'items': 'string'
+                                }
+                            }
+                        ]
+                    }
+                }],
+                datum={'test': 'not-a-record'},
+                expected_errors=[
+                    error(expected='TestRecord', datum='not-a-record', path='Test.test')
                 ],
             ),
         ])

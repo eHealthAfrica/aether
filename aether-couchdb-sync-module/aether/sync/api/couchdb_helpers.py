@@ -42,7 +42,7 @@ generates a new password for an existing user (as an automatic 'forgot password'
 def filter_id(device_id):
     #  filter according to:  http://docs.couchdb.org/en/master/api/database/common.html#put--db
     #  + remove some more special chars, since they're annoying
-    return re.sub('[^a-z0-9_-]', '', device_id.lower())
+    return re.sub(r'[^a-z0-9_-]', '', device_id.lower())
 
 
 def generate_password():

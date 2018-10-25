@@ -21,8 +21,10 @@ import json
 import requests
 import uuid
 
+from django.utils import timezone
+from django.utils.translation import ugettext as _
+
 from rest_framework import status
-from django.utils.translation import gettext as lang_translator
 
 from aether.common.kernel import utils
 
@@ -70,7 +72,7 @@ def validate_contract(contract):
     # check kernel connection
     if not utils.test_connection():
         return (
-            [{'description': 'It was not possible to connect to Aether Kernel.'}],
+            [{'description': _('It was not possible to connect to Aether Kernel.')}],
             [],
         )
 
@@ -106,7 +108,7 @@ def validate_contract(contract):
     schemas = {}
     for entity_type in contract.entity_types:
         name = entity_type['name']
-        entities[name] = None
+        entities[name] = str(uuid.uuid4())  # the value must be UUID complaint
         schemas[name] = entity_type
 
     mapping = [
@@ -147,51 +149,94 @@ def validate_contract(contract):
         return (errors, [])
     else:
         data = resp.text
-        description = f'{lang_translator("It was not possible to validate the pipeline: ")}{str(data)}'
+        description = _('It was not possible to validate the pipeline: {}').format(str(data))
         errors = [{'description': description}]
         return (errors, [])
 
 
-def kernel_data_request(url='', method='get', data=None):
+def kernel_to_pipeline():
     '''
-    Handle requests to the kernel server
+    Fetches all mappingsets in kernel and tranform them into pipelines,
+    taking also the linked mappings+schemas and transform them into contracts.
     '''
-    if data is None:
-        data = {}
-    kernerl_url = utils.get_kernel_server_url()
-    res = requests.request(method=method,
-                           url=f'{kernerl_url}/{url}',
-                           headers=utils.get_auth_header(),
-                           json=data
-                           )
-    if res.status_code >= 200 and res.status_code < 400:
-        return res.json()
-    else:
-        raise Exception(res.json())
+    KERNEL_URL = utils.get_kernel_server_url()
 
+    mappingsets = utils.get_all_docs(f'{KERNEL_URL}/mappingsets/')
+    for mappingset in mappingsets:
+        mappingset_id = mappingset['id']
 
-def is_object_linked(kernel_refs, object_name, entity_type_name=''):
-    if kernel_refs and object_name in kernel_refs:
-        try:
-            if object_name is 'schemas':
-                if entity_type_name in kernel_refs[object_name]:
-                    url = f'{object_name.lower()}/{kernel_refs[object_name][entity_type_name]}'
-                else:
-                    return False
-            else:
-                url = f'{object_name.lower()}/{kernel_refs[object_name]}/'
-            kernel_data_request(url)
-            return True
-        except Exception:
-            return False
-    else:
-        return False
+        if models.Pipeline.objects.filter(mappingset=mappingset_id).count() > 0:
+            # do not update the current pipeline but bring new contracts
+            pipeline = models.Pipeline.objects.filter(mappingset=mappingset_id).first()
+        else:
+            # create the pipeline
+            pipeline = models.Pipeline.objects.create(
+                id=mappingset_id,  # use mappingset id as pipeline id
+                name=mappingset['name'],
+                schema=mappingset['schema'],
+                input=mappingset['input'],
+                mappingset=mappingset_id,
+            )
+
+        # fetch linked mappings
+        url = f'{KERNEL_URL}/mappings/?mappingset={mappingset_id}'
+        mappings = utils.get_all_docs(url)
+
+        for mapping in mappings:
+            mapping_id = mapping['id']
+
+            if models.Contract.objects.filter(kernel_refs__mapping=mapping_id).count() > 0:
+                # do not update the current contract
+                continue
+
+            schemas_url = f'{KERNEL_URL}/schemas/?fields=definition&mapping={mapping_id}'
+
+            models.Contract.objects.create(
+                id=mapping_id,  # use mapping id as contract id
+                name=mapping['name'],
+                pipeline=pipeline,
+
+                mapping=[
+                    {'id': str(uuid.uuid4()), 'source': rule[0], 'destination': rule[1]}
+                    for rule in mapping['definition']['mapping']
+                ],
+                entity_types=[
+                    schema['definition']
+                    for schema in utils.get_all_docs(schemas_url)
+                ],
+
+                is_active=mapping['is_active'],
+                is_read_only=mapping['is_read_only'],
+
+                kernel_refs={
+                    'project': mapping['project'],
+                    'mapping': mapping_id,
+                    'schemas': mapping['definition']['entities'],
+                },
+                published_on=mapping['modified'],
+            )
 
 
 def publish_preflight(contract):
     '''
-    Performs a check for possible pipeline publish errors against kernel
+    Performs a check for possible contract publish errors against kernel
     '''
+
+    def get_from_kernel_by_id(model, pk):
+        try:
+            return kernel_data_request(f'{model}/{pk}/')
+        except Exception:
+            return None
+
+    def get_from_kernel_by_name(model, name):
+        try:
+            results = kernel_data_request(f'{model}/?name={name}')
+            if results['count'] > 0:
+                return results['results'][0]
+            return None
+        except Exception:  # pragma: no cover
+            return None
+
     outcome = {
         'successful': [],
         'error': [],
@@ -203,222 +248,189 @@ def publish_preflight(contract):
     }
 
     if contract.mapping_errors:
-        outcome['error'].append(lang_translator('{} mappings have errors'.format(contract.name)))
+        outcome['error'].append(_('{} mappings have errors'.format(contract.name)))
         return outcome
-    for entity_type in contract.entity_types:
-        if is_object_linked(contract.kernel_refs, 'schemas', entity_type['name']):
-            outcome['exists'].append(
-                {
-                    entity_type['name']: lang_translator(
-                        '{} schema with id {} exists'.format(
-                            entity_type['name'],
-                            contract.kernel_refs['schemas'][entity_type['name']]
-                        )
-                    )
-                }
-            )
-            outcome['ids']['schema'][entity_type['name']] = contract.kernel_refs['schemas'][entity_type['name']]
-        else:
-            get_by_name = kernel_data_request(f'schemas/?name={entity_type["name"]}')['results']
-            if len(get_by_name):
-                outcome['exists'].append(
-                    {
-                        entity_type['name']: lang_translator(
-                            'Schema with name {} exists on kernel'.format(
-                                entity_type['name']
-                            )
-                        )
-                    }
-                )
-                outcome['ids']['schema'][entity_type['name']] = get_by_name[0]['id']
-    if is_object_linked(contract.kernel_refs, 'mappings'):
-        outcome['exists'].append(
-            {
-                contract.name: lang_translator(
-                    'Mapping with id {} exists'.format(
-                        contract.kernel_refs['mappings']
-                    )
-                )
-            }
-        )
-        outcome['ids']['mapping'][contract.name] = contract.kernel_refs['mappings']
-    else:
-        get_by_name = kernel_data_request(f'mappings/?name={contract.name}')['results']
-        if len(get_by_name):
-            outcome['exists'].append(
-                {
-                    contract.name: lang_translator(
-                        'Pipeline (mapping) with name {} exists on kernel.'.format(
-                            contract.name
-                        )
-                    )
-                }
-            )
-            outcome['ids']['mapping'][contract.name] = get_by_name[0]['id']
 
-    if contract.pipeline.mappingset:
-        try:
-            mappingset = kernel_data_request(f'mappingsets/{contract.pipeline.mappingset}/')
-            if json.dumps(mappingset['input'], sort_keys=True) != json.dumps(contract.pipeline.schema, sort_keys=True):
+    # check entity types (schemas in kernel)
+    for entity_type in contract.entity_types:
+        name = entity_type['name']
+        id = contract.kernel_refs.get('schemas', {}).get(name) if contract.kernel_refs else None
+
+        if id and get_from_kernel_by_id('schemas', id):
+            outcome['exists'].append({
+                name: _('Entity type (schema) with id {} exists on kernel').format(id)
+            })
+            outcome['ids']['schema'][name] = id
+        else:
+            get_by_name = get_from_kernel_by_name('schemas', name)
+            if get_by_name:
                 outcome['exists'].append({
-                    contract.pipeline.name: lang_translator('Input data will be changed')
+                    name: _('Entity type (schema) with name {} exists on kernel').format(name)
                 })
-        except Exception:
-            pass
+                outcome['ids']['schema'][name] = get_by_name['id']
+
+    # check the contract (mapping in kernel)
+    if contract.kernel_refs and get_from_kernel_by_id('mappings', contract.kernel_refs.get('mapping')):
+        id = contract.kernel_refs['mapping']
+        outcome['exists'].append({
+            contract.name: _('Contract (mapping) with id {} exists on kernel').format(id)
+        })
+        outcome['ids']['mapping'][contract.name] = id
+    else:
+        get_by_name = get_from_kernel_by_name('mappings', contract.name)
+        if get_by_name:
+            outcome['exists'].append({
+                contract.name: _('Contract (mapping) with name {} exists on kernel.').format(contract.name)
+            })
+            outcome['ids']['mapping'][contract.name] = get_by_name['id']
+
+    # check the pipeline (mappingset in kernel)
+    pipeline = contract.pipeline
+    if pipeline.mappingset:
+        mappingset = get_from_kernel_by_id('mappingsets', pipeline.mappingset)
+        if mappingset:
+            if json.dumps(mappingset['input'], sort_keys=True) != json.dumps(pipeline.input, sort_keys=True):
+                outcome['exists'].append({
+                    pipeline.name: _('Input data will be changed')
+                })
+            if json.dumps(mappingset['schema'], sort_keys=True) != json.dumps(pipeline.schema, sort_keys=True):
+                outcome['exists'].append({
+                    pipeline.name: _('Schema data will be changed')
+                })
+
     return outcome
 
 
-def publish_pipeline(project_name, contract, objects_to_overwrite={}):
+def publish_contract(project_name, contract, objects_to_overwrite={}):
     '''
     Transform pipeline and contract to kernel artefacts and publish
     '''
-    project_id = str(uuid.uuid4())
-    mappingsets = []
-    mappings = []
-    schemas = []
-    outcome = {}
-    try:
-        projects = kernel_data_request(f'projects/?name={project_name}')['results']
-        aux_project = projects[0] if len(projects) else {}
-        project_id = aux_project.get('id', str(uuid.uuid4()))
-        project_name = aux_project.get('name', 'Aux')
-    except Exception as e:
-        pass
-    if contract.kernel_refs and 'project' in contract.kernel_refs:
+
+    pipeline = contract.pipeline
+    mappingset_id = str(pipeline.mappingset or uuid.uuid4())
+    mapping_id = objects_to_overwrite.get('mapping', {}).get(contract.name, str(contract.id))
+
+    # find out linked project id
+    project_id = None
+
+    # use pipeline mappingset as first source of truth
+    if pipeline.mappingset:
         try:
-            project = kernel_data_request(f'projects/{contract.kernel_refs["project"]}/')
-            project_id = project.get('id')
+            mappingset = kernel_data_request(f'mappingsets/{pipeline.mappingset}/')
+            project_id = mappingset.get('project')
+        except Exception:
+            pass
+
+    # try with the linked project (if contract was published before)
+    if not project_id and contract.kernel_refs and contract.kernel_refs.get('project'):
+        try:
+            project_pk = contract.kernel_refs['project']
+            project = kernel_data_request(f'projects/{project_pk}/?fields=name')
+
+            project_id = project_pk
             project_name = project.get('name')
         except Exception:
             pass
-    mappingset = {}
-    if contract.pipeline.mappingset:
+
+    if not project_id:
+        # try with the given project name
         try:
-            mappingset = kernel_data_request(f'mappingsets/{contract.pipeline.mappingset}/')
-            project_id = mappingset.get('project')
-            mappingset['name'] = contract.pipeline.name
-            mappingset['input'] = contract.pipeline.schema
-        except Exception as e:
-            mappingset = {
-                'id': str(contract.pipeline.mappingset),
-                'name': contract.pipeline.name,
-                'input': contract.pipeline.schema,
-            }
-    else:
-        mappingset = {
-            'id': str(uuid.uuid4()),
-            'name': contract.pipeline.name,
-            'input': contract.pipeline.schema,
+            results = kernel_data_request(f'projects/?fields=id&name={project_name}')
+            if results['count'] == 1:  # it can only be one
+                project_id = results['results'][0]['id']
+        except Exception:  # pragma: no cover
+            pass
+
+    if not project_id:  # set a new value
+        project_id = str(uuid.uuid4())
+
+    # build schemas from contract enitites, include a new id if missing
+    schemas = [
+        {
+            'id': objects_to_overwrite.get('schema', {}).get(entity_type.get('name'), str(uuid.uuid4())),
+            'name': entity_type.get('name'),
+            'definition': entity_type,
         }
-    mappingsets.append(mappingset)
-    [
-        schemas.append({
-            'name': schema.get('name'),
-            'type': schema.get('type'),
-            'definition': schema,
-            'id': objects_to_overwrite.get('schema', {}).get(schema.get('name'))
-        })
-        for schema in contract.entity_types
+        for entity_type in contract.entity_types
     ]
-    mappings.append({
-        'id': objects_to_overwrite.get('mapping', {}).get(contract.name, str(contract.id)),
-        'name': contract.name,
-        'definition': {
-            'mapping': [
-                [rule['source'], rule['destination']]
-                for rule in contract.mapping
-            ]
-        },
-        'mappingset': mappingsets[0]['id'],
-        'is_active': True,
-        'is_ready_only': contract.is_read_only
-    })
+    entities = {schema['name']: schema['id'] for schema in schemas}
+
+    # payload to POST to kernel with the contract artefacts
+    data = {
+        'name': project_name,
+
+        # the contract entity types correspond to kernel schemas
+        'schemas': schemas,
+
+        # the pipelines have a 1:1 relationship with kernel mappingsets
+        'mappingsets': [{
+            'id': mappingset_id,
+            'name': pipeline.name,
+            'input': pipeline.input,
+            'schema': pipeline.schema,
+        }],
+
+        # the contract mapping corresponds to kernel mapping but with different rules format
+        'mappings': [{
+            'id': mapping_id,
+            'name': contract.name,
+            'definition': {
+                'mapping': [
+                    [rule['source'], rule['destination']]
+                    for rule in contract.mapping
+                ],
+                'entities': entities,
+            },
+            'mappingset': mappingset_id,
+            'is_active': True,
+            'is_ready_only': contract.is_read_only,
+        }],
+    }
+
     try:
-        data = {
-            'name': project_name,
-            'schemas': schemas,
-            'mappingsets': mappingsets,
-            'mappings': mappings
-        }
         result = kernel_data_request(f'projects/{project_id}/artefacts/', 'patch', data)
-        _schemas = {}
-        for id in result['schemas']:
-            schema_data = kernel_data_request(f'schemas/{id}/')
-            schema_name = schema_data.get('name')
-            _schemas[schema_name] = id
-        result['schemas'] = _schemas
-        result['mappings'] = result['mappings'][0]
-        outcome['artefacts'] = result
-    except Exception as e:
-        outcome['error'] = str(e)
-    return outcome
 
+        # update pipeline
+        pipeline.mappingset = mappingset_id
+        pipeline.save()
 
-def convert_mappings(mapping_from_kernel):
-    return [
-        {'source': mapping[0], 'destination': mapping[1]}
-        for mapping in mapping_from_kernel
-    ]
-
-
-def convert_entity_types(entities_from_kernel):
-    result = {'schemas': [], 'ids': {}}
-    for _, entity_id in entities_from_kernel.items():
-        project_schema = kernel_data_request(f'projectschemas/{entity_id}/')
-        schema = kernel_data_request(f'schemas/{project_schema["schema"]}/')
-        result['schemas'].append(schema['definition'])
-        result['ids'][schema['name']] = schema['id']
-    return result
-
-
-def create_new_pipeline_from_kernel(mappingset):
-    mappingset_id = mappingset['id']
-    new_pipeline = linked_pipeline_object('mappingset', mappingset_id)
-    url = f'{utils.get_kernel_server_url()}/mappings/?mappingset={mappingset_id}'
-    mappings = utils.get_all_docs(url)
-    if not new_pipeline and len(mappings):
-        new_pipeline = models.Pipeline.objects.create(
-            id=mappingset['id'],
-            name=mappingset['name'],
-            schema=mappingset['schema'],
-            input=mappingset['input'],
-            mappingset=mappingset['id']
-        )
-    else:
-        new_pipeline = new_pipeline.first()
-    for mapping in mappings:
-        new_mapping = linked_pipeline_object('mappings', mapping['id'])
-        if not new_mapping:
-            entity_types = convert_entity_types(mapping['definition']['entities'])
-            models.Contract.objects.create(
-                id=mapping['id'],
-                name=mapping['name'],
-                mapping=convert_mappings(mapping['definition']['mapping']),
-                entity_types=entity_types['schemas'],
-                pipeline=new_pipeline,
-                is_active=mapping['is_active'],
-                is_read_only=mapping['is_read_only'],
-                kernel_refs={
-                    'schemas': entity_types['ids'],
-                    'mappings': mapping['id']
-                },
-                published_on=mapping['modified']
-            )
-    return new_pipeline
-
-
-def linked_pipeline_object(object_name, id):
-    if object_name is 'mappingset':
-        return models.Pipeline.objects.filter(mappingset=id)
-    else:
-        kwargs = {
-            '{0}__{1}'.format('kernel_refs', object_name): id
+        kernel_refs = {
+            'project': result['project'],
+            'mapping': mapping_id,  # 1:1
+            'schemas': entities,
         }
-        return models.Contract.objects.filter(**kwargs)
+
+        contract.published_on = timezone.now()
+        contract.kernel_refs = kernel_refs
+        contract.save()
+
+        return {'artefacts': kernel_refs}
+
+    except Exception as e:
+        return {'error': str(e)}
 
 
-def kernel_to_pipeline():
-    url = f'{utils.get_kernel_server_url()}/mappingsets/'
-    mappingsets = utils.get_all_docs(url)
-    for mappingset in mappingsets:
-        create_new_pipeline_from_kernel(mappingset)
+################################################################################
+# HELPERS
+################################################################################
+
+
+def kernel_data_request(url='', method='get', data=None):
+    '''
+    Handle requests to the kernel server
+    '''
+
+    res = requests.request(
+        method=method,
+        url=f'{utils.get_kernel_server_url()}/{url}',
+        json=data or {},
+        headers=utils.get_auth_header(),
+    )
+
+    if res.status_code == 204:  # NO-CONTENT
+        return None
+
+    if res.status_code >= 200 and res.status_code < 400:
+        return res.json()
+    else:
+        raise Exception(res.json())
