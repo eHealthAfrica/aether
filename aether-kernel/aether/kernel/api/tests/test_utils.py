@@ -53,17 +53,33 @@ class UtilsTests(TestCase):
     def test_merge_objects(self):
         source = {'a': 0, 'c': 3}
         target = {'a': 1, 'b': 2}
+        self.assertEqual(utils.merge_objects(source, target, 'overwrite'),
+                         {'a': 1, 'b': 2})
+        self.assertEqual(source,
+                         {'a': 0, 'c': 3},
+                         'source content is not touched')
+        self.assertEqual(target,
+                         {'a': 1, 'b': 2},
+                         'target content is not touched')
 
+        source = {'a': 0, 'c': 3}
+        target = {'a': 1, 'b': 2}
         self.assertEqual(utils.merge_objects(source, target, 'last_write_wins'),
                          {'a': 1, 'b': 2, 'c': 3})
         self.assertEqual(source,
                          {'a': 1, 'b': 2, 'c': 3},
                          'source content is replaced')
+        self.assertEqual(target,
+                         {'a': 1, 'b': 2},
+                         'target content is not touched')
 
         source = {'a': 0, 'c': 3}
         target = {'a': 1, 'b': 2}
         self.assertEqual(utils.merge_objects(source, target, 'first_write_wins'),
                          {'a': 0, 'b': 2, 'c': 3})
+        self.assertEqual(source,
+                         {'a': 0, 'c': 3},
+                         'source content is not touched')
         self.assertEqual(target,
                          {'a': 0, 'b': 2, 'c': 3},
                          'target content is replaced')

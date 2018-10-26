@@ -95,12 +95,14 @@ def merge_objects(source, target, direction):
     # prefer_new > (Target to Source) Target takes primacy,
     # prefer_existing > (Source to Target) Source takes primacy
     result = {}
-    if direction and direction == MERGE_OPTIONS.fww.value:
+    if direction == MERGE_OPTIONS.fww.value:
         for key in source:
             target[key] = source[key]
         result = target
-    else:
+    elif direction == MERGE_OPTIONS.lww.value:
         for key in target:
             source[key] = target[key]
         result = source
+    else:
+        result = target
     return result

@@ -306,13 +306,11 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         # find out payload
-        direction = validated_data.pop('merge', DEFAULT_MERGE)
-        if direction in (MERGE_OPTIONS.fww.value, MERGE_OPTIONS.lww.value):
-            validated_data['payload'] = utils.merge_objects(
-                source=instance.payload,
-                target=validated_data.get('payload', {}),
-                direction=direction,
-            )
+        validated_data['payload'] = utils.merge_objects(
+            source=instance.payload,
+            target=validated_data.get('payload', {}),
+            direction=validated_data.pop('merge', DEFAULT_MERGE),
+        )
 
         try:
             return super(EntitySerializer, self).update(instance, validated_data)
