@@ -19,7 +19,7 @@
 import uuid
 
 from django.test import TestCase
-from rest_framework import serializers
+from django.core.exceptions import ValidationError
 
 from aether.kernel.api import validators
 
@@ -31,32 +31,54 @@ class ValidatorsTest(TestCase):
             'name': 'Test',
             'type': 'record',
             'fields': [
-                {
-                    'name': 'id',
-                    'type': 'string'
-                }
+                {'name': 'name', 'type': 'string'},
+                {'name': 'age', 'type': 'int'},
+                {'name': 'id', 'type': 'string'},
             ]
         }
 
+    def test_validate_schema_definition__success(self):
+        try:
+            validators.validate_schema_definition(self.schema)
+            self.assertTrue(True)
+        except Exception:
+            self.assertTrue(False)
+
     def test_validate_avro_schema__success(self):
-        result = validators.validate_avro_schema(self.schema)
-        self.assertIsNone(result)
+        try:
+            validators.validate_avro_schema(self.schema)
+            self.assertTrue(True)
+        except Exception:
+            self.assertTrue(False)
 
     def test_validate_avro_schema__error(self):
-        with self.assertRaises(serializers.ValidationError) as err:
+        with self.assertRaises(ValidationError) as err:
             validators.validate_avro_schema({})  # "{}" is not a valid Avro schema
-        message = str(err.exception.detail[0])
+        message = str(err.exception)
         self.assertIn('No "type" property', message)
 
-    def test_has_valid_id_field__success(self):
-        result = validators.validate_id_field(self.schema)
-        self.assertIsNone(result)
+    def test_validate_id_field__success(self):
+        try:
+            validators.validate_id_field(self.schema)
+            self.assertTrue(True)
+        except Exception:
+            self.assertTrue(False)
 
-    def test_has_valid_id_field__error(self):
+    def test_validate_id_field__success__union(self):
+        try:
+            validators.validate_id_field([
+                {'name': 'Test1', 'type': 'record', 'fields': []},
+                {'name': 'Test2', 'type': 'record', 'fields': []},
+                {**self.schema, 'aetherBaseSchema': True}
+            ])
+            self.assertTrue(True)
+        except Exception:
+            self.assertTrue(False)
+
+    def test_validate_id_field__error(self):
         invalid_schema = {
             'name': 'Test',
             'type': 'record',
-            'aetherBaseSchema': True,
             'fields': [
                 {
                     'name': 'id',
@@ -64,9 +86,40 @@ class ValidatorsTest(TestCase):
                 }
             ]
         }
-        with self.assertRaises(serializers.ValidationError) as err:
+        with self.assertRaises(ValidationError) as err:
             validators.validate_id_field(invalid_schema)
-        message = str(err.exception.detail[0])
+        message = str(err.exception)
+        self.assertIn(validators.MESSAGE_REQUIRED_ID, message)
+
+    def test_validate_id_field__error__union(self):
+        missing_aetherBaseSchema = [
+            {'name': 'Test1', 'type': 'record'},
+            {'name': 'Test2', 'type': 'record'},
+            {'name': 'Test3', 'type': 'record'},
+        ]
+        with self.assertRaises(ValidationError) as err:
+            validators.validate_id_field(missing_aetherBaseSchema)
+        message = str(err.exception)
+        self.assertIn(validators.MESSAGE_REQUIRED_ID, message)
+
+        more_than_one_aetherBaseSchema = [
+            {'name': 'Test1', 'type': 'record', 'aetherBaseSchema': True},
+            {'name': 'Test2', 'type': 'record'},
+            {'name': 'Test3', 'type': 'record', 'aetherBaseSchema': True},
+        ]
+        with self.assertRaises(ValidationError) as err:
+            validators.validate_id_field(more_than_one_aetherBaseSchema)
+        message = str(err.exception)
+        self.assertIn(validators.MESSAGE_REQUIRED_ID, message)
+
+        one_aetherBaseSchema__missing_id = [
+            {'name': 'Test1', 'type': 'record'},
+            {'name': 'Test2', 'type': 'record'},
+            {'name': 'Test3', 'type': 'record', 'aetherBaseSchema': True},
+        ]
+        with self.assertRaises(ValidationError) as err:
+            validators.validate_id_field(one_aetherBaseSchema__missing_id)
+        message = str(err.exception)
         self.assertIn(validators.MESSAGE_REQUIRED_ID, message)
 
     def test_validate_mapping_definition__success(self):
@@ -78,8 +131,11 @@ class ValidatorsTest(TestCase):
             },
         ]
         for mapping in mappings:
-            result = validators.validate_mapping_definition(mapping)
-            self.assertIsNone(result)
+            try:
+                validators.validate_mapping_definition(mapping)
+                self.assertTrue(True)
+            except Exception:
+                self.assertTrue(False)
 
     def test_validate_mapping_definition__error(self):
         mappings = [
@@ -88,9 +144,26 @@ class ValidatorsTest(TestCase):
             {'a': 1},
         ]
         for mapping in mappings:
-            with self.assertRaises(serializers.ValidationError) as err:
+            with self.assertRaises(ValidationError) as err:
                 validators.validate_mapping_definition(mapping)
             self.assertIn(
                 'is not valid under any of the given schemas',
-                err.exception.detail[0],
+                str(err.exception),
             )
+
+    def test_validate_schemas__success(self):
+        schemas = {
+            'one': self.schema,
+            'two': self.schema,
+        }
+        try:
+            validators.validate_schemas(schemas)
+            self.assertTrue(True)
+        except Exception:
+            self.assertTrue(False)
+
+    def test_validate_schemas__error(self):
+        with self.assertRaises(ValidationError) as err:
+            validators.validate_schemas([self.schema])
+        message = str(err.exception)
+        self.assertIn(' is not an Object', message)
