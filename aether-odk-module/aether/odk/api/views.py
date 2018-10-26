@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import logging
 import json
 import requests
 
@@ -42,7 +43,7 @@ from aether.common.kernel.utils import (
     get_submissions_url,
     submit_to_kernel,
 )
-from ..settings import logger
+from ..settings import LOGGING_LEVEL
 
 from .models import Project, XForm, MediaFile
 from .serializers import (
@@ -58,6 +59,10 @@ from .kernel_utils import (
 )
 from .surveyors_utils import get_surveyors
 from .xform_utils import get_instance_data_from_xml, parse_submission
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(LOGGING_LEVEL)
 
 
 # list of messages that can be translated
