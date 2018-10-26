@@ -23,6 +23,7 @@ import re
 import uuid
 
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.utils.translation import ugettext as _
 
 from jsonpath_ng.ext import parse as jsonpath_ng_ext_parse
@@ -536,6 +537,7 @@ def extract_create_entities(submission_payload, mapping_definition, schemas):
     return submission_data, entities
 
 
+@transaction.atomic
 def run_entity_extraction(submission):
     # Extract entity for each mapping in the submission.mappingset
     mappings = submission.mappingset \
@@ -574,3 +576,11 @@ def run_entity_extraction(submission):
                 mapping_revision=mapping.revision
             )
             entity_instance.save()
+
+    # this should include in the submission payload the following properties
+    # generated during the extraction:
+    # - ``aether_errors``, with all the errors that made not possible
+    #   to create the entities.
+    # - ``aether_extractor_enrichment``, with the generated values that allow us
+    #   to re-execute this process again with the same result.
+    submission.save()
