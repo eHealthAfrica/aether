@@ -4,20 +4,20 @@ A mapping is a set of instructions that when executed transform a source documen
 
 Each mapping is made up of two instuctions, the first describing a source and the second a destination. The destination instruction will always be a reference to one of the entities we're trying to create. The source instruction can pull data from a few places, the most typical will be the source document. However, we can also use it to pull data from entities that have been created previously in the mapping, or to generate a new UUID, or to apply a constant not found in the source document.
 
-Mapping instructions are executed in order. To see how we handle missing references and other issues, see the section, [_Extractor Mechanism_](#user-content-extractor-mechanism).
+Mapping instructions are executed in order. To see how we handle missing references and other issues, see the section, [_Extractor Mechanism_](#extractor-mechanism).
 
-#### Types of Mapping
+### Types of Mapping
 
 There are two general types of instructions: JSONPath and it's extensions, and Extractor Functions. 
-##### [_JSONPath Functions_](#user-content-jsonpath-function)
+#### [_JSONPath Functions_](#jsonpath-function)
 Look something like this: `$.path.to.somewhere[*].attribue`
-##### [_Extractor Functions_](#user-content-extractor-function) 
+#### [_Extractor Functions_](#extractor-function) 
 Look something like this: `#!uuid` or `#!constant#male#string`
 
 Let's construct an example that we can use to illustrate our mappings. We want to normalize this into two linked types. A Stooge who lives in a house, and a House with an address. We have a form with contact information that arrives in the following (pretty horrible) format:
 
-<details open>
-    <summary><i>Input <b>(Hide/Show)</b></i></summary>
+
+Input
 
 ```json
 {
@@ -42,10 +42,10 @@ Let's construct an example that we can use to illustrate our mappings. We want t
 }
 
 ```
-</details>
 
-<details open>
-    <summary><i>Schema <b>(Hide/Show)</b></i></summary><br>
+
+
+Schema
 
 ```json
 [
@@ -96,7 +96,7 @@ Let's construct an example that we can use to illustrate our mappings. We want t
 ]
 ```
 
-</details>
+
 
 <a name="jsonpath-function"></a>
 ## JSONPath Functions
@@ -106,7 +106,7 @@ The JSONPath functions used by Aether are based on the [jsonpath-ng](https://git
 JSONPath instructions are used to specify a location in the Source. It's conventional to start a JSONPath with the character `$`. We use a similar syntax for the destination, but we do not support the full syntax for reasons we'll discuss in a minute.
 
 ---
-#### Simple JSONPath based copy operations
+### Simple JSONPath based copy operations
 
 A simple case would be to copy the `address` from the source document and put it into a House entity under the property `address`.
 ```
@@ -152,7 +152,7 @@ This yields the expected:
 ```
 
 ---
-#### JSONPath extensions
+### JSONPath extensions
 
 One annoying antipattern shows up in our sample input, the use of numbered keys such as `number1`, `number2` in an object. JSONPath has no native answer for this using the standard wildcard `*` operator, so we've gone beyond the specification. For example:
 
@@ -180,7 +180,7 @@ Yields:
 ```
 
 ---
-#### JSONPath filtering and other functions
+### JSONPath filtering and other functions
 
 Because we use `jsonpath-ng`'s extended parser, there are a number of functional improvements that you can leverage. A reference is available [here](https://github.com/h2non/jsonpath-ng#extensions).
 
@@ -189,17 +189,17 @@ Filtering is an advanced feature and can change the order of the filtered field 
   - Always apply filters in the same order.
   - Apply the same filter for all properties of a given type.
 
-For more information about how the extractor interprets instructions and why filtering order matters, see the section titled [_Extractor Mechanism_](#user-content-extractor-mechanism).
+For more information about how the extractor interprets instructions and why filtering order matters, see the section titled [_Extractor Mechanism_](#extractor-mechanism).
 
 <a name="extractor-function"></a>
 ## Extractor Functions
 
-##### UUID
+#### UUID
 - *call:* `#!uuid`
 - *args:* `none`
 - *explanation:*
 
-    Generates a random UUID (version 4) which can be assigned as a string to a field. Beyond generating the ID, this is saved as part of the original submission document in a section titled `aether_extractor_enrichment` so that if extraction is performed a second time against the same dataset, the same IDs will be used as long as the the order of the submission data do not change. See [_Extractor Mechanism_](#user-content-extractor-mechanism) for more information on instruction ordering.
+    Generates a random UUID (version 4) which can be assigned as a string to a field. Beyond generating the ID, this is saved as part of the original submission document in a section titled `aether_extractor_enrichment` so that if extraction is performed a second time against the same dataset, the same IDs will be used as long as the the order of the submission data do not change. See [_Extractor Mechanism_](#extractor-mechanism) for more information on instruction ordering.
 
 - *example:* 
 ```json
@@ -210,7 +210,7 @@ For more information about how the extractor interprets instructions and why fil
 ```
 ---
 
-##### Constant
+#### Constant
 - *call:* `#!constant`
 - *args:*
     - 1: the value of the constant
@@ -251,7 +251,7 @@ For more information about how the extractor interprets instructions and why fil
 ```
 ---
 
-##### Entity Reference
+#### Entity Reference
 - *call:* `#!entity-reference`
 - *args:*
     - 1: The jsonpath for the resource in the constructed entities.
@@ -443,8 +443,8 @@ As stated previously, Mapping instruction sets are executed in order. If the ext
 
 Let's introduce some new artifacts so we can illustrate the process from the extractor point of view.
 
-<details open>
-    <summary><i>Input <b>(Hide/Show)</b></i></summary>
+
+Input
     
 ```json
 {
@@ -469,9 +469,9 @@ Let's introduce some new artifacts so we can illustrate the process from the ext
 }
 ```
 
-</details>
-<details open>
-    <summary><i>Schemas <b>(Hide/Show)</b></i></summary>
+
+
+Schemas
 
 ```json
 [
@@ -522,14 +522,14 @@ Let's introduce some new artifacts so we can illustrate the process from the ext
 ]
 ```
 
-</details>
 
-##### Steps
+
+#### Steps
 
 Let's start with a suboptimal mapping:
 
-<details open>
-    <summary><i>Mapping <b>(Hide/Show)</b></i></summary>
+
+Mapping
 
 ```json
 [
@@ -564,11 +564,11 @@ Let's start with a suboptimal mapping:
 ]
 ```
 
-</details>
+
 
 ---
-<details open>
-    <summary><i>First Pass Details <b>(Hide/Show)</b></i></summary>
+
+First Pass Details
 
 The first thing the extractor does is try to size the output requirements. In this case, based on the mappings and input, we can figure out that there will be 5 output entities; 4 `People` and 1 `Household`. We'll refer to the current state of the output at each mapping step.
 
@@ -824,7 +824,7 @@ Instruction
   "House.id"
 ]
 ```
-</details>
+
 
 _Resulting Objects_
 
@@ -873,8 +873,8 @@ _Failed Functions_
 ```
 
 ---
-<details open>
-    <summary><i>Second Pass Details <b>(Hide/Show)</b></i></summary>
+
+Second Pass Details
 
 Instruction
 
@@ -887,7 +887,7 @@ Instruction
 
 We can now resolve the Entity Reference as `House[*].id` has a value.
 
-</details>
+
 
 _Resulting Objects_
 
