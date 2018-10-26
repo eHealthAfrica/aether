@@ -47,6 +47,26 @@ MEDIA_INTERNAL_URL = '/media-internal/'
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/media/')
 
 
+# Version and revision
+# ------------------------------------------------------------------------------
+
+# from  ``/code/aether/common/conf``  to  ``/code``
+here = os.path.dirname(os.path.realpath(__file__))
+_root = os.path.dirname(os.path.dirname(os.path.dirname(here)))
+
+try:
+    with open(os.path.join(_root, 'VERSION')) as fp:
+        VERSION = fp.read().strip()
+except Exception:
+    VERSION = '#.#.#'
+
+try:
+    with open(os.path.join(_root, 'REVISION')) as fp:
+        REVISION = fp.read().strip()
+except Exception:
+    REVISION = '---'
+
+
 # Django Basic Configuration
 # ------------------------------------------------------------------------------
 

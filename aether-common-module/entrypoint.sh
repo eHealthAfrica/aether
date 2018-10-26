@@ -83,8 +83,9 @@ case "$1" in
         # test before building
         test_flake8
         test_coverage
+
         # remove previous build if needed
-        rm -rf dist
+        rm -rf dist/*
         rm -rf build
         rm -rf aether.common.egg-info
 
