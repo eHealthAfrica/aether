@@ -32,3 +32,6 @@ class SettingsTest(TestCase):
         self.assertEqual(settings.SECURE_PROXY_SSL_HEADER, None)
 
         self.assertEqual(settings.ROOT_URLCONF, 'aether.common.urls')
+
+        self.assertEqual(settings.VERSION, '0.0.0')
+        self.assertEqual(settings.REVISION, '0123456789ABCDEF')
