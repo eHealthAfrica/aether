@@ -23,7 +23,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 
 from django.test import TransactionTestCase
 
-from .. import models
+from aether.kernel.api import models
 
 from . import EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA, EXAMPLE_SOURCE_DATA_ENTITY, EXAMPLE_MAPPING
 

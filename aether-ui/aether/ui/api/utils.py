@@ -344,7 +344,7 @@ def publish_contract(project_name, contract, objects_to_overwrite={}):
     if not project_id:  # set a new value
         project_id = str(uuid.uuid4())
 
-    # build schemas from contract enitites, include a new id if missing
+    # build schemas from contract entities, include a new id if missing
     schemas = [
         {
             'id': objects_to_overwrite.get('schema', {}).get(entity_type.get('name'), str(uuid.uuid4())),

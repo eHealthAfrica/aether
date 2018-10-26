@@ -20,8 +20,8 @@ import uuid
 
 from django.test import TestCase
 
-from ..models import Project, Schema, ProjectSchema, Mapping, MappingSet
-from ..project_artefacts import (
+from aether.kernel.api.models import Project, Schema, ProjectSchema, Mapping, MappingSet
+from aether.kernel.api.project_artefacts import (
     get_project_artefacts as retrieve,
     upsert_project_artefacts as generate,
     upsert_project_with_avro_schemas as generate_from_avro,

@@ -20,7 +20,7 @@ import collections
 import json
 from django.utils.translation import ugettext as _
 
-from .utils import find_by_jsonpath
+from .entity_extractor import find_by_jsonpath
 
 import spavro
 
