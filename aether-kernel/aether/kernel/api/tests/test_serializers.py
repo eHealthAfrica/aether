@@ -20,7 +20,7 @@ import copy
 
 from django.test import RequestFactory, TransactionTestCase
 
-from .. import models, serializers
+from aether.kernel.api import models, serializers
 
 from . import EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA, EXAMPLE_SOURCE_DATA_ENTITY, EXAMPLE_MAPPING
 

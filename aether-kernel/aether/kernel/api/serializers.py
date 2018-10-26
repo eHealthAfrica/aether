@@ -25,10 +25,11 @@ from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
-from . import constants, models, utils, validators
+from .constants import MergeOptions as MERGE_OPTIONS
+from .entity_extractor import run_entity_extraction
 
+from . import models, utils, validators
 
-MERGE_OPTIONS = constants.MergeOptions
 
 MERGE_CHOICES = (
     (MERGE_OPTIONS.overwrite.value, _('Overwrite (Do not merge)')),
@@ -190,7 +191,7 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     def create(self, validated_data):
         instance = super(SubmissionSerializer, self).create(validated_data)
         # entity extraction should not raise any exception
-        utils.run_entity_extraction(instance)
+        run_entity_extraction(instance)
         return instance
 
     class Meta:
@@ -305,13 +306,11 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         # find out payload
-        direction = validated_data.pop('merge', DEFAULT_MERGE)
-        if direction in (MERGE_OPTIONS.fww.value, MERGE_OPTIONS.lww.value):
-            validated_data['payload'] = utils.merge_objects(
-                source=instance.payload,
-                target=validated_data.get('payload', {}),
-                direction=direction,
-            )
+        validated_data['payload'] = utils.merge_objects(
+            source=instance.payload,
+            target=validated_data.get('payload', {}),
+            direction=validated_data.pop('merge', DEFAULT_MERGE),
+        )
 
         try:
             return super(EntitySerializer, self).update(instance, validated_data)

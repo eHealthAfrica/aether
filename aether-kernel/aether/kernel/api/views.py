@@ -32,16 +32,17 @@ from rest_framework.decorators import (
 )
 from rest_framework.renderers import JSONRenderer
 
+from .avro_tools import extract_jsonpaths_and_docs
+from .constants import LINKED_DATA_MAX_DEPTH
+from .entity_extractor import extract_create_entities
+from .exporter import ExporterViewSet
+from .mapping_validation import validate_mappings
+
 from . import (
-    avro_tools,
-    constants,
-    exporter,
     filters,
-    mapping_validation,
     models,
     project_artefacts,
     serializers,
-    utils,
 )
 
 
@@ -85,7 +86,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         for schema in schemas:
             if not name:
                 name = f'{project.name}-{schema.schema_name}'
-            avro_tools.extract_jsonpaths_and_docs(
+            extract_jsonpaths_and_docs(
                 schema=schema.definition,
                 jsonpaths=jsonpaths,
                 docs=docs,
@@ -301,7 +302,7 @@ class MappingViewSet(viewsets.ModelViewSet):
     filter_class = filters.MappingFilter
 
 
-class SubmissionViewSet(exporter.ExporterViewSet):
+class SubmissionViewSet(ExporterViewSet):
     queryset = models.Submission.objects.all()
     serializer_class = serializers.SubmissionSerializer
     filter_class = filters.SubmissionFilter
@@ -332,7 +333,7 @@ class SchemaViewSet(viewsets.ModelViewSet):
         jsonpaths = []
         docs = {}
 
-        avro_tools.extract_jsonpaths_and_docs(
+        extract_jsonpaths_and_docs(
             schema=schema.definition,
             jsonpaths=jsonpaths,
             docs=docs,
@@ -364,7 +365,7 @@ class ProjectSchemaViewSet(viewsets.ModelViewSet):
         jsonpaths = []
         docs = {}
 
-        avro_tools.extract_jsonpaths_and_docs(
+        extract_jsonpaths_and_docs(
             schema=schema.definition,
             jsonpaths=jsonpaths,
             docs=docs,
@@ -376,7 +377,7 @@ class ProjectSchemaViewSet(viewsets.ModelViewSet):
         })
 
 
-class EntityViewSet(exporter.ExporterViewSet):
+class EntityViewSet(ExporterViewSet):
     queryset = models.Entity.objects.all()
     serializer_class = serializers.EntitySerializer
     filter_class = filters.EntityFilter
@@ -419,9 +420,9 @@ class EntityViewSet(exporter.ExporterViewSet):
             depth = int(depth)
             if depth < 0:
                 depth = 0
-            if depth > constants.LINKED_DATA_MAX_DEPTH:
+            if depth > LINKED_DATA_MAX_DEPTH:
                 # instead of raising an error change the value to the MAXIMUM
-                depth = constants.LINKED_DATA_MAX_DEPTH
+                depth = LINKED_DATA_MAX_DEPTH
         except Exception:
             depth = 0
 
@@ -514,7 +515,7 @@ class AetherSchemaView(SchemaView):
 @api_view(['POST'])
 @renderer_classes([JSONRenderer])
 @permission_classes([permissions.IsAuthenticated])
-def validate_mappings(request):
+def validate_mappings_view(request):
     '''
     Given a `submission_payload`, a `mapping_definition` and a list of
     `entities`, verify that each mapping function in `mapping_definition` can
@@ -529,12 +530,12 @@ def validate_mappings(request):
     '''
 
     def run_mapping_validation(submission_payload, mapping_definition, schemas):
-        submission_data, entities = utils.extract_create_entities(
+        submission_data, entities = extract_create_entities(
             submission_payload,
             mapping_definition,
             schemas,
         )
-        validation_result = mapping_validation.validate_mappings(
+        validation_result = validate_mappings(
             submission_payload=submission_payload,
             schemas=schemas,
             mapping_definition=mapping_definition,
