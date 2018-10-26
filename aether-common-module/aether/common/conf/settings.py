@@ -310,9 +310,12 @@ if DJANGO_STORAGE_BACKEND == 'filesystem':
 
 elif DJANGO_STORAGE_BACKEND == 's3':
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    AWS_STORAGE_BUCKET_NAME = os.environ['BUCKET_NAME']
-    if not AWS_STORAGE_BUCKET_NAME:
-        msg = 'Missing BUCKET_NAME environment variable!'
+    try:
+        AWS_STORAGE_BUCKET_NAME = os.environ['BUCKET_NAME']
+        AWS_S3_REGION_NAME = os.environ['AWS_S3_REGION_NAME']
+        AWS_DEFAULT_ACL = os.environ['AWS_DEFAULT_ACL']
+    except KeyError as key:
+        msg = f'Missing {key} environment variable!'
         logger.critical(msg)
         raise RuntimeError(msg)
 
