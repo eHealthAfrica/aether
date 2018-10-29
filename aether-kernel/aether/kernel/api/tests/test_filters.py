@@ -560,14 +560,22 @@ class TestFilters(TestCase):
             response = self.client.get(url,
                                        {'fields': 'payload', 'page_size': submissions_count, **kwargs},
                                        format='json')
-            submissions = json.loads(response.content)['results']
-            for submission in submissions:
-                self.assertEqual(submission['payload'], payload)
-                filtered_submissions_count += 1
-        self.assertEqual(
-            len(models.Submission.objects.all()),
-            filtered_submissions_count,
-        )
+            submissions = json.loads(response.content)
+            filtered_submissions_count += submissions['count']
+            for submission in submissions['results']:
+                # remove aether_xxx entries in payload
+                submission_payload = {
+                    k: v
+                    for k, v in submission['payload'].items()
+                    if k not in ('aether_errors', 'aether_extractor_enrichment')
+                }
+                original_payload = {
+                    k: v
+                    for k, v in payload.items()
+                    if k not in ('aether_errors', 'aether_extractor_enrichment')
+                }
+                self.assertEqual(submission_payload, original_payload)
+        self.assertEqual(submissions_count, filtered_submissions_count)
 
     def test_submission_filter__by_payload__post(self):
         url = reverse(viewname='submission-query')
@@ -587,32 +595,37 @@ class TestFilters(TestCase):
 
         filtered_submissions_count = 0
         for kwargs, payload in zip(filters, payloads):
-            response = self.client.get(url,
-                                       {'fields': 'payload', 'page_size': submissions_count, **kwargs},
-                                       format='json')
-            submissions = json.loads(response.content)['results']
-            for submission in submissions:
-                self.assertEqual(submission['payload'], payload)
-                filtered_submissions_count += 1
-        self.assertEqual(
-            len(models.Submission.objects.all()),
-            filtered_submissions_count,
-        )
+            response = self.client.post(url + f'?fields=payload&page_size={submissions_count}',
+                                        kwargs,
+                                        format='json')
+            submissions = json.loads(response.content)
+            filtered_submissions_count += submissions['count']
+            for submission in submissions['results']:
+                # remove aether_xxx entries in payload
+                submission_payload = {
+                    k: v
+                    for k, v in submission['payload'].items()
+                    if k not in ('aether_errors', 'aether_extractor_enrichment')
+                }
+                original_payload = {
+                    k: v
+                    for k, v in payload.items()
+                    if k not in ('aether_errors', 'aether_extractor_enrichment')
+                }
+                self.assertEqual(submission_payload, original_payload)
+        self.assertEqual(submissions_count, filtered_submissions_count)
 
     def test_submission_filter__by_payload__error(self):
         url = reverse(viewname='submission-list')
-        filters = [
-            {'payload__a': '[1'},  # raise json.decoder.JSONDecodeError
-        ]
-        payloads = [
-            {'a': 1, 'z': 3},
-        ]
-        gen_payload = generators.ChoicesGenerator(values=payloads)
-        generate_project(submission_field_values={'payload': gen_payload})
+        generate_project(submission_field_values={'payload': {'a': '[1', 'z': 3}})
         submissions_count = models.Submission.objects.count()
 
-        for kwargs, payload in zip(filters, payloads):
-            response = self.client.get(url,
-                                       {'fields': 'payload', 'page_size': submissions_count, **kwargs},
-                                       format='json')
-            self.assertEqual(json.loads(response.content)['count'], 0)
+        response = self.client.get(
+            url,
+            {
+                'page_size': submissions_count,
+                'payload__a': '[1',  # raise json.decoder.JSONDecodeError
+            },
+            format='json',
+        )
+        self.assertEqual(json.loads(response.content)['count'], submissions_count)
