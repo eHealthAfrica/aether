@@ -44,8 +44,8 @@ pyasn1-modules==0.2.2
 pycodestyle==2.4.0
 pyflakes==2.0.0
 python-cas==1.4.0
-python-dateutil==2.7.3
-pytz==2018.6
+python-dateutil==2.7.5
+pytz==2018.7
 raven==6.9.0
 redis==2.10.6
 requests==2.20.0
