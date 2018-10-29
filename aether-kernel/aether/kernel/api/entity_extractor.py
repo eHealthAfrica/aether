@@ -45,6 +45,9 @@ Entity = collections.namedtuple(
     ['payload', 'projectschema_name', 'status'],
 )
 
+ENTITY_EXTRACTION_ERRORS = 'aether_errors'
+ENTITY_EXTRACTION_ENRICHMENT = 'aether_extractor_enrichment'
+
 # RegEx for jsonpaths containing a partial wildcard as a key:
 # $.path.to[*].key_* where the matching path might be $.path.to[1].key_1
 # or with invertes position:
@@ -361,17 +364,16 @@ def get_or_make_uuid(entity_type, field_name, instance_number, source_data):
     # Either uses a pre-created uuid present in source_data --or-- creates a new
     # uuid and saves it in source data make one uuid, we may not use it
     value = str(uuid.uuid4())
-    base = 'aether_extractor_enrichment'
+    base = ENTITY_EXTRACTION_ENRICHMENT
     if source_data.get(base, {}).get(entity_type, {}).get(field_name):
         try:
-            value = source_data.get(base, {}).get(
-                entity_type).get(field_name)[instance_number]
+            value = source_data.get(base, {}).get(entity_type).get(field_name)[instance_number]
         except IndexError:
             source_data[base][entity_type][field_name].append(value)
         finally:
             return value
     else:
-        # create as little as the heirarchy as required
+        # create as little as the hierarchy as required
         # there's a better way to do this with collections.defaultdict
         if not source_data.get(base):
             source_data[base] = {}
@@ -473,7 +475,7 @@ def extract_entity(entity_type, entities, requirements, data, entity_stub):
 
 def extract_entities(requirements, response_data, entity_definitions, schemas):
     data = response_data if response_data else []
-    data['aether_errors'] = []
+    data[ENTITY_EXTRACTION_ERRORS] = []
     # for output. Since we need to submit the extracted entities as different
     # types, it's helpful to seperate them here
     entities = {}
@@ -502,9 +504,9 @@ def extract_entities(requirements, response_data, entity_definitions, schemas):
     # send a log of paths with errors to the user via saved response
     for action in failed_again:
         error = 'Failure: "{}"'.format(action.error)
-        data['aether_errors'].append(error)
+        data[ENTITY_EXTRACTION_ERRORS].append(error)
     validation_result = validate_entities(entities, schemas)
-    data['aether_errors'].extend(validation_result.validation_errors)
+    data[ENTITY_EXTRACTION_ERRORS].extend(validation_result.validation_errors)
     return data, validation_result.entities
 
 
@@ -520,7 +522,7 @@ def extract_create_entities(submission_payload, mapping_definition, schemas):
     requirements = get_entity_requirements(entity_defs, field_mappings)
 
     # Only attempt entity extraction if requirements are present
-    submission_data = {'aether_errors': []}
+    submission_data = {ENTITY_EXTRACTION_ERRORS: []}
     entity_types = {}
     if any(requirements.values()):
         submission_data, entity_types = extract_entities(

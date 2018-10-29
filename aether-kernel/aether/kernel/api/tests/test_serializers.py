@@ -168,13 +168,30 @@ class SerializersTests(TransactionTestCase):
         self.assertTrue(mapping.is_valid(), mapping.errors)
         mapping.save()
 
-        # check the submission
+        # check the submission with entity extraction errors
+        submission = serializers.SubmissionSerializer(
+            data={
+                'mappingset': mappingset.data['id'],
+                'project': project.data['id'],
+                'payload': {},  # error
+            },
+            context={'request': self.request},
+        )
+        self.assertTrue(submission.is_valid(), submission.errors)
+
+        # save the submission and check that no entities were created
+        # and we have aether errors
+        self.assertEqual(models.Entity.objects.count(), 0)
+        submission.save()
+        self.assertEqual(models.Entity.objects.count(), 0)
+        self.assertIn('aether_errors', submission.data['payload'])
+
+        # check the submission without entity extraction errors
         submission = serializers.SubmissionSerializer(
             data={
                 'mappingset': mappingset.data['id'],
                 'project': project.data['id'],
                 'payload': EXAMPLE_SOURCE_DATA,
-                'merge': 'overwrite',  #
             },
             context={'request': self.request},
         )
@@ -184,6 +201,7 @@ class SerializersTests(TransactionTestCase):
         self.assertEqual(models.Entity.objects.count(), 0)
         submission.save()
         self.assertNotEqual(models.Entity.objects.count(), 0)
+        self.assertIn('aether_extractor_enrichment', submission.data['payload'])
 
         # check entity
         entity = serializers.EntitySerializer(
