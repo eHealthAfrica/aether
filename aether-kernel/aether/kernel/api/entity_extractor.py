@@ -19,6 +19,7 @@
 import collections
 import fnmatch
 import json
+import logging
 import re
 import uuid
 
@@ -27,11 +28,15 @@ from django.utils.translation import ugettext as _
 
 from jsonpath_ng.ext import parse as jsonpath_ng_ext_parse
 
-from ..settings import logger
+from ..settings import LOGGING_LEVEL
 
 from . import models
 from .validators import validate_entities
 from .utils import object_contains
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(LOGGING_LEVEL)
 
 
 Entity = collections.namedtuple(
