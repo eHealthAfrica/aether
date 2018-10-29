@@ -78,6 +78,12 @@ class ExporterViewSet(ModelViewSet):
         numbers, lists and objects as well.
         '''
 
+        def parse_value(value):
+            try:
+                return json.loads(value)
+            except json.decoder.JSONDecodeError:
+                return value
+
         json_filter = f'{self.json_field}__'
         filters = [
             # GET method: query params
@@ -90,13 +96,9 @@ class ExporterViewSet(ModelViewSet):
             for k, v in self.request.data.items()
             if k.startswith(json_filter)
         ]
-
         queryset = self.queryset
         for k, v in filters:
-            try:
-                kwargs = {k: json.loads(v)}
-            except json.decoder.JSONDecodeError:
-                kwargs = {k: v}
+            kwargs = {k: parse_value(v)}
             queryset = queryset.filter(**kwargs)
         return queryset
 
