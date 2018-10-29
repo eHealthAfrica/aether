@@ -66,7 +66,6 @@ services:
   client-test:
     build: ./aether-utils/aether-client
     environment:
-      # use a different database when testing the integration with another container
       KERNEL_URL: http://kernel-test:9000
       KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
       KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
