@@ -39,7 +39,7 @@ psycopg2-binary==2.7.5
 pycodestyle==2.4.0
 pyflakes==2.0.0
 python-cas==1.4.0
-pytz==2018.6
+pytz==2018.7
 raven==6.9.0
 requests==2.20.0
 six==1.11.0
