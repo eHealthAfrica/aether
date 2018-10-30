@@ -1,6 +1,5 @@
-/* global describe, expect, it */
+/* global describe, expect, it, jest */
 import React from 'react'
-import sinon from 'sinon'
 
 import { mountWithIntl } from 'enzyme-react-intl'
 
@@ -120,20 +119,23 @@ describe('<IdentityMapping />', () => {
   }
 
   it('triggers pipeline updates and closes modal', () => {
-    const updateContract = sinon.spy()
+    const updateContractMock = jest.fn()
     const component = mountWithIntl(
       <input.IdentityMapping
         selectedPipeline={pipeline}
-        updateContract={updateContract}
+        updateContract={updateContractMock}
       />
     )
+
     expect(component.find(Modal).length).toEqual(0)
     findByDataQa(component, 'input.identityMapping.btn-apply').simulate('click')
     expect(component.find(Modal).length).toEqual(1)
     findByDataQa(component, 'input.identityMapping.btn-confirm').simulate('click')
-    expect(updateContract.callCount).toEqual(1)
+    expect(component.find(Modal).length).toEqual(0)
 
-    const { mapping, entity_types: entityTypes } = updateContract.args[0][0]
+    expect(updateContractMock).toHaveBeenCalledTimes(1)
+
+    const { mapping, entity_types: entityTypes } = updateContractMock.mock.calls[0][0]
 
     expect(mapping[0].source).toEqual('$.a')
     expect(mapping[0].destination).toEqual('Test.a')
@@ -157,8 +159,6 @@ describe('<IdentityMapping />', () => {
         }
       ]
     })
-
-    expect(component.find(Modal).length).toEqual(0)
   })
 
   it('opens modal', () => {
