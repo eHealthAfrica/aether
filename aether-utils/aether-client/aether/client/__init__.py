@@ -109,7 +109,7 @@ def show_request(operation, *args, **kwargs):
 
 '''
 Some arguments don't properly display in the swagger specification so we have
-to add them at runtime for the client to suppor them. This includes all payload
+to add them at runtime for the client to support them. This includes all payload
 filters like payload__name=John. Normally payload__name wouldn't be found in the
 spec and an error would be produced.
 '''
@@ -214,7 +214,7 @@ class AetherDecorator(ResourceDecorator):
     def _verify_param(self, name, param_name):
         operation = getattr(self.resource, self._get_full_name(name))
         # allow searching for arbitrary fields within the payload
-        if param_name.startswith('payload'):
+        if param_name.startswith('payload__'):
             # add it to the allowed list of parameters
             operation.params[param_name] = mockParam(param_name, operation, self.swagger_spec)
             return True
