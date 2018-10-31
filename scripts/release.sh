@@ -90,7 +90,6 @@ CONNECT_COMPOSE='docker-compose-connect.yml'
 TEST_APPS=( integration-test )
 TEST_COMPOSE='docker-compose-test.yml'
 
-
 for APP in "${CORE_APPS[@]}"
 do
     release_app $APP $CORE_COMPOSE
