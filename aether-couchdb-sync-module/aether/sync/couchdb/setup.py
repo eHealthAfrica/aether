@@ -17,8 +17,8 @@
 # under the License.
 
 import json
+import logging
 import os
-import os.path
 
 from django.conf import settings
 from django.utils.translation import ugettext as _
@@ -28,7 +28,11 @@ from pathlib import Path
 from . import api
 from .. import errors
 from .utils import force_put_doc
-from ..settings import logger
+from ..settings import LOGGING_LEVEL
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(LOGGING_LEVEL)
 
 
 class DuplicateKeyError(ValueError):

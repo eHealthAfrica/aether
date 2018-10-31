@@ -260,11 +260,11 @@ class ExporterViewsTest(TestCase):
         self.client.logout()
 
     def test__generate__csv(self):
-        # without paths
+        # without paths (includes: ``aether_extractor_enrichment``)
         data = models.Submission.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
         _, zip_path, _ = generate(data, paths=[], labels=EXAMPLE_LABELS, format='csv', offset=0, limit=1)
         zip_file = zipfile.ZipFile(zip_path, 'r')
-        self.assertEqual(zip_file.namelist(), ['export-#.csv', 'export-#-1.csv', 'export-#-2.csv'])
+        self.assertEqual(zip_file.namelist(), ['export-#.csv', 'export-#-1.csv', 'export-#-2.csv', 'export-#-3.csv'])
 
         # with the whole paths list
         data = models.Submission.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')

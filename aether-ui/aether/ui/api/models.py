@@ -26,6 +26,28 @@ from model_utils.models import TimeStampedModel
 from .utils import validate_contract
 
 
+'''
+Data model schema:
+
+    +------------------+       +------------------+
+    | Pipeline         |       | Contract         |
+    +==================+       +==================+
+    | id               |<--+   | id               |
+    | name             |   |   | name             |
+    | schema           |   |   | entity_types     |
+    | input            |   |   | mapping          |
+    +~~~~~~~~~~~~~~~~~~+   |   | mapping_errors   |
+    | mappingset       |   |   | output           |
+    +------------------+   |   | is_active        |
+                           |   | is_read_only     |
+                           |   +~~~~~~~~~~~~~~~~~~+
+                           |   | kernel_refs      |
+                           |   +::::::::::::::::::+
+                           +--<| pipeline         |
+                               +------------------+
+'''
+
+
 class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, unique=True)
