@@ -87,6 +87,9 @@ CORE_APPS=( kernel odk couchdb-sync ui )
 CORE_COMPOSE='docker-compose.yml'
 CONNECT_APPS=( producer )
 CONNECT_COMPOSE='docker-compose-connect.yml'
+TEST_APPS=( integration-test )
+TEST_COMPOSE='docker-compose-test.yml'
+
 
 for APP in "${CORE_APPS[@]}"
 do
@@ -96,4 +99,9 @@ done
 for CONNECT_APP in "${CONNECT_APPS[@]}"
 do
     release_app $CONNECT_APP $CONNECT_COMPOSE
+done
+
+for TEST_APP in "${TEST_APPS[@]}"
+do
+    release_app $TEST_APP $TEST_COMPOSE
 done
