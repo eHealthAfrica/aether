@@ -36,6 +36,17 @@ case "$1" in
         ./scripts/test_all.sh
     ;;
 
+    core)
+        ./scripts/test_container.sh kernel
+        ./scripts/test_container.sh client
+    ;;
+
+    modules)
+        ./scripts/test_container.sh ui
+        ./scripts/test_container.sh odk
+        ./scripts/test_container.sh couchdb-sync
+    ;;
+
     *)
         # testing the given container
         ./scripts/test_container.sh $1
