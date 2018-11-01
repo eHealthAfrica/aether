@@ -83,24 +83,10 @@ docker-compose run   ui-assets build
 
 # Build docker images
 IMAGE_REPO='ehealthafrica'
-CORE_APPS=( kernel odk couchdb-sync ui )
-CORE_COMPOSE='docker-compose.yml'
-CONNECT_APPS=( producer )
-CONNECT_COMPOSE='docker-compose-connect.yml'
-TEST_APPS=( integration-test )
-TEST_COMPOSE='docker-compose-test.yml'
+RELEASE_APPS=( kernel odk couchdb-sync ui producer integration-test )
+RELEASE_COMPOSE='docker-compose-release.yml'
 
-for APP in "${CORE_APPS[@]}"
+for APP in "${RELEASE_APPS[@]}"
 do
-    release_app $APP $CORE_COMPOSE
-done
-
-for CONNECT_APP in "${CONNECT_APPS[@]}"
-do
-    release_app $CONNECT_APP $CONNECT_COMPOSE
-done
-
-for TEST_APP in "${TEST_APPS[@]}"
-do
-    release_app $TEST_APP $TEST_COMPOSE
+    release_app $APP $RELEASE_COMPOSE
 done
