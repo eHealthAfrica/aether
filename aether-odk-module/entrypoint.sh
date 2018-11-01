@@ -59,6 +59,10 @@ pip_freeze () {
     /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
 }
 
+prep_travis() {
+    pip install -q -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt --cache-dir /.cache/pip
+}
+
 setup () {
     # check if required environment variables were set
     ./conf/check_vars.sh
@@ -166,6 +170,17 @@ case "$1" in
         setup
 
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
+    ;;
+
+    start_travis )
+        prep_travis
+        setup
+
+        [ -z "$DEBUG" ] && LOGGING="--disable-logging" || LOGGING=""
+        /usr/local/bin/uwsgi \
+            --ini /code/conf/uwsgi.ini \
+            --http 0.0.0.0:$WEB_SERVER_PORT \
+            $LOGGING
     ;;
 
     health )

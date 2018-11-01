@@ -1,0 +1,248 @@
+# ------------------------------------------------------------------------------
+# Config file for ALL TESTING containers:
+#
+#  * Aether Kernel
+#  * ODK Module
+#  * CouchDB Sync Module
+#  * Aether UI
+#  * Zookeper & Kafka
+#  * Aether Kafka Producer
+#  * Aether Integration Tests
+# ------------------------------------------------------------------------------
+
+version: "2.1"
+
+services:
+
+  # ---------------------------------
+  # Database containers
+  # ---------------------------------
+
+  db-test:
+    extends:
+      file: ./docker-compose-base.yml
+      service: postgres-base
+
+  couchdb-test:
+    extends:
+      file: ./docker-compose-base.yml
+      service: couchdb-base
+
+  redis-test:
+    extends:
+      file: ./docker-compose-base.yml
+      service: redis-base
+
+
+  # ---------------------------------
+  # Aether Kernel
+  # ---------------------------------
+
+  kernel-test:
+    image: aether-kernel:test
+    build:
+      context: ./aether-kernel
+      dockerfile: Dockerfile.test
+    extends:
+      file: ./docker-compose-base.yml
+      service: kernel-base
+    environment:
+      # use a different database when testing the integration with another container
+      DB_NAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
+      DEBUG: null # set to null to remove previous value
+      MEDIA_ROOT: /tmp/
+      PGHOST: db-test
+      TESTING: "true"
+      WEB_SERVER_PORT: 9000
+    volumes:
+      # volumes in tests
+      - ./tmp/test/kernel/media:/media
+      - ./tmp/test/kernel/static:/var/www/static
+      - ./tmp/test/kernel/tmp:/tmp
+      - ${HOME}/.cache/pip/:/.cache/pip
+    ports:
+      - "9000:9000"
+    command: start_travis
+
+  # ---------------------------------
+  # Aether Kernel Client
+  # ---------------------------------
+
+  client-test:
+    build:
+      context: ./aether-utils/aether-client
+      dockerfile: Dockerfile.test
+    environment:
+      KERNEL_URL: http://kernel-test:9000
+      KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
+      KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
+      TESTING: "true"
+    volumes:
+      - ./aether-utils/aether-client:/code
+      - ./VERSION:/code/VERSION
+      - ${HOME}/.cache/pip/:/.cache/pip
+    command: test_travis
+
+
+
+  # ---------------------------------
+  # ODK module
+  # ---------------------------------
+
+  odk-test:
+    image: aether-odk:test
+    build:
+      context: ./aether-odk-module
+      dockerfile: Dockerfile.test
+    extends:
+      file: ./docker-compose-base.yml
+      service: odk-base
+    environment:
+      AETHER_KERNEL_URL: http://kernel-test:9000
+      DB_NAME: test-odk
+      DEBUG: null # set to null to remove previous value
+      MEDIA_ROOT: /tmp/
+      PGHOST: db-test
+      TESTING: "true"
+      WEB_SERVER_PORT: 9002
+    volumes:
+      # volumes in tests
+      - ./tmp/test/odk/media:/media
+      - ./tmp/test/odk/static:/var/www/static
+      - ${HOME}/.cache/pip/:/.cache/pip
+    ports:
+      - "9002:9002"
+    command: start_travis
+
+
+  # ---------------------------------
+  # CouchDB Sync module
+  # ---------------------------------
+
+  couchdb-sync-test:
+    image: aether-couchdb-sync:test
+    build:
+      context: ./aether-couchdb-sync-module
+      dockerfile: Dockerfile.test
+    extends:
+      file: ./docker-compose-base.yml
+      service: couchdb-sync-base
+    environment:
+      AETHER_KERNEL_URL: http://kernel-test:9000
+      COUCHDB_URL: http://couchdb-test:5984
+      DB_NAME: test-couchdb-sync
+      DEBUG: null # set to null to remove previous value
+      GOOGLE_CLIENT_ID: secret_google_client_id
+      MEDIA_ROOT: /tmp/
+      PGHOST: db-test
+      REDIS_HOST: redis-test
+      TESTING: "true"
+      WEB_SERVER_PORT: 9006
+    ports:
+      - "9006:9006"
+    volumes:
+      - ${HOME}/.cache/pip/:/.cache/pip
+    command: start_travis
+
+
+  # ---------------------------------
+  # Aether UI
+  # ---------------------------------
+
+  ui-test:
+    image: aether-ui:test
+    build:
+      context: ./aether-ui
+      dockerfile: Dockerfile.test
+    extends:
+      file: ./docker-compose-base.yml
+      service: ui-base
+    environment:
+      AETHER_KERNEL_URL: http://kernel-test:9000
+      DB_NAME: test-ui
+      DEBUG: null # set to null to remove previous value
+      PGHOST: db-test
+      TESTING: "true"
+      WEB_SERVER_PORT: 9004
+    ports:
+      - "9004:9004"
+    command: start_travis
+    volumes:
+      - ${HOME}/.cache/pip/:/.cache/pip
+
+  ui-assets-test:
+    extends:
+      file: docker-compose-base.yml
+      service: ui-assets-base
+
+
+  # ---------------------------------
+  # Kafka & Zookeeper
+  # ---------------------------------
+
+  zookeeper-test:
+    extends:
+      file: ./docker-compose-base.yml
+      service: zookeeper-base
+
+  kafka-test:
+    extends:
+      file: ./docker-compose-base.yml
+      service: kafka-base
+    links:
+      - zookeeper-test
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-test:32181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-test:29092
+      ADVERTISED_HOST_NAME: kafka-test
+
+
+  # ---------------------------------
+  # Aether Kafka Producer
+  # ---------------------------------
+
+  producer-test:
+    image: aether-producer:test
+    build:
+      context: ./aether-producer
+      dockerfile: Dockerfile.test
+    extends:
+      file: ./docker-compose-base.yml
+      service: aether-producer-base
+    environment:
+      # These variables will override the ones indicated in the settings file
+      KAFKA_URL: kafka-test:29092
+      KERNEL_URL: http://kernel-test:9000
+      OFFSET_DB_URL: sqlite:///test-offset.db
+      POSTGRES_DBNAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
+      POSTGRES_HOST: db-test
+      SERVER_PORT: 9005
+    ports:
+      - "9005:9005"
+    links:
+      - kafka-test
+      - zookeeper-test
+    volumes:
+      - ${HOME}/.cache/pip/:/.cache/pip
+    command: start_travis
+
+
+  # ---------------------------------
+  # Aether Integration Tests
+  # ---------------------------------
+
+  integration-test:
+    image: aether/integration:test
+    build:
+      context: ./test-aether-integration-module
+      dockerfile: Dockerfile.test
+    environment:
+      KERNEL_URL: http://kernel-test:9000
+      KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
+      KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
+    volumes:
+      - ./test-aether-integration-module:/code
+      - ./VERSION:/code/VERSION
+      - ${HOME}/.cache/pip/:/.cache/pip
+    command: test_travis

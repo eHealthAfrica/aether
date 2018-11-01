@@ -37,6 +37,9 @@ show_help() {
     """
 }
 
+prep_travis() {
+    pip install -q -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt --cache-dir /.cache/pip
+}
 
 case "$1" in
     bash )
@@ -75,6 +78,10 @@ case "$1" in
         ./manage.py test
     ;;
 
+    start_travis )
+        prep_travis
+        ./manage.py test
+    ;;
 
     help)
         show_help

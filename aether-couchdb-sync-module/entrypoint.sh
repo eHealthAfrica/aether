@@ -61,6 +61,10 @@ pip_freeze () {
     /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
 }
 
+prep_travis() {
+    pip install -q -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt --cache-dir /.cache/pip
+}
+
 setup () {
     # check if required environment variables were set
     ./conf/check_vars.sh
@@ -142,6 +146,14 @@ case "$1" in
         test_coverage "${@:2}"
     ;;
 
+    test_travis )
+        echo "DEBUG=$DEBUG"
+        prep_travis
+        setup
+        test_flake8
+        test_coverage "${@:2}"
+    ;;
+
     test_lint )
         test_flake8
     ;;
@@ -187,6 +199,17 @@ case "$1" in
 
         wait $scheduler
         wait $worker
+    ;;
+
+    start_travis )
+        
+        setup
+
+        [ -z "$DEBUG" ] && LOGGING="--disable-logging" || LOGGING=""
+        /usr/local/bin/uwsgi \
+            --ini /code/conf/uwsgi.ini \
+            --http 0.0.0.0:$WEB_SERVER_PORT \
+            $LOGGING
     ;;
 
     health )

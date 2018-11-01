@@ -46,6 +46,10 @@ test_coverage() {
     rm -R .pytest_cache
 }
 
+prep_travis() {
+    pip install -q -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt --cache-dir /.cache/pip
+}
+
 
 case "$1" in
     bash )
@@ -63,6 +67,12 @@ case "$1" in
 
     test_lint)
         test_flake8
+    ;;
+
+    test_travis)
+        prep_travis
+        test_flake8
+        test_coverage "${@:2}"
     ;;
 
     help)

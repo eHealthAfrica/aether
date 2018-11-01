@@ -26,7 +26,7 @@ containers=( kernel client ui odk couchdb-sync )
 
 for container in "${containers[@]}"
 do
-    ./scripts/test_container.sh $container
+    ./scripts/test_container.sh $container $1
 done
 
 echo "_____________________________________________ END"

@@ -33,11 +33,11 @@ case "$1" in
     ;;
 
     all)
-        ./scripts/test_all.sh
+        ./scripts/test_all.sh travis
     ;;
 
     *)
         # testing the given container
-        ./scripts/test_container.sh $1
+        ./scripts/test_container.sh $1 travis
     ;;
 esac

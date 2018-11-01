@@ -20,7 +20,14 @@
 #
 set -Eeuo pipefail
 
-DC_TEST="docker-compose -f docker-compose-test.yml"
+if [ "$2" = "travis" ]
+then
+  echo "Using Travis testing configuration"
+  DC_TEST="docker-compose -f docker-compose-travis-test.yml"
+else
+  DC_TEST="docker-compose -f docker-compose-test.yml"
+fi
+
 
 ./scripts/kill_all.sh
 $DC_TEST down
@@ -68,7 +75,13 @@ fi
 echo "_____________________________________________ Preparing $1 container"
 $DC_TEST build "$1"-test
 echo "_____________________________________________ $1 ready!"
-$DC_TEST run "$1"-test test
+if [ "$2" = "travis" ]
+then
+    $DC_TEST run "$1"-test test_travis  
+else
+    $DC_TEST run "$1"-test test  
+fi
+
 echo "_____________________________________________ $1 tests passed!"
 
 

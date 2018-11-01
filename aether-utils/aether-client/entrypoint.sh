@@ -36,6 +36,10 @@ show_help() {
     """
 }
 
+prep_travis() {
+    pip install -q -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt --cache-dir /.cache/pip
+}
+
 test_flake8() {
     flake8 /code/. --config=/code/setup.cfg
 }
@@ -57,6 +61,12 @@ case "$1" in
     ;;
 
     test)
+        test_flake8
+        test
+    ;;
+
+    test_travis )
+        prep_travis
         test_flake8
         test
     ;;
