@@ -20,12 +20,12 @@
 #
 set -Eeuo pipefail
 
-if [ "$2" = "travis" ]
+if [ "$#" -ne 2 ]
 then
+  DC_TEST="docker-compose -f docker-compose-test.yml"
+else
   echo "Using Travis testing configuration"
   DC_TEST="docker-compose -f docker-compose-travis-test.yml"
-else
-  DC_TEST="docker-compose -f docker-compose-test.yml"
 fi
 
 
@@ -62,7 +62,14 @@ then
     # rename kernel test database in each case
     export TEST_KERNEL_DB_NAME=test-kernel-"$1"
     $DC_TEST up -d kernel-test
+fi
 
+
+echo "_____________________________________________ Preparing $1 container"
+$DC_TEST build "$1"-test
+echo "_____________________________________________ $1 ready!"
+if [[ $1 != "kernel" ]]
+then
     # give time to kernel to start up
     KERNEL_HEALTH_URL="http://localhost:9000/health"
     until curl -s $KERNEL_HEALTH_URL > /dev/null; do
@@ -71,10 +78,6 @@ then
     done
 fi
 
-
-echo "_____________________________________________ Preparing $1 container"
-$DC_TEST build "$1"-test
-echo "_____________________________________________ $1 ready!"
 if [ "$2" = "travis" ]
 then
     $DC_TEST run "$1"-test test_travis  

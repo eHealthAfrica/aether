@@ -148,6 +148,14 @@ case "$1" in
         test_coverage "${@:2}"
     ;;
 
+    test_travis )
+        echo "DEBUG=$DEBUG"
+        prep_travis
+        setup
+        test_flake8
+        test_coverage "${@:2}"
+    ;;
+
     test_lint )
         test_flake8
     ;;

@@ -59,7 +59,7 @@ services:
       - ./tmp/test/kernel/media:/media
       - ./tmp/test/kernel/static:/var/www/static
       - ./tmp/test/kernel/tmp:/tmp
-      - ${HOME}/.cache/pip/:/.cache/pip
+      - ${HOME}/.cache/pip:/.cache/pip
     ports:
       - "9000:9000"
     command: start_travis
@@ -80,7 +80,7 @@ services:
     volumes:
       - ./aether-utils/aether-client:/code
       - ./VERSION:/code/VERSION
-      - ${HOME}/.cache/pip/:/.cache/pip
+      - ${HOME}/.cache/pip:/.cache/pip
     command: test_travis
 
 
@@ -141,7 +141,7 @@ services:
     ports:
       - "9006:9006"
     volumes:
-      - ${HOME}/.cache/pip/:/.cache/pip
+      - ${HOME}/.cache/pip:/.cache/pip
     command: start_travis
 
 
@@ -168,7 +168,7 @@ services:
       - "9004:9004"
     command: start_travis
     volumes:
-      - ${HOME}/.cache/pip/:/.cache/pip
+      - ${HOME}/.cache/pip:/.cache/pip
 
   ui-assets-test:
     extends:
@@ -224,7 +224,7 @@ services:
       - kafka-test
       - zookeeper-test
     volumes:
-      - ${HOME}/.cache/pip/:/.cache/pip
+      - ${HOME}/.cache/pip:/.cache/pip
     command: start_travis
 
 
@@ -244,5 +244,5 @@ services:
     volumes:
       - ./test-aether-integration-module:/code
       - ./VERSION:/code/VERSION
-      - ${HOME}/.cache/pip/:/.cache/pip
+      - ${HOME}/.cache/pip:/.cache/pip
     command: test_travis

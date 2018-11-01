@@ -26,7 +26,12 @@ containers=( kernel client ui odk couchdb-sync )
 
 for container in "${containers[@]}"
 do
+if [ "$#" -ne 1 ]
+then
+    ./scripts/test_container.sh $container
+else
     ./scripts/test_container.sh $container $1
+fi
 done
 
 echo "_____________________________________________ END"
