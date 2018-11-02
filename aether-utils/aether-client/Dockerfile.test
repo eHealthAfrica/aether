@@ -1,16 +1,5 @@
 FROM python:3.6-slim-jessie
 
-# create user to run container (avoid root user)
-# and do this before PIP installs so we can install at runtime.
-RUN useradd -u 2000 -ms /bin/false aether
-USER 2000:50
-
-################################################################################
-## setup container
-################################################################################
-
-RUN pip install --upgrade pip
-
 ################################################################################
 ## install app
 ## copy files one by one and split commands to use docker cache
@@ -23,6 +12,19 @@ COPY ./ /code
 ## last setup steps
 ################################################################################
 
+# create user to run container (avoid root user)
+RUN useradd -u 2000 -ms /bin/false aether
 RUN chown -R aether: /code
+
+# and do this before PIP installs so we can install at runtime.
+# set UID to travis' so PIP cache can be written to
+# set GID to 'staff' (50)?
+USER 2000
+
+################################################################################
+## setup pip as non-root
+################################################################################
+
+RUN pip install --upgrade pip
 
 ENTRYPOINT ["/code/entrypoint.sh"]
