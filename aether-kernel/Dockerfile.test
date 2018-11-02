@@ -31,12 +31,10 @@ RUN echo $GIT_REVISION > REVISION
 # create user to run container (avoid root user)
 # set UID to travis' so PIP cache can be written to
 RUN useradd -u 2000 -ms /bin/false aether
-RUN chown -R aether: /
-# chown the whole thing... we're in the root group so?
-
+RUN chown -R aether: /code
 # chown / so our user can get to their libs
-# RUN chown -R aether: /usr/local
-# RUN chown -R aether: /var/www
+RUN chown -R aether: /usr/local
+RUN chown -R aether: /var/www
 USER 2000:0
 
 ENTRYPOINT ["/code/entrypoint.sh"]
