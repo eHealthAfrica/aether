@@ -13,7 +13,7 @@ matrix:
   include:
     - name: "Aether PIP-Cache test (client)"
       stage: test
-      env: 'TEST_MODE=isolate'
+      env: 'TEST_MODE=client'
 
     # - name: "Aether CORE tests (Kernel, Client, UI, ODK and CouchDB-Sync)"
     #   stage: test

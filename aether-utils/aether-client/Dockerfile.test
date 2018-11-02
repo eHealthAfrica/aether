@@ -1,7 +1,7 @@
 FROM python:3.6-slim-jessie
 
 ################################################################################
-## setup pip
+## setup container
 ################################################################################
 
 RUN pip install --upgrade pip
@@ -15,17 +15,24 @@ WORKDIR /code
 COPY ./ /code
 
 ################################################################################
+## copy application version and create git revision
+################################################################################
+
+ARG VERSION
+RUN echo $VERSION > VERSION
+ARG GIT_REVISION
+RUN echo $GIT_REVISION > REVISION
+
+################################################################################
 ## last setup steps
 ################################################################################
 
 # create user to run container (avoid root user)
+# set UID to travis' so PIP cache can be written to
 RUN useradd -u 2000 -ms /bin/false aether
 RUN chown -R aether: /code
+# chown /usr/local so our user can get to their libs
 RUN chown -R aether: /usr/local
-
-# and do this before PIP installs so we can install at runtime.
-# set UID to travis' so PIP cache can be written to
-# set GID to 'staff' (50)?
 USER 2000
 
 ENTRYPOINT ["/code/entrypoint.sh"]
