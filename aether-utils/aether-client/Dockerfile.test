@@ -19,7 +19,9 @@ COPY ./ /code
 ################################################################################
 
 # create user to run container (avoid root user)
-RUN useradd -ms /bin/false aether
+RUN useradd -u 2000 -ms /bin/false aether
 RUN chown -R aether: /code
+
+USER aether
 
 ENTRYPOINT ["/code/entrypoint.sh"]
