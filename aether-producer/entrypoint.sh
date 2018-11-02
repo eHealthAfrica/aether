@@ -38,6 +38,10 @@ show_help() {
 }
 
 prep_travis() {
+    ls -la /.cache/pip
+    whoami
+    id
+    id -g
     pip install -q -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt --cache-dir /.cache/pip
 }
 
