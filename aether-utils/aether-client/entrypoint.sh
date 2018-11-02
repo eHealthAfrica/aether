@@ -37,6 +37,7 @@ show_help() {
 }
 
 prep_travis() {
+    stat /usr/local/lib/python3.6/site-packages
     ls -la /.cache/pip
     whoami
     id
