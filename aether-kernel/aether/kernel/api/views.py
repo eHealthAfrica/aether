@@ -484,6 +484,7 @@ class SubmissionStatsMixin(object):
                        first_submission=Min('submissions__created'),
                        last_submission=Max('submissions__created'),
                        submissions_count=Count('submissions__id', distinct=True),
+                       attachments_count=Count('submissions__attachments__id', distinct=True),
                        entities_count=entities_count,
                    )
 
