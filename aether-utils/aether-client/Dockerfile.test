@@ -22,6 +22,6 @@ COPY ./ /code
 RUN useradd -u 2000 -ms /bin/false aether
 RUN chown -R aether: /code
 
-USER 2000:0
+USER 2000:50
 
 ENTRYPOINT ["/code/entrypoint.sh"]
