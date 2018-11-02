@@ -11,9 +11,9 @@ services:
 matrix:
   fast_finish: true
   include:
-    - name: "Aether CORE tests (Kernel, Client, UI, ODK and CouchDB-Sync)"
+    - name: "Aether PIP-Cache test (Producer)"
       stage: test
-      env: 'TEST_MODE=producer'
+      env: 'TEST_MODE=client'
 
     # - name: "Aether CORE tests (Kernel, Client, UI, ODK and CouchDB-Sync)"
     #   stage: test
