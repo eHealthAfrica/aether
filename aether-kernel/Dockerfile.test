@@ -34,7 +34,7 @@ RUN useradd -u 2000 -ms /bin/false aether
 RUN chown -R aether: /code
 # chown / so our user can get to their libs
 RUN chown -R aether: /usr/local
-RUN chown -R aether: /var/www
+RUN chown -R aether: /var/www/static
 USER 2000:0
 
 ENTRYPOINT ["/code/entrypoint.sh"]
