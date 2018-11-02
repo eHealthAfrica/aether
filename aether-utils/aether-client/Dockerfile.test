@@ -21,7 +21,7 @@ COPY ./ /code
 # create user to run container (avoid root user)
 RUN useradd -u 2000 -ms /bin/false aether
 RUN chown -R aether: /code
-RUN chown -R aether: /usr/local/lib/python3.6
+RUN chown -R aether: /usr/local
 
 # and do this before PIP installs so we can install at runtime.
 # set UID to travis' so PIP cache can be written to
