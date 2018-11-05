@@ -82,6 +82,8 @@ if [ "$2" = "travis" ]
 then
     echo "Building Travis pip cache..."
     $DC_TEST run "$1"-test travis_cache
+    run_container=$(docker ps -l -q)
+    docker commit $run_container aether-$1:test
 fi
 if [[ $1 != "kernel" ]]
 then
