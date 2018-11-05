@@ -186,7 +186,7 @@ services:
   # ---------------------------------
 
   integration-test:
-    image: aether/integration:test
+    image: aether-integration:test
     build:
       context: ./test-aether-integration-module
       dockerfile: Dockerfile.test
