@@ -60,12 +60,13 @@ pip_freeze () {
 
 prep_travis() {
     ls -la /.cache/pip
-    chmod -R 755 /.cache/pip
+    chown -R root:root /.cache/pip
     ls -la /.cache/pip
     whoami
     id
     id -g
     pip install -q -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt --cache-dir /.cache/pip
+    chown -R aether:50 /.cache/pip
 }
 
 setup () {
