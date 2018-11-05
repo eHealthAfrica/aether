@@ -35,11 +35,7 @@ case "$1" in
     all)
         ./scripts/test_all.sh travis
     ;;
-
-    isolate)
-        ./scripts/_tmp_isolate-test.sh client
-    ;;
-
+    
     *)
         # testing the given container
         ./scripts/test_container.sh $1 travis

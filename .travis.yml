@@ -11,13 +11,9 @@ services:
 matrix:
   fast_finish: true
   include:
-    - name: "Aether PIP-Cache test (client)"
+    - name: "Aether CORE tests (Kernel, Client, UI, ODK and CouchDB-Sync)"
       stage: test
-      env: 'TEST_MODE=kernel'
-
-    # - name: "Aether CORE tests (Kernel, Client, UI, ODK and CouchDB-Sync)"
-    #   stage: test
-    #   env: 'TEST_MODE=all'
+      env: 'TEST_MODE=all'
 
     # split containers one by one
     # - name: "Aether Kernel tests"
