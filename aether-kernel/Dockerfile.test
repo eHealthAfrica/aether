@@ -31,6 +31,7 @@ RUN echo $GIT_REVISION > REVISION
 # create user to run container (avoid root user)
 # add user with UID of travis' so PIP cache can be written to
 RUN useradd -u 2000 -ms /bin/false travis
+RUN echo 'travis:travis' | chpasswd
 RUN chown -R travis: /code
 # USER 0:0
 
