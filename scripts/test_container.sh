@@ -28,12 +28,12 @@ wait_for_kernel() {
     done
 }
 
-if [ "$#" -ne 2 ]
+if [ "$2" = "travis" ]
 then
-  DC_TEST="docker-compose -f docker-compose-test.yml"
-else
   echo "Using Travis testing configuration"
   DC_TEST="docker-compose -f docker-compose-travis-test.yml"
+else
+  DC_TEST="docker-compose -f docker-compose-test.yml"
 fi
 
 
@@ -80,6 +80,7 @@ echo "_____________________________________________ $1 ready!"
 
 if [ "$2" = "travis" ]
 then
+    echo "Building Travis pip cache..."
     $DC_TEST run "$1"-test travis_cache
 fi
 if [[ $1 != "kernel" ]]
