@@ -35,7 +35,7 @@ wait_for_kernel() {
     done
 }
 
-if [ "$2" = "travis" ]
+if [ "$1" = "travis" ]
 then
   echo "Using Travis testing configuration"
   DC_TEST="docker-compose -f docker-compose-travis-test.yml"
@@ -76,7 +76,7 @@ $DC_TEST up -d producer-test
 
 echo "_____________________________________________ Starting Integration Tests"
 build_container integration
-if [ "$2" = "travis" ]
+if [ "$1" = "travis" ]
 then
   $DC_TEST run --no-deps integration-test travis_cache
   run_container=$(docker ps -l -q)
