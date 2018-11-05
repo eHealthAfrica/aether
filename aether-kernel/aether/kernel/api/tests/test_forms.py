@@ -17,7 +17,8 @@
 # under the License.
 
 from django.test import TestCase
-from .. import forms
+
+from aether.kernel.api import forms
 
 
 class FormsTest(TestCase):

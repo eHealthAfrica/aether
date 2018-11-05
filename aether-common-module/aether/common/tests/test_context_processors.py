@@ -30,4 +30,6 @@ class ContextProcessorsTests(TestCase):
             'dev_mode': False,
             'app_name': 'aether-test',
             'app_link': 'http://aether-link-test',
+            'app_version': '0.0.0',
+            'app_revision': '0123456789ABCDEF',
         })

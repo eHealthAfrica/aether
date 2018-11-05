@@ -17,7 +17,8 @@
 # under the License.
 
 from django.test import TestCase
-from .. import mapping_validation
+
+from aether.kernel.api import mapping_validation
 
 valid_schemas = {
     'Person': {

@@ -47,6 +47,26 @@ MEDIA_INTERNAL_URL = '/media-internal/'
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/media/')
 
 
+# Version and revision
+# ------------------------------------------------------------------------------
+
+# from  ``/code/aether/common/conf``  to  ``/code``
+here = os.path.dirname(os.path.realpath(__file__))
+_root = os.path.dirname(os.path.dirname(os.path.dirname(here)))
+
+try:
+    with open(os.path.join(_root, 'VERSION')) as fp:
+        VERSION = fp.read().strip()
+except Exception:
+    VERSION = '#.#.#'
+
+try:
+    with open(os.path.join(_root, 'REVISION')) as fp:
+        REVISION = fp.read().strip()
+except Exception:
+    REVISION = '---'
+
+
 # Django Basic Configuration
 # ------------------------------------------------------------------------------
 
@@ -310,9 +330,12 @@ if DJANGO_STORAGE_BACKEND == 'filesystem':
 
 elif DJANGO_STORAGE_BACKEND == 's3':
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    AWS_STORAGE_BUCKET_NAME = os.environ['BUCKET_NAME']
-    if not AWS_STORAGE_BUCKET_NAME:
-        msg = 'Missing BUCKET_NAME environment variable!'
+    try:
+        AWS_STORAGE_BUCKET_NAME = os.environ['BUCKET_NAME']
+        AWS_S3_REGION_NAME = os.environ['AWS_S3_REGION_NAME']
+        AWS_DEFAULT_ACL = os.environ['AWS_DEFAULT_ACL']
+    except KeyError as key:
+        msg = f'Missing {key} environment variable!'
         logger.critical(msg)
         raise RuntimeError(msg)
 

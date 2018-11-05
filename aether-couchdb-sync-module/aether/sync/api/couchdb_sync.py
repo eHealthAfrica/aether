@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import logging
 import re
 import requests
 
@@ -27,9 +28,12 @@ from aether.common.kernel import utils as kernel_utils
 from .kernel_utils import propagate_kernel_artefacts
 from .models import DeviceDB, Schema
 from ..couchdb import utils, api
-from ..settings import logger
+from ..settings import LOGGING_LEVEL
 from .. import errors
 
+
+logger = logging.getLogger(__name__)
+logger.setLevel(LOGGING_LEVEL)
 
 SYNC_DOC = 'sync_doc'
 

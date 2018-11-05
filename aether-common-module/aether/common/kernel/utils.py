@@ -16,13 +16,18 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import logging
 import os
 import requests
 
 from django.utils.translation import ugettext as _
 
 from . import errors
-from ..conf.settings import logger
+from ..settings import LOGGING_LEVEL
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(LOGGING_LEVEL)
 
 
 def get_kernel_server_url():
