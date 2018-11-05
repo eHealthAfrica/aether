@@ -11,44 +11,22 @@ services:
 matrix:
   fast_finish: true
   include:
-    - name: "Aether CORE tests (Kernel, Client, UI, ODK and CouchDB-Sync)"
+    - name: "Aether CORE tests (Kernel, Client)"
       stage: test
-      env: 'TEST_MODE=all'
+      env: 'TEST_MODE=core'
 
-    # split containers one by one
-    # - name: "Aether Kernel tests"
-    #   stage: test
-    #   env: 'TEST_MODE=kernel'
+    - name: "Aether modules tests (UI, ODK and CouchDB-Sync)"
+      stage: test
+      env: 'TEST_MODE=modules'
 
-    # - name: "Aether Client tests"
-    #   stage: test
-    #   env: 'TEST_MODE=client'
-
-    # - name: "Aether ODK module tests"
-    #   stage: test
-    #   env: 'TEST_MODE=odk'
-
-    # - name: "Aether CouchDB-Sync module tests"
-    #   stage: test
-    #   env: 'TEST_MODE=couchdb-sync'
-
-    # - name: "Aether UI tests"
-    #   stage: test
-    #   env: 'TEST_MODE=ui'
-
-    # - name: "Integration tests (Kernel with Kakfa/Zookeeper and Producer)"
-    #   stage: test
-    #   env: 'TEST_MODE=integration'
-
-    #  - name: "Kubernetes tests (Kernel and ODK)"
-    #    stage: test
-    #    env: 'TEST_MODE=kubernetes'
+    - name: "Integration tests (Kernel with Kakfa/Zookeeper and Producer)"
+      stage: test
+      env: 'TEST_MODE=integration'
 
     # execute only to deploy
-    # - name: "Aether release"
-    #   stage: deploy
-    #   script: ./scripts/release.sh
-
+    - name: "Aether release"
+      stage: deploy
+      script: ./scripts/release.sh
 
 install: true
 

@@ -35,6 +35,17 @@ case "$1" in
     all)
         ./scripts/test_all.sh travis
     ;;
+
+    core)
+        ./scripts/test_container.sh kernel travis
+        ./scripts/test_container.sh client travis
+    ;;
+
+    modules)
+        ./scripts/test_container.sh ui travis
+        ./scripts/test_container.sh odk travis
+        ./scripts/test_container.sh couchdb-sync travis
+    ;;
     
     *)
         # testing the given container
