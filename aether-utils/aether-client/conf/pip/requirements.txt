@@ -6,8 +6,7 @@
 ################################################################################
 
 bravado
-flake8==3.6.0
-flake8-quotes==1.0.0
+flake8
 pytest
 pytest-runner
 requests

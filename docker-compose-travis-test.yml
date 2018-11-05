@@ -69,6 +69,7 @@ services:
   # ---------------------------------
 
   client-test:
+    image: aether-client:test
     build:
       context: ./aether-utils/aether-client
       dockerfile: Dockerfile.test

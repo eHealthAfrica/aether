@@ -63,7 +63,7 @@ case "$1" in
     ;;
 
     test)
-        # test_flake8
+        test_flake8
         test
     ;;
 
