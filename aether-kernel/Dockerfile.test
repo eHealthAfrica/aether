@@ -32,6 +32,5 @@ RUN echo $GIT_REVISION > REVISION
 # add user with UID of travis' so PIP cache can be written to
 RUN useradd -u 2000 -ms /bin/false -g root -G sudo -p travis travis
 RUN chown -R travis: /code
-USER travis
 
 ENTRYPOINT ["/code/entrypoint.sh"]

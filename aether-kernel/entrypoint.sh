@@ -60,6 +60,8 @@ pip_freeze () {
 
 prep_travis() {
     ls -la /.cache/pip
+    chmod -R 755 /.cache/pip
+    ls -la /.cache/pip
     whoami
     id
     id -g
