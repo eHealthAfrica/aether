@@ -42,9 +42,12 @@ case "$1" in
     ;;
 
     modules)
-        ./scripts/test_container.sh ui travis
         ./scripts/test_container.sh odk travis
         ./scripts/test_container.sh couchdb-sync travis
+    ;;
+
+    ui)
+        ./scripts/test_container.sh ui travis
     ;;
     
     *)
