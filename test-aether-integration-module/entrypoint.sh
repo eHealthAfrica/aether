@@ -47,9 +47,10 @@ test_coverage() {
 }
 
 prep_travis() {
+    chown -R root:root /.cache/pip
     pip install -q -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt --cache-dir /.cache/pip
+    chown -R 2000:50 /.cache/pip
 }
-
 
 case "$1" in
     bash )
@@ -67,12 +68,6 @@ case "$1" in
 
     test_lint)
         test_flake8
-    ;;
-
-    test_travis)
-        prep_travis
-        test_flake8
-        test_coverage "${@:2}"
     ;;
 
     help)

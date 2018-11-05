@@ -27,8 +27,21 @@ function build_container() {
     $DC_TEST build "$1"-test
 }
 
-DC_TEST="docker-compose -f docker-compose-test.yml"
+wait_for_kernel() {
+    KERNEL_HEALTH_URL="http://localhost:9000/health"
+    until curl -s $KERNEL_HEALTH_URL > /dev/null; do
+        >&2 echo "Waiting for Kernel..."
+        sleep 2
+    done
+}
 
+if [ "$#" -ne 2 ]
+then
+  DC_TEST="docker-compose -f docker-compose-test.yml"
+else
+  echo "Using Travis testing configuration"
+  DC_TEST="docker-compose -f docker-compose-travis-test.yml"
+fi
 
 echo "_____________________________________________ TESTING"
 
@@ -47,21 +60,21 @@ done
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
 
-# give time to kernel to start up
-KERNEL_HEALTH_URL="http://localhost:9000/health"
-until curl -s $KERNEL_HEALTH_URL > /dev/null; do
-    >&2 echo "Waiting for Kernel..."
-    sleep 2
-done
 echo "_____________________________________________ Starting Kafka"
 $DC_TEST up -d zookeeper-test kafka-test
 
 build_container producer
 echo "_____________________________________________ Starting Producer"
+
 $DC_TEST up -d producer-test
 
 echo "_____________________________________________ Starting Integration Tests"
 build_container integration
+if ! [ "$#" -ne 2 ]
+then
+  $DC_TEST run --no-deps integration-test travis_cache
+fi
+wait_for_kernel
 $DC_TEST run --no-deps integration-test test
 
 ./scripts/kill_all.sh

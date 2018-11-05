@@ -30,7 +30,7 @@ show_help() {
     manage        : invoke manage.py commands
 
     pip_freeze    : freeze pip dependencies and write to requirements.txt
-
+    travis_cache  : build the pip requirements for the travis cache
     start         : start in normal mode
     start_dev     : start for test/dev
     start_test    : start for test/dev
@@ -67,6 +67,9 @@ case "$1" in
         /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
     ;;
 
+    travis_cache)
+        prep_travis
+    ;;
 
     start )
         ./manage.py

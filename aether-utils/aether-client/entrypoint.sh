@@ -29,7 +29,7 @@ show_help() {
     bash          : run bash
     build         : build python wheel of library in /dist
     eval          : eval shell command
-
+    travis_cache  : build the pip requirements for the travis cache
     test          : run tests
     test_lint     : run flake8 tests
 
@@ -67,14 +67,12 @@ case "$1" in
         test
     ;;
 
-    test_travis )
-        prep_travis
-        test_flake8
-        test
-    ;;
-
     test_lint)
         test_flake8
+    ;;
+
+    travis_cache)
+        prep_travis
     ;;
 
     build)

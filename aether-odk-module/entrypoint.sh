@@ -30,7 +30,7 @@ show_help () {
     manage        : invoke django manage.py commands
 
     pip_freeze    : freeze pip dependencies and write to requirements.txt
-
+    travis_cache  : build the pip requirements for the travis cache
     setup         : check required environment variables,
                     create/migrate database and,
                     create/update superuser using
@@ -139,20 +139,16 @@ case "$1" in
         pip_freeze
     ;;
 
+    travis_cache)
+        prep_travis
+    ;;
+
     setup )
         setup
     ;;
 
     test )
         echo "DEBUG=$DEBUG"
-        setup
-        test_flake8
-        test_coverage "${@:2}"
-    ;;
-
-    test_travis )
-        echo "DEBUG=$DEBUG"
-        prep_travis
         setup
         test_flake8
         test_coverage "${@:2}"

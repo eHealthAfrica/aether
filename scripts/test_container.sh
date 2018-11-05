@@ -20,6 +20,14 @@
 #
 set -Eeuo pipefail
 
+wait_for_kernel() {
+    KERNEL_HEALTH_URL="http://localhost:9000/health"
+    until curl -s $KERNEL_HEALTH_URL > /dev/null; do
+        >&2 echo "Waiting for Kernel..."
+        sleep 2
+    done
+}
+
 if [ "$#" -ne 2 ]
 then
   DC_TEST="docker-compose -f docker-compose-test.yml"
@@ -68,22 +76,17 @@ fi
 echo "_____________________________________________ Preparing $1 container"
 $DC_TEST build "$1"-test
 echo "_____________________________________________ $1 ready!"
-if [[ $1 != "kernel" ]]
-then
-    # give time to kernel to start up
-    KERNEL_HEALTH_URL="http://localhost:9000/health"
-    until curl -s $KERNEL_HEALTH_URL > /dev/null; do
-        >&2 echo "Waiting for Kernel..."
-        sleep 2
-    done
-fi
+
 
 if [ "$2" = "travis" ]
 then
-    $DC_TEST run "$1"-test test_travis  
-else
-    $DC_TEST run "$1"-test test  
+    $DC_TEST run "$1"-test travis_cache
 fi
+if [[ $1 != "kernel" ]]
+then
+    wait_for_kernel
+fi
+$DC_TEST run "$1"-test test
 
 echo "_____________________________________________ $1 tests passed!"
 
