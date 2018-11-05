@@ -20,18 +20,18 @@ services:
 
   db-test:
     extends:
-      file: ./docker-compose-base.yml
-      service: postgres-base
+      file: ./docker-compose-test.yml
+      service: db-test
 
   couchdb-test:
     extends:
-      file: ./docker-compose-base.yml
-      service: couchdb-base
+      file: ./docker-compose-test.yml
+      service: couchdb-test
 
   redis-test:
     extends:
-      file: ./docker-compose-base.yml
-      service: redis-base
+      file: ./docker-compose-test.yml
+      service: redis-test
 
 
   # ---------------------------------
@@ -44,25 +44,16 @@ services:
       context: ./aether-kernel
       dockerfile: Dockerfile.test
     extends:
-      file: ./docker-compose-base.yml
-      service: kernel-base
-    environment:
-      # use a different database when testing the integration with another container
-      DB_NAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
-      DEBUG: null # set to null to remove previous value
-      MEDIA_ROOT: /tmp/
-      PGHOST: db-test
-      TESTING: "true"
-      WEB_SERVER_PORT: 9000
+      file: ./docker-compose-test.yml
+      service: kernel-test
     volumes:
       # volumes in tests
       - ./tmp/test/kernel/media:/media
       - ./tmp/test/kernel/static:/var/www/static
       - ./tmp/test/kernel/tmp:/tmp
       - ${HOME}/.cache/pip:/.cache/pip
-    ports:
-      - "9000:9000"
     command: start_travis
+
 
   # ---------------------------------
   # Aether Kernel Client
@@ -73,17 +64,13 @@ services:
     build:
       context: ./aether-utils/aether-client
       dockerfile: Dockerfile.test
-    environment:
-      KERNEL_URL: http://kernel-test:9000
-      KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
-      KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
-      TESTING: "true"
+    extends:
+      file: ./docker-compose-test.yml
+      service: client-test
     volumes:
       - ./aether-utils/aether-client:/code
       - ./VERSION:/code/VERSION
       - ${HOME}/.cache/pip:/.cache/pip
-    command: test_travis
-
 
 
   # ---------------------------------
@@ -96,24 +83,13 @@ services:
       context: ./aether-odk-module
       dockerfile: Dockerfile.test
     extends:
-      file: ./docker-compose-base.yml
-      service: odk-base
-    environment:
-      AETHER_KERNEL_URL: http://kernel-test:9000
-      DB_NAME: test-odk
-      DEBUG: null # set to null to remove previous value
-      MEDIA_ROOT: /tmp/
-      PGHOST: db-test
-      TESTING: "true"
-      WEB_SERVER_PORT: 9002
+      file: ./docker-compose-test.yml
+      service: odk-test
     volumes:
       # volumes in tests
       - ./tmp/test/odk/media:/media
       - ./tmp/test/odk/static:/var/www/static
       - ${HOME}/.cache/pip/:/.cache/pip
-    ports:
-      - "9002:9002"
-    command: start_travis
 
 
   # ---------------------------------
@@ -126,24 +102,10 @@ services:
       context: ./aether-couchdb-sync-module
       dockerfile: Dockerfile.test
     extends:
-      file: ./docker-compose-base.yml
-      service: couchdb-sync-base
-    environment:
-      AETHER_KERNEL_URL: http://kernel-test:9000
-      COUCHDB_URL: http://couchdb-test:5984
-      DB_NAME: test-couchdb-sync
-      DEBUG: null # set to null to remove previous value
-      GOOGLE_CLIENT_ID: secret_google_client_id
-      MEDIA_ROOT: /tmp/
-      PGHOST: db-test
-      REDIS_HOST: redis-test
-      TESTING: "true"
-      WEB_SERVER_PORT: 9006
-    ports:
-      - "9006:9006"
+      file: ./docker-compose-test.yml
+      service: couchdb-sync-test
     volumes:
       - ${HOME}/.cache/pip:/.cache/pip
-    command: start_travis
 
 
   # ---------------------------------
@@ -156,25 +118,15 @@ services:
       context: ./aether-ui
       dockerfile: Dockerfile.test
     extends:
-      file: ./docker-compose-base.yml
-      service: ui-base
-    environment:
-      AETHER_KERNEL_URL: http://kernel-test:9000
-      DB_NAME: test-ui
-      DEBUG: null # set to null to remove previous value
-      PGHOST: db-test
-      TESTING: "true"
-      WEB_SERVER_PORT: 9004
-    ports:
-      - "9004:9004"
-    command: start_travis
+      file: ./docker-compose-test.yml
+      service: ui-test
     volumes:
       - ${HOME}/.cache/pip:/.cache/pip
 
   ui-assets-test:
     extends:
-      file: docker-compose-base.yml
-      service: ui-assets-base
+      file: docker-compose-test.yml
+      service: ui-assets-test
 
 
   # ---------------------------------
@@ -238,12 +190,10 @@ services:
     build:
       context: ./test-aether-integration-module
       dockerfile: Dockerfile.test
-    environment:
-      KERNEL_URL: http://kernel-test:9000
-      KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
-      KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
+    extends:
+      file: ./docker-compose-test.yml
+      service: integration-test
     volumes:
       - ./test-aether-integration-module:/code
       - ./VERSION:/code/VERSION
       - ${HOME}/.cache/pip:/.cache/pip
-    command: test_travis

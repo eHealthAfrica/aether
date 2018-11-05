@@ -27,7 +27,8 @@ show_help() {
     ----------------------------------------------------------------------------
     bash          : run bash
     eval          : eval shell command
-
+    
+    travis_cache  : build the pip requirements for the travis cache
     test          : run tests
     test_lint     : run flake8 tests
     """
@@ -61,6 +62,10 @@ case "$1" in
         eval "${@:2}"
     ;;
 
+    travis_cache)
+        prep_travis
+    ;;
+    
     test)
         test_flake8
         test_coverage "${@:2}"
