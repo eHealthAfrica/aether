@@ -51,10 +51,14 @@ echo "_____________________________________________ Starting database"
 $DC_TEST up -d db-test
 
 build_container kernel
-echo "Building Travis pip cache..."
-$DC_TEST run kernel-test travis_cache
-run_container=$(docker ps -l -q)
-docker commit $run_container aether-kernel:test
+if [ "$1" = "travis" ]
+then
+  echo "Building Travis pip cache..."
+  $DC_TEST run kernel-test travis_cache
+  run_container=$(docker ps -l -q)
+  docker commit $run_container aether-kernel:test
+fi
+
 until $DC_TEST run --no-deps kernel-test eval pg_isready -q; do
     >&2 echo "Waiting for db-test..."
     sleep 2
@@ -78,7 +82,7 @@ if [ "$1" = "travis" ]
 then
   $DC_TEST run --no-deps integration-test travis_cache
   run_container=$(docker ps -l -q)
-  docker commit $run_container aether-$1:test
+  docker commit $run_container aether-integration:test
 fi
 wait_for_kernel
 $DC_TEST run --no-deps kernel-test eval python /code/sql/create_readonly_user.py

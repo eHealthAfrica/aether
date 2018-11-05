@@ -194,6 +194,5 @@ services:
       file: ./docker-compose-test.yml
       service: integration-test
     volumes:
-      - ./test-aether-integration-module:/code
       - ./VERSION:/code/VERSION
       - ${HOME}/.cache/pip:/.cache/pip
