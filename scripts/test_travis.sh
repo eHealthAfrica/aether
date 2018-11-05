@@ -28,8 +28,8 @@ case "$1" in
     ;;
 
     integration)
-        ./scripts/test_integration_requires.sh
-        ./scripts/test_integration.sh
+        ./scripts/test_integration_requires.sh travis
+        ./scripts/test_integration.sh travis
     ;;
 
     all)

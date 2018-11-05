@@ -26,12 +26,19 @@ set -Eeuo pipefail
 
 AETHER_FUNCTIONS=scripts/aether_functions.sh
 
-ORDER=( "create_credentials"
-        "create_aether_docker_assets"
-        "build_aether_utils_and_distribute"
-        "build_common_and_distribute"
-        "create_readonly_user_test"
+if [ "$2" = "travis" ]
+then
+    ORDER=( "build_aether_utils_and_distribute"
+            "create_readonly_user_test"
+            )
+else
+    ORDER=( "create_credentials"
+            "create_aether_docker_assets"
+            "build_aether_utils_and_distribute"
+            "build_common_and_distribute"
+            "create_readonly_user_test"
         )
+
 for FN in "${ORDER[@]}";
 do
     $AETHER_FUNCTIONS $FN
