@@ -59,8 +59,8 @@ pip_freeze () {
 }
 
 prep_travis() {
-    su travis
-    stat /usr/local/lib/python3.6/site-packages
+    whoaimi
+    su travis -p travis
     ls -la /.cache/pip
     whoami
     id
