@@ -73,6 +73,8 @@ build_container integration
 if ! [ "$#" -ne 2 ]
 then
   $DC_TEST run --no-deps integration-test travis_cache
+  run_container=$(docker ps -l -q)
+  docker commit $run_container aether-$1:test
 fi
 wait_for_kernel
 $DC_TEST run --no-deps integration-test test

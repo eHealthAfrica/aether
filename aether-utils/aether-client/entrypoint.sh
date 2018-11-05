@@ -38,7 +38,7 @@ show_help() {
 
 prep_travis() {
     chown -R root:root /.cache/pip
-    pip install -q -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt --cache-dir /.cache/pip
+    pip install -q -r /code/conf/pip/requirements.txt --cache-dir /.cache/pip
     chown -R 2000:50 /.cache/pip
 }
 
