@@ -38,6 +38,7 @@ else
             "build_common_and_distribute"
             "create_readonly_user_test"
         )
+fi
 
 for FN in "${ORDER[@]}";
 do
