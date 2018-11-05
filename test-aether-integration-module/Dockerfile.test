@@ -15,17 +15,14 @@ RUN apt-get update -qq \
 
 WORKDIR /code
 COPY ./ /code
-RUN mkdir /code/.cache/pip
-
 
 ################################################################################
 ## last setup steps
 ################################################################################
 
 # create user to run container (avoid root user)
-RUN useradd -ms /bin/false aether
+# add user with UID of travis' so PIP cache can be written to
+RUN useradd -u 2000 -ms /bin/false aether
 RUN chown -R aether: /code
-USER aether
-
 
 ENTRYPOINT ["/code/entrypoint.sh"]
