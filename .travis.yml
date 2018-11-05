@@ -15,17 +15,17 @@ matrix:
       stage: test
       env: 'TEST_MODE=core'
 
-    # - name: "Aether modules tests (ODK and CouchDB-Sync)"
-    #   stage: test
-    #   env: 'TEST_MODE=modules'
+    - name: "Aether modules tests (ODK and CouchDB-Sync)"
+      stage: test
+      env: 'TEST_MODE=modules'
     
-    # - name: "Aether UI tests (UI Module)"
-    #   stage: test
-    #   env: 'TEST_MODE=ui'      
+    - name: "Aether UI tests (UI Module)"
+      stage: test
+      env: 'TEST_MODE=ui'      
 
-    # - name: "Integration tests (Kernel with Kakfa/Zookeeper and Producer)"
-    #   stage: test
-    #   env: 'TEST_MODE=integration'
+    - name: "Integration tests (Kernel with Kakfa/Zookeeper and Producer)"
+      stage: test
+      env: 'TEST_MODE=integration'
 
     # # execute only to deploy
     # - name: "Aether release"
