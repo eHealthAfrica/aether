@@ -37,12 +37,14 @@ show_help() {
 }
 
 prep_travis() {
+    su travis
     stat /usr/local/lib/python3.6/site-packages
     ls -la /.cache/pip
     whoami
     id
     id -g
     pip install -q -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt --cache-dir /.cache/pip
+    logout
 }
 
 test_flake8() {
