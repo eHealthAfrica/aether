@@ -60,7 +60,7 @@ pip_freeze () {
 
 prep_travis() {
     whoaimi
-    su travis -p travis
+    su travis
     ls -la /.cache/pip
     whoami
     id
