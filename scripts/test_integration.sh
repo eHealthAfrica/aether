@@ -51,6 +51,11 @@ echo "_____________________________________________ Starting database"
 $DC_TEST up -d db-test
 
 build_container kernel
+echo "Building Travis pip cache..."
+$DC_TEST run kernel-test travis_cache
+run_container=$(docker ps -l -q)
+docker commit $run_container aether-kernel:test
+$DC_TEST run --no-deps kernel-test eval python /code/sql/create_readonly_user.py
 
 until $DC_TEST run --no-deps kernel-test eval pg_isready -q; do
     >&2 echo "Waiting for db-test..."
@@ -59,6 +64,7 @@ done
 
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
+
 
 echo "_____________________________________________ Starting Kafka"
 $DC_TEST up -d zookeeper-test kafka-test

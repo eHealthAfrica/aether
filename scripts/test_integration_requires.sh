@@ -28,9 +28,7 @@ AETHER_FUNCTIONS=scripts/aether_functions.sh
 
 if [ "$1" = "travis" ]
 then
-    ORDER=( "build_aether_utils_and_distribute"
-            "create_readonly_user_test"
-            )
+    ORDER=( "build_aether_utils_and_distribute" )
 else
     ORDER=( "create_credentials"
             "create_aether_docker_assets"
