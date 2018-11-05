@@ -59,7 +59,6 @@ until $DC_TEST run --no-deps kernel-test eval pg_isready -q; do
     >&2 echo "Waiting for db-test..."
     sleep 2
 done
-$DC_TEST run --no-deps kernel-test eval python /code/sql/create_readonly_user.py
 
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
@@ -82,6 +81,7 @@ then
   docker commit $run_container aether-$1:test
 fi
 wait_for_kernel
+$DC_TEST run --no-deps kernel-test eval python /code/sql/create_readonly_user.py
 $DC_TEST run --no-deps integration-test test
 
 ./scripts/kill_all.sh
