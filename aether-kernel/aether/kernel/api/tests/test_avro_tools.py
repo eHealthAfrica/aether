@@ -343,7 +343,7 @@ class TestAvroValidator(TestCase):
                 }],
                 datum={'test': 'not-a-map'},
                 expected_errors=[
-                    error(expected='map', datum='not-a-map', path='Test.test')
+                    error(expected='map', datum='"not-a-map"', path='Test.test')
                 ],
             ),
         ])
@@ -467,7 +467,7 @@ class TestAvroValidator(TestCase):
                 }],
                 datum={'test': 'not-a-record'},
                 expected_errors=[
-                    error(expected='TestRecord', datum='not-a-record', path='Test.test')
+                    error(expected='TestRecord', datum='"not-a-record"', path='Test.test')
                 ],
             ),
         ])
