@@ -59,14 +59,11 @@ pip_freeze () {
 }
 
 prep_travis() {
-    whoami
-    su travis -p travis
     ls -la /.cache/pip
     whoami
     id
     id -g
     pip install -q -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt --cache-dir /.cache/pip
-    logout
 }
 
 setup () {
