@@ -30,7 +30,7 @@ RUN echo $GIT_REVISION > REVISION
 
 # create user to run container (avoid root user)
 # add user with UID of travis' so PIP cache can be written to
-RUN useradd -u 2000 -ms /bin/false -g root -G sudo -p travis travis
-RUN chown -R travis: /code
+RUN useradd -u 2000 -ms /bin/false aether
+RUN chown -R aether: /code
 
 ENTRYPOINT ["/code/entrypoint.sh"]
