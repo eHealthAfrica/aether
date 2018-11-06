@@ -51,7 +51,7 @@ case "$1" in
     ui)
         ./scripts/test_container.sh ui $MODE
     ;;
-    
+
     *)
         # testing the given container
         ./scripts/test_container.sh $1 $MODE

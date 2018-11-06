@@ -27,10 +27,10 @@ matrix:
       stage: test
       env: 'TEST_MODE=integration'
 
-    # # execute only to deploy
-    # - name: "Aether release"
-    #   stage: deploy
-    #   script: ./scripts/release.sh
+    # execute only to deploy
+    - name: "Aether release"
+      stage: deploy
+      script: ./scripts/release.sh
 
 install: true
 
