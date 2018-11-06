@@ -28,7 +28,15 @@ wait_for_kernel() {
     done
 }
 
-if [ "$2" = "travis" ]
+
+if [ ${2-} ]
+then
+    MODE=$2
+else
+    MODE="default"
+fi
+
+if [ "$MODE" = "travis" ]
 then
   echo "Using Travis testing configuration"
   DC_TEST="docker-compose -f docker-compose-travis-test.yml"
@@ -56,7 +64,6 @@ then
     $DC_TEST up -d couchdb-test redis-test
 fi
 
-# sometimes this is not as faster as we wanted... :'(
 $DC_TEST build kernel-test
 until $DC_TEST run kernel-test eval pg_isready -q; do
     >&2 echo "Waiting for db-test..."
@@ -78,7 +85,7 @@ $DC_TEST build "$1"-test
 echo "_____________________________________________ $1 ready!"
 
 
-if [ "$2" = "travis" ]
+if [ "$MODE" = "travis" ]
 then
     echo "Building Travis pip cache..."
     $DC_TEST run "$1"-test travis_cache

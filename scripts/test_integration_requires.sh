@@ -26,7 +26,14 @@ set -Eeuo pipefail
 
 AETHER_FUNCTIONS=scripts/aether_functions.sh
 
-if [ "$1" = "travis" ]
+if [ ${1-} ]
+then
+    MODE="$1"
+else
+    MODE="default"
+fi
+
+if [ "$MODE" = "travis" ]
 then
     ORDER=( "build_aether_utils_and_distribute" )
 else
@@ -34,7 +41,6 @@ else
             "create_aether_docker_assets"
             "build_aether_utils_and_distribute"
             "build_common_and_distribute"
-            "create_readonly_user_test"
         )
 fi
 

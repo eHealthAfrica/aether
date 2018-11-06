@@ -20,18 +20,20 @@
 #
 set -Eeuo pipefail
 
+if [ ${1-} ]
+then
+    MODE="$1"
+else
+    MODE="default"
+fi
+
 echo "_____________________________________________ TESTING"
 
 containers=( kernel client ui odk couchdb-sync )
 
 for container in "${containers[@]}"
 do
-if [ "$#" -ne 1 ]
-then
-    ./scripts/test_container.sh $container
-else
-    ./scripts/test_container.sh $container $1
-fi
+  ./scripts/test_container.sh $container $MODE
 done
 
 echo "_____________________________________________ END"
