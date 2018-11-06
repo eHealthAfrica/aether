@@ -177,18 +177,6 @@ case "$1" in
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
 
-    start_travis )
-        prep_travis
-        setup
-
-        [ -z "$DEBUG" ] && LOGGING="--disable-logging" || LOGGING=""
-        /usr/local/bin/uwsgi \
-            --ini /code/conf/uwsgi.ini \
-            --http 0.0.0.0:$WEB_SERVER_PORT \
-            $LOGGING
-
-    ;;
-
     health )
         ./manage.py check_url --url=http://0.0.0.0:$WEB_SERVER_PORT/health
     ;;
