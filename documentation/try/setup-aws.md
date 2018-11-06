@@ -10,7 +10,7 @@ This guide will take you through the steps required to create and configure an E
 
 ## Overview of the setup process
 If you are already comfortable with configuring and running Amazon EC2 instances, just follow this list of steps and return to [Try Gather](http://gather.ehealthafrica.org/documentation/try/setup) or [Try Aether](index#into-the-aether)
-* Create an EC2 Ubuntu instance with at least 2 processors, 8GB RAM and 8GB Storage **t3.large**
+* Create an EC2 Ubuntu instance with at least 2 processors, 8GB RAM and 8GB Storage **t2.large**
 * Configure your VPC to be accessible from the internet with these ports open: 22, 80, 8000, 8443 and 5000
 * Verify/Install git, Docker and Docker Compose. It helps if Docker can be [run as a non-root user](https://docs.docker.com/install/linux/linux-postinstall/)
 * Use *Stop* instead of *Terminate* if you want to preserve data between sessions.
