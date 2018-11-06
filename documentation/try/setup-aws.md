@@ -22,11 +22,11 @@ Click **Launch Image** to create a new EC2 image.
 
 <p style="clear: both;"/>
 
-[![AWS EC2 AMI](/images/aws-ec2-step1.png)](/images/aws-ec2-step1.png){: .scalable}**Step 1: Choose an AMI -** Select **Ubuntu Server 16.04 LTS (HVM), SSD Volume Type** from the list of AMIs
+[![AWS EC2 AMI](/images/aws-ec2-step1.png)](/images/aws-ec2-step1.png){: .scalable}**Step 1: Choose an AMI -** Select **Ubuntu Server 18.04 LTS (HVM), SSD Volume Type** from the list of AMIs
 
 <p style="clear: both;"/>
 
-[![AWS EC2 Instance Type](/images/aws-ec2-step2.png)](/images/aws-ec2-step2.png){: .scalable}**Step 2: Choose an Instance Type -** Select **Ubuntu Server 16.04 LTS (HVM), SSD Volume Type** from the list of AMIs
+[![AWS EC2 Instance Type](/images/aws-ec2-step2.png)](/images/aws-ec2-step2.png){: .scalable}**Step 2: Choose an Instance Type -** Select **x2.large** with 2 CPUs and 8 GB RAM
 
 <p style="clear: both;"/>
 
