@@ -82,7 +82,7 @@ class TestAvroValidator(TestCase):
                 fields=[{'name': 'test', 'type': 'null'}],
                 datum={'test': 'not-null'},
                 expected_errors=[
-                    error(expected='null', datum='not-null', path='Test.test'),
+                    error(expected='null', datum='"not-null"', path='Test.test'),
                 ],
             ),
         ])
@@ -98,7 +98,7 @@ class TestAvroValidator(TestCase):
                 fields=[{'name': 'test', 'type': 'boolean'}],
                 datum={'test': 'not-a-boolean'},
                 expected_errors=[
-                    error(expected='boolean', datum='not-a-boolean', path='Test.test'),
+                    error(expected='boolean', datum='"not-a-boolean"', path='Test.test'),
                 ],
             )
         ])
@@ -114,7 +114,7 @@ class TestAvroValidator(TestCase):
                 fields=[{'name': 'test', 'type': 'bytes'}],
                 datum={'test': 'not-bytes'},
                 expected_errors=[
-                    error(expected='bytes', datum='not-bytes', path='Test.test'),
+                    error(expected='bytes', datum='"not-bytes"', path='Test.test'),
                 ],
             )
         ])
@@ -144,9 +144,9 @@ class TestAvroValidator(TestCase):
             ),
             AvroValidatorTest(
                 fields=[{'name': 'test', 'type': 'int'}],
-                datum={'test': 'not-an-int'},
+                datum={'test': '1'},
                 expected_errors=[
-                    error(expected='int', datum='not-an-int', path='Test.test'),
+                    error(expected='int', datum='"1"', path='Test.test'),
                 ],
             ),
             AvroValidatorTest(
@@ -169,7 +169,7 @@ class TestAvroValidator(TestCase):
                 fields=[{'name': 'test', 'type': 'long'}],
                 datum={'test': 'not-a-long'},
                 expected_errors=[
-                    error(expected='long', datum='not-a-long', path='Test.test'),
+                    error(expected='long', datum='"not-a-long"', path='Test.test'),
                 ],
             )
         ])
@@ -185,7 +185,7 @@ class TestAvroValidator(TestCase):
                 fields=[{'name': 'test', 'type': 'float'}],
                 datum={'test': 'not-a-float'},
                 expected_errors=[
-                    error(expected='float', datum='not-a-float', path='Test.test'),
+                    error(expected='float', datum='"not-a-float"', path='Test.test'),
                 ],
             ),
         ])
@@ -201,7 +201,7 @@ class TestAvroValidator(TestCase):
                 fields=[{'name': 'test', 'type': 'double'}],
                 datum={'test': 'not-a-double'},
                 expected_errors=[
-                    error(expected='double', datum='not-a-double', path='Test.test'),
+                    error(expected='double', datum='"not-a-double"', path='Test.test'),
                 ],
             )
         ])
@@ -231,7 +231,7 @@ class TestAvroValidator(TestCase):
                 }],
                 datum={'test': '1234'},
                 expected_errors=[
-                    error(expected='md5', datum='1234', path='Test.test'),
+                    error(expected='md5', datum='"1234"', path='Test.test'),
                 ],
             )
         ])
@@ -261,7 +261,7 @@ class TestAvroValidator(TestCase):
                 }],
                 datum={'test': 'D'},
                 expected_errors=[
-                    error(expected='TestEnum', datum='D', path='Test.test'),
+                    error(expected='TestEnum', datum='"D"', path='Test.test'),
                 ],
             )
         ])
@@ -330,7 +330,7 @@ class TestAvroValidator(TestCase):
                 }],
                 datum={'test': {'a': 'not-an-int'}},
                 expected_errors=[
-                    error(expected='int', datum='not-an-int', path='Test.test')
+                    error(expected='int', datum='"not-an-int"', path='Test.test')
                 ],
             ),
             AvroValidatorTest(
@@ -343,7 +343,7 @@ class TestAvroValidator(TestCase):
                 }],
                 datum={'test': 'not-a-map'},
                 expected_errors=[
-                    error(expected='map', datum='not-a-map', path='Test.test')
+                    error(expected='map', datum='"not-a-map"', path='Test.test')
                 ],
             ),
         ])
@@ -467,7 +467,7 @@ class TestAvroValidator(TestCase):
                 }],
                 datum={'test': 'not-a-record'},
                 expected_errors=[
-                    error(expected='TestRecord', datum='not-a-record', path='Test.test')
+                    error(expected='TestRecord', datum='"not-a-record"', path='Test.test')
                 ],
             ),
         ])
