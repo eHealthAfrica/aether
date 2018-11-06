@@ -202,7 +202,7 @@ services:
   # ---------------------------------
 
   integration-test:
-    image: aether-integration:test
+    image: aether-integration-test
     build: ./test-aether-integration-module
     environment:
       KERNEL_URL: http://kernel-test:9000
