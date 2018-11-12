@@ -29,7 +29,7 @@ MESSAGE_OK = _('{url} is responding.') + '\n'
 
 class Command(BaseCommand):
 
-    help = 'Check URL.'
+    help = _('Check URL.')
 
     def add_arguments(self, parser):
         parser.add_argument(
