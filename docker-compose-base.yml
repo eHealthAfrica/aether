@@ -118,6 +118,8 @@ services:
       - ./.persistent_data/static/kernel:/var/www/static
       # temporary folder for Excel files
       - ./.persistent_data/export/kernel:/tmp
+      # backup folder
+      - ./.persistent_data/backups/kernel:/backups
     ports:
       - "8000:8000"
     command: start_dev
@@ -168,6 +170,8 @@ services:
       - ./.persistent_data/media/odk:/media
       # static folder
       - ./.persistent_data/static/odk:/var/www/static
+      # backup folder
+      - ./.persistent_data/backups/odk:/backups
     ports:
       # behind ngnix
       - "8002:8002"
@@ -227,6 +231,8 @@ services:
       - ./aether-couchdb-sync-module:/code
       # static folder
       - ./.persistent_data/static/sync:/var/www/static
+      # backup folder
+      - ./.persistent_data/backups/sync:/backups
     ports:
       - "8006:8006"
     command: start_dev
@@ -279,6 +285,8 @@ services:
       - ./aether-ui:/code
       # static folder
       - ./.persistent_data/static/ui:/var/www/static
+      # backup folder
+      - ./.persistent_data/backups/ui:/backups
     ports:
       - "8004:8004"
     command: start_dev

@@ -20,7 +20,13 @@
 #
 set -Eeuo pipefail
 
-# Define help message
+# set DEBUG if missing
+set +u
+DEBUG="$DEBUG"
+set -u
+
+BACKUPS_FOLDER=/backups
+
 show_help () {
     echo """
     Commands
@@ -35,6 +41,9 @@ show_help () {
                     create/migrate database and,
                     create/update superuser using
                         'ADMIN_USERNAME', 'ADMIN_PASSWORD', 'ADMIN_TOKEN'
+
+    backup_db     : creates db dump (${BACKUPS_FOLDER}/${DB_NAME}-backup-{timestamp}.sql)
+    restore_dump  : restore db dump (${BACKUPS_FOLDER}/${DB_NAME}-backup.sql)
 
     test          : run tests
     test_lint     : run flake8 tests
@@ -59,6 +68,40 @@ pip_freeze () {
 
     cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
     /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
+}
+
+backup_db() {
+    pg_isready
+
+    if psql -c "" $DB_NAME; then
+        echo "$DB_NAME database exists!"
+
+        pg_dump $DB_NAME > ${BACKUPS_FOLDER}/${DB_NAME}-backup-$(date "+%Y%m%d%H%M%S").sql
+        echo "$DB_NAME database backup created."
+    fi
+}
+
+restore_db() {
+    pg_isready
+
+    # backup current data
+    backup_db
+
+    # delete DB is exists
+    if psql -c "" $DB_NAME; then
+        dropdb -e $DB_NAME
+        echo "$DB_NAME database deleted."
+    fi
+
+    createdb -e $DB_NAME -e ENCODING=UTF8
+    echo "$DB_NAME database created."
+
+    # load dump
+    psql -e $DB_NAME < ${BACKUPS_FOLDER}/${DB_NAME}-backup.sql
+    echo "$DB_NAME database dump restored."
+
+    # migrate data model if needed
+    ./manage.py migrate --noinput
 }
 
 setup () {
@@ -109,11 +152,6 @@ test_coverage () {
 }
 
 
-# set DEBUG if missing
-set +u
-DEBUG="$DEBUG"
-set -u
-
 case "$1" in
     bash )
         bash
@@ -133,6 +171,14 @@ case "$1" in
 
     setup )
         setup
+    ;;
+
+    backup_db )
+        backup_db
+    ;;
+
+    restore_dump )
+        restore_db
     ;;
 
     test )
