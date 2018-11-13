@@ -929,6 +929,9 @@ p {
   margin-top: 2rem;
   height: 0; }
 
+.box .videoWrapper {
+  margin-top: 0; }
+
 .videoWrapper iframe {
   position: absolute;
   top: 0;
