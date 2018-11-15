@@ -142,6 +142,10 @@ def upsert_project_artefacts(
             # in case of no "schema" is indicated, do not update it.
             ignore_fields.append('schema')
 
+        if raw_mappingset.get('schema') is None:
+            # in case of no schema is indicated, do not update it.
+            ignore_fields.append('schema')
+
         mappingset = __upsert_instance(
             model=MappingSet,
             pk=raw_mappingset.get('id'),
