@@ -28,6 +28,7 @@ from jsonpath_ng.ext import parse as jsonpath_ng_ext_parse
 from spavro.schema import parse as parse_schema
 from spavro.io import validate
 
+from django.db import transaction
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 from pygments import highlight
@@ -656,7 +657,13 @@ def extract_create_entities(submission_payload, mapping_definition, schemas):
     return submission_data, entities
 
 
-def run_entity_extraction(submission):
+@transaction.atomic
+def run_entity_extraction(submission, overwrite=False):
+    if overwrite:
+        # FIXME:
+        # there should be a better way to detect the generated entities and
+        # replace their payloads with the new ones
+        submission.entities.all().delete()
     # Extract entity for each mapping in the submission.mappingset
     mappings = submission.mappingset \
                          .mappings \
