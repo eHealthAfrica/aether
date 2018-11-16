@@ -36,7 +36,7 @@ Session = None
 
 def init(url):
     global engine
-    engine = create_engine(url, connect_args={'check_same_thread': False})
+    engine = create_engine(url)
 
     try:
         Base.metadata.create_all(engine)
