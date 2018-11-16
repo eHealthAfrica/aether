@@ -39,7 +39,8 @@ Session = None
 
 file_path = os.environ.get('PRODUCER_SETTINGS_FILE')
 SETTINGS = Settings(file_path)
- 
+
+
 def init():
     global engine
 
@@ -48,7 +49,7 @@ def init():
     offset_db_port = SETTINGS['offset_db_port']
     offset_db_password = SETTINGS['offset_db_password']
     offset_db_name = SETTINGS['offset_db_name']
-    
+
     url = f'postgresql+psycopg2://{offset_db_user}:{offset_db_password}' + \
         f'@{offset_db_host}:{offset_db_port}/{offset_db_name}'
 
@@ -66,6 +67,7 @@ def init():
         logger.error('Database creation failed: %s' % sqe)
         sys.exit(1)
 
+
 def start_session(engine):
     try:
         Base.metadata.create_all(engine)
@@ -78,6 +80,7 @@ def start_session(engine):
         logger.error('Database could not be initialized. | %s' % err)
         raise err
 
+
 def create_db(engine, url):
     db_name = url.split('/')[-1]
     root = url.replace(db_name, 'postgres')
@@ -86,6 +89,7 @@ def create_db(engine, url):
     conn.execute("commit")
     conn.execute("create database %s" % db_name)
     conn.close()
+
 
 def get_session():
     return Session()
@@ -144,7 +148,8 @@ class Offset(Base):
                 session.commit()
                 return offset
         except Exception as err:
-            logger.error('Could not save offset for topic %s | %s' % (name, err))
+            logger.error('Could not save offset for topic %s | %s' %
+                         (name, err))
             return offset
 
     @classmethod

@@ -153,7 +153,8 @@ class ProducerManager(object):
             if "ConnectionResetError" in str(rce):
                 return True
             else:
-                self.logger.debug("Could not connect to Kafka on url: %s" % kafka_url)
+                self.logger.debug(
+                    "Could not connect to Kafka on url: %s" % kafka_url)
                 self.logger.debug("Connection problem: %s" % rce)
                 return False
 
@@ -272,7 +273,8 @@ class ProducerManager(object):
         status = {
             "kernel_connected": self.kernel is not None,  # This is a real object
             "kafka_container_accessible": self.kafka_available(),
-            "kafka_submission_status": str(self.kafka),   # This is just a status flag
+            # This is just a status flag
+            "kafka_submission_status": str(self.kafka),
             "topics": {k: v.get_status() for k, v in self.topic_managers.items()}
         }
         with self.app.app_context():
@@ -333,7 +335,8 @@ class TopicManager(object):
         self.wait_time = self.context.settings.get('sleep_time', 2)
         self.window_size_sec = self.context.settings.get('window_size_sec', 3)
         pg_requires = ['user', 'dbname', 'port', 'host', 'password']
-        self.pg_creds = {key: self.context.settings.get("postgres_%s" % key) for key in pg_requires}
+        self.pg_creds = {key: self.context.settings.get(
+            "postgres_%s" % key) for key in pg_requires}
         self.kafka_failure_wait_time = self.context.settings.get(
             'kafka_failure_wait_time', 10)
         try:
@@ -351,7 +354,8 @@ class TopicManager(object):
         self.update_schema(schema)
         kafka_settings = self.context.settings.get('kafka_settings')
         # apply setting from root config to be able to use env variables
-        kafka_settings["bootstrap.servers"] = self.context.settings.get("kafka_url")
+        kafka_settings["bootstrap.servers"] = self.context.settings.get(
+            "kafka_url")
         self.producer = Producer(**kafka_settings)
         # Spawn worker and give to pool.
         self.context.threads.append(gevent.spawn(self.update_kafka))
@@ -369,7 +373,8 @@ class TopicManager(object):
                 cursor.execute(query)
                 return sum([1 for i in cursor]) > 0
         except psycopg2.OperationalError as pgerr:
-            self.logger.critical('Could not access Database to look for updates: %s' % pgerr)
+            self.logger.critical(
+                'Could not access Database to look for updates: %s' % pgerr)
             return False
 
     def get_time_window_filter(self, query_time):
