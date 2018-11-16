@@ -27,6 +27,14 @@ function build_container() {
     $DC_TEST build "$1"-test
 }
 
+wait_for_kernel() {
+    KERNEL_HEALTH_URL="http://localhost:9000/health"
+    until curl -s $KERNEL_HEALTH_URL > /dev/null; do
+        >&2 echo "Waiting for Kernel..."
+        sleep 2
+    done
+}
+
 DC_TEST="docker-compose -f docker-compose-test.yml"
 
 
@@ -47,18 +55,16 @@ done
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
 
-# give time to kernel to start up
-KERNEL_HEALTH_URL="http://localhost:9000/health"
-until curl -s $KERNEL_HEALTH_URL > /dev/null; do
-    >&2 echo "Waiting for Kernel..."
-    sleep 2
-done
 echo "_____________________________________________ Starting Kafka"
 $DC_TEST up -d zookeeper-test kafka-test
 
 build_container producer
 echo "_____________________________________________ Starting Producer"
 $DC_TEST up -d producer-test
+
+echo "_____________________________________________ Waiting for Kernel"
+wait_for_kernel
+$DC_TEST run --no-deps kernel-test eval python /code/sql/create_readonly_user.py
 
 echo "_____________________________________________ Starting Integration Tests"
 build_container integration

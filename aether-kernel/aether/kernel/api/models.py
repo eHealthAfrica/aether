@@ -33,9 +33,11 @@ from model_utils.models import TimeStampedModel
 from aether.common.utils import resolve_file_url
 
 from .constants import NAMESPACE
-from .utils import json_prettified, validate_payload, EntityValidationError
+from .utils import json_prettified
+
 from .validators import (
     validate_avro_schema,
+    validate_entity_payload,
     validate_mapping_definition,
     validate_schema_definition,
 )
@@ -50,38 +52,38 @@ ENTITY_STATUS_CHOICES = (
 '''
 Data model schema:
 
-    +------------------+          +------------------+         +------------------+        +------------------+
-    | Project          |          | MappingSet       |         | Submission       |        | Attachment       |
-    +==================+          +==================+         +==================+        +==================+
-    | id               |<-----+   | id               |<----+   | id               |<---+   | id               |
-    | created          |      |   | created          |     |   | created          |    |   | created          |
-    | modified         |      |   | modified         |     |   | modified         |    |   | modified         |
-    | revision         |      |   | revision         |     |   | revision         |    |   | name             |
-    | name             |      |   | name             |     |   | payload          |    |   | attachment_file  |
-    | salad_schema     |      |   | input            |     |   +::::::::::::::::::+    |   | md5sum           |
-    | jsonld_context   |      |   +::::::::::::::::::+     +--<| mappingset       |    |   +::::::::::::::::::+
-    | rdf_definition   |      +--<| project          |     |   | project(**)      |    +--<| submission       |
-    +------------------+      |   +------------------+     |   +------------------+    |   | submission_rev   |
-                              |                            |                           |   +------------------+
-                              |                            |                           |
-                              |                            |                           |
-    +------------------+      |   +------------------+     |   +------------------+    |   +------------------+
-    | Schema           |      |   | ProjectSchema    |     |   | Mapping          |    |   | Entity           |
-    +==================+      |   +==================+     |   +==================+    |   +==================+
-    | id               |<--+  |   | id               |<--+ |   | id               |<-+ |   | id               |
-    | created          |   |  |   | created          |   | |   | created          |  | |   | modified         |
-    | modified         |   |  |   | modified         |   | |   | modified         |  | |   | revision         |
-    | revision         |   |  |   | name             |   | |   | revision         |  | |   | payload          |
-    | name             |   |  |   | mandatory_fields |   | |   | name             |  | |   | status           |
-    | definition       |   |  |   | transport_rule   |   | |   | definition       |  | |   +::::::::::::::::::+
-    | type             |   |  |   | masked_fields    |   | |   | is_active        |  | +--<| submission       |
-    | family           |   |  |   | is_encrypted     |   | |   | is_read_only     |  +----<| mapping          |
-    +------------------+   |  |   +::::::::::::::::::+   | |   +::::::::::::::::::+        | mapping_rev      |
-                           |  +--<| project          |   | +--<| mappingset       |  +----<| projectschema    |
-                           +-----<| schema           |   +---<<| projectschemas   |  |     | project(**)      |
-                                  +------------------+   |     | project(**)      |  |     | schema(**)       |
-                                                         |     +------------------+  |     +------------------+
-                                                         +---------------------------+
++------------------+       +------------------+       +------------------+       +---------------------+
+| Project          |       | MappingSet       |       | Submission       |       | Attachment          |
++==================+       +==================+       +==================+       +=====================+
+| id               |<---+  | id               |<---+  | id               |<---+  | id                  |
+| created          |    |  | created          |    |  | created          |    |  | created             |
+| modified         |    |  | modified         |    |  | modified         |    |  | modified            |
+| revision         |    |  | revision         |    |  | revision         |    |  | name                |
+| name             |    |  | name             |    |  | payload          |    |  | attachment_file     |
+| salad_schema     |    |  | input            |    |  +::::::::::::::::::+    |  | md5sum              |
+| jsonld_context   |    |  +::::::::::::::::::+    +-<| mappingset       |    |  +:::::::::::::::::::::+
+| rdf_definition   |    +-<| project          |    |  | project(**)      |    +-<| submission          |
++------------------+    |  +------------------+    |  +------------------+    |  | submission_revision |
+                        |                          |                          |  +---------------------+
+                        |                          |                          |
+                        |                          |                          |
++------------------+    |  +------------------+    |  +------------------+    |  +------------------+
+| Schema           |    |  | ProjectSchema    |    |  | Mapping          |    |  | Entity           |
++==================+    |  +==================+    |  +==================+    |  +==================+
+| id               |<-+ |  | id               |<-+ |  | id               |<-+ |  | id               |
+| created          |  | |  | created          |  | |  | created          |  | |  | modified         |
+| modified         |  | |  | modified         |  | |  | modified         |  | |  | revision         |
+| revision         |  | |  | name             |  | |  | revision         |  | |  | payload          |
+| name             |  | |  | mandatory_fields |  | |  | name             |  | |  | status           |
+| definition       |  | |  | transport_rule   |  | |  | definition       |  | |  +::::::::::::::::::+
+| type             |  | |  | masked_fields    |  | |  | is_active        |  | +-<| submission       |
+| family           |  | |  | is_encrypted     |  | |  | is_read_only     |  +---<| mapping          |
++------------------+  | |  +::::::::::::::::::+  | |  +::::::::::::::::::+       | mapping_revision |
+                      | +-<| project          |  | +-<| mappingset       |  +---<| projectschema    |
+                      +---<| schema           |  +--<<| projectschemas   |  |    | project(**)      |
+                           +------------------+  |    | project(**)      |  |    | schema(**)       |
+                                                 |    +------------------+  |    +------------------+
+                                                 +--------------------------+
 '''
 
 
@@ -89,17 +91,18 @@ class Project(ExportModelOperationsMixin('kernel_project'), TimeStampedModel):
     '''
     Project
 
-    :ivar UUID id:        ID.
-    :ivar text revision:  Revision.
-    :ivar text name:      Name.
-
-    :ivar text salad_schema:    Salad schema (optional).
+    :ivar UUID      id:              ID (primary key).
+    :ivar datetime  created:         Creation timestamp.
+    :ivar datetime  modified:        Last update timestamp.
+    :ivar text      revision:        Revision.
+    :ivar text      name:            Name (**unique**).
+    :ivar text      salad_schema:    Salad schema (optional).
         Semantic Annotations for Linked Avro Data (SALAD)
         https://www.commonwl.org/draft-3/SchemaSalad.html
-    :ivar text jsonld_context:  JSON LS context (optional).
+    :ivar text      jsonld_context:  JSON LS context (optional).
         JSON for Linking Data
         https://json-ld.org/
-    :ivar text rdf_definition:  RDF definition (optional).
+    :ivar text      rdf_definition:  RDF definition (optional).
         Resource Description Framework
         https://www.w3.org/TR/rdf-schema/
 
@@ -167,13 +170,14 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), TimeStampedMod
     '''
     Mapping Set: collection of mapping rules.
 
-    :ivar UUID id:        ID.
-    :ivar text revision:  Revision.
-    :ivar text name:      Name.
-
-    :ivar JSON schema:      AVRO schema definition.
-    :ivar JSON input:       Sample of data that conform the AVRO schema.
-    :ivar Project project:  Project.
+    :ivar UUID      id:        ID (primary key).
+    :ivar datetime  created:   Creation timestamp.
+    :ivar datetime  modified:  Last update timestamp.
+    :ivar text      revision:  Revision.
+    :ivar text      name:      Name (**unique**).
+    :ivar JSON      schema:    AVRO schema definition.
+    :ivar JSON      input:     Sample of data that conform the AVRO schema.
+    :ivar Project   project:   Project.
 
     '''
 
@@ -218,13 +222,13 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedMod
     '''
     Data submission
 
-    :ivar UUID id:        ID.
-    :ivar text revision:  Revision.
-
-    :ivar JSON payload:   Submission content.
-
-    :ivar MappingSet mappingset:  Mapping set.
-    :ivar Project    project:     Project (redundant but speed up queries).
+    :ivar UUID        id:          ID (primary key).
+    :ivar datetime    created:     Creation timestamp.
+    :ivar datetime    modified:    Last update timestamp.
+    :ivar text        revision:    Revision.
+    :ivar JSON        payload:     Submission content.
+    :ivar MappingSet  mappingset:  Mapping set.
+    :ivar Project     project:     Project (redundant but speed up queries).
 
     '''
 
@@ -285,14 +289,14 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), TimeStampedMod
     '''
     Attachment linked to submission.
 
-    :ivar UUID id:    ID.
-    :ivar text name:  File name.
-
-    :ivar File       attachment_file:      Path to file.
-    :ivar text       md5sum:               File content MD5.
-
-    :ivar Submission submission:           Submission.
-    :ivar text       submission_revision:  Submission revision when the attachment was saved.
+    :ivar UUID        id:                   ID (primary key).
+    :ivar datetime    created:              Creation timestamp.
+    :ivar datetime    modified:             Last update timestamp.
+    :ivar text        name:                 File name.
+    :ivar File        attachment_file:      Path to file (depends on the file storage system).
+    :ivar text        md5sum:               File content hash (MD5).
+    :ivar Submission  submission:           Submission.
+    :ivar text        submission_revision:  Submission revision when the attachment was saved.
 
     '''
 
@@ -348,13 +352,14 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), TimeStampedModel):
     '''
     AVRO Schema
 
-    :ivar UUID id:        ID.
-    :ivar text revision:  Revision.
-    :ivar text name:      Name.
-
-    :ivar text type:       Schema namespace
-    :ivar JSON difinition: AVRO schema definiton.
-    :ivar text family:     Schema family.
+    :ivar UUID      id:         ID (primary key).
+    :ivar datetime  created:     Creation timestamp.
+    :ivar datetime  modified:    Last update timestamp.
+    :ivar text      revision:    Revision.
+    :ivar text      name:        Name (**unique**).
+    :ivar text      type:        Schema namespace
+    :ivar JSON      definition:  AVRO schema definiton.
+    :ivar text      family:      Schema family.
 
     '''
 
@@ -396,17 +401,17 @@ class ProjectSchema(ExportModelOperationsMixin('kernel_projectschema'), TimeStam
     '''
     Project Schema
 
-    :ivar UUID id:   ID.
-    :ivar text name: Name.
-
-    :ivar text  mandatory_fields: The list of mandatory fields included in the AVRO
-        schema definition.
-    :ivar text  transport_rule:   The transport rule.
-    :ivar text  masked_fields:    The list of fields that must be masked before transport.
-    :ivar bool  is_encrypted:     Is the transport encrypted?
-
-    :ivar Schema  schema:   Schema.
-    :ivar Project project:  Project.
+    :ivar UUID      id:                ID (primary key).
+    :ivar datetime  created:           Creation timestamp.
+    :ivar datetime  modified:          Last update timestamp.
+    :ivar text      name:              Name (**unique**).
+    :ivar text      mandatory_fields:  The list of mandatory fields included in
+        the AVRO schema definition.
+    :ivar text      transport_rule:    The transport rule.
+    :ivar text      masked_fields:     The list of fields that must be masked before transport.
+    :ivar bool      is_encrypted:      Is the transport encrypted?
+    :ivar Schema    schema:            Schema.
+    :ivar Project   project:           Project.
 
     '''
 
@@ -440,15 +445,15 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
     '''
     Mapping rules used to extract quality data from raw submissions.
 
-    :ivar UUID id:        ID.
-    :ivar text revision:  Revision.
-    :ivar text name:      Name.
-
-    :ivar JSON  definition:    The list of mapping rules between
+    :ivar UUID           id:              ID (primary key).
+    :ivar datetime       created:         Creation timestamp.
+    :ivar datetime       modified:        Last update timestamp.
+    :ivar text           revision:        Revision.
+    :ivar text           name:            Name (**unique**).
+    :ivar JSON           definition:      The list of mapping rules between
         a source (submission) and a destination (entity).
-    :ivar bool  is_active:     Is the mapping active?
-    :ivar bool  is_read_only:  Can the mapping rules be modified manually?
-
+    :ivar bool           is_active:       Is the mapping active?
+    :ivar bool           is_read_only:    Can the mapping rules be modified manually?
     :ivar MappingSet     mappingset:      Mapping set.
     :ivar ProjectSchema  projectschemas:  The list of project schemas included
         in the mapping rules.
@@ -526,13 +531,12 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
     '''
     Entity: extracted data from raw submissions.
 
-    :ivar UUID id:        ID.
-    :ivar text revision:  Revision.
-
-    :ivar JSON  payload:   The extracted data.
-    :ivar text  status:    Status: "Pending Approval" or "Publishable".
-    :ivar text  modified:  Last modified timestamp with ID or previous modified timestamp.
-
+    :ivar UUID           id:                ID (primary key).
+    :ivar text           modified:          Last update timestamp in ISO format along with the id.
+    :ivar text           revision:          Revision.
+    :ivar JSON           payload:           The extracted data.
+    :ivar text           status:            Status: "Pending Approval" or "Publishable".
+    :ivar text           modified:          Last modified timestamp with ID or previous modified timestamp.
     :ivar Submission     submission:        Submission.
     :ivar Mapping        mapping:           Mapping rules applied to get the entity.
     :ivar text           mapping_revision:  Mapping revision at the moment of the extraction.
@@ -645,12 +649,12 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
 
         if self.schema:
             try:
-                validate_payload(
+                validate_entity_payload(
                     schema_definition=self.schema.definition,
                     payload=self.payload,
                 )
-            except EntityValidationError as eve:
-                raise ValidationError({'payload': [str(eve)]})
+            except ValidationError as ve:
+                raise ValidationError({'payload': [str(ve)]})
 
     def save(self, *args, **kwargs):
         try:

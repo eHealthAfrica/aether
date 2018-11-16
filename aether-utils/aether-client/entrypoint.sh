@@ -32,7 +32,6 @@ show_help() {
 
     test          : run tests
     test_lint     : run flake8 tests
-    test_coverage : run tests with coverage output
 
     """
 }
