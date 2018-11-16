@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -18,17 +16,30 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import json
 import os
-import sys
-from time import sleep
 
-if __name__ == '__main__':
 
-    try:
-        settings_path = os.environ['PRODUCER_SETTINGS_FILE']
-    except KeyError:
-        print('PRODUCER_SETTINGS_FILE not set in environment.')
-        sys.exit(1)
-    from producer import aether_producer
-    aether_producer.main()
-    print("Started Producer with path %s" % settings_path)
+class Settings(dict):
+    # A container for our settings
+    def __init__(self, file_path=None):
+        self.load(file_path)
+
+    def get(self, key, default=None):
+        try:
+            return self.__getitem__(key)
+        except KeyError:
+            return default
+
+    def __getitem__(self, key):
+        result = os.environ.get(key.upper())
+        if result is None:
+            result = super().__getitem__(key)
+
+        return result
+
+    def load(self, path):
+        with open(path) as f:
+            obj = json.load(f)
+            for k in obj:
+                self[k] = obj.get(k)
