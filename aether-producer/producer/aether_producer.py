@@ -54,33 +54,9 @@ from urllib3.exceptions import MaxRetryError
 
 from producer import db
 from producer.db import Offset
+from producer.settings import Settings
 
 FILE_PATH = os.path.dirname(os.path.realpath(__file__))
-
-
-class Settings(dict):
-    # A container for our settings
-    def __init__(self, file_path=None):
-        self.load(file_path)
-
-    def get(self, key, default=None):
-        try:
-            return self.__getitem__(key)
-        except KeyError:
-            return default
-
-    def __getitem__(self, key):
-        result = os.environ.get(key.upper())
-        if result is None:
-            result = super().__getitem__(key)
-
-        return result
-
-    def load(self, path):
-        with open(path) as f:
-            obj = json.load(f)
-            for k in obj:
-                self[k] = obj.get(k)
 
 
 class KafkaStatus(enum.Enum):
@@ -183,9 +159,8 @@ class ProducerManager(object):
 
     # Connect to sqlite
     def init_db(self):
-        url = self.settings['offset_db_url']
-        db.init(url)
-        self.logger.info("OffsetDB initialized at %s" % url)
+        db.init()
+        self.logger.info("OffsetDB initialized")
 
     # Maintain Aether Connection
     def connect_aether(self):
@@ -667,6 +642,7 @@ class TopicManager(object):
         self.status['offset'] = new_offset.offset_value
 
 
-def main(file_path=None):
+def main():
+    file_path = os.environ.get('PRODUCER_SETTINGS_FILE')
     settings = Settings(file_path)
     handler = ProducerManager(settings)

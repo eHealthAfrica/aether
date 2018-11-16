@@ -28,16 +28,45 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 
+from producer.settings import Settings
+
+FILE_PATH = os.path.dirname(os.path.realpath(__file__))
+
 Base = declarative_base()
 logger = logging.getLogger(__name__)
 engine = None
 Session = None
 
-
-def init(url):
+file_path = os.environ.get('PRODUCER_SETTINGS_FILE')
+SETTINGS = Settings(file_path)
+ 
+def init():
     global engine
-    engine = create_engine(url)
 
+    offset_db_host = SETTINGS['offset_db_host']
+    offset_db_user = SETTINGS['offset_db_user']
+    offset_db_port = SETTINGS['offset_db_port']
+    offset_db_password = SETTINGS['offset_db_password']
+    offset_db_name = SETTINGS['offset_db_name']
+    
+    url = f'postgresql+psycopg2://{offset_db_user}:{offset_db_password}' + \
+        f'@{offset_db_host}:{offset_db_port}/{offset_db_name}'
+
+    engine = create_engine(url)
+    try:
+        start_session(engine)
+        return
+    except SQLAlchemyError:
+        pass
+    try:
+        logger.error('Attempting to Create Database.')
+        create_db(engine, url)
+        start_session(engine)
+    except SQLAlchemyError as sqe:
+        logger.error('Database creation failed: %s' % sqe)
+        sys.exit(1)
+
+def start_session(engine):
     try:
         Base.metadata.create_all(engine)
 
@@ -47,8 +76,16 @@ def init(url):
         logger.info('Database initialized.')
     except SQLAlchemyError as err:
         logger.error('Database could not be initialized. | %s' % err)
-        sys.exit(1)
+        raise err
 
+def create_db(engine, url):
+    db_name = url.split('/')[-1]
+    root = url.replace(db_name, 'postgres')
+    temp_engine = create_engine(root)
+    conn = temp_engine.connect()
+    conn.execute("commit")
+    conn.execute("create database %s" % db_name)
+    conn.close()
 
 def get_session():
     return Session()
