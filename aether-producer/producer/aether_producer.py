@@ -34,8 +34,8 @@ import logging
 import os
 import psycopg2
 from psycopg2 import sql
-import requests
 import signal
+import socket
 import spavro.schema
 import sys
 import traceback
@@ -46,7 +46,6 @@ from gevent.pywsgi import WSGIServer
 from confluent_kafka import Producer, Consumer, KafkaException
 from psycopg2.extras import DictCursor
 
-from requests.exceptions import ConnectionError
 from spavro.datafile import DataFileWriter, DataFileReader
 from spavro.io import DatumWriter, DatumReader
 from spavro.io import validate
@@ -141,22 +140,21 @@ class ProducerManager(object):
 
     # Connectivity
 
+    # see if kafka's port is available
     def kafka_available(self):
-        kafka_url = "http://%s" % self.settings["kafka_url"]
+        kafka_ip, kafka_port = self.settings["kafka_url"].split(":")
+        kafka_port = int(kafka_port)
         try:
-            res = requests.head(kafka_url)
-            return True
-        except ConnectionError as rce:
-            # Requests has the same exception type for both failed to resolve
-            # and ConnectionResetError. Kafka resets the connection as it doesn't
-            # support HEAD, but we know it's there and the port is correct.
-            if "ConnectionResetError" in str(rce):
-                return True
-            else:
-                self.logger.debug(
-                    "Could not connect to Kafka on url: %s" % kafka_url)
-                self.logger.debug("Connection problem: %s" % rce)
-                return False
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.connect((kafka_ip, kafka_port))
+        except (InterruptedError,
+                ConnectionRefusedError,
+                socket.gaierror) as rce:
+            self.logger.debug(
+                "Could not connect to Kafka on url: %s:%s" % (kafka_ip, kafka_port))
+            self.logger.debug("Connection problem: %s" % rce)
+            return False
+        return True
 
     # Connect to sqlite
     def init_db(self):

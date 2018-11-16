@@ -25,10 +25,11 @@ from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
-from . import constants, models, utils, validators
+from .constants import MergeOptions as MERGE_OPTIONS
+from .entity_extractor import run_entity_extraction, ENTITY_EXTRACTION_ERRORS
 
+from . import models, utils, validators
 
-MERGE_OPTIONS = constants.MergeOptions
 
 MERGE_CHOICES = (
     (MERGE_OPTIONS.overwrite.value, _('Overwrite (Do not merge)')),
@@ -189,8 +190,12 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     def create(self, validated_data):
         instance = super(SubmissionSerializer, self).create(validated_data)
-        # entity extraction should not raise any exception
-        utils.run_entity_extraction(instance)
+        try:
+            run_entity_extraction(instance)
+        except Exception as e:
+            instance.payload[ENTITY_EXTRACTION_ERRORS] = instance.payload.get(ENTITY_EXTRACTION_ERRORS, [])
+            instance.payload[ENTITY_EXTRACTION_ERRORS] += [str(e)]
+            instance.save()
         return instance
 
     class Meta:
@@ -284,7 +289,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     # this field is used to update existing entities, indicates the MERGE strategy
     merge = serializers.ChoiceField(write_only=True, choices=MERGE_CHOICES, default=DEFAULT_MERGE)
 
-    # this field is used to extract the linked entities
+    # this field is used to include the linked nested entities
     resolved = serializers.JSONField(read_only=True, default={})
 
     # this will return all linked attachment files
@@ -305,13 +310,11 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         # find out payload
-        direction = validated_data.pop('merge', DEFAULT_MERGE)
-        if direction in (MERGE_OPTIONS.fww.value, MERGE_OPTIONS.lww.value):
-            validated_data['payload'] = utils.merge_objects(
-                source=instance.payload,
-                target=validated_data.get('payload', {}),
-                direction=direction,
-            )
+        validated_data['payload'] = utils.merge_objects(
+            source=instance.payload,
+            target=validated_data.get('payload', {}),
+            direction=validated_data.pop('merge', DEFAULT_MERGE),
+        )
 
         try:
             return super(EntitySerializer, self).update(instance, validated_data)
@@ -327,6 +330,7 @@ class ProjectStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     first_submission = serializers.DateTimeField()
     last_submission = serializers.DateTimeField()
     submissions_count = serializers.IntegerField()
+    attachments_count = serializers.IntegerField()
     entities_count = serializers.IntegerField()
 
     class Meta:
@@ -334,7 +338,7 @@ class ProjectStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = (
             'id', 'name', 'created',
             'first_submission', 'last_submission',
-            'submissions_count', 'entities_count',
+            'submissions_count', 'attachments_count', 'entities_count',
         )
 
 
@@ -342,6 +346,7 @@ class MappingSetStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer)
     first_submission = serializers.DateTimeField()
     last_submission = serializers.DateTimeField()
     submissions_count = serializers.IntegerField()
+    attachments_count = serializers.IntegerField()
     entities_count = serializers.IntegerField()
 
     class Meta:
@@ -349,7 +354,7 @@ class MappingSetStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer)
         fields = (
             'id', 'name', 'created',
             'first_submission', 'last_submission',
-            'submissions_count', 'entities_count',
+            'submissions_count', 'attachments_count', 'entities_count',
         )
 
 

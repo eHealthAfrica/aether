@@ -18,6 +18,7 @@
 
 import base64
 import json
+import os
 import uuid
 
 from django.contrib.auth import get_user_model
@@ -30,7 +31,8 @@ from ..surveyors_utils import get_surveyor_group
 
 UserModel = get_user_model().objects
 
-PATH_DIR = '/code/aether/odk/api/tests/files/'
+here = os.path.dirname(os.path.realpath(__file__))
+PATH_DIR = os.path.join(here, 'files/')
 
 XFORM_XLS_FILE = PATH_DIR + 'demo-xform.xls'
 XFORM_XML_FILE = PATH_DIR + 'demo-xform.xml'

@@ -29,7 +29,7 @@ MESSAGE_OK = _('RQ scheduler running with {number} workers.') + '\n'
 
 class Command(BaseCommand):
 
-    help = 'Health check for RQ.'
+    help = _('Health check for RQ.')
 
     def handle(self, *args, **options):
         '''

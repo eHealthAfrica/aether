@@ -26,9 +26,46 @@ from model_utils.models import TimeStampedModel
 from .utils import validate_contract
 
 
+'''
+Data model schema:
+
++------------------+     +------------------+
+| Pipeline         |     | Contract         |
++==================+     +==================+
+| id               |<-+  | id               |
+| created          |  |  | created          |
+| modified         |  |  | modified         |
+| name             |  |  | name             |
+| schema           |  |  | entity_types     |
+| input            |  |  | mapping          |
++~~~~~~~~~~~~~~~~~~+  |  | mapping_errors   |
+| mappingset       |  |  | output           |
++------------------+  |  | is_active        |
+                      |  | is_read_only     |
+                      |  +~~~~~~~~~~~~~~~~~~+
+                      |  | kernel_refs      |
+                      |  +::::::::::::::::::+
+                      +-<| pipeline         |
+                         +------------------+
+'''
+
+
 class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
+    '''
+    Pipeline
+
+    :ivar UUID      id:          ID (primary key).
+    :ivar datetime  created:     Creation timestamp.
+    :ivar datetime  modified:    Last update timestamp.
+    :ivar text      name:        Name (**unique**).
+    :ivar JSON      schema:      AVRO schema of the input.
+    :ivar JSON      input:       Data sample.
+    :ivar UUID      mappingset:  Linked Aether Mappingset ID.
+    '''
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, unique=True)
+
     # this is the avro schema
     schema = JSONField(null=True, blank=True, default=dict)
 
@@ -54,8 +91,53 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
 
 
 class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
+    '''
+    Contract
+
+    :ivar UUID      id:              ID (primary key).
+    :ivar datetime  created:         Creation timestamp.
+    :ivar datetime  modified:        Last update timestamp.
+    :ivar text      name:            Name (**unique**).
+    :ivar Pipeline  pipeline:        Pipeline.
+    :ivar JSON      entity_types:    List of AVRO schemas of the different entities.
+    :ivar JSON      mapping:         List of mapping rules used to transform
+        the pipeline input into the entity types.
+        Rule format:
+            {
+                "id": uuid,
+                "source": "jsonpath-input-1",
+                "destination": "jsonpath-entity-type-1",
+            }
+
+    :ivar JSON      mapping_errors:  List of errors derived from
+        the mapping rules, the entity types and the pipeline input
+        when the Kernel ``validate-mappings`` endpoint is called.
+
+    :ivar JSON      output:          List of entities extracted using
+        the mapping rules, the entity types and the pipeline input
+        when the Kernel ``validate-mappings`` endpoint is called.
+
+    :ivar JSON      kernel_refs:     Linked Aether Kernel artefact IDs.
+        Object expected format:
+            {
+                "project": uuid,
+                "mapping": uuid,
+                "schemas": {
+                    "entity name": uuid,
+                    ...
+                },
+            }
+
+    :ivar datetime  published_on:    Timestamp of last published to Aether Kernel.
+    :ivar bool      is_active:       Is the contract active?
+    :ivar bool      is_read_only:    Can the contract be modified manually?
+
+    '''
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, unique=True)
+
+    pipeline = models.ForeignKey(to=Pipeline, on_delete=models.CASCADE)
 
     # the list of available entity types (avro schemas)
     entity_types = JSONField(null=True, blank=True, default=list)
@@ -106,8 +188,6 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
     published_on = models.DateTimeField(null=True, blank=True, editable=False)
     is_active = models.BooleanField(default=True)
     is_read_only = models.BooleanField(default=False)
-
-    pipeline = models.ForeignKey(to=Pipeline, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name

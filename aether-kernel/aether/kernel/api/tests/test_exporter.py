@@ -29,8 +29,12 @@ from django.http import FileResponse
 from django.test import TestCase
 from django.urls import reverse
 
-from .. import models, project_artefacts, utils
-from ..exporter import (
+from aether.kernel.api import models
+
+from aether.kernel.api.entity_extractor import run_entity_extraction
+from aether.kernel.api.project_artefacts import upsert_project_with_avro_schemas
+
+from aether.kernel.api.exporter import (
     __filter_paths as filter_paths,
     __flatten_dict as flatten_dict,
     __get_label as get_label,
@@ -236,7 +240,7 @@ class ExporterViewsTest(TestCase):
 
         # create artefacts for the AVRO schema
         artefacts_id = str(project.pk)
-        project_artefacts.upsert_project_with_avro_schemas(
+        upsert_project_with_avro_schemas(
             project_id=artefacts_id,
             avro_schemas=[{
                 'id': artefacts_id,
@@ -249,18 +253,18 @@ class ExporterViewsTest(TestCase):
             mappingset=models.MappingSet.objects.get(pk=artefacts_id),
         )
         # extract entities
-        utils.run_entity_extraction(submission)
+        run_entity_extraction(submission)
         self.assertEqual(models.Entity.objects.count(), 1)
 
     def tearDown(self):
         self.client.logout()
 
     def test__generate__csv(self):
-        # without paths
+        # without paths (includes: ``aether_extractor_enrichment``)
         data = models.Submission.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
         _, zip_path, _ = generate(data, paths=[], labels=EXAMPLE_LABELS, format='csv', offset=0, limit=1)
         zip_file = zipfile.ZipFile(zip_path, 'r')
-        self.assertEqual(zip_file.namelist(), ['export-#.csv', 'export-#-1.csv', 'export-#-2.csv'])
+        self.assertEqual(zip_file.namelist(), ['export-#.csv', 'export-#-1.csv', 'export-#-2.csv', 'export-#-3.csv'])
 
         # with the whole paths list
         data = models.Submission.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
@@ -374,7 +378,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(reverse('submission-csv'), '/submissions/csv/')
 
     @mock.patch(
-        'aether.kernel.api.views.exporter.generate_file',
+        'aether.kernel.api.exporter.generate_file',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_submissions_export__error__mocked(self, mock_export):
@@ -386,7 +390,7 @@ class ExporterViewsTest(TestCase):
         mock_export.assert_called_once()
 
     @mock.patch(
-        'aether.kernel.api.views.exporter.generate_file',
+        'aether.kernel.api.exporter.generate_file',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_submissions_export__xlsx__mocked(self, mock_export):
@@ -403,7 +407,7 @@ class ExporterViewsTest(TestCase):
         )
 
     @mock.patch(
-        'aether.kernel.api.views.exporter.generate_file',
+        'aether.kernel.api.exporter.generate_file',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_submissions_export__csv__mocked(self, mock_export):
@@ -440,7 +444,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(reverse('entity-csv'), '/entities/csv/')
 
     @mock.patch(
-        'aether.kernel.api.views.exporter.generate_file',
+        'aether.kernel.api.exporter.generate_file',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_entities_export___error__mocked(self, mock_export):
@@ -452,7 +456,7 @@ class ExporterViewsTest(TestCase):
         mock_export.assert_called_once()
 
     @mock.patch(
-        'aether.kernel.api.views.exporter.generate_file',
+        'aether.kernel.api.exporter.generate_file',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_entities_export__xlsx__mocked(self, mock_export):
@@ -480,7 +484,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(response['Content-Type'], XLSX_CONTENT_TYPE)
 
     @mock.patch(
-        'aether.kernel.api.views.exporter.generate_file',
+        'aether.kernel.api.exporter.generate_file',
         side_effect=OSError('[Errno 2] No such file or directory'),
     )
     def test_entities_export__csv__mocked(self, mock_export):
