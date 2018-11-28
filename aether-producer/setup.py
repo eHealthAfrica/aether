@@ -18,13 +18,18 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import os
 from setuptools import setup
+
+with open(os.path.join('/code', 'VERSION'), 'r') as version_file:
+    version = version_file.read().strip()
+
 setup(
     name='aether_producer',
     author='Shawn Sarwar',
     author_email='shawn.sarwar@ehealthafrica.org',
     decription='Kafka Producer for Aether',
-    version='0.9.0',
+    version=version,
     setup_requires=['pytest'],
     tests_require=['pytest', 'sqlalchemy', 'requests', 'aether_producer'],
     url='https://github.com/eHealthAfrica/aether',

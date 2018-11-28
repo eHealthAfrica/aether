@@ -350,6 +350,7 @@ services:
     stdin_open: true
     volumes:
      - ./aether-producer:/code
+     - ./VERSION:/code/VERSION
     environment:
       PYTHONUNBUFFERED: 1
 

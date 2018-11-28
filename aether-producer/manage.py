@@ -31,5 +31,5 @@ if __name__ == '__main__':
         sys.exit(1)
 
     from producer import main
-    main(file_path=settings_path)
+    main()
     print("Started Producer with path %s" % settings_path)

@@ -1,4 +1,4 @@
-producer/*offset.json
+VERSION
 client/
 *.db
 *__pycache__
