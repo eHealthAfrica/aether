@@ -21,7 +21,7 @@
 import logging
 import pytest
 
-from app.producer import *
+from producer import *
 Offset = db.Offset
 
 log = logging.getLogger()

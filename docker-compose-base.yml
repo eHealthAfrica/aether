@@ -372,7 +372,7 @@ services:
       SERVER_PORT: 5005
 
       # default settings file
-      PRODUCER_SETTINGS_FILE: /code/app/settings.json
+      PRODUCER_SETTINGS_FILE: /code/producer/settings.json
     ports:
       - "5005:5005"
     command: start
