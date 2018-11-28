@@ -3,7 +3,11 @@ version: "2.1"
 services:
 
   common:
-    build: .
+    build:
+      context: .
+      args:
+        VERSION: 0.0.0
+        GIT_REVISION: 0123456789ABCDEF
 
     environment:
       TESTING: "true"
@@ -32,6 +36,23 @@ services:
       PAGE_SIZE: 10
       MAX_PAGE_SIZE: 30
     volumes:
-      - ./:/code
+      ########################################################
+      #                       WARNING                        #
+      # do not include the root folder as volume or          #
+      # `VERSION` and `REVISION` files will not be available #
+      ########################################################
+
+      # - ./:/code
+
+      # include all folders and root files manually :'(
+      - ./aether:/code/aether
+      - ./conf:/code/conf
+      - ./dist:/code/dist
+
+      - ./entrypoint.sh:/code/entrypoint.sh
+      - ./manage.py:/code/manage.py
+      - ./MANIFEST.in:/code/MANIFEST.in
+      - ./README.md:/code/README.md
+      - ./setup.py:/code/setup.py
 
     command: build

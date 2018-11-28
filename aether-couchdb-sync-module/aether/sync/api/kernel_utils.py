@@ -49,7 +49,6 @@ def propagate_kernel_project(project, family=None):
     '''
 
     artefacts = {
-        'action': 'create',
         'name': project.name,
         'family': family,
         'avro_schemas': [],
@@ -70,7 +69,6 @@ def propagate_kernel_artefacts(schema, family=None):
     '''
 
     artefacts = {
-        'action': 'create',
         'name': schema.project.name,
         'family': family,
         'avro_schemas': [__parse_schema(schema)],

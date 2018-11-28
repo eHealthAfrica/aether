@@ -16,9 +16,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.db.models import Count, Min, Max
+from django.db.models import Count, Min, Max, TextField, Q, Case, When
+from django.db.models.functions import Cast
 from django.shortcuts import get_object_or_404
-from django.utils.translation import ugettext as _
 
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -32,16 +32,17 @@ from rest_framework.decorators import (
 )
 from rest_framework.renderers import JSONRenderer
 
+from .avro_tools import extract_jsonpaths_and_docs
+from .constants import LINKED_DATA_MAX_DEPTH
+from .entity_extractor import extract_create_entities
+from .exporter import ExporterViewSet
+from .mapping_validation import validate_mappings
+
 from . import (
-    avro_tools,
-    constants,
-    exporter,
     filters,
-    mapping_validation,
     models,
     project_artefacts,
     serializers,
-    utils,
 )
 
 
@@ -55,7 +56,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
         '''
         Returns the schemas "skeleton" used by this project.
 
-        Reachable at ``/projects/{pk}/schemas-skeleton/?family=<<family_name>>``
+        Reachable at ``/projects/{pk}/schemas-skeleton/?passthrough=true&family=<<string>>``
+
+        These endpoints return the same result:
+
+            ``/projects/{pk}/schemas-skeleton/?passthrough=true``
+            ``/projects/{pk}/schemas-skeleton/?family={pk}``
+
         '''
 
         project = get_object_or_404(models.Project, pk=pk)
@@ -65,7 +72,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
         docs = {}
         name = None
 
-        family = request.GET.get('family')
+        if request.query_params.get('passthrough', 'false') == 'true':
+            # the passthrough schemas are identified with the project id
+            family = str(project.id)
+        else:
+            family = request.query_params.get('family')
+
         schemas = [
             ps.schema
             for ps in project.projectschemas.order_by('-created')
@@ -73,8 +85,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         ]
         for schema in schemas:
             if not name:
-                name = f'{project.name}-{schema.family_name}'
-            avro_tools.extract_jsonpaths_and_docs(
+                name = f'{project.name}-{schema.schema_name}'
+            extract_jsonpaths_and_docs(
                 schema=schema.definition,
                 jsonpaths=jsonpaths,
                 docs=docs,
@@ -84,6 +96,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             'jsonpaths': jsonpaths,
             'docs': docs,
             'name': name or project.name,
+            'schemas': len(schemas),
         })
 
     @action(detail=True, methods=['get', 'patch'])
@@ -144,7 +157,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 # this is optional, indicates the action to execute:
                 #   "create", creates the missing objects but does not update the existing ones
                 #   otherwise creates/updates the given objects
-                'action': 'upsert',
+                'action': 'create|upsert',
 
                 # this is optional, if missing the method will assign a random name
                 "name": "project name (optional but unique)",
@@ -238,12 +251,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 # this is optional, indicates the action to execute:
                 #   "create", creates the missing objects but does not update the existing ones
                 #   otherwise creates/updates the given objects
-                'action': 'upsert',
+                'action': 'create|upsert',
 
                 # this is optional, if missing the method will assign a random name
                 "name": "project name (optional but unique)",
 
-                # this is optional, all the schemas created/updated will be assigned to this family
+                # this is optional, all the schemas created/updated will
+                # be assigned to this family
+                # if none is indicated the project id will be used
+                # to identify the passthrough schemas
                 "family": "family name",
 
                 # this is optional, for each entry the method will
@@ -268,27 +284,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
             project_id=pk,
             project_name=data.get('name'),
             avro_schemas=data.get('avro_schemas', []),
-            family=data.get('family'),
+            family=data.get('family') or pk,
         )
 
         return Response(data=results)
-
-
-class ProjectStatsViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.Project \
-                     .objects \
-                     .values('id', 'name', 'created') \
-                     .annotate(
-                         first_submission=Min('submissions__created'),
-                         last_submission=Max('submissions__created'),
-                         submissions_count=Count('submissions__id', distinct=True),
-                         entities_count=Count('submissions__entities__id', distinct=True),
-                     )
-    serializer_class = serializers.ProjectStatsSerializer
-
-    search_fields = ('name',)
-    ordering_fields = ('name', 'created',)
-    ordering = ('name',)
 
 
 class MappingSetViewSet(viewsets.ModelViewSet):
@@ -297,30 +296,13 @@ class MappingSetViewSet(viewsets.ModelViewSet):
     filter_class = filters.MappingSetFilter
 
 
-class MappingSetStatsViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.MappingSet \
-                     .objects \
-                     .values('id', 'name', 'created') \
-                     .annotate(
-                         first_submission=Min('submissions__created'),
-                         last_submission=Max('submissions__created'),
-                         submissions_count=Count('submissions__id', distinct=True),
-                         entities_count=Count('submissions__entities__id', distinct=True),
-                     )
-    serializer_class = serializers.MappingSetStatsSerializer
-
-    search_fields = ('name',)
-    ordering_fields = ('name', 'created',)
-    ordering = ('name',)
-
-
 class MappingViewSet(viewsets.ModelViewSet):
     queryset = models.Mapping.objects.all()
     serializer_class = serializers.MappingSerializer
     filter_class = filters.MappingFilter
 
 
-class SubmissionViewSet(exporter.ExporterViewSet):
+class SubmissionViewSet(ExporterViewSet):
     queryset = models.Submission.objects.all()
     serializer_class = serializers.SubmissionSerializer
     filter_class = filters.SubmissionFilter
@@ -351,7 +333,7 @@ class SchemaViewSet(viewsets.ModelViewSet):
         jsonpaths = []
         docs = {}
 
-        avro_tools.extract_jsonpaths_and_docs(
+        extract_jsonpaths_and_docs(
             schema=schema.definition,
             jsonpaths=jsonpaths,
             docs=docs,
@@ -359,7 +341,7 @@ class SchemaViewSet(viewsets.ModelViewSet):
         return Response(data={
             'jsonpaths': jsonpaths,
             'docs': docs,
-            'name': schema.family_name,
+            'name': schema.schema_name,
         })
 
 
@@ -383,7 +365,7 @@ class ProjectSchemaViewSet(viewsets.ModelViewSet):
         jsonpaths = []
         docs = {}
 
-        avro_tools.extract_jsonpaths_and_docs(
+        extract_jsonpaths_and_docs(
             schema=schema.definition,
             jsonpaths=jsonpaths,
             docs=docs,
@@ -391,11 +373,11 @@ class ProjectSchemaViewSet(viewsets.ModelViewSet):
         return Response(data={
             'jsonpaths': jsonpaths,
             'docs': docs,
-            'name': f'{project_schema.project.name}-{schema.family_name}',
+            'name': f'{project_schema.project.name}-{schema.schema_name}',
         })
 
 
-class EntityViewSet(exporter.ExporterViewSet):
+class EntityViewSet(ExporterViewSet):
     queryset = models.Entity.objects.all()
     serializer_class = serializers.EntitySerializer
     filter_class = filters.EntityFilter
@@ -422,32 +404,99 @@ class EntityViewSet(exporter.ExporterViewSet):
                     linked_entity_schema_name = linked_entity.projectschema.schema.name
 
                     resolved[linked_entity_schema_name] = resolved.get(linked_entity_schema_name, {})
-                    resolved[linked_entity_schema_name][linked_data_ref] = serializers.EntityLDSerializer(
+                    resolved[linked_entity_schema_name][linked_data_ref] = self.serializer_class(
                         linked_entity,
                         context={'request': request},
                     ).data
 
                     # continue with next nested level
                     get_entity_linked_data(linked_entity, request, resolved, depth, start_depth + 1)
-                except Exception:
+                except Exception:  # pragma: no cover
                     pass
             return resolved
 
-        instance = get_object_or_404(models.Entity, pk=pk)
-        depth = request.query_params.get('depth')
-        if depth:
-            try:
-                depth = int(depth)
-                if depth > constants.LINKED_DATA_MAX_DEPTH:
-                    return Response(
-                        {'description': _('Supported max depth is {}').format(constants.LINKED_DATA_MAX_DEPTH)},
-                        status=status.HTTP_400_BAD_REQUEST)
-                else:
-                    instance.resolved = get_entity_linked_data(instance, request, {}, depth)
-            except Exception as e:
-                return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        try:
+            depth = request.query_params.get('depth', '0')
+            depth = int(depth)
+            if depth < 0:
+                depth = 0
+            if depth > LINKED_DATA_MAX_DEPTH:
+                # instead of raising an error change the value to the MAXIMUM
+                depth = LINKED_DATA_MAX_DEPTH
+        except Exception:
+            depth = 0
 
-        return Response(serializers.EntitySerializer(instance, context={'request': request}).data)
+        instance = get_object_or_404(models.Entity, pk=pk)
+        try:
+            if depth:
+                instance.resolved = get_entity_linked_data(instance, request, {}, depth)
+        except Exception:  # pragma: no cover
+            instance.resolved = {}
+
+        return Response(self.serializer_class(instance, context={'request': request}).data)
+
+
+class SubmissionStatsMixin(object):
+
+    search_fields = ('name',)
+    ordering_fields = ('name', 'created',)
+    ordering = ('name',)
+
+    def get_queryset(self):
+        entities_count = Count('submissions__entities__id', distinct=True)
+
+        entities_filter = None
+        if self.request.query_params.get('passthrough', 'false') == 'true':
+            # filter entities generated by passthrough mappings
+            # HOW: The schema family matches the project id
+
+            # compare family with project id
+            # (issue: need to cast the UUID field into a Text field)
+            project_id = Cast('submissions__entities__projectschema__project', TextField())
+
+            entities_filter = Q(
+                submissions__entities__projectschema__schema__family=project_id,
+                submissions__entities__mapping__is_read_only=True,
+            )
+        else:
+            family = self.request.query_params.get('family')
+            if family:
+                entities_filter = Q(submissions__entities__projectschema__schema__family=family)
+
+        if entities_filter:
+            # Django 1: use Case+When
+            entities_count = Count(
+                expression=Case(When(entities_filter, then='submissions__entities__id')),
+                distinct=True,
+            )
+
+            # Django 2: filter in Count
+            # (replace code above with this block when we upgrade to Django 2)
+            # entities_count = Count(
+            #     expression='submissions__entities__id',
+            #     distinct=True,
+            #     filter=entities_filter,
+            # )
+
+        return self.model.objects \
+                   .values('id', 'name', 'created') \
+                   .annotate(
+                       first_submission=Min('submissions__created'),
+                       last_submission=Max('submissions__created'),
+                       submissions_count=Count('submissions__id', distinct=True),
+                       attachments_count=Count('submissions__attachments__id', distinct=True),
+                       entities_count=entities_count,
+                   )
+
+
+class ProjectStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
+    model = models.Project  # required by SubmissionStatsMixin
+    serializer_class = serializers.ProjectStatsSerializer
+
+
+class MappingSetStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
+    model = models.MappingSet  # required by SubmissionStatsMixin
+    serializer_class = serializers.MappingSetStatsSerializer
 
 
 SchemaView = get_schema_view(
@@ -467,7 +516,7 @@ class AetherSchemaView(SchemaView):
 @api_view(['POST'])
 @renderer_classes([JSONRenderer])
 @permission_classes([permissions.IsAuthenticated])
-def validate_mappings(request):
+def validate_mappings_view(request):
     '''
     Given a `submission_payload`, a `mapping_definition` and a list of
     `entities`, verify that each mapping function in `mapping_definition` can
@@ -482,12 +531,12 @@ def validate_mappings(request):
     '''
 
     def run_mapping_validation(submission_payload, mapping_definition, schemas):
-        submission_data, entities = utils.extract_create_entities(
+        submission_data, entities = extract_create_entities(
             submission_payload,
             mapping_definition,
             schemas,
         )
-        validation_result = mapping_validation.validate_mappings(
+        validation_result = validate_mappings(
             submission_payload=submission_payload,
             schemas=schemas,
             mapping_definition=mapping_definition,

@@ -69,11 +69,11 @@ case "$1" in
     ;;
 
     pip_freeze )
-        pip install virtualenv
+        pip install -q virtualenv
         rm -rf /tmp/env
 
         virtualenv -p python3 /tmp/env/
-        /tmp/env/bin/pip install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
+        /tmp/env/bin/pip install -q -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
 
         cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
         /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt

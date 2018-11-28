@@ -16,22 +16,30 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django import template
+import json
+import os
 
 
-register = template.Library()
+class Settings(dict):
+    # A container for our settings
+    def __init__(self, file_path=None):
+        self.load(file_path)
 
+    def get(self, key, default=None):
+        try:
+            return self.__getitem__(key)
+        except KeyError:
+            return default
 
-@register.filter(name='get_fullname')
-def get_fullname(user):
-    '''
-    Returns a readable name of the user.
-    - ``first_name`` + ``last_name``
-    - ``name``
-    - ``username``
-    '''
+    def __getitem__(self, key):
+        result = os.environ.get(key.upper())
+        if result is None:
+            result = super().__getitem__(key)
 
-    if user.first_name and user.last_name:
-        return '{} {}'. format(user.first_name, user.last_name)
+        return result
 
-    return user.username
+    def load(self, path):
+        with open(path) as f:
+            obj = json.load(f)
+            for k in obj:
+                self[k] = obj.get(k)

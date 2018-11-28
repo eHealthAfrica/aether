@@ -93,7 +93,7 @@ class Client(SwaggerClient):
         # Wrap bravado-core's Resource and Operation objects in order to
         # execute a service call via the http_client.
         # Replaces with AetherSpecific handler
-        return AetherDecorator(resource, self.__also_return_response)
+        return AetherDecorator(resource, self.__also_return_response, self.swagger_spec)
 
     def __getitem__(self, name):
         return getattr(self, name)
@@ -107,9 +107,23 @@ def show_request(operation, *args, **kwargs):
     return([kwargs, request_params])
 
 
+'''
+Some arguments don't properly display in the swagger specification so we have
+to add them at runtime for the client to support them. This includes all payload
+filters like payload__name=John. Normally payload__name wouldn't be found in the
+spec and an error would be produced.
+'''
+
+
+def mockParam(name, op, swagger_spec):
+    param_spec = {'name': name, 'in': 'query',
+                  'description': "", 'required': False, 'type': 'string'}
+    return bravado_core.param.Param(swagger_spec, op, param_spec)
+
+
 class AetherDecorator(ResourceDecorator):
 
-    def __init__(self, resource, also_return_response=True):
+    def __init__(self, resource, also_return_response=True, swagger_spec=None):
         self.name = resource.name
         # The only way to be able to form coherent exceptions is to catch these
         # common types and wrap them in our own, exposing the status and error
@@ -125,6 +139,7 @@ class AetherDecorator(ResourceDecorator):
             bravado.exception.BravadoTimeoutError,
             bravado.exception.BravadoConnectionError
         ]
+        self.swagger_spec = swagger_spec
         super(AetherDecorator, self).__init__(
             resource, also_return_response)
 
@@ -185,7 +200,7 @@ class AetherDecorator(ResourceDecorator):
                 details['status_code'] = http_response.status_code
                 try:
                     details['response'] = http_response.json()
-                except Exception as err:
+                except Exception:
                     # JSON is unavailable, so we just use the original exception text.
                     pass
                 raise AetherAPIException(**details)
@@ -198,6 +213,11 @@ class AetherDecorator(ResourceDecorator):
 
     def _verify_param(self, name, param_name):
         operation = getattr(self.resource, self._get_full_name(name))
+        # allow searching for arbitrary fields within the payload
+        if param_name.startswith('payload__'):
+            # add it to the allowed list of parameters
+            operation.params[param_name] = mockParam(param_name, operation, self.swagger_spec)
+            return True
         if param_name not in operation.params:
             raise ValueError("%s has no parameter %s" % (name, param_name))
         return True

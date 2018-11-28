@@ -19,10 +19,10 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from ..ui_tags import get_fullname
+from ..aether_tags import get_fullname
 
 
-class UiTagsTests(TestCase):
+class AetherTagsTests(TestCase):
 
     def test_get_fullname(self):
         user = get_user_model().objects.create()

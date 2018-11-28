@@ -27,7 +27,7 @@ from django.utils.translation import ugettext as _
 
 class Command(BaseCommand):
 
-    help = 'Setup admin user'
+    help = _('Setup admin user')
 
     def add_arguments(self, parser):
         parser.add_argument(

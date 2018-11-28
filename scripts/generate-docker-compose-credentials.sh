@@ -36,7 +36,7 @@ fi
 set -Eeo pipefail
 
 
-cat <<STOP
+cat << EOF
 #
 # USE THIS ONLY LOCALLY
 #
@@ -58,13 +58,6 @@ cat <<STOP
 #
 #   docker-compose restart {container-name}
 #
-
-
-# ------------------------------------------------------------------
-# Platform Versioning
-# ==================================================================
-VERSION=$( cat "VERSION" )
-# ------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------
@@ -108,11 +101,7 @@ COUCHDB_SYNC_ADMIN_PASSWORD=$(gen_random_string)
 COUCHDB_SYNC_ADMIN_TOKEN=$(gen_random_string)
 COUCHDB_SYNC_DJANGO_SECRET_KEY=$(gen_random_string)
 COUCHDB_SYNC_DB_PASSWORD=$(gen_random_string)
-STOP
-if [[ ${#COUCHDB_SYNC_GOOGLE_CLIENT_ID} > 0 ]]; then
-echo COUCHDB_SYNC_GOOGLE_CLIENT_ID=${COUCHDB_SYNC_GOOGLE_CLIENT_ID}
-fi
-cat <<EOF
+COUCHDB_SYNC_GOOGLE_CLIENT_ID=${COUCHDB_SYNC_GOOGLE_CLIENT_ID:-¯\_(ツ)_/¯}
 # ------------------------------------------------------------------
 
 
@@ -124,4 +113,5 @@ UI_ADMIN_PASSWORD=$(gen_random_string)
 UI_DJANGO_SECRET_KEY=$(gen_random_string)
 UI_DB_PASSWORD=$(gen_random_string)
 # ------------------------------------------------------------------
+
 EOF

@@ -29,7 +29,7 @@ MESSAGE_OK = _('{url} is responding.') + '\n'
 
 class Command(BaseCommand):
 
-    help = 'Check URL.'
+    help = _('Check URL.')
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -68,6 +68,7 @@ class Command(BaseCommand):
             response.raise_for_status()
             self.stdout.write(MESSAGE_OK.format(url=url))
 
-        except Exception as e:
+        except Exception as err:
             self.stderr.write(MESSAGE_ERROR.format(url=url))
+            self.stderr.write(str(err))
             raise RuntimeError(MESSAGE_ERROR.format(url=url))

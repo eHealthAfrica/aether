@@ -26,6 +26,8 @@ def aether_context(request):
         'dev_mode': settings.DEBUG,
         'app_name': settings.APP_NAME,
         'app_link': settings.APP_LINK,
+        'app_version': settings.VERSION,
+        'app_revision': settings.REVISION,
     }
 
     return context

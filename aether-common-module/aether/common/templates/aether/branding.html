@@ -27,4 +27,9 @@ under the License.
     </div>
   </div>
   <span data-app-name="app-name"><b>ae</b>ther</span>
+  {% if version %}
+  <sup class="badge" data-app-name="app-version">
+    {{app_version}}  ({{app_revision}})
+  </sup>
+  {% endif %}
 </a>

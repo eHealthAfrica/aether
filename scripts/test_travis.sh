@@ -22,18 +22,34 @@ set -Eeuo pipefail
 
 ./scripts/build_common_and_distribute.sh
 
+MODE="travis"
+
 case "$1" in
     kubernetes)
         ./scripts/kubernetes/run_travis.sh
     ;;
 
     integration)
-        ./scripts/test_integration_requires.sh
+        ./scripts/test_integration_requires.sh $MODE
         ./scripts/test_integration.sh
     ;;
 
     all)
         ./scripts/test_all.sh
+    ;;
+
+    core)
+        ./scripts/test_container.sh kernel
+        ./scripts/test_container.sh client
+    ;;
+
+    modules)
+        ./scripts/test_container.sh odk
+        ./scripts/test_container.sh couchdb-sync
+    ;;
+
+    ui)
+        ./scripts/test_container.sh ui
     ;;
 
     *)

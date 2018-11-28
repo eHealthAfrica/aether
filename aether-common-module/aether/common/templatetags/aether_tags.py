@@ -16,25 +16,23 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import os
-from setuptools import setup, find_packages
-import sys
+from django import template
 
-if sys.version_info < (3,0):
-    sys.exit('aether data mocker requires Python 3.x')
 
-with open(os.path.join('/code', 'VERSION')) as version_file:
-    version = version_file.read().strip()
+register = template.Library()
 
-# allow setup.py to be run from any path
-os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
-setup(
-    name='aether.mocker',
-    version=version,
-    install_requires=[
-        "aether.client"
-    ],
-    packages=find_packages(),
-    namespace_packages=['aether']
-)
+@register.filter(name='get_fullname')
+def get_fullname(user):
+    '''
+    Returns a readable name of the user.
+
+    - ``first_name`` + ``last_name``
+    - ``name``
+    - ``username``
+    '''
+
+    if user.first_name and user.last_name:
+        return '{} {}'. format(user.first_name, user.last_name)
+
+    return user.username

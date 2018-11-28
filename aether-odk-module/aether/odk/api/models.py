@@ -39,38 +39,41 @@ from .xform_utils import (
 
 
 '''
-
 Data model schema:
 
-
-    +------------------+       +-------------------+       +------------------+
-    | Project          |       | XForm             |       | MediaFile        |
-    +==================+       +===================+       +==================+
-    | project_id       |<--+   | id                |<--+   | id               |
-    | name             |   |   | xml_data          |   |   | name             |
-    +::::::::::::::::::+   |   | description       |   |   | media_file       |
-    | surveyors (User) |   |   | created_at        |   |   +~~~~~~~~~~~~~~~~~~+
-    +------------------+   |   +~~~~~~~~~~~~~~~~~~-+   |   | md5sum           |
-                           |   | title             |   |   +::::::::::::::::::+
-                           |   | form_id           |   +--<| xform            |
-                           |   | version           |       +------------------+
-                           |   | md5sum            |
-                           |   | avro_schema       |
-                           |   +:::::::::::::::::::+
-                           |   | kernel_id         |
-                           |   +:::::::::::::::::::+
-                           +--<| project           |
-                               | surveyors (User)  |
-                               +-------------------+
-
++------------------+     +------------------+     +------------------+
+| Project          |     | XForm            |     | MediaFile        |
++==================+     +==================+     +==================+
+| project_id       |<-+  | id               |<-+  | id               |
+| name             |  |  | created_at       |  |  | name             |
++::::::::::::::::::+  |  | modified_at      |  |  | media_file       |
+| surveyors (User) |  |  | description      |  |  +~~~~~~~~~~~~~~~~~~+
++------------------+  |  | xml_data         |  |  | md5sum           |
+                      |  +~~~~~~~~~~~~~~~~~~+  |  +::::::::::::::::::+
+                      |  | title            |  +-<| xform            |
+                      |  | form_id          |     +------------------+
+                      |  | version          |
+                      |  | md5sum           |
+                      |  | avro_schema      |
+                      |  +~~~~~~~~~~~~~~~~~~+
+                      |  | kernel_id        |
+                      |  +::::::::::::::::::+
+                      +-<| project          |
+                         | surveyors (User) |
+                         +------------------+
 '''
 
 
 class Project(ExportModelOperationsMixin('odk_project'), models.Model):
     '''
-    Database link of an Aether Kernel Project
+    Database link of an Aether Kernel Project.
 
     The needed and common data is stored here, like the list of granted surveyors.
+
+    :ivar UUID  project_id:  Aether Kernel project ID (primary key).
+    :ivar text  name:        Project name (might match the linked Kernel project name).
+    :ivar User  surveyors:   List of granted surveyors (user with the group "surveyor").
+        EVERYONE will be able to access this project xForms if none is indicated.
     '''
 
     # This is needed to submit data to kernel
@@ -128,7 +131,7 @@ def __validate_xml_data__(value):
     try:
         validate_xform(value)
     except Exception as e:
-        raise ValidationError(e)
+        raise ValidationError(str(e))
 
 
 class XForm(ExportModelOperationsMixin('odk_xform'), models.Model):
@@ -144,28 +147,29 @@ class XForm(ExportModelOperationsMixin('odk_xform'), models.Model):
         - one Schema and
         - one ProjectSchema.
 
+
+    :ivar integer   id:           ID (primary key).
+    :ivar datetime  created_at:   Creation timestamp.
+    :ivar datetime  modified_at:  Last update timestamp.
+    :ivar text      description:  Description.
+    :ivar text      xml_data:     xForm definition in XML format.
+    :ivar text      title:        xForm title (derived from XML data).
+    :ivar text      form_id:      xForm ID (derived from XML data).
+    :ivar text      version:      xForm version (derived from XML data).
+        If the definition does not provide one the app will assign one and
+        autoincrement it with the updates.
+    :ivar text      md5sum:       xForm definition hash (MD5) (derived from XML data).
+    :ivar JSON      avro_schema:  AVRO schema that represents the xForm definition.
+    :ivar UUID      kernel_id:    Kernel artefact ID bound to this xForm.
+    :ivar Project   project:      Project.
+    :ivar User      surveyors:    List of granted surveyors (user with the group "surveyor").
+        EVERYONE will be able to access this xForm if none is indicated.
+
     '''
 
-    # This is needed to submit data to kernel
-    kernel_id = models.UUIDField(
-        default=uuid.uuid4,
-        verbose_name=_('Aether Kernel ID'),
-        help_text=_('This ID is used to create Aether Kernel artefacts (schema, project schema and mapping).'),
-    )
-
-    project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
-
-    description = models.TextField(default='', null=True, blank=True, verbose_name=_('xForm description'))
     created_at = models.DateTimeField(default=timezone.now, editable=False, verbose_name=_('created at'))
     modified_at = models.DateTimeField(default=timezone.now, verbose_name=_('modified at'))
-
-    # the list of granted surveyors
-    surveyors = models.ManyToManyField(
-        to=get_user_model(),
-        blank=True,
-        verbose_name=_('surveyors'),
-        help_text=_('If you do not specify any surveyors, EVERYONE will be able to access this xForm.'),
-    )
+    description = models.TextField(default='', null=True, blank=True, verbose_name=_('xForm description'))
 
     # here comes the extracted data from an xForm file
     xml_data = models.TextField(
@@ -184,6 +188,23 @@ class XForm(ExportModelOperationsMixin('odk_xform'), models.Model):
     version = models.TextField(default='0', blank=True, verbose_name=_('xForm version'))
     md5sum = models.CharField(default='', editable=False, max_length=36, verbose_name=_('xForm md5sum'))
     avro_schema = JSONField(null=True, blank=True, editable=False, verbose_name=_('AVRO schema'))
+
+    # This is needed to submit data to kernel
+    kernel_id = models.UUIDField(
+        default=uuid.uuid4,
+        verbose_name=_('Aether Kernel ID'),
+        help_text=_('This ID is used to create Aether Kernel artefacts (schema, project schema and mapping).'),
+    )
+
+    project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
+
+    # the list of granted surveyors
+    surveyors = models.ManyToManyField(
+        to=get_user_model(),
+        blank=True,
+        verbose_name=_('surveyors'),
+        help_text=_('If you do not specify any surveyors, EVERYONE will be able to access this xForm.'),
+    )
 
     @property
     def hash(self):
@@ -301,14 +322,21 @@ def __media_path__(instance, filename):
 
 class MediaFile(ExportModelOperationsMixin('odk_mediafile'), models.Model):
     '''
-    Database representation of a media file linked to an XForm
-    '''
+    Database representation of a media file linked to an XForm.
 
-    xform = models.ForeignKey(to=XForm, on_delete=models.CASCADE, verbose_name=_('xForm'))
+    :ivar integer  id:          ID (primary key).
+    :ivar text     name:        File name.
+    :ivar File     media_file:  Path to file (depends on the file storage system).
+    :ivar text     md5sum:      File content hash (MD5).
+    :ivar XForm    xform:       xForm.
+
+    '''
 
     name = models.TextField(blank=True, verbose_name=_('name'))
     media_file = models.FileField(upload_to=__media_path__, verbose_name=_('file'))
     md5sum = models.CharField(editable=False, max_length=36, verbose_name=_('md5sum'))
+
+    xform = models.ForeignKey(to=XForm, on_delete=models.CASCADE, verbose_name=_('xForm'))
 
     @property
     def hash(self):

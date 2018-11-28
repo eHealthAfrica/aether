@@ -132,13 +132,11 @@ class PostSubmissionTests(CustomTestCase):
         # cleaning the house
         self.PROJECT_URL = f'{kernel_url}/projects/{str(self.xform.project.project_id)}/'
         self.SCHEMA_URL = f'{kernel_url}/schemas/{str(self.xform.kernel_id)}/'
-        self.ENTITIES_URL = f'{kernel_url}/entities/?project={str(self.xform.project.project_id)}'
 
     def tearDown(self):
         super(PostSubmissionTests, self).tearDown()
 
         # delete the test objects created in kernel testing server
-        requests.delete(self.ENTITIES_URL, headers=self.KERNEL_HEADERS)
         requests.delete(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
         requests.delete(self.SCHEMA_URL, headers=self.KERNEL_HEADERS)
 

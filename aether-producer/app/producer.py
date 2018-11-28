@@ -34,8 +34,8 @@ import logging
 import os
 import psycopg2
 from psycopg2 import sql
-import requests
 import signal
+import socket
 import spavro.schema
 import sys
 import traceback
@@ -46,40 +46,15 @@ from gevent.pywsgi import WSGIServer
 from confluent_kafka import Producer, Consumer, KafkaException
 from psycopg2.extras import DictCursor
 from requests.exceptions import ConnectionError
+
 from spavro.datafile import DataFileWriter, DataFileReader
 from spavro.io import DatumWriter, DatumReader
 from spavro.io import validate
 from urllib3.exceptions import MaxRetryError
 
-from . import db
-from .db import Offset
-
-
-class Settings(dict):
-    # A container for our settings
-    # Any setting set via ENV takes precedence over the same value in the file.
-
-    def __init__(self, file_path=None):
-        self.load(file_path)
-
-    def get(self, key, default=None):
-        try:
-            return self.__getitem__(key)
-        except KeyError:
-            return default
-
-    def __getitem__(self, key):
-        result = os.environ.get(key.upper())
-        if result is None:
-            result = super().__getitem__(key)
-
-        return result
-
-    def load(self, path):
-        with open(path) as f:
-            obj = json.load(f)
-            for k in obj:
-                self[k] = obj.get(k)
+from producer import db
+from producer.db import Offset
+from producer.settings import Settings
 
 
 class KafkaStatus(enum.Enum):
@@ -164,27 +139,26 @@ class ProducerManager(object):
 
     # Connectivity
 
+    # see if kafka's port is available
     def kafka_available(self):
-        kafka_url = "http://%s" % self.settings["kafka_url"]
+        kafka_ip, kafka_port = self.settings["kafka_url"].split(":")
+        kafka_port = int(kafka_port)
         try:
-            res = requests.head(kafka_url)
-            return True
-        except ConnectionError as rce:
-            # Requests has the same exception type for both failed to resolve
-            # and ConnectionResetError. Kafka resets the connection as it doesn't
-            # support HEAD, but we know it's there and the port is correct.
-            if "ConnectionResetError" in str(rce):
-                return True
-            else:
-                self.logger.debug("Could not connect to Kafka on url: %s" % kafka_url)
-                self.logger.debug("Connection problem: %s" % rce)
-                return False
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.connect((kafka_ip, kafka_port))
+        except (InterruptedError,
+                ConnectionRefusedError,
+                socket.gaierror) as rce:
+            self.logger.debug(
+                "Could not connect to Kafka on url: %s:%s" % (kafka_ip, kafka_port))
+            self.logger.debug("Connection problem: %s" % rce)
+            return False
+        return True
 
     # Connect to sqlite
     def init_db(self):
-        url = self.settings['offset_db_url']
-        db.init(url)
-        self.logger.info("OffsetDB initialized at %s" % url)
+        db.init()
+        self.logger.info("OffsetDB initialized")
 
     # Maintain Aether Connection
     def connect_aether(self):
@@ -303,7 +277,8 @@ class ProducerManager(object):
         status = {
             "kernel_connected": self.kernel is not None,  # This is a real object
             "kafka_container_accessible": self.kafka_available(),
-            "kafka_submission_status": str(self.kafka),   # This is just a status flag
+            # This is just a status flag
+            "kafka_submission_status": str(self.kafka),
             "topics": {k: v.get_status() for k, v in self.topic_managers.items()}
         }
         with self.app.app_context():
@@ -364,7 +339,8 @@ class TopicManager(object):
         self.wait_time = self.context.settings.get('sleep_time', 2)
         self.window_size_sec = self.context.settings.get('window_size_sec', 3)
         pg_requires = ['user', 'dbname', 'port', 'host', 'password']
-        self.pg_creds = {key: self.context.settings.get("postgres_%s" % key) for key in pg_requires}
+        self.pg_creds = {key: self.context.settings.get(
+            "postgres_%s" % key) for key in pg_requires}
         self.kafka_failure_wait_time = self.context.settings.get(
             'kafka_failure_wait_time', 10)
         try:
@@ -382,7 +358,8 @@ class TopicManager(object):
         self.update_schema(schema)
         kafka_settings = self.context.settings.get('kafka_settings')
         # apply setting from root config to be able to use env variables
-        kafka_settings["bootstrap.servers"] = self.context.settings.get("kafka_url")
+        kafka_settings["bootstrap.servers"] = self.context.settings.get(
+            "kafka_url")
         self.producer = Producer(**kafka_settings)
         # Spawn worker and give to pool.
         self.context.threads.append(gevent.spawn(self.update_kafka))
@@ -400,7 +377,8 @@ class TopicManager(object):
                 cursor.execute(query)
                 return sum([1 for i in cursor]) > 0
         except psycopg2.OperationalError as pgerr:
-            self.logger.critical('Could not access Database to look for updates: %s' % pgerr)
+            self.logger.critical(
+                'Could not access Database to look for updates: %s' % pgerr)
             return False
 
     def get_time_window_filter(self, query_time):
@@ -673,6 +651,7 @@ class TopicManager(object):
         self.status['offset'] = new_offset.offset_value
 
 
-def main(file_path=None):
+def main():
+    file_path = os.environ.get('PRODUCER_SETTINGS_FILE')
     settings = Settings(file_path)
     handler = ProducerManager(settings)

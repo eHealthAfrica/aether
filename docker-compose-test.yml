@@ -66,12 +66,13 @@ services:
   client-test:
     build: ./aether-utils/aether-client
     environment:
-      # use a different database when testing the integration with another container
       KERNEL_URL: http://kernel-test:9000
       KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
       KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
       TESTING: "true"
-      VERSION: ${VERSION}
+    volumes:
+      - ./aether-utils/aether-client:/code
+      - ./VERSION:/code/VERSION
     command: test
 
 
@@ -185,10 +186,14 @@ services:
       PRODUCER_SETTINGS_FILE: /code/tests/conf/producer.json
       KAFKA_URL: kafka-test:29092
       KERNEL_URL: http://kernel-test:9000
-      OFFSET_DB_URL: sqlite:///test-offset.db
       POSTGRES_DBNAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
       POSTGRES_HOST: db-test
       SERVER_PORT: 9005
+      OFFSET_DB_HOST: db-test
+      OFFSET_DB_USER: postgres
+      OFFSET_DB_PORT: 5432
+      OFFSET_DB_PASSWORD: ${KERNEL_DB_PASSWORD}
+      OFFSET_DB_NAME: producer_offset_db_test
     ports:
       - "9005:9005"
     volumes:
@@ -201,7 +206,7 @@ services:
   # ---------------------------------
 
   integration-test:
-    image: aether/integration
+    image: aether-integration-test
     build: ./test-aether-integration-module
     environment:
       PRODUCER_STATUS_URL: http://producer-test:9005/status

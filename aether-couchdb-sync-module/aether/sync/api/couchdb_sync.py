@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import logging
 import re
 import requests
 
@@ -27,9 +28,12 @@ from aether.common.kernel import utils as kernel_utils
 from .kernel_utils import propagate_kernel_artefacts
 from .models import DeviceDB, Schema
 from ..couchdb import utils, api
-from ..settings import logger
+from ..settings import LOGGING_LEVEL
 from .. import errors
 
+
+logger = logging.getLogger(__name__)
+logger.setLevel(LOGGING_LEVEL)
 
 SYNC_DOC = 'sync_doc'
 
@@ -67,7 +71,7 @@ def get_meta_doc(db_name, couchdb_id):
 
 
 def is_design_doc(doc):
-    return re.match('^_design', doc['_id'])
+    return re.match(r'^_design', doc['_id'])
 
 
 def is_sync_doc(doc):
@@ -141,7 +145,7 @@ def import_synced_docs(docs, db_name):
             resp = post_to_aether(doc, aether_id=aether_id)
             try:
                 resp.raise_for_status()
-            except requests.exceptions.HTTPError as err:
+            except requests.exceptions.HTTPError:
                 logger.error('post survey to aether failed: ' + resp.text)
                 stats['errors'].append(resp.content)
                 stats['errored'] += 1
