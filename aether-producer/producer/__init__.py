@@ -26,6 +26,7 @@ import ast
 from contextlib import contextmanager
 from datetime import datetime
 import enum
+from functools import wraps
 import gevent
 from gevent.pool import Pool
 import io
@@ -91,7 +92,7 @@ class ProducerManager(object):
     # Keeps track of schemas
     # Spawns a TopicManager for each schema type in Kernel
     # TopicManager registers own eventloop greenlet (update_kafka) with ProducerManager
-
+    
     def __init__(self, settings):
         self.settings = settings
         # Start Signal Handlers
@@ -100,6 +101,9 @@ class ProducerManager(object):
         signal.signal(signal.SIGINT, self.kill)
         gevent.signal(signal.SIGTERM, self.kill)
         # Turn on Flask Endpoints
+        # Get Auth details from env
+        self.admin_name = settings.get('PRODUCER_ADMIN_USER')
+        self.admin_password = settings.get('PRODUCER_ADMIN_PW')
         self.serve()
         self.add_endpoints()
         # Initialize Offsetdb
@@ -268,6 +272,22 @@ class ProducerManager(object):
             self.app.wsgi_app, spawn=self.worker_pool
         )
         self.http.start()
+    
+    def check_auth(self, username, password):
+        return username == self.admin_name and password == self.admin_password
+
+    def authenticate(self):
+        return Response('Bad Credentials', 401,
+        {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
+    def requires_auth(f):
+        @wraps(f)
+        def decorated(self, *args, **kwargs):
+            auth = request.authorization
+            if not auth or not self.check_auth(auth.username, auth.password):
+                return self.authenticate()
+            return f(self, *args, **kwargs)
+        return decorated
 
     # Exposed Request Endpoints
 
@@ -275,6 +295,7 @@ class ProducerManager(object):
         with self.app.app_context():
             return Response({"healthy": True})
 
+    @requires_auth
     def request_status(self):
         status = {
             "kernel_connected": self.kernel is not None,  # This is a real object
@@ -286,10 +307,13 @@ class ProducerManager(object):
         with self.app.app_context():
             return jsonify(**status)
 
+    @requires_auth
     def request_topics(self):
         if not self.topic_managers:
-            return {}
-        return jsonify(**{k: v.get_topic_size() for k,v in self.topic_managers.items()})
+            return Response({})
+        status = {k: v.get_topic_size() for k,v in self.topic_managers.items()}
+        with self.app.app_context():
+            return jsonify(**status)
 
 class TopicManager(object):
 
@@ -443,7 +467,9 @@ class TopicManager(object):
         with psycopg2.connect(**self.pg_creds) as conn:
             cursor = conn.cursor(cursor_factory=DictCursor)
             cursor.execute(query)
-            return [{key: row[key] for key in row.keys()} for row in cursor][0]
+            size = [{key: row[key] for key in row.keys()} for row in cursor][0]
+            self.logger.debug(f'''Reporting requested size for {self.name} of {size['count']}''')
+            return size
 
     def update_schema(self, schema_obj):
         self.schema_obj = self.parse_schema(schema_obj)

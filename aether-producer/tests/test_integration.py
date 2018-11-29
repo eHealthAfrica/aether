@@ -28,14 +28,20 @@ from . import *
 def test_manager_http_endpoint_service(ProducerManagerSettings):
     man = MockProducerManager(ProducerManagerSettings)
     try:
+        auth = requests.auth.HTTPBasicAuth(USER, PW)
         man.serve()
         man.add_endpoints()
         sleep(1)
         url = 'http://localhost:%s' % man.settings.get('server_port')
-        r = requests.head(url + '/status')
+        r = requests.head(f'{url}/healthcheck')
         assert(r.status_code == 200)
-        r = requests.head(url + '/healthcheck')
-        assert(r.status_code == 200)
+        protected_endpoints = ['status', 'topics']
+        for e in protected_endpoints:
+            r = requests.head(f'{url}/{e}')
+            assert(r.status_code == 401)
+        for e in protected_endpoints:
+            r = requests.head(f'{url}/{e}', auth=auth)
+            assert(r.status_code == 200)
     finally:
         man.http.stop()
         man.http.close()
@@ -50,4 +56,3 @@ def test_initialize_database_get_set(ProducerManagerSettings):
     value = str(uuid.uuid4())
     new_offset = Offset.update('fake_entry', value)
     assert(Offset.get_offset('fake_entry').offset_value == value)
-

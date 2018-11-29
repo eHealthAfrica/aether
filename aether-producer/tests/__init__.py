@@ -26,9 +26,14 @@ Offset = db.Offset
 
 log = logging.getLogger()
 
+USER = os.environ['PRODUCER_ADMIN_USER']
+PW = os.environ['PRODUCER_ADMIN_PW']
+
 class MockProducerManager(ProducerManager):
 
     def __init__(self, settings):
+        self.admin_name = USER
+        self.admin_password = PW
         self.settings = settings
         self.killed = False
         self.kernel = None

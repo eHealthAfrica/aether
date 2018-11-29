@@ -33,6 +33,11 @@ FORMS_TO_SUBMIT = 10
 SEED_ENTITIES = 10 * 7  # 7 Vaccines in each report
 SEED_TYPE = "CurrentStock"
 
+PRODUCER_CREDS = [
+    os.environ['PRODUCER_ADMIN_USER'],
+    os.environ['PRODUCER_ADMIN_PW']
+]
+
 
 @pytest.fixture(scope="function")
 def producer_topics():
@@ -56,6 +61,8 @@ def producer_status():
     for x in range(max_retry):
         try:
             status = producer_request('status')
+            if not status:
+                raise ValueError('No status response from producer')
             kafka = status.get('kafka_container_accessible')
             if not kafka:
                 raise ValueError('Kafka not connected yet')
@@ -72,11 +79,12 @@ def producer_status():
 
 
 def producer_request(endpoint):
+    auth = requests.auth.HTTPBasicAuth(*PRODUCER_CREDS)
     url = '{base}/{endpoint}'.format(
         base=os.environ['PRODUCER_URL'],
         endpoint=endpoint)
     try:
-        res = requests.get(url).json()
+        res = requests.get(url, auth=auth).json()
         return res
     except Exception as err:
         print(err)
