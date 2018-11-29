@@ -45,6 +45,7 @@ from aether.client import Client
 from flask import Flask, Response, request, abort, jsonify
 from gevent.pywsgi import WSGIServer
 from confluent_kafka import Producer, KafkaException
+from confluent_kafka.admin import AdminClient, NewTopic, NewPartitions, ConfigResource, ConfigEntry
 from psycopg2.extras import DictCursor
 import requests
 from requests.exceptions import ConnectionError
@@ -111,6 +112,9 @@ class ProducerManager(object):
         # Clear objects and start
         self.kernel = None
         self.kafka = KafkaStatus.SUBMISSION_PENDING
+        self.kafka_admin_client = AdminClient(
+            {"bootstrap.servers": self.settings.get("kafka_url")}
+        )
         self.topic_managers = {}
         self.run()
 
@@ -273,6 +277,8 @@ class ProducerManager(object):
         )
         self.http.start()
     
+    # Basic Auth implementation
+
     def check_auth(self, username, password):
         return username == self.admin_name and password == self.admin_password
 
@@ -314,6 +320,25 @@ class ProducerManager(object):
         status = {k: v.get_topic_size() for k,v in self.topic_managers.items()}
         with self.app.app_context():
             return jsonify(**status)
+
+    @requires_auth
+    def request_pause(self):
+        get = request.args.get
+
+    @requires_auth
+    def request_resume(self):
+        get = request.args.get
+
+    @requires_auth
+    def request_rebuild(self):
+        get = request.args.get
+
+
+class TopicStatus(enum.Enum):
+    PAUSED = 1  # Paused
+    LOCKED = 2  # Paused by system and non-resumable via API until sys unlock
+    REBUILDING = 3  # Topic is being rebuilt
+    NORMAL = 4  # Topic is operating normally
 
 class TopicManager(object):
 
@@ -368,6 +393,7 @@ class TopicManager(object):
         self.logger = self.context.logger
         self.name = schema['name']
         self.offset = ""
+        self.operating_status = TopicStatus.NORMAL
         self.limit = self.context.settings.get('postgres_pull_limit', 100)
         self.status = {
             "last_errors_set": {},
@@ -403,6 +429,67 @@ class TopicManager(object):
         self.producer = Producer(**kafka_settings)
         # Spawn worker and give to pool.
         self.context.threads.append(gevent.spawn(self.update_kafka))
+
+    # API Calls to Control Topic
+
+    def pause(self):
+        # Stops sending of data on this topic until resume is called or Producer restarts.
+        if self.operating_status is not TopicStatus.NORMAL:
+            self.logger.info(
+                f'Topic {self.name} could not pause, status: {self.operating_status}.')
+            return False
+        self.logger.info(f'Topic {self.name} is pausing.')
+        self.operating_status = TopicStatus.PAUSED
+
+    def resume(self):
+        # Resume sending data after pausing.
+        if self.operating_status is not TopicStatus.PAUSED:
+            self.logger.info(
+                f'Topic {self.name} could not resume, status: {self.operating_status}.')
+            return False
+        self.logger.info(f'Topic {self.name} is resuming.')
+        self.operating_status = TopicStatus.NORMAL
+
+    # Functions to rebuilt this topic
+
+    def rebuild(self):
+        # API Call
+        self.logger.warn(f'Topic {self.name} is being REBUIT!')
+        # kick off rebuild process
+        self.context.threads.append(gevent.spawn(self.handle_rebuild))
+
+    def handle_rebuild(self):
+        # greened background task to handle rebuilding of topic
+        self.operating_status = TopicStatus.REBUILDING
+        self.logger.warn(f'REBUILDING: {self.name} waiting' \
+        + f' {self.wait_time *2}(sec) for inflight ops to resolve')
+        self.context.safe_sleep(self.wait_time *2)
+        self.logger.warn(f'REBUILDING: {self.name} Deleting Topic')
+        self.producer = None
+        ok = self.delete_this_topic()
+        if not ok:
+            self.logger.critical(f'REBUILDING: {self.name} FAILED. Topic will not resume.')
+            self.operating_status = TopicStatus.LOCKED
+            return
+        self.producer = Producer(**kafka_settings)
+        self.operating_status = TopicStatus.PAUSED
+        self.resume()
+
+    def delete_this_topic(self):
+        kadmin = self.context.kafka_admin_client
+        fs = kadmin.delete_topic(self.name, operation_timeout=60)
+        for topic, f in fs.items():
+            try:
+                if topic is not self.name:
+                    raise ValueError(f'{self.name} deleted Wrong Topic! --> {topic}')
+                f.result()  # The result itself is None
+                self.logger.warn(f'REBUILDING: Topic {self.name} Deleted.')
+            except Exception as e:
+                self.logger.critical(f'REBUILDING: {self.name} FAILED with error: {e}')
+                return False
+        return True
+
+    # Postgres Facing Polls and handlers
 
     def updates_available(self):
 
@@ -488,6 +575,7 @@ class TopicManager(object):
 
     def get_status(self):
         # Updates inflight status and returns to Flask called
+        self.status['operating_status'] = str(self.operating_status)
         self.status['inflight'] = [i for i in self.change_set.keys()]
         return self.status
 
@@ -518,6 +606,13 @@ class TopicManager(object):
         # Waits for all messages to be accepted or timeout in TopicManager.wait_for_kafka
 
         while not self.context.killed:
+
+            if self.operating_status is not TopicStatus.NORMAL:
+                self.logger.debug(
+                    f'Topic {self.name} not updating, status: {self.operating_status}' \
+                    + ', waiting {self.wait_time}(sec)')
+                self.context.safe_sleep(self.wait_time)
+                continue
 
             if not self.context.kafka_available():
                 self.logger.debug('Kafka Container not accessible, waiting.')
