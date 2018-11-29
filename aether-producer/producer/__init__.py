@@ -43,7 +43,7 @@ import traceback
 from aether.client import Client
 from flask import Flask, Response, request, abort, jsonify
 from gevent.pywsgi import WSGIServer
-from confluent_kafka import Producer, Consumer, KafkaException
+from confluent_kafka import Producer, KafkaException
 from psycopg2.extras import DictCursor
 import requests
 from requests.exceptions import ConnectionError
@@ -243,6 +243,7 @@ class ProducerManager(object):
         # URLS configured here
         self.register('healthcheck', self.request_healthcheck)
         self.register('status', self.request_status)
+        self.register('topics', self.request_topics)
 
     def register(self, route_name, fn):
         self.app.add_url_rule('/%s' % route_name, route_name, view_func=fn)
@@ -258,7 +259,7 @@ class ProducerManager(object):
         self.app.config['JSONIFY_PRETTYPRINT_REGULAR'] = self.settings.get(
             'flask_settings', {}).get('pretty_json_status', False)
         pool_size = self.settings.get(
-            'flask_settings', {}).get('max_connections', 1)
+            'flask_settings', {}).get('max_connections', 3)
         server_ip = self.settings.get('server_ip', "")
         server_port = int(self.settings.get('server_port', 9005))
         self.worker_pool = Pool(pool_size)
@@ -285,6 +286,10 @@ class ProducerManager(object):
         with self.app.app_context():
             return jsonify(**status)
 
+    def request_topics(self):
+        if not self.topic_managers:
+            return {}
+        return jsonify(**{k: v.get_topic_size() for k,v in self.topic_managers.items()})
 
 class TopicManager(object):
 
@@ -301,6 +306,16 @@ class TopicManager(object):
         WHERE e.modified > {modified}
         AND s.name = {schema_name}
         LIMIT 1; '''
+
+    # Count how many unique (controlled by kernel) messages should currently be in this topic
+    COUNT_STR = '''
+            SELECT
+                count(*)
+            FROM kernel_entity e
+            inner join kernel_projectschema ps on e.projectschema_id = ps.id
+            inner join kernel_schema s on ps.schema_id = s.id
+            WHERE s.name = {schema_name};
+    '''
 
     # Changes pull query
     QUERY_STR = '''
@@ -420,6 +435,15 @@ class TopicManager(object):
             # returning an iterator to free up the DB resource
             window_filter = self.get_time_window_filter(query_time)
             return [{key: row[key] for key in row.keys()} for row in cursor if window_filter(row)]
+
+    def get_topic_size(self):
+        query = sql.SQL(TopicManager.COUNT_STR).format(
+            schema_name=sql.Literal(self.name),
+        )
+        with psycopg2.connect(**self.pg_creds) as conn:
+            cursor = conn.cursor(cursor_factory=DictCursor)
+            cursor.execute(query)
+            return [{key: row[key] for key in row.keys()} for row in cursor][0]
 
     def update_schema(self, schema_obj):
         self.schema_obj = self.parse_schema(schema_obj)

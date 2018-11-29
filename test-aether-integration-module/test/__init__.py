@@ -35,12 +35,27 @@ SEED_TYPE = "CurrentStock"
 
 
 @pytest.fixture(scope="function")
-def producer_status():
+def producer_topics():
     max_retry = 10
-    url = os.environ['PRODUCER_STATUS_URL']
     for x in range(max_retry):
         try:
-            status = requests.get(url).json()
+            status = producer_request('status')
+            kafka = status.get('kafka_container_accessible')
+            if not kafka:
+                raise ValueError('Kafka not connected yet')
+            topics = producer_request('topics')
+            return topics
+        except Exception as err:
+            print(err)
+            sleep(1)
+
+
+@pytest.fixture(scope="function")
+def producer_status():
+    max_retry = 10
+    for x in range(max_retry):
+        try:
+            status = producer_request('status')
             kafka = status.get('kafka_container_accessible')
             if not kafka:
                 raise ValueError('Kafka not connected yet')
@@ -54,6 +69,18 @@ def producer_status():
         except Exception as err:
             print(err)
             sleep(1)
+
+
+def producer_request(endpoint):
+    url = '{base}/{endpoint}'.format(
+        base=os.environ['PRODUCER_URL'],
+        endpoint=endpoint)
+    try:
+        res = requests.get(url).json()
+        return res
+    except Exception as err:
+        print(err)
+        sleep(1)
 
 
 @pytest.fixture(scope="function")  # noqa

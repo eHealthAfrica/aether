@@ -209,7 +209,7 @@ services:
     image: aether-integration-test
     build: ./test-aether-integration-module
     environment:
-      PRODUCER_STATUS_URL: http://producer-test:9005/status
+      PRODUCER_URL: http://producer-test:9005
       KERNEL_URL: http://kernel-test:9000
       KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
       KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}

@@ -42,10 +42,15 @@ def test_3_check_updated_count(entities):
 
 
 def test_4_check_producer_status(producer_status):
-    assert(producer_status > 0)
+    assert(producer_status is not None)
 
 
-def test_5_check_stream_entities(read_people, entities):
+def test_5_check_producer_topics(producer_topics):
+    assert(SEED_TYPE in producer_topics.keys())
+    assert(int(producer_topics[SEED_TYPE]['count']) is SEED_ENTITIES)
+
+
+def test_6_check_stream_entities(read_people, entities):
     kernel_messages = [msg.payload.get("id") for msg in entities.get(SEED_TYPE)]
     kafka_messages = [msg['id'] for msg in read_people]
     failed = []

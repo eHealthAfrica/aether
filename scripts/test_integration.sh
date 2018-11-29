@@ -46,7 +46,12 @@ echo "_____________________________________________ PRODUCER OK..."
 
 $DC_TEST kill
 
-echo "_____________________________________________ Starting database"
+echo "_____________________________________________ Starting Integration Tests"
+
+echo "_____________________________________________ Starting Kafka"
+$DC_TEST up -d zookeeper-test kafka-test
+
+echo "_____________________________________________ Starting Postgres"
 $DC_TEST up -d db-test
 
 build_container kernel
@@ -59,9 +64,6 @@ done
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
 
-echo "_____________________________________________ Starting Kafka"
-$DC_TEST up -d zookeeper-test kafka-test
-
 build_container producer
 echo "_____________________________________________ Starting Producer"
 $DC_TEST up -d producer-test
@@ -70,7 +72,6 @@ echo "_____________________________________________ Waiting for Kernel"
 wait_for_kernel
 $DC_TEST run --no-deps kernel-test eval python /code/sql/create_readonly_user.py
 
-echo "_____________________________________________ Starting Integration Tests"
 build_container integration
 $DC_TEST run --no-deps integration-test test
 echo "_____________________________________________ Integration OK..."
