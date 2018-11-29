@@ -45,6 +45,7 @@ from flask import Flask, Response, request, abort, jsonify
 from gevent.pywsgi import WSGIServer
 from confluent_kafka import Producer, Consumer, KafkaException
 from psycopg2.extras import DictCursor
+import requests
 from requests.exceptions import ConnectionError
 
 from spavro.datafile import DataFileWriter, DataFileReader
