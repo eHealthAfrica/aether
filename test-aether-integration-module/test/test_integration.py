@@ -41,8 +41,8 @@ def test_3_check_updated_count(entities):
     assert(len(entities.get(SEED_TYPE)) >= SEED_ENTITIES)
 
 
-def test_4_check_producer_status(producer_status):
-    assert(producer_status is not None)
+def test_4_check_producer_status(wait_for_producer_status):
+    assert(wait_for_producer_status is not None)
 
 
 def test_5_check_producer_topics(producer_topics):
@@ -59,3 +59,22 @@ def test_6_check_stream_entities(read_people, entities):
             failed.append(_id)
     assert(len(failed) == 0)
     assert(len(kernel_messages) == len(kafka_messages))
+
+
+def test_7_control_topic():
+    producer_control_topic(SEED_TYPE, 'pause')
+    sleep(.5)
+    op = topic_status(SEED_TYPE)['operating_status']
+    assert(op == 'TopicStatus.PAUSED')
+    producer_control_topic(SEED_TYPE, 'resume')
+    sleep(.5)
+    op = topic_status(SEED_TYPE)['operating_status']
+    assert(op == 'TopicStatus.NORMAL')
+    producer_control_topic(SEED_TYPE, 'rebuild')
+    sleep(.5)
+    for x in range(120):
+        op = topic_status(SEED_TYPE)['operating_status']
+        if op != 'TopicStatus.REBUILDING':
+            return
+        sleep(1)
+    assert(False), 'Topic Deletion Timed out.'

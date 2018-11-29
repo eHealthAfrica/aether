@@ -252,6 +252,9 @@ class ProducerManager(object):
         self.register('healthcheck', self.request_healthcheck)
         self.register('status', self.request_status)
         self.register('topics', self.request_topics)
+        self.register('pause', self.request_pause)
+        self.register('resume', self.request_resume)
+        self.register('rebuild', self.request_rebuild)
 
     def register(self, route_name, fn):
         self.app.add_url_rule('/%s' % route_name, route_name, view_func=fn)
@@ -321,17 +324,42 @@ class ProducerManager(object):
         with self.app.app_context():
             return jsonify(**status)
 
+    # Topic Command API
+
     @requires_auth
     def request_pause(self):
-        get = request.args.get
+        return self.handle_topic_command(request, TopicStatus.PAUSED)
 
     @requires_auth
     def request_resume(self):
-        get = request.args.get
+        return self.handle_topic_command(request, TopicStatus.NORMAL)
 
     @requires_auth
     def request_rebuild(self):
-        get = request.args.get
+        return self.handle_topic_command(request, TopicStatus.REBUILDING)
+
+    def handle_topic_command(self, request, status):
+        topic = request.args.get('topic')
+        if not topic:
+            return Response(f'A topic must be specified', 422)
+        if not self.topic_managers.get(topic):
+            return Response(f'Bad topic name {topic}', 422)
+        manager = self.topic_managers[topic]
+        if status is TopicStatus.PAUSED:
+            fn = manager.pause
+        if status is TopicStatus.NORMAL:
+            fn = manager.resume
+        if status is TopicStatus.REBUILDING:
+            fn = manager.rebuild
+        try:
+            res = fn()
+            if not res:
+                return Response(f'Operation failed on {topic}', 500)
+            return Response(f'Success for status {status} on {topic}', 200)
+        except Exception as err:
+            return Response(f'Operation failed on {topic} with: {err}', 500)
+
+
 
 
 class TopicStatus(enum.Enum):
@@ -426,7 +454,8 @@ class TopicManager(object):
         # apply setting from root config to be able to use env variables
         kafka_settings["bootstrap.servers"] = self.context.settings.get(
             "kafka_url")
-        self.producer = Producer(**kafka_settings)
+        self.kafka_settings = kafka_settings
+        self.producer = Producer(**self.kafka_settings)
         # Spawn worker and give to pool.
         self.context.threads.append(gevent.spawn(self.update_kafka))
 
@@ -440,6 +469,7 @@ class TopicManager(object):
             return False
         self.logger.info(f'Topic {self.name} is pausing.')
         self.operating_status = TopicStatus.PAUSED
+        return True
 
     def resume(self):
         # Resume sending data after pausing.
@@ -449,6 +479,7 @@ class TopicManager(object):
             return False
         self.logger.info(f'Topic {self.name} is resuming.')
         self.operating_status = TopicStatus.NORMAL
+        return True
 
     # Functions to rebuilt this topic
 
@@ -457,13 +488,14 @@ class TopicManager(object):
         self.logger.warn(f'Topic {self.name} is being REBUIT!')
         # kick off rebuild process
         self.context.threads.append(gevent.spawn(self.handle_rebuild))
+        return True
 
     def handle_rebuild(self):
         # greened background task to handle rebuilding of topic
         self.operating_status = TopicStatus.REBUILDING
         self.logger.warn(f'REBUILDING: {self.name} waiting' \
-        + f' {self.wait_time *2}(sec) for inflight ops to resolve')
-        self.context.safe_sleep(self.wait_time *2)
+        + f' {self.wait_time *1.5}(sec) for inflight ops to resolve')
+        self.context.safe_sleep(int(self.wait_time *1.5))
         self.logger.warn(f'REBUILDING: {self.name} Deleting Topic')
         self.producer = None
         ok = self.delete_this_topic()
@@ -471,23 +503,25 @@ class TopicManager(object):
             self.logger.critical(f'REBUILDING: {self.name} FAILED. Topic will not resume.')
             self.operating_status = TopicStatus.LOCKED
             return
-        self.producer = Producer(**kafka_settings)
+        self.logger.warn(f'REBUILDING: {self.name} Resetting Offset.')
+        self.set_offset("")
+        self.logger.warn(f'REBUILDING: {self.name} Rebuilding Topic Producer')
+        self.producer = Producer(**self.kafka_settings)
+        self.logger.warn(f'REBUILDING: {self.name} Wipe Complete. /resume to complete operation.')
         self.operating_status = TopicStatus.PAUSED
-        self.resume()
 
     def delete_this_topic(self):
         kadmin = self.context.kafka_admin_client
-        fs = kadmin.delete_topic(self.name, operation_timeout=60)
-        for topic, f in fs.items():
-            try:
-                if topic is not self.name:
-                    raise ValueError(f'{self.name} deleted Wrong Topic! --> {topic}')
-                f.result()  # The result itself is None
-                self.logger.warn(f'REBUILDING: Topic {self.name} Deleted.')
-            except Exception as e:
-                self.logger.critical(f'REBUILDING: {self.name} FAILED with error: {e}')
-                return False
-        return True
+        fs = kadmin.delete_topics([self.name], operation_timeout=60)
+        future = fs.get(self.name)
+        for x in range(60):
+            if not future.done():
+                if (x % 5 == 0):
+                    self.logger.warn(f'REBUILDING: {self.name} Waiting for future to complete')
+                sleep(1)
+            else:
+                return True
+        return False
 
     # Postgres Facing Polls and handlers
 
@@ -610,7 +644,7 @@ class TopicManager(object):
             if self.operating_status is not TopicStatus.NORMAL:
                 self.logger.debug(
                     f'Topic {self.name} not updating, status: {self.operating_status}' \
-                    + ', waiting {self.wait_time}(sec)')
+                    + f', waiting {self.wait_time}(sec)')
                 self.context.safe_sleep(self.wait_time)
                 continue
 

@@ -56,7 +56,7 @@ def producer_topics():
 
 
 @pytest.fixture(scope="function")
-def producer_status():
+def wait_for_producer_status():
     max_retry = 10
     for x in range(max_retry):
         try:
@@ -76,19 +76,6 @@ def producer_status():
         except Exception as err:
             print(err)
             sleep(1)
-
-
-def producer_request(endpoint):
-    auth = requests.auth.HTTPBasicAuth(*PRODUCER_CREDS)
-    url = '{base}/{endpoint}'.format(
-        base=os.environ['PRODUCER_URL'],
-        endpoint=endpoint)
-    try:
-        res = requests.get(url, auth=auth).json()
-        return res
-    except Exception as err:
-        print(err)
-        sleep(1)
 
 
 @pytest.fixture(scope="function")  # noqa
@@ -124,3 +111,32 @@ def read_people():
     messages = read(consumer, start="FIRST", verbose=False, timeout_ms=500)
     consumer.close()  # leaving consumers open can slow down zookeeper, try to stay tidy
     return messages
+
+
+# Producer convenience functions
+
+
+def producer_request(endpoint, expect_json=True):
+    auth = requests.auth.HTTPBasicAuth(*PRODUCER_CREDS)
+    url = '{base}/{endpoint}'.format(
+        base=os.environ['PRODUCER_URL'],
+        endpoint=endpoint)
+    try:
+        res = requests.get(url, auth=auth)
+        if expect_json:
+            return res.json()
+        else:
+            return res.text
+    except Exception as err:
+        print(err)
+        sleep(1)
+
+
+def topic_status(topic):
+    status = producer_request('status')
+    return status['topics'][topic]
+
+
+def producer_control_topic(topic, operation):
+    endpoint = f'{operation}?topic={topic}'
+    return producer_request(endpoint, False)
