@@ -248,7 +248,7 @@ class ProducerManager(object):
         self.app.add_url_rule('/%s' % route_name, route_name, view_func=fn)
 
     def serve(self):
-        self.app = Flask(__name__)  # pylint: disable=invalid-name
+        self.app = Flask('AetherProducer')  # pylint: disable=invalid-name
         self.logger = self.app.logger
         log_level = logging.getLevelName(
             self.settings.get('log_level', 'DEBUG'))
