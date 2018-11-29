@@ -32,7 +32,7 @@ show_help() {
 
     start             : start producer with settings from file at environment path: PRODUCER_SETTINGS_FILE
 
-    test_all          : run unit and integration tests.
+    test              : run unit and integration tests.
     test_integration  : run integration tests
     test_unit         : run unit tests
     """
@@ -92,7 +92,7 @@ case "$1" in
         test_integration
     ;;
 
-    test_all )
+    test )
         test_all
     ;;
 
