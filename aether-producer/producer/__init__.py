@@ -93,7 +93,7 @@ class ProducerManager(object):
     # Keeps track of schemas
     # Spawns a TopicManager for each schema type in Kernel
     # TopicManager registers own eventloop greenlet (update_kafka) with ProducerManager
-    
+
     def __init__(self, settings):
         self.settings = settings
         # Start Signal Handlers
@@ -279,7 +279,7 @@ class ProducerManager(object):
             self.app.wsgi_app, spawn=self.worker_pool
         )
         self.http.start()
-    
+
     # Basic Auth implementation
 
     def check_auth(self, username, password):
@@ -287,7 +287,7 @@ class ProducerManager(object):
 
     def authenticate(self):
         return Response('Bad Credentials', 401,
-        {'WWW-Authenticate': 'Basic realm="Login Required"'})
+                        {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
     def requires_auth(f):
         @wraps(f)
@@ -320,7 +320,7 @@ class ProducerManager(object):
     def request_topics(self):
         if not self.topic_managers:
             return Response({})
-        status = {k: v.get_topic_size() for k,v in self.topic_managers.items()}
+        status = {k: v.get_topic_size() for k, v in self.topic_managers.items()}
         with self.app.app_context():
             return jsonify(**status)
 
@@ -360,13 +360,12 @@ class ProducerManager(object):
             return Response(f'Operation failed on {topic} with: {err}', 500)
 
 
-
-
 class TopicStatus(enum.Enum):
     PAUSED = 1  # Paused
     LOCKED = 2  # Paused by system and non-resumable via API until sys unlock
     REBUILDING = 3  # Topic is being rebuilt
     NORMAL = 4  # Topic is operating normally
+
 
 class TopicManager(object):
 
@@ -493,9 +492,9 @@ class TopicManager(object):
     def handle_rebuild(self):
         # greened background task to handle rebuilding of topic
         self.operating_status = TopicStatus.REBUILDING
-        self.logger.warn(f'REBUILDING: {self.name} waiting' \
-        + f' {self.wait_time *1.5}(sec) for inflight ops to resolve')
-        self.context.safe_sleep(int(self.wait_time *1.5))
+        self.logger.warn(f'REBUILDING: {self.name} waiting'
+                         + f' {self.wait_time *1.5}(sec) for inflight ops to resolve')
+        self.context.safe_sleep(int(self.wait_time * 1.5))
         self.logger.warn(f'REBUILDING: {self.name} Deleting Topic')
         self.producer = None
         ok = self.delete_this_topic()
@@ -640,10 +639,9 @@ class TopicManager(object):
         # Waits for all messages to be accepted or timeout in TopicManager.wait_for_kafka
 
         while not self.context.killed:
-
             if self.operating_status is not TopicStatus.NORMAL:
                 self.logger.debug(
-                    f'Topic {self.name} not updating, status: {self.operating_status}' \
+                    f'Topic {self.name} not updating, status: {self.operating_status}'
                     + f', waiting {self.wait_time}(sec)')
                 self.context.safe_sleep(self.wait_time)
                 continue
