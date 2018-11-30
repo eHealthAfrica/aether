@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import os
 from time import sleep
 
 import pytest
@@ -27,6 +28,7 @@ from aether.client import fixtures  # noqa
 
 from .consumer import get_consumer, read
 
+
 FORMS_TO_SUBMIT = 10
 SEED_ENTITIES = 10 * 7  # 7 Vaccines in each report
 SEED_TYPE = "CurrentStock"
@@ -34,8 +36,8 @@ SEED_TYPE = "CurrentStock"
 
 @pytest.fixture(scope="function")
 def producer_status():
-    max_retry = 30
-    url = "http://producer-test:9005/status"
+    max_retry = 10
+    url = os.environ['PRODUCER_STATUS_URL']
     for x in range(max_retry):
         try:
             status = requests.get(url).json()
@@ -45,7 +47,7 @@ def producer_status():
             person = status.get('topics', {}).get(SEED_TYPE, {})
             ok_count = person.get('last_changeset_status', {}).get('succeeded')
             if ok_count:
-                sleep(10)
+                sleep(5)
                 return ok_count
             else:
                 sleep(1)

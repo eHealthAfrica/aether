@@ -350,6 +350,7 @@ services:
     stdin_open: true
     volumes:
      - ./aether-producer:/code
+     - ./VERSION:/code/VERSION
     environment:
       PYTHONUNBUFFERED: 1
 
@@ -375,4 +376,4 @@ services:
       PRODUCER_SETTINGS_FILE: /code/producer/settings.json
     ports:
       - "5005:5005"
-    command: start_dev
+    command: start

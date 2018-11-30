@@ -39,6 +39,10 @@ DC_TEST="docker-compose -f docker-compose-test.yml"
 
 
 echo "_____________________________________________ TESTING"
+$DC_TEST kill
+echo "_____________________________________________ TESTING PRODUCER"
+./scripts/test_container.sh producer
+echo "_____________________________________________ PRODUCER OK..."
 
 $DC_TEST kill
 
@@ -69,6 +73,6 @@ $DC_TEST run --no-deps kernel-test eval python /code/sql/create_readonly_user.py
 echo "_____________________________________________ Starting Integration Tests"
 build_container integration
 $DC_TEST run --no-deps integration-test test
-
+echo "_____________________________________________ Integration OK..."
 ./scripts/kill_all.sh
 echo "_____________________________________________ END"

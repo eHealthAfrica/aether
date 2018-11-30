@@ -5,7 +5,7 @@
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
+# Licensed under the Apache License, Version 2.0 (the 'License');
 # you may not use this file except in compliance with
 # the License.  You may obtain a copy of the License at
 #
@@ -19,17 +19,20 @@
 # under the License.
 
 import os
-import sys
-from time import sleep
+from setuptools import setup
 
-if __name__ == '__main__':
+with open(os.path.join('/code', 'VERSION'), 'r') as version_file:
+    version = version_file.read().strip()
 
-    try:
-        settings_path = os.environ['PRODUCER_SETTINGS_FILE']
-    except KeyError:
-        print('PRODUCER_SETTINGS_FILE not set in environment.')
-        sys.exit(1)
-
-    from producer import main
-    main()
-    print("Started Producer with path %s" % settings_path)
+setup(
+    name='aether_producer',
+    author='Shawn Sarwar',
+    author_email='shawn.sarwar@ehealthafrica.org',
+    decription='Kafka Producer for Aether',
+    version=version,
+    setup_requires=['pytest'],
+    tests_require=['pytest', 'sqlalchemy', 'requests', 'aether_producer'],
+    url='https://github.com/eHealthAfrica/aether',
+    keywords=['aet', 'aether', 'kafka', 'producer'],
+    classifiers=[]
+    )

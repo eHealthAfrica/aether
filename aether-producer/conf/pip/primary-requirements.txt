@@ -15,6 +15,7 @@ aether.client>=0.11.0
 confluent_kafka
 flask
 gevent
+pytest
 psycopg2-binary
 psycogreen
 spavro

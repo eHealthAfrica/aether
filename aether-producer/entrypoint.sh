@@ -25,18 +25,39 @@ show_help() {
     echo """
     Commands
     ----------------------------------------------------------------------------
-    bash          : run bash
-    eval          : eval shell command
-    manage        : invoke manage.py commands
+    bash              : run bash
+    eval              : eval shell command
 
-    pip_freeze    : freeze pip dependencies and write to requirements.txt
+    pip_freeze        : freeze pip dependencies and write to requirements.txt
 
-    start         : start in normal mode
-    start_dev     : start for test/dev
-    start_test    : start for test/dev
+    start             : start producer with settings from file at environment path: PRODUCER_SETTINGS_FILE
+
+    test              : run unit and integration tests.
+    test_integration  : run integration tests
+    test_unit         : run unit tests
     """
 }
 
+test_unit() {
+    pytest -m unit
+    cat /code/conf/extras/good_job.txt
+    rm -R .pytest_cache
+    rm -rf tests/__pycache__
+}
+
+test_integration() {
+    pytest -m integration
+    cat /code/conf/extras/good_job.txt
+    rm -R .pytest_cache
+    rm -rf tests/__pycache__
+}
+
+test_all() {
+    pytest
+    cat /code/conf/extras/good_job.txt
+    rm -R .pytest_cache
+    rm -rf tests/__pycache__
+}
 
 case "$1" in
     bash )
@@ -45,10 +66,6 @@ case "$1" in
 
     eval )
         eval "${@:2}"
-    ;;
-
-    manage )
-        ./manage.py "${@:2}"
     ;;
 
     pip_freeze )
@@ -67,14 +84,17 @@ case "$1" in
         ./manage.py
     ;;
 
-    start_dev )
-        ./manage.py test
+    test_unit )
+        test_unit
     ;;
 
-    start_test )
-        ./manage.py test
+    test_integration )
+        test_integration
     ;;
 
+    test )
+        test_all
+    ;;
 
     help)
         show_help
