@@ -26,14 +26,10 @@ import ast
 from datetime import datetime
 import enum
 from functools import wraps
-import gevent
-from gevent.pool import Pool
 import io
 import json
 import logging
 import os
-import psycopg2
-from psycopg2 import sql
 import signal
 import socket
 import spavro.schema
@@ -41,14 +37,17 @@ import sys
 import traceback
 
 from aether.client import Client
-from flask import Flask, Response, request, jsonify
-from gevent.pywsgi import WSGIServer
 from confluent_kafka import Producer
 from confluent_kafka.admin import AdminClient
+from flask import Flask, Response, request, jsonify
+import gevent
+from gevent.pool import Pool
+from gevent.pywsgi import WSGIServer
+import psycopg2
+from psycopg2 import sql
 from psycopg2.extras import DictCursor
 import requests
 from requests.exceptions import ConnectionError
-
 from spavro.datafile import DataFileWriter, DataFileReader
 from spavro.io import DatumWriter, DatumReader
 from spavro.io import validate
@@ -491,21 +490,22 @@ class TopicManager(object):
     def handle_rebuild(self):
         # greened background task to handle rebuilding of topic
         self.operating_status = TopicStatus.REBUILDING
-        self.logger.warn(f'REBUILDING: {self.name} waiting'
+        tag = f'REBUILDING {self.name}:'
+        self.logger.info(f'{tag} waiting'
                          + f' {self.wait_time *1.5}(sec) for inflight ops to resolve')
         self.context.safe_sleep(int(self.wait_time * 1.5))
-        self.logger.warn(f'REBUILDING: {self.name} Deleting Topic')
+        self.logger.info(f'{tag} Deleting Topic')
         self.producer = None
         ok = self.delete_this_topic()
         if not ok:
-            self.logger.critical(f'REBUILDING: {self.name} FAILED. Topic will not resume.')
+            self.logger.critical(f'{tag} FAILED. Topic will not resume.')
             self.operating_status = TopicStatus.LOCKED
             return
-        self.logger.warn(f'REBUILDING: {self.name} Resetting Offset.')
+        self.logger.warn(f'{tag} Resetting Offset.')
         self.set_offset("")
-        self.logger.warn(f'REBUILDING: {self.name} Rebuilding Topic Producer')
+        self.logger.info(f'{tag} Rebuilding Topic Producer')
         self.producer = Producer(**self.kafka_settings)
-        self.logger.warn(f'REBUILDING: {self.name} Wipe Complete. /resume to complete operation.')
+        self.logger.warn(f'{tag} Wipe Complete. /resume to complete operation.')
         self.operating_status = TopicStatus.PAUSED
 
     def delete_this_topic(self):
@@ -515,7 +515,7 @@ class TopicManager(object):
         for x in range(60):
             if not future.done():
                 if (x % 5 == 0):
-                    self.logger.warn(f'REBUILDING: {self.name} Waiting for future to complete')
+                    self.logger.debug(f'REBUILDING {self.name}: Waiting for future to complete')
                 sleep(1)
             else:
                 return True
