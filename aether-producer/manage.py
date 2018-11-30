@@ -20,7 +20,6 @@
 
 import os
 import sys
-from time import sleep
 
 if __name__ == '__main__':
 

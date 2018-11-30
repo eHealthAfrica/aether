@@ -29,6 +29,7 @@ log = logging.getLogger()
 USER = os.environ['PRODUCER_ADMIN_USER']
 PW = os.environ['PRODUCER_ADMIN_PW']
 
+
 class MockProducerManager(ProducerManager):
 
     def __init__(self, settings):

@@ -35,4 +35,4 @@ setup(
     url='https://github.com/eHealthAfrica/aether',
     keywords=['aet', 'aether', 'kafka', 'producer'],
     classifiers=[]
-    )
+)

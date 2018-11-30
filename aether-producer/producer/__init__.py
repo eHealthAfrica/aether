@@ -18,12 +18,11 @@
 
 from gevent import monkey, sleep
 # need to patch sockets to make requests async
-monkey.patch_all()
+monkey.patch_all()  # noqa
 import psycogreen.gevent
-psycogreen.gevent.patch_psycopg()
+psycogreen.gevent.patch_psycopg()  # noqa
 
 import ast
-from contextlib import contextmanager
 from datetime import datetime
 import enum
 from functools import wraps
@@ -42,10 +41,10 @@ import sys
 import traceback
 
 from aether.client import Client
-from flask import Flask, Response, request, abort, jsonify
+from flask import Flask, Response, request, jsonify
 from gevent.pywsgi import WSGIServer
-from confluent_kafka import Producer, KafkaException
-from confluent_kafka.admin import AdminClient, NewTopic, NewPartitions, ConfigResource, ConfigEntry
+from confluent_kafka import Producer
+from confluent_kafka.admin import AdminClient
 from psycopg2.extras import DictCursor
 import requests
 from requests.exceptions import ConnectionError
@@ -227,7 +226,7 @@ class ProducerManager(object):
                         schema for schema in self.kernel.schemas.paginated('list')]
                 for schema in schemas:
                     schema_name = schema['name']
-                    if not schema_name in self.topic_managers.keys():
+                    if schema_name not in self.topic_managers.keys():
                         self.logger.info(
                             "New topic connected: %s" % schema_name)
                         self.topic_managers[schema_name] = TopicManager(
@@ -441,7 +440,7 @@ class TopicManager(object):
                 .get('topic_settings', {}) \
                 .get('name_modifier', "%s") \
                 % self.name
-        except Exception as err:  # Bad Name
+        except Exception:  # Bad Name
             self.logger.critical(("invalid name_modifier using topic name for topic: %s."
                                   " Update configuration for"
                                   " topic_settings.name_modifier") % self.name)
@@ -741,7 +740,7 @@ class TopicManager(object):
             for _id, err in self.failed_changes.items():
                 try:
                     del self.change_set[_id]
-                except KeyError as ke:
+                except KeyError:
                     pass  # could have been removed on previous iter
             for _id in self.successful_changes:
                 try:
@@ -832,4 +831,4 @@ class TopicManager(object):
 def main():
     file_path = os.environ.get('PRODUCER_SETTINGS_FILE')
     settings = Settings(file_path)
-    handler = ProducerManager(settings)
+    ProducerManager(settings)

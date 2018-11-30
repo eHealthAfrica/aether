@@ -24,6 +24,7 @@ import uuid
 
 from . import *
 
+
 @pytest.mark.integration
 def test_manager_http_endpoint_service(ProducerManagerSettings):
     man = MockProducerManager(ProducerManagerSettings)
@@ -54,5 +55,5 @@ def test_initialize_database_get_set(ProducerManagerSettings):
     man.init_db()
     assert(Offset.get_offset('some_missing') is None)
     value = str(uuid.uuid4())
-    new_offset = Offset.update('fake_entry', value)
+    Offset.update('fake_entry', value)
     assert(Offset.get_offset('fake_entry').offset_value == value)

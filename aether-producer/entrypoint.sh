@@ -28,6 +28,7 @@ show_help() {
     bash              : run bash
     eval              : eval shell command
 
+    flake8            : check against code style guidelines
     pip_freeze        : freeze pip dependencies and write to requirements.txt
 
     start             : start producer with settings from file at environment path: PRODUCER_SETTINGS_FILE
@@ -36,6 +37,10 @@ show_help() {
     test_integration  : run integration tests
     test_unit         : run unit tests
     """
+}
+
+test_flake8() {
+    flake8 /code/. --config=/code/setup.cfg
 }
 
 test_unit() {
@@ -68,6 +73,10 @@ case "$1" in
         eval "${@:2}"
     ;;
 
+    flake8 )
+        test_flake8
+    ;;
+    
     pip_freeze )
         pip install -q virtualenv
         rm -rf /tmp/env
@@ -93,6 +102,7 @@ case "$1" in
     ;;
 
     test )
+        test_flake8
         test_all
     ;;
 
