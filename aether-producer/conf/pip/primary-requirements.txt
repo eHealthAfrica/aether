@@ -14,6 +14,7 @@
 aether.client>=0.11.0
 confluent_kafka
 flask
+flake8
 gevent
 pytest
 psycopg2-binary

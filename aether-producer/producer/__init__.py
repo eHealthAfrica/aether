@@ -18,22 +18,18 @@
 
 from gevent import monkey, sleep
 # need to patch sockets to make requests async
-monkey.patch_all()
+monkey.patch_all()  # noqa
 import psycogreen.gevent
-psycogreen.gevent.patch_psycopg()
+psycogreen.gevent.patch_psycopg()  # noqa
 
 import ast
-from contextlib import contextmanager
 from datetime import datetime
 import enum
-import gevent
-from gevent.pool import Pool
+from functools import wraps
 import io
 import json
 import logging
 import os
-import psycopg2
-from psycopg2 import sql
 import signal
 import socket
 import spavro.schema
@@ -41,13 +37,17 @@ import sys
 import traceback
 
 from aether.client import Client
-from flask import Flask, Response, request, abort, jsonify
+from confluent_kafka import Producer
+from confluent_kafka.admin import AdminClient
+from flask import Flask, Response, request, jsonify
+import gevent
+from gevent.pool import Pool
 from gevent.pywsgi import WSGIServer
-from confluent_kafka import Producer, Consumer, KafkaException
+import psycopg2
+from psycopg2 import sql
 from psycopg2.extras import DictCursor
 import requests
 from requests.exceptions import ConnectionError
-
 from spavro.datafile import DataFileWriter, DataFileReader
 from spavro.io import DatumWriter, DatumReader
 from spavro.io import validate
@@ -100,6 +100,9 @@ class ProducerManager(object):
         signal.signal(signal.SIGINT, self.kill)
         gevent.signal(signal.SIGTERM, self.kill)
         # Turn on Flask Endpoints
+        # Get Auth details from env
+        self.admin_name = settings.get('PRODUCER_ADMIN_USER')
+        self.admin_password = settings.get('PRODUCER_ADMIN_PW')
         self.serve()
         self.add_endpoints()
         # Initialize Offsetdb
@@ -107,6 +110,9 @@ class ProducerManager(object):
         # Clear objects and start
         self.kernel = None
         self.kafka = KafkaStatus.SUBMISSION_PENDING
+        self.kafka_admin_client = AdminClient(
+            {"bootstrap.servers": self.settings.get("kafka_url")}
+        )
         self.topic_managers = {}
         self.run()
 
@@ -219,7 +225,7 @@ class ProducerManager(object):
                         schema for schema in self.kernel.schemas.paginated('list')]
                 for schema in schemas:
                     schema_name = schema['name']
-                    if not schema_name in self.topic_managers.keys():
+                    if schema_name not in self.topic_managers.keys():
                         self.logger.info(
                             "New topic connected: %s" % schema_name)
                         self.topic_managers[schema_name] = TopicManager(
@@ -243,6 +249,10 @@ class ProducerManager(object):
         # URLS configured here
         self.register('healthcheck', self.request_healthcheck)
         self.register('status', self.request_status)
+        self.register('topics', self.request_topics)
+        self.register('pause', self.request_pause)
+        self.register('resume', self.request_resume)
+        self.register('rebuild', self.request_rebuild)
 
     def register(self, route_name, fn):
         self.app.add_url_rule('/%s' % route_name, route_name, view_func=fn)
@@ -250,17 +260,21 @@ class ProducerManager(object):
     def serve(self):
         self.app = Flask('AetherProducer')  # pylint: disable=invalid-name
         self.logger = self.app.logger
-        log_level = logging.getLevelName(
-            self.settings.get('log_level', 'DEBUG'))
+        log_level = logging.getLevelName(self.settings
+                                         .get('log_level', 'DEBUG'))
         self.logger.setLevel(log_level)
         if log_level is "DEBUG":
             self.app.debug = True
-        self.app.config['JSONIFY_PRETTYPRINT_REGULAR'] = self.settings.get(
-            'flask_settings', {}).get('pretty_json_status', False)
-        pool_size = self.settings.get(
-            'flask_settings', {}).get('max_connections', 1)
-        server_ip = self.settings.get('server_ip', "")
-        server_port = int(self.settings.get('server_port', 9005))
+        self.app.config['JSONIFY_PRETTYPRINT_REGULAR'] = self.settings \
+            .get('flask_settings', {}) \
+            .get('pretty_json_status', False)
+        pool_size = self.settings \
+            .get('flask_settings', {}) \
+            .get('max_connections', 3)
+        server_ip = self.settings \
+            .get('server_ip', "")
+        server_port = int(self.settings
+                          .get('server_port', 9005))
         self.worker_pool = Pool(pool_size)
         self.http = WSGIServer(
             (server_ip, server_port),
@@ -268,12 +282,31 @@ class ProducerManager(object):
         )
         self.http.start()
 
+    # Basic Auth implementation
+
+    def check_auth(self, username, password):
+        return username == self.admin_name and password == self.admin_password
+
+    def request_authentication(self):
+        return Response('Bad Credentials', 401,
+                        {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
+    def requires_auth(f):
+        @wraps(f)
+        def decorated(self, *args, **kwargs):
+            auth = request.authorization
+            if not auth or not self.check_auth(auth.username, auth.password):
+                return self.request_authentication()
+            return f(self, *args, **kwargs)
+        return decorated
+
     # Exposed Request Endpoints
 
     def request_healthcheck(self):
         with self.app.app_context():
             return Response({"healthy": True})
 
+    @requires_auth
     def request_status(self):
         status = {
             "kernel_connected": self.kernel is not None,  # This is a real object
@@ -284,6 +317,56 @@ class ProducerManager(object):
         }
         with self.app.app_context():
             return jsonify(**status)
+
+    @requires_auth
+    def request_topics(self):
+        if not self.topic_managers:
+            return Response({})
+        status = {k: v.get_topic_size() for k, v in self.topic_managers.items()}
+        with self.app.app_context():
+            return jsonify(**status)
+
+    # Topic Command API
+
+    @requires_auth
+    def request_pause(self):
+        return self.handle_topic_command(request, TopicStatus.PAUSED)
+
+    @requires_auth
+    def request_resume(self):
+        return self.handle_topic_command(request, TopicStatus.NORMAL)
+
+    @requires_auth
+    def request_rebuild(self):
+        return self.handle_topic_command(request, TopicStatus.REBUILDING)
+
+    def handle_topic_command(self, request, status):
+        topic = request.args.get('topic')
+        if not topic:
+            return Response(f'A topic must be specified', 422)
+        if not self.topic_managers.get(topic):
+            return Response(f'Bad topic name {topic}', 422)
+        manager = self.topic_managers[topic]
+        if status is TopicStatus.PAUSED:
+            fn = manager.pause
+        if status is TopicStatus.NORMAL:
+            fn = manager.resume
+        if status is TopicStatus.REBUILDING:
+            fn = manager.rebuild
+        try:
+            res = fn()
+            if not res:
+                return Response(f'Operation failed on {topic}', 500)
+            return Response(f'Success for status {status} on {topic}', 200)
+        except Exception as err:
+            return Response(f'Operation failed on {topic} with: {err}', 500)
+
+
+class TopicStatus(enum.Enum):
+    PAUSED = 1  # Paused
+    LOCKED = 2  # Paused by system and non-resumable via API until sys unlock
+    REBUILDING = 3  # Topic is being rebuilt
+    NORMAL = 4  # Topic is operating normally
 
 
 class TopicManager(object):
@@ -301,6 +384,16 @@ class TopicManager(object):
         WHERE e.modified > {modified}
         AND s.name = {schema_name}
         LIMIT 1; '''
+
+    # Count how many unique (controlled by kernel) messages should currently be in this topic
+    COUNT_STR = '''
+            SELECT
+                count(e.id)
+            FROM kernel_entity e
+            inner join kernel_projectschema ps on e.projectschema_id = ps.id
+            inner join kernel_schema s on ps.schema_id = s.id
+            WHERE s.name = {schema_name};
+    '''
 
     # Changes pull query
     QUERY_STR = '''
@@ -329,6 +422,7 @@ class TopicManager(object):
         self.logger = self.context.logger
         self.name = schema['name']
         self.offset = ""
+        self.operating_status = TopicStatus.NORMAL
         self.limit = self.context.settings.get('postgres_pull_limit', 100)
         self.status = {
             "last_errors_set": {},
@@ -349,7 +443,7 @@ class TopicManager(object):
                 .get('topic_settings', {}) \
                 .get('name_modifier', "%s") \
                 % self.name
-        except Exception as err:  # Bad Name
+        except Exception:  # Bad Name
             self.logger.critical(("invalid name_modifier using topic name for topic: %s."
                                   " Update configuration for"
                                   " topic_settings.name_modifier") % self.name)
@@ -361,9 +455,77 @@ class TopicManager(object):
         # apply setting from root config to be able to use env variables
         kafka_settings["bootstrap.servers"] = self.context.settings.get(
             "kafka_url")
-        self.producer = Producer(**kafka_settings)
+        self.kafka_settings = kafka_settings
+        self.producer = Producer(**self.kafka_settings)
         # Spawn worker and give to pool.
         self.context.threads.append(gevent.spawn(self.update_kafka))
+
+    # API Calls to Control Topic
+
+    def pause(self):
+        # Stops sending of data on this topic until resume is called or Producer restarts.
+        if self.operating_status is not TopicStatus.NORMAL:
+            self.logger.info(
+                f'Topic {self.name} could not pause, status: {self.operating_status}.')
+            return False
+        self.logger.info(f'Topic {self.name} is pausing.')
+        self.operating_status = TopicStatus.PAUSED
+        return True
+
+    def resume(self):
+        # Resume sending data after pausing.
+        if self.operating_status is not TopicStatus.PAUSED:
+            self.logger.info(
+                f'Topic {self.name} could not resume, status: {self.operating_status}.')
+            return False
+        self.logger.info(f'Topic {self.name} is resuming.')
+        self.operating_status = TopicStatus.NORMAL
+        return True
+
+    # Functions to rebuilt this topic
+
+    def rebuild(self):
+        # API Call
+        self.logger.warn(f'Topic {self.name} is being REBUIT!')
+        # kick off rebuild process
+        self.context.threads.append(gevent.spawn(self.handle_rebuild))
+        return True
+
+    def handle_rebuild(self):
+        # greened background task to handle rebuilding of topic
+        self.operating_status = TopicStatus.REBUILDING
+        tag = f'REBUILDING {self.name}:'
+        self.logger.info(f'{tag} waiting'
+                         + f' {self.wait_time *1.5}(sec) for inflight ops to resolve')
+        self.context.safe_sleep(int(self.wait_time * 1.5))
+        self.logger.info(f'{tag} Deleting Topic')
+        self.producer = None
+        ok = self.delete_this_topic()
+        if not ok:
+            self.logger.critical(f'{tag} FAILED. Topic will not resume.')
+            self.operating_status = TopicStatus.LOCKED
+            return
+        self.logger.warn(f'{tag} Resetting Offset.')
+        self.set_offset("")
+        self.logger.info(f'{tag} Rebuilding Topic Producer')
+        self.producer = Producer(**self.kafka_settings)
+        self.logger.warn(f'{tag} Wipe Complete. /resume to complete operation.')
+        self.operating_status = TopicStatus.PAUSED
+
+    def delete_this_topic(self):
+        kadmin = self.context.kafka_admin_client
+        fs = kadmin.delete_topics([self.name], operation_timeout=60)
+        future = fs.get(self.name)
+        for x in range(60):
+            if not future.done():
+                if (x % 5 == 0):
+                    self.logger.debug(f'REBUILDING {self.name}: Waiting for future to complete')
+                sleep(1)
+            else:
+                return True
+        return False
+
+    # Postgres Facing Polls and handlers
 
     def updates_available(self):
 
@@ -421,6 +583,17 @@ class TopicManager(object):
             window_filter = self.get_time_window_filter(query_time)
             return [{key: row[key] for key in row.keys()} for row in cursor if window_filter(row)]
 
+    def get_topic_size(self):
+        query = sql.SQL(TopicManager.COUNT_STR).format(
+            schema_name=sql.Literal(self.name),
+        )
+        with psycopg2.connect(**self.pg_creds) as conn:
+            cursor = conn.cursor(cursor_factory=DictCursor)
+            cursor.execute(query)
+            size = [{key: row[key] for key in row.keys()} for row in cursor][0]
+            self.logger.debug(f'''Reporting requested size for {self.name} of {size['count']}''')
+            return size
+
     def update_schema(self, schema_obj):
         self.schema_obj = self.parse_schema(schema_obj)
         self.schema = spavro.schema.parse(json.dumps(self.schema_obj))
@@ -438,6 +611,7 @@ class TopicManager(object):
 
     def get_status(self):
         # Updates inflight status and returns to Flask called
+        self.status['operating_status'] = str(self.operating_status)
         self.status['inflight'] = [i for i in self.change_set.keys()]
         return self.status
 
@@ -468,6 +642,12 @@ class TopicManager(object):
         # Waits for all messages to be accepted or timeout in TopicManager.wait_for_kafka
 
         while not self.context.killed:
+            if self.operating_status is not TopicStatus.NORMAL:
+                self.logger.debug(
+                    f'Topic {self.name} not updating, status: {self.operating_status}'
+                    + f', waiting {self.wait_time}(sec)')
+                self.context.safe_sleep(self.wait_time)
+                continue
 
             if not self.context.kafka_available():
                 self.logger.debug('Kafka Container not accessible, waiting.')
@@ -564,7 +744,7 @@ class TopicManager(object):
             for _id, err in self.failed_changes.items():
                 try:
                     del self.change_set[_id]
-                except KeyError as ke:
+                except KeyError:
                     pass  # could have been removed on previous iter
             for _id in self.successful_changes:
                 try:
@@ -655,4 +835,4 @@ class TopicManager(object):
 def main():
     file_path = os.environ.get('PRODUCER_SETTINGS_FILE')
     settings = Settings(file_path)
-    handler = ProducerManager(settings)
+    ProducerManager(settings)

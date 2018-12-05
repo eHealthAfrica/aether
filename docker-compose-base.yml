@@ -370,6 +370,8 @@ services:
       OFFSET_DB_PASSWORD: ${KERNEL_DB_PASSWORD}
       OFFSET_DB_NAME: producer_offset_db
 
+      PRODUCER_ADMIN_USER: ${PRODUCER_ADMIN_USER}
+      PRODUCER_ADMIN_PW: ${PRODUCER_ADMIN_PW}
       SERVER_PORT: 5005
 
       # default settings file
