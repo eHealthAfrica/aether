@@ -137,6 +137,11 @@ def topic_status(topic):
     return status['topics'][topic]
 
 
+def producer_topic_count(topic):
+    status = producer_request('topics')
+    return status[topic]['count']
+
+
 def producer_control_topic(topic, operation):
     endpoint = f'{operation}?topic={topic}'
     return producer_request(endpoint, False)

@@ -260,17 +260,21 @@ class ProducerManager(object):
     def serve(self):
         self.app = Flask('AetherProducer')  # pylint: disable=invalid-name
         self.logger = self.app.logger
-        log_level = logging.getLevelName(
-            self.settings.get('log_level', 'DEBUG'))
+        log_level = logging.getLevelName(self.settings
+                                         .get('log_level', 'DEBUG'))
         self.logger.setLevel(log_level)
         if log_level is "DEBUG":
             self.app.debug = True
-        self.app.config['JSONIFY_PRETTYPRINT_REGULAR'] = self.settings.get(
-            'flask_settings', {}).get('pretty_json_status', False)
-        pool_size = self.settings.get(
-            'flask_settings', {}).get('max_connections', 3)
-        server_ip = self.settings.get('server_ip', "")
-        server_port = int(self.settings.get('server_port', 9005))
+        self.app.config['JSONIFY_PRETTYPRINT_REGULAR'] = self.settings \
+            .get('flask_settings', {}) \
+            .get('pretty_json_status', False)
+        pool_size = self.settings \
+            .get('flask_settings', {}) \
+            .get('max_connections', 3)
+        server_ip = self.settings \
+            .get('server_ip', "")
+        server_port = int(self.settings
+                          .get('server_port', 9005))
         self.worker_pool = Pool(pool_size)
         self.http = WSGIServer(
             (server_ip, server_port),
@@ -283,7 +287,7 @@ class ProducerManager(object):
     def check_auth(self, username, password):
         return username == self.admin_name and password == self.admin_password
 
-    def authenticate(self):
+    def request_authentication(self):
         return Response('Bad Credentials', 401,
                         {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
@@ -292,7 +296,7 @@ class ProducerManager(object):
         def decorated(self, *args, **kwargs):
             auth = request.authorization
             if not auth or not self.check_auth(auth.username, auth.password):
-                return self.authenticate()
+                return self.request_authentication()
             return f(self, *args, **kwargs)
         return decorated
 
@@ -384,7 +388,7 @@ class TopicManager(object):
     # Count how many unique (controlled by kernel) messages should currently be in this topic
     COUNT_STR = '''
             SELECT
-                count(*)
+                count(e.id)
             FROM kernel_entity e
             inner join kernel_projectschema ps on e.projectschema_id = ps.id
             inner join kernel_schema s on ps.schema_id = s.id

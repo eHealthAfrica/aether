@@ -59,6 +59,7 @@ def test_6_check_stream_entities(read_people, entities):
             failed.append(_id)
     assert(len(failed) == 0)
     assert(len(kernel_messages) == len(kafka_messages))
+    assert(producer_topic_count(SEED_TYPE) == len(kafka_messages))
 
 
 def test_7_control_topic():
