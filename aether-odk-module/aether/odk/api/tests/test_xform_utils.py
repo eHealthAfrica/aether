@@ -298,7 +298,7 @@ class XFormUtilsParsersTests(CustomTestCase):
         data = parse_submission(data, self.samples['xform']['raw-xml'])
         self.assertNotEqual(list(data.keys())[0], 'Something_that_is_not_None')
 
-        self.assertEqual(data, expected)
+        self.assertEqual(data, expected, json.dumps(data, indent=2))
 
     def test__parse_submission__with_multilanguage(self):
         with open(self.samples['submission']['file-ok'], 'rb') as xml:
@@ -316,7 +316,7 @@ class XFormUtilsParsersTests(CustomTestCase):
         data = parse_submission(data, self.samples['xform']['raw-xml-i18n'])
         self.assertNotEqual(list(data.keys())[0], 'Something_that_is_not_None')
 
-        self.assertEqual(data, expected)
+        self.assertEqual(data, expected, json.dumps(data, indent=2))
 
 
 class XFormUtilsAvroTests(CustomTestCase):
@@ -643,7 +643,7 @@ class XFormUtilsAvroTests(CustomTestCase):
         self.assertEqual(schema['name'], 'MyTestForm_Test10')
         self.assertEqual(schema['doc'], 'My Test Form (id: my-test-form, version: Test-1.0)')
 
-        self.assertEqual(schema, xform_avro)
+        self.assertEqual(schema, xform_avro, json.dumps(schema, indent=2))
 
         schema_i18n = parse_xform_to_avro_schema(self.samples['xform']['raw-xml-i18n'])
         self.assertEqual(schema_i18n['name'], 'MyTestForm_Test10')
@@ -692,18 +692,21 @@ class XFormUtilsAvroTests(CustomTestCase):
             'fields': [
                 {
                     'name': '_id',
+                    'namespace': 'Nested_Repeats_Test_0',
                     'doc': 'xForm ID',
-                    'type': 'string',
+                    'type': ['null', 'string'],
                     'default': 'nested_repeats_test',
                 },
                 {
                     'name': '_version',
+                    'namespace': 'Nested_Repeats_Test_0',
                     'doc': 'xForm version',
-                    'type': 'string',
+                    'type': ['null', 'string'],
                     'default': '0',
                 },
                 {
                     'name': 'Repeat_1',
+                    'namespace': 'Nested_Repeats_Test_0',
                     'type': [
                         'null',
                         {
@@ -714,10 +717,12 @@ class XFormUtilsAvroTests(CustomTestCase):
                                 'fields': [
                                     {
                                         'name': 'name_1',
+                                        'namespace': 'Nested_Repeats_Test_0.Repeat_1',
                                         'type': ['null', 'string'],
                                     },
                                     {
                                         'name': 'Repeat_2',
+                                        'namespace': 'Nested_Repeats_Test_0.Repeat_1',
                                         'type': [
                                             'null',
                                             {
@@ -728,6 +733,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                                                     'fields': [
                                                         {
                                                             'name': 'name_2',
+                                                            'namespace': 'Nested_Repeats_Test_0.Repeat_1.Repeat_2',
                                                             'type': ['null', 'string'],
                                                         },
                                                     ],
@@ -775,18 +781,21 @@ class XFormUtilsAvroTests(CustomTestCase):
             'fields': [
                 {
                     'name': '_id',
+                    'namespace': 'WrongNames_0',
                     'doc': 'xForm ID',
-                    'type': 'string',
+                    'type': ['null', 'string'],
                     'default': 'wrong-names',
                 },
                 {
                     'name': '_version',
+                    'namespace': 'WrongNames_0',
                     'doc': 'xForm version',
-                    'type': 'string',
+                    'type': ['null', 'string'],
                     'default': '0',
                 },
                 {
                     'name': 'full-name',
+                    'namespace': 'WrongNames_0',
                     'type': [
                         'null',
                         {
@@ -795,10 +804,12 @@ class XFormUtilsAvroTests(CustomTestCase):
                             'fields': [
                                 {
                                     'name': 'first-name',
+                                    'namespace': 'WrongNames_0.full-name',
                                     'type': ['null', 'string'],
                                 },
                                 {
                                     'name': 'last-name',
+                                    'namespace': 'WrongNames_0.full-name',
                                     'type': ['null', 'string'],
                                 },
                             ],
@@ -811,6 +822,77 @@ class XFormUtilsAvroTests(CustomTestCase):
                 'Invalid name "first-name".',
                 'Invalid name "last-name".',
             ],
+        }
+
+        schema = parse_xform_to_avro_schema(xml_definition)
+        self.assertEqual(schema, expected, json.dumps(schema, indent=2))
+
+    def test__parse_xform_to_avro_schema__repeated_names(self):
+        xml_definition = '''
+            <h:html
+                    xmlns="http://www.w3.org/2002/xforms"
+                    xmlns:h="http://www.w3.org/1999/xhtml">
+                <h:head>
+                    <h:title>Repeating names</h:title>
+                    <model>
+                        <instance>
+                            <dup_names id="dup-names">
+                                <dup_property/>
+                                <group_name>
+                                    <dup_property/>
+                                </group_name>
+                            </dup_names>
+                        </instance>
+                    </model>
+                </h:head>
+                <h:body/>
+            </h:html>
+        '''
+
+        expected = {
+            'name': 'DupNames_0',
+            'doc': 'Repeating names (id: dup-names, version: 0)',
+            'type': 'record',
+            'fields': [
+                {
+                    'name': '_id',
+                    'namespace': 'DupNames_0',
+                    'doc': 'xForm ID',
+                    'type': ['null', 'string'],
+                    'default': 'dup-names',
+                },
+                {
+                    'name': '_version',
+                    'namespace': 'DupNames_0',
+                    'doc': 'xForm version',
+                    'type': ['null', 'string'],
+                    'default': '0',
+                },
+                {
+                    'name': 'dup_property',
+                    'namespace': 'DupNames_0',
+                    'type': ['null', 'string'],
+                },
+                {
+                    'name': 'group_name',
+                    'namespace': 'DupNames_0',
+                    'type': [
+                        'null',
+                        {
+                            'name': 'group_name',
+                            'type': 'record',
+                            'fields': [
+                                {
+                                    'name': 'dup_property',
+                                    'namespace': 'DupNames_0.group_name',
+                                    'type': ['null', 'string'],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+            # '_errors': []  # No expected errors
         }
 
         schema = parse_xform_to_avro_schema(xml_definition)
