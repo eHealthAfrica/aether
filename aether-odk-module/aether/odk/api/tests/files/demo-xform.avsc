@@ -58,6 +58,8 @@
         "null",
         {
           "name": "location",
+          "namespace": "MyTestForm_Test10",
+          "doc": "Collect your GPS coordinates",
           "type": "record",
           "fields": [
             {
@@ -96,6 +98,8 @@
         "null",
         {
           "name": "location_none",
+          "namespace": "MyTestForm_Test10",
+          "doc": "Ignore your GPS coordinates",
           "type": "record",
           "fields": [
             {
@@ -170,6 +174,8 @@
         "null",
         {
           "name": "option_a",
+          "namespace": "MyTestForm_Test10",
+          "doc": "Option A",
           "type": "record",
           "fields": [
             {
@@ -190,6 +196,8 @@
         "null",
         {
           "name": "option_b",
+          "namespace": "MyTestForm_Test10",
+          "doc": "Option B",
           "type": "record",
           "fields": [
             {
@@ -218,6 +226,8 @@
           "type": "array",
           "items": {
             "name": "iterate",
+            "namespace": "MyTestForm_Test10",
+            "doc": "Indicate loop elements",
             "type": "record",
             "fields": [
               {
@@ -247,6 +257,8 @@
           "type": "array",
           "items": {
             "name": "iterate_one",
+            "namespace": "MyTestForm_Test10",
+            "doc": "Indicate one",
             "type": "record",
             "fields": [
               {
@@ -270,6 +282,8 @@
           "type": "array",
           "items": {
             "name": "iterate_none",
+            "namespace": "MyTestForm_Test10",
+            "doc": "Indicate none",
             "type": "record",
             "fields": [
               {
@@ -297,6 +311,8 @@
         "null",
         {
           "name": "dup_group",
+          "namespace": "MyTestForm_Test10",
+          "doc": "Group",
           "type": "record",
           "fields": [
             {
@@ -322,6 +338,7 @@
         "null",
         {
           "name": "meta",
+          "namespace": "MyTestForm_Test10",
           "type": "record",
           "fields": [
             {

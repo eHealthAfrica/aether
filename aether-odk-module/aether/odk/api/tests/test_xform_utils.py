@@ -713,6 +713,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                             'type': 'array',
                             'items': {
                                 'name': 'Repeat_1',
+                                'namespace': 'Nested_Repeats_Test_0',
                                 'type': 'record',
                                 'fields': [
                                     {
@@ -729,6 +730,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                                                 'type': 'array',
                                                 'items': {
                                                     'name': 'Repeat_2',
+                                                    'namespace': 'Nested_Repeats_Test_0.Repeat_1',
                                                     'type': 'record',
                                                     'fields': [
                                                         {
@@ -800,6 +802,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                         'null',
                         {
                             'name': 'full-name',
+                            'namespace': 'WrongNames_0',
                             'type': 'record',
                             'fields': [
                                 {
@@ -880,6 +883,7 @@ class XFormUtilsAvroTests(CustomTestCase):
                         'null',
                         {
                             'name': 'group_name',
+                            'namespace': 'DupNames_0',
                             'type': 'record',
                             'fields': [
                                 {
