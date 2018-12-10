@@ -54,9 +54,11 @@ from spavro.io import validate
 from urllib3.exceptions import MaxRetryError
 
 from producer import db
-from producer.db import Offset
+from producer.db import Offset, PriorityDatabasePool
 from producer.settings import Settings
 
+
+POSTGRES = PriorityDatabasePool(1)
 
 class KafkaStatus(enum.Enum):
     SUBMISSION_PENDING = 1
@@ -535,14 +537,27 @@ class TopicManager(object):
             schema_name=sql.Literal(self.name),
         )
         try:
-            with psycopg2.connect(**self.pg_creds) as conn:
-                cursor = conn.cursor(cursor_factory=DictCursor)
-                cursor.execute(query)
-                return sum([1 for i in cursor]) > 0
+            promise = POSTGRES.request_connection(1, self.name)
+            getter = promise.get()
+            conn = getter()
+            cursor = conn.cursor(cursor_factory=DictCursor)
+            cursor.execute(query)
+            return sum([1 for i in cursor]) > 0
         except psycopg2.OperationalError as pgerr:
             self.logger.critical(
                 'Could not access Database to look for updates: %s' % pgerr)
             return False
+        finally:
+            POSTGRES.release(getter)
+
+        #     with psycopg2.connect(**self.pg_creds) as conn:
+        #         cursor = conn.cursor(cursor_factory=DictCursor)
+        #         cursor.execute(query)
+        #         return sum([1 for i in cursor]) > 0
+        # except psycopg2.OperationalError as pgerr:
+        #     self.logger.critical(
+        #         'Could not access Database to look for updates: %s' % pgerr)
+        #     return False
 
     def get_time_window_filter(self, query_time):
         # You can't always trust that a set from kernel made up of time window
@@ -575,13 +590,31 @@ class TopicManager(object):
             limit=sql.Literal(self.limit),
         )
         query_time = datetime.now()
-        with psycopg2.connect(**self.pg_creds) as conn:
+
+        try:
+            promise = POSTGRES.request_connection(1, self.name)
+            getter = promise.get()
+            conn = getter()
             cursor = conn.cursor(cursor_factory=DictCursor)
             cursor.execute(query)
             # Since this cursor is of limited size, we keep it in memory instead of
             # returning an iterator to free up the DB resource
             window_filter = self.get_time_window_filter(query_time)
             return [{key: row[key] for key in row.keys()} for row in cursor if window_filter(row)]
+        except psycopg2.OperationalError as pgerr:
+            self.logger.critical(
+                'Could not access Database to look for updates: %s' % pgerr)
+            return []
+        finally:
+            POSTGRES.release(getter)
+
+        # with psycopg2.connect(**self.pg_creds) as conn:
+        #     cursor = conn.cursor(cursor_factory=DictCursor)
+        #     cursor.execute(query)
+        #     # Since this cursor is of limited size, we keep it in memory instead of
+        #     # returning an iterator to free up the DB resource
+        #     window_filter = self.get_time_window_filter(query_time)
+        #     return [{key: row[key] for key in row.keys()} for row in cursor if window_filter(row)]
 
     def get_topic_size(self):
         query = sql.SQL(TopicManager.COUNT_STR).format(

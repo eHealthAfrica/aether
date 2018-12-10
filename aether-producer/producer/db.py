@@ -16,10 +16,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from datetime import datetime
 import logging
 import sys
 import os
 import uuid
+
+import gevent
+from gevent import sleep
+from gevent.event import AsyncResult
+from gevent.queue import PriorityQueue, Queue
 
 from sqlalchemy import Column, String
 from sqlalchemy.ext.declarative import declarative_base
@@ -158,3 +164,78 @@ class Offset(Base):
             schema_name=name
         ).first()
         return offset
+
+
+Class PriorityDatabasePool(object):
+
+    def __init__(self, max_connections=1):
+        self.live_workers = 0
+        pg_requires = ['user', 'dbname', 'port', 'host', 'password']
+        self.pg_creds = {key: SETTINGS.get(
+            "postgres_%s" % key) for key in pg_requires}
+        self.max_connections = max_connections
+        self.workers = []
+        self.job_queue = PriorityQueue()
+        self.connection_pool = Queue()
+        self.running = True
+        gevent.signal(signal.SIGTERM, self._kill)
+        self._start_workers()
+        
+
+    def _start_workers(self):
+        for i in range(self.max_connections):
+            self.connection_pool.put(self._make_connection())
+        for i in range(self.max_connections):
+            self.workers.append(gevent.spawn(self._dispatcher))
+        gevent.joinall(self.workers)
+
+    def _test_connection(self, conn):
+        if not conn:
+            return False
+        try:
+            cur = conn.cursor()
+            cur.execute('SELECT 1')
+            return True
+        except (psycopg2.OperationalError, psychopg2.InterfaceError):
+            return False
+        
+    def _make_connection(self):
+        _id = self.live_workers
+        conn = psycopg2.connect(**self.pg_creds)
+        def get():
+            while not self._test_connection(conn):
+                logger.error(f'Pool {_id} is dead, getting new resource')
+                sleep(3)
+                new_id = self.live_workers
+                conn = psycopg2.connect(**self.pg_creds)
+                logger.error(f'Replaced pool member {_id} with {new_id}')
+                _id = new_id
+                self.live_workers +=1
+            return conn
+
+        self.live_workers +=1
+        return fn
+
+    def _kill(self, *args, **kwargs):
+        logger.info('PriorityDatabasePool is shutting down.')
+        logger.info('PriorityDatabasePool resolving remaning %s jobs.' % (len(self.job_queue)))
+        self.running = False
+
+    def _dispatcher(self):
+        while self.running or not self.job_queue.empty():
+            if not self.connection_pool.empty() and not self.job_queue.empty():
+                conn = self.connection_pool.get()
+                priority_level, request_time, data = self.job_queue.get()
+                name, promise = data
+                promise.set(conn)
+            else:
+                sleep(0)
+
+    def request_connection(self, priority_level, name):
+        promise = AsyncResult()
+        job = (priority_level, datetime.now(), (name, promise))
+        self.job_queue.job(task)
+        return promise
+
+    def release(self, conn):
+        self.connection_pool.put(conn)
