@@ -45,7 +45,7 @@ XLSX_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml
 
 # Total number of rows on a worksheet (since Excel 2007): 1048576
 # https://support.office.com/en-us/article/Excel-specifications-and-limits-1672b34d-7043-467e-8e27-269d656771c3
-MAX_SIZE = 1048575  # the missing one is the header
+MAX_SIZE = 1048574  # the missing ones are the header ones (paths & labels)
 PAGE_SIZE = 1000
 
 
@@ -134,6 +134,134 @@ class ExporterViewSet(ModelViewSet):
         return request.query_params.get(name, dict(request.data).get(name, default))
 
     def __export(self, request, format):
+        '''
+        Expected parameters:
+
+        Data filtering:
+
+        - ``page``, current block of data.
+            Default: ``1``.
+
+        - ``page_size``, size of the block of data.
+            Default: ``1048574``. The missing ones are reserved to the header.
+            Total number of rows on a worksheet (since Excel 2007): ``1048576``.
+            https://support.office.com/en-us/article/Excel-specifications-and-limits-1672b34d-7043-467e-8e27-269d656771c3
+
+        - ``{json_field}__xxx``, json field filters. Handled by the ``get_queryset`` method.
+
+        File options:
+
+        - ``filename``, name of the generated file (without extension).
+            Default: first instance name (project/mappingset name) or ``export``.
+
+        - ``paths``, using the AVRO schema definition for the data, the jsonpaths to be included.
+            If missing will extract it from the schemas associated to the data
+            along with the ``labels``.
+
+            Example:
+                ["a", "a.b", "a.c", ..., "z"]
+
+        - ``labels``, the dictionary of labels for each jsonpath.
+            If missing will use the jsonpaths or the one extracted from the schemas.
+
+            Example:
+                {
+                    "a": "A",
+                    "a.b": "B",
+                    "a.c": "C",
+                    ...
+                    "z": "Z"
+                }
+
+        - ``header_content``, indicates what to include in the header.
+            Options: ``labels`` (default), ``paths``, ``both`` (occupies two rows).
+
+            Example:
+                With labels:    A / B   A / C   ... Z
+                With paths:     a/b     a/c     ... z
+                With both:      a/b     a/c     ... z
+                                A / B   A / C   ... Z
+
+        - ``header_separator``, a one-character string used to separate the nested
+            columns in the headers row.
+            Default: slash ``/``.
+
+            Example:
+                With labels:    A / B   A / C   ... Z
+                With paths:     a/b     a/c     ... z
+
+        - ``header_shorten``, indicates if the header includes the full jsonpath/label
+            or only the column one.
+            Values: ``yes``, any other ``no``. Default: ``no``.
+
+            Example:
+                With yes:       B       C       ... Z
+                Otherwise:      A / B   A / C   ... Z
+
+        - ``data_format``: indicates how to parse the data into the file or files.
+            Values: ``flatten``, any other ``split``. Default: ``split``.
+
+            Example:
+
+                Data:
+
+                [
+                    {
+                        "id": "id1",
+                        "payload": {
+                            "a": {
+                                "b": "1,2,3",
+                                "c": [0, 1, 2]
+                            },
+                            ...
+                            "z": 1
+                        }
+                    },
+                    {
+                        "id": "id2",
+                        "payload": {
+                            "a": {
+                                "b": "a,b,c",
+                                "c": [4, 5]
+                            },
+                            ...
+                            "z": 2
+                        }
+                    }
+                ]
+
+                With flatten:
+
+                    @   @ID   A / B   A / C / 0   A / C / 1   A / C / 2   ... Z
+                    1   id1   1,2,3   0           1           2           ... 1
+                    2   id2   a,b,c   4           5                       ... 2
+
+                Otherwise (with split):
+
+                    Main file:
+                        @   @ID   A / B   ... Z
+                        1   id1   1,2,3   ... 1
+                        2   id2   a,b,c   ... 2
+
+                    A_C file:
+                        @   @ID   A / C / #   A / C
+                        1   id1   1           0
+                        1   id1   2           1
+                        1   id1   3           2
+                        2   id2   1           4
+                        2   id2   2           5
+
+        CSV format specific:
+
+        - ``csv_separator``, a one-character string used to separate the columns.
+            Default: comma ``,``.
+
+        - ``csv_quotes``, a one-character string used to quote fields containing
+            special characters, such as the separator or quotes, or which contain
+            new-line characters.
+            Default: double quotes ``"``.
+
+        '''
         queryset = self.filter_queryset(self.get_queryset())
         data = queryset.annotate(exporter_data=F(self.json_field)) \
                        .values('pk', 'exporter_data')
