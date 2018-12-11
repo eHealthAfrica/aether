@@ -16,6 +16,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from gevent import monkey, sleep
+# need to patch sockets to make requests async
+monkey.patch_all()  # noqa
+import psycogreen.gevent
+psycogreen.gevent.patch_psycopg()  # noqa
+
 from datetime import datetime
 import logging
 import sys
@@ -29,12 +35,14 @@ from gevent.event import AsyncResult
 from gevent.queue import PriorityQueue, Queue
 
 import psycopg2
+from psycopg2.extras import DictCursor
 
 from sqlalchemy import Column, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import NullPool
 
 from producer.settings import Settings
 
@@ -59,6 +67,8 @@ logger.setLevel(log_level)
 def init():
     global engine
 
+    # Offset
+
     offset_db_host = SETTINGS['offset_db_host']
     offset_db_user = SETTINGS['offset_db_user']
     offset_db_port = SETTINGS['offset_db_port']
@@ -68,7 +78,8 @@ def init():
     url = f'postgresql+psycopg2://{offset_db_user}:{offset_db_password}' + \
         f'@{offset_db_host}:{offset_db_port}/{offset_db_name}'
 
-    engine = create_engine(url)
+    Offset.create_pool()
+    engine = create_engine(url, poolclass=NullPool)
     try:
         start_session(engine)
         return
@@ -81,7 +92,6 @@ def init():
     except SQLAlchemyError as sqe:
         logger.error('Database creation failed: %s' % sqe)
         sys.exit(1)
-
 
 def start_session(engine):
     try:
@@ -121,6 +131,23 @@ def make_uuid():
 class Offset(Base):
     __tablename__ = 'offset'
 
+    GET_STR = '''
+        SELECT
+            o.schema_name,
+            o.offset_value
+        FROM public.offset o
+        WHERE o.schema_name = '{schema_name}'
+        LIMIT 1; '''
+
+    SET_STR = '''
+        INSERT INTO public.offset
+            (schema_name, offset_value)
+        VALUES
+            ('{schema_name}', '{offset_value}')
+        ON CONFLICT (schema_name) DO UPDATE SET
+            (schema_name, offset_value)
+            = (EXCLUDED.schema_name, EXCLUDED.offset_value);'''
+
     schema_name = Column(String, primary_key=True)
     offset_value = Column(String, nullable=False)
 
@@ -136,53 +163,61 @@ class Offset(Base):
         return offset
 
     @classmethod
-    def get(cls, **kwargs):
-        session = get_session()
-        offset = session.query(cls).filter_by(**kwargs).first()
-        return offset
+    def create_pool(cls):
+        # OffsetDB
+        offset_settings = {
+            'user': 'offset_db_user',
+            'dbname': 'offset_db_name',
+            'port': 'offset_db_port',
+            'host': 'offset_db_host',
+            'password': 'offset_db_password'
+        }
+        offset_creds = {k: SETTINGS.get(v) for k, v in offset_settings.items()}
+        global OFFSET_DB
+        OFFSET_DB = PriorityDatabasePool(offset_creds, 3)
 
     @classmethod
     def update(cls, name, offset_value):
         # Update or Create if not existing
+        call = "Offset-SET"
         try:
-            session = get_session()
-            offset = session.query(cls).filter_by(
-                schema_name=name
-            ).first()
-            if offset:
-                offset.offset_value = offset_value
-                session.add(offset)
-                session.commit()
-                return offset
-            else:
-                offset = cls(
-                    schema_name=name,
-                    offset_value=offset_value
-                )
-                session.add(offset)
-                session.commit()
-                return offset
+            promise = OFFSET_DB.request_connection(0, call)  # Lower Priority than set
+            conn = promise.get()
+            cursor = conn.cursor()
+            query = Offset.SET_STR.format(
+                schema_name=name,
+                offset_value=offset_value)
+            cursor.execute(query)
+            return offset_value
         except Exception as err:
-            logger.error('Could not save offset for topic %s | %s' %
-                         (name, err))
-            return offset
+            raise err
+        finally:
+            OFFSET_DB.release(call, conn)
 
     @classmethod
     def get_offset(cls, name):
-        session = get_session()
-        offset = session.query(cls).filter_by(
-            schema_name=name
-        ).first()
-        return offset
-
+        call = "Offset-GET"
+        try:
+            promise = OFFSET_DB.request_connection(1, call)  # Lower Priority than set
+            conn = promise.get()
+            cursor = conn.cursor(cursor_factory=DictCursor)
+            query = Offset.GET_STR.format(schema_name=name)
+            cursor.execute(query)
+            res = [i for i in cursor]
+            if not res:
+                return None
+            return res[0][1]
+        except Exception as err:
+            raise err
+        finally:
+            OFFSET_DB.release(call, conn)
+    
 
 class PriorityDatabasePool(object):
 
-    def __init__(self, max_connections=1):
+    def __init__(self, pg_creds, max_connections=1):
         self.live_workers = 0
-        pg_requires = ['user', 'dbname', 'port', 'host', 'password']
-        self.pg_creds = {key: SETTINGS.get(
-            "postgres_%s" % key) for key in pg_requires}
+        self.pg_creds = pg_creds
         self.max_connections = max_connections
         logger.debug(f'Initializing DB Pool with {max_connections} connections.')
         self.workers = []
@@ -247,3 +282,9 @@ class PriorityDatabasePool(object):
     def release(self, caller, conn):
         logger.debug(f'{caller} released connection.')
         self.connection_pool.put(conn)
+
+# KernelDB
+pg_requires = ['user', 'dbname', 'port', 'host', 'password']
+pg_creds = {key: SETTINGS.get(
+    "postgres_%s" % key) for key in pg_requires}
+KERNEL_DB = PriorityDatabasePool(pg_creds, 5)

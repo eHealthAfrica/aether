@@ -55,12 +55,8 @@ from urllib3.exceptions import MaxRetryError
 
 from producer import db
 from producer.db import Offset, PriorityDatabasePool
+from producer.db import KERNEL_DB as POSTGRES
 from producer.settings import Settings
-
-try:
-    POSTGRES = PriorityDatabasePool(1)
-except Exception as e:
-    raise e
 
 
 class KafkaStatus(enum.Enum):
@@ -270,8 +266,8 @@ class ProducerManager(object):
             '%(asctime)s [Producer] %(levelname)-8s %(message)s'))
         log_level = logging.getLevelName(self.settings
                                          .get('log_level', 'DEBUG'))
-        # self.logger.setLevel(log_level)
-        self.logger.setLevel(logging.INFO)
+        self.logger.setLevel(log_level)
+        # self.logger.setLevel(logging.INFO)
         if log_level is "DEBUG":
             self.app.debug = True
         self.app.config['JSONIFY_PRETTYPRINT_REGULAR'] = self.settings \
@@ -843,8 +839,8 @@ class TopicManager(object):
         offset = Offset.get_offset(self.name)
         if offset:
             self.logger.debug("Got offset for %s | %s" %
-                              (self.name, offset.offset_value))
-            return offset.offset_value
+                              (self.name, offset))
+            return offset
         else:
             self.logger.debug(
                 'Could not get offset for %s it is a new type' % (self.name))
@@ -855,8 +851,8 @@ class TopicManager(object):
         # Set a new offset in the database
         new_offset = Offset.update(self.name, offset)
         self.logger.debug("new offset for %s | %s" %
-                          (self.name, new_offset.offset_value))
-        self.status['offset'] = new_offset.offset_value
+                          (self.name, new_offset))
+        self.status['offset'] = new_offset
 
 
 def main():
