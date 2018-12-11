@@ -419,7 +419,7 @@ class ExporterViewsTest(TestCase):
 
         response = self.client.post(reverse('submission-csv'), data=json.dumps({
             'paths': ['_id', '_rev'],
-            'headers': {'_id': 'id', '_rev': 'rev'},
+            'labels': {'_id': 'id', '_rev': 'rev'},
             'filename': 'submissions',
             'page': 3,
             'page_size': 5,

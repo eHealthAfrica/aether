@@ -152,7 +152,7 @@ class ExporterViewSet(ModelViewSet):
 
         # extract jsonpaths and docs from linked schemas definition
         jsonpaths = self.__get(request, 'paths', [])
-        docs = self.__get(request, 'headers', {})
+        docs = self.__get(request, 'labels', {})
         if self.schema_field and not jsonpaths:
             schemas = queryset.order_by(self.schema_order or self.schema_field) \
                               .values(self.schema_field) \
