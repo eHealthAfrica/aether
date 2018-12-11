@@ -188,6 +188,7 @@ class Offset(Base):
                 schema_name=name,
                 offset_value=offset_value)
             cursor.execute(query)
+            conn.commit()
             return offset_value
         except Exception as err:
             raise err

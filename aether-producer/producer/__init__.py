@@ -603,7 +603,7 @@ class TopicManager(object):
             schema_name=sql.Literal(self.name),
         )
         try:
-            promise = POSTGRES.request_connection(1, self.name)  # needs to be quick
+            promise = POSTGRES.request_connection(0, self.name)  # needs to be quick
             conn = promise.get()
             cursor = conn.cursor(cursor_factory=DictCursor)
             cursor.execute(query)
