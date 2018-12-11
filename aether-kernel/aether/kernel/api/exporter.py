@@ -17,11 +17,13 @@
 # under the License.
 
 from datetime import datetime
+from collections import namedtuple
 import csv
 import json
 import os
 import re
 import tempfile
+import uuid
 import zipfile
 
 from openpyxl import Workbook
@@ -35,18 +37,58 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 
 from .avro_tools import ARRAY_PATH, MAP_PATH, UNION_PATH, extract_jsonpaths_and_docs
-from ..settings import CSV_SEPARATOR
+from ..settings import (
+    EXPORT_CSV_ESCAPE,
+    EXPORT_CSV_QUOTE,
+    EXPORT_CSV_SEPARATOR,
+    EXPORT_DATA_FORMAT,
+    EXPORT_HEADER_CONTENT,
+    EXPORT_HEADER_SEPARATOR,
+    EXPORT_HEADER_SHORTEN,
+)
 
 EXPORT_DIR = tempfile.mkdtemp()
 FILENAME_RE = '{name}-{ts}.{ext}'
 
+CSV_FORMAT = 'csv'
 CSV_CONTENT_TYPE = 'application/zip'
+
+XLSX_FORMAT = 'xlsx'
 XLSX_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 # Total number of rows on a worksheet (since Excel 2007): 1048576
 # https://support.office.com/en-us/article/Excel-specifications-and-limits-1672b34d-7043-467e-8e27-269d656771c3
 MAX_SIZE = 1048574  # the missing ones are the header ones (paths & labels)
 PAGE_SIZE = 1000
+
+# CSV Dialect
+# https://docs.python.org/3/library/csv.html#dialects-and-formatting-parameters
+DEFAULT_DIALECT = 'aether_dialect'
+csv.register_dialect(
+    DEFAULT_DIALECT,
+    delimiter=EXPORT_CSV_SEPARATOR,
+    doublequote=False,
+    escapechar=EXPORT_CSV_ESCAPE,
+    quotechar=EXPORT_CSV_QUOTE,
+    quoting=csv.QUOTE_NONNUMERIC,
+)
+
+ExportOptions = namedtuple(
+    'ExportOptions', [
+        'header_content',
+        'header_separator',
+        'header_shorten',
+        'data_format',
+        'csv_dialect',
+    ])
+
+DEFAULT_OPTIONS = ExportOptions(
+    header_content=EXPORT_HEADER_CONTENT,
+    header_separator=EXPORT_HEADER_SEPARATOR,
+    header_shorten=EXPORT_HEADER_SHORTEN,
+    data_format=EXPORT_DATA_FORMAT,
+    csv_dialect=DEFAULT_DIALECT,
+)
 
 
 class ExporterViewSet(ModelViewSet):
@@ -119,7 +161,7 @@ class ExporterViewSet(ModelViewSet):
 
         Reachable at ``/{model}/xlsx/``
         '''
-        return self.__export(request, format='xlsx')
+        return self.__export(request, format=XLSX_FORMAT)
 
     @action(detail=False, methods=['get', 'post'])
     def csv(self, request, *args, **kwargs):
@@ -128,12 +170,53 @@ class ExporterViewSet(ModelViewSet):
 
         Reachable at ``/{model}/csv/``
         '''
-        return self.__export(request, format='csv')
+        return self.__export(request, format=CSV_FORMAT)
 
     def __get(self, request, name, default=None):
         return request.query_params.get(name, dict(request.data).get(name, default))
 
-    def __export(self, request, format):
+    def __options(self, request):
+        # register CSV dialect for the given options
+        dialect_name = f'aether_custom_{str(uuid.uuid4())}'
+        csv_sep = self.__get(request, 'csv_separator', EXPORT_CSV_SEPARATOR)
+        if csv_sep == 'TAB':
+            csv_sep = '\t'
+
+        csv.register_dialect(
+            dialect_name,
+            delimiter=csv_sep,
+            doublequote=False,
+            escapechar=self.__get(request, 'csv_escape', EXPORT_CSV_ESCAPE),
+            quotechar=self.__get(request, 'csv_quote', EXPORT_CSV_QUOTE),
+            quoting=csv.QUOTE_NONNUMERIC,
+        )
+
+        # check valid values for each option
+        header_content = self.__get(request, 'header_content', EXPORT_HEADER_CONTENT)
+        if header_content not in ('labels', 'paths', 'both'):
+            header_content = 'labels'
+
+        header_separator = self.__get(request, 'header_separator', EXPORT_HEADER_SEPARATOR)
+        if not header_separator:
+            header_separator = EXPORT_HEADER_SEPARATOR
+
+        header_shorten = self.__get(request, 'header_shorten', EXPORT_HEADER_SHORTEN)
+        if header_shorten != 'yes':
+            header_shorten = 'no'
+
+        data_format = self.__get(request, 'data_format', EXPORT_DATA_FORMAT)
+        if data_format != 'flatten':
+            data_format = 'split'
+
+        return ExportOptions(
+            header_content=header_content,
+            header_separator=header_separator,
+            header_shorten=header_shorten,
+            data_format=data_format,
+            csv_dialect=dialect_name,
+        )
+
+    def __export(self, request, format=CSV_FORMAT):
         '''
         Expected parameters:
 
@@ -159,7 +242,7 @@ class ExporterViewSet(ModelViewSet):
             along with the ``labels``.
 
             Example:
-                ["a", "a.b", "a.c", ..., "z"]
+                ["a.b", "a.c", ..., "z"]
 
         - ``labels``, the dictionary of labels for each jsonpath.
             If missing will use the jsonpaths or the one extracted from the schemas.
@@ -232,7 +315,7 @@ class ExporterViewSet(ModelViewSet):
 
                 With flatten:
 
-                    @   @ID   A / B   A / C / 0   A / C / 1   A / C / 2   ... Z
+                    @   @ID   A / B   A / C / 1   A / C / 2   A / C / 3   ... Z
                     1   id1   1,2,3   0           1           2           ... 1
                     2   id2   a,b,c   4           5                       ... 2
 
@@ -253,13 +336,17 @@ class ExporterViewSet(ModelViewSet):
 
         CSV format specific:
 
-        - ``csv_separator``, a one-character string used to separate the columns.
-            Default: comma ``,``.
+        - ``csv_escape``, a one-character string used to escape the separator
+            and the quotechar char.
+            Default: backslash ``\\``.
 
-        - ``csv_quotes``, a one-character string used to quote fields containing
-            special characters, such as the separator or quotes, or which contain
+        - ``csv_quote``, a one-character string used to quote fields containing
+            special characters, such as the separator or quote char, or which contain
             new-line characters.
             Default: double quotes ``"``.
+
+        - ``csv_separator``, a one-character string used to separate the columns.
+            Default: comma ``,``.
 
         '''
         queryset = self.filter_queryset(self.get_queryset())
@@ -275,9 +362,6 @@ class ExporterViewSet(ModelViewSet):
         if offset >= limit:
             return Response(status=204)  # NO-CONTENT
 
-        # use the first instance to build the filename
-        filename = self.__get(request, 'filename', queryset.first().name or 'export')
-
         # extract jsonpaths and docs from linked schemas definition
         jsonpaths = self.__get(request, 'paths', [])
         docs = self.__get(request, 'labels', {})
@@ -292,44 +376,59 @@ class ExporterViewSet(ModelViewSet):
                     docs=docs,
                 )
 
+        options = self.__options(request)
+
         try:
-            filename, filepath, content_type = generate_file(
+            file_name, file_path, content_type = generate_file(
                 data=data,
+                format=format,
+                # use the first instance to build the filename
+                filename=self.__get(request, 'filename', queryset.first().name or 'export'),
                 paths=jsonpaths,
                 labels=docs,
-                format=format,
-                filename=filename,
                 offset=offset,
                 limit=limit,
+                options=options,
             )
+            csv.unregister_dialect(options.csv_dialect)
 
-            response = FileResponse(open(filepath, 'rb'))
+            response = FileResponse(open(file_path, 'rb'))
             response['Content-Type'] = content_type
-            response['Content-Disposition'] = f'attachment; filename="{filename}"'
-            response['Content-Length'] = os.path.getsize(filepath)
+            response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+            response['Content-Length'] = os.path.getsize(file_path)
             response['Access-Control-Expose-Headers'] = 'Content-Disposition'
 
             return response
 
         except IOError as e:
+            csv.unregister_dialect(options.csv_dialect)
             msg = _('Got an error while creating the file: {error}').format(error=str(e))
             return Response(data={'detail': msg}, status=500)
 
 
-def generate_file(data, paths=[], labels={}, format='csv', filename='export', offset=0, limit=MAX_SIZE):
+def generate_file(data,
+                  paths=[],
+                  labels={},
+                  format=CSV_FORMAT,
+                  filename='export',
+                  offset=0,
+                  limit=MAX_SIZE,
+                  options=DEFAULT_OPTIONS,
+                  ):
     '''
     Generates an XLSX/ ZIP (of CSV files) file with the given data.
 
     - ``data`` is a queryset with two main properties ``pk`` and ``exporter_data``.
+    - ``format``, expected values ``xlsx`` or ``csv``.
     - ``paths`` is a list with the allowed jsonpaths.
     - ``labels`` is a dictionary whose keys are the jsonpaths
       and the values the linked labels to use as header for that jsonpath.
-    - ``format``, expected values ``xlsx`` or ``csv``.
+    - ``options`` the export options.
     '''
 
-    csv_files = __generate_csv_files(data, paths, labels, offset, limit)
-    if format == 'xlsx':
-        return __prepare_xlsx(csv_files, filename)
+    csv_files = __generate_csv_files(data, paths, labels, offset, limit, options)
+    if format == XLSX_FORMAT:
+        return __prepare_xlsx(csv_files, filename, options.csv_dialect)
     else:
         return __prepare_zip(csv_files, filename)
 
@@ -345,12 +444,12 @@ def __prepare_zip(csv_files, filename):
     return zip_name, zip_path, CSV_CONTENT_TYPE
 
 
-def __prepare_xlsx(csv_files, filename):
+def __prepare_xlsx(csv_files, filename, csv_dialect):
     wb = Workbook(write_only=True, iso_dates=True)
     for key, value in csv_files.items():
         ws = wb.create_sheet(key)
         with open(value, newline='') as f:
-            reader = csv.reader(f, delimiter=CSV_SEPARATOR)
+            reader = csv.reader(f, dialect=csv_dialect)
             for line in reader:
                 ws.append(line)
 
@@ -374,9 +473,9 @@ def __prepare_xlsx(csv_files, filename):
 #
 # @param {list}  data    - raw data
 # @param {list}  paths   - the list of allowed paths
-# @param {dict}  labels  - a dictionary with headers labels
+# @param {dict}  labels  - a dictionary with header labels
 #
-def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE):
+def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE, export_options=DEFAULT_OPTIONS):
     def add_header(options, header):
         if header not in options['headers_set']:
             options['headers_set'].add(header)
@@ -396,7 +495,7 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE):
             title = '#' if group == '$' else f'#-{len(csv_options.keys())}'
             csv_path = f'{EXPORT_DIR}/temp-{title}.csv'
             f = open(csv_path, 'w', newline='')
-            c = csv.writer(f, delimiter=CSV_SEPARATOR)
+            c = csv.writer(f, dialect=export_options.csv_dialect)
 
             csv_options[group] = {
                 'file': f,
@@ -431,7 +530,7 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE):
                 i = 0
                 for val in value:
                     i += 1
-                    element = __flatten_dict(val) if isinstance(val, dict) else {'value': val}
+                    element = __flatten_dict(val, flatten_list) if isinstance(val, (dict, list)) else {'value': val}
                     element_ids = {
                         **item_ids,             # identifies the parent
                         f'@.{array_group}': i,  # identifies the element
@@ -441,6 +540,7 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE):
         append_entry(current, entry)
 
     # start generation
+    flatten_list = (export_options.data_format == 'flatten')
     csv_options = {}
     paths = __filter_paths(paths)
 
@@ -451,7 +551,7 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE):
         data_to = min(data_from + PAGE_SIZE, limit)
         for row in data[data_from:data_to]:
             index += 1
-            json_data = __flatten_dict(row.get('exporter_data'))
+            json_data = __flatten_dict(row.get('exporter_data'), flatten_list)
             walker(json_data, {'@': index, '@id': str(row.get('pk'))}, '$')
         data_from = data_to
 
@@ -485,13 +585,33 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE):
 
         if headers:
             with open(rows_path, newline='') as fr, open(csv_path, 'w', newline='') as fw:
-                r = csv.DictReader(fr, fieldnames=current['headers'])
-                w = csv.writer(fw)
+                r = csv.DictReader(fr, fieldnames=current['headers'], dialect=export_options.csv_dialect)
+                w = csv.writer(fw, dialect=export_options.csv_dialect)
 
-                w.writerow([
-                    __get_label(header, labels)
-                    for header in headers
-                ])
+                single = (export_options.header_shorten == 'yes')
+                # paths header
+                if export_options.header_content in ('paths', 'both'):
+                    w.writerow([
+                        __get_label(header,
+                                    labels,
+                                    content='path',
+                                    single=single,
+                                    joiner=export_options.header_separator,
+                                    )
+                        for header in headers
+                    ])
+
+                # labels header
+                if export_options.header_content in ('labels', 'both'):
+                    w.writerow([
+                        __get_label(header,
+                                    labels,
+                                    content='label',
+                                    single=single,
+                                    joiner=f' {export_options.header_separator} ',
+                                    )
+                        for header in headers
+                    ])
 
                 for row in r:
                     w.writerow([
@@ -503,12 +623,18 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE):
     return csv_files
 
 
-def __flatten_dict(obj):
+def __flatten_dict(obj, flatten_list=False):
     def _items():
         for key, value in obj.items():
+            if isinstance(value, list) and flatten_list:
+                value = {
+                    str(i): v
+                    for i, v in enumerate(value, start=1)
+                }
+
             if isinstance(value, dict):
-                for subkey, subvalue in __flatten_dict(value).items():
-                    yield key + '.' + subkey, subvalue
+                for subkey, subvalue in __flatten_dict(value, flatten_list).items():
+                    yield f'{key}.{subkey}', subvalue
             else:
                 yield key, value
     return dict(_items())
@@ -539,7 +665,12 @@ def __filter_paths(paths):
     return leafs
 
 
-def __get_label(jsonpath, labels={}):
+def __get_label(jsonpath,
+                labels={},
+                content='label',
+                single=False,
+                joiner=' / ',
+                ):
     def get_single(path):
         # find in the labels dictionary the jsonpath entry
         if labels.get(path):
@@ -566,4 +697,12 @@ def __get_label(jsonpath, labels={}):
         jsonpath = jsonpath[2:]  # remove attribute identifier
 
     pieces = jsonpath.split('.')
-    return ' / '.join([get_single('.'.join(pieces[:i + 1])) for i in range(len(pieces))])
+    if content == 'path':
+        return pieces[-1] if single else joiner.join(pieces)
+
+    if single:
+        # take only the last piece
+        return get_single('.'.join(pieces))
+    else:
+        # the full label
+        return joiner.join([get_single('.'.join(pieces[:i + 1])) for i in range(len(pieces))])
