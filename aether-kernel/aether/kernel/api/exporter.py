@@ -589,6 +589,7 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE, export_o
                 w = csv.writer(fw, dialect=export_options.csv_dialect)
 
                 single = (export_options.header_shorten == 'yes')
+
                 # paths header
                 if export_options.header_content in ('paths', 'both'):
                     w.writerow([
@@ -627,10 +628,7 @@ def __flatten_dict(obj, flatten_list=False):
     def _items():
         for key, value in obj.items():
             if isinstance(value, list) and flatten_list:
-                value = {
-                    str(i): v
-                    for i, v in enumerate(value, start=1)
-                }
+                value = {str(i): v for i, v in enumerate(value, start=1)}
 
             if isinstance(value, dict):
                 for subkey, subvalue in __flatten_dict(value, flatten_list).items():

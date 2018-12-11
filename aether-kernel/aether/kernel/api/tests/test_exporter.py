@@ -319,7 +319,7 @@ class ExporterViewsTest(TestCase):
                 csv_dialect=DEFAULT_DIALECT,
             ),
             **kwargs,
-            )
+        )
         zip_file = zipfile.ZipFile(zip_path, 'r')
         self.assertEqual(zip_file.namelist(), ['export-#.csv'])
 
