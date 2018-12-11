@@ -110,6 +110,18 @@
           <text id="/Something_that_is_not_None/iterate_none/nothing:label">
             <value>None</value>
           </text>
+          <text id="/Something_that_is_not_None/value:label">
+            <value>Dup value</value>
+          </text>
+          <text id="/Something_that_is_not_None/dup_group:label">
+            <value>Group</value>
+          </text>
+          <text id="/Something_that_is_not_None/dup_group/value:label">
+            <value>Nested dup value</value>
+          </text>
+          <text id="/Something_that_is_not_None/note_end:label">
+            <value>That's all folks!</value>
+          </text>
           <text id="static_instance-country-0">
             <value>Cameroon</value>
           </text>
@@ -244,6 +256,18 @@
           <text id="/Something_that_is_not_None/iterate_none/nothing:label">
             <value>Nada</value>
           </text>
+          <text id="/Something_that_is_not_None/value:label">
+            <value>Valor por duplicado</value>
+          </text>
+          <text id="/Something_that_is_not_None/dup_group:label">
+            <value>Grupo</value>
+          </text>
+          <text id="/Something_that_is_not_None/dup_group/value:label">
+            <value>Valor por duplicado anidado</value>
+          </text>
+          <text id="/Something_that_is_not_None/note_end:label">
+            <value>¡Eso es todo amigos!</value>
+          </text>
           <text id="static_instance-country-0">
             <value>Camerún</value>
           </text>
@@ -312,6 +336,11 @@
           <iterate_none jr:template="">
             <nothing/>
           </iterate_none>
+          <value/>
+          <dup_group>
+            <value/>
+          </dup_group>
+          <note_end/>
           <meta>
             <instanceID/>
             <instanceName/>
@@ -423,6 +452,9 @@
       <bind nodeset="/Something_that_is_not_None/iterate/value" type="string"/>
       <bind nodeset="/Something_that_is_not_None/iterate_one/item" type="string"/>
       <bind nodeset="/Something_that_is_not_None/iterate_none/nothing" type="string"/>
+      <bind nodeset="/Something_that_is_not_None/value" type="string"/>
+      <bind nodeset="/Something_that_is_not_None/dup_group/value" type="string"/>
+      <bind nodeset="/Something_that_is_not_None/note_end" readonly="true()" required="false()" type="string"/>
       <bind
             calculate="concat('uuid:', uuid())"
             nodeset="/Something_that_is_not_None/meta/instanceID"
@@ -543,5 +575,17 @@
         </input>
       </repeat>
     </group>
+    <input ref="/Something_that_is_not_None/value">
+      <label ref="jr:itext('/Something_that_is_not_None/value:label')"/>
+    </input>
+    <group ref="/Something_that_is_not_None/dup_group">
+      <label ref="jr:itext('/Something_that_is_not_None/dup_group:label')"/>
+      <input ref="/Something_that_is_not_None/dup_group/value">
+        <label ref="jr:itext('/Something_that_is_not_None/dup_group/value:label')"/>
+      </input>
+    </group>
+    <input ref="/Something_that_is_not_None/note_end">
+      <label ref="jr:itext('/Something_that_is_not_None/note_end:label')"/>
+    </input>
   </h:body>
 </h:html>

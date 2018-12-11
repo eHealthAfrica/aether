@@ -79,6 +79,11 @@
           <iterate_none jr:template="">
             <nothing/>
           </iterate_none>
+          <value/>
+          <dup_group>
+            <value/>
+          </dup_group>
+          <note_end/>
           <meta>
             <instanceID/>
             <instanceName/>
@@ -190,6 +195,9 @@
       <bind nodeset="/Something_that_is_not_None/iterate/value" type="string"/>
       <bind nodeset="/Something_that_is_not_None/iterate_one/item" type="string"/>
       <bind nodeset="/Something_that_is_not_None/iterate_none/nothing" type="string"/>
+      <bind nodeset="/Something_that_is_not_None/value" type="string"/>
+      <bind nodeset="/Something_that_is_not_None/dup_group/value" type="string"/>
+      <bind nodeset="/Something_that_is_not_None/note_end" readonly="true()" required="false()" type="string"/>
       <bind
             calculate="concat('uuid:', uuid())"
             nodeset="/Something_that_is_not_None/meta/instanceID"
@@ -310,5 +318,17 @@
         </input>
       </repeat>
     </group>
+    <input ref="/Something_that_is_not_None/value">
+      <label>Dup value</label>
+    </input>
+    <group ref="/Something_that_is_not_None/dup_group">
+      <label>Group</label>
+      <input ref="/Something_that_is_not_None/dup_group/value">
+        <label>Nested dup value</label>
+      </input>
+    </group>
+    <input ref="/Something_that_is_not_None/note_end">
+      <label>That's all folks!</label>
+    </input>
   </h:body>
 </h:html>
