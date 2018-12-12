@@ -605,6 +605,9 @@ class ExporterViewsTest(TestCase):
                                 .order_by('created') \
                                 .annotate(exporter_data=F('payload')) \
                                 .values('pk', 'exporter_data')
+
+        # ----------------------------------------------------------------------
+        # with paths (header in order)
         _, xlsx_path, _ = generate(
             data,
             paths=['id', 'list_1', 'list_2'],
@@ -681,6 +684,101 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(ws['K4'].value, 'i')
         self.assertEqual(ws['L4'].value, 'j')
         self.assertEqual(ws['M4'].value, 'k')
+
+        # ----------------------------------------------------------------------
+        # without paths (in order of appearance)
+        _, xlsx_path, _ = generate(
+            data,
+            paths=[],
+            labels={},
+            format=XLSX_FORMAT,
+            offset=0,
+            limit=3,
+            options=ExportOptions(
+                header_content='paths',
+                header_separator='.',
+                header_shorten='no',
+                data_format='flatten',
+                csv_dialect=DEFAULT_DIALECT,
+            ),
+        )
+        wb2 = load_workbook(filename=xlsx_path, read_only=True)
+
+        header = [c.value for c in wb2['#'][1]]
+        self.assertEqual(
+            header,
+            [
+                '@', '@id', 'id',
+                'list_1.1', 'list_1.2', 'list_1.3',
+                'list_2.1', 'list_2.2',
+                'list_1.4', 'list_1.5',
+                'list_2.3', 'list_2.4', 'list_2.5',
+            ]
+        )
+
+    def test__generate__xlsx__flatten__multiple_nested_lists(self):
+        # delete submissions
+        models.Submission.objects.all().delete()
+        ms = models.MappingSet.objects.first()
+
+        # create custom submissions with lists
+        models.Submission.objects.create(
+            mappingset=ms,
+            payload={
+                'id': 1,
+                'list_2': [['a'], ['b']],
+                'list_1': [[1], [2, 3]],
+            },
+        )
+        models.Submission.objects.create(
+            mappingset=ms,
+            payload={
+                'id': 2,
+                'list_1': [[4, 5, 6], [7, 8]],
+                'list_2': [['c', 'd'], ['f']],
+            },
+        )
+        models.Submission.objects.create(
+            mappingset=ms,
+            payload={
+                'id': 3,
+                'list_2': [['g', 'h', 'i', 'j', 'k']],
+                'list_1': [[], [], [], [9]],
+            },
+        )
+
+        data = models.Submission.objects \
+                                .order_by('created') \
+                                .annotate(exporter_data=F('payload')) \
+                                .values('pk', 'exporter_data')
+
+        _, xlsx_path, _ = generate(
+            data,
+            paths=['id', 'list_1', 'list_2'],
+            labels={},
+            format=XLSX_FORMAT,
+            offset=0,
+            limit=3,
+            options=ExportOptions(
+                header_content='paths',
+                header_separator='.',
+                header_shorten='no',
+                data_format='flatten',
+                csv_dialect=DEFAULT_DIALECT,
+            ),
+        )
+        wb = load_workbook(filename=xlsx_path, read_only=True)
+
+        # check workbook header
+        header = [c.value for c in wb['#'][1]]
+        self.assertEqual(
+            header,
+            [
+                '@', '@id', 'id',
+                'list_1.1.1', 'list_1.2.1', 'list_1.2.2', 'list_1.1.2', 'list_1.1.3', 'list_1.4.1',
+                'list_2.1.1', 'list_2.2.1', 'list_2.1.2', 'list_2.1.3', 'list_2.1.4', 'list_2.1.5',
+            ]
+        )
 
     # -----------------------------
     # SUBMISSIONS

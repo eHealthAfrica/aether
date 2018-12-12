@@ -569,7 +569,7 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE, export_o
         # create headers in order
         headers = None
         if not paths:
-            headers = current['headers']
+            headers = current['headers']  # appearance order
         else:
             if group == '$':
                 headers = ['@', '@id']
