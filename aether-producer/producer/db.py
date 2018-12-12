@@ -35,6 +35,7 @@ from gevent.event import AsyncResult
 from gevent.queue import PriorityQueue, Queue
 
 import psycopg2
+from psycopg2 import sql
 from psycopg2.extras import DictCursor
 
 from sqlalchemy import Column, String
@@ -78,10 +79,11 @@ def init():
     url = f'postgresql+psycopg2://{offset_db_user}:{offset_db_password}' + \
         f'@{offset_db_host}:{offset_db_port}/{offset_db_name}'
 
-    Offset.create_pool()
+    
     engine = create_engine(url, poolclass=NullPool)
     try:
         start_session(engine)
+        Offset.create_pool()
         return
     except SQLAlchemyError:
         pass
@@ -89,9 +91,11 @@ def init():
         logger.error('Attempting to Create Database.')
         create_db(engine, url)
         start_session(engine)
+        Offset.create_pool()
     except SQLAlchemyError as sqe:
         logger.error('Database creation failed: %s' % sqe)
         sys.exit(1)
+    
 
 def start_session(engine):
     try:
@@ -136,31 +140,20 @@ class Offset(Base):
             o.schema_name,
             o.offset_value
         FROM public.offset o
-        WHERE o.schema_name = '{schema_name}'
+        WHERE o.schema_name = {schema_name}
         LIMIT 1; '''
 
     SET_STR = '''
         INSERT INTO public.offset
             (schema_name, offset_value)
         VALUES
-            ('{schema_name}', '{offset_value}')
+            ({schema_name}, {offset_value})
         ON CONFLICT (schema_name) DO UPDATE SET
             (schema_name, offset_value)
             = (EXCLUDED.schema_name, EXCLUDED.offset_value);'''
 
     schema_name = Column(String, primary_key=True)
     offset_value = Column(String, nullable=False)
-
-    @classmethod
-    def create(cls, **kwargs):
-        offset = Offset.get(**kwargs)
-        if offset:
-            return offset
-        offset = cls(**kwargs)
-        session = get_session()
-        session.add(offset)
-        session.commit()
-        return offset
 
     @classmethod
     def create_pool(cls):
@@ -174,19 +167,19 @@ class Offset(Base):
         }
         offset_creds = {k: SETTINGS.get(v) for k, v in offset_settings.items()}
         global OFFSET_DB
-        OFFSET_DB = PriorityDatabasePool(offset_creds, 3)
+        OFFSET_DB = PriorityDatabasePool(offset_creds, 'OffsetDB', 3)
 
     @classmethod
     def update(cls, name, offset_value):
         # Update or Create if not existing
         call = "Offset-SET"
         try:
-            promise = OFFSET_DB.request_connection(0, call)  # Lower Priority than set
+            promise = OFFSET_DB.request_connection(0, call)  # Highest Priority
             conn = promise.get()
             cursor = conn.cursor()
-            query = Offset.SET_STR.format(
-                schema_name=name,
-                offset_value=offset_value)
+            query = sql.SQL(Offset.SET_STR).format(
+                schema_name=sql.Literal(name),
+                offset_value=sql.Literal(offset_value))
             cursor.execute(query)
             conn.commit()
             return offset_value
@@ -202,7 +195,7 @@ class Offset(Base):
             promise = OFFSET_DB.request_connection(1, call)  # Lower Priority than set
             conn = promise.get()
             cursor = conn.cursor(cursor_factory=DictCursor)
-            query = Offset.GET_STR.format(schema_name=name)
+            query = sql.SQL(Offset.GET_STR).format(schema_name=sql.Literal(name))
             cursor.execute(query)
             res = [i for i in cursor]
             if not res:
@@ -216,11 +209,12 @@ class Offset(Base):
 
 class PriorityDatabasePool(object):
 
-    def __init__(self, pg_creds, max_connections=1):
+    def __init__(self, pg_creds, name, max_connections=1):
+        self.name = name
         self.live_workers = 0
         self.pg_creds = pg_creds
         self.max_connections = max_connections
-        logger.debug(f'Initializing DB Pool with {max_connections} connections.')
+        logger.debug(f'Initializing DB Pool: {self.name} with {max_connections} connections.')
         self.workers = []
         self.job_queue = PriorityQueue()
         self.connection_pool = Queue()
@@ -233,8 +227,7 @@ class PriorityDatabasePool(object):
             self.connection_pool.put(self._make_connection())
         for i in range(self.max_connections):
             self.workers.append(gevent.spawn(self._dispatcher))
-        # gevent.joinall(self.workers)
-
+        
     def _test_connection(self, conn):
         if not conn:
             return False
@@ -252,25 +245,26 @@ class PriorityDatabasePool(object):
         return conn
 
     def _kill(self, *args, **kwargs):
-        logger.info('PriorityDatabasePool is shutting down.')
-        logger.info('PriorityDatabasePool resolving remaning %s jobs.' % (len(self.job_queue)))
+        logger.info(f'PriorityDatabasePool: {self.name} is shutting down.')
+        logger.info(f'PriorityDatabasePool: {self.name}' + 
+            f' resolving remaning {len(self.job_queue)} jobs.')
         self.running = False
 
     def _dispatcher(self):
         while self.running or not self.job_queue.empty():
             if not self.connection_pool.empty() and not self.job_queue.empty():
                 conn = self.connection_pool.get()
-                while not self._test_connection(conn):
-                    logger.error(f'Pooled connection is dead, getting new resource')
-                    sleep(3)
-                    new_id = self.live_workers
-                    conn = psycopg2.connect(**self.pg_creds)
-                    logger.error(f'Replaced dead pool member with {new_id}')
-                    self.live_workers += 1
                 priority_level, request_time, data = self.job_queue.get()
                 name, promise = data
+                logger.debug(f'{self.name} pulled 1 for {name}: still {len(self.connection_pool)}')
+                while not self._test_connection(conn):
+                    logger.error(f'Pooled connection is dead, getting new resource')
+                    logger.error(f'Replacing dead pool member.')
+                    conn = self._make_connection()
+                    sleep(0)
                 logger.debug(f'Got job from {name} @priority {priority_level}')
                 promise.set(conn)
+                sleep(0)
             else:
                 sleep(0)
 
@@ -281,11 +275,13 @@ class PriorityDatabasePool(object):
         return promise
 
     def release(self, caller, conn):
-        logger.debug(f'{caller} released connection.')
+        if not conn:
+            raise TypeError('Null connection returned to pool')
         self.connection_pool.put(conn)
+        logger.debug(f'{caller} released. {len(self.connection_pool)} available in {self.name}')
 
 # KernelDB
 pg_requires = ['user', 'dbname', 'port', 'host', 'password']
 pg_creds = {key: SETTINGS.get(
     "postgres_%s" % key) for key in pg_requires}
-KERNEL_DB = PriorityDatabasePool(pg_creds, 5)
+KERNEL_DB = PriorityDatabasePool(pg_creds, 'KernelDB', 20)
