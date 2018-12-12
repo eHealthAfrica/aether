@@ -37,6 +37,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 
 from .avro_tools import ARRAY_PATH, MAP_PATH, UNION_PATH, extract_jsonpaths_and_docs
+from .entity_extractor import ENTITY_EXTRACTION_ENRICHMENT, ENTITY_EXTRACTION_ERRORS
 from ..settings import (
     EXPORT_CSV_ESCAPE,
     EXPORT_CSV_QUOTE,
@@ -530,7 +531,7 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE, export_o
                 i = 0
                 for val in value:
                     i += 1
-                    element = __flatten_dict(val, flatten_list) if isinstance(val, (dict, list)) else {'value': val}
+                    element = __flatten_dict(val, flatten_list) if isinstance(val, (dict, list)) else {'': val}
                     element_ids = {
                         **item_ids,             # identifies the parent
                         f'@.{array_group}': i,  # identifies the element
@@ -648,6 +649,10 @@ def __filter_paths(paths):
             # remove xForm internal fields
             path not in ['_id', '_version', 'starttime', 'endtime', 'deviceid', 'meta'] and
             not path.startswith('meta.') and
+            # remove aether internal fields
+            f'{ENTITY_EXTRACTION_ENRICHMENT}.' not in path and
+            f'{ENTITY_EXTRACTION_ERRORS}.' not in path and
+            path not in [ENTITY_EXTRACTION_ENRICHMENT, ENTITY_EXTRACTION_ERRORS] and
             # remove array/ map/ union paths
             f'.{ARRAY_PATH}' not in path and
             f'.{MAP_PATH}' not in path and

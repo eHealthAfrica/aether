@@ -82,6 +82,7 @@ EXAMPLE_PATHS = [
     'option_b',
     'option_b.choice_b',
     'lang',
+    'lang.#',
     'iterate',
     'iterate.#',
     'iterate.#.index',
@@ -293,19 +294,22 @@ class ExporterViewsTest(TestCase):
         data = models.Submission.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
         _, zip_path, _ = generate(data, paths=[], **kwargs)
         zip_file = zipfile.ZipFile(zip_path, 'r')
-        self.assertEqual(zip_file.namelist(), ['export-#.csv', 'export-#-1.csv', 'export-#-2.csv', 'export-#-3.csv'])
+        self.assertEqual(zip_file.namelist(),
+                         ['export-#.csv', 'export-#-1.csv', 'export-#-2.csv', 'export-#-3.csv', 'export-#-4.csv'])
 
-        # with the whole paths list
+        # with the whole paths list (there are 3 arrays with data, ``iterate_none`` is empty)
         data = models.Submission.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
         _, zip_path, _ = generate(data, paths=EXAMPLE_PATHS, **kwargs)
         zip_file = zipfile.ZipFile(zip_path, 'r')
-        self.assertEqual(zip_file.namelist(), ['export-#.csv', 'export-#-1.csv', 'export-#-2.csv'])
+        self.assertEqual(zip_file.namelist(),
+                         ['export-#.csv', 'export-#-1.csv', 'export-#-2.csv', 'export-#-3.csv'])
 
         # without `iterate_one` in paths
         paths = [path for path in EXAMPLE_PATHS if not path.startswith('iterate_one')]
         _, zip_path, _ = generate(data, paths=paths, **kwargs)
         zip_file = zipfile.ZipFile(zip_path, 'r')
-        self.assertEqual(zip_file.namelist(), ['export-#.csv', 'export-#-1.csv'])
+        self.assertEqual(zip_file.namelist(),
+                         ['export-#.csv', 'export-#-1.csv', 'export-#-2.csv'])
 
         # with `flatten` option should generate only one file
         _, zip_path, _ = generate(
@@ -363,8 +367,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(ws['N1'].value, 'datetime')
         self.assertEqual(ws['O1'].value, 'option')
         self.assertEqual(ws['P1'].value, 'option_a—choice_a')
-        self.assertEqual(ws['Q1'].value, 'lang')
-        self.assertEqual(ws['R1'].value, 'id')
+        self.assertEqual(ws['Q1'].value, 'id')
 
         # check headers: labels
         self.assertEqual(ws['A2'].value, '@')
@@ -383,8 +386,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(ws['N2'].value, 'At?')
         self.assertEqual(ws['O2'].value, 'Choice (A/B)')
         self.assertEqual(ws['P2'].value, 'Option A — Choice A')
-        self.assertEqual(ws['Q2'].value, 'Spoken languages')
-        self.assertEqual(ws['R2'].value, 'ID')
+        self.assertEqual(ws['Q2'].value, 'ID')
 
         # check rows
         self.assertEqual(ws['A3'].value, 1)
@@ -403,63 +405,87 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(ws['N3'].value, '2017-07-14T16:38:47.151000+02:00')
         self.assertEqual(ws['O3'].value, 'a')
         self.assertEqual(ws['P3'].value, 'A')
-        self.assertEqual(ws['Q3'].value, 'EN,FR')
-        self.assertEqual(ws['R3'].value, '6b90cfb6-0ee6-4035-94bc-fb7f3e56d790')
+        self.assertEqual(ws['Q3'].value, '6b90cfb6-0ee6-4035-94bc-fb7f3e56d790')
 
         ws1 = wb['#-1']  # first array content
 
         # check headers: paths
         self.assertEqual(ws1['A1'].value, '@')
         self.assertEqual(ws1['B1'].value, '@id')
-        self.assertEqual(ws1['C1'].value, 'iterate—#')
-        self.assertEqual(ws1['D1'].value, 'iterate—#—index')
-        self.assertEqual(ws1['E1'].value, 'iterate—#—value')
+        self.assertEqual(ws1['C1'].value, 'lang—#')
+        self.assertEqual(ws1['D1'].value, 'lang—#—')
 
         # check headers: labels
         self.assertEqual(ws1['A2'].value, '@')
         self.assertEqual(ws1['B2'].value, '@id')
-        self.assertEqual(ws1['C2'].value, 'Indicate loop elements — #')
-        self.assertEqual(ws1['D2'].value, 'Indicate loop elements — # — Index')
-        self.assertEqual(ws1['E2'].value, 'Indicate loop elements — # — Value')
+        self.assertEqual(ws1['C2'].value, 'Spoken languages — #')
+        self.assertEqual(ws1['D2'].value, 'Spoken languages — # — ')
 
         # check rows
         self.assertEqual(ws1['A3'].value, 1)
         self.assertEqual(ws1['B3'].value, _id)
         self.assertEqual(ws1['C3'].value, 1)
-        self.assertEqual(ws1['D3'].value, 1)
-        self.assertEqual(ws1['E3'].value, 'One')
+        self.assertEqual(ws1['D3'].value, 'EN')
 
         self.assertEqual(ws1['A4'].value, 1)
         self.assertEqual(ws1['B4'].value, _id)
         self.assertEqual(ws1['C4'].value, 2)
-        self.assertEqual(ws1['D4'].value, 2)
-        self.assertEqual(ws1['E4'].value, 'Two')
-
-        self.assertEqual(ws1['A5'].value, 1)
-        self.assertEqual(ws1['B5'].value, _id)
-        self.assertEqual(ws1['C5'].value, 3)
-        self.assertEqual(ws1['D5'].value, 3)
-        self.assertEqual(ws1['E5'].value, 'Three')
+        self.assertEqual(ws1['D4'].value, 'FR')
 
         ws2 = wb['#-2']  # second array content
 
         # check headers: paths
         self.assertEqual(ws2['A1'].value, '@')
         self.assertEqual(ws2['B1'].value, '@id')
-        self.assertEqual(ws2['C1'].value, 'iterate_one—#')
-        self.assertEqual(ws2['D1'].value, 'iterate_one—#—item')
+        self.assertEqual(ws2['C1'].value, 'iterate—#')
+        self.assertEqual(ws2['D1'].value, 'iterate—#—index')
+        self.assertEqual(ws2['E1'].value, 'iterate—#—value')
 
         # check headers: labels
         self.assertEqual(ws2['A2'].value, '@')
         self.assertEqual(ws2['B2'].value, '@id')
-        self.assertEqual(ws2['C2'].value, 'Indicate one — #')
-        self.assertEqual(ws2['D2'].value, 'Indicate one — # — Item')
+        self.assertEqual(ws2['C2'].value, 'Indicate loop elements — #')
+        self.assertEqual(ws2['D2'].value, 'Indicate loop elements — # — Index')
+        self.assertEqual(ws2['E2'].value, 'Indicate loop elements — # — Value')
 
         # check rows
         self.assertEqual(ws2['A3'].value, 1)
         self.assertEqual(ws2['B3'].value, _id)
         self.assertEqual(ws2['C3'].value, 1)
-        self.assertEqual(ws2['D3'].value, 'one')
+        self.assertEqual(ws2['D3'].value, 1)
+        self.assertEqual(ws2['E3'].value, 'One')
+
+        self.assertEqual(ws2['A4'].value, 1)
+        self.assertEqual(ws2['B4'].value, _id)
+        self.assertEqual(ws2['C4'].value, 2)
+        self.assertEqual(ws2['D4'].value, 2)
+        self.assertEqual(ws2['E4'].value, 'Two')
+
+        self.assertEqual(ws2['A5'].value, 1)
+        self.assertEqual(ws2['B5'].value, _id)
+        self.assertEqual(ws2['C5'].value, 3)
+        self.assertEqual(ws2['D5'].value, 3)
+        self.assertEqual(ws2['E5'].value, 'Three')
+
+        ws3 = wb['#-3']  # third array content
+
+        # check headers: paths
+        self.assertEqual(ws3['A1'].value, '@')
+        self.assertEqual(ws3['B1'].value, '@id')
+        self.assertEqual(ws3['C1'].value, 'iterate_one—#')
+        self.assertEqual(ws3['D1'].value, 'iterate_one—#—item')
+
+        # check headers: labels
+        self.assertEqual(ws3['A2'].value, '@')
+        self.assertEqual(ws3['B2'].value, '@id')
+        self.assertEqual(ws3['C2'].value, 'Indicate one — #')
+        self.assertEqual(ws3['D2'].value, 'Indicate one — # — Item')
+
+        # check rows
+        self.assertEqual(ws3['A3'].value, 1)
+        self.assertEqual(ws3['B3'].value, _id)
+        self.assertEqual(ws3['C3'].value, 1)
+        self.assertEqual(ws3['D3'].value, 'one')
 
     def test__generate__xlsx__flatten(self):
         data = models.Submission.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
@@ -501,15 +527,16 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(ws['N1'].value, 'datetime')
         self.assertEqual(ws['O1'].value, 'option')
         self.assertEqual(ws['P1'].value, 'option_a—choice_a')
-        self.assertEqual(ws['Q1'].value, 'lang')
-        self.assertEqual(ws['R1'].value, 'iterate—1—index')
-        self.assertEqual(ws['S1'].value, 'iterate—1—value')
-        self.assertEqual(ws['T1'].value, 'iterate—2—index')
-        self.assertEqual(ws['U1'].value, 'iterate—2—value')
-        self.assertEqual(ws['V1'].value, 'iterate—3—index')
-        self.assertEqual(ws['W1'].value, 'iterate—3—value')
-        self.assertEqual(ws['X1'].value, 'iterate_one—1—item')
-        self.assertEqual(ws['Y1'].value, 'id')
+        self.assertEqual(ws['Q1'].value, 'lang—1')
+        self.assertEqual(ws['R1'].value, 'lang—2')
+        self.assertEqual(ws['S1'].value, 'iterate—1—index')
+        self.assertEqual(ws['T1'].value, 'iterate—1—value')
+        self.assertEqual(ws['U1'].value, 'iterate—2—index')
+        self.assertEqual(ws['V1'].value, 'iterate—2—value')
+        self.assertEqual(ws['W1'].value, 'iterate—3—index')
+        self.assertEqual(ws['X1'].value, 'iterate—3—value')
+        self.assertEqual(ws['Y1'].value, 'iterate_one—1—item')
+        self.assertEqual(ws['Z1'].value, 'id')
 
         # check rows
         self.assertEqual(ws['A2'].value, 1)
@@ -528,15 +555,16 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(ws['N2'].value, '2017-07-14T16:38:47.151000+02:00')
         self.assertEqual(ws['O2'].value, 'a')
         self.assertEqual(ws['P2'].value, 'A')
-        self.assertEqual(ws['Q2'].value, 'EN,FR')
-        self.assertEqual(ws['R2'].value, 1)
-        self.assertEqual(ws['S2'].value, 'One')
-        self.assertEqual(ws['T2'].value, 2)
-        self.assertEqual(ws['U2'].value, 'Two')
-        self.assertEqual(ws['V2'].value, 3)
-        self.assertEqual(ws['W2'].value, 'Three')
-        self.assertEqual(ws['X2'].value, 'one')
-        self.assertEqual(ws['Y2'].value, '6b90cfb6-0ee6-4035-94bc-fb7f3e56d790')
+        self.assertEqual(ws['Q2'].value, 'EN')
+        self.assertEqual(ws['R2'].value, 'FR')
+        self.assertEqual(ws['S2'].value, 1)
+        self.assertEqual(ws['T2'].value, 'One')
+        self.assertEqual(ws['U2'].value, 2)
+        self.assertEqual(ws['V2'].value, 'Two')
+        self.assertEqual(ws['W2'].value, 3)
+        self.assertEqual(ws['X2'].value, 'Three')
+        self.assertEqual(ws['Y2'].value, 'one')
+        self.assertEqual(ws['Z2'].value, '6b90cfb6-0ee6-4035-94bc-fb7f3e56d790')
 
     # -----------------------------
     # SUBMISSIONS
