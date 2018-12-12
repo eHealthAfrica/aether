@@ -283,6 +283,10 @@ class ExporterViewsTest(TestCase):
     def tearDown(self):
         self.client.logout()
 
+    # -----------------------------
+    # GENERATE FILES
+    # -----------------------------
+
     def test__generate__csv(self):
         kwargs = {
             'labels': EXAMPLE_LABELS,
@@ -565,6 +569,118 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(ws['X2'].value, 'Three')
         self.assertEqual(ws['Y2'].value, 'one')
         self.assertEqual(ws['Z2'].value, '6b90cfb6-0ee6-4035-94bc-fb7f3e56d790')
+
+    def test__generate__xlsx__flatten__multiple_lists(self):
+        # delete submissions
+        models.Submission.objects.all().delete()
+        ms = models.MappingSet.objects.first()
+
+        # create custom submissions with lists
+        models.Submission.objects.create(
+            mappingset=ms,
+            payload={
+                'id': 1,
+                'list_2': ['a', 'b'],
+                'list_1': [1, 2, 3],
+            },
+        )
+        models.Submission.objects.create(
+            mappingset=ms,
+            payload={
+                'id': 2,
+                'list_1': [4, 5, 6, 7, 8],
+                'list_2': ['c', 'd', 'f'],
+            },
+        )
+        models.Submission.objects.create(
+            mappingset=ms,
+            payload={
+                'id': 3,
+                'list_2': ['g', 'h', 'i', 'j', 'k'],
+                'list_1': [9],
+            },
+        )
+
+        data = models.Submission.objects \
+                                .order_by('created') \
+                                .annotate(exporter_data=F('payload')) \
+                                .values('pk', 'exporter_data')
+        _, xlsx_path, _ = generate(
+            data,
+            paths=['id', 'list_1', 'list_2'],
+            labels={},
+            format=XLSX_FORMAT,
+            offset=0,
+            limit=3,
+            options=ExportOptions(
+                header_content='paths',
+                header_separator='.',
+                header_shorten='no',
+                data_format='flatten',
+                csv_dialect=DEFAULT_DIALECT,
+            ),
+        )
+        wb = load_workbook(filename=xlsx_path, read_only=True)
+
+        # check workbook content
+        ws = wb['#']  # root content
+
+        # check headers: paths
+        self.assertEqual(ws['A1'].value, '@')
+        self.assertEqual(ws['B1'].value, '@id')
+        self.assertEqual(ws['C1'].value, 'id')
+        # list_1 entries
+        self.assertEqual(ws['D1'].value, 'list_1.1')
+        self.assertEqual(ws['E1'].value, 'list_1.2')
+        self.assertEqual(ws['F1'].value, 'list_1.3')
+        self.assertEqual(ws['G1'].value, 'list_1.4')
+        self.assertEqual(ws['H1'].value, 'list_1.5')
+        # list_2 entries
+        self.assertEqual(ws['I1'].value, 'list_2.1')
+        self.assertEqual(ws['J1'].value, 'list_2.2')
+        self.assertEqual(ws['K1'].value, 'list_2.3')
+        self.assertEqual(ws['L1'].value, 'list_2.4')
+        self.assertEqual(ws['M1'].value, 'list_2.5')
+
+        # check rows
+        self.assertEqual(ws['A2'].value, 1)
+        self.assertEqual(ws['C2'].value, 1)
+        self.assertEqual(ws['D2'].value, 1)
+        self.assertEqual(ws['E2'].value, 2)
+        self.assertEqual(ws['F2'].value, 3)
+        self.assertEqual(ws['G2'].value, None)
+        self.assertEqual(ws['H2'].value, None)
+        self.assertEqual(ws['I2'].value, 'a')
+        self.assertEqual(ws['J2'].value, 'b')
+        self.assertEqual(ws['K2'].value, None)
+        self.assertEqual(ws['L2'].value, None)
+        self.assertEqual(ws['M2'].value, None)
+
+        self.assertEqual(ws['A3'].value, 2)
+        self.assertEqual(ws['C3'].value, 2)
+        self.assertEqual(ws['D3'].value, 4)
+        self.assertEqual(ws['E3'].value, 5)
+        self.assertEqual(ws['F3'].value, 6)
+        self.assertEqual(ws['G3'].value, 7)
+        self.assertEqual(ws['H3'].value, 8)
+        self.assertEqual(ws['I3'].value, 'c')
+        self.assertEqual(ws['J3'].value, 'd')
+        self.assertEqual(ws['K3'].value, 'f')
+        self.assertEqual(ws['L3'].value, None)
+        self.assertEqual(ws['M3'].value, None)
+
+        self.assertEqual(ws['A4'].value, 3)
+        self.assertEqual(ws['C4'].value, 3)
+        self.assertEqual(ws['D4'].value, 9)
+        self.assertEqual(ws['E4'].value, None)
+        self.assertEqual(ws['F4'].value, None)
+        self.assertEqual(ws['G4'].value, None)
+        self.assertEqual(ws['H4'].value, None)
+        self.assertEqual(ws['I4'].value, 'g')
+        self.assertEqual(ws['J4'].value, 'h')
+        self.assertEqual(ws['K4'].value, 'i')
+        self.assertEqual(ws['L4'].value, 'j')
+        self.assertEqual(ws['M4'].value, 'k')
 
     # -----------------------------
     # SUBMISSIONS
