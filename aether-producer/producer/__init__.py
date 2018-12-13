@@ -54,7 +54,7 @@ from spavro.io import validate
 from urllib3.exceptions import MaxRetryError
 
 from producer import db
-from producer.db import Offset, PriorityDatabasePool
+from producer.db import Offset
 from producer.db import KERNEL_DB as POSTGRES
 from producer.settings import Settings
 
@@ -261,7 +261,11 @@ class ProducerManager(object):
     def serve(self):
         self.app = Flask('AetherProducer')  # pylint: disable=invalid-name
         self.logger = self.app.logger
-        handler = self.logger.handlers[0]
+        try:
+            handler = self.logger.handlers[0]
+        except IndexError:
+            handler = logging.StreamHandler()
+            self.logger.addHandler(handler)
         handler.setFormatter(logging.Formatter(
             '%(asctime)s [Producer] %(levelname)-8s %(message)s'))
         log_level = logging.getLevelName(self.settings
@@ -550,7 +554,10 @@ class TopicManager(object):
                 'Could not access Database to look for updates: %s' % pgerr)
             return False
         finally:
-            POSTGRES.release(self.name, conn)
+            try:
+                POSTGRES.release(self.name, conn)
+            except UnboundLocalError:
+                self.logger.error(f'{self.name} could not release a connection it never received.')
 
     def get_time_window_filter(self, query_time):
         # You can't always trust that a set from kernel made up of time window
@@ -596,7 +603,10 @@ class TopicManager(object):
                 'Could not access Database to look for updates: %s' % pgerr)
             return []
         finally:
-            POSTGRES.release(self.name, conn)
+            try:
+                POSTGRES.release(self.name, conn)
+            except UnboundLocalError:
+                self.logger.error(f'{self.name} could not release a connection it never received.')
 
     def get_topic_size(self):
         query = sql.SQL(TopicManager.COUNT_STR).format(
@@ -615,7 +625,10 @@ class TopicManager(object):
                 'Could not access db to get topic size: %s' % pgerr)
             return -1
         finally:
-            POSTGRES.release(self.name, conn)
+            try:
+                POSTGRES.release(self.name, conn)
+            except UnboundLocalError:
+                self.logger.error(f'{self.name} could not release a connection it never received.')
 
     def update_schema(self, schema_obj):
         self.schema_obj = self.parse_schema(schema_obj)
