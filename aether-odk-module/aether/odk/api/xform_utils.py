@@ -234,14 +234,16 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         'fields': [
             {
                 'name': '_id',
+                'namespace': name,
                 'doc': _('xForm ID'),
-                'type': 'string',
+                'type': __get_avro_primitive_type('string'),
                 'default': form_id,
             },
             {
                 'name': '_version',
+                'namespace': name,
                 'doc': _('xForm version'),
-                'type': 'string',
+                'type': __get_avro_primitive_type('string'),
                 'default': version,
             },
         ],
@@ -273,15 +275,23 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         parent_path = '/'.join(xpath.split('/')[:-1])
         parent = list(__find_by_key_value(avro_schema, KEY, parent_path))[0]
 
+        current_path = '.'.join(xpath.split('/')[2:-1])
+        namespace = f'{name}.{current_path}' if current_path else name
+
+        current_field = {
+            'name': current_name,
+            'namespace': namespace,
+            'doc': current_doc,
+        }
+
         # nested record
         if current_type == 'group':
             parent['fields'].append({
-                'name': current_name,
-                'doc': current_doc,
+                **current_field,
                 'type': [
                     'null',
                     {
-                        'name': current_name,
+                        **current_field,
                         'type': 'record',
                         'fields': [],
                         KEY: xpath,
@@ -292,14 +302,13 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         # array
         elif current_type == 'repeat':
             parent['fields'].append({
-                'name': current_name,
-                'doc': current_doc,
+                **current_field,
                 'type': [
                     'null',
                     {
                         'type': 'array',
                         'items': {
-                            'name': current_name,
+                            **current_field,
                             'type': 'record',
                             'fields': [],
                             KEY: xpath,
@@ -312,33 +321,36 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         # currently, only geopoint is implemented by ODK Collect
         elif current_type == 'geopoint':
             parent['fields'].append({
-                'name': current_name,
-                'doc': current_doc,
+                **current_field,
                 'type': [
                     'null',
                     {
-                        'name': current_name,
+                        **current_field,
                         'type': 'record',
                         'fields': [
                             {
                                 'name': 'latitude',
+                                'namespace': f'{namespace}.{current_name}',
                                 'doc': _('latitude'),
-                                'type': __get_avro_primitive_type('float', required=False),
+                                'type': __get_avro_primitive_type('float'),
                             },
                             {
                                 'name': 'longitude',
+                                'namespace': f'{namespace}.{current_name}',
                                 'doc': _('longitude'),
-                                'type': __get_avro_primitive_type('float', required=False),
+                                'type': __get_avro_primitive_type('float'),
                             },
                             {
                                 'name': 'altitude',
+                                'namespace': f'{namespace}.{current_name}',
                                 'doc': _('altitude'),
-                                'type': __get_avro_primitive_type('float', required=False),
+                                'type': __get_avro_primitive_type('float'),
                             },
                             {
                                 'name': 'accuracy',
+                                'namespace': f'{namespace}.{current_name}',
                                 'doc': _('accuracy'),
-                                'type': __get_avro_primitive_type('float', required=False),
+                                'type': __get_avro_primitive_type('float'),
                             },
                         ],
                     },
@@ -348,12 +360,11 @@ def parse_xform_to_avro_schema(xml_definition, default_version=DEFAULT_XFORM_VER
         # final and simple leaf
         else:
             parent['fields'].append({
-                'name': current_name,
+                **current_field,
                 # Since an Avro schema does not contain the same branching logic as an XForm,
                 # a field that is mandatory in a form is not actually always present,
                 # and therefore cannot be required in the schema.
-                'type': __get_avro_primitive_type(current_type, required=False),
-                'doc': current_doc,
+                'type': __get_avro_primitive_type(current_type),
             })
 
     # remove fake KEY

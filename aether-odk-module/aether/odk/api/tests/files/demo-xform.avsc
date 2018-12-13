@@ -5,69 +5,84 @@
   "fields": [
     {
       "name": "_id",
+      "namespace": "MyTestForm_Test10",
       "doc": "xForm ID",
-      "type": "string",
+      "type": [ "null", "string" ],
       "default": "my-test-form"
     },
     {
       "name": "_version",
+      "namespace": "MyTestForm_Test10",
       "doc": "xForm version",
-      "type": "string",
+      "type": [ "null", "string" ],
       "default": "Test-1.0"
     },
     {
       "name": "starttime",
+      "namespace": "MyTestForm_Test10",
       "type": [ "null", "string" ]
     },
     {
       "name": "endtime",
+      "namespace": "MyTestForm_Test10",
       "type": [ "null", "string" ]
     },
     {
       "name": "deviceid",
+      "namespace": "MyTestForm_Test10",
       "type": [ "null", "string" ]
     },
     {
       "name": "country",
-      "type": [ "null", "string" ],
-      "doc": "Country"
+      "namespace": "MyTestForm_Test10",
+      "doc": "Country",
+      "type": [ "null", "string" ]
     },
     {
       "name": "region",
-      "type": [ "null", "string" ],
-      "doc": "Region"
+      "namespace": "MyTestForm_Test10",
+      "doc": "Region",
+      "type": [ "null", "string" ]
     },
     {
       "name": "name",
-      "type": [ "null", "string" ],
-      "doc": "What is your name?"
+      "namespace": "MyTestForm_Test10",
+      "doc": "What is your name?",
+      "type": [ "null", "string" ]
     },
     {
       "name": "location",
+      "namespace": "MyTestForm_Test10",
       "doc": "Collect your GPS coordinates",
       "type": [
         "null",
         {
           "name": "location",
+          "namespace": "MyTestForm_Test10",
+          "doc": "Collect your GPS coordinates",
           "type": "record",
           "fields": [
             {
               "name": "latitude",
+              "namespace": "MyTestForm_Test10.location",
               "doc": "latitude",
               "type": [ "null", "float" ]
             },
             {
               "name": "longitude",
+              "namespace": "MyTestForm_Test10.location",
               "doc": "longitude",
               "type": [ "null", "float" ]
             },
             {
               "name": "altitude",
+              "namespace": "MyTestForm_Test10.location",
               "doc": "altitude",
               "type": [ "null", "float" ]
             },
             {
               "name": "accuracy",
+              "namespace": "MyTestForm_Test10.location",
               "doc": "accuracy",
               "type": [ "null", "float" ]
             }
@@ -77,30 +92,37 @@
     },
     {
       "name": "location_none",
+      "namespace": "MyTestForm_Test10",
       "doc": "Ignore your GPS coordinates",
       "type": [
         "null",
         {
           "name": "location_none",
+          "namespace": "MyTestForm_Test10",
+          "doc": "Ignore your GPS coordinates",
           "type": "record",
           "fields": [
             {
               "name": "latitude",
+              "namespace": "MyTestForm_Test10.location_none",
               "doc": "latitude",
               "type": [ "null", "float" ]
             },
             {
               "name": "longitude",
+              "namespace": "MyTestForm_Test10.location_none",
               "doc": "longitude",
               "type": [ "null", "float" ]
             },
             {
               "name": "altitude",
+              "namespace": "MyTestForm_Test10.location_none",
               "doc": "altitude",
               "type": [ "null", "float" ]
             },
             {
               "name": "accuracy",
+              "namespace": "MyTestForm_Test10.location_none",
               "doc": "accuracy",
               "type": [ "null", "float" ]
             }
@@ -110,47 +132,57 @@
     },
     {
       "name": "image",
-      "type": [ "null", "string" ],
-      "doc": "Take a picture"
+      "namespace": "MyTestForm_Test10",
+      "doc": "Take a picture",
+      "type": [ "null", "string" ]
     },
     {
       "name": "number",
-      "type": [ "null", "int" ],
-      "doc": "How many?"
+      "namespace": "MyTestForm_Test10",
+      "doc": "How many?",
+      "type": [ "null", "int" ]
     },
     {
       "name": "number2",
-       "type": [ "null", "double" ],
-      "doc": "Percentage"
+      "namespace": "MyTestForm_Test10",
+      "doc": "Percentage",
+      "type": [ "null", "double" ]
     },
     {
       "name": "date",
-      "type": [ "null", "string" ],
-      "doc": "When?"
+      "namespace": "MyTestForm_Test10",
+      "doc": "When?",
+      "type": [ "null", "string" ]
     },
     {
       "name": "datetime",
-      "type": [ "null", "string" ],
-      "doc": "At?"
+      "namespace": "MyTestForm_Test10",
+      "doc": "At?",
+      "type": [ "null", "string" ]
     },
     {
       "name": "option",
-      "type": [ "null", "string" ],
-      "doc": "Choice (A/B)"
+      "namespace": "MyTestForm_Test10",
+      "doc": "Choice (A/B)",
+      "type": [ "null", "string" ]
     },
     {
       "name": "option_a",
+      "namespace": "MyTestForm_Test10",
       "doc": "Option A",
       "type": [
         "null",
         {
           "name": "option_a",
+          "namespace": "MyTestForm_Test10",
+          "doc": "Option A",
           "type": "record",
           "fields": [
             {
               "name": "choice_a",
-              "type": [ "null", "string" ],
-              "doc": "Choice A"
+              "namespace": "MyTestForm_Test10.option_a",
+              "doc": "Choice A",
+              "type": [ "null", "string" ]
             }
           ]
         }
@@ -158,17 +190,21 @@
     },
     {
       "name": "option_b",
+      "namespace": "MyTestForm_Test10",
       "doc": "Option B",
       "type": [
         "null",
         {
           "name": "option_b",
+          "namespace": "MyTestForm_Test10",
+          "doc": "Option B",
           "type": "record",
           "fields": [
             {
               "name": "choice_b",
-              "type": [ "null", "string" ],
-              "doc": "Choice B"
+              "namespace": "MyTestForm_Test10.option_b",
+              "doc": "Choice B",
+              "type": [ "null", "string" ]
             }
           ]
         }
@@ -176,11 +212,13 @@
     },
     {
       "name": "lang",
-      "type": [ "null", "string" ],
-      "doc": "Spoken languages"
+      "namespace": "MyTestForm_Test10",
+      "doc": "Spoken languages",
+      "type": [ "null", "string" ]
     },
     {
       "name": "iterate",
+      "namespace": "MyTestForm_Test10",
       "doc": "Indicate loop elements",
       "type": [
         "null",
@@ -188,17 +226,21 @@
           "type": "array",
           "items": {
             "name": "iterate",
+            "namespace": "MyTestForm_Test10",
+            "doc": "Indicate loop elements",
             "type": "record",
             "fields": [
               {
                 "name": "index",
-                "type": [ "null", "int" ],
-                "doc": "Index"
+                "namespace": "MyTestForm_Test10.iterate",
+                "doc": "Index",
+                "type": [ "null", "int" ]
               },
               {
                 "name": "value",
-                "type": [ "null", "string" ],
-                "doc": "Value"
+                "namespace": "MyTestForm_Test10.iterate",
+                "doc": "Value",
+                "type": [ "null", "string" ]
               }
             ]
           }
@@ -207,6 +249,7 @@
     },
     {
       "name": "iterate_one",
+      "namespace": "MyTestForm_Test10",
       "doc": "Indicate one",
       "type": [
         "null",
@@ -214,12 +257,15 @@
           "type": "array",
           "items": {
             "name": "iterate_one",
+            "namespace": "MyTestForm_Test10",
+            "doc": "Indicate one",
             "type": "record",
             "fields": [
               {
                 "name": "item",
-                "type": [ "null", "string" ],
-                "doc": "Item"
+                "namespace": "MyTestForm_Test10.iterate_one",
+                "doc": "Item",
+                "type": [ "null", "string" ]
               }
             ]
           }
@@ -228,6 +274,7 @@
     },
     {
       "name": "iterate_none",
+      "namespace": "MyTestForm_Test10",
       "doc": "Indicate none",
       "type": [
         "null",
@@ -235,12 +282,15 @@
           "type": "array",
           "items": {
             "name": "iterate_none",
+            "namespace": "MyTestForm_Test10",
+            "doc": "Indicate none",
             "type": "record",
             "fields": [
               {
                 "name": "nothing",
-                "type": [ "null", "string" ],
-                "doc": "None"
+                "namespace": "MyTestForm_Test10.iterate_none",
+                "doc": "None",
+                "type": [ "null", "string" ]
               }
             ]
           }
@@ -248,19 +298,57 @@
       ]
     },
     {
+      "name": "value",
+      "namespace": "MyTestForm_Test10",
+      "doc": "Dup value",
+      "type": [ "null", "string" ]
+    },
+    {
+      "name": "dup_group",
+      "namespace": "MyTestForm_Test10",
+      "doc": "Group",
+      "type": [
+        "null",
+        {
+          "name": "dup_group",
+          "namespace": "MyTestForm_Test10",
+          "doc": "Group",
+          "type": "record",
+          "fields": [
+            {
+              "name": "value",
+              "namespace": "MyTestForm_Test10.dup_group",
+              "doc": "Nested dup value",
+              "type": [ "null", "string" ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "note_end",
+      "namespace": "MyTestForm_Test10",
+      "doc": "That's all folks!",
+      "type": [ "null", "string" ]
+    },
+    {
       "name": "meta",
+      "namespace": "MyTestForm_Test10",
       "type": [
         "null",
         {
           "name": "meta",
+          "namespace": "MyTestForm_Test10",
           "type": "record",
           "fields": [
             {
               "name": "instanceID",
+              "namespace": "MyTestForm_Test10.meta",
               "type": [ "null", "string" ]
             },
             {
               "name": "instanceName",
+              "namespace": "MyTestForm_Test10.meta",
               "type": [ "null", "string" ]
             }
           ]

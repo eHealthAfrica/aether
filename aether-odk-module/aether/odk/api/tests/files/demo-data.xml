@@ -18,6 +18,7 @@
 
     <name>Name</name>
     <country>CM</country>
+    <region/>
 
     <location>52.52469543 13.39282687 108.0 22.0</location>
     <location_none/>
@@ -54,6 +55,13 @@
         <item>one</item>
     </iterate_one>
     <iterate_none/>
+
+    <value>In the root</value>
+    <dup_group>
+        <value>In the group</value>
+    </dup_group>
+
+    <note_end>That’s all folks!</note_end>
 
     <not_in_the_definition>Oops!</not_in_the_definition>
 

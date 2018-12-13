@@ -34,7 +34,11 @@ from rest_framework.renderers import JSONRenderer
 
 from .avro_tools import extract_jsonpaths_and_docs
 from .constants import LINKED_DATA_MAX_DEPTH
-from .entity_extractor import extract_create_entities
+from .entity_extractor import (
+    extract_create_entities,
+    run_entity_extraction,
+    ENTITY_EXTRACTION_ERRORS,
+)
 from .exporter import ExporterViewSet
 from .mapping_validation import validate_mappings
 
@@ -306,6 +310,33 @@ class SubmissionViewSet(ExporterViewSet):
     queryset = models.Submission.objects.all()
     serializer_class = serializers.SubmissionSerializer
     filter_class = filters.SubmissionFilter
+
+    @action(detail=True, methods=['patch'])
+    def extract(self, request, pk, *args, **kwargs):
+        '''
+        Forces entity extraction.
+
+        Reachable at ``PATCH /submissions/{pk}/extract/``
+        '''
+
+        instance = get_object_or_404(models.Submission, pk=pk)
+
+        try:
+            run_entity_extraction(instance, overwrite=True)
+
+            return Response(
+                data=self.serializer_class(instance, context={'request': request}).data,
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            key = ENTITY_EXTRACTION_ERRORS
+            instance.payload[key] = instance.payload.get(key, []) + [str(e)]
+            instance.save()
+
+            return Response(
+                data=self.serializer_class(instance, context={'request': request}).data,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class AttachmentViewSet(viewsets.ModelViewSet):
