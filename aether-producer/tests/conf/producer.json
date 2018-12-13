@@ -1,7 +1,7 @@
 {
     "start_delay": 5,
     "sleep_time": 10,
-    "log_level" : "DEBUG",
+    "log_level" : "ERROR",
     "window_size_sec" : 2,
 
     "postgres_pull_limit" : 250,

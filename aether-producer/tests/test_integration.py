@@ -59,10 +59,10 @@ def test_initialize_database_get_set(OffsetDB):
 
 @pytest.mark.integration
 def test_offset_pooling(OffsetQueue, OffsetDB):
-    assert(OffsetQueue.max_connections is len(OffsetQueue.connection_pool))
     osn, osv = 'pool_offset_test', '10001'
     OffsetDB.update(osn, osv)
     assert(osv == OffsetDB.get_offset(osn))
+    assert(OffsetQueue.max_connections is len(OffsetQueue.connection_pool))
     conns = []
     while not OffsetQueue.connection_pool.empty():
         promise = OffsetQueue.request_connection(0, 'test')
@@ -76,5 +76,33 @@ def test_offset_pooling(OffsetQueue, OffsetDB):
         pass
     else:
         assert(False), 'Operation should have timed out.'
+    for conn in conns:
+        OffsetQueue.release('test', conn)
+
+
+@pytest.mark.integration
+def test_offset_prioritization(OffsetQueue, OffsetDB):
+    # Grab all connections
+    conns = []
+    while not OffsetQueue.connection_pool.empty():
+        promise = OffsetQueue.request_connection(0, 'test')
+        conn = promise.get()
+        assert(OffsetQueue._test_connection(conn) is True)
+        conns.append(conn)
+    low_prio = OffsetQueue.request_connection(1, 'low')
+    high_prio = OffsetQueue.request_connection(0, 'high')
+    # free a connection
+    conn = conns.pop()
+    OffsetQueue.release('test', conn)
+    try:
+        with Timeout(1):
+            conn = low_prio.get()
+    except TimeoutError:
+        pass
+    else:
+        assert(False), 'Operation should have timed out.'
+    with Timeout(1):
+        conn = high_prio.get()
+        assert(OffsetQueue._test_connection(conn) is True)
     for conn in conns:
         OffsetQueue.release('test', conn)
