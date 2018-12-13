@@ -682,15 +682,14 @@ def __order_headers(headers):
 
     ASSUMPTIONS:
         a) The are no numeric properties outside the nested list items. (AVRO naming restrictions)
-        b) The numerical properties appear in order in the list. [1, 2, 3, ...]
+        b) The numerical properties appear in order in the list starting with 1. [1, 2, 3, ...]
         c) There are no gaps between two consecutive numerical properties.  [..., n, ..., n+1, ...]
-        d) There is always a ``1`` numerical entry.
 
     These cases are not possible:
         ``2`` before ``1``:
-            [ ..., ``any_path.2.and_more``, ..., ``any_path.1.and_more``,... ]
+            [ ..., "any_path.2.and_more", ..., "any_path.1.and_more",... ]
         ``1`` and ``3`` without ``2``:
-            [ ..., ``any_path.1.and_more``, ..., ``any_path.3.and_more``,... ]
+            [ ..., "any_path.1.and_more", ..., "any_path.3.and_more",... ]
 
     IMPLEMENTED SOLUTION: assign a weigth to each list element
 
@@ -700,22 +699,22 @@ def __order_headers(headers):
         B) it's a flatten array element
               then set the same weigth as the first flatten element in the list
               along with its index (recursively)
-              For any_path.3.and_more set (any_path.1 row, 3) pair
+              For "any_path.3.and_more" set ("any_path" row, 3) pair
 
         Index   Element     Weight 1      Weight 2    Weight 3      Weight 4    Weight 5
                             (# row 1st)   (index)     (# row 1st)   (index)     (# row 1st)
         1.-     ZZZ         -> 1
-        2.-     w.2.b.1     -> 3          -> 2        -> 2          -> 1        -> 2  << !!never happens (disorder)
-        3.-     w.1.a.1     -> 3          -> 1        -> 3          -> 1        -> 3
-        4.-     w.2.a       -> 3          -> 2        -> 4
+        2.-     w.2.b.1     -> 2          -> 2        -> 2          -> 1        -> 2  << !!never happens (disorder)
+        3.-     w.1.a.1     -> 2          -> 1        -> 3          -> 1        -> 3
+        4.-     w.2.a       -> 2          -> 2        -> 4
         5.-     XXX         -> 5
-        6.-     b.1         -> 6          -> 1        -> 6
-        7.-     w.3         -> 3          -> 3        -> 7
-        8.-     w.2.b.2     -> 3          -> 2        -> 2          -> 2        -> 8
+        6.-     b.2         -> 6          -> 2        -> 6                           << !!never happens (no 1)
+        7.-     w.3         -> 2          -> 3        -> 7
+        8.-     w.2.b.2     -> 2          -> 2        -> 2          -> 2        -> 8
         9.-     YYY         -> 9
         10.-    c.1         -> 10         -> 1        -> 10
-        11.-    w.1.c.1     -> 3          -> 1        -> 11         -> 1        -> 11
-        12.-    w.1.c.2     -> 3          -> 1        -> 11         -> 2        -> 12
+        11.-    w.1.c.1     -> 2          -> 1        -> 11         -> 1        -> 11
+        12.-    w.1.c.2     -> 2          -> 1        -> 11         -> 2        -> 12
         13.-    c.2         -> 10         -> 2        -> 13
         14.-    b.4         -> 6          -> 4        -> 14                           << !!never happens (gap)
 
@@ -724,15 +723,15 @@ def __order_headers(headers):
         Index   Element     Weight 1      Weight 2    Weight 3      Weight 4    Weight 5
                             (# row 1st)   (index)     (# row 1st)   (index)     (# row 1st)
         1.-     ZZZ         -> 1
-        3.-     w.1.a.1     -> 3          -> 1        -> 3          -> 1        -> 3
-        11.-    w.1.c.1     -> 3          -> 1        -> 11         -> 1        -> 11
-        12.-    w.1.c.2     -> 3          -> 1        -> 11         -> 2        -> 12
-        2.-     w.2.b.1     -> 3          -> 2        -> 2          -> 1        -> 2
-        8.-     w.2.b.2     -> 3          -> 2        -> 2          -> 2        -> 8
-        4.-     w.2.a       -> 3          -> 2        -> 4
-        7.-     w.3         -> 3          -> 3        -> 7
+        3.-     w.1.a.1     -> 2          -> 1        -> 3          -> 1        -> 3
+        11.-    w.1.c.1     -> 2          -> 1        -> 11         -> 1        -> 11
+        12.-    w.1.c.2     -> 2          -> 1        -> 11         -> 2        -> 12
+        2.-     w.2.b.1     -> 2          -> 2        -> 2          -> 1        -> 2
+        8.-     w.2.b.2     -> 2          -> 2        -> 2          -> 2        -> 8
+        4.-     w.2.a       -> 2          -> 2        -> 4
+        7.-     w.3         -> 2          -> 3        -> 7
         5.-     XXX         -> 5
-        6.-     b.1         -> 6          -> 1        -> 6
+        6.-     b.2         -> 6          -> 2        -> 6
         14.-    b.4         -> 6          -> 4        -> 14
         9.-     YYY         -> 9
         10.-    c.1         -> 10         -> 1        -> 10
@@ -755,8 +754,8 @@ def __order_headers(headers):
             # a.4.b.5.c.6.z  ==>  (a.4, a.4.b.5, a.4.b.5.c.6)
             pieces = header.split('.')
             for i in range(len(pieces)):
-                if pieces[i] == '1':  # ASSUMPTION d)
-                    first = '.'.join(pieces[:i] + ['1'])
+                if __is_int(pieces[i]):
+                    first = '.'.join(pieces[:i])
                     position_by_path[first] = min(position_by_path.get(first, index), index)
 
             # calculate weight size
@@ -771,12 +770,12 @@ def __order_headers(headers):
 
     for index, header in enumerate(headers):
         if RE_ENDSWITH_DIGIT.search(header) or RE_CONTAINS_DIGIT.search(header):
-            # a.4.b.5.c.6  ==>  (a.1 row, 4, a.4.b.1 row, 5, a.4.b.5.c.1 row, 6, current row)
+            # a.4.b.5.c.6  ==>  (a row, 4, a.4.b row, 5, a.4.b.5.c row, 6, current row)
             weight = []
             pieces = header.split('.')
             for i in range(len(pieces)):
                 if __is_int(pieces[i]):
-                    first = '.'.join(pieces[:i] + ['1'])  # ASSUMPTION d)
+                    first = '.'.join(pieces[:i])
                     weight += [position_by_path[first], int(pieces[i])]
             weight += [index]
             weighted_headers[index][1] = weight
