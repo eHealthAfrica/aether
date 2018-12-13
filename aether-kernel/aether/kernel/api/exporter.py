@@ -567,23 +567,7 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE, export_o
         rows_path = current['csv_path']
 
         # create headers in order
-        headers = None
-        if not paths:
-            headers = current['headers']  # appearance order
-        else:
-            if group == '$':
-                headers = ['@', '@id']
-                for path in paths:
-                    for header in current['headers']:
-                        if header == path or header.startswith(path + '.'):
-                            headers.append(header)
-            else:
-                # check that the group is in the paths list
-                for path in paths:
-                    if group == path or group.startswith(path + '.'):
-                        headers = current['headers']
-                        break
-
+        headers = __filter_headers(paths, group, current['headers'])
         if headers:
             with open(rows_path, newline='') as fr, open(csv_path, 'w', newline='') as fw:
                 r = csv.DictReader(fr, fieldnames=current['headers'], dialect=export_options.csv_dialect)
@@ -668,6 +652,141 @@ def __filter_paths(paths):
     return leafs
 
 
+def __filter_headers(paths, group, headers):
+    # create headers in order
+    filtered_headers = None
+    if not paths:
+        filtered_headers = headers  # appearance order
+    else:
+        if group == '$':
+            filtered_headers = ['@', '@id']
+            for path in paths:
+                for header in headers:
+                    if header == path or header.startswith(path + '.'):
+                        filtered_headers.append(header)
+        else:
+            # check that the group is in the paths list
+            for path in paths:
+                if group == path or group.startswith(path + '.'):
+                    return headers
+
+    if group != '$':  # only the main group can have flattened list
+        return filtered_headers
+    return __order_headers(filtered_headers)
+
+
+def __order_headers(headers):
+    '''
+    ISSUE: order the headers so the nested arrays appear together and in order.
+    The sorting algorithm MUST be STABLE (luckly python "sorted" method is).
+
+    ASSUMPTIONS:
+        a) The are no numeric properties outside the nested list items. (AVRO naming restrictions)
+        b) The numerical properties appear in order in the list. [1, 2, 3, ...]
+        c) There are no gaps between two consecutive numerical properties.  [..., n, ..., n+1, ...]
+        d) There is always a ``1`` numerical entry.
+
+    These cases are not possible:
+        ``2`` before ``1``:
+            [ ..., ``any_path.2.and_more``, ..., ``any_path.1.and_more``,... ]
+        ``1`` and ``3`` without ``2``:
+            [ ..., ``any_path.1.and_more``, ..., ``any_path.3.and_more``,... ]
+
+    IMPLEMENTED SOLUTION: assign a weigth to each list element
+
+        A) it's not a flatten array element
+                then set its position in the array
+
+        B) it's a flatten array element
+              then set the same weigth as the first flatten element in the list
+              along with its index (recursively)
+              For any_path.3.and_more set (any_path.1 row, 3) pair
+
+        Index   Element     Weight 1      Weight 2    Weight 3      Weight 4    Weight 5
+                            (# row 1st)   (index)     (# row 1st)   (index)     (# row 1st)
+        1.-     ZZZ         -> 1
+        2.-     w.2.b.1     -> 3          -> 2        -> 2          -> 1        -> 2  << !!never happens (disorder)
+        3.-     w.1.a.1     -> 3          -> 1        -> 3          -> 1        -> 3
+        4.-     w.2.a       -> 3          -> 2        -> 4
+        5.-     XXX         -> 5
+        6.-     b.1         -> 6          -> 1        -> 6
+        7.-     w.3         -> 3          -> 3        -> 7
+        8.-     w.2.b.2     -> 3          -> 2        -> 2          -> 2        -> 8
+        9.-     YYY         -> 9
+        10.-    c.1         -> 10         -> 1        -> 10
+        11.-    w.1.c.1     -> 3          -> 1        -> 11         -> 1        -> 11
+        12.-    w.1.c.2     -> 3          -> 1        -> 11         -> 2        -> 12
+        13.-    c.2         -> 10         -> 2        -> 13
+        14.-    b.4         -> 6          -> 4        -> 14                           << !!never happens (gap)
+
+    Sorted by weights:
+
+        Index   Element     Weight 1      Weight 2    Weight 3      Weight 4    Weight 5
+                            (# row 1st)   (index)     (# row 1st)   (index)     (# row 1st)
+        1.-     ZZZ         -> 1
+        3.-     w.1.a.1     -> 3          -> 1        -> 3          -> 1        -> 3
+        11.-    w.1.c.1     -> 3          -> 1        -> 11         -> 1        -> 11
+        12.-    w.1.c.2     -> 3          -> 1        -> 11         -> 2        -> 12
+        2.-     w.2.b.1     -> 3          -> 2        -> 2          -> 1        -> 2
+        8.-     w.2.b.2     -> 3          -> 2        -> 2          -> 2        -> 8
+        4.-     w.2.a       -> 3          -> 2        -> 4
+        7.-     w.3         -> 3          -> 3        -> 7
+        5.-     XXX         -> 5
+        6.-     b.1         -> 6          -> 1        -> 6
+        14.-    b.4         -> 6          -> 4        -> 14
+        9.-     YYY         -> 9
+        10.-    c.1         -> 10         -> 1        -> 10
+        13.-    c.2         -> 10         -> 2        -> 13
+
+    '''
+
+    RE_CONTAINS_DIGIT = re.compile(r'\.\d+\.')  # a.999.b
+    RE_ENDSWITH_DIGIT = re.compile(r'\.\d+$')   # a.b.999
+
+    # check that there are flattened lists
+    weighted_headers = []
+    position_by_path = {}
+    max_weight_size = 1
+    for index, header in enumerate(headers):
+        weighted_headers.append([header, [index]])
+
+        if RE_CONTAINS_DIGIT.search(header) or RE_ENDSWITH_DIGIT.search(header):
+            # divide the header into pieces and set the current position for each numerical entry
+            # a.4.b.5.c.6.z  ==>  (a.4, a.4.b.5, a.4.b.5.c.6)
+            pieces = header.split('.')
+            for i in range(len(pieces)):
+                if pieces[i] == '1':  # ASSUMPTION d)
+                    first = '.'.join(pieces[:i] + ['1'])
+                    position_by_path[first] = min(position_by_path.get(first, index), index)
+
+            # calculate weight size
+            size = 1 + 2 * (
+                len(RE_CONTAINS_DIGIT.findall(header)) +
+                len(RE_ENDSWITH_DIGIT.findall(header))
+            )
+            max_weight_size = max(max_weight_size, size)
+
+    if max_weight_size == 1:
+        return headers
+
+    for index, header in enumerate(headers):
+        if RE_ENDSWITH_DIGIT.search(header) or RE_CONTAINS_DIGIT.search(header):
+            # a.4.b.5.c.6  ==>  (a.1 row, 4, a.4.b.1 row, 5, a.4.b.5.c.1 row, 6, current row)
+            weight = []
+            pieces = header.split('.')
+            for i in range(len(pieces)):
+                if __is_int(pieces[i]):
+                    first = '.'.join(pieces[:i] + ['1'])  # ASSUMPTION d)
+                    weight += [position_by_path[first], int(pieces[i])]
+            weight += [index]
+            weighted_headers[index][1] = weight
+
+    for i in range(max_weight_size - 1, -1, -1):
+        weighted_headers.sort(key=lambda x: x[1][i] if len(x[1]) > i else 0)
+
+    return [wh[0] for wh in weighted_headers]
+
+
 def __get_label(jsonpath,
                 labels={},
                 content='label',
@@ -709,3 +828,11 @@ def __get_label(jsonpath,
     else:
         # the full label
         return joiner.join([get_single('.'.join(pieces[:i + 1])) for i in range(len(pieces))])
+
+
+def __is_int(value):
+    try:
+        int(value, 10)
+        return True
+    except ValueError:
+        return False

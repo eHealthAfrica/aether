@@ -21,6 +21,9 @@ import mock
 import os
 import zipfile
 
+from copy import deepcopy
+from random import shuffle
+
 from openpyxl import load_workbook
 
 from django.contrib.auth import get_user_model
@@ -36,6 +39,8 @@ from aether.kernel.api.project_artefacts import upsert_project_with_avro_schemas
 
 from aether.kernel.api.exporter import (
     __filter_paths as filter_paths,
+    __filter_headers as filter_headers,
+    __order_headers as order_headers,
     __flatten_dict as flatten_dict,
     __get_label as get_label,
 
@@ -197,6 +202,81 @@ class ExporterTest(TestCase):
 
         self.assertEqual(filter_paths(paths), expected)
         self.assertEqual(filter_paths(filter_paths(paths)), expected)
+
+    def test__filter_headers(self):
+        prefix = ['@', '@id']
+        headers = ['a', 'x', 'z', 'c', 'd']
+        # nothing changes
+        self.assertEqual(filter_headers([], '$', headers), headers)
+
+        # includes prefix, filters and orders the headers
+        self.assertEqual(filter_headers(['a', 'w', 'd', 'z'], '$', headers), prefix + ['a', 'd', 'z'])
+
+    def test__filter_headers__list(self):
+        paths = ['b', 'a']  # not in alphabetical order
+        prefix = ['@', '@id']
+
+        expected = [
+            'b.1', 'b.2', 'b.3', 'b.4', 'b.5',
+            'a.1', 'a.2', 'a.3', 'a.4', 'a.5',
+        ]
+        headers = deepcopy(expected)
+
+        for _ in range(5):
+            shuffle(headers)  # change the order of the elements
+            self.assertNotEqual(headers, expected)
+            self.assertEqual(filter_headers(paths, '$', headers), prefix + expected)
+
+    def test__filter_headers__nested_list(self):
+        paths = ['b', 'a']  # not in alphabetical order
+        prefix = ['@', '@id']
+
+        expected = [
+            'b.1.1', 'b.1.2', 'b.1.3', 'b.1.4', 'b.1.5', 'b.2.1',
+            'a.1.1', 'a.1.2', 'a.1.3', 'a.2.1', 'a.2.2', 'a.3.1',
+        ]
+        headers = deepcopy(expected)
+
+        for _ in range(5):
+            shuffle(headers)  # change the order of the elements
+            self.assertNotEqual(headers, expected)
+            self.assertEqual(filter_headers(paths, '$', headers), prefix + expected)
+
+    def test__order_headers__documented_case(self):
+        headers = [
+            'ZZZ',
+            'w.2.b.1',
+            'w.1.a.1',
+            'w.2.a',
+            'XXX',
+            'b.1',
+            'w.3',
+            'w.2.b.2',
+            'YYY',
+            'c.1',
+            'w.1.c.1',
+            'w.1.c.2',
+            'c.2',
+            'b.4',
+        ]
+        expected = [
+            'ZZZ',
+            'w.1.a.1',
+            'w.1.c.1',
+            'w.1.c.2',
+            'w.2.b.1',
+            'w.2.b.2',
+            'w.2.a',
+            'w.3',
+            'XXX',
+            'b.1',
+            'b.4',
+            'YYY',
+            'c.1',
+            'c.2',
+        ]
+
+        self.assertEqual(order_headers(headers), expected)
 
     def test__get_label(self):
         labels = {
@@ -569,216 +649,6 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(ws['X2'].value, 'Three')
         self.assertEqual(ws['Y2'].value, 'one')
         self.assertEqual(ws['Z2'].value, '6b90cfb6-0ee6-4035-94bc-fb7f3e56d790')
-
-    def test__generate__xlsx__flatten__multiple_lists(self):
-        # delete submissions
-        models.Submission.objects.all().delete()
-        ms = models.MappingSet.objects.first()
-
-        # create custom submissions with lists
-        models.Submission.objects.create(
-            mappingset=ms,
-            payload={
-                'id': 1,
-                'list_2': ['a', 'b'],
-                'list_1': [1, 2, 3],
-            },
-        )
-        models.Submission.objects.create(
-            mappingset=ms,
-            payload={
-                'id': 2,
-                'list_1': [4, 5, 6, 7, 8],
-                'list_2': ['c', 'd', 'f'],
-            },
-        )
-        models.Submission.objects.create(
-            mappingset=ms,
-            payload={
-                'id': 3,
-                'list_2': ['g', 'h', 'i', 'j', 'k'],
-                'list_1': [9],
-            },
-        )
-
-        data = models.Submission.objects \
-                                .order_by('created') \
-                                .annotate(exporter_data=F('payload')) \
-                                .values('pk', 'exporter_data')
-
-        # ----------------------------------------------------------------------
-        # with paths (header in order)
-        _, xlsx_path, _ = generate(
-            data,
-            paths=['id', 'list_1', 'list_2'],
-            labels={},
-            format=XLSX_FORMAT,
-            offset=0,
-            limit=3,
-            options=ExportOptions(
-                header_content='paths',
-                header_separator='.',
-                header_shorten='no',
-                data_format='flatten',
-                csv_dialect=DEFAULT_DIALECT,
-            ),
-        )
-        wb = load_workbook(filename=xlsx_path, read_only=True)
-
-        # check workbook content
-        ws = wb['#']  # root content
-
-        # check headers: paths
-        self.assertEqual(ws['A1'].value, '@')
-        self.assertEqual(ws['B1'].value, '@id')
-        self.assertEqual(ws['C1'].value, 'id')
-        # list_1 entries
-        self.assertEqual(ws['D1'].value, 'list_1.1')
-        self.assertEqual(ws['E1'].value, 'list_1.2')
-        self.assertEqual(ws['F1'].value, 'list_1.3')
-        self.assertEqual(ws['G1'].value, 'list_1.4')
-        self.assertEqual(ws['H1'].value, 'list_1.5')
-        # list_2 entries
-        self.assertEqual(ws['I1'].value, 'list_2.1')
-        self.assertEqual(ws['J1'].value, 'list_2.2')
-        self.assertEqual(ws['K1'].value, 'list_2.3')
-        self.assertEqual(ws['L1'].value, 'list_2.4')
-        self.assertEqual(ws['M1'].value, 'list_2.5')
-
-        # check rows
-        self.assertEqual(ws['A2'].value, 1)
-        self.assertEqual(ws['C2'].value, 1)
-        self.assertEqual(ws['D2'].value, 1)
-        self.assertEqual(ws['E2'].value, 2)
-        self.assertEqual(ws['F2'].value, 3)
-        self.assertEqual(ws['G2'].value, None)
-        self.assertEqual(ws['H2'].value, None)
-        self.assertEqual(ws['I2'].value, 'a')
-        self.assertEqual(ws['J2'].value, 'b')
-        self.assertEqual(ws['K2'].value, None)
-        self.assertEqual(ws['L2'].value, None)
-        self.assertEqual(ws['M2'].value, None)
-
-        self.assertEqual(ws['A3'].value, 2)
-        self.assertEqual(ws['C3'].value, 2)
-        self.assertEqual(ws['D3'].value, 4)
-        self.assertEqual(ws['E3'].value, 5)
-        self.assertEqual(ws['F3'].value, 6)
-        self.assertEqual(ws['G3'].value, 7)
-        self.assertEqual(ws['H3'].value, 8)
-        self.assertEqual(ws['I3'].value, 'c')
-        self.assertEqual(ws['J3'].value, 'd')
-        self.assertEqual(ws['K3'].value, 'f')
-        self.assertEqual(ws['L3'].value, None)
-        self.assertEqual(ws['M3'].value, None)
-
-        self.assertEqual(ws['A4'].value, 3)
-        self.assertEqual(ws['C4'].value, 3)
-        self.assertEqual(ws['D4'].value, 9)
-        self.assertEqual(ws['E4'].value, None)
-        self.assertEqual(ws['F4'].value, None)
-        self.assertEqual(ws['G4'].value, None)
-        self.assertEqual(ws['H4'].value, None)
-        self.assertEqual(ws['I4'].value, 'g')
-        self.assertEqual(ws['J4'].value, 'h')
-        self.assertEqual(ws['K4'].value, 'i')
-        self.assertEqual(ws['L4'].value, 'j')
-        self.assertEqual(ws['M4'].value, 'k')
-
-        # ----------------------------------------------------------------------
-        # without paths (in order of appearance)
-        _, xlsx_path, _ = generate(
-            data,
-            paths=[],
-            labels={},
-            format=XLSX_FORMAT,
-            offset=0,
-            limit=3,
-            options=ExportOptions(
-                header_content='paths',
-                header_separator='.',
-                header_shorten='no',
-                data_format='flatten',
-                csv_dialect=DEFAULT_DIALECT,
-            ),
-        )
-        wb2 = load_workbook(filename=xlsx_path, read_only=True)
-
-        header = [c.value for c in wb2['#'][1]]
-        self.assertEqual(
-            header,
-            [
-                '@', '@id', 'id',
-                'list_1.1', 'list_1.2', 'list_1.3',
-                'list_2.1', 'list_2.2',
-                'list_1.4', 'list_1.5',
-                'list_2.3', 'list_2.4', 'list_2.5',
-            ]
-        )
-
-    def test__generate__xlsx__flatten__multiple_nested_lists(self):
-        # delete submissions
-        models.Submission.objects.all().delete()
-        ms = models.MappingSet.objects.first()
-
-        # create custom submissions with lists
-        models.Submission.objects.create(
-            mappingset=ms,
-            payload={
-                'id': 1,
-                'list_2': [['a'], ['b']],
-                'list_1': [[1], [2, 3]],
-            },
-        )
-        models.Submission.objects.create(
-            mappingset=ms,
-            payload={
-                'id': 2,
-                'list_1': [[4, 5, 6], [7, 8]],
-                'list_2': [['c', 'd'], ['f']],
-            },
-        )
-        models.Submission.objects.create(
-            mappingset=ms,
-            payload={
-                'id': 3,
-                'list_2': [['g', 'h', 'i', 'j', 'k']],
-                'list_1': [[], [], [], [9]],
-            },
-        )
-
-        data = models.Submission.objects \
-                                .order_by('created') \
-                                .annotate(exporter_data=F('payload')) \
-                                .values('pk', 'exporter_data')
-
-        _, xlsx_path, _ = generate(
-            data,
-            paths=['id', 'list_1', 'list_2'],
-            labels={},
-            format=XLSX_FORMAT,
-            offset=0,
-            limit=3,
-            options=ExportOptions(
-                header_content='paths',
-                header_separator='.',
-                header_shorten='no',
-                data_format='flatten',
-                csv_dialect=DEFAULT_DIALECT,
-            ),
-        )
-        wb = load_workbook(filename=xlsx_path, read_only=True)
-
-        # check workbook header
-        header = [c.value for c in wb['#'][1]]
-        self.assertEqual(
-            header,
-            [
-                '@', '@id', 'id',
-                'list_1.1.1', 'list_1.2.1', 'list_1.2.2', 'list_1.1.2', 'list_1.1.3', 'list_1.4.1',
-                'list_2.1.1', 'list_2.2.1', 'list_2.1.2', 'list_2.1.3', 'list_2.1.4', 'list_2.1.5',
-            ]
-        )
 
     # -----------------------------
     # SUBMISSIONS
