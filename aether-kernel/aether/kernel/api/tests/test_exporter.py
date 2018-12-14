@@ -58,11 +58,6 @@ here = os.path.dirname(os.path.realpath(__file__))
 
 
 EXAMPLE_PATHS = [
-    '_id',
-    '_version',
-    'starttime',
-    'endtime',
-    'deviceid',
     'country',
     'region',
     'name',
@@ -98,9 +93,6 @@ EXAMPLE_PATHS = [
     'iterate_none',
     'iterate_none.#',
     'iterate_none.#.nothing',
-    'meta',
-    'meta.instanceID',
-    'meta.instanceName',
     'id',
 ]
 

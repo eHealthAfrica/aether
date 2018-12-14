@@ -630,9 +630,6 @@ def __filter_paths(paths):
         if (
             # remove attributes
             not path.startswith('@') and
-            # remove xForm internal fields
-            path not in ['_id', '_version', 'starttime', 'endtime', 'deviceid', 'meta'] and
-            not path.startswith('meta.') and
             # remove aether internal fields
             f'{ENTITY_EXTRACTION_ENRICHMENT}.' not in path and
             f'{ENTITY_EXTRACTION_ERRORS}.' not in path and
