@@ -183,6 +183,9 @@ services:
       service: aether-producer-base
     environment:
       # These variables will override the ones indicated in the settings file
+      PRODUCER_SETTINGS_FILE: /code/tests/conf/producer.json
+      PRODUCER_ADMIN_USER: ${PRODUCER_ADMIN_USER}
+      PRODUCER_ADMIN_PW: ${PRODUCER_ADMIN_PW}
       KAFKA_URL: kafka-test:29092
       KERNEL_URL: http://kernel-test:9000
       POSTGRES_DBNAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
@@ -195,10 +198,9 @@ services:
       OFFSET_DB_NAME: producer_offset_db_test
     ports:
       - "9005:9005"
-    links:
-      - kafka-test
-      - zookeeper-test
-    command: start_test
+    volumes:
+      - ./aether-producer/tests:/code/tests
+    command: start
 
 
   # ---------------------------------
@@ -209,9 +211,12 @@ services:
     image: aether-integration-test
     build: ./test-aether-integration-module
     environment:
+      PRODUCER_URL: http://producer-test:9005
       KERNEL_URL: http://kernel-test:9000
       KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
       KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
+      PRODUCER_ADMIN_USER: ${PRODUCER_ADMIN_USER}
+      PRODUCER_ADMIN_PW: ${PRODUCER_ADMIN_PW}
     volumes:
       - ./test-aether-integration-module:/code
       - ./VERSION:/code/VERSION

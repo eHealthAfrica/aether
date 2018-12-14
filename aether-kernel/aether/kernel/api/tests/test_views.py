@@ -687,3 +687,28 @@ class ViewsTest(TestCase):
             'docs': {'id': 'ID', '_rev': 'REVISION', 'name': 'NAME', 'villageID': 'VILLAGE'},
             'name': 'a project name-Person',
         })
+
+    def test_submission__extract__endpoint(self):
+        self.assertEqual(reverse('submission-extract', kwargs={'pk': 1}),
+                         '/submissions/1/extract/')
+        url = reverse('submission-extract', kwargs={'pk': self.submission.pk})
+
+        models.Entity.objects.all().delete()  # remove all entities
+        self.assertEqual(self.submission.entities.count(), 0)
+        self.submission.refresh_from_db()
+        self.assertEqual(self.submission.payload['aether_errors'], [])
+
+        response = self.client.post(url)
+        self.assertEquals(response.status_code, 405, 'only PATCH')
+
+        with mock.patch('aether.kernel.api.views.run_entity_extraction',
+                        side_effect=Exception('oops')):
+            response = self.client.patch(url)
+        self.assertEquals(response.status_code, 400)
+        self.assertEqual(self.submission.entities.count(), 0)
+        self.submission.refresh_from_db()
+        self.assertEqual(self.submission.payload['aether_errors'], ['oops'])
+
+        response = self.client.patch(url)
+        self.assertEquals(response.status_code, 200)
+        self.assertNotEqual(self.submission.entities.count(), 0)

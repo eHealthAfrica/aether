@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import os
 from time import sleep
 
 import pytest
@@ -27,25 +28,48 @@ from aether.client import fixtures  # noqa
 
 from .consumer import get_consumer, read
 
+
 FORMS_TO_SUBMIT = 10
 SEED_ENTITIES = 10 * 7  # 7 Vaccines in each report
 SEED_TYPE = "CurrentStock"
 
+PRODUCER_CREDS = [
+    os.environ['PRODUCER_ADMIN_USER'],
+    os.environ['PRODUCER_ADMIN_PW']
+]
+
 
 @pytest.fixture(scope="function")
-def producer_status():
-    max_retry = 30
-    url = "http://producer-test:9005/status"
+def producer_topics():
+    max_retry = 10
     for x in range(max_retry):
         try:
-            status = requests.get(url).json()
+            status = producer_request('status')
+            kafka = status.get('kafka_container_accessible')
+            if not kafka:
+                raise ValueError('Kafka not connected yet')
+            topics = producer_request('topics')
+            return topics
+        except Exception as err:
+            print(err)
+            sleep(1)
+
+
+@pytest.fixture(scope="function")
+def wait_for_producer_status():
+    max_retry = 10
+    for x in range(max_retry):
+        try:
+            status = producer_request('status')
+            if not status:
+                raise ValueError('No status response from producer')
             kafka = status.get('kafka_container_accessible')
             if not kafka:
                 raise ValueError('Kafka not connected yet')
             person = status.get('topics', {}).get(SEED_TYPE, {})
             ok_count = person.get('last_changeset_status', {}).get('succeeded')
             if ok_count:
-                sleep(10)
+                sleep(5)
                 return ok_count
             else:
                 sleep(1)
@@ -87,3 +111,37 @@ def read_people():
     messages = read(consumer, start="FIRST", verbose=False, timeout_ms=500)
     consumer.close()  # leaving consumers open can slow down zookeeper, try to stay tidy
     return messages
+
+
+# Producer convenience functions
+
+
+def producer_request(endpoint, expect_json=True):
+    auth = requests.auth.HTTPBasicAuth(*PRODUCER_CREDS)
+    url = '{base}/{endpoint}'.format(
+        base=os.environ['PRODUCER_URL'],
+        endpoint=endpoint)
+    try:
+        res = requests.get(url, auth=auth)
+        if expect_json:
+            return res.json()
+        else:
+            return res.text
+    except Exception as err:
+        print(err)
+        sleep(1)
+
+
+def topic_status(topic):
+    status = producer_request('status')
+    return status['topics'][topic]
+
+
+def producer_topic_count(topic):
+    status = producer_request('topics')
+    return status[topic]['count']
+
+
+def producer_control_topic(topic, operation):
+    endpoint = f'{operation}?topic={topic}'
+    return producer_request(endpoint, False)

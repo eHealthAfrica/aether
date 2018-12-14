@@ -16,13 +16,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from datetime import datetime
 import logging
 import sys
 import os
 import uuid
 
-from sqlalchemy import Column, ForeignKey, String, DateTime, inspect
+from sqlalchemy import Column, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError

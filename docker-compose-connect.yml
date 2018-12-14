@@ -50,6 +50,7 @@ services:
     links:
       - kafka
       - zookeeper
+
     networks:
       - aether
     command: start

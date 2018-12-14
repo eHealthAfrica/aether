@@ -350,6 +350,7 @@ services:
     stdin_open: true
     volumes:
      - ./aether-producer:/code
+     - ./VERSION:/code/VERSION
     environment:
       PYTHONUNBUFFERED: 1
 
@@ -369,10 +370,12 @@ services:
       OFFSET_DB_PASSWORD: ${KERNEL_DB_PASSWORD}
       OFFSET_DB_NAME: producer_offset_db
 
+      PRODUCER_ADMIN_USER: ${PRODUCER_ADMIN_USER}
+      PRODUCER_ADMIN_PW: ${PRODUCER_ADMIN_PW}
       SERVER_PORT: 5005
 
       # default settings file
       PRODUCER_SETTINGS_FILE: /code/producer/settings.json
     ports:
       - "5005:5005"
-    command: start_dev
+    command: start
