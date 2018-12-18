@@ -48,6 +48,10 @@ from ..settings import (
     EXPORT_HEADER_SHORTEN,
 )
 
+
+RE_CONTAINS_DIGIT = re.compile(r'\.\d+\.')  # a.999.b
+RE_ENDSWITH_DIGIT = re.compile(r'\.\d+$')   # a.b.999
+
 EXPORT_DIR = tempfile.mkdtemp()
 FILENAME_RE = '{name}-{ts}.{ext}'
 
@@ -531,7 +535,7 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE, export_o
                 i = 0
                 for val in value:
                     i += 1
-                    element = __flatten_dict(val, flatten_list) if isinstance(val, (dict, list)) else {'': val}
+                    element = __flatten_dict(val) if isinstance(val, dict) else {'': val}
                     element_ids = {
                         **item_ids,             # identifies the parent
                         f'@.{array_group}': i,  # identifies the element
@@ -705,7 +709,7 @@ def __order_headers(headers):
         3.-     w.1.a.1     -> 2          -> 1        -> 3          -> 1        -> 3
         4.-     w.2.a       -> 2          -> 2        -> 4
         5.-     XXX         -> 5
-        6.-     b.2         -> 6          -> 2        -> 6                           << !!never happens (no 1)
+        6.-     b.2         -> 6          -> 2        -> 6                            << !!never happens (no 1st)
         7.-     w.3         -> 2          -> 3        -> 7
         8.-     w.2.b.2     -> 2          -> 2        -> 2          -> 2        -> 8
         9.-     YYY         -> 9
@@ -736,9 +740,6 @@ def __order_headers(headers):
 
     '''
 
-    RE_CONTAINS_DIGIT = re.compile(r'\.\d+\.')  # a.999.b
-    RE_ENDSWITH_DIGIT = re.compile(r'\.\d+$')   # a.b.999
-
     # check that there are flattened lists
     weighted_headers = []
     position_by_path = {}
@@ -746,7 +747,7 @@ def __order_headers(headers):
     for index, header in enumerate(headers):
         weighted_headers.append([header, [index]])
 
-        if RE_CONTAINS_DIGIT.search(header) or RE_ENDSWITH_DIGIT.search(header):
+        if __is_flatten(header):
             # divide the header into pieces and set the current position for each numerical entry
             # a.4.b.5.c.6.z  ==>  (a.4, a.4.b.5, a.4.b.5.c.6)
             pieces = header.split('.')
@@ -766,7 +767,7 @@ def __order_headers(headers):
         return headers
 
     for index, header in enumerate(headers):
-        if RE_ENDSWITH_DIGIT.search(header) or RE_CONTAINS_DIGIT.search(header):
+        if __is_flatten(header):
             # a.4.b.5.c.6  ==>  (a row, 4, a.4.b row, 5, a.4.b.5.c row, 6, current row)
             weight = []
             pieces = header.split('.')
@@ -832,3 +833,7 @@ def __is_int(value):
         return True
     except ValueError:
         return False
+
+
+def __is_flatten(value):
+    return RE_CONTAINS_DIGIT.search(value) or RE_ENDSWITH_DIGIT.search(value)
