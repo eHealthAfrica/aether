@@ -1,16 +1,18 @@
 {
-    "offset_db_url" : "sqlite:///test-offset.db",
     "start_delay": 5,
     "sleep_time": 10,
-    "log_level" : "DEBUG",
+    "log_level" : "ERROR",
     "window_size_sec" : 2,
-    "postgres_pull_limit" : 250,
 
+    "postgres_pull_limit" : 250,
     "postgres_host"   : "db-test",
     "postgres_port"   : 5432,
     "postgres_user"   : "readonlyuser",
     "postgres_dbname" : "kernel-test",
     "postgres_password" : "",
+
+    "offset_db_pool_size" : 1,
+    "kernel_db_pool_size" : 1,
 
     "kernel_url": "http://kernel-test:9000",
     "kernel_admin_username" : "admin",
@@ -39,7 +41,8 @@
     "server_ip"   : "",
 
     "flask_settings": {
-        "max_connections" : 3
+        "max_connections" : 3,
+        "pretty_json_status": true
     },
     "topic_settings" : {
         "name_modifier" : "%s"

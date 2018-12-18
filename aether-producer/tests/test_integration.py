@@ -50,10 +50,59 @@ def test_manager_http_endpoint_service(ProducerManagerSettings):
 
 
 @pytest.mark.integration
-def test_initialize_database_get_set(ProducerManagerSettings):
-    man = MockProducerManager(ProducerManagerSettings)
-    man.init_db()
-    assert(Offset.get_offset('some_missing') is None)
+def test_initialize_database_get_set(OffsetDB):
+    assert(OffsetDB.get_offset('some_missing') is None)
     value = str(uuid.uuid4())
-    Offset.update('fake_entry', value)
-    assert(Offset.get_offset('fake_entry').offset_value == value)
+    OffsetDB.update('fake_entry', value)
+    assert(OffsetDB.get_offset('fake_entry') == value)
+
+
+@pytest.mark.integration
+def test_offset_pooling(OffsetQueue, OffsetDB):
+    osn, osv = 'pool_offset_test', '10001'
+    OffsetDB.update(osn, osv)
+    assert(osv == OffsetDB.get_offset(osn))
+    assert(OffsetQueue.max_connections is len(OffsetQueue.connection_pool))
+    conns = []
+    while not OffsetQueue.connection_pool.empty():
+        promise = OffsetQueue.request_connection(0, 'test')
+        conn = promise.get()
+        assert(OffsetQueue._test_connection(conn) is True)
+        conns.append(conn)
+    try:
+        with Timeout(1):
+            OffsetDB.get_offset(osn)
+    except TimeoutError:
+        pass
+    else:
+        assert(False), 'Operation should have timed out.'
+    for conn in conns:
+        OffsetQueue.release('test', conn)
+
+
+@pytest.mark.integration
+def test_offset_prioritization(OffsetQueue, OffsetDB):
+    # Grab all connections
+    conns = []
+    while not OffsetQueue.connection_pool.empty():
+        promise = OffsetQueue.request_connection(0, 'test')
+        conn = promise.get()
+        assert(OffsetQueue._test_connection(conn) is True)
+        conns.append(conn)
+    low_prio = OffsetQueue.request_connection(1, 'low')
+    high_prio = OffsetQueue.request_connection(0, 'high')
+    # free a connection
+    conn = conns.pop()
+    OffsetQueue.release('test', conn)
+    try:
+        with Timeout(1):
+            conn = low_prio.get()
+    except TimeoutError:
+        pass
+    else:
+        assert(False), 'Operation should have timed out.'
+    with Timeout(1):
+        conn = high_prio.get()
+        assert(OffsetQueue._test_connection(conn) is True)
+    for conn in conns:
+        OffsetQueue.release('test', conn)

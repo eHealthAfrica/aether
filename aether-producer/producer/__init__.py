@@ -55,6 +55,7 @@ from urllib3.exceptions import MaxRetryError
 
 from producer import db
 from producer.db import Offset
+from producer.db import KERNEL_DB as POSTGRES
 from producer.settings import Settings
 
 
@@ -260,9 +261,17 @@ class ProducerManager(object):
     def serve(self):
         self.app = Flask('AetherProducer')  # pylint: disable=invalid-name
         self.logger = self.app.logger
+        try:
+            handler = self.logger.handlers[0]
+        except IndexError:
+            handler = logging.StreamHandler()
+            self.logger.addHandler(handler)
+        handler.setFormatter(logging.Formatter(
+            '%(asctime)s [Producer] %(levelname)-8s %(message)s'))
         log_level = logging.getLevelName(self.settings
                                          .get('log_level', 'DEBUG'))
         self.logger.setLevel(log_level)
+        # self.logger.setLevel(logging.INFO)
         if log_level is "DEBUG":
             self.app.debug = True
         self.app.config['JSONIFY_PRETTYPRINT_REGULAR'] = self.settings \
@@ -535,14 +544,20 @@ class TopicManager(object):
             schema_name=sql.Literal(self.name),
         )
         try:
-            with psycopg2.connect(**self.pg_creds) as conn:
-                cursor = conn.cursor(cursor_factory=DictCursor)
-                cursor.execute(query)
-                return sum([1 for i in cursor]) > 0
+            promise = POSTGRES.request_connection(1, self.name)  # Medium priority
+            conn = promise.get()
+            cursor = conn.cursor(cursor_factory=DictCursor)
+            cursor.execute(query)
+            return sum([1 for i in cursor]) > 0
         except psycopg2.OperationalError as pgerr:
             self.logger.critical(
                 'Could not access Database to look for updates: %s' % pgerr)
             return False
+        finally:
+            try:
+                POSTGRES.release(self.name, conn)
+            except UnboundLocalError:
+                self.logger.error(f'{self.name} could not release a connection it never received.')
 
     def get_time_window_filter(self, query_time):
         # You can't always trust that a set from kernel made up of time window
@@ -575,24 +590,45 @@ class TopicManager(object):
             limit=sql.Literal(self.limit),
         )
         query_time = datetime.now()
-        with psycopg2.connect(**self.pg_creds) as conn:
+
+        try:
+            promise = POSTGRES.request_connection(2, self.name)  # Lowest priority
+            conn = promise.get()
             cursor = conn.cursor(cursor_factory=DictCursor)
             cursor.execute(query)
-            # Since this cursor is of limited size, we keep it in memory instead of
-            # returning an iterator to free up the DB resource
             window_filter = self.get_time_window_filter(query_time)
             return [{key: row[key] for key in row.keys()} for row in cursor if window_filter(row)]
+        except psycopg2.OperationalError as pgerr:
+            self.logger.critical(
+                'Could not access Database to look for updates: %s' % pgerr)
+            return []
+        finally:
+            try:
+                POSTGRES.release(self.name, conn)
+            except UnboundLocalError:
+                self.logger.error(f'{self.name} could not release a connection it never received.')
 
     def get_topic_size(self):
         query = sql.SQL(TopicManager.COUNT_STR).format(
             schema_name=sql.Literal(self.name),
         )
-        with psycopg2.connect(**self.pg_creds) as conn:
+        try:
+            promise = POSTGRES.request_connection(0, self.name)  # needs to be quick
+            conn = promise.get()
             cursor = conn.cursor(cursor_factory=DictCursor)
             cursor.execute(query)
             size = [{key: row[key] for key in row.keys()} for row in cursor][0]
             self.logger.debug(f'''Reporting requested size for {self.name} of {size['count']}''')
             return size
+        except psycopg2.OperationalError as pgerr:
+            self.logger.critical(
+                'Could not access db to get topic size: %s' % pgerr)
+            return -1
+        finally:
+            try:
+                POSTGRES.release(self.name, conn)
+            except UnboundLocalError:
+                self.logger.error(f'{self.name} could not release a connection it never received.')
 
     def update_schema(self, schema_obj):
         self.schema_obj = self.parse_schema(schema_obj)
@@ -816,8 +852,8 @@ class TopicManager(object):
         offset = Offset.get_offset(self.name)
         if offset:
             self.logger.debug("Got offset for %s | %s" %
-                              (self.name, offset.offset_value))
-            return offset.offset_value
+                              (self.name, offset))
+            return offset
         else:
             self.logger.debug(
                 'Could not get offset for %s it is a new type' % (self.name))
@@ -828,8 +864,8 @@ class TopicManager(object):
         # Set a new offset in the database
         new_offset = Offset.update(self.name, offset)
         self.logger.debug("new offset for %s | %s" %
-                          (self.name, new_offset.offset_value))
-        self.status['offset'] = new_offset.offset_value
+                          (self.name, new_offset))
+        self.status['offset'] = new_offset
 
 
 def main():
