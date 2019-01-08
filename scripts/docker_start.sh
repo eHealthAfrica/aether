@@ -78,6 +78,14 @@ done
 docker network create aether_internal       2>/dev/null || true
 docker volume  create aether_database_data  2>/dev/null || true
 
+# create temporal files with VERSION and REVISION
+APP_VERSION=`cat ./VERSION`
+# locally use the branch name
+APP_REVISION=`git rev-parse --abbrev-ref HEAD`
+
+echo $APP_VERSION  > ./tmp/VERSION
+echo $APP_REVISION > ./tmp/REVISION
+
 echo ""
 docker-compose ps
 echo "----------------------------------------------------------------------"
@@ -179,4 +187,4 @@ docker ps
 echo "----------------------------------------------------------------------"
 echo ""
 
-docker-compose logs -f $app
+docker-compose up $app

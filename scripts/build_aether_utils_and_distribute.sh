@@ -21,7 +21,7 @@
 set -Eeuo pipefail
 
 DC_UTILS="docker-compose -f ./aether-utils/docker-compose.yml"
-VERSION=$(cat "VERSION")
+VERSION=$(cat "./tmp/VERSION")
 
 $DC_UTILS down
 
