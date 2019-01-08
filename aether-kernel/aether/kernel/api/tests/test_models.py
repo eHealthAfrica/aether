@@ -36,7 +36,7 @@ class ModelsTests(TransactionTestCase):
             revision='rev 1',
             name='a project name',
         )
-        self.assertEquals(str(project), project.name)
+        self.assertEqual(str(project), project.name)
         self.assertNotEqual(models.Project.objects.count(), 0)
 
         schema = models.Schema.objects.create(
@@ -44,7 +44,7 @@ class ModelsTests(TransactionTestCase):
             definition={},
             revision='a sample revision',
         )
-        self.assertEquals(str(schema), schema.name)
+        self.assertEqual(str(schema), schema.name)
         self.assertNotEqual(models.Schema.objects.count(), 0)
         self.assertIsNotNone(schema.definition_prettified)
         self.assertEqual(schema.schema_name, 'sample schema')
@@ -58,7 +58,7 @@ class ModelsTests(TransactionTestCase):
             project=project,
             schema=schema,
         )
-        self.assertEquals(str(projectschema), projectschema.name)
+        self.assertEqual(str(projectschema), projectschema.name)
         self.assertNotEqual(models.ProjectSchema.objects.count(), 0)
 
         mappingset = models.MappingSet.objects.create(
@@ -68,9 +68,9 @@ class ModelsTests(TransactionTestCase):
             input=EXAMPLE_SOURCE_DATA,
             project=project,
         )
-        self.assertEquals(str(mappingset), mappingset.name)
+        self.assertEqual(str(mappingset), mappingset.name)
         self.assertNotEqual(models.MappingSet.objects.count(), 0)
-        self.assertEquals(str(mappingset.project), str(project))
+        self.assertEqual(str(mappingset.project), str(project))
         self.assertIsNotNone(mappingset.input_prettified)
         self.assertIsNotNone(mappingset.schema_prettified)
 
@@ -80,7 +80,7 @@ class ModelsTests(TransactionTestCase):
             revision='a sample revision field',
             mappingset=mappingset,
         )
-        self.assertEquals(str(mapping), mapping.name)
+        self.assertEqual(str(mapping), mapping.name)
         self.assertNotEqual(models.Mapping.objects.count(), 0)
         self.assertIsNotNone(mapping.definition_prettified)
         self.assertEqual(mapping.projectschemas.count(), 0, 'No entities in definition')
@@ -105,6 +105,7 @@ class ModelsTests(TransactionTestCase):
         )
         self.assertNotEqual(models.Submission.objects.count(), 0)
         self.assertIsNotNone(submission.payload_prettified)
+        self.assertEqual(str(submission), str(submission.id))
         self.assertEqual(submission.project, project, 'submission inherits mapping project')
         self.assertEqual(submission.name, 'a project name-a sample mapping set')
 
@@ -112,10 +113,10 @@ class ModelsTests(TransactionTestCase):
             submission=submission,
             attachment_file=SimpleUploadedFile('sample.txt', b'abc'),
         )
-        self.assertEquals(str(attachment), attachment.name)
-        self.assertEquals(attachment.name, 'sample.txt')
-        self.assertEquals(attachment.md5sum, '900150983cd24fb0d6963f7d28e17f72')
-        self.assertEquals(attachment.submission_revision, submission.revision)
+        self.assertEqual(str(attachment), attachment.name)
+        self.assertEqual(attachment.name, 'sample.txt')
+        self.assertEqual(attachment.md5sum, '900150983cd24fb0d6963f7d28e17f72')
+        self.assertEqual(attachment.submission_revision, submission.revision)
         self.assertTrue(attachment.attachment_file_url.endswith(attachment.attachment_file.url))
 
         attachment_2 = models.Attachment.objects.create(
@@ -124,10 +125,10 @@ class ModelsTests(TransactionTestCase):
             name='sample_2.txt',
             attachment_file=SimpleUploadedFile('sample_12345678.txt', b'abcd'),
         )
-        self.assertEquals(str(attachment_2), attachment_2.name)
-        self.assertEquals(attachment_2.name, 'sample_2.txt')
-        self.assertEquals(attachment_2.md5sum, 'e2fc714c4727ee9395f324cd2e7f331f')
-        self.assertEquals(attachment_2.submission_revision, 'next revision')
+        self.assertEqual(str(attachment_2), attachment_2.name)
+        self.assertEqual(attachment_2.name, 'sample_2.txt')
+        self.assertEqual(attachment_2.md5sum, 'e2fc714c4727ee9395f324cd2e7f331f')
+        self.assertEqual(attachment_2.submission_revision, 'next revision')
         self.assertNotEqual(attachment_2.submission_revision, submission.revision)
 
         with self.assertRaises(IntegrityError) as err:
@@ -150,6 +151,7 @@ class ModelsTests(TransactionTestCase):
         )
         self.assertNotEqual(models.Entity.objects.count(), 0)
         self.assertIsNotNone(entity.payload_prettified)
+        self.assertEqual(str(entity), str(entity.id))
         self.assertEqual(entity.project, project, 'entity inherits submission project')
         self.assertEqual(entity.name, f'{project.name}-{schema.schema_name}')
         self.assertEqual(entity.mapping_revision, mapping.revision,
