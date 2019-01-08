@@ -21,7 +21,7 @@ from django.contrib import admin
 from django.conf.urls import include, url
 from django.utils.translation import ugettext as _
 
-from aether.common.health.views import health, check_db
+from aether.common.health.views import health, check_db, check_app
 
 
 def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
@@ -32,6 +32,7 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
 
         - the `/health` URL. Always responds with `200` status and an empty JSON object `{}`.
         - the `/check-db` URL. Responds with `500` status if the database is not available.
+        - the `/check-app` URL. Responds with current app version and more.
         - the `/admin` section URLs.
         - the `/accounts` URLs, checks if the REST Framework ones, using the templates
           indicated in `LOGIN_TEMPLATE` and `LOGGED_OUT_TEMPLATE` environment variables,
@@ -72,8 +73,8 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
         logout_view = views.LogoutView.as_view(template_name=settings.LOGGED_OUT_TEMPLATE)
 
     auth_views = [
-        url(r'^login/$', login_view, name='login'),
-        url(r'^logout/$', logout_view, name='logout'),
+        url(r'^login/$', view=login_view, name='login'),
+        url(r'^logout/$', view=logout_view, name='logout'),
     ]
 
     if token:
@@ -87,8 +88,9 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
 
     urlpatterns = [
         # `health` endpoints
-        url(r'^health$', health, name='health'),
-        url(r'^check-db$', check_db, name='check-db'),
+        url(r'^health$', view=health, name='health'),
+        url(r'^check-db$', view=check_db, name='check-db'),
+        url(r'^check-app$', view=check_app, name='check-app'),
 
         # `admin` section
         url(r'^admin/', admin.site.urls),
@@ -106,9 +108,9 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
 
         urlpatterns += [
             # media files (protected)
-            url(r'^media/(?P<path>.*)$', login_required(media_serve), name='media'),
+            url(r'^media/(?P<path>.*)$', view=login_required(media_serve), name='media'),
             # media files (basic auth)
-            url(r'^media-basic/(?P<path>.*)$', basic_serve, name='media-basic'),
+            url(r'^media-basic/(?P<path>.*)$', view=basic_serve, name='media-basic'),
         ]
 
     if settings.DEBUG:
@@ -125,7 +127,7 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
 
         # checks if Kernel server is available
         urlpatterns += [
-            url('^check-kernel$', check_kernel, name='check-kernel'),
+            url('^check-kernel$', view=check_kernel, name='check-kernel'),
         ]
 
         # `aether.common.kernel.utils.get_kernel_server_url()` returns different
