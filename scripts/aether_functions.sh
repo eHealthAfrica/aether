@@ -61,7 +61,6 @@ function build_ui_assets {
 
 function build_core_modules {
     CONTAINERS=($ARGS)
-    create_version_files
 
     # speed up first start up
     docker-compose up -d db
@@ -80,38 +79,10 @@ function build_core_modules {
     done
 }
 
-function build_test_modules {
-    CONTAINERS=($ARGS)
-    create_version_files
-
-    # speed up first start up
-    docker-compose -f docker-compose-test.yml up -d db-test
-
-    # build Aether Suite
-    for container in "${CONTAINERS[@]}"
-    do
-        # build container
-        docker-compose -f docker-compose-test.yml build \
-            --build-arg GIT_REVISION=$APP_VERSION \
-            --build-arg VERSION=$APP_VERSION \
-            $container
-
-        # setup container (model migration, admin user, static content...)
-        docker-compose -f docker-compose-test.yml run --no-deps $container setup
-    done
-}
-
 # kernel readonly user (used by Aether Producer)
 function create_readonly_user {
     docker-compose run --no-deps kernel eval python /code/sql/create_readonly_user.py
     docker-compose kill
-}
-
-# kernel readonly user (used by Aether Producer)
-function create_readonly_user_test {
-    docker-compose -f docker-compose-test.yml \
-        run --no-deps kernel-test eval python /code/sql/create_readonly_user.py
-    docker-compose -f docker-compose-test.yml kill
 }
 
 # Run function found at first command line arg

@@ -47,10 +47,6 @@ case "$1" in
         ./scripts/test_container.sh couchdb-sync
     ;;
 
-    ui)
-        ./scripts/test_container.sh ui
-    ;;
-
     *)
         # testing the given container
         ./scripts/test_container.sh $1
