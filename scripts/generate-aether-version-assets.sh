@@ -19,11 +19,18 @@
 # under the License.
 #
 
+set +x
+
+mkdir ./tmp/
+
 set -Eeuo pipefail
 
 APP_VERSION=`cat ./VERSION`
 # locally use the branch name
 APP_REVISION=`git rev-parse --abbrev-ref HEAD`
+
+echo "Release version:  $APP_VERSION"
+echo "Release revision: $APP_REVISION"
 
 echo $APP_VERSION  > ./tmp/VERSION
 echo $APP_REVISION > ./tmp/REVISION
