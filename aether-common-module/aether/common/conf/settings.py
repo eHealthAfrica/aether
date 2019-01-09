@@ -154,6 +154,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'aether.common.drf.pagination.CustomPagination',
     'PAGE_SIZE': int(os.environ.get('PAGE_SIZE', 10)),
     'MAX_PAGE_SIZE': int(os.environ.get('MAX_PAGE_SIZE', 5000)),
+    'HTML_SELECT_CUTOFF': int(os.environ.get('HTML_SELECT_CUTOFF', 100)),
 }
 
 
