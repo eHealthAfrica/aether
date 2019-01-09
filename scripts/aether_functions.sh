@@ -36,12 +36,7 @@ function create_aether_docker_assets {
 }
 
 function create_version_files {
-    APP_VERSION=`cat ./VERSION`
-    # locally use the branch name
-    APP_REVISION=`git rev-parse --abbrev-ref HEAD`
-
-    echo $APP_VERSION  > ./tmp/VERSION
-    echo $APP_REVISION > ./tmp/REVISION
+    ./scripts/generate-aether-version-assets.sh
 }
 
 # build Aether utilities

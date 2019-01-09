@@ -20,6 +20,8 @@
 #
 set -Eeuo pipefail
 
+./scripts/generate-aether-version-assets.sh
+
 DC_UTILS="docker-compose -f ./aether-utils/docker-compose.yml"
 VERSION=$(cat "./tmp/VERSION")
 

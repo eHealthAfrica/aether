@@ -19,10 +19,11 @@
 # under the License.
 #
 
-check_openssl () {
-    which openssl > /dev/null
-}
+set -Eeuo pipefail
 
-gen_random_string () {
-    openssl rand -hex 16 | tr -d "\n"
-}
+APP_VERSION=`cat ./VERSION`
+# locally use the branch name
+APP_REVISION=`git rev-parse --abbrev-ref HEAD`
+
+echo $APP_VERSION  > ./tmp/VERSION
+echo $APP_REVISION > ./tmp/REVISION
