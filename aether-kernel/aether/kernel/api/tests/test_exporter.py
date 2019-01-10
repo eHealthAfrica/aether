@@ -765,6 +765,16 @@ class ExporterViewsTest(TestCase):
         )
 
     def test_entities_export__xlsx__empty(self):
+        response = self.client.get(reverse('entity-xlsx') + '?start_at=1')
+        self.assertTrue(response.status_code, 200)
+        response = self.client.get(reverse('entity-xlsx') + '?start_at=2')
+        self.assertTrue(response.status_code, 204)
+
+        response = self.client.get(reverse('entity-xlsx') + '?page=1')
+        self.assertTrue(response.status_code, 200)
+        response = self.client.get(reverse('entity-xlsx') + '?page=2')
+        self.assertTrue(response.status_code, 204)
+
         models.Entity.objects.all().delete()
         response = self.client.post(reverse('entity-xlsx'))
         self.assertTrue(response.status_code, 204)

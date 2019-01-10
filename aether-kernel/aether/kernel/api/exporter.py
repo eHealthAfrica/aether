@@ -227,13 +227,17 @@ class ExporterViewSet(ModelViewSet):
 
         Data filtering:
 
-        - ``page``, current block of data.
-            Default: ``1``.
-
         - ``page_size``, size of the block of data.
             Default: ``1048574``. The missing ones are reserved to the header.
             Total number of rows on a worksheet (since Excel 2007): ``1048576``.
             https://support.office.com/en-us/article/Excel-specifications-and-limits-1672b34d-7043-467e-8e27-269d656771c3
+
+        - ``page``, current block of data.
+            Default: ``1``.
+
+        - ``start_at``: indicates the starting position. This allows to start at
+            a custom position and not only at the beginning of the page block.
+            Otherwise the ``page`` parameter is used to calculate it.
 
         - ``{json_field}__xxx``, json field filters. Handled by the ``get_queryset`` method.
 
@@ -358,11 +362,15 @@ class ExporterViewSet(ModelViewSet):
         data = queryset.annotate(exporter_data=F(self.json_field)) \
                        .values('pk', 'exporter_data')
 
-        # check pagination
-        current_page = int(self.__get(request, 'page', '1'))
-        page_size = int(self.__get(request, 'page_size', MAX_SIZE))
+        # check pagination (positive values)
+        page_size = max(1, int(self.__get(request, 'page_size', MAX_SIZE)))
+        start_at = max(0, int(self.__get(request, 'start_at', '0')))
+        if start_at > 0:
+            offset = start_at - 1
+        else:
+            current_page = int(self.__get(request, 'page', '1'))
+            offset = (current_page - 1) * page_size
 
-        offset = (current_page - 1) * page_size
         limit = min(data.count(), offset + page_size)
         if offset >= limit:
             return Response(status=204)  # NO-CONTENT
