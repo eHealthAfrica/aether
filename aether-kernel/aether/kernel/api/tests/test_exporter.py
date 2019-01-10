@@ -371,21 +371,21 @@ class ExporterViewsTest(TestCase):
         _, zip_path, _ = generate(data, paths=[], **kwargs)
         zip_file = zipfile.ZipFile(zip_path, 'r')
         self.assertEqual(zip_file.namelist(),
-                         ['export-#.csv', 'export-#-1.csv', 'export-#-2.csv', 'export-#-3.csv', 'export-#-4.csv'])
+                         ['export.csv', 'export.1.csv', 'export.2.csv', 'export.3.csv', 'export.4.csv'])
 
         # with the whole paths list (there are 3 arrays with data, ``iterate_none`` is empty)
         data = models.Submission.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
         _, zip_path, _ = generate(data, paths=EXAMPLE_PATHS, **kwargs)
         zip_file = zipfile.ZipFile(zip_path, 'r')
         self.assertEqual(zip_file.namelist(),
-                         ['export-#.csv', 'export-#-1.csv', 'export-#-2.csv', 'export-#-3.csv'])
+                         ['export.csv', 'export.1.csv', 'export.2.csv', 'export.3.csv'])
 
         # without `iterate_one` in paths
         paths = [path for path in EXAMPLE_PATHS if not path.startswith('iterate_one')]
         _, zip_path, _ = generate(data, paths=paths, **kwargs)
         zip_file = zipfile.ZipFile(zip_path, 'r')
         self.assertEqual(zip_file.namelist(),
-                         ['export-#.csv', 'export-#-1.csv', 'export-#-2.csv'])
+                         ['export.csv', 'export.1.csv', 'export.2.csv'])
 
         # with `flatten` option should generate only one file
         _, zip_path, _ = generate(
@@ -401,7 +401,7 @@ class ExporterViewsTest(TestCase):
             **kwargs,
         )
         zip_file = zipfile.ZipFile(zip_path, 'r')
-        self.assertEqual(zip_file.namelist(), ['export-#.csv'])
+        self.assertEqual(zip_file.namelist(), ['export.csv'])
 
     def test__generate__xlsx__split(self):
         data = models.Submission.objects.annotate(exporter_data=F('payload')).values('pk', 'exporter_data')
@@ -424,7 +424,7 @@ class ExporterViewsTest(TestCase):
         _id = str(models.Submission.objects.first().pk)
 
         # check workbook content
-        ws = wb['#']  # root content
+        ws = wb['0']  # root content
 
         # check headers: paths
         self.assertEqual(ws['A1'].value, '@')
@@ -483,7 +483,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(ws['P3'].value, 'A')
         self.assertEqual(ws['Q3'].value, '6b90cfb6-0ee6-4035-94bc-fb7f3e56d790')
 
-        ws1 = wb['#-1']  # first array content
+        ws1 = wb['1']  # first array content
 
         # check headers: paths
         self.assertEqual(ws1['A1'].value, '@')
@@ -508,7 +508,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(ws1['C4'].value, 2)
         self.assertEqual(ws1['D4'].value, 'FR')
 
-        ws2 = wb['#-2']  # second array content
+        ws2 = wb['2']  # second array content
 
         # check headers: paths
         self.assertEqual(ws2['A1'].value, '@')
@@ -543,7 +543,7 @@ class ExporterViewsTest(TestCase):
         self.assertEqual(ws2['D5'].value, 3)
         self.assertEqual(ws2['E5'].value, 'Three')
 
-        ws3 = wb['#-3']  # third array content
+        ws3 = wb['3']  # third array content
 
         # check headers: paths
         self.assertEqual(ws3['A1'].value, '@')
@@ -584,7 +584,7 @@ class ExporterViewsTest(TestCase):
         _id = str(models.Submission.objects.first().pk)
 
         # check workbook content
-        ws = wb['#']  # root content
+        ws = wb['0']  # root content
 
         # check headers: paths
         self.assertEqual(ws['A1'].value, '@')

@@ -55,7 +55,6 @@ RE_CONTAINS_DIGIT = re.compile(r'\.\d+\.')  # a.999.b
 RE_ENDSWITH_DIGIT = re.compile(r'\.\d+$')   # a.b.999
 
 EXPORT_DIR = tempfile.mkdtemp()
-FILENAME_RE = '{name}-{ts}.{ext}'
 
 CSV_FORMAT = 'csv'
 CSV_CONTENT_TYPE = 'application/zip'
@@ -397,7 +396,8 @@ class ExporterViewSet(ModelViewSet):
         options = self.__options(request)
 
         try:
-            logger.debug(f'Preparing {format} file: offset {offset}, limit {limit}')
+            logger.info(f'Preparing {format} file: offset {offset}, limit {limit}')
+            logger.info(str(options))
             file_name, file_path, content_type = generate_file(
                 data=data,
                 format=format,
@@ -410,7 +410,7 @@ class ExporterViewSet(ModelViewSet):
                 options=options,
             )
             csv.unregister_dialect(options.csv_dialect)
-            logger.debug('Prepared')
+            logger.info(f'File "{file_name}" ready!')
 
             response = FileResponse(open(file_path, 'rb'))
             response['Content-Type'] = content_type
@@ -454,11 +454,11 @@ def generate_file(data,
 
 
 def __prepare_zip(csv_files, filename):
-    zip_name = FILENAME_RE.format(name=filename, ts=datetime.now().isoformat(), ext='zip')
+    zip_name = f'{filename}-{datetime.now().isoformat()}.zip'
     zip_path = EXPORT_DIR + '/' + filename
     with zipfile.ZipFile(zip_path, 'w') as csv_zip:
         for key, value in csv_files.items():
-            csv_name = FILENAME_RE.format(name=filename, ts=key, ext='csv')
+            csv_name = f'{filename}.csv' if key == '0' else f'{filename}.{key}.csv'
             csv_zip.write(value, csv_name)
 
     return zip_name, zip_path, CSV_CONTENT_TYPE
@@ -473,7 +473,7 @@ def __prepare_xlsx(csv_files, filename, csv_dialect):
             for line in reader:
                 ws.append(line)
 
-    xlsx_name = FILENAME_RE.format(name=filename, ts=datetime.now().isoformat(), ext='xlsx')
+    xlsx_name = f'{filename}-{datetime.now().isoformat()}.xlsx'
     xlsx_path = EXPORT_DIR + '/' + xlsx_name
     wb.save(xlsx_path)
     wb.close()
@@ -512,7 +512,7 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE, export_o
             return csv_options[group]
         except KeyError:
             # new
-            title = '#' if group == '$' else f'#-{len(csv_options.keys())}'
+            title = '0' if group == '$' else str(len(csv_options.keys()))
             csv_path = f'{EXPORT_DIR}/temp-{title}.csv'
             f = open(csv_path, 'w', newline='')
             c = csv.writer(f, dialect=export_options.csv_dialect)
