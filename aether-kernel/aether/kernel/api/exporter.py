@@ -20,6 +20,7 @@ from datetime import datetime
 from collections import namedtuple
 import csv
 import json
+import logging
 import os
 import re
 import tempfile
@@ -46,6 +47,7 @@ from ..settings import (
     EXPORT_HEADER_CONTENT,
     EXPORT_HEADER_SEPARATOR,
     EXPORT_HEADER_SHORTEN,
+    LOGGING_LEVEL,
 )
 
 
@@ -94,6 +96,9 @@ DEFAULT_OPTIONS = ExportOptions(
     data_format=EXPORT_DATA_FORMAT,
     csv_dialect=DEFAULT_DIALECT,
 )
+
+logger = logging.getLogger(__name__)
+logger.setLevel(LOGGING_LEVEL)
 
 
 class ExporterViewSet(ModelViewSet):
@@ -392,6 +397,7 @@ class ExporterViewSet(ModelViewSet):
         options = self.__options(request)
 
         try:
+            logger.debug(f'Preparing {format} file: offset {offset}, limit {limit}')
             file_name, file_path, content_type = generate_file(
                 data=data,
                 format=format,
@@ -404,6 +410,7 @@ class ExporterViewSet(ModelViewSet):
                 options=options,
             )
             csv.unregister_dialect(options.csv_dialect)
+            logger.debug('Prepared')
 
             response = FileResponse(open(file_path, 'rb'))
             response['Content-Type'] = content_type
@@ -562,11 +569,15 @@ def __generate_csv_files(data, paths, labels, offset=0, limit=MAX_SIZE, export_o
     index = offset
     while data_from < limit:
         data_to = min(data_from + PAGE_SIZE, limit)
+        logger.debug(f'From {data_from} to {data_to}')
+
         for row in data[data_from:data_to]:
             index += 1
             json_data = __flatten_dict(row.get('exporter_data'), flatten_list)
             walker(json_data, {'@': index, '@id': str(row.get('pk'))}, '$')
         data_from = data_to
+
+    logger.debug('Building headers')
 
     # include headers and row columns in order
     csv_files = {}
