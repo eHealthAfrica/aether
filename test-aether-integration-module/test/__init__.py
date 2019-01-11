@@ -50,7 +50,7 @@ def producer_topics():
                 raise ValueError('Kafka not connected yet')
             topics = producer_request('topics')
             return topics
-        except Exception as err:
+        except Exception:
             sleep(1)
 
 
