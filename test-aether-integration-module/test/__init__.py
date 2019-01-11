@@ -51,7 +51,6 @@ def producer_topics():
             topics = producer_request('topics')
             return topics
         except Exception as err:
-            print(err)
             sleep(1)
 
 
@@ -73,7 +72,6 @@ def wait_for_producer_status():
                 sleep(5)
                 return ok_count
             else:
-                print(person.get('last_changeset_status'))
                 raise ValueError('Last changeset status has no successes. Not producing')
         except Exception as err:
             failure_mode = str(err)
