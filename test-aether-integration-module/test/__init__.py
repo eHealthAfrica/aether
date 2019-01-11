@@ -57,7 +57,8 @@ def producer_topics():
 
 @pytest.fixture(scope="function")
 def wait_for_producer_status():
-    max_retry = 10
+    max_retry = 30
+    failure_mode = None
     for x in range(max_retry):
         try:
             status = producer_request('status')
@@ -72,10 +73,13 @@ def wait_for_producer_status():
                 sleep(5)
                 return ok_count
             else:
-                sleep(1)
+                print(person.get('last_changeset_status'))
+                raise ValueError('Last changeset status has no successes. Not producing')
         except Exception as err:
-            print(err)
+            failure_mode = str(err)
             sleep(1)
+
+    raise TimeoutError(f'Producer not ready before {max_retry}s timeout. Reason: {failure_mode}')
 
 
 @pytest.fixture(scope="function")  # noqa
