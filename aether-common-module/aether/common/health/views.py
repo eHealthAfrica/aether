@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.conf import settings
 from django.http import JsonResponse
 
 from aether.common.health.utils import test_db_connection
@@ -39,3 +40,15 @@ def check_db(*args, **kwargs):
         return JsonResponse({}, status=500)
 
     return JsonResponse({})
+
+
+def check_app(*args, **kwargs):
+    '''
+    Health check for the current app version and more.
+    '''
+
+    return JsonResponse({
+        'app_name': settings.APP_NAME,
+        'app_version': settings.VERSION,
+        'app_revision': settings.REVISION,
+    })

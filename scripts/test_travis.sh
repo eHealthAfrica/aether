@@ -20,9 +20,8 @@
 #
 set -Eeuo pipefail
 
+./scripts/generate-aether-version-assets.sh
 ./scripts/build_common_and_distribute.sh
-
-MODE="travis"
 
 case "$1" in
     kubernetes)
@@ -30,7 +29,7 @@ case "$1" in
     ;;
 
     integration)
-        ./scripts/test_integration_requires.sh $MODE
+        ./scripts/test_integration_requires.sh travis
         ./scripts/test_integration.sh
     ;;
 
@@ -46,10 +45,6 @@ case "$1" in
     modules)
         ./scripts/test_container.sh odk
         ./scripts/test_container.sh couchdb-sync
-    ;;
-
-    ui)
-        ./scripts/test_container.sh ui
     ;;
 
     *)

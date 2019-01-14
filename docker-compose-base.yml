@@ -118,6 +118,11 @@ services:
       WEB_SERVER_PORT: 8000
     volumes:
       - ./aether-kernel:/code
+
+      # app version
+      - ./tmp/VERSION:/code/VERSION
+      - ./tmp/REVISION:/code/REVISION
+
       # media folder
       - ./.persistent_data/media/kernel:/media
       # static folder
@@ -172,6 +177,11 @@ services:
       # WEB_SERVER_PORT: 8443
     volumes:
       - ./aether-odk-module:/code
+
+      # app version
+      - ./tmp/VERSION:/code/VERSION
+      - ./tmp/REVISION:/code/REVISION
+
       # media folder
       - ./.persistent_data/media/odk:/media
       # static folder
@@ -235,6 +245,11 @@ services:
       WEB_SERVER_PORT: 8006
     volumes: &sync-volumes
       - ./aether-couchdb-sync-module:/code
+
+      # app version
+      - ./tmp/VERSION:/code/VERSION
+      - ./tmp/REVISION:/code/REVISION
+
       # static folder
       - ./.persistent_data/static/sync:/var/www/static
       # backup folder
@@ -289,6 +304,11 @@ services:
       WEB_SERVER_PORT: 8004
     volumes:
       - ./aether-ui:/code
+
+      # app version
+      - ./tmp/VERSION:/code/VERSION
+      - ./tmp/REVISION:/code/REVISION
+
       # static folder
       - ./.persistent_data/static/ui:/var/www/static
       # backup folder

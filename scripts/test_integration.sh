@@ -27,7 +27,7 @@ function build_container() {
     $DC_TEST build "$1"-test
 }
 
-wait_for_kernel() {
+function wait_for_kernel() {
     KERNEL_HEALTH_URL="http://localhost:9000/health"
     until curl -s $KERNEL_HEALTH_URL > /dev/null; do
         >&2 echo "Waiting for Kernel..."

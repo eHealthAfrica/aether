@@ -28,7 +28,7 @@ from aether.common.auth.views import obtain_auth_token
 
 
 urlpatterns = [
-    url(r'^get-token$', obtain_auth_token, name='token'),
+    url(r'^get-token$', view=obtain_auth_token, name='token'),
 ]
 ```
 
@@ -42,12 +42,13 @@ Include the view entry in the `urls.py` file.
 
 ```python
 from django.conf.urls import url
-from aether.common.health.views import health, check_db
+from aether.common.health.views import health, check_db, check_app
 
 
 urlpatterns = [
-    url(r'^health$', health, name='health'),        # checks if django responds
-    url(r'^check-db$', check_db, name='check-db'),  # checks if the db responds
+    url(r'^health$', view=health, name='health'),           # checks if django responds
+    url(r'^check-db$', view=check_db, name='check-db'),     # checks if the db responds
+    url(r'^check-app$', view=check_app, name='check-app'),  # returns the app version
 ]
 ```
 
@@ -71,7 +72,7 @@ from aether.common.kernel.views import check_kernel
 
 
 urlpatterns = [
-    url(r'^check-kernel$', check_kernel, name='check-kernel'),
+    url(r'^check-kernel$', view=check_kernel, name='check-kernel'),
 ]
 ```
 
@@ -118,6 +119,7 @@ Default URLs included:
 
   - the `/health` URL. Always responds with `200` status and an empty JSON object `{}`.
   - the `/check-db` URL. Responds with `500` status if the database is not available.
+  - the `/check-app` URL. Responds with current app version and more.
   - the `/admin` section URLs.
   - the `/accounts` URLs, checks if the REST Framework ones, using the templates
     indicated in `LOGIN_TEMPLATE` and `LOGGED_OUT_TEMPLATE` environment variables,
