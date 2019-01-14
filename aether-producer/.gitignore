@@ -1,7 +1,3 @@
 VERSION
 client/
 *.db
-*__pycache__
-.pytest*
-*.pyc
-*.*~

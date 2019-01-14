@@ -72,7 +72,7 @@ services:
       TESTING: "true"
     volumes:
       - ./aether-utils/aether-client:/code
-      - ./VERSION:/code/VERSION
+      - ./tmp/VERSION:/code/VERSION
     command: test
 
 
@@ -219,5 +219,5 @@ services:
       PRODUCER_ADMIN_PW: ${PRODUCER_ADMIN_PW}
     volumes:
       - ./test-aether-integration-module:/code
-      - ./VERSION:/code/VERSION
+      - ./tmp/VERSION:/code/VERSION
     command: test
