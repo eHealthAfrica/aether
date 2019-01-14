@@ -29,6 +29,6 @@ class AppsTests(TestCase):
 
     def test_scheduler(self):
         scheduler = get_scheduler('default')
-        jobs = scheduler.get_jobs()
+        jobs = list(scheduler.get_jobs())
 
         self.assertEquals(len(jobs), 1, 'only one job')

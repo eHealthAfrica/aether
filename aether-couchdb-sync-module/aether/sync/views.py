@@ -27,7 +27,7 @@ def check_rq(*args, **kwargs):
     '''
 
     scheduler = get_scheduler('default')
-    jobs = scheduler.get_jobs()
+    jobs = list(scheduler.get_jobs())
 
     if len(jobs) == 0:
         return JsonResponse({}, status=500)
