@@ -67,6 +67,7 @@ echo "Release version:  $VERSION"
 echo "Release revision: $TRAVIS_COMMIT"
 
 # create temporal files with VERSION+REVISION data
+mkdir ./tmp/
 echo $VERSION       > ./tmp/VERSION
 echo $TRAVIS_COMMIT > ./tmp/REVISION
 
