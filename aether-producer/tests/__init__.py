@@ -21,6 +21,7 @@
 import logging
 import pytest
 
+from .timeout import timeout as Timeout  # noqa
 from producer import *
 Offset = db.Offset
 
@@ -54,3 +55,17 @@ class ObjectWithKernel(object):
 @pytest.fixture(scope='session')
 def ProducerManagerSettings():
     return Settings('/code/tests/conf/producer.json')
+
+
+@pytest.mark.integration
+@pytest.fixture(scope='session')
+def OffsetDB(ProducerManagerSettings):
+    man = MockProducerManager(ProducerManagerSettings)
+    man.init_db()
+    return Offset
+
+
+@pytest.mark.integration
+@pytest.fixture(scope='function')
+def OffsetQueue():
+    return db.OFFSET_DB

@@ -264,6 +264,9 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedMod
         self.project = self.mappingset.project
         super(Submission, self).save(*args, **kwargs)
 
+    def __str__(self):
+        return f'{self.id}'
+
     class Meta:
         app_label = 'kernel'
         default_related_name = 'submissions'
@@ -663,6 +666,9 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
             raise IntegrityError(ve)
 
         super(Entity, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.id}'
 
     class Meta:
         app_label = 'kernel'

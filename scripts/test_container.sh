@@ -73,6 +73,14 @@ if [[ $1 != "kernel" ]]
 then
     wait_for_kernel
 fi
+
+# Producer needs readonlyuser to be present
+if [[ $1 = "producer" ]]
+then
+    echo "_____________________________________________ Creating readonlyuser on Kernel"
+    $DC_TEST run kernel-test eval python /code/sql/create_readonly_user.py
+fi
+
 $DC_TEST run "$1"-test test
 echo "_____________________________________________ $1 tests passed!"
 

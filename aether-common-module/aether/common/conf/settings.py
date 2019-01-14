@@ -50,18 +50,14 @@ MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/media/')
 # Version and revision
 # ------------------------------------------------------------------------------
 
-# from  ``/code/aether/common/conf``  to  ``/code``
-here = os.path.dirname(os.path.realpath(__file__))
-_root = os.path.dirname(os.path.dirname(os.path.dirname(here)))
-
 try:
-    with open(os.path.join(_root, 'VERSION')) as fp:
+    with open('/code/VERSION') as fp:
         VERSION = fp.read().strip()
 except Exception:
     VERSION = '#.#.#'
 
 try:
-    with open(os.path.join(_root, 'REVISION')) as fp:
+    with open('/code/REVISION') as fp:
         REVISION = fp.read().strip()
 except Exception:
     REVISION = '---'
@@ -154,6 +150,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'aether.common.drf.pagination.CustomPagination',
     'PAGE_SIZE': int(os.environ.get('PAGE_SIZE', 10)),
     'MAX_PAGE_SIZE': int(os.environ.get('MAX_PAGE_SIZE', 5000)),
+    'HTML_SELECT_CUTOFF': int(os.environ.get('HTML_SELECT_CUTOFF', 100)),
 }
 
 
