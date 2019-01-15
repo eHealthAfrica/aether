@@ -37,7 +37,7 @@ class Command(BaseCommand):
         '''
 
         scheduler = get_scheduler('default')
-        jobs = scheduler.get_jobs()
+        jobs = list(scheduler.get_jobs())
 
         if len(jobs) == 0:
             self.stderr.write(MESSAGE_ERROR)
