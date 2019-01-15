@@ -43,7 +43,7 @@ rq-scheduler
 
 
 # CAS libraries
-django-cas-ng
+django-cas-ng<3.6.0  # breaking changes
 django-ums-client
 
 
