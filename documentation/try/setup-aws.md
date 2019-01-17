@@ -10,7 +10,7 @@ This guide will take you through the steps required to create and configure an E
 
 ## Overview of the setup process
 If you are already comfortable with configuring and running Amazon EC2 instances, just follow this list of steps and return to [Try Gather](http://gather.ehealthafrica.org/documentation/try/setup) or [Try Aether](index#into-the-aether)
-* Create an EC2 Ubuntu instance with at least 2 processors, 8GB RAM and 8GB Storage **t3.large**
+* Create an EC2 Ubuntu instance with at least 2 processors, 8GB RAM and 8GB Storage **t2.large**
 * Configure your VPC to be accessible from the internet with these ports open: 22, 80, 8000, 8443 and 5000
 * Verify/Install git, Docker and Docker Compose. It helps if Docker can be [run as a non-root user](https://docs.docker.com/install/linux/linux-postinstall/)
 * Use *Stop* instead of *Terminate* if you want to preserve data between sessions.
@@ -22,11 +22,11 @@ Click **Launch Image** to create a new EC2 image.
 
 <p style="clear: both;"/>
 
-[![AWS EC2 AMI](/images/aws-ec2-step1.png)](/images/aws-ec2-step1.png){: .scalable}**Step 1: Choose an AMI -** Select **Ubuntu Server 16.04 LTS (HVM), SSD Volume Type** from the list of AMIs
+[![AWS EC2 AMI](/images/aws-ec2-step1.png)](/images/aws-ec2-step1.png){: .scalable}**Step 1: Choose an AMI -** Select **Ubuntu Server 18.04 LTS (HVM), SSD Volume Type** from the list of AMIs
 
 <p style="clear: both;"/>
 
-[![AWS EC2 Instance Type](/images/aws-ec2-step2.png)](/images/aws-ec2-step2.png){: .scalable}**Step 2: Choose an Instance Type -** Select **Ubuntu Server 16.04 LTS (HVM), SSD Volume Type** from the list of AMIs
+[![AWS EC2 Instance Type](/images/aws-ec2-step2.png)](/images/aws-ec2-step2.png){: .scalable}**Step 2: Choose an Instance Type -** Select **x2.large** with 2 CPUs and 8 GB RAM
 
 <p style="clear: both;"/>
 
@@ -50,12 +50,12 @@ Click **Launch Image** to create a new EC2 image.
 
 <p style="clear: both;"/>
 
-[![AWS EC2 Key Pair](/images/aws-ec2-KeyPair.png)](/images/aws-ec2-KeyPair.png){: .scalable}**Select your key pair -** Amazon EC2 uses public–key cryptography to encrypt and decrypt login information. In order for you to log in to your instance, you must have an [Amazon EC2 cryptographic key pair](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html) specified for your instance and stored locally on your client machine.  If you already have a key pair that you use for AWS, select it here and go to the next step.  
+[![AWS EC2 Key Pair](/images/aws-ec2-KeyPair.png)](/images/aws-ec2-KeyPair.png){: .scalable}**Select your key pair -** Amazon EC2 uses public–key cryptography to encrypt and decrypt login information. In order for you to log in to your instance, you must have an [Amazon EC2 cryptographic key pair](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html) specified for your instance and stored locally on your client machine.  If you already have a key pair that you use for AWS, select it here and go to the next step. The rest of this guide will refer to the name as "Test_Keys.pem."
 
 If you don't have a key pair, select **Create a new key pair**, give it a name and press **Download Key Pair**.  The private key file is automatically downloaded by your browser. The base file name is the name you specified as the name of your key pair, and the file name extension is .pem. Save the private key file in a safe place.  I use .ssh in my home folder. If you will use an SSH client on a Mac or Linux computer to connect to your instance, use the following command to set the permissions of your private key file so that only you can read it. 
 <p style="clear: both;"/>
 ```
-chmod 400 my-key-pair.pem
+chmod 400 Test_Keys.pem
 ```
 [![AWS EC2 Wait](/images/aws-ec2-console.png)](/images/aws-ec2-console.png){: .scalable}**Wait for instance to be ready -** It will take a few minutes for your instance to initialize and be ready for service.  Bring up your EC2 console and wait for the **Status Checks** to be complete and for **Instance State** to change to **running**.  You will need to note the **IPv4 Public IP Address** displayed on the console.
 
@@ -73,7 +73,7 @@ ssh -i "~/.ssh/Test_Keys.pem" ubuntu@18.184.160.216
 ``` 
 
 If you successfully logged into your Ubuntu EC2 instance, congratulations, the hard part is over and you can move to the next steps.  If you were not able to login to your instance, here are a few things to look at based on your error message:
-* **Permissions 0644 for '/Users/dmoran/.ssh/eHA_FRA.pem' are too open.** - You did not successfully change permission for your .pem file.  Follow the instructions in **Select your key pair** step from above
+* **Permissions 0644 for '~/.ssh/Test_Keys.pem' are too open.** - You did not successfully change permission for your .pem file.  Follow the instructions in **Select your key pair** step from above
 * **ssh: connect to host 18.197.111.229 port 22: Operation timed out** - Your instance is either not running or your VPC is not properly configured with port 22 open.  Verify that your instance is ready by following the **Wait for instance to be ready** step above.  Also, verify that you have followed **Step 6: Configure Security Group** exactly.  If you have an older AWS account, it is possible that your default VPC has been deleted and the one used above is not configured with a properly permissioned default gateway.  This article explains the situation and the solution: [Default VPC and Default Subnets](https://docs.aws.amazon.com/vpc/latest/userguide/default-vpc.html)
 
 ## Installing Docker and Docker Compose

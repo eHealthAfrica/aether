@@ -5,7 +5,7 @@ description: Aether Documentation – Try It for yourself
 ---
 
 # A Simple Aether-Based Solution
-***
+
 Aether is a platform for building solutions that curate and exchange live information. Structured data is "pushed" to Aether via client API.  The input data is combined with known schemas and _mapping functions_ resulting in the extraction of one or more _entity objects._
 
 Entities are standalone data documents that each contain a matadata "contract" or schema.  The schema describes the structure of the data represented by the entity.  The entities (document/schema bundles) are passed along to a queing mechanism and made available to downstream data consumers.  
@@ -16,8 +16,11 @@ An example of this type of entity extraction is [normalizing](https://en.wikiped
 
 In Aether speak, we call this process a **pipeline**.  A pipeline consists of a path that data takes through Aether, and the transformations that it goes through along the way. Within a pipeline, we define one or more _data contracts_ that specify the format of the transformed data, along with rules that define how the input data is transformed to comply with those contracts.
 
-You should already be set up, logged in and looking at a mostly empty **AUX//Pipelines** screen from the [previous step](index)
+You should already be set up, logged in and looking at a mostly empty **Aether//Pipelines** screen from the [previous step](index)
+
 ![AUX](/images/screenshots/pipelines-overview-start.png)
+{: .screenshot}
+
 ## Try it Yourself
 In this exercise, we will setup a system for health facilities to report their current stock level of vaccines. Software at each facility will communicate to this reporting system by making REST calls. We don't worry about what the implementation at the facility will be, our job is to define the document structures, make REST endpoints available to accept those documents and handle the downstream data flow.
 
