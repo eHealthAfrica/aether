@@ -102,6 +102,19 @@ Let's fix that. First assign another UUID to Facility.rev as we did before. Next
 
 ![Input](/images/03b-mapping.png)
 
-You can now save this pipeline which will give you a submission URL. Data sent to this url will undergo this transformation and be saved in Aether as the entity type Facility. This is a very straight-forward example. We've added a few fields and taken `lat` and `lng` from the nested `location` object. In the next example, we'll tackle a more complex example that creates many entities from a single input document.
+You can now save this pipeline by pressing `Publish Pipeline` which will return you to the main _AUX // Pipelines_ screen. You should now see an entry named _Clinic Registration_ with info about number of entities and whether there are errors.  The name, _Clinic Registration,_ is a link back to the pipeline editor for this pipeline.   The little info icon (i) button brings up valuable information about how to submit data to this URL and has some sample data that you can use to test.  Press the info button now.
+
+![Input](/images/aux-pipeline-info.png)
+
+The _Submission URL_ is the URL that your client apps will use to _POST_ clinic registration data to Aether. Data sent to this url will undergo this transformation and be saved in Aether as the entity type Facility.  We will try a post later, but first, a look at the Aether REST API.
+
+### Explore the Aether REST API
+In the last section we talked about _submission_ URL used to post data to Aether.  There are other useful URLs for debugging, managing and integrating with Aether and we will explore them now.  In your browser, navigate to `http://kernel.aether.local` and you should come to the following page.  If you get a _403_ or _Authentication_ error then you just need to login again.  Remember, the default userid and password are _admin_ and _adminadmin._
+
+![Input](/images/api-root.png)
+
+
+### Summary
+This is a very straight-forward example. We've added a few fields and taken `lat` and `lng` from the nested `location` object. In the next example, we'll tackle a more complex example that creates many entities from a single input document.
 
 <div style="margin-top: 2rem; text-align: center"><a href="walkthrough-core">Next Step: A More Complex Aether-Based Solution</a></div>
