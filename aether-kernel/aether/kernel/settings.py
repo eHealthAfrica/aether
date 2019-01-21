@@ -48,4 +48,14 @@ REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'] = [
     *REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'],
 ]
 
-CSV_SEPARATOR = os.environ.get('CSV_SEPARATOR', ',')
+
+# Export Configuration
+# ------------------------------------------------------------------------------
+
+EXPORT_CSV_ESCAPE = os.environ.get('EXPORT_CSV_ESCAPE', '\\')
+EXPORT_CSV_QUOTE = os.environ.get('EXPORT_CSV_QUOTE', '"')
+EXPORT_CSV_SEPARATOR = os.environ.get('EXPORT_CSV_SEPARATOR', ',')
+EXPORT_DATA_FORMAT = os.environ.get('EXPORT_DATA_FORMAT', 'split')
+EXPORT_HEADER_CONTENT = os.environ.get('EXPORT_HEADER_CONTENT', 'labels')
+EXPORT_HEADER_SEPARATOR = os.environ.get('EXPORT_HEADER_SEPARATOR', '/')
+EXPORT_HEADER_SHORTEN = os.environ.get('EXPORT_HEADER_SHORTEN', 'no')
