@@ -21,7 +21,7 @@ def load_backup_file(fp):
     '''
 
     # read entries
-    documents = json.load(fp)
+    entries = json.load(fp)
     devices = set()
     stats = {
         'total': 0,
@@ -31,9 +31,10 @@ def load_backup_file(fp):
         'errors': {},
     }
 
-    logger.info(_('Processing {} documents...').format(len(documents)))
+    logger.info(_('Processing {} documents...').format(len(entries)))
 
-    for doc in documents:
+    for entry in entries:
+        doc = entry['doc']
         stats['total'] += 1
 
         # each entry has a "deviceId" property, use it to create the linked DeviceDB

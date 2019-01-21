@@ -1,15 +1,21 @@
 [
   {
-    "deviceId": "test_abc123",
-    "_id": "sample-1"
+    "doc": {
+      "deviceId": "test_abc123",
+      "_id": "sample-1"
+    }
   },
   {
-    "deviceId": "test_abc123",
-    "_id": "sample-2"
+    "doc": {
+      "deviceId": "test_abc123",
+      "_id": "sample-2"
+    }
   },
   {
-    "deviceId": "test_abc123",
-    "_id": "sample-3",
-    "_rev": "rev-1"
+    "doc": {
+      "deviceId": "test_abc123",
+      "_id": "sample-3",
+      "_rev": "rev-1"
+    }
   }
 ]
