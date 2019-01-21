@@ -21,7 +21,7 @@
 from django.core.management.base import BaseCommand
 from django.utils.translation import ugettext as _
 
-from aether.sync.api.couchdb_file import load_file
+from aether.sync.api.couchdb_file import load_backup_file
 
 
 class Command(BaseCommand):
@@ -36,12 +36,10 @@ class Command(BaseCommand):
             help=_('Indicate the file to load'),
             dest='filename',
             action='store',
-            required=False,
+            required=True,
         )
 
     def handle(self, *args, **options):
         with open(options['filename'], 'r') as fp:
-            stats = load_file(fp)
+            stats = load_backup_file(fp)
             self.stdout.write(str(stats))
-
-        self.stdout.write(_('END.'))

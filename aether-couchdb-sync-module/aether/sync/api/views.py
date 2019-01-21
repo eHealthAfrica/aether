@@ -39,7 +39,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
-from .couchdb_file import load_file
+from .couchdb_file import load_backup_file
 from .couchdb_helpers import create_db, create_or_update_user
 from .models import Project, Schema, MobileUser, DeviceDB
 from .serializers import ProjectSerializer, SchemaSerializer, MobileUserSerializer
@@ -284,7 +284,7 @@ def load_file(request):
     '''
 
     try:
-        stats = load_file(request.FILES['file'])
+        stats = load_backup_file(fp=request.FILES['file'])
         return Response(data=stats)
 
     except Exception as e:

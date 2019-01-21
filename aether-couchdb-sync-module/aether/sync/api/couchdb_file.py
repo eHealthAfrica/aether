@@ -1,8 +1,10 @@
 import json
 import logging
 
+from django.utils.translation import ugettext as _
+
 from .models import DeviceDB
-from .couchdb_helpers import create_db, create_or_update_user, create_document
+from .couchdb_helpers import create_db, create_document
 from ..settings import LOGGING_LEVEL
 
 
@@ -10,7 +12,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(LOGGING_LEVEL)
 
 
-def load_file(fp):
+def load_backup_file(fp):
     '''
     POST file content into CouchDB server.
 
@@ -26,6 +28,7 @@ def load_file(fp):
         'success': 0,
         'erred': 0,
         'err_docs': [],
+        'errors': {},
     }
 
     logger.info(_('Processing {} documents...').format(len(documents)))
@@ -50,25 +53,23 @@ def load_file(fp):
                 devices.add(device_id)
 
             except Exception as err:
-                stats['erred'] += 1
-                stats['err_docs'].push(doc)
-
-                logger.exception(err)
                 logger.error(_('Creating couchdb db failed'))
-                continue
+                logger.exception(err)
 
         # create document
         try:
-            r = create_document(device_id, doc)
-            r.raise_for_status()
+            resp = create_document(device_id, doc)
+            resp.raise_for_status()
             stats['success'] += 1
 
-        except Exception as ce:
+        except Exception as err2:
             stats['erred'] += 1
-            stats['err_docs'].push(doc)
+            stats['err_docs'].append(doc)
+            stats['errors'][doc['_id']] = resp.json()
 
             logger.error(_('Error creating document {}.').format(doc['_id']))
-            logger.exception(e)
+            logger.error(resp.content)
+            logger.exception(err2)
 
     logger.info(_('Processed {} documents.').format(stats['total']))
 
