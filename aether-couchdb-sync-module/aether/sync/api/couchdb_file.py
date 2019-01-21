@@ -37,8 +37,22 @@ def load_backup_file(fp):
         doc = entry['doc']
         stats['total'] += 1
 
-        # each entry has a "deviceId" property, use it to create the linked DeviceDB
-        # along with the CouchDB user and database
+        # each entry has a "deviceId" property
+        # use it to create the linked DeviceDB along with the CouchDB user and database
+        # {
+        #     "id": "schema-1234",
+        #     "key": "schema-1234",
+        #     "value": {
+        #         "rev": "1-xyz"
+        #     },
+        #     "doc": {
+        #         "_id": "schema-1234",
+        #         "_rev": "1-xyz",
+        #         "deviceId": "abc9876",
+        #         # ...
+        #     }
+        # }
+
         device_id = doc['deviceId']
         if device_id not in devices:  # do this only once per device
             # Get/Create the device db record and couchdb db
