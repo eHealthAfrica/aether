@@ -27,6 +27,7 @@ function create_credentials {
         ./scripts/generate-docker-compose-credentials.sh > .env
     fi
 }
+
 set -Eeuo pipefail
 
 # Try to create the Aether network+volume if missing
@@ -61,6 +62,8 @@ function build_ui_assets {
 
 function build_core_modules {
     CONTAINERS=($ARGS)
+    APP_REVISION=`cat ./tmp/REVISION`
+    APP_VERSION=`cat ./tmp/VERSION`
 
     # speed up first start up
     docker-compose up -d db
@@ -70,7 +73,7 @@ function build_core_modules {
     do
         # build container
         docker-compose build \
-            --build-arg GIT_REVISION=$APP_VERSION \
+            --build-arg GIT_REVISION=$APP_REVISION \
             --build-arg VERSION=$APP_VERSION \
             $container
 
