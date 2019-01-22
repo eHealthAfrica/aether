@@ -13,8 +13,8 @@
 ################################################################################
 
 aether.common==0.0.0
-boto3==1.9.82
-botocore==1.12.82
+boto3==1.9.83
+botocore==1.12.83
 cachetools==3.0.0
 certifi==2018.11.29
 chardet==3.0.4
@@ -72,12 +72,13 @@ pyflakes==2.0.0
 Pygments==2.3.1
 python-cas==1.4.0
 python-dateutil==2.7.5
+python-json-logger==0.1.10
 pytz==2018.9
-raven==6.10.0
 requests==2.21.0
 rsa==4.0
 ruamel.yaml==0.15.86
 s3transfer==0.1.13
+sentry-sdk==0.6.9
 six==1.12.0
 spavro==1.1.21
 sqlparse==0.2.4

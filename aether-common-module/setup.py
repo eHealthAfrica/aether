@@ -49,6 +49,7 @@ setup(
         'django-storages',
         'djangorestframework',
         'psycopg2-binary',
+        'python-json-logger',
         'requests',
     ],
 
