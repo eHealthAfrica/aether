@@ -23,6 +23,7 @@
 #   django-storages
 #   djangorestframework
 #   psycopg2-binary
+#   python-json-logger
 #   requests
 aether.common
 
@@ -48,7 +49,7 @@ django-ums-client
 
 
 # Server side
-raven                  # Sentry
+sentry-sdk             # Sentry
 uwsgi                  # Server behind NGINX
 
 
