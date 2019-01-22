@@ -39,9 +39,10 @@ psycopg2-binary==2.7.6.1
 pycodestyle==2.4.0
 pyflakes==2.0.0
 python-cas==1.4.0
+python-json-logger==0.1.10
 pytz==2018.9
-raven==6.10.0
 requests==2.21.0
+sentry-sdk==0.6.9
 six==1.12.0
 sqlparse==0.2.4
 urllib3==1.24.1
