@@ -59,7 +59,7 @@ django-ums-client
 
 
 # Server side
-raven                  # Sentry
+sentry-sdk             # Sentry
 uwsgi                  # Server behind NGINX
 
 

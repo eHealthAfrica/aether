@@ -180,21 +180,6 @@ LOGGING_CLASS = 'logging.StreamHandler' if not TESTING else 'logging.NullHandler
 logger = logging.getLogger(__name__)
 logger.setLevel(LOGGING_LEVEL)
 
-SENTRY_CLASS = 'logging.NullHandler'
-SENTRY_DSN = os.environ.get('SENTRY_DSN')
-if SENTRY_DSN:
-    INSTALLED_APPS += ['raven.contrib.django.raven_compat', ]
-    MIDDLEWARE = [
-        'raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware',
-    ] + MIDDLEWARE
-
-    SENTRY_CLASS = 'raven.contrib.django.raven_compat.handlers.SentryHandler'
-    SENTRY_CLIENT = 'raven.contrib.django.raven_compat.DjangoClient'
-
-else:
-    logger.info('No SENTRY enabled!')
-
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
@@ -213,36 +198,34 @@ LOGGING = {
             'class': LOGGING_CLASS,
             'formatter': 'verbose',
         },
-        'sentry_handler': {
-            'level': logging.ERROR,
-            'class': SENTRY_CLASS,
-            'formatter': 'verbose',
-        },
     },
     'loggers': {
         'aether': {
             'level': LOGGING_LEVEL,
-            'handlers': ['console', 'sentry_handler'],
+            'handlers': ['console', ],
             'propagate': False,
         },
         'django': {
             'level': LOGGING_LEVEL,
-            'handlers': ['console', 'sentry_handler'],
-            'propagate': False,
-        },
-        # These ones are available with Sentry enabled
-        'raven': {
-            'level': logging.ERROR,
-            'handlers': ['console', 'sentry_handler'],
-            'propagate': False,
-        },
-        'sentry.errors': {
-            'level': logging.ERROR,
-            'handlers': ['console', 'sentry_handler'],
+            'handlers': ['console', ],
             'propagate': False,
         },
     },
 }
+
+# https://docs.sentry.io/platforms/python/django/
+SENTRY_DSN = os.environ.get('SENTRY_DSN')
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration(), ]
+    )
+
+else:
+    logger.info('No SENTRY enabled!')
 
 
 # Authentication Configuration
