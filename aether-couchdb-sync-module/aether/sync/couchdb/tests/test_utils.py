@@ -22,6 +22,7 @@ from .. import utils
 
 
 class UtilsTests(CouchDBTestCase):
+
     def test_walk_changes(self):
         num_total = 10
         glob = {'num_seen': 0}  # instead of nonlocal
@@ -52,7 +53,9 @@ class UtilsTests(CouchDBTestCase):
     def test_fetch_db_docs(self):
         # clean db
         d1 = utils.fetch_db_docs(self.test_db, 0)
-        self.assertEqual(d1['last_seq'], 0, msg='last seq starts in 0')
+        # Note: in CouchDB 1.x the `last_seq` values are integers,
+        # but since CouchDB 2.x they turned into strings like `0-zzzzzzz`
+        self.assertEqual(str(d1['last_seq'])[0], '0', msg='last seq starts in 0')
         self.assertEqual(len(d1['docs']), 0, msg='empty db')
 
         # two new docs

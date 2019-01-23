@@ -22,6 +22,11 @@ from aether.sync.api.tests import ApiTestCase, DEVICE_TEST_FILE
 
 from ..couchdb_file import load_backup_file
 
+# CouchDB 1.x
+# no_db_msg = 'no_db_file'
+# Since CouchDB 2.x
+no_db_msg = 'Database does not exist.'
+
 
 class LoadFileViewsTests(ApiTestCase):
 
@@ -61,9 +66,9 @@ class LoadFileViewsTests(ApiTestCase):
                     {'deviceId': 'test_abc123', '_id': 'sample-3', '_rev': 'rev-1'},
                 ],
                 'errors': {
-                    'sample-1': {'error': 'not_found', 'reason': 'no_db_file'},
-                    'sample-2': {'error': 'not_found', 'reason': 'no_db_file'},
-                    'sample-3': {'error': 'not_found', 'reason': 'no_db_file'},
+                    'sample-1': {'error': 'not_found', 'reason': no_db_msg},
+                    'sample-2': {'error': 'not_found', 'reason': no_db_msg},
+                    'sample-3': {'error': 'not_found', 'reason': no_db_msg},
                 }
             }
         )
