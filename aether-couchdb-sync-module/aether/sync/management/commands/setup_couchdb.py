@@ -21,7 +21,7 @@
 from django.core.management.base import BaseCommand
 from django.utils.translation import ugettext as _
 
-from aether.sync.couchdb import api
+from aether.sync.couchdb.setup import create_db, SYSTEM_DATABASES
 
 
 class Command(BaseCommand):
@@ -40,17 +40,7 @@ class Command(BaseCommand):
     help = _('Set up CouchDB server.')
 
     def handle(self, *args, **options):
-        databases = [
-            '_users',
-            '_replicator',
-            '_global_changes',
-        ]
+        for db_name in SYSTEM_DATABASES:
+            create_db(db_name)
 
-        for db in databases:
-            resp = api.get(db)
-            if resp.status_code == 404:
-                r = api.put(db)
-                if r.status_code == 201:
-                    self.stdout.write(_('Created database {}').format(db))
-
-        self.stdout.write(_('Couchdb set up done.'))
+        self.stdout.write(_('CouchDB set up done.'))

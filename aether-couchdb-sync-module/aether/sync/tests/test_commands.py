@@ -126,3 +126,20 @@ class LoadFileSyncCommandTest(TestCase):
         except Exception:
             self.assertTrue(False)
         mock_load.assert_called_once()
+
+
+class SetUpCouchDBCommandTest(TestCase):
+    def setUp(self):
+        # Redirect to /dev/null in order to not clutter the test log.
+        self.out = open(os.devnull, 'w')
+
+    @mock.patch('aether.sync.management.commands.setup_couchdb.create_db')
+    def test__setup_couchdb(self, mock_create):
+        try:
+            call_command('setup_couchdb',
+                         stdout=self.out,
+                         stderr=self.out)
+            self.assertTrue(True)
+        except Exception:
+            self.assertTrue(False)
+        mock_create.assert_called()

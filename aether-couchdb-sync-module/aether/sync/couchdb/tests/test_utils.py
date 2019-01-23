@@ -23,20 +23,6 @@ from .. import utils
 
 class UtilsTests(CouchDBTestCase):
 
-    def test_walk_changes(self):
-        num_total = 10
-        glob = {'num_seen': 0}  # instead of nonlocal
-
-        for i in range(num_total):
-            couchdb.post(self.test_db, json={'i': i})
-
-        def f(c):
-            self.assertEqual(c['doc']['i'], glob['num_seen'])
-            glob['num_seen'] += 1
-
-        utils.walk_changes(self.test_db, f, params={'limit': 2, 'include_docs': 'true'})
-        self.assertEqual(glob['num_seen'], num_total)
-
     def test_force_put_doc(self):
         path = self.test_db + '/foo'
 
