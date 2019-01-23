@@ -32,8 +32,8 @@ logger.setLevel(LOGGING_LEVEL)
 
 SYSTEM_DATABASES = [
     '_users',
-    '_replicator',
-    '_global_changes',
+    # '_replicator',
+    # '_global_changes',
 ]
 
 

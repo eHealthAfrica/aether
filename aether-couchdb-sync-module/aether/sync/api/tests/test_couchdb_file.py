@@ -22,11 +22,6 @@ from aether.sync.api.tests import ApiTestCase, DEVICE_TEST_FILE
 
 from ..couchdb_file import load_backup_file
 
-# CouchDB 1.x
-# no_db_msg = 'no_db_file'
-# Since CouchDB 2.x
-no_db_msg = 'Database does not exist.'
-
 
 class LoadFileViewsTests(ApiTestCase):
 
@@ -34,42 +29,16 @@ class LoadFileViewsTests(ApiTestCase):
         with open(DEVICE_TEST_FILE, 'rb') as fp:
             stats = load_backup_file(fp)
 
-        self.assertEqual(
-            stats,
-            {
-                'total': 3,
-                'success': 2,
-                'erred': 1,
-                'err_docs': [
-                    {'deviceId': 'test_abc123', '_id': 'sample-3', '_rev': 'rev-1'},
-                ],
-                'errors': {
-                    'sample-3': {'error': 'bad_request', 'reason': 'Invalid rev format'},
-                }
-            }
-        )
+        self.assertEqual(stats['total'], 3)
+        self.assertEqual(stats['success'], 3)
+        self.assertEqual(stats['erred'], 0)
 
     @mock.patch('aether.sync.api.couchdb_file.create_db', side_effect=Exception)
     def test__load_backup_file__couchdb_error(self, mock_create_db):
         with open(DEVICE_TEST_FILE, 'rb') as fp:
             stats = load_backup_file(fp)
+            mock_create_db.assert_called_once()
 
-        self.assertEqual(
-            stats,
-            {
-                'total': 3,
-                'success': 0,
-                'erred': 3,
-                'err_docs': [
-                    {'deviceId': 'test_abc123', '_id': 'sample-1'},
-                    {'deviceId': 'test_abc123', '_id': 'sample-2'},
-                    {'deviceId': 'test_abc123', '_id': 'sample-3', '_rev': 'rev-1'},
-                ],
-                'errors': {
-                    'sample-1': {'error': 'not_found', 'reason': no_db_msg},
-                    'sample-2': {'error': 'not_found', 'reason': no_db_msg},
-                    'sample-3': {'error': 'not_found', 'reason': no_db_msg},
-                }
-            }
-        )
-        mock_create_db.assert_called()
+        self.assertEqual(stats['total'], 3)
+        self.assertEqual(stats['success'], 0)
+        self.assertEqual(stats['erred'], 3)
