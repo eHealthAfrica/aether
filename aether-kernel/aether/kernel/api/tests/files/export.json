@@ -2,7 +2,7 @@
   "id": "6b90cfb6-0ee6-4035-94bc-fb7f3e56d790",
   "_id": "my-test-form",
   "date": "2017-07-14T00:00:00",
-  "lang": "EN,FR",
+  "lang": ["EN", "FR"],
   "meta": {
     "instanceID": "uuid:cef69d9d-ebd9-408f-8bc6-9d418bb083d9",
     "instanceName": "Something_that_is_not_null"

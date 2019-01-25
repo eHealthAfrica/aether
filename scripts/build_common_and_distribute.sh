@@ -37,7 +37,10 @@ do
     DEST=./$FOLDER/conf/pip/dependencies/
     mkdir -p $DEST
     cp -r ./aether-common-module/dist/$PCK_FILE $DEST
+
+    echo "----------------------------------------------------------------------"
     echo "Distributed into $DEST"
+    echo "----------------------------------------------------------------------"
 done
 
 $DC_FILE kill

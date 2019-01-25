@@ -23,6 +23,7 @@
 #   django-storages
 #   djangorestframework
 #   psycopg2-binary
+#   python-json-logger
 #   requests
 aether.common
 
@@ -43,12 +44,12 @@ rq-scheduler
 
 
 # CAS libraries
-django-cas-ng
+django-cas-ng<3.6.0  # breaking changes
 django-ums-client
 
 
 # Server side
-raven                  # Sentry
+sentry-sdk             # Sentry
 uwsgi                  # Server behind NGINX
 
 

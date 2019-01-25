@@ -176,8 +176,15 @@
     },
     {
       "name": "lang",
-      "type": [ "null", "string" ],
-      "doc": "Spoken languages"
+      "doc": "Spoken languages",
+      "type": [
+        "null",
+        {
+          "name": "lang",
+          "type": "array",
+          "items": "string"
+        }
+      ]
     },
     {
       "name": "iterate",
