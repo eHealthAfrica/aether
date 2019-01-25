@@ -178,3 +178,4 @@ def generate_project(
 
             # extract entities
             run_entity_extraction(submission)
+    return project
