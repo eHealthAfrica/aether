@@ -80,11 +80,15 @@ services:
   kernel-base:
     image: aether-kernel
     build: ./aether-kernel
-    stdin_open: true
-    tty: true
-    environment:
+    stdin_open: "true"
+    tty: "true"
+    environment: &kernel-environment
       # Uncomment this line to enable single sign on if you use CAS
       # CAS_SERVER_URL: https://your.cas.server
+      REDIS_DB: 0
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: 6379
 
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
@@ -116,7 +120,7 @@ services:
       EXPORT_HEADER_SHORTEN: "no"
 
       WEB_SERVER_PORT: 8000
-    volumes:
+    volumes: &kernel-volumes
       - ./aether-kernel:/code
 
       # app version
@@ -134,6 +138,12 @@ services:
     ports:
       - "8000:8000"
     command: start_dev
+
+  kernel-sync-rq-base:
+    image: aether-kernel
+    environment: *kernel-environment
+    volumes: *kernel-volumes
+    command: start_rq
 
 
   # ---------------------------------

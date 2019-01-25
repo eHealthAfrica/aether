@@ -24,12 +24,12 @@ from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 from rest_framework.reverse import reverse
+import django_rq
 
 from .constants import MergeOptions as MERGE_OPTIONS
 from .entity_extractor import run_entity_extraction, ENTITY_EXTRACTION_ERRORS
 
 from . import models, utils, validators
-
 
 MERGE_CHOICES = (
     (MERGE_OPTIONS.overwrite.value, _('Overwrite (Do not merge)')),
@@ -188,15 +188,11 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     # (name, relative url) in one request call
     attachments = AttachmentSerializerNested(many=True, read_only=True)
 
-    # def create(self, validated_data):
-    #     instance = super(SubmissionSerializer, self).create(validated_data)
-    #     try:
-    #         run_entity_extraction(instance)
-    #     except Exception as e:
-    #         instance.payload[ENTITY_EXTRACTION_ERRORS] = instance.payload.get(ENTITY_EXTRACTION_ERRORS, [])
-    #         instance.payload[ENTITY_EXTRACTION_ERRORS] += [str(e)]
-    #         instance.save()
-    #     return instance
+    def create(self, validated_data):
+        instance = super(SubmissionSerializer, self).create(validated_data)
+        instance.save()
+        django_rq.enqueue(run_entity_extraction, submission=instance)
+        return instance
 
     class Meta:
         model = models.Submission

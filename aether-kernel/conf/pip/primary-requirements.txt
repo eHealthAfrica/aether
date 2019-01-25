@@ -36,6 +36,7 @@ drf-dynamic-fields
 drf_yasg
 pygments
 python-dateutil
+django-rq
 
 
 # AVRO + JSON libraries

@@ -25,6 +25,7 @@ decorator==4.3.0
 Django==1.11.18
 django-autofixture==0.12.1
 django-cas-ng==3.5.10
+django-rq
 django-cors-headers==2.4.0
 django-debug-toolbar==1.11
 django-filter==2.1.0

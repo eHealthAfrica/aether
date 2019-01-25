@@ -217,6 +217,16 @@ case "$1" in
         ./manage.py check_url --url=http://0.0.0.0:$WEB_SERVER_PORT/health
     ;;
 
+    start_rq )
+        ./manage.py rqworker default --name "rq-${RANDOM}" &
+        ./manage.py rqworker default --name "rq-${RANDOM}" &
+        ./manage.py rqworker default --name "rq-${RANDOM}" &
+        ./manage.py rqworker default --name "rq-${RANDOM}" &
+        worker=$!
+        wait $worker
+
+    ;;
+
     help )
         show_help
     ;;

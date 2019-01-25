@@ -36,6 +36,7 @@ INSTALLED_APPS += [
     'reversion',
     'reversion_compare',
     'aether.kernel',
+    'django_rq',
 ]
 
 MIGRATION_MODULES = {
@@ -59,3 +60,17 @@ EXPORT_DATA_FORMAT = os.environ.get('EXPORT_DATA_FORMAT', 'split')
 EXPORT_HEADER_CONTENT = os.environ.get('EXPORT_HEADER_CONTENT', 'labels')
 EXPORT_HEADER_SEPARATOR = os.environ.get('EXPORT_HEADER_SEPARATOR', '/')
 EXPORT_HEADER_SHORTEN = os.environ.get('EXPORT_HEADER_SHORTEN', 'no')
+
+# django rq
+# ------------------------------------------------------------------------------
+
+RQ_QUEUES = {
+    'default': {
+        'HOST': os.environ['REDIS_HOST'],
+        'PORT': os.environ['REDIS_PORT'],
+        'DB': os.environ['REDIS_DB'],
+        'PASSWORD': os.environ['REDIS_PASSWORD'],
+        'DEFAULT_TIMEOUT': 360,
+    },
+}
+RQ_SHOW_ADMIN_LINK = True

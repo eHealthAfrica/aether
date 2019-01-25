@@ -34,4 +34,5 @@ urlpatterns = generate_urlpatterns(token=True) + [
     url(f'{API_PREFIX}/swagger/$',
         view=AetherSchemaView.with_ui('swagger', cache_timeout=0),
         name='schema-swagger-ui'),
+    url(r'^django-rq/', include('django_rq.urls')),
 ]

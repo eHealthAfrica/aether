@@ -71,6 +71,15 @@ services:
         aliases:
           - kernel.aether.local
 
+  kernel-sync-rq:
+    extends:
+      file: ./docker-compose-base.yml
+      service: kernel-sync-rq-base
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - internal
 
   # ---------------------------------
   # Aether UI

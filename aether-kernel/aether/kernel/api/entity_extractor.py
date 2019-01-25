@@ -597,3 +597,4 @@ def run_entity_extraction(submission, overwrite=False):
     # - ``aether_extractor_enrichment``, with the generated values that allow us
     #   to re-execute this process again with the same result.
     submission.save()
+    return 'OK'
