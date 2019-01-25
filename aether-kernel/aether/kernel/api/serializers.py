@@ -188,15 +188,15 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     # (name, relative url) in one request call
     attachments = AttachmentSerializerNested(many=True, read_only=True)
 
-    def create(self, validated_data):
-        instance = super(SubmissionSerializer, self).create(validated_data)
-        try:
-            run_entity_extraction(instance)
-        except Exception as e:
-            instance.payload[ENTITY_EXTRACTION_ERRORS] = instance.payload.get(ENTITY_EXTRACTION_ERRORS, [])
-            instance.payload[ENTITY_EXTRACTION_ERRORS] += [str(e)]
-            instance.save()
-        return instance
+    # def create(self, validated_data):
+    #     instance = super(SubmissionSerializer, self).create(validated_data)
+    #     try:
+    #         run_entity_extraction(instance)
+    #     except Exception as e:
+    #         instance.payload[ENTITY_EXTRACTION_ERRORS] = instance.payload.get(ENTITY_EXTRACTION_ERRORS, [])
+    #         instance.payload[ENTITY_EXTRACTION_ERRORS] += [str(e)]
+    #         instance.save()
+    #     return instance
 
     class Meta:
         model = models.Submission
