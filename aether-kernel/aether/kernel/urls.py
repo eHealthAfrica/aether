@@ -19,7 +19,7 @@
 from django.conf.urls import include, url
 
 from aether.common.conf.urls import generate_urlpatterns
-from aether.kernel.api.views import AetherSchemaView, KeycloakView
+from aether.kernel.api.views import AetherSchemaView
 
 API_PREFIX = '^(?P<version>v1)'
 
@@ -34,8 +34,4 @@ urlpatterns = generate_urlpatterns(token=True) + [
     url(f'{API_PREFIX}/swagger/$',
         view=AetherSchemaView.with_ui('swagger', cache_timeout=0),
         name='schema-swagger-ui'),
-    url(f'keycloak/?',
-        view=KeycloakView.as_view())
-    url(f'keycloak/keycloak.json',
-        view=KeycloakView.as_view())
-] 
+]

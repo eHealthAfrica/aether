@@ -19,8 +19,6 @@
 from django.db.models import Count, Min, Max, TextField, Q, Case, When
 from django.db.models.functions import Cast
 from django.shortcuts import get_object_or_404
-from django.template import Template
-from django.views.generic import TemplateView
 
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -50,13 +48,6 @@ from . import (
     project_artefacts,
     serializers,
 )
-
-
-class KeycloakJSONOIDC(object):
-    pass
-
-class KeycloakView(TemplateView):
-    template_name = 'keycloak.html'
 
 
 class ProjectViewSet(viewsets.ModelViewSet):

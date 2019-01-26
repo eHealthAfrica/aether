@@ -32,16 +32,10 @@ ADD_REVERSION_ADMIN = True
 
 INSTALLED_APPS += [
     'django_filters',
-    'django_keycloak',
     'drf_yasg',
     'reversion',
     'reversion_compare',
     'aether.kernel',
-]
-
-MIDDLEWARE = [
-  'debug_toolbar.middleware.DebugToolbarMiddleware',
-  'aether.kernel.api.middleware.AetherKCMiddleware'
 ]
 
 MIGRATION_MODULES = {
@@ -54,33 +48,6 @@ REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'] = [
     *REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'],
 ]
 
-
-KEYCLOAK_CONFIG = {
-       'KEYCLOAK_SERVER_URL': 'http://localhost:8080/auth/',
-       'KEYCLOAK_REALM': 'realm1',
-       'KEYCLOAK_CLIENT_ID': 'realm1-oidc',
-       'KEYCLOAK_CLIENT_SECRET_KEY': None,
-       'KEYCLOAK_CLIENT_PUBLIC_KEY': None,
-       'KEYCLOAK_DEFAULT_ACCESS': 'ALLOW',  # DENY or ALLOW (Default is DENY)
-       'KEYCLOAK_AUTHORIZATION_CONFIG': None,  #os.path.join(BASE_DIR,  'your-client-authz-config.json'),
-       'KEYCLOAK_METHOD_VALIDATE_TOKEN': 'INTROSPECT',  # INTROSPECT OR DECODE (Default is INTROSPECT)
-}
-
-TEMPLATES = [
-  {
-    'BACKEND': 'django.template.backends.django.DjangoTemplates',
-    'DIRS': [
-      'aether/kernel/template', 
-      'django.contrib.auth.context_processors.auth'
-    ],
-    'APP_DIRS': True,
-    'OPTIONS': {
-      'context_processors': [
-        'django.contrib.auth.context_processors.auth'
-      ]
-    }
-  }
-]
 
 # Export Configuration
 # ------------------------------------------------------------------------------
