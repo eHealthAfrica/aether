@@ -53,6 +53,9 @@ REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'] = [
     *REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'],
 ]
 
+#Overrite static URL to account for app name (which isn't stripped by gateway)
+STATIC_URL = '/kernel/static/'
+
 KEYCLOAK_CONFIG = {
        'KEYCLOAK_SERVER_URL': 'http://aether.local:8080/auth/',
        'KEYCLOAK_REALM': 'realm1',
