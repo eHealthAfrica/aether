@@ -44,6 +44,7 @@ services:
       service: kernel-base
     environment:
       # use a different database when testing the integration with another container
+      ASYNC_ENTITY_EXTRACTION: null
       DB_NAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
       DEBUG: null # set to null to remove previous value
       MEDIA_ROOT: /tmp/

@@ -555,11 +555,11 @@ def run_entity_extraction(submission, overwrite=False):
 
             # Extract entity for each mapping in the submission.mappingset
             mappings = submission.mappingset \
-                                .mappings \
-                                .filter(is_active=True) \
-                                .exclude(definition={}) \
-                                .exclude(definition__entities__isnull=True) \
-                                .exclude(definition__entities={})
+                                 .mappings \
+                                 .filter(is_active=True) \
+                                 .exclude(definition={}) \
+                                 .exclude(definition__entities__isnull=True) \
+                                 .exclude(definition__entities={})
 
             for mapping in mappings:
                 # Get the primary key of the projectschema

@@ -64,6 +64,8 @@ EXPORT_HEADER_SHORTEN = os.environ.get('EXPORT_HEADER_SHORTEN', 'no')
 # django rq
 # ------------------------------------------------------------------------------
 
+ASYNC_ENTITY_EXTRACTION = bool(os.environ.get('ASYNC_ENTITY_EXTRACTION', False))
+
 RQ_QUEUES = {
     'default': {
         'HOST': os.environ['REDIS_HOST'],

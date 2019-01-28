@@ -20,6 +20,7 @@
 
 import urllib
 
+from django.conf import settings
 from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
@@ -27,7 +28,7 @@ from rest_framework.reverse import reverse
 import django_rq
 
 from .constants import MergeOptions as MERGE_OPTIONS
-from .entity_extractor import run_entity_extraction, ENTITY_EXTRACTION_ERRORS
+from .entity_extractor import run_entity_extraction
 
 from . import models, utils, validators
 
@@ -191,7 +192,10 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     def create(self, validated_data):
         instance = super(SubmissionSerializer, self).create(validated_data)
         instance.save()
-        django_rq.enqueue(run_entity_extraction, submission=instance)
+        if settings.ASYNC_ENTITY_EXTRACTION:
+            django_rq.enqueue(run_entity_extraction, submission=instance)
+        else:
+            run_entity_extraction(submission=instance)
         return instance
 
     class Meta:
