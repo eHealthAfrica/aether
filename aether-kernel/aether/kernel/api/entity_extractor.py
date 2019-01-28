@@ -544,57 +544,61 @@ def extract_create_entities(submission_payload, mapping_definition, schemas):
     return submission_data, entities
 
 
-@transaction.atomic
 def run_entity_extraction(submission, overwrite=False):
-    if overwrite:
-        # FIXME:
-        # there should be a better way to detect the generated entities and
-        # replace their payloads with the new ones
-        submission.entities.all().delete()
+    try:
+        with transaction.atomic():
+            if overwrite:
+                # FIXME:
+                # there should be a better way to detect the generated entities and
+                # replace their payloads with the new ones
+                submission.entities.all().delete()
 
-    # Extract entity for each mapping in the submission.mappingset
-    mappings = submission.mappingset \
-                         .mappings \
-                         .filter(is_active=True) \
-                         .exclude(definition={}) \
-                         .exclude(definition__entities__isnull=True) \
-                         .exclude(definition__entities={})
+            # Extract entity for each mapping in the submission.mappingset
+            mappings = submission.mappingset \
+                                .mappings \
+                                .filter(is_active=True) \
+                                .exclude(definition={}) \
+                                .exclude(definition__entities__isnull=True) \
+                                .exclude(definition__entities={})
 
-    for mapping in mappings:
-        # Get the primary key of the projectschema
-        entity_ps_ids = mapping.definition.get('entities')
-        # Get the schema of the projectschema
-        project_schemas = {
-            name: models.ProjectSchema.objects.get(pk=_id)
-            for name, _id in entity_ps_ids.items()
-        }
-        schemas = {
-            name: ps.schema.definition
-            for name, ps in project_schemas.items()
-        }
-        _, entities = extract_create_entities(
-            submission_payload=submission.payload,
-            mapping_definition=mapping.definition,
-            schemas=schemas,
-        )
-        for entity in entities:
-            projectschema_name = entity.projectschema_name
-            projectschema = project_schemas[projectschema_name]
-            entity_instance = models.Entity(
-                payload=entity.payload,
-                status=entity.status,
-                projectschema=projectschema,
-                submission=submission,
-                mapping=mapping,
-                mapping_revision=mapping.revision
-            )
-            entity_instance.save()
+            for mapping in mappings:
+                # Get the primary key of the projectschema
+                entity_ps_ids = mapping.definition.get('entities')
+                # Get the schema of the projectschema
+                project_schemas = {
+                    name: models.ProjectSchema.objects.get(pk=_id)
+                    for name, _id in entity_ps_ids.items()
+                }
+                schemas = {
+                    name: ps.schema.definition
+                    for name, ps in project_schemas.items()
+                }
+                _, entities = extract_create_entities(
+                    submission_payload=submission.payload,
+                    mapping_definition=mapping.definition,
+                    schemas=schemas,
+                )
+                for entity in entities:
+                    projectschema_name = entity.projectschema_name
+                    projectschema = project_schemas[projectschema_name]
+                    entity_instance = models.Entity(
+                        payload=entity.payload,
+                        status=entity.status,
+                        projectschema=projectschema,
+                        submission=submission,
+                        mapping=mapping,
+                        mapping_revision=mapping.revision
+                    )
+                    entity_instance.save()
 
-    # this should include in the submission payload the following properties
-    # generated during the extraction:
-    # - ``aether_errors``, with all the errors that made not possible
-    #   to create the entities.
-    # - ``aether_extractor_enrichment``, with the generated values that allow us
-    #   to re-execute this process again with the same result.
-    submission.save()
-    return 'OK'
+            # this should include in the submission payload the following properties
+            # generated during the extraction:
+            # - ``aether_errors``, with all the errors that made not possible
+            #   to create the entities.
+            # - ``aether_extractor_enrichment``, with the generated values that allow us
+            #   to re-execute this process again with the same result.
+            submission.payload[ENTITY_EXTRACTION_ERRORS] = submission.payload.get(ENTITY_EXTRACTION_ERRORS, [])
+            submission.save()
+    except Exception as e:
+        submission.payload[ENTITY_EXTRACTION_ERRORS] = submission.payload.get(ENTITY_EXTRACTION_ERRORS, [])
+        submission.payload[ENTITY_EXTRACTION_ERRORS] += [str(e)]

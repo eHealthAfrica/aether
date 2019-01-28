@@ -71,10 +71,10 @@ services:
         aliases:
           - kernel.aether.local
 
-  kernel-sync-rq:
+  kernel-rq:
     extends:
       file: ./docker-compose-base.yml
-      service: kernel-sync-rq-base
+      service: kernel-rq-base
     depends_on:
       db:
         condition: service_healthy

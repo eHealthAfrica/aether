@@ -139,7 +139,7 @@ services:
       - "8000:8000"
     command: start_dev
 
-  kernel-sync-rq-base:
+  kernel-rq-base:
     image: aether-kernel
     environment: *kernel-environment
     volumes: *kernel-volumes
