@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.contrib.auth import get_user_model
 from django.http.response import JsonResponse
 from django_keycloak.middleware import KeycloakMiddleware
 from rest_framework.exceptions import PermissionDenied, AuthenticationFailed, NotAuthenticated
@@ -65,8 +66,18 @@ class AetherKCMiddleware(KeycloakMiddleware):
                 except Exception:
                     return 1
             decoded = jwt.decode(token, PK[realm], audience='account', algorithms='RS256')
+            # Create user
+            # add user to request as request.user?
             print(decoded)
             print(realm, token)
+            #username = 
+            # try:
+            #   user = user_model.get(username=username)
+            # except UserModel.DoesNotExist:
+            #     user = user_model.create_user(
+            #         username=username,
+            #         password=user_model.make_random_password(length=100),
+            #     )
 
         return None
 
