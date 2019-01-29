@@ -21,21 +21,14 @@ from django.http.response import JsonResponse
 from django_keycloak.middleware import KeycloakMiddleware
 from rest_framework.exceptions import PermissionDenied, AuthenticationFailed, NotAuthenticated
 
-import logging
-
-LOG = logging.getLogger('root')
-# LOG.addHandler(logging.StreamHandler())
-
 import base64
 from jwcrypto.jwk import JWK
 import jwt
-# from jwt.contrib.algorithms.pycrypto import RSAAlgorithm
-# jwt.register_algorithm('RS256', RSAAlgorithm(RSAAlgorithm.SHA256))
 import json
 import requests
 
 
-KC_URL = 'http://keycloak:8080/auth/'  # internal
+KC_URL = 'http://keycloak:8080/auth/'  # internal, should through kong
 KEYCLOAK_EXTERNAL = 'http://localhost:8080/auth/'
 
 kcj = {}
@@ -65,19 +58,32 @@ class AetherKCMiddleware(KeycloakMiddleware):
                     PK[realm] = get_public_key(KC_URL, realm)
                 except Exception:
                     return 1
-            decoded = jwt.decode(token, PK[realm], audience='account', algorithms='RS256')
+            try:
+                decoded = jwt.decode(token, PK[realm], audience='account', algorithms='RS256')
+            except jwt.ExpiredSignatureError:  
+                # We want to handle this with a redirect to the login screen.
+                return JsonResponse({"detail": 'Session Expired'},
+                                    status=AuthenticationFailed.status_code)
             # Create user
             # add user to request as request.user?
             print(decoded)
             print(realm, token)
-            #username = 
-            # try:
-            #   user = user_model.get(username=username)
-            # except UserModel.DoesNotExist:
-            #     user = user_model.create_user(
-            #         username=username,
-            #         password=user_model.make_random_password(length=100),
-            #     )
+            try:
+                username = decoded['preferred_username']
+            except KeyError:
+                return JsonResponse({"detail": AuthenticationFailed.default_detail},
+                                    status=AuthenticationFailed.status_code)
+            try:
+                UserModel = get_user_model()
+                user_model = UserModel.objects
+                user = user_model.get(username=username)
+            except UserModel.DoesNotExist:
+                user = user_model.create_user(
+                    username=username,
+                    password=user_model.make_random_password(length=100),
+                )
+            finally:
+                request.user = user
 
         return None
 
