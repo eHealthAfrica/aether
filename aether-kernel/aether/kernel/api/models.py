@@ -23,6 +23,7 @@ from datetime import datetime
 from hashlib import md5
 
 from django.contrib.postgres.fields import JSONField
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import models, IntegrityError
 from django.utils.translation import ugettext as _
@@ -87,6 +88,39 @@ Data model schema:
 '''
 
 
+class CachedManager(models.Manager):
+    # Model manager that looks first in the cache.
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        self._queryset_class = CachedQuerySet
+
+
+class CachedQuerySet(models.query.QuerySet):
+    
+    def __init__(self, model=None, query=None, using=None, hints=None):
+        self.model_name = model.__name__
+        super().__init__(model, query, using, hints)
+        
+
+    def get(self, *args, **kwargs):
+        print(args, kwargs)
+        if 'pk' or 'id' in kwargs:
+            _id = kwargs.get('id') or kwargs.get('pk')
+            key = f'''{self.model_name}:{kwargs['pk']}'''
+            try:
+                obj = cache.get(key)
+                if not obj:
+                    raise ValueError(f'{key} not in cache')
+                return obj
+            except ValueError:
+                obj = super().get(**kwargs)
+                cache.set(key, obj)
+                return obj
+        else:
+            return super().get(**kwargs)
+
+
+
 class Project(ExportModelOperationsMixin('kernel_project'), TimeStampedModel):
     '''
     Project
@@ -139,6 +173,7 @@ class Project(ExportModelOperationsMixin('kernel_project'), TimeStampedModel):
             'https://www.w3.org/TR/rdf-schema/'
         ),
     )
+    objects = CachedManager()  # Cache get by PK calls
 
     def __str__(self):
         return self.name
@@ -194,6 +229,7 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), TimeStampedMod
     input = JSONField(null=True, blank=True, verbose_name=_('input sample'))
 
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
+    objects = CachedManager()  # Cache get by PK calls
 
     @property
     def input_prettified(self):
@@ -377,6 +413,7 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), TimeStampedModel):
     # from different sources but that share a common structure
     # the passthrough schemas will contain the project id as family
     family = models.TextField(null=True, blank=True, verbose_name=_('schema family'))
+    objects = CachedManager()  # Cache get by PK calls
 
     @property
     def definition_prettified(self):
@@ -428,6 +465,7 @@ class ProjectSchema(ExportModelOperationsMixin('kernel_projectschema'), TimeStam
 
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
     schema = models.ForeignKey(to=Schema, on_delete=models.CASCADE, verbose_name=_('schema'))
+    objects = CachedManager()  # Cache get by PK calls
 
     def __str__(self):
         return self.name
@@ -492,6 +530,7 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
         blank=True,
         verbose_name=_('project'),
     )
+    objects = CachedManager()  # Cache get by PK calls
 
     def save(self, *args, **kwargs):
         self.project = self.mappingset.project

@@ -39,6 +39,13 @@ INSTALLED_APPS += [
     'django_rq',
 ]
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
+
 MIGRATION_MODULES = {
     'kernel': 'aether.kernel.api.migrations'
 }
