@@ -204,8 +204,9 @@ def format_validation_error(error):
 
 def jsonpath_segment_count(error):
     '''
-    This function can be used to sort errors by "depth"; a validation
-    error deep inside a nested structure gets a higher score.
+    This function can be used to sort a list of errors by "depth";
+    an error with a path value like `Test.a.b.c[0].d` will return
+    a number greater than that of e.g. `Test.a.b.c`.
     '''
     return len(re.findall(r'[\.\[]', error.path))
 
