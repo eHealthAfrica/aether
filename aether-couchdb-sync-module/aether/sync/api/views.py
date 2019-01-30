@@ -16,6 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import logging
+
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext as _
@@ -42,7 +44,11 @@ from .kernel_utils import (
     KernelPropagationError,
 )
 
-from ..settings import logger
+from ..settings import LOGGING_LEVEL
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(LOGGING_LEVEL)
 
 
 class ProjectViewSet(viewsets.ModelViewSet):

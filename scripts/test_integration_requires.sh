@@ -26,13 +26,25 @@ set -Eeuo pipefail
 
 AETHER_FUNCTIONS=scripts/aether_functions.sh
 
-ORDER=( "create_credentials"
-        "create_aether_docker_assets"
-        "build_aether_utils_and_distribute"
-        "build_common_and_distribute"
-        "build_test_modules kernel-test producer-test integration-test"
-        "create_readonly_user_test"
+if [ ${1-} ]
+then
+    MODE="$1"
+else
+    MODE="default"
+fi
+
+if [ "$MODE" = "travis" ]
+then
+    ORDER=( "build_aether_utils_and_distribute" )
+else
+    ORDER=( "create_credentials"
+            "create_aether_docker_assets"
+            "create_version_files"
+            "build_aether_utils_and_distribute"
+            "build_common_and_distribute"
         )
+fi
+
 for FN in "${ORDER[@]}";
 do
     $AETHER_FUNCTIONS $FN

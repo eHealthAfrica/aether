@@ -20,8 +20,10 @@
 #
 set -Eeuo pipefail
 
+./scripts/generate-aether-version-assets.sh
+
 DC_UTILS="docker-compose -f ./aether-utils/docker-compose.yml"
-export VERSION=$(cat "VERSION")
+VERSION=$(cat "./tmp/VERSION")
 
 $DC_UTILS down
 

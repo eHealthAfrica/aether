@@ -20,6 +20,7 @@
 #
 set -Eeuo pipefail
 
+./scripts/generate-aether-version-assets.sh
 ./scripts/build_common_and_distribute.sh
 
 case "$1" in
@@ -28,12 +29,22 @@ case "$1" in
     ;;
 
     integration)
-        ./scripts/test_integration_requires.sh
+        ./scripts/test_integration_requires.sh travis
         ./scripts/test_integration.sh
     ;;
 
     all)
         ./scripts/test_all.sh
+    ;;
+
+    core)
+        ./scripts/test_container.sh kernel
+        ./scripts/test_container.sh client
+    ;;
+
+    modules)
+        ./scripts/test_container.sh odk
+        ./scripts/test_container.sh couchdb-sync
     ;;
 
     *)

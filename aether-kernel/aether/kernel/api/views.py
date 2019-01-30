@@ -19,7 +19,6 @@
 from django.db.models import Count, Min, Max, TextField, Q, Case, When
 from django.db.models.functions import Cast
 from django.shortcuts import get_object_or_404
-from django.utils.translation import ugettext as _
 
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -33,16 +32,21 @@ from rest_framework.decorators import (
 )
 from rest_framework.renderers import JSONRenderer
 
+from .avro_tools import extract_jsonpaths_and_docs
+from .constants import LINKED_DATA_MAX_DEPTH
+from .entity_extractor import (
+    extract_create_entities,
+    run_entity_extraction,
+    ENTITY_EXTRACTION_ERRORS,
+)
+from .exporter import ExporterViewSet
+from .mapping_validation import validate_mappings
+
 from . import (
-    avro_tools,
-    constants,
-    exporter,
     filters,
-    mapping_validation,
     models,
     project_artefacts,
     serializers,
-    utils,
 )
 
 
@@ -86,7 +90,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         for schema in schemas:
             if not name:
                 name = f'{project.name}-{schema.schema_name}'
-            avro_tools.extract_jsonpaths_and_docs(
+            extract_jsonpaths_and_docs(
                 schema=schema.definition,
                 jsonpaths=jsonpaths,
                 docs=docs,
@@ -302,10 +306,37 @@ class MappingViewSet(viewsets.ModelViewSet):
     filter_class = filters.MappingFilter
 
 
-class SubmissionViewSet(exporter.ExporterViewSet):
+class SubmissionViewSet(ExporterViewSet):
     queryset = models.Submission.objects.all()
     serializer_class = serializers.SubmissionSerializer
     filter_class = filters.SubmissionFilter
+
+    @action(detail=True, methods=['patch'])
+    def extract(self, request, pk, *args, **kwargs):
+        '''
+        Forces entity extraction.
+
+        Reachable at ``PATCH /submissions/{pk}/extract/``
+        '''
+
+        instance = get_object_or_404(models.Submission, pk=pk)
+
+        try:
+            run_entity_extraction(instance, overwrite=True)
+
+            return Response(
+                data=self.serializer_class(instance, context={'request': request}).data,
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            key = ENTITY_EXTRACTION_ERRORS
+            instance.payload[key] = instance.payload.get(key, []) + [str(e)]
+            instance.save()
+
+            return Response(
+                data=self.serializer_class(instance, context={'request': request}).data,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class AttachmentViewSet(viewsets.ModelViewSet):
@@ -333,7 +364,7 @@ class SchemaViewSet(viewsets.ModelViewSet):
         jsonpaths = []
         docs = {}
 
-        avro_tools.extract_jsonpaths_and_docs(
+        extract_jsonpaths_and_docs(
             schema=schema.definition,
             jsonpaths=jsonpaths,
             docs=docs,
@@ -365,7 +396,7 @@ class ProjectSchemaViewSet(viewsets.ModelViewSet):
         jsonpaths = []
         docs = {}
 
-        avro_tools.extract_jsonpaths_and_docs(
+        extract_jsonpaths_and_docs(
             schema=schema.definition,
             jsonpaths=jsonpaths,
             docs=docs,
@@ -377,7 +408,7 @@ class ProjectSchemaViewSet(viewsets.ModelViewSet):
         })
 
 
-class EntityViewSet(exporter.ExporterViewSet):
+class EntityViewSet(ExporterViewSet):
     queryset = models.Entity.objects.all()
     serializer_class = serializers.EntitySerializer
     filter_class = filters.EntityFilter
@@ -404,32 +435,36 @@ class EntityViewSet(exporter.ExporterViewSet):
                     linked_entity_schema_name = linked_entity.projectschema.schema.name
 
                     resolved[linked_entity_schema_name] = resolved.get(linked_entity_schema_name, {})
-                    resolved[linked_entity_schema_name][linked_data_ref] = serializers.EntityLDSerializer(
+                    resolved[linked_entity_schema_name][linked_data_ref] = self.serializer_class(
                         linked_entity,
                         context={'request': request},
                     ).data
 
                     # continue with next nested level
                     get_entity_linked_data(linked_entity, request, resolved, depth, start_depth + 1)
-                except Exception:
+                except Exception:  # pragma: no cover
                     pass
             return resolved
 
-        instance = get_object_or_404(models.Entity, pk=pk)
-        depth = request.query_params.get('depth')
-        if depth:
-            try:
-                depth = int(depth)
-                if depth > constants.LINKED_DATA_MAX_DEPTH:
-                    return Response(
-                        {'description': _('Supported max depth is {}').format(constants.LINKED_DATA_MAX_DEPTH)},
-                        status=status.HTTP_400_BAD_REQUEST)
-                else:
-                    instance.resolved = get_entity_linked_data(instance, request, {}, depth)
-            except Exception as e:
-                return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        try:
+            depth = request.query_params.get('depth', '0')
+            depth = int(depth)
+            if depth < 0:
+                depth = 0
+            if depth > LINKED_DATA_MAX_DEPTH:
+                # instead of raising an error change the value to the MAXIMUM
+                depth = LINKED_DATA_MAX_DEPTH
+        except Exception:
+            depth = 0
 
-        return Response(serializers.EntitySerializer(instance, context={'request': request}).data)
+        instance = get_object_or_404(models.Entity, pk=pk)
+        try:
+            if depth:
+                instance.resolved = get_entity_linked_data(instance, request, {}, depth)
+        except Exception:  # pragma: no cover
+            instance.resolved = {}
+
+        return Response(self.serializer_class(instance, context={'request': request}).data)
 
 
 class SubmissionStatsMixin(object):
@@ -480,6 +515,7 @@ class SubmissionStatsMixin(object):
                        first_submission=Min('submissions__created'),
                        last_submission=Max('submissions__created'),
                        submissions_count=Count('submissions__id', distinct=True),
+                       attachments_count=Count('submissions__attachments__id', distinct=True),
                        entities_count=entities_count,
                    )
 
@@ -511,7 +547,7 @@ class AetherSchemaView(SchemaView):
 @api_view(['POST'])
 @renderer_classes([JSONRenderer])
 @permission_classes([permissions.IsAuthenticated])
-def validate_mappings(request):
+def validate_mappings_view(request):
     '''
     Given a `submission_payload`, a `mapping_definition` and a list of
     `entities`, verify that each mapping function in `mapping_definition` can
@@ -526,12 +562,12 @@ def validate_mappings(request):
     '''
 
     def run_mapping_validation(submission_payload, mapping_definition, schemas):
-        submission_data, entities = utils.extract_create_entities(
+        submission_data, entities = extract_create_entities(
             submission_payload,
             mapping_definition,
             schemas,
         )
-        validation_result = mapping_validation.validate_mappings(
+        validation_result = validate_mappings(
             submission_payload=submission_payload,
             schemas=schemas,
             mapping_definition=mapping_definition,

@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import json
 import mock
 import requests
 
@@ -140,7 +141,7 @@ class PostSubmissionTests(CustomTestCase):
         requests.delete(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
         requests.delete(self.SCHEMA_URL, headers=self.KERNEL_HEADERS)
 
-    def helper_check_submission(self, succeed=True, attachments=0):
+    def helper_check_submission(self, succeed=True, attachments=0, entity=None):
         response = requests.get(
             self.MAPPINGSET_URL + '?fields=submissions_url',
             headers=self.KERNEL_HEADERS,
@@ -162,6 +163,10 @@ class PostSubmissionTests(CustomTestCase):
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             content = response.json()
             self.assertEqual(content['count'], 1)  # using identity mapping
+            if entity:  # check that the entity payload matches
+                payload = dict(content['results'][0]['payload'])
+                del payload['id']  # dynamically generated
+                self.assertEqual(payload, entity)
 
             # get attachments
             response = requests.get(submission['attachments_url'], headers=self.KERNEL_HEADERS)
@@ -226,6 +231,10 @@ class PostSubmissionTests(CustomTestCase):
         self.helper_check_submission(succeed=False)
 
     def test__submission__post(self):
+        with open(self.samples['submission']['file-ok-json'], 'rb') as content:
+            entity_payload = dict(json.load(content))
+            del entity_payload['not_in_the_definition']  # not in the AVRO schema
+
         with open(self.samples['submission']['file-ok'], 'rb') as f:
             response = self.client.post(
                 self.url,
@@ -233,9 +242,13 @@ class PostSubmissionTests(CustomTestCase):
                 **self.headers_user
             )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content.decode())
-        self.helper_check_submission()
+        self.helper_check_submission(entity=entity_payload)
 
     def test__submission__post__with_attachment(self):
+        with open(self.samples['submission']['file-ok-json'], 'rb') as content:
+            entity_payload = dict(json.load(content))
+            del entity_payload['not_in_the_definition']  # not in the AVRO schema
+
         # submit response with one attachment
         with open(self.samples['submission']['file-ok'], 'rb') as f:
             response = self.client.post(
@@ -252,6 +265,10 @@ class PostSubmissionTests(CustomTestCase):
         self.helper_check_submission(attachments=1)
 
     def test__submission__post__with_attachments(self):
+        with open(self.samples['submission']['file-ok-json'], 'rb') as content:
+            entity_payload = dict(json.load(content))
+            del entity_payload['not_in_the_definition']  # not in the AVRO schema
+
         # submit response with more than one attachment
         with open(self.samples['submission']['file-ok'], 'rb') as f:
             response = self.client.post(
@@ -268,9 +285,13 @@ class PostSubmissionTests(CustomTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content.decode())
 
         # check that submission was created with four attachments
-        self.helper_check_submission(attachments=4)
+        self.helper_check_submission(entity=entity_payload, attachments=4)
 
     def test__submission__post__with_attachments__multiple_requests(self):
+        with open(self.samples['submission']['file-ok-json'], 'rb') as content:
+            entity_payload = dict(json.load(content))
+            del entity_payload['not_in_the_definition']  # not in the AVRO schema
+
         # An ODK Collect submission containing several large attachments will be
         # split up into several POST requests. The form data in all these
         # requests is identical, but the attachments differ. In this test, we
@@ -289,7 +310,7 @@ class PostSubmissionTests(CustomTestCase):
                     **self.headers_user
                 )
             self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content.decode())
-        self.helper_check_submission(attachments=count)
+        self.helper_check_submission(entity=entity_payload, attachments=count)
 
     def test__submission__post__no_instance_id(self):
         with open(self.samples['submission']['file-err-missing-instance-id'], 'rb') as f:

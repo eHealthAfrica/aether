@@ -1,0 +1,278 @@
+{
+  "name": "export",
+  "doc": "My Test Schema (id: my-test-schema, version: Test-1.0)",
+  "type": "record",
+  "fields": [
+    {
+      "name": "_id",
+      "doc": "ID",
+      "type": "string",
+      "default": "my-test-form"
+    },
+    {
+      "name": "_version",
+      "doc": "version",
+      "type": "string",
+      "default": "Test-1.0"
+    },
+    {
+      "name": "starttime",
+      "type": [ "null", "string" ]
+    },
+    {
+      "name": "endtime",
+      "type": [ "null", "string" ]
+    },
+    {
+      "name": "deviceid",
+      "type": [ "null", "string" ]
+    },
+    {
+      "name": "country",
+      "type": [ "null", "string" ],
+      "doc": "Country"
+    },
+    {
+      "name": "region",
+      "type": [ "null", "string" ],
+      "doc": "Region"
+    },
+    {
+      "name": "name",
+      "type": [ "null", "string" ],
+      "doc": "What is your name?"
+    },
+    {
+      "name": "location",
+      "doc": "Collect your GPS coordinates",
+      "type": [
+        "null",
+        {
+          "name": "location",
+          "type": "record",
+          "fields": [
+            {
+              "name": "latitude",
+              "doc": "latitude",
+              "type": [ "null", "float" ]
+            },
+            {
+              "name": "longitude",
+              "doc": "longitude",
+              "type": [ "null", "float" ]
+            },
+            {
+              "name": "altitude",
+              "doc": "altitude",
+              "type": [ "null", "float" ]
+            },
+            {
+              "name": "accuracy",
+              "doc": "accuracy",
+              "type": [ "null", "float" ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "location_none",
+      "doc": "Ignore your GPS coordinates",
+      "type": [
+        "null",
+        {
+          "name": "location_none",
+          "type": "record",
+          "fields": [
+            {
+              "name": "latitude",
+              "doc": "latitude",
+              "type": [ "null", "float" ]
+            },
+            {
+              "name": "longitude",
+              "doc": "longitude",
+              "type": [ "null", "float" ]
+            },
+            {
+              "name": "altitude",
+              "doc": "altitude",
+              "type": [ "null", "float" ]
+            },
+            {
+              "name": "accuracy",
+              "doc": "accuracy",
+              "type": [ "null", "float" ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "image",
+      "type": [ "null", "string" ],
+      "doc": "Take a picture"
+    },
+    {
+      "name": "number",
+      "type": [ "null", "int" ],
+      "doc": "How many?"
+    },
+    {
+      "name": "number2",
+       "type": [ "null", "double" ],
+      "doc": "Percentage"
+    },
+    {
+      "name": "date",
+      "type": [ "null", "string" ],
+      "doc": "When?"
+    },
+    {
+      "name": "datetime",
+      "type": [ "null", "string" ],
+      "doc": "At?"
+    },
+    {
+      "name": "option",
+      "type": [ "null", "string" ],
+      "doc": "Choice (A/B)"
+    },
+    {
+      "name": "option_a",
+      "doc": "Option A",
+      "type": [
+        "null",
+        {
+          "name": "option_a",
+          "type": "record",
+          "fields": [
+            {
+              "name": "choice_a",
+              "type": [ "null", "string" ],
+              "doc": "Choice A"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "option_b",
+      "doc": "Option B",
+      "type": [
+        "null",
+        {
+          "name": "option_b",
+          "type": "record",
+          "fields": [
+            {
+              "name": "choice_b",
+              "type": [ "null", "string" ],
+              "doc": "Choice B"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lang",
+      "doc": "Spoken languages",
+      "type": [
+        "null",
+        {
+          "name": "lang",
+          "type": "array",
+          "items": "string"
+        }
+      ]
+    },
+    {
+      "name": "iterate",
+      "doc": "Indicate loop elements",
+      "type": [
+        "null",
+        {
+          "type": "array",
+          "items": {
+            "name": "iterate",
+            "type": "record",
+            "fields": [
+              {
+                "name": "index",
+                "type": [ "null", "int" ],
+                "doc": "Index"
+              },
+              {
+                "name": "value",
+                "type": [ "null", "string" ],
+                "doc": "Value"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "iterate_one",
+      "doc": "Indicate one",
+      "type": [
+        "null",
+        {
+          "type": "array",
+          "items": {
+            "name": "iterate_one",
+            "type": "record",
+            "fields": [
+              {
+                "name": "item",
+                "type": [ "null", "string" ],
+                "doc": "Item"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "iterate_none",
+      "doc": "Indicate none",
+      "type": [
+        "null",
+        {
+          "type": "array",
+          "items": {
+            "name": "iterate_none",
+            "type": "record",
+            "fields": [
+              {
+                "name": "nothing",
+                "type": [ "null", "string" ],
+                "doc": "None"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "meta",
+      "type": [
+        "null",
+        {
+          "name": "meta",
+          "type": "record",
+          "fields": [
+            {
+              "name": "instanceID",
+              "type": [ "null", "string" ]
+            },
+            {
+              "name": "instanceName",
+              "type": [ "null", "string" ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+#
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -15,26 +17,22 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
 
-import os
-from setuptools import setup, find_packages
-import sys
+set +x
 
-if sys.version_info < (3,0):
-    sys.exit('aether data mocker requires Python 3.x')
+mkdir ./tmp/
 
-with open(os.path.join('/code', 'VERSION')) as version_file:
-    version = version_file.read().strip()
+set -Eeuo pipefail
 
-# allow setup.py to be run from any path
-os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
+APP_VERSION=`cat ./VERSION`
+# locally use the branch name
+APP_REVISION=`git rev-parse --abbrev-ref HEAD`
 
-setup(
-    name='aether.mocker',
-    version=version,
-    install_requires=[
-        "aether.client"
-    ],
-    packages=find_packages(),
-    namespace_packages=['aether']
-)
+echo "----------------------------------------------------------------------"
+echo "Release version:  $APP_VERSION"
+echo "Release revision: $APP_REVISION"
+echo "----------------------------------------------------------------------"
+
+echo $APP_VERSION  > ./tmp/VERSION
+echo $APP_REVISION > ./tmp/REVISION

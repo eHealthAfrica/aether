@@ -46,6 +46,11 @@ release_process () {
     echo "Release version:  $VERSION"
     echo "Release revision: $TRAVIS_COMMIT"
 
+    # create temporal files with VERSION+REVISION data
+    mkdir ./tmp/
+    echo $VERSION       > ./tmp/VERSION
+    echo $TRAVIS_COMMIT > ./tmp/REVISION
+
     # Login in dockerhub with write permissions (repos are public)
     docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
 
@@ -63,19 +68,12 @@ release_process () {
 
     # Build docker images
     IMAGE_REPO='ehealthafrica'
-    CORE_APPS=( kernel odk couchdb-sync ui )
-    CORE_COMPOSE='docker-compose.yml'
-    CONNECT_APPS=( producer )
-    CONNECT_COMPOSE='docker-compose-connect.yml'
+    RELEASE_APPS=( kernel odk couchdb-sync ui producer integration-test )
+    RELEASE_COMPOSE='docker-compose-release.yml'
 
-    for APP in "${CORE_APPS[@]}"
+    for APP in "${RELEASE_APPS[@]}"
     do
-        release_app $APP $CORE_COMPOSE
-    done
-
-    for CONNECT_APP in "${CONNECT_APPS[@]}"
-    do
-        release_app $CONNECT_APP $CONNECT_COMPOSE
+        release_app $APP $RELEASE_COMPOSE
     done
 }
 

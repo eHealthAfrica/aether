@@ -16,7 +16,30 @@
 # specific language governing permissions and limitations
 # under the License.
 
-try:
-    __import__('pkg_resources').declare_namespace(__name__)
-except ImportError:
-    __path__ = __import__('pkgutil').extend_path(__path__, __name__)
+import json
+import os
+
+
+class Settings(dict):
+    # A container for our settings
+    def __init__(self, file_path=None):
+        self.load(file_path)
+
+    def get(self, key, default=None):
+        try:
+            return self.__getitem__(key)
+        except KeyError:
+            return default
+
+    def __getitem__(self, key):
+        result = os.environ.get(key.upper())
+        if result is None:
+            result = super().__getitem__(key)
+
+        return result
+
+    def load(self, path):
+        with open(path) as f:
+            obj = json.load(f)
+            for k in obj:
+                self[k] = obj.get(k)

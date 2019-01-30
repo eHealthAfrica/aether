@@ -12,15 +12,5 @@ services:
       TESTING: "true"
     volumes:
       - ./aether-client:/code
-      - ../VERSION:/code/VERSION
-    command: build
-
-
-  mocker:
-    build: ./aether-mock-data
-    environment:
-      TESTING: "true"
-    volumes:
-      - ./aether-mock-data:/code
-      - ../VERSION:/code/VERSION
+      - ../tmp/VERSION:/code/VERSION
     command: build

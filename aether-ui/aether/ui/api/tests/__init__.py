@@ -176,7 +176,7 @@ PIPELINE_EXAMPLE = {
         'type': 'string'
       }
     ],
-    'namespace': 'org.ehealthafrica'
+    'namespace': 'org.ehealthafrica.test',
   },
   'input': {
     '_id': 'participant-jhfnjdt1982m',
@@ -251,115 +251,7 @@ CONTRACT_EXAMPLE = {
   ]
 }
 
-PIPELINE_EXAMPLE_1 = {
-  'name': 'Pipeline Example 1',
-  'schema': {
-    'name': 'hat',
-    'type': 'record',
-    'fields': [
-      {
-        'name': 'person',
-        'type': {
-          'name': 'person',
-          'type': 'record',
-          'fields': [
-            {
-              'name': 'forename',
-              'type': 'string'
-            },
-            {
-              'name': 'surname',
-              'type': 'string'
-            }
-          ]
-        }
-      }
-    ]
-  },
-  'input': {
-    'person': {
-      'age': 54,
-      'surname': 'Lfdjk',
-      'forename': 'Sejflsd Dljljkf'
-    }
-  },
-  'entity_types': [
-    {
-      'name': 'Person',
-      'type': 'record',
-      'fields': [
-        {
-          'name': 'id',
-          'type': 'string'
-        },
-        {
-          'name': 'firstName',
-          'type': 'string'
-        }
-      ]
-    },
-    {
-      'name': 'Screening',
-      'type': 'record',
-      'fields': [
-        {
-          'name': 'id',
-          'type': 'string'
-        }
-      ]
-    },
-    {
-      'name': 'PersonX',
-      'type': 'record',
-      'fields': [
-        {
-          'name': 'id',
-          'type': 'string'
-        },
-        {
-          'name': 'firstName',
-          'type': 'string'
-        }
-      ]
-    }
-  ],
-  'mapping': [
-    {
-      'source': '#!uuid',
-      'destination': 'Person.id'
-    },
-    {
-      'source': 'person.forename',
-      'destination': 'Person.firstName'
-    },
-    {
-      'source': '#!uuid',
-      'destination': 'Screening.id'
-    }
-  ],
-  'output': [
-    {
-      'id': '0d8aebf3-50d0-4e77-a5ee-1045ffa5f29f',
-      'firstName': 'Sejflsd Dljljkf'
-    },
-    {
-      'id': '5c40d8bb-7d3e-48cb-a008-7a55b97950de'
-    }
-  ],
-  'kernel_refs': {
-    'project': '12345',
-    'schema': {
-      'Person': '1234'
-    },
-    'projectSchema': {
-      'Person': '1234'
-    },
-    'mapping': '1234'
-  }
-}
-
-
-PIPELINE_EXAMPLE_WITH_MAPPING_ERRORS = {
+PIPELINE_EXAMPLE_WITH_ERRORS = {
   'name': 'Pipeline Example With Mapping Errors',
   'schema': {
     'name': 'hat',
@@ -387,7 +279,7 @@ PIPELINE_EXAMPLE_WITH_MAPPING_ERRORS = {
   }
 }
 
-CONTRACT_EXAMPLE_WITH_MAPPING_ERRORS = {
+CONTRACT_EXAMPLE_WITH_ERRORS = {
   'name': 'contract with errors',
   'entity_types': [
     {
