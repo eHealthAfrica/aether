@@ -146,7 +146,7 @@ function git_branch_commit_and_release() {
     git add VERSION
     # make Travis CI skip this build
     COMMIT_MESSAGE="chore: Update VERSION file to ${BRANCH_OR_TAG_VALUE} [ci skip]"
-    git commit -m COMMIT_MESSAGE
+    git commit -m "${COMMIT_MESSAGE}"
     if ! git push --quiet --follow-tags ${REMOTE} ${COMMIT_BRANCH} > /dev/null 2>&1; then
         echo "Failed to push git changes to" $TRAVIS_BRANCH
         exit 1
@@ -169,7 +169,7 @@ function git_branch_commit_and_release() {
         echo "Updating develop branch version to " ${BRANCH_OR_TAG_VALUE}
         echo ${BRANCH_OR_TAG_VALUE} > VERSION
         git add VERSION
-        git commit -m COMMIT_MESSAGE #Skip travis build on develop commit
+        git commit -m "${COMMIT_MESSAGE}" #Skip travis build on develop commit
         git push ${REMOTE} develop
     else
         echo "Develop branch VERSION value is not updated"
