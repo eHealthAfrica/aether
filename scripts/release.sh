@@ -134,7 +134,6 @@ function git_branch_commit_and_release() {
     
     if [[ $3 = "tag" ]];
     then
-        # https://github.com/travis-ci/travis-ci/issues/4745#issuecomment-345711626
         TRAVIS_BRANCH=$(git ls-remote origin | sed -n "\|$TRAVIS_COMMIT\s\+refs/heads/|{s///p}")
         git fetch ${REMOTE} $TRAVIS_BRANCH
         git branch $TRAVIS_BRANCH FETCH_HEAD
