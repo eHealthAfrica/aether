@@ -31,7 +31,7 @@ from .consumer import get_consumer, read
 
 FORMS_TO_SUBMIT = 10
 SEED_ENTITIES = 10 * 7  # 7 Vaccines in each report
-SEED_TYPE = "CurrentStock"
+SEED_TYPE = 'CurrentStock'
 
 PRODUCER_CREDS = [
     os.environ['PRODUCER_ADMIN_USER'],
@@ -39,7 +39,7 @@ PRODUCER_CREDS = [
 ]
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope='function')
 def producer_topics():
     max_retry = 10
     for x in range(max_retry):
@@ -54,7 +54,7 @@ def producer_topics():
             sleep(1)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope='function')
 def wait_for_producer_status():
     max_retry = 30
     failure_mode = None
@@ -80,19 +80,19 @@ def wait_for_producer_status():
     raise TimeoutError(f'Producer not ready before {max_retry}s timeout. Reason: {failure_mode}')
 
 
-@pytest.fixture(scope="function")  # noqa
-def entities(client, projectschemas):
+@pytest.fixture(scope='function')  # noqa
+def entities(client, projectschemas):  # noqa: F811
     entities = {}
     for ps in projectschemas:
-        name = ps["name"]
+        name = ps['name']
         ps_id = ps.id
         entities[name] = [i for i in client.entities.paginated(
             'list', projectschema=ps_id)]
     return entities
 
 
-@pytest.fixture(scope="function")  # noqa
-def generate_entities(client, mappingset):
+@pytest.fixture(scope='function')
+def generate_entities(client, mappingset):  # noqa: F811
     payloads = iter(fixtures.get_submission_payloads())
     entities = []
     for i in range(FORMS_TO_SUBMIT):
@@ -107,10 +107,10 @@ def generate_entities(client, mappingset):
     return entities
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope='function')
 def read_people():
     consumer = get_consumer(SEED_TYPE)
-    messages = read(consumer, start="FIRST", verbose=False, timeout_ms=500)
+    messages = read(consumer, start='FIRST', verbose=False, timeout_ms=500)
     consumer.close()  # leaving consumers open can slow down zookeeper, try to stay tidy
     return messages
 
