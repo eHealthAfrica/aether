@@ -32,7 +32,6 @@ ADD_REVERSION_ADMIN = True
 
 INSTALLED_APPS += [
     'django_filters',
-    'django_keycloak',
     'drf_yasg',
     'reversion',
     'reversion_compare',
@@ -56,17 +55,7 @@ REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'] = [
 #Overrite static URL to account for app name (which isn't stripped by gateway)
 STATIC_URL = '/kernel/static/'
 
-KEYCLOAK_CONFIG = {
-       'KEYCLOAK_SERVER_URL': 'http://aether.local:8080/auth/',
-       'KEYCLOAK_REALM': 'realm1',
-       'KEYCLOAK_CLIENT_ID': 'realm1-oidc',
-       'KEYCLOAK_CLIENT_SECRET_KEY': None,
-       'KEYCLOAK_CLIENT_PUBLIC_KEY': None,
-       'KEYCLOAK_DEFAULT_ACCESS': 'ALLOW',  # DENY or ALLOW (Default is DENY)
-       'KEYCLOAK_AUTHORIZATION_CONFIG': None,  #os.path.join(BASE_DIR,  'your-client-authz-config.json'),
-       'KEYCLOAK_METHOD_VALIDATE_TOKEN': 'INTROSPECT',  # INTROSPECT OR DECODE (Default is INTROSPECT)
-}
-
+USE_X_FORWARDED_HOST = True
 
 # Export Configuration
 # ------------------------------------------------------------------------------

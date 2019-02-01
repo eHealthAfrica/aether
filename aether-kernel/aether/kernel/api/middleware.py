@@ -18,7 +18,8 @@
 
 from django.contrib.auth import get_user_model
 from django.http.response import JsonResponse
-from django_keycloak.middleware import KeycloakMiddleware
+from django.shortcuts import redirect as redirect_response
+from django.utils.deprecation import MiddlewareMixin
 from rest_framework.exceptions import PermissionDenied, AuthenticationFailed, NotAuthenticated
 
 import base64
@@ -28,10 +29,10 @@ import json
 import requests
 
 
-KC_URL = 'http://keycloak:8080/auth/'  # internal, should through kong
-KEYCLOAK_EXTERNAL = 'http://localhost:8080/auth/'
+KC_URL = 'http://keycloak:8080/keycloak/auth/'  # internal, should through kong
+KEYCLOAK_EXTERNAL = 'http://aether.local/keycloak/auth/'
+REFRESH_URL = 'http://aether.local/auth/user/{realm}/refresh'
 
-kcj = {}
 PK = {}
 
 def get_public_key(kc_url, realm):
@@ -44,11 +45,10 @@ def get_public_key(kc_url, realm):
     RSA_PUB_KEY = str(key_obj.export_to_pem(), 'utf-8')
     return RSA_PUB_KEY
 
-class AetherKCMiddleware(KeycloakMiddleware):
-    pass
 
+class AetherKCMiddleware(MiddlewareMixin):
+    
     def process_view(self, request, view_func, view_args, view_kwargs):
-        print(request.COOKIES)
         cookies = request.COOKIES
         if 'aether-realm' and 'aether-jwt' in cookies:
             realm = request.COOKIES['aether-realm']
@@ -56,18 +56,21 @@ class AetherKCMiddleware(KeycloakMiddleware):
             if not realm in PK:
                 try:
                     PK[realm] = get_public_key(KC_URL, realm)
-                except Exception:
-                    return 1
+                except Exception as err:
+                    return JsonResponse({"detail": 'Realm not found'},
+                                    status=AuthenticationFailed.status_code)
             try:
                 decoded = jwt.decode(token, PK[realm], audience='account', algorithms='RS256')
             except jwt.ExpiredSignatureError:  
                 # We want to handle this with a redirect to the login screen.
-                return JsonResponse({"detail": 'Session Expired'},
-                                    status=AuthenticationFailed.status_code)
+                path = request.get_full_path()
+                host = request.META['HTTP_X_FORWARDED_HOST']
+                redirect = f'http://{host}{path}'
+                url = REFRESH_URL.format(realm=realm) + f'?redirect={redirect}'
+                return redirect_response(url)
+                
             # Create user
-            # add user to request as request.user?
-            print(decoded)
-            print(realm, token)
+            
             try:
                 username = decoded['preferred_username']
             except KeyError:
@@ -83,53 +86,7 @@ class AetherKCMiddleware(KeycloakMiddleware):
                     password=user_model.make_random_password(length=100),
                 )
             finally:
+                # add user to request as request.user
                 request.user = user
 
         return None
-
-        # """
-        # Validate only the token introspect.
-        # :param request: django request
-        # :param view_func:
-        # :param view_args: view args
-        # :param view_kwargs: view kwargs
-        # :return:
-        # """
-
-
-        # # try:
-        # #     view_scopes = view_func.view_class.keycloak_scopes
-        # # except AttributeError as e:
-        # #     raise Exception("Scopes mappers not found.")
-        # if 'HTTP_AUTHORIZATION' not in request.META:
-        #     return None
-        #     # return JsonResponse({"detail": NotAuthenticated.default_detail},
-        #     #                     status=NotAuthenticated.status_code)
-
-        # token = request.META.get('HTTP_AUTHORIZATION')
-
-        # # # Get default if method is not defined.
-        # # required_scope = view_scopes.get(request.method, None) \
-        # #     if view_scopes.get(request.method, None) else view_scopes.get('DEFAULT', None)
-
-        # # # DEFAULT scope not found and DEFAULT_ACCESS is DENY
-        # # if not required_scope and self.default_access == 'DENY':
-        # #     return JsonResponse({"detail": PermissionDenied.default_detail},
-        # #                         status=PermissionDenied.status_code)
-        
-        # try:
-        #     user_permissions = self.keycloak.get_permissions(token,
-        #                                                      method_token_info=self.method_validate_token.lower(),
-        #                                                      key=self.client_public_key)
-        # except KeycloakInvalidTokenError as e:
-        #     return None
-        #     # return JsonResponse({"detail": AuthenticationFailed.default_detail},
-        #     #                     status=AuthenticationFailed.status_code)
-
-        # for perm in user_permissions:
-        #     if required_scope in perm.scopes:
-        #         return None
-
-        # # User Permission Denied
-        # return JsonResponse({"detail": PermissionDenied.default_detail},
-        #                     status=PermissionDenied.status_code)
