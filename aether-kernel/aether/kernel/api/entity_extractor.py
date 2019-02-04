@@ -340,22 +340,47 @@ def resolve_entity_reference(
         return matches[instance_number].value
 
 
+def nest_object(obj, path, value):
+    # this allows us to treat 'fields' as paths with depths >1
+    # so that we can create structures as we fill them
+    keys = path.split('.')
+    # simple behavior
+    if len(keys) < 2:
+        obj[path] = value
+        return
+    else:
+        obj = put_nested(obj, keys, value)
+        return
+
+
+def put_nested(_dict, keys, value):
+    # recursively puts a value deep into a dictionary at path [k1.k2.kn]
+    if len(keys) > 1:
+        try:
+            _dict[keys[0]] = put_nested(_dict[keys[0]], keys[1:], value)
+        except KeyError:  # Level doesn't exist yet
+            _dict[keys[0]] = put_nested({}, keys[1:], value)
+    else:
+        _dict[keys[0]] = value
+    return _dict
+
+
 def resolve_source_reference(path, entities, entity_name, i, field, data):
     # called via normal jsonpath as source
     # is NOT defferable as all source data should be present at extractor start
     # assignes values directly to entities within function and return new offset value (i)
     matches = find_by_jsonpath(data, path)
     if not matches:
-        entities[entity_name][i][field] = None
+        nest_object(entities[entity_name][i], field, None)
         i += 1
     elif len(matches) == 1:
         # single value
-        entities[entity_name][i][field] = matches[0].value
+        nest_object(entities[entity_name][i], field, matches[0].value)
         i += 1
     else:
         for x, match in enumerate(matches):
             # multiple values, choose the one aligned with this entity (#i) & order of match(x)
-            entities[entity_name][i][field] = matches[x].value
+            nest_object(entities[entity_name][i], field, matches[x].value)
             i += 1
     return i
 
