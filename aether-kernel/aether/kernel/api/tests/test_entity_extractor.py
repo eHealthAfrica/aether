@@ -68,7 +68,6 @@ class EntityExtractorTests(TestCase):
                         entity_requirements)
 
     def test_get_entity_requirements__union_base(self):
-        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         entities = EXAMPLE_ENTITY_DEFINITION
         field_mappings = EXAMPLE_FIELD_MAPPINGS_ARRAY_BASE
         expected = EXAMPLE_REQUIREMENTS_ARRAY_BASE
@@ -133,7 +132,6 @@ class EntityExtractorTests(TestCase):
     def test_resolve_source_reference__nested_schema(self):
         data = EXAMPLE_DATA_FOR_NESTED_SCHEMA
         requirements = EXAMPLE_REQUIREMENTS_NESTED_SCHEMA
-        # entities = EXAMPLE_ENTITY_NESTED
         entities = {'Nested': [{}, {}, {}]}
         entity_name = 'Nested'
         field = 'location.lat'
