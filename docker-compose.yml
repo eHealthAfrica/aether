@@ -86,8 +86,8 @@ services:
       kernel:
         condition: service_started
       # use this dependency with "start_dev" command and webpack (optional)
-      # ui-assets:
-      #   condition: service_started
+      ui-assets:
+        condition: service_started
     networks:
       internal:
         aliases:
