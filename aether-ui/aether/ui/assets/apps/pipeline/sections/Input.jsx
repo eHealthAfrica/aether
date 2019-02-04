@@ -29,7 +29,18 @@ import {
   generateGUID,
   generateSchema
 } from '../../utils'
-import { updatePipeline } from '../redux'
+import { updatePipeline, updateContract } from '../redux'
+
+// In-house workaround to the avsc library to avoid null values
+// in case of union types
+avro.types.UnwrappedUnionType.prototype.random = () => {
+  const types = this.types.filter(({ typeName }) => typeName !== 'null')
+  if (types.length === 0) {
+    return null
+  }
+  const index = Math.floor(Math.random() * types.length)
+  return types[index].random()
+}
 
 // The input section has two subviews `SCHEMA_VIEW` and `DATA_VIEW`.
 // In the schema view, the user enters an avro schema representing their input.
@@ -63,7 +74,17 @@ export const makeOptionalField = (field) => {
 
 export const deriveEntityTypes = (schema) => {
   const fields = schema.fields.map(makeOptionalField)
-  return [{ ...schema, fields: fields }]
+  if (!fields.find(field => field.name === 'id')) {
+    // DETECTED CONFLICT
+    // the "id" must be an string if the schema defines it with
+    // another type the validation could fail
+    // this step only includes it if missing but does not change the type to "string"
+    fields.push({
+      name: 'id',
+      type: 'string'
+    })
+  }
+  return [{ ...schema, fields }]
 }
 
 export const deriveMappingRules = (schema) => {
@@ -74,7 +95,15 @@ export const deriveMappingRules = (schema) => {
       destination: `${schema.name}.${field.name}`
     }
   }
-  return schema.fields.map(fieldToMappingRule)
+  const rules = schema.fields.map(fieldToMappingRule)
+  if (!schema.fields.find(field => field.name === 'id')) {
+    rules.push({
+      id: generateGUID(),
+      source: `#!uuid`,
+      destination: `${schema.name}.id`
+    })
+  }
+  return rules
 }
 
 const MESSAGES = defineMessages({
@@ -118,7 +147,7 @@ class SchemaInput extends Component {
 
   notifyChange (event) {
     event.preventDefault()
-    const {formatMessage} = this.props.intl
+    const { formatMessage } = this.props.intl
     this.setState({
       error: null,
       errorHead: null
@@ -126,18 +155,22 @@ class SchemaInput extends Component {
     try {
       // validate schema
       const schema = JSON.parse(this.state.inputSchema)
-      const type = avro.parse(schema, { noAnonymousTypes: true })
+      const type = avro.parse(schema, { noAnonymousTypes: true, wrapUnions: false })
+
       // generate a new input sample
-      let input = {}
       try {
-        input = type.random()
+        const input = type.random()
+        // check if there is a string "id" field
+        if (schema.fields.find(field => field.name === 'id' && field.type === 'string')) {
+          input.id = generateGUID() // make it more UUID
+        }
+        this.props.updatePipeline({ ...this.props.selectedPipeline, schema, input })
       } catch (error) {
         this.setState({
           error: error.message,
           errorHead: formatMessage(MESSAGES.recursiveError)
         })
       }
-      this.props.updatePipeline({ ...this.props.selectedPipeline, schema, input })
     } catch (error) {
       this.setState({
         error: error.message,
@@ -179,6 +212,7 @@ class SchemaInput extends Component {
               onChange={this.onSchemaTextChanged.bind(this)}
               placeholder={msg}
               rows='10'
+              disabled={this.props.selectedPipeline.isInputReadOnly}
             />
           )}
         </FormattedMessage>
@@ -277,11 +311,12 @@ class DataInput extends Component {
               onChange={this.onDataChanged.bind(this)}
               placeholder={msg}
               rows='10'
+              disabled={this.props.selectedPipeline.isInputReadOnly}
             />
           )}
         </FormattedMessage>
 
-        <button type='submit' className='btn btn-w btn-primary mt-3' disabled={!this.hasChanged()}>
+        <button type='submit' className='btn btn-w btn-primary mt-3' disabled={this.props.selectedPipeline.isInputReadOnly || !this.hasChanged()}>
           <span className='details-title'>
             <FormattedMessage
               id='pipeline.input.data.button.add'
@@ -319,7 +354,7 @@ export class IdentityMapping extends Component {
     const schema = this.props.selectedPipeline.schema
     const mappingRules = deriveMappingRules(schema)
     const entityTypes = deriveEntityTypes(schema)
-    this.props.updatePipeline({
+    this.props.updateContract({
       ...this.props.selectedPipeline,
       mapping: mappingRules,
       entity_types: entityTypes
@@ -384,6 +419,7 @@ export class IdentityMapping extends Component {
             data-qa='input.identityMapping.btn-apply'
             className='btn btn-w'
             onClick={this.showModal}
+            disabled={this.props.selectedPipeline.is_read_only}
           >
             <FormattedMessage
               id='pipeline.input.identityMapping.btn-apply'
@@ -463,4 +499,4 @@ const mapStateToProps = ({ pipelines }) => ({
   selectedPipeline: pipelines.selectedPipeline
 })
 
-export default connect(mapStateToProps, { updatePipeline })(injectIntl(Input))
+export default connect(mapStateToProps, { updatePipeline, updateContract })(injectIntl(Input))

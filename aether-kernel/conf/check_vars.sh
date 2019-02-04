@@ -29,14 +29,14 @@ check_variable() {
 }
 
 # Admin user
-check_variable "$ADMIN_USERNAME"    "Admin user username (ADMIN_USERNAME)"
-check_variable "$ADMIN_PASSWORD"    "Admin user password (ADMIN_PASSWORD)"
-check_variable "$ADMIN_TOKEN"       "Admin user password (ADMIN_TOKEN)"
+check_variable "$ADMIN_USERNAME" "Admin user username (ADMIN_USERNAME)"
+check_variable "$ADMIN_PASSWORD" "Admin user password (ADMIN_PASSWORD)"
+check_variable "$ADMIN_TOKEN"    "Admin user authorization token (ADMIN_TOKEN)"
 
 # Database read-only user
 check_variable "$KERNEL_READONLY_DB_USERNAME" "DB read-only user username (KERNEL_READONLY_DB_USERNAME)"
 check_variable "$KERNEL_READONLY_DB_PASSWORD" "DB read-only user password (KERNEL_READONLY_DB_PASSWORD)"
 
 # App requirements
-check_variable "$DB_NAME"           "Database name (DB_NAME)"
-check_variable "$WEB_SERVER_PORT"   "Web server port (WEB_SERVER_PORT)"
+check_variable "$DB_NAME"         "Database name (DB_NAME)"
+check_variable "$WEB_SERVER_PORT" "Web server port (WEB_SERVER_PORT)"

@@ -20,7 +20,13 @@
 #
 set -Eeuo pipefail
 
-# Define help message
+# set DEBUG if missing
+set +u
+DEBUG="$DEBUG"
+set -u
+
+BACKUPS_FOLDER=/backups
+
 show_help () {
     echo """
     Commands
@@ -36,27 +42,64 @@ show_help () {
                     create/update superuser using
                         'ADMIN_USERNAME', 'ADMIN_PASSWORD'
 
-    test          : run ALL tests
-    test_lint     : run flake8, standardjs and sass lint tests
-    test_coverage : run python tests with coverage output
-    test_py       : alias of test_coverage
+    backup_db     : creates db dump (${BACKUPS_FOLDER}/${DB_NAME}-backup-{timestamp}.sql)
+    restore_dump  : restore db dump (${BACKUPS_FOLDER}/${DB_NAME}-backup.sql)
+
+    test          : run tests
+    test_lint     : run flake8 tests
+    test_coverage : run tests with coverage output
 
     start         : start webserver behind nginx
     start_dev     : start webserver for development
 
     health        : checks the system healthy
+    check_kernel  : checks communication with kernel
     """
 }
 
 pip_freeze () {
-    pip install virtualenv
+    pip install -q virtualenv
     rm -rf /tmp/env
 
     virtualenv -p python3 /tmp/env/
-    /tmp/env/bin/pip install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
+    /tmp/env/bin/pip install -q -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
 
     cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
     /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
+}
+
+backup_db() {
+    pg_isready
+
+    if psql -c "" $DB_NAME; then
+        echo "$DB_NAME database exists!"
+
+        pg_dump $DB_NAME > ${BACKUPS_FOLDER}/${DB_NAME}-backup-$(date "+%Y%m%d%H%M%S").sql
+        echo "$DB_NAME database backup created."
+    fi
+}
+
+restore_db() {
+    pg_isready
+
+    # backup current data
+    backup_db
+
+    # delete DB is exists
+    if psql -c "" $DB_NAME; then
+        dropdb -e $DB_NAME
+        echo "$DB_NAME database deleted."
+    fi
+
+    createdb -e $DB_NAME -e ENCODING=UTF8
+    echo "$DB_NAME database created."
+
+    # load dump
+    psql -e $DB_NAME < ${BACKUPS_FOLDER}/${DB_NAME}-backup.sql
+    echo "$DB_NAME database dump restored."
+
+    # migrate data model if needed
+    ./manage.py migrate --noinput
 }
 
 setup () {
@@ -77,6 +120,21 @@ setup () {
 
     # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
     ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD
+
+    # cleaning
+    rm -r -f /code/aether/ui/static/*.*
+    # copy assets bundles folder into static folder
+    cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
+
+    STATIC_ROOT=/var/www/static
+    # create static assets
+    ./manage.py collectstatic --noinput --clear --verbosity 0
+    chmod -R 755 $STATIC_ROOT
+
+    # expose version number (if exists)
+    cp ./VERSION $STATIC_ROOT/VERSION   2>/dev/null || :
+    # add git revision (if exists)
+    cp ./REVISION $STATIC_ROOT/REVISION 2>/dev/null || :
 }
 
 test_lint () {
@@ -94,11 +152,6 @@ test_coverage () {
     cat ./conf/extras/good_job.txt
 }
 
-
-# set DEBUG if missing
-set +u
-DEBUG="$DEBUG"
-set -u
 
 case "$1" in
     bash )
@@ -121,11 +174,19 @@ case "$1" in
         setup
     ;;
 
+    backup_db )
+        backup_db
+    ;;
+
+    restore_dump )
+        restore_db
+    ;;
+
     test )
         echo "DEBUG=$DEBUG"
         setup
         test_lint
-        test_coverage
+        test_coverage "${@:2}"
     ;;
 
     test_lint )
@@ -136,23 +197,8 @@ case "$1" in
         test_coverage "${@:2}"
     ;;
 
-    test_py )
-        test_coverage "${@:2}"
-    ;;
-
     start )
         setup
-
-        # create static assets
-        rm -r -f /code/aether/ui/static/*.*
-        cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
-        ./manage.py collectstatic --noinput --clear --verbosity 0
-        chmod -R 755 /var/www/static
-
-        # expose version number (if exists)
-        cp ./VERSION /var/www/static/VERSION 2>/dev/null || :
-        # add git revision (if exists)
-        cp ./REVISION /var/www/static/REVISION 2>/dev/null || :
 
         [ -z "$DEBUG" ] && LOGGING="--disable-logging" || LOGGING=""
         /usr/local/bin/uwsgi \
@@ -164,16 +210,15 @@ case "$1" in
     start_dev )
         setup
 
-        # cleaning
-        rm -r -f /code/aether/ui/static/*.*
-        # copy assets bundles folder into static folder
-        cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
-
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
 
     health )
         ./manage.py check_url --url=http://0.0.0.0:$WEB_SERVER_PORT/health
+    ;;
+
+    check_kernel )
+        ./manage.py check_url --url=$AETHER_KERNEL_URL --token=$AETHER_KERNEL_TOKEN
     ;;
 
     help )

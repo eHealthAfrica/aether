@@ -20,9 +20,10 @@
 #   django-cors-headers
 #   django-debug-toolbar
 #   django-prometheus
+#   django-storages
 #   djangorestframework
-#   djangorestframework-csv
 #   psycopg2-binary
+#   python-json-logger
 #   requests
 aether.common
 
@@ -37,13 +38,18 @@ pyxform
 spavro
 
 
-# UMS libraries
-django-cas-ng
+# Storage
+boto3
+google-cloud-storage
+
+
+# CAS libraries
+django-cas-ng<3.6.0  # breaking changes
 django-ums-client
 
 
 # Server side
-raven                  # Sentry
+sentry-sdk             # Sentry
 uwsgi                  # Server behind NGINX
 
 

@@ -29,11 +29,6 @@
     display: none;
   }
 
-  .toggleable-content {
-    height: auto;
-    display: block;
-  }
-
   .tabs {
 
     .tab.selected {
@@ -53,7 +48,7 @@
   }
 
   .rules-buttons {
-    margin-top: 1rem;
+    margin: 1rem 0;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
@@ -155,19 +150,26 @@
   }
 
   .definition {
-    box-shadow: 1px 1px 1px rgba($black, .2) inset;
-    background-color: darken($dark-blue, 3);
-    padding: $unit $unit-xl;
     flex: 1 1 auto;
+    display: flex;
 
-    .definition-code {
-      border-radius: $border-radius;
+    form {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex: 1 1 auto;
+    }
+
+    button {
+      margin: $unit-xl;
+      flex: 1 1 1;
     }
   }
 
   .textarea-header {
     box-shadow: 1px 1px 1px rgba($black, .2) inset, 1px 0 0 rgba($white, .1);
-    background: $dark-blue;
+    background: darken($dark-blue, 3);
   }
 
   textarea {

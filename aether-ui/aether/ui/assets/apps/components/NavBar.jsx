@@ -33,7 +33,7 @@ const MESSAGES = defineMessages({
 
 class NavBar extends Component {
   render () {
-    const {formatMessage} = this.props.intl
+    const { formatMessage } = this.props.intl
 
     return (
       <div data-qa='navbar' className='navbar top-nav'>

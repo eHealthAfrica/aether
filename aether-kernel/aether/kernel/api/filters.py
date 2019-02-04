@@ -16,6 +16,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.db.models import TextField
+from django.db.models.functions import Cast
+
 import django_filters.rest_framework as filters
 import uuid
 
@@ -39,16 +42,32 @@ class ProjectFilter(filters.FilterSet):
 
 
 class MappingFilter(filters.FilterSet):
+    mappingset = filters.CharFilter(
+        method='mappingset_filter',
+    )
+    projectschema = filters.CharFilter(
+        method='projectschema_filter',
+    )
+
+    def mappingset_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(mappingset__pk=value)
+        else:
+            return queryset.filter(mappingset__name=value)
+
+    def projectschema_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(projectschemas__pk=value)
+        else:
+            return queryset.filter(projectschemas__name=value)
+
     class Meta:
         fields = '__all__'
         exclude = ('definition',)
         model = models.Mapping
 
 
-class SubmissionFilter(filters.FilterSet):
-    instanceID = filters.CharFilter(
-        name='payload__meta__instanceID',
-    )
+class MappingSetFilter(filters.FilterSet):
     project = filters.CharFilter(
         method='project_filter',
     )
@@ -58,6 +77,32 @@ class SubmissionFilter(filters.FilterSet):
             return queryset.filter(project__pk=value)
         else:
             return queryset.filter(project__name=value)
+
+    class Meta:
+        fields = '__all__'
+        exclude = ('input', 'schema',)
+        model = models.MappingSet
+
+
+class SubmissionFilter(filters.FilterSet):
+    project = filters.CharFilter(
+        method='project_filter',
+    )
+    mappingset = filters.CharFilter(
+        method='mappingset_filter',
+    )
+
+    def project_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(project__pk=value)
+        else:
+            return queryset.filter(project__name=value)
+
+    def mappingset_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(mappingset__pk=value)
+        else:
+            return queryset.filter(mappingset__name=value)
 
     class Meta:
         fields = '__all__'
@@ -75,6 +120,9 @@ class SchemaFilter(filters.FilterSet):
     project = filters.CharFilter(
         method='project_filter',
     )
+    mapping = filters.CharFilter(
+        method='mapping_filter',
+    )
 
     def project_filter(self, queryset, name, value):
         if is_uuid(value):
@@ -82,12 +130,28 @@ class SchemaFilter(filters.FilterSet):
         else:
             return queryset.filter(projectschemas__project__name=value)
 
+    def mapping_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(projectschemas__mappings__pk=value)
+        else:
+            return queryset.filter(projectschemas__mappings__name=value)
+
     class Meta:
         exclude = ('definition',)
         model = models.Schema
 
 
 class ProjectSchemaFilter(filters.FilterSet):
+    mapping = filters.CharFilter(
+        method='mapping_filter',
+    )
+
+    def mapping_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(mappings__pk=value)
+        else:
+            return queryset.filter(mappings__name=value)
+
     class Meta:
         fields = '__all__'
         model = models.ProjectSchema
@@ -99,6 +163,16 @@ class EntityFilter(filters.FilterSet):
     )
     project = filters.CharFilter(
         method='project_filter',
+    )
+    mapping = filters.CharFilter(
+        method='mapping_filter',
+    )
+    family = filters.CharFilter(
+        field_name='projectschema__schema__family',
+        lookup_expr='iexact',  # case-insensitive
+    )
+    passthrough = filters.CharFilter(
+        method='passthrough__filter',
     )
 
     def project_filter(self, queryset, name, value):
@@ -112,6 +186,20 @@ class EntityFilter(filters.FilterSet):
             return queryset.filter(projectschema__schema__pk=value)
         else:
             return queryset.filter(projectschema__schema__name=value)
+
+    def mapping_filter(self, queryset, name, value):
+        if is_uuid(value):
+            return queryset.filter(mapping__pk=value)
+        else:
+            return queryset.filter(mapping__name=value)
+
+    def passthrough__filter(self, queryset, name, value):
+        if value == 'true':
+            return queryset.filter(
+                projectschema__schema__family=Cast('project__pk', TextField()),
+                mapping__is_read_only=True,
+            )
+        return queryset
 
     class Meta:
         fields = '__all__'

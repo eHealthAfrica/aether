@@ -22,15 +22,13 @@ import os
 # ------------------------------------------------------------------------------
 
 from aether.common.conf.settings import *  # noqa
-from aether.common.conf.settings import INSTALLED_APPS, TEMPLATES, STATIC_ROOT
+from aether.common.conf.settings import INSTALLED_APPS, STATIC_ROOT
 
 
 # UI Configuration
 # ------------------------------------------------------------------------------
 
 ROOT_URLCONF = 'aether.ui.urls'
-
-APP_NAME = 'aether'
 
 # Javascript/CSS Files:
 WEBPACK_LOADER = {
@@ -39,15 +37,13 @@ WEBPACK_LOADER = {
         'STATS_FILE': os.path.join(STATIC_ROOT, 'webpack-stats.json'),
         'POLL_INTERVAL': 0.1,  # in miliseconds
         'TIMEOUT': None,
-        'IGNORE': ['.+\.hot-update.js', '.+\.map'],
+        'IGNORE': [r'.+\.hot-update.js', r'.+\.map'],
     },
 }
 
-# aether.ui must be first because of template overrides
-INSTALLED_APPS = ['aether.ui'] + INSTALLED_APPS + ['webpack_loader']
-
-TEMPLATES[0]['OPTIONS']['context_processors'] += [
-    'aether.ui.context_processors.ui_context',
+INSTALLED_APPS += [
+    'webpack_loader',
+    'aether.ui',
 ]
 
 MIGRATION_MODULES = {

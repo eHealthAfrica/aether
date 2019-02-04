@@ -17,14 +17,15 @@
 # under the License.
 
 import random
-import uuid
 
 from autofixture import AutoFixture
 
 from aether.kernel.api import models
+from aether.kernel.api.avro_tools import random_avro
+from aether.kernel.api.entity_extractor import run_entity_extraction
 
-ENTITIES_COUNT_RANGE = (1, 3)
-SUBMISSIONS_COUNT_RANGE = (10, 20)
+MAPPINGS_COUNT_RANGE = (1, 3)
+SUBMISSIONS_COUNT_RANGE = (5, 10)
 
 
 def schema_definition():
@@ -44,22 +45,22 @@ def schema_definition():
     }
 
 
-def submission_payload():
+def mappingset_schema():
     return {
-        'test_field': 'test_value'
+        'name': 'Test',
+        'type': 'record',
+        'fields': [
+            {
+                'name': 'test_field',
+                'type': 'string',
+            },
+        ],
     }
 
 
-def entity_payload():
+def mapping_definition(entity_test_pk):
     return {
-        'id': str(uuid.uuid4()),
-        'test_field': 'test_value',
-    }
-
-
-def mapping_definition():
-    return {
-        'entities': {'Test': 1},
+        'entities': {'Test': str(entity_test_pk)},
         'mapping': [
             ['#!uuid', 'Test.id'],
             ['$.test_field', 'Test.test_field'],
@@ -78,11 +79,11 @@ def get_field_values(default, values=None):
 
 def generate_project(
         project_field_values=None,
-        mapping_field_values=None,
         schema_field_values=None,
         projectschema_field_values=None,
+        mappingset_field_values=None,
+        mapping_field_values=None,
         submission_field_values=None,
-        entity_field_values=None,
 ):
     '''
     Generate an Aether Project.
@@ -111,17 +112,6 @@ def generate_project(
         ),
     ).create_one()
 
-    mapping = AutoFixture(
-        model=models.Mapping,
-        field_values=get_field_values(
-            default=dict(
-                definition=mapping_definition(),
-                project=project,
-            ),
-            values=mapping_field_values,
-        ),
-    ).create_one()
-
     schema = AutoFixture(
         model=models.Schema,
         field_values=get_field_values(
@@ -143,26 +133,48 @@ def generate_project(
         ),
     ).create_one()
 
-    for _ in range(random.randint(*SUBMISSIONS_COUNT_RANGE)):
-        submission = AutoFixture(
-            model=models.Submission,
+    for _ in range(random.randint(*MAPPINGS_COUNT_RANGE)):
+        mappingset = AutoFixture(
+            model=models.MappingSet,
             field_values=get_field_values(
                 default=dict(
-                    payload=submission_payload(),
-                    mapping=mapping,
+                    project=project,
+                    schema=mappingset_schema(),
                 ),
-                values=submission_field_values,
+                values=mappingset_field_values,
             ),
         ).create_one()
 
+        # create a random input based on the schema
+        if not mappingset.input and mappingset.schema:
+            mappingset.input = random_avro(mappingset.schema)
+            mappingset.save()
+
         AutoFixture(
-            model=models.Entity,
+            model=models.Mapping,
             field_values=get_field_values(
                 default=dict(
-                    payload=entity_payload(),
-                    projectschema=projectschema,
-                    submission=submission,
+                    mappingset=mappingset,
+                    definition=mapping_definition(projectschema.pk),
+                    projectschemas=[projectschema],
                 ),
-                values=entity_field_values,
+                values=mapping_field_values,
             ),
-        ).create(random.randint(*ENTITIES_COUNT_RANGE))
+        ).create_one()
+
+        for _ in range(random.randint(*SUBMISSIONS_COUNT_RANGE)):
+            submission = AutoFixture(
+                model=models.Submission,
+                field_values=get_field_values(
+                    default=dict(
+                        # use mappingset schema to generate random payloads
+                        payload=random_avro(mappingset.schema),
+                        project=project,
+                        mappingset=mappingset,
+                    ),
+                    values=submission_field_values,
+                ),
+            ).create_one()
+
+            # extract entities
+            run_entity_extraction(submission)

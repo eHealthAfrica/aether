@@ -20,7 +20,13 @@
 #
 set -Eeuo pipefail
 
-# Define help message
+# set DEBUG if missing
+set +u
+DEBUG="$DEBUG"
+set -u
+
+BACKUPS_FOLDER=/backups
+
 show_help () {
     echo """
     Commands
@@ -34,7 +40,10 @@ show_help () {
     setup         : check required environment variables,
                     create/migrate database and,
                     create/update superuser using
-                        'ADMIN_USERNAME', 'ADMIN_PASSWORD'
+                        'ADMIN_USERNAME', 'ADMIN_PASSWORD', 'ADMIN_TOKEN'
+
+    backup_db     : creates db dump (${BACKUPS_FOLDER}/${DB_NAME}-backup-{timestamp}.sql)
+    restore_dump  : restore db dump (${BACKUPS_FOLDER}/${DB_NAME}-backup.sql)
 
     test          : run tests
     test_lint     : run flake8 tests
@@ -46,18 +55,53 @@ show_help () {
 
     health        : checks the system healthy
     health_rq     : checks the RQ healthy
+    check_kernel  : checks communication with kernel
     """
 }
 
 pip_freeze () {
-    pip install virtualenv
+    pip install -q virtualenv
     rm -rf /tmp/env
 
     virtualenv -p python3 /tmp/env/
-    /tmp/env/bin/pip install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
+    /tmp/env/bin/pip install -q -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
 
     cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
     /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
+}
+
+backup_db() {
+    pg_isready
+
+    if psql -c "" $DB_NAME; then
+        echo "$DB_NAME database exists!"
+
+        pg_dump $DB_NAME > ${BACKUPS_FOLDER}/${DB_NAME}-backup-$(date "+%Y%m%d%H%M%S").sql
+        echo "$DB_NAME database backup created."
+    fi
+}
+
+restore_db() {
+    pg_isready
+
+    # backup current data
+    backup_db
+
+    # delete DB is exists
+    if psql -c "" $DB_NAME; then
+        dropdb -e $DB_NAME
+        echo "$DB_NAME database deleted."
+    fi
+
+    createdb -e $DB_NAME -e ENCODING=UTF8
+    echo "$DB_NAME database created."
+
+    # load dump
+    psql -e $DB_NAME < ${BACKUPS_FOLDER}/${DB_NAME}-backup.sql
+    echo "$DB_NAME database dump restored."
+
+    # migrate data model if needed
+    ./manage.py migrate --noinput
 }
 
 setup () {
@@ -77,9 +121,19 @@ setup () {
     ./manage.py migrate --noinput
 
     # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
-    ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD
+    ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD -t=$ADMIN_TOKEN
 
     ./manage.py check_url --url=$COUCHDB_URL
+
+    STATIC_ROOT=/var/www/static
+    # create static assets
+    ./manage.py collectstatic --noinput --clear --verbosity 0
+    chmod -R 755 $STATIC_ROOT
+
+    # expose version number (if exists)
+    cp ./VERSION $STATIC_ROOT/VERSION   2>/dev/null || :
+    # add git revision (if exists)
+    cp ./REVISION $STATIC_ROOT/REVISION 2>/dev/null || :
 }
 
 test_flake8 () {
@@ -97,11 +151,6 @@ test_coverage () {
     cat /code/conf/extras/good_job.txt
 }
 
-
-# set DEBUG if missing
-set +u
-DEBUG="$DEBUG"
-set -u
 
 case "$1" in
     bash )
@@ -124,6 +173,14 @@ case "$1" in
         setup
     ;;
 
+    backup_db )
+        backup_db
+    ;;
+
+    restore_dump )
+        restore_db
+    ;;
+
     test )
         echo "DEBUG=$DEBUG"
         setup
@@ -141,18 +198,6 @@ case "$1" in
 
     start )
         setup
-
-        # media assets
-        chown aether: /media
-
-        # create static assets
-        ./manage.py collectstatic --noinput --clear --verbosity 0
-        chmod -R 755 /var/www/static
-
-        # expose version number (if exists)
-        cp ./VERSION /var/www/static/VERSION 2>/dev/null || :
-        # add git revision (if exists)
-        cp ./REVISION /var/www/static/REVISION 2>/dev/null || :
 
         [ -z "$DEBUG" ] && LOGGING="--disable-logging" || LOGGING=""
         /usr/local/bin/uwsgi \
@@ -196,6 +241,10 @@ case "$1" in
 
     health_rq )
         ./manage.py check_rq
+    ;;
+
+    check_kernel )
+        ./manage.py check_url --url=$AETHER_KERNEL_URL --token=$AETHER_KERNEL_TOKEN
     ;;
 
     help )

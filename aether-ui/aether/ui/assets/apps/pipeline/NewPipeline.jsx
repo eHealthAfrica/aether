@@ -64,7 +64,7 @@ class NewPipeline extends Component {
   }
 
   renderForm () {
-    const {formatMessage} = this.props.intl
+    const { formatMessage } = this.props.intl
     const onSubmit = (event) => {
       event.preventDefault()
 

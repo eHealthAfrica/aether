@@ -20,42 +20,33 @@
 #
 set -Eeuo pipefail
 
-DC_UTILS="docker-compose -f docker-compose-build-aether-utils.yml"
+./scripts/generate-aether-version-assets.sh
 
-# remove previous containers (clean start)
-./scripts/kill_all.sh
+DC_UTILS="docker-compose -f ./aether-utils/docker-compose.yml"
+VERSION=$(cat "./tmp/VERSION")
+
 $DC_UTILS down
 
-UTILS=( client mocker saladbar)
-for UTIL in "${UTILS[@]}"
+UTIL=client
+# create the distribution
+$DC_UTILS build $UTIL
+$DC_UTILS run $UTIL build
+PCK_FILE=aether.$UTIL-$VERSION-py2.py3-none-any.whl
+
+FOLDERS=( test-aether-integration-module aether-producer )
+
+# distribute within the containers
+for FOLDER in "${FOLDERS[@]}"
 do
+    FILE=./aether-utils/aether-$UTIL/dist/$PCK_FILE
+    DEST=./$FOLDER/conf/pip/dependencies/
 
-    # create the distribution
-    $DC_UTILS build $UTIL
-    $DC_UTILS run $UTIL build
-    PCK_FILE=aether.$UTIL-0.0.0-py2.py3-none-any.whl
+    mkdir -p $DEST
+    cp -r $FILE $DEST
 
-    if [[ $UTIL = "mocker" ]]
-    then
-        SRC=mock-data
-    else
-        SRC=$UTIL
-    fi
-
-    if [[ $UTIL = "client" ]]
-    then
-        FOLDERS=( test-aether-integration-module aether-producer )
-    else
-        FOLDERS=( test-aether-integration-module )
-    fi
-
-    # distribute within the containers
-    for FOLDER in "${FOLDERS[@]}"
-    do
-        mkdir -p ./$FOLDER/conf/pip/dependencies
-        cp -r ./aether-utils/aether-$SRC/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
-    done
-
+    echo "----------------------------------------------------------------------"
+    echo "Distributed [$FILE] into [$DEST]"
+    echo "----------------------------------------------------------------------"
 done
 
-./scripts/kill_all.sh
+$DC_UTILS kill

@@ -29,7 +29,7 @@ MESSAGE_OK = _('RQ scheduler running with {number} workers.') + '\n'
 
 class Command(BaseCommand):
 
-    help = 'Health check for RQ.'
+    help = _('Health check for RQ.')
 
     def handle(self, *args, **options):
         '''
@@ -37,7 +37,7 @@ class Command(BaseCommand):
         '''
 
         scheduler = get_scheduler('default')
-        jobs = scheduler.get_jobs()
+        jobs = list(scheduler.get_jobs())
 
         if len(jobs) == 0:
             self.stderr.write(MESSAGE_ERROR)

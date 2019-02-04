@@ -48,12 +48,12 @@ def connect_kafka():
             consumer = get_consumer()
             topics = consumer.topics()
             consumer.close()
-            print("Connected to Kafka...")
+            print('Connected to Kafka...')
             return [topic for topic in topics]
         except Exception as ke:
-            print("Could not connect to Kafka: %s" % (ke))
+            print('Could not connect to Kafka: %s' % (ke))
             Sleep(CONN_RETRY_WAIT_TIME)
-    print("Failed to connect to Kafka after %s retries" % CONN_RETRY)
+    print('Failed to connect to Kafka after %s retries' % CONN_RETRY)
     sys.exit(1)  # Kill consumer with error
 
 
@@ -69,11 +69,11 @@ def read_poll_result(new_records, verbose=False):
     return flattened
 
 
-def read(consumer, start="LATEST", verbose=False, timeout_ms=5000, max_records=200):
+def read(consumer, start='LATEST', verbose=False, timeout_ms=5000, max_records=200):
     messages = []
-    if start not in ["FIRST", "LATEST"]:
-        raise ValueError("%s it not a valid argument for 'start='" % start)
-    if start is "FIRST":
+    if start not in ['FIRST', 'LATEST']:
+        raise ValueError('%s it not a valid argument for "start="' % start)
+    if start == 'FIRST':
         consumer.seek_to_beginning()
     blank = 0
     while True:
@@ -92,5 +92,5 @@ def read(consumer, start="LATEST", verbose=False, timeout_ms=5000, max_records=2
 
         new_messages = read_poll_result(poll_result, verbose)
         messages.extend(new_messages)
-    print("Read %s messages" % (len(messages)))
+    print('Read %s messages' % (len(messages)))
     return messages

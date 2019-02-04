@@ -20,12 +20,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='project',
             name='jsonld_context',
-            field=models.TextField(blank=True, null=True),
+            field=models.TextField(null=True, blank=True),
         ),
         migrations.AlterField(
             model_name='project',
             name='rdf_definition',
-            field=models.TextField(blank=True, null=True),
+            field=models.TextField(null=True, blank=True),
         ),
         migrations.AlterField(
             model_name='project',
@@ -35,22 +35,22 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='project',
             name='salad_schema',
-            field=models.TextField(blank=True, null=True),
+            field=models.TextField(null=True, blank=True),
         ),
         migrations.AlterField(
             model_name='projectschema',
             name='mandatory_fields',
-            field=models.TextField(blank=True, null=True),
+            field=models.TextField(null=True, blank=True),
         ),
         migrations.AlterField(
             model_name='projectschema',
             name='masked_fields',
-            field=models.TextField(blank=True, null=True),
+            field=models.TextField(null=True, blank=True),
         ),
         migrations.AlterField(
             model_name='projectschema',
             name='transport_rule',
-            field=models.TextField(blank=True, null=True),
+            field=models.TextField(null=True, blank=True),
         ),
         migrations.AlterField(
             model_name='schema',

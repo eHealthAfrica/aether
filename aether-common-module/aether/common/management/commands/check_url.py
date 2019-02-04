@@ -29,17 +29,26 @@ MESSAGE_OK = _('{url} is responding.') + '\n'
 
 class Command(BaseCommand):
 
-    help = 'Check URL.'
+    help = _('Check URL.')
 
     def add_arguments(self, parser):
         parser.add_argument(
             '--url',
             '-u',
             type=str,
-            help='Indicate the url to check',
+            help=_('Indicate the url to check'),
             dest='url',
             action='store',
             required=True,
+        )
+        parser.add_argument(
+            '--token',
+            '-t',
+            type=str,
+            help=_('Indicate the authorization token'),
+            dest='token',
+            action='store',
+            required=False,
         )
 
     def handle(self, *args, **options):
@@ -48,12 +57,18 @@ class Command(BaseCommand):
         '''
 
         url = options['url']
+        token = options['token']
 
         try:
-            response = requests.head(url)
+            if token:
+                response = requests.head(url, headers={'Authorization': f'Token {token}'})
+            else:
+                response = requests.head(url)
+
             response.raise_for_status()
             self.stdout.write(MESSAGE_OK.format(url=url))
 
-        except Exception as e:
+        except Exception as err:
             self.stderr.write(MESSAGE_ERROR.format(url=url))
+            self.stderr.write(str(err))
             raise RuntimeError(MESSAGE_ERROR.format(url=url))

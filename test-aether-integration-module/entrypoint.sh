@@ -28,8 +28,6 @@ show_help() {
     bash          : run bash
     eval          : eval shell command
 
-    pip_freeze    : freeze pip dependencies and write to requirements.txt
-
     test          : run tests
     test_lint     : run flake8 tests
     """
@@ -56,15 +54,6 @@ case "$1" in
 
     eval )
         eval "${@:2}"
-    ;;
-
-    pip_freeze )
-
-        rm -rf /tmp/env
-        pip3 install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
-
-        cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
-        pip3 freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
     ;;
 
     test)

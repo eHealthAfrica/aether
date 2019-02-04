@@ -33,30 +33,33 @@ MSG_KERNEL_RESPONSE_ERR = _(
     'Response: {content}'
 )
 
+NAMESPACE = 'org.ehealthafrica.aether.odk.xforms'
+
 
 class KernelPropagationError(Exception):
     pass
 
 
-def propagate_kernel_project(project):
+def propagate_kernel_project(project, family=None):
     '''
     Creates a copy of the indicated project in Aether Kernel
-    and creates/updates its linked artefacts.
+    and creates/updates its linked artefacts based on the given AVRO schemas.
+
+    One AVRO schema should create/update in Kernel:
+        - one Project,
+        - one Mapping,
+        - one Schema and
+        - one ProjectSchema.
     '''
 
     artefacts = {
-        # do not update the mapping rules in case of the xform was already propagated
-        # that might be the case that the user changed the default rules
-        'action': 'create',
         'name': project.name,
-        'schemas': [],
-        'mappings': [],
+        'family': family,
+        'avro_schemas': [],
     }
 
     for xform in project.xforms.order_by('-modified_at'):
-        schemas, mapping = __xform_to_artefacts(xform)
-        artefacts['schemas'] += schemas
-        artefacts['mappings'].append(mapping)
+        artefacts['avro_schemas'].append(__parse_xform(xform))
 
     __upsert_kernel_artefacts(project, artefacts)
 
@@ -64,25 +67,15 @@ def propagate_kernel_project(project):
     return True
 
 
-def propagate_kernel_artefacts(xform):
+def propagate_kernel_artefacts(xform, family=None):
     '''
     Creates/updates artefacts based on the indicated xForm in Aether Kernel.
-
-    One XForm should create/update in Kernel:
-        - one Project,
-        - one Mapping,
-        - one or more Schemas and
-        - one or more ProjectSchemas.
     '''
 
-    schemas, mapping = __xform_to_artefacts(xform)
     artefacts = {
-        # do not update the mapping rules in case of the xform was already propagated
-        # that might be the case that the user changed the default rules
-        'action': 'create',
         'name': xform.project.name,
-        'schemas': schemas,
-        'mappings': [mapping],
+        'family': family,
+        'avro_schemas': [__parse_xform(xform)],
     }
 
     __upsert_kernel_artefacts(xform.project, artefacts)
@@ -103,7 +96,7 @@ def __upsert_kernel_artefacts(project, artefacts={}):
         raise KernelPropagationError(MSG_KERNEL_CONNECTION_ERR)
 
     kernel_url = get_kernel_server_url()
-    url = f'{kernel_url}/projects/{project_id}/artefacts/'
+    url = f'{kernel_url}/projects/{project_id}/avro-schemas/'
 
     response = requests.patch(url=url, json=artefacts, headers=auth_header)
     if response.status_code != 200:
@@ -115,57 +108,18 @@ def __upsert_kernel_artefacts(project, artefacts={}):
     return True
 
 
-def __xform_to_artefacts(xform):
-    # all the items will have the same id
-    item_id = str(xform.kernel_id)
+def __parse_xform(xform):
     definition = copy.deepcopy(xform.avro_schema)
     # assign namespace based on project name
-    definition['namespace'] = f'aether.odk.xforms.{__clean_name(xform.project.name)}'
+    definition['namespace'] = f'{NAMESPACE}.{__clean_name(xform.project.name)}'
 
-    name = definition['name']
-    fields = definition['fields']
-
-    # create identity mapping rules using the AVRO schema fields (first level)
-    rules = [
-        [
-            '{}.{}'.format('$', f['name']),   # source
-            '{}.{}'.format(name, f['name']),  # destination
-        ]
-        for f in fields
-    ]
-
-    # kernel entities/ schemas need an "id" field,
-    # if this does not exist include it manually
-    id_or_none = next((x for x in fields if x['name'] == 'id'), None)
-    if id_or_none is None:
-        rules.append([
-            '#!uuid',  # this will generate an UUID during entity extractor step
-            f'{name}.id',
-        ])
-        definition['fields'].append({
-            'name': 'id',
-            'doc': _('ID'),
-            'type': 'string',
-        })
-
-    schema = {
-        'id': item_id,
-        'name': name,
+    return {
+        'id': str(xform.kernel_id),
         'definition': definition,
     }
-    mapping = {
-        'id': item_id,
-        'name': name,
-        'definition': {
-            'entities': {name: item_id},
-            'mapping': rules,
-        }
-    }
-
-    return [schema], mapping
 
 
-def __clean_name(value='Project'):
+def __clean_name(value):
     '''
     Replaces any non alphanumeric character with spaces
     Converts to title case

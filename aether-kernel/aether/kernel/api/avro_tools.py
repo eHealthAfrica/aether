@@ -22,7 +22,17 @@ function from the official avro python library. See class docstring
 for details.
 '''
 
-import collections
+import random
+
+from collections import namedtuple
+from copy import deepcopy
+from django.utils.translation import ugettext as _
+from os import urandom
+from string import ascii_letters
+from uuid import uuid4
+
+from .constants import NAMESPACE
+
 
 # Constants used by AvroValidator to distinguish between avro types
 # ``int`` and ``long``.
@@ -50,6 +60,114 @@ REQUEST = 'request'
 STRING = 'string'
 UNION = 'union'
 
+# AVRO types:
+# - primitive: null, boolean, int, long, float, double, bytes, string
+# - complex: record, map, array, union, enum, fixed
+PRIMITIVE_TYPES = [
+    BOOLEAN,
+    BYTES,
+    DOUBLE,
+    FLOAT,
+    INT,
+    LONG,
+    NULL,
+    STRING,
+
+    # these ones are not primitives but internally work as:
+    # bytes when is serialized or string once is deserialized
+    #   {"type": "enum", "name": "e", "symbols": ["A", "B", "C", "D"]}
+    ENUM,
+    # bytes with fixed length
+    #   {"type": "fixed", "size": 16, "name": "f"}
+    FIXED,
+]
+
+# indicates the complex field type within the full jsonpath
+ARRAY_PATH = '#'
+MAP_PATH = '*'
+UNION_PATH = '?'
+
+
+def random_string():
+    return ''.join(random.choice(ascii_letters) for i in range(random.randint(1, 30)))
+
+
+def random_avro(schema):
+    '''
+    Generates a random value based on the given AVRO schema.
+    '''
+
+    name = schema.get('name')
+    avro_type = schema['type']
+    if isinstance(avro_type, list):  # UNION or NULLABLE
+        # ["null", "int", "string", {"type: "record", ...}]
+        avro_type = [t for t in avro_type if t != NULL]  # ignore NULL
+        if len(avro_type) == 1:  # it was NULLABLE
+            avro_type = avro_type[0]
+
+    if __has_type(avro_type):  # {"type": {"type": "zzz", ...}}
+        schema = avro_type
+        avro_type = avro_type.get('type')
+
+    if avro_type == NULL:
+        return None
+
+    if avro_type == BOOLEAN:
+        return True if random.random() > 0.5 else False
+
+    if avro_type in [BYTES, FIXED]:
+        return urandom(schema.get('size', 8))
+
+    if avro_type == INT:
+        return random.randint(INT_MIN_VALUE, INT_MAX_VALUE)
+
+    if avro_type == LONG:
+        return random.randint(LONG_MIN_VALUE, LONG_MAX_VALUE)
+
+    if avro_type in [FLOAT, DOUBLE]:
+        return random.random() + random.randint(INT_MIN_VALUE, INT_MAX_VALUE)
+
+    if avro_type == STRING:
+        if name == 'id':
+            return str(uuid4())  # "id" fields contain an UUID
+        return random_string()
+
+    if avro_type == ENUM:
+        return random.choice(schema['symbols'])
+
+    if avro_type == RECORD:
+        return {
+            f['name']: random_avro(f)
+            for f in schema.get('fields', [])
+        }
+
+    if avro_type == MAP:
+        values = schema.get('values')
+        map_type = values if __has_type(values) else {'type': values}
+        return {
+            random_string(): random_avro(map_type)
+            for i in range(random.randint(1, 5))
+        }
+
+    if avro_type == ARRAY:
+        items = schema.get('items')
+        array_type = items if __has_type(items) else {'type': items}
+        return [
+            random_avro(array_type)
+            for i in range(random.randint(1, 5))
+        ]
+
+    if isinstance(avro_type, list):  # UNION
+        # choose one random type and generate value
+        # ["int", "string", {"type: "record", ...}]
+        ut = avro_type[random.randint(0, len(avro_type) - 1)]
+        ut = ut if __has_type(ut) else {'type': ut}
+        return random_avro(ut)
+
+    # TODO: named types  ¯\_(ツ)_/¯
+
+    return None
+
 
 class AvroValidationException(Exception):
     pass
@@ -66,7 +184,7 @@ class AvroValidationException(Exception):
 #
 #     indicates that the expected type at path "$.a.b" was a union of
 #     'null' and 'string'. The actual value was 1.
-AvroValidationError = collections.namedtuple(
+AvroValidationError = namedtuple(
     'AvroValidationError',
     ['expected', 'datum', 'path'],
 )
@@ -76,7 +194,11 @@ def format_validation_error(error):
     '''
     Format an AvroValidationError.
     '''
-    return f'Expected type "{error.expected}" at path "{error.path}". Actual value: {error.datum}'
+    return _('Expected type "{expected}" at path "{path}". Actual value: {datum}').format(
+        expected=error.expected,
+        path=error.path,
+        datum=error.datum,
+    )
 
 
 class AvroValidator(object):
@@ -138,6 +260,8 @@ class AvroValidator(object):
         failed validation.
         '''
         typename = AvroValidator.get_schema_typename(schema)
+        if isinstance(datum, str):
+            datum = f'"{datum}"'
         error = AvroValidationError(expected=typename, datum=datum, path=path)
         self.errors.append(error)
         return False
@@ -308,7 +432,10 @@ class AvroValidator(object):
         if schema.type in [RECORD, ERROR, REQUEST]:
             return self.validate_record(schema, datum, path)
         raise AvroValidationException(
-            f'Could not validate datum "{datum}" against "{schema}"'
+            _('Could not validate datum "{datum}" against "{schema}"').format(
+                datum=datum,
+                schema=schema,
+            )
         )
 
 
@@ -317,3 +444,177 @@ def validate(schema, data):
     Wrap AvroValidator in a function. Returns an instance of AvroValidator.
     '''
     return AvroValidator(schema, data)
+
+
+def avro_schema_to_passthrough_artefacts(item_id, avro_schema):
+    '''
+    Builds artefacts based on the indicated AVRO Schema.
+
+    One AVRO Schema should build:
+        - one Schema
+        - one Passthrough Mapping
+    '''
+
+    if not item_id:
+        item_id = str(uuid4())
+
+    definition = deepcopy(avro_schema)
+
+    # assign default namespace
+    if not definition.get('namespace'):
+        definition['namespace'] = NAMESPACE
+
+    name = definition['name']
+    fields = definition['fields']
+
+    # create passthrough mapping rules using the AVRO schema fields (first level)
+    rules = [
+        [
+            '{}.{}'.format('$', f['name']),   # source
+            '{}.{}'.format(name, f['name']),  # destination
+        ]
+        for f in fields
+    ]
+
+    # entities need an "id" field,
+    # if this does not exist include it manually
+    id_or_none = next((x for x in fields if x['name'] == 'id'), None)
+    if id_or_none is None:
+        rules.append([
+            '#!uuid',  # this will generate an UUID during entity extractor step
+            f'{name}.id',
+        ])
+        definition['fields'].append({
+            'name': 'id',
+            'doc': 'UUID',
+            'type': 'string',
+        })
+
+    schema = {
+        'id': item_id,
+        'name': name,
+        'definition': definition,
+    }
+    mapping = {
+        'id': item_id,
+        'name': name,
+        'definition': {
+            'entities': {name: item_id},
+            'mapping': rules,
+        },
+        # this is an auto-generated mapping that shouldn't be modified manually
+        'is_read_only': True,
+        'is_active': True,
+        'schema': avro_schema,  # include avro schema
+        'input': random_avro(avro_schema),  # include a data sample
+    }
+
+    return schema, mapping
+
+
+def is_nullable(avro_type):
+    '''
+    Indicates if the given AVRO type accept null values or just another type (but only one)
+
+    {"type": [ "null", nullable_type ]} or {"type": [ nullable_type, "null" ]}
+    '''
+    return isinstance(avro_type, list) and len(avro_type) == 2 and NULL in avro_type
+
+
+def extract_jsonpaths_and_docs(schema, jsonpaths, docs):
+    '''
+    Extracts the "doc" properties of the AVRO schema and generates
+    the list of possible jsonpaths
+
+    Arguments:
+    - ``schema``    - The AVRO schema.
+    - ``jsonpaths`` - The initial jsonpaths, the extracted jsonpaths will be added here.
+    - ``docs``      - The initial docs, the extracted docs will be added here.
+
+    Assumption: the given schema is a valid schema.
+    '''
+    def walker(avro_type, parent=None):
+        jsonpath = ''
+        # using '$' to detect the root type
+        if avro_type.get('name') != '$':
+            jsonpath = avro_type.get('name', '')
+            if parent:
+                jsonpath = f'{parent}.{jsonpath}'
+            if jsonpath not in jsonpaths:
+                jsonpaths.append(jsonpath)
+            if jsonpath not in docs and avro_type.get('doc'):
+                docs[jsonpath] = avro_type.get('doc')
+
+        current = avro_type
+
+        # "nullable"
+        # { "type": [ "null", nullable_type ]} or { "type": [ nullable_type, "null" ]}
+        if __has_type(avro_type) and is_nullable(avro_type.get('type')):
+            current = [child for child in current.get('type') if child != NULL][0]
+
+        if __is_leaf(current):
+            # leaf... nothing else to do
+            return
+
+        current_type_value = current.get('type')
+        if current_type_value == RECORD:
+            for child in current.get('fields'):
+                walker(child, jsonpath)
+
+        elif current_type_value == MAP:
+            # indicate that the next property can be any with "*" name
+            values = current.get('values')
+            map_type = values if __has_type(values) else {'type': values}
+            walker({**map_type, 'name': MAP_PATH}, jsonpath)
+
+        elif current_type_value == ARRAY:
+            # indicate that the next property can be any int with "#"
+            items = current.get('items')
+            array_type = items if __has_type(items) else {'type': items}
+            walker({**array_type, 'name': ARRAY_PATH}, jsonpath)
+
+        elif isinstance(current_type_value, list):
+            # indicate that the next property came from an union with "?"
+            # union but not nullable :scream:
+            for child in current_type_value:
+                if not __is_leaf(child):
+                    walker({**child, 'name': UNION_PATH, 'doc': None}, jsonpath)
+
+        # TODO: named types  ¯\_(ツ)_/¯
+
+    walker({**schema, 'name': '$'})
+
+
+def __is_leaf(avro_type):
+    '''
+    Indicates if the given AVRO type corresponds to an object leaf
+
+    returns True if type is
+        - primitive or
+        - array of primitives or
+        - "nullable" primitive
+
+    Otherwise False
+        - record
+        - map
+        - tagged union
+        - named type
+
+    '''
+    return (
+        # Real primitives: {"type": "aaa"}
+        avro_type in PRIMITIVE_TYPES or
+
+        # Complex types but taken as primitives: {"type": {"type": "zzz"}}
+        (__has_type(avro_type) and __is_leaf(avro_type.get('type'))) or
+
+        # Array of primitives {"type": "array", "items": "aaa"}
+        (__has_type(avro_type) and avro_type.get('type') == ARRAY and __is_leaf(avro_type.get('items'))) or
+
+        # Nullable primitive ["null", "aaa"]
+        (is_nullable(avro_type) and len([True for avro_child in avro_type if __is_leaf(avro_child)]) == 2)
+    )
+
+
+def __has_type(avro_type):
+    return isinstance(avro_type, dict) and avro_type.get('type')

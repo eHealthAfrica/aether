@@ -5,12 +5,12 @@ FROM node:carbon-slim
 ## setup container
 ################################################################################
 
-# Upgrade npm to last version
-RUN npm install -g npm
-
 WORKDIR /code/
 
 COPY ./package.json /code/package.json
+
+# Upgrade npm to last version
+RUN npm install -g npm
 RUN npm install --loglevel warn
 
 

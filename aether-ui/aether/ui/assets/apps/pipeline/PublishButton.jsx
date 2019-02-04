@@ -65,13 +65,12 @@ class PublishButton extends Component {
     return <ul className='error'>{errorList}</ul>
   }
 
-  buildPublishSuccess (publishSuccessList) {
-    const successList = publishSuccessList.map(passed => (
-      <li key={passed}>
-        <FormattedMessage id={`publish.success.${passed}`} defaultMessage={passed} />
+  buildPublishSuccess () {
+    return (<ul className='success'>
+      <li key='publish_success_ok_'>
+        <FormattedMessage id='publish.success.message' defaultMessage='Pipeline published successfully.' />
       </li>
-    ))
-    return <ul className='success'>{successList}</ul>
+    </ul>)
   }
 
   getPublishOptions (status, statusData) {
@@ -102,7 +101,7 @@ class PublishButton extends Component {
         </div>
       ),
       showPublishOptions: true,
-      publishOptionsContent: status === 'success' ? this.buildPublishSuccess(statusData) : this.buildPublishErrors(statusData)
+      publishOptionsContent: status === 'success' ? this.buildPublishSuccess() : this.buildPublishErrors(statusData)
     })
   }
 
@@ -122,7 +121,7 @@ class PublishButton extends Component {
   publish (event) {
     event.stopPropagation()
     this.props.selectedPipelineChanged(this.props.pipeline)
-    this.props.publishPipeline(this.props.pipeline.id)
+    this.props.publishPipeline(this.props.pipeline.pipeline, this.props.pipeline.id)
   }
 
   render () {
@@ -132,7 +131,7 @@ class PublishButton extends Component {
           buttons={this.state.publishOptionsButtons}>
           {this.state.publishOptionsContent}
         </Modal>
-        <button type='button' className={this.props.className} onClick={this.publish.bind(this)}>
+        <button type='button' className={this.props.className} onClick={this.publish.bind(this)} disabled={this.props.disabled}>
           <FormattedMessage
             id='pipeline.navbar.breadcrumb.publish'
             defaultMessage='Publish'

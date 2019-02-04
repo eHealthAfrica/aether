@@ -8,10 +8,12 @@
 django<2
 django-cors-headers
 django-prometheus
+django-storages
 djangorestframework
-djangorestframework-csv
 psycopg2-binary
+python-json-logger
 requests
+
 
 # test libraries
 coverage

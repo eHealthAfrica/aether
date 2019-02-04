@@ -20,15 +20,13 @@
 #
 set -Eeuo pipefail
 
-DC_UTILS="docker-compose -f docker-compose-build-aether-utils.yml"
+DC_FILE="docker-compose -f ./aether-common-module/docker-compose.yml"
 
-# remove previous containers (clean start)
-./scripts/kill_all.sh
-$DC_UTILS down
+$DC_FILE down
 
 # create the distribution
-$DC_UTILS build common
-$DC_UTILS run   common build
+$DC_FILE build common
+$DC_FILE run   common build
 
 PCK_FILE=aether.common-0.0.0-py2.py3-none-any.whl
 
@@ -36,8 +34,13 @@ PCK_FILE=aether.common-0.0.0-py2.py3-none-any.whl
 FOLDERS=( aether-kernel aether-odk-module aether-couchdb-sync-module aether-ui )
 for FOLDER in "${FOLDERS[@]}"
 do
-    mkdir -p ./$FOLDER/conf/pip/dependencies
-    cp -r ./aether-common-module/dist/$PCK_FILE ./$FOLDER/conf/pip/dependencies/
+    DEST=./$FOLDER/conf/pip/dependencies/
+    mkdir -p $DEST
+    cp -r ./aether-common-module/dist/$PCK_FILE $DEST
+
+    echo "----------------------------------------------------------------------"
+    echo "Distributed into $DEST"
+    echo "----------------------------------------------------------------------"
 done
 
-./scripts/kill_all.sh
+$DC_FILE kill

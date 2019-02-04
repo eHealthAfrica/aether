@@ -29,13 +29,8 @@ DEBUG = bool(os.environ.get('DEBUG'))
 TESTING = bool(os.environ.get('TESTING'))
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-if DEBUG:
-    logger.setLevel(logging.DEBUG)
-if TESTING:
-    logger.setLevel(logging.CRITICAL)
+APP_NAME = os.environ.get('APP_NAME', 'aether')
+APP_LINK = os.environ.get('APP_LINK', 'http://aether.ehealthafrica.org')
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -52,6 +47,22 @@ MEDIA_INTERNAL_URL = '/media-internal/'
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/media/')
 
 
+# Version and revision
+# ------------------------------------------------------------------------------
+
+try:
+    with open('/code/VERSION') as fp:
+        VERSION = fp.read().strip()
+except Exception:
+    VERSION = '#.#.#'
+
+try:
+    with open('/code/REVISION') as fp:
+        REVISION = fp.read().strip()
+except Exception:
+    REVISION = '---'
+
+
 # Django Basic Configuration
 # ------------------------------------------------------------------------------
 
@@ -64,11 +75,11 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'django.contrib.sessions',
     'django.contrib.staticfiles',
+    'storages',
 
     # REST framework with auth token
     'rest_framework',
     'rest_framework.authtoken',
-    'rest_framework_csv',
 
     # CORS checking
     'corsheaders',
@@ -81,10 +92,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    # Make sure this stays as the 1st middleware
-    'django_prometheus.middleware.PrometheusBeforeMiddleware',
-
-    # All middlewares go here
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -93,9 +100,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
-    # Make sure this stays as the last middleware
-    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 TEMPLATES = [
@@ -110,6 +114,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'aether.common.context_processors.aether_context',
             ],
         },
     },
@@ -122,9 +127,8 @@ TEMPLATES = [
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
-        'rest_framework.renderers.AdminRenderer',
-        'aether.common.drf.renderers.CustomCSVRenderer',
+        'aether.common.drf.renderers.CustomBrowsableAPIRenderer',
+        'aether.common.drf.renderers.CustomAdminRenderer',
     ),
     'DEFAULT_PARSER_CLASSES': (
         'rest_framework.parsers.JSONParser',
@@ -144,6 +148,9 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
     ),
     'DEFAULT_PAGINATION_CLASS': 'aether.common.drf.pagination.CustomPagination',
+    'PAGE_SIZE': int(os.environ.get('PAGE_SIZE', 10)),
+    'MAX_PAGE_SIZE': int(os.environ.get('MAX_PAGE_SIZE', 5000)),
+    'HTML_SELECT_CUTOFF': int(os.environ.get('HTML_SELECT_CUTOFF', 100)),
 }
 
 
@@ -161,6 +168,72 @@ DATABASES = {
         'TESTING': {'CHARSET': 'UTF8'},
     },
 }
+
+
+# Logging Configuration
+# ------------------------------------------------------------------------------
+
+# https://docs.python.org/3.6/library/logging.html#levels
+LOGGING_LEVEL = os.environ.get('LOGGING_LEVEL', logging.INFO)
+LOGGING_CLASS = 'logging.StreamHandler' if not TESTING else 'logging.NullHandler'
+LOGGING_FORMAT = '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+LOGGING_FORMATTER = os.environ.get('LOGGING_FORMATTER')
+if LOGGING_FORMATTER != 'verbose':
+    LOGGING_FORMATTER = 'json'
+
+logger = logging.getLogger(__name__)
+logger.setLevel(LOGGING_LEVEL)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'root': {
+        'level': LOGGING_LEVEL,
+        'handlers': ['console'],
+    },
+    'formatters': {
+        'verbose': {
+            'format': LOGGING_FORMAT,
+        },
+        'json': {
+            'class': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+            'format': LOGGING_FORMAT,
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': LOGGING_LEVEL,
+            'class': LOGGING_CLASS,
+            'formatter': LOGGING_FORMATTER,
+        },
+    },
+    'loggers': {
+        'aether': {
+            'level': LOGGING_LEVEL,
+            'handlers': ['console', ],
+            'propagate': False,
+        },
+        'django': {
+            'level': LOGGING_LEVEL,
+            'handlers': ['console', ],
+            'propagate': False,
+        },
+    },
+}
+
+# https://docs.sentry.io/platforms/python/django/
+SENTRY_DSN = os.environ.get('SENTRY_DSN')
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration(), ]
+    )
+
+else:
+    logger.info('No SENTRY enabled!')
 
 
 # Authentication Configuration
@@ -188,11 +261,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-CAS_VERSION = 3
-CAS_LOGOUT_COMPLETELY = True
-CAS_SERVER_URL = os.environ.get('CAS_SERVER_URL', '')
-HOSTNAME = os.environ.get('HOSTNAME', '')
-
+CAS_SERVER_URL = os.environ.get('CAS_SERVER_URL')
 if CAS_SERVER_URL:
     INSTALLED_APPS += [
         # CAS libraries
@@ -202,24 +271,15 @@ if CAS_SERVER_URL:
     AUTHENTICATION_BACKENDS += [
         'ums_client.backends.UMSRoleBackend',
     ]
+    CAS_VERSION = 3
+    CAS_LOGOUT_COMPLETELY = True
+    HOSTNAME = os.environ['HOSTNAME']
+
 else:
-    logger.info('No CAS enable!')
+    logger.info('No CAS enabled!')
 
-
-# Sentry Configuration
-# ------------------------------------------------------------------------------
-
-SENTRY_DSN = os.environ.get('SENTRY_DSN')
-if SENTRY_DSN:
-    INSTALLED_APPS += ['raven.contrib.django.raven_compat', ]
-    MIDDLEWARE = [
-        'raven.contrib.django.raven_compat.middleware.SentryResponseErrorIdMiddleware',
-    ] + MIDDLEWARE
-
-    SENTRY_CLIENT = 'raven.contrib.django.raven_compat.DjangoClient'
-    SENTRY_CELERY_LOGLEVEL = logging.INFO
-else:
-    logger.info('No SENTRY enable!')
+    LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login.html')
+    LOGGED_OUT_TEMPLATE = os.environ.get('LOGGED_OUT_TEMPLATE', 'aether/logged_out.html')
 
 
 # Security Configuration
@@ -243,6 +303,48 @@ if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
+# Storage Configuration
+# ------------------------------------------------------------------------------
+
+DJANGO_STORAGE_BACKEND = os.environ['DJANGO_STORAGE_BACKEND']
+
+if DJANGO_STORAGE_BACKEND == 'filesystem':
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    HOSTNAME = os.environ['HOSTNAME']
+    if not HOSTNAME:
+        msg = 'Missing HOSTNAME environment variable!'
+        logger.critical(msg)
+        raise RuntimeError(msg)
+
+elif DJANGO_STORAGE_BACKEND == 's3':
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    try:
+        AWS_STORAGE_BUCKET_NAME = os.environ['BUCKET_NAME']
+        AWS_S3_REGION_NAME = os.environ['AWS_S3_REGION_NAME']
+        AWS_DEFAULT_ACL = os.environ['AWS_DEFAULT_ACL']
+    except KeyError as key:
+        msg = f'Missing {key} environment variable!'
+        logger.critical(msg)
+        raise RuntimeError(msg)
+
+elif DJANGO_STORAGE_BACKEND == 'gcs':
+    DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+    GS_BUCKET_NAME = os.environ['BUCKET_NAME']
+    if not GS_BUCKET_NAME:
+        msg = 'Missing BUCKET_NAME environment variable!'
+        logger.critical(msg)
+        raise RuntimeError(msg)
+
+else:
+    msg = (
+        'Unrecognized value "{}" for environment variable DJANGO_STORAGE_BACKEND.'
+        ' Expected one of the following: "filesystem", "s3", "gcs"'
+    )
+    raise RuntimeError(msg.format(DJANGO_STORAGE_BACKEND))
+
+logger.info('Using storage backend "{}"'.format(DJANGO_STORAGE_BACKEND))
+
+
 # Debug Configuration
 # ------------------------------------------------------------------------------
 
@@ -256,6 +358,20 @@ if not TESTING and DEBUG:
     }
 
 
+# Prometheus Configuration
+# ------------------------------------------------------------------------------
+
+MIDDLEWARE = [
+    # Make sure this stays as the first middleware
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+
+    *MIDDLEWARE,
+
+    # Make sure this stays as the last middleware
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
+]
+
+
 # Local Configuration
 # ------------------------------------------------------------------------------
 # This scriptlet allows you to include custom settings in your local environment
@@ -263,4 +379,4 @@ if not TESTING and DEBUG:
 try:
     from local_settings import *  # noqa
 except ImportError:
-    logger.info('No local settings!')
+    logger.debug('No local settings!')

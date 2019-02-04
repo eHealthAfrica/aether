@@ -19,7 +19,7 @@
 from django_rq import job
 
 from aether.common.kernel.utils import test_connection
-from .import_couchdb import import_synced_devices
+from .api.couchdb_sync import import_synced_devices
 
 
 @job('default', timeout=15 * 60)

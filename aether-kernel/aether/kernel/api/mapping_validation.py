@@ -18,8 +18,9 @@
 
 import collections
 import json
+from django.utils.translation import ugettext as _
 
-from .utils import find_by_jsonpath
+from .entity_extractor import find_by_jsonpath
 
 import spavro
 
@@ -27,24 +28,20 @@ Success = collections.namedtuple('Success', ['path', 'result'])
 Failure = collections.namedtuple('Failure', ['path', 'description'])
 
 
-INVALID_PATH = (
+INVALID_PATH = _(
     'A destination path (the right side of a mapping) must consist of '
     'exactly two parts: <schema-name>.<field-name>. '
     'Example: "Person.firstName"'
 )
-NO_MATCH = 'No match for path'
+NO_MATCH = _('No match for path')
 
 
 def no_schema(schema_name):
-    return 'Could not find schema "{schema_name}"'.format(
-        schema_name=schema_name
-    )
+    return _('Could not find schema "{}"').format(schema_name)
 
 
 def invalid_schema(schema_name):
-    return 'The schema "{schema_name}" is invalid'.format(
-        schema_name=schema_name
-    )
+    return _('The schema "{}" is invalid').format(schema_name)
 
 
 def validate_getter(obj, path):
@@ -54,8 +51,8 @@ def validate_getter(obj, path):
     if path.startswith('#!'):
         return Success(path, [])
     result = [
-        datum.value for datum in
-        find_by_jsonpath(obj, path)
+        datum.value
+        for datum in find_by_jsonpath(obj, path)
     ]
     if result:
         return Success(path, result)
@@ -69,18 +66,18 @@ def validate_setter(schemas, path):
     path_segments = path.split('.')
     try:
         schema_name, field_name = path_segments
-    except ValueError as e:
+    except ValueError:
         return Failure(path, INVALID_PATH)
 
     try:
         schema_definition = schemas[schema_name]
-    except KeyError as e:
+    except KeyError:
         message = no_schema(schema_name)
         return Failure(path, message)
 
     try:
         spavro.schema.parse(json.dumps(schema_definition))
-    except spavro.schema.SchemaParseException as e:
+    except spavro.schema.SchemaParseException:
         message = invalid_schema(schema_name)
         return Failure(path, message)
 

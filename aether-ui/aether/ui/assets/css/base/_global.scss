@@ -100,10 +100,12 @@ textarea {
   border-radius: $border-radius;
   background: $background-color;
   font-family: $body-font-family;
+  color: $dark-blue;
   padding: .8em;
 
   &:disabled {
-    background: $light-grey;
+    @include stripy($background-color, $white);
+    box-shadow: none;
     color: $grey;
   }
 

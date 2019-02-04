@@ -20,27 +20,43 @@
 #
 set -Eeuo pipefail
 
+# build_aether_containers.sh MUST be run before attempting integration tests.
+
 function build_container() {
     echo "_____________________________________________ Building $1 container"
     $DC_TEST build "$1"-test
+}
+
+function wait_for_kernel() {
+    KERNEL_HEALTH_URL="http://localhost:9000/health"
+    until curl -s $KERNEL_HEALTH_URL > /dev/null; do
+        >&2 echo "Waiting for Kernel..."
+        sleep 2
+    done
 }
 
 DC_TEST="docker-compose -f docker-compose-test.yml"
 
 
 echo "_____________________________________________ TESTING"
+$DC_TEST kill
+echo "_____________________________________________ TESTING PRODUCER"
+./scripts/test_container.sh producer
+echo "_____________________________________________ PRODUCER OK..."
 
+$DC_TEST kill
 
-./scripts/build_aether_utils_and_distribute.sh
-$DC_TEST down
+echo "_____________________________________________ Starting Integration Tests"
 
-echo "_____________________________________________ Starting database"
+echo "_____________________________________________ Starting Kafka"
+$DC_TEST up -d zookeeper-test kafka-test
+
+echo "_____________________________________________ Starting Postgres"
 $DC_TEST up -d db-test
 
 build_container kernel
 
-# sometimes this is not as faster as we wanted... :'(
-until $DC_TEST run kernel-test eval pg_isready -q; do
+until $DC_TEST run --no-deps kernel-test eval pg_isready -q; do
     >&2 echo "Waiting for db-test..."
     sleep 2
 done
@@ -48,23 +64,16 @@ done
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
 
-# give time to kernel to start up
-KERNEL_HEALTH_URL="http://localhost:9000/health"
-until curl -s $KERNEL_HEALTH_URL > /dev/null; do
-    >&2 echo "Waiting for Kernel..."
-    sleep 2
-done
-
-echo "_____________________________________________ Starting Kafka"
-$DC_TEST up -d zookeeper-test kafka-test
-
 build_container producer
 echo "_____________________________________________ Starting Producer"
 $DC_TEST up -d producer-test
 
-echo "_____________________________________________ Starting Integration Tests"
-build_container integration
-$DC_TEST run integration-test test
+echo "_____________________________________________ Waiting for Kernel"
+wait_for_kernel
+$DC_TEST run --no-deps kernel-test eval python /code/sql/create_readonly_user.py
 
+build_container integration
+$DC_TEST run --no-deps integration-test test
+echo "_____________________________________________ Integration OK..."
 ./scripts/kill_all.sh
 echo "_____________________________________________ END"

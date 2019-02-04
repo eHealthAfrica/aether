@@ -53,7 +53,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='project',
             name='name',
-            field=models.TextField(blank=True, default='', null=True, verbose_name='name'),
+            field=models.TextField(null=True, blank=True, default='', verbose_name='name'),
         ),
         migrations.AlterField(
             model_name='project',
@@ -68,7 +68,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='xform',
             name='avro_schema',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, editable=False, null=True, verbose_name='AVRO schema'),
+            field=django.contrib.postgres.fields.jsonb.JSONField(null=True, blank=True, editable=False, verbose_name='AVRO schema'),
         ),
         migrations.AlterField(
             model_name='xform',
@@ -78,7 +78,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='xform',
             name='description',
-            field=models.TextField(blank=True, default='', null=True, verbose_name='xForm description'),
+            field=models.TextField(null=True, blank=True, default='', verbose_name='xForm description'),
         ),
         migrations.AlterField(
             model_name='xform',
