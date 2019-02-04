@@ -125,28 +125,28 @@ TEMPLATES = [
 # ------------------------------------------------------------------------------
 
 REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': (
+    'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
         'aether.common.drf.renderers.CustomBrowsableAPIRenderer',
         'aether.common.drf.renderers.CustomAdminRenderer',
-    ),
-    'DEFAULT_PARSER_CLASSES': (
+    ],
+    'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
         'rest_framework.parsers.FormParser',
         'rest_framework.parsers.MultiPartParser',
-    ),
-    'DEFAULT_AUTHENTICATION_CLASSES': (
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.TokenAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
-    ),
-    'DEFAULT_FILTER_BACKENDS': (
+    ],
+    'DEFAULT_FILTER_BACKENDS': [
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
-    ),
+    ],
     'DEFAULT_PAGINATION_CLASS': 'aether.common.drf.pagination.CustomPagination',
     'PAGE_SIZE': int(os.environ.get('PAGE_SIZE', 10)),
     'MAX_PAGE_SIZE': int(os.environ.get('MAX_PAGE_SIZE', 5000)),
@@ -280,6 +280,25 @@ else:
 
     LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login.html')
     LOGGED_OUT_TEMPLATE = os.environ.get('LOGGED_OUT_TEMPLATE', 'aether/logged_out.html')
+
+
+# Multitenancy Configuration
+# ------------------------------------------------------------------------------
+
+MULTITENANCY = bool(os.environ.get('MULTITENANCY'))
+if MULTITENANCY:
+    REALM_COOKIE = os.environ.get('REALM_COOKIE', 'aether-realm')
+
+    MIGRATION_MODULES = {
+        'multitenancy': 'aether.common.multitenancy.migrations',
+    }
+    REST_FRAMEWORK['DEFAULT_PERMISSION_CLASSES'] = [
+        'aether.common.multitenancy.utils.IsAccessibleByRealm',
+    ]
+
+else:
+    MIGRATION_MODULES = {}
+    logger.info('No multitenancy enabled!')
 
 
 # Security Configuration

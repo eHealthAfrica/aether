@@ -115,9 +115,15 @@ services:
       EXPORT_HEADER_SEPARATOR: "/"
       EXPORT_HEADER_SHORTEN: "no"
 
+      LOGGING_FORMATTER: verbose
+      MULTITENANCY: "true"
+      HTML_SELECT_CUTOFF: 10
+
       WEB_SERVER_PORT: 8000
     volumes:
       - ./aether-kernel:/code
+
+      - ./aether-common-module/aether/common:/code/aether/common
 
       # app version
       - ./tmp/VERSION:/code/VERSION
@@ -170,6 +176,8 @@ services:
       PGPASSWORD: ${ODK_DB_PASSWORD}
       PGPORT: 5432
       PGUSER: postgres
+
+      LOGGING_FORMATTER: verbose
 
       # behind ngnix
       WEB_SERVER_PORT: 8002
@@ -242,6 +250,8 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_PORT: 6379
 
+      LOGGING_FORMATTER: verbose
+
       WEB_SERVER_PORT: 8006
     volumes: &sync-volumes
       - ./aether-couchdb-sync-module:/code
@@ -298,6 +308,8 @@ services:
       PGPASSWORD: ${UI_DB_PASSWORD}
       PGPORT: 5432
       PGUSER: postgres
+
+      LOGGING_FORMATTER: verbose
 
       # use this value with "start_dev" command and webpack otherwise comment it out
       STATIC_ROOT: /code/aether/ui/assets/bundles

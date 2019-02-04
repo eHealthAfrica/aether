@@ -24,6 +24,8 @@ services:
       PGPORT: 9999
       DB_NAME: common
 
+      MULTITENANCY: "true"
+
       # required by kernel module
       AETHER_KERNEL_URL_TEST: http://kernel-test
       AETHER_KERNEL_TOKEN: kernel_secret_token

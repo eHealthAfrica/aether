@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.conf import settings
 from django.db.models import Count, Min, Max, TextField, Q, Case, When
 from django.db.models.functions import Cast
 from django.shortcuts import get_object_or_404
@@ -31,6 +32,8 @@ from rest_framework.decorators import (
     renderer_classes,
 )
 from rest_framework.renderers import JSONRenderer
+
+from aether.common.multitenancy.utils import MtViewSetMixin, filter_by_realm
 
 from .avro_tools import extract_jsonpaths_and_docs
 from .constants import LINKED_DATA_MAX_DEPTH
@@ -50,7 +53,7 @@ from . import (
 )
 
 
-class ProjectViewSet(viewsets.ModelViewSet):
+class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectSerializer
     filter_class = filters.ProjectFilter
@@ -236,6 +239,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
             mappings=data.get('mappings', []),
         )
 
+        project = get_object_or_404(models.Project, pk=results['project'])
+        project.save_mt(request)
+
         return Response(data=results)
 
     def __upsert_schemas(self, request, pk=None):
@@ -291,25 +297,31 @@ class ProjectViewSet(viewsets.ModelViewSet):
             family=data.get('family') or pk,
         )
 
+        project = get_object_or_404(models.Project, pk=results['project'])
+        project.save_mt(request)
+
         return Response(data=results)
 
 
-class MappingSetViewSet(viewsets.ModelViewSet):
+class MappingSetViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.MappingSet.objects.all()
     serializer_class = serializers.MappingSetSerializer
     filter_class = filters.MappingSetFilter
+    mt_field = 'project__mt'
 
 
-class MappingViewSet(viewsets.ModelViewSet):
+class MappingViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.Mapping.objects.all()
     serializer_class = serializers.MappingSerializer
     filter_class = filters.MappingFilter
+    mt_field = 'mappingset__project__mt'
 
 
-class SubmissionViewSet(ExporterViewSet):
+class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
     queryset = models.Submission.objects.all()
     serializer_class = serializers.SubmissionSerializer
     filter_class = filters.SubmissionFilter
+    mt_field = 'mappingset__project__mt'
 
     @action(detail=True, methods=['patch'])
     def extract(self, request, pk, *args, **kwargs):
@@ -339,10 +351,11 @@ class SubmissionViewSet(ExporterViewSet):
             )
 
 
-class AttachmentViewSet(viewsets.ModelViewSet):
+class AttachmentViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.Attachment.objects.all()
     serializer_class = serializers.AttachmentSerializer
     filter_class = filters.AttachmentFilter
+    mt_field = 'submission__mappingset__project__mt'
 
 
 class SchemaViewSet(viewsets.ModelViewSet):
@@ -376,10 +389,11 @@ class SchemaViewSet(viewsets.ModelViewSet):
         })
 
 
-class ProjectSchemaViewSet(viewsets.ModelViewSet):
+class ProjectSchemaViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.ProjectSchema.objects.all()
     serializer_class = serializers.ProjectSchemaSerializer
     filter_class = filters.ProjectSchemaFilter
+    mt_field = 'project__mt'
 
     @action(detail=True, methods=['get'])
     def skeleton(self, request, pk=None, *args, **kwargs):
@@ -408,10 +422,11 @@ class ProjectSchemaViewSet(viewsets.ModelViewSet):
         })
 
 
-class EntityViewSet(ExporterViewSet):
+class EntityViewSet(MtViewSetMixin, ExporterViewSet):
     queryset = models.Entity.objects.all()
     serializer_class = serializers.EntitySerializer
     filter_class = filters.EntityFilter
+    mt_field = 'project__mt'
 
     # Exporter required fields
     schema_field = 'projectschema__schema__definition'
@@ -467,13 +482,14 @@ class EntityViewSet(ExporterViewSet):
         return Response(self.serializer_class(instance, context={'request': request}).data)
 
 
-class SubmissionStatsMixin(object):
+class SubmissionStatsMixin(MtViewSetMixin):
 
     search_fields = ('name',)
     ordering_fields = ('name', 'created',)
     ordering = ('name',)
 
     def get_queryset(self):
+        qs = super(SubmissionStatsMixin, self).get_queryset()
         entities_count = Count('submissions__entities__id', distinct=True)
 
         entities_filter = None
@@ -509,25 +525,26 @@ class SubmissionStatsMixin(object):
             #     filter=entities_filter,
             # )
 
-        return self.model.objects \
-                   .values('id', 'name', 'created') \
-                   .annotate(
-                       first_submission=Min('submissions__created'),
-                       last_submission=Max('submissions__created'),
-                       submissions_count=Count('submissions__id', distinct=True),
-                       attachments_count=Count('submissions__attachments__id', distinct=True),
-                       entities_count=entities_count,
-                   )
+        return qs.values('id', 'name', 'created') \
+                 .annotate(
+                     first_submission=Min('submissions__created'),
+                     last_submission=Max('submissions__created'),
+                     submissions_count=Count('submissions__id', distinct=True),
+                     attachments_count=Count('submissions__attachments__id', distinct=True),
+                     entities_count=entities_count,
+                 )
 
 
 class ProjectStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
-    model = models.Project  # required by SubmissionStatsMixin
+    queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectStatsSerializer
+    mt_field = 'mt'
 
 
 class MappingSetStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
-    model = models.MappingSet  # required by SubmissionStatsMixin
+    queryset = models.MappingSet.objects.all()
     serializer_class = serializers.MappingSetStatsSerializer
+    mt_field = 'project__mt'
 
 
 SchemaView = get_schema_view(

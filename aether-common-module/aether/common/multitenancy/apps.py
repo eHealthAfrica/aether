@@ -16,32 +16,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-'''
-This settings are only used for testing purposes.
-The app that includes this module should have its own settings.
-'''
-
-from aether.common.conf.settings import *  # noqa
-from aether.common.conf.settings import (
-    INSTALLED_APPS,
-    MULTITENANCY,
-)
+from django.apps import AppConfig
 
 
-ROOT_URLCONF = 'aether.common.urls'
+class Config(AppConfig):
 
-
-if MULTITENANCY:
-    INSTALLED_APPS += ['aether.common.multitenancy', ]
-    MULTITENANCY_MODEL = 'multitenancy.MtInstance'  # itself ;-)
-
-
-# Database Configuration
-# ------------------------------------------------------------------------------
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:',
-    },
-}
+    name = 'aether.common.multitenancy'
+    verbose_name = 'Aether multitenancy'

@@ -16,32 +16,31 @@
 # specific language governing permissions and limitations
 # under the License.
 
-'''
-This settings are only used for testing purposes.
-The app that includes this module should have its own settings.
-'''
-
-from aether.common.conf.settings import *  # noqa
-from aether.common.conf.settings import (
-    INSTALLED_APPS,
-    MULTITENANCY,
-)
+from django.conf import settings
+from django.db import models
+from django.utils.translation import ugettext as _
 
 
-ROOT_URLCONF = 'aether.common.urls'
+class MtInstance(models.Model):
 
+    instance = models.OneToOneField(
+        related_name='mt',
+        to=settings.MULTITENANCY_MODEL,
+        verbose_name=_('instance'),
+    )
 
-if MULTITENANCY:
-    INSTALLED_APPS += ['aether.common.multitenancy', ]
-    MULTITENANCY_MODEL = 'multitenancy.MtInstance'  # itself ;-)
+    realm = models.TextField(
+        verbose_name=_('realm'),
+    )
 
+    def __str__(self):
+        return str(self.instance)
 
-# Database Configuration
-# ------------------------------------------------------------------------------
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:',
-    },
-}
+    class Meta:
+        app_label = 'multitenancy'
+        ordering = ['instance']
+        indexes = [
+            models.Index(fields=['realm']),
+        ]
+        verbose_name = _('instance by realm')
+        verbose_name_plural = _('instances by realm')
