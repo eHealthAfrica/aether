@@ -175,13 +175,18 @@ def get_entity_requirements(entities, field_mappings):
         entity_requirements = {}
         # find mappings that start with the entity name
         # and return a list with the entity_type ( and dot ) removed from the destination
-        matching_mappings = [[src, dst.split(entity_type+'.')[1]]
+        start_string = entity_type+'.'
+        matching_mappings = [[src, dst.split(start_string)[1]]
                              for src, dst in field_mappings
-                             if dst.startswith(entity_type+'.')]
+                             if dst.startswith(start_string)]
         for field in entity_definition:
             # filter again to find sources pertaining to this particular field in this entity
+            # can match an sub-element in this field.
+            # "name.last" would pertain to the "name" field.
             field_sources = [src for src,
-                             dst in matching_mappings if dst == field]
+                             dst in matching_mappings if
+                             (dst == field) or
+                             (dst.split('.')[0] == field)]
             entity_requirements[field] = field_sources
         all_requirements[entity_type] = entity_requirements
     return all_requirements
