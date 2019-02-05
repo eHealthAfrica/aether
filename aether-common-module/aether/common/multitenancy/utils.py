@@ -19,8 +19,7 @@
 from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Manager, Model, F
-from django.db.models.query import QuerySet
+from django.db.models import Model, F
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import PrimaryKeyRelatedField, ModelSerializer
@@ -29,7 +28,7 @@ from .models import MtInstance
 
 
 def is_accessible_by_realm(request, obj):
-    if not settings.MULTITENANCY or request.user.is_staff:
+    if not settings.MULTITENANCY:
         return True
 
     # Object instance should have a method named `is_accessible`.
@@ -41,37 +40,27 @@ def is_accessible_by_realm(request, obj):
 
 
 def filter_by_realm(request, data, mt_field='mt'):
-    # only returns the instances linked to the current realm
-
-    if not settings.MULTITENANCY or request.user.is_staff:
+    if not settings.MULTITENANCY:
         return data
 
+    # only returns the instances linked to the current realm
     realm = request.COOKIES.get(settings.REALM_COOKIE, 'default')
-    if isinstance(data, list):
-        return [
-            item
-            for item in data
-            if item.is_accessible(realm)
-        ]
-
-    elif isinstance(data, Model):
-        return data if data.is_accessible(realm) else None
-
-    elif isinstance(data, (QuerySet, Manager)):
-        return data.annotate(mt_realm=F(f'{mt_field}__realm')).filter(mt_realm=realm)
-
-    return data
+    return data.annotate(mt_realm=F(f'{mt_field}__realm')).filter(mt_realm=realm)
 
 
 def assign_to_realm(request, instance):
+    if not settings.MULTITENANCY:
+        return False
+
     # assign to current realm
-    if settings.MULTITENANCY:
-        realm = request.COOKIES.get(settings.REALM_COOKIE, 'default')
-        try:
-            instance.mt.realm = realm
-            instance.mt.save()
-        except ObjectDoesNotExist:
-            MtInstance.objects.create(instance=instance, realm=realm)
+    realm = request.COOKIES.get(settings.REALM_COOKIE, 'default')
+    try:
+        instance.mt.realm = realm
+        instance.mt.save()
+    except ObjectDoesNotExist:
+        MtInstance.objects.create(instance=instance, realm=realm)
+
+    return True
 
 
 class IsAccessibleByRealm(IsAuthenticated):

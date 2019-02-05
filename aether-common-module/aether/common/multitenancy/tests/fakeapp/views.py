@@ -16,16 +16,27 @@
 # specific language governing permissions and limitations
 # under the License.
 
-'''
-These urls are only used for testing purposes.
-The app that includes this module should have its own urls list.
-'''
+from rest_framework.viewsets import ModelViewSet
 
-from django.conf.urls import include, url
+from aether.common.multitenancy.utils import MtViewSetMixin
 
-from aether.common.conf.urls import generate_urlpatterns
+from aether.common.multitenancy.tests.fakeapp.models import (
+    TestModel,
+    TestChildModel,
+)
+from aether.common.multitenancy.tests.fakeapp.serializers import (
+    TestModelSerializer,
+    TestChildModelSerializer,
+)
 
-urlpatterns = generate_urlpatterns(kernel=True, token=True)
-urlpatterns += [
-    url(r'^test', include('aether.common.multitenancy.tests.fakeapp.urls')),
-]
+
+class TestModelViewSet(MtViewSetMixin, ModelViewSet):
+    queryset = TestModel.objects.order_by('name')
+    serializer_class = TestModelSerializer
+    # mt_field = 'mt'  # not needed in this case
+
+
+class TestChildModelViewSet(MtViewSetMixin, ModelViewSet):
+    queryset = TestChildModel.objects.order_by('name')
+    serializer_class = TestChildModelSerializer
+    mt_field = 'parent__mt'

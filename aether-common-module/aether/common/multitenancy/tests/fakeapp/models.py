@@ -16,16 +16,31 @@
 # specific language governing permissions and limitations
 # under the License.
 
-'''
-These urls are only used for testing purposes.
-The app that includes this module should have its own urls list.
-'''
+from django.db import models
 
-from django.conf.urls import include, url
+from aether.common.multitenancy.utils import MtModelAbstract
 
-from aether.common.conf.urls import generate_urlpatterns
 
-urlpatterns = generate_urlpatterns(kernel=True, token=True)
-urlpatterns += [
-    url(r'^test', include('aether.common.multitenancy.tests.fakeapp.urls')),
-]
+class TestModel(MtModelAbstract):
+    name = models.TextField()
+
+    class Meta:
+        app_label = 'fakeapp'
+
+
+class TestChildModel(models.Model):
+    name = models.TextField()
+    parent = models.ForeignKey(to=TestModel, on_delete=models.CASCADE, related_name='children')
+
+    def is_accessible(self, realm):
+        return self.parent.is_accessible(realm)
+
+    class Meta:
+        app_label = 'fakeapp'
+
+
+class TestNoMtModel(models.Model):
+    name = models.TextField()
+
+    class Meta:
+        app_label = 'fakeapp'

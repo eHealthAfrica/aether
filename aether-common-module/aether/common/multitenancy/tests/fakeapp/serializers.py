@@ -16,16 +16,26 @@
 # specific language governing permissions and limitations
 # under the License.
 
-'''
-These urls are only used for testing purposes.
-The app that includes this module should have its own urls list.
-'''
+from rest_framework.serializers import ModelSerializer
 
-from django.conf.urls import include, url
+from aether.common.multitenancy.utils import MtPrimaryKeyRelatedField, MtModelSerializer
 
-from aether.common.conf.urls import generate_urlpatterns
+from .models import TestModel, TestChildModel
 
-urlpatterns = generate_urlpatterns(kernel=True, token=True)
-urlpatterns += [
-    url(r'^test', include('aether.common.multitenancy.tests.fakeapp.urls')),
-]
+
+class TestModelSerializer(MtModelSerializer):
+
+    class Meta:
+        model = TestModel
+        fields = '__all__'
+
+
+class TestChildModelSerializer(ModelSerializer):
+
+    parent = MtPrimaryKeyRelatedField(
+        queryset=TestModel.objects.all(),
+    )
+
+    class Meta:
+        model = TestChildModel
+        fields = '__all__'

@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.AddIndex(
-            model_name='MtInstance',
-            index=models.Index(fields=['realm'], name='multitenanc_realm_7c3200_idx'),
+            model_name='mtinstance',
+            index=models.Index(fields=['realm'], name='multitenanc_realm_4d6500_idx'),
         ),
     ]

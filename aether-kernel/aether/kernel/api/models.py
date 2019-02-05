@@ -177,7 +177,6 @@ class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract, MtMo
         verbose_name_plural = _('projects')
 
 
-
 class ProjectChildAbstract(KernelAbstract):
 
     def is_accessible(self, realm):

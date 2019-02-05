@@ -16,7 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.conf import settings
 from django.db.models import Count, Min, Max, TextField, Q, Case, When
 from django.db.models.functions import Cast
 from django.shortcuts import get_object_or_404
@@ -33,7 +32,7 @@ from rest_framework.decorators import (
 )
 from rest_framework.renderers import JSONRenderer
 
-from aether.common.multitenancy.utils import MtViewSetMixin, filter_by_realm
+from aether.common.multitenancy.utils import MtViewSetMixin
 
 from .avro_tools import extract_jsonpaths_and_docs
 from .constants import LINKED_DATA_MAX_DEPTH
