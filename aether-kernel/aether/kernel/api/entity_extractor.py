@@ -177,7 +177,7 @@ def get_entity_requirements(entities, field_mappings):
         entity_requirements = {}
         # find mappings that start with the entity name
         # and return a list with the entity_type ( and dot ) removed from the destination
-        start_string = entity_type+'.'
+        start_string = entity_type + '.'
         matching_mappings = [[src, dst.split(start_string)[1]]
                              for src, dst in field_mappings
                              if dst.startswith(start_string)]
@@ -481,8 +481,11 @@ def extract_entity(entity_type, entities, requirements, data, entity_stub):
     # make empty stubs for our expected outputs. One for each member
     # identified in count process
     entities[entity_type] = [
-        {field: None for field in entity_stub.keys()
-            if field in requirements.get(entity_type)}  # make sure there are mappings
+        {
+            field: None
+            for field in entity_stub.keys()
+            if field in requirements.get(entity_type)  # make sure there are mappings
+        }
         for i in range(count)]
 
     # iterate required fields, resolve paths and copy data to stubs

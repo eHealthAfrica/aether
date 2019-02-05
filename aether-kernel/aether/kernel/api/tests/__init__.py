@@ -91,31 +91,31 @@ EXAMPLE_SCHEMA = {
 }
 
 EXAMPLE_NESTED_SCHEMA = {
-  'type': 'record',
-  'fields': [
-    {
-      'name': 'name',
-      'type': 'string'
-    },
-    {
-      'name': 'location',
-      'type': {
-        'type': 'record',
-        'fields': [
-          {
-            'name': 'lat',
-            'type': 'int'
-          },
-          {
-            'name': 'lng',
-            'type': 'int'
-          }
-        ],
-        'name': 'Nested'
-      }
-    }
-  ],
-  'name': 'Nested'
+    'type': 'record',
+    'fields': [
+        {
+            'name': 'name',
+            'type': 'string'
+        },
+        {
+            'name': 'location',
+            'type': {
+                'type': 'record',
+                'fields': [
+                    {
+                        'name': 'lat',
+                        'type': 'int'
+                    },
+                    {
+                        'name': 'lng',
+                        'type': 'int'
+                    }
+                ],
+                'name': 'Nested'
+            }
+        }
+    ],
+    'name': 'Nested'
 }
 
 EXAMPLE_SOURCE_DATA = {
@@ -182,22 +182,22 @@ EXAMPLE_NESTED_SOURCE_DATA = {
 
 
 EXAMPLE_DATA_FOR_NESTED_SCHEMA = [
-        {
-            'name': 'a',
-            'lat': 10,
-            'lng': 20
-        },
-        {
-            'name': 'b',
-            'lat': 11,
-            'lng': 21
-        },
-        {
-            'name': 'c',
-            'lat': 12,
-            'lng': 22
-        },
-    ]
+    {
+        'name': 'a',
+        'lat': 10,
+        'lng': 20
+    },
+    {
+        'name': 'b',
+        'lat': 11,
+        'lng': 21
+    },
+    {
+        'name': 'c',
+        'lat': 12,
+        'lng': 22
+    },
+]
 
 
 EXAMPLE_PARTIAL_WILDCARDS = {
@@ -252,29 +252,29 @@ EXAMPLE_REQUIREMENTS_ARRAY_BASE = {
 
 EXAMPLE_ENTITY_NESTED = {
     'Nested': [
-            {
-                'name': 'a',
-                'location': {
-                    'lat': 10,
-                    'lng': 20
-                }
-            },
-            {
-                'name': 'b',
-                'location': {
-                    'lat': 11,
-                    'lng': 21
-                }
-            },
-            {
-                'name': 'c',
-                'location': {
-                    'lat': 12,
-                    'lng': 22
-                }
-            },
-        ]
-    }
+        {
+            'name': 'a',
+            'location': {
+                'lat': 10,
+                'lng': 20
+            }
+        },
+        {
+            'name': 'b',
+            'location': {
+                'lat': 11,
+                'lng': 21
+            }
+        },
+        {
+            'name': 'c',
+            'location': {
+                'lat': 12,
+                'lng': 22
+            }
+        },
+    ]
+}
 
 EXAMPLE_ENTITY = {
     'Person': [
@@ -299,7 +299,11 @@ EXAMPLE_ENTITY = {
     ],
 }
 
-EXAMPLE_ENTITY_DEFINITION = {'Person': ['id', '_rev', 'name', 'dob', 'villageID']}
+EXAMPLE_ENTITY_DEFINITION = {
+    'Person': [
+        'id', '_rev', 'name', 'dob', 'villageID'
+    ]
+}
 
 EXAMPLE_FIELD_MAPPINGS = [
     ['#!uuid', 'Person.id'],
