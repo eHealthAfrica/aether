@@ -25,7 +25,6 @@ from aether.common.conf.settings import *  # noqa
 from aether.common.conf.settings import (
     INSTALLED_APPS,
     MIGRATION_MODULES,
-    MULTITENANCY,
 )
 
 
