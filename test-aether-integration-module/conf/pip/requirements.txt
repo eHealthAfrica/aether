@@ -4,29 +4,12 @@
 #                                                                              #
 ################################################################################
 
-aet.consumer>=0.9.1
+aet.consumer
 aether.client
 
-atomicwrites==1.2.1
-attrs==18.2.0
-certifi==2018.11.29
-chardet==3.0.4
-coverage==4.5.2
-entrypoints==0.3
-flake8==3.7.1
-idna==2.8
-kafka==1.3.5
-mccabe==0.6.1
-mock==2.0.0
-more-itertools==5.0.0
-pbr==5.1.1
-pluggy==0.8.1
-py==1.7.0
-pycodestyle==2.5.0
-pyflakes==2.1.0
-pytest==4.1.1
-pytest-runner==4.2
-requests==2.21.0
-six==1.12.0
-spavro==1.1.21
-urllib3==1.24.1
+kafka
+requests
+
+flake8
+pytest
+pytest-runner

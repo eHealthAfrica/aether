@@ -36,15 +36,10 @@ function wait_for_kernel() {
 }
 
 DC_TEST="docker-compose -f docker-compose-test.yml"
+export TEST_KERNEL_DB_NAME=test-kernel-integration
 
-
+./scripts/kill_all.sh
 echo "_____________________________________________ TESTING"
-$DC_TEST kill
-echo "_____________________________________________ TESTING PRODUCER"
-./scripts/test_container.sh producer
-echo "_____________________________________________ PRODUCER OK..."
-
-$DC_TEST kill
 
 echo "_____________________________________________ Starting Integration Tests"
 
@@ -75,5 +70,6 @@ $DC_TEST run --no-deps kernel-test eval python /code/sql/create_readonly_user.py
 build_container integration
 $DC_TEST run --no-deps integration-test test
 echo "_____________________________________________ Integration OK..."
+
 ./scripts/kill_all.sh
 echo "_____________________________________________ END"
