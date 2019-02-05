@@ -32,12 +32,15 @@ class ModelsTests(TransactionTestCase):
 
     def test_models(self):
 
+        REALM = 'testing'
+
         project = models.Project.objects.create(
             revision='rev 1',
             name='a project name',
         )
         self.assertEqual(str(project), project.name)
         self.assertNotEqual(models.Project.objects.count(), 0)
+        self.assertFalse(project.is_accessible(REALM))
 
         schema = models.Schema.objects.create(
             name='sample schema',
@@ -60,6 +63,8 @@ class ModelsTests(TransactionTestCase):
         )
         self.assertEqual(str(projectschema), projectschema.name)
         self.assertNotEqual(models.ProjectSchema.objects.count(), 0)
+        self.assertIsNone(projectschema.revision)
+        self.assertFalse(projectschema.is_accessible(REALM))
 
         mappingset = models.MappingSet.objects.create(
             revision='a sample revision',
@@ -73,6 +78,7 @@ class ModelsTests(TransactionTestCase):
         self.assertEqual(str(mappingset.project), str(project))
         self.assertIsNotNone(mappingset.input_prettified)
         self.assertIsNotNone(mappingset.schema_prettified)
+        self.assertFalse(mappingset.is_accessible(REALM))
 
         mapping = models.Mapping.objects.create(
             name='sample mapping',
@@ -84,6 +90,7 @@ class ModelsTests(TransactionTestCase):
         self.assertNotEqual(models.Mapping.objects.count(), 0)
         self.assertIsNotNone(mapping.definition_prettified)
         self.assertEqual(mapping.projectschemas.count(), 0, 'No entities in definition')
+        self.assertFalse(mapping.is_accessible(REALM))
 
         mapping_definition = dict(EXAMPLE_MAPPING)
         mapping_definition['entities']['Person'] = str(projectschema.pk)
@@ -108,6 +115,7 @@ class ModelsTests(TransactionTestCase):
         self.assertEqual(str(submission), str(submission.id))
         self.assertEqual(submission.project, project, 'submission inherits mapping project')
         self.assertEqual(submission.name, 'a project name-a sample mapping set')
+        self.assertFalse(submission.is_accessible(REALM))
 
         attachment = models.Attachment.objects.create(
             submission=submission,
@@ -117,7 +125,10 @@ class ModelsTests(TransactionTestCase):
         self.assertEqual(attachment.name, 'sample.txt')
         self.assertEqual(attachment.md5sum, '900150983cd24fb0d6963f7d28e17f72')
         self.assertEqual(attachment.submission_revision, submission.revision)
+        self.assertIsNone(attachment.revision)
+        self.assertEqual(attachment.project, submission.project)
         self.assertTrue(attachment.attachment_file_url.endswith(attachment.attachment_file.url))
+        self.assertFalse(attachment.is_accessible(REALM))
 
         attachment_2 = models.Attachment.objects.create(
             submission=submission,
@@ -156,6 +167,7 @@ class ModelsTests(TransactionTestCase):
         self.assertEqual(entity.name, f'{project.name}-{schema.schema_name}')
         self.assertEqual(entity.mapping_revision, mapping.revision,
                          'entity takes mapping revision if missing')
+        self.assertFalse(entity.is_accessible(REALM))
 
         project_2 = models.Project.objects.create(
             revision='rev 1',

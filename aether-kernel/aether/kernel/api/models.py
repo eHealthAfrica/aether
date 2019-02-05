@@ -180,7 +180,7 @@ class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract, MtMo
 class ProjectChildAbstract(KernelAbstract):
 
     def is_accessible(self, realm):
-        return self.project.is_accessible(realm)
+        return self.project.is_accessible(realm) if self.project else False
 
     class Meta:
         abstract = True
