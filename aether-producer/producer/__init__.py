@@ -272,7 +272,7 @@ class ProducerManager(object):
                                          .get('log_level', 'DEBUG'))
         self.logger.setLevel(log_level)
         # self.logger.setLevel(logging.INFO)
-        if log_level is "DEBUG":
+        if log_level == "DEBUG":
             self.app.debug = True
         self.app.config['JSONIFY_PRETTYPRINT_REGULAR'] = self.settings \
             .get('flask_settings', {}) \

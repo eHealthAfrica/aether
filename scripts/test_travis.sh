@@ -30,6 +30,7 @@ case "$1" in
 
     integration)
         ./scripts/test_integration_requires.sh travis
+        ./scripts/test_container.sh producer
         ./scripts/test_integration.sh
     ;;
 
