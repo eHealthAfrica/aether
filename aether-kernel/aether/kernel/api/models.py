@@ -560,11 +560,16 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
         blank=True,
         verbose_name=_('mapping'),
     )
-    mapping_revision = models.TextField(null=True, blank=True, verbose_name=_('mapping revision'))
+    mapping_revision = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name=_('mapping revision'),
+    )
     projectschema = models.ForeignKey(
         to=ProjectSchema,
         on_delete=models.SET_NULL,
-        null=True, blank=True,
+        null=True,
+        blank=True,
         verbose_name=_('project schema'),
     )
 

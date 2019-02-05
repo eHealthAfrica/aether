@@ -149,10 +149,11 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     project = MtPrimaryKeyRelatedField(
         queryset=models.Project.objects.all(),
+        required=False,
     )
     mappingset = MtPrimaryKeyRelatedField(
         queryset=models.MappingSet.objects.all(),
-        mt_field='project__mt'
+        mt_field='project__mt',
     )
 
     class Meta:
@@ -203,10 +204,11 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     project = MtPrimaryKeyRelatedField(
         queryset=models.Project.objects.all(),
+        required=False,
     )
     mappingset = MtPrimaryKeyRelatedField(
         queryset=models.MappingSet.objects.all(),
-        mt_field='project__mt'
+        mt_field='project__mt',
     )
 
     def create(self, validated_data):
@@ -238,7 +240,7 @@ class AttachmentSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     submission = MtPrimaryKeyRelatedField(
         queryset=models.Submission.objects.all(),
-        mt_field='mappingset__project__mt'
+        mt_field='mappingset__project__mt',
     )
 
     class Meta:
@@ -332,18 +334,22 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     project = MtPrimaryKeyRelatedField(
         queryset=models.Project.objects.all(),
-    )
-    mapping = MtPrimaryKeyRelatedField(
-        queryset=models.Mapping.objects.all(),
-        mt_field='mappingset__project__mt'
+        required=False,
     )
     submission = MtPrimaryKeyRelatedField(
         queryset=models.Submission.objects.all(),
-        mt_field='mappingset__project__mt'
+        mt_field='mappingset__project__mt',
+        required=False,
+    )
+    mapping = MtPrimaryKeyRelatedField(
+        queryset=models.Mapping.objects.all(),
+        mt_field='mappingset__project__mt',
+        required=False,
     )
     projectschema = MtPrimaryKeyRelatedField(
         queryset=models.ProjectSchema.objects.all(),
-        mt_field='project__mt'
+        mt_field='project__mt',
+        required=False,
     )
 
     def create(self, validated_data):

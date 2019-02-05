@@ -226,6 +226,7 @@ class SerializersTests(TransactionTestCase):
             data={
                 'submission': submission.data['id'],
                 'projectschema': projectschema.data['id'],
+                'mapping': mapping.data['id'],
                 'status': 'Pending Approval',
                 'payload': EXAMPLE_SOURCE_DATA_ENTITY,
             },
