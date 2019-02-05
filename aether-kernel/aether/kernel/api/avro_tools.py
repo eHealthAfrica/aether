@@ -23,6 +23,7 @@ for details.
 '''
 
 import random
+import re
 
 from collections import namedtuple
 from copy import deepcopy
@@ -201,6 +202,15 @@ def format_validation_error(error):
     )
 
 
+def jsonpath_segment_count(error):
+    '''
+    This function can be used to sort a list of errors by "depth";
+    an error with a path value like `Test.a.b.c[0].d` will return
+    a number greater than that of e.g. `Test.a.b.c`.
+    '''
+    return len(re.findall(r'[\.\[]', error.path))
+
+
 class AvroValidator(object):
     '''
     AvroValidator validates an avro datum (value) against a schema and
@@ -362,20 +372,14 @@ class AvroValidator(object):
     def validate_union(self, schema, datum, path):
         '''
         Validate ``datum`` against a 'union' schema.
-        Any errors encountered when validating subschemas are discarded.
-        Instead, we append an error indicating that the validation of the union
-        itself failed. The advantage of this approach is that **most** error
-        messages will be more helpful; instead of several separate error
-        messages, each indicating validation failure in a subschema, we will
-        get a single error message indicating that the expected type was a
-        union of several types. The disadvantage is that we lose some error
-        details for complex types.
+
+        If ``schema`` only contains primitive types, subschema errors are
+        discarded.
         '''
         subschema_errors = []
         for subschema in schema.schemas:
-            # Any errors encountered during subschema validation will be
-            # discarded, so we need a separate validation state for each
-            # subschema.
+            # Any errors encountered during subschema validation can end up being
+            # discarded, so we need a separate validation state for each subschema.
             validator = AvroValidator(subschema, datum, path)
             if validator.errors:
                 subschema_errors.extend(validator.errors)
@@ -385,7 +389,42 @@ class AvroValidator(object):
                 subschema_errors = []
                 break
         if subschema_errors:
-            self.on_error(schema, datum, path)
+            if all([error.expected in PRIMITIVE_TYPES for error in subschema_errors]):
+                # If every subschema is of a primitive type, add their parent schema to
+                # `self.errors` via `self.on_error()`.
+                #
+                # This gives us meaningful error messages for union types; when validating
+                # the datum
+                #
+                # {"a": 1}
+                #
+                # against the schema
+                #
+                # {
+                #     "type": "record",
+                #     "name": "test",
+                #     "fields": [
+                #         {
+                #             "name": "a",
+                #             "type": ["null", "string"]
+                #         }
+                #     ]
+                # }
+                #
+                # the error will indicate that the expected type was "['null', 'string']".
+                self.on_error(schema, datum, path)
+            else:
+                # Otherwise, extend `self.errors` with the "most relevant" subschema error.
+                # "Most relevant" means, in most cases, the subschema closest to the invalid
+                # datum.
+                # This makes it possible to display more detailed errors for nullable complex
+                # types.
+                sorted_errors = sorted(
+                    subschema_errors,
+                    key=jsonpath_segment_count,
+                    reverse=True,
+                )[0:1]
+                self.errors.extend(sorted_errors)
             return False
         return True
 
@@ -443,7 +482,8 @@ def validate(schema, data):
     '''
     Wrap AvroValidator in a function. Returns an instance of AvroValidator.
     '''
-    return AvroValidator(schema, data)
+    result = AvroValidator(schema, data)
+    return result
 
 
 def avro_schema_to_passthrough_artefacts(item_id, avro_schema):
