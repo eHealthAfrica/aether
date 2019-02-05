@@ -59,6 +59,33 @@ def validate_getter(obj, path):
     return Failure(path, NO_MATCH)
 
 
+def validate_existence_in_fields(field_name, path, definition):
+    # looks an a schema object with property fields
+    # if field_name matches one of the properties, we mark success
+    # if a field_name is a dotted match child.name -> child
+    # we recurse and look for a nested object
+    for field in definition['fields']:
+        if field['name'] == field_name:
+            # field exists in this level
+            return Success(path, [])
+        else:
+            try:
+                # Test for base path matches
+                # and recurse if required
+                field_parts = field_name.split('.')
+                if field['name'] == field_parts[0]:
+                    child = [t for t in field.get('type', []) if isinstance(t, dict)]
+                    if not child or len(field_parts) < 2:
+                        break
+                    else:
+                        next_field_name = '.'.join(field_parts[1:])
+                        return validate_existence_in_fields(next_field_name, path, child[0])
+            except KeyError:
+                pass
+    # fail if no matches are found and no new level can be searched.
+    return Failure(path, NO_MATCH)
+
+
 def validate_setter(schemas, path):
     '''
     Validate the right side of a mapping pair ("destination").
@@ -67,7 +94,11 @@ def validate_setter(schemas, path):
     try:
         schema_name, field_name = path_segments
     except ValueError:
-        return Failure(path, INVALID_PATH)
+        try:
+            schema_name = path_segments[0]
+            field_name = '.'.join(path_segments[1:])
+        except KeyError:
+            return Failure(path, INVALID_PATH)
 
     try:
         schema_definition = schemas[schema_name]
@@ -81,11 +112,7 @@ def validate_setter(schemas, path):
         message = invalid_schema(schema_name)
         return Failure(path, message)
 
-    for field in schema_definition['fields']:
-        if field['name'] == field_name:
-            return Success(path, [])
-
-    return Failure(path, NO_MATCH)
+    return validate_existence_in_fields(field_name, path, schema_definition)
 
 
 def validate_mapping(submission_payload, entities, mapping):

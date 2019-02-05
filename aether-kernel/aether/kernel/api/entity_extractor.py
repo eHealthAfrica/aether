@@ -52,7 +52,8 @@ ENTITY_EXTRACTION_ENRICHMENT = 'aether_extractor_enrichment'
 # $.path.to[*].key_* where the matching path might be $.path.to[1].key_1
 # or with invertes position:
 # $.path.key_*.to[*].field for $.path.key_27.to[1].field
-CUSTOM_JSONPATH_WILDCARD_REGEX = re.compile(r'(\$)?(\.)?([a-zA-Z0-9_-]*(\[.*\])*\.)?[a-zA-Z0-9_-]+\*')
+CUSTOM_JSONPATH_WILDCARD_REGEX = re.compile(
+    r'(\$)?(\.)?([a-zA-Z0-9_-]*(\[.*\])*\.)?[a-zA-Z0-9_-]+\*')
 
 # RegEx for the part of a JSONPath matching the previous RegEx which is non-compliant with the
 # JSONPath spec.
@@ -139,7 +140,8 @@ def find_by_jsonpath(obj, path):
         # Perform an standard jsonpath search.
         matches = CachedParser.find(standard_jsonpath, obj)
         # filter matching jsonpathes for adherence to partial wildpath
-        matching_paths = fnmatch.filter([str(i.full_path) for i in matches], wild_path)
+        matching_paths = fnmatch.filter(
+            [str(i.full_path) for i in matches], wild_path)
         return [i for i in matches if str(i.full_path) in matching_paths]
 
     else:
@@ -183,11 +185,15 @@ def get_entity_requirements(entities, field_mappings):
             # filter again to find sources pertaining to this particular field in this entity
             # can match an sub-element in this field.
             # "name.last" would pertain to the "name" field.
-            field_sources = [src for src,
-                             dst in matching_mappings if
-                             (dst == field) or
-                             (dst.split('.')[0] == field)]
-            entity_requirements[field] = field_sources
+            field_sources = {}  # allows us to add nested fields and then add them to reqs
+            for src, dst in matching_mappings:
+                if dst == field or (dst.split('.')[0] == field):
+                    curr = field_sources.get(dst, [])
+                    curr.append(src)
+                    field_sources[dst] = curr
+
+            for _field, src in field_sources.items():
+                entity_requirements[_field] = src
         all_requirements[entity_type] = entity_requirements
     return all_requirements
 
@@ -198,6 +204,8 @@ def get_entity_stub(requirements, entity_definitions, entity_name, source_data):
     entity_stub = {k: [] for k in entity_definitions.get(entity_name)}
     # do a quick first resolution of paths to size output requirement
     for field, paths in requirements.get(entity_name).items():
+        if field not in entity_stub.keys() and len(paths) > 0:
+            entity_stub[field] = []  # add missing deep paths
         for i, path in enumerate(paths):
             # if this is a json path, we'll resolve it to see how big the result is
             if '#!' not in path:
@@ -239,7 +247,7 @@ class DeferrableAction(object):
         # Takes the entities object as an argument and attempts to assign the
         # resolved value to the proper path.
         p = self.path
-        entities[p[0]][p[1]][p[2]] = self.res
+        nest_object(entities[p[0]][p[1]], p[2], self.res)  # handle deep paths
         '''
         for loc in self.path:
             obj = obj[loc]
@@ -336,7 +344,8 @@ def resolve_entity_reference(
         if idx >= 0:
             return matches[idx].value
     if len(matches) < 1:
-        raise ValueError(_('path {} has no matches; aborting').format(entity_jsonpath))
+        raise ValueError(
+            _('path {} has no matches; aborting').format(entity_jsonpath))
     if len(matches) < 2:
         # single value
         return matches[0].value
@@ -354,6 +363,8 @@ def nest_object(obj, path, value):
         obj[path] = value
         return
     else:
+        if not obj.get(path, None):  # remove empty reference of base object
+            del obj[path]
         obj = put_nested(obj, keys, value)
         return
 
@@ -397,7 +408,8 @@ def get_or_make_uuid(entity_type, field_name, instance_number, source_data):
     base = ENTITY_EXTRACTION_ENRICHMENT
     if source_data.get(base, {}).get(entity_type, {}).get(field_name):
         try:
-            value = source_data.get(base, {}).get(entity_type).get(field_name)[instance_number]
+            value = source_data.get(base, {}).get(
+                entity_type).get(field_name)[instance_number]
         except IndexError:
             source_data[base][entity_type][field_name].append(value)
         finally:
@@ -466,7 +478,9 @@ def extract_entity(entity_type, entities, requirements, data, entity_stub):
     # make empty stubs for our expected outputs. One for each member
     # identified in count process
     entities[entity_type] = [
-        {field: None for field in entity_stub.keys()} for i in range(count)]
+        {field: None for field in entity_stub.keys()
+            if field in requirements.get(entity_type)}  # make sure there are mappings
+        for i in range(count)]
 
     # iterate required fields, resolve paths and copy data to stubs
     for field, paths in requirements.get(entity_type).items():
@@ -561,7 +575,6 @@ def extract_create_entities(submission_payload, mapping_definition, schemas):
             entity_defs,
             schemas,
         )
-
     entities = []
     for projectschema_name, entity_payloads in entity_types.items():
         for entity_payload in entity_payloads:
