@@ -45,9 +45,6 @@ wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key a
 apt-get update -qq
 apt-get -qq --yes --force-yes install $POSTGRES_PACKAGE
 
-# upgrade pip
-pip install --upgrade pip
-
 
 ################################################################################
 # last steps and cleaning
