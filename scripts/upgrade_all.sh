@@ -62,4 +62,10 @@ do
     fi
 done
 
+
+# special case
+echo "_____________________________________________ Updating producer"
+docker-compose -f docker-compose-connect.yml run --no-deps producer pip_freeze
+echo "_____________________________________________ producer updated!"
+
 ./scripts/kill_all.sh
