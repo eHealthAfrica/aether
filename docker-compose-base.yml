@@ -123,8 +123,6 @@ services:
     volumes:
       - ./aether-kernel:/code
 
-      - ./aether-common-module/aether/common:/code/aether/common
-
       # app version
       - ./tmp/VERSION:/code/VERSION
       - ./tmp/REVISION:/code/REVISION

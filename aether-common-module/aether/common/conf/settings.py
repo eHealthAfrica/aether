@@ -289,6 +289,9 @@ MULTITENANCY = bool(os.environ.get('MULTITENANCY'))
 if MULTITENANCY:
     REALM_COOKIE = os.environ.get('REALM_COOKIE', 'aether-realm')
 
+    INSTALLED_APPS += [
+        'aether.common.multitenancy',
+    ]
     MIGRATION_MODULES = {
         'multitenancy': 'aether.common.multitenancy.migrations',
     }

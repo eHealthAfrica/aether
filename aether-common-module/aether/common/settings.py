@@ -46,10 +46,8 @@ DATABASES = {
 # Multitenancy Configuration
 # ------------------------------------------------------------------------------
 
-if MULTITENANCY:
-    INSTALLED_APPS += [
-        'aether.common.multitenancy.tests.fakeapp',
-        'aether.common.multitenancy',
-    ]
-    MIGRATION_MODULES['fakeapp'] = 'aether.common.multitenancy.tests.fakeapp.migrations'
-    MULTITENANCY_MODEL = 'fakeapp.TestModel'
+INSTALLED_APPS += [
+    'aether.common.multitenancy.tests.fakeapp',
+]
+MIGRATION_MODULES['fakeapp'] = 'aether.common.multitenancy.tests.fakeapp.migrations'
+MULTITENANCY_MODEL = 'fakeapp.TestModel'

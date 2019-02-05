@@ -25,7 +25,6 @@ from aether.common.conf.settings import *  # noqa
 from aether.common.conf.settings import (
     INSTALLED_APPS,
     MIGRATION_MODULES,
-    MULTITENANCY,
     REST_FRAMEWORK,
 )
 
@@ -44,10 +43,7 @@ INSTALLED_APPS += [
 ]
 
 # In case of Mutitenancy is enabled!
-if MULTITENANCY:
-    # multitenancy comes after "aether.kernel" or the "kernel.Project" model is not ready yet
-    INSTALLED_APPS += ['aether.common.multitenancy', ]
-    MULTITENANCY_MODEL = 'kernel.Project'
+MULTITENANCY_MODEL = 'kernel.Project'
 
 MIGRATION_MODULES['kernel'] = 'aether.kernel.api.migrations'
 
