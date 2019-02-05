@@ -114,7 +114,7 @@ class PipelineList extends Component {
         } header={this.state.errorHeader} show={this.state.showError}>
           {this.state.errorMessage}
         </Modal>
-        <div className='preview-input'>
+        <div className='preview-input' onClick={this.onSelectPipeline.bind(this, pipeline)}>
           <div className='input-heading'>
             <span className='badge badge-c badge-big'>
               <i className='fas fa-file fa-sm'/>
@@ -125,7 +125,7 @@ class PipelineList extends Component {
         <div className='preview-contracts'>
 
           <div className='preview-contract'
-            onClick={() => { this.onSelectPipeline(pipeline) }}>
+            onClick={() => { this.onSelectContract(pipeline) }}>
             <h2 className='contract-heading'>{pipeline.name}</h2>
 
             <div className='contract-summaries'>
@@ -187,11 +187,17 @@ class PipelineList extends Component {
     this.props.addPipeline(newPipeline)
   }
 
-  onSelectPipeline (pipeline) {
-    this.props.selectedPipelineChanged(pipeline)
-    this.props.history.push(`/${pipeline.pipeline}/${pipeline.id}`)
+  onSelectContract (contract) {
+    this.props.selectedPipelineChanged(contract)
+    this.props.history.push(`/${contract.pipeline}/${contract.id}`)
+  }
+
+  onSelectPipeline = pipeline => {
+    this.props.selectedPipelineChanged(contract)
+    this.props.history.push(`/${contract.pipeline}/${contract.id}`)
   }
 }
+
 
 const mapStateToProps = ({ pipelines }) => ({
   pipelineList: pipelines.pipelineList,
