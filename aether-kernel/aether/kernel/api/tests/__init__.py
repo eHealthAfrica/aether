@@ -227,7 +227,6 @@ EXAMPLE_SOURCE_DATA_ENTITY = {
 EXAMPLE_REQUIREMENTS = {
     'Person': {
         'id': ['#!uuid'],
-        '_rev': [],
         'name': ['data.people[*].name'],
         'dob': ['data.people[*].dob'],
         'villageID': ['data.village'],
@@ -245,7 +244,6 @@ EXAMPLE_REQUIREMENTS_NESTED_SCHEMA = {
 EXAMPLE_REQUIREMENTS_ARRAY_BASE = {
     'Person': {
         'id': ['#!uuid'],
-        '_rev': [],
         'name': ['[*].name'],
         'dob': ['[*].dob'],
         'villageID': ['[*].village']

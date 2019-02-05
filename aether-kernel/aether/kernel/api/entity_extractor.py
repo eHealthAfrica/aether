@@ -364,7 +364,10 @@ def nest_object(obj, path, value):
         return
     else:
         if not obj.get(path, None):  # remove empty reference of base object
-            del obj[path]
+            try:
+                del obj[path]
+            except KeyError:
+                pass
         obj = put_nested(obj, keys, value)
         return
 

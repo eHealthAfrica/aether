@@ -66,22 +66,21 @@ def validate_existence_in_fields(field_name, path, definition):
     # we recurse and look for a nested object
     for field in definition['fields']:
         if field['name'] == field_name:
-            # field exists in this level
+            # matching field exists in this level
             return Success(path, [])
         else:
-            try:
-                # Test for base path matches
-                # and recurse if required
-                field_parts = field_name.split('.')
-                if field['name'] == field_parts[0]:
-                    child = [t for t in field.get('type', []) if isinstance(t, dict)]
-                    if not child or len(field_parts) < 2:
-                        break
-                    else:
-                        next_field_name = '.'.join(field_parts[1:])
-                        return validate_existence_in_fields(next_field_name, path, child[0])
-            except KeyError:
-                pass
+            # Test for base path matches
+            # and recurse if required
+            field_parts = field_name.split('.')
+            if field['name'] == field_parts[0]:
+                child = field.get('type', [])
+                if not isinstance(child, dict):  # could be a union, get the dict.
+                    try:
+                        child = [t for t in field.get('type', []) if isinstance(t, dict)][0]
+                    except IndexError:  # no match
+                        continue
+                next_field_name = '.'.join(field_parts[1:])
+                return validate_existence_in_fields(next_field_name, path, child)
     # fail if no matches are found and no new level can be searched.
     return Failure(path, NO_MATCH)
 
@@ -94,11 +93,9 @@ def validate_setter(schemas, path):
     try:
         schema_name, field_name = path_segments
     except ValueError:
-        try:
-            schema_name = path_segments[0]
-            field_name = '.'.join(path_segments[1:])
-        except KeyError:
-            return Failure(path, INVALID_PATH)
+        # path has a nested property indicated
+        schema_name = path_segments[0]
+        field_name = '.'.join(path_segments[1:])
 
     try:
         schema_definition = schemas[schema_name]
