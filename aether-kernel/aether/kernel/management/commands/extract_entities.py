@@ -41,7 +41,7 @@ class Command(BaseCommand):
             self.stderr.write('----------------------------------------')
             self.stderr.write(_('Error on submission {id}.').format(id=id))
             for error in errors:
-                self.stderr.write(error)
+                self.stderr.write(str(error))
             self.stderr.write('----------------------------------------')
 
         self.stdout.write(
