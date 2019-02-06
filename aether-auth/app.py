@@ -62,7 +62,7 @@ def get_realms():
     
 
 def get_oidc(kc_url, realm):
-    realm_client = f'app-client'
+    realm_client = f'{realm}-oidc'
     headers = get_kc_admin_token()
     INSTALLATION_URL = f'{kc_url}admin/realms/{realm}/clients/{realm_client}/installation/providers/keycloak-oidc-keycloak-json'
     res = requests.get(INSTALLATION_URL, headers=headers)
