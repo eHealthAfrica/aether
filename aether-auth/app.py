@@ -1,3 +1,21 @@
+# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
+#
+# See the NOTICE file distributed with this work for additional information
+# regarding copyright ownership.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
 import base64
 from flask import Flask, jsonify, request, render_template, redirect
 from jwcrypto.jwk import JWK
@@ -6,14 +24,16 @@ from jwt.contrib.algorithms.pycrypto import RSAAlgorithm
 import json
 from keycloak import KeycloakAdmin
 import requests
+import os
 
+ENV = lambda x : os.environ.get(x)
 
-HOST = 'aether.local'
+HOST = ENV('BASE_HOST')  # External URL for host
 
-KC_URL = 'http://keycloak:8080/keycloak/auth/'  # internal
+KC_URL = f'http://{ENV("KEYCLOAK_INTERNAL")}/keycloak/auth/'  # internal
 KEYCLOAK_EXTERNAL = f'http://{HOST}/keycloak/auth/'
-KC_ADMIN = 'admin'
-KC_PASSWORD = 'password'
+KC_ADMIN = ENV('KEYCLOAK_GLOBAL_ADMIN')
+KC_PASSWORD = ENV('KEYCLOAK_GLOBAL_PASSWORD')
 KC_MASTER_REALM = 'master'
 
 app = Flask(__name__, template_folder='templates')

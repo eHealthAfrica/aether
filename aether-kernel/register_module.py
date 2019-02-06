@@ -1,6 +1,6 @@
 import json
 import requests
-
+import os
 
 # Kong info
 ENV = lambda x : os.environ.get(x)

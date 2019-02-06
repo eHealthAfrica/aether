@@ -134,8 +134,6 @@ services:
       - ./.persistent_data/export/kernel:/tmp
       # backup folder
       - ./.persistent_data/backups/kernel:/backups
-    ports:
-      - "8007:8007"
     command: start_dev
 
 

@@ -155,13 +155,15 @@ services:
       - internal
 
 
-  # ---------------------------------
-  # NGINX container
-  # ---------------------------------
+  # Deprecated in favor of Kong in docker-compose-auth.yml
 
-  nginx:
-    extends:
-      file: ./docker-compose-base.yml
-      service: nginx-base
-    networks:
-      - internal
+  # # ---------------------------------
+  # # NGINX container
+  # # ---------------------------------
+
+  # nginx:
+  #   extends:
+  #     file: ./docker-compose-base.yml
+  #     service: nginx-base
+  #   networks:
+  #     - internal

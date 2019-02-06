@@ -66,9 +66,9 @@ services:
       - kongpg:kongpg
     ports:
       - "80:80/tcp"
-      - "8001:8001/tcp"
-      - "8443:8443/tcp"
-      - "8444:8444/tcp"
+      # - "8001:8001/tcp"  # internal only
+      # - "8443:8443/tcp"  Once ODK is integrated, we can take these
+      # - "8444:8444/tcp"
     networks:
       - internal
 
