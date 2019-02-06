@@ -368,12 +368,33 @@ class TestAvroValidator(TestCase):
             ),
             AvroValidatorTest(
                 fields=[{
-                    'name': 'test',
-                    'type': ['null', 'string'],
+                    'name': 'a',
+                    'type': [
+                        'null',
+                        {
+                            'name': 'record-1',
+                            'type': 'record',
+                            'fields': [
+                                {
+                                    'name': 'b',
+                                    'type': {
+                                        'name': 'record-2',
+                                        'type': 'record',
+                                        'fields': [
+                                            {
+                                                'name': 'c',
+                                                'type': ['null', 'string']
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    ],
                 }],
-                datum={'test': 1},
+                datum={'a': {'b': {'c': 123}}},
                 expected_errors=[
-                    error(expected=['null', 'string'], datum=1, path='Test.test')
+                    error(expected=['null', 'string'], datum=123, path='Test.a.b.c')
                 ],
             ),
         ])

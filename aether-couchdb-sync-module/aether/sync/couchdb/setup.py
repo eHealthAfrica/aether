@@ -29,7 +29,6 @@ from ..settings import LOGGING_LEVEL
 logger = logging.getLogger(__name__)
 logger.setLevel(LOGGING_LEVEL)
 
-
 SYSTEM_DATABASES = [
     '_users',
     # '_replicator',

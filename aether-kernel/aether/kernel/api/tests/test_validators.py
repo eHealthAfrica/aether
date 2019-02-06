@@ -129,6 +129,10 @@ class ValidatorsTest(TestCase):
                 'entities': {'Person': str(uuid.uuid4())},
                 'mapping': [['$.a', 'Person.a']],
             },
+            {
+                'entities': {'Person': str(uuid.uuid4())},
+                'mapping': [['[*].a', 'Person.a']],
+            },
         ]
         for mapping in mappings:
             try:
