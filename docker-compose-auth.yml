@@ -8,6 +8,18 @@ networks:
       name: aether_internal
 
 services:
+  # Auth mediator
+  auth:
+    build: ./aether-auth
+    depends_on:
+      kong:
+        condition: service_started
+      keycloak:
+        condition: service_started
+    command: start
+    networks:
+      - internal
+
   kong-migrations:
     image: "${KONG_DOCKER_TAG:-kong:latest}"
     command: kong migrations bootstrap
@@ -42,10 +54,11 @@ services:
       KONG_PG_USER: ${KONG_PG_USER:-kong}
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_PROXY_LISTEN: 0.0.0.0:80
     links:
       - kongpg:kongpg
     ports:
-      - "8000:8000/tcp"
+      - "80:80/tcp"
       - "8001:8001/tcp"
       - "8443:8443/tcp"
       - "8444:8444/tcp"
@@ -78,7 +91,7 @@ services:
     - internal
 
   keycloak:
-    image: jboss/keycloak
+    build: ./aether-auth/keycloak
     environment:
       DB_VENDOR: POSTGRES
       DB_ADDR: keycloakpg
@@ -87,6 +100,8 @@ services:
       DB_PASSWORD: password
       KEYCLOAK_USER: admin
       KEYCLOAK_PASSWORD: password
+      PROXY_ADDRESS_FORWARDING: 'true'
+      PROXY_PORT_FORWARDING: 'true'
       # Uncomment the line below if you want to specify JDBC parameters. The parameter below is just an example, and it shouldn't be used in production without knowledge. It is highly recommended that you read the PostgreSQL JDBC driver documentation in order to use it.
       #JDBC_PARAMS: "ssl=true"
     ports:

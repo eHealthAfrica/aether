@@ -1,0 +1,6 @@
+flask==1.0.2
+jwcrypto==0.6.0
+python-keycloak==0.14.4
+pyjwt==1.7.1
+pycrypto
+requests==2.21.0
