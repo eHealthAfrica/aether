@@ -95,7 +95,7 @@ class MtModelAbstract(Model):
         '''
 
         try:
-            return self.mt.realm == realm
+            return settings.MULTITENANCY and self.mt.realm == realm
         except ObjectDoesNotExist:
             return False
 
