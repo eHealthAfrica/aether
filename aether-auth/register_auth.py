@@ -1,13 +1,15 @@
 import json
+import os
 import requests
 
+ENV = lambda x : os.environ.get(x)
 
 # Kong info
 
 # TODO Make ENVs
 
-HOST = 'aether.local'  # External URL for host
-KONG_URL = 'http://kong:8001/'
+HOST = ENV('BASE_HOST')  # External URL for host
+KONG_URL = f'http://{ENV("KONG_INTERNAL")}/'
 CLIENT_URL = 'http://auth:3011/'
 CLIENT_NAME = 'auth' 
 PLUGIN_URL = f'{KONG_URL}services/{CLIENT_NAME}/plugins'

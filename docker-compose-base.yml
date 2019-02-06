@@ -86,6 +86,9 @@ services:
       # Uncomment this line to enable single sign on if you use CAS
       # CAS_SERVER_URL: https://your.cas.server
 
+      BASE_HOST: ${BASE_HOST}
+      KONG_INTERNAL: ${KONG_INTERNAL}
+
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}

@@ -61,6 +61,11 @@ cat << EOF
 
 
 # ------------------------------------------------------------------
+# Hosting
+# ==================================================================
+BASE_HOST=aether.local
+
+# ------------------------------------------------------------------
 # Databases
 # ==================================================================
 COUCHDB_USER=admin
@@ -68,6 +73,15 @@ COUCHDB_PASSWORD=$(gen_random_string)
 REDIS_PASSWORD=$(gen_random_string)
 # ------------------------------------------------------------------
 
+# ------------------------------------------------------------------
+# Authorization & Authentication
+# ==================================================================
+KEYCLOAK_GLOBAL_ADMIN=admin
+KEYCLOAK_GLOBAL_PASSWORD=$(gen_random_string)
+KEYCLOAK_PG_PASSWORD=$(gen_random_string)
+KEYCLOAK_INTERNAL=keycloak:8080
+KONG_INTERNAL=kong:8001
+KONG_PG_PASSWORD=$(gen_random_string)
 
 # ------------------------------------------------------------------
 # Aether Kernel

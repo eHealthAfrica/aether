@@ -3,10 +3,10 @@ import requests
 
 
 # Kong info
-# TODO Make ENVs
+ENV = lambda x : os.environ.get(x)
 
-HOST_URL = 'aether.local'
-KONG_URL = 'http://kong:8001/'  # Internal Kong URL
+HOST_URL = ENV('BASE_HOST')  # External URL for host
+KONG_URL = f'http://{ENV("KONG_INTERNAL")}/'  # Internal Kong URL
 CLIENT_URL = 'http://kernel:8000/'  # Internal service URL
 CLIENT_NAME = 'kernel' 
 PLUGIN_URL = f'{KONG_URL}services/{CLIENT_NAME}/plugins'

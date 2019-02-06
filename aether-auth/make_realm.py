@@ -4,20 +4,20 @@ from jwcrypto.jwk import JWK
 from keycloak import KeycloakAdmin
 import requests
 
+ENV = lambda x : os.environ.get(x)
 
 # Keycloak Information
-HOST_URL = 'aether.local'
-KC_INT_HOST = 'keycloak:8080'
+HOST_URL = ENV('BASE_HOST')
+KC_INT_HOST = ENV('KEYCLOAK_INTERNAL')
 INTERNAL_KC = f'http://{KC_INT_HOST}/keycloak/auth/'  # external url
 KEYCLOAK_URL = f'http://{HOST_URL}/keycloak/auth/'  # external url
 
 KC_MASTER_REALM = 'master'
-KC_ADMIN_USER = 'admin'  # Admin on MASTER realm
-KC_ADMIN_PASSWORD = 'password'
+KC_ADMIN_USER = ENV('KEYCLOAK_GLOBAL_ADMIN')  # Admin on MASTER realm
+KC_ADMIN_PASSWORD = ENV('KEYCLOAK_GLOBAL_PASSWORD')
 
 # Kong Information
-KONG_HOST = 'kong'  # usually an internal reference as Kong admin is not public
-KONG_URL = f'http://{KONG_HOST}:8001/'
+KONG_URL = f'http://{ENV("KONG_INTERNAL")}/'
 CONSUMERS_URL = f'{KONG_URL}consumers'
 
 REALMS_PATH = '/code/realm'
@@ -44,7 +44,6 @@ def make_realm(name, config):
         } 
     res = requests.post(realm_url, headers=headers, data=json.dumps(config))
     if not res.status_code is 201:
-        print(res, res.text)
         raise ValueError('Could not create realm.')
 
     # Make a Single Kong Consumer for JWT covering the whole realm.
@@ -58,7 +57,6 @@ def make_realm(name, config):
         )
     details = res.json()
     consumer_id = details['id']
-    print(consumer_id)
     # Get the public key from Keycloak
 
     res = requests.get(
@@ -95,8 +93,6 @@ def find_available_realms():
             config = json.load(_f)
             realms[name] = config
     return realms
-            
-
 
 if __name__ == "__main__":
     realms = find_available_realms()

@@ -16,6 +16,13 @@ services:
         condition: service_started
       keycloak:
         condition: service_started
+    environment:
+      BASE_HOST: ${BASE_HOST}
+      KEYCLOAK_GLOBAL_ADMIN: ${KEYCLOAK_GLOBAL_ADMIN}
+      KEYCLOAK_GLOBAL_PASSWORD: ${KEYCLOAK_GLOBAL_PASSWORD}
+      KEYCLOAK_INTERNAL: ${KEYCLOAK_INTERNAL}
+      KONG_INTERNAL: ${KONG_INTERNAL}
+      
     command: start
     networks:
       - internal
@@ -86,7 +93,7 @@ services:
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${KEYCLOAK_PG_PASSWORD}
     networks:
     - internal
 
@@ -97,13 +104,12 @@ services:
       DB_ADDR: keycloakpg
       DB_DATABASE: keycloak
       DB_USER: keycloak
-      DB_PASSWORD: password
-      KEYCLOAK_USER: admin
-      KEYCLOAK_PASSWORD: password
+      DB_PASSWORD: ${KEYCLOAK_PG_PASSWORD}
+      KEYCLOAK_USER: ${KEYCLOAK_GLOBAL_ADMIN}
+      KEYCLOAK_PASSWORD: ${KEYCLOAK_GLOBAL_PASSWORD}
       PROXY_ADDRESS_FORWARDING: 'true'
       PROXY_PORT_FORWARDING: 'true'
-      # Uncomment the line below if you want to specify JDBC parameters. The parameter below is just an example, and it shouldn't be used in production without knowledge. It is highly recommended that you read the PostgreSQL JDBC driver documentation in order to use it.
-      #JDBC_PARAMS: "ssl=true"
+      
     ports:
       - 8080:8080
     depends_on:

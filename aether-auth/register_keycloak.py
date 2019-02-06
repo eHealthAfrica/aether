@@ -1,13 +1,15 @@
 import json
+import os
 import requests
 
+ENV = lambda x : os.environ.get(x)
 
 # Kong info
 # TODO Make ENVs
 
-HOST = 'aether.local'  # External URL for host
-KONG_URL = 'http://kong:8001/'  # available kong admin url
-CLIENT_URL = 'http://keycloak:8080/'  # internal service url
+HOST = ENV('BASE_HOST')  # External URL for host
+KONG_URL = f'http://{ENV("KONG_INTERNAL")}/'  # available kong admin url
+CLIENT_URL = f'http://{ENV("KEYCLOAK_INTERNAL")}/'  # internal service url
 CLIENT_NAME = 'keycloak' 
 PLUGIN_URL = f'{KONG_URL}services/{CLIENT_NAME}/plugins'
 ROUTE_URL = f'{KONG_URL}services/{CLIENT_NAME}/routes'
