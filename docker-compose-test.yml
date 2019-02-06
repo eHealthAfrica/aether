@@ -47,7 +47,7 @@ services:
       DB_NAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
       DEBUG: null # set to null to remove previous value
       MEDIA_ROOT: /tmp/
-      MULTITENANCY: null
+      MULTITENANCY: "true"
       PGHOST: db-test
       TESTING: "true"
       WEB_SERVER_PORT: 9000

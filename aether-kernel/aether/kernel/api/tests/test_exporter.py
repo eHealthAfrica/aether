@@ -29,7 +29,7 @@ from openpyxl import load_workbook
 from django.contrib.auth import get_user_model
 from django.db.models import F
 from django.http import FileResponse
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from aether.kernel.api import models
@@ -315,6 +315,7 @@ class ExporterTest(TestCase):
         self.assertEqual(get_label('x.y.a.z', labels), 'X / Y / A / Z')
 
 
+@override_settings(MULTITENANCY=False)
 class ExporterViewsTest(TestCase):
 
     def setUp(self):
