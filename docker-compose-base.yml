@@ -115,7 +115,7 @@ services:
       EXPORT_HEADER_SEPARATOR: "/"
       EXPORT_HEADER_SHORTEN: "no"
 
-      WEB_SERVER_PORT: 8007
+      WEB_SERVER_PORT: 8000
     volumes:
       - ./aether-kernel:/code
 

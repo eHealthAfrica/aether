@@ -49,6 +49,8 @@ show_help () {
     test_lint     : run flake8 tests
     test_coverage : run tests with coverage output
 
+    setup_auth    : register module in Kong.
+
     start         : start webserver behind nginx
     start_dev     : start webserver for development
 
@@ -172,6 +174,10 @@ case "$1" in
 
     setup )
         setup
+    ;;
+
+    setup_auth )
+        python /code/register_module.py
     ;;
 
     backup_db )
