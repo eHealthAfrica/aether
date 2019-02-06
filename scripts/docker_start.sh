@@ -116,19 +116,16 @@ case $app in
     kernel)
         PRE_CONTAINERS=(db)
         SETUP_CONTAINERS=(kernel)
-        POST_CONTAINERS=(nginx)
     ;;
 
     odk)
         PRE_CONTAINERS=(db)
         SETUP_CONTAINERS=(kernel odk)
-        POST_CONTAINERS=(nginx)
     ;;
 
     ui)
         PRE_CONTAINERS=(ui-assets db)
         SETUP_CONTAINERS=(kernel ui)
-        POST_CONTAINERS=(nginx)
     ;;
 
     sync|couchdb-sync)
@@ -136,7 +133,7 @@ case $app in
 
         PRE_CONTAINERS=(db couchdb redis)
         SETUP_CONTAINERS=(kernel couchdb-sync)
-        POST_CONTAINERS=(couchdb-sync-rq nginx)
+        POST_CONTAINERS=(couchdb-sync-rq)
     ;;
 
     *)
@@ -144,7 +141,7 @@ case $app in
 
         PRE_CONTAINERS=(ui-assets db couchdb redis)
         SETUP_CONTAINERS=(kernel odk ui couchdb-sync)
-        POST_CONTAINERS=(couchdb-sync-rq nginx)
+        POST_CONTAINERS=(couchdb-sync-rq)
     ;;
 esac
 
