@@ -50,17 +50,9 @@ class Command(BaseCommand):
 
         data = {
             'name': f'{CLIENT_NAME}',
-            'url': f'{CLIENT_URL}'
+            'url': f'{CLIENT_URL}',
         }
-        res = requests.post(f'{KONG_URL}services/', data=data)
-        try:
-            res.raise_for_status()
-
-            api_id = res.json()['id']
-            if api_id != settings.APP_ID:
-                self.stdout.write(str(res.json()))
-        except Exception:
-            self.stderr.write(str(res.json()))
+        self.__post(url=f'{KONG_URL}services/', data=data)
 
         # Routes
         # # protected Routes
@@ -70,13 +62,7 @@ class Command(BaseCommand):
             'paths': [f'/{CLIENT_NAME}'],
             'strip_path': 'false',
         }
-        res = requests.post(ROUTE_URL, data=data)
-        try:
-            res.raise_for_status()
-        except Exception:
-            self.stderr.write(str(res.json()))
-
-        route_info = res.json()
+        route_info = self.__post(url=ROUTE_URL, data=data)
         protected_route_id = route_info['id']
 
         # Add a separate Path for static assets, which we will NOT protect
@@ -85,43 +71,40 @@ class Command(BaseCommand):
             'paths': [f'/{CLIENT_NAME}/static'],
             'strip_path': 'false',
         }
-        res = requests.post(ROUTE_URL, data=data)
-        try:
-            res.raise_for_status()
-        except Exception:
-            self.stderr.write(str(res.json()))
+        self.__post(url=ROUTE_URL, data=data)
 
         # Add JWT Plugin to protected route.
 
-        ROUTE_URL = f'{KONG_URL}routes/{protected_route_id}/plugins'
         data = {
             'name': 'jwt',
-            'config.cookie_names': ['aether-jwt']
+            'config.cookie_names': ['aether-jwt'],
         }
-        res = requests.post(ROUTE_URL, data=data)
-        try:
-            res.raise_for_status()
-        except Exception:
-            self.stderr.write(str(res.json()))
+        self.__post(url=f'{KONG_URL}routes/{protected_route_id}/plugins', data=data)
 
         # ADD CORS Plugin to Kong for all localhost requests
 
         data = {
             'name': 'cors',
             'config.origins': f'{scheme}://{HOST_URL}/*',
-            'config.methods': 'GET, POST, DELETE, HEAD, PUT',
+            'config.methods': ['HEAD', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
             'config.headers': 'Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, Authorization',
             'config.exposed_headers': 'Authorization',
             'config.max_age': 3600,
             'config.credentials': 'true',
         }
-        res = requests.post(PLUGIN_URL, data=data)
-        try:
-            res.raise_for_status()
-        except Exception:
-            self.stderr.write(str(res.json()))
+        self.__post(url=PLUGIN_URL, data=data)
 
         self.stdout.write(
             _('Service {name} from, {url} now being served by kong @ /{name}.')
             .format(name=CLIENT_NAME, url=CLIENT_URL)
         )
+
+    def __post(self, url, data):
+        res = requests.post(url, data=data)
+        try:
+            res.raise_for_status()
+            self.stdout.write(str(res.json()))
+        except Exception:
+            self.stderr.write(str(res.status_code))
+            self.stderr.write(str(res.json()))
+        return res.json()
