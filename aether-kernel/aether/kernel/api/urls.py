@@ -20,7 +20,6 @@ from django.conf.urls import url, include
 from rest_framework.routers import DefaultRouter
 
 from . import views
-from ..settings import APP_ID
 
 router = DefaultRouter()
 
@@ -39,5 +38,3 @@ router.register('entities', views.EntityViewSet)
 urlpatterns = router.urls + [
     url(r'^validate-mappings/$', views.validate_mappings_view, name='validate-mappings'),
 ]
-# Prepend urls with /kernel/
-urlpatterns = [url(fr'^{APP_ID}/', include(urlpatterns))]
