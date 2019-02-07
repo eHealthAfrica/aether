@@ -88,6 +88,7 @@ services:
 
       BASE_HOST: ${BASE_HOST}
       KONG_INTERNAL: ${KONG_INTERNAL}
+      KEYCLOAK_INTERNAL: ${KEYCLOAK_INTERNAL}
 
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"

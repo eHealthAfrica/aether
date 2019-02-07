@@ -20,17 +20,16 @@ from django.contrib.auth import get_user_model
 from django.http.response import JsonResponse
 from django.shortcuts import redirect as redirect_response
 from django.utils.deprecation import MiddlewareMixin
-from rest_framework.exceptions import PermissionDenied, AuthenticationFailed, NotAuthenticated
+from rest_framework.exceptions import AuthenticationFailed
 
-import base64
 from jwcrypto.jwk import JWK
 import jwt
-import json
 import requests
 
-from ..settings import BASE_HOST, REALM_COOKIE, JWT_COOKIE
+from ..settings import BASE_HOST, KEYCLOAK_INTERNAL, REALM_COOKIE, JWT_COOKIE
 
-KC_URL = f'http://{BASE_HOST}/keycloak/auth/'
+KC_URL = f'http://{KEYCLOAK_INTERNAL}/keycloak/auth/'
+# KC_URL = f'http://{BASE_HOST}/keycloak/auth/'
 REFRESH_URL = f'http://{BASE_HOST}' + '/auth/user/{realm}/refresh'  # replace realm later
 # Cached Public Keys for validating JWTs of different realms
 PK = {}
@@ -52,32 +51,27 @@ class JWTAuthentication(MiddlewareMixin):
     def process_view(self, request, view_func, view_args, view_kwargs):
         cookies = request.COOKIES
         if 'aether-realm' and 'aether-jwt' in cookies:
-            realm = request.COOKIES[REALM_COOKIE]
+            realm = request.COOKIES.get(REALM_COOKIE)
+            if not realm:
+                return JsonResponse({'detail': 'No realm included in request'},
+                                    status=AuthenticationFailed.status_code)
             token = request.COOKIES[JWT_COOKIE]
-            if not realm in PK:
+            if realm not in PK:
                 try:
                     PK[realm] = get_public_key(KC_URL, realm)
-                except Exception as err:
-                    return JsonResponse({"detail": 'Realm not found'},
-                                        status=AuthenticationFailed.status_code)
+                except Exception:
+                    return self.login_redirect(request, realm)
             try:
                 decoded = jwt.decode(
                     token, PK[realm], audience='account', algorithms='RS256')
             except jwt.ExpiredSignatureError:
-                # We want to handle this with a redirect to the login screen.
-                path = request.get_full_path()
-                host = request.META['HTTP_X_FORWARDED_HOST']
-                # on Success, the login page will redirect back to this original request
-                redirect = f'http://{host}{path}'
-                url = REFRESH_URL.format(realm=realm) + f'?redirect={redirect}'
-                return redirect_response(url)
+                return self.login_redirect(request, realm)
 
             # Create user
-
             try:
                 username = decoded['preferred_username']
             except KeyError:
-                return JsonResponse({"detail": AuthenticationFailed.default_detail},
+                return JsonResponse({'detail': AuthenticationFailed.default_detail},
                                     status=AuthenticationFailed.status_code)
             try:
                 UserModel = get_user_model()
@@ -91,5 +85,13 @@ class JWTAuthentication(MiddlewareMixin):
             finally:
                 # add user to request as request.user
                 request.user = user
-
         return None
+
+    def login_redirect(self, request, realm):
+        # We want to handle this with a redirect to the login screen.
+        path = request.get_full_path()
+        host = request.META['HTTP_X_FORWARDED_HOST']
+        # on Success, the login page will redirect back to this original request
+        redirect = f'http://{host}{path}'
+        url = REFRESH_URL.format(realm=realm) + f'?redirect={redirect}'
+        return redirect_response(url)

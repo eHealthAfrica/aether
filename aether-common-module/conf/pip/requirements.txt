@@ -15,6 +15,12 @@ python-json-logger
 requests
 
 
+# Keycloak libraries
+jwcrypto
+pyjwt
+python-keycloak
+
+
 # test libraries
 coverage
 flake8

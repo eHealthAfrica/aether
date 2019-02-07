@@ -34,6 +34,7 @@ APP_ID = os.environ.get('APP_ID', 'aether-module-name')  # URL Friendly
 APP_LINK = os.environ.get('APP_LINK', 'http://aether.ehealthafrica.org')
 
 BASE_HOST = os.environ.get('BASE_HOST', 'aether.local')
+KEYCLOAK_INTERNAL = os.environ.get('KEYCLOAK_INTERNAL', 'keycloak:8080')
 
 REALM_COOKIE = os.environ.get('REALM_COOKIE', 'aether-realm')
 JWT_COOKIE = os.environ.get('JWT_COOKIE', 'aether-jwt')
