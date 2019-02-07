@@ -16,26 +16,27 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django import forms
-from django.contrib.postgres.forms.jsonb import JSONField
+from rest_framework.viewsets import ModelViewSet
+
+from aether.common.multitenancy.utils import MtViewSetMixin
+
+from aether.common.multitenancy.tests.fakeapp.models import (
+    TestModel,
+    TestChildModel,
+)
+from aether.common.multitenancy.tests.fakeapp.serializers import (
+    TestModelSerializer,
+    TestChildModelSerializer,
+)
 
 
-class MappingSetForm(forms.ModelForm):
-    schema = JSONField()
-    input = JSONField()
+class TestModelViewSet(MtViewSetMixin, ModelViewSet):
+    queryset = TestModel.objects.order_by('name')
+    serializer_class = TestModelSerializer
+    # mt_field = 'mt'  # not needed in this case
 
 
-class MappingForm(forms.ModelForm):
-    definition = JSONField()
-
-
-class SubmissionForm(forms.ModelForm):
-    payload = JSONField()
-
-
-class SchemaForm(forms.ModelForm):
-    definition = JSONField()
-
-
-class EntityForm(forms.ModelForm):
-    payload = JSONField()
+class TestChildModelViewSet(MtViewSetMixin, ModelViewSet):
+    queryset = TestChildModel.objects.order_by('name')
+    serializer_class = TestChildModelSerializer
+    mt_field = 'parent__mt'

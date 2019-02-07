@@ -22,7 +22,11 @@
 import os
 
 from aether.common.conf.settings import *  # noqa
-from aether.common.conf.settings import INSTALLED_APPS, REST_FRAMEWORK
+from aether.common.conf.settings import (
+    INSTALLED_APPS,
+    MIGRATION_MODULES,
+    REST_FRAMEWORK,
+)
 
 # Kernel Configuration
 # ------------------------------------------------------------------------------
@@ -38,9 +42,10 @@ INSTALLED_APPS += [
     'aether.kernel',
 ]
 
-MIGRATION_MODULES = {
-    'kernel': 'aether.kernel.api.migrations'
-}
+# In case of Mutitenancy is enabled!
+MULTITENANCY_MODEL = 'kernel.Project'
+
+MIGRATION_MODULES['kernel'] = 'aether.kernel.api.migrations'
 
 REST_FRAMEWORK['DEFAULT_VERSIONING_CLASS'] = 'rest_framework.versioning.URLPathVersioning'
 REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'] = [

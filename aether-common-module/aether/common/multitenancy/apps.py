@@ -16,21 +16,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.test import TestCase
-
-from aether.kernel.api import forms
+from django.apps import AppConfig
 
 
-class FormsTest(TestCase):
+class Config(AppConfig):
 
-    def test_str_to_json(self):
-        data = '{"dob": "2000-01-01", "name":"PersonA"}'
-        expected = {'dob': '2000-01-01', 'name': 'PersonA'}
-        result = str(forms.str_to_json(data))
-        self.assertTrue(str(expected) in result, result)
-
-    def test_str_to_json_no_data(self):
-        data = None
-        expected = {}
-        result = str(forms.str_to_json(data))
-        self.assertTrue(str(expected) in result, result)
+    name = 'aether.common.multitenancy'
+    verbose_name = 'Aether multitenancy'

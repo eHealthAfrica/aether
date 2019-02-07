@@ -17,11 +17,15 @@
 # under the License.
 
 '''
-This settings are only used for testing purposes.
+These settings are only used for testing purposes.
 The app that includes this module should have its own settings.
 '''
 
 from aether.common.conf.settings import *  # noqa
+from aether.common.conf.settings import (
+    INSTALLED_APPS,
+    MIGRATION_MODULES,
+)
 
 
 ROOT_URLCONF = 'aether.common.urls'
@@ -36,3 +40,13 @@ DATABASES = {
         'NAME': ':memory:',
     },
 }
+
+
+# Multitenancy Configuration
+# ------------------------------------------------------------------------------
+
+INSTALLED_APPS += [
+    'aether.common.multitenancy.tests.fakeapp',
+]
+MIGRATION_MODULES['fakeapp'] = 'aether.common.multitenancy.tests.fakeapp.migrations'
+MULTITENANCY_MODEL = 'fakeapp.TestModel'

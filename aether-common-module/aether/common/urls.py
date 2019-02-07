@@ -17,10 +17,15 @@
 # under the License.
 
 '''
-This urls are only used for testing purposes.
+These urls are only used for testing purposes.
 The app that includes this module should have its own urls list.
 '''
+
+from django.conf.urls import include, url
 
 from aether.common.conf.urls import generate_urlpatterns
 
 urlpatterns = generate_urlpatterns(kernel=True, token=True)
+urlpatterns += [
+    url(r'^test', include('aether.common.multitenancy.tests.fakeapp.urls')),
+]

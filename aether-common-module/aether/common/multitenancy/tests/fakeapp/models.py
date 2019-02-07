@@ -16,26 +16,31 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django import forms
-from django.contrib.postgres.forms.jsonb import JSONField
+from django.db import models
+
+from aether.common.multitenancy.utils import MtModelAbstract
 
 
-class MappingSetForm(forms.ModelForm):
-    schema = JSONField()
-    input = JSONField()
+class TestModel(MtModelAbstract):
+    name = models.TextField()
+
+    class Meta:
+        app_label = 'fakeapp'
 
 
-class MappingForm(forms.ModelForm):
-    definition = JSONField()
+class TestChildModel(models.Model):
+    name = models.TextField()
+    parent = models.ForeignKey(to=TestModel, on_delete=models.CASCADE, related_name='children')
+
+    def is_accessible(self, realm):
+        return self.parent.is_accessible(realm)
+
+    class Meta:
+        app_label = 'fakeapp'
 
 
-class SubmissionForm(forms.ModelForm):
-    payload = JSONField()
+class TestNoMtModel(models.Model):
+    name = models.TextField()
 
-
-class SchemaForm(forms.ModelForm):
-    definition = JSONField()
-
-
-class EntityForm(forms.ModelForm):
-    payload = JSONField()
+    class Meta:
+        app_label = 'fakeapp'

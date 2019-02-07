@@ -82,7 +82,7 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
 
         # generates users token
         auth_views += [
-            url('^token$', obtain_auth_token, name='token'),
+            url('^token$', view=obtain_auth_token, name='token'),
         ]
     auth_urls = (auth_views, 'rest_framework')
 

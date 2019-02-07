@@ -16,26 +16,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django import forms
-from django.contrib.postgres.forms.jsonb import JSONField
+from rest_framework.routers import DefaultRouter
+
+from .views import TestModelViewSet, TestChildModelViewSet
 
 
-class MappingSetForm(forms.ModelForm):
-    schema = JSONField()
-    input = JSONField()
+router = DefaultRouter()
+router.register('testmodel', TestModelViewSet)
+router.register('testchildmodel', TestChildModelViewSet)
 
-
-class MappingForm(forms.ModelForm):
-    definition = JSONField()
-
-
-class SubmissionForm(forms.ModelForm):
-    payload = JSONField()
-
-
-class SchemaForm(forms.ModelForm):
-    definition = JSONField()
-
-
-class EntityForm(forms.ModelForm):
-    payload = JSONField()
+urlpatterns = router.urls

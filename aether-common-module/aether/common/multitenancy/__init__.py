@@ -16,26 +16,4 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django import forms
-from django.contrib.postgres.forms.jsonb import JSONField
-
-
-class MappingSetForm(forms.ModelForm):
-    schema = JSONField()
-    input = JSONField()
-
-
-class MappingForm(forms.ModelForm):
-    definition = JSONField()
-
-
-class SubmissionForm(forms.ModelForm):
-    payload = JSONField()
-
-
-class SchemaForm(forms.ModelForm):
-    definition = JSONField()
-
-
-class EntityForm(forms.ModelForm):
-    payload = JSONField()
+default_app_config = 'aether.common.multitenancy.apps.Config'

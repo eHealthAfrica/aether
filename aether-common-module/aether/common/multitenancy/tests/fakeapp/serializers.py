@@ -16,26 +16,26 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django import forms
-from django.contrib.postgres.forms.jsonb import JSONField
+from rest_framework.serializers import ModelSerializer
+
+from aether.common.multitenancy.utils import MtPrimaryKeyRelatedField, MtModelSerializer
+
+from .models import TestModel, TestChildModel
 
 
-class MappingSetForm(forms.ModelForm):
-    schema = JSONField()
-    input = JSONField()
+class TestModelSerializer(MtModelSerializer):
+
+    class Meta:
+        model = TestModel
+        fields = '__all__'
 
 
-class MappingForm(forms.ModelForm):
-    definition = JSONField()
+class TestChildModelSerializer(ModelSerializer):
 
+    parent = MtPrimaryKeyRelatedField(
+        queryset=TestModel.objects.all(),
+    )
 
-class SubmissionForm(forms.ModelForm):
-    payload = JSONField()
-
-
-class SchemaForm(forms.ModelForm):
-    definition = JSONField()
-
-
-class EntityForm(forms.ModelForm):
-    payload = JSONField()
+    class Meta:
+        model = TestChildModel
+        fields = '__all__'

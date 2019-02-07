@@ -22,13 +22,14 @@ import string
 
 from autofixture import generators
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from aether.kernel.api import models
 from aether.kernel.api.tests.utils.generators import generate_project
 
 
+@override_settings(MULTITENANCY=False)
 class TestFilters(TestCase):
 
     def setUp(self):

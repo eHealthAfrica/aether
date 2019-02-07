@@ -16,26 +16,31 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django import forms
-from django.contrib.postgres.forms.jsonb import JSONField
+from django.conf import settings
+from django.db import models
+from django.utils.translation import ugettext as _
 
 
-class MappingSetForm(forms.ModelForm):
-    schema = JSONField()
-    input = JSONField()
+class MtInstance(models.Model):
 
+    instance = models.OneToOneField(
+        related_name='mt',
+        to=settings.MULTITENANCY_MODEL,
+        verbose_name=_('instance'),
+    )
 
-class MappingForm(forms.ModelForm):
-    definition = JSONField()
+    realm = models.TextField(
+        verbose_name=_('realm'),
+    )
 
+    def __str__(self):
+        return str(self.instance)
 
-class SubmissionForm(forms.ModelForm):
-    payload = JSONField()
-
-
-class SchemaForm(forms.ModelForm):
-    definition = JSONField()
-
-
-class EntityForm(forms.ModelForm):
-    payload = JSONField()
+    class Meta:
+        app_label = 'multitenancy'
+        ordering = ['instance']
+        indexes = [
+            models.Index(fields=['realm']),
+        ]
+        verbose_name = _('instance by realm')
+        verbose_name_plural = _('instances by realm')

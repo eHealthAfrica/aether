@@ -16,26 +16,18 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django import forms
-from django.contrib.postgres.forms.jsonb import JSONField
+from django.contrib import admin
+
+from .models import MtInstance
 
 
-class MappingSetForm(forms.ModelForm):
-    schema = JSONField()
-    input = JSONField()
+class MtInstanceAdmin(admin.ModelAdmin):
+
+    list_display = ('instance', 'realm',)
+
+    show_full_result_count = True
+    empty_value_display = '---'
+    list_per_page = 25
 
 
-class MappingForm(forms.ModelForm):
-    definition = JSONField()
-
-
-class SubmissionForm(forms.ModelForm):
-    payload = JSONField()
-
-
-class SchemaForm(forms.ModelForm):
-    definition = JSONField()
-
-
-class EntityForm(forms.ModelForm):
-    payload = JSONField()
+admin.site.register(MtInstance, MtInstanceAdmin)
