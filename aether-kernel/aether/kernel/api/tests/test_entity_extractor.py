@@ -23,10 +23,11 @@ from django.test import TestCase
 
 from aether.kernel.api import entity_extractor
 
-from . import (EXAMPLE_MAPPING, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA,
-               EXAMPLE_NESTED_SOURCE_DATA, EXAMPLE_REQUIREMENTS,
-               EXAMPLE_ENTITY_DEFINITION, EXAMPLE_FIELD_MAPPINGS, EXAMPLE_ENTITY,
-               EXAMPLE_PARTIAL_WILDCARDS)
+from . import (EXAMPLE_MAPPING, EXAMPLE_MAPPING_EDGE, EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA,
+               EXAMPLE_DATA_FOR_NESTED_SCHEMA, EXAMPLE_REQUIREMENTS_NESTED_SCHEMA,
+               EXAMPLE_NESTED_SOURCE_DATA, EXAMPLE_REQUIREMENTS, EXAMPLE_REQUIREMENTS_ARRAY_BASE,
+               EXAMPLE_ENTITY_DEFINITION, EXAMPLE_FIELD_MAPPINGS, EXAMPLE_FIELD_MAPPINGS_EDGE,
+               EXAMPLE_ENTITY, EXAMPLE_FIELD_MAPPINGS_ARRAY_BASE, EXAMPLE_PARTIAL_WILDCARDS)
 
 
 class EntityExtractorTests(TestCase):
@@ -34,6 +35,12 @@ class EntityExtractorTests(TestCase):
     def test_get_field_mappings(self):
         mapping = EXAMPLE_MAPPING
         expected = EXAMPLE_FIELD_MAPPINGS
+        field_mapping = str(entity_extractor.get_field_mappings(mapping))
+        self.assertTrue(str(expected) in field_mapping, field_mapping)
+
+    def test_get_field_mappings__edge(self):
+        mapping = EXAMPLE_MAPPING_EDGE
+        expected = EXAMPLE_FIELD_MAPPINGS_EDGE
         field_mapping = str(entity_extractor.get_field_mappings(mapping))
         self.assertTrue(str(expected) in field_mapping, field_mapping)
 
@@ -60,6 +67,15 @@ class EntityExtractorTests(TestCase):
         self.assertTrue(str(expected) in entity_requirements,
                         entity_requirements)
 
+    def test_get_entity_requirements__union_base(self):
+        entities = EXAMPLE_ENTITY_DEFINITION
+        field_mappings = EXAMPLE_FIELD_MAPPINGS_ARRAY_BASE
+        expected = EXAMPLE_REQUIREMENTS_ARRAY_BASE
+        entity_requirements = str(
+            entity_extractor.get_entity_requirements(entities, field_mappings))
+        self.assertTrue(str(expected) in entity_requirements,
+                        entity_requirements)
+
     def test_get_entity_stub(self):
         requirements = EXAMPLE_REQUIREMENTS
         source_data = EXAMPLE_SOURCE_DATA
@@ -68,6 +84,18 @@ class EntityExtractorTests(TestCase):
         stub = entity_extractor.get_entity_stub(
             requirements, entity_definitions, entity_name, source_data)
         self.assertEquals(len(stub.get('dob')), 3)
+
+    def test_nest_object__simple_object(self):
+        obj = {}
+        path = 'a.b.c'
+        value = 1
+        entity_extractor.nest_object(obj, path, value)
+        self.assertEquals(obj['a']['b']['c'], value)
+
+    def test_put_nested__simple_object(self):
+        keys = ['a', 'b', 'c']
+        obj = entity_extractor.put_nested({}, keys, 1)
+        self.assertEquals(obj['a']['b']['c'], 1)
 
     def test_resolve_source_reference__single_resolution(self):
         data = EXAMPLE_SOURCE_DATA
@@ -97,6 +125,17 @@ class EntityExtractorTests(TestCase):
         entity_name = 'Person'
         field = 'dob'
         path = 'data.pe*[*].dob'
+        resolved_count = entity_extractor.resolve_source_reference(
+            path, entities, entity_name, 0, field, data)
+        self.assertEquals(resolved_count, 3)
+
+    def test_resolve_source_reference__nested_schema(self):
+        data = EXAMPLE_DATA_FOR_NESTED_SCHEMA
+        requirements = EXAMPLE_REQUIREMENTS_NESTED_SCHEMA
+        entities = {'Nested': [{}, {}, {}]}
+        entity_name = 'Nested'
+        field = 'location.lat'
+        path = requirements.get(entity_name, {}).get(field)
         resolved_count = entity_extractor.resolve_source_reference(
             path, entities, entity_name, 0, field, data)
         self.assertEquals(resolved_count, 3)

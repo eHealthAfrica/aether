@@ -243,7 +243,8 @@ class AetherDecorator(ResourceDecorator):
             _next = result.get('next')
             page += 1
             results = result.get('results')
-            if not results:
+            # if not results:  # WARNING: this is true with empty lists []
+            if results is None:
                 raise StopIteration
             for item in results:
                 yield item

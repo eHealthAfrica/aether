@@ -57,7 +57,7 @@ def load_config(directory, strip=False, predicate=None):  # pragma: no cover
 
     for (dirpath, dirnames, filenames) in os.walk(directory, topdown=False):
         key = os.path.split(dirpath)[-1]
-        ob = {}  # type: JsonType
+        ob = {}
         objects[dirpath] = (key, ob)
 
         for name in filenames:
