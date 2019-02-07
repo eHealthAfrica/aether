@@ -127,14 +127,14 @@ def demo(tenant):
 def refresh(tenant):
     redirect = request.args.get('redirect', None) \
         or f'http://{HOST}/auth/user/{tenant}/token'
-    return render_template('./index.html', tenant=tenant, redirect=redirect)
+    return render_template('./index.html', tenant=tenant, redirect=redirect, host=HOST)
 
 # Logout
 @app.route("/auth/user/<tenant>/logout")
 def logout(tenant):
     redirect = request.args.get('redirect', None) \
         or f'http://{HOST}/auth/login/{tenant}'
-    return render_template('./logout.html', tenant=tenant, redirect=redirect)
+    return render_template('./logout.html', tenant=tenant, redirect=redirect, host=HOST)
 
 ## PUBLIC
 # Base route returns an error
