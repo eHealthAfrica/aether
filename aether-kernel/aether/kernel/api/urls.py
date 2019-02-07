@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.conf.urls import url, include
+from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 
 from . import views

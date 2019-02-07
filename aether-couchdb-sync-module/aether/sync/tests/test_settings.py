@@ -27,8 +27,5 @@ class SettingsTest(TestCase):
         self.assertTrue(settings.TESTING)
         self.assertFalse(settings.DEBUG)
 
-        self.assertFalse(settings.USE_X_FORWARDED_HOST)
-        self.assertFalse(settings.USE_X_FORWARDED_PORT)
-        self.assertEqual(settings.SECURE_PROXY_SSL_HEADER, None)
-
         self.assertEqual(settings.ROOT_URLCONF, 'aether.sync.urls')
+        self.assertEqual(settings.APP_NAME, 'Aether CouchDB-Sync')
