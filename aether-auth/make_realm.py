@@ -16,26 +16,26 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
 import os
-from jwcrypto.jwk import JWK
-from keycloak import KeycloakAdmin
 import requests
 
-ENV = lambda x : os.environ.get(x)
+from jwcrypto.jwk import JWK
+from keycloak import KeycloakAdmin
+
+get_env = lambda x : os.environ.get(x)
 
 # Keycloak Information
-HOST_URL = ENV('BASE_HOST')
-KC_INT_HOST = ENV('KEYCLOAK_INTERNAL')
+HOST_URL = get_env('BASE_HOST')
+KC_INT_HOST = get_env('KEYCLOAK_INTERNAL')
 INTERNAL_KC = f'http://{KC_INT_HOST}/keycloak/auth/'  # external url
 KEYCLOAK_URL = f'http://{HOST_URL}/keycloak/auth/'  # external url
 
 KC_MASTER_REALM = 'master'
-KC_ADMIN_USER = ENV('KEYCLOAK_GLOBAL_ADMIN')  # Admin on MASTER realm
-KC_ADMIN_PASSWORD = ENV('KEYCLOAK_GLOBAL_PASSWORD')
+KC_ADMIN_USER = get_env('KEYCLOAK_GLOBAL_ADMIN')  # Admin on MASTER realm
+KC_ADMIN_PASSWORD = get_env('KEYCLOAK_GLOBAL_PASSWORD')
 
 # Kong Information
-KONG_URL = f'http://{ENV("KONG_INTERNAL")}/'
+KONG_URL = f'http://{get_env("KONG_INTERNAL")}/'
 CONSUMERS_URL = f'{KONG_URL}consumers'
 
 REALMS_PATH = '/code/realm'
@@ -58,8 +58,8 @@ def make_realm(name, config):
     realm_url = f'{INTERNAL_KC}admin/realms'
     headers = {
         'content-type': 'application/json',
-        'authorization': f'Bearer {token}'
-        } 
+        'authorization': f'Bearer {token}',
+    }
     res = requests.post(realm_url, headers=headers, data=json.dumps(config))
     if not res.status_code is 201:
         raise ValueError('Could not create realm.')
@@ -67,19 +67,18 @@ def make_realm(name, config):
     # Make a Single Kong Consumer for JWT covering the whole realm.
 
     data = {
-        'username': f'{name}-jwt-consumer'
+        'username': f'{name}-jwt-consumer',
     }
-    res = requests.post(
-        CONSUMERS_URL,
-        data=data
-        )
+    res = requests.post(CONSUMERS_URL, data=data)
+    res.raise_for_status()
+
     details = res.json()
     consumer_id = details['id']
     # Get the public key from Keycloak
 
-    res = requests.get(
-            CERT_URL
-        )
+    res = requests.get(CERT_URL)
+    res.raise_for_status()
+
     jwk_key = res.json()['keys'][0]
 
     # Transform JWK into a PEM.
@@ -93,11 +92,10 @@ def make_realm(name, config):
     data = {
         'key': f'{KEYCLOAK_URL}realms/{name}',
         'algorithm': 'RS256',
-        'rsa_public_key': RSA_PUB_KEY
+        'rsa_public_key': RSA_PUB_KEY,
     }
-    res =requests.post(CONSUMER_CREDENTIALS_URL,
-            data=data
-        )
+    res = requests.post(CONSUMER_CREDENTIALS_URL, data=data)
+    res.raise_for_status()
 
     print(f'Realm: {name} created on keycloak: {KEYCLOAK_URL}')
 
@@ -112,7 +110,8 @@ def find_available_realms():
             realms[name] = config
     return realms
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     realms = find_available_realms()
     for name, config in realms.items():
-        make_realm(name, config) 
+        make_realm(name, config)

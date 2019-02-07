@@ -16,26 +16,24 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import base64
 import json
 import jwt
 import os
 import requests
 
-from flask import Flask, jsonify, request, render_template, redirect
+from flask import Flask, jsonify, request, render_template
 from jwcrypto.jwk import JWK
-from jwt.contrib.algorithms.pycrypto import RSAAlgorithm
 from keycloak import KeycloakAdmin
 
 
-ENV = lambda x : os.environ.get(x)
+get_env = lambda x : os.environ.get(x)
 
-HOST = ENV('BASE_HOST')  # External URL for host
+HOST = get_env('BASE_HOST')  # External URL for host
 
-KC_URL = f'http://{ENV("KEYCLOAK_INTERNAL")}/keycloak/auth/'  # internal
+KC_URL = f'http://{get_env("KEYCLOAK_INTERNAL")}/keycloak/auth/'  # internal
 KEYCLOAK_EXTERNAL = f'http://{HOST}/keycloak/auth/'
-KC_ADMIN = ENV('KEYCLOAK_GLOBAL_ADMIN')
-KC_PASSWORD = ENV('KEYCLOAK_GLOBAL_PASSWORD')
+KC_ADMIN = get_env('KEYCLOAK_GLOBAL_ADMIN')
+KC_PASSWORD = get_env('KEYCLOAK_GLOBAL_PASSWORD')
 KC_MASTER_REALM = 'master'
 
 app = Flask(__name__, template_folder='templates')
@@ -53,7 +51,7 @@ def get_kc_admin_token():
                                    verify=True)
     token = keycloak_admin.token['access_token']
     headers = {
-        'authorization': f'Bearer {token}'
+        'authorization': f'Bearer {token}',
     }
     return headers
 
@@ -63,13 +61,20 @@ def get_realms():
     url = f'{KC_URL}admin/realms'
     res = requests.get(url, headers=headers)
     realms = res.json()
-    return {r.get('id'): r.get('realm') for r in realms if r.get('id') != 'master'}
+    return {
+        r.get('id'): r.get('realm')
+        for r in realms
+        if r.get('id') != 'master'
+    }
 
 
 def get_oidc(kc_url, realm):
     realm_client = f'{realm}-oidc'
     headers = get_kc_admin_token()
-    INSTALLATION_URL = f'{kc_url}admin/realms/{realm}/clients/{realm_client}/installation/providers/keycloak-oidc-keycloak-json'
+    INSTALLATION_URL = (
+        f'{kc_url}admin/realms/{realm}/clients/{realm_client}'
+        '/installation/providers/keycloak-oidc-keycloak-json'
+    )
     res = requests.get(INSTALLATION_URL, headers=headers)
     oidc = res.json()
     oidc['auth-server-url'] = KEYCLOAK_EXTERNAL
@@ -78,9 +83,7 @@ def get_oidc(kc_url, realm):
 
 def get_public_key(kc_url, realm):
     CERT_URL = f'{kc_url}realms/{realm}/protocol/openid-connect/certs'
-    res = requests.get(
-        CERT_URL
-    )
+    res = requests.get(CERT_URL)
     jwk_key = res.json()['keys'][0]
     key_obj = JWK(**jwk_key)
     RSA_PUB_KEY = str(key_obj.export_to_pem(), 'utf-8')
@@ -102,10 +105,7 @@ def validate_token(tenant, headers=None, cookies=None):
     if not headers:
         headers = {}
     if not tenant in PK:
-        try:
-            PK[tenant] = get_public_key(KC_URL, tenant)
-        except Exception as e:
-            raise e
+        PK[tenant] = get_public_key(KC_URL, tenant)
     header_auth = headers.get('authorization')
     if header_auth:
         raw = header_auth[7:]
@@ -155,10 +155,10 @@ def base(tenant):
 @app.route("/auth/login")
 @app.route("/auth/login/<tenant>")
 def login(tenant=None):
-    redirect = request.args.get('redirect', None) \
-        or f'http://{HOST}/auth/user/{tenant}/token'
     if not tenant:
         return jsonify({'error': 'a realm must be specified for login /auth/login/{realm}'})
+    redirect = request.args.get('redirect', None) \
+        or f'http://{HOST}/auth/user/{tenant}/token'
     return render_template('./index.html', tenant=tenant, redirect=redirect, host=HOST)
 
 
@@ -166,10 +166,7 @@ def login(tenant=None):
 @app.route("/auth/login/<tenant>/keycloak.json")
 def kc_json(tenant):
     if not tenant in kcj:
-        try:
-            kcj[tenant] = get_oidc(KC_URL, tenant)
-        except Exception as e:
-            raise e
+        kcj[tenant] = get_oidc(KC_URL, tenant)
     return jsonify(kcj[tenant])
 
 

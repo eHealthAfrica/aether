@@ -26,5 +26,7 @@ DC_AUTH="docker-compose -f docker-compose-auth.yml"
 $DC_AUTH kill
 $DC_AUTH up -d kongpg
 sleep 3
+
+$DC_AUTH run kong kong migrations bootstrap
 $DC_AUTH run kong kong migrations --v up
 $DC_AUTH kill

@@ -23,6 +23,8 @@ services:
       KEYCLOAK_GLOBAL_PASSWORD: ${KEYCLOAK_GLOBAL_PASSWORD}
       KEYCLOAK_INTERNAL: ${KEYCLOAK_INTERNAL}
       KONG_INTERNAL: ${KONG_INTERNAL}
+    volumes:
+      - ./aether-auth:/code
     command: start
     networks:
       - internal
