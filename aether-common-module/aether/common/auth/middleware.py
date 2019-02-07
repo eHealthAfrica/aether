@@ -37,9 +37,7 @@ PK = {}
 
 def get_public_key(kc_url, realm):
     CERT_URL = f'{kc_url}realms/{realm}/protocol/openid-connect/certs'
-    res = requests.get(
-        CERT_URL
-    )
+    res = requests.get(CERT_URL)
     jwk_key = res.json()['keys'][0]
     key_obj = JWK(**jwk_key)
     RSA_PUB_KEY = str(key_obj.export_to_pem(), 'utf-8')

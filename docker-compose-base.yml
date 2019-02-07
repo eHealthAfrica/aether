@@ -86,15 +86,16 @@ services:
       # Uncomment this line to enable single sign on if you use CAS
       # CAS_SERVER_URL: https://your.cas.server
 
+      APP_INTERNAL: http://kernel:8000
       BASE_HOST: ${BASE_HOST}
-      KONG_INTERNAL: ${KONG_INTERNAL}
       KEYCLOAK_INTERNAL: ${KEYCLOAK_INTERNAL}
+      KONG_INTERNAL: ${KONG_INTERNAL}
 
-      CSRF_COOKIE_DOMAIN: .aether.local
+      CSRF_COOKIE_DOMAIN: aether.local
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}
       DJANGO_STORAGE_BACKEND: filesystem
-      HOSTNAME: kernel.aether.local
+      HOSTNAME: ${BASE_HOST}/kernel
 
       APP_NAME: Aether Kernel
       APP_ID: kernel
@@ -156,11 +157,16 @@ services:
       # Uncomment this line to enable single sign on if you use CAS
       # CAS_SERVER_URL: https://your.cas.server
 
-      CSRF_COOKIE_DOMAIN: .aether.local
+      APP_INTERNAL: http://odk:8002
+      BASE_HOST: ${BASE_HOST}
+      KEYCLOAK_INTERNAL: ${KEYCLOAK_INTERNAL}
+      KONG_INTERNAL: ${KONG_INTERNAL}
+
+      CSRF_COOKIE_DOMAIN: aether.local
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${ODK_DJANGO_SECRET_KEY}
       DJANGO_STORAGE_BACKEND: filesystem
-      HOSTNAME: odk.aether.local
+      HOSTNAME: ${BASE_HOST}/odk
 
       APP_NAME: Aether ODK
       APP_ID: odk
@@ -219,11 +225,16 @@ services:
       # Uncomment this line to enable single sign on if you use CAS
       # CAS_SERVER_URL: https://your.cas.server
 
-      CSRF_COOKIE_DOMAIN: .aether.local
+      APP_INTERNAL: http://couchdb-sync:8006
+      BASE_HOST: ${BASE_HOST}
+      KEYCLOAK_INTERNAL: ${KEYCLOAK_INTERNAL}
+      KONG_INTERNAL: ${KONG_INTERNAL}
+
+      CSRF_COOKIE_DOMAIN: aether.local
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${COUCHDB_SYNC_DJANGO_SECRET_KEY}
       DJANGO_STORAGE_BACKEND: filesystem
-      HOSTNAME: sync.aether.local
+      HOSTNAME: ${BASE_HOST}/couchdb-sync
 
       APP_NAME: Aether CouchDB-Sync
       APP_ID: couchdb-sync
@@ -291,11 +302,16 @@ services:
       # Uncomment this line to enable single sign on if you use CAS
       # CAS_SERVER_URL: https://your.cas.server
 
-      CSRF_COOKIE_DOMAIN: .aether.local
+      APP_INTERNAL: http://ui:8004
+      BASE_HOST: ${BASE_HOST}
+      KEYCLOAK_INTERNAL: ${KEYCLOAK_INTERNAL}
+      KONG_INTERNAL: ${KONG_INTERNAL}
+
+      CSRF_COOKIE_DOMAIN: aether.local
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${UI_DJANGO_SECRET_KEY}
       DJANGO_STORAGE_BACKEND: filesystem
-      HOSTNAME: ui.aether.local
+      HOSTNAME: ${BASE_HOST}/ui
 
       APP_NAME: Aether
       APP_ID: ui

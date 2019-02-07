@@ -25,11 +25,13 @@ ENV = lambda x : os.environ.get(x)
 # Kong info
 
 # TODO Make ENVs
+# TODO: Fix scheme https or http
 
 HOST = ENV('BASE_HOST')  # External URL for host
 KONG_URL = f'http://{ENV("KONG_INTERNAL")}/'
+
 CLIENT_URL = 'http://auth:3011/'
-CLIENT_NAME = 'auth' 
+CLIENT_NAME = 'auth'
 PLUGIN_URL = f'{KONG_URL}services/{CLIENT_NAME}/plugins'
 
 print(f'Exposing Service {CLIENT_NAME} @ {CLIENT_URL}')
@@ -117,5 +119,5 @@ data = {
 }
 
 res = requests.post(PLUGIN_URL, data=data)
-print(f'Service {CLIENT_NAME} from, {CLIENT_URL}' 
+print(f'Service {CLIENT_NAME} from, {CLIENT_URL}'
     + f' now being served by kong @ /{CLIENT_NAME}.')

@@ -63,7 +63,11 @@ cat << EOF
 # ------------------------------------------------------------------
 # Hosting
 # ==================================================================
-BASE_HOST=aether.local
+BASE_HOST=aether.local:8090
+KEYCLOAK_INTERNAL=keycloak:8080
+KONG_INTERNAL=kong:8001
+# ------------------------------------------------------------------
+
 
 # ------------------------------------------------------------------
 # Databases
@@ -79,9 +83,9 @@ REDIS_PASSWORD=$(gen_random_string)
 KEYCLOAK_GLOBAL_ADMIN=admin
 KEYCLOAK_GLOBAL_PASSWORD=$(gen_random_string)
 KEYCLOAK_PG_PASSWORD=$(gen_random_string)
-KEYCLOAK_INTERNAL=keycloak:8080
-KONG_INTERNAL=kong:8001
 KONG_PG_PASSWORD=$(gen_random_string)
+# ------------------------------------------------------------------
+
 
 # ------------------------------------------------------------------
 # Aether Kernel
@@ -134,5 +138,5 @@ UI_DB_PASSWORD=$(gen_random_string)
 # ==================================================================
 PRODUCER_ADMIN_USER=admin
 PRODUCER_ADMIN_PW=$(gen_random_string)
-
+# ------------------------------------------------------------------
 EOF

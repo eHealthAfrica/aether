@@ -1,4 +1,4 @@
-FROM python:3.6-slim-jessie
+FROM python:3.7-slim-stretch
 
 ################################################################################
 ## setup container
@@ -6,7 +6,7 @@ FROM python:3.6-slim-jessie
 
 RUN apt-get update -qq \
     && apt-get -qq --yes --force-yes install gcc \
-    && pip install --upgrade pip
+    && pip install -q --upgrade pip
 
 ################################################################################
 ## install app
@@ -16,9 +16,8 @@ RUN apt-get update -qq \
 WORKDIR /code
 
 # This avoids reinstalling Python packages each time the image is rebuilt.
-ADD ./requirements.txt /code/requirements.txt
-
-RUN pip install -r requirements.txt
+COPY ./requirements.txt /code/requirements.txt
+RUN pip install -q -r requirements.txt
 
 COPY . /code
 
