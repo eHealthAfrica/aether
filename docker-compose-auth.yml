@@ -61,11 +61,12 @@ services:
       KONG_PG_USER: ${KONG_PG_USER:-kong}
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
-      KONG_PROXY_LISTEN: 0.0.0.0:80
+      KONG_PROXY_LISTEN: 0.0.0.0:8090
     links:
       - kongpg:kongpg
     ports:
-      - "80:80/tcp"
+      # - "80:80/tcp"
+      - "8090:8090/tcp"
       # - "8001:8001/tcp"  # internal only
       # - "8443:8443/tcp"  Once ODK is integrated, we can take these
       # - "8444:8444/tcp"
