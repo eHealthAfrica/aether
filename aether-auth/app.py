@@ -150,7 +150,7 @@ def login(tenant=None):
         or f'http://{HOST}/auth/user/{tenant}/token'
     if not tenant:
         return jsonify({'error': 'a realm must be specified for login /auth/login/{realm}'})        
-    return render_template('./index.html', tenant=tenant, redirect=redirect)
+    return render_template('./index.html', tenant=tenant, redirect=redirect, host=HOST)
 
 # Public Information
 @app.route("/auth/login/<tenant>/keycloak.json")
