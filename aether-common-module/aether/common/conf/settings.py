@@ -30,7 +30,13 @@ TESTING = bool(os.environ.get('TESTING'))
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
 APP_NAME = os.environ.get('APP_NAME', 'aether')
+APP_ID = os.environ.get('APP_ID', 'aether-module-name')  # URL Friendly
 APP_LINK = os.environ.get('APP_LINK', 'http://aether.ehealthafrica.org')
+
+BASE_HOST = os.environ.get('BASE_HOST', 'aether.local')
+
+REALM_COOKIE = os.environ.get('REALM_COOKIE', 'aether-realm')
+JWT_COOKIE = os.environ.get('JWT_COOKIE', 'aether-jwt')
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -38,7 +44,7 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-STATIC_URL = '/static/'
+STATIC_URL = f'/{APP_ID}/static/'
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/static/')
 
 MEDIA_URL = '/media/'
@@ -100,6 +106,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'aether.common.auth.middleware.JWTAuthentication'
 ]
 
 TEMPLATES = [
@@ -293,7 +300,7 @@ CSRF_COOKIE_DOMAIN = os.environ.get('CSRF_COOKIE_DOMAIN', '.aether.org')
 CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', CSRF_COOKIE_DOMAIN).split(',')
 SESSION_COOKIE_DOMAIN = CSRF_COOKIE_DOMAIN
 
-if os.environ.get('DJANGO_USE_X_FORWARDED_HOST', False):
+if os.environ.get('DJANGO_USE_X_FORWARDED_HOST', True):
     USE_X_FORWARDED_HOST = True
 
 if os.environ.get('DJANGO_USE_X_FORWARDED_PORT', False):

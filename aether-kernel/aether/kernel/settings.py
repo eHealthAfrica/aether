@@ -38,10 +38,6 @@ INSTALLED_APPS += [
     'aether.kernel',
 ]
 
-MIDDLEWARE = [
-  'aether.kernel.api.middleware.AetherKCMiddleware'
-]
-
 MIGRATION_MODULES = {
     'kernel': 'aether.kernel.api.migrations'
 }
@@ -51,11 +47,6 @@ REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'] = [
     'django_filters.rest_framework.DjangoFilterBackend',
     *REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'],
 ]
-
-#Overrite static URL to account for app name (which isn't stripped by gateway)
-STATIC_URL = '/kernel/static/'
-
-USE_X_FORWARDED_HOST = True
 
 # Export Configuration
 # ------------------------------------------------------------------------------

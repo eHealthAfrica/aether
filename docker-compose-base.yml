@@ -96,6 +96,7 @@ services:
       HOSTNAME: kernel.aether.local
 
       APP_NAME: Aether Kernel
+      APP_ID: kernel
 
       ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
@@ -157,6 +158,7 @@ services:
       HOSTNAME: odk.aether.local
 
       APP_NAME: Aether ODK
+      APP_ID: odk
 
       ADMIN_USERNAME: ${ODK_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${ODK_ADMIN_PASSWORD}
@@ -217,6 +219,7 @@ services:
       HOSTNAME: sync.aether.local
 
       APP_NAME: Aether CouchDB-Sync
+      APP_ID: couchdb-sync
 
       ADMIN_USERNAME: ${COUCHDB_SYNC_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${COUCHDB_SYNC_ADMIN_PASSWORD}
@@ -286,6 +289,7 @@ services:
       HOSTNAME: ui.aether.local
 
       APP_NAME: Aether
+      APP_ID: ui
 
       ADMIN_USERNAME: ${UI_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${UI_ADMIN_PASSWORD}
