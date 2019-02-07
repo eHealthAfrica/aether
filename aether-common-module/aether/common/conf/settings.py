@@ -30,14 +30,8 @@ TESTING = bool(os.environ.get('TESTING'))
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
 APP_NAME = os.environ.get('APP_NAME', 'aether')
-APP_ID = os.environ.get('APP_ID', 'aether-module-name')  # URL Friendly
+APP_ID = os.environ.get('APP_ID', 'aether')  # URL Friendly
 APP_LINK = os.environ.get('APP_LINK', 'http://aether.ehealthafrica.org')
-
-BASE_HOST = os.environ.get('BASE_HOST', 'aether.local')
-KEYCLOAK_INTERNAL = os.environ.get('KEYCLOAK_INTERNAL', 'keycloak:8080')
-
-REALM_COOKIE = os.environ.get('REALM_COOKIE', 'aether-realm')
-JWT_COOKIE = os.environ.get('JWT_COOKIE', 'aether-jwt')
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
@@ -45,7 +39,7 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-STATIC_URL = f'/{APP_ID}/static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/static/')
 
 MEDIA_URL = '/media/'
@@ -107,7 +101,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'aether.common.auth.middleware.JWTAuthentication'
 ]
 
 TEMPLATES = [
@@ -127,6 +120,8 @@ TEMPLATES = [
         },
     },
 ]
+
+MIGRATION_MODULES = {}
 
 
 # REST Framework Configuration
@@ -290,6 +285,26 @@ else:
     LOGGED_OUT_TEMPLATE = os.environ.get('LOGGED_OUT_TEMPLATE', 'aether/logged_out.html')
 
 
+KEYCLOAK_INTERNAL = os.environ.get('KEYCLOAK_INTERNAL')
+if KEYCLOAK_INTERNAL:
+    APP_ID = os.environ['APP_ID']  # URL Friendly
+    KONG_INTERNAL = os.environ['KONG_INTERNAL']
+    APP_INTERNAL = os.environ['APP_INTERNAL']
+
+    BASE_HOST = os.environ.get('BASE_HOST', 'aether.local')
+    JWT_COOKIE = os.environ.get('JWT_COOKIE', 'aether-jwt')
+    REALM_COOKIE = os.environ.get('REALM_COOKIE', 'aether-realm')
+
+    STATIC_URL = f'/{APP_ID}/static/'
+
+    MIDDLEWARE += [
+        'aether.common.auth.middleware.JWTAuthentication',
+    ]
+
+else:
+    logger.info('No Keycloak enabled!')
+
+
 # Multitenancy Configuration
 # ------------------------------------------------------------------------------
 
@@ -308,7 +323,6 @@ if MULTITENANCY:
     ]
 
 else:
-    MIGRATION_MODULES = {}
     logger.info('No multitenancy enabled!')
 
 

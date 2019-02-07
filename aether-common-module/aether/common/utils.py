@@ -27,7 +27,8 @@ def resolve_file_url(url):
         # For local development, the environment variable DJANGO_STORAGE_BACKEND is
         # set to "filesytem" and files (attachments, media files etc.) are stored on
         # the filesystem and served via nginx. Example URL:
-        # http://odk.aether.local/media/<path-to-file>.
+        # http://odk.aether.local/media/<path-to-file> or
+        # http://aether.local/odk/media/<path-to-file>.
         ssl_header = settings.SECURE_PROXY_SSL_HEADER
         scheme = ssl_header[1] if ssl_header else 'http'
         return f'{scheme}://{settings.HOSTNAME}{url}'

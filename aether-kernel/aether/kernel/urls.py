@@ -21,12 +21,10 @@ from django.conf.urls import include, url
 from aether.common.conf.urls import generate_urlpatterns
 from aether.kernel.api.views import AetherSchemaView
 
-from .settings import APP_ID
-
 API_PREFIX = '^(?P<version>v1)'
 
 
-urlpatterns = generate_urlpatterns(token=True) + [
+urlpatterns = generate_urlpatterns(token=True, app=[
     url(r'^', include('aether.kernel.api.urls')),
     url(f'{API_PREFIX}/', include('aether.kernel.api.urls')),
 
@@ -36,7 +34,4 @@ urlpatterns = generate_urlpatterns(token=True) + [
     url(f'{API_PREFIX}/swagger/$',
         view=AetherSchemaView.with_ui('swagger', cache_timeout=0),
         name='schema-swagger-ui'),
-]
-
-# Prepend urls with /kernel/
-urlpatterns = [url(fr'^{APP_ID}/', include(urlpatterns))]
+])

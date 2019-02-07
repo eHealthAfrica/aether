@@ -22,7 +22,7 @@ import os
 # ------------------------------------------------------------------------------
 
 from aether.common.conf.settings import *  # noqa
-from aether.common.conf.settings import INSTALLED_APPS, STATIC_ROOT
+from aether.common.conf.settings import INSTALLED_APPS, STATIC_ROOT, MIGRATION_MODULES
 
 
 # UI Configuration
@@ -46,6 +46,5 @@ INSTALLED_APPS += [
     'aether.ui',
 ]
 
-MIGRATION_MODULES = {
-    'ui': 'aether.ui.api.migrations'
-}
+# MULTITENANCY_MODEL = 'ui.Project'
+MIGRATION_MODULES['ui'] = 'aether.ui.api.migrations'

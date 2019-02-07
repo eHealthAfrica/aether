@@ -24,7 +24,7 @@ from django.utils.translation import ugettext as _
 from aether.common.health.views import health, check_db, check_app
 
 
-def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
+def generate_urlpatterns(token=False, kernel=False, app=[]):  # pragma: no cover
     '''
     Generates the most common url patterns in the apps.
 
@@ -142,5 +142,15 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
 
         msg_token = _('Environment variable "AETHER_KERNEL_TOKEN" is not set')
         assert get_kernel_server_token(), msg_token
+
+    # add app specific
+    urlpatterns += app
+
+    # keycloak + kong enabled
+    if settings.KEYCLOAK_INTERNAL:
+        # Prepend urls with /{APP_ID}/
+        urlpatterns = [
+            url(fr'^{settings.APP_ID}/', include(urlpatterns))
+        ]
 
     return urlpatterns

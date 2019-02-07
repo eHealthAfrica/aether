@@ -42,9 +42,8 @@ INSTALLED_APPS += [
     'aether.kernel',
 ]
 
-# In case of Mutitenancy is enabled!
-MULTITENANCY_MODEL = 'kernel.Project'
 
+MULTITENANCY_MODEL = 'kernel.Project'
 MIGRATION_MODULES['kernel'] = 'aether.kernel.api.migrations'
 
 REST_FRAMEWORK['DEFAULT_VERSIONING_CLASS'] = 'rest_framework.versioning.URLPathVersioning'

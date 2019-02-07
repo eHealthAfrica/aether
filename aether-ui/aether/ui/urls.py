@@ -23,7 +23,7 @@ from django.views.generic import TemplateView
 from aether.common.conf.urls import generate_urlpatterns
 
 
-urlpatterns = generate_urlpatterns(kernel=True) + [
+urlpatterns = generate_urlpatterns(kernel=True, app=[
     # API
     url(r'^api/', include('aether.ui.api.urls')),
 
@@ -36,4 +36,4 @@ urlpatterns = generate_urlpatterns(kernel=True) + [
     url(r'^styleguide/',
         login_required(TemplateView.as_view(template_name='pages/styleguide.html')),
         name='styleguide'),
-]
+])
