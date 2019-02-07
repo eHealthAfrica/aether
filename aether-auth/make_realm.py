@@ -63,6 +63,7 @@ def make_realm(name, config):
     }
     res = requests.post(realm_url, headers=headers, data=json.dumps(config))
     if not res.status_code is 201:
+        print(res.json())
         raise ValueError('Could not create realm.')
 
     # Make a Single Kong Consumer for JWT covering the whole realm.

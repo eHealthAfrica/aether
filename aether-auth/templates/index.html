@@ -1,27 +1,28 @@
 <!DOCTYPE html>
 <html lang='en'>
-<body>
-<script src='http://{{host}}/keycloak/auth/js/keycloak.js'></script>
-<script type='text/javascript'>
-  'use strict'
-  // MAKE THIS MORE SECURE.
-  function setCookie(name,value,days) {
-    var expires = "";
-    if (days) {
-        var date = new Date();
-        date.setTime(date.getTime() + (days*24*60*60*1000));
-        expires = "; expires=" + date.toUTCString();
-    }
-    document.cookie = name + "=" + (value || "")  + expires + "; path=/";
-  }
-  const keycloak = Keycloak('/auth/login/{{ tenant }}/keycloak.json')
-  keycloak.init({ onLoad: 'login-required' })
-    .error(function () { alert('error') })
-    .success(function (authenticated) {
-      setCookie('aether-jwt', keycloak.token, 7)
-      setCookie('aether-realm', '{{tenant}}', 7)
-      window.location.replace('{{ redirect }}' );
-    })
-</script>
-</body>
+  <body>
+    <script src='http://{{host}}/keycloak/auth/js/keycloak.js'></script>
+    <script type='text/javascript'>
+      'use strict'
+      // MAKE THIS MORE SECURE.
+      function setCookie (name, value, days) {
+        var expires = ""
+        if (days) {
+            var date = new Date()
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000))
+            expires = "; expires=" + date.toUTCString()
+        }
+        document.cookie = name + "=" + (value || "")  + expires + "; path=/"
+      }
+
+      const keycloak = Keycloak('/auth/login/{{ tenant }}/keycloak.json')
+      keycloak.init({ onLoad: 'login-required' })
+        .error(function () { alert('error') })
+        .success(function (authenticated) {
+          setCookie('aether-jwt', keycloak.token, 7)
+          setCookie('aether-realm', '{{ tenant }}', 7)
+          window.location.replace('{{ redirect }}')
+        })
+    </script>
+  </body>
 </html>
