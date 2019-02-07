@@ -19,6 +19,8 @@
 import logging
 import os
 
+from django.contrib import admin
+
 
 # Common Configuration
 # ------------------------------------------------------------------------------
@@ -173,6 +175,14 @@ DATABASES = {
 }
 
 
+# Admin site Configuration
+# ------------------------------------------------------------------------------
+
+admin.site.site_url = '/'
+admin.site.site_header = APP_NAME + ' administration'
+admin.site.site_title = APP_NAME + ' site administration'
+
+
 # Logging Configuration
 # ------------------------------------------------------------------------------
 
@@ -300,6 +310,9 @@ if KEYCLOAK_INTERNAL:
     MIDDLEWARE += [
         'aether.common.auth.middleware.JWTAuthentication',
     ]
+
+    # change "View site" url in admin section
+    admin.site.site_url = f'/{APP_ID}/'
 
 else:
     logger.info('No Keycloak enabled!')
