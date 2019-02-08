@@ -20,12 +20,26 @@
 #
 set -Eeuo pipefail
 
+source .env
+
 DCA="docker-compose -f ./docker-compose-auth.yml"
 
 $DCA kill
 $DCA down
-$DCA up -d kongpg keycloakpg db
+$DCA up -d db
 sleep 3
+
+DB_ID=$($DCA ps -q db)
+
+docker container exec -i $DB_ID psql <<- EOSQL
+    CREATE USER kong PASSWORD '${KONG_PG_PASSWORD}';
+    CREATE DATABASE kong OWNER kong;
+EOSQL
+
+docker container exec -i $DB_ID psql <<- EOSQL
+    CREATE USER keycloak PASSWORD '${KEYCLOAK_PG_PASSWORD}';
+    CREATE DATABASE keycloak OWNER keycloak;
+EOSQL
 
 $DCA build keycloak kernel
 
@@ -34,6 +48,7 @@ $DCA run kong kong migrations up
 sleep 3
 
 $DCA up -d kong keycloak
+sleep 5
 
 $DCA build auth
 $DCA run auth setup_auth

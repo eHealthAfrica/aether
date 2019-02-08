@@ -16,7 +16,7 @@ volumes:
 services:
 
   # ---------------------------------
-  # Databases
+  # Database
   # ---------------------------------
 
   db:
@@ -27,30 +27,6 @@ services:
       - database_data:/var/lib/postgresql/data
     networks:
       - internal
-
-  kongpg:
-    image: postgres:9.6-alpine
-    environment:
-      POSTGRES_DB: kong
-      POSTGRES_USER: kong
-      POSTGRES_PASSWORD: ${KONG_PG_PASSWORD}
-    healthcheck:
-      test: pg_isready
-      interval: 30s
-      timeout: 30s
-      retries: 3
-    networks:
-      - internal
-
-  keycloakpg:
-    image: postgres:9.6-alpine
-    environment:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: ${KEYCLOAK_PG_PASSWORD}
-    networks:
-      - internal
-
 
   # ---------------------------------
   # Authorization modules
@@ -65,7 +41,7 @@ services:
       KONG_CASSANDRA_CONTACT_POINTS: db
 
       KONG_DATABASE: postgres
-      KONG_PG_HOST: kongpg
+      KONG_PG_HOST: db
       KONG_PG_DATABASE: kong
       KONG_PG_USER: kong
       KONG_PG_PASSWORD: ${KONG_PG_PASSWORD:-kong}
@@ -73,10 +49,8 @@ services:
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_PROXY_LISTEN: 0.0.0.0:8090
-    links:
-      - kongpg:kongpg
     depends_on:
-      kongpg:
+      db:
         condition: service_healthy
     ports:
       - "8090:8090/tcp"
@@ -91,7 +65,7 @@ services:
     build: ./aether-auth/keycloak
     environment:
       DB_VENDOR: POSTGRES
-      DB_ADDR: keycloakpg
+      DB_ADDR: db
       DB_DATABASE: keycloak
       DB_USER: keycloak
       DB_PASSWORD: ${KEYCLOAK_PG_PASSWORD}
@@ -101,21 +75,22 @@ services:
 
       PROXY_ADDRESS_FORWARDING: 'true'
       PROXY_PORT_FORWARDING: 'true'
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - 8080:8080
-    depends_on:
-      - keycloakpg
     networks:
       - internal
 
   auth:
     build: ./aether-auth
     environment:
-      BASE_HOST: ${BASE_HOST}
+      BASE_HOST: aether.local:8090
       KEYCLOAK_GLOBAL_ADMIN: ${KEYCLOAK_GLOBAL_ADMIN}
       KEYCLOAK_GLOBAL_PASSWORD: ${KEYCLOAK_GLOBAL_PASSWORD}
-      KEYCLOAK_INTERNAL: ${KEYCLOAK_INTERNAL}
-      KONG_INTERNAL: ${KONG_INTERNAL}
+      KEYCLOAK_INTERNAL: keycloak:8080
+      KONG_INTERNAL: kong:8001
       APP_NAME: auth
       APP_PORT: 3012
     volumes:
@@ -140,11 +115,13 @@ services:
     environment:
       # DEBUG: null
       APP_INTERNAL: http://kernel:8000
-      BASE_HOST: ${BASE_HOST}
+      BASE_HOST: aether.local:8090
       CSRF_COOKIE_DOMAIN: aether.local
-      HOSTNAME: ${BASE_HOST}/kernel
-      KEYCLOAK_INTERNAL: ${KEYCLOAK_INTERNAL}
-      KONG_INTERNAL: ${KONG_INTERNAL}
+      HOSTNAME: aether.local:8090/kernel
+      KEYCLOAK_INTERNAL: keycloak:8080
+      KONG_INTERNAL: kong:8001
+    volumes:
+      - ./aether-common-module/aether/common:/code/aether/common
     depends_on:
       db:
         condition: service_healthy
