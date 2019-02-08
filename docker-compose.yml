@@ -63,17 +63,6 @@ services:
     extends:
       file: ./docker-compose-base.yml
       service: kernel-base
-    environment:
-      # Uncomment this line to enable single sign on if you use CAS
-      # CAS_SERVER_URL: https://your.cas.server
-
-      # Enable keycloak and Kong
-      APP_INTERNAL: http://kernel:8000
-      BASE_HOST: ${BASE_HOST}
-      CSRF_COOKIE_DOMAIN: aether.local
-      HOSTNAME: ${BASE_HOST}/kernel
-      KEYCLOAK_INTERNAL: ${KEYCLOAK_INTERNAL}
-      KONG_INTERNAL: ${KONG_INTERNAL}
     depends_on:
       db:
         condition: service_healthy
@@ -98,17 +87,6 @@ services:
     extends:
       file: ./docker-compose-base.yml
       service: ui-base
-    environment:
-      # Uncomment this line to enable single sign on if you use CAS
-      # CAS_SERVER_URL: https://your.cas.server
-
-      # Enable keycloak and Kong
-      APP_INTERNAL: http://ui:8004
-      BASE_HOST: ${BASE_HOST}
-      CSRF_COOKIE_DOMAIN: aether.local
-      HOSTNAME: ${BASE_HOST}/ui
-      KEYCLOAK_INTERNAL: ${KEYCLOAK_INTERNAL}
-      KONG_INTERNAL: ${KONG_INTERNAL}
     depends_on:
       db:
         condition: service_healthy
@@ -131,17 +109,6 @@ services:
     extends:
       file: ./docker-compose-base.yml
       service: odk-base
-    environment:
-      # Uncomment this line to enable single sign on if you use CAS
-      # CAS_SERVER_URL: https://your.cas.server
-
-      # Enable keycloak and Kong
-      APP_INTERNAL: http://odk:8002
-      BASE_HOST: ${BASE_HOST}
-      CSRF_COOKIE_DOMAIN: aether.local
-      HOSTNAME: ${BASE_HOST}/odk
-      KEYCLOAK_INTERNAL: ${KEYCLOAK_INTERNAL}
-      KONG_INTERNAL: ${KONG_INTERNAL}
     depends_on:
       db:
         condition: service_healthy
@@ -159,17 +126,6 @@ services:
     extends:
       file: ./docker-compose-base.yml
       service: couchdb-sync-base
-    environment:
-      # Uncomment this line to enable single sign on if you use CAS
-      # CAS_SERVER_URL: https://your.cas.server
-
-      # Enable keycloak and Kong
-      APP_INTERNAL: http://couchdb-sync:8006
-      BASE_HOST: ${BASE_HOST}
-      CSRF_COOKIE_DOMAIN: aether.local
-      HOSTNAME: ${BASE_HOST}/couchdb-sync
-      KEYCLOAK_INTERNAL: ${KEYCLOAK_INTERNAL}
-      KONG_INTERNAL: ${KONG_INTERNAL}
     depends_on:
       db:
         condition: service_healthy
@@ -199,15 +155,13 @@ services:
       - internal
 
 
-  # Deprecated in favor of Kong in docker-compose-auth.yml
-
   # # ---------------------------------
   # # NGINX container
   # # ---------------------------------
 
-  # nginx:
-  #   extends:
-  #     file: ./docker-compose-base.yml
-  #     service: nginx-base
-  #   networks:
-  #     - internal
+  nginx:
+    extends:
+      file: ./docker-compose-base.yml
+      service: nginx-base
+    networks:
+      - internal

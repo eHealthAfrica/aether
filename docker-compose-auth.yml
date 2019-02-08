@@ -7,28 +7,26 @@ networks:
       # if this isn't explicitly set it inherits from the containing folder name (aether or not)
       name: aether_internal
 
+volumes:
+  # docker volume create aether_database_data
+  database_data:
+    external:
+      name: aether_database_data
+
 services:
 
-  # Auth mediator
-  auth:
-    build: ./aether-auth
-    depends_on:
-      kong:
-        condition: service_started
-      keycloak:
-        condition: service_started
-    environment:
-      BASE_HOST: ${BASE_HOST}
-      KEYCLOAK_GLOBAL_ADMIN: ${KEYCLOAK_GLOBAL_ADMIN}
-      KEYCLOAK_GLOBAL_PASSWORD: ${KEYCLOAK_GLOBAL_PASSWORD}
-      KEYCLOAK_INTERNAL: ${KEYCLOAK_INTERNAL}
-      KONG_INTERNAL: ${KONG_INTERNAL}
+  # ---------------------------------
+  # Databases
+  # ---------------------------------
+
+  db:
+    extends:
+      file: ./docker-compose-base.yml
+      service: postgres-base
     volumes:
-      - ./aether-auth:/code
-    command: start
+      - database_data:/var/lib/postgresql/data
     networks:
       - internal
-
 
   kongpg:
     image: postgres:9.6-alpine
@@ -52,6 +50,11 @@ services:
       POSTGRES_PASSWORD: ${KEYCLOAK_PG_PASSWORD}
     networks:
       - internal
+
+
+  # ---------------------------------
+  # Authorization modules
+  # ---------------------------------
 
   kong:
     image: kong:latest
@@ -102,5 +105,46 @@ services:
       - 8080:8080
     depends_on:
       - keycloakpg
+    networks:
+      - internal
+
+  auth:
+    build: ./aether-auth
+    environment:
+      BASE_HOST: ${BASE_HOST}
+      KEYCLOAK_GLOBAL_ADMIN: ${KEYCLOAK_GLOBAL_ADMIN}
+      KEYCLOAK_GLOBAL_PASSWORD: ${KEYCLOAK_GLOBAL_PASSWORD}
+      KEYCLOAK_INTERNAL: ${KEYCLOAK_INTERNAL}
+      KONG_INTERNAL: ${KONG_INTERNAL}
+    volumes:
+      - ./aether-auth:/code
+    depends_on:
+      kong:
+        condition: service_started
+      keycloak:
+        condition: service_started
+    command: start
+    networks:
+      - internal
+
+  # ---------------------------------
+  # Aether modules
+  # ---------------------------------
+
+  kernel:
+    extends:
+      file: ./docker-compose-base.yml
+      service: kernel-base
+    environment:
+      # DEBUG: null
+      APP_INTERNAL: http://kernel:8000
+      BASE_HOST: ${BASE_HOST}
+      CSRF_COOKIE_DOMAIN: aether.local
+      HOSTNAME: ${BASE_HOST}/kernel
+      KEYCLOAK_INTERNAL: ${KEYCLOAK_INTERNAL}
+      KONG_INTERNAL: ${KONG_INTERNAL}
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - internal

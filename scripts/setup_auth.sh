@@ -24,10 +24,10 @@ DCA="docker-compose -f ./docker-compose-auth.yml"
 
 $DCA kill
 $DCA down
-$DCA up -d kongpg keycloakpg
+$DCA up -d kongpg keycloakpg db
 sleep 3
 
-$DCA build keycloak
+$DCA build keycloak kernel
 
 $DCA run kong kong migrations bootstrap
 $DCA run kong kong migrations up
@@ -38,6 +38,7 @@ $DCA up -d kong keycloak
 $DCA build auth
 $DCA run auth setup_auth
 $DCA run auth make_realm
+$DCA run kernel manage register_module
 
 $DCA kill auth
-$DCA up -d auth
+$DCA up auth kernel
