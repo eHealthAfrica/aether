@@ -31,25 +31,14 @@ from django.utils.translation import ugettext as _
 from rest_framework.exceptions import AuthenticationFailed
 
 
-def get_public_key(kc_url, realm):
-    CERT_URL = f'{kc_url}realms/{realm}/protocol/openid-connect/certs'
-    res = requests.get(CERT_URL)
-    jwk_key = res.json()['keys'][0]
-    key_obj = JWK(**jwk_key)
-    RSA_PUB_KEY = str(key_obj.export_to_pem(), 'utf-8')
-    return RSA_PUB_KEY
-
-
 class JWTAuthentication(MiddlewareMixin):
     # Cached Public Keys for validating JWTs of different realms
     PK = {}
 
     def process_request(self, request):
-        cookies = request.COOKIES
-
-        if settings.REALM_COOKIE and settings.JWT_COOKIE in cookies:
+        if settings.REALM_COOKIE and settings.JWT_COOKIE in request.COOKIES:
             token = request.COOKIES[settings.JWT_COOKIE]
-            realm = request.COOKIES.get(settings.REALM_COOKIE)
+            realm = request.COOKIES[settings.REALM_COOKIE]
 
             if not realm:
                 return JsonResponse(
@@ -59,11 +48,7 @@ class JWTAuthentication(MiddlewareMixin):
 
             if realm not in self.PK:
                 try:
-                    ssl_header = settings.SECURE_PROXY_SSL_HEADER
-                    scheme = ssl_header[1] if ssl_header else 'http'
-                    KC_URL = f'{scheme}://{settings.KEYCLOAK_INTERNAL}/keycloak/auth/'
-
-                    self.PK[realm] = get_public_key(KC_URL, realm)
+                    self.PK[realm] = self.__get_public_key(realm)
                 except Exception:
                     return self.__login_redirect(request, realm)
 
@@ -97,9 +82,7 @@ class JWTAuthentication(MiddlewareMixin):
         return None
 
     def __login_redirect(self, request, realm):
-        ssl_header = settings.SECURE_PROXY_SSL_HEADER
-        scheme = ssl_header[1] if ssl_header else 'http'
-        REFRESH_URL = f'{scheme}://{settings.BASE_HOST}/auth/user/{realm}/refresh'
+        scheme = self.__get_scheme()
 
         # We want to handle this with a redirect to the login screen.
         path = request.get_full_path()
@@ -107,5 +90,21 @@ class JWTAuthentication(MiddlewareMixin):
 
         # on Success, the login page will redirect back to this original request
         redirect = f'{scheme}://{host}{path}'
-        url = REFRESH_URL.format(realm=realm) + f'?redirect={redirect}'
+        url = f'{scheme}://{settings.BASE_HOST}/auth/user/{realm}/refresh?redirect={redirect}'
+
         return redirect_response(url)
+
+    def __get_public_key(self, realm):
+        scheme = self.__get_scheme()
+        url = f'{scheme}://{settings.KEYCLOAK_INTERNAL}/keycloak/auth/realms/{realm}/protocol/openid-connect/certs'
+
+        res = requests.get(url)
+        res.raise_for_status()
+
+        jwk_key = res.json()['keys'][0]
+        key_obj = JWK(**jwk_key)
+        return str(key_obj.export_to_pem(), 'utf-8')
+
+    def __get_scheme(self):
+        ssl_header = settings.SECURE_PROXY_SSL_HEADER
+        return ssl_header[1] if ssl_header else 'http'
