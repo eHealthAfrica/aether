@@ -87,19 +87,6 @@ body {
   top: 0;
 }
 
-.front {
-  background: url('/static/aether/images/aether-white.png');
-  background-size: 100%;
-  transform: rotateY(0deg);
-  z-index: 2;
-}
-
-.back {
-  background: url('/static/aether/images/eHA-icon.svg');
-  background-size: 100%;
-  transform: rotateY(180deg);
-}
-
 /* navbar branding classes */
 .navbar-brand .back,
 .navbar-brand .front,
@@ -122,6 +109,19 @@ body {
 
 .logout-info a,
 .logout-info a:visited {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.login-jwt-info {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 250px;
+}
+
+.login-jwt-info a,
+.login-jwt-info a:visited {
   color: #fff;
   text-decoration: underline;
 }

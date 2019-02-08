@@ -42,7 +42,7 @@ under the License.
       {# This is the block SCRIPTS, redefine it in the child template #}
     {% endblock scripts %}
 
-    <link rel="stylesheet" type="text/css" href="{% static 'aether/css/styles.css' %}"/>
+    {% include 'aether/styles.html' %}
     {% block styles %}
       {# This is the block STYLES, redefine it in the child template #}
     {% endblock styles %}

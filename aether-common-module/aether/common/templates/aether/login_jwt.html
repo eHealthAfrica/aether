@@ -22,13 +22,13 @@ under the License.
 
 {% load i18n %}
 
-{% block body_class %}logout-info{% endblock %}
+{% block body_class %}login-jwt-info{% endblock %}
 
 {% block branding %}
   {% include 'aether/branding.html' with classname='brand' link='#' %}
 {% endblock %}
 
 {% block content %}
-  <p>{% blocktrans %}Thank you for using {{app_name}}.{% endblocktrans %}</p>
+  <h2>{{ app_name }}</h2>
   <p><a href="{{ jwt_login }}">{% trans 'Log in' %}</a></p>
 {% endblock %}
