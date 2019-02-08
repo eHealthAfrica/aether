@@ -17,7 +17,9 @@
 
       const keycloak = Keycloak('/auth/login/{{ tenant }}/keycloak.json')
       keycloak.init({ onLoad: 'login-required' })
-        .error(function () { alert('error') })
+        .error(function () { 
+          window.location.replace('/auth/?error=unknown_realm') 
+        })
         .success(function (authenticated) {
           setCookie('aether-jwt', keycloak.token, 7)
           setCookie('aether-realm', '{{ tenant }}', 7)

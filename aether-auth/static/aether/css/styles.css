@@ -1,0 +1,127 @@
+/*
+ * Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
+ *
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:300,400,600);
+
+body {
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  background: #50aef3;
+  background-image: linear-gradient(to right, #50aef3, #7175dd);
+  color: #fff;
+  font-family: "Open Sans", Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.3em;
+}
+
+/* branding classes */
+.brand {
+  display: block;
+  height: 1rem;
+  margin: 10vh 0 5rem;
+  position: relative;
+  transition: opacity .4s;
+  width: 2.4rem;
+}
+
+.brand span {
+  color: #fff;
+  display: inline-block;
+  font-size: 28px;
+  font-weight: 300;
+  line-height: 46px;
+  margin: 0 60px;
+}
+
+.brand span b {
+  font-weight: 600;
+}
+
+.logo-container {
+  perspective: 1000px;
+  position: absolute;
+}
+
+.logo-container:hover .flipper {
+  transform: rotateY(180deg);
+}
+
+.back,
+.front,
+.logo-container {
+  border-radius: 50%;
+  height: 46px;
+  width: 46px;
+}
+
+.flipper {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: 1s;
+}
+
+.back,
+.front {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  box-sizing: border-box;
+  left: 0;
+  position: absolute;
+  top: 0;
+}
+
+.front {
+  background: url('/auth/static/aether/images/aether-white.png');
+  background-size: 100%;
+  transform: rotateY(0deg);
+  z-index: 2;
+}
+
+.back {
+  background: url('/auth/static/aether/images/eHA-icon.svg');
+  background-size: 100%;
+  transform: rotateY(180deg);
+}
+
+/* navbar branding classes */
+.navbar-brand .back,
+.navbar-brand .front,
+.navbar-brand .logo-container {
+  height: 24px;
+  width: 24px;
+}
+
+.navbar-brand span {
+  font-family: "Open Sans", Helvetica, Arial, sans-serif;
+  display: inline-block;
+  margin-left: 32px;
+  line-height: 24px;
+}
+
+/* logged out info */
+.logout-info {
+  padding-left: 2rem;
+}
+
+.logout-info a,
+.logout-info a:visited {
+  color: #fff;
+  text-decoration: underline;
+}
