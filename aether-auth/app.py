@@ -21,7 +21,7 @@ import jwt
 import os
 import requests
 
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, send_from_directory
 from jwcrypto.jwk import JWK
 from keycloak import KeycloakAdmin
 
@@ -84,6 +84,7 @@ def get_oidc(kc_url, realm):
 def get_public_key(kc_url, realm):
     CERT_URL = f'{kc_url}realms/{realm}/protocol/openid-connect/certs'
     res = requests.get(CERT_URL)
+    res.raise_for_status()
     jwk_key = res.json()['keys'][0]
     key_obj = JWK(**jwk_key)
     RSA_PUB_KEY = str(key_obj.export_to_pem(), 'utf-8')
@@ -114,15 +115,22 @@ def validate_token(tenant, headers=None, cookies=None):
 
     return jwt.decode(raw, PK[tenant], audience='account', algorithms='RS256')
 
-
 ## Protected Service
 
 @app.route("/auth/user/<tenant>/token")
 def demo(tenant):
     try:
         token = validate_token(tenant, request.headers, request.cookies)
-    except jwt.ExpiredSignatureError:
+    except jwt.exceptions.InvalidSignatureError:
+        return app.response_class(response=json.dumps({'error': 'invalid_signature_for_realm'}),
+                                  status=401,
+                                  mimetype='application/json')
+    except jwt.exceptions.ExpiredSignatureError:
         return app.response_class(response=json.dumps({'error': 'signature_expired'}),
+                                  status=401,
+                                  mimetype='application/json')
+    except requests.exceptions.HTTPError:
+        return app.response_class(response=json.dumps({'error': 'invalid_realm'}),
                                   status=401,
                                   mimetype='application/json')
     return render_template('./token.html', token=json.dumps(token,indent=2))
@@ -145,14 +153,27 @@ def logout(tenant):
 
 
 ## PUBLIC
+
+## Static Assets
+@app.route("/auth/static/<path:path>")
+def serve_static(path):
+    return send_from_directory('static', path)
+
 # Base route returns an error
-@app.route("/auth")
-def base(tenant):
-    return jsonify({'error': 'a realm must be specified for login "/auth/login/{realm}"'})
+@app.route("/auth/")
+@app.route("/auth/login/")
+def base():
+    if not 'realm' in request.args:
+        return render_template('./realm.html')
+    else:
+        realm = request.args.get('realm')
+        redirect = request.args.get('redirect', None) \
+            or f'http://{HOST}/auth/user/{realm}/token'
+        return render_template('./index.html', tenant=realm, redirect=redirect, host=HOST)
+
 
 
 # Login Route
-@app.route("/auth/login")
 @app.route("/auth/login/<tenant>")
 def login(tenant=None):
     if not tenant:
@@ -171,4 +192,4 @@ def kc_json(tenant):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=3011)
+    app.run(host='0.0.0.0', port=get_env('APP_PORT'))

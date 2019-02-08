@@ -22,15 +22,14 @@ import requests
 get_env = lambda x : os.environ.get(x)
 
 # Kong info
-
-# TODO Make ENVs
 # TODO: Fix scheme https or http
 
 HOST = get_env('BASE_HOST')  # External URL for host
 KONG_URL = f'http://{get_env("KONG_INTERNAL")}/'
-
-CLIENT_URL = 'http://auth:3011/'
-CLIENT_NAME = 'auth'
+APP_NAME = get_env('APP_NAME')
+APP_PORT = get_env('APP_PORT')
+CLIENT_URL = f'http://{APP_NAME}:{APP_PORT}/'
+CLIENT_NAME = APP_NAME
 
 print(f'Exposing Service {CLIENT_NAME} @ {CLIENT_URL}')
 
@@ -53,7 +52,7 @@ ROUTE_URL = f'{KONG_URL}services/{CLIENT_NAME}/routes'
 
 # EVERYTHING past /login will be public
 data = {
-    'paths' : [f'/{CLIENT_NAME}/login'],
+    'paths' : [f'/{CLIENT_NAME}'],
     'strip_path': 'false',
 }
 res = requests.post(ROUTE_URL, data=data)

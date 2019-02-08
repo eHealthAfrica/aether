@@ -116,6 +116,8 @@ services:
       KEYCLOAK_GLOBAL_PASSWORD: ${KEYCLOAK_GLOBAL_PASSWORD}
       KEYCLOAK_INTERNAL: ${KEYCLOAK_INTERNAL}
       KONG_INTERNAL: ${KONG_INTERNAL}
+      APP_NAME: auth
+      APP_PORT: 3012
     volumes:
       - ./aether-auth:/code
     depends_on:
