@@ -27,6 +27,10 @@ from django.contrib.auth import get_user_model
 from rest_framework.authentication import BaseAuthentication
 
 
+def get_current_realm(request):
+    return request.COOKIES.get(settings.REALM_COOKIE, settings.DEFAULT_REALM)
+
+
 class JwtTokenAuthentication(BaseAuthentication):
     '''
     Simple JWT token based authentication.
@@ -37,33 +41,20 @@ class JwtTokenAuthentication(BaseAuthentication):
     PK = {}
 
     def authenticate(self, request):
+        UserModel = get_user_model()
+        user_model = UserModel.objects
 
-        if settings.REALM_COOKIE and settings.JWT_COOKIE in request.COOKIES:
+        try:
+            realm = get_current_realm(request)
             token = request.COOKIES[settings.JWT_COOKIE]
-            realm = request.COOKIES[settings.REALM_COOKIE]
-
-            if not realm:
-                return None
 
             if realm not in self.PK:
-                try:
-                    self.PK[realm] = self.__get_public_key(realm)
-                except Exception:
-                    return None
+                self.PK[realm] = self.__get_public_key(realm)
 
-            try:
-                decoded = jwt.decode(token, self.PK[realm], audience='account', algorithms='RS256')
-            except jwt.ExpiredSignatureError:
-                return None
+            decoded = jwt.decode(token, self.PK[realm], audience='account', algorithms='RS256')
+            username = decoded['preferred_username']
 
             # Create user
-            try:
-                username = decoded['preferred_username']
-            except KeyError:
-                return None
-
-            UserModel = get_user_model()
-            user_model = UserModel.objects
             try:
                 user = user_model.get(username=username)
             except UserModel.DoesNotExist:
@@ -74,10 +65,13 @@ class JwtTokenAuthentication(BaseAuthentication):
             finally:
                 return (user, None)
 
+        except (jwt.ExpiredSignatureError, KeyError, Exception):
+            return None
+
         return None
 
     def authenticate_header(self, request):
-        realm = request.COOKIES.get(settings.REALM_COOKIE, 'default')
+        realm = get_current_realm(request)
         return f'JWT realm="{realm}"'
 
     def __get_public_key(self, realm):

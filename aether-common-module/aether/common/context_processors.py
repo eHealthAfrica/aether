@@ -19,6 +19,8 @@
 
 from django.conf import settings
 
+from .drf.authentication import get_current_realm
+
 
 def aether_context(request):
     context = {
@@ -30,7 +32,7 @@ def aether_context(request):
     }
 
     if settings.KEYCLOAK_INTERNAL:
-        realm = request.COOKIES.get(settings.REALM_COOKIE, 'default')
+        realm = get_current_realm(request)
         ssl_header = settings.SECURE_PROXY_SSL_HEADER
         scheme = ssl_header[1] if ssl_header else 'http'
         redirect = f'{scheme}://{settings.BASE_HOST}/{settings.APP_ID}'

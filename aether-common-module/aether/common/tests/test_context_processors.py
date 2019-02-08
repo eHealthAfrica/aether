@@ -38,11 +38,12 @@ class ContextProcessorsTests(TestCase):
         KEYCLOAK_INTERNAL='0.0.0.0:8080',
         BASE_HOST='localhost',
         APP_ID='testing',
+        DEFAULT_REALM='aether-testing',
     )
     def test_aether_context__with_keycloak(self):
         request = RequestFactory().get('/')
 
         self.assertEqual(
             aether_context(request)['jwt_login'],
-            'http://localhost/auth/user/default/refresh?redirect=http://localhost/testing',
+            'http://localhost/auth/user/aether-testing/refresh?redirect=http://localhost/testing',
         )

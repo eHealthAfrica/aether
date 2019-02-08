@@ -307,6 +307,7 @@ if KEYCLOAK_INTERNAL:
     BASE_HOST = os.environ.get('BASE_HOST', 'aether.local')
     JWT_COOKIE = os.environ.get('JWT_COOKIE', 'aether-jwt')
     REALM_COOKIE = os.environ.get('REALM_COOKIE', 'aether-realm')
+    DEFAULT_REALM = os.environ.get('DEFAULT_REALM', 'aether')
 
     STATIC_URL = f'/{APP_ID}/static/'
 
@@ -326,6 +327,7 @@ else:
 MULTITENANCY = bool(os.environ.get('MULTITENANCY'))
 if MULTITENANCY:
     REALM_COOKIE = os.environ.get('REALM_COOKIE', 'aether-realm')
+    DEFAULT_REALM = os.environ.get('DEFAULT_REALM', 'aether')
 
     INSTALLED_APPS += [
         'aether.common.multitenancy',
