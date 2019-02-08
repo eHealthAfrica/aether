@@ -21,7 +21,6 @@ from django.conf import settings
 
 
 def aether_context(request):
-
     context = {
         'dev_mode': settings.DEBUG,
         'app_name': settings.APP_NAME,
@@ -29,5 +28,14 @@ def aether_context(request):
         'app_version': settings.VERSION,
         'app_revision': settings.REVISION,
     }
+
+    if settings.KEYCLOAK_INTERNAL:
+        realm = request.COOKIES.get(settings.REALM_COOKIE, 'default')
+        ssl_header = settings.SECURE_PROXY_SSL_HEADER
+        scheme = ssl_header[1] if ssl_header else 'http'
+        redirect = f'{scheme}://{settings.BASE_HOST}/{settings.APP_ID}'
+        url = f'{scheme}://{settings.BASE_HOST}/auth/user/{realm}/refresh?redirect={redirect}'
+
+        context['jwt_login'] = url
 
     return context

@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 
 from ..context_processors import aether_context
 
@@ -33,3 +33,16 @@ class ContextProcessorsTests(TestCase):
             'app_version': '0.0.0',
             'app_revision': '0123456789ABCDEF',
         })
+
+    @override_settings(
+        KEYCLOAK_INTERNAL='0.0.0.0:8080',
+        BASE_HOST='localhost',
+        APP_ID='testing',
+    )
+    def test_aether_context__with_keycloak(self):
+        request = RequestFactory().get('/')
+
+        self.assertEqual(
+            aether_context(request)['jwt_login'],
+            'http://localhost/auth/user/default/refresh?redirect=http://localhost/testing',
+        )

@@ -23,48 +23,44 @@ from jwcrypto.jwk import JWK
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.http.response import JsonResponse
-from django.shortcuts import redirect as redirect_response
-from django.utils.deprecation import MiddlewareMixin
-from django.utils.translation import ugettext as _
 
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.authentication import BaseAuthentication
 
 
-class JWTAuthentication(MiddlewareMixin):
-    # Cached Public Keys for validating JWTs of different realms
+class JwtTokenAuthentication(BaseAuthentication):
+    '''
+    Simple JWT token based authentication.
+
+    Clients should authenticate by passing the token key and realm in the cookies.
+    '''
+
     PK = {}
 
-    def process_request(self, request):
+    def authenticate(self, request):
+
         if settings.REALM_COOKIE and settings.JWT_COOKIE in request.COOKIES:
             token = request.COOKIES[settings.JWT_COOKIE]
             realm = request.COOKIES[settings.REALM_COOKIE]
 
             if not realm:
-                return JsonResponse(
-                    {'detail': _('No realm included in request')},
-                    status=AuthenticationFailed.status_code,
-                )
+                return None
 
             if realm not in self.PK:
                 try:
                     self.PK[realm] = self.__get_public_key(realm)
                 except Exception:
-                    return self.__login_redirect(request, realm)
+                    return None
 
             try:
                 decoded = jwt.decode(token, self.PK[realm], audience='account', algorithms='RS256')
             except jwt.ExpiredSignatureError:
-                return self.__login_redirect(request, realm)
+                return None
 
             # Create user
             try:
                 username = decoded['preferred_username']
             except KeyError:
-                return JsonResponse(
-                    {'detail': AuthenticationFailed.default_detail},
-                    status=AuthenticationFailed.status_code,
-                )
+                return None
 
             UserModel = get_user_model()
             user_model = UserModel.objects
@@ -76,26 +72,17 @@ class JWTAuthentication(MiddlewareMixin):
                     password=user_model.make_random_password(length=100),
                 )
             finally:
-                # add user to request as request.user
-                request.user = user
+                return (user, None)
 
         return None
 
-    def __login_redirect(self, request, realm):
-        scheme = self.__get_scheme()
-
-        # We want to handle this with a redirect to the login screen.
-        path = request.get_full_path()
-        host = request.META['HTTP_X_FORWARDED_HOST']
-
-        # on Success, the login page will redirect back to this original request
-        redirect = f'{scheme}://{host}{path}'
-        url = f'{scheme}://{settings.BASE_HOST}/auth/user/{realm}/refresh?redirect={redirect}'
-
-        return redirect_response(url)
+    def authenticate_header(self, request):
+        realm = request.COOKIES.get(settings.REALM_COOKIE, 'default')
+        return f'JWT realm="{realm}"'
 
     def __get_public_key(self, realm):
-        scheme = self.__get_scheme()
+        ssl_header = settings.SECURE_PROXY_SSL_HEADER
+        scheme = ssl_header[1] if ssl_header else 'http'
         url = f'{scheme}://{settings.KEYCLOAK_INTERNAL}/keycloak/auth/realms/{realm}/protocol/openid-connect/certs'
 
         res = requests.get(url)
@@ -104,7 +91,3 @@ class JWTAuthentication(MiddlewareMixin):
         jwk_key = res.json()['keys'][0]
         key_obj = JWK(**jwk_key)
         return str(key_obj.export_to_pem(), 'utf-8')
-
-    def __get_scheme(self):
-        ssl_header = settings.SECURE_PROXY_SSL_HEADER
-        return ssl_header[1] if ssl_header else 'http'

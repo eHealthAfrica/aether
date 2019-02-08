@@ -144,6 +144,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.TokenAuthentication',
+        'aether.common.drf.authentication.JwtTokenAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -178,9 +179,15 @@ DATABASES = {
 # Admin site Configuration
 # ------------------------------------------------------------------------------
 
+LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login.html')
+LOGGED_OUT_TEMPLATE = os.environ.get('LOGGED_OUT_TEMPLATE', 'aether/logged_out.html')
+
 admin.site.site_url = '/'
 admin.site.site_header = APP_NAME + ' administration'
 admin.site.site_title = APP_NAME + ' site administration'
+
+admin.site.login_template = LOGIN_TEMPLATE
+admin.site.logout_template = LOGGED_OUT_TEMPLATE
 
 
 # Logging Configuration
@@ -291,10 +298,6 @@ if CAS_SERVER_URL:
 else:
     logger.info('No CAS enabled!')
 
-    LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login.html')
-    LOGGED_OUT_TEMPLATE = os.environ.get('LOGGED_OUT_TEMPLATE', 'aether/logged_out.html')
-
-
 KEYCLOAK_INTERNAL = os.environ.get('KEYCLOAK_INTERNAL')
 if KEYCLOAK_INTERNAL:
     APP_ID = os.environ['APP_ID']  # URL Friendly
@@ -307,12 +310,11 @@ if KEYCLOAK_INTERNAL:
 
     STATIC_URL = f'/{APP_ID}/static/'
 
-    MIDDLEWARE += [
-        'aether.common.auth.middleware.JWTAuthentication',
-    ]
+    LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login_kong.html')
 
     # change "View site" url in admin section
     admin.site.site_url = f'/{APP_ID}/'
+    admin.site.login_template = LOGIN_TEMPLATE
 
 else:
     logger.info('No Keycloak enabled!')
