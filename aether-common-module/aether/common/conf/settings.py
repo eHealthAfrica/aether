@@ -311,7 +311,7 @@ if KEYCLOAK_INTERNAL:
 
     STATIC_URL = f'/{APP_ID}/static/'
 
-    LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login_kong.html')
+    LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login_jwt.html')
 
     # change "View site" url in admin section
     admin.site.site_url = f'/{APP_ID}/'
