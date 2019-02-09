@@ -43,8 +43,8 @@ EOSQL
 
 $DCA build keycloak kernel
 
-$DCA run kong kong migrations bootstrap
-$DCA run kong kong migrations up
+$DCA run kong kong migrations bootstrap 2>/dev/null || :  # bootstrap not in all image versions?
+$DCA run kong kong migrations up  # if bootstrap is invalid, only up is required.
 sleep 3
 
 $DCA up -d kong keycloak
@@ -53,6 +53,7 @@ sleep 5
 $DCA build auth
 $DCA run auth setup_auth
 $DCA run auth make_realm
+$DCA run kernel setup  # kernel database missing causes module registration to fail
 $DCA run kernel manage register_module
 
 $DCA kill auth

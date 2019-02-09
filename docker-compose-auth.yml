@@ -127,3 +127,4 @@ services:
         condition: service_healthy
     networks:
       - internal
+    command: start
