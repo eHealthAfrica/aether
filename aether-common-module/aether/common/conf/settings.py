@@ -176,6 +176,27 @@ DATABASES = {
 }
 
 
+# Security Configuration
+# ------------------------------------------------------------------------------
+
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+CSRF_COOKIE_DOMAIN = os.environ.get('CSRF_COOKIE_DOMAIN', '.aether.org')
+CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', CSRF_COOKIE_DOMAIN).split(',')
+SESSION_COOKIE_DOMAIN = CSRF_COOKIE_DOMAIN
+
+if os.environ.get('DJANGO_USE_X_FORWARDED_HOST', False):
+    USE_X_FORWARDED_HOST = True
+
+if os.environ.get('DJANGO_USE_X_FORWARDED_PORT', False):
+    USE_X_FORWARDED_PORT = True
+
+if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
 # Admin site Configuration
 # ------------------------------------------------------------------------------
 
@@ -317,6 +338,8 @@ if KEYCLOAK_INTERNAL:
     admin.site.site_url = f'/{APP_ID}/'
     admin.site.login_template = LOGIN_TEMPLATE
 
+    USE_X_FORWARDED_HOST = True
+
 else:
     logger.info('No Keycloak enabled!')
 
@@ -341,27 +364,6 @@ if MULTITENANCY:
 
 else:
     logger.info('No multitenancy enabled!')
-
-
-# Security Configuration
-# ------------------------------------------------------------------------------
-
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
-
-CORS_ORIGIN_ALLOW_ALL = True
-
-CSRF_COOKIE_DOMAIN = os.environ.get('CSRF_COOKIE_DOMAIN', '.aether.org')
-CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', CSRF_COOKIE_DOMAIN).split(',')
-SESSION_COOKIE_DOMAIN = CSRF_COOKIE_DOMAIN
-
-if os.environ.get('DJANGO_USE_X_FORWARDED_HOST', True):
-    USE_X_FORWARDED_HOST = True
-
-if os.environ.get('DJANGO_USE_X_FORWARDED_PORT', False):
-    USE_X_FORWARDED_PORT = True
-
-if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Storage Configuration

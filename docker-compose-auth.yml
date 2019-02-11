@@ -35,29 +35,23 @@ services:
   kong:
     image: kong:latest
     environment:
-      KONG_ADMIN_ACCESS_LOG: /dev/stdout
-      KONG_ADMIN_ERROR_LOG: /dev/stderr
-      KONG_ADMIN_LISTEN: '0.0.0.0:8001'
-      KONG_CASSANDRA_CONTACT_POINTS: db
-
       KONG_DATABASE: postgres
       KONG_PG_HOST: db
       KONG_PG_DATABASE: kong
       KONG_PG_USER: kong
-      KONG_PG_PASSWORD: ${KONG_PG_PASSWORD:-kong}
+      KONG_PG_PASSWORD: ${KONG_PG_PASSWORD}
 
-      KONG_PROXY_ACCESS_LOG: /dev/stdout
-      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
       KONG_PROXY_LISTEN: 0.0.0.0:8090
     depends_on:
       db:
         condition: service_healthy
     ports:
-      - "8090:8090/tcp"
-      # - "80:80/tcp"
-      # - "8001:8001/tcp"  # internal only
-      # - "8443:8443/tcp"  Once ODK is integrated, we can take these
-      # - "8444:8444/tcp"
+      - "8090:8090"
+      # - "80:80"
+      # - "8001:8001"  # internal only
+      # - "8443:8443"  # Once ODK is integrated, we can take these
+      # - "8444:8444"
     networks:
       - internal
 
@@ -113,15 +107,13 @@ services:
       file: ./docker-compose-base.yml
       service: kernel-base
     environment:
-      # DEBUG: null
+      DEBUG: null
       APP_INTERNAL: http://kernel:8000
       BASE_HOST: aether.local:8090
       CSRF_COOKIE_DOMAIN: aether.local
       HOSTNAME: aether.local:8090/kernel
       KEYCLOAK_INTERNAL: keycloak:8080
       KONG_INTERNAL: kong:8001
-    volumes:
-      - ./aether-common-module/aether/common:/code/aether/common
     depends_on:
       db:
         condition: service_healthy

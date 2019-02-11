@@ -26,20 +26,35 @@ DCA="docker-compose -f ./docker-compose-auth.yml"
 
 $DCA kill
 $DCA down
+
+
+# Try to create the Aether network+volume if missing
+docker network create aether_internal       2>/dev/null || true
+docker volume  create aether_database_data  2>/dev/null || true
+
+./scripts/generate-aether-version-assets.sh
+
 $DCA up -d db
 sleep 3
 
 DB_ID=$($DCA ps -q db)
 
+# THESE COMMANDS WILL ERASE PREVIOUS DATA!!!
 docker container exec -i $DB_ID psql <<- EOSQL
+    DROP USER kong;
+    DROP DATABASE kong;
+
     CREATE USER kong PASSWORD '${KONG_PG_PASSWORD}';
     CREATE DATABASE kong OWNER kong;
 EOSQL
-
 docker container exec -i $DB_ID psql <<- EOSQL
+    DROP USER keycloak;
+    DROP DATABASE keycloak;
+
     CREATE USER keycloak PASSWORD '${KEYCLOAK_PG_PASSWORD}';
     CREATE DATABASE keycloak OWNER keycloak;
 EOSQL
+$DCA logs db
 
 $DCA build keycloak kernel
 
@@ -48,6 +63,7 @@ $DCA run kong kong migrations up  # if bootstrap is invalid, only up is required
 sleep 3
 
 $DCA up -d kong keycloak
+$DCA logs kong keycloak
 sleep 5
 
 $DCA build auth
@@ -56,5 +72,4 @@ $DCA run auth make_realm
 $DCA run kernel setup  # kernel database missing causes module registration to fail
 $DCA run kernel manage register_module
 
-$DCA kill auth
-$DCA up auth kernel
+$DCA kill
