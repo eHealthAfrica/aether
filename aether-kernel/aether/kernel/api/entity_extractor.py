@@ -386,7 +386,7 @@ def put_nested(_dict, keys, value):
         last_key = keys[0]
         if '[' not in last_key:
             _dict[last_key] = value
-        else:
+        else:  # last element is an array
             matches = ARRAY_ACCESSOR_REGEX.findall(last_key)
             key, index = matches[0], int(matches[1])
             if key not in _dict:
