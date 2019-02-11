@@ -20,7 +20,10 @@ from django.test import TestCase
 
 from aether.kernel.api import mapping_validation
 
+from . import NESTED_ARRAY_SCHEMA
+
 valid_schemas = {
+    'Nested': NESTED_ARRAY_SCHEMA,
     'Person': {
         'name': 'Person',
         'type': 'record',
@@ -135,6 +138,18 @@ class TestMappingValidation(TestCase):
 
     def test_validate_setter__success__optional_nested(self):
         path = 'Person.optional_location.lat'
+        expected = mapping_validation.Success(path, [])
+        result = mapping_validation.validate_setter(valid_schemas, path)
+        self.assertEquals(expected, result)
+
+    def test_validate_setter__success__set_array(self):
+        path = 'Nested.geom.coordinates'
+        expected = mapping_validation.Success(path, [])
+        result = mapping_validation.validate_setter(valid_schemas, path)
+        self.assertEquals(expected, result)
+
+    def test_validate_setter__success__set_array_at_idndex(self):
+        path = 'Nested.geom.coordinates[0]'
         expected = mapping_validation.Success(path, [])
         result = mapping_validation.validate_setter(valid_schemas, path)
         self.assertEquals(expected, result)

@@ -56,7 +56,7 @@ CUSTOM_JSONPATH_WILDCARD_REGEX = re.compile(
     r'(\$)?(\.)?([a-zA-Z0-9_-]*(\[.*\])*\.)?[a-zA-Z0-9_-]+\*')
 # RegEX to split off array accessors in keynames
 ARRAY_ACCESSOR_REGEX = re.compile(
-    r'[^[\]]')
+    r'[^\[\]]+')
 
 # RegEx for the part of a JSONPath matching the previous RegEx which is non-compliant with the
 # JSONPath spec.
@@ -387,8 +387,8 @@ def put_nested(_dict, keys, value):
         if '[' not in last_key:
             _dict[last_key] = value
         else:  # last element is an array
-            matches = ARRAY_ACCESSOR_REGEX.findall(last_key)
-            key, index = matches[0], int(matches[1])
+            m = ARRAY_ACCESSOR_REGEX.findall(last_key)
+            key, index = m[0], int(m[1])
             if key not in _dict:
                 _dict[key] = None
             _dict[key] = put_in_array(_dict[key], index, value)

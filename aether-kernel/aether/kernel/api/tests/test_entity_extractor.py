@@ -98,16 +98,14 @@ class EntityExtractorTests(TestCase):
         self.assertEquals(obj['a']['b']['c'], 1)
 
     def test_put_nested__array(self):
-        keys = ['a', 'b', 'c', 'd[0]']
+        keys = ['a', 'b', 'c', 'de[0]']
         obj = entity_extractor.put_nested({}, keys, 1)
-        print(obj)
-        self.assertEquals(obj['a']['b']['c']['d'][0], 1)
+        self.assertEquals(obj['a']['b']['c']['de'][0], 1)
 
     def test_put_in_array__simple(self):
         obj = None
         val = 'a'
         obj = entity_extractor.put_in_array(obj, 0, val)
-        print(obj)
         self.assertEquals(obj[0], val)
 
     def test_put_in_array__existing_value(self):
@@ -115,7 +113,6 @@ class EntityExtractorTests(TestCase):
         obj = [starting]
         val = 'a'
         obj = entity_extractor.put_in_array(obj, 0, val)
-        print(obj)
         self.assertEquals(obj[0], val)
         self.assertEquals(obj[1], starting)
 
@@ -123,7 +120,6 @@ class EntityExtractorTests(TestCase):
         obj = None
         val = 'a'
         obj = entity_extractor.put_in_array(obj, 100, val)
-        print(obj)
         self.assertEquals(obj[0], val)
 
     def test_resolve_source_reference__single_resolution(self):

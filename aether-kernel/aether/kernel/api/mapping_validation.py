@@ -19,10 +19,14 @@
 import collections
 import json
 from django.utils.translation import ugettext as _
+import re
 
 from .entity_extractor import find_by_jsonpath
 
 import spavro
+
+ARRAY_ACCESSOR_REGEX = re.compile(
+    r'[^\[\]]+')
 
 Success = collections.namedtuple('Success', ['path', 'result'])
 Failure = collections.namedtuple('Failure', ['path', 'description'])
@@ -59,14 +63,29 @@ def validate_getter(obj, path):
     return Failure(path, NO_MATCH)
 
 
+def is_array_accessor(field, field_accessor):
+    matches = ARRAY_ACCESSOR_REGEX.match(field_accessor)
+    return matches.group(0) == field
+
+
+def always_false(*args, **kwargs):
+    return False
+
+
 def validate_existence_in_fields(field_name, path, definition):
     # looks an a schema object with property fields
     # if field_name matches one of the properties, we mark success
     # if a field_name is a dotted match child.name -> child
     # we recurse and look for a nested object
+
+    # if this field is an array accessor, we'll perform extra checking
+    check_array = is_array_accessor if '[' in field_name else always_false
+
     for field in definition['fields']:
         if field['name'] == field_name:
             # matching field exists in this level
+            return Success(path, [])
+        elif check_array(field['name'], field_name):
             return Success(path, [])
         else:
             # Test for base path matches
