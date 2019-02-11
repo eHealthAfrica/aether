@@ -48,11 +48,8 @@ setup(
         'django-prometheus',
         'django-storages',
         'djangorestframework',
-        'jwcrypto',
         'psycopg2-binary',
-        'pyjwt',
         'python-json-logger',
-        'python-keycloak',
         'requests',
     ],
 

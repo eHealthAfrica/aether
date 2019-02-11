@@ -48,6 +48,11 @@ django-cas-ng<3.6.0  # breaking changes
 django-ums-client
 
 
+# JWT libraries (used by Keycloak)
+jwcrypto
+pyjwt
+
+
 # Server side
 sentry-sdk             # Sentry
 uwsgi                  # Server behind NGINX

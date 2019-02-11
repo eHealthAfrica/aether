@@ -22,11 +22,8 @@
 #   django-prometheus
 #   django-storages
 #   djangorestframework
-#   jwcrypto
 #   psycopg2-binary
-#   pyjwt
 #   python-json-logger
-#   python-keycloak
 #   requests
 aether.common
 
@@ -60,6 +57,12 @@ lxml
 # CAS libraries
 django-cas-ng<3.6.0  # breaking changes
 django-ums-client
+
+
+# JWT libraries (used by Keycloak)
+jwcrypto
+pyjwt
+
 
 # Server side
 sentry-sdk             # Sentry

@@ -38,7 +38,7 @@ class JwtTokenAuthentication(BaseAuthentication):
     Clients should authenticate by passing the token key and realm in the cookies.
     '''
 
-    PK = {}
+    PUBLIC_KEYS = {}
 
     def authenticate(self, request):
         UserModel = get_user_model()
@@ -48,10 +48,10 @@ class JwtTokenAuthentication(BaseAuthentication):
             realm = get_current_realm(request)
             token = request.COOKIES[settings.JWT_COOKIE]
 
-            if realm not in self.PK:
-                self.PK[realm] = self.__get_public_key(realm)
+            if realm not in self.PUBLIC_KEYS:
+                self.PUBLIC_KEYS[realm] = self.__get_public_key(realm)
 
-            decoded = jwt.decode(token, self.PK[realm], audience='account', algorithms='RS256')
+            decoded = jwt.decode(token, self.PUBLIC_KEYS[realm], audience='account', algorithms='RS256')
             username = decoded['preferred_username']
 
             # Create user

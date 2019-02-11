@@ -144,7 +144,6 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.TokenAuthentication',
-        'aether.common.drf.authentication.JwtTokenAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -330,6 +329,9 @@ if KEYCLOAK_URL:
 
     STATIC_URL = f'/{APP_ID}/static/'
     LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login_jwt.html')
+    REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] += [
+        'aether.common.drf.authentication.JwtTokenAuthentication',
+    ]
 
     # change "View site" url in admin section
     admin.site.site_url = f'/{APP_ID}/'
@@ -338,7 +340,7 @@ if KEYCLOAK_URL:
     USE_X_FORWARDED_HOST = True
 
 else:
-    logger.info('No Kong enabled!')
+    logger.info('No Keycloak enabled!')
 
 
 # Multitenancy Configuration
