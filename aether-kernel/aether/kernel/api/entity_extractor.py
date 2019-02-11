@@ -54,6 +54,9 @@ ENTITY_EXTRACTION_ENRICHMENT = 'aether_extractor_enrichment'
 # $.path.key_*.to[*].field for $.path.key_27.to[1].field
 CUSTOM_JSONPATH_WILDCARD_REGEX = re.compile(
     r'(\$)?(\.)?([a-zA-Z0-9_-]*(\[.*\])*\.)?[a-zA-Z0-9_-]+\*')
+# RegEX to split off array accessors in keynames
+ARRAY_ACCESSOR_REGEX = re.compile(
+    r'[^[\]]')
 
 # RegEx for the part of a JSONPath matching the previous RegEx which is non-compliant with the
 # JSONPath spec.
@@ -380,8 +383,27 @@ def put_nested(_dict, keys, value):
         except KeyError:  # Level doesn't exist yet
             _dict[keys[0]] = put_nested({}, keys[1:], value)
     else:
-        _dict[keys[0]] = value
+        last_key = keys[0]
+        if '[' not in last_key:
+            _dict[last_key] = value
+        else:
+            matches = ARRAY_ACCESSOR_REGEX.findall(last_key)
+            key, index = matches[0], int(matches[1])
+            if key not in _dict:
+                _dict[key] = None
+            _dict[key] = put_in_array(_dict[key], index, value)
     return _dict
+
+
+def put_in_array(arr, idx, val):
+    out = None
+    if not isinstance(arr, list):
+        out = []
+    else:
+        out = arr
+    # best effort to insert at the requested index
+    out.insert(idx, val)
+    return out
 
 
 def resolve_source_reference(path, entities, entity_name, i, field, data):

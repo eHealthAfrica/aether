@@ -97,6 +97,35 @@ class EntityExtractorTests(TestCase):
         obj = entity_extractor.put_nested({}, keys, 1)
         self.assertEquals(obj['a']['b']['c'], 1)
 
+    def test_put_nested__array(self):
+        keys = ['a', 'b', 'c', 'd[0]']
+        obj = entity_extractor.put_nested({}, keys, 1)
+        print(obj)
+        self.assertEquals(obj['a']['b']['c']['d'][0], 1)
+
+    def test_put_in_array__simple(self):
+        obj = None
+        val = 'a'
+        obj = entity_extractor.put_in_array(obj, 0, val)
+        print(obj)
+        self.assertEquals(obj[0], val)
+
+    def test_put_in_array__existing_value(self):
+        starting = 1
+        obj = [starting]
+        val = 'a'
+        obj = entity_extractor.put_in_array(obj, 0, val)
+        print(obj)
+        self.assertEquals(obj[0], val)
+        self.assertEquals(obj[1], starting)
+
+    def test_put_in_array__large_idx(self):
+        obj = None
+        val = 'a'
+        obj = entity_extractor.put_in_array(obj, 100, val)
+        print(obj)
+        self.assertEquals(obj[0], val)
+
     def test_resolve_source_reference__single_resolution(self):
         data = EXAMPLE_SOURCE_DATA
         requirements = EXAMPLE_REQUIREMENTS
