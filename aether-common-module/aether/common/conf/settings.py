@@ -324,14 +324,13 @@ if KEYCLOAK_INTERNAL:
     APP_ID = os.environ['APP_ID']  # URL Friendly
     KONG_INTERNAL = os.environ['KONG_INTERNAL']
     APP_INTERNAL = os.environ['APP_INTERNAL']
+    BASE_HOST = os.environ['BASE_HOST']
 
-    BASE_HOST = os.environ.get('BASE_HOST', 'aether.local')
     JWT_COOKIE = os.environ.get('JWT_COOKIE', 'aether-jwt')
     REALM_COOKIE = os.environ.get('REALM_COOKIE', 'aether-realm')
     DEFAULT_REALM = os.environ.get('DEFAULT_REALM', 'aether')
 
     STATIC_URL = f'/{APP_ID}/static/'
-
     LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login_jwt.html')
 
     # change "View site" url in admin section
