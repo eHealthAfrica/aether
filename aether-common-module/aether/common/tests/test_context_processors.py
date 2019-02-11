@@ -35,8 +35,8 @@ class ContextProcessorsTests(TestCase):
         })
 
     @override_settings(
-        KEYCLOAK_INTERNAL='0.0.0.0:8080',
-        BASE_HOST='localhost',
+        KEYCLOAK_URL='http://0.0.0.0:8080',
+        BASE_HOST='http://localhost',
         APP_ID='testing',
         DEFAULT_REALM='aether-testing',
     )

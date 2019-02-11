@@ -16,13 +16,26 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
+
 from aether.common.utils import resolve_file_url
 
 
 class UtilsTest(TestCase):
+
     def test_resolve_file_url(self):
         absolute_url = 'http://test.com/test/'
         relative_url = '/test/'
         self.assertEqual(resolve_file_url(absolute_url), absolute_url)
         self.assertEqual(resolve_file_url(relative_url), 'http://example.com/test/')
+
+    @override_settings(
+        KEYCLOAK_URL='http://0.0.0.0:8080',
+        BASE_HOST='http://localhost',
+        APP_ID='testing',
+    )
+    def test_resolve_file_url__with_keycloak(self):
+        absolute_url = 'http://test.com/test/'
+        relative_url = '/test/'
+        self.assertEqual(resolve_file_url(absolute_url), absolute_url)
+        self.assertEqual(resolve_file_url(relative_url), 'http://localhost/testing/test/')

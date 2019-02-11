@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -23,30 +25,25 @@ import requests
 from jwcrypto.jwk import JWK
 from keycloak import KeycloakAdmin
 
-get_env = lambda x : os.environ.get(x)
+from settings import (
+    KEYCLOAK_URL,
+    CONSUMERS_URL,
 
-# Keycloak Information
-HOST_URL = get_env('BASE_HOST')
-KC_INT_HOST = get_env('KEYCLOAK_INTERNAL')
-INTERNAL_KC = f'http://{KC_INT_HOST}/keycloak/auth/'  # external url
-KEYCLOAK_URL = f'http://{HOST_URL}/keycloak/auth/'  # external url
+    KC_URL,
+    KC_ADMIN_USER,
+    KC_ADMIN_PASSWORD,
+    KC_MASTER_REALM,
 
-KC_MASTER_REALM = 'master'
-KC_ADMIN_USER = get_env('KEYCLOAK_GLOBAL_ADMIN')  # Admin on MASTER realm
-KC_ADMIN_PASSWORD = get_env('KEYCLOAK_GLOBAL_PASSWORD')
+    REALMS_PATH,
+)
 
-# Kong Information
-KONG_URL = f'http://{get_env("KONG_INTERNAL")}/'
-CONSUMERS_URL = f'{KONG_URL}consumers'
-
-REALMS_PATH = '/code/realm'
 
 # Get administrative Token with KC Master Credentials
 
 def make_realm(name, config):
-    CERT_URL = f'{INTERNAL_KC}realms/{name}/protocol/openid-connect/certs'
     print(f'Creating realm: {name}')
-    keycloak_admin = KeycloakAdmin(server_url=INTERNAL_KC,
+
+    keycloak_admin = KeycloakAdmin(server_url=KC_URL,
                                    username=KC_ADMIN_USER,
                                    password=KC_ADMIN_PASSWORD,
                                    realm_name=KC_MASTER_REALM,
@@ -55,8 +52,7 @@ def make_realm(name, config):
     token = keycloak_admin.token['access_token']
 
     # Register realm with provided config
-
-    realm_url = f'{INTERNAL_KC}admin/realms'
+    realm_url = f'{KC_URL}admin/realms'
     headers = {
         'content-type': 'application/json',
         'authorization': f'Bearer {token}',
@@ -67,7 +63,6 @@ def make_realm(name, config):
         raise ValueError('Could not create realm.')
 
     # Make a Single Kong Consumer for JWT covering the whole realm.
-
     data = {
         'username': f'{name}-jwt-consumer',
     }
@@ -76,20 +71,19 @@ def make_realm(name, config):
 
     details = res.json()
     consumer_id = details['id']
-    # Get the public key from Keycloak
 
+    # Get the public key from Keycloak
+    CERT_URL = f'{KC_URL}realms/{name}/protocol/openid-connect/certs'
     res = requests.get(CERT_URL)
     res.raise_for_status()
 
     jwk_key = res.json()['keys'][0]
 
     # Transform JWK into a PEM.
-
     key_obj = JWK(**jwk_key)
     RSA_PUB_KEY = str(key_obj.export_to_pem(), 'utf-8')
 
     # Add JWT public key to Kong Consumer
-
     CONSUMER_CREDENTIALS_URL = f'{CONSUMERS_URL}/{consumer_id}/jwt'
     data = {
         'key': f'{KEYCLOAK_URL}realms/{name}',

@@ -75,9 +75,7 @@ class JwtTokenAuthentication(BaseAuthentication):
         return f'JWT realm="{realm}"'
 
     def __get_public_key(self, realm):
-        ssl_header = settings.SECURE_PROXY_SSL_HEADER
-        scheme = ssl_header[1] if ssl_header else 'http'
-        url = f'{scheme}://{settings.KEYCLOAK_INTERNAL}/keycloak/auth/realms/{realm}/protocol/openid-connect/certs'
+        url = f'{settings.KEYCLOAK_URL}/keycloak/auth/realms/{realm}/protocol/openid-connect/certs'
 
         res = requests.get(url)
         res.raise_for_status()

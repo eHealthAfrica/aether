@@ -201,12 +201,10 @@ case "$1" in
         setup
 
         [ -z "$DEBUG" ] && LOGGING="--disable-logging" || LOGGING=""
-        [ -z "$KEYCLOAK_INTERNAL" ] && STATIC_URL="/static" || STATIC_URL="/${APP_ID}/static"
 
         /usr/local/bin/uwsgi \
             --ini /code/conf/uwsgi.ini \
             --http 0.0.0.0:$WEB_SERVER_PORT \
-            --static-map ${STATIC_URL}=/var/www/static
             $LOGGING
     ;;
 

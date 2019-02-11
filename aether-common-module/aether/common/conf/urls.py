@@ -148,9 +148,8 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):  # pragma: no cover
                 url(r'^__debug__/', include(debug_toolbar.urls)),
             ]
 
-    # keycloak + kong enabled
-    if settings.KEYCLOAK_INTERNAL:
-        # Prepend urls with /{APP_ID}/
+    if settings.KEYCLOAK_URL:
+        # Prepend urls with "{APP_ID}/"
         urlpatterns = [
             url(fr'^{settings.APP_ID}/', include(urlpatterns))
         ]

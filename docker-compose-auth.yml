@@ -78,15 +78,22 @@ services:
       - internal
 
   auth:
+    image: aether-auth
     build: ./aether-auth
     environment:
-      BASE_HOST: aether.local:8090
+      BASE_HOST: http://aether.local:8090
+      KEYCLOAK_INTERNAL: http://keycloak:8080
+      KONG_INTERNAL: http://kong:8001
+
       KEYCLOAK_GLOBAL_ADMIN: ${KEYCLOAK_GLOBAL_ADMIN}
       KEYCLOAK_GLOBAL_PASSWORD: ${KEYCLOAK_GLOBAL_PASSWORD}
-      KEYCLOAK_INTERNAL: keycloak:8080
-      KONG_INTERNAL: kong:8001
+
       APP_NAME: auth
+      APP_INTERNAL: http://auth:3012
       APP_PORT: 3012
+
+      JWT_COOKIE: aether-jwt
+      REALM_COOKIE: aether-realm
     volumes:
       - ./aether-auth:/code
     depends_on:
@@ -108,12 +115,11 @@ services:
       service: kernel-base
     environment:
       DEBUG: null
-      APP_INTERNAL: http://kernel:8000
-      BASE_HOST: aether.local:8090
       CSRF_COOKIE_DOMAIN: aether.local
-      HOSTNAME: aether.local:8090/kernel
-      KEYCLOAK_INTERNAL: keycloak:8080
-      KONG_INTERNAL: kong:8001
+      HOSTNAME: aether.local
+
+      BASE_HOST: http://aether.local
+      KEYCLOAK_URL: http://keycloak:8080
     depends_on:
       db:
         condition: service_healthy

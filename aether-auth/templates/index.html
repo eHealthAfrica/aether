@@ -1,30 +1,31 @@
 <!DOCTYPE html>
-<html lang='en'>
-  <body>
-    <script src='http://{{host}}/keycloak/auth/js/keycloak.js'></script>
-    <script type='text/javascript'>
+<html>
+  <head>
+    <script src="{{ host }}/keycloak/auth/js/keycloak.js"></script>
+    <script type="text/javascript">
       'use strict'
       // MAKE THIS MORE SECURE.
       function setCookie (name, value, days) {
-        var expires = ""
+        var expires = ''
         if (days) {
             var date = new Date()
             date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000))
-            expires = "; expires=" + date.toUTCString()
+            expires = '; expires=' + date.toUTCString()
         }
-        document.cookie = name + "=" + (value || "")  + expires + "; path=/"
+        document.cookie = name + '=' + (value || '')  + expires + '; path=/'
       }
 
       const keycloak = Keycloak('/auth/login/{{ tenant }}/keycloak.json')
       keycloak.init({ onLoad: 'login-required' })
-        .error(function () { 
-          window.location.replace('/auth/?error=unknown_realm') 
+        .error(function () {
+          window.location.replace('/auth/?error=unknown_realm')
         })
         .success(function (authenticated) {
-          setCookie('aether-jwt', keycloak.token, 7)
-          setCookie('aether-realm', '{{ tenant }}', 7)
+          setCookie('{{ jwt_cookie }}', keycloak.token, 7)
+          setCookie('{{ realm_cookie }}', '{{ tenant }}', 7)
           window.location.replace('{{ redirect }}')
         })
     </script>
-  </body>
+  </head>
+  <body></body>
 </html>

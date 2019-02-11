@@ -319,11 +319,9 @@ if CAS_SERVER_URL:
 else:
     logger.info('No CAS enabled!')
 
-KEYCLOAK_INTERNAL = os.environ.get('KEYCLOAK_INTERNAL')
-if KEYCLOAK_INTERNAL:
+KEYCLOAK_URL = os.environ.get('KEYCLOAK_URL')
+if KEYCLOAK_URL:
     APP_ID = os.environ['APP_ID']  # URL Friendly
-    KONG_INTERNAL = os.environ['KONG_INTERNAL']
-    APP_INTERNAL = os.environ['APP_INTERNAL']
     BASE_HOST = os.environ['BASE_HOST']
 
     JWT_COOKIE = os.environ.get('JWT_COOKIE', 'aether-jwt')
@@ -340,7 +338,7 @@ if KEYCLOAK_INTERNAL:
     USE_X_FORWARDED_HOST = True
 
 else:
-    logger.info('No Keycloak enabled!')
+    logger.info('No Kong enabled!')
 
 
 # Multitenancy Configuration

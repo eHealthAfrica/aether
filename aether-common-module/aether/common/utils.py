@@ -26,13 +26,23 @@ def resolve_file_url(url):
     if url.startswith('/'):
         # For local development, the environment variable DJANGO_STORAGE_BACKEND is
         # set to "filesytem" and files (attachments, media files etc.) are stored on
-        # the filesystem and served via nginx. Example URL:
-        # http://odk.aether.local/media/<path-to-file> or
-        # http://aether.local/odk/media/<path-to-file>.
-        ssl_header = settings.SECURE_PROXY_SSL_HEADER
-        scheme = ssl_header[1] if ssl_header else 'http'
-        return f'{scheme}://{settings.HOSTNAME}{url}'
-    # When the environment variable DJANGO_STORAGE_BACKEND is set to "s3" or
-    # "gcs", all file urls will be absolute. Example:
-    # https://abcd.s3.amazonaws.com/<file-name>?AWSAccessKeyId=ABC&Signature=ABC%3D&Expires=1534775613.
+        # the filesystem and served via nginx.
+        # Example URL:
+        #    http://odk.aether.local/media/<path-to-file> or
+        #    http://aether.local/odk/media/<path-to-file>.
+
+        if settings.KEYCLOAK_URL:
+            host = f'{settings.BASE_HOST}/{settings.APP_ID}'
+
+        else:
+            ssl_header = settings.SECURE_PROXY_SSL_HEADER
+            scheme = ssl_header[1] if ssl_header else 'http'
+            host = f'{scheme}://{settings.HOSTNAME}'
+
+        return f'{host}{url}'
+
+    # When the environment variable DJANGO_STORAGE_BACKEND is set to "s3" or "gcs",
+    # all file urls will be absolute.
+    # Example:
+    #   https://abcd.s3.amazonaws.com/<file-name>?AWSAccessKeyId=ABC&Signature=ABC%3D&Expires=1534775613.
     return url

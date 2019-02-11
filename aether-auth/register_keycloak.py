@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -16,61 +18,64 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
 import os
 import requests
+import sys
 
-get_env = lambda x : os.environ.get(x)
+from settings import HOST, KONG_URL
 
-# Kong info
-# TODO Make ENVs
 
-HOST = get_env('BASE_HOST')  # External URL for host
-KONG_URL = f'http://{get_env("KONG_INTERNAL")}/'  # available kong admin url
+def __post(url, data):
+    res = requests.post(url, data=data)
+    try:
+        res.raise_for_status()
+        return res.json()
+    except Exception as e:
+        print(res.status_code)
+        print(res.json())
+        raise e
 
-CLIENT_URL = f'http://{get_env("KEYCLOAK_INTERNAL")}/'  # internal service url
-CLIENT_NAME = 'keycloak'
 
-print(f'Exposing Service {CLIENT_NAME} @ {CLIENT_URL}')
+def register_app(name, url):
+    # Register Client with Kong
+    # Single API Service
+    data = {
+        'name':f'{name}',
+        'url': f'{url}',
+    }
+    client_info = __post(url=f'{KONG_URL}services/', data=data)
+    client_id = client_info['id']
 
-# Register Client with Kong
-# Single API Service
+    # ADD CORS Plugin to Kong for whole domain CORS
+    PLUGIN_URL = f'{KONG_URL}services/{name}/plugins'
+    data = {
+        'name': 'cors',
+        'config.origins': f'{HOST}/*',
+        'config.methods': ['HEAD', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+        'config.headers': 'Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, Authorization',
+        'config.exposed_headers': 'Authorization',
+        'config.max_age': 3600,
+        'config.credentials': 'true',
+    }
+    __post(url=PLUGIN_URL, data=data)
 
-data = {
-    'name':f'{CLIENT_NAME}',
-    'url': f'{CLIENT_URL}',
-}
-res = requests.post(f'{KONG_URL}services/', data=data)
-res.raise_for_status()
+    # Routes
+    # Add a route which we will NOT protect
+    ROUTE_URL = f'{KONG_URL}services/{name}/routes'
+    data = {
+        'paths' : [f'/{name}'],
+        'strip_path': 'false',
+        'preserve_host': 'false',  # This is keycloak specific.
+    }
+    __post(url=ROUTE_URL, data=data)
 
-# Routes
-# Add a route which we will NOT protect
+    return client_id
 
-ROUTE_URL = f'{KONG_URL}services/{CLIENT_NAME}/routes'
-data = {
-    'paths' : [f'/{CLIENT_NAME}'],
-    'strip_path': 'false',
-    'preserve_host': 'false',  # This is keycloak specific.
-}
-res = requests.post(ROUTE_URL, data=data)
-res.raise_for_status()
 
-# ADD CORS Plugin to Kong for whole domain CORS
+if __name__ == '__main__':
+    CLIENT_NAME = sys.argv[1]
+    CLIENT_URL = sys.argv[2]
 
-PLUGIN_URL = f'{KONG_URL}services/{CLIENT_NAME}/plugins'
-data = {
-    'name': 'cors',
-    'config.origins': f'http://{HOST}/*',
-    'config.methods': ['HEAD', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    'config.headers': 'Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, Authorization',
-    'config.exposed_headers': 'Authorization',
-    'config.max_age': 3600,
-    'config.credentials': 'true',
-}
-res = requests.post(PLUGIN_URL, data=data)
-res.raise_for_status()
-
-print(
-    f'Service {CLIENT_NAME} from, {CLIENT_URL}'
-    f' now being served by kong @ /{CLIENT_NAME}.'
-)
+    print(f'Exposing Service {CLIENT_NAME} @ {CLIENT_URL}')
+    client_id = register_app(CLIENT_NAME, CLIENT_URL)
+    print(f'Service {CLIENT_NAME} from {CLIENT_URL} now being served by kong @ /{client_id}.')

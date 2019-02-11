@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (C) 2019 by eHealth Africa : http://www.eHealthAfrica.org
+# Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
 # regarding copyright ownership.
@@ -22,7 +22,7 @@ import os
 import requests
 import sys
 
-from settings import get_env, HOST, KONG_URL, JWT_COOKIE
+from settings import HOST, KONG_URL, JWT_COOKIE
 
 
 def __post(url, data):
@@ -40,7 +40,7 @@ def register_app(name, url):
     # Register Client with Kong
     # Single API Service
     data = {
-        'name':f'{name}',
+        'name': f'{name}',
         'url': f'{url}',
     }
     client_info = __post(url=f'{KONG_URL}services/', data=data)
@@ -51,7 +51,7 @@ def register_app(name, url):
     data = {
         'name': 'cors',
         'config.origins': f'{HOST}/*',
-        'config.methods': ['GET', 'POST'],
+        'config.methods': ['HEAD', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
         'config.headers': 'Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, Authorization',
         'config.exposed_headers': 'Authorization',
         'config.max_age': 3600,
@@ -59,31 +59,28 @@ def register_app(name, url):
     }
     __post(url=PLUGIN_URL, data=data)
 
-    # routes
+    # Routes
+    # # protected Routes
+    # # EVERYTHING past / will be JWT controlled
     ROUTE_URL = f'{KONG_URL}services/{name}/routes'
-
-    # open Route
-    # EVERYTHING past /login will be public
     data = {
-        'paths' : [f'/{name}'],
-        'strip_path': 'false',
-    }
-    __post(url=ROUTE_URL, data=data)
-
-    # protected Routes
-    # EVERYTHING past /api will be JWT controlled
-    data = {
-        'paths' : [f'/{name}/user'],
+        'paths': [f'/{name}'],
         'strip_path': 'false',
     }
     route_info = __post(url=ROUTE_URL, data=data)
     protected_route_id = route_info['id']
 
     # Add JWT Plugin to protected route.
-    ROUTE_URL = f'{KONG_URL}routes/{protected_route_id}/plugins'
     data = {
         'name': 'jwt',
-        'config.cookie_names' : [JWT_COOKIE],
+        'config.cookie_names': [JWT_COOKIE],
+    }
+    __post(url=f'{KONG_URL}routes/{protected_route_id}/plugins', data=data)
+
+    # Add a separate Path for static assets, which we will NOT protect
+    data = {
+        'paths': [f'/{name}/static'],
+        'strip_path': 'false',
     }
     __post(url=ROUTE_URL, data=data)
 

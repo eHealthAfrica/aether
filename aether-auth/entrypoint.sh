@@ -20,19 +20,17 @@
 #
 set -Eeuo pipefail
 
-# set DEBUG if missing
-set +u
-DEBUG="$DEBUG"
-set -u
-
 show_help () {
     echo """
     Commands
     ----------------------------------------------------------------------------
     bash          : run bash
     eval          : eval shell command
+
     make_realm    : create realms from the artifacts in /code/realm
     setup_auth    : register keycloak and auth module in Kong.
+    register_app  : register aether app in Kong.
+
     start         : start auth webserver
     """
 }
@@ -51,8 +49,12 @@ case "$1" in
     ;;
 
     setup_auth )
-        python /code/register_keycloak.py
-        python /code/register_auth.py
+        python /code/register_keycloak.py keycloak    ${KEYCLOAK_INTERNAL}
+        python /code/register_auth.py     ${APP_NAME} ${APP_INTERNAL}
+    ;;
+
+    register_app )
+        python /code/register_app.py "${@:2}"
     ;;
 
     start )

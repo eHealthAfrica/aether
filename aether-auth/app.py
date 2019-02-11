@@ -25,28 +25,37 @@ from flask import Flask, jsonify, request, render_template, send_from_directory
 from jwcrypto.jwk import JWK
 from keycloak import KeycloakAdmin
 
+from settings import (
+    APP_PORT,
+    HOST,
+    JWT_COOKIE,
+    REALM_COOKIE,
 
-get_env = lambda x : os.environ.get(x)
+    KEYCLOAK_URL,
+    KC_URL,
+    KC_ADMIN_USER,
+    KC_ADMIN_PASSWORD,
+    KC_MASTER_REALM,
+)
 
-HOST = get_env('BASE_HOST')  # External URL for host
 
-KC_URL = f'http://{get_env("KEYCLOAK_INTERNAL")}/keycloak/auth/'  # internal
-KEYCLOAK_EXTERNAL = f'http://{HOST}/keycloak/auth/'
-KC_ADMIN = get_env('KEYCLOAK_GLOBAL_ADMIN')
-KC_PASSWORD = get_env('KEYCLOAK_GLOBAL_PASSWORD')
-KC_MASTER_REALM = 'master'
+APP_RENDER_KWARGS = {
+    'host': HOST,
+    'jwt_cookie': JWT_COOKIE,
+    'realm_cookie': REALM_COOKIE,
+}
+KEYCLOAK_OIDCS = {}
+PUBLIC_KEYS = {}
 
 app = Flask(__name__, template_folder='templates')
-kcj = {}
-PK = {}
 
 app.logger.info(f'Authorization Setup with Keycloak on {KC_URL}!')
 
 
 def get_kc_admin_token():
     keycloak_admin = KeycloakAdmin(server_url=KC_URL,
-                                   username=KC_ADMIN,
-                                   password=KC_PASSWORD,
+                                   username=KC_ADMIN_USER,
+                                   password=KC_ADMIN_PASSWORD,
                                    realm_name=KC_MASTER_REALM,
                                    verify=True)
     token = keycloak_admin.token['access_token']
@@ -68,21 +77,21 @@ def get_realms():
     }
 
 
-def get_oidc(kc_url, realm):
+def get_oidc(realm):
     realm_client = f'{realm}-oidc'
     headers = get_kc_admin_token()
     INSTALLATION_URL = (
-        f'{kc_url}admin/realms/{realm}/clients/{realm_client}'
+        f'{KC_URL}admin/realms/{realm}/clients/{realm_client}'
         '/installation/providers/keycloak-oidc-keycloak-json'
     )
     res = requests.get(INSTALLATION_URL, headers=headers)
     oidc = res.json()
-    oidc['auth-server-url'] = KEYCLOAK_EXTERNAL
+    oidc['auth-server-url'] = KEYCLOAK_URL
     return oidc
 
 
-def get_public_key(kc_url, realm):
-    CERT_URL = f'{kc_url}realms/{realm}/protocol/openid-connect/certs'
+def get_public_key(realm):
+    CERT_URL = f'{KC_URL}realms/{realm}/protocol/openid-connect/certs'
     res = requests.get(CERT_URL)
     res.raise_for_status()
     jwk_key = res.json()['keys'][0]
@@ -92,12 +101,11 @@ def get_public_key(kc_url, realm):
 
 
 def setup_auth():
-    global kcj, PK
     realms = get_realms()
     for _id, realm in realms.items():
-        kcj[realm] = get_oidc(KC_URL, realm)
-        PK[realm] = get_public_key(KC_URL, realm)
-    return [kcj, PK]
+        KEYCLOAK_OIDCS[realm] = get_oidc(realm)
+        PUBLIC_KEYS[realm] = get_public_key(realm)
+    return [KEYCLOAK_OIDCS, PUBLIC_KEYS]
 
 
 def validate_token(tenant, headers=None, cookies=None):
@@ -105,19 +113,20 @@ def validate_token(tenant, headers=None, cookies=None):
         cookies = {}
     if not headers:
         headers = {}
-    if not tenant in PK:
-        PK[tenant] = get_public_key(KC_URL, tenant)
+    if tenant not in PUBLIC_KEYS:
+        PUBLIC_KEYS[tenant] = get_public_key(tenant)
     header_auth = headers.get('authorization')
     if header_auth:
         raw = header_auth[7:]
     else:
-        raw = cookies.get('aether-jwt')
+        raw = cookies.get(JWT_COOKIE)
 
-    return jwt.decode(raw, PK[tenant], audience='account', algorithms='RS256')
+    return jwt.decode(raw, PUBLIC_KEYS[tenant], audience='account', algorithms='RS256')
+
 
 ## Protected Service
 
-@app.route("/auth/user/<tenant>/token")
+@app.route('/auth/user/<tenant>/token')
 def demo(tenant):
     try:
         token = validate_token(tenant, request.headers, request.cookies)
@@ -137,59 +146,56 @@ def demo(tenant):
 
 
 # Works for refreshing via UI
-@app.route("/auth/user/<tenant>/refresh")
+@app.route('/auth/user/<tenant>/refresh')
 def refresh(tenant):
-    redirect = request.args.get('redirect', None) \
-        or f'http://{HOST}/auth/user/{tenant}/token'
-    return render_template('./index.html', tenant=tenant, redirect=redirect, host=HOST)
+    redirect = request.args.get('redirect', None) or f'{HOST}/auth/user/{tenant}/token'
+    return render_template('./index.html', tenant=tenant, redirect=redirect, **APP_RENDER_KWARGS)
 
 
 # Logout
-@app.route("/auth/user/<tenant>/logout")
+@app.route('/auth/user/<tenant>/logout')
 def logout(tenant):
-    redirect = request.args.get('redirect', None) \
-        or f'http://{HOST}/auth/login/{tenant}'
-    return render_template('./logout.html', tenant=tenant, redirect=redirect, host=HOST)
+    redirect = request.args.get('redirect', None) or f'{HOST}/auth/login/{tenant}'
+    return render_template('./logout.html', tenant=tenant, redirect=redirect, **APP_RENDER_KWARGS)
 
 
 ## PUBLIC
 
 ## Static Assets
-@app.route("/auth/static/<path:path>")
+@app.route('/auth/static/<path:path>')
 def serve_static(path):
     return send_from_directory('static', path)
 
-# Base route returns an error
-@app.route("/auth/")
-@app.route("/auth/login/")
-def base():
-    if not 'realm' in request.args:
-        return render_template('./realm.html')
-    else:
-        realm = request.args.get('realm')
-        redirect = request.args.get('redirect', None) \
-            or f'http://{HOST}/auth/user/{realm}/token'
-        return render_template('./index.html', tenant=realm, redirect=redirect, host=HOST)
 
+# Base route returns an error
+@app.route('/auth/')
+@app.route('/auth/login/')
+def base():
+    if 'realm' not in request.args:
+        return render_template('./realm.html')
+
+    realm = request.args.get('realm')
+    redirect = request.args.get('redirect', None) or f'{HOST}/auth/user/{realm}/token'
+    return render_template('./index.html', tenant=realm, redirect=redirect, **APP_RENDER_KWARGS)
 
 
 # Login Route
-@app.route("/auth/login/<tenant>")
+@app.route('/auth/login/<tenant>')
 def login(tenant=None):
     if not tenant:
         return jsonify({'error': 'a realm must be specified for login /auth/login/{realm}'})
-    redirect = request.args.get('redirect', None) \
-        or f'http://{HOST}/auth/user/{tenant}/token'
-    return render_template('./index.html', tenant=tenant, redirect=redirect, host=HOST)
+
+    redirect = request.args.get('redirect', None) or f'{HOST}/auth/user/{tenant}/token'
+    return render_template('./index.html', tenant=tenant, redirect=redirect, **APP_RENDER_KWARGS)
 
 
 # Public Information
-@app.route("/auth/login/<tenant>/keycloak.json")
+@app.route('/auth/login/<tenant>/keycloak.json')
 def kc_json(tenant):
-    if not tenant in kcj:
-        kcj[tenant] = get_oidc(KC_URL, tenant)
-    return jsonify(kcj[tenant])
+    if tenant not in KEYCLOAK_OIDCS:
+        KEYCLOAK_OIDCS[tenant] = get_oidc(tenant)
+    return jsonify(KEYCLOAK_OIDCS[tenant])
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=get_env('APP_PORT'))
+    app.run(host='0.0.0.0', port=APP_PORT)

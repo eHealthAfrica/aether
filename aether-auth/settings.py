@@ -16,26 +16,31 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import os
 
-from django.conf import settings
-
-from .drf.authentication import get_current_realm
+get_env = lambda x : os.environ.get(x)
 
 
-def aether_context(request):
-    context = {
-        'dev_mode': settings.DEBUG,
-        'app_name': settings.APP_NAME,
-        'app_link': settings.APP_LINK,
-        'app_version': settings.VERSION,
-        'app_revision': settings.REVISION,
-    }
+HOST = get_env('BASE_HOST')  # External URL for host
+APP_NAME = get_env('APP_NAME')
+APP_PORT = get_env('APP_PORT')
 
-    if settings.KEYCLOAK_URL:
-        realm = get_current_realm(request)
-        redirect = f'{settings.BASE_HOST}/{settings.APP_ID}'
-        url = f'{settings.BASE_HOST}/auth/user/{realm}/refresh?redirect={redirect}'
 
-        context['jwt_login'] = url
+# Keycloak Information
+KEYCLOAK_INTERNAL = get_env('KEYCLOAK_INTERNAL')
+KEYCLOAK_URL = f'{HOST}/keycloak/auth/'
 
-    return context
+KC_URL = f'{KEYCLOAK_INTERNAL}/keycloak/auth/'  # internal
+KC_ADMIN_USER = get_env('KEYCLOAK_GLOBAL_ADMIN')
+KC_ADMIN_PASSWORD = get_env('KEYCLOAK_GLOBAL_PASSWORD')
+KC_MASTER_REALM = 'master'
+
+
+# Kong Information
+KONG_URL = f'{get_env("KONG_INTERNAL")}/'
+CONSUMERS_URL = f'{KONG_URL}consumers'
+
+
+REALMS_PATH = '/code/realm'
+JWT_COOKIE = get_env('JWT_COOKIE') or 'aether-jwt'
+REALM_COOKIE = get_env('REALM_COOKIE') or 'aether-realm'
