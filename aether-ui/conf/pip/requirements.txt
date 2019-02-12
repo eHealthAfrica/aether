@@ -13,12 +13,9 @@
 ################################################################################
 
 aether.common==0.0.0
-asn1crypto==0.24.0
 certifi==2018.11.29
-cffi==1.11.5
 chardet==3.0.4
 coverage==4.5.2
-cryptography==2.5
 Django==1.11.20
 django-cas-ng==3.5.10
 django-cors-headers==2.4.0
@@ -34,7 +31,6 @@ entrypoints==0.3
 flake8==3.7.5
 flake8-quotes==1.0.0
 idna==2.8
-jwcrypto==0.6.0
 lxml==4.3.1
 mccabe==0.6.1
 mock==2.0.0
@@ -42,9 +38,7 @@ pbr==5.1.2
 prometheus-client==0.5.0
 psycopg2-binary==2.7.7
 pycodestyle==2.5.0
-pycparser==2.19
 pyflakes==2.1.0
-PyJWT==1.7.1
 python-cas==1.4.0
 python-json-logger==0.1.10
 pytz==2018.9
