@@ -96,5 +96,5 @@ if __name__ == '__main__':
     CLIENT_URL = sys.argv[2]
 
     print(f'Exposing Service {CLIENT_NAME} @ {CLIENT_URL}')
-    client_id = register_app(CLIENT_NAME, CLIENT_URL)
-    print(f'Service {CLIENT_NAME} from {CLIENT_URL} now being served by kong @ /{client_id}.')
+    register_app(CLIENT_NAME, CLIENT_URL)
+    print(f'Service {CLIENT_NAME} from {CLIENT_URL} now being served by kong @ /{CLIENT_NAME}.')

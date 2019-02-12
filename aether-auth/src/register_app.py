@@ -79,7 +79,7 @@ def register_app(name, url):
 
     # Add a separate Path for static assets, which we will NOT protect
     data = {
-        'paths': [f'/{name}/static'],
+        'paths': [f'/{name}/static', f'/{name}/media-basic'],
         'strip_path': 'false',
     }
     __post(url=ROUTE_URL, data=data)
@@ -93,5 +93,5 @@ if __name__ == '__main__':
     CLIENT_URL = sys.argv[2]
 
     print(f'Exposing Service {CLIENT_NAME} @ {CLIENT_URL}')
-    client_id = register_app(CLIENT_NAME, CLIENT_URL)
-    print(f'Service {CLIENT_NAME} from {CLIENT_URL} now being served by kong @ /{client_id}.')
+    register_app(CLIENT_NAME, CLIENT_URL)
+    print(f'Service {CLIENT_NAME} from {CLIENT_URL} now being served by kong @ /{CLIENT_NAME}.')

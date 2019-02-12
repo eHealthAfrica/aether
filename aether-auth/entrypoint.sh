@@ -45,20 +45,20 @@ case "$1" in
     ;;
 
     make_realm )
-        python /code/make_realm.py
+        python /code/src/make_realm.py
     ;;
 
     setup_auth )
-        python /code/register_keycloak.py keycloak    ${KEYCLOAK_INTERNAL}
+        python /code/src/register_keycloak.py keycloak    ${KEYCLOAK_INTERNAL}
         python /code/register_auth.py     ${APP_NAME} ${APP_INTERNAL}
     ;;
 
     register_app )
-        python /code/register_app.py "${@:2}"
+        python /code/src/register_app.py "${@:2}"
     ;;
 
     start )
-        python /code/app.py
+        python /code/src/app.py
     ;;
 
     help )
