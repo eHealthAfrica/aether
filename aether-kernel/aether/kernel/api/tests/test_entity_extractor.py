@@ -92,6 +92,14 @@ class EntityExtractorTests(TestCase):
         entity_extractor.nest_object(obj, path, value)
         self.assertEquals(obj['a']['b']['c'], value)
 
+    def test_nest_object__unlikely_dotted_reference(self):
+        obj = {'a.b': 2, 'a.b.c': None}
+        path = 'a.b.c'
+        value = 1
+        entity_extractor.nest_object(obj, path, value)
+        self.assertEquals(obj['a']['b']['c'], value)
+        self.assertEquals(obj['a.b'], 2)
+
     def test_put_nested__simple_object(self):
         keys = ['a', 'b', 'c']
         obj = entity_extractor.put_nested({}, keys, 1)
@@ -241,6 +249,36 @@ class EntityExtractorTests(TestCase):
         uuid = str(entity_extractor.get_or_make_uuid(
             entity_type, field_name, instance_number, source_data))
         self.assertEquals(uuid.count('-'), 4)
+
+    def test_extractor_action__entity_reference(self):
+        source_path = '#!entity-reference#bad-reference'
+        try:
+            entity_extractor.extractor_action(
+                source_path, None, None, None, None, None)
+            self.assertTrue(False)
+        except ValueError:
+            self.assertTrue(True)
+
+    def test_extractor_action__none(self):
+        source_path = '#!none'
+        res = entity_extractor.extractor_action(
+            source_path, None, None, None, None, None)
+        self.assertEquals(res, None)
+
+    def test_extractor_action__constant(self):
+        source_path = '#!constant#1#int'
+        res = entity_extractor.extractor_action(
+            source_path, None, None, None, None, None)
+        self.assertEquals(res, 1)
+
+    def test_extractor_action__missing(self):
+        source_path = '#!undefined#1#int'
+        try:
+            entity_extractor.extractor_action(
+                source_path, None, None, None, None, None)
+            self.assertTrue(False)
+        except ValueError:
+            self.assertTrue(True)
 
     def test_extract_entity(self):
         requirements = EXAMPLE_REQUIREMENTS

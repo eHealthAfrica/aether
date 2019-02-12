@@ -28,8 +28,7 @@ valid_schemas = {
         'name': 'Person',
         'type': 'record',
         'namespace': 'test.Person',
-        'fields': [
-            {
+        'fields': [{
                 'name': 'firstName',
                 'type': 'string',
                 'namespace': 'Person'
