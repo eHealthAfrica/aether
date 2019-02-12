@@ -23,7 +23,7 @@ set -Eeuo pipefail
 DCA="docker-compose -f ./docker-compose-auth.yml"
 $DCA kill
 
-containers=( db kong keycloak auth )
+containers=( db kong keycloak auth kernel )
 for container in "${containers[@]}"
 do
     echo "_____________________________________________ Starting $container"
@@ -32,6 +32,3 @@ do
     echo "_____________________________________________ $container started!"
     sleep 5
 done
-
-echo "_____________________________________________ Starting Aether kernel"
-$DCA up kernel

@@ -47,13 +47,11 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "8090:8090"
-      # - "80:80"
-      # - "8001:8001"  # internal only
-      # - "8443:8443"  # Once ODK is integrated, we can take these
-      # - "8444:8444"
+      - 8090:8090
+      # - 8001:8001  # internal only
     networks:
       - internal
+
 
   keycloak:
     build: ./aether-auth/keycloak
@@ -81,19 +79,19 @@ services:
     image: aether-auth
     build: ./aether-auth
     environment:
-      BASE_HOST: http://aether.local:8090
-      KEYCLOAK_INTERNAL: http://keycloak:8080
-      KONG_INTERNAL: http://kong:8001
-
       KEYCLOAK_GLOBAL_ADMIN: ${KEYCLOAK_GLOBAL_ADMIN}
       KEYCLOAK_GLOBAL_PASSWORD: ${KEYCLOAK_GLOBAL_PASSWORD}
 
-      APP_NAME: auth
-      APP_INTERNAL: http://auth:3012
-      APP_PORT: 3012
-
       JWT_COOKIE: aether-jwt
       REALM_COOKIE: aether-realm
+
+      APP_NAME: auth
+      APP_PORT: 3012
+
+      APP_INTERNAL: http://auth:3012
+      BASE_HOST: http://aether.local:8090
+      KEYCLOAK_INTERNAL: http://keycloak:8080
+      KONG_INTERNAL: http://kong:8001
     volumes:
       - ./aether-auth:/code
     depends_on:
@@ -101,6 +99,8 @@ services:
         condition: service_started
       keycloak:
         condition: service_started
+    ports:
+      - 3012:3012
     command: start
     networks:
       - internal
@@ -118,7 +118,7 @@ services:
       CSRF_COOKIE_DOMAIN: aether.local
       HOSTNAME: aether.local
 
-      BASE_HOST: http://aether.local
+      BASE_HOST: http://aether.local:8090
       KEYCLOAK_URL: http://keycloak:8080
     depends_on:
       db:

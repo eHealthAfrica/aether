@@ -20,9 +20,11 @@
 #
 set -Eeuo pipefail
 
-# set DEBUG if missing
+# set DEBUG, KEYCLOAK_URL if missing
 set +u
-DEBUG="$DEBUG"
+DEBUG="${DEBUG}"
+KEYCLOAK_URL="${KEYCLOAK_URL}"
+MEDIA_ROOT="${MEDIA_ROOT:-/media/}"
 set -u
 
 BACKUPS_FOLDER=/backups
@@ -183,7 +185,7 @@ case "$1" in
     ;;
 
     test )
-        echo "DEBUG=$DEBUG"
+        echo "DEBUG=${DEBUG}"
         setup
         test_flake8
         test_coverage "${@:2}"
@@ -200,22 +202,25 @@ case "$1" in
     start )
         setup
 
-        [ -z "$DEBUG" ] && LOGGING="--disable-logging" || LOGGING=""
+        [ -z "${DEBUG}" ] && LOGGING="--disable-logging" || LOGGING=""
+        [ -z "${KEYCLOAK_URL}" ] && PREFIX="" || PREFIX="/${APP_ID}"
 
         /usr/local/bin/uwsgi \
             --ini /code/conf/uwsgi.ini \
-            --http 0.0.0.0:$WEB_SERVER_PORT \
+            --http 0.0.0.0:${WEB_SERVER_PORT} \
+            --static-map ${PREFIX}/static=/var/www/static \
+            # --static-map ${PREFIX}/media=${MEDIA_ROOT} \
             $LOGGING
     ;;
 
     start_dev )
         setup
 
-        ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
+        ./manage.py runserver 0.0.0.0:${WEB_SERVER_PORT}
     ;;
 
     health )
-        ./manage.py check_url --url=http://0.0.0.0:$WEB_SERVER_PORT/health
+        ./manage.py check_url --url=http://0.0.0.0:${WEB_SERVER_PORT}/health
     ;;
 
     help )
