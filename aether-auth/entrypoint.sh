@@ -50,7 +50,7 @@ case "$1" in
 
     setup_auth )
         python /code/src/register_keycloak.py keycloak    ${KEYCLOAK_INTERNAL}
-        python /code/register_auth.py     ${APP_NAME} ${APP_INTERNAL}
+        python /code/src/register_auth.py     ${APP_NAME} ${APP_INTERNAL}
     ;;
 
     register_app )
