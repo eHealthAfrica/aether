@@ -37,5 +37,5 @@ router.register('entities', views.EntityViewSet)
 
 
 urlpatterns = router.urls + [
-    url(r'^validate-mappings/$', views.validate_mappings_view, name='validate-mappings'),
+    url(r'^validate-mappings/$', view=views.validate_mappings_view, name='validate-mappings'),
 ]
