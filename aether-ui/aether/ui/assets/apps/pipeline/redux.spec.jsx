@@ -83,22 +83,22 @@ describe('Pipeline actions', () => {
 
   it('should dispatch an update action and update redux store', () => {
     const pipeline = {
-      'id': '1243563231',
-      'pipeline': 2,
-      'name': 'contract 2',
-      'isInputReadOnly': false,
-      'mapping_errors': null,
-      'mapping': [],
-      'output': null,
-      'entity_types': [],
-      'schema': null,
-      'input': null,
-      'highlightDestination': [],
-      'highlightSource': {}
+      id: 1,
+      name: 'Pipeline Mock 1 Updated',
+      schema: null,
+      input: null,
+      contracts: [{
+        mapping_errors: null,
+        mapping: [],
+        output: null,
+        entity_types: [],
+        id: '124356323',
+        name: 'contract 1'
+      }]
     }
     nock('http://localhost')
       .get(`/api/pipelines/?limit=${MAX_PAGE_SIZE}`)
-      .reply(200, mockPipelines)
+      .reply(200, mockPipelines.results)
 
     nock('http://localhost')
       .put(`/api/pipelines/${pipeline.id}/`)
@@ -108,8 +108,11 @@ describe('Pipeline actions', () => {
       .then(() => {
         return store.dispatch(updatePipeline(pipeline))
           .then(() => {
-            expect(store.getState().pipelineList[1]).toEqual(
-              pipeline
+            const proContracts = pipeline.contracts.map(c => ({ ...c,
+              highlightDestination: [],
+              highlightSource: {} }))
+            expect(store.getState().pipelineList[0]).toEqual(
+              { ...pipeline, contracts: proContracts, isInputReadOnly: false }
             )
           })
       })
@@ -117,22 +120,25 @@ describe('Pipeline actions', () => {
 
   it('should try updating pipeline with wrong id and fail', () => {
     const wrongPipeline = {
-      'id': 1001,
-      'name': 'None existant pipeline ',
-      'mapping_errors': null,
-      'mapping': [],
-      'output': null,
-      'entity_types': [],
-      'schema': null,
-      'input': null,
-      'pipeline': 100
+      id: 1001,
+      name: 'Pipeline Mock 1',
+      schema: null,
+      input: null,
+      contracts: [{
+        mapping_errors: null,
+        mapping: [],
+        output: null,
+        entity_types: [],
+        id: '124356323',
+        name: 'contract 1'
+      }]
     }
     nock('http://localhost')
       .get(`/api/pipelines/?limit=${MAX_PAGE_SIZE}`)
       .reply(200, mockPipelines)
 
     nock('http://localhost')
-      .put(`/api/pipelines/${wrongPipeline.pipeline}/`)
+      .put(`/api/pipelines/${wrongPipeline.id}/`)
       .reply(404)
     expect(typeof updatePipeline(wrongPipeline)).toEqual('object')
     return store.dispatch(getPipelines())
@@ -149,13 +155,13 @@ describe('Pipeline actions', () => {
   it('should successfully get all pipelines and add to store', () => {
     nock('http://localhost')
       .get(`/api/pipelines/?limit=${MAX_PAGE_SIZE}`)
-      .reply(200, mockPipelines)
-    store.dispatch({ type: types.GET_ALL, payload: { results: [] } })
+      .reply(200, mockPipelines.results)
+    store.dispatch({ type: types.GET_ALL, payload: [] })
     expect(store.getState().pipelineList).toEqual([])
     return store.dispatch(getPipelines())
       .then(() => {
         expect(store.getState().pipelineList).toEqual(
-          mockPipelines.transformed
+          mockPipelines.results.map(p => ({ ...p, isInputReadOnly: false }))
         )
       })
   })
@@ -172,6 +178,7 @@ describe('Pipeline actions', () => {
     const expectedStoreData = {
       pipelineList: [],
       selectedPipeline: null,
+      selectedContract: null,
       error: { error: 'Not Found', message: 'Resource Not Found', status: 404 },
       notFound: null,
       publishSuccess: null,
@@ -206,7 +213,12 @@ describe('Pipeline actions', () => {
     return store.dispatch(getPipelineById(pipeline.id, pipeline.contracts[0].id))
       .then(() => {
         expect(store.getState().selectedPipeline).toEqual(
-          mockPipelines.transformed[2]
+          { ...mockPipelines.results[2],
+            isInputReadOnly: false
+          }
+        )
+        expect(store.getState().selectedContract).toEqual(
+          mockPipelines.results[2].contracts[0]
         )
       })
   })
