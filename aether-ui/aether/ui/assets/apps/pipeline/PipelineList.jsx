@@ -169,11 +169,11 @@ class PipelineList extends Component {
                     <div className='status-publish'>
                       <FormattedMessage
                         id='contract.list.publish-status'
-                        defaultMessage={contract.published_on ? `Published on ${moment(contract.published_on).format('MMMM DD')}`
+                        defaultMessage={contract.published_on ? `Published on ${moment(contract.published_on).format('MMMM DD, YYYY HH:mm')}`
                           : 'Not published'}
                       />
                     </div>
-                    <PublishButton pipeline={contract} className='btn btn-w btn-publish' />
+                    <PublishButton contract={contract} pipeline={pipeline} className='btn btn-w btn-publish' />
                   </div>
                 </div>
               </React.Fragment>

@@ -22,7 +22,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 import { PROJECT_NAME } from '../utils/constants'
-import { publishPipeline, selectedPipelineChanged } from './redux'
+import { publishPipeline, selectedPipelineChanged, selectedContractChanged } from './redux'
 import Modal from '../components/Modal'
 
 class PublishButton extends Component {
@@ -37,8 +37,8 @@ class PublishButton extends Component {
   }
 
   componentWillReceiveProps (nextProps) {
-    if (nextProps.selectedPipeline && nextProps.selectedPipeline.id &&
-      nextProps.selectedPipeline.id === this.props.pipeline.id) {
+    if (nextProps.selectedContract && nextProps.selectedContract.id &&
+      nextProps.selectedContract.id === this.props.contract.id) {
       if (nextProps.publishError) {
         this.getPublishOptions('error', nextProps.publishError)
       }
@@ -50,12 +50,12 @@ class PublishButton extends Component {
 
   buildPublishErrors (errors) {
     const errorList = []
-    errors.error.forEach(error => {
+    errors.error && errors.error.forEach(error => {
       errorList.push(<li key={error}>
         <FormattedMessage id={`publish.error.${error}`} defaultMessage={error} />
       </li>)
     })
-    errors.exists.forEach(exists => {
+    errors.exists && errors.exists.forEach(exists => {
       Object.keys(exists).forEach(exist => {
         errorList.push(<li key={exist}>
           <FormattedMessage id={`publish.exists.${exist}`} defaultMessage={exists[exist]} />
@@ -74,6 +74,7 @@ class PublishButton extends Component {
   }
 
   getPublishOptions (status, statusData) {
+    const ids = statusData.ids || {}
     this.setState({
       publishOptionsButtons: status === 'success' ? (
         <button type='button' className='btn btn-w btn-primary' onClick={this.setPublishOptionsModal.bind(this, false)}>
@@ -91,7 +92,8 @@ class PublishButton extends Component {
             />
           </button>
           {
-            (!this.props.pipeline.mapping_errors || !this.props.pipeline.mapping_errors.length) && (<button type='button' className='btn btn-w btn-primary' onClick={this.publishOverwrite.bind(this)}>
+            (!this.props.contract.mapping_errors || !this.props.contract.mapping_errors.length) &&
+            statusData.exists && (<button type='button' className='btn btn-w btn-primary' onClick={this.publishOverwrite.bind(this, ids)}>
               <FormattedMessage
                 id='publish.modal.overwrite'
                 defaultMessage='Overwrite Existing Pipeline'
@@ -112,23 +114,27 @@ class PublishButton extends Component {
     })
   }
 
-  publishOverwrite (event) {
+  publishOverwrite (ids, event) {
     event.stopPropagation()
     this.setPublishOptionsModal.bind(this, false)
-    this.props.publishPipeline(this.props.pipeline.id, PROJECT_NAME, true)
+    this.props.publishPipeline(this.props.pipeline.id, this.props.contract.id, PROJECT_NAME, true, ids)
   }
 
   publish (event) {
     event.stopPropagation()
     this.props.selectedPipelineChanged(this.props.pipeline)
-    this.props.publishPipeline(this.props.pipeline.pipeline, this.props.pipeline.id)
+    this.props.selectedContractChanged(this.props.contract)
+    this.props.publishPipeline(this.props.pipeline.id, this.props.contract.id)
   }
 
   render () {
     return (
       <div>
-        <Modal show={this.state.showPublishOptions} header={`Publish ${this.props.pipeline.name}`}
-          buttons={this.state.publishOptionsButtons}>
+        <Modal
+          show={this.state.showPublishOptions}
+          header={`Publish ${this.props.pipeline.name} | ${this.props.contract.name}`}
+          buttons={this.state.publishOptionsButtons}
+        >
           {this.state.publishOptionsContent}
         </Modal>
         <button type='button' className={this.props.className} onClick={this.publish.bind(this)} disabled={this.props.disabled}>
@@ -145,7 +151,12 @@ class PublishButton extends Component {
 const mapStateToProps = ({ pipelines }) => ({
   publishError: pipelines.publishError,
   publishSuccess: pipelines.publishSuccess,
-  selectedPipeline: pipelines.selectedPipeline
+  selectedPipeline: pipelines.selectedPipeline,
+  selectedContract: pipelines.selectedContract
 })
 
-export default connect(mapStateToProps, { publishPipeline, selectedPipelineChanged })(PublishButton)
+export default connect(mapStateToProps, {
+  publishPipeline,
+  selectedPipelineChanged,
+  selectedContractChanged
+})(PublishButton)

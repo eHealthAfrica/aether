@@ -21,7 +21,7 @@
 /* global describe, it, expect, beforeEach */
 import reducer, { types, selectedPipelineChanged,
   addPipeline, getPipelines, updatePipeline,
-  INITIAL_PIPELINE, getPipelineById, publishPipeline } from './redux'
+  INITIAL_PIPELINE, getPipelineById, publishPipeline, selectedContractChanged } from './redux'
 import { createStore, applyMiddleware } from 'redux'
 import nock from 'nock'
 import middleware from '../redux/middleware'
@@ -225,12 +225,11 @@ describe('Pipeline actions', () => {
 
   it('should dispatch a publish pipeline action and save response in the redux store', () => {
     const pipeline = mockPipelines.results[0]
-    const selectedPipe = mockPipelines.transformed[0]
     nock('http://localhost')
-      .post('/api/pipelines/1/publish/')
+      .post(`/api/pipelines/${pipeline.id}/publish/`)
       .reply(200, pipeline)
     expect(typeof publishPipeline(pipeline.id, pipeline.contracts[0].id)).toEqual('object')
-    store.dispatch(selectedPipelineChanged(selectedPipe))
+    store.dispatch(selectedContractChanged(pipeline.contracts[0].id))
     return store.dispatch(publishPipeline(pipeline.id, pipeline.contracts[0].id))
       .then(() => {
         expect(store.getState().publishSuccess).toEqual(

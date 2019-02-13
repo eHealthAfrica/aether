@@ -250,17 +250,21 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
     }
 
     case types.PIPELINE_PUBLISH_ERROR: {
-      return { ...state, publishError: action.error.error }
+      return { ...state, publishError: action.error.error || action.error.message || action.error }
     }
 
     case types.PIPELINE_PUBLISH_SUCCESS: {
-      const updatedPipelines = action.payload
-      const currentPipeline = updatedPipelines.find(x => x.id === state.selectedPipeline.id)
-      updatedPipelines.forEach(pipeline => {
-        const index = newPipelineList.findIndex(x => x.id === pipeline.id)
-        newPipelineList[index] = pipeline
-      })
-      return { ...state, pipelineList: newPipelineList, selectedPipeline: currentPipeline, publishSuccess: true }
+      const updatedPipeline = parsePipeline(checkReadOnlySinglePipeline(action.payload))
+      const currentContract = updatedPipeline.contracts.find(x => x.id === state.selectedContract.id)
+      const index = newPipelineList.findIndex(x => x.id === updatedPipeline.id)
+      newPipelineList[index] = updatedPipeline
+      return {
+        ...state,
+        pipelineList: newPipelineList,
+        selectedPipeline: updatedPipeline,
+        publishSuccess: true,
+        selectedContract: currentContract
+      }
     }
 
     case types.GET_FROM_KERNEL: {

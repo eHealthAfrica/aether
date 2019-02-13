@@ -112,12 +112,12 @@ class Pipeline extends Component {
   }
 
   setDefaultContract (contractId) {
+    this.setState({ pipelineView: 'entityTypes' })
     if (this.props.selectedPipeline) {
       const selectedContract = this.props.selectedPipeline.contracts
         .find(x => x.id === contractId)
       if (selectedContract) {
         this.props.selectedContractChanged(selectedContract)
-        this.setState({ pipelineView: 'entityTypes' })
       }
     }
   }
@@ -442,7 +442,7 @@ class Pipeline extends Component {
                   ? `Published on ${moment(this.props.selectedContract.published_on).format('MMMM DD, YYYY HH:mm')}`
                   : 'Not published'}
               />
-              <PublishButton pipeline={this.props.selectedPipeline} className='btn btn-d btn-publish' />
+              <PublishButton pipeline={this.props.selectedPipeline} contract={this.props.selectedContract} className='btn btn-d btn-publish' />
             </div>
             { this.props.selectedContract.published_on
               ? <div>
