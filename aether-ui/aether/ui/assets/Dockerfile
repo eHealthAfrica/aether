@@ -1,22 +1,10 @@
-FROM node:carbon-slim
-
-
-################################################################################
-## setup container
-################################################################################
+FROM node:dubnium-slim
 
 WORKDIR /code/
 
 COPY ./package.json /code/package.json
-
-# Upgrade npm to last version
-RUN npm install -g npm
-RUN npm install --loglevel warn
-
-
-################################################################################
-## Last steps
-################################################################################
+RUN npm install -q -g npm && npm install -q
 
 COPY ./ /code
+
 ENTRYPOINT ["/code/conf/entrypoint.sh"]

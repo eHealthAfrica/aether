@@ -4,15 +4,12 @@
 #                                                                              #
 ################################################################################
 
-aet.consumer>=0.9.1
+aet.consumer
 aether.client
 
 kafka
 requests
-spavro
 
-coverage
 flake8
-mock
 pytest
 pytest-runner
