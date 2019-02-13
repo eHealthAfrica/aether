@@ -33,7 +33,7 @@ jsonschema==2.6.0
 MarkupSafe==1.1.0
 mccabe==0.6.1
 monotonic==1.5
-more-itertools==5.0.0
+more-itertools==6.0.0
 msgpack-python==0.5.6
 pluggy==0.8.1
 psycogreen==1.0.1
@@ -42,7 +42,7 @@ py==1.7.0
 pycodestyle==2.5.0
 pyflakes==2.1.0
 pytest==4.2.0
-python-dateutil==2.7.5
+python-dateutil==2.8.0
 pytz==2018.9
 PyYAML==3.13
 requests==2.21.0
