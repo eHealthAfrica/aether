@@ -92,6 +92,12 @@
     background: rgba($background-color, .3);
     box-shadow: 1px 1px 2px $shadow-color;
   }
+
+  .info {
+    span {
+      float: right;
+    }
+  }
 }
 
 .input-heading {

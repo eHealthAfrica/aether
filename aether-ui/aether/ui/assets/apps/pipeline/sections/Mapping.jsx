@@ -30,11 +30,11 @@ class Mapping extends Component {
     super(props)
 
     this.state = {
-      mappingRules: props.selectedPipeline.mapping || [],
+      mappingRules: props.contract.mapping || [],
       view: 'rules',
       error: null,
-      mappingRulesInput: props.selectedPipeline.mapping
-        ? this.mappingToJSON(props.selectedPipeline.mapping) : JSON.stringify([]),
+      mappingRulesInput: props.contract.mapping
+        ? this.mappingToJSON(props.contract.mapping) : JSON.stringify([]),
       current_rules: [],
       jsonError: null
     }
@@ -48,12 +48,12 @@ class Mapping extends Component {
 
   componentWillReceiveProps (nextProps) {
     this.setState({
-      mappingRules: nextProps.selectedPipeline.mapping || []
+      mappingRules: nextProps.contract.mapping || []
     })
-    if (nextProps.selectedPipeline.mapping !== this.props.selectedPipeline.mapping) {
+    if (nextProps.contract.mapping !== this.props.contract.mapping) {
       this.setState({
-        current_rules: [...nextProps.selectedPipeline.mapping],
-        mappingRulesInput: this.mappingToJSON(nextProps.selectedPipeline.mapping)
+        current_rules: [...nextProps.contract.mapping],
+        mappingRulesInput: this.mappingToJSON(nextProps.contract.mapping)
       })
     }
   }
@@ -77,7 +77,7 @@ class Mapping extends Component {
 
   notifyChange (event) {
     event.preventDefault()
-    this.props.updateContract({ ...this.props.selectedPipeline, mapping: this.state.mappingRules })
+    this.props.updateContract({ ...this.props.contract, mapping: this.state.mappingRules })
   }
 
   notifyChangeJSON (event) {
@@ -86,7 +86,7 @@ class Mapping extends Component {
     this.setState({ jsonError: null })
     try {
       rules = this.JSONToMapping(this.state.mappingRulesInput)
-      this.props.updateContract({ ...this.props.selectedPipeline, mapping: rules })
+      this.props.updateContract({ ...this.props.contract, mapping: rules })
       this.setState({ current_rules: JSON.parse(this.state.mappingRulesInput) })
     } catch (error) {
       this.setState({ jsonError: error.message })
@@ -94,7 +94,7 @@ class Mapping extends Component {
   }
 
   hasChanged () {
-    return !deepEqual(this.state.mappingRules, this.props.selectedPipeline.mapping)
+    return !deepEqual(this.state.mappingRules, this.props.contract.mapping)
   }
 
   hasChangedJson () {
@@ -148,7 +148,7 @@ class Mapping extends Component {
                 <div className='rules-buttons'>
                   { this.renderAddNewRuleButton() }
 
-                  <button type='submit' className='btn btn-d btn-primary' disabled={this.props.selectedPipeline.is_read_only || !this.hasChanged()}>
+                  <button type='submit' className='btn btn-d btn-primary' disabled={this.props.contract.is_read_only || !this.hasChanged()}>
                     <span className='details-title'>
                       <FormattedMessage
                         id='mapping.rules.button.ok'
@@ -186,7 +186,7 @@ class Mapping extends Component {
     }
 
     return (
-      <button type='button' className='btn btn-d btn-primary' onClick={addNewRule} disabled={this.props.selectedPipeline.is_read_only}>
+      <button type='button' className='btn btn-d btn-primary' onClick={addNewRule} disabled={this.props.contract.is_read_only}>
         <FormattedMessage id='mapping.button.add' defaultMessage='Add rule' />
       </button>
     )
@@ -212,7 +212,7 @@ class Mapping extends Component {
       })
     }
 
-    const hasError = (source, destination = null) => (Boolean(this.props.selectedPipeline.mapping_errors.find(
+    const hasError = (source, destination = null) => (Boolean(this.props.contract.mapping_errors.find(
       error => (error.path && (error.path === source || error.path === destination))
     )))
 
@@ -254,7 +254,7 @@ class Mapping extends Component {
           type='button'
           className='btn btn-d btn-flat btn-transparent'
           onClick={removeRule}
-          disabled={this.props.selectedPipeline.is_read_only}>
+          disabled={this.props.contract.is_read_only}>
           <span className='details-title'>
             <FormattedMessage
               id='mapping.rule.button.delete'
@@ -293,7 +293,7 @@ class Mapping extends Component {
                 onChange={this.onMappingRulesTextChanged.bind(this)}
                 placeholder={message}
                 rows='10'
-                disabled={this.props.selectedPipeline.is_read_only}
+                disabled={this.props.contract.is_read_only}
               />
             )}
           </FormattedMessage>

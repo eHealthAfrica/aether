@@ -52,7 +52,9 @@ class NewPipeline extends Component {
       <button
         type='button'
         className='btn btn-c btn-big new-input'
-        onClick={() => this.setState({ view: 'form' })}>
+        onClick={() => {
+          this.setState({ view: 'form' })
+        }}>
         <span className='details-title'>
           <FormattedMessage
             id='pipeline.new.button.new'
@@ -67,7 +69,6 @@ class NewPipeline extends Component {
     const { formatMessage } = this.props.intl
     const onSubmit = (event) => {
       event.preventDefault()
-
       this.props.onStartPipeline({ name: this.state.newPipelineName })
     }
 

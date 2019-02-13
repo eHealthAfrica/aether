@@ -457,7 +457,7 @@ class Input extends Component {
         <div className='section-left'>
           <AvroSchemaViewer
             schema={this.props.selectedPipeline.schema}
-            highlight={this.props.selectedPipeline.highlightSource}
+            highlight={this.props.selectedContract.highlightSource}
           />
         </div>
         <div className='section-right'>
@@ -496,7 +496,8 @@ class Input extends Component {
 }
 
 const mapStateToProps = ({ pipelines }) => ({
-  selectedPipeline: pipelines.selectedPipeline
+  selectedPipeline: pipelines.selectedPipeline,
+  selectedContract: pipelines.selectedContract
 })
 
 export default connect(mapStateToProps, { updatePipeline, updateContract })(injectIntl(Input))

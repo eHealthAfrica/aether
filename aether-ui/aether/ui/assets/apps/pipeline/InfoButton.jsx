@@ -46,17 +46,6 @@ class InfoButton extends Component {
                   <div className='modal-section'>
                     <label className='form-label'>
                       <FormattedMessage
-                        id='info.modal.publishedDate'
-                        defaultMessage='Published on'
-                      />
-                    </label>
-                    <span>
-                      {moment(this.props.pipeline.published_on).format('DD MMMM, YYYY HH:mm:ss')}
-                    </span>
-                  </div>
-                  <div className='modal-section mt-5'>
-                    <label className='form-label'>
-                      <FormattedMessage
                         id='info.modal.SubmissionUrl'
                         defaultMessage='Submission URL'
                       />
