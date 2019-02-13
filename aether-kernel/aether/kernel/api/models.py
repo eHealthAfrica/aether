@@ -55,47 +55,64 @@ Data model schema:
 +------------------+       +------------------+       +------------------+       +---------------------+
 | Project          |       | MappingSet       |       | Submission       |       | Attachment          |
 +==================+       +==================+       +==================+       +=====================+
-| id               |<---+  | id               |<---+  | id               |<---+  | id                  |
-| created          |    |  | created          |    |  | created          |    |  | created             |
-| modified         |    |  | modified         |    |  | modified         |    |  | modified            |
-| revision         |    |  | revision         |    |  | revision         |    |  | name                |
-| name             |    |  | name             |    |  | payload          |    |  | attachment_file     |
-| salad_schema     |    |  | input            |    |  +::::::::::::::::::+    |  | md5sum              |
-| jsonld_context   |    |  +::::::::::::::::::+    +-<| mappingset       |    |  +:::::::::::::::::::::+
-| rdf_definition   |    +-<| project          |    |  | project(**)      |    +-<| submission          |
-+------------------+    |  +------------------+    |  +------------------+    |  | submission_revision |
-                        |                          |                          |  +---------------------+
-                        |                          |                          |
+| Base fields      |<---+  | Base fields      |<---+  | Base fields      |<---+  | Base fields         |
+| salad_schema     |    |  | input            |    |  | payload          |    |  | attachment_file     |
+| jsonld_context   |    |  | schema           |    |  +::::::::::::::::::+    |  | md5sum              |
+| rdf_definition   |    |  +::::::::::::::::::+    +-<| mappingset       |    |  +:::::::::::::::::::::+
++::::::::::::::::::+    +-<| project          |    |  | project(**)      |    +-<| submission          |
+| organizations(*) |    |  +------------------+    |  +------------------+    |  | submission_revision |
++------------------+    |                          |                          |  +---------------------+
                         |                          |                          |
 +------------------+    |  +------------------+    |  +------------------+    |  +------------------+
 | Schema           |    |  | ProjectSchema    |    |  | Mapping          |    |  | Entity           |
 +==================+    |  +==================+    |  +==================+    |  +==================+
-| id               |<-+ |  | id               |<-+ |  | id               |<-+ |  | id               |
-| created          |  | |  | created          |  | |  | created          |  | |  | modified         |
-| modified         |  | |  | modified         |  | |  | modified         |  | |  | revision         |
-| revision         |  | |  | name             |  | |  | revision         |  | |  | payload          |
-| name             |  | |  | mandatory_fields |  | |  | name             |  | |  | status           |
-| definition       |  | |  | transport_rule   |  | |  | definition       |  | |  +::::::::::::::::::+
-| type             |  | |  | masked_fields    |  | |  | is_active        |  | +-<| submission       |
-| family           |  | |  | is_encrypted     |  | |  | is_read_only     |  +---<| mapping          |
-+------------------+  | |  +::::::::::::::::::+  | |  +::::::::::::::::::+       | mapping_revision |
-                      | +-<| project          |  | +-<| mappingset       |  +---<| projectschema    |
-                      +---<| schema           |  +--<<| projectschemas   |  |    | project(**)      |
-                           +------------------+  |    | project(**)      |  |    | schema(**)       |
-                                                 |    +------------------+  |    +------------------+
-                                                 +--------------------------+
+| Base fields      |<-+ |  | Base fields      |<-+ |  | Base fields      |<-+ |  | Base fields      |
+| definition       |  | |  | mandatory_fields |  | |  | definition       |  | |  | payload          |
+| type             |  | |  | transport_rule   |  | |  | is_active        |  | |  | status           |
+| family           |  | |  | masked_fields    |  | |  | is_read_only     |  | |  +::::::::::::::::::+
++------------------+  | |  | is_encrypted     |  | |  +::::::::::::::::::+  | +-<| submission       |
+                      | |  +::::::::::::::::::+  | +-<| mappingset       |  +---<| mapping          |
+                      | +-<| project          |  +==<<| projectschemas   |  |    | mapping_revision |
+                      +---<| schema           |  |    | project(**)      |  +---<| projectschema    |
+                           +------------------+  |    +------------------+  |    | project(**)      |
+                                                 +--------------------------+    | schema(**)       |
+                                                                                 +------------------+
 '''
 
 
-class Project(ExportModelOperationsMixin('kernel_project'), TimeStampedModel):
+class KernelAbstract(TimeStampedModel):
+    '''
+    Common fields in all models:
+
+    :ivar UUID  id:        ID (primary key).
+    :ivar text  revision:  Revision.
+    :ivar text  name:      Name (**unique**).
+
+    .. note:: Extends from :class:`model_utils.models.TimeStampedModel`
+
+        :ivar datetime  created:   Creation timestamp.
+        :ivar datetime  modified:  Last update timestamp.
+    '''
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
+    revision = models.TextField(default='1', verbose_name=_('revision'))
+    name = models.CharField(max_length=50, unique=True, verbose_name=_('name'))
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        abstract = True
+        app_label = 'kernel'
+        ordering = ['-modified']
+
+
+class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract):
     '''
     Project
 
-    :ivar UUID      id:              ID (primary key).
-    :ivar datetime  created:         Creation timestamp.
-    :ivar datetime  modified:        Last update timestamp.
-    :ivar text      revision:        Revision.
-    :ivar text      name:            Name (**unique**).
+    .. note:: Extends from :class:`aether.kernel.api.models.KernelAbstract`
+
     :ivar text      salad_schema:    Salad schema (optional).
         Semantic Annotations for Linked Avro Data (SALAD)
         https://www.commonwl.org/draft-3/SchemaSalad.html
@@ -107,10 +124,6 @@ class Project(ExportModelOperationsMixin('kernel_project'), TimeStampedModel):
         https://www.w3.org/TR/rdf-schema/
 
     '''
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
-    revision = models.TextField(default='1', verbose_name=_('revision'))
-    name = models.CharField(max_length=50, unique=True, verbose_name=_('name'))
 
     salad_schema = models.TextField(
         null=True,
@@ -140,9 +153,6 @@ class Project(ExportModelOperationsMixin('kernel_project'), TimeStampedModel):
         ),
     )
 
-    def __str__(self):
-        return self.name
-
     def delete(self, *args, **kwargs):
         # find the linked passthrough schemas
         for schema in Schema.objects.filter(family=str(self.pk)):
@@ -156,7 +166,6 @@ class Project(ExportModelOperationsMixin('kernel_project'), TimeStampedModel):
         super(Project, self).delete(*args, **kwargs)
 
     class Meta:
-        app_label = 'kernel'
         default_related_name = 'projects'
         ordering = ['-modified']
         indexes = [
@@ -166,24 +175,28 @@ class Project(ExportModelOperationsMixin('kernel_project'), TimeStampedModel):
         verbose_name_plural = _('projects')
 
 
-class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), TimeStampedModel):
+class ProjectChildAbstract(KernelAbstract):
+    '''
+    Use this model class for each Project dependant model.
+
+    .. note:: Extends from :class:`aether.kernel.api.models.KernelAbstract`
+    '''
+
+    class Meta:
+        abstract = True
+
+
+class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), ProjectChildAbstract):
     '''
     Mapping Set: collection of mapping rules.
 
-    :ivar UUID      id:        ID (primary key).
-    :ivar datetime  created:   Creation timestamp.
-    :ivar datetime  modified:  Last update timestamp.
-    :ivar text      revision:  Revision.
-    :ivar text      name:      Name (**unique**).
+    .. note:: Extends from :class:`aether.kernel.api.models.ProjectChildAbstract`
+
     :ivar JSON      schema:    AVRO schema definition.
     :ivar JSON      input:     Sample of data that conform the AVRO schema.
     :ivar Project   project:   Project.
 
     '''
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
-    revision = models.TextField(default='1', verbose_name=_('revision'))
-    name = models.CharField(max_length=50, unique=True, verbose_name=_('name'))
 
     schema = JSONField(
         null=True,
@@ -203,11 +216,7 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), TimeStampedMod
     def schema_prettified(self):
         return json_prettified(self.schema)
 
-    def __str__(self):
-        return self.name
-
     class Meta:
-        app_label = 'kernel'
         default_related_name = 'mappingsets'
         ordering = ['project__id', '-modified']
         indexes = [
@@ -218,22 +227,17 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), TimeStampedMod
         verbose_name_plural = _('mapping sets')
 
 
-class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedModel):
+class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAbstract):
     '''
     Data submission
 
-    :ivar UUID        id:          ID (primary key).
-    :ivar datetime    created:     Creation timestamp.
-    :ivar datetime    modified:    Last update timestamp.
-    :ivar text        revision:    Revision.
+    .. note:: Extends from :class:`aether.kernel.api.models.ProjectChildAbstract`
+
     :ivar JSON        payload:     Submission content.
     :ivar MappingSet  mappingset:  Mapping set.
     :ivar Project     project:     Project (redundant but speed up queries).
 
     '''
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
-    revision = models.TextField(default='1', verbose_name=_('revision'))
 
     payload = JSONField(verbose_name=_('payload'))
 
@@ -257,7 +261,7 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedMod
         return json_prettified(self.payload)
 
     @property
-    def name(self):
+    def name(self):  # overrides base model field
         return f'{self.mappingset.project.name}-{self.mappingset.name}'
 
     def save(self, *args, **kwargs):
@@ -268,7 +272,6 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedMod
         return f'{self.id}'
 
     class Meta:
-        app_label = 'kernel'
         default_related_name = 'submissions'
         ordering = ['project__id', '-modified']
         indexes = [
@@ -288,22 +291,18 @@ def __attachment_path__(instance, filename):
     )
 
 
-class Attachment(ExportModelOperationsMixin('kernel_attachment'), TimeStampedModel):
+class Attachment(ExportModelOperationsMixin('kernel_attachment'), ProjectChildAbstract):
     '''
     Attachment linked to submission.
 
-    :ivar UUID        id:                   ID (primary key).
-    :ivar datetime    created:              Creation timestamp.
-    :ivar datetime    modified:             Last update timestamp.
-    :ivar text        name:                 File name.
+    .. note:: Extends from :class:`aether.kernel.api.models.ProjectChildAbstract`
+
     :ivar File        attachment_file:      Path to file (depends on the file storage system).
     :ivar text        md5sum:               File content hash (MD5).
     :ivar Submission  submission:           Submission.
     :ivar text        submission_revision:  Submission revision when the attachment was saved.
 
     '''
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
 
     # http://www.linfo.org/file_name.html
     # Modern Unix-like systems support long file names, usually up to 255 bytes in length.
@@ -317,11 +316,16 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), TimeStampedMod
     submission_revision = models.TextField(verbose_name=_('submission revision'))
 
     @property
+    def revision(self):  # overrides base model field
+        return None
+
+    @property
+    def project(self):
+        return self.submission.project
+
+    @property
     def attachment_file_url(self):
         return resolve_file_url(self.attachment_file.url)
-
-    def __str__(self):
-        return self.name
 
     def save(self, *args, **kwargs):
         # calculate file hash
@@ -341,7 +345,6 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), TimeStampedMod
         super(Attachment, self).save(*args, **kwargs)
 
     class Meta:
-        app_label = 'kernel'
         default_related_name = 'attachments'
         ordering = ['submission__id', 'name']
         indexes = [
@@ -351,24 +354,17 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), TimeStampedMod
         verbose_name_plural = _('attachments')
 
 
-class Schema(ExportModelOperationsMixin('kernel_schema'), TimeStampedModel):
+class Schema(ExportModelOperationsMixin('kernel_schema'), KernelAbstract):
     '''
     AVRO Schema
 
-    :ivar UUID      id:         ID (primary key).
-    :ivar datetime  created:     Creation timestamp.
-    :ivar datetime  modified:    Last update timestamp.
-    :ivar text      revision:    Revision.
-    :ivar text      name:        Name (**unique**).
+    .. note:: Extends from :class:`aether.kernel.api.models.KernelAbstract`
+
     :ivar text      type:        Schema namespace
     :ivar JSON      definition:  AVRO schema definiton.
     :ivar text      family:      Schema family.
 
     '''
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
-    revision = models.TextField(default='1', verbose_name=_('revision'))
-    name = models.CharField(max_length=50, unique=True, verbose_name=_('name'))
 
     type = models.CharField(max_length=50, default=NAMESPACE, verbose_name=_('schema type'))
     definition = JSONField(validators=[validate_schema_definition], verbose_name=_('AVRO schema'))
@@ -386,11 +382,7 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), TimeStampedModel):
     def schema_name(self):
         return self.definition.get('name', self.name)
 
-    def __str__(self):
-        return self.name
-
     class Meta:
-        app_label = 'kernel'
         default_related_name = 'schemas'
         ordering = ['-modified']
         indexes = [
@@ -400,14 +392,12 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), TimeStampedModel):
         verbose_name_plural = _('schemas')
 
 
-class ProjectSchema(ExportModelOperationsMixin('kernel_projectschema'), TimeStampedModel):
+class ProjectSchema(ExportModelOperationsMixin('kernel_projectschema'), ProjectChildAbstract):
     '''
     Project Schema
 
-    :ivar UUID      id:                ID (primary key).
-    :ivar datetime  created:           Creation timestamp.
-    :ivar datetime  modified:          Last update timestamp.
-    :ivar text      name:              Name (**unique**).
+    .. note:: Extends from :class:`aether.kernel.api.models.ProjectChildAbstract`
+
     :ivar text      mandatory_fields:  The list of mandatory fields included in
         the AVRO schema definition.
     :ivar text      transport_rule:    The transport rule.
@@ -418,9 +408,6 @@ class ProjectSchema(ExportModelOperationsMixin('kernel_projectschema'), TimeStam
 
     '''
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
-    name = models.CharField(max_length=50, unique=True, verbose_name=_('name'))
-
     mandatory_fields = models.TextField(null=True, blank=True, verbose_name=_('mandatory fields'))
     transport_rule = models.TextField(null=True, blank=True, verbose_name=_('transport rule'))
     masked_fields = models.TextField(null=True, blank=True, verbose_name=_('masked fields'))
@@ -429,11 +416,11 @@ class ProjectSchema(ExportModelOperationsMixin('kernel_projectschema'), TimeStam
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
     schema = models.ForeignKey(to=Schema, on_delete=models.CASCADE, verbose_name=_('schema'))
 
-    def __str__(self):
-        return self.name
+    @property
+    def revision(self):  # overrides base model field
+        return None
 
     class Meta:
-        app_label = 'kernel'
         default_related_name = 'projectschemas'
         ordering = ['project__id', '-modified']
         indexes = [
@@ -444,15 +431,12 @@ class ProjectSchema(ExportModelOperationsMixin('kernel_projectschema'), TimeStam
         verbose_name_plural = _('project schemas')
 
 
-class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
+class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract):
     '''
     Mapping rules used to extract quality data from raw submissions.
 
-    :ivar UUID           id:              ID (primary key).
-    :ivar datetime       created:         Creation timestamp.
-    :ivar datetime       modified:        Last update timestamp.
-    :ivar text           revision:        Revision.
-    :ivar text           name:            Name (**unique**).
+    .. note:: Extends from :class:`aether.kernel.api.models.ProjectChildAbstract`
+
     :ivar JSON           definition:      The list of mapping rules between
         a source (submission) and a destination (entity).
     :ivar bool           is_active:       Is the mapping active?
@@ -463,10 +447,6 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
     :ivar Project        project:         Project (redundant but speed up queries).
 
     '''
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
-    revision = models.TextField(default='1', verbose_name=_('revision'))
-    name = models.CharField(max_length=50, unique=True, verbose_name=_('name'))
 
     definition = JSONField(validators=[validate_mapping_definition], verbose_name=_('mapping rules'))
     is_active = models.BooleanField(default=True, verbose_name=_('active?'))
@@ -493,6 +473,10 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
         verbose_name=_('project'),
     )
 
+    @property
+    def definition_prettified(self):
+        return json_prettified(self.definition)
+
     def save(self, *args, **kwargs):
         self.project = self.mappingset.project
 
@@ -511,15 +495,7 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
             ps_list.append(ProjectSchema.objects.get(pk=entity_pk, project=self.project))
         self.projectschemas.add(*ps_list)
 
-    @property
-    def definition_prettified(self):
-        return json_prettified(self.definition)
-
-    def __str__(self):
-        return self.name
-
     class Meta:
-        app_label = 'kernel'
         default_related_name = 'mappings'
         ordering = ['project__id', '-modified']
         indexes = [
@@ -530,13 +506,14 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
         verbose_name_plural = _('mappings')
 
 
-class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
+class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
     '''
     Entity: extracted data from raw submissions.
 
-    :ivar UUID           id:                ID (primary key).
-    :ivar text           modified:          Last update timestamp in ISO format along with the id.
-    :ivar text           revision:          Revision.
+    .. note:: Extends from :class:`aether.kernel.api.models.ProjectChildAbstract`
+        Replaces:
+        :ivar text           modified:          Last update timestamp in ISO format along with the id.
+
     :ivar JSON           payload:           The extracted data.
     :ivar text           status:            Status: "Pending Approval" or "Publishable".
     :ivar text           modified:          Last modified timestamp with ID or previous modified timestamp.
@@ -549,12 +526,10 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
 
     '''
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
-    revision = models.TextField(default='1', verbose_name=_('revision'))
+    modified = models.CharField(max_length=100, editable=False, verbose_name=_('modified'))
 
     payload = JSONField(verbose_name=_('payload'))
     status = models.CharField(max_length=20, choices=ENTITY_STATUS_CHOICES, verbose_name=_('status'))
-    modified = models.CharField(max_length=100, editable=False, verbose_name=_('modified'))
 
     submission = models.ForeignKey(
         to=Submission,
@@ -570,11 +545,16 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
         blank=True,
         verbose_name=_('mapping'),
     )
-    mapping_revision = models.TextField(null=True, blank=True, verbose_name=_('mapping revision'))
+    mapping_revision = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name=_('mapping revision'),
+    )
     projectschema = models.ForeignKey(
         to=ProjectSchema,
         on_delete=models.SET_NULL,
-        null=True, blank=True,
+        null=True,
+        blank=True,
         verbose_name=_('project schema'),
     )
 
@@ -603,7 +583,7 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
         return json_prettified(self.payload)
 
     @property
-    def name(self):
+    def name(self):  # overrides base model field
         # try to build a name for the extracted entity base on the linked data
         if self.projectschema and self.mapping:
             # find in the mapping definition the name used by this project schema
@@ -671,7 +651,6 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
         return f'{self.id}'
 
     class Meta:
-        app_label = 'kernel'
         default_related_name = 'entities'
         verbose_name_plural = 'entities'
         ordering = ['project__id', '-modified']
