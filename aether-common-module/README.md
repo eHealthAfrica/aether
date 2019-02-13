@@ -110,9 +110,9 @@ based on the app settings.
 from aether.common.conf.urls import generate_urlpatterns
 
 
-urlpatterns = generate_urlpatterns(token=True, kernel=True) + [
+urlpatterns = generate_urlpatterns(token=True, kernel=True, app=[
     # app specific urls
-]
+])
 ```
 
 Default URLs included:
