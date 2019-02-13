@@ -89,6 +89,9 @@ services:
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}
+      LOGGING_FORMATTER: verbose
+      HTML_SELECT_CUTOFF: 10
+
       DJANGO_STORAGE_BACKEND: filesystem
       HOSTNAME: kernel.aether.local
 
@@ -152,6 +155,9 @@ services:
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${ODK_DJANGO_SECRET_KEY}
+      LOGGING_FORMATTER: verbose
+      HTML_SELECT_CUTOFF: 10
+
       DJANGO_STORAGE_BACKEND: filesystem
       HOSTNAME: odk.aether.local
 
@@ -212,6 +218,9 @@ services:
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${COUCHDB_SYNC_DJANGO_SECRET_KEY}
+      LOGGING_FORMATTER: verbose
+      HTML_SELECT_CUTOFF: 10
+
       DJANGO_STORAGE_BACKEND: filesystem
       HOSTNAME: sync.aether.local
 
@@ -281,6 +290,9 @@ services:
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${UI_DJANGO_SECRET_KEY}
+      LOGGING_FORMATTER: verbose
+      HTML_SELECT_CUTOFF: 10
+
       DJANGO_STORAGE_BACKEND: filesystem
       HOSTNAME: ui.aether.local
 
