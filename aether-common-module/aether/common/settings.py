@@ -17,7 +17,7 @@
 # under the License.
 
 '''
-This settings are only used for testing purposes.
+These settings are only used for testing purposes.
 The app that includes this module should have its own settings.
 '''
 

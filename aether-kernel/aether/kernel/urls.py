@@ -24,7 +24,7 @@ from aether.kernel.api.views import AetherSchemaView
 API_PREFIX = '^(?P<version>v1)'
 
 
-urlpatterns = generate_urlpatterns(token=True) + [
+urlpatterns = generate_urlpatterns(token=True, app=[
     url(r'^', include('aether.kernel.api.urls')),
     url(f'{API_PREFIX}/', include('aether.kernel.api.urls')),
 
@@ -34,4 +34,4 @@ urlpatterns = generate_urlpatterns(token=True) + [
     url(f'{API_PREFIX}/swagger/$',
         view=AetherSchemaView.with_ui('swagger', cache_timeout=0),
         name='schema-swagger-ui'),
-]
+])

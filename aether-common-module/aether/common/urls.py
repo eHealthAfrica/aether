@@ -17,7 +17,7 @@
 # under the License.
 
 '''
-This urls are only used for testing purposes.
+These urls are only used for testing purposes.
 The app that includes this module should have its own urls list.
 '''
 

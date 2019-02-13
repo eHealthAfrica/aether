@@ -24,7 +24,7 @@ from .api.views import signin
 from .views import check_rq
 
 
-urlpatterns = generate_urlpatterns(token=True, kernel=True) + [
+urlpatterns = generate_urlpatterns(token=True, kernel=True, app=[
     url(r'^', include('aether.sync.api.urls')),
 
     url(r'^check-rq$', view=check_rq, name='check-rq'),
@@ -32,4 +32,4 @@ urlpatterns = generate_urlpatterns(token=True, kernel=True) + [
 
     # used by the Aether Mobile App
     url(r'^sync/signin$', view=signin, name='signin'),
-]
+])
