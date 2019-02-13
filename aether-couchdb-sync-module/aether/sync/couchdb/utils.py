@@ -19,27 +19,6 @@
 from . import api
 
 
-def walk_changes(db, f, *args, **kwargs):
-    supplied_params = kwargs.get('params', {})
-    # set some defaults
-    params = {'since': 0, 'limit': 100}
-    params.update(supplied_params)
-    # loop and fetch changes until the end of the changes has been reached
-    while True:
-        ks = kwargs.copy()
-        ks.update({'params': params})
-        r = api.get(db + '/_changes', *args, **ks)
-        r.raise_for_status()
-        j = r.json()
-        cs = j['results']
-        done = len(cs) == 0 or len(cs) < params['limit']
-        for c in cs:
-            f(c)
-        if done:
-            break
-        params.update({'since': j['last_seq']})
-
-
 def force_put_doc(path, document):
     doc = document.copy()
     r = api.get(path)

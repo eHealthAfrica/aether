@@ -30,11 +30,16 @@ from rest_framework.decorators import (
     api_view,
     authentication_classes,
     permission_classes,
+    renderer_classes,
     throttle_classes,
 )
+
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
+from .couchdb_file import load_backup_file
 from .couchdb_helpers import create_db, create_or_update_user
 from .models import Project, Schema, MobileUser, DeviceDB
 from .serializers import ProjectSerializer, SchemaSerializer, MobileUserSerializer
@@ -268,3 +273,20 @@ def signin(request):
         'url': request.build_absolute_uri('/_couchdb/' + device_db.db_name),
     }
     return Response(payload, status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@renderer_classes([JSONRenderer])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def load_file(request):
+    '''
+    POST file content into CouchDB server.
+    '''
+
+    try:
+        stats = load_backup_file(fp=request.FILES['file'])
+        return Response(data=stats)
+
+    except Exception as e:
+        logger.exception(e)
+        return Response(data={'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)

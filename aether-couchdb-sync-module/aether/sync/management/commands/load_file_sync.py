@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -16,23 +18,28 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.conf.urls import include, url
+from django.core.management.base import BaseCommand
+from django.utils.translation import ugettext as _
 
-from aether.common.conf.urls import generate_urlpatterns
-
-from .api.views import signin, load_file
-from .views import check_rq
+from aether.sync.api.couchdb_file import load_backup_file
 
 
-urlpatterns = generate_urlpatterns(token=True, kernel=True, app=[
-    url(r'^', include('aether.sync.api.urls')),
+class Command(BaseCommand):
 
-    url(r'^check-rq$', view=check_rq, name='check-rq'),
-    url(r'^rq/', include('django_rq.urls')),
+    help = _('POST file content into CouchDB server.')
 
-    # used by the Aether Mobile App
-    url(r'^sync/signin$', view=signin, name='signin'),
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--filename',
+            '-f',
+            type=str,
+            help=_('Indicate the file to load'),
+            dest='filename',
+            action='store',
+            required=True,
+        )
 
-    # simulate the sync process using an Aether Mobile App backup file
-    url(r'^sync/load-file$', view=load_file, name='load-file'),
-])
+    def handle(self, *args, **options):
+        with open(options['filename'], 'r') as fp:
+            stats = load_backup_file(fp)
+            self.stdout.write(str(stats))
