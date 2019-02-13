@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -16,24 +18,28 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.conf.urls import include, url
-from django.contrib.auth.decorators import login_required
-from django.views.generic import TemplateView
+from django.core.management.base import BaseCommand
+from django.utils.translation import ugettext as _
 
-from aether.common.conf.urls import generate_urlpatterns
+from aether.sync.api.couchdb_file import load_backup_file
 
 
-urlpatterns = generate_urlpatterns(kernel=True, app=[
-    # API
-    url(r'^api/', include('aether.ui.api.urls')),
+class Command(BaseCommand):
 
-    # Pipeline builder app
-    url(r'^$',
-        view=login_required(TemplateView.as_view(template_name='pages/pipeline.html')),
-        name='pipeline-app'),
+    help = _('POST file content into CouchDB server.')
 
-    # styleguide
-    url(r'^styleguide/',
-        view=login_required(TemplateView.as_view(template_name='pages/styleguide.html')),
-        name='styleguide'),
-])
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--filename',
+            '-f',
+            type=str,
+            help=_('Indicate the file to load'),
+            dest='filename',
+            action='store',
+            required=True,
+        )
+
+    def handle(self, *args, **options):
+        with open(options['filename'], 'r') as fp:
+            stats = load_backup_file(fp)
+            self.stdout.write(str(stats))

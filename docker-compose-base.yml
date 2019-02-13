@@ -33,7 +33,7 @@ services:
       retries: 30
 
   couchdb-base:
-    image: couchdb:1.7.2
+    image: couchdb:2.3
     environment:
       COUCHDB_USER: ${COUCHDB_USER}
       COUCHDB_PASSWORD: ${COUCHDB_PASSWORD}

@@ -99,6 +99,9 @@ class KernelAbstract(TimeStampedModel):
     revision = models.TextField(default='1', verbose_name=_('revision'))
     name = models.CharField(max_length=50, unique=True, verbose_name=_('name'))
 
+    def __str__(self):
+        return self.name
+
     class Meta:
         abstract = True
         app_label = 'kernel'
@@ -152,9 +155,6 @@ class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract, MtMo
         ),
     )
 
-    def __str__(self):
-        return self.name
-
     def delete(self, *args, **kwargs):
         # find the linked passthrough schemas
         for schema in Schema.objects.filter(family=str(self.pk)):
@@ -178,6 +178,11 @@ class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract, MtMo
 
 
 class ProjectChildAbstract(KernelAbstract):
+    '''
+    Use this model class for each Project dependant model.
+
+    .. note:: Extends from :class:`aether.kernel.api.models.KernelAbstract`
+    '''
 
     def is_accessible(self, realm):
         return self.project.is_accessible(realm) if self.project else False
@@ -190,7 +195,7 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), ProjectChildAb
     '''
     Mapping Set: collection of mapping rules.
 
-    .. note:: Extends from :class:`aether.kernel.api.models.KernelAbstract`
+    .. note:: Extends from :class:`aether.kernel.api.models.ProjectChildAbstract`
 
     :ivar JSON      schema:    AVRO schema definition.
     :ivar JSON      input:     Sample of data that conform the AVRO schema.
@@ -216,9 +221,6 @@ class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), ProjectChildAb
     def schema_prettified(self):
         return json_prettified(self.schema)
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         default_related_name = 'mappingsets'
         ordering = ['project__id', '-modified']
@@ -234,7 +236,7 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
     '''
     Data submission
 
-    .. note:: Extends from :class:`aether.kernel.api.models.KernelAbstract`
+    .. note:: Extends from :class:`aether.kernel.api.models.ProjectChildAbstract`
 
     :ivar JSON        payload:     Submission content.
     :ivar MappingSet  mappingset:  Mapping set.
@@ -264,7 +266,7 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
         return json_prettified(self.payload)
 
     @property
-    def name(self):
+    def name(self):  # overrides base model field
         return f'{self.mappingset.project.name}-{self.mappingset.name}'
 
     def save(self, *args, **kwargs):
@@ -298,7 +300,7 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), ProjectChildAb
     '''
     Attachment linked to submission.
 
-    .. note:: Extends from :class:`aether.kernel.api.models.KernelAbstract`
+    .. note:: Extends from :class:`aether.kernel.api.models.ProjectChildAbstract`
 
     :ivar File        attachment_file:      Path to file (depends on the file storage system).
     :ivar text        md5sum:               File content hash (MD5).
@@ -319,7 +321,7 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), ProjectChildAb
     submission_revision = models.TextField(verbose_name=_('submission revision'))
 
     @property
-    def revision(self):
+    def revision(self):  # overrides base model field
         return None
 
     @property
@@ -329,9 +331,6 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), ProjectChildAb
     @property
     def attachment_file_url(self):
         return resolve_file_url(self.attachment_file.url)
-
-    def __str__(self):
-        return self.name
 
     def save(self, *args, **kwargs):
         # calculate file hash
@@ -388,9 +387,6 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), KernelAbstract):
     def schema_name(self):
         return self.definition.get('name', self.name)
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         default_related_name = 'schemas'
         ordering = ['-modified']
@@ -405,7 +401,7 @@ class ProjectSchema(ExportModelOperationsMixin('kernel_projectschema'), ProjectC
     '''
     Project Schema
 
-    .. note:: Extends from :class:`aether.kernel.api.models.KernelAbstract`
+    .. note:: Extends from :class:`aether.kernel.api.models.ProjectChildAbstract`
 
     :ivar text      mandatory_fields:  The list of mandatory fields included in
         the AVRO schema definition.
@@ -426,11 +422,8 @@ class ProjectSchema(ExportModelOperationsMixin('kernel_projectschema'), ProjectC
     schema = models.ForeignKey(to=Schema, on_delete=models.CASCADE, verbose_name=_('schema'))
 
     @property
-    def revision(self):
+    def revision(self):  # overrides base model field
         return None
-
-    def __str__(self):
-        return self.name
 
     class Meta:
         default_related_name = 'projectschemas'
@@ -447,7 +440,7 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
     '''
     Mapping rules used to extract quality data from raw submissions.
 
-    .. note:: Extends from :class:`aether.kernel.api.models.KernelAbstract`
+    .. note:: Extends from :class:`aether.kernel.api.models.ProjectChildAbstract`
 
     :ivar JSON           definition:      The list of mapping rules between
         a source (submission) and a destination (entity).
@@ -489,9 +482,6 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
     def definition_prettified(self):
         return json_prettified(self.definition)
 
-    def __str__(self):
-        return self.name
-
     def save(self, *args, **kwargs):
         self.project = self.mappingset.project
 
@@ -525,7 +515,7 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
     '''
     Entity: extracted data from raw submissions.
 
-    .. note:: Extends from :class:`aether.kernel.api.models.KernelAbstract`
+    .. note:: Extends from :class:`aether.kernel.api.models.ProjectChildAbstract`
         Replaces:
         :ivar text           modified:          Last update timestamp in ISO format along with the id.
 
@@ -598,7 +588,7 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
         return json_prettified(self.payload)
 
     @property
-    def name(self):
+    def name(self):  # overrides base model field
         # try to build a name for the extracted entity base on the linked data
         if self.projectschema and self.mapping:
             # find in the mapping definition the name used by this project schema

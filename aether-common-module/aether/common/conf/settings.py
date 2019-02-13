@@ -19,6 +19,8 @@
 import logging
 import os
 
+from django.contrib import admin
+
 
 # Common Configuration
 # ------------------------------------------------------------------------------
@@ -120,6 +122,8 @@ TEMPLATES = [
     },
 ]
 
+MIGRATION_MODULES = {}
+
 
 # REST Framework Configuration
 # ------------------------------------------------------------------------------
@@ -168,6 +172,41 @@ DATABASES = {
         'TESTING': {'CHARSET': 'UTF8'},
     },
 }
+
+
+# Security Configuration
+# ------------------------------------------------------------------------------
+
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+CSRF_COOKIE_DOMAIN = os.environ.get('CSRF_COOKIE_DOMAIN', '.aether.org')
+CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', CSRF_COOKIE_DOMAIN).split(',')
+SESSION_COOKIE_DOMAIN = CSRF_COOKIE_DOMAIN
+
+if os.environ.get('DJANGO_USE_X_FORWARDED_HOST', False):
+    USE_X_FORWARDED_HOST = True
+
+if os.environ.get('DJANGO_USE_X_FORWARDED_PORT', False):
+    USE_X_FORWARDED_PORT = True
+
+if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
+# Admin site Configuration
+# ------------------------------------------------------------------------------
+
+LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login.html')
+LOGGED_OUT_TEMPLATE = os.environ.get('LOGGED_OUT_TEMPLATE', 'aether/logged_out.html')
+
+admin.site.site_url = '/'
+admin.site.site_header = APP_NAME
+admin.site.site_title = APP_NAME
+
+admin.site.login_template = LOGIN_TEMPLATE
+admin.site.logout_template = LOGGED_OUT_TEMPLATE
 
 
 # Logging Configuration
@@ -278,9 +317,6 @@ if CAS_SERVER_URL:
 else:
     logger.info('No CAS enabled!')
 
-    LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login.html')
-    LOGGED_OUT_TEMPLATE = os.environ.get('LOGGED_OUT_TEMPLATE', 'aether/logged_out.html')
-
 
 # Multitenancy Configuration
 # ------------------------------------------------------------------------------
@@ -292,37 +328,13 @@ if MULTITENANCY:
     INSTALLED_APPS += [
         'aether.common.multitenancy',
     ]
-    MIGRATION_MODULES = {
-        'multitenancy': 'aether.common.multitenancy.migrations',
-    }
+    MIGRATION_MODULES['multitenancy'] = 'aether.common.multitenancy.migrations'
     REST_FRAMEWORK['DEFAULT_PERMISSION_CLASSES'] = [
         'aether.common.multitenancy.utils.IsAccessibleByRealm',
     ]
 
 else:
-    MIGRATION_MODULES = {}
     logger.info('No multitenancy enabled!')
-
-
-# Security Configuration
-# ------------------------------------------------------------------------------
-
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
-
-CORS_ORIGIN_ALLOW_ALL = True
-
-CSRF_COOKIE_DOMAIN = os.environ.get('CSRF_COOKIE_DOMAIN', '.aether.org')
-CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', CSRF_COOKIE_DOMAIN).split(',')
-SESSION_COOKIE_DOMAIN = CSRF_COOKIE_DOMAIN
-
-if os.environ.get('DJANGO_USE_X_FORWARDED_HOST', False):
-    USE_X_FORWARDED_HOST = True
-
-if os.environ.get('DJANGO_USE_X_FORWARDED_PORT', False):
-    USE_X_FORWARDED_PORT = True
-
-if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Storage Configuration
