@@ -96,11 +96,9 @@ class CachedManager(models.Manager):
 
 
 class CachedQuerySet(models.query.QuerySet):
-    
     def __init__(self, model=None, query=None, using=None, hints=None):
         self.model_name = model.__name__
         super().__init__(model, query, using, hints)
-        
 
     def get(self, *args, **kwargs):
         print(args, kwargs)
@@ -118,7 +116,6 @@ class CachedQuerySet(models.query.QuerySet):
                 return obj
         else:
             return super().get(**kwargs)
-
 
 
 class Project(ExportModelOperationsMixin('kernel_project'), TimeStampedModel):
