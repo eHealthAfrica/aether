@@ -56,17 +56,3 @@ class UtilsTest(TestCase):
             '/check-kernel',
             'There is a "/check-kernel" endpoint'
         )
-
-    def test__urls__media(self):
-        self.assertEqual(
-            reverse('media', kwargs={'path': 'path/to/somewhere'}),
-            '/media/path/to/somewhere',
-            'There is a "/media" endpoint'
-        )
-
-    def test__urls__media_basic(self):
-        self.assertEqual(
-            reverse('media-basic', kwargs={'path': 'path/to/somewhere'}),
-            '/media-basic/path/to/somewhere',
-            'There is a "/media-basic" endpoint'
-        )

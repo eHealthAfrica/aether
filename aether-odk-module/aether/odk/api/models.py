@@ -29,8 +29,6 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
-from aether.common.utils import resolve_file_url
-
 from .xform_utils import (
     get_xform_data_from_xml,
     parse_xform_to_avro_schema,
@@ -344,7 +342,7 @@ class MediaFile(ExportModelOperationsMixin('odk_mediafile'), models.Model):
 
     @property
     def media_file_url(self):
-        return resolve_file_url(self.media_file.url)
+        return self.media_file.url
 
     def save(self, *args, **kwargs):
         # calculate hash
