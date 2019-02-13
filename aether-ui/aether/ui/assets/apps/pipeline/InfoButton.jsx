@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
-import moment from 'moment'
 import Modal from '../components/Modal'
 import { generateGUID } from '../utils'
 

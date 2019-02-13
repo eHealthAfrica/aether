@@ -80,8 +80,9 @@ class Pipeline extends Component {
       this.toggleSettings()
     }
 
-    if (match && match.params && match.params.cid)
+    if (match && match.params && match.params.cid) {
       this.setDefaultContract(match.params.cid)
+    }
   }
 
   componentDidUpdate (prevProps) {
@@ -100,7 +101,7 @@ class Pipeline extends Component {
         errorMessage: this.props.error.message
       })
       if (!this.props.selectedContract.id) {
-        const floatingContract = {...this.props.selectedContract}
+        const floatingContract = { ...this.props.selectedContract }
         this.setState({
           newContracts: [floatingContract],
           showSettings: true
@@ -110,7 +111,7 @@ class Pipeline extends Component {
     }
   }
 
-  setDefaultContract = contractId => {
+  setDefaultContract (contractId) {
     if (this.props.selectedPipeline) {
       const selectedContract = this.props.selectedPipeline.contracts
         .find(x => x.id === contractId)
@@ -121,52 +122,52 @@ class Pipeline extends Component {
     }
   }
 
-  onTabChange = contract => {
+  onTabChange (contract) {
     this.props.selectedContractChanged(contract)
   }
 
-  renderTabs = (contracts, selectedContract) => {
+  renderTabs (contracts, selectedContract) {
     return (
-        <React.Fragment>
+      <React.Fragment>
         {
-        contracts.map(contract => (
-          <div className={`pipeline-tab ${selectedContract.name === contract.name ? 'active' : ''}`}
-          onClick={this.onTabChange.bind(this, contract)}
-          key={contract.id}>
-          {contract.name}
-          {contract.mapping.length ? <span className={`status ${contract.mapping_errors.length ? 'red' : 'green'}`}></span> : null}
-          <div 
-            className={`btn-icon settings-button ${this.state.showSettings ? 'active' : ''}`}
-            onClick={() => this.toggleSettings()}>
-            <i className='fas fa-ellipsis-h'/>
-          </div>
-        </div>
-        ))
+          contracts.map(contract => (
+            <div className={`pipeline-tab ${selectedContract.name === contract.name ? 'active' : ''}`}
+              onClick={this.onTabChange.bind(this, contract)}
+              key={contract.id}>
+              {contract.name}
+              {contract.mapping.length ? <span className={`status ${contract.mapping_errors.length ? 'red' : 'green'}`} /> : null}
+              <div
+                className={`btn-icon settings-button ${this.state.showSettings ? 'active' : ''}`}
+                onClick={() => this.toggleSettings()}>
+                <i className='fas fa-ellipsis-h' />
+              </div>
+            </div>
+          ))
         }
-        </React.Fragment>
-      )
+      </React.Fragment>
+    )
   }
 
-  renderNewContractTabs = contracts => {
+  renderNewContractTabs (contracts) {
     this.setState({
       newContractTabs: (
         <React.Fragment>
-        {
-          contracts.length ? contracts.map(contract => (
-            <div className={`pipeline-tab ${this.props.selectedContract && this.props.selectedContract.name === contract.name ? 'active' : ''}`}
-            key={contract.name}
-            onClick={this.onTabChange.bind(this, contract)}
-            >
-              {contract.name}
-            </div>
-          )) : null
-        }
+          {
+            contracts.length ? contracts.map(contract => (
+              <div className={`pipeline-tab ${this.props.selectedContract && this.props.selectedContract.name === contract.name ? 'active' : ''}`}
+                key={contract.name}
+                onClick={this.onTabChange.bind(this, contract)}
+              >
+                {contract.name}
+              </div>
+            )) : null
+          }
         </React.Fragment>
       )
     })
   }
 
-  setErrorModal = visible => {
+  setErrorModal (visible) {
     this.setState({
       showError: visible
     })
@@ -215,16 +216,16 @@ class Pipeline extends Component {
 
         <div className={`pipeline ${this.state.showOutput ? 'show-output' : ''} ${this.state.fullscreen ? 'fullscreen' : ''}`}>
           <div className='pipeline-tabs'>
-          {
-            this.renderTabs(this.props.selectedPipeline.contracts, this.props.selectedContract)
-          }
-          {
-            this.state.newContractTabs
-          }
+            {
+              this.renderTabs(this.props.selectedPipeline.contracts, this.props.selectedContract)
+            }
+            {
+              this.state.newContractTabs
+            }
             <button
               type='button'
               className='btn btn-c btn-sm new-contract'
-              onClick={this.addNewContract}
+              onClick={this.addNewContract.bind(this)}
             >
               <span className='details-title'>
                 <FormattedMessage
@@ -232,7 +233,7 @@ class Pipeline extends Component {
                   defaultMessage='Add contract'
                 />
               </span>
-          </button>
+            </button>
 
           </div>
           <div className='pipeline-nav'>
@@ -241,7 +242,7 @@ class Pipeline extends Component {
                 className='pipeline-nav-item__input'
                 onClick={() => this.viewInput()}>
                 <div className='badge'>
-                  <i className='fas fa-file'/>
+                  <i className='fas fa-file' />
                 </div>
                 <FormattedMessage
                   id='pipeline.navbar.input'
@@ -252,7 +253,7 @@ class Pipeline extends Component {
                 className='pipeline-nav-item__entityTypes'
                 onClick={() => this.setState({ pipelineView: 'entityTypes' })}>
                 <div className='badge'>
-                  <i className='fas fa-caret-right'/>
+                  <i className='fas fa-caret-right' />
                 </div>
                 <FormattedMessage
                   id='pipeline.navbar.entity.types'
@@ -268,7 +269,7 @@ class Pipeline extends Component {
                 className='pipeline-nav-item__mapping'
                 onClick={() => this.setState({ pipelineView: 'mapping' })}>
                 <div className='badge'>
-                  <i className='fas fa-caret-right'/>
+                  <i className='fas fa-caret-right' />
                 </div>
                 <FormattedMessage
                   id='pipeline.navbar.mapping'
@@ -283,8 +284,8 @@ class Pipeline extends Component {
               <div
                 className='pipeline-nav-item__contracts'
                 onClick={() => this.setState({ pipelineView: 'entityTypes' })}>
-                <div className='badge'>                
-                  <i className='fas fa-caret-right'/>
+                <div className='badge'>
+                  <i className='fas fa-caret-right' />
                 </div>
                 <FormattedMessage
                   id='pipeline.navbar.contracts'
@@ -295,8 +296,8 @@ class Pipeline extends Component {
             <div
               className='pipeline-nav-item__output'
               onClick={() => this.toggleOutput()}>
-              <div className='badge'>                
-                <i className='fas fa-caret-right'/>
+              <div className='badge'>
+                <i className='fas fa-caret-right' />
               </div>
               <FormattedMessage
                 id='pipeline.navbar.output'
@@ -304,9 +305,9 @@ class Pipeline extends Component {
               />
               {
                 this.props.selectedContract.mapping.length > 0 && <span
-                className={`status ${this.props.selectedContract.mapping_errors.length ? 'red' : 'green'}`}
+                  className={`status ${this.props.selectedContract.mapping_errors.length ? 'red' : 'green'}`}
                 />
-            }
+              }
             </div>
           </div>
 
@@ -315,17 +316,17 @@ class Pipeline extends Component {
               <Input />
             </div>
             <div className='pipeline-section__entityTypes'>
-              <EntityTypes contract={this.props.selectedContract || firstContract}/>
+              <EntityTypes contract={this.props.selectedContract || firstContract} />
             </div>
             <div className='pipeline-section__mapping'>
               <Mapping contract={this.props.selectedContract || firstContract} />
             </div>
           </div>
           <div className='pipeline-output'>
-            <Output contract={this.props.selectedContract || firstContract}/>
+            <Output contract={this.props.selectedContract || firstContract} />
           </div>
 
-          { this.state.showSettings && 
+          { this.state.showSettings &&
             this.renderSettings()
           }
 
@@ -334,7 +335,7 @@ class Pipeline extends Component {
     )
   }
 
-  addNewContract = () => {
+  addNewContract () {
     const nContract = generateNewContract(this.props.selectedPipeline, this.state.newContracts)
     this.props.selectedContractChanged(nContract)
     this.setState({
@@ -342,7 +343,7 @@ class Pipeline extends Component {
       showSettings: true
     }, () => this.renderNewContractTabs(this.state.newContracts))
   }
- 
+
   toggleSettings () {
     if (!this.state.showSettings) {
       this.setState({ showSettings: true, contractName: this.props.selectedContract.name })
@@ -381,24 +382,23 @@ class Pipeline extends Component {
       showOutput: false,
       pipelineView: 'input',
       showSettings: false
-     })
+    })
   }
 
-  onSettingsSave = () => {
+  onSettingsSave () {
     const { selectedContract } = this.props
     if (!selectedContract.id) {
-      const newContract = {...selectedContract, pipeline: this.props.selectedPipeline.id, name: this.state.contractName}
+      const newContract = { ...selectedContract, pipeline: this.props.selectedPipeline.id, name: this.state.contractName }
       this.props.addInitialContract(newContract)
       this.setState({
         newContracts: []
       })
       this.renderNewContractTabs([])
     } else {
-      this.props.updateContract({...selectedContract, name: this.state.contractName })
+      this.props.updateContract({ ...selectedContract, name: this.state.contractName })
     }
     this.toggleSettings()
   }
-
 
   renderSettings () {
     return (
@@ -406,7 +406,7 @@ class Pipeline extends Component {
         <div
           className='btn-icon close-button'
           onClick={() => this.toggleSettings()}>
-          <i className='fas fa-times'></i>
+          <i className='fas fa-times' />
           <span>close settings</span>
         </div>
 
@@ -444,8 +444,8 @@ class Pipeline extends Component {
               />
               <PublishButton pipeline={this.props.selectedPipeline} className='btn btn-d btn-publish' />
             </div>
-            { this.props.selectedContract.published_on ? 
-              <div>
+            { this.props.selectedContract.published_on
+              ? <div>
                 <label className='form-label'>
                   <FormattedMessage
                     id='settings.submission.title'
@@ -454,8 +454,8 @@ class Pipeline extends Component {
                 </label>
 
                 <a className='submission-url'
-                href={`${this.props.kernelUrl}/submissions/?mappingset=${this.props.selectedPipeline.mappingset}`}>
-                {this.props.selectedPipeline.mappingset &&
+                  href={`${this.props.kernelUrl}/submissions/?mappingset=${this.props.selectedPipeline.mappingset}`}>
+                  {this.props.selectedPipeline.mappingset &&
                   `${this.props.kernelUrl}/submissions/?mappingset=${this.props.selectedPipeline.mappingset}`}</a>
               </div> : null
             }
@@ -473,7 +473,7 @@ class Pipeline extends Component {
           </button>
           <button
             className='btn btn-d btn-primary btn-big ml-4'
-            onClick={this.onSettingsSave}>
+            onClick={this.onSettingsSave.bind(this)}>
             <span className='details-title'>
               <FormattedMessage
                 id='contract.save'
@@ -485,7 +485,6 @@ class Pipeline extends Component {
 
       </div>
     )
-
   }
 }
 

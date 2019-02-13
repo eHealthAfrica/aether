@@ -48,7 +48,7 @@ $output-nav-width: 10rem;
 .pipeline-tabs {
   position: absolute;
   top: $navbar-height-xs * -1;
-  height: $navbar-height-xs; 
+  height: $navbar-height-xs;
   left: $column-width;
   width: calc(100% - #{$column-width});
   display: flex;
@@ -273,6 +273,7 @@ div[class^='pipeline-section__'],
   .badge {
     @include bg-gradient;
     opacity: 1;
+
     .fa-caret-right {
       transform: rotate(90deg);
     }
@@ -298,7 +299,6 @@ div[class^='pipeline-section__'],
   div.pipeline-nav-item__input {
     @include selected;
     width: calc(100% - (#{$entityTypes-nav-width} + #{$mapping-nav-width}));
-    width: 100%;
     color: $text-color;
   }
 

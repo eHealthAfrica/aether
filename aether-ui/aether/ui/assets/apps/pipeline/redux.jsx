@@ -66,7 +66,7 @@ export const addPipeline = ({ name }) => ({
     { data: { name } })
 })
 
-export const getPipelineById = (pid, cid=null) => {
+export const getPipelineById = (pid, cid = null) => {
   currentContractId = cid
   return {
     types: ['', types.PIPELINE_BY_ID, types.PIPELINE_NOT_FOUND],
@@ -140,7 +140,7 @@ export const addInitialContract = ({ name, pipeline }) => ({
 })
 
 const parsePipeline = pipeline => {
-  return {...pipeline, contracts: pipeline.contracts.map(contract => (parseContract(contract)))}
+  return { ...pipeline, contracts: pipeline.contracts.map(contract => (parseContract(contract))) }
 }
 
 const parseContract = (contract) => {
@@ -208,10 +208,12 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
       const index = newPipelineList.findIndex(x => x.id === returnedPipeline.id)
       let currentContract = null
       if (returnedPipeline.contracts && returnedPipeline.contracts.length) {
-        if (currentContractId)
+        if (currentContractId) {
           currentContract = returnedPipeline.contracts.find(x => x.id === currentContractId)
-        if (!currentContract)
+        }
+        if (!currentContract) {
           currentContract = returnedPipeline.contracts[0]
+        }
       }
       newPipelineList[index] = returnedPipeline
       return { ...state, pipelineList: newPipelineList, selectedPipeline: checkReadOnlySinglePipeline(returnedPipeline), selectedContract: currentContract }
@@ -220,7 +222,7 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
     case types.CONTRACT_UPDATE: {
       const returnedContract = parseContract(action.payload)
       const index = state.selectedPipeline.contracts.findIndex(x => x.id === returnedContract.id)
-      const uPipeline = {...state.selectedPipeline}
+      const uPipeline = { ...state.selectedPipeline }
       uPipeline.contracts[index] = returnedContract
       const pIndex = newPipelineList.findIndex(x => x.id === state.selectedPipeline.id)
       newPipelineList[pIndex] = uPipeline
@@ -252,7 +254,7 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
     }
 
     case types.PIPELINE_PUBLISH_SUCCESS: {
-      const updatedPipelines = pipelineTranslator(action.payload)
+      const updatedPipelines = action.payload
       const currentPipeline = updatedPipelines.find(x => x.id === state.selectedPipeline.id)
       updatedPipelines.forEach(pipeline => {
         const index = newPipelineList.findIndex(x => x.id === pipeline.id)

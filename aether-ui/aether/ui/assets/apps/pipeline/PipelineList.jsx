@@ -126,59 +126,59 @@ class PipelineList extends Component {
         <div className={`preview-input ${pipeline.isInputReadOnly ? 'pipeline-readonly' : ''}`} onClick={this.onSelectPipeline.bind(this, pipeline)}>
           <div className='input-heading'>
             <span className='badge badge-c badge-big'>
-              <i className='fas fa-file fa-sm'/>
+              <i className='fas fa-file fa-sm' />
             </span>
-              {pipeline.name}
+            {pipeline.name}
           </div>
-          <div className="info">
-          { pipeline.mappingset && <InfoButton pipeline={pipeline}/> }
+          <div className='info'>
+            { pipeline.mappingset && <InfoButton pipeline={pipeline} /> }
           </div>
         </div>
         <div className='preview-contracts'>
-        {
-          pipeline.contracts.map(contract => (
-            <React.Fragment key={contract.id}>
-              <div className={`preview-contract ${contract.is_read_only ? 'pipeline-readonly' : ''}`}
-                onClick={() => { this.onSelectContract(pipeline, contract) }}>
-                <h2 className='contract-heading'>{contract.name}</h2>
+          {
+            pipeline.contracts.map(contract => (
+              <React.Fragment key={contract.id}>
+                <div className={`preview-contract ${contract.is_read_only ? 'pipeline-readonly' : ''}`}
+                  onClick={() => { this.onSelectContract(pipeline, contract) }}>
+                  <h2 className='contract-heading'>{contract.name}</h2>
 
-                <div className='contract-summaries'>
-                  <div className='summary-entity-types'>
-                    <span className='badge badge-b badge-big'>
-                      { contract.entity_types ? contract.entity_types.length : 0 }
-                    </span>
-                    <FormattedMessage
-                      id='pipeline.list.entity.types'
-                      defaultMessage='Entity-Types'
-                    />
+                  <div className='contract-summaries'>
+                    <div className='summary-entity-types'>
+                      <span className='badge badge-b badge-big'>
+                        { contract.entity_types ? contract.entity_types.length : 0 }
+                      </span>
+                      <FormattedMessage
+                        id='pipeline.list.entity.types'
+                        defaultMessage='Entity-Types'
+                      />
+                    </div>
+
+                    <div className='summary-errors'>
+                      <span className={`badge badge-b badge-big
+                      ${contract && contract.mapping_errors.length && 'error'}`}>
+                        { contract.mapping_errors ? contract.mapping_errors.length : 0 }
+                      </span>
+                      <FormattedMessage
+                        id='contract.list.errors'
+                        defaultMessage='Errors'
+                      />
+                    </div>
                   </div>
 
-                  <div className='summary-errors'>
-                    <span className={`badge badge-b badge-big
-                    ${contract && contract.mapping_errors.length && 'error'}`}>
-                      { contract.mapping_errors ? contract.mapping_errors.length : 0 }
-                    </span>
-                    <FormattedMessage
-                      id='contract.list.errors'
-                      defaultMessage='Errors'
-                    />
+                  <div className='contract-publish'>
+                    <div className='status-publish'>
+                      <FormattedMessage
+                        id='contract.list.publish-status'
+                        defaultMessage={contract.published_on ? `Published on ${moment(contract.published_on).format('MMMM DD')}`
+                          : 'Not published'}
+                      />
+                    </div>
+                    <PublishButton pipeline={contract} className='btn btn-w btn-publish' />
                   </div>
                 </div>
-
-                <div className='contract-publish'>
-                  <div className='status-publish'>
-                    <FormattedMessage
-                      id='contract.list.publish-status'
-                      defaultMessage={contract.published_on ? `Published on ${moment(contract.published_on).format('MMMM DD')}`
-                        : 'Not published'}
-                    />
-                  </div>
-                  <PublishButton pipeline={contract} className='btn btn-w btn-publish' />
-                </div>
-              </div>
               </React.Fragment>
-          ))
-        }
+            ))
+          }
           <button
             type='button'
             className='btn btn-c'
@@ -195,7 +195,7 @@ class PipelineList extends Component {
     ))
   }
 
-  onAddContract = pipeline => {
+  onAddContract (pipeline) {
     this.props.selectedPipelineChanged(pipeline)
     this.props.selectedContractChanged(generateNewContract(pipeline))
     this.props.history.push({
@@ -220,7 +220,6 @@ class PipelineList extends Component {
     this.props.history.push(`/${pipeline.id}`)
   }
 }
-
 
 const mapStateToProps = ({ pipelines }) => ({
   pipelineList: pipelines.pipelineList,

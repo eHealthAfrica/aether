@@ -136,7 +136,7 @@ export const generateSchema = (obj) => {
   return schema
 }
 
-export const generateNewContract = (pipeline, newContracts=[]) => {
+export const generateNewContract = (pipeline, newContracts = []) => {
   let existingName = null
   let existingNewName = null
   let count = 0

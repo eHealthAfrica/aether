@@ -71,8 +71,8 @@ small {
 }
 
 .badge-c {
-  background: rgba($text-color, .2);
   @include shadow-cutout-white;
+  background: rgba($text-color, .2);
 }
 
 .form-label {
@@ -220,23 +220,23 @@ select:-webkit-autofill {
   }
 }
 
-  .status {
-    @include shadow-cutout-dark;
-    border-radius: 50%;
-    width: .5em;
-    height: .5em;
-    content: '';
-    display: inline-block;
-    margin-left: .5em;
-  }
+.status {
+  @include shadow-cutout-dark;
+  border-radius: 50%;
+  width: .5em;
+  height: .5em;
+  content: '';
+  display: inline-block;
+  margin-left: .5em;
+}
 
-  .red {
-    background-color: $red;
-  }
+.red {
+  background-color: $red;
+}
 
-  .green {
-    background-color: $green;
-  }
+.green {
+  background-color: $green;
+}
 
 .monospace {
   font: $font-size-xs $code-font-family;

@@ -48,10 +48,13 @@ describe('Pipeline actions', () => {
     const selectedPipeline = {
       name: 'mock name',
       id: 1,
-      errors: 0,
-      entityTypes: 3,
-      highlightDestination: [],
-      highlightSource: {}
+      contracts: [
+        {
+          entityTypes: [],
+          highlightDestination: [],
+          highlightSource: {}
+        }
+      ]
     }
     const expectedAction = {
       type: types.SELECTED_PIPELINE_CHANGED,

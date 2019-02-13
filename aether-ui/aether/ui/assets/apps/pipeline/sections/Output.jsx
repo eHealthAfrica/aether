@@ -52,8 +52,4 @@ class Output extends Component {
   }
 }
 
-const mapStateToProps = ({ pipelines }) => ({
-  
-})
-
-export default connect(mapStateToProps)(Output)
+export default connect()(Output)
