@@ -54,6 +54,10 @@ ENTITY_EXTRACTION_ENRICHMENT = 'aether_extractor_enrichment'
 # $.path.key_*.to[*].field for $.path.key_27.to[1].field
 CUSTOM_JSONPATH_WILDCARD_REGEX = re.compile(
     r'(\$)?(\.)?([a-zA-Z0-9_-]*(\[.*\])*\.)?[a-zA-Z0-9_-]+\*')
+# RegEX to split off array accessors in keynames
+# from arr[inx] matches [arr, idx]
+ARRAY_ACCESSOR_REGEX = re.compile(
+    r'[^\[\]]+')
 
 # RegEx for the part of a JSONPath matching the previous RegEx which is non-compliant with the
 # JSONPath spec.
@@ -379,9 +383,41 @@ def put_nested(_dict, keys, value):
             _dict[keys[0]] = put_nested(_dict[keys[0]], keys[1:], value)
         except KeyError:  # Level doesn't exist yet
             _dict[keys[0]] = put_nested({}, keys[1:], value)
-    else:
+    # Key has an array accessor like child[0]
+    # Array accessors are only allowed at the last path element
+    elif len(ARRAY_ACCESSOR_REGEX.findall(keys[0])) > 1:
+        unpack_array_into_dict(_dict, keys[0], value)
+    else:  # Simply the last key and value
         _dict[keys[0]] = value
     return _dict
+
+
+def unpack_array_into_dict(_dict, array_key, value):
+    # {array_key} is a key with an array accessor like people[0]
+    # which is a destination path in dictionary {_dict}
+    # at which we should find value {value}
+
+    # split {array_key} into dictionary key and array index
+    m = ARRAY_ACCESSOR_REGEX.findall(array_key)
+    key, index = m[0], int(m[1])
+    # if there is no value, we add one so that it's reference can be passed
+    _dict[key] = _dict.get(key, [])
+    _dict[key] = put_in_array(_dict[key], index, value)
+
+
+def put_in_array(arr, idx, val):
+    # put value {val} into list {arr} at index {idx}
+    # if arr isn't a list, we make it one.
+    # if idx exists, we shift the old value right
+    # if idx is longer than existing array, value is appended
+    if not isinstance(arr, list):
+        # if input array is anything, we'll keep it
+        out = [arr] if arr else []
+    else:
+        out = arr
+    # best effort to insert at the requested index
+    out.insert(idx, val)
+    return out
 
 
 def resolve_source_reference(path, entities, entity_name, i, field, data):
