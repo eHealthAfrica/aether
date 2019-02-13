@@ -22,6 +22,7 @@ from django.test import TestCase
 from django.core.exceptions import ValidationError
 
 from aether.kernel.api import validators
+from . import NESTED_ARRAY_SCHEMA
 
 
 class ValidatorsTest(TestCase):
@@ -36,6 +37,7 @@ class ValidatorsTest(TestCase):
                 {'name': 'id', 'type': 'string'},
             ]
         }
+        self.nested_schema = NESTED_ARRAY_SCHEMA
 
     def test_validate_schema_definition__success(self):
         try:
@@ -158,7 +160,7 @@ class ValidatorsTest(TestCase):
     def test_validate_schemas__success(self):
         schemas = {
             'one': self.schema,
-            'two': self.schema,
+            'two': self.nested_schema,
         }
         try:
             validators.validate_schemas(schemas)
