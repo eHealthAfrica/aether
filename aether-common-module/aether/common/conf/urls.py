@@ -24,7 +24,7 @@ from django.utils.translation import ugettext as _
 from aether.common.health.views import health, check_db, check_app
 
 
-def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
+def generate_urlpatterns(token=False, kernel=False, app=[]):  # pragma: no cover
     '''
     Generates the most common url patterns in the apps.
 
@@ -113,14 +113,6 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
             url(r'^media-basic/(?P<path>.*)$', view=basic_serve, name='media-basic'),
         ]
 
-    if settings.DEBUG:
-        if 'debug_toolbar' in settings.INSTALLED_APPS:
-            import debug_toolbar
-
-            urlpatterns += [
-                url(r'^__debug__/', include(debug_toolbar.urls)),
-            ]
-
     if kernel:
         from aether.common.kernel.views import check_kernel
         from aether.common.kernel.utils import get_kernel_server_url, get_kernel_server_token
@@ -134,13 +126,26 @@ def generate_urlpatterns(token=False, kernel=False):  # pragma: no cover
         #  values depending on the value of `settings.TESTING`. Without these
         # assertions, a deployment configuration missing e.g. `AETHER_KERNEL_URL`
         # will seem to be in order until `get_kernel_server_url()` is called.
+        ERR_MSG = _('Environment variable "{}" is not set')
+
         if settings.TESTING:
-            msg = _('Environment variable "AETHER_KERNEL_URL_TEST" is not set')
+            msg = ERR_MSG.format('AETHER_KERNEL_URL_TEST')
         else:
-            msg = _('Environment variable "AETHER_KERNEL_URL" is not set')
+            msg = ERR_MSG.format('AETHER_KERNEL_URL')
         assert get_kernel_server_url(), msg
 
-        msg_token = _('Environment variable "AETHER_KERNEL_TOKEN" is not set')
+        msg_token = ERR_MSG.format('AETHER_KERNEL_TOKEN')
         assert get_kernel_server_token(), msg_token
+
+    # add app specific
+    urlpatterns += app
+
+    if settings.DEBUG:
+        if 'debug_toolbar' in settings.INSTALLED_APPS:
+            import debug_toolbar
+
+            urlpatterns += [
+                url(r'^__debug__/', include(debug_toolbar.urls)),
+            ]
 
     return urlpatterns
