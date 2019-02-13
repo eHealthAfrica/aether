@@ -489,6 +489,7 @@ class SubmissionStatsMixin(MtViewSetMixin):
 
     def get_queryset(self):
         qs = super(SubmissionStatsMixin, self).get_queryset()
+
         entities_count = Count('submissions__entities__id', distinct=True)
 
         entities_filter = None

@@ -25,7 +25,6 @@ from django.conf.urls import include, url
 
 from aether.common.conf.urls import generate_urlpatterns
 
-urlpatterns = generate_urlpatterns(kernel=True, token=True)
-urlpatterns += [
+urlpatterns = generate_urlpatterns(kernel=True, token=True, app=[
     url(r'^test', include('aether.common.multitenancy.tests.fakeapp.urls')),
-]
+])
