@@ -160,7 +160,7 @@ def upsert_project_artefacts(
 
     # 4. create/update the mappings
     for raw_mapping in mappings:
-        ignore_fields.remove('name') # comment to prevent mapping name updates
+        ignore_fields = ['name']
         mapping_name = raw_mapping.get('name', __random_name())
 
         mapping_definition = raw_mapping.get('definition')
