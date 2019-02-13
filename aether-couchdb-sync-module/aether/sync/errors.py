@@ -25,5 +25,9 @@ class CouchDBInitializationError(Exception):
     pass
 
 
-class SubmissionMappingError(Exception):
+class KernelSubmissionError(Exception):
+    pass
+
+
+class KernelPropagationError(Exception):
     pass

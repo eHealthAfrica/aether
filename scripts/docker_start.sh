@@ -18,140 +18,167 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+set -Eeuo pipefail
 
 # start the indicated app/module with the necessary dependencies
 #
-#   docker_start.sh [--force | -f] [--build | -b] <app>
+#   ./scripts/docker_start.sh [--force | --kill | -f | -k] [--build | -b] <name>
 #
 # arguments:
-#   --force | -f  will kill running containers
-#   --build | -b  will build containers
+#   --kill  | -k   kill all running containers before start
+#   --build | -b   kill and build all containers before start
+#   --force | -f   ensure that the container will be restarted if needed
 
-#   <app>
-#      Expected values: kernel, odk, couchdb-sync or sync.
+#   <name>
+#      Expected values: kernel, odk, ui, couchdb-sync or sync.
 #      Any other value will start all containers.
 #
 
 # default values
 kill=no
+force=no
 build=no
-container=all
+app=
 
 while [[ $# -gt 0 ]]
 do
-  case "$1" in
-    -f|--force)
-      # stop all containers
-      kill=yes
+    case "$1" in
+        -k|--kill)
+            # stop all containers
+            kill=yes
 
-      shift # past argument
-    ;;
+            shift # past argument
+        ;;
 
-    -b|--build)
-      # build all containers
-      build=yes
+        -b|--build)
+            # build all containers
+            build=yes
 
-      shift # past argument
-    ;;
+            shift # past argument
+        ;;
 
-    *)
-      # otherwise is the container name
-      container="$1"
+        -f|--force)
+            # force restart container
+            force=yes
 
-      shift # past argument
-    ;;
-  esac
+            shift # past argument
+        ;;
+
+        *)
+            # otherwise is the container name
+            app="$1"
+
+            shift # past argument
+        ;;
+    esac
 done
 
 
-# just show what's running
+# Try to create the Aether network+volume if missing
+docker network create aether_internal       2>/dev/null || true
+docker volume  create aether_database_data  2>/dev/null || true
+
+./scripts/generate-aether-version-assets.sh
+
 echo ""
 docker-compose ps
+echo "----------------------------------------------------------------------"
 echo ""
 
 
 if [[ $kill = "yes" ]]
 then
-  echo "**********************************************************************"
-  echo "**** Killing containers                                           ****"
-  echo "**********************************************************************"
+    echo "----------------------------------------------------------------------"
+    echo "---- Killing containers                                           ----"
+    echo "----------------------------------------------------------------------"
 
-  ./scripts/kill_all.sh
+    ./scripts/kill_all.sh
+    echo ""
 fi
 
 
 if [[ $build = "yes" ]]
 then
-  echo "**********************************************************************"
-  echo "**** Building containers                                          ****"
-  echo "**********************************************************************"
+    echo "----------------------------------------------------------------------"
+    echo "---- Building containers                                          ----"
+    echo "----------------------------------------------------------------------"
 
-  docker-compose build
+    ./scripts/build_aether_containers.sh
+    echo ""
 fi
 
 
-case $container in
+echo "----------------------------------------------------------------------"
+echo "---- Starting containers                                          ----"
+echo "----------------------------------------------------------------------"
 
-  kernel)
-    echo "**********************************************************************"
-    echo "**** Starting PostgreSQL                                          ****"
-    echo "**** Starting NGINX                                               ****"
-    echo "**** Starting Kernel app                                          ****"
-    echo "**********************************************************************"
+case $app in
+    kernel)
+        PRE_CONTAINERS=(db)
+        SETUP_CONTAINERS=(kernel)
+        POST_CONTAINERS=(nginx)
+    ;;
 
-    docker-compose up db kernel nginx
-  ;;
+    odk)
+        PRE_CONTAINERS=(db)
+        SETUP_CONTAINERS=(kernel odk)
+        POST_CONTAINERS=(nginx)
+    ;;
 
-  odk)
-    echo "**********************************************************************"
-    echo "**** Starting PostgreSQL                                          ****"
-    echo "**** Starting NGINX                                               ****"
-    echo "**** Starting Kernel app                                          ****"
-    echo "**** Starting ODK module                                          ****"
-    echo "**********************************************************************"
+    ui)
+        PRE_CONTAINERS=(ui-assets db)
+        SETUP_CONTAINERS=(kernel ui)
+        POST_CONTAINERS=(nginx)
+    ;;
 
-    docker-compose up db kernel odk nginx
-  ;;
+    sync|couchdb-sync)
+        app=couchdb-sync
 
-  sync|couchdb-sync)
-    echo "**********************************************************************"
-    echo "**** Starting PostgreSQL                                          ****"
-    echo "**** Starting CouchDB                                             ****"
-    echo "**** Starting Redis                                               ****"
-    echo "**** Starting RQ                                                  ****"
-    echo "**** Starting NGINX                                               ****"
-    echo "**** Starting Kernel app                                          ****"
-    echo "**** Starting CouchDB-Sync module                                 ****"
-    echo "**********************************************************************"
+        PRE_CONTAINERS=(db couchdb redis)
+        SETUP_CONTAINERS=(kernel couchdb-sync)
+        POST_CONTAINERS=(couchdb-sync-rq nginx)
+    ;;
 
-    docker-compose up db couchdb redis kernel couchdb-sync couchdb-sync-rq nginx
-  ;;
+    *)
+        app=
 
-  ui)
-    echo "**********************************************************************"
-    echo "**** Starting PostgreSQL                                          ****"
-    echo "**** Starting NGINX                                               ****"
-    echo "**** Starting Kernel app                                          ****"
-    echo "**** Starting UI module                                           ****"
-    echo "**** Starting webpack                                             ****"
-    echo "**********************************************************************"
-
-    docker-compose up db kernel ui webpack nginx
-  ;;
-
-  *)
-    echo "**********************************************************************"
-    echo "**** Starting PostgreSQL                                          ****"
-    echo "**** Starting CouchDB                                             ****"
-    echo "**** Starting Redis                                               ****"
-    echo "**** Starting RQ                                                  ****"
-    echo "**** Starting NGINX                                               ****"
-    echo "**** Starting Kernel app                                          ****"
-    echo "**** Starting ODK module                                          ****"
-    echo "**** Starting CouchDB-Sync module                                 ****"
-    echo "**********************************************************************"
-
-    docker-compose up
-  ;;
-
+        PRE_CONTAINERS=(ui-assets db couchdb redis)
+        SETUP_CONTAINERS=(kernel odk ui couchdb-sync)
+        POST_CONTAINERS=(couchdb-sync-rq nginx)
+    ;;
 esac
+
+start_container () {
+    if [[ $force = "yes" ]]; then
+        docker-compose kill $1
+    fi
+    docker-compose up --no-deps -d $1
+    sleep 2
+    docker-compose logs --tail 20 $1
+}
+
+for container in "${PRE_CONTAINERS[@]}"
+do
+    start_container $container
+done
+
+for container in "${SETUP_CONTAINERS[@]}"
+do
+    docker-compose run $container setup
+    start_container $container
+done
+
+for container in "${POST_CONTAINERS[@]}"
+do
+    start_container $container
+done
+
+echo ""
+docker-compose ps
+echo "----------------------------------------------------------------------"
+echo ""
+docker ps
+echo "----------------------------------------------------------------------"
+echo ""
+
+docker-compose up $app

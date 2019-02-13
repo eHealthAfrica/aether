@@ -17,16 +17,22 @@
 # under the License.
 
 import json
+import logging
 import os
-import os.path
 
 from django.conf import settings
+from django.utils.translation import ugettext as _
+
 from pathlib import Path
 
 from . import api
 from .. import errors
 from .utils import force_put_doc
-from ..settings import logger
+from ..settings import LOGGING_LEVEL
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(LOGGING_LEVEL)
 
 
 class DuplicateKeyError(ValueError):
@@ -43,14 +49,15 @@ def load_config(directory, strip=False, predicate=None):  # pragma: no cover
         Each entry is only added to the document if predicate returns True.
         Can be used to ignore backup files etc.
     '''
+
     objects = {}
 
     if not os.path.isdir(directory):
-        raise OSError('No directory: "{0}"'.format(directory))
+        raise OSError(_('No directory: "{}"').format(directory))
 
     for (dirpath, dirnames, filenames) in os.walk(directory, topdown=False):
         key = os.path.split(dirpath)[-1]
-        ob = {}  # type: JsonType
+        ob = {}
         objects[dirpath] = (key, ob)
 
         for name in filenames:
@@ -59,8 +66,7 @@ def load_config(directory, strip=False, predicate=None):  # pragma: no cover
             if predicate and not predicate(fullname):
                 continue
             if fkey in ob:
-                raise DuplicateKeyError('file "{0}" clobbers key "{1}"'
-                                        .format(fullname, fkey))
+                raise DuplicateKeyError(_('file "{}" clobbers key "{}"').format(fullname, fkey))
             with open(fullname, 'r') as f:
                 contents = f.read()
                 if name.endswith('.json'):
@@ -71,14 +77,13 @@ def load_config(directory, strip=False, predicate=None):  # pragma: no cover
 
         for name in dirnames:
             if name == '_attachments':
-                raise NotImplementedError('_attachments are not supported')
+                raise NotImplementedError(_('_attachments are not supported'))
             fullpath = os.path.join(dirpath, name)
             if predicate and not predicate(fullpath):
                 continue
             subkey, subthing = objects[fullpath]
             if subkey in ob:
-                raise DuplicateKeyError('directory "{0}" clobbers key "{1}"'
-                                        .format(fullpath, subkey))
+                raise DuplicateKeyError(_('directory "{}" clobbers key "{}"').format(fullpath, subkey))
             ob[subkey] = subthing
 
     return ob
@@ -86,9 +91,11 @@ def load_config(directory, strip=False, predicate=None):  # pragma: no cover
 
 def setup_db(db_name, config, cleanup=False):  # pragma: no cover
     '''
-    Setup up a couchdb database from a configuration
-    When `cleanup` is True all the data will be wiped from the existing database!
+    Setup up a couchdb database from a configuration,
+
+    When `cleanup` is `True` all the data will be wiped from the existing database!
     '''
+
     ddoc = config.copy()
     # The {db}/_security is its own document in couchdb and we push it seperately.
     # A security document is required.
@@ -97,7 +104,7 @@ def setup_db(db_name, config, cleanup=False):  # pragma: no cover
         del ddoc['_security']
     else:
         raise errors.CouchDBInitializationError(
-            'Provide a security document for the couchdb: ' + db_name
+            _('Provide a security document for the couchdb: {}').format(db_name)
         )
 
     r = api.get(db_name)
@@ -105,13 +112,13 @@ def setup_db(db_name, config, cleanup=False):  # pragma: no cover
 
     # In testing mode we delete existing couchdbs
     if exists and cleanup:
-        logger.info('deleting couchdb: ' + db_name)
+        logger.info(_('deleting couchdb: {}').format(db_name))
         r = api.delete(db_name)
         r.raise_for_status()
         exists = False
 
     if not exists:
-        logger.info('creating couchdb: ' + db_name)
+        logger.info(_('creating couchdb: {}').format(db_name))
         r = api.put(db_name)
         r.raise_for_status()
 
@@ -124,14 +131,17 @@ def setup_db(db_name, config, cleanup=False):  # pragma: no cover
 
 
 def setup_couchdb(cleanup=False):  # pragma: no cover
-    ''' Setup couchdb by loading the configuration from a directory structure '''
+    '''
+    Setup couchdb by loading the configuration from a directory structure.
+    '''
+
     base_path = Path(settings.COUCHDB_DIR)
     dirs = (p for p in base_path.iterdir() if p.is_dir())
 
     for db_dir in dirs:
         db_name = db_dir.name
-        logger.info('setting up couchdb: ' + db_name)
         if settings.TESTING:
             db_name = db_name + '_test'
+        logger.info(_('setting up couchdb: {}').format(db_name))
         config = load_config(str(db_dir))
         setup_db(db_name, config, cleanup=cleanup)

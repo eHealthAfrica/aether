@@ -18,185 +18,214 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-set -Eeuox pipefail
+set -Eeuo pipefail
 
+# set DEBUG if missing
+set +u
+DEBUG="$DEBUG"
+set -u
 
-# Define help message
-show_help() {
-  echo """
-  Commands
-  ----------------------------------------------------------------------------
-  bash          : run bash
-  eval          : eval shell command
-  manage        : invoke django manage.py commands
+BACKUPS_FOLDER=/backups
 
-  pip_freeze    : freeze pip dependencies and write to requirements.txt
+show_help () {
+    echo """
+    Commands
+    ----------------------------------------------------------------------------
+    bash          : run bash
+    eval          : eval shell command
+    manage        : invoke django manage.py commands
 
-  setupproddb   : create/migrate database for production
-  setuplocaldb  : create/migrate database for development (creates superuser)
+    pip_freeze    : freeze pip dependencies and write to requirements.txt
 
-  test          : run ALL tests
-  test_lint     : run flake8, standardjs and sass lint tests
-  test_coverage : run python tests with coverage output
-  test_py       : alias of test_coverage
+    setup         : check required environment variables,
+                    create/migrate database and,
+                    create/update superuser using
+                        'ADMIN_USERNAME', 'ADMIN_PASSWORD'
 
-  start         : start webserver behind nginx
-  start_dev     : start webserver for development
-  """
+    backup_db     : creates db dump (${BACKUPS_FOLDER}/${DB_NAME}-backup-{timestamp}.sql)
+    restore_dump  : restore db dump (${BACKUPS_FOLDER}/${DB_NAME}-backup.sql)
+
+    test          : run tests
+    test_lint     : run flake8 tests
+    test_coverage : run tests with coverage output
+
+    start         : start webserver behind nginx
+    start_dev     : start webserver for development
+
+    health        : checks the system healthy
+    check_kernel  : checks communication with kernel
+    """
 }
 
-pip_freeze() {
-    pip install virtualenv
+pip_freeze () {
+    pip install -q virtualenv
     rm -rf /tmp/env
 
     virtualenv -p python3 /tmp/env/
-    /tmp/env/bin/pip install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
+    /tmp/env/bin/pip install -q -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
 
     cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
     /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
 }
 
-setup_db() {
-  export PGPASSWORD=$RDS_PASSWORD
-  export PGHOST=$RDS_HOSTNAME
-  export PGUSER=$RDS_USERNAME
+backup_db() {
+    pg_isready
 
-  until pg_isready -q; do
-    >&2 echo "Waiting for postgres..."
-    sleep 1
-  done
+    if psql -c "" $DB_NAME; then
+        echo "$DB_NAME database exists!"
 
-  if psql -c "" $RDS_DB_NAME; then
-    echo "$RDS_DB_NAME database exists!"
-  else
-    createdb -e $RDS_DB_NAME -e ENCODING=UTF8
-    echo "$RDS_DB_NAME database created!"
-  fi
-
-  # migrate data model if needed
-  ./manage.py migrate --noinput
+        pg_dump $DB_NAME > ${BACKUPS_FOLDER}/${DB_NAME}-backup-$(date "+%Y%m%d%H%M%S").sql
+        echo "$DB_NAME database backup created."
+    fi
 }
 
-setup_initial_data() {
-  # create initial superuser
-  ./manage.py loaddata ./conf/extras/initial.json
+restore_db() {
+    pg_isready
+
+    # backup current data
+    backup_db
+
+    # delete DB is exists
+    if psql -c "" $DB_NAME; then
+        dropdb -e $DB_NAME
+        echo "$DB_NAME database deleted."
+    fi
+
+    createdb -e $DB_NAME -e ENCODING=UTF8
+    echo "$DB_NAME database created."
+
+    # load dump
+    psql -e $DB_NAME < ${BACKUPS_FOLDER}/${DB_NAME}-backup.sql
+    echo "$DB_NAME database dump restored."
+
+    # migrate data model if needed
+    ./manage.py migrate --noinput
 }
 
-setup_prod() {
-  # check if vars exist
-  ./conf/check_vars.sh
-  # arguments: -u=admin -p=secretsecret -e=admin@ehealthafrica.org -t=01234656789abcdefghij
-  ./manage.py setup_admin -p=$ADMIN_PASSWORD
+setup () {
+    # check if required environment variables were set
+    ./conf/check_vars.sh
+
+    pg_isready
+
+    if psql -c "" $DB_NAME; then
+        echo "$DB_NAME database exists!"
+    else
+        createdb -e $DB_NAME -e ENCODING=UTF8
+        echo "$DB_NAME database created!"
+    fi
+
+    # migrate data model if needed
+    ./manage.py migrate --noinput
+
+    # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
+    ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD
+
+    # cleaning
+    rm -r -f /code/aether/ui/static/*.*
+    # copy assets bundles folder into static folder
+    cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
+
+    STATIC_ROOT=/var/www/static
+    # create static assets
+    ./manage.py collectstatic --noinput --clear --verbosity 0
+    chmod -R 755 $STATIC_ROOT
+
+    # expose version number (if exists)
+    cp ./VERSION $STATIC_ROOT/VERSION   2>/dev/null || :
+    # add git revision (if exists)
+    cp ./REVISION $STATIC_ROOT/REVISION 2>/dev/null || :
 }
 
-setup_static() {
-  # create static assets
-  ./manage.py collectstatic --noinput --clear
-  # copy distributed app
-  chown -R aether: /code/aether/ui/assets/bundles
-  cp -r /code/aether/ui/assets/bundles/* /var/www/static
-
-  chmod -R 755 /var/www/static/
+test_lint () {
+    flake8 ./aether --config=./conf/extras/flake8.cfg
 }
 
-test_lint() {
-  flake8 ./aether --config=./conf/extras/flake8.cfg
+test_coverage () {
+    export RCFILE=./conf/extras/coverage.rc
+    export TESTING=true
+
+    coverage run    --rcfile="$RCFILE" manage.py test "${@:1}"
+    coverage report --rcfile="$RCFILE"
+    coverage erase
+
+    cat ./conf/extras/good_job.txt
 }
-
-test_coverage() {
-  export RCFILE=./conf/extras/coverage.rc
-  export TESTING=true
-
-  coverage run    --rcfile="$RCFILE" manage.py test "${@:1}"
-  coverage report --rcfile="$RCFILE"
-  coverage erase
-
-  cat ./conf/extras/good_job.txt
-}
-
-
-# --------------------------------
-# set DJANGO_SECRET_KEY if needed
-if [ "$DJANGO_SECRET_KEY" = "" ]
-then
-  export DJANGO_SECRET_KEY=$(
-    cat /dev/urandom | tr -dc 'a-zA-Z0-9-_!@#$%^&*()_+{}|:<>?=' | fold -w 64 | head -n 4
-  )
-fi
-# --------------------------------
 
 
 case "$1" in
-  bash )
-    bash
-  ;;
+    bash )
+        bash
+    ;;
 
-  eval )
-    eval "${@:2}"
-  ;;
+    eval )
+        eval "${@:2}"
+    ;;
 
-  manage )
-    ./manage.py "${@:2}"
-  ;;
+    manage )
+        ./manage.py "${@:2}"
+    ;;
 
-  pip_freeze )
-    pip_freeze
-  ;;
+    pip_freeze )
+        pip_freeze
+    ;;
 
-  setuplocaldb )
-    setup_db
-    setup_initial_data
-  ;;
+    setup )
+        setup
+    ;;
 
-  setupproddb )
-    setup_db
-  ;;
+    backup_db )
+        backup_db
+    ;;
 
-  test)
-    test_lint
-    test_coverage
+    restore_dump )
+        restore_db
+    ;;
 
-    # collect static assets
-    ./manage.py collectstatic --noinput --dry-run
-  ;;
+    test )
+        echo "DEBUG=$DEBUG"
+        setup
+        test_lint
+        test_coverage "${@:2}"
+    ;;
 
-  test_lint)
-    test_lint
-  ;;
+    test_lint )
+        test_lint
+    ;;
 
-  test_coverage)
-    test_coverage "${@:2}"
-  ;;
+    test_coverage )
+        test_coverage "${@:2}"
+    ;;
 
-  test_py)
-    test_coverage "${@:2}"
-  ;;
+    start )
+        setup
 
-  start )
-    setup_db
-    setup_prod
-    setup_static
+        [ -z "$DEBUG" ] && LOGGING="--disable-logging" || LOGGING=""
+        /usr/local/bin/uwsgi \
+            --ini /code/conf/uwsgi.ini \
+            --http 0.0.0.0:$WEB_SERVER_PORT \
+            $LOGGING
+    ;;
 
-    /usr/local/bin/uwsgi --ini ./conf/uwsgi.ini
-  ;;
+    start_dev )
+        setup
 
-  start_dev )
-    setup_db
-    setup_initial_data
+        ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
+    ;;
 
-    # copy bundles in static folder
-    chmod -R 755 /code/aether/ui/assets/bundles
-    chown -R aether: /code/aether/ui/assets/bundles
-    cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
+    health )
+        ./manage.py check_url --url=http://0.0.0.0:$WEB_SERVER_PORT/health
+    ;;
 
-    ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
-  ;;
+    check_kernel )
+        ./manage.py check_url --url=$AETHER_KERNEL_URL --token=$AETHER_KERNEL_TOKEN
+    ;;
 
-  help)
-    show_help
-  ;;
+    help )
+        show_help
+    ;;
 
-  *)
-    show_help
-  ;;
+    * )
+        show_help
+    ;;
 esac

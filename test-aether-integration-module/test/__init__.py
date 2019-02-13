@@ -16,133 +16,134 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import pytest
+import os
 from time import sleep
+
+import pytest
 import requests
 
-from aether.client import KernelClient
-import aether.saladbar.wizard as wizard
-
+# Register Test Project and provide access to artifacts through client test fixtures
+from aether.client.test_fixtures import client, project, schemas, projectschemas, mapping, mappingset  # noqa
+from aether.client import fixtures  # noqa
 
 from .consumer import get_consumer, read
 
 
-KERNEL_URL = "http://kernel-test:9000/v1"
+FORMS_TO_SUBMIT = 10
+SEED_ENTITIES = 10 * 7  # 7 Vaccines in each report
+SEED_TYPE = 'CurrentStock'
 
-kernel_credentials = {
-    "username": "admin-kernel",
-    "password": "adminadmin",
-}
-
-kernel_retry = 15
-kernel_retry_time = 1
-
-SEED_ENTITIES = 1234
-SEED_TYPE = "Person"
+PRODUCER_CREDS = [
+    os.environ['PRODUCER_ADMIN_USER'],
+    os.environ['PRODUCER_ADMIN_PW']
+]
 
 
-@pytest.fixture(scope="session")
-def aether_client():
-    for x in range(kernel_retry):
-        try:
-            client = KernelClient(KERNEL_URL, **kernel_credentials)
-            return client
-        except Exception as err:
-            sleep(kernel_retry_time)
-            print("Couldn't connect to Aether: %s" % (err))
-            pass
-
-    raise EnvironmentError("Could not connect to Aether Kernel on url: %s" % KERNEL_URL)
-
-
-@pytest.fixture(scope="session")
-def schema_registration():
-    try:
-        wizard.test_setup()
-        return True
-    except Exception as err:
-        raise(err)
-        print("Schema registration failed with: %s" % err)
-        return False
-
-
-@pytest.fixture(scope="module")
-def existing_projects(aether_client):
-    return [i for i in aether_client.Resource.Project]
-
-
-@pytest.fixture(scope="module")
-def existing_schemas(aether_client):
-    return [i for i in aether_client.Resource.Schema]
-
-
-@pytest.fixture(scope="module")
-def existing_projectschemas(aether_client):
-    return [i for i in aether_client.Resource.ProjectSchema]
-
-
-@pytest.fixture(scope="function")
-def producer_status():
-    max_retry = 30
-    url = "http://producer-test:9005/status"
+@pytest.fixture(scope='function')
+def producer_topics():
+    max_retry = 10
     for x in range(max_retry):
         try:
-            status = requests.get(url).json()
-            kafka = status.get('kafka')
+            status = producer_request('status')
+            kafka = status.get('kafka_container_accessible')
+            if not kafka:
+                raise ValueError('Kafka not connected yet')
+            topics = producer_request('topics')
+            return topics
+        except Exception:
+            sleep(1)
+
+
+@pytest.fixture(scope='function')
+def wait_for_producer_status():
+    max_retry = 30
+    failure_mode = None
+    for x in range(max_retry):
+        try:
+            status = producer_request('status')
+            if not status:
+                raise ValueError('No status response from producer')
+            kafka = status.get('kafka_container_accessible')
             if not kafka:
                 raise ValueError('Kafka not connected yet')
             person = status.get('topics', {}).get(SEED_TYPE, {})
             ok_count = person.get('last_changeset_status', {}).get('succeeded')
             if ok_count:
-                sleep(10)
+                sleep(5)
                 return ok_count
             else:
-                sleep(1)
+                raise ValueError('Last changeset status has no successes. Not producing')
         except Exception as err:
-            print(err)
+            failure_mode = str(err)
             sleep(1)
 
+    raise TimeoutError(f'Producer not ready before {max_retry}s timeout. Reason: {failure_mode}')
 
-@pytest.fixture(scope="function")
-def existing_entities(aether_client, existing_projectschemas):
+
+@pytest.fixture(scope='function')  # noqa
+def entities(client, projectschemas):  # noqa: F811
     entities = {}
-    for ps in existing_projectschemas:
-        name = ps.get("name")
-        endpoint = aether_client.Entity.get(name, strict=False)
-        entities[name] = [i for i in endpoint]
+    for ps in projectschemas:
+        name = ps['name']
+        ps_id = ps.id
+        entities[name] = [i for i in client.entities.paginated(
+            'list', projectschema=ps_id)]
     return entities
 
 
-@pytest.fixture(scope="module")
-def generate_entities(aether_client, existing_schemas, existing_projectschemas):
+@pytest.fixture(scope='function')
+def generate_entities(client, mappingset):  # noqa: F811
+    payloads = iter(fixtures.get_submission_payloads())
     entities = []
-    manager = None
-    from aether.mocker import MockingManager, MockFn, Generic
-    person = "org.eha.demo.Person"
-    location = "org.eha.demo.GeoLocation"
-    try:
-        manager = MockingManager(kernel_url=KERNEL_URL)
-        manager.types[location].override_property(
-            "latitude", MockFn(Generic.geo_lat))
-        manager.types[location].override_property(
-            "longitude", MockFn(Generic.geo_lng))
-        for x in range(SEED_ENTITIES):
-            entity = manager.register(person)
+    for i in range(FORMS_TO_SUBMIT):
+        Submission = client.get_model('Submission')
+        submission = Submission(
+            payload=next(payloads),
+            mappingset=mappingset.id
+        )
+        instance = client.submissions.create(data=submission)
+        for entity in client.entities.paginated('list', submission=instance.id):
             entities.append(entity)
-    except Exception as err:
-        raise(err)
-    finally:
-        try:
-            if manager:
-                manager.kill()
-        except Exception as oos:
-            raise(oos)
     return entities
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope='function')
 def read_people():
     consumer = get_consumer(SEED_TYPE)
-    messages = read(consumer, start="FIRST", verbose=False, timeout_ms=500)
+    messages = read(consumer, start='FIRST', verbose=False, timeout_ms=500)
     consumer.close()  # leaving consumers open can slow down zookeeper, try to stay tidy
     return messages
+
+
+# Producer convenience functions
+
+
+def producer_request(endpoint, expect_json=True):
+    auth = requests.auth.HTTPBasicAuth(*PRODUCER_CREDS)
+    url = '{base}/{endpoint}'.format(
+        base=os.environ['PRODUCER_URL'],
+        endpoint=endpoint)
+    try:
+        res = requests.get(url, auth=auth)
+        if expect_json:
+            return res.json()
+        else:
+            return res.text
+    except Exception as err:
+        print(err)
+        sleep(1)
+
+
+def topic_status(topic):
+    status = producer_request('status')
+    return status['topics'][topic]
+
+
+def producer_topic_count(topic):
+    status = producer_request('topics')
+    return status[topic]['count']
+
+
+def producer_control_topic(topic, operation):
+    endpoint = f'{operation}?topic={topic}'
+    return producer_request(endpoint, False)

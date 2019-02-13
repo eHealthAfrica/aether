@@ -16,10 +16,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import logging
 import json
 import requests
 
-from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext as _
@@ -41,8 +41,9 @@ from aether.common.kernel.utils import (
     get_attachments_url,
     get_auth_header,
     get_submissions_url,
+    submit_to_kernel,
 )
-from ..settings import logger
+from ..settings import LOGGING_LEVEL
 
 from .models import Project, XForm, MediaFile
 from .serializers import (
@@ -60,9 +61,14 @@ from .surveyors_utils import get_surveyors
 from .xform_utils import get_instance_data_from_xml, parse_submission
 
 
+logger = logging.getLogger(__name__)
+logger.setLevel(LOGGING_LEVEL)
+
+
 # list of messages that can be translated
 MSG_XFORM_VERSION_WARNING = _(
-    'Requesting {requested_version} xform version, current is {current_version}'
+    'Requesting {requested_version} xform version, '
+    'while current is {current_version}.'
 )
 MSG_KERNEL_CONNECTION_ERR = _(
     'Connection with Aether Kernel is not possible.'
@@ -77,17 +83,21 @@ MSG_SUBMISSION_MISSING_INSTANCE_ID_ERR = _(
     'Instance ID is missing in submission.'
 )
 MSG_SUBMISSION_XFORM_UNAUTHORIZED_ERR = _(
-    'xForm entry {form_id} unauthorized.'
+    'xForm entry "{form_id}" unauthorized.'
 )
 MSG_SUBMISSION_XFORM_NOT_FOUND_ERR = _(
-    'xForm entry {form_id} no found.'
+    'xForm entry "{form_id}" no found.'
 )
 MSG_SUBMISSION_XFORM_VERSION_WARNING = _(
-    'Sending response to {submission_version} xform version, current is {current_version}'
+    'Sending response to {submission_version} version of the xForm "{form_id}", '
+    'while current is {current_version}.'
 )
 MSG_SUBMISSION_KERNEL_ARTEFACTS_ERR = _(
     'Unexpected error from Aether Kernel '
     'while checking the xForm artefacts "{form_id}".'
+)
+MSG_SUBMISSION_KERNEL_EXISTENT_INSTANCE_ID = _(
+    'There is already a submission "{id}" in Aether Kernel with instance ID "{instance}".'
 )
 MSG_SUBMISSION_KERNEL_SUBMIT_ERR = _(
     'Unexpected response {status} from Aether Kernel '
@@ -104,6 +114,9 @@ MSG_SUBMISSION_SUBMIT_ERR = _(
 MSG_SUBMISSION_SUBMIT_SUCCESS = _(
     'Successfully submitted data of the xForm "{form_id}" to Aether Kernel.'
 )
+MSG_SUBMISSION_SUBMIT_SUCCESS_ID = _(
+    'The submission with instance ID "{instance}" has ID "{id}" in Aether Kernel.'
+)
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -118,17 +131,17 @@ class ProjectViewSet(viewsets.ModelViewSet):
     search_fields = ('name',)
 
     @action(detail=True, methods=['patch'])
-    def propagates(self, request, pk=None, *args, **kwargs):
+    def propagate(self, request, pk=None, *args, **kwargs):
         '''
         Creates a copy of the project in Aether Kernel server.
 
-        Reachable at ``.../projects/{pk}/propagates/``
+        Reachable at ``.../projects/{pk}/propagate/``
         '''
 
         project = get_object_or_404(Project, pk=pk)
 
         try:
-            propagate_kernel_project(project)
+            propagate_kernel_project(project=project, family=request.data.get('family'))
         except KernelPropagationError as kpe:
             return Response(
                 data={'description': str(kpe)},
@@ -163,18 +176,18 @@ class XFormViewSet(viewsets.ModelViewSet):
         return queryset
 
     @action(detail=True, methods=['patch'])
-    def propagates(self, request, pk=None, *args, **kwargs):
+    def propagate(self, request, pk=None, *args, **kwargs):
         '''
         Creates the artefacts of the xform in Aether Kernel server.
 
-        Reachable at ``.../xforms/{pk}/propagates/``
+        Reachable at ``.../xforms/{pk}/propagate/``
         '''
 
         xform = get_object_or_404(XForm, pk=pk)
         xform.save()  # creates avro schema if missing
 
         try:
-            propagate_kernel_artefacts(xform)
+            propagate_kernel_artefacts(xform=xform, family=request.data.get('family'))
         except KernelPropagationError as kpe:
             return Response(
                 data={'description': str(kpe)},
@@ -338,12 +351,7 @@ def xform_get_manifest(request, pk):
             requested_version=version, current_version=xform.version))
 
     return Response(
-        data={
-            'media_files': xform.media_files.all(),
-            # use `/media-basic` entrypoint to use Basic Authentication not UMS or Django
-            'host': request.build_absolute_uri().replace(
-                request.get_full_path(), settings.MEDIA_BASIC_URL),
-        },
+        data={'media_files': xform.media_files.all()},
         template_name='xformManifest.xml',
         content_type='text/xml',
         headers={'X-OpenRosa-Version': '1.0'},
@@ -362,6 +370,59 @@ def xform_submission(request):
     Response specification:
     https://docs.opendatakit.org/openrosa-http/#openrosa-responses
 
+    Any time a request is received the following steps are executed:
+
+    1. Checks if the connection with Aether Kernel is possible.
+       Otherwise responds with a 424 (failed dependency) status code.
+
+    2. Checks if the request includes content as a FILE
+       in the ``xml_submission_file`` param.
+       Otherwise responds with a 422 (unprocessable entity) status code.
+
+    3. Reads and parses the file content (from XML to JSON format).
+       If fails responds with a 422 (unprocessable entity) status code.
+
+    4. Checks if the content has a `meta.instanceID` value.
+       This check is part of the OpenRosa spec.
+       Otherwise responds with a 422 (unprocessable entity) status code.
+
+    5. Checks if the xForm linked to the request exists in Aether ODK.
+       Otherwise responds with a 404 (not found) status code.
+
+    6. Checks if the request user is a granted surveyor of the xForm.
+       Otherwise responds with a 401 (unauthorized) status code.
+
+    7. Compares the content xForm version with the current xForm version.
+       Warns if the content one is older than the current one and continues.
+
+    8. Propagates xForm artefacts to Aether Kernel.
+       (This creates all the required artefacts in Aether Kernel
+       that receive the request content and extract the linked entities)
+       If fails responds with a 424 (failed dependency) status code.
+
+    Note: Any error beyond this point will respond with a 400 (bad request) status code.
+          Also it will delete any submission or attachment linked to this request
+          in Aether Kernel.
+
+    9. Checks if the request instance ID is already in any Aether Kernel submission.
+       As part of the OpenRosa specs, submissions with big attachments could be
+       split in several requests depending on the size of the attachments.
+       In all of the cases the ``xml_submission_file`` FILE is included in the
+       request.
+
+    9.1. If there is no submission in Aether Kernel with this instance ID,
+         submits the parsed JSON content to Aether Kernel.
+         Also submits the original XML content as an attachment of the submission.
+
+    9.2. If there is at least one submission (there should be only one)
+         warns about it and continues.
+
+    10. Checks if there are more FILE entries in the request.
+
+    10.1. If there are more files submits them as attachments linked to
+          this submission to Aether Kernel.
+
+    11. Responds with a 201 (created) status code.
     '''
 
     # first of all check if the connection is possible
@@ -481,7 +542,7 @@ def xform_submission(request):
     # check sent version with current one
     if version < xform.version:  # pragma: no cover
         logger.warning(MSG_SUBMISSION_XFORM_VERSION_WARNING.format(
-            submission_version=version, current_version=xform.version))
+            submission_version=version, current_version=xform.version, form_id=form_id))
 
     # make sure that the xForm artefacts already exist in Aether Kernel
     try:
@@ -508,22 +569,19 @@ def xform_submission(request):
         previous_submissions_response = requests.get(
             submissions_url,
             headers=auth_header,
-            params={'instanceID': instance_id},
+            params={'payload__meta__instanceID': instance_id},
         )
         previous_submissions = json.loads(previous_submissions_response.content.decode('utf-8'))
         previous_submissions_count = previous_submissions['count']
+
         # If there are no previous submissions with the same instance id as
-        # the current submission, save this submission and assign its id to
+        # the current submission, post this submission and assign its id to
         # `submission_id`.
         if previous_submissions_count == 0:
             submission_id = None
-            response = requests.post(
-                submissions_url,
-                json={
-                    'mapping': str(xform.kernel_id),
-                    'payload': data,
-                },
-                headers=auth_header,
+            response = submit_to_kernel(
+                submission=data,
+                mappingset_id=str(xform.kernel_id),
             )
             submission_content = response.content.decode('utf-8')
 
@@ -544,11 +602,16 @@ def xform_submission(request):
             # If there is one field with non ascii characters, the usual
             # response.json() will throw a `UnicodeDecodeError`.
             submission_id = json.loads(submission_content).get('id')
+
         # If there already exists a submission with for this instance id, we
         # need to retrieve its submission id in order to be able to associate
         # attachments with it.
         else:
             submission_id = previous_submissions['results'][0]['id']
+
+            msg = MSG_SUBMISSION_KERNEL_EXISTENT_INSTANCE_ID.format(instance=instance_id, id=submission_id)
+            logger.warning(msg)
+            logger.warning(previous_submissions['results'][0])
 
         # Submit attachments (if any) to the submission.
         attachments_url = get_attachments_url()
@@ -585,6 +648,9 @@ def xform_submission(request):
                         content_type='text/xml',
                         headers={'X-OpenRosa-Version': '1.0'},
                     )
+
+        msg = MSG_SUBMISSION_SUBMIT_SUCCESS_ID.format(instance=instance_id, id=submission_id)
+        logger.info(msg)
 
         return Response(
             data={

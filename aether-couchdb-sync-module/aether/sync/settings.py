@@ -29,13 +29,12 @@ from aether.common.conf.settings import INSTALLED_APPS
 # ------------------------------------------------------------------------------
 
 ROOT_URLCONF = 'aether.sync.urls'
-WSGI_APPLICATION = 'aether.sync.wsgi.application'
 
 # Allow cors for all origins but only for the sync endpoint
 CORS_URLS_REGEX = r'^/sync/.*$'
 
 # SECURITY WARNING: this should also be considered a secret:
-GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_ID = os.environ['GOOGLE_CLIENT_ID']
 
 FIXTURE_DIRS = (
     'aether/sync/fixtures/',
@@ -50,15 +49,15 @@ MIGRATION_MODULES = {
     'sync': 'aether.sync.api.migrations',
 }
 
-COUCHDB_URL = os.environ.get('COUCHDB_URL', 'http://couchdb:5984')
-COUCHDB_USER = os.environ.get('COUCHDB_USER', None)
-COUCHDB_PASSWORD = os.environ.get('COUCHDB_PASSWORD', None)
-COUCHDB_DIR = './couchdb'
+COUCHDB_URL = os.environ['COUCHDB_URL']
+COUCHDB_USER = os.environ['COUCHDB_USER']
+COUCHDB_PASSWORD = os.environ['COUCHDB_PASSWORD']
+COUCHDB_DIR = os.environ.get('COUCHDB_DIR', './couchdb')
 
-REDIS_HOST = os.environ.get('REDIS_HOST', 'redis')
-REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
+REDIS_HOST = os.environ['REDIS_HOST']
+REDIS_PORT = os.environ['REDIS_PORT']
 REDIS_DB = os.environ.get('REDIS_DB', 0)
-REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', None)
+REDIS_PASSWORD = os.environ['REDIS_PASSWORD']
 
 RQ_QUEUES = {
     'default': {

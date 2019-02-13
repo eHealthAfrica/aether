@@ -16,24 +16,120 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.conf import settings
-from django.views.decorators.csrf import csrf_exempt
-from oauth2client import client, crypt
-from rest_framework import status
-from rest_framework.decorators import (
-    api_view,
-    permission_classes,
-    authentication_classes,
-    throttle_classes
-)
-from rest_framework.throttling import AnonRateThrottle
-from rest_framework.response import Response
+import logging
 
+from django.conf import settings
+from django.shortcuts import get_object_or_404
+from django.utils.translation import ugettext as _
+from django.views.decorators.csrf import csrf_exempt
+
+from oauth2client import client, crypt
+from rest_framework import viewsets, status
+from rest_framework.decorators import (
+    action,
+    api_view,
+    authentication_classes,
+    permission_classes,
+    throttle_classes,
+)
+from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 
 from .couchdb_helpers import create_db, create_or_update_user
-from .models import MobileUser, DeviceDB
+from .models import Project, Schema, MobileUser, DeviceDB
+from .serializers import ProjectSerializer, SchemaSerializer, MobileUserSerializer
+from .kernel_utils import (
+    propagate_kernel_project,
+    propagate_kernel_artefacts,
+    KernelPropagationError,
+)
 
-from ..settings import logger
+from ..settings import LOGGING_LEVEL
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(LOGGING_LEVEL)
+
+
+class ProjectViewSet(viewsets.ModelViewSet):
+    '''
+    Create new Project entries.
+    '''
+
+    queryset = Project.objects \
+                      .prefetch_related('schemas') \
+                      .order_by('name')
+    serializer_class = ProjectSerializer
+    search_fields = ('name',)
+
+    @action(detail=True, methods=['patch'])
+    def propagate(self, request, pk=None, *args, **kwargs):
+        '''
+        Creates a copy of the project in Aether Kernel server.
+
+        Reachable at ``.../projects/{pk}/propagate/``
+        '''
+
+        project = get_object_or_404(Project, pk=pk)
+
+        try:
+            propagate_kernel_project(project=project, family=request.data.get('family'))
+        except KernelPropagationError as kpe:
+            return Response(
+                data={'description': str(kpe)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return self.retrieve(request, pk, *args, **kwargs)
+
+
+class SchemaViewSet(viewsets.ModelViewSet):
+    '''
+    Create new Schema entries providing the AVRO schema via file or raw data.
+    '''
+
+    queryset = Schema.objects.order_by('name')
+    serializer_class = SchemaSerializer
+    search_fields = ('name', 'avro_schema',)
+
+    def get_queryset(self):
+        queryset = self.queryset
+
+        project_id = self.request.query_params.get('project_id', None)
+        if project_id is not None:
+            queryset = queryset.filter(project=project_id)
+
+        return queryset
+
+    @action(detail=True, methods=['patch'])
+    def propagate(self, request, pk=None, *args, **kwargs):
+        '''
+        Creates the artefacts of the schema in Aether Kernel server.
+
+        Reachable at ``.../schemas/{pk}/propagate/``
+        '''
+
+        schema = get_object_or_404(Schema, pk=pk)
+
+        try:
+            propagate_kernel_artefacts(schema=schema, family=request.data.get('family'))
+        except KernelPropagationError as kpe:
+            return Response(
+                data={'description': str(kpe)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return self.retrieve(request, pk, *args, **kwargs)
+
+
+class MobileUserViewSet(viewsets.ModelViewSet):
+    '''
+    Create new Mobile User entries.
+    '''
+
+    queryset = MobileUser.objects.order_by('email')
+    serializer_class = MobileUserSerializer
+    search_fields = ('email',)
 
 
 # Sync credentials endpoint
@@ -45,20 +141,66 @@ from ..settings import logger
 @authentication_classes([])
 @permission_classes([])
 def signin(request):
+    '''
+    Sync credentials endpoint.
+
+    Allows only **POST** http method.
+    `It's throttled. <http://www.django-rest-framework.org/api-guide/throttling/>`__
+    Needs to be open since the mobile app doesn't have any aether credentials.
+
+    **Steps**
+    1. Checks internal ``GOOGLE_CLIENT_ID``.
+       .. warning:: If missing responses **500 -- Internal server error**.
+
+    2. Checks ``idToken`` parameter.
+       .. warning:: If missing responses **400 -- Bad request**.
+
+    3. Checks ``deviceId`` parameter.
+       .. warning:: If missing responses **400 -- Bad request**.
+
+    4. Verifies *ID token* against `GOOGLE API
+       <https://console.developers.google.com/apis/credentials>`__
+       and receives google user account data.
+        .. warning:: If could not verify *ID token* responses **500 -- Internal server error**.
+        .. warning:: If invalid *ID token* responses **401 -- Unauthorized**.
+
+    5. Checks ``email`` in user account.
+       .. warning:: If missing responses **500 -- Internal server error**.
+
+    6. Checks if user account does exist and is therefore allowed to sync.
+       .. warning:: If missing (was not added to :class:`aether.sync.api.models.MobileUser`)
+                    responses **403 -- Forbidden**.
+
+    7. Creates/Updates the CouchDB user of the mobile user and grants
+       permissions to the device database.
+       .. warning:: The same google user account cannot be shared among devices
+                    at the same time because every time the device signs in,
+                    it changes the user CouchDB credentials.
+       .. note:: The same device can have different google user accounts.
+
+    8. Creates the DeviceDB record and the CouchDB database if missing.
+
+    9. Responses **201 -- Created** with a payload with this schema:
+        * ``username`` -- CouchDB credentials: username.
+        * ``password`` -- CouchDB credentials: password.
+        * ``url``      -- CouchDB device database url.
+        * ``db``       -- CouchDB device database name.
+    '''
+
     if settings.GOOGLE_CLIENT_ID == '':
-        msg = 'Server is missing google client id'
+        msg = _('Server is missing google client id')
         logger.error(msg)
         return Response(msg, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     token = request.data.get('idToken', '')
     if token == '':
-        msg = 'No "idToken" sent'
+        msg = _('No "idToken" sent')
         logger.error(msg)
         return Response(msg, status.HTTP_400_BAD_REQUEST)
 
     device_id = request.data.get('deviceId', '')
     if device_id == '':
-        msg = 'No "deviceId" sent'
+        msg = _('No "deviceId" sent')
         logger.error(msg)
         return Response(msg, status.HTTP_400_BAD_REQUEST)
 
@@ -72,15 +214,15 @@ def signin(request):
         )
     except client.VerifyJwtTokenError as err:
         logger.exception(str(err))
-        return Response('Could not verify ID token', status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(_('Could not verify ID token'), status.HTTP_500_INTERNAL_SERVER_ERROR)
     except crypt.AppIdentityError:
-        msg = 'Invalid ID Token'
+        msg = _('Invalid ID Token')
         logger.error(msg)
         return Response(msg, status.HTTP_401_UNAUTHORIZED)
 
     email = user_data.get('email', '')
     if email == '':
-        msg = 'User data is missing email'
+        msg = _('User data is missing email')
         logger.error(msg)
         return Response(msg, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -90,7 +232,7 @@ def signin(request):
     except MobileUser.DoesNotExist:
         # This is a user that comes from our app, but is not added to MobileUser list
         # That should trigger a different error message on the device
-        msg = 'Mobile user does not exist'
+        msg = _('Mobile user does not exist')
         logger.error(msg)
         return Response(msg, status.HTTP_403_FORBIDDEN)
 
@@ -99,13 +241,13 @@ def signin(request):
         couchdb_config = create_or_update_user(email, device_id)
     except ValueError as err:
         logger.exception(str(err))
-        return Response('Creating credentials failed', status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(_('Creating credentials failed'), status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     # Get/Create the device db record and couchdb db
     try:
         device_db = DeviceDB.objects.get(device_id=device_id)
     except DeviceDB.DoesNotExist:
-        logger.info('Creating db for device {}'.format(device_id))
+        logger.info(_('Creating db for device {}').format(device_id))
         device_db = DeviceDB(device_id=device_id, mobileuser=user)
         device_db.save()
     else:
@@ -117,13 +259,11 @@ def signin(request):
         create_db(device_id)
     except Exception as err:
         logger.exception(str(err))
-        return Response('Creating couchdb db failed', status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(_('Creating couchdb db failed'), status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     payload = {
         'username': couchdb_config['username'],
         'password': couchdb_config['password'],
-        # Send the url of the couchdb device-db for replication
-        # 'url': 'http://localhost:8667/_couchdb/' + device_db.db_name
         'db': device_db.db_name,
         'url': request.build_absolute_uri('/_couchdb/' + device_db.db_name),
     }

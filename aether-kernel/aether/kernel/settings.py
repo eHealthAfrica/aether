@@ -19,6 +19,8 @@
 # Common settings
 # ------------------------------------------------------------------------------
 
+import os
+
 from aether.common.conf.settings import *  # noqa
 from aether.common.conf.settings import INSTALLED_APPS, REST_FRAMEWORK
 
@@ -26,16 +28,14 @@ from aether.common.conf.settings import INSTALLED_APPS, REST_FRAMEWORK
 # ------------------------------------------------------------------------------
 
 ROOT_URLCONF = 'aether.kernel.urls'
-WSGI_APPLICATION = 'aether.kernel.wsgi.application'
 ADD_REVERSION_ADMIN = True
 
 INSTALLED_APPS += [
     'django_filters',
-    'rest_framework_filters',
+    'drf_yasg',
     'reversion',
     'reversion_compare',
     'aether.kernel',
-    'drf_openapi',
 ]
 
 MIGRATION_MODULES = {
@@ -43,6 +43,19 @@ MIGRATION_MODULES = {
 }
 
 REST_FRAMEWORK['DEFAULT_VERSIONING_CLASS'] = 'rest_framework.versioning.URLPathVersioning'
-REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'] = (
-    'rest_framework_filters.backends.DjangoFilterBackend',
-) + REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS']
+REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'] = [
+    'django_filters.rest_framework.DjangoFilterBackend',
+    *REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'],
+]
+
+
+# Export Configuration
+# ------------------------------------------------------------------------------
+
+EXPORT_CSV_ESCAPE = os.environ.get('EXPORT_CSV_ESCAPE', '\\')
+EXPORT_CSV_QUOTE = os.environ.get('EXPORT_CSV_QUOTE', '"')
+EXPORT_CSV_SEPARATOR = os.environ.get('EXPORT_CSV_SEPARATOR', ',')
+EXPORT_DATA_FORMAT = os.environ.get('EXPORT_DATA_FORMAT', 'split')
+EXPORT_HEADER_CONTENT = os.environ.get('EXPORT_HEADER_CONTENT', 'labels')
+EXPORT_HEADER_SEPARATOR = os.environ.get('EXPORT_HEADER_SEPARATOR', '/')
+EXPORT_HEADER_SHORTEN = os.environ.get('EXPORT_HEADER_SHORTEN', 'no')

@@ -69,7 +69,7 @@ class Migration(migrations.Migration):
                 ('map_revision', models.TextField(default='1')),
                 ('date', models.DateTimeField(auto_now_add=True, db_index=True)),
                 ('payload', django.contrib.postgres.fields.jsonb.JSONField()),
-                ('mapping', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='submissions', to='kernel.Mapping')),
+                ('mapping', models.ForeignKey(null=True, blank=True, on_delete=django.db.models.deletion.CASCADE, related_name='submissions', to='kernel.Mapping')),
             ],
         ),
         migrations.CreateModel(
@@ -100,6 +100,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='entity',
             name='submission',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='entities', to='kernel.Submission'),
+            field=models.ForeignKey(null=True, blank=True, on_delete=django.db.models.deletion.CASCADE, related_name='entities', to='kernel.Submission'),
         ),
     ]

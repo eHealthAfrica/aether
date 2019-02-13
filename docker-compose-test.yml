@@ -4,6 +4,10 @@
 #  * Aether Kernel
 #  * ODK Module
 #  * CouchDB Sync Module
+#  * Aether UI
+#  * Zookeper & Kafka
+#  * Aether Kafka Producer
+#  * Aether Integration Tests
 # ------------------------------------------------------------------------------
 
 version: "2.1"
@@ -16,17 +20,17 @@ services:
 
   db-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: postgres-base
 
   couchdb-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: couchdb-base
 
   redis-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: redis-base
 
 
@@ -36,18 +40,41 @@ services:
 
   kernel-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: kernel-base
     environment:
+      # use a different database when testing the integration with another container
+      DB_NAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
+      DEBUG: null # set to null to remove previous value
       MEDIA_ROOT: /tmp/
-      RDS_DB_NAME: kernel-test
-      RDS_HOSTNAME: db-test
+      PGHOST: db-test
       TESTING: "true"
       WEB_SERVER_PORT: 9000
-    depends_on:
-      - db-test
+    volumes:
+      # volumes in tests
+      - ./tmp/test/kernel/media:/media
+      - ./tmp/test/kernel/static:/var/www/static
+      - ./tmp/test/kernel/tmp:/tmp
     ports:
       - "9000:9000"
+    command: start
+
+  # ---------------------------------
+  # Aether Kernel Client
+  # ---------------------------------
+
+  client-test:
+    build: ./aether-utils/aether-client
+    environment:
+      KERNEL_URL: http://kernel-test:9000
+      KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
+      KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
+      TESTING: "true"
+    volumes:
+      - ./aether-utils/aether-client:/code
+      - ./tmp/VERSION:/code/VERSION
+    command: test
+
 
 
   # ---------------------------------
@@ -56,20 +83,23 @@ services:
 
   odk-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: odk-base
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9000
+      DB_NAME: test-odk
+      DEBUG: null # set to null to remove previous value
       MEDIA_ROOT: /tmp/
-      RDS_DB_NAME: odk-test
-      RDS_HOSTNAME: db-test
+      PGHOST: db-test
       TESTING: "true"
-      WEB_SERVER_PORT: 9443
-    depends_on:
-      - db-test
-      - kernel-test
+      WEB_SERVER_PORT: 9002
+    volumes:
+      # volumes in tests
+      - ./tmp/test/odk/media:/media
+      - ./tmp/test/odk/static:/var/www/static
     ports:
-      - "9443:9443"
+      - "9002:9002"
+    command: start
 
 
   # ---------------------------------
@@ -78,98 +108,62 @@ services:
 
   couchdb-sync-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: couchdb-sync-base
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9000
       COUCHDB_URL: http://couchdb-test:5984
+      DB_NAME: test-couchdb-sync
+      DEBUG: null # set to null to remove previous value
+      GOOGLE_CLIENT_ID: secret_google_client_id
       MEDIA_ROOT: /tmp/
-      RDS_DB_NAME: couchdb-sync-test
-      RDS_HOSTNAME: db-test
+      PGHOST: db-test
       REDIS_HOST: redis-test
       TESTING: "true"
-      WEB_SERVER_PORT: 9666
-    depends_on:
-      - couchdb-test
-      - db-test
-      - kernel-test
-      - redis-test
+      WEB_SERVER_PORT: 9006
     ports:
-      - "9666:9666"
+      - "9006:9006"
+    command: start
 
 
   # ---------------------------------
-  # Aether UI container
+  # Aether UI
   # ---------------------------------
 
   ui-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: ui-base
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9000
-      MEDIA_ROOT: /tmp/
-      RDS_DB_NAME: ui-test
-      RDS_HOSTNAME: db-test
+      DB_NAME: test-ui
+      DEBUG: null # set to null to remove previous value
+      PGHOST: db-test
       TESTING: "true"
       WEB_SERVER_PORT: 9004
-    depends_on:
-      - db-test
-      - kernel-test
     ports:
       - "9004:9004"
+    command: start
 
-  ui-webpack-test:
+  ui-assets-test:
     extends:
       file: docker-compose-base.yml
-      service: ui-webpack-base
+      service: ui-assets-base
 
 
   # ---------------------------------
-  # Aether Client container
-  # ---------------------------------
-  client-test:
-    image: aether/client
-    build: ./aether-utils/aether-client
-
-    volumes:
-      - ./aether-utils/aether-client:/code
-
-    depends_on:
-      - db-test
-      - kernel-test
-
-  # ---------------------------------
-  # Aether Integration Tests
-  # ---------------------------------
-  integration-test:
-    image: aether/integration
-    build: ./test-aether-integration-module
-
-    volumes:
-      - ./test-aether-integration-module:/code
-
-    depends_on:
-      - db-test
-      - kernel-test
-      - kafka-test
-      - producer-test
-
-  # ---------------------------------
-  # Aether Kafka Containers
+  # Kafka & Zookeeper
   # ---------------------------------
 
   zookeeper-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: zookeeper-base
 
   kafka-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: kafka-base
-    depends_on:
-      - zookeeper-test
     links:
       - zookeeper-test
     environment:
@@ -178,19 +172,52 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-test:29092
       ADVERTISED_HOST_NAME: kafka-test
 
+
   # ---------------------------------
   # Aether Kafka Producer
   # ---------------------------------
 
   producer-test:
     extends:
-      file: docker-compose-base.yml
+      file: ./docker-compose-base.yml
       service: aether-producer-base
     environment:
-      PRODUCER_SETTINGS_FILE: /code/producer/test_settings.json
+      # These variables will override the ones indicated in the settings file
+      PRODUCER_SETTINGS_FILE: /code/tests/conf/producer.json
+      PRODUCER_ADMIN_USER: ${PRODUCER_ADMIN_USER}
+      PRODUCER_ADMIN_PW: ${PRODUCER_ADMIN_PW}
+      KAFKA_URL: kafka-test:29092
+      KERNEL_URL: http://kernel-test:9000
+      POSTGRES_DBNAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
+      POSTGRES_HOST: db-test
+      SERVER_PORT: 9005
+      OFFSET_DB_HOST: db-test
+      OFFSET_DB_USER: postgres
+      OFFSET_DB_PORT: 5432
+      OFFSET_DB_PASSWORD: ${KERNEL_DB_PASSWORD}
+      OFFSET_DB_NAME: producer_offset_db_test
     ports:
       - "9005:9005"
-    links:
-      - kafka-test
-      - zookeeper-test
-    command: start_test
+    volumes:
+      - ./aether-producer/tests:/code/tests
+    command: start
+
+
+  # ---------------------------------
+  # Aether Integration Tests
+  # ---------------------------------
+
+  integration-test:
+    image: aether-integration-test
+    build: ./test-aether-integration-module
+    environment:
+      PRODUCER_URL: http://producer-test:9005
+      KERNEL_URL: http://kernel-test:9000
+      KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
+      KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
+      PRODUCER_ADMIN_USER: ${PRODUCER_ADMIN_USER}
+      PRODUCER_ADMIN_PW: ${PRODUCER_ADMIN_PW}
+    volumes:
+      - ./test-aether-integration-module:/code
+      - ./tmp/VERSION:/code/VERSION
+    command: test

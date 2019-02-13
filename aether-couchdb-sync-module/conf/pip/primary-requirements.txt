@@ -4,30 +4,56 @@
 #                                                                              #
 #                                 CHANGE ME !!!                                #
 #                                                                              #
-# Update me and then run 'docker-compose run couchdb-sync pip_freeze'          #
+# To check the outdated dependencies run                                       #
+#     docker-compose run --no-deps couchdb-sync eval pip list --outdated       #
+#                                                                              #
+# Update me and then run                                                       #
+#     docker-compose run --no-deps couchdb-sync pip_freeze                     #
 #                                                                              #
 ################################################################################
 
-django<2
-django-cas-ng
-django-cors-headers
-django-debug-toolbar
-django-rq
-django-ums-client
-djangorestframework
-oauth2client
-psycopg2-binary
-raven
-redis
-requests
-rq
-rq-scheduler
-uwsgi
 
-# Aether common module
+# Main libraries
+
+# Aether common module, will also require:
+#   django < 2
+#   django-cors-headers
+#   django-debug-toolbar
+#   django-prometheus
+#   django-storages
+#   djangorestframework
+#   psycopg2-binary
+#   python-json-logger
+#   requests
 aether.common
 
-# test libraries
+
+# Django specific
+drf-dynamic-fields
+
+
+# OAuth
+oauth2client
+
+
+# Task scheduler
+django-rq
+redis
+rq
+rq-scheduler
+
+
+# CAS libraries
+django-cas-ng<3.6.0  # breaking changes
+django-ums-client
+
+
+# Server side
+sentry-sdk             # Sentry
+uwsgi                  # Server behind NGINX
+
+
+# Test libraries
 coverage
 flake8
 flake8-quotes

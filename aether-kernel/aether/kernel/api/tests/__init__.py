@@ -16,22 +16,28 @@
 # specific language governing permissions and limitations
 # under the License.
 
-PATH_DIR = '/code/aether/kernel/api/tests/files/'
-
-SCHEMA_FILE_EMPTY = PATH_DIR + 'empty_schema.json'
-SCHEMA_FILE_SAMPLE = PATH_DIR + 'sample_schema.json'
-SCHEMA_FILE_ERROR = PATH_DIR + 'err_schema.json'
-
 EXAMPLE_MAPPING = {
     'entities': {
-        'Person': '1'
+        'Person': '1',
     },
     'mapping': [
         ['#!uuid', 'Person.id'],
         ['data.village', 'Person.villageID'],
         ['data.people[*].name', 'Person.name'],
-        ['data.people[*].dob', 'Person.dob']
-    ]
+        ['data.people[*].dob', 'Person.dob'],
+    ],
+}
+
+EXAMPLE_MAPPING_EDGE = {
+    'entities': {
+        'Person': '1',
+    },
+    'mapping': [
+        ['#!uuid', 'Person.id'],
+        ['[*].village', 'Person.villageID'],
+        ['$[*].name', 'Person.name'],
+        ['$.data.people[*].dob', 'Person.dob.nested'],
+    ],
 }
 
 EXAMPLE_SCHEMA = {
@@ -44,15 +50,17 @@ EXAMPLE_SCHEMA = {
             'jsonldPredicate': '@id',
             'type': 'string',
             'name': 'id',
-            'inherited_from': 'http://ehealthafrica.org/#CouchDoc'
+            'doc': 'ID',
+            'inherited_from': 'http://ehealthafrica.org/#CouchDoc',
         },
         {
             'type': [
                 'null',
                 'string',
-                ],
+            ],
             'name': '_rev',
-            'inherited_from': 'http://ehealthafrica.org/#CouchDoc'
+            'doc': 'REVISION',
+            'inherited_from': 'http://ehealthafrica.org/#CouchDoc',
         },
         {
             'type': [
@@ -60,24 +68,90 @@ EXAMPLE_SCHEMA = {
                 'string',
                 {
                     'type': 'array',
-                    'items': 'string'
+                    'items': 'string',
                 }
             ],
-            'name': 'name'
+            'name': 'name',
+            'doc': 'NAME',
         },
         {
             'type': 'string',
-            'name': 'dob'
+            'name': 'dob',
         },
         {
             'jsonldPredicate': {
                 '_type': '@id',
-                '_id': 'http://ehealthafrica.org/#Village'
+                '_id': 'http://ehealthafrica.org/#Village',
             },
             'type': 'string',
-            'name': 'villageID'
+            'name': 'villageID',
+            'doc': 'VILLAGE',
+        },
+    ],
+}
+
+EXAMPLE_NESTED_SCHEMA = {
+    'type': 'record',
+    'fields': [
+        {
+            'name': 'name',
+            'type': 'string'
+        },
+        {
+            'name': 'location',
+            'type': {
+                'type': 'record',
+                'fields': [
+                    {
+                        'name': 'lat',
+                        'type': 'int'
+                    },
+                    {
+                        'name': 'lng',
+                        'type': 'int'
+                    }
+                ],
+                'name': 'Nested'
+            }
         }
-    ]
+    ],
+    'name': 'Nested'
+}
+
+NESTED_ARRAY_SCHEMA = {
+    'fields': [
+        {
+            'name': 'id',
+            'type': 'string'
+        },
+        {
+            'name': 'geom',
+            'namespace': 'Test',
+            'type': {
+                'fields': [
+                    {
+                        'name': 'coordinates',
+                        'namespace': 'Test.geom',
+                        'type': {
+                            'items': 'float',
+                            'type': 'array'
+                        }
+                    },
+                    {
+                        'name': 'type',
+                        'namespace': 'Test.geom',
+                        'type': 'string'
+                    }
+                ],
+                'name': 'geom',
+                'namespace': 'Test',
+                'type': 'record'
+            }
+        }
+    ],
+    'name': 'Test',
+    'namespace': 'org.eha.Test',
+    'type': 'record'
 }
 
 EXAMPLE_SOURCE_DATA = {
@@ -86,18 +160,18 @@ EXAMPLE_SOURCE_DATA = {
         'people': [
             {
                 'name': 'PersonA',
-                'dob': '2000-01-01'
+                'dob': '2000-01-01',
             },
             {
                 'name': 'PersonB',
-                'dob': '2001-01-01'
+                'dob': '2001-01-01',
             },
             {
-                'name': 'PersonC',
-                'dob': '2002-01-01'
-            }
-        ]
-    }
+                'name': ['FirstC', 'MiddleC', 'LastC'],
+                'dob': '2002-01-01',
+            },
+        ],
+    },
 }
 
 EXAMPLE_NESTED_SOURCE_DATA = {
@@ -109,54 +183,133 @@ EXAMPLE_NESTED_SOURCE_DATA = {
                 'people': [
                     {
                         'name': 'PersonA',
-                        'dob': '2000-01-01'
+                        'dob': '2000-01-01',
                     },
                     {
                         'name': 'PersonB',
-                        'dob': '2001-01-01'
+                        'dob': '2001-01-01',
                     },
                     {
-                        'name': 'PersonC',
-                        'dob': '2002-01-01'
-                    }
-                ]
+                        'name': ['FirstC', 'MiddleC', 'LastC'],
+                        'dob': '2002-01-01',
+                    },
+                ],
             },
             {
                 'num': 1,
                 'people': [
                     {
                         'name': 'PersonD',
-                        'dob': '2000-01-01'
+                        'dob': '2000-01-01',
                     },
                     {
                         'name': 'PersonE',
-                        'dob': '2001-01-01'
+                        'dob': '2001-01-01',
                     },
                     {
                         'name': 'PersonF',
-                        'dob': '2002-01-01'
-                    }
-                ]
-            }
-        ]
-    }
+                        'dob': '2002-01-01',
+                    },
+                ],
+            },
+        ],
+    },
+}
+
+
+EXAMPLE_DATA_FOR_NESTED_SCHEMA = [
+    {
+        'name': 'a',
+        'lat': 10,
+        'lng': 20
+    },
+    {
+        'name': 'b',
+        'lat': 11,
+        'lng': 21
+    },
+    {
+        'name': 'c',
+        'lat': 12,
+        'lng': 22
+    },
+]
+
+
+EXAMPLE_PARTIAL_WILDCARDS = {
+    'households': [
+        {
+            'address': '74 Whyioughta St.',
+            'name1': 'Larry',
+            'number1': 1,
+            'name2': 'Curly',
+            'number2': 2
+        },
+        {
+            'address': '1600 Ipoke Ave',
+            'name1': 'Moe',
+            'number1': 3
+        }
+    ]
 }
 
 EXAMPLE_SOURCE_DATA_ENTITY = {
     'villageID': 'somevillageID',
     'name': 'Person-Valid',
     'dob': '2000-01-01',
-    'id': 'somerandomID'
+    'id': 'somerandomID',
 }
 
 EXAMPLE_REQUIREMENTS = {
     'Person': {
         'id': ['#!uuid'],
-        '_rev': [],
         'name': ['data.people[*].name'],
         'dob': ['data.people[*].dob'],
-        'villageID': ['data.village']
+        'villageID': ['data.village'],
+    },
+}
+
+EXAMPLE_REQUIREMENTS_NESTED_SCHEMA = {
+    'Nested': {
+        'name': '[*].name',
+        'location.lat': '[*].lat',
+        'location.lng': '[*].lng'
     }
+}
+
+EXAMPLE_REQUIREMENTS_ARRAY_BASE = {
+    'Person': {
+        'id': ['#!uuid'],
+        'name': ['[*].name'],
+        'dob': ['[*].dob'],
+        'villageID': ['[*].village']
+    }
+}
+
+EXAMPLE_ENTITY_NESTED = {
+    'Nested': [
+        {
+            'name': 'a',
+            'location': {
+                'lat': 10,
+                'lng': 20
+            }
+        },
+        {
+            'name': 'b',
+            'location': {
+                'lat': 11,
+                'lng': 21
+            }
+        },
+        {
+            'name': 'c',
+            'location': {
+                'lat': 12,
+                'lng': 22
+            }
+        },
+    ]
 }
 
 EXAMPLE_ENTITY = {
@@ -165,30 +318,49 @@ EXAMPLE_ENTITY = {
             'id': '1d119b5d-ca71-4f03-a061-1481e1a694ea',
             'name': 'PersonA',
             'dob': '2000-01-01',
-            'villageID': 'somevillageID'
+            'villageID': 'somevillageID',
         },
         {
             'id': '5474b768-92d9-431f-bf90-3c6db1788109',
             'name': 'PersonB',
             'dob': '2001-01-01',
-            'villageID': 'somevillageID'
+            'villageID': 'somevillageID',
         },
         {
             'id': '64d30f72-c15e-4476-9522-d26cb036c73b',
-            'name': 'PersonC',
+            'name': ['FirstC', 'MiddleC', 'LastC'],
             'dob': '2002-01-01',
-            'villageID': 'somevillageID'
-        }
-    ]
+            'villageID': 'somevillageID',
+        },
+    ],
 }
 
-EXAMPLE_ENTITY_DEFINITION = {'Person': ['id', '_rev', 'name', 'dob', 'villageID']}
+EXAMPLE_ENTITY_DEFINITION = {
+    'Person': [
+        'id', '_rev', 'name', 'dob', 'villageID'
+    ]
+}
 
 EXAMPLE_FIELD_MAPPINGS = [
     ['#!uuid', 'Person.id'],
     ['data.village', 'Person.villageID'],
     ['data.people[*].name', 'Person.name'],
-    ['data.people[*].dob', 'Person.dob']]
+    ['data.people[*].dob', 'Person.dob'],
+]
+
+EXAMPLE_FIELD_MAPPINGS_EDGE = [
+    ['#!uuid', 'Person.id'],
+    ['[*].village', 'Person.villageID'],
+    ['$[*].name', 'Person.name'],
+    ['$.data.people[*].dob', 'Person.dob.nested']
+]
+
+EXAMPLE_FIELD_MAPPINGS_ARRAY_BASE = [
+    ['#!uuid', 'Person.id'],
+    ['[*].village', 'Person.villageID'],
+    ['[*].name', 'Person.name'],
+    ['[*].dob', 'Person.dob'],
+]
 
 SAMPLE_LOCATION_SCHEMA_DEFINITION = {
     'name': 'Location',
@@ -197,24 +369,24 @@ SAMPLE_LOCATION_SCHEMA_DEFINITION = {
         {
             'name': 'id',
             'type': 'string',
-            'jsonldPredicate': '@id'
+            'jsonldPredicate': '@id',
         },
         {
             'name': 'revision',
             'type': [
                 'null',
-                'string'
-            ]
+                'string',
+            ],
         },
         {
             'name': 'lat',
-            'type': 'float'
+            'type': 'float',
         },
         {
             'name': 'lng',
-            'type': 'float'
-        }
-    ]
+            'type': 'float',
+        },
+    ],
 }
 
 SAMPLE_HOUSEHOLD_SCHEMA_DEFINITION = {
@@ -224,126 +396,36 @@ SAMPLE_HOUSEHOLD_SCHEMA_DEFINITION = {
         {
             'name': 'id',
             'type': 'string',
-            'jsonldPredicate': '@id'
+            'jsonldPredicate': '@id',
         },
         {
             'name': 'revision',
             'type': [
                 'null',
-                'string'
-            ]
+                'string',
+            ],
         },
         {
             'name': 'locationID',
             'type': [
                 'null',
-                'string'
+                'string',
             ],
             'jsonldPredicate': {
                 '_id': 'http://ehealthafrica.org/#Location',
-                '_type': '@id'
-            }
-        }
-    ]
+                '_type': '@id',
+            },
+        },
+    ],
 }
 
 SAMPLE_LOCATION_DATA = {
+    'id': '00f3f1ae-abab-448b-b12f-f9c1839465ab',
     'lat': 6.951801,
     'lng': -2.7539059999999997,
-    'id': '00f3f1ae-abab-448b-b12f-f9c1839465ab'
 }
 
 SAMPLE_HOUSEHOLD_DATA = {
-    'locationID': '00f3f1ae-abab-448b-b12f-f9c1839465ab'
-}
-
-EXAMPLE_GAMETOKEN_SCHEMA = {
-    'fields': [
-      {
-        'jsonldPredicate': '@id',
-        'type': 'string',
-        'name': 'id',
-        'inherited_from': 'http://game.eha.org/BaseModel'
-      },
-      {
-        'type': 'string',
-        'name': 'rev',
-        'inherited_from': 'http://game.eha.org/BaseModel'
-      },
-      {
-        'doc': 'A description of the thing.',
-        'jsonldPredicate': 'http://game.eha.org/description',
-        'type': [
-          'null',
-          'string',
-          {
-            'items': 'string',
-            'type': 'array'
-          }
-        ],
-        'name': 'description'
-      },
-      {
-        'doc': 'A token value, true for positive, false for negative',
-        'jsonldPredicate': 'http://game.eha.org/tokenValue',
-        'type': [
-          'null',
-          'boolean'
-        ],
-        'name': 'tokenValue'
-      },
-      {
-        'doc': 'The time something was created',
-        'jsonldPredicate': 'http://game.eha.org/generationTime',
-        'type': [
-          'null',
-          'string',
-          {
-            'items': 'string',
-            'type': 'array'
-          }
-        ],
-        'name': 'generationTime'
-      },
-      {
-        'doc': 'A hash to maintain the integrity of generated tokens.',
-        'jsonldPredicate': 'http://game.eha.org/securityHash',
-        'type': [
-          'null',
-          'string',
-          {
-            'items': 'string',
-            'type': 'array'
-          }
-        ],
-        'name': 'securityHash'
-      },
-      {
-        'doc': 'A common name for this entity.',
-        'jsonldPredicate': 'http://game.eha.org/name',
-        'type': [
-          'null',
-          'string',
-          {
-            'items': 'string',
-            'type': 'array'
-          }
-        ],
-        'name': 'name'
-      }
-    ],
-    'type': 'record',
-    'name': 'http://game.eha.org/GameToken',
-    'extends': 'http://game.eha.org/BaseModel'
-  }
-
-EXAMPLE_VALID_PAYLOAD = {
-    'id': 'bdc639fe-b142-4587-b2e9-4dc1a51f9a5d',
-    'rev': 'some1srevision'
-}
-
-EXAMPLE_INVALID_PAYLOAD = {
     'id': 'bdc639fe-b142-4587-b2e9-4dc1a51f9a5c',
-    'rev': 'some1srevision',
-    'tokenValue': 'shouldhavebeenaboolean!'
+    'locationID': '00f3f1ae-abab-448b-b12f-f9c1839465ab',
 }

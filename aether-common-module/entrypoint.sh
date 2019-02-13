@@ -20,7 +20,6 @@
 #
 set -Eeuo pipefail
 
-
 # Define help message
 show_help() {
     echo """
@@ -45,7 +44,6 @@ test_flake8() {
 test_coverage() {
     export RCFILE=/code/conf/extras/coverage.rc
     export TESTING=true
-    export DEBUG=false
 
     coverage run    --rcfile="$RCFILE" manage.py test "${@:1}"
     coverage report --rcfile="$RCFILE"
@@ -56,15 +54,15 @@ test_coverage() {
 
 
 case "$1" in
-    bash )
+    bash)
         bash
     ;;
 
-    eval )
+    eval)
         eval "${@:2}"
     ;;
 
-    manage )
+    manage)
         ./manage.py "${@:2}"
     ;;
 
@@ -85,8 +83,9 @@ case "$1" in
         # test before building
         test_flake8
         test_coverage
+
         # remove previous build if needed
-        rm -rf dist
+        rm -rf dist/*
         rm -rf build
         rm -rf aether.common.egg-info
 

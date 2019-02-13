@@ -17,53 +17,42 @@
 # under the License.
 
 import os
+
+from io import open
 from setuptools import find_packages, setup
 
-# allow setup.py to be run from any path
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
+
+
+def read(f):
+    return open(f, 'r', encoding='utf-8').read()
+
 
 setup(
     name='aether.common',
     version='0.0.0',
     description='A python module with common aether functionality',
-    url='https://github.com/eHealthAfrica/aether/',
+    long_description=read('README.md'),
+    long_description_content_type='text/markdown',
 
+    url='https://github.com/eHealthAfrica/aether/',
     author='eHealth Africa',
     author_email='aether@ehealthafrica.org',
-
     license='Apache2 License',
 
-    packages=find_packages(),
-    python_requires='>=2.7, <4',
+    python_requires='>=3.6',
     install_requires=[
         'django<2',
-        'djangorestframework>=3.8<4',
-        'djangorestframework-csv>=2.0.0<3',
-        'django-cors-headers>=2.0.0<3',
+        'django-cors-headers',
+        'django-debug-toolbar',
+        'django-prometheus',
+        'django-storages',
+        'djangorestframework',
+        'psycopg2-binary',
+        'python-json-logger',
+        'requests',
     ],
 
-    classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Environment :: Web Environment',
-
-        'Framework :: Django',
-        'Framework :: Django :: 1.11',
-
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: Apache Software License',
-        'Operating System :: OS Independent',
-
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-
-        'Topic :: Software Development',
-        'Topic :: Software Development :: Libraries',
-        'Topic :: Software Development :: Libraries :: Python Modules',
-        'Topic :: Software Development :: Libraries :: Django Modules',
-        'Topic :: Software Development :: Libraries :: REST-Framework Modules',
-    ],
+    packages=find_packages(exclude=['*tests*']),
+    include_package_data=True,
 )

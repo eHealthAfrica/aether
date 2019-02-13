@@ -29,13 +29,18 @@ class ProjectAdmin(CompareVersionAdmin):
 
 class MappingAdmin(CompareVersionAdmin):
     form = forms.MappingForm
+    list_display = ('id', 'name', 'revision',)
+    readonly_fields = ('id',)
+
+
+class MappingSetAdmin(CompareVersionAdmin):
     list_display = ('id', 'name', 'revision', 'project',)
     readonly_fields = ('id',)
 
 
 class SubmissionAdmin(CompareVersionAdmin):
     form = forms.SubmissionForm
-    list_display = ('id', 'revision', 'mapping', 'map_revision',)
+    list_display = ('id', 'revision', 'mappingset',)
     readonly_fields = ('id',)
 
 
@@ -57,6 +62,7 @@ class EntityAdmin(CompareVersionAdmin):
 
 
 admin.site.register(models.Project, ProjectAdmin)
+admin.site.register(models.MappingSet, MappingSetAdmin)
 admin.site.register(models.Mapping, MappingAdmin)
 admin.site.register(models.Submission, SubmissionAdmin)
 admin.site.register(models.Schema, SchemaAdmin)

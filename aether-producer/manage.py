@@ -20,7 +20,6 @@
 
 import os
 import sys
-from time import sleep
 
 if __name__ == '__main__':
 
@@ -29,6 +28,7 @@ if __name__ == '__main__':
     except KeyError:
         print('PRODUCER_SETTINGS_FILE not set in environment.')
         sys.exit(1)
-    from producer import aether_producer
-    aether_producer.main(file_path=settings_path)
+
+    from producer import main
+    main()
     print("Started Producer with path %s" % settings_path)

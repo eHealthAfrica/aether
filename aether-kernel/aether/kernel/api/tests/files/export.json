@@ -1,0 +1,53 @@
+{
+  "id": "6b90cfb6-0ee6-4035-94bc-fb7f3e56d790",
+  "_id": "my-test-form",
+  "date": "2017-07-14T00:00:00",
+  "lang": ["EN", "FR"],
+  "meta": {
+    "instanceID": "uuid:cef69d9d-ebd9-408f-8bc6-9d418bb083d9",
+    "instanceName": "Something_that_is_not_null"
+  },
+  "name": "Name",
+  "image": null,
+  "number": 3,
+  "option": "a",
+  "region": null,
+  "country": "CM",
+  "endtime": "2017-07-14T16:38:47.151000+02:00",
+  "iterate": [
+    {
+      "index": 1,
+      "value": "One"
+    },
+    {
+      "index": 2,
+      "value": "Two"
+    },
+    {
+      "index": 3,
+      "value": "Three"
+    }
+  ],
+  "number2": 3.56,
+  "_version": "test-1.0",
+  "datetime": "2017-07-14T16:38:47.151000+02:00",
+  "deviceid": "355217062209730",
+  "location": {
+    "accuracy": 22,
+    "altitude": 108,
+    "latitude": 52.52469543,
+    "longitude": 13.39282687
+  },
+  "option_a": {
+    "choice_a": "A"
+  },
+  "option_b": null,
+  "starttime": "2017-07-14T16:37:08.966000+02:00",
+  "iterate_one": [
+    {
+      "item": "one"
+    }
+  ],
+  "iterate_none": [],
+  "location_none": null
+}

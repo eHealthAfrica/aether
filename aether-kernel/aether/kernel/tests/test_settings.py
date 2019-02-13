@@ -32,4 +32,11 @@ class SettingsTest(TestCase):
         self.assertEqual(settings.SECURE_PROXY_SSL_HEADER, None)
 
         self.assertEqual(settings.ROOT_URLCONF, 'aether.kernel.urls')
-        self.assertEqual(settings.WSGI_APPLICATION, 'aether.kernel.wsgi.application')
+
+        self.assertEqual(settings.EXPORT_CSV_ESCAPE, '\\')
+        self.assertEqual(settings.EXPORT_CSV_QUOTE, '"')
+        self.assertEqual(settings.EXPORT_CSV_SEPARATOR, ',')
+        self.assertEqual(settings.EXPORT_DATA_FORMAT, 'split')
+        self.assertEqual(settings.EXPORT_HEADER_CONTENT, 'labels')
+        self.assertEqual(settings.EXPORT_HEADER_SEPARATOR, '/')
+        self.assertEqual(settings.EXPORT_HEADER_SHORTEN, 'no')

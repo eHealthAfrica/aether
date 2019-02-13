@@ -20,13 +20,24 @@
 
 /* global describe, it, expect */
 import React from 'react'
-import { shallow } from 'enzyme'
+import { IntlProvider } from 'react-intl'
+import { Provider } from 'react-redux'
+import { mount } from 'enzyme'
 import AppLayout from './AppLayout'
-import PipelineApp from '../pipeline/PipelineApp'
+
+class Foo extends React.Component {
+  render () {
+    return 'foo'
+  }
+}
 
 describe('AppLayout', () => {
-  it('should load applayout with pipeline app', () => {
-    const component = shallow(<AppLayout app={PipelineApp} />)
-    expect(component.exists(<div class='pipelines-container show-index' />)).toBe(true)
+  it('should render the component wrapped by Redux Provider and IntlProvider', () => {
+    const component = mount(<AppLayout app={Foo} />)
+
+    expect(component.find(Provider).exists()).toBeTruthy()
+    expect(component.find(IntlProvider).exists()).toBeTruthy()
+    expect(component.find(Foo).exists()).toBeTruthy()
+    expect(component.text()).toContain('foo')
   })
 })

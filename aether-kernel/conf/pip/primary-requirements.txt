@@ -4,36 +4,67 @@
 #                                                                              #
 #                                 CHANGE ME !!!                                #
 #                                                                              #
-# Update me and then run 'docker-compose run kernel pip_freeze'                #
+# To check the outdated dependencies run                                       #
+#     docker-compose run --no-deps kernel eval pip list --outdated             #
+#                                                                              #
+# Update me and then run                                                       #
+#     docker-compose run --no-deps kernel pip_freeze                           #
 #                                                                              #
 ################################################################################
 
-django<2
-django-cas-ng
-django-cors-headers
-django-debug-toolbar
+
+# Main libraries
+
+# Aether common module, will also require:
+#   django < 2
+#   django-cors-headers
+#   django-debug-toolbar
+#   django-prometheus
+#   django-storages
+#   djangorestframework
+#   psycopg2-binary
+#   python-json-logger
+#   requests
+aether.common
+
+
+# Django specific
 django-filter
 django-model-utils
 django-reversion-compare
-django-ums-client
-djangorestframework
-djangorestframework-filters
 drf-dynamic-fields
-drf-openapi
-jsonpath_ng
-jsonschema
-psycopg2-binary
+drf_yasg
 pygments
 python-dateutil
-raven
-requests
+
+
+# AVRO + JSON libraries
+jsonpath_ng
+jsonschema
 spavro
-uwsgi
 
-# Aether common module
-aether.common
 
-# test libraries
+# Storage
+boto3
+google-cloud-storage
+
+
+# XLSX libraries
+openpyxl
+lxml
+
+
+# CAS libraries
+django-cas-ng<3.6.0  # breaking changes
+django-ums-client
+
+
+# Server side
+sentry-sdk             # Sentry
+uwsgi                  # Server behind NGINX
+
+
+# Test libraries
 coverage
 django-autofixture
 flake8

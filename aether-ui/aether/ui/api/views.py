@@ -16,76 +16,77 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.conf import settings
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
 
 from http import HTTPStatus
 
 from rest_framework import viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
 
-from aether.common.kernel import utils
+from aether.common.kernel.utils import get_kernel_server_url
 
-from . import models, serializers, utils as ui_utils
+from . import models, serializers, utils
 
 
 class PipelineViewSet(viewsets.ModelViewSet):
     queryset = models.Pipeline.objects.all()
     serializer_class = serializers.PipelineSerializer
     ordering = ('name',)
+    pagination_class = None
 
     @action(methods=['post'], detail=False)
     def fetch(self, request):
         '''
         This view gets kernel objects, transforms and loads into a pipeline
         '''
-        ui_utils.kernel_to_pipeline()
-        pipelines = models.Pipeline.objects.all()
-        serialized_data = serializers.PipelineSerializer(pipelines, context={'request': request}, many=True).data
-        return Response(serialized_data, status=HTTPStatus.OK)
+
+        utils.kernel_to_pipeline()
+        return self.list(request)
 
     @action(methods=['post'], detail=True)
     def publish(self, request, pk=None):
         '''
-        This view transform the supplied pipeline to kernal models,
-        publish and update the pipeline with related kernel model ids.
+        This view transforms the supplied pipeline to kernel artefacts,
+        publish and update the pipeline/contract with related kernel artefacts ids.
         '''
-        project_name = request.data.get('project_name', 'Aux')
-        overwrite = request.data.get('overwrite', False)
-        outcome = {
-            'successful': [],
-            'error': [],
-            'exists': []
-        }
-        try:
-            pipeline = get_object_or_404(models.Pipeline, pk=pk)
-        except Exception as e:
-            outcome['error'].append(str(e))
-            return Response(outcome, status=HTTPStatus.BAD_REQUEST)
-        outcome = ui_utils.publish_preflight(pipeline, project_name, outcome)
 
-        if outcome['error']:
+        project_name = request.data.get('project_name', settings.APP_NAME)
+        overwrite = request.data.get('overwrite', False)
+        contract_id = request.data.get('contract_id')
+        objects_to_overwrite = request.data.get('ids', {})
+
+        try:
+            contract = get_object_or_404(models.Contract, pk=contract_id)
+        except Exception as e:
+            return Response({'error': [str(e)]}, status=HTTPStatus.BAD_REQUEST)
+
+        outcome = utils.publish_preflight(contract)
+        if len(outcome.get('error', [])):
             return Response(outcome, status=HTTPStatus.BAD_REQUEST)
-        if outcome['exists']:
+
+        publish_result = {}
+        if len(outcome.get('exists', [])):
             if overwrite:
-                outcome = ui_utils.publish_pipeline(pipeline, project_name, True)
+                publish_result = utils.publish_contract(project_name, contract, objects_to_overwrite)
             else:
                 return Response(outcome, status=HTTPStatus.BAD_REQUEST)
         else:
-            outcome = ui_utils.publish_pipeline(pipeline, project_name)
+            publish_result = utils.publish_contract(project_name, contract)
 
-        if outcome['error']:
-            return Response(outcome, status=HTTPStatus.BAD_REQUEST)
-        else:
-            pipeline.published_on = timezone.now()
-            pipeline.save()
-            serialized_data = serializers.PipelineSerializer(pipeline, context={'request': request}).data
-            outcome['pipeline'] = serialized_data
-            return Response(outcome, status=HTTPStatus.OK)
+        if 'error' in publish_result:
+            return Response(publish_result, status=HTTPStatus.BAD_REQUEST)
+
+        return self.retrieve(request, pk)
+
+
+class ContractViewSet(viewsets.ModelViewSet):
+    queryset = models.Contract.objects.all()
+    serializer_class = serializers.ContractSerializer
+    ordering = ('name',)
 
 
 @api_view(['GET'])
 def get_kernel_url(request):
-    return Response(utils.get_kernel_server_url())
+    return Response(get_kernel_server_url())

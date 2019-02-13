@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import json
 import mock
 
 from django.contrib.auth import get_user_model
@@ -41,41 +42,41 @@ class KernelViewsTests(CustomTestCase):
         self.client.logout()
 
     def test__project_propagation(self):
-        url_404 = reverse('project-propagates', kwargs={'pk': self.helper_create_uuid()})
+        url_404 = reverse('project-propagate', kwargs={'pk': self.helper_create_uuid()})
         response = self.client.patch(url_404)
         self.assertEqual(response.status_code, 404)
 
         project = self.helper_create_project()
-        url = reverse('project-propagates', kwargs={'pk': project.pk})
+        url = reverse('project-propagate', kwargs={'pk': project.pk})
 
         with mock.patch('aether.odk.api.views.propagate_kernel_project',
                         return_value=True) as mock_kernel:
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 200)
-            mock_kernel.assert_called_once()
+            mock_kernel.assert_called_once_with(project=project, family=None)
 
         with mock.patch('aether.odk.api.views.propagate_kernel_project',
                         side_effect=[KernelPropagationError]) as mock_kernel:
-            response = self.client.patch(url)
+            response = self.client.patch(url, json.dumps({'family': 'testing'}), content_type='application/json')
             self.assertEqual(response.status_code, 400)
-            mock_kernel.assert_called_once()
+            mock_kernel.assert_called_once_with(project=project, family='testing')
 
     def test__xform_propagation(self):
-        url_404 = reverse('xform-propagates', kwargs={'pk': 0})
+        url_404 = reverse('xform-propagate', kwargs={'pk': 0})
         response = self.client.patch(url_404)
         self.assertEqual(response.status_code, 404)
 
         xform = self.helper_create_xform()
-        url = reverse('xform-propagates', kwargs={'pk': xform.pk})
+        url = reverse('xform-propagate', kwargs={'pk': xform.pk})
 
         with mock.patch('aether.odk.api.views.propagate_kernel_artefacts',
                         return_value=True) as mock_kernel:
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 200)
-            mock_kernel.assert_called_once()
+            mock_kernel.assert_called_once_with(xform=xform, family=None)
 
         with mock.patch('aether.odk.api.views.propagate_kernel_artefacts',
                         side_effect=[KernelPropagationError]) as mock_kernel:
-            response = self.client.patch(url)
+            response = self.client.patch(url, json.dumps({'family': 'testing'}), content_type='application/json')
             self.assertEqual(response.status_code, 400)
-            mock_kernel.assert_called_once()
+            mock_kernel.assert_called_once_with(xform=xform, family='testing')

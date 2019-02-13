@@ -16,10 +16,29 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
+
 from rest_framework import serializers
 
 from . import models
+
+
+class ContractSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        read_only=True,
+        view_name='contract-detail',
+    )
+
+    pipeline_url = serializers.HyperlinkedRelatedField(
+        read_only=True,
+        source='pipeline',
+        view_name='pipeline-detail',
+    )
+
+    class Meta:
+        model = models.Contract
+        fields = '__all__'
 
 
 class PipelineSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
@@ -27,6 +46,14 @@ class PipelineSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         read_only=True,
         view_name='pipeline-detail',
     )
+
+    contracts = ContractSerializer(many=True, read_only=True)
+
+    def update(self, instance, validated_data):
+        if instance.contracts.filter(is_read_only=True).count() > 0:
+            raise serializers.ValidationError({'description': _('Input is readonly')})
+
+        return super(PipelineSerializer, self).update(instance, validated_data)
 
     class Meta:
         model = models.Pipeline

@@ -1,0 +1,91 @@
+{
+  "name": "aether-ui",
+  "version": "0.0.0",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "eHealth Africa",
+    "email": "info@ehealthafrica.org",
+    "url": "https://ehealthafrica.org"
+  },
+  "engines": {
+    "node": ">=6.0.0",
+    "npm": ">=3.0.0"
+  },
+  "scripts": {
+    "test-lint-js": "standard './apps/**/*.js*'",
+    "test-lint-scss": "sass-lint --verbose",
+    "test-lint": "npm run test-lint-scss && npm run test-lint-js",
+    "test-js": "jest --expand",
+    "test-js-verbose": "TERM=dumb && jest --expand --colors --maxWorkers=1",
+    "test": "npm run test-lint && npm run test-js",
+    "webpack": "webpack --config ./conf/webpack.prod.js",
+    "webpack-server": "node ./conf/webpack.server.js"
+  },
+  "dependencies": {
+    "avsc": "~5.4.0",
+    "bootstrap": "~4.2.1",
+    "html5shiv": "~3.7.0",
+    "jquery": "~3.3.0",
+    "moment": "~2.24.0",
+    "popper.js": "~1.14.0",
+    "react": "~16.7.0",
+    "react-dom": "~16.7.0",
+    "react-intl": "~2.8.0",
+    "react-redux": "~5.1.0",
+    "react-router-dom": "~4.3.0",
+    "redux": "~4.0.0",
+    "redux-thunk": "~2.3.0",
+    "whatwg-fetch": "~3.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "~7.2.0",
+    "@babel/preset-env": "~7.3.0",
+    "@babel/preset-react": "~7.0.0",
+    "babel-core": "~7.0.0-bridge.0",
+    "babel-loader": "~8.0.0",
+    "css-loader": "~2.1.0",
+    "enzyme": "~3.8.0",
+    "enzyme-adapter-react-16": "~1.8.0",
+    "enzyme-react-intl": "~2.0.0",
+    "jest": "~23.6.0",
+    "mini-css-extract-plugin": "~0.5.0",
+    "nock": "~10.0.0",
+    "node-fetch": "~2.3.0",
+    "node-sass": "~4.11.0",
+    "react-hot-loader": "~4.3.0",
+    "redux-devtools-extension": "~2.13.0",
+    "sass-lint": "~1.12.0",
+    "sass-loader": "~7.1.0",
+    "standard": "~12.0.0",
+    "style-loader": "~0.23.0",
+    "terser": "~3.14.0",
+    "webpack": "~4.29.0",
+    "webpack-bundle-tracker": "~0.4.2-beta",
+    "webpack-cli": "~3.2.0",
+    "webpack-dev-server": "~3.1.0"
+  },
+  "babel": {
+    "presets": [
+      "@babel/preset-env",
+      "@babel/preset-react"
+    ],
+    "plugins": [
+      "react-hot-loader/babel"
+    ]
+  },
+  "sasslintConfig": "./conf/sass-lint.yml",
+  "standard": {
+    "verbose": true
+  },
+  "jest": {
+    "collectCoverage": true,
+    "coverageDirectory": "<rootDir>/tests/.coverage",
+    "rootDir": ".",
+    "setupFiles": [
+      "<rootDir>/tests/jest.setup.jsx"
+    ],
+    "testEnvironment": "<rootDir>/tests/ui-tests-environment",
+    "testURL": "http://localhost/",
+    "verbose": true
+  }
+}

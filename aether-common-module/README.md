@@ -15,9 +15,8 @@ Includes the methods that allow:
 
 ```bash
 # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
-./manage.py setup_admin -p=$ADMIN_PASSWORD -t=$ADMIN_TOKEN
+./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD -t=$ADMIN_TOKEN
 ```
-
 
 #### To create "users" with auth token via POST request.
 
@@ -29,7 +28,7 @@ from aether.common.auth.views import obtain_auth_token
 
 
 urlpatterns = [
-    url(r'^get-token$', obtain_auth_token, name='token'),
+    url(r'^get-token$', view=obtain_auth_token, name='token'),
 ]
 ```
 
@@ -43,12 +42,20 @@ Include the view entry in the `urls.py` file.
 
 ```python
 from django.conf.urls import url
-from aether.common.health.views import health
+from aether.common.health.views import health, check_db, check_app
 
 
 urlpatterns = [
-    url('^health$', health, name='health'),
+    url(r'^health$', view=health, name='health'),           # checks if django responds
+    url(r'^check-db$', view=check_db, name='check-db'),     # checks if the db responds
+    url(r'^check-app$', view=check_app, name='check-app'),  # returns the app version
 ]
+```
+
+#### To check if an URL is reachable via command.
+
+```bash
+./manage.py check_url -u=http://my-server/url/to/check
 ```
 
 ### Kernel section
@@ -65,7 +72,7 @@ from aether.common.kernel.views import check_kernel
 
 
 urlpatterns = [
-    url(r'^check-kernel$', check_kernel, name='check-kernel'),
+    url(r'^check-kernel$', view=check_kernel, name='check-kernel'),
 ]
 ```
 
@@ -78,10 +85,10 @@ Possible responses:
 - `Always Look on the Bright Side of Life!!!` ✘
 - `Brought to you by eHealth Africa - good tech for hard places` ✔
 
-#### To make submissions linked to an existing mapping.
+#### To push submissions linked to an existing project artefact (mapping set).
 
 ```python
-aether.common.kernel.utils.submit_to_kernel(submission, mapping_id, submission_id=None)
+aether.common.kernel.utils.submit_to_kernel(submission, mappingset_id, submission_id=None)
 ```
 
 ### Conf section
@@ -91,9 +98,6 @@ aether.common.kernel.utils.submit_to_kernel(submission, mapping_id, submission_i
 Import this snippet in the `settings.py` file to have the common app settings.
 
 ```python
-# Common settings
-# ------------------------------------------------------------------------------
-
 from aether.common.conf.settings import *  # noqa
 ```
 
@@ -114,12 +118,24 @@ urlpatterns = generate_urlpatterns(token=True, kernel=True) + [
 Default URLs included:
 
   - the `/health` URL. Always responds with `200` status and an empty JSON object `{}`.
+  - the `/check-db` URL. Responds with `500` status if the database is not available.
+  - the `/check-app` URL. Responds with current app version and more.
   - the `/admin` section URLs.
-  - the `/accounts` URLs, checks if the REST Framework ones or the UMS ones.
+  - the `/accounts` URLs, checks if the REST Framework ones, using the templates
+    indicated in `LOGIN_TEMPLATE` and `LOGGED_OUT_TEMPLATE` environment variables,
+    or the CAS ones.
   - the `debug toolbar` URLs only in DEBUG mode.
-  - the `/media` URLS. The endpoint gives protected access (only to logged in users) to media files.
-  - the `/media-basic` URLS. The endpoint gives protected access
-    (only logged in users with basic authentication) to media files.
+
+
+Based on `settings`:
+
+  - if `DJANGO_STORAGE_BACKEND` is `filesystem` then:
+
+    - the `/media/<path>` URLs. The endpoint gives protected access
+      (only logged in users) to media files.
+
+    - the `/media-basic/<path>` URLs. The endpoint gives protected access
+      (only logged in users with basic authentication) to media files.
 
 Based on the arguments:
 
@@ -141,11 +157,17 @@ Execute the following command in this folder.
 python setup.py bdist_wheel --universal
 ```
 
+or to ease the process the build is also run within a docker container.
+
+```bash
+docker-compose run common build
+```
+
 
 ## How to test the module
 
 To ease the process the tests are run within a docker container.
 
 ```bash
-docker-compose -f docker-compose-common.yml run common test
+docker-compose run common test
 ```

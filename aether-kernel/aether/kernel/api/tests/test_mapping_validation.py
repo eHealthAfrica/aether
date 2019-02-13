@@ -17,24 +17,76 @@
 # under the License.
 
 from django.test import TestCase
-from .. import mapping_validation
+
+from aether.kernel.api import mapping_validation
+
+from . import NESTED_ARRAY_SCHEMA
 
 valid_schemas = {
+    'Nested': NESTED_ARRAY_SCHEMA,
     'Person': {
         'name': 'Person',
         'type': 'record',
-        'fields': [
-            {
+        'namespace': 'test.Person',
+        'fields': [{
                 'name': 'firstName',
-                'type': 'string'
+                'type': 'string',
+                'namespace': 'Person'
             },
             {
                 'name': 'lastName',
-                'type': 'string'
+                'type': 'string',
+                'namespace': 'Person'
             },
             {
                 'name': 'age',
-                'type': 'int'
+                'type': 'int',
+                'namespace': 'Person'
+            },
+            {
+                'name': 'location',
+                'namespace': 'Person',
+                'type': {
+                    'name': 'location',
+                    'type': 'record',
+                    'namespace': 'Person',
+                    'fields': [
+                        {
+                            'name': 'lat',
+                            'type': 'int',
+                            'namespace': 'Person.location'
+                        },
+                        {
+                            'name': 'lng',
+                            'type': 'int',
+                            'namespace': 'Person.location'
+                        }
+                    ]
+                }
+            },
+            {
+                'name': 'optional_location',
+                'namespace': 'Person',
+                'type': [
+                    'null',
+                    {
+                        'name': 'optional_location',
+                        'type': 'record',
+                        'namespace': 'Person',
+                        'fields': [
+                            {
+                                'name': 'lat',
+                                'type': 'int',
+                                'namespace': 'Person.optional_location'
+                            },
+                            {
+                                'name': 'lng',
+                                'type': 'int',
+                                'namespace': 'Person.optional_location'
+                            }
+                        ]
+                    }
+                ]
             }
         ]
     }
@@ -83,9 +135,33 @@ class TestMappingValidation(TestCase):
         result = mapping_validation.validate_setter(valid_schemas, path)
         self.assertEquals(expected, result)
 
-    def test_validate_setter__failure__invalid_path(self):
+    def test_validate_setter__success__optional_nested(self):
+        path = 'Person.optional_location.lat'
+        expected = mapping_validation.Success(path, [])
+        result = mapping_validation.validate_setter(valid_schemas, path)
+        self.assertEquals(expected, result)
+
+    def test_validate_setter__success__set_array(self):
+        path = 'Nested.geom.coordinates'
+        expected = mapping_validation.Success(path, [])
+        result = mapping_validation.validate_setter(valid_schemas, path)
+        self.assertEquals(expected, result)
+
+    def test_validate_setter__success__set_array_at_idndex(self):
+        path = 'Nested.geom.coordinates[0]'
+        expected = mapping_validation.Success(path, [])
+        result = mapping_validation.validate_setter(valid_schemas, path)
+        self.assertEquals(expected, result)
+
+    def test_validate_setter__success__mandatory_nested(self):
+        path = 'Person.location.lat'
+        expected = mapping_validation.Success(path, [])
+        result = mapping_validation.validate_setter(valid_schemas, path)
+        self.assertEquals(expected, result)
+
+    def test_validate_setter__failure__missing_schema(self):
         path = 'a.b.c'
-        description = mapping_validation.INVALID_PATH
+        description = mapping_validation.no_schema('a')
         expected = mapping_validation.Failure(path, description)
         result = mapping_validation.validate_setter(valid_schemas, path)
         self.assertEquals(expected, result)
@@ -95,6 +171,20 @@ class TestMappingValidation(TestCase):
         description = mapping_validation.invalid_schema('Person')
         expected = mapping_validation.Failure(path, description)
         result = mapping_validation.validate_setter(invalid_schemas, path)
+        self.assertEquals(expected, result)
+
+    def test_validate_setter__failure__mandatory_nested(self):
+        path = 'Person.location.lat.missing'
+        description = mapping_validation.NO_MATCH
+        expected = mapping_validation.Failure(path, description)
+        result = mapping_validation.validate_setter(valid_schemas, path)
+        self.assertEquals(expected, result)
+
+    def test_validate_setter__failure__optional_nested(self):
+        path = 'Person.optional_location.lat.missing'
+        description = mapping_validation.NO_MATCH
+        expected = mapping_validation.Failure(path, description)
+        result = mapping_validation.validate_setter(valid_schemas, path)
         self.assertEquals(expected, result)
 
     def test_validate_setter__failure__no_match(self):
@@ -157,7 +247,7 @@ class TestMappingValidation(TestCase):
             ),
             mapping_validation.Failure(
                 path=mapping_definition['mapping'][1][1],
-                description=mapping_validation.INVALID_PATH,
+                description=mapping_validation.no_schema('Test-2'),
             ),
         ]
         result = mapping_validation.validate_mappings(

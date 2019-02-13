@@ -18,87 +18,15 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-set -Eeuox pipefail
-
-function kill_all() {
-  echo "_____________________________________________ Killing containers"
-  ./scripts/kill_all.sh
-  $DC_TEST down
-}
-
-function build_container() {
-  echo "_____________________________________________ Building $1 container"
-  $DC_TEST build "$1"-test
-}
-
-function prepare_container() {
-  echo "_____________________________________________ Preparing $1 container"
-  build_container $1
-  $DC_TEST run "$1"-test setuplocaldb
-  echo "_____________________________________________ $1 ready!"
-}
-
-function prepare_and_test_container() {
-  echo "_____________________________________________ Starting $1 tasks"
-  prepare_container $1
-  $DC_TEST run "$1"-test test
-  echo "_____________________________________________ $1 tasks done"
-}
-
-DC_TEST="docker-compose -f docker-compose-test.yml"
+set -Eeuo pipefail
 
 echo "_____________________________________________ TESTING"
 
-kill_all
+containers=( kernel client ui odk couchdb-sync )
 
-
-echo "_____________________________________________ Common module"
-./scripts/build_common_and_distribute.sh
-
-echo "_____________________________________________ Aether utils"
-./scripts/build_aether_utils_and_distribute.sh
-
-
-echo "_____________________________________________ Starting database"
-$DC_TEST up -d db-test
-
-
-# test and start a clean KERNEL TEST container
-prepare_and_test_container kernel
-
-
-echo "_____________________________________________ Starting kernel"
-$DC_TEST up -d kernel-test
-
-
-# test a clean CLIENT TEST container
-prepare_and_test_container client
-
-
-# test a clean ODK TEST container
-prepare_and_test_container odk
-
-
-# test a clean UI TEST container
-$DC_TEST build ui-webpack-test
-$DC_TEST run   ui-webpack-test test
-$DC_TEST run   ui-webpack-test build
-prepare_and_test_container ui
-
-
-echo "_____________________________________________ Starting auxiliary databases"
-$DC_TEST up -d couchdb-test redis-test
-
-echo "_____________________________________________ Loading test project in kernel"
-$DC_TEST run kernel-test manage loaddata aether/kernel/api/tests/fixtures/project.json
-
-# test a clean SYNC TEST container
-prepare_and_test_container couchdb-sync
-
-# clean start for the next bunch of tests
-kill_all
-
-# execute INTEGRATION TEST
-./scripts/test_integration.sh
+for container in "${containers[@]}"
+do
+    ./scripts/test_container.sh $container
+done
 
 echo "_____________________________________________ END"

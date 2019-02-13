@@ -20,24 +20,49 @@
 #
 set -Eeuo pipefail
 
-
 # Define help message
 show_help() {
     echo """
     Commands
     ----------------------------------------------------------------------------
-    bash          : run bash
-    eval          : eval shell command
-    manage        : invoke manage.py commands
+    bash              : run bash
+    eval              : eval shell command
 
-    pip_freeze    : freeze pip dependencies and write to requirements.txt
+    flake8            : check against code style guidelines
+    pip_freeze        : freeze pip dependencies and write to requirements.txt
 
-    start         : start in normal mode
-    start_dev     : start for test/dev
-    start_test    : start for test/dev
+    start             : start producer with settings from file at environment path: PRODUCER_SETTINGS_FILE
+
+    test              : run unit and integration tests.
+    test_integration  : run integration tests
+    test_unit         : run unit tests
     """
 }
 
+test_flake8() {
+    flake8 /code/. --config=/code/setup.cfg
+}
+
+test_unit() {
+    pytest -m unit
+    cat /code/conf/extras/good_job.txt
+    rm -R .pytest_cache
+    rm -rf tests/__pycache__
+}
+
+test_integration() {
+    pytest -m integration
+    cat /code/conf/extras/good_job.txt
+    rm -R .pytest_cache
+    rm -rf tests/__pycache__
+}
+
+test_all() {
+    pytest
+    cat /code/conf/extras/good_job.txt
+    rm -R .pytest_cache
+    rm -rf tests/__pycache__
+}
 
 case "$1" in
     bash )
@@ -48,16 +73,16 @@ case "$1" in
         eval "${@:2}"
     ;;
 
-    manage )
-        ./manage.py "${@:2}"
+    flake8 )
+        test_flake8
     ;;
-
+    
     pip_freeze )
-        pip install virtualenv
+        pip install -q virtualenv
         rm -rf /tmp/env
 
         virtualenv -p python3 /tmp/env/
-        /tmp/env/bin/pip install -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
+        /tmp/env/bin/pip install -q -f ./conf/pip/dependencies -r ./conf/pip/primary-requirements.txt --upgrade
 
         cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
         /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
@@ -68,14 +93,18 @@ case "$1" in
         ./manage.py
     ;;
 
-    start_dev )
-        ./manage.py test
+    test_unit )
+        test_unit
     ;;
 
-    start_test )
-        ./manage.py test
+    test_integration )
+        test_integration
     ;;
 
+    test )
+        test_flake8
+        test_all
+    ;;
 
     help)
         show_help

@@ -34,17 +34,28 @@
 }
 
 @mixin logo-ui {
-  background: url('/static/images/aux-icon-white.png');
+  background: url('/static/aether/images/aether-white.png');
 }
 
 @mixin logo-eha {
-  background: url('/static/images/eHA-icon.svg');
+  background: url('/static/aether/images/eHA-icon.svg');
 }
 
 @mixin bg-gradient {
   background: $action-color-b;
   background-image: linear-gradient(to right, rgba($purple, 0), $purple);
   color: $white;
+}
+
+@mixin stripy($bg, $stripe) {
+  background: repeating-linear-gradient(
+    -45deg,
+    $stripe,
+    $stripe 10%,
+    $bg 10%,
+    $bg 50%,
+    $stripe 50%) top left fixed;
+  background-size: 8px 8px;
 }
 
 @mixin shadow-flat-dark {

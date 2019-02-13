@@ -21,12 +21,11 @@ class InfoButton extends Component {
   }
 
   render () {
-    const { kernel_refs: kernelRefs } = this.props.pipeline
-    const submissionUrl = kernelRefs && kernelRefs.mapping &&
-    `${this.props.kernelUrl}/submissions/?mapping=${kernelRefs.mapping}`
+    const { mappingset } = this.props.pipeline
+    const submissionUrl = mappingset &&
+    `${this.props.kernelUrl}/submissions/?mappingset=${mappingset}`
     const sampleData = {
-      mapping: kernelRefs && kernelRefs.mapping,
-      map_revision: generateGUID(),
+      mappingset: mappingset,
       revision: generateGUID(),
       payload: this.props.pipeline.input || {}
     }

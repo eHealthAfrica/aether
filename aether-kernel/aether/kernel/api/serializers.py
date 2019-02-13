@@ -18,22 +18,25 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from rest_framework import serializers
-from rest_framework.reverse import reverse
-from drf_dynamic_fields import DynamicFieldsMixin
-
-from . import constants, models, utils, validators
-
 import urllib
 
+from django.utils.translation import ugettext as _
+from drf_dynamic_fields import DynamicFieldsMixin
+from rest_framework import serializers
+from rest_framework.reverse import reverse
 
-m_options = constants.MergeOptions
+from .constants import MergeOptions as MERGE_OPTIONS
+from .entity_extractor import run_entity_extraction, ENTITY_EXTRACTION_ERRORS
+
+from . import models, utils, validators
+
 
 MERGE_CHOICES = (
-    (m_options.overwrite.value, 'Overwrite (Do not merge)'),
-    (m_options.lww.value, 'Last Write Wins (Target to Source)'),
-    (m_options.fww.value, 'First Write Wins (Source to Target)')
+    (MERGE_OPTIONS.overwrite.value, _('Overwrite (Do not merge)')),
+    (MERGE_OPTIONS.lww.value, _('Last Write Wins (Target to Source)')),
+    (MERGE_OPTIONS.fww.value, _('First Write Wins (Source to Target)'))
 )
+DEFAULT_MERGE = MERGE_OPTIONS.overwrite.value
 
 
 class FilteredHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
@@ -75,11 +78,11 @@ class ProjectSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         read_only=True,
         view_name='project-detail',
     )
-    mappings_url = FilteredHyperlinkedRelatedField(
+    mappingset_url = FilteredHyperlinkedRelatedField(
         lookup_field='project',
         read_only=True,
-        source='mappings',
-        view_name='mapping-list',
+        source='mappingsets',
+        view_name='mappingset-list',
     )
     projectschemas_url = FilteredHyperlinkedRelatedField(
         lookup_field='project',
@@ -98,30 +101,55 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         read_only=True,
         view_name='mapping-detail',
     )
-    project_url = serializers.HyperlinkedRelatedField(
+    mappingset_url = serializers.HyperlinkedRelatedField(
         read_only=True,
-        source='project',
-        view_name='project-detail',
-    )
-    submissions_url = FilteredHyperlinkedRelatedField(
-        lookup_field='mapping',
-        read_only=True,
-        source='submissions',
-        view_name='submission-list',
+        source='mappingset',
+        view_name='mappingset-detail',
     )
 
-    def validate_definition(self, value):
-        validators.validate_mapping_definition(value)
-        return value
+    projectschemas_url = FilteredHyperlinkedRelatedField(
+        lookup_field='mapping',
+        read_only=True,
+        source='projectschemas',
+        view_name='projectschema-list',
+    )
 
     class Meta:
         model = models.Mapping
         fields = '__all__'
 
 
+class MappingSetSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        read_only=True,
+        view_name='mappingset-detail',
+    )
+    project_url = serializers.HyperlinkedRelatedField(
+        read_only=True,
+        source='project',
+        view_name='project-detail',
+    )
+    mappings_url = FilteredHyperlinkedRelatedField(
+        lookup_field='mappingset',
+        read_only=True,
+        source='mappings',
+        view_name='mapping-list',
+    )
+    submissions_url = FilteredHyperlinkedRelatedField(
+        lookup_field='mappingset',
+        read_only=True,
+        source='submissions',
+        view_name='submission-list',
+    )
+
+    class Meta:
+        model = models.MappingSet
+        fields = '__all__'
+
+
 class AttachmentSerializerNested(DynamicFieldsMixin, serializers.ModelSerializer):
     name = serializers.CharField(read_only=True)
-    url = serializers.CharField(read_only=True, source='attachment_path')
+    url = serializers.CharField(read_only=True, source='attachment_file_url')
 
     class Meta:
         model = models.Attachment
@@ -133,9 +161,14 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='submission-detail',
         read_only=True
     )
-    mapping_url = serializers.HyperlinkedRelatedField(
-        view_name='mapping-detail',
-        source='mapping',
+    project_url = serializers.HyperlinkedRelatedField(
+        view_name='project-detail',
+        source='project',
+        read_only=True,
+    )
+    mappingset_url = serializers.HyperlinkedRelatedField(
+        view_name='mappingset-detail',
+        source='mappingset',
         read_only=True,
     )
     entities_url = FilteredHyperlinkedRelatedField(
@@ -156,14 +189,14 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     attachments = AttachmentSerializerNested(many=True, read_only=True)
 
     def create(self, validated_data):
+        instance = super(SubmissionSerializer, self).create(validated_data)
         try:
-            submission = models.Submission(**validated_data)
-            utils.run_entity_extraction(submission)
-            return submission
+            run_entity_extraction(instance)
         except Exception as e:
-            raise serializers.ValidationError({
-                'description': 'Submission validation failed >> ' + str(e)
-            })
+            instance.payload[ENTITY_EXTRACTION_ERRORS] = instance.payload.get(ENTITY_EXTRACTION_ERRORS, [])
+            instance.payload[ENTITY_EXTRACTION_ERRORS] += [str(e)]
+            instance.save()
+        return instance
 
     class Meta:
         model = models.Submission
@@ -175,6 +208,7 @@ class AttachmentSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     submission_revision = serializers.CharField(allow_null=True, default=None)
 
     url = serializers.HyperlinkedIdentityField('attachment-detail', read_only=True)
+    attachment_file_url = serializers.CharField(read_only=True)
     submission_url = serializers.HyperlinkedRelatedField(
         'submission-detail',
         source='submission',
@@ -197,11 +231,6 @@ class SchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         source='projectschemas',
         view_name='projectschema-list',
     )
-
-    def validate_definition(self, value):
-        validators.validate_avro_schema(value)
-        validators.validate_id_field(value)
-        return value
 
     class Meta:
         model = models.Schema
@@ -229,6 +258,12 @@ class ProjectSchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         source='entities',
         view_name='entity-list',
     )
+    mappings_url = FilteredHyperlinkedRelatedField(
+        lookup_field='projectschema',
+        read_only=True,
+        source='mappings',
+        view_name='mapping-list',
+    )
 
     class Meta:
         model = models.ProjectSchema
@@ -236,7 +271,6 @@ class ProjectSchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 
 class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    lookup_field = 'merge'
     url = serializers.HyperlinkedIdentityField(
         view_name='entity-detail',
         read_only=True
@@ -246,8 +280,17 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         source='projectschema',
         view_name='projectschema-detail',
     )
-    merge = serializers.ChoiceField(MERGE_CHOICES, default=m_options.overwrite.value)
-    resolved = serializers.JSONField(default={})
+    submission_url = serializers.HyperlinkedRelatedField(
+        read_only=True,
+        source='submission',
+        view_name='submission-detail',
+    )
+
+    # this field is used to update existing entities, indicates the MERGE strategy
+    merge = serializers.ChoiceField(write_only=True, choices=MERGE_CHOICES, default=DEFAULT_MERGE)
+
+    # this field is used to include the linked nested entities
+    resolved = serializers.JSONField(read_only=True, default={})
 
     # this will return all linked attachment files
     # (name, relative url) in one request call
@@ -258,82 +301,25 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     )
 
     def create(self, validated_data):
+        # remove helper field
+        validated_data.pop('merge')
         try:
-            utils.validate_payload(validated_data['projectschema'].schema.definition, validated_data['payload'])
-        except Exception as schemaError:
-            raise serializers.ValidationError(schemaError)
-        try:
-            entity = models.Entity(
-                payload=validated_data.pop('payload'),
-                status=validated_data.pop('status'),
-                projectschema=validated_data.pop('projectschema'),
-            )
-            if 'submission' in validated_data:
-                entity.submission = validated_data.pop('submission')
-            if 'id' in validated_data:
-                entity.id = validated_data.pop('id')
-            entity.payload['_id'] = str(entity.id)
-            entity.save()
-            return entity
+            return super(EntitySerializer, self).create(validated_data)
         except Exception as e:
-            raise serializers.ValidationError({
-                'description': 'Submission validation failed >> ' + str(e)
-            })
+            raise serializers.ValidationError(e)
 
     def update(self, instance, validated_data):
+        # find out payload
+        validated_data['payload'] = utils.merge_objects(
+            source=instance.payload,
+            target=validated_data.get('payload', {}),
+            direction=validated_data.pop('merge', DEFAULT_MERGE),
+        )
+
         try:
-            if 'submission' in validated_data and validated_data['submission'] is not None:
-                instance.submission = validated_data.pop('submission')
-            if 'status' in validated_data:
-                instance.status = validated_data.pop('status')
-            if 'projectschema' in validated_data and validated_data['projectschema'] is not None:
-                instance.projectschema = validated_data.pop('projectschema')
-            else:
-                raise serializers.ValidationError({
-                    'description': 'Project schema must be specified'
-                })
-            if 'payload' in validated_data:
-                target_payload = validated_data.pop('payload')
-            else:
-                target_payload = {}
-            merge_value = None
-            if 'merge' in self.context['request'].query_params:
-                merge_value = self.context['request'].query_params['merge']
-            elif 'merge' in validated_data:
-                merge_value = validated_data.pop('merge')
-            if (merge_value == m_options.fww.value
-                    or merge_value == m_options.lww.value):
-                instance.payload = \
-                    utils.merge_objects(instance.payload, target_payload, merge_value)
-            else:
-                instance.payload = target_payload
-            try:
-                utils.validate_payload(instance.projectschema.schema.definition, instance.payload)
-            except Exception as schemaError:
-                raise serializers.ValidationError(schemaError)
-            instance.save()
-            return instance
+            return super(EntitySerializer, self).update(instance, validated_data)
         except Exception as e:
-            raise serializers.ValidationError({
-                'description': 'Submission validation failed >> ' + str(e)
-            })
-
-    class Meta:
-        model = models.Entity
-        fields = '__all__'
-
-
-class EntityLDSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField(
-        view_name='entity-detail',
-        read_only=True
-    )
-    projectschema_url = serializers.HyperlinkedRelatedField(
-        read_only=True,
-        source='projectschema',
-        view_name='projectschema-detail',
-    )
-    merge = serializers.ChoiceField(MERGE_CHOICES, default=m_options.overwrite.value)
+            raise serializers.ValidationError(e)
 
     class Meta:
         model = models.Entity
@@ -344,6 +330,7 @@ class ProjectStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     first_submission = serializers.DateTimeField()
     last_submission = serializers.DateTimeField()
     submissions_count = serializers.IntegerField()
+    attachments_count = serializers.IntegerField()
     entities_count = serializers.IntegerField()
 
     class Meta:
@@ -351,36 +338,27 @@ class ProjectStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = (
             'id', 'name', 'created',
             'first_submission', 'last_submission',
-            'submissions_count', 'entities_count',
+            'submissions_count', 'attachments_count', 'entities_count',
         )
 
 
-class MappingStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class MappingSetStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     first_submission = serializers.DateTimeField()
     last_submission = serializers.DateTimeField()
     submissions_count = serializers.IntegerField()
+    attachments_count = serializers.IntegerField()
     entities_count = serializers.IntegerField()
 
     class Meta:
-        model = models.Mapping
+        model = models.MappingSet
         fields = (
-            'id', 'name', 'definition', 'created',
+            'id', 'name', 'created',
             'first_submission', 'last_submission',
-            'submissions_count', 'entities_count',
+            'submissions_count', 'attachments_count', 'entities_count',
         )
 
 
 class MappingValidationSerializer(serializers.Serializer):
     submission_payload = serializers.JSONField()
-    mapping_definition = serializers.JSONField()
-    schemas = serializers.JSONField()
-
-    def validate_schemas(self, value):
-        if not isinstance(value, dict):
-            raise serializers.ValidationError(
-                'Value {value} is not an Object'.format(value=value)
-            )
-        for schema in value.values():
-            validators.validate_avro_schema(schema)
-            validators.validate_id_field(schema)
-        return value
+    mapping_definition = serializers.JSONField(validators=[validators.validate_mapping_definition])
+    schemas = serializers.JSONField(validators=[validators.validate_schemas])

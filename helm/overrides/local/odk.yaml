@@ -1,8 +1,10 @@
-application:
-  command: start_dev
-debug: true
-liveEdit:
-  enabled: true
+replicaCount: 1
+pullPolicy: Never
 odk:
   repository: aether-odk
-release: latest
+  tag: latest
+app:
+  command: start_dev
+debug: true
+provider:
+  aws: false

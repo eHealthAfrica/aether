@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -ex
+set -Eeuox pipefail
 
 # When stopping and starting pods in a rapid succession, two or more instances
 # of a release will be active for a short period of time. To ensure that we run
@@ -27,8 +27,6 @@ test_kernel() {
 }
 
 test_odk() {
-    local fixture=aether/kernel/api/tests/fixtures/project_empty_schema.json
-    run_command kernel manage loaddata $fixture
     run_command odk test
 }
 

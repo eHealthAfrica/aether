@@ -24,22 +24,18 @@ from . import views
 
 router = DefaultRouter()
 
+router.register('schemas', views.SchemaViewSet)
 router.register('projects', views.ProjectViewSet)
-router.register('projects-stats',
-                views.ProjectStatsViewSet,
-                base_name='projects_stats')
-router.register('mappings', views.MappingViewSet)
-router.register('mappings-stats',
-                views.MappingStatsViewSet,
-                base_name='mappings_stats')
+router.register('projects-stats', views.ProjectStatsViewSet, base_name='projects_stats')
 router.register('projectschemas', views.ProjectSchemaViewSet)
+router.register('mappingsets', views.MappingSetViewSet)
+router.register('mappingsets-stats', views.MappingSetStatsViewSet, base_name='mappingsets_stats')
+router.register('mappings', views.MappingViewSet)
 router.register('submissions', views.SubmissionViewSet)
 router.register('attachments', views.AttachmentViewSet)
 router.register('entities', views.EntityViewSet)
-router.register('schemas', views.SchemaViewSet)
+
 
 urlpatterns = router.urls + [
-    url(r'^validate-mappings/$',
-        views.validate_mappings,
-        name='validate-mappings')
+    url(r'^validate-mappings/$', views.validate_mappings_view, name='validate-mappings'),
 ]

@@ -4,39 +4,44 @@
 #                                                                              #
 #                                 CHANGE ME !!!                                #
 #                                                                              #
-# Update me and then run 'docker-compose run ui pip_freeze'                    #
+# To check the outdated dependencies run                                       #
+#     docker-compose run --no-deps ui eval pip list --outdated                 #
+#                                                                              #
+# Update me and then run                                                       #
+#     docker-compose run --no-deps ui pip_freeze                               #
 #                                                                              #
 ################################################################################
 
 
 # Main libraries
-# Aether common module, will also install:
-#   django                   < 2
-#   djangorestframework     >= 3.8   < 4
-#   djangorestframework-csv >= 2.0.0 < 3
-#   django-cors-headers     >= 2.0.0 < 3
+
+# Aether common module, will also require:
+#   django < 2
+#   django-cors-headers
+#   django-debug-toolbar
+#   django-prometheus
+#   django-storages
+#   djangorestframework
+#   psycopg2-binary
+#   python-json-logger
+#   requests
 aether.common
 
 
+# Django specific
 django-model-utils
+django-webpack-loader  # load JS assets
 drf-dynamic-fields
-psycopg2-binary
-requests
-uwsgi
 
 
-# UMS libraries
-django-cas-ng
+# CAS libraries
+django-cas-ng<3.6.0  # breaking changes
 django-ums-client
 
 
-# Development
-django-debug-toolbar
-django-webpack-loader
-
-
 # Server side
-raven    # Sentry
+sentry-sdk             # Sentry
+uwsgi                  # Server behind NGINX
 
 
 # Test libraries

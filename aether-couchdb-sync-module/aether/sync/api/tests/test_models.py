@@ -16,12 +16,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import uuid
 from django.db import IntegrityError
 
 from ...couchdb import api
 from . import ApiTestCase
 from .. import couchdb_helpers
-from ..models import MobileUser, DeviceDB
+from ..models import MobileUser, DeviceDB, Project, Schema
 
 
 class ModelsTests(ApiTestCase):
@@ -39,6 +40,7 @@ class ModelsTests(ApiTestCase):
         '''
         email = 'test_karl@ehealthnigeria.org'
         first_user = MobileUser.objects.create(email=email)
+        self.assertEqual(str(first_user), email)
 
         self.assertRaises(
             IntegrityError,
@@ -47,7 +49,7 @@ class ModelsTests(ApiTestCase):
 
         found_user = MobileUser.objects.get(email=email)
 
-        self.assertEquals(first_user, found_user, 'retreives user via email')
+        self.assertEquals(first_user, found_user, 'retrieves user via email')
 
     def test_delete_user_model(self):
         '''
@@ -91,6 +93,7 @@ class ModelsTests(ApiTestCase):
         device_id = 'test_Xx'
         devicedb = DeviceDB(device_id=device_id)
         devicedb.save()
+        self.assertEqual(str(devicedb), device_id)
         couchdb_helpers.create_db(device_id)
 
         db_req = api.get(couchdb_helpers.generate_db_name(device_id))
@@ -101,7 +104,7 @@ class ModelsTests(ApiTestCase):
 
         found_db = DeviceDB.objects.get(device_id=device_id)
 
-        self.assertEquals(devicedb, found_db, 'retreives db via device-id')
+        self.assertEquals(devicedb, found_db, 'retrieves db via device-id')
 
     def test_devicedb_and_user_roles(self):
         device_id = 'test_Xx'
@@ -157,3 +160,19 @@ class ModelsTests(ApiTestCase):
         devicedb = DeviceDB(device_id=device_id)
 
         self.assertEqual(devicedb.db_name, db_name)
+
+    def test_project_and_schema_create(self):
+        name = 'village'
+        id = uuid.uuid4()
+
+        project = Project.objects.create(name=name, project_id=id)
+        self.assertEqual(str(project), f'{id} - {name}')
+
+        schema = Schema.objects.create(name=name, project=project)
+        self.assertEqual(str(schema), name)
+
+        schema_2 = Schema.objects.create(
+            project=project,
+            avro_schema={'name': 'name'}
+        )
+        self.assertEqual(str(schema_2), 'name')

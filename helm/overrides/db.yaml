@@ -1,6 +1,5 @@
+fullnameOverride: db
 imageTag: 9.6.3
 persistence:
   enabled: true
-fullnameOverride: db
-postgresPassword: secret
 postgresUser: postgres

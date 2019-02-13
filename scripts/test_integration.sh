@@ -18,54 +18,58 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-set -e
+set -Eeuo pipefail
 
-function prepare_container() {
-  echo "_____________________________________________ Preparing $1 container"
-  build_container $1
-  $DC_TEST run "$1"-test setuplocaldb
-  echo "_____________________________________________ $1 ready!"
-}
+# build_aether_containers.sh MUST be run before attempting integration tests.
 
 function build_container() {
-  echo "_____________________________________________ Building $1 container"
-  $DC_TEST build "$1"-test
+    echo "_____________________________________________ Building $1 container"
+    $DC_TEST build "$1"-test
+}
+
+function wait_for_kernel() {
+    KERNEL_HEALTH_URL="http://localhost:9000/health"
+    until curl -s $KERNEL_HEALTH_URL > /dev/null; do
+        >&2 echo "Waiting for Kernel..."
+        sleep 2
+    done
 }
 
 DC_TEST="docker-compose -f docker-compose-test.yml"
+export TEST_KERNEL_DB_NAME=test-kernel-integration
 
-
+./scripts/kill_all.sh
 echo "_____________________________________________ TESTING"
 
-# kill ALL containers and clean TEST ones
-./scripts/kill_all.sh
-$DC_TEST down
+echo "_____________________________________________ Starting Integration Tests"
 
-# start databases
-echo "_____________________________________________ Starting database"
+echo "_____________________________________________ Starting Kafka"
+$DC_TEST up -d zookeeper-test kafka-test
+
+echo "_____________________________________________ Starting Postgres"
 $DC_TEST up -d db-test
 
-# start a clean KERNEL TEST container
-prepare_container kernel
+build_container kernel
+
+until $DC_TEST run --no-deps kernel-test eval pg_isready -q; do
+    >&2 echo "Waiting for db-test..."
+    sleep 2
+done
 
 echo "_____________________________________________ Starting kernel"
 $DC_TEST up -d kernel-test
-
-build_container kafka
-build_container zookeeper
-echo "_____________________________________________ Starting Kafka"
-$DC_TEST up -d zookeeper-test kafka-test
 
 build_container producer
 echo "_____________________________________________ Starting Producer"
 $DC_TEST up -d producer-test
 
-# test a clean INGEGRATION TEST container
-echo "_____________________________________________ Starting Integration Tests"
+echo "_____________________________________________ Waiting for Kernel"
+wait_for_kernel
+$DC_TEST run --no-deps kernel-test eval python /code/sql/create_readonly_user.py
+
 build_container integration
-$DC_TEST run integration-test test
+$DC_TEST run --no-deps integration-test test
+echo "_____________________________________________ Integration OK..."
 
-# kill ALL containers
 ./scripts/kill_all.sh
-
 echo "_____________________________________________ END"

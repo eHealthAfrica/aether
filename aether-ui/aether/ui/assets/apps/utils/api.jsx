@@ -62,7 +62,7 @@ export default class ApiClient {
           window.fetch(path, options)
             .then(res => {
               if (res.status >= 200 && res.status < 400) {
-                res.json().then(res => resolve(res)).catch(err => reject(err)) // Should be extended to cater for other content-types or than json
+                res.json().then(res => resolve(res)).catch(err => reject(err)) // Should be extended to cater for other content-types other than json
               } else {
                 if (res.status === 404) {
                   reject(new NotFoundError('Resource Not Found'))

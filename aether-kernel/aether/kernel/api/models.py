@@ -21,222 +21,262 @@
 import uuid
 from datetime import datetime
 from hashlib import md5
+
 from django.contrib.postgres.fields import JSONField
-from django.db import models
+from django.core.exceptions import ValidationError
+from django.db import models, IntegrityError
+from django.utils.translation import ugettext as _
+from django_prometheus.models import ExportModelOperationsMixin
+
 from model_utils.models import TimeStampedModel
 
+from aether.common.utils import resolve_file_url
+
+from .constants import NAMESPACE
 from .utils import json_prettified
 
-STATUS_CHOICES = (
-    ('Pending Approval', 'Pending Approval'),
-    ('Publishable', 'Publishable'),
+from .validators import (
+    validate_avro_schema,
+    validate_entity_payload,
+    validate_mapping_definition,
+    validate_schema_definition,
+)
+
+
+ENTITY_STATUS_CHOICES = (
+    ('Pending Approval', _('Pending Approval')),
+    ('Publishable', _('Publishable')),
 )
 
 
 '''
-
 Data model schema:
 
-
-    +------------------+          +------------------+       +------------------+       +---------------------+
-    | Project          |          | Mapping          |       | Submission       |       | Attachment          |
-    +==================+          +==================+       +==================+       +=====================+
-    | id               |<-----+   | id               |<--+   | id               |<--+   | id                  |
-    | created          |      |   | created          |   |   | created          |   |   | created             |
-    | modified         |      |   | modified         |   |   | modified         |   |   | modified            |
-    | revision         |      |   | revision         |   |   | revision         |   |   | name                |
-    | name             |      |   | name             |   |   | payload          |   |   | attachment_file     |
-    | salad_schema     |      |   | definition       |   |   +::::::::::::::::::+   |   | md5sum              |
-    | jsonld_context   |      |   +::::::::::::::::::+   +--<| mapping          |   |   +:::::::::::::::::::::+
-    | rdf_definition   |      +--<| project          |       | map_revision     |   +--<| submission          |
-    +------------------+      |   +------------------+       +------------------+   |   | submission_revision |
-                              |                                                     |   +---------------------+
-                              |                                                     |
-    +------------------+      |   +------------------+       +------------------+   |
-    | Schema           |      |   | ProjectSchema    |       | Entity           |   |
-    +==================+      |   +==================+       +==================+   |
-    | id               |<--+  |   | id               |<--+   | id               |   |
-    | created          |   |  |   | created          |   |   | modified         |   |
-    | modified         |   |  |   | modified         |   |   | revision         |   |
-    | revision         |   |  |   | name             |   |   | payload          |   |
-    | name             |   |  |   | mandatory_fields |   |   | status           |   |
-    | definition       |   |  |   | transport_rule   |   |   +::::::::::::::::::+   |
-    | type             |   |  |   | masked_fields    |   |   | submission       |>--+
-    +------------------+   |  |   | is_encrypted     |   +--<| projectschema    |
-                           |  |   +::::::::::::::::::+       +------------------+
-                           |  +--<| project          |
-                           +-----<| schema           |
-                                  +------------------+
-
++------------------+       +------------------+       +------------------+       +---------------------+
+| Project          |       | MappingSet       |       | Submission       |       | Attachment          |
++==================+       +==================+       +==================+       +=====================+
+| id               |<---+  | id               |<---+  | id               |<---+  | id                  |
+| created          |    |  | created          |    |  | created          |    |  | created             |
+| modified         |    |  | modified         |    |  | modified         |    |  | modified            |
+| revision         |    |  | revision         |    |  | revision         |    |  | name                |
+| name             |    |  | name             |    |  | payload          |    |  | attachment_file     |
+| salad_schema     |    |  | input            |    |  +::::::::::::::::::+    |  | md5sum              |
+| jsonld_context   |    |  +::::::::::::::::::+    +-<| mappingset       |    |  +:::::::::::::::::::::+
+| rdf_definition   |    +-<| project          |    |  | project(**)      |    +-<| submission          |
++------------------+    |  +------------------+    |  +------------------+    |  | submission_revision |
+                        |                          |                          |  +---------------------+
+                        |                          |                          |
+                        |                          |                          |
++------------------+    |  +------------------+    |  +------------------+    |  +------------------+
+| Schema           |    |  | ProjectSchema    |    |  | Mapping          |    |  | Entity           |
++==================+    |  +==================+    |  +==================+    |  +==================+
+| id               |<-+ |  | id               |<-+ |  | id               |<-+ |  | id               |
+| created          |  | |  | created          |  | |  | created          |  | |  | modified         |
+| modified         |  | |  | modified         |  | |  | modified         |  | |  | revision         |
+| revision         |  | |  | name             |  | |  | revision         |  | |  | payload          |
+| name             |  | |  | mandatory_fields |  | |  | name             |  | |  | status           |
+| definition       |  | |  | transport_rule   |  | |  | definition       |  | |  +::::::::::::::::::+
+| type             |  | |  | masked_fields    |  | |  | is_active        |  | +-<| submission       |
+| family           |  | |  | is_encrypted     |  | |  | is_read_only     |  +---<| mapping          |
++------------------+  | |  +::::::::::::::::::+  | |  +::::::::::::::::::+       | mapping_revision |
+                      | +-<| project          |  | +-<| mappingset       |  +---<| projectschema    |
+                      +---<| schema           |  +--<<| projectschemas   |  |    | project(**)      |
+                           +------------------+  |    | project(**)      |  |    | schema(**)       |
+                                                 |    +------------------+  |    +------------------+
+                                                 +--------------------------+
 '''
 
 
-class Project(TimeStampedModel):
+class Project(ExportModelOperationsMixin('kernel_project'), TimeStampedModel):
     '''
-                Table "public.kernel_project"
+    Project
 
-         Column     |           Type           | Modifiers
-    ----------------+--------------------------+-----------
-     id             | uuid                     | not null
-     revision       | text                     | not null
-     name           | character varying(50)    | not null
-     salad_schema   | text                     |
-     jsonld_context | text                     |
-     rdf_definition | text                     |
-     created        | timestamp with time zone | not null
-     modified       | timestamp with time zone | not null
-
-    Indexes:
-        "kernel_project_pkey" PRIMARY KEY, btree (id)
-        "kernel_project_name_###_uniq" UNIQUE CONSTRAINT, btree (name)
-        "kernel_project_name_###_like" btree (name varchar_pattern_ops)
-
-    Referenced by:
-        TABLE "kernel_mapping"
-            CONSTRAINT "kernel_mapping_project_id_###_fk_kernel_project_id"
-            FOREIGN KEY (project_id)
-            REFERENCES kernel_project(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-        TABLE "kernel_projectschema"
-            CONSTRAINT "kernel_projectschema_project_id_###_fk_kernel_project_id"
-            FOREIGN KEY (project_id)
-            REFERENCES kernel_project(id)
-            DEFERRABLE INITIALLY DEFERRED
+    :ivar UUID      id:              ID (primary key).
+    :ivar datetime  created:         Creation timestamp.
+    :ivar datetime  modified:        Last update timestamp.
+    :ivar text      revision:        Revision.
+    :ivar text      name:            Name (**unique**).
+    :ivar text      salad_schema:    Salad schema (optional).
+        Semantic Annotations for Linked Avro Data (SALAD)
+        https://www.commonwl.org/draft-3/SchemaSalad.html
+    :ivar text      jsonld_context:  JSON LS context (optional).
+        JSON for Linking Data
+        https://json-ld.org/
+    :ivar text      rdf_definition:  RDF definition (optional).
+        Resource Description Framework
+        https://www.w3.org/TR/rdf-schema/
 
     '''
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    revision = models.TextField(default='1')
-    name = models.CharField(max_length=50, null=False, unique=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
+    revision = models.TextField(default='1', verbose_name=_('revision'))
+    name = models.CharField(max_length=50, unique=True, verbose_name=_('name'))
 
-    salad_schema = models.TextField(null=True, blank=True)
-    jsonld_context = models.TextField(null=True, blank=True)
-    rdf_definition = models.TextField(null=True, blank=True)
+    salad_schema = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name=_('salad schema'),
+        help_text=_(
+            'Semantic Annotations for Linked Avro Data (SALAD)  '
+            'https://www.commonwl.org/draft-3/SchemaSalad.html'
+        ),
+    )
+    jsonld_context = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name=_('JSON LD context'),
+        help_text=_(
+            'JSON for Linking Data  '
+            'https://json-ld.org/'
+        ),
+    )
+    rdf_definition = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name=_('RDF definition'),
+        help_text=_(
+            'Resource Description Framework  '
+            'https://www.w3.org/TR/rdf-schema/'
+        ),
+    )
 
     def __str__(self):
         return self.name
+
+    def delete(self, *args, **kwargs):
+        # find the linked passthrough schemas
+        for schema in Schema.objects.filter(family=str(self.pk)):
+            # delete the schema if is not used in more projects
+            if schema.projectschemas.exclude(project=self).count() == 0:
+                schema.delete()
+            else:
+                schema.family = None  # remove passthrough flag
+                schema.save()
+
+        super(Project, self).delete(*args, **kwargs)
 
     class Meta:
         app_label = 'kernel'
         default_related_name = 'projects'
-        ordering = ('-modified',)
+        ordering = ['-modified']
+        indexes = [
+            models.Index(fields=['-modified']),
+        ]
+        verbose_name = _('project')
+        verbose_name_plural = _('projects')
 
 
-class Mapping(TimeStampedModel):
+class MappingSet(ExportModelOperationsMixin('kernel_mappingset'), TimeStampedModel):
     '''
-                Table "public.kernel_mapping"
+    Mapping Set: collection of mapping rules.
 
-       Column   |           Type           | Modifiers
-    ------------+--------------------------+-----------
-     id         | uuid                     | not null
-     name       | character varying(50)    | not null
-     definition | jsonb                    | not null
-     revision   | text                     | not null
-     project_id | uuid                     | not null
-     created    | timestamp with time zone | not null
-     modified   | timestamp with time zone | not null
-
-    Indexes:
-        "kernel_mapping_pkey" PRIMARY KEY, btree (id)
-        "kernel_mapping_name_###_uniq" UNIQUE CONSTRAINT, btree (name)
-        "kernel_mapping_name_###_like" btree (name varchar_pattern_ops)
-        "kernel_mapping_project_id_###" btree (project_id)
-
-    Foreign-key constraints:
-        "kernel_mapping_project_id_###_fk_kernel_project_id"
-            FOREIGN KEY (project_id)
-            REFERENCES kernel_project(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-    Referenced by:
-        TABLE "kernel_submission"
-            CONSTRAINT "kernel_submission_mapping_id_###_fk_kernel_mapping_id"
-            FOREIGN KEY (mapping_id)
-            REFERENCES kernel_mapping(id)
-            DEFERRABLE INITIALLY DEFERRED
+    :ivar UUID      id:        ID (primary key).
+    :ivar datetime  created:   Creation timestamp.
+    :ivar datetime  modified:  Last update timestamp.
+    :ivar text      revision:  Revision.
+    :ivar text      name:      Name (**unique**).
+    :ivar JSON      schema:    AVRO schema definition.
+    :ivar JSON      input:     Sample of data that conform the AVRO schema.
+    :ivar Project   project:   Project.
 
     '''
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    revision = models.TextField(default='1')
-    name = models.CharField(max_length=50, null=False, unique=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
+    revision = models.TextField(default='1', verbose_name=_('revision'))
+    name = models.CharField(max_length=50, unique=True, verbose_name=_('name'))
 
-    definition = JSONField(blank=False, null=False)
+    schema = JSONField(
+        null=True,
+        blank=True,
+        validators=[validate_avro_schema],
+        verbose_name=_('AVRO schema'),
+    )
+    input = JSONField(null=True, blank=True, verbose_name=_('input sample'))
 
-    project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
+    project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
 
     @property
-    def definition_prettified(self):
-        return json_prettified(self.definition)
+    def input_prettified(self):
+        return json_prettified(self.input)
+
+    @property
+    def schema_prettified(self):
+        return json_prettified(self.schema)
 
     def __str__(self):
         return self.name
 
     class Meta:
         app_label = 'kernel'
-        default_related_name = 'mappings'
-        ordering = ('-modified',)
+        default_related_name = 'mappingsets'
+        ordering = ['project__id', '-modified']
+        indexes = [
+            models.Index(fields=['project', '-modified']),
+            models.Index(fields=['-modified']),
+        ]
+        verbose_name = _('mapping set')
+        verbose_name_plural = _('mapping sets')
 
 
-class Submission(TimeStampedModel):
+class Submission(ExportModelOperationsMixin('kernel_submission'), TimeStampedModel):
     '''
-                Table "public.kernel_submission"
+    Data submission
 
-        Column    |           Type           | Modifiers
-    --------------+--------------------------+-----------
-     id           | uuid                     | not null
-     revision     | text                     | not null
-     map_revision | text                     | not null
-     payload      | jsonb                    | not null
-     mapping_id   | uuid                     | not null
-     created      | timestamp with time zone | not null
-     modified     | timestamp with time zone | not null
-
-    Indexes:
-        "kernel_submission_pkey" PRIMARY KEY, btree (id)
-        "kernel_submission_mapping_id_###" btree (mapping_id)
-
-    Foreign-key constraints:
-        "kernel_submission_mapping_id_###_fk_kernel_mapping_id"
-            FOREIGN KEY (mapping_id)
-            REFERENCES kernel_mapping(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-    Referenced by:
-        TABLE "kernel_attachment"
-            CONSTRAINT "kernel_attachment_submission_id_###_fk_kernel_submission_id"
-            FOREIGN KEY (submission_id)
-            REFERENCES kernel_submission(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-        TABLE "kernel_entity"
-            CONSTRAINT "kernel_entity_submission_id_###_fk_kernel_submission_id"
-            FOREIGN KEY (submission_id)
-            REFERENCES kernel_submission(id)
-            DEFERRABLE INITIALLY DEFERRED
+    :ivar UUID        id:          ID (primary key).
+    :ivar datetime    created:     Creation timestamp.
+    :ivar datetime    modified:    Last update timestamp.
+    :ivar text        revision:    Revision.
+    :ivar JSON        payload:     Submission content.
+    :ivar MappingSet  mappingset:  Mapping set.
+    :ivar Project     project:     Project (redundant but speed up queries).
 
     '''
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    revision = models.TextField(default='1')
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
+    revision = models.TextField(default='1', verbose_name=_('revision'))
 
-    map_revision = models.TextField(default='1')
-    payload = JSONField(blank=False, null=False)
+    payload = JSONField(verbose_name=_('payload'))
 
-    mapping = models.ForeignKey(to=Mapping, related_name='submissions', on_delete=models.CASCADE)
+    mappingset = models.ForeignKey(
+        to=MappingSet,
+        on_delete=models.CASCADE,
+        verbose_name=_('mapping set'),
+    )
+
+    # redundant but speed up queries
+    project = models.ForeignKey(
+        to=Project,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name=_('project'),
+    )
 
     @property
     def payload_prettified(self):
         return json_prettified(self.payload)
 
+    @property
+    def name(self):
+        return f'{self.mappingset.project.name}-{self.mappingset.name}'
+
+    def save(self, *args, **kwargs):
+        self.project = self.mappingset.project
+        super(Submission, self).save(*args, **kwargs)
+
     def __str__(self):
-        return '{} - {}'.format(str(self.mapping), self.id)
+        return f'{self.id}'
 
     class Meta:
         app_label = 'kernel'
         default_related_name = 'submissions'
-        ordering = ('-modified',)
+        ordering = ['project__id', '-modified']
+        indexes = [
+            models.Index(fields=['project', '-modified']),
+            models.Index(fields=['-modified']),
+        ]
+        verbose_name = _('submission')
+        verbose_name_plural = _('submissions')
 
 
 def __attachment_path__(instance, filename):
@@ -248,49 +288,37 @@ def __attachment_path__(instance, filename):
     )
 
 
-class Attachment(TimeStampedModel):
+class Attachment(ExportModelOperationsMixin('kernel_attachment'), TimeStampedModel):
     '''
-                Table "public.kernel_attachment"
+    Attachment linked to submission.
 
-           Column        |           Type           | Modifiers
-    ---------------------+--------------------------+-----------
-     id                  | uuid                     | not null
-     submission_revision | text                     | not null
-     name                | character varying(255)   | not null
-     attachment_file     | character varying(100)   | not null
-     md5sum              | character varying(36)    | not null
-     submission_id       | uuid                     | not null
-     created             | timestamp with time zone | not null
-     modified            | timestamp with time zone | not null
-
-    Indexes:
-        "kernel_attachment_pkey" PRIMARY KEY, btree (id)
-        "kernel_attachment_submission_id_###" btree (submission_id)
-
-    Foreign-key constraints:
-        "kernel_attachment_submission_id_###_fk_kernel_submission_id"
-            FOREIGN KEY (submission_id)
-            REFERENCES kernel_submission(id)
-            DEFERRABLE INITIALLY DEFERRED
+    :ivar UUID        id:                   ID (primary key).
+    :ivar datetime    created:              Creation timestamp.
+    :ivar datetime    modified:             Last update timestamp.
+    :ivar text        name:                 File name.
+    :ivar File        attachment_file:      Path to file (depends on the file storage system).
+    :ivar text        md5sum:               File content hash (MD5).
+    :ivar Submission  submission:           Submission.
+    :ivar text        submission_revision:  Submission revision when the attachment was saved.
 
     '''
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
 
     # http://www.linfo.org/file_name.html
     # Modern Unix-like systems support long file names, usually up to 255 bytes in length.
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, verbose_name=_('filename'))
 
-    attachment_file = models.FileField(upload_to=__attachment_path__)
+    attachment_file = models.FileField(upload_to=__attachment_path__, verbose_name=_('file'))
     # save attachment hash to check later if the file is not corrupted
-    md5sum = models.CharField(blank=True, max_length=36)
+    md5sum = models.CharField(blank=True, max_length=36, verbose_name=_('file MD5'))
 
-    submission = models.ForeignKey(to=Submission, on_delete=models.CASCADE)
-    submission_revision = models.TextField()
+    submission = models.ForeignKey(to=Submission, on_delete=models.CASCADE, verbose_name=_('submission'))
+    submission_revision = models.TextField(verbose_name=_('submission revision'))
 
     @property
-    def attachment_path(self):
-        return self.attachment_file.path
+    def attachment_file_url(self):
+        return resolve_file_url(self.attachment_file.url)
 
     def __str__(self):
         return self.name
@@ -315,42 +343,173 @@ class Attachment(TimeStampedModel):
     class Meta:
         app_label = 'kernel'
         default_related_name = 'attachments'
-        ordering = ['submission', 'submission_revision', 'name']
+        ordering = ['submission__id', 'name']
+        indexes = [
+            models.Index(fields=['submission', 'name']),
+        ]
+        verbose_name = _('attachment')
+        verbose_name_plural = _('attachments')
 
 
-class Schema(TimeStampedModel):
+class Schema(ExportModelOperationsMixin('kernel_schema'), TimeStampedModel):
     '''
-                Table "public.kernel_schema"
+    AVRO Schema
 
-       Column   |           Type           | Modifiers
-    ------------+--------------------------+-----------
-     id         | uuid                     | not null
-     name       | character varying(50)    | not null
-     type       | character varying(50)    | not null
-     definition | jsonb                    | not null
-     revision   | text                     | not null
-     created    | timestamp with time zone | not null
-     modified   | timestamp with time zone | not null
+    :ivar UUID      id:         ID (primary key).
+    :ivar datetime  created:     Creation timestamp.
+    :ivar datetime  modified:    Last update timestamp.
+    :ivar text      revision:    Revision.
+    :ivar text      name:        Name (**unique**).
+    :ivar text      type:        Schema namespace
+    :ivar JSON      definition:  AVRO schema definiton.
+    :ivar text      family:      Schema family.
 
-    Indexes:
-        "kernel_schema_pkey" PRIMARY KEY, btree (id)
-        "kernel_schema_name_###_uniq" UNIQUE CONSTRAINT, btree (name)
-        "kernel_schema_name_###_like" btree (name varchar_pattern_ops)
-
-    Referenced by:
-        TABLE "kernel_projectschema"
-            CONSTRAINT "kernel_projectschema_schema_id_###_fk_kernel_schema_id"
-            FOREIGN KEY (schema_id)
-            REFERENCES kernel_schema(id)
-            DEFERRABLE INITIALLY DEFERRED
     '''
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    revision = models.TextField(default='1')
-    name = models.CharField(max_length=50, null=False, unique=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
+    revision = models.TextField(default='1', verbose_name=_('revision'))
+    name = models.CharField(max_length=50, unique=True, verbose_name=_('name'))
 
-    type = models.CharField(max_length=50)
-    definition = JSONField(blank=False, null=False)
+    type = models.CharField(max_length=50, default=NAMESPACE, verbose_name=_('schema type'))
+    definition = JSONField(validators=[validate_schema_definition], verbose_name=_('AVRO schema'))
+
+    # this field is used to group different schemas created automatically
+    # from different sources but that share a common structure
+    # the passthrough schemas will contain the project id as family
+    family = models.TextField(null=True, blank=True, verbose_name=_('schema family'))
+
+    @property
+    def definition_prettified(self):
+        return json_prettified(self.definition)
+
+    @property
+    def schema_name(self):
+        return self.definition.get('name', self.name)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        app_label = 'kernel'
+        default_related_name = 'schemas'
+        ordering = ['-modified']
+        indexes = [
+            models.Index(fields=['-modified']),
+        ]
+        verbose_name = _('schema')
+        verbose_name_plural = _('schemas')
+
+
+class ProjectSchema(ExportModelOperationsMixin('kernel_projectschema'), TimeStampedModel):
+    '''
+    Project Schema
+
+    :ivar UUID      id:                ID (primary key).
+    :ivar datetime  created:           Creation timestamp.
+    :ivar datetime  modified:          Last update timestamp.
+    :ivar text      name:              Name (**unique**).
+    :ivar text      mandatory_fields:  The list of mandatory fields included in
+        the AVRO schema definition.
+    :ivar text      transport_rule:    The transport rule.
+    :ivar text      masked_fields:     The list of fields that must be masked before transport.
+    :ivar bool      is_encrypted:      Is the transport encrypted?
+    :ivar Schema    schema:            Schema.
+    :ivar Project   project:           Project.
+
+    '''
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
+    name = models.CharField(max_length=50, unique=True, verbose_name=_('name'))
+
+    mandatory_fields = models.TextField(null=True, blank=True, verbose_name=_('mandatory fields'))
+    transport_rule = models.TextField(null=True, blank=True, verbose_name=_('transport rule'))
+    masked_fields = models.TextField(null=True, blank=True, verbose_name=_('masked fields'))
+    is_encrypted = models.BooleanField(default=False, verbose_name=_('encrypted?'))
+
+    project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))
+    schema = models.ForeignKey(to=Schema, on_delete=models.CASCADE, verbose_name=_('schema'))
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        app_label = 'kernel'
+        default_related_name = 'projectschemas'
+        ordering = ['project__id', '-modified']
+        indexes = [
+            models.Index(fields=['project', '-modified']),
+            models.Index(fields=['-modified']),
+        ]
+        verbose_name = _('project schema')
+        verbose_name_plural = _('project schemas')
+
+
+class Mapping(ExportModelOperationsMixin('kernel_mapping'), TimeStampedModel):
+    '''
+    Mapping rules used to extract quality data from raw submissions.
+
+    :ivar UUID           id:              ID (primary key).
+    :ivar datetime       created:         Creation timestamp.
+    :ivar datetime       modified:        Last update timestamp.
+    :ivar text           revision:        Revision.
+    :ivar text           name:            Name (**unique**).
+    :ivar JSON           definition:      The list of mapping rules between
+        a source (submission) and a destination (entity).
+    :ivar bool           is_active:       Is the mapping active?
+    :ivar bool           is_read_only:    Can the mapping rules be modified manually?
+    :ivar MappingSet     mappingset:      Mapping set.
+    :ivar ProjectSchema  projectschemas:  The list of project schemas included
+        in the mapping rules.
+    :ivar Project        project:         Project (redundant but speed up queries).
+
+    '''
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
+    revision = models.TextField(default='1', verbose_name=_('revision'))
+    name = models.CharField(max_length=50, unique=True, verbose_name=_('name'))
+
+    definition = JSONField(validators=[validate_mapping_definition], verbose_name=_('mapping rules'))
+    is_active = models.BooleanField(default=True, verbose_name=_('active?'))
+    is_read_only = models.BooleanField(default=False, verbose_name=_('read only?'))
+
+    mappingset = models.ForeignKey(
+        to=MappingSet,
+        on_delete=models.CASCADE,
+        verbose_name=_('mapping set'),
+    )
+    projectschemas = models.ManyToManyField(
+        to=ProjectSchema,
+        blank=True,
+        editable=False,
+        verbose_name=_('project schemas'),
+    )
+
+    # redundant but speed up queries
+    project = models.ForeignKey(
+        to=Project,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name=_('project'),
+    )
+
+    def save(self, *args, **kwargs):
+        self.project = self.mappingset.project
+
+        try:
+            # this will call the fields validators in our case `validate_mapping_definition`
+            self.full_clean()
+        except ValidationError as ve:
+            raise IntegrityError(ve)
+
+        super(Mapping, self).save(*args, **kwargs)
+
+        self.projectschemas.clear()
+        entities = self.definition.get('entities', {})
+        ps_list = []
+        for entity_pk in entities.values():
+            ps_list.append(ProjectSchema.objects.get(pk=entity_pk, project=self.project))
+        self.projectschemas.add(*ps_list)
 
     @property
     def definition_prettified(self):
@@ -361,132 +520,164 @@ class Schema(TimeStampedModel):
 
     class Meta:
         app_label = 'kernel'
-        default_related_name = 'schemas'
-        ordering = ('-modified',)
+        default_related_name = 'mappings'
+        ordering = ['project__id', '-modified']
+        indexes = [
+            models.Index(fields=['project', '-modified']),
+            models.Index(fields=['-modified']),
+        ]
+        verbose_name = _('mapping')
+        verbose_name_plural = _('mappings')
 
 
-class ProjectSchema(TimeStampedModel):
+class Entity(ExportModelOperationsMixin('kernel_entity'), models.Model):
     '''
-                Table "public.kernel_projectschema"
+    Entity: extracted data from raw submissions.
 
-          Column      |           Type           | Modifiers
-    ------------------+--------------------------+-----------
-     id               | uuid                     | not null
-     name             | character varying(50)    | not null
-     mandatory_fields | text                     |
-     transport_rule   | text                     |
-     masked_fields    | text                     |
-     is_encrypted     | boolean                  | not null
-     project_id       | uuid                     | not null
-     schema_id        | uuid                     | not null
-     created          | timestamp with time zone | not null
-     modified         | timestamp with time zone | not null
-
-    Indexes:
-        "kernel_projectschema_pkey" PRIMARY KEY, btree (id)
-        "kernel_projectschema_name_###_uniq" UNIQUE CONSTRAINT, btree (name)
-        "kernel_projectschema_name_###_like" btree (name varchar_pattern_ops)
-        "kernel_projectschema_project_id_###" btree (project_id)
-        "kernel_projectschema_schema_id_###" btree (schema_id)
-
-    Foreign-key constraints:
-        "kernel_projectschema_project_id_###_fk_kernel_project_id"
-            FOREIGN KEY (project_id)
-            REFERENCES kernel_project(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-        "kernel_projectschema_schema_id_###_fk_kernel_schema_id"
-            FOREIGN KEY (schema_id)
-            REFERENCES kernel_schema(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-    Referenced by:
-        TABLE "kernel_entity"
-            CONSTRAINT "kernel_entity_projectschema_id_###_fk_kernel_project_id"
-            FOREIGN KEY (projectschema_id)
-            REFERENCES kernel_projectschema(id)
-            DEFERRABLE INITIALLY DEFERRED
+    :ivar UUID           id:                ID (primary key).
+    :ivar text           modified:          Last update timestamp in ISO format along with the id.
+    :ivar text           revision:          Revision.
+    :ivar JSON           payload:           The extracted data.
+    :ivar text           status:            Status: "Pending Approval" or "Publishable".
+    :ivar text           modified:          Last modified timestamp with ID or previous modified timestamp.
+    :ivar Submission     submission:        Submission.
+    :ivar Mapping        mapping:           Mapping rules applied to get the entity.
+    :ivar text           mapping_revision:  Mapping revision at the moment of the extraction.
+    :ivar ProjectSchema  projectschema:     The AVRO schema of the extracted data.
+    :ivar Project        project:           Project (redundant but speed up queries).
+    :ivar Schema         schema :           Schema (redundant but speed up queries).
 
     '''
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    name = models.CharField(max_length=50, null=False, unique=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
+    revision = models.TextField(default='1', verbose_name=_('revision'))
 
-    mandatory_fields = models.TextField(null=True, blank=True)
-    transport_rule = models.TextField(null=True, blank=True)
-    masked_fields = models.TextField(null=True, blank=True)
-    is_encrypted = models.BooleanField(default=False)
+    payload = JSONField(verbose_name=_('payload'))
+    status = models.CharField(max_length=20, choices=ENTITY_STATUS_CHOICES, verbose_name=_('status'))
+    modified = models.CharField(max_length=100, editable=False, verbose_name=_('modified'))
 
-    project = models.ForeignKey(to=Project, on_delete=models.CASCADE)
-    schema = models.ForeignKey(to=Schema, on_delete=models.CASCADE)
+    submission = models.ForeignKey(
+        to=Submission,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name=_('submission'),
+    )
+    mapping = models.ForeignKey(
+        to=Mapping,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name=_('mapping'),
+    )
+    mapping_revision = models.TextField(null=True, blank=True, verbose_name=_('mapping revision'))
+    projectschema = models.ForeignKey(
+        to=ProjectSchema,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        verbose_name=_('project schema'),
+    )
 
-    def __str__(self):
-        return self.name
+    # redundant but speed up queries
+    # WARNING:  the project deletion has consequences
+    project = models.ForeignKey(
+        to=Project,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name=_('project'),
+    )
 
-    class Meta:
-        app_label = 'kernel'
-        default_related_name = 'projectschemas'
-        ordering = ('-modified',)
-
-
-class Entity(models.Model):
-    '''
-                Table "public.kernel_entity"
-
-          Column      |          Type          | Modifiers
-    ------------------+------------------------+-----------
-     id               | uuid                   | not null
-     revision         | text                   | not null
-     payload          | jsonb                  | not null
-     status           | character varying(20)  | not null
-     modified         | character varying(100) | not null
-     projectschema_id | uuid                   |
-     submission_id    | uuid                   |
-
-    Indexes:
-        "kernel_entity_pkey" PRIMARY KEY, btree (id)
-        "kernel_entity_projectschema_id_###" btree (projectschema_id)
-        "kernel_entity_submission_id_###" btree (submission_id)
-
-    Foreign-key constraints:
-        "kernel_entity_projectschema_id_###_fk_kernel_project_id"
-            FOREIGN KEY (projectschema_id)
-            REFERENCES kernel_projectschema(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-        "kernel_entity_submission_id_###_fk_kernel_submission_id"
-            FOREIGN KEY (submission_id)
-            REFERENCES kernel_submission(id)
-            DEFERRABLE INITIALLY DEFERRED
-
-    '''
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    revision = models.TextField(default='1')
-
-    payload = JSONField(blank=False, null=False)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
-    modified = models.CharField(max_length=100, editable=False)
-
-    projectschema = models.ForeignKey(to=ProjectSchema, on_delete=models.SET_NULL, null=True)
-    submission = models.ForeignKey(to=Submission, on_delete=models.SET_NULL, blank=True, null=True)
-
-    def save(self, **kwargs):
-        if self.modified:
-            self.modified = '{}-{}'.format(datetime.now().isoformat(), self.modified[27:None])
-        else:
-            self.modified = '{}-{}'.format(datetime.now().isoformat(), self.id)
-        super(Entity, self).save(**kwargs)
+    # redundant but speed up queries
+    # WARNING:  the schema deletion has consequences
+    schema = models.ForeignKey(
+        to=Schema,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name=_('schema'),
+    )
 
     @property
     def payload_prettified(self):
         return json_prettified(self.payload)
 
+    @property
+    def name(self):
+        # try to build a name for the extracted entity base on the linked data
+        if self.projectschema and self.mapping:
+            # find in the mapping definition the name used by this project schema
+            for k, v in self.mapping.definition.get('entities', {}).items():
+                if v == str(self.projectschema.pk):
+                    return f'{self.project.name}-{k}'
+        if self.projectschema:
+            return f'{self.project.name}-{self.schema.schema_name}'
+        if self.submission:
+            return self.submission.name
+        if self.project:
+            return self.project.name
+        return None
+
+    def clean(self):
+        super(Entity, self).clean()
+
+        # check linked projects
+        project_ids = set()
+        possible_project = None
+        if self.projectschema:
+            project_ids.add(self.projectschema.project.pk)
+            possible_project = self.projectschema.project
+        if self.submission:
+            project_ids.add(self.submission.project.pk)
+            possible_project = self.submission.project
+        if self.mapping:
+            project_ids.add(self.mapping.project.pk)
+            possible_project = self.mapping.project
+
+        if len(project_ids) > 1:
+            raise ValidationError(_('Submission, Mapping and Project Schema MUST belong to the same Project'))
+        elif len(project_ids) == 1:
+            self.project = possible_project
+
+        if self.projectschema:  # redundant values taken from project schema
+            self.schema = self.projectschema.schema
+
+        if self.mapping and not self.mapping_revision:
+            self.mapping_revision = self.mapping.revision
+
+        if self.modified:
+            self.modified = '{}-{}'.format(datetime.now().isoformat(), self.modified[27:None])
+        else:
+            self.modified = '{}-{}'.format(datetime.now().isoformat(), self.id)
+
+        if self.schema:
+            try:
+                validate_entity_payload(
+                    schema_definition=self.schema.definition,
+                    payload=self.payload,
+                )
+            except ValidationError as ve:
+                raise ValidationError({'payload': [str(ve)]})
+
+    def save(self, *args, **kwargs):
+        try:
+            self.full_clean()
+        except ValidationError as ve:
+            raise IntegrityError(ve)
+
+        super(Entity, self).save(*args, **kwargs)
+
     def __str__(self):
-        return 'Entity {}'.format(self.id)
+        return f'{self.id}'
 
     class Meta:
         app_label = 'kernel'
         default_related_name = 'entities'
         verbose_name_plural = 'entities'
-        ordering = ('-modified',)
+        ordering = ['project__id', '-modified']
+        indexes = [
+            models.Index(fields=['project', '-modified']),
+            models.Index(fields=['-modified']),
+        ]
+        verbose_name = _('entity')
+        verbose_name_plural = _('entities')

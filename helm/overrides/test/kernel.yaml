@@ -1,7 +1,14 @@
-application:
+replicaCount: 1
+pullPolicy: Never
+app:
   command: start_dev
 debug: true
+testing: true
 kernel:
   repository: aether-kernel
-release: latest
-testing: true
+  tag: latest
+provider:
+  aws: false
+database:
+  host: db
+  user: postgres

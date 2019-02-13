@@ -6,16 +6,18 @@
 #                                                                              #
 # Update me and then run                                                       #
 #                                                                              #
-# docker-compose -f docker-compose-connect.yml run producer pip_freeze         #
+# docker-compose -f docker-compose-connect.yml run \                           #
+#                --no-deps producer pip_freeze                                 #
 #                                                                              #
 ################################################################################
 
-aether.client
+aether.client>=1.1.0
 confluent_kafka
 flask
+flake8
 gevent
+pytest
 psycopg2-binary
 psycogreen
-requests
 spavro
 sqlalchemy

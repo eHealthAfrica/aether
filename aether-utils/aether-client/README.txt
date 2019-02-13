@@ -9,7 +9,7 @@ docker container. We can do that through the build option in ./entrypoint.sh. Th
 run in the aether-client docker container. To just build a new wheel in ./dist, from the base
 Aether dir run:
 
-    `docker-compose -f ./docker-compose-client.yml run client build`
+    `docker-compose -f ./docker-compose-build-aether-utils.yml run client build`
 
 To build and distribute, there's a script in:
 
