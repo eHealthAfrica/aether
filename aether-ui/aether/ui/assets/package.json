@@ -23,12 +23,8 @@
   },
   "dependencies": {
     "avsc": "~5.4.0",
-<<<<<<< HEAD
-    "bootstrap": "~4.2.1",
-=======
     "bootstrap": "~4.3.0",
     "html5shiv": "~3.7.0",
->>>>>>> f934d97e7cc4dbe41b288d289ca6213003a7372b
     "jquery": "~3.3.0",
     "moment": "~2.24.0",
     "popper.js": "~1.14.0",
