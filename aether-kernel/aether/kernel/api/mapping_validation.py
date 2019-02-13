@@ -19,14 +19,10 @@
 import collections
 import json
 from django.utils.translation import ugettext as _
-import re
-
-from .entity_extractor import find_by_jsonpath
-
 import spavro
 
-ARRAY_ACCESSOR_REGEX = re.compile(
-    r'[^\[\]]+')
+from .entity_extractor import find_by_jsonpath, ARRAY_ACCESSOR_REGEX
+
 
 Success = collections.namedtuple('Success', ['path', 'result'])
 Failure = collections.namedtuple('Failure', ['path', 'description'])
@@ -79,7 +75,9 @@ def validate_existence_in_fields(field_name, path, definition):
     # we recurse and look for a nested object
 
     # if this field is an array accessor, we'll perform extra checking
-    check_array = is_array_accessor if '[' in field_name else always_false
+    check_array = is_array_accessor \
+        if len(ARRAY_ACCESSOR_REGEX.findall(field_name)) > 1 \
+        else always_false
 
     for field in definition['fields']:
         if field['name'] == field_name:

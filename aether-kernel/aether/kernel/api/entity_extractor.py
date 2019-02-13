@@ -385,7 +385,7 @@ def put_nested(_dict, keys, value):
             _dict[keys[0]] = put_nested({}, keys[1:], value)
     # Key has an array accessor like child[0]
     # Array accessors are only allowed at the last path element
-    elif '[' in keys[0]:
+    elif len(ARRAY_ACCESSOR_REGEX.findall(keys[0])) > 1:
         unpack_array_into_dict(_dict, keys[0], value)
     else:  # Simply the last key and value
         _dict[keys[0]] = value
