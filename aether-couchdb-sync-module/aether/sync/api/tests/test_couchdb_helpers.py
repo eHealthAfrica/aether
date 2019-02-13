@@ -165,3 +165,8 @@ class CouchdbHelpersTests(TestCase):
         couchdb_helpers.delete_user(device_id='test_xxx')
         api_mock.get.assert_called_with('_users/org.couchdb.user:test_xxx')
         api_mock.delete.assert_called_with('_users/org.couchdb.user:test_xxx?rev=1')
+
+    @mock.patch('aether.sync.api.couchdb_helpers.api.post')
+    def test_create_document(self, post_function):
+        couchdb_helpers.create_document(device_id='abc123', doc={'_id': 'test'})
+        post_function.assert_called_with('device_abc123', json={'_id': 'test'})

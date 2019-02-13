@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -16,21 +18,28 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.test import TestCase
+from django.core.management.base import BaseCommand
+from django.utils.translation import ugettext as _
 
-from aether.kernel.api import forms
+from aether.sync.api.couchdb_file import load_backup_file
 
 
-class FormsTest(TestCase):
+class Command(BaseCommand):
 
-    def test_str_to_json(self):
-        data = '{"dob": "2000-01-01", "name":"PersonA"}'
-        expected = {'dob': '2000-01-01', 'name': 'PersonA'}
-        result = str(forms.str_to_json(data))
-        self.assertTrue(str(expected) in result, result)
+    help = _('POST file content into CouchDB server.')
 
-    def test_str_to_json_no_data(self):
-        data = None
-        expected = {}
-        result = str(forms.str_to_json(data))
-        self.assertTrue(str(expected) in result, result)
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--filename',
+            '-f',
+            type=str,
+            help=_('Indicate the file to load'),
+            dest='filename',
+            action='store',
+            required=True,
+        )
+
+    def handle(self, *args, **options):
+        with open(options['filename'], 'r') as fp:
+            stats = load_backup_file(fp)
+            self.stdout.write(str(stats))

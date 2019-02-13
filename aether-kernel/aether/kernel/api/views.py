@@ -474,6 +474,8 @@ class SubmissionStatsMixin(object):
     ordering = ('name',)
 
     def get_queryset(self):
+        qs = super(SubmissionStatsMixin, self).get_queryset()
+
         entities_count = Count('submissions__entities__id', distinct=True)
 
         entities_filter = None
@@ -509,24 +511,23 @@ class SubmissionStatsMixin(object):
             #     filter=entities_filter,
             # )
 
-        return self.model.objects \
-                   .values('id', 'name', 'created') \
-                   .annotate(
-                       first_submission=Min('submissions__created'),
-                       last_submission=Max('submissions__created'),
-                       submissions_count=Count('submissions__id', distinct=True),
-                       attachments_count=Count('submissions__attachments__id', distinct=True),
-                       entities_count=entities_count,
-                   )
+        return qs.values('id', 'name', 'created') \
+                 .annotate(
+                     first_submission=Min('submissions__created'),
+                     last_submission=Max('submissions__created'),
+                     submissions_count=Count('submissions__id', distinct=True),
+                     attachments_count=Count('submissions__attachments__id', distinct=True),
+                     entities_count=entities_count,
+                 )
 
 
 class ProjectStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
-    model = models.Project  # required by SubmissionStatsMixin
+    queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectStatsSerializer
 
 
 class MappingSetStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
-    model = models.MappingSet  # required by SubmissionStatsMixin
+    queryset = models.MappingSet.objects.all()
     serializer_class = serializers.MappingSetStatsSerializer
 
 

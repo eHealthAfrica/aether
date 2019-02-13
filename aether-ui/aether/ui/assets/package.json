@@ -23,12 +23,17 @@
   },
   "dependencies": {
     "avsc": "~5.4.0",
+<<<<<<< HEAD
     "bootstrap": "~4.2.1",
+=======
+    "bootstrap": "~4.3.0",
+    "html5shiv": "~3.7.0",
+>>>>>>> f934d97e7cc4dbe41b288d289ca6213003a7372b
     "jquery": "~3.3.0",
     "moment": "~2.24.0",
     "popper.js": "~1.14.0",
-    "react": "~16.7.0",
-    "react-dom": "~16.7.0",
+    "react": "~16.8.0",
+    "react-dom": "~16.8.0",
     "react-intl": "~2.8.0",
     "react-redux": "~5.1.0",
     "react-router-dom": "~4.3.0",
@@ -45,7 +50,7 @@
     "babel-loader": "~8.0.0",
     "css-loader": "~2.1.0",
     "enzyme": "~3.8.0",
-    "enzyme-adapter-react-16": "~1.8.0",
+    "enzyme-adapter-react-16": "~1.9.0",
     "enzyme-react-intl": "~2.0.0",
     "express": "~4.16.0",
     "jest": "~23.6.0",

@@ -124,6 +124,8 @@ setup () {
     ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD -t=$ADMIN_TOKEN
 
     ./manage.py check_url --url=$COUCHDB_URL
+    # create system databases if missing (since CouchDB 2.X)
+    ./manage.py setup_couchdb
 
     STATIC_ROOT=/var/www/static
     # create static assets
@@ -193,6 +195,8 @@ case "$1" in
     ;;
 
     test_coverage )
+        # create system databases if missing (since CouchDB 2.X)
+        ./manage.py setup_couchdb
         test_coverage "${@:2}"
     ;;
 

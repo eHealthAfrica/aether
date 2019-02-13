@@ -23,17 +23,17 @@ from django.views.generic import TemplateView
 from aether.common.conf.urls import generate_urlpatterns
 
 
-urlpatterns = generate_urlpatterns(kernel=True) + [
+urlpatterns = generate_urlpatterns(kernel=True, app=[
     # API
     url(r'^api/', include('aether.ui.api.urls')),
 
     # Pipeline builder app
     url(r'^$',
-        login_required(TemplateView.as_view(template_name='pages/pipeline.html')),
+        view=login_required(TemplateView.as_view(template_name='pages/pipeline.html')),
         name='pipeline-app'),
 
     # styleguide
     url(r'^styleguide/',
-        login_required(TemplateView.as_view(template_name='pages/styleguide.html')),
+        view=login_required(TemplateView.as_view(template_name='pages/styleguide.html')),
         name='styleguide'),
-]
+])

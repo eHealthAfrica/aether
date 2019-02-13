@@ -23,6 +23,8 @@ from ...couchdb import api
 
 db_name_test = re.compile('^device_test_')
 
+DEVICE_TEST_FILE = '/code/aether/sync/api/tests/files/device_sync.json'
+
 
 def clean_couch():
     '''

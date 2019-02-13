@@ -19,6 +19,8 @@
 import logging
 import os
 
+from django.contrib import admin
+
 
 # Common Configuration
 # ------------------------------------------------------------------------------
@@ -125,28 +127,28 @@ TEMPLATES = [
 # ------------------------------------------------------------------------------
 
 REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': (
+    'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
         'aether.common.drf.renderers.CustomBrowsableAPIRenderer',
         'aether.common.drf.renderers.CustomAdminRenderer',
-    ),
-    'DEFAULT_PARSER_CLASSES': (
+    ],
+    'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
         'rest_framework.parsers.FormParser',
         'rest_framework.parsers.MultiPartParser',
-    ),
-    'DEFAULT_AUTHENTICATION_CLASSES': (
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.TokenAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
-    ),
-    'DEFAULT_FILTER_BACKENDS': (
+    ],
+    'DEFAULT_FILTER_BACKENDS': [
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
-    ),
+    ],
     'DEFAULT_PAGINATION_CLASS': 'aether.common.drf.pagination.CustomPagination',
     'PAGE_SIZE': int(os.environ.get('PAGE_SIZE', 10)),
     'MAX_PAGE_SIZE': int(os.environ.get('MAX_PAGE_SIZE', 5000)),
@@ -168,6 +170,41 @@ DATABASES = {
         'TESTING': {'CHARSET': 'UTF8'},
     },
 }
+
+
+# Security Configuration
+# ------------------------------------------------------------------------------
+
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+CSRF_COOKIE_DOMAIN = os.environ.get('CSRF_COOKIE_DOMAIN', '.aether.org')
+CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', CSRF_COOKIE_DOMAIN).split(',')
+SESSION_COOKIE_DOMAIN = CSRF_COOKIE_DOMAIN
+
+if os.environ.get('DJANGO_USE_X_FORWARDED_HOST', False):
+    USE_X_FORWARDED_HOST = True
+
+if os.environ.get('DJANGO_USE_X_FORWARDED_PORT', False):
+    USE_X_FORWARDED_PORT = True
+
+if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
+# Admin site Configuration
+# ------------------------------------------------------------------------------
+
+LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login.html')
+LOGGED_OUT_TEMPLATE = os.environ.get('LOGGED_OUT_TEMPLATE', 'aether/logged_out.html')
+
+admin.site.site_url = '/'
+admin.site.site_header = APP_NAME
+admin.site.site_title = APP_NAME
+
+admin.site.login_template = LOGIN_TEMPLATE
+admin.site.logout_template = LOGGED_OUT_TEMPLATE
 
 
 # Logging Configuration
@@ -277,30 +314,6 @@ if CAS_SERVER_URL:
 
 else:
     logger.info('No CAS enabled!')
-
-    LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login.html')
-    LOGGED_OUT_TEMPLATE = os.environ.get('LOGGED_OUT_TEMPLATE', 'aether/logged_out.html')
-
-
-# Security Configuration
-# ------------------------------------------------------------------------------
-
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
-
-CORS_ORIGIN_ALLOW_ALL = True
-
-CSRF_COOKIE_DOMAIN = os.environ.get('CSRF_COOKIE_DOMAIN', '.aether.org')
-CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', CSRF_COOKIE_DOMAIN).split(',')
-SESSION_COOKIE_DOMAIN = CSRF_COOKIE_DOMAIN
-
-if os.environ.get('DJANGO_USE_X_FORWARDED_HOST', False):
-    USE_X_FORWARDED_HOST = True
-
-if os.environ.get('DJANGO_USE_X_FORWARDED_PORT', False):
-    USE_X_FORWARDED_PORT = True
-
-if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Storage Configuration
