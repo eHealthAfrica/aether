@@ -36,7 +36,12 @@ INSTALLED_APPS += [
     'reversion',
     'reversion_compare',
     'aether.kernel',
+    'silk'
 ]
+
+MIDDLEWARE = [
+    'silk.middleware.SilkyMiddleware',
+] + MIDDLEWARE
 
 MIGRATION_MODULES = {
     'kernel': 'aether.kernel.api.migrations'
