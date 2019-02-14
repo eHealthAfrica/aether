@@ -22,6 +22,8 @@ from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
+from aether.common.multitenancy.utils import MtPrimaryKeyRelatedField, MtModelSerializer
+
 from .models import Project, XForm, MediaFile
 from .xform_utils import parse_xform_file, validate_xform
 from .surveyors_utils import get_surveyors, flag_as_surveyor
@@ -30,6 +32,11 @@ from .surveyors_utils import get_surveyors, flag_as_surveyor
 class MediaFileSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     name = serializers.CharField(allow_null=True, default=None)
+
+    xform = MtPrimaryKeyRelatedField(
+        queryset=XForm.objects.all(),
+        mt_field='project__mt',
+    )
 
     class Meta:
         model = MediaFile
@@ -64,6 +71,10 @@ class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     # this will return all media files in one request call
     media_files = MediaFileSerializer(many=True, read_only=True)
+
+    project = MtPrimaryKeyRelatedField(
+        queryset=Project.objects.all(),
+    )
 
     def validate(self, value):
         if value['xml_file']:
@@ -120,7 +131,7 @@ class SurveyorSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = ('id', 'username', 'password', )
 
 
-class ProjectSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):
 
     url = serializers.HyperlinkedIdentityField('project-detail', read_only=True)
     surveyors = serializers.PrimaryKeyRelatedField(

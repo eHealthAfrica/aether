@@ -20,7 +20,7 @@
 # ------------------------------------------------------------------------------
 
 from aether.common.conf.settings import *  # noqa
-from aether.common.conf.settings import INSTALLED_APPS
+from aether.common.conf.settings import INSTALLED_APPS, MIGRATION_MODULES
 
 
 # ODK Configuration
@@ -35,6 +35,6 @@ INSTALLED_APPS += [
     'aether.odk',
 ]
 
-MIGRATION_MODULES = {
-    'odk': 'aether.odk.api.migrations',
-}
+# In case of Mutitenancy is enabled!
+MULTITENANCY_MODEL = 'odk.Project'
+MIGRATION_MODULES['odk'] = 'aether.odk.api.migrations'

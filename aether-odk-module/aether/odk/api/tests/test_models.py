@@ -158,10 +158,12 @@ class ModelsTests(CustomTestCase):
             project=Project.objects.create(),
             xml_data=self.samples['xform']['xml-ok'],
         )
+        self.assertFalse(xform.is_accessible('realm'))
         media = MediaFile.objects.create(
             xform=xform,
             media_file=SimpleUploadedFile('sample.txt', b'abc'),
         )
+        self.assertFalse(media.is_accessible('realm'))
         self.assertEqual(media.name, 'sample.txt', 'takes file name')
         self.assertEqual(media.md5sum, '900150983cd24fb0d6963f7d28e17f72')
         self.assertEqual(str(media), 'sample.txt')

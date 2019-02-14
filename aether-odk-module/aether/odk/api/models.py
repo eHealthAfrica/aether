@@ -29,6 +29,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
+from aether.common.multitenancy.utils import MtModelAbstract
 from aether.common.utils import resolve_file_url
 
 from .xform_utils import (
@@ -64,7 +65,7 @@ Data model schema:
 '''
 
 
-class Project(ExportModelOperationsMixin('odk_project'), models.Model):
+class Project(ExportModelOperationsMixin('odk_project'), MtModelAbstract):
     '''
     Database link of an Aether Kernel Project.
 
@@ -300,6 +301,9 @@ class XForm(ExportModelOperationsMixin('odk_xform'), models.Model):
     def increase_version(self):
         self.version = '{:%Y%m%d%H}'.format(timezone.now())
 
+    def is_accessible(self, realm):
+        return self.project.is_accessible(realm)
+
     def __str__(self):
         return '{} - {}'.format(self.title, self.form_id)
 
@@ -358,6 +362,9 @@ class MediaFile(ExportModelOperationsMixin('odk_mediafile'), models.Model):
             self.name = self.media_file.name
 
         super(MediaFile, self).save(*args, **kwargs)
+
+    def is_accessible(self, realm):
+        return self.xform.project.is_accessible(realm)
 
     def __str__(self):
         return self.name

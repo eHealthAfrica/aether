@@ -43,6 +43,8 @@ from aether.common.kernel.utils import (
     get_submissions_url,
     submit_to_kernel,
 )
+from aether.common.multitenancy.utils import MtViewSetMixin
+
 from ..settings import LOGGING_LEVEL
 
 from .models import Project, XForm, MediaFile
@@ -119,7 +121,7 @@ MSG_SUBMISSION_SUBMIT_SUCCESS_ID = _(
 )
 
 
-class ProjectViewSet(viewsets.ModelViewSet):
+class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     '''
     Create new Project entries.
     '''
@@ -151,7 +153,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return self.retrieve(request, pk, *args, **kwargs)
 
 
-class XFormViewSet(viewsets.ModelViewSet):
+class XFormViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     '''
     Create new xForms entries providing:
 
@@ -165,6 +167,7 @@ class XFormViewSet(viewsets.ModelViewSet):
                     .order_by('title')
     serializer_class = XFormSerializer
     search_fields = ('title', 'description', 'xml_data',)
+    mt_field = 'project__mt'
 
     def get_queryset(self):
         queryset = self.queryset
@@ -197,7 +200,7 @@ class XFormViewSet(viewsets.ModelViewSet):
         return self.retrieve(request, pk, *args, **kwargs)
 
 
-class MediaFileViewSet(viewsets.ModelViewSet):
+class MediaFileViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     '''
     Create new Media File entries.
     '''
@@ -205,6 +208,7 @@ class MediaFileViewSet(viewsets.ModelViewSet):
     queryset = MediaFile.objects.order_by('name')
     serializer_class = MediaFileSerializer
     search_fields = ('name', 'xform__title',)
+    mt_field = 'xform__project__mt'
 
 
 class SurveyorViewSet(viewsets.ModelViewSet):
