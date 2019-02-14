@@ -25,6 +25,8 @@ from django.dispatch import receiver
 from django.utils.translation import ugettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
+from aether.common.multitenancy.utils import MtModelAbstract
+
 from .couchdb_helpers import delete_user, generate_db_name
 
 
@@ -59,7 +61,7 @@ Data model schema:
 '''
 
 
-class Project(ExportModelOperationsMixin('couchdbsync_project'), models.Model):
+class Project(ExportModelOperationsMixin('couchdbsync_project'), MtModelAbstract):
     '''
     Database link of an Aether Kernel Project
 
@@ -117,6 +119,9 @@ class Schema(ExportModelOperationsMixin('couchdbsync_schema'), models.Model):
         help_text=_('This ID corresponds to an Aether Kernel Artefact ID.'),
     )
     avro_schema = JSONField(verbose_name=_('AVRO schema'), blank=True, default=dict)
+
+    def is_accessible(self, realm):
+        return self.project.is_accessible(realm)
 
     def __str__(self):
         return self.name

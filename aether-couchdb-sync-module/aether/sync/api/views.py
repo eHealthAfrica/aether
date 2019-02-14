@@ -39,6 +39,8 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
+from aether.common.multitenancy.utils import MtViewSetMixin
+
 from .couchdb_file import load_backup_file
 from .couchdb_helpers import create_db, create_or_update_user
 from .models import Project, Schema, MobileUser, DeviceDB
@@ -56,7 +58,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(LOGGING_LEVEL)
 
 
-class ProjectViewSet(viewsets.ModelViewSet):
+class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     '''
     Create new Project entries.
     '''
@@ -88,7 +90,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return self.retrieve(request, pk, *args, **kwargs)
 
 
-class SchemaViewSet(viewsets.ModelViewSet):
+class SchemaViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     '''
     Create new Schema entries providing the AVRO schema via file or raw data.
     '''
@@ -96,6 +98,7 @@ class SchemaViewSet(viewsets.ModelViewSet):
     queryset = Schema.objects.order_by('name')
     serializer_class = SchemaSerializer
     search_fields = ('name', 'avro_schema',)
+    mt_field = 'project__mt'
 
     def get_queryset(self):
         queryset = self.queryset

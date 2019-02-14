@@ -22,7 +22,7 @@ import os
 # ------------------------------------------------------------------------------
 
 from aether.common.conf.settings import *  # noqa
-from aether.common.conf.settings import INSTALLED_APPS
+from aether.common.conf.settings import INSTALLED_APPS, MIGRATION_MODULES
 
 
 # Sync Configuration
@@ -45,9 +45,9 @@ INSTALLED_APPS += [
     'aether.sync',
 ]
 
-MIGRATION_MODULES = {
-    'sync': 'aether.sync.api.migrations',
-}
+# In case of Mutitenancy is enabled!
+MULTITENANCY_MODEL = 'sync.Project'
+MIGRATION_MODULES['sync'] = 'aether.sync.api.migrations'
 
 COUCHDB_URL = os.environ['COUCHDB_URL']
 COUCHDB_USER = os.environ['COUCHDB_USER']

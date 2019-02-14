@@ -167,9 +167,11 @@ class ModelsTests(ApiTestCase):
 
         project = Project.objects.create(name=name, project_id=id)
         self.assertEqual(str(project), f'{id} - {name}')
+        self.assertFalse(project.is_accessible('realm'))
 
         schema = Schema.objects.create(name=name, project=project)
         self.assertEqual(str(schema), name)
+        self.assertFalse(schema.is_accessible('realm'))
 
         schema_2 = Schema.objects.create(
             project=project,

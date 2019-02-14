@@ -22,6 +22,8 @@ from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
+from aether.common.multitenancy.utils import MtPrimaryKeyRelatedField, MtModelSerializer
+
 from .models import Project, Schema, MobileUser
 
 
@@ -33,6 +35,10 @@ class SchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         default=None,
         label=_('AVRO Schema file'),
         help_text=_('Upload an AVRO Schema file'),
+    )
+
+    project = MtPrimaryKeyRelatedField(
+        queryset=Project.objects.all(),
     )
 
     def validate(self, value):
@@ -51,7 +57,7 @@ class SchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ProjectSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):
 
     # this will return all linked schemas in one request call
     schemas = SchemaSerializer(read_only=True, many=True)
