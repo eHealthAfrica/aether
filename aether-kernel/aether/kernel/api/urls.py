@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.conf.urls import url
+from django.conf.urls import url, include
 from rest_framework.routers import DefaultRouter
 
 from . import views
@@ -37,5 +37,7 @@ router.register('entities', views.EntityViewSet)
 
 
 urlpatterns = router.urls + [
-    url(r'^validate-mappings/$', views.validate_mappings_view, name='validate-mappings'),
+    url(r'^validate-mappings/$', view=views.validate_mappings_view, name='validate-mappings'),
 ]
+
+urlpatterns += [url(r'^silk/', include('silk.urls', namespace='silk'))]

@@ -32,6 +32,7 @@ aether.common
 django-filter
 django-model-utils
 django-reversion-compare
+django-silk
 drf-dynamic-fields
 drf_yasg
 pygments

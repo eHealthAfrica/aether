@@ -36,7 +36,8 @@ INSTALLED_APPS += [
     'reversion',
     'reversion_compare',
     'aether.kernel',
-    'django_rq',
+    'silk',
+    'django_rq'
 ]
 
 CACHES = {
@@ -45,6 +46,10 @@ CACHES = {
         'LOCATION': 'unique-snowflake',
     }
 }
+
+MIDDLEWARE = [
+    'silk.middleware.SilkyMiddleware',
+] + MIDDLEWARE
 
 MIGRATION_MODULES = {
     'kernel': 'aether.kernel.api.migrations'
