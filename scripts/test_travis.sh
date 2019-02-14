@@ -24,10 +24,6 @@ set -Eeuo pipefail
 ./scripts/build_common_and_distribute.sh
 
 case "$1" in
-    kubernetes)
-        ./scripts/kubernetes/run_travis.sh
-    ;;
-
     integration)
         ./scripts/test_integration_requires.sh travis
         ./scripts/test_container.sh producer

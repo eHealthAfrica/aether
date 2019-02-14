@@ -59,6 +59,7 @@ services:
       - "9000:9000"
     command: start
 
+
   # ---------------------------------
   # Aether Kernel Client
   # ---------------------------------
@@ -74,7 +75,6 @@ services:
       - ./aether-utils/aether-client:/code
       - ./tmp/VERSION:/code/VERSION
     command: test
-
 
 
   # ---------------------------------
