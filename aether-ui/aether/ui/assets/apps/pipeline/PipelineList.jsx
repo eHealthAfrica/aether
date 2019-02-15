@@ -124,6 +124,15 @@ class PipelineList extends Component {
           {this.state.errorMessage}
         </Modal>
         <div className={`preview-input ${pipeline.isInputReadOnly ? 'pipeline-readonly' : ''}`} onClick={this.onSelectPipeline.bind(this, pipeline)}>
+          
+          { pipeline.isInputReadOnly &&
+            <span className='tag'>
+              <FormattedMessage
+                id='pipeline.read-only.indicator'
+                defaultMessage='read-only'
+              />
+            </span>
+          }
           <div className='input-heading'>
             <span className='badge badge-c badge-big'>
               <i className='fas fa-file fa-sm' />
@@ -139,28 +148,38 @@ class PipelineList extends Component {
               <React.Fragment key={contract.id}>
                 <div className={`preview-contract ${contract.is_read_only ? 'pipeline-readonly' : ''}`}
                   onClick={() => { this.onSelectContract(pipeline, contract) }}>
-                  <h2 className='contract-heading'>{contract.name}</h2>
 
-                  <div className='contract-summaries'>
-                    <div className='summary-entity-types'>
-                      <span className='badge badge-b badge-big'>
-                        { contract.entity_types ? contract.entity_types.length : 0 }
-                      </span>
+                  { contract.is_read_only &&
+                    <span className='tag'>
                       <FormattedMessage
-                        id='pipeline.list.entity.types'
-                        defaultMessage='Entity-Types'
+                        id='pipeline.read-only.indicator'
+                        defaultMessage='read-only'
                       />
-                    </div>
+                    </span>
+                  }
+                  <div className='contract-heading'>
+                    <h2 className='contract-name'>{contract.name}</h2>
+                    <div className='contract-summaries'>
+                      <div className='summary-entity-types'>
+                        <span className='badge badge-b badge-big'>
+                          { contract.entity_types ? contract.entity_types.length : 0 }
+                        </span>
+                        <FormattedMessage
+                          id='pipeline.list.entity.types'
+                          defaultMessage='Entity-Types'
+                        />
+                      </div>
 
-                    <div className='summary-errors'>
-                      <span className={`badge badge-b badge-big
-                      ${contract && contract.mapping_errors.length && 'error'}`}>
-                        { contract.mapping_errors ? contract.mapping_errors.length : 0 }
-                      </span>
-                      <FormattedMessage
-                        id='contract.list.errors'
-                        defaultMessage='Errors'
-                      />
+                      <div className='summary-errors'>
+                        <span className={`badge badge-b badge-big
+                        ${contract && contract.mapping_errors.length && 'error'}`}>
+                          { contract.mapping_errors ? contract.mapping_errors.length : 0 }
+                        </span>
+                        <FormattedMessage
+                          id='contract.list.errors'
+                          defaultMessage='Errors'
+                        />
+                      </div>
                     </div>
                   </div>
 
