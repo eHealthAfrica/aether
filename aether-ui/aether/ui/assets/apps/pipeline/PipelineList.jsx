@@ -128,7 +128,9 @@ class PipelineList extends Component {
             <span className='badge badge-c badge-big'>
               <i className='fas fa-file fa-sm' />
             </span>
-            {pipeline.name}
+            <span className='input-name'>
+              {pipeline.name}
+            </span>
           </div>
           <div className='info'>
             { pipeline.mappingset && <InfoButton pipeline={pipeline} /> }

@@ -105,6 +105,12 @@
   font-weight: 300;
   display: flex;
   align-items: center;
+
+  .input-name {
+    word-wrap: break-word;
+    max-width: 80%;
+    line-height: 1.3em;
+  }
 }
 
 .preview-contracts {
@@ -138,6 +144,7 @@
   margin-bottom: .5rem;
   transition: color .3s;
   word-wrap: break-word;
+  max-width: 100%;
 }
 
 .contract-summaries {
@@ -277,6 +284,9 @@
 
 @media screen and (max-width: 1000px) {
 
+  .pipelines {
+    padding: 3rem 5vw;
+  }
 
   .pipeline-form {
     flex-wrap: wrap;
