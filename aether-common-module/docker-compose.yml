@@ -15,8 +15,13 @@ services:
       # required environment variables
       DJANGO_SECRET_KEY: django_secret_key
 
-      DJANGO_STORAGE_BACKEND: filesystem
-      HOSTNAME: example.com
+      DJANGO_STORAGE_BACKEND: minio
+      BUCKET_NAME: common
+      MINIO_STORAGE_ENDPOINT: minio-common
+      MINIO_STORAGE_USE_HTTPS: null
+      MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET: null
+      MINIO_STORAGE_ACCESS_KEY: minio_access_key
+      MINIO_STORAGE_SECRET_KEY: minio_secret_key
 
       PGPASSWORD: secretsecret
       PGUSER: db-test-user

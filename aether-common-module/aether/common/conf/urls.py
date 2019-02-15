@@ -39,16 +39,6 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):  # pragma: no cover
           or the CAS ones.
         - the `debug toolbar` URLs only in DEBUG mode.
 
-    Based on `settings`:
-
-        - if `DJANGO_STORAGE_BACKEND` is `filesystem` then:
-
-            - the `/media/<path>` URLs. The endpoint gives protected access
-              (only logged in users) to media files.
-
-            - the `/media-basic/<path>` URLs. The endpoint gives protected access
-              (only logged in users with basic authentication) to media files.
-
     Based on the arguments:
 
         - `token`: indicates if the app should be able to create and return
@@ -101,17 +91,6 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):  # pragma: no cover
         # monitoring
         url('', include('django_prometheus.urls')),
     ]
-
-    if settings.DJANGO_STORAGE_BACKEND == 'filesystem':
-        from django.contrib.auth.decorators import login_required
-        from aether.common.conf.views import basic_serve, media_serve
-
-        urlpatterns += [
-            # media files (protected)
-            url(r'^media/(?P<path>.*)$', view=login_required(media_serve), name='media'),
-            # media files (basic auth)
-            url(r'^media-basic/(?P<path>.*)$', view=basic_serve, name='media-basic'),
-        ]
 
     if kernel:
         from aether.common.kernel.views import check_kernel

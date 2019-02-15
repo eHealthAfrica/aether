@@ -19,8 +19,6 @@
 import logging
 import os
 
-from django.contrib import admin
-
 
 # Common Configuration
 # ------------------------------------------------------------------------------
@@ -42,11 +40,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/static/')
-
-MEDIA_URL = '/media/'
-MEDIA_BASIC_URL = '/media-basic/'
-MEDIA_INTERNAL_URL = '/media-internal/'
-MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/media/')
 
 
 # Version and revision
@@ -77,7 +70,6 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'django.contrib.sessions',
     'django.contrib.staticfiles',
-    'storages',
 
     # REST framework with auth token
     'rest_framework',
@@ -193,20 +185,6 @@ if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
-# Admin site Configuration
-# ------------------------------------------------------------------------------
-
-LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login.html')
-LOGGED_OUT_TEMPLATE = os.environ.get('LOGGED_OUT_TEMPLATE', 'aether/logged_out.html')
-
-admin.site.site_url = '/'
-admin.site.site_header = APP_NAME
-admin.site.site_title = APP_NAME
-
-admin.site.login_template = LOGIN_TEMPLATE
-admin.site.logout_template = LOGGED_OUT_TEMPLATE
-
-
 # Logging Configuration
 # ------------------------------------------------------------------------------
 
@@ -298,6 +276,17 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
+# Site Configuration
+# ------------------------------------------------------------------------------
+
+LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login.html')
+LOGGED_OUT_TEMPLATE = os.environ.get('LOGGED_OUT_TEMPLATE', 'aether/logged_out.html')
+
+
+# Authentication Server Configuration
+# ------------------------------------------------------------------------------
+
 CAS_SERVER_URL = os.environ.get('CAS_SERVER_URL')
 if CAS_SERVER_URL:
     INSTALLED_APPS += [
@@ -319,43 +308,55 @@ else:
 # Storage Configuration
 # ------------------------------------------------------------------------------
 
-DJANGO_STORAGE_BACKEND = os.environ['DJANGO_STORAGE_BACKEND']
+try:
+    DJANGO_STORAGE_BACKEND = os.environ.get('DJANGO_STORAGE_BACKEND')
 
-if DJANGO_STORAGE_BACKEND == 'filesystem':
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-    HOSTNAME = os.environ['HOSTNAME']
-    if not HOSTNAME:
-        msg = 'Missing HOSTNAME environment variable!'
-        logger.critical(msg)
-        raise RuntimeError(msg)
+    if DJANGO_STORAGE_BACKEND == 'minio':
+        INSTALLED_APPS += ['minio_storage', ]
+        DEFAULT_FILE_STORAGE = 'minio_storage.storage.MinioMediaStorage'
 
-elif DJANGO_STORAGE_BACKEND == 's3':
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    try:
+        MINIO_STORAGE_ACCESS_KEY = os.environ['MINIO_STORAGE_ACCESS_KEY']
+        MINIO_STORAGE_ENDPOINT = os.environ['MINIO_STORAGE_ENDPOINT']
+        MINIO_STORAGE_SECRET_KEY = os.environ['MINIO_STORAGE_SECRET_KEY']
+        MINIO_STORAGE_USE_HTTPS = bool(os.environ.get('MINIO_STORAGE_USE_HTTPS'))
+
+        MINIO_STORAGE_MEDIA_BUCKET_NAME = os.environ['BUCKET_NAME']
+        MINIO_STORAGE_MEDIA_URL = os.environ.get('MINIO_STORAGE_MEDIA_URL')
+        MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET = bool(os.environ.get('MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET'))
+        MINIO_STORAGE_AUTO_CREATE_MEDIA_POLICY = bool(os.environ.get('MINIO_STORAGE_AUTO_CREATE_MEDIA_POLICY'))
+        MINIO_STORAGE_MEDIA_USE_PRESIGNED = bool(os.environ.get('MINIO_STORAGE_MEDIA_USE_PRESIGNED'))
+        MINIO_STORAGE_MEDIA_BACKUP_FORMAT = bool(os.environ.get('MINIO_STORAGE_MEDIA_BACKUP_FORMAT'))
+        MINIO_STORAGE_MEDIA_BACKUP_BUCKET = bool(os.environ.get('MINIO_STORAGE_MEDIA_BACKUP_BUCKET'))
+
+    elif DJANGO_STORAGE_BACKEND == 's3':
+        INSTALLED_APPS += ['storages', ]
+        DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
         AWS_STORAGE_BUCKET_NAME = os.environ['BUCKET_NAME']
         AWS_S3_REGION_NAME = os.environ['AWS_S3_REGION_NAME']
         AWS_DEFAULT_ACL = os.environ['AWS_DEFAULT_ACL']
-    except KeyError as key:
-        msg = f'Missing {key} environment variable!'
-        logger.critical(msg)
-        raise RuntimeError(msg)
 
-elif DJANGO_STORAGE_BACKEND == 'gcs':
-    DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-    GS_BUCKET_NAME = os.environ['BUCKET_NAME']
-    if not GS_BUCKET_NAME:
-        msg = 'Missing BUCKET_NAME environment variable!'
-        logger.critical(msg)
-        raise RuntimeError(msg)
+    elif DJANGO_STORAGE_BACKEND == 'gcs':
+        INSTALLED_APPS += ['storages', ]
+        DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
 
-else:
-    msg = (
-        'Unrecognized value "{}" for environment variable DJANGO_STORAGE_BACKEND.'
-        ' Expected one of the following: "filesystem", "s3", "gcs"'
-    )
-    raise RuntimeError(msg.format(DJANGO_STORAGE_BACKEND))
+        GS_BUCKET_NAME = os.environ['BUCKET_NAME']
 
-logger.info('Using storage backend "{}"'.format(DJANGO_STORAGE_BACKEND))
+except KeyError as key:
+    msg = f'Missing {key} environment variable!'
+    logger.critical(msg)
+    raise RuntimeError(msg)
+
+
+def check_storage():
+    if DJANGO_STORAGE_BACKEND not in ['minio', 's3', 'gcs']:
+        msg = (
+            'Unrecognized value "{}" for environment variable DJANGO_STORAGE_BACKEND.'
+            ' Expected one of the following: "minio", "s3", "gcs"'
+        )
+        raise RuntimeError(msg.format(DJANGO_STORAGE_BACKEND))
+    else:
+        logger.info('Using storage backend "{}"'.format(DJANGO_STORAGE_BACKEND))
 
 
 # Debug Configuration

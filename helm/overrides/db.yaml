@@ -1,5 +1,0 @@
-fullnameOverride: db
-imageTag: 9.6.3
-persistence:
-  enabled: true
-postgresUser: postgres
