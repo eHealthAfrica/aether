@@ -21,13 +21,14 @@ import uuid
 import mock
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from ..kernel_utils import KernelPropagationError
 from ..models import Project, Schema
 
 
+@override_settings(MULTITENANCY=False)
 class KernelViewsTests(TestCase):
 
     def setUp(self):
