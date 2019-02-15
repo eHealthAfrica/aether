@@ -20,6 +20,7 @@ import logging
 import json
 import requests
 
+from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext as _
@@ -45,8 +46,6 @@ from aether.common.kernel.utils import (
 )
 from aether.common.multitenancy.utils import MtViewSetMixin
 
-from ..settings import LOGGING_LEVEL
-
 from .models import Project, XForm, MediaFile
 from .serializers import (
     ProjectSerializer,
@@ -64,7 +63,7 @@ from .xform_utils import get_instance_data_from_xml, parse_submission
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(LOGGING_LEVEL)
+logger.setLevel(settings.LOGGING_LEVEL)
 
 
 # list of messages that can be translated

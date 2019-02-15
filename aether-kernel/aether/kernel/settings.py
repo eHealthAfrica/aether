@@ -26,6 +26,7 @@ from aether.common.conf.settings import (
     INSTALLED_APPS,
     MIGRATION_MODULES,
     REST_FRAMEWORK,
+    check_storage,
 )
 
 # Kernel Configuration
@@ -52,6 +53,11 @@ REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'] = [
     'django_filters.rest_framework.DjangoFilterBackend',
     *REST_FRAMEWORK['DEFAULT_FILTER_BACKENDS'],
 ]
+
+
+# Storage Configuration
+# ------------------------------------------------------------------------------
+check_storage()
 
 
 # Export Configuration

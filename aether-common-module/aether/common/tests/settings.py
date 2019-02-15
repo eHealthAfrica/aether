@@ -25,10 +25,11 @@ from aether.common.conf.settings import *  # noqa
 from aether.common.conf.settings import (
     INSTALLED_APPS,
     MIGRATION_MODULES,
+    check_storage,
 )
 
 
-ROOT_URLCONF = 'aether.common.urls'
+ROOT_URLCONF = 'aether.common.tests.urls'
 
 
 # Database Configuration
@@ -45,8 +46,13 @@ DATABASES = {
 # Multitenancy Configuration
 # ------------------------------------------------------------------------------
 
+MULTITENANCY_MODEL = 'fakeapp.TestModel'
 INSTALLED_APPS += [
     'aether.common.multitenancy.tests.fakeapp',
 ]
 MIGRATION_MODULES['fakeapp'] = 'aether.common.multitenancy.tests.fakeapp.migrations'
-MULTITENANCY_MODEL = 'fakeapp.TestModel'
+
+
+# Storage Configuration
+# ------------------------------------------------------------------------------
+check_storage()

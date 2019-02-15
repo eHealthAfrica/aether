@@ -59,9 +59,6 @@ services:
 
       # static folders per container
       - ./.persistent_data/static:/static
-
-      # media folders per container
-      - ./.persistent_data/media:/media
     ports:
       - "80:80"
       # needed for ODK behind nginx (ODK Collect only accepts 443 and 8443 ports)
@@ -71,6 +68,18 @@ services:
       interval: 5s
       timeout: 3s
       retries: 30
+
+
+  minio-base:
+    image: minio/minio:latest
+    volumes:
+      - ./.persistent_data/media:/data
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_STORAGE_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_STORAGE_SECRET_KEY}
+    command: minio server --quiet --address minio:9000 /data
+    ports:
+      - "9000:9000"
 
 
   # ---------------------------------
@@ -83,8 +92,9 @@ services:
     stdin_open: true
     tty: true
     environment:
-      # Uncomment this line to enable single sign on if you use CAS
+      # Uncomment these lines to enable single sign on if you use CAS
       # CAS_SERVER_URL: https://your.cas.server
+      # HOSTNAME: kernel.aether.local
 
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
@@ -92,10 +102,18 @@ services:
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
 
-      DJANGO_STORAGE_BACKEND: filesystem
-      HOSTNAME: kernel.aether.local
-
       MULTITENANCY: "true"
+
+      BUCKET_NAME: kernel
+      DJANGO_STORAGE_BACKEND: minio
+      MINIO_STORAGE_ACCESS_KEY: ${MINIO_STORAGE_ACCESS_KEY}
+      MINIO_STORAGE_SECRET_KEY: ${MINIO_STORAGE_SECRET_KEY}
+      MINIO_STORAGE_ENDPOINT: minio:9000
+      # Use these settings to make it accessible via browser
+      MINIO_STORAGE_MEDIA_USE_PRESIGNED: null
+      MINIO_STORAGE_MEDIA_URL: http://localhost:9000/kernel
+      MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET: "true"
+      MINIO_STORAGE_AUTO_CREATE_MEDIA_POLICY: "true"
 
       APP_NAME: Aether Kernel
 
@@ -120,7 +138,7 @@ services:
       EXPORT_HEADER_SEPARATOR: "/"
       EXPORT_HEADER_SHORTEN: "no"
 
-      WEB_SERVER_PORT: 8000
+      WEB_SERVER_PORT: 8100
     volumes:
       - ./aether-kernel:/code
 
@@ -128,8 +146,6 @@ services:
       - ./tmp/VERSION:/code/VERSION
       - ./tmp/REVISION:/code/REVISION
 
-      # media folder
-      - ./.persistent_data/media/kernel:/media
       # static folder
       - ./.persistent_data/static/kernel:/var/www/static
       # temporary folder for Excel files
@@ -137,7 +153,7 @@ services:
       # backup folder
       - ./.persistent_data/backups/kernel:/backups
     ports:
-      - "8000:8000"
+      - "8100:8100"
     command: start_dev
 
 
@@ -151,8 +167,9 @@ services:
     stdin_open: true
     tty: true
     environment:
-      # Uncomment this line to enable single sign on if you use CAS
+      # Uncomment these lines to enable single sign on if you use CAS
       # CAS_SERVER_URL: https://your.cas.server
+      # HOSTNAME: odk.aether.local
 
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
@@ -160,10 +177,18 @@ services:
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
 
-      DJANGO_STORAGE_BACKEND: filesystem
-      HOSTNAME: odk.aether.local
-
       MULTITENANCY: "true"
+
+      BUCKET_NAME: odk
+      DJANGO_STORAGE_BACKEND: minio
+      MINIO_STORAGE_ACCESS_KEY: ${MINIO_STORAGE_ACCESS_KEY}
+      MINIO_STORAGE_SECRET_KEY: ${MINIO_STORAGE_SECRET_KEY}
+      MINIO_STORAGE_ENDPOINT: minio:9000
+      # Use these settings to make it accessible via browser
+      MINIO_STORAGE_MEDIA_USE_PRESIGNED: null
+      MINIO_STORAGE_MEDIA_URL: http://localhost:9000/odk
+      MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET: "true"
+      MINIO_STORAGE_AUTO_CREATE_MEDIA_POLICY: "true"
 
       APP_NAME: Aether ODK
 
@@ -172,8 +197,8 @@ services:
       ADMIN_TOKEN: ${ODK_ADMIN_TOKEN}
 
       AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
-      AETHER_KERNEL_URL: http://kernel:8000
-      AETHER_KERNEL_URL_TEST: http://kernel-test:9000
+      AETHER_KERNEL_URL: http://kernel:8100
+      AETHER_KERNEL_URL_TEST: http://kernel-test:9100
 
       DB_NAME: odk
       PGHOST: db
@@ -182,7 +207,7 @@ services:
       PGUSER: postgres
 
       # behind ngnix
-      WEB_SERVER_PORT: 8002
+      WEB_SERVER_PORT: 8102
       # standalone (without nginx) (ODK Collect only accepts 443 and 8443 ports)
       # WEB_SERVER_PORT: 8443
     volumes:
@@ -192,15 +217,13 @@ services:
       - ./tmp/VERSION:/code/VERSION
       - ./tmp/REVISION:/code/REVISION
 
-      # media folder
-      - ./.persistent_data/media/odk:/media
       # static folder
       - ./.persistent_data/static/odk:/var/www/static
       # backup folder
       - ./.persistent_data/backups/odk:/backups
     ports:
       # behind ngnix
-      - "8002:8002"
+      - "8102:8102"
       # standalone (without nginx)
       # - "8443:8443"
     command: start_dev
@@ -216,17 +239,15 @@ services:
     stdin_open: true
     tty: true
     environment: &sync-environment
-      # Uncomment this line to enable single sign on if you use CAS
+      # Uncomment these lines to enable single sign on if you use CAS
       # CAS_SERVER_URL: https://your.cas.server
+      # HOSTNAME: sync.aether.local
 
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
       DJANGO_SECRET_KEY: ${COUCHDB_SYNC_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
-
-      DJANGO_STORAGE_BACKEND: filesystem
-      HOSTNAME: sync.aether.local
 
       MULTITENANCY: "true"
 
@@ -237,8 +258,8 @@ services:
       ADMIN_TOKEN: ${COUCHDB_SYNC_ADMIN_TOKEN}
 
       AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
-      AETHER_KERNEL_URL: http://kernel:8000
-      AETHER_KERNEL_URL_TEST: http://kernel-test:9000
+      AETHER_KERNEL_URL: http://kernel:8100
+      AETHER_KERNEL_URL_TEST: http://kernel-test:9100
 
       GOOGLE_CLIENT_ID: ${COUCHDB_SYNC_GOOGLE_CLIENT_ID}
 
@@ -257,7 +278,7 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_PORT: 6379
 
-      WEB_SERVER_PORT: 8006
+      WEB_SERVER_PORT: 8106
     volumes: &sync-volumes
       - ./aether-couchdb-sync-module:/code
 
@@ -270,7 +291,7 @@ services:
       # backup folder
       - ./.persistent_data/backups/sync:/backups
     ports:
-      - "8006:8006"
+      - "8106:8106"
     command: start_dev
 
   couchdb-sync-rq-base:
@@ -290,8 +311,9 @@ services:
     stdin_open: true
     tty: true
     environment:
-      # Uncomment this line to enable single sign on if you use CAS
+      # Uncomment these lines to enable single sign on if you use CAS
       # CAS_SERVER_URL: https://your.cas.server
+      # HOSTNAME: ui.aether.local
 
       CSRF_COOKIE_DOMAIN: .aether.local
       DEBUG: "true"
@@ -299,17 +321,14 @@ services:
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
 
-      DJANGO_STORAGE_BACKEND: filesystem
-      HOSTNAME: ui.aether.local
-
       APP_NAME: Aether
 
       ADMIN_USERNAME: ${UI_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${UI_ADMIN_PASSWORD}
 
       AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
-      AETHER_KERNEL_URL: http://kernel:8000
-      AETHER_KERNEL_URL_TEST: http://kernel-test:9000
+      AETHER_KERNEL_URL: http://kernel:8100
+      AETHER_KERNEL_URL_TEST: http://kernel-test:9100
 
       DB_NAME: ui
       PGHOST: db
@@ -319,7 +338,7 @@ services:
 
       # use this value with "start_dev" command and webpack otherwise comment it out
       STATIC_ROOT: /code/aether/ui/assets/bundles
-      WEB_SERVER_PORT: 8004
+      WEB_SERVER_PORT: 8104
     volumes:
       - ./aether-ui:/code
 
@@ -332,7 +351,7 @@ services:
       # backup folder
       - ./.persistent_data/backups/ui:/backups
     ports:
-      - "8004:8004"
+      - "8104:8104"
     command: start_dev
 
   ui-assets-base:
@@ -399,7 +418,7 @@ services:
       PYTHONUNBUFFERED: 1
 
       # These variables will override the ones indicated in the settings file
-      KERNEL_URL: http://kernel:8000
+      KERNEL_URL: http://kernel:8100
       KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
       KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
 

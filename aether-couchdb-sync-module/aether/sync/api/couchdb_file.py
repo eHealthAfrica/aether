@@ -19,15 +19,15 @@
 import json
 import logging
 
+from django.conf import settings
 from django.utils.translation import ugettext as _
 
 from .models import DeviceDB
 from .couchdb_helpers import create_db, create_document
-from ..settings import LOGGING_LEVEL
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(LOGGING_LEVEL)
+logger.setLevel(settings.LOGGING_LEVEL)
 
 
 def load_backup_file(fp):

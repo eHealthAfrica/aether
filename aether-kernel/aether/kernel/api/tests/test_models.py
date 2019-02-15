@@ -127,7 +127,7 @@ class ModelsTests(TransactionTestCase):
         self.assertEqual(attachment.submission_revision, submission.revision)
         self.assertIsNone(attachment.revision)
         self.assertEqual(attachment.project, submission.project)
-        self.assertTrue(attachment.attachment_file_url.endswith(attachment.attachment_file.url))
+        self.assertEqual(attachment.attachment_file_url, attachment.attachment_file.url)
         self.assertFalse(attachment.is_accessible(REALM))
 
         attachment_2 = models.Attachment.objects.create(

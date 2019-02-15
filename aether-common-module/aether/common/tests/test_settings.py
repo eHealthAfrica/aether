@@ -15,3 +15,20 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
+from django.conf import settings
+from django.test import TestCase
+
+
+class SettingsTest(TestCase):
+
+    def test_default_variables(self):
+
+        self.assertTrue(settings.TESTING)
+        self.assertFalse(settings.DEBUG)
+
+        self.assertEqual(settings.ROOT_URLCONF, 'aether.common.tests.urls')
+        self.assertIsNotNone(settings.DJANGO_STORAGE_BACKEND)
+
+        self.assertEqual(settings.VERSION, '0.0.0')
+        self.assertEqual(settings.REVISION, '0123456789ABCDEF')

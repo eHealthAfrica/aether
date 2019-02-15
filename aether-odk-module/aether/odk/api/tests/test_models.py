@@ -16,7 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError
 
@@ -53,14 +52,14 @@ class ModelsTests(CustomTestCase):
                 <h:html
                         xmlns="http://www.w3.org/2002/xforms"
                         xmlns:h="http://www.w3.org/1999/xhtml">
-                  <h:head>
-                    <model>
-                      <instance>
-                      </instance>
-                    </model>
-                  </h:head>
-                  <h:body>
-                  </h:body>
+                    <h:head>
+                        <model>
+                            <instance>
+                            </instance>
+                        </model>
+                    </h:head>
+                    <h:body>
+                    </h:body>
                 </h:html>
             ''',
         )
@@ -173,7 +172,7 @@ class ModelsTests(CustomTestCase):
         self.assertEqual(media.name, 'sample.txt', 'no replaces name')
         self.assertEqual(media.md5sum, 'e2fc714c4727ee9395f324cd2e7f331f')
         self.assertEqual(media.hash, 'md5:e2fc714c4727ee9395f324cd2e7f331f')
-        self.assertEqual(media.media_file_url, f'http://{settings.HOSTNAME}{media.media_file.url}')
+        self.assertEqual(media.media_file_url, media.media_file.url)
         # with media files there is manifest_url
         self.assertEqual(xform.manifest_url,
                          '/forms/{}/manifest.xml?version={}'.format(xform.id, xform.version))

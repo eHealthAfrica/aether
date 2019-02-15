@@ -22,7 +22,6 @@ django-cors-headers==2.4.0
 django-debug-toolbar==1.11
 django-model-utils==3.1.2
 django-prometheus==1.0.15
-django-storages==1.7.1
 django-ums-client==0.2.6
 django-webpack-loader==0.6.0
 djangorestframework==3.9.1
