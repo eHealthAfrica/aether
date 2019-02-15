@@ -32,15 +32,7 @@ from ..kernel_utils import (
 )
 from ..models import Project, Schema
 
-
-class MockResponse:
-    def __init__(self, status_code, json_data=None):
-        self.json_data = json_data
-        self.status_code = status_code
-        self.content = json.dumps(json_data).encode('utf-8')
-
-    def json(self):
-        return self.json_data
+from . import MockResponse
 
 
 @override_settings(MULTITENANCY=False)

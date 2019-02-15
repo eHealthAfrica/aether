@@ -16,7 +16,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import json
 import re
+
 from django.test import TransactionTestCase
 
 from ...couchdb import api
@@ -49,3 +51,13 @@ class ApiTestCase(TransactionTestCase):
 
     def tearDown(self):
         clean_couch()
+
+
+class MockResponse:
+    def __init__(self, status_code, json_data=None):
+        self.json_data = json_data
+        self.status_code = status_code
+        self.content = json.dumps(json_data).encode('utf-8')
+
+    def json(self):
+        return self.json_data
