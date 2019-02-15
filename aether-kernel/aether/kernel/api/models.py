@@ -30,8 +30,6 @@ from django_prometheus.models import ExportModelOperationsMixin
 
 from model_utils.models import TimeStampedModel
 
-from aether.common.utils import resolve_file_url
-
 from .constants import NAMESPACE
 from .utils import json_prettified
 
@@ -325,7 +323,7 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), ProjectChildAb
 
     @property
     def attachment_file_url(self):
-        return resolve_file_url(self.attachment_file.url)
+        return self.attachment_file.url
 
     def save(self, *args, **kwargs):
         # calculate file hash

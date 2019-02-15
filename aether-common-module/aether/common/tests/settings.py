@@ -22,9 +22,10 @@ The app that includes this module should have its own settings.
 '''
 
 from aether.common.conf.settings import *  # noqa
+from aether.common.conf.settings import check_storage
 
 
-ROOT_URLCONF = 'aether.common.urls'
+ROOT_URLCONF = 'aether.common.tests.urls'
 
 
 # Database Configuration
@@ -36,3 +37,5 @@ DATABASES = {
         'NAME': ':memory:',
     },
 }
+
+check_storage()
