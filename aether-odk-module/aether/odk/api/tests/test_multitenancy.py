@@ -60,30 +60,41 @@ class MultitenancyTests(CustomTestCase):
         self.assertEqual(settings.MULTITENANCY_MODEL, 'odk.Project')
         self.assertEqual(utils.get_multitenancy_model(), models.Project)
 
-    def test_models(self):
-        obj1 = self.helper_create_project()
-        child1 = self.helper_create_xform(project_id=obj1.project_id)
-        self.assertFalse(obj1.is_accessible(CURRENT_REALM))
-        self.assertFalse(child1.is_accessible(CURRENT_REALM))
+    def test_models__initial(self):
+        xform = self.helper_create_xform(with_media=True)
+        project = xform.project
+        media_file = xform.media_files.first()
+
+        self.assertFalse(project.is_accessible(CURRENT_REALM))
+        self.assertFalse(xform.is_accessible(CURRENT_REALM))
+        self.assertFalse(media_file.is_accessible(CURRENT_REALM))
         self.assertTrue(MtInstance.objects.count() == 0)
 
-        obj1.save_mt(self.request)
-        self.assertTrue(MtInstance.objects.count() > 0)
-        self.assertTrue(obj1.is_accessible(CURRENT_REALM))
-        self.assertTrue(child1.is_accessible(CURRENT_REALM))
+    def test_models__assign_realm(self):
+        xform = self.helper_create_xform(with_media=True)
+        project = xform.project
+        media_file = xform.media_files.first()
 
-        mt1 = MtInstance.objects.get(instance=obj1)
-        self.assertEqual(str(mt1), str(obj1))
+        project.save_mt(self.request)
+
+        self.assertEqual(project.get_realm(), CURRENT_REALM)
+        self.assertTrue(project.is_accessible(CURRENT_REALM))
+        self.assertTrue(xform.is_accessible(CURRENT_REALM))
+        self.assertTrue(media_file.is_accessible(CURRENT_REALM))
+
+        self.assertTrue(MtInstance.objects.count() > 0)
+        mt1 = MtInstance.objects.get(instance=project)
+        self.assertEqual(str(mt1), str(project))
         self.assertEqual(mt1.realm, CURRENT_REALM)
 
         # change realm
         self.request.COOKIES[settings.REALM_COOKIE] = 'another'
-        self.assertEqual(obj1.mt.realm, CURRENT_REALM)
-        self.assertFalse(utils.is_accessible_by_realm(self.request, obj1))
+        self.assertEqual(project.mt.realm, CURRENT_REALM)
+        self.assertFalse(utils.is_accessible_by_realm(self.request, project))
 
-        obj1.save_mt(self.request)
-        self.assertTrue(utils.is_accessible_by_realm(self.request, obj1))
-        self.assertEqual(obj1.mt.realm, 'another')
+        project.save_mt(self.request)
+        self.assertTrue(utils.is_accessible_by_realm(self.request, project))
+        self.assertEqual(project.mt.realm, 'another')
 
     def test_serializers(self):
         obj1 = serializers.ProjectSerializer(
@@ -135,7 +146,7 @@ class MultitenancyTests(CustomTestCase):
         url = reverse('project-detail', kwargs={'pk': obj1.pk})
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        url = reverse('schema-detail', kwargs={'pk': child1.pk})
+        url = reverse('xform-detail', kwargs={'pk': child1.pk})
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -143,7 +154,7 @@ class MultitenancyTests(CustomTestCase):
         url = reverse('project-detail', kwargs={'pk': obj2.pk})
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        url = reverse('schema-detail', kwargs={'pk': child2.pk})
+        url = reverse('xform-detail', kwargs={'pk': child2.pk})
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
@@ -190,19 +201,19 @@ class NoMultitenancyTests(CustomTestCase):
         self.assertTrue(self.client.login(username=username, password=password))
 
     def test_no_multitenancy(self, *args):
-        project = models.Project.objects.create(name='name')
-        self.assertFalse(project.is_accessible(CURRENT_REALM))
+        obj1 = self.helper_create_project()
+        self.assertFalse(obj1.is_accessible(CURRENT_REALM))
         self.assertTrue(MtInstance.objects.count() == 0)
-        self.assertTrue(utils.is_accessible_by_realm(self.request, project))
+        self.assertTrue(utils.is_accessible_by_realm(self.request, obj1))
 
         initial_data = models.Project.objects.all()
         self.assertEqual(utils.filter_by_realm(self.request, initial_data), initial_data)
 
-        self.assertFalse(utils.assign_to_realm(self.request, project))
+        self.assertFalse(utils.assign_to_realm(self.request, obj1))
         self.assertTrue(MtInstance.objects.count() == 0)
 
     def test_models(self):
-        obj1 = models.Project.objects.create(name='one')
+        obj1 = self.helper_create_project()
         child1 = self.helper_create_xform(project_id=obj1.project_id)
         self.assertFalse(obj1.is_accessible(CURRENT_REALM))
         self.assertFalse(child1.is_accessible(CURRENT_REALM))
@@ -223,7 +234,7 @@ class NoMultitenancyTests(CustomTestCase):
         self.assertTrue(MtInstance.objects.count() == 0)
 
         # create another Project instance
-        models.Project.objects.create(name='another name')
+        self.helper_create_project()
 
         child1 = serializers.XFormSerializer(data={}, context={'request': self.request})
         self.assertEqual(child1.fields['project'].get_queryset().count(), 2)
