@@ -16,12 +16,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 
 from . import CustomTestCase
 
 
+@override_settings(MULTITENANCY=False)
 class ViewsTests(CustomTestCase):
 
     def setUp(self):

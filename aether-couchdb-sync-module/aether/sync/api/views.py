@@ -99,7 +99,7 @@ class SchemaViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     mt_field = 'project__mt'
 
     def get_queryset(self):
-        queryset = self.queryset
+        queryset = super(SchemaViewSet, self).get_queryset()
 
         project_id = self.request.query_params.get('project_id', None)
         if project_id is not None:
