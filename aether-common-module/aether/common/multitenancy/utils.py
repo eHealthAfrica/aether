@@ -31,7 +31,7 @@ def get_current_realm(request):
     '''
     Find the current realm within the cookies or within the request headers.
     '''
-    return request.COOKIES.get(
+    return getattr(request, 'COOKIES', {}).get(
         settings.REALM_COOKIE,
         getattr(request, 'headers', {}).get(
             settings.REALM_COOKIE,
@@ -76,6 +76,14 @@ def assign_to_realm(request, instance):
     return True
 
 
+def assign_realm_in_headers(instance, headers={}):
+    if not settings.MULTITENANCY:
+        return headers
+
+    headers[settings.REALM_COOKIE] = instance.get_realm()
+    return headers
+
+
 class IsAccessibleByRealm(IsAuthenticated):
     '''
     Object-level permission to allow access to objects linked to the current realm.
@@ -107,10 +115,19 @@ class MtModelAbstract(Model):
         Check if the object "realm" is the current realm.
         '''
 
+        return settings.MULTITENANCY and self.get_realm() == realm
+
+    def get_realm(self):
+        '''
+        Returns the object "realm" or the default one if missing.
+        '''
+
+        if not settings.MULTITENANCY:
+            return None
         try:
-            return settings.MULTITENANCY and self.mt.realm == realm
+            return self.mt.realm
         except ObjectDoesNotExist:
-            return False
+            return settings.DEFAULT_REALM
 
     class Meta:
         abstract = True
