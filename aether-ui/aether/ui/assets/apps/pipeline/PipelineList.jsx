@@ -132,9 +132,6 @@ class PipelineList extends Component {
               {pipeline.name}
             </span>
           </div>
-          <div className='info'>
-            { pipeline.mappingset && <InfoButton pipeline={pipeline} /> }
-          </div>
         </div>
         <div className='preview-contracts'>
           {
@@ -169,6 +166,7 @@ class PipelineList extends Component {
 
                   <div className='contract-publish'>
                     <div className='status-publish'>
+                      { pipeline.mappingset && <InfoButton pipeline={pipeline} /> }
                       <FormattedMessage
                         id='contract.list.publish-status'
                         defaultMessage={contract.published_on ? `Published on ${moment(contract.published_on).format('MMMM DD, YYYY HH:mm')}`
