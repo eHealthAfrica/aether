@@ -47,6 +47,7 @@ class MultitenancyTests(TestCase):
         super(MultitenancyTests, self).setUp()
         self.request = RequestFactory().get('/')
         self.request.COOKIES[settings.REALM_COOKIE] = 'realm1'
+        self.request.headers = {}
 
         username = 'user'
         email = 'user@example.com'

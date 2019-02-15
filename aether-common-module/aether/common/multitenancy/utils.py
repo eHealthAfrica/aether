@@ -27,13 +27,26 @@ from rest_framework.serializers import PrimaryKeyRelatedField, ModelSerializer
 from .models import MtInstance
 
 
+def get_current_realm(request):
+    '''
+    Find the current realm within the cookies or within the request headers.
+    '''
+    return request.COOKIES.get(
+        settings.REALM_COOKIE,
+        getattr(request, 'headers', {}).get(
+            settings.REALM_COOKIE,
+            settings.DEFAULT_REALM
+        )
+    )
+
+
 def is_accessible_by_realm(request, obj):
     if not settings.MULTITENANCY:
         return True
 
     # Object instance should have a method named `is_accessible`.
     if getattr(obj, 'is_accessible', None) is not None:
-        realm = request.COOKIES.get(settings.REALM_COOKIE, 'default')
+        realm = get_current_realm(request)
         return obj.is_accessible(realm)
 
     return True
@@ -44,7 +57,7 @@ def filter_by_realm(request, data, mt_field='mt'):
         return data
 
     # only returns the instances linked to the current realm
-    realm = request.COOKIES.get(settings.REALM_COOKIE, 'default')
+    realm = get_current_realm(request)
     return data.annotate(mt_realm=F(f'{mt_field}__realm')).filter(mt_realm=realm)
 
 
@@ -53,7 +66,7 @@ def assign_to_realm(request, instance):
         return False
 
     # assign to current realm
-    realm = request.COOKIES.get(settings.REALM_COOKIE, 'default')
+    realm = get_current_realm(request)
     try:
         instance.mt.realm = realm
         instance.mt.save()
