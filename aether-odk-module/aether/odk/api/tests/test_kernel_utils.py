@@ -20,6 +20,8 @@ import json
 import mock
 import requests
 
+from django.test import override_settings
+
 from aether.common.kernel.utils import get_auth_header, get_kernel_server_url
 
 from . import CustomTestCase, MockResponse
@@ -31,6 +33,7 @@ from ..kernel_utils import (
 )
 
 
+@override_settings(MULTITENANCY=False)
 class KernelUtilsTest(CustomTestCase):
 
     def setUp(self):

@@ -20,12 +20,14 @@ import json
 import mock
 
 from django.contrib.auth import get_user_model
+from django.test import override_settings
 from django.urls import reverse
 
 from . import CustomTestCase
 from ..kernel_utils import KernelPropagationError
 
 
+@override_settings(MULTITENANCY=False)
 class KernelViewsTests(CustomTestCase):
 
     def setUp(self):
