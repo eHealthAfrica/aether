@@ -74,7 +74,15 @@ class Migration(migrations.Migration):
             name='pipeline',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='contracts', to='ui.Pipeline'),
         ),
-        migrations.RunPython(migrate_current_pipelines_to_contracts, migrations.RunPython.noop),
+
+        migrations.RunPython(
+            code=migrate_current_pipelines_to_contracts,
+            reverse_code=migrations.RunPython.noop,
+            # The optional elidable argument determines whether or not the operation
+            # will be removed (elided) when squashing migrations.
+            elidable=True,
+        ),
+
         migrations.RemoveField(
             model_name='pipeline',
             name='entity_types',
