@@ -21,7 +21,7 @@
 set -Eeuo pipefail
 
 wait_for_kernel() {
-    KERNEL_HEALTH_URL="http://localhost:9000/health"
+    KERNEL_HEALTH_URL="http://localhost:9100/health"
     until curl -s $KERNEL_HEALTH_URL > /dev/null; do
         >&2 echo "Waiting for Kernel..."
         sleep 2
@@ -42,8 +42,8 @@ then
 fi
 
 
-echo "_____________________________________________ Starting databases"
-$DC_TEST up -d db-test
+echo "_____________________________________________ Starting databases + Minio Storage server"
+$DC_TEST up -d db-test minio-test
 if [[ $1 = "couchdb-sync" ]]
 then
     $DC_TEST up -d couchdb-test redis-test

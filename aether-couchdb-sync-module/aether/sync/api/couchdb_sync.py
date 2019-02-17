@@ -20,6 +20,7 @@ import logging
 import re
 import requests
 
+from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
@@ -28,12 +29,11 @@ from aether.common.kernel import utils as kernel_utils
 from .kernel_utils import propagate_kernel_artefacts
 from .models import DeviceDB, Schema
 from ..couchdb import utils, api
-from ..settings import LOGGING_LEVEL
 from .. import errors
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(LOGGING_LEVEL)
+logger.setLevel(settings.LOGGING_LEVEL)
 
 SYNC_DOC = 'sync_doc'
 

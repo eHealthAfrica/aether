@@ -23,13 +23,12 @@ import logging
 import re
 import uuid
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils.translation import ugettext as _
 
 from jsonpath_ng.ext import parse as jsonpath_ng_ext_parse
-
-from ..settings import LOGGING_LEVEL
 
 from . import models
 from .validators import validate_entities
@@ -37,7 +36,7 @@ from .utils import object_contains
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(LOGGING_LEVEL)
+logger.setLevel(settings.LOGGING_LEVEL)
 
 
 Entity = collections.namedtuple(

@@ -28,7 +28,7 @@ function build_container() {
 }
 
 function wait_for_kernel() {
-    KERNEL_HEALTH_URL="http://localhost:9000/health"
+    KERNEL_HEALTH_URL="http://localhost:9100/health"
     until curl -s $KERNEL_HEALTH_URL > /dev/null; do
         >&2 echo "Waiting for Kernel..."
         sleep 2
@@ -46,8 +46,8 @@ echo "_____________________________________________ Starting Integration Tests"
 echo "_____________________________________________ Starting Kafka"
 $DC_TEST up -d zookeeper-test kafka-test
 
-echo "_____________________________________________ Starting Postgres"
-$DC_TEST up -d db-test
+echo "_____________________________________________ Starting Postgres + Minio Storage server"
+$DC_TEST up -d db-test minio-test
 
 build_container kernel
 

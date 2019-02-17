@@ -1,0 +1,20 @@
+[
+  {
+    "doc": {
+      "deviceId": "test_abc123",
+      "_id": "sample-1"
+    }
+  },
+  {
+    "doc": {
+      "_id": "sample-2",
+      "_rev": "1-f53f718566cf4b23ab548274bb156bab"
+    }
+  },
+  {
+    "doc": {
+      "_id": "sample-3",
+      "_rev": "1"
+    }
+  }
+]

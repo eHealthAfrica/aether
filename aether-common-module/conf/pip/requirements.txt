@@ -7,8 +7,8 @@
 
 django<2
 django-cors-headers
+django-minio-storage
 django-prometheus
-django-storages
 djangorestframework
 psycopg2-binary
 python-json-logger

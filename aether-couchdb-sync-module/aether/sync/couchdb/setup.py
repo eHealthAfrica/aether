@@ -16,77 +16,24 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
 import logging
-import os
 
 from django.conf import settings
 from django.utils.translation import ugettext as _
 
-from pathlib import Path
-
 from . import api
 from .. import errors
 from .utils import force_put_doc
-from ..settings import LOGGING_LEVEL
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(LOGGING_LEVEL)
+logger.setLevel(settings.LOGGING_LEVEL)
 
-
-class DuplicateKeyError(ValueError):
-    pass
-
-
-def load_config(directory, strip=False, predicate=None):  # pragma: no cover
-    '''
-    Load a couchdb configuration from the filesystem, like couchdbkit or couchdb-bootstrap.
-
-    strip: remove leading and trailing whitespace from file contents, like couchdbkit.
-
-    predicate: function that is passed the full path to each file or directory.
-        Each entry is only added to the document if predicate returns True.
-        Can be used to ignore backup files etc.
-    '''
-
-    objects = {}
-
-    if not os.path.isdir(directory):
-        raise OSError(_('No directory: "{}"').format(directory))
-
-    for (dirpath, dirnames, filenames) in os.walk(directory, topdown=False):
-        key = os.path.split(dirpath)[-1]
-        ob = {}
-        objects[dirpath] = (key, ob)
-
-        for name in filenames:
-            fkey = os.path.splitext(name)[0]
-            fullname = os.path.join(dirpath, name)
-            if predicate and not predicate(fullname):
-                continue
-            if fkey in ob:
-                raise DuplicateKeyError(_('file "{}" clobbers key "{}"').format(fullname, fkey))
-            with open(fullname, 'r') as f:
-                contents = f.read()
-                if name.endswith('.json'):
-                    contents = json.loads(contents)
-                elif strip:
-                    contents = contents.strip()
-                ob[fkey] = contents
-
-        for name in dirnames:
-            if name == '_attachments':
-                raise NotImplementedError(_('_attachments are not supported'))
-            fullpath = os.path.join(dirpath, name)
-            if predicate and not predicate(fullpath):
-                continue
-            subkey, subthing = objects[fullpath]
-            if subkey in ob:
-                raise DuplicateKeyError(_('directory "{}" clobbers key "{}"').format(fullpath, subkey))
-            ob[subkey] = subthing
-
-    return ob
+SYSTEM_DATABASES = [
+    '_users',
+    # '_replicator',
+    # '_global_changes',
+]
 
 
 def setup_db(db_name, config, cleanup=False):  # pragma: no cover
@@ -107,20 +54,7 @@ def setup_db(db_name, config, cleanup=False):  # pragma: no cover
             _('Provide a security document for the couchdb: {}').format(db_name)
         )
 
-    r = api.get(db_name)
-    exists = r.status_code < 400
-
-    # In testing mode we delete existing couchdbs
-    if exists and cleanup:
-        logger.info(_('deleting couchdb: {}').format(db_name))
-        r = api.delete(db_name)
-        r.raise_for_status()
-        exists = False
-
-    if not exists:
-        logger.info(_('creating couchdb: {}').format(db_name))
-        r = api.put(db_name)
-        r.raise_for_status()
+    create_db(db_name, cleanup)
 
     if '_id' in ddoc:
         ddoc_url = db_name + '/' + ddoc['_id']
@@ -130,18 +64,18 @@ def setup_db(db_name, config, cleanup=False):  # pragma: no cover
     force_put_doc(secdoc_url, secdoc)
 
 
-def setup_couchdb(cleanup=False):  # pragma: no cover
-    '''
-    Setup couchdb by loading the configuration from a directory structure.
-    '''
+def create_db(db_name, cleanup=False):  # pragma: no cover
+    r = api.get(db_name)
+    exists = r.status_code < 400
 
-    base_path = Path(settings.COUCHDB_DIR)
-    dirs = (p for p in base_path.iterdir() if p.is_dir())
+    # In testing mode we delete existing couchdbs
+    if exists and cleanup:
+        logger.info(_('Deleting couchdb: {}').format(db_name))
+        r = api.delete(db_name)
+        r.raise_for_status()
+        exists = False
 
-    for db_dir in dirs:
-        db_name = db_dir.name
-        if settings.TESTING:
-            db_name = db_name + '_test'
-        logger.info(_('setting up couchdb: {}').format(db_name))
-        config = load_config(str(db_dir))
-        setup_db(db_name, config, cleanup=cleanup)
+    if not exists:
+        logger.info(_('Creating couchdb: {}').format(db_name))
+        r = api.put(db_name)
+        r.raise_for_status()

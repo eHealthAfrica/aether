@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -16,22 +18,28 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.conf import settings
-from django.test import TestCase
+from django.core.management.base import BaseCommand
+from django.utils.translation import ugettext as _
+
+from aether.sync.api.couchdb_file import load_backup_file
 
 
-class SettingsTest(TestCase):
+class Command(BaseCommand):
 
-    def test_default_variables(self):
+    help = _('POST file content into CouchDB server.')
 
-        self.assertTrue(settings.TESTING)
-        self.assertFalse(settings.DEBUG)
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--filename',
+            '-f',
+            type=str,
+            help=_('Indicate the file to load'),
+            dest='filename',
+            action='store',
+            required=True,
+        )
 
-        self.assertFalse(settings.USE_X_FORWARDED_HOST)
-        self.assertFalse(settings.USE_X_FORWARDED_PORT)
-        self.assertEqual(settings.SECURE_PROXY_SSL_HEADER, None)
-
-        self.assertEqual(settings.ROOT_URLCONF, 'aether.common.urls')
-
-        self.assertEqual(settings.VERSION, '0.0.0')
-        self.assertEqual(settings.REVISION, '0123456789ABCDEF')
+    def handle(self, *args, **options):
+        with open(options['filename'], 'r') as fp:
+            stats = load_backup_file(fp)
+            self.stdout.write(str(stats))

@@ -54,6 +54,13 @@ services:
     networks:
       - internal
 
+  minio:
+    extends:
+      file: ./docker-compose-base.yml
+      service: minio-base
+    networks:
+      - internal
+
 
   # ---------------------------------
   # Aether Kernel

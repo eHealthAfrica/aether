@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -19,12 +21,26 @@
 from django.core.management.base import BaseCommand
 from django.utils.translation import ugettext as _
 
-from ...setup import setup_couchdb
+from aether.sync.couchdb.setup import create_db, SYSTEM_DATABASES
 
 
 class Command(BaseCommand):
-    help = _('Set up couchdb')
+    '''
+    Since CouchDB 2.x the three system databases are not created by default.
+    We need to create them manually.
+
+    http://docs.couchdb.org/en/stable/setup/single-node.html
+
+        curl -X PUT http://127.0.0.1:5984/_users
+        curl -X PUT http://127.0.0.1:5984/_replicator
+        curl -X PUT http://127.0.0.1:5984/_global_changes
+
+    '''
+
+    help = _('Set up CouchDB server.')
 
     def handle(self, *args, **options):
-        setup_couchdb()
-        self.stdout.write(_('Couchdb set up done.'))
+        for db_name in SYSTEM_DATABASES:
+            create_db(db_name)
+
+        self.stdout.write(_('CouchDB set up done.'))
