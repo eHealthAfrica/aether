@@ -26,13 +26,7 @@ In order to determine whether you are dealing with a security issue, ask yoursel
 
 If the answer to either of those two questions are "yes", then you're probably dealing with a security issue. Note that even if you answer "no" to both questions, you may still be dealing with a security issue, so if you're unsure, just email us.
 
-When filing an issue, make sure to answer these five questions:
->
-1. What version of Aether are you using?
-2. What operating system and processor architecture are you using?
-3. What did you do?
-4. What did you expect to see?
-5. What did you see instead?
+When you file an issue, please ensure that you have answered every question in the issue template.
 
 ## Getting started with Aether developement
 
