@@ -134,7 +134,7 @@ class Pipeline extends Component {
             <div className={`pipeline-tab ${selectedContract.name === contract.name ? 'active' : ''}`}
               onClick={this.onTabChange.bind(this, contract)}
               key={contract.id}>
-              {contract.name}
+              <span className='contract-name'>{contract.name}</span>
               {contract.mapping.length ? <span className={`status ${contract.mapping_errors.length ? 'red' : 'green'}`} /> : null}
               <div
                 className={`btn-icon settings-button ${this.state.showSettings ? 'active' : ''}`}

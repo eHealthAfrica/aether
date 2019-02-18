@@ -20,14 +20,14 @@ import logging
 import os
 import requests
 
+from django.conf import settings
 from django.utils.translation import ugettext as _
 
 from . import errors
-from ..settings import LOGGING_LEVEL
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(LOGGING_LEVEL)
+logger.setLevel(settings.LOGGING_LEVEL)
 
 
 def get_kernel_server_url():

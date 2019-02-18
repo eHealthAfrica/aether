@@ -49,11 +49,9 @@ from .kernel_utils import (
     KernelPropagationError,
 )
 
-from ..settings import LOGGING_LEVEL
-
 
 logger = logging.getLogger(__name__)
-logger.setLevel(LOGGING_LEVEL)
+logger.setLevel(settings.LOGGING_LEVEL)
 
 
 class ProjectViewSet(viewsets.ModelViewSet):

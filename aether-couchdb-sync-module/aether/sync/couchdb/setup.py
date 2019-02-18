@@ -18,16 +18,16 @@
 
 import logging
 
+from django.conf import settings
 from django.utils.translation import ugettext as _
 
 from . import api
 from .. import errors
 from .utils import force_put_doc
-from ..settings import LOGGING_LEVEL
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(LOGGING_LEVEL)
+logger.setLevel(settings.LOGGING_LEVEL)
 
 SYSTEM_DATABASES = [
     '_users',

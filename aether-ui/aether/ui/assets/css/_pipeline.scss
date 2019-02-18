@@ -61,6 +61,14 @@ $output-nav-width: 10rem;
   align-items: center;
   height: $navbar-height-xs;
   cursor: pointer;
+  min-width: 0;
+  border-left: 1px solid rgba($white, .1);
+
+  .contract-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
   .settings-button {
 
@@ -83,6 +91,7 @@ $output-nav-width: 10rem;
   &.active {
     background: lighten($dark-blue, 5);
     border-bottom: 1px solid rgba($white, .1);
+    border-left: 0;
 
     .settings-button {
       display: inline-block;
@@ -92,6 +101,10 @@ $output-nav-width: 10rem;
       display: none;
     }
   }
+  
+  &:last-of-type {
+    margin-right: .3rem;
+  }
 }
 
 .new-contract {
@@ -99,6 +112,7 @@ $output-nav-width: 10rem;
   transition: opacity .4s;
   align-self: center;
   margin-right: .3rem;
+  flex: 0 0 auto;
 }
 
 .pipeline-nav {

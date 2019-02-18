@@ -92,11 +92,14 @@
     background: rgba($background-color, .3);
     box-shadow: 1px 1px 2px $shadow-color;
   }
+}
 
-  .info {
-    span {
-      float: right;
-    }
+.pipeline-readonly {
+  @include stripy(rgba($light-grey, .2), rgba($white, .3));
+
+  .tag {
+    position: relative;
+    top: -.2rem;
   }
 }
 
@@ -105,6 +108,12 @@
   font-weight: 300;
   display: flex;
   align-items: center;
+
+  .input-name {
+    word-wrap: break-word;
+    max-width: 80%;
+    line-height: 1.3em;
+  }
 }
 
 .preview-contracts {
@@ -115,34 +124,48 @@
   @include card;
   margin-bottom: .8rem;
   position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
   transition: box-shadow .5s;
+
+  .contract-heading {
+    display: flex;
+    align-items: baseline;
+  }
+
+  .contract-name {
+    color: $action-color;
+    font-weight: 300;
+    font-size: $font-size-xl;
+    margin-bottom: .5rem;
+    transition: color .3s;
+    word-wrap: break-word;
+    flex:1;
+    min-width: 0;
+  }
 
   &:hover {
     cursor: pointer;
     box-shadow: 3px 3px 5px rgba($text-color, .4), -1px -1px 1px $light-grey inset;
     background: $background-color;
 
-    .preview-heading {
+    .contract-name {
       color: darken($hover-color, 10);
     }
   }
-}
 
-.contract-heading {
-  color: $action-color;
-  font-weight: 300;
-  font-size: $font-size-xl;
-  margin-bottom: .5rem;
-  transition: color .3s;
-  word-wrap: break-word;
+  &.pipeline-readonly {
+    @include stripy(rgba($white, .8), $white);
+
+    .tag {
+      position: relative;
+      top: -.2rem;
+    }
+  }
 }
 
 .contract-summaries {
   display: flex;
   margin-left: auto;
+  flex: 0 0 auto;
 }
 
 .summary-entity-types {
@@ -277,6 +300,9 @@
 
 @media screen and (max-width: 1000px) {
 
+  .pipelines {
+    padding: 3rem 5vw;
+  }
 
   .pipeline-form {
     flex-wrap: wrap;

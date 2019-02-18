@@ -114,19 +114,19 @@ echo "----------------------------------------------------------------------"
 
 case $app in
     kernel)
-        PRE_CONTAINERS=(db)
+        PRE_CONTAINERS=(db minio)
         SETUP_CONTAINERS=(kernel)
         POST_CONTAINERS=(nginx)
     ;;
 
     odk)
-        PRE_CONTAINERS=(db)
+        PRE_CONTAINERS=(db minio)
         SETUP_CONTAINERS=(kernel odk)
         POST_CONTAINERS=(nginx)
     ;;
 
     ui)
-        PRE_CONTAINERS=(ui-assets db)
+        PRE_CONTAINERS=(ui-assets db minio)
         SETUP_CONTAINERS=(kernel ui)
         POST_CONTAINERS=(nginx)
     ;;
@@ -134,7 +134,7 @@ case $app in
     sync|couchdb-sync)
         app=couchdb-sync
 
-        PRE_CONTAINERS=(db couchdb redis)
+        PRE_CONTAINERS=(db couchdb redis minio)
         SETUP_CONTAINERS=(kernel couchdb-sync)
         POST_CONTAINERS=(couchdb-sync-rq nginx)
     ;;
@@ -142,7 +142,7 @@ case $app in
     *)
         app=
 
-        PRE_CONTAINERS=(ui-assets db couchdb redis)
+        PRE_CONTAINERS=(ui-assets db couchdb redis minio)
         SETUP_CONTAINERS=(kernel odk ui couchdb-sync)
         POST_CONTAINERS=(couchdb-sync-rq nginx)
     ;;

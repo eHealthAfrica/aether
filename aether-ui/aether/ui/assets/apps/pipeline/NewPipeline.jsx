@@ -58,7 +58,7 @@ class NewPipeline extends Component {
         <span className='details-title'>
           <FormattedMessage
             id='pipeline.new.button.new'
-            defaultMessage='New input'
+            defaultMessage='New pipeline'
           />
         </span>
       </button>

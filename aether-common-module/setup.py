@@ -46,12 +46,31 @@ setup(
         'django-cors-headers',
         'django-debug-toolbar',
         'django-prometheus',
-        'django-storages',
         'djangorestframework',
         'psycopg2-binary',
         'python-json-logger',
         'requests',
     ],
+    extras_require={
+        'cas': [
+            'django-cas-ng<3.6.0',  # breaking changes
+            'django-ums-client',
+        ],
+        'storage': [
+            'django-minio-storage',
+            'django-storages[boto3,google]',
+        ],
+        'server': [
+            'sentry-sdk',
+            'uwsgi',
+        ],
+        'test': [
+            'coverage',
+            'flake8',
+            'flake8-quotes',
+            'mock',
+        ],
+    },
 
     packages=find_packages(exclude=['*tests*']),
     include_package_data=True,

@@ -16,24 +16,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django import template
 from django.conf import settings
-
-register = template.Library()
-
-
-def get_absolute_url(scheme, host, media_url, file_path):
-    return f'{scheme}://{host}{media_url}{file_path}'
+from django.contrib import admin
 
 
-@register.simple_tag(takes_context=True)
-def get_file_url(context, media_file):
-    if settings.DJANGO_STORAGE_BACKEND == 'filesystem':
-        request = context['request']
-        return get_absolute_url(
-            scheme=request.scheme,
-            host=request.get_host(),
-            media_url=settings.MEDIA_BASIC_URL,
-            file_path=media_file.name,
-        )
-    return media_file.url
+admin.site.site_url = '/'
+admin.site.site_header = settings.APP_NAME
+admin.site.site_title = settings.APP_NAME
+
+admin.site.login_template = settings.LOGIN_TEMPLATE
+admin.site.logout_template = settings.LOGGED_OUT_TEMPLATE

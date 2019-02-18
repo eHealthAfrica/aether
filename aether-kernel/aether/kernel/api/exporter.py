@@ -29,6 +29,7 @@ import zipfile
 
 from openpyxl import Workbook
 
+from django.conf import settings
 from django.db.models import F
 from django.http import FileResponse
 from django.utils.translation import ugettext as _
@@ -39,16 +40,6 @@ from rest_framework.decorators import action
 
 from .avro_tools import ARRAY_PATH, MAP_PATH, UNION_PATH, extract_jsonpaths_and_docs
 from .entity_extractor import ENTITY_EXTRACTION_ENRICHMENT, ENTITY_EXTRACTION_ERRORS
-from ..settings import (
-    EXPORT_CSV_ESCAPE,
-    EXPORT_CSV_QUOTE,
-    EXPORT_CSV_SEPARATOR,
-    EXPORT_DATA_FORMAT,
-    EXPORT_HEADER_CONTENT,
-    EXPORT_HEADER_SEPARATOR,
-    EXPORT_HEADER_SHORTEN,
-    LOGGING_LEVEL,
-)
 
 
 RE_CONTAINS_DIGIT = re.compile(r'\.\d+\.')  # a.999.b
@@ -72,10 +63,10 @@ PAGE_SIZE = 1000
 DEFAULT_DIALECT = 'aether_dialect'
 csv.register_dialect(
     DEFAULT_DIALECT,
-    delimiter=EXPORT_CSV_SEPARATOR,
+    delimiter=settings.EXPORT_CSV_SEPARATOR,
     doublequote=False,
-    escapechar=EXPORT_CSV_ESCAPE,
-    quotechar=EXPORT_CSV_QUOTE,
+    escapechar=settings.EXPORT_CSV_ESCAPE,
+    quotechar=settings.EXPORT_CSV_QUOTE,
     quoting=csv.QUOTE_NONNUMERIC,
 )
 
@@ -89,15 +80,15 @@ ExportOptions = namedtuple(
     ])
 
 DEFAULT_OPTIONS = ExportOptions(
-    header_content=EXPORT_HEADER_CONTENT,
-    header_separator=EXPORT_HEADER_SEPARATOR,
-    header_shorten=EXPORT_HEADER_SHORTEN,
-    data_format=EXPORT_DATA_FORMAT,
+    header_content=settings.EXPORT_HEADER_CONTENT,
+    header_separator=settings.EXPORT_HEADER_SEPARATOR,
+    header_shorten=settings.EXPORT_HEADER_SHORTEN,
+    data_format=settings.EXPORT_DATA_FORMAT,
     csv_dialect=DEFAULT_DIALECT,
 )
 
 logger = logging.getLogger(__name__)
-logger.setLevel(LOGGING_LEVEL)
+logger.setLevel(settings.LOGGING_LEVEL)
 
 
 class ExporterViewSet(ModelViewSet):
@@ -187,7 +178,7 @@ class ExporterViewSet(ModelViewSet):
     def __options(self, request):
         # register CSV dialect for the given options
         dialect_name = f'aether_custom_{str(uuid.uuid4())}'
-        csv_sep = self.__get(request, 'csv_separator', EXPORT_CSV_SEPARATOR)
+        csv_sep = self.__get(request, 'csv_separator', settings.EXPORT_CSV_SEPARATOR)
         if csv_sep == 'TAB':
             csv_sep = '\t'
 
@@ -195,25 +186,25 @@ class ExporterViewSet(ModelViewSet):
             dialect_name,
             delimiter=csv_sep,
             doublequote=False,
-            escapechar=self.__get(request, 'csv_escape', EXPORT_CSV_ESCAPE),
-            quotechar=self.__get(request, 'csv_quote', EXPORT_CSV_QUOTE),
+            escapechar=self.__get(request, 'csv_escape', settings.EXPORT_CSV_ESCAPE),
+            quotechar=self.__get(request, 'csv_quote', settings.EXPORT_CSV_QUOTE),
             quoting=csv.QUOTE_NONNUMERIC,
         )
 
         # check valid values for each option
-        header_content = self.__get(request, 'header_content', EXPORT_HEADER_CONTENT)
+        header_content = self.__get(request, 'header_content', settings.EXPORT_HEADER_CONTENT)
         if header_content not in ('labels', 'paths', 'both'):
             header_content = 'labels'
 
-        header_separator = self.__get(request, 'header_separator', EXPORT_HEADER_SEPARATOR)
+        header_separator = self.__get(request, 'header_separator', settings.EXPORT_HEADER_SEPARATOR)
         if not header_separator:
-            header_separator = EXPORT_HEADER_SEPARATOR
+            header_separator = settings.EXPORT_HEADER_SEPARATOR
 
-        header_shorten = self.__get(request, 'header_shorten', EXPORT_HEADER_SHORTEN)
+        header_shorten = self.__get(request, 'header_shorten', settings.EXPORT_HEADER_SHORTEN)
         if header_shorten != 'yes':
             header_shorten = 'no'
 
-        data_format = self.__get(request, 'data_format', EXPORT_DATA_FORMAT)
+        data_format = self.__get(request, 'data_format', settings.EXPORT_DATA_FORMAT)
         if data_format != 'flatten':
             data_format = 'split'
 
