@@ -78,8 +78,6 @@ done
 docker network create aether_internal       2>/dev/null || true
 docker volume  create aether_database_data  2>/dev/null || true
 
-./scripts/generate-aether-version-assets.sh
-
 echo ""
 docker-compose ps
 echo "----------------------------------------------------------------------"

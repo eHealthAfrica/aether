@@ -20,32 +20,31 @@
 #
 set -Eeuo pipefail
 
-./scripts/generate-aether-version-assets.sh
-
 DC_UTILS="docker-compose -f ./aether-utils/docker-compose.yml"
-VERSION=$(cat "./tmp/VERSION")
+
+APP_VERSION=`cat ./VERSION`
 
 $DC_UTILS down
 
-UTIL=client
 # create the distribution
-$DC_UTILS build $UTIL
-$DC_UTILS run $UTIL build
-PCK_FILE=aether.$UTIL-$VERSION-py2.py3-none-any.whl
+$DC_UTILS build \
+    --build-arg VERSION=$APP_VERSION \
+    client
+$DC_UTILS run client build
 
+PCK_FILE=aether.client-${APP_VERSION}-py2.py3-none-any.whl
 FOLDERS=( test-aether-integration-module aether-producer )
 
 # distribute within the containers
 for FOLDER in "${FOLDERS[@]}"
 do
-    FILE=./aether-utils/aether-$UTIL/dist/$PCK_FILE
-    DEST=./$FOLDER/conf/pip/dependencies/
+    DEST=./${FOLDER}/conf/pip/dependencies/
+    mkdir -p ${DEST}
 
-    mkdir -p $DEST
-    cp -r $FILE $DEST
+    cp -r ./aether-utils/aether-client/dist/${PCK_FILE} ${DEST}
 
     echo "----------------------------------------------------------------------"
-    echo "Distributed [$FILE] into [$DEST]"
+    echo "Distributed [${PCK_FILE}] into [$DEST]"
     echo "----------------------------------------------------------------------"
 done
 

@@ -127,9 +127,9 @@ setup () {
     chmod -R 755 $STATIC_ROOT
 
     # expose version number (if exists)
-    cp ./VERSION $STATIC_ROOT/VERSION   2>/dev/null || :
+    cp /var/tmp/VERSION $STATIC_ROOT/VERSION   2>/dev/null || :
     # add git revision (if exists)
-    cp ./REVISION $STATIC_ROOT/REVISION 2>/dev/null || :
+    cp /var/tmp/REVISION $STATIC_ROOT/REVISION 2>/dev/null || :
 }
 
 test_flake8 () {

@@ -21,18 +21,25 @@
 import os
 from setuptools import setup
 
-with open(os.path.join('/code', 'VERSION'), 'r') as version_file:
+with open(os.path.join('/var/tmp', 'VERSION'), 'r') as version_file:
     version = version_file.read().strip()
 
 setup(
+    version=version,
     name='aether_producer',
+    decription='Kafka Producer for Aether',
+
+    url='https://github.com/eHealthAfrica/aether',
     author='Shawn Sarwar',
     author_email='shawn.sarwar@ehealthafrica.org',
-    decription='Kafka Producer for Aether',
-    version=version,
-    setup_requires=['pytest'],
-    tests_require=['pytest', 'sqlalchemy', 'requests', 'aether_producer'],
-    url='https://github.com/eHealthAfrica/aether',
+    license='Apache2 License',
     keywords=['aet', 'aether', 'kafka', 'producer'],
-    classifiers=[]
+
+    setup_requires=['pytest'],
+    tests_require=[
+        'aether_producer',
+        'pytest',
+        'requests',
+        'sqlalchemy',
+    ],
 )

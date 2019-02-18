@@ -25,7 +25,6 @@ AETHER_FUNCTIONS=scripts/aether_functions.sh
 
 ORDER=( "create_credentials"
         "create_aether_docker_assets"
-        "create_version_files"
         "build_aether_utils_and_distribute"
         "build_connect"
         "build_common_and_distribute"

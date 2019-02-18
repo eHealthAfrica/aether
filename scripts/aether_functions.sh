@@ -36,10 +36,6 @@ function create_aether_docker_assets {
     docker volume  create aether_database_data  2>/dev/null || true
 }
 
-function create_version_files {
-    ./scripts/generate-aether-version-assets.sh
-}
-
 # build Aether utilities
 function build_aether_utils_and_distribute {
     ./scripts/build_aether_utils_and_distribute.sh
@@ -62,8 +58,8 @@ function build_ui_assets {
 
 function build_core_modules {
     CONTAINERS=($ARGS)
-    APP_REVISION=`cat ./tmp/REVISION`
-    APP_VERSION=`cat ./tmp/VERSION`
+    APP_REVISION=`git rev-parse --abbrev-ref HEAD`
+    APP_VERSION=`cat ./VERSION`
 
     # speed up first start up
     docker-compose up -d db

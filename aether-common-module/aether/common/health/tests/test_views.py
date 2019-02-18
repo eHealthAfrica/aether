@@ -45,8 +45,8 @@ class ViewsTest(TestCase):
     def test__check_app(self, *args):
         response = self.client.get(reverse('check-app'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json(), {
-            'app_name': 'aether-test',
-            'app_version': '0.0.0',
-            'app_revision': '0123456789ABCDEF',
-        })
+        app_status = response.json()
+
+        self.assertEqual(app_status['app_name'], 'aether-test')
+        self.assertNotEqual(app_status['app_version'], '#.#.#')
+        self.assertNotEqual(app_status['app_revision'], '---')

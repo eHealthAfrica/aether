@@ -30,5 +30,5 @@ class SettingsTest(TestCase):
         self.assertEqual(settings.ROOT_URLCONF, 'aether.common.tests.urls')
         self.assertIsNotNone(settings.DJANGO_STORAGE_BACKEND)
 
-        self.assertEqual(settings.VERSION, '0.0.0')
-        self.assertEqual(settings.REVISION, '0123456789ABCDEF')
+        self.assertNotEqual(settings.VERSION, '#.#.#')
+        self.assertNotEqual(settings.REVISION, '---')

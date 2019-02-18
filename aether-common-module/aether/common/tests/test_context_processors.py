@@ -25,11 +25,11 @@ class ContextProcessorsTests(TestCase):
 
     def test_aether_context(self):
         request = RequestFactory().get('/')
+        context = aether_context(request)
 
-        self.assertEqual(aether_context(request), {
-            'dev_mode': False,
-            'app_name': 'aether-test',
-            'app_link': 'http://aether-link-test',
-            'app_version': '0.0.0',
-            'app_revision': '0123456789ABCDEF',
-        })
+        self.assertFalse(context['dev_mode'])
+
+        self.assertEqual(context['app_name'], 'aether-test')
+        self.assertEqual(context['app_link'], 'http://aether-link-test')
+        self.assertNotEqual(context['app_version'], '#.#.#')
+        self.assertNotEqual(context['app_revision'], '---')

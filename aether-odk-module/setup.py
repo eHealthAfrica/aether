@@ -21,7 +21,11 @@ from setuptools import find_packages, setup
 
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
+with open(os.path.join('/var/tmp', 'VERSION')) as version_file:
+    version = version_file.read().strip()
+
 setup(
+    version=version,
     name='aether.odk',
     description='A python module with Aether ODK functionality',
 

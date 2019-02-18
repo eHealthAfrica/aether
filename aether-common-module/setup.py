@@ -23,6 +23,9 @@ from setuptools import find_packages, setup
 
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
+with open(os.path.join('/var/tmp', 'VERSION')) as version_file:
+    version = version_file.read().strip()
+
 
 def read(f):
     return open(f, 'r', encoding='utf-8').read()
@@ -30,7 +33,7 @@ def read(f):
 
 setup(
     name='aether.common',
-    version='0.0.0',
+    version=version,
     description='A python module with common aether functionality',
     long_description=read('README.md'),
     long_description_content_type='text/markdown',

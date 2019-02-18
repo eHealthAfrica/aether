@@ -22,6 +22,17 @@ RUN pip install -q --upgrade pip && \
 COPY ./ /code
 
 ################################################################################
+## copy application version and create git revision
+################################################################################
+
+ARG VERSION
+ARG GIT_REVISION
+
+RUN mkdir -p /var/tmp && \
+    echo $VERSION > /var/tmp/VERSION && \
+    echo $GIT_REVISION > /var/tmp/REVISION
+
+################################################################################
 ## last setup steps
 ################################################################################
 

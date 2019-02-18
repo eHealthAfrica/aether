@@ -19,19 +19,29 @@
 import os
 from setuptools import setup, find_packages
 
-with open(os.path.join('/code', 'VERSION')) as version_file:
+os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
+
+with open(os.path.join('/var/tmp', 'VERSION')) as version_file:
     version = version_file.read().strip()
 
 setup(
-    name='aether.client',
     version=version,
-    include_package_data=True,
+    name='aether.client',
+    description='A python module with Aether Client functionality',
+
+    url='https://github.com/eHealthAfrica/aether/',
+    author='eHealth Africa',
+    author_email='aether@ehealthafrica.org',
+    license='Apache2 License',
+
     install_requires=[
         'bravado',
-        'requests'
+        'requests',
     ],
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
+
     packages=find_packages(),
-    namespace_packages=['aether']
+    include_package_data=True,
+    namespace_packages=['aether'],
 )

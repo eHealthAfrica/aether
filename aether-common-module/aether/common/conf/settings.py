@@ -46,13 +46,13 @@ STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/static/')
 # ------------------------------------------------------------------------------
 
 try:
-    with open('/code/VERSION') as fp:
+    with open('/var/tmp/VERSION') as fp:
         VERSION = fp.read().strip()
 except Exception:
     VERSION = '#.#.#'
 
 try:
-    with open('/code/REVISION') as fp:
+    with open('/var/tmp/REVISION') as fp:
         REVISION = fp.read().strip()
 except Exception:
     REVISION = '---'

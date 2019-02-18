@@ -22,13 +22,19 @@ set -Eeuo pipefail
 
 DC_FILE="docker-compose -f ./aether-common-module/docker-compose.yml"
 
+APP_REVISION=`git rev-parse --abbrev-ref HEAD`
+APP_VERSION=`cat ./VERSION`
+
 $DC_FILE down
 
 # create the distribution
-$DC_FILE build common
+$DC_FILE build \
+    --build-arg GIT_REVISION=$APP_REVISION \
+    --build-arg VERSION=$APP_VERSION \
+    common
 $DC_FILE run   common build
 
-PCK_FILE=aether.common-0.0.0-py2.py3-none-any.whl
+PCK_FILE=aether.common-${APP_VERSION}-py2.py3-none-any.whl
 
 # distribute within the containers
 FOLDERS=( aether-kernel aether-odk-module aether-couchdb-sync-module aether-ui )
@@ -39,7 +45,7 @@ do
     cp -r ./aether-common-module/dist/$PCK_FILE $DEST
 
     echo "----------------------------------------------------------------------"
-    echo "Distributed into $DEST"
+    echo "Distributed [${PCK_FILE}] into [$DEST]"
     echo "----------------------------------------------------------------------"
 done
 

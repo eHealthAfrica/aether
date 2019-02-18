@@ -338,7 +338,7 @@ The pattern to run a command is always
 This will stop ALL running containers and execute the containers tests.
 
 ```bash
-./scripts/test_all.sh
+./scripts/test_travis.sh complete
 ```
 
 To execute tests in just one container.

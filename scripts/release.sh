@@ -66,11 +66,6 @@ fi
 echo "Release version:  $VERSION"
 echo "Release revision: $TRAVIS_COMMIT"
 
-# create temporal files with VERSION+REVISION data
-mkdir ./tmp/
-echo $VERSION       > ./tmp/VERSION
-echo $TRAVIS_COMMIT > ./tmp/REVISION
-
 # Login in dockerhub with write permissions (repos are public)
 docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
 
