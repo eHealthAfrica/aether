@@ -64,7 +64,7 @@ Then sit back and wait. There will probably be discussion about the pull request
 
 Please adhere to the general guideline that you should never force push to a publicly shared branch. Once you have opened your pull request, you should consider your branch publicly shared. Instead of force pushing you can just add incremental commits; this is generally easier on your reviewers. If you need to pick up changes from develop, you can merge develop into your branch. A reviewer might ask you to rebase a long-running pull request in which case force pushing is okay for that request. Note that squashing at the end of the review process should also not be done, that can be done when the pull request is integrated via GitHub.
 
-### Dveloping a custom consumer
+### Developing a custom consumer
 
 One of the most obvious areas for extension within Aether is the consumers, which read data from Kafka and then write it to some other destination. If you want to use the Aether platform in your project, you will probably find that you need to build a custom consumer. If so, that’s great! Consumers can be written in any language you like - we use Python, but it’s entirely up to you.
 
