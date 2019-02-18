@@ -57,6 +57,7 @@ services:
       BUCKET_NAME: test-kernel
       DEBUG: null # set to null to remove previous value
       MINIO_STORAGE_ENDPOINT: minio-test:9000
+      MULTITENANCY: "true"
       PGHOST: db-test
       TESTING: "true"
       WEB_SERVER_PORT: 9100
@@ -100,6 +101,7 @@ services:
       DB_NAME: test-odk
       DEBUG: null # set to null to remove previous value
       MINIO_STORAGE_ENDPOINT: minio-test:9000
+      MULTITENANCY: "true"
       PGHOST: db-test
       TESTING: "true"
       WEB_SERVER_PORT: 9102
@@ -125,6 +127,7 @@ services:
       DB_NAME: test-couchdb-sync
       DEBUG: null # set to null to remove previous value
       GOOGLE_CLIENT_ID: secret_google_client_id
+      MULTITENANCY: "true"
       PGHOST: db-test
       REDIS_HOST: redis-test
       TESTING: "true"

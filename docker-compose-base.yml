@@ -102,7 +102,7 @@ services:
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
 
-      MULTITENANCY: "true"
+      MULTITENANCY: null
 
       BUCKET_NAME: kernel
       DJANGO_STORAGE_BACKEND: minio
@@ -177,7 +177,7 @@ services:
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
 
-      MULTITENANCY: "true"
+      MULTITENANCY: null
 
       BUCKET_NAME: odk
       DJANGO_STORAGE_BACKEND: minio
@@ -249,7 +249,7 @@ services:
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
 
-      MULTITENANCY: "true"
+      MULTITENANCY: null
 
       APP_NAME: Aether CouchDB-Sync
 
