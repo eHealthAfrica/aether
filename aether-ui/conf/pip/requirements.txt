@@ -12,7 +12,7 @@
 #                                                                              #
 ################################################################################
 
-aether.common==0.0.0
+aether.common==1.2.0
 certifi==2018.11.29
 chardet==3.0.4
 coverage==4.5.2
@@ -42,7 +42,7 @@ python-cas==1.4.0
 python-json-logger==0.1.10
 pytz==2018.9
 requests==2.21.0
-sentry-sdk==0.7.2
+sentry-sdk==0.7.3
 six==1.12.0
 sqlparse==0.2.4
 urllib3==1.24.1
