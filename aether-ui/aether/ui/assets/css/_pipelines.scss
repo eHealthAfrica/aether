@@ -131,6 +131,17 @@
     align-items: baseline;
   }
 
+  .contract-name {
+    color: $action-color;
+    font-weight: 300;
+    font-size: $font-size-xl;
+    margin-bottom: .5rem;
+    transition: color .3s;
+    word-wrap: break-word;
+    flex:1;
+    min-width: 0;
+  }
+
   &:hover {
     cursor: pointer;
     box-shadow: 3px 3px 5px rgba($text-color, .4), -1px -1px 1px $light-grey inset;
@@ -149,17 +160,6 @@
       top: -.2rem;
     }
   }
-}
-
-.contract-name {
-  color: $action-color;
-  font-weight: 300;
-  font-size: $font-size-xl;
-  margin-bottom: .5rem;
-  transition: color .3s;
-  word-wrap: break-word;
-  flex:1;
-  min-width: 0;
 }
 
 .contract-summaries {
