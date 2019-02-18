@@ -355,7 +355,7 @@ export class IdentityMapping extends Component {
     const mappingRules = deriveMappingRules(schema)
     const entityTypes = deriveEntityTypes(schema)
     this.props.updateContract({
-      ...this.props.selectedPipeline,
+      ...this.props.selectedContract,
       mapping: mappingRules,
       entity_types: entityTypes
     })
