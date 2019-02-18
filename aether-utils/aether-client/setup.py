@@ -16,18 +16,20 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import os
+from io import open
 from setuptools import setup, find_packages
 
-os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
-with open(os.path.join('/var/tmp', 'VERSION')) as version_file:
-    version = version_file.read().strip()
+def read(f):
+    return open(f, 'r', encoding='utf-8').read()
+
 
 setup(
-    version=version,
+    version=read('/var/tmp/VERSION').strip(),
     name='aether.client',
     description='A python module with Aether Client functionality',
+    long_description=read('README.md'),
+    long_description_content_type='text/markdown',
 
     url='https://github.com/eHealthAfrica/aether/',
     author='eHealth Africa',

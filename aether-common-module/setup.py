@@ -16,15 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import os
-
 from io import open
 from setuptools import find_packages, setup
-
-os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
-
-with open(os.path.join('/var/tmp', 'VERSION')) as version_file:
-    version = version_file.read().strip()
 
 
 def read(f):
@@ -32,8 +25,8 @@ def read(f):
 
 
 setup(
+    version=read('/var/tmp/VERSION').strip(),
     name='aether.common',
-    version=version,
     description='A python module with common aether functionality',
     long_description=read('README.md'),
     long_description_content_type='text/markdown',

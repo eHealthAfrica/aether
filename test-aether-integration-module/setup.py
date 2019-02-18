@@ -18,10 +18,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
+from io import open
 from setuptools import setup
 
+
+def read(f):
+    return open(f, 'r', encoding='utf-8').read()
+
+
 setup(
+    version=read('/var/tmp/VERSION').strip(),
     name='test.aether.integration',
 
     url='https://github.com/eHealthAfrica/aether/',

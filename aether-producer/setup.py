@@ -18,14 +18,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import os
-from setuptools import setup
+from io import open
+from setuptools import find_packages, setup
 
-with open(os.path.join('/var/tmp', 'VERSION'), 'r') as version_file:
-    version = version_file.read().strip()
+
+def read(f):
+    return open(f, 'r', encoding='utf-8').read()
+
 
 setup(
-    version=version,
+    version=read('/var/tmp/VERSION').strip(),
     name='aether_producer',
     decription='Kafka Producer for Aether',
 
@@ -37,7 +39,6 @@ setup(
 
     setup_requires=['pytest'],
     tests_require=[
-        'aether_producer',
         'pytest',
         'requests',
         'sqlalchemy',

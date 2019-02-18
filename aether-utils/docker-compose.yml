@@ -8,8 +8,6 @@ services:
 
   client:
     build: ./aether-client
-    environment:
-      TESTING: "true"
     volumes:
       - ./aether-client:/code
     command: build
