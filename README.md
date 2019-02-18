@@ -99,7 +99,7 @@ of the most common ones with non default values. For more info take a look at th
 #### Aether Kernel
 
 - `DB_NAME`: `aether` Database name.
-- `WEB_SERVER_PORT`: `8000` Web server port.
+- `WEB_SERVER_PORT`: `8100` Web server port.
 - `ADMIN_TOKEN`: `kernel_admin_user_auth_token`
   to connect to it from other modules. It's used within the start up scripts.
 - `CSV_SEPARATOR`: `,` fields separator in the CSV export format.
@@ -107,69 +107,77 @@ of the most common ones with non default values. For more info take a look at th
 #### Aether ODK Module
 
 - `DB_NAME`: `odk` Database name.
-- `WEB_SERVER_PORT`: `8002` Web server port.
+- `WEB_SERVER_PORT`: `8102` Web server port.
 - `ADMIN_TOKEN`: `odk_admin_user_auth_token`
   to connect to it from other modules. It's used within the start up scripts.
 - `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
-- `AETHER_KERNEL_URL`: `http://kernel:8000` Aether Kernel Server url.
-- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9000` Aether Kernel Testing Server url.
+- `AETHER_KERNEL_URL`: `http://kernel:8100` Aether Kernel Server url.
+- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
 
 #### Aether UI
 
 - `DB_NAME`: `ui` Database name.
-- `WEB_SERVER_PORT`: `8004` Web server port.
+- `WEB_SERVER_PORT`: `8104` Web server port.
 - `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
-- `AETHER_KERNEL_URL`: `http://kernel:8000` Aether Kernel Server url.
-- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9000` Aether Kernel Testing Server url.
+- `AETHER_KERNEL_URL`: `http://kernel:8100` Aether Kernel Server url.
+- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
 
 #### Aether CouchDB Sync Module
 
 - `DB_NAME`: `couchdb-sync` Database name.
-- `WEB_SERVER_PORT`: `8006` Web server port.
+- `WEB_SERVER_PORT`: `8106` Web server port.
 - `ADMIN_TOKEN`: `sync_admin_user_auth_token`
   to connect to it from other modules. It's used within the start up scripts.
 - `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
-- `AETHER_KERNEL_URL`: `http://kernel:8000` Aether Kernel Server url.
-- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9000` Aether Kernel Testing Server url.
+- `AETHER_KERNEL_URL`: `http://kernel:8100` Aether Kernel Server url.
+- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
 - `GOOGLE_CLIENT_ID`: `generate_it_in_your_google_developer_console`
   Token used to verify the device identity with Google.
   See more in https://developers.google.com/identity/protocols/OAuth2
 
 #### File Storage System
+
 (Used on Kernel and ODK Module)
 
 - `DJANGO_STORAGE_BACKEND`: Used to specify a [Default file storage system](https://docs.djangoproject.com/en/1.11/ref/settings/#default-file-storage).
-  Available options: `filesystem`, `s3`, `gcs`.
+  Available options: `minio`, `s3`, `gcs`.
   More information [here](https://django-storages.readthedocs.io/en/latest/index.html).
   Setting `DJANGO_STORAGE_BACKEND` is **mandatory**, even for local development
-  (in which case "filesystem" would typically be used).
+  (in which case "minio" would typically be used with the `minio` service).
 
-##### File system (`DJANGO_STORAGE_BACKEND=filesystem`)
+##### Minio (`DJANGO_STORAGE_BACKEND=minio`)
 
-- `MEDIA_ROOT`: `/media` the local folder in which all the media assets will be stored.
-  The files will be served at `$HOSTNAME/media/<file-name>`.
+- `BUCKET_NAME`: Name of the bucket that will act as MEDIA folder (**mandatory**).
+- `MINIO_STORAGE_ACCESS_KEY`: Minio Access Key.
+- `MINIO_STORAGE_SECRET_KEY`: Minio Secret Access Key.
+- `MINIO_STORAGE_ENDPOINT`: Minio server url endpoint (without scheme).
+- `MINIO_STORAGE_USE_HTTPS`: Whether to use TLS or not. Determines the scheme.
+- `MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET`: Whether to create the bucket if it does not already exist.
+- `MINIO_STORAGE_MEDIA_USE_PRESIGNED`: Determines if the media file URLs should be pre-signed.
+
+See more in https://django-minio-storage.readthedocs.io/en/latest/usage
 
 ##### S3 (`DJANGO_STORAGE_BACKEND=s3`)
 
 - `BUCKET_NAME`: Name of the bucket to use on s3 (**mandatory**). Must be unique on s3.
-- `AWS_ACCESS_KEY_ID`: AWS Access Key to your s3 account. Used when `DJANGO_STORAGE_BACKEND=s3`.
-- `AWS_SECRET_ACCESS_KEY`: AWS Secret Access Key to your s3 account. Used when `DJANGO_STORAGE_BACKEND=s3`.
+- `AWS_ACCESS_KEY_ID`: AWS Access Key to your s3 account.
+- `AWS_SECRET_ACCESS_KEY`: AWS Secret Access Key to your s3 account.
 
 ##### Google Cloud Storage (`DJANGO_STORAGE_BACKEND=gcs`)
 
 - `BUCKET_NAME`: Name of the bucket to use on gcs (**mandatory**).
   Create bucket using [Google Cloud Console](https://console.cloud.google.com/)
   and set appropriate permissions.
-- `GS_ACCESS_KEY_ID`: Google Cloud Access Key. Used when `DJANGO_STORAGE_BACKEND=gcs`.
+- `GS_ACCESS_KEY_ID`: Google Cloud Access Key.
   [How to create Access Keys on Google Cloud Storage](https://cloud.google.com/storage/docs/migrating#keys)
-- `GS_SECRET_ACCESS_KEY`: Google Cloud Secret Access Key. Used when `DJANGO_STORAGE_BACKEND=gcs`.
+- `GS_SECRET_ACCESS_KEY`: Google Cloud Secret Access Key.
   [How to create Access Keys on Google Cloud Storage](https://cloud.google.com/storage/docs/migrating#keys)
 
 
 **WARNING**
 
 Never run `odk`, `ui` or `couchdb-sync` tests against any PRODUCTION server.
-The tests clean up will **DELETE ALL MAPPINGS!!!**
+The tests clean up would **DELETE ALL PROJECTS!!!**
 
 *[Return to TOC](#table-of-contents)*
 
@@ -284,8 +292,6 @@ If the response is `Always Look on the Bright Side of Life!!!`
 it's not possible to connect, on the other hand if the message is
 `Brought to you by eHealth Africa - good tech for hard places` everything goes fine.
 
-The environment variable `HOSTNAME` is required when `DJANGO_STORAGE_BACKEND` is set to "filesystem".
-
 This also applies for `aether-ui` and `aether-couchdb-sync-module`.
 
 In the case of `aether-couchdb-sync-module` a valid `GOOGLE_CLIENT_ID`
@@ -367,7 +373,7 @@ docker-compose -f docker-compose-test.yml up -d <container-name>-test
 **WARNING**
 
 Never run `odk`, `ui` or `couchdb-sync` tests against any PRODUCTION server.
-The tests clean up will **DELETE ALL MAPPINGS!!!**
+The tests clean up would **DELETE ALL PROJECTS!!!**
 
 Look into [docker-compose-base.yml](docker-compose-base.yml), the variable
 `AETHER_KERNEL_URL_TEST` indicates the Aether Kernel Server used in tests.

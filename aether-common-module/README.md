@@ -124,18 +124,7 @@ Default URLs included:
   - the `/accounts` URLs, checks if the REST Framework ones, using the templates
     indicated in `LOGIN_TEMPLATE` and `LOGGED_OUT_TEMPLATE` environment variables,
     or the CAS ones.
-  - the `debug toolbar` URLs only in DEBUG mode.
-
-
-Based on `settings`:
-
-  - if `DJANGO_STORAGE_BACKEND` is `filesystem` then:
-
-    - the `/media/<path>` URLs. The endpoint gives protected access
-      (only logged in users) to media files.
-
-    - the `/media-basic/<path>` URLs. The endpoint gives protected access
-      (only logged in users with basic authentication) to media files.
+  - the `debug toolbar` URLs only in `DEBUG` mode.
 
 Based on the arguments:
 
