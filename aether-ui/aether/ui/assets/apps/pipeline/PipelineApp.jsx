@@ -20,7 +20,7 @@
 
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { Route } from 'react-router-dom'
+import { Route, Switch } from 'react-router-dom'
 import { hot } from 'react-hot-loader'
 
 import PipelineList from './PipelineList'
@@ -31,9 +31,11 @@ class PipelineApp extends Component {
     return (
       <Route render={props => (
         <React.Fragment>
-          <Route exact path='/' component={PipelineList} />
-          <Route path='/:pid' component={Pipeline} />
-          <Route path='/:pid/:cid' component={Pipeline} />
+          <Switch>
+            <Route exact path='/' component={PipelineList} />
+            <Route path='/:pid/:cid' component={Pipeline} />
+            <Route path='/:pid' component={Pipeline} />
+          </Switch>
         </React.Fragment>
       )} />
     )
