@@ -23,9 +23,16 @@
 # docker compose.
 #
 # Example:
-# ./scripts/generate-docker-compose-credentials.sh > .env
+# ./scripts/build_docker_credentials.sh > .env
 
-source ./scripts/random_string.sh
+check_openssl () {
+    which openssl > /dev/null
+}
+
+gen_random_string () {
+    openssl rand -hex 16 | tr -d "\n"
+}
+
 check_openssl
 RET=$?
 if [ $RET -eq 1 ]; then
