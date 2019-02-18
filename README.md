@@ -51,13 +51,13 @@ git clone git@github.com:eHealthAfrica/aether.git && cd aether
 **Note:** Make sure you have `openssl` installed in your system.
 
 ```bash
-./scripts/generate-docker-compose-credentials.sh > .env
+./scripts/build_docker_credentials.sh > .env
 ```
 
 ##### Build containers and start the applications
 
 ```bash
-./scripts/build_aether_containers.sh && ./scripts/docker_start.sh
+./scripts/build_all_containers.sh && ./scripts/docker_start.sh
 ```
 or
 
@@ -338,7 +338,13 @@ The pattern to run a command is always
 This will stop ALL running containers and execute the containers tests.
 
 ```bash
-./scripts/test_travis.sh complete
+./scripts/test_all.sh
+```
+
+or making sure that all the requirements are up to date:
+
+```bash
+./scripts/test_travis.sh all
 ```
 
 To execute tests in just one container.

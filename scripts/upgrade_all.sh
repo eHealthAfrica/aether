@@ -20,12 +20,13 @@
 #
 set -Eeuo pipefail
 
-# create the common module
-./scripts/build_common_and_distribute.sh
+source ./scripts/aether_functions.sh
+
+CONTAINERS=( kernel odk couchdb-sync ui producer integration-test )
 
 # default values
 build=no
-containers=( kernel odk couchdb-sync ui )
+containers=( kernel odk couchdb-sync ui producer )
 
 while [[ $# -gt 0 ]]
 do
@@ -46,26 +47,17 @@ do
     esac
 done
 
+create_docker_assets
+build_libraries_and_distribute
 
-for container in "${containers[@]}"
+for container in "${CONTAINERS[@]}"
 do
-    # upgrade pip dependencies
-    echo "_____________________________________________ Updating $container"
-    docker-compose run --no-deps $container pip_freeze
-    echo "_____________________________________________ $container updated!"
+    pip_freeze_module $container
 
     if [[ $build = "yes" ]]
     then
-        echo "_____________________________________________ Rebuilding $container with updates"
-        docker-compose build --no-cache $container
-        echo "_____________________________________________ $container rebuilt!"
+        build_module $container
     fi
 done
-
-
-# special case
-echo "_____________________________________________ Updating producer"
-docker-compose -f docker-compose-connect.yml run --no-deps producer pip_freeze
-echo "_____________________________________________ producer updated!"
 
 ./scripts/kill_all.sh

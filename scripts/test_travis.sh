@@ -20,15 +20,13 @@
 #
 set -Eeuo pipefail
 
-./scripts/build_common_and_distribute.sh
+source ./scripts/aether_functions.sh
+
+create_credentials
+create_docker_assets
+build_libraries_and_distribute
 
 case "$1" in
-    integration)
-        ./scripts/test_integration_requires.sh travis
-        ./scripts/test_container.sh producer
-        ./scripts/test_integration.sh
-    ;;
-
     all)
         ./scripts/test_all.sh
     ;;
@@ -43,12 +41,9 @@ case "$1" in
         ./scripts/test_container.sh couchdb-sync
     ;;
 
-    complete)
-        ./scripts/test_all.sh
-
-        ./scripts/test_integration_requires.sh travis
+    integration)
         ./scripts/test_container.sh producer
-        ./scripts/test_integration.sh
+        ./scripts/test_container.sh integration
     ;;
 
     *)

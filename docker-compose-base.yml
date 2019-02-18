@@ -390,8 +390,7 @@ services:
     build: ./aether-producer
     stdin_open: true
     volumes:
-     - ./aether-producer:/code
-     - ./VERSION:/var/tmp/VERSION
+      - ./aether-producer:/code
     environment:
       PYTHONUNBUFFERED: 1
 

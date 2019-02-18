@@ -20,10 +20,22 @@
 #
 set -Eeuo pipefail
 
-wait_for_kernel() {
+function build_container {
+    echo "_____________________________________________ Building $1 container"
+    $DC_TEST build "$1"-test
+}
+
+function wait_for_kernel {
     KERNEL_HEALTH_URL="http://localhost:9100/health"
     until curl -s $KERNEL_HEALTH_URL > /dev/null; do
-        >&2 echo "Waiting for Kernel..."
+        >&2 echo "_____________________________________________ Waiting for Kernel..."
+        sleep 2
+    done
+}
+
+function wait_for_db {
+    until $DC_TEST run kernel-test eval pg_isready -q; do
+        >&2 echo "_____________________________________________ Waiting for db-test..."
         sleep 2
     done
 }
@@ -35,7 +47,7 @@ $DC_TEST down
 
 if [[ $1 == "ui" ]]
 then
-    $DC_TEST build ui-assets-test
+    build_container ui-assets
     $DC_TEST run   ui-assets-test test
     $DC_TEST run   ui-assets-test build
     echo "_____________________________________________ Tested and built ui assets"
@@ -48,39 +60,47 @@ if [[ $1 = "couchdb-sync" ]]
 then
     $DC_TEST up -d couchdb-test redis-test
 fi
-
-# sometimes this is not as faster as we wanted... :'(
-$DC_TEST build kernel-test
-until $DC_TEST run kernel-test eval pg_isready -q; do
-    >&2 echo "Waiting for db-test..."
-    sleep 2
-done
+if [[ $1 = "integration" ]]
+then
+    echo "_____________________________________________ Starting Zookeeper and Kafka"
+    $DC_TEST up -d zookeeper-test kafka-test
+fi
 
 
 if [[ $1 != "kernel" ]]
 then
-    echo "_____________________________________________ Starting kernel"
     # rename kernel test database in each case
     export TEST_KERNEL_DB_NAME=test-kernel-"$1"
+
+    build_container kernel
+
+    echo "_____________________________________________ Starting kernel"
+    wait_for_db
     $DC_TEST up -d kernel-test
+    wait_for_kernel
+    echo "_____________________________________________ kernel ready!"
+
+    # Producer and Integration need readonlyuser to be present
+    if [[ $1 = "producer" || $1 == "integration" ]]
+    then
+        echo "_____________________________________________ Creating readonlyuser on Kernel DB"
+        $DC_TEST run kernel-test eval python /code/sql/create_readonly_user.py
+
+        if [[ $1 = "integration" ]]
+        then
+            build_container producer
+            echo "_____________________________________________ Starting producer"
+            $DC_TEST up -d producer-test
+            echo "_____________________________________________ producer ready!"
+        fi
+    fi
 fi
 
 
 echo "_____________________________________________ Preparing $1 container"
-$DC_TEST build "$1"-test
+build_container $1
 echo "_____________________________________________ $1 ready!"
-if [[ $1 != "kernel" ]]
-then
-    wait_for_kernel
-fi
-
-# Producer needs readonlyuser to be present
-if [[ $1 = "producer" ]]
-then
-    echo "_____________________________________________ Creating readonlyuser on Kernel"
-    $DC_TEST run kernel-test eval python /code/sql/create_readonly_user.py
-fi
-
+wait_for_db
 $DC_TEST run "$1"-test test
 echo "_____________________________________________ $1 tests passed!"
 

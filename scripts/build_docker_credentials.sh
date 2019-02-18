@@ -25,11 +25,11 @@
 # Example:
 # ./scripts/build_docker_credentials.sh > .env
 
-check_openssl () {
+function check_openssl {
     which openssl > /dev/null
 }
 
-gen_random_string () {
+function gen_random_string {
     openssl rand -hex 16 | tr -d "\n"
 }
 

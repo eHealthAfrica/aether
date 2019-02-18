@@ -47,7 +47,6 @@ services:
       file: ./docker-compose-base.yml
       service: aether-producer-base
     restart: on-failure
-    
     networks:
       - aether
     command: start

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
@@ -18,11 +18,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+set -Eeuo pipefail
 
-check_openssl () {
-    which openssl > /dev/null
-}
-
-gen_random_string () {
-    openssl rand -hex 16 | tr -d "\n"
-}
+docker network create aether_internal      2>/dev/null || true
+docker volume  create aether_database_data 2>/dev/null || true

@@ -74,9 +74,7 @@ do
 done
 
 
-# Try to create the Aether network+volume if missing
-docker network create aether_internal       2>/dev/null || true
-docker volume  create aether_database_data  2>/dev/null || true
+./scripts/build_docker_assets.sh
 
 echo ""
 docker-compose ps
@@ -101,7 +99,7 @@ then
     echo "---- Building containers                                          ----"
     echo "----------------------------------------------------------------------"
 
-    ./scripts/build_aether_containers.sh
+    ./scripts/build_all_containers.sh
     echo ""
 fi
 
@@ -146,7 +144,7 @@ case $app in
     ;;
 esac
 
-start_container () {
+function start_container {
     if [[ $force = "yes" ]]; then
         docker-compose kill $1
     fi
