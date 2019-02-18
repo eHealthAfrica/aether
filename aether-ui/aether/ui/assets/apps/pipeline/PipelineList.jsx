@@ -124,7 +124,7 @@ class PipelineList extends Component {
           {this.state.errorMessage}
         </Modal>
         <div className={`preview-input ${pipeline.isInputReadOnly ? 'pipeline-readonly' : ''}`} onClick={this.onSelectPipeline.bind(this, pipeline)}>
-          
+
           { pipeline.isInputReadOnly &&
             <span className='tag'>
               <FormattedMessage
