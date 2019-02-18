@@ -21,18 +21,18 @@
 
 set -Eeuo pipefail
 
-AETHER_FUNCTIONS=scripts/aether_functions.sh
+source ./scripts/aether_functions.sh
 
-ORDER=( "create_credentials"
-        "create_aether_docker_assets"
-        "build_aether_utils_and_distribute"
-        "build_connect"
-        "build_common_and_distribute"
-        "build_ui_assets"
-        "build_core_modules kernel ui odk couchdb-sync"
-        "create_readonly_user"
-        )
-for FN in "${ORDER[@]}";
+CONTAINERS=( kernel odk couchdb-sync ui producer integration-test )
+
+create_credentials
+create_docker_assets
+build_libraries_and_distribute
+build_ui_assets
+
+for container in "${CONTAINERS[@]}"
 do
-    $AETHER_FUNCTIONS $FN
+    build_module $container
 done
+
+create_readonly_user
