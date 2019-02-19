@@ -34,17 +34,14 @@ matrix:
 
 install: true
 
-before_script:
-  - ./scripts/generate-docker-compose-credentials.sh > .env
-
 script:
   - ./scripts/test_travis.sh $TEST_MODE
 
+after_failure:
+  - docker-compose -f docker-compose-test.yml logs -t --tail="all"
+
 after_script:
   - ./scripts/kill_all.sh
-
-after_failure:
-  - ./scripts/test_travis_failure.sh $TEST_MODE
 
 # TODO: move this secured global env var to Travis settings
 env:

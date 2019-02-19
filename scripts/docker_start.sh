@@ -20,7 +20,7 @@
 #
 set -Eeuo pipefail
 
-# start the indicated app/module with the necessary dependencies
+# start the indicated container with the necessary dependencies
 #
 #   ./scripts/docker_start.sh [--force | --kill | -f | -k] [--build | -b] <name>
 #
@@ -74,11 +74,7 @@ do
 done
 
 
-# Try to create the Aether network+volume if missing
-docker network create aether_internal       2>/dev/null || true
-docker volume  create aether_database_data  2>/dev/null || true
-
-./scripts/generate-aether-version-assets.sh
+./scripts/build_docker_assets.sh
 
 echo ""
 docker-compose ps
@@ -103,7 +99,7 @@ then
     echo "---- Building containers                                          ----"
     echo "----------------------------------------------------------------------"
 
-    ./scripts/build_aether_containers.sh
+    ./scripts/build_all_containers.sh
     echo ""
 fi
 
@@ -148,7 +144,7 @@ case $app in
     ;;
 esac
 
-start_container () {
+function start_container {
     if [[ $force = "yes" ]]; then
         docker-compose kill $1
     fi
