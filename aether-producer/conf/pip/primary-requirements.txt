@@ -11,7 +11,7 @@
 #                                                                              #
 ################################################################################
 
-aether.client>=1.1.0
+aether.client
 confluent_kafka
 flask
 flake8

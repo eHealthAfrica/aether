@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -16,14 +18,18 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import os
+from io import open
 from setuptools import find_packages, setup
 
-os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
+
+def read(f):
+    return open(f, 'r', encoding='utf-8').read()
+
 
 setup(
+    version=read('/var/tmp/VERSION').strip(),
     name='aether.ui',
-    description='A python module with Aether UI functionality',
+    description='An Aether module with UI functionality',
 
     url='https://github.com/eHealthAfrica/aether/',
     author='eHealth Africa',

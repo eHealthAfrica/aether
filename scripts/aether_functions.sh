@@ -19,39 +19,26 @@
 # under the License.
 #
 
+set -Eeuo pipefail
+
 # Generate credentials if missing
 function create_credentials {
     if [ -e ".env" ]; then
         echo "[.env] file already exists! Remove it if you want to generate a new one."
     else
-        ./scripts/generate-docker-compose-credentials.sh > .env
+        ./scripts/build_docker_credentials.sh > .env
     fi
 }
 
-set -Eeuo pipefail
-
 # Try to create the Aether network+volume if missing
-function create_aether_docker_assets {
-    docker network create aether_internal       2>/dev/null || true
-    docker volume  create aether_database_data  2>/dev/null || true
+function create_docker_assets {
+    ./scripts/build_docker_assets.sh
 }
 
-function create_version_files {
-    ./scripts/generate-aether-version-assets.sh
-}
-
-# build Aether utilities
-function build_aether_utils_and_distribute {
-    ./scripts/build_aether_utils_and_distribute.sh
-}
-
-# build Aether Connect
-function build_connect {
-    docker-compose -f docker-compose-connect.yml build
-}
-# build Aether Common python module
-function build_common_and_distribute {
+# build Aether client & Aether Common python libraries
+function build_libraries_and_distribute {
     ./scripts/build_common_and_distribute.sh
+    ./scripts/build_client_and_distribute.sh
 }
 
 # build Aether UI assets
@@ -60,36 +47,33 @@ function build_ui_assets {
     docker-compose run   ui-assets build
 }
 
-function build_core_modules {
-    CONTAINERS=($ARGS)
-    APP_REVISION=`cat ./tmp/REVISION`
-    APP_VERSION=`cat ./tmp/VERSION`
+# build the indicated container
+function build_container {
+    container=$1
+    APP_REVISION=`git rev-parse --abbrev-ref HEAD`
+    APP_VERSION=`cat ./VERSION`
 
-    # speed up first start up
-    docker-compose up -d db
+    DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml -f docker-compose-test.yml"
 
-    # build Aether Suite
-    for container in "${CONTAINERS[@]}"
-    do
-        # build container
-        docker-compose build \
-            --build-arg GIT_REVISION=$APP_REVISION \
-            --build-arg VERSION=$APP_VERSION \
-            $container
+    echo "_____________________________________________ Building container $container"
+    $DC build \
+        --build-arg GIT_REVISION=$APP_REVISION \
+        --build-arg VERSION=$APP_VERSION \
+        $container
+}
 
-        # setup container (model migration, admin user, static content...)
-        docker-compose run $container setup
-    done
+# upgrade the dependencies of the indicated container
+function pip_freeze_container {
+    container=$1
+    DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml"
+
+    echo "_____________________________________________ Upgrading container $container"
+    $DC run --no-deps $container pip_freeze
 }
 
 # kernel readonly user (used by Aether Producer)
 function create_readonly_user {
+    docker-compose up -d db
     docker-compose run --no-deps kernel eval python /code/sql/create_readonly_user.py
     docker-compose kill
 }
-
-# Run function found at first command line arg
-CALL=$1
-# If there are arguments they are also accessible
-ARGS=${@:2}
-$CALL $ARGS

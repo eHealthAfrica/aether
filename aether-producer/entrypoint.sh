@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
@@ -76,7 +76,7 @@ case "$1" in
     flake8 )
         test_flake8
     ;;
-    
+
     pip_freeze )
         pip install -q virtualenv
         rm -rf /tmp/env
@@ -87,7 +87,6 @@ case "$1" in
         cat /code/conf/pip/requirements_header.txt | tee conf/pip/requirements.txt
         /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
     ;;
-
 
     start )
         ./manage.py
