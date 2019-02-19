@@ -367,13 +367,13 @@ export class IdentityMapping extends Component {
     const header = (
       <FormattedMessage
         id='pipeline.input.identityMapping.header'
-        defaultMessage='Create passthrough pipeline'
+        defaultMessage='Create identity contract'
       />
     )
     const content = (
       <FormattedMessage
         id='pipeline.input.identityMapping.content'
-        defaultMessage='Are you sure that you want to create a passthrough pipeline? This action will overwrite all existing entity types and mappings.'
+        defaultMessage='Are you sure that you want to create an identity contract? This action will overwrite all existing entity types and mappings.'
       />
     )
     const buttons = (
@@ -412,7 +412,7 @@ export class IdentityMapping extends Component {
           <p>
             <FormattedMessage
               id='pipeline.input.identityMapping.btn-apply'
-              defaultMessage='You can use a passthrough pipeline to leave submitted data unchanged. This will automatically create both Entity Types and Mappings.'
+              defaultMessage='You can use an identity contract to leave submitted data unchanged. This will automatically create both Entity Types and Mappings.'
             />
           </p>
           <button
@@ -423,7 +423,7 @@ export class IdentityMapping extends Component {
           >
             <FormattedMessage
               id='pipeline.input.identityMapping.btn-apply'
-              defaultMessage='Create passthrough pipeline'
+              defaultMessage='Create identity contract'
             />
           </button>
         </div>
