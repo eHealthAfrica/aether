@@ -114,7 +114,10 @@ class PipelineList extends Component {
         key={pipeline.id}
         className='pipeline-preview'>
         <Modal buttons={
-          <button type='button' className='btn btn-w btn-primary' onClick={this.setErrorModal.bind(this, false)}>
+          <button
+            type='button'
+            className='btn btn-w btn-primary'
+            onClick={this.setErrorModal.bind(this, false)}>
             <FormattedMessage
               id='pipeline.modal.error.ok'
               defaultMessage='Ok'
@@ -123,8 +126,11 @@ class PipelineList extends Component {
         } header={this.state.errorHeader} show={this.state.showError}>
           {this.state.errorMessage}
         </Modal>
-        <div className={`preview-input ${pipeline.isInputReadOnly ? 'pipeline-readonly' : ''}`} onClick={this.onSelectPipeline.bind(this, pipeline)}>
-
+        <div
+          className={`preview-input ${pipeline.isInputReadOnly ?
+            'pipeline-readonly' :
+            ''}`}
+          onClick={this.onSelectPipeline.bind(this, pipeline)}>
           { pipeline.isInputReadOnly &&
             <span className='tag'>
               <FormattedMessage
@@ -138,7 +144,7 @@ class PipelineList extends Component {
               <i className='fas fa-file fa-sm' />
             </span>
             <span className='input-name'>
-              {pipeline.name}
+              { pipeline.name } { pipeline.mappingset && <InfoButton pipeline={pipeline} /> }
             </span>
           </div>
         </div>
@@ -146,7 +152,9 @@ class PipelineList extends Component {
           {
             pipeline.contracts.map(contract => (
               <React.Fragment key={contract.id}>
-                <div className={`preview-contract ${contract.is_read_only ? 'pipeline-readonly' : ''}`}
+                <div className={`preview-contract ${contract.is_read_only ?
+                  'pipeline-readonly' :
+                  ''}`}
                   onClick={() => { this.onSelectContract(pipeline, contract) }}>
 
                   { contract.is_read_only &&
@@ -185,14 +193,24 @@ class PipelineList extends Component {
 
                   <div className='contract-publish'>
                     <div className='status-publish'>
-                      { pipeline.mappingset && <InfoButton pipeline={pipeline} /> }
-                      <FormattedMessage
-                        id='contract.list.publish-status'
-                        defaultMessage={contract.published_on ? `Published on ${moment(contract.published_on).format('MMMM DD, YYYY HH:mm')}`
-                          : 'Not published'}
-                      />
+                      { contract.published_on &&
+                        <React.Fragment>
+                          <FormattedMessage
+                            id='contract.list.publish-status.published'
+                            defaultMessage='Published on '
+                          /> { moment(contract.published_on).format('MMMM DD, YYYY HH:mm') } :
+                        </React.Fragment> }
+                      { !contract.published_on &&
+                        <FormattedMessage
+                          id='contract.list.publish-status.not-published'
+                          defaultMessage='Not published'
+                        />
+                      }
                     </div>
-                    <PublishButton contract={contract} pipeline={pipeline} className='btn btn-w btn-publish' />
+                    <PublishButton
+                      contract={contract}
+                      pipeline={pipeline}
+                      className='btn btn-w btn-publish' />
                   </div>
                 </div>
               </React.Fragment>

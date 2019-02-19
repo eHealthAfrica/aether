@@ -438,13 +438,24 @@ class Pipeline extends Component {
               />
             </label>
             <div className='status-publish'>
-              <FormattedMessage
-                id='pipeline.publish-status'
-                defaultMessage={this.props.selectedContract.published_on
-                  ? `Published on ${moment(this.props.selectedContract.published_on).format('MMMM DD, YYYY HH:mm')}`
-                  : 'Not published'}
-              />
-              <PublishButton pipeline={this.props.selectedPipeline} contract={this.props.selectedContract} className='btn btn-d btn-publish' />
+              { this.props.selectedContract.published_on &&
+                <React.Fragment>
+                  <FormattedMessage
+                    id='pipeline.publish-status.published'
+                    defaultMessage='Published on'
+                  /> { moment(this.props.selectedContract.published_on).format('MMMM DD, YYYY HH:mm') }
+                </React.Fragment>
+              }
+              { !this.props.selectedContract.published_on &&
+                <FormattedMessage
+                  id='pipeline.publish-status.not-published'
+                  defaultMessage='Not published'
+                />
+              }
+              <PublishButton
+                pipeline={this.props.selectedPipeline}
+                contract={this.props.selectedContract}
+                className='btn btn-d btn-publish' />
             </div>
             { this.props.selectedContract.published_on
               ? <div>
