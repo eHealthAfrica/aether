@@ -33,6 +33,15 @@ services:
       file: ./docker-compose-base.yml
       service: redis-base
 
+  minio-test:
+    extends:
+      file: ./docker-compose-base.yml
+      service: minio-base
+    volumes:
+      # volumes in tests
+      - ./tmp/test/media:/data
+    command: minio server --quiet --address minio-test:9000 /data
+
 
   # ---------------------------------
   # Aether Kernel
@@ -45,36 +54,34 @@ services:
     environment:
       # use a different database when testing the integration with another container
       DB_NAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
+      BUCKET_NAME: test-kernel
       DEBUG: null # set to null to remove previous value
-      MEDIA_ROOT: /tmp/
+      MINIO_STORAGE_ENDPOINT: minio-test:9000
       PGHOST: db-test
       TESTING: "true"
-      WEB_SERVER_PORT: 9000
+      WEB_SERVER_PORT: 9100
     volumes:
       # volumes in tests
-      - ./tmp/test/kernel/media:/media
       - ./tmp/test/kernel/static:/var/www/static
       - ./tmp/test/kernel/tmp:/tmp
     ports:
-      - "9000:9000"
+      - "9100:9100"
     command: start
+
 
   # ---------------------------------
   # Aether Kernel Client
   # ---------------------------------
 
   client-test:
-    build: ./aether-utils/aether-client
+    extends:
+      file: ./aether-client-library/docker-compose.yml
+      service: client
     environment:
-      KERNEL_URL: http://kernel-test:9000
+      KERNEL_URL: http://kernel-test:9100
       KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
       KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
-      TESTING: "true"
-    volumes:
-      - ./aether-utils/aether-client:/code
-      - ./tmp/VERSION:/code/VERSION
     command: test
-
 
 
   # ---------------------------------
@@ -86,19 +93,19 @@ services:
       file: ./docker-compose-base.yml
       service: odk-base
     environment:
-      AETHER_KERNEL_URL: http://kernel-test:9000
+      AETHER_KERNEL_URL: http://kernel-test:9100
+      BUCKET_NAME: test-odk
       DB_NAME: test-odk
       DEBUG: null # set to null to remove previous value
-      MEDIA_ROOT: /tmp/
+      MINIO_STORAGE_ENDPOINT: minio-test:9000
       PGHOST: db-test
       TESTING: "true"
-      WEB_SERVER_PORT: 9002
+      WEB_SERVER_PORT: 9102
     volumes:
       # volumes in tests
-      - ./tmp/test/odk/media:/media
       - ./tmp/test/odk/static:/var/www/static
     ports:
-      - "9002:9002"
+      - "9102:9102"
     command: start
 
 
@@ -111,18 +118,17 @@ services:
       file: ./docker-compose-base.yml
       service: couchdb-sync-base
     environment:
-      AETHER_KERNEL_URL: http://kernel-test:9000
+      AETHER_KERNEL_URL: http://kernel-test:9100
       COUCHDB_URL: http://couchdb-test:5984
       DB_NAME: test-couchdb-sync
       DEBUG: null # set to null to remove previous value
       GOOGLE_CLIENT_ID: secret_google_client_id
-      MEDIA_ROOT: /tmp/
       PGHOST: db-test
       REDIS_HOST: redis-test
       TESTING: "true"
-      WEB_SERVER_PORT: 9006
+      WEB_SERVER_PORT: 9106
     ports:
-      - "9006:9006"
+      - "9106:9106"
     command: start
 
 
@@ -135,14 +141,14 @@ services:
       file: ./docker-compose-base.yml
       service: ui-base
     environment:
-      AETHER_KERNEL_URL: http://kernel-test:9000
+      AETHER_KERNEL_URL: http://kernel-test:9100
       DB_NAME: test-ui
       DEBUG: null # set to null to remove previous value
       PGHOST: db-test
       TESTING: "true"
-      WEB_SERVER_PORT: 9004
+      WEB_SERVER_PORT: 9104
     ports:
-      - "9004:9004"
+      - "9104:9104"
     command: start
 
   ui-assets-test:
@@ -187,7 +193,7 @@ services:
       PRODUCER_ADMIN_USER: ${PRODUCER_ADMIN_USER}
       PRODUCER_ADMIN_PW: ${PRODUCER_ADMIN_PW}
       KAFKA_URL: kafka-test:29092
-      KERNEL_URL: http://kernel-test:9000
+      KERNEL_URL: http://kernel-test:9100
       POSTGRES_DBNAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
       POSTGRES_HOST: db-test
       SERVER_PORT: 9005
@@ -212,12 +218,11 @@ services:
     build: ./test-aether-integration-module
     environment:
       PRODUCER_URL: http://producer-test:9005
-      KERNEL_URL: http://kernel-test:9000
+      KERNEL_URL: http://kernel-test:9100
       KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
       KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
       PRODUCER_ADMIN_USER: ${PRODUCER_ADMIN_USER}
       PRODUCER_ADMIN_PW: ${PRODUCER_ADMIN_PW}
     volumes:
       - ./test-aether-integration-module:/code
-      - ./tmp/VERSION:/code/VERSION
     command: test

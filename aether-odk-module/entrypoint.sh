@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
@@ -127,15 +127,9 @@ setup () {
     chmod -R 755 $STATIC_ROOT
 
     # expose version number (if exists)
-    cp ./VERSION $STATIC_ROOT/VERSION   2>/dev/null || :
+    cp /var/tmp/VERSION $STATIC_ROOT/VERSION   2>/dev/null || :
     # add git revision (if exists)
-    cp ./REVISION $STATIC_ROOT/REVISION 2>/dev/null || :
-
-    # media assets storage
-    if [ "$DJANGO_STORAGE_BACKEND" == "filesystem" ]; then
-        echo "Filesystem storage in ${MEDIA_ROOT:-/media}"
-        chown aether: ${MEDIA_ROOT:-/media}
-    fi
+    cp /var/tmp/REVISION $STATIC_ROOT/REVISION 2>/dev/null || :
 }
 
 test_flake8 () {

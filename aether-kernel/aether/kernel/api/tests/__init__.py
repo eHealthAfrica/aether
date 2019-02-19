@@ -118,6 +118,42 @@ EXAMPLE_NESTED_SCHEMA = {
     'name': 'Nested'
 }
 
+NESTED_ARRAY_SCHEMA = {
+    'fields': [
+        {
+            'name': 'id',
+            'type': 'string'
+        },
+        {
+            'name': 'geom',
+            'namespace': 'Test',
+            'type': {
+                'fields': [
+                    {
+                        'name': 'coordinates',
+                        'namespace': 'Test.geom',
+                        'type': {
+                            'items': 'float',
+                            'type': 'array'
+                        }
+                    },
+                    {
+                        'name': 'type',
+                        'namespace': 'Test.geom',
+                        'type': 'string'
+                    }
+                ],
+                'name': 'geom',
+                'namespace': 'Test',
+                'type': 'record'
+            }
+        }
+    ],
+    'name': 'Test',
+    'namespace': 'org.eha.Test',
+    'type': 'record'
+}
+
 EXAMPLE_SOURCE_DATA = {
     'data': {
         'village': 'somevillageID',

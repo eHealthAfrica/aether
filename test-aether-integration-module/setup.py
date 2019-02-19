@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
@@ -18,11 +18,23 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
+from io import open
 from setuptools import setup
 
+
+def read(f):
+    return open(f, 'r', encoding='utf-8').read()
+
+
 setup(
+    version=read('/var/tmp/VERSION').strip(),
     name='test.aether.integration',
+
+    url='https://github.com/eHealthAfrica/aether/',
+    author='eHealth Africa',
+    author_email='aether@ehealthafrica.org',
+    license='Apache2 License',
+
     setup_requires=['pytest-runner'],
-    tests_require=['pytest']
+    tests_require=['pytest'],
 )

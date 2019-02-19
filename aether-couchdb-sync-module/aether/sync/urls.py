@@ -20,11 +20,11 @@ from django.conf.urls import include, url
 
 from aether.common.conf.urls import generate_urlpatterns
 
-from .api.views import signin
+from .api.views import signin, load_file
 from .views import check_rq
 
 
-urlpatterns = generate_urlpatterns(token=True, kernel=True) + [
+urlpatterns = generate_urlpatterns(token=True, kernel=True, app=[
     url(r'^', include('aether.sync.api.urls')),
 
     url(r'^check-rq$', view=check_rq, name='check-rq'),
@@ -32,4 +32,7 @@ urlpatterns = generate_urlpatterns(token=True, kernel=True) + [
 
     # used by the Aether Mobile App
     url(r'^sync/signin$', view=signin, name='signin'),
-]
+
+    # simulate the sync process using an Aether Mobile App backup file
+    url(r'^sync/load-file$', view=load_file, name='load-file'),
+])

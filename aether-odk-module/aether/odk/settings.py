@@ -20,7 +20,7 @@
 # ------------------------------------------------------------------------------
 
 from aether.common.conf.settings import *  # noqa
-from aether.common.conf.settings import INSTALLED_APPS
+from aether.common.conf.settings import INSTALLED_APPS, check_storage
 
 
 # ODK Configuration
@@ -38,3 +38,8 @@ INSTALLED_APPS += [
 MIGRATION_MODULES = {
     'odk': 'aether.odk.api.migrations',
 }
+
+
+# Storage Configuration
+# ------------------------------------------------------------------------------
+check_storage()
