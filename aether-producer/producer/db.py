@@ -138,7 +138,7 @@ class Offset(Base):
     # sure our sets happen ASAP while reads of offsets can be
     # delayed until resources are free.
 
-    __tablename__ = 'offset'
+    __tablename__ = 'offset_table'
 
     # GET single offset value
     GET_STR = '''
