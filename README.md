@@ -347,7 +347,14 @@ or making sure that all the requirements are up to date:
 ./scripts/test_travis.sh all
 ```
 
-To execute tests in just one container.
+To execute tests in just one container:
+  - `kernel`
+  - `client`
+  - `ui`
+  - `odk`
+  - `couchdb-sync`
+  - `producer`
+  - `integration`
 
 ```bash
 ./scripts/test_container.sh <container-name>
@@ -357,7 +364,6 @@ or
 
 ```bash
 docker-compose run <container-name> test
-
 ```
 
 or
