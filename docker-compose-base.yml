@@ -366,8 +366,6 @@ services:
       - ./aether-ui/aether/ui/assets/css:/code/css
       - ./aether-ui/aether/ui/assets/tests:/code/tests
       - ./aether-ui/aether/ui/assets/package.json:/code/package.json
-    environment:
-      WEBPACK_STATS_FILE: /code/aether/ui/assets/bundles/webpack-stats.json
     ports:
       - "3004:3004"
     command: start_dev
