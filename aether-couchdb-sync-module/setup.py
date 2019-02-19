@@ -27,7 +27,7 @@ def read(f):
 setup(
     version=read('/var/tmp/VERSION').strip(),
     name='aether.sync',
-    description='A python module with Aether CoudhDB Sync functionality',
+    description='A python library with Aether CoudhDB Sync functionality',
 
     url='https://github.com/eHealthAfrica/aether/',
     author='eHealth Africa',

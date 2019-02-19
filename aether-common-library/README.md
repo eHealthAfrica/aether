@@ -1,6 +1,6 @@
 # Aether common
 
-This module contains the shared features among different aether modules.
+This library contains the shared features among different aether modules.
 
 All the features that can be re-used in other modules and are not module specific
 should be moved to this one.
@@ -153,7 +153,7 @@ docker-compose run common build
 ```
 
 
-## How to test the module
+## How to test the library
 
 To ease the process the tests are run within a docker container.
 

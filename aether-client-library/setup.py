@@ -27,7 +27,7 @@ def read(f):
 setup(
     version=read('/var/tmp/VERSION').strip(),
     name='aether.client',
-    description='A python module with Aether Client functionality',
+    description='A python library with Aether Client functionality',
     long_description=read('README.md'),
     long_description_content_type='text/markdown',
 

@@ -27,7 +27,7 @@ def read(f):
 setup(
     version=read('/var/tmp/VERSION').strip(),
     name='aether.kernel',
-    description='A python module with Aether KERNEL functionality',
+    description='A python library with Aether KERNEL functionality',
 
     url='https://github.com/eHealthAfrica/aether/',
     author='eHealth Africa',

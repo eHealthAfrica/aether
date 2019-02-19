@@ -32,7 +32,7 @@ build_ui_assets
 
 for container in "${CONTAINERS[@]}"
 do
-    build_module $container
+    build_container $container
 done
 
 create_readonly_user

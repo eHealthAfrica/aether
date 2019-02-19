@@ -33,7 +33,7 @@ show_help() {
     test_lint     : run flake8 tests
     test_coverage : run tests with coverage output
 
-    build         : build package module
+    build         : build package library
     """
 }
 

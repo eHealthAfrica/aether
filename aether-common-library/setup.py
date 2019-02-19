@@ -27,7 +27,7 @@ def read(f):
 setup(
     version=read('/var/tmp/VERSION').strip(),
     name='aether.common',
-    description='A python module with common aether functionality',
+    description='A python library with common aether functionality',
     long_description=read('README.md'),
     long_description_content_type='text/markdown',
 

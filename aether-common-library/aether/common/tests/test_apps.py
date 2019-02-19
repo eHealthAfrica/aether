@@ -26,5 +26,5 @@ class AppsTests(TestCase):
         self.assertEquals(
             # this is only valid in tests, the correct name is `aether.common`
             apps.get_app_config('common').verbose_name,
-            'Aether common module'
+            'Aether common library'
         )

@@ -52,11 +52,11 @@ build_libraries_and_distribute
 
 for container in "${CONTAINERS[@]}"
 do
-    pip_freeze_module $container
+    pip_freeze_container $container
 
     if [[ $build = "yes" ]]
     then
-        build_module $container
+        build_container $container
     fi
 done
 

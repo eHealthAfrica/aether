@@ -35,7 +35,7 @@ function create_docker_assets {
     ./scripts/build_docker_assets.sh
 }
 
-# build Aether client & Aether Common python module
+# build Aether client & Aether Common python libraries
 function build_libraries_and_distribute {
     ./scripts/build_common_and_distribute.sh
     ./scripts/build_client_and_distribute.sh
@@ -48,7 +48,7 @@ function build_ui_assets {
 }
 
 # build the indicated container
-function build_module {
+function build_container {
     container=$1
     APP_REVISION=`git rev-parse --abbrev-ref HEAD`
     APP_VERSION=`cat ./VERSION`
@@ -63,7 +63,7 @@ function build_module {
 }
 
 # upgrade the dependencies of the indicated container
-function pip_freeze_module {
+function pip_freeze_container {
     container=$1
     DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml"
 

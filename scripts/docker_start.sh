@@ -20,7 +20,7 @@
 #
 set -Eeuo pipefail
 
-# start the indicated app/module with the necessary dependencies
+# start the indicated container with the necessary dependencies
 #
 #   ./scripts/docker_start.sh [--force | --kill | -f | -k] [--build | -b] <name>
 #

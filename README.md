@@ -8,7 +8,7 @@
 - [Setup](#Setup)
   - [Dependencies](#dependencies)
   - [Installation](#installation)
-  - [Common Module](#common-module)
+  - [Common Library](#common-library)
   - [Environment Variables](#environment-variables)
     - [Aether Kernel](#aether-kernel)
     - [Aether ODK Module](#aether-odk-module)
@@ -76,9 +76,9 @@ for local development. Never deploy these to publicly accessible servers.
 
 *[Return to TOC](#table-of-contents)*
 
-### Common module
+### Common library
 
-This module contains the shared features among different containers.
+This library contains the shared features among different containers.
 
 To create a new version and distribute it:
 
@@ -86,7 +86,7 @@ To create a new version and distribute it:
 ./scripts/build_common_and_distribute.sh
 ```
 
-See more in [README](/aether-common-module/README.md).
+See more in [README](/aether-common-library/README.md).
 
 *[Return to TOC](#table-of-contents)*
 
@@ -214,7 +214,7 @@ This will start:
 
 If you generated an `.env` file during installation, passwords for all superusers can be found there.
 
-To start any app/module separately:
+To start any container separately:
 
 ```bash
 ./scripts/docker_start.sh kernel          # starts Aether Kernel app and its dependencies

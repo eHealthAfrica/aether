@@ -18,7 +18,6 @@
 
 '''
 These settings are only used for testing purposes.
-The app that includes this module should have its own settings.
 '''
 
 from aether.common.conf.settings import *  # noqa

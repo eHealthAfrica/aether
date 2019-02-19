@@ -27,12 +27,12 @@ show_help() {
     Commands
     ----------------------------------------------------------------------------
     bash          : run bash
-    build         : build python wheel of library in /dist
     eval          : eval shell command
 
     test          : run tests
     test_lint     : run flake8 tests
 
+    build         : build python wheel of library in /dist
     """
 }
 
