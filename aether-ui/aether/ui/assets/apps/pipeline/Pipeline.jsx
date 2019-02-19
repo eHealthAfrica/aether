@@ -76,7 +76,7 @@ class Pipeline extends Component {
       this.setState({
         pipelineView: 'entityTypes',
         newContracts: [...this.state.newContracts, this.props.selectedContract]
-      }, () => this.renderNewContractTabs(this.state.newContracts))
+      }, () => this.renderNewContractTabs())
       this.toggleSettings()
     }
 
@@ -90,6 +90,7 @@ class Pipeline extends Component {
       this.setState({
         contractName: this.props.selectedContract.name
       })
+      this.renderNewContractTabs()
     }
     if (prevProps.selectedPipeline !== this.props.selectedPipeline) {
       this.renderTabs(this.props.selectedPipeline.contracts, this.props.selectedContract)
@@ -149,6 +150,7 @@ class Pipeline extends Component {
   }
 
   renderNewContractTabs (contracts) {
+    contracts = contracts || this.state.newContracts
     this.setState({
       newContractTabs: (
         <React.Fragment>
@@ -341,7 +343,7 @@ class Pipeline extends Component {
     this.setState({
       newContracts: [...this.state.newContracts, nContract],
       showSettings: true
-    }, () => this.renderNewContractTabs(this.state.newContracts))
+    }, () => this.renderNewContractTabs())
   }
 
   toggleSettings () {
