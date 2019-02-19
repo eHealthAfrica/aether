@@ -142,10 +142,6 @@ services:
     volumes:
       - ./aether-kernel:/code
 
-      # app version
-      - ./tmp/VERSION:/code/VERSION
-      - ./tmp/REVISION:/code/REVISION
-
       # static folder
       - ./.persistent_data/static/kernel:/var/www/static
       # temporary folder for Excel files
@@ -213,10 +209,6 @@ services:
     volumes:
       - ./aether-odk-module:/code
 
-      # app version
-      - ./tmp/VERSION:/code/VERSION
-      - ./tmp/REVISION:/code/REVISION
-
       # static folder
       - ./.persistent_data/static/odk:/var/www/static
       # backup folder
@@ -282,10 +274,6 @@ services:
     volumes: &sync-volumes
       - ./aether-couchdb-sync-module:/code
 
-      # app version
-      - ./tmp/VERSION:/code/VERSION
-      - ./tmp/REVISION:/code/REVISION
-
       # static folder
       - ./.persistent_data/static/sync:/var/www/static
       # backup folder
@@ -341,10 +329,6 @@ services:
       WEB_SERVER_PORT: 8104
     volumes:
       - ./aether-ui:/code
-
-      # app version
-      - ./tmp/VERSION:/code/VERSION
-      - ./tmp/REVISION:/code/REVISION
 
       # static folder
       - ./.persistent_data/static/ui:/var/www/static
@@ -412,8 +396,7 @@ services:
     build: ./aether-producer
     stdin_open: true
     volumes:
-     - ./aether-producer:/code
-     - ./VERSION:/code/VERSION
+      - ./aether-producer:/code
     environment:
       PYTHONUNBUFFERED: 1
 

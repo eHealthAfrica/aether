@@ -75,15 +75,13 @@ services:
   # ---------------------------------
 
   client-test:
-    build: ./aether-utils/aether-client
+    extends:
+      file: ./aether-client-library/docker-compose.yml
+      service: client
     environment:
       KERNEL_URL: http://kernel-test:9100
       KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
       KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
-      TESTING: "true"
-    volumes:
-      - ./aether-utils/aether-client:/code
-      - ./tmp/VERSION:/code/VERSION
     command: test
 
 
@@ -230,5 +228,4 @@ services:
       PRODUCER_ADMIN_PW: ${PRODUCER_ADMIN_PW}
     volumes:
       - ./test-aether-integration-module:/code
-      - ./tmp/VERSION:/code/VERSION
     command: test
