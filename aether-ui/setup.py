@@ -29,7 +29,7 @@ def read(f):
 setup(
     version=read('/var/tmp/VERSION').strip(),
     name='aether.ui',
-    description='A python library with Aether UI functionality',
+    description='An Aether module with UI functionality',
 
     url='https://github.com/eHealthAfrica/aether/',
     author='eHealth Africa',

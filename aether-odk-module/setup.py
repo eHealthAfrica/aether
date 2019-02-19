@@ -29,7 +29,7 @@ def read(f):
 setup(
     version=read('/var/tmp/VERSION').strip(),
     name='aether.odk',
-    description='A python library with Aether ODK functionality',
+    description='An Aether module with ODK functionality',
 
     url='https://github.com/eHealthAfrica/aether/',
     author='eHealth Africa',
