@@ -111,7 +111,8 @@
 
   .input-name {
     word-wrap: break-word;
-    max-width: 80%;
+    // 100% - padding - logo size - logo padding
+    max-width: calc(100% - 1rem - 1rem - 1.8rem);
     line-height: 1.3em;
   }
 }
