@@ -21,7 +21,7 @@ chardet==3.0.4
 Click==7.0
 confluent-kafka==0.11.6
 entrypoints==0.3
-flake8==3.7.5
+flake8==3.7.6
 Flask==1.0.2
 gevent==1.4.0
 greenlet==0.4.15
@@ -41,7 +41,7 @@ psycopg2-binary==2.7.7
 py==1.7.0
 pycodestyle==2.5.0
 pyflakes==2.1.0
-pytest==4.2.1
+pytest==4.3.0
 python-dateutil==2.8.0
 pytz==2018.9
 PyYAML==3.13

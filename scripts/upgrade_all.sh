@@ -22,8 +22,6 @@ set -Eeuo pipefail
 
 source ./scripts/aether_functions.sh
 
-CONTAINERS=( kernel odk couchdb-sync ui producer integration-test )
-
 # default values
 build=no
 containers=( kernel odk couchdb-sync ui producer )
@@ -50,7 +48,7 @@ done
 create_docker_assets
 build_libraries_and_distribute
 
-for container in "${CONTAINERS[@]}"
+for container in "${containers[@]}"
 do
     pip_freeze_container $container
 

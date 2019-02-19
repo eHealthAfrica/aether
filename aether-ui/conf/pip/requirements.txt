@@ -27,7 +27,7 @@ django-webpack-loader==0.6.0
 djangorestframework==3.9.1
 drf-dynamic-fields==0.3.0
 entrypoints==0.3
-flake8==3.7.5
+flake8==3.7.6
 flake8-quotes==1.0.0
 idna==2.8
 lxml==4.3.1
