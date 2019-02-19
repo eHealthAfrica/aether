@@ -20,7 +20,7 @@
 #
 set -Eeuo pipefail
 
-DC_FILE="docker-compose -f ./aether-common-module/docker-compose.yml"
+DC_FILE="docker-compose -f ./aether-common-library/docker-compose.yml"
 
 APP_REVISION=`git rev-parse --abbrev-ref HEAD`
 APP_VERSION=`cat ./VERSION`
@@ -42,7 +42,7 @@ for FOLDER in "${FOLDERS[@]}"
 do
     DEST=./$FOLDER/conf/pip/dependencies/
     mkdir -p $DEST
-    cp -r ./aether-common-module/dist/$PCK_FILE $DEST
+    cp -r ./aether-common-library/dist/$PCK_FILE $DEST
 
     echo "----------------------------------------------------------------------"
     echo "Distributed [${PCK_FILE}] into [$DEST]"

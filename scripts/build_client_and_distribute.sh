@@ -20,7 +20,7 @@
 #
 set -Eeuo pipefail
 
-DC_UTILS="docker-compose -f ./aether-utils/docker-compose.yml"
+DC_UTILS="docker-compose -f ./aether-client-library/docker-compose.yml"
 
 APP_VERSION=`cat ./VERSION`
 
@@ -41,7 +41,7 @@ do
     DEST=./${FOLDER}/conf/pip/dependencies/
     mkdir -p ${DEST}
 
-    cp -r ./aether-utils/aether-client/dist/${PCK_FILE} ${DEST}
+    cp -r ./aether-client-library/dist/${PCK_FILE} ${DEST}
 
     echo "----------------------------------------------------------------------"
     echo "Distributed [${PCK_FILE}] into [$DEST]"

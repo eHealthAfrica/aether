@@ -75,7 +75,7 @@ services:
 
   client-test:
     extends:
-      file: ./aether-utils/docker-compose.yml
+      file: ./aether-client-library/docker-compose.yml
       service: client
     environment:
       KERNEL_URL: http://kernel-test:9100
