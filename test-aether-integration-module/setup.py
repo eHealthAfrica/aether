@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
