@@ -23,14 +23,14 @@ set -Eeuo pipefail
 
 source ./scripts/aether_functions.sh
 
-CONTAINERS=( kernel odk couchdb-sync ui producer integration-test )
+containers=( kernel odk couchdb-sync ui producer integration-test )
 
 create_credentials
 create_docker_assets
 build_libraries_and_distribute
 build_ui_assets
 
-for container in "${CONTAINERS[@]}"
+for container in "${containers[@]}"
 do
     build_container $container
 done

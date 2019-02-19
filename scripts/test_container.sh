@@ -43,7 +43,6 @@ function wait_for_db {
 DC_TEST="docker-compose -f docker-compose-test.yml"
 
 ./scripts/kill_all.sh
-$DC_TEST down
 
 if [[ $1 == "ui" ]]
 then

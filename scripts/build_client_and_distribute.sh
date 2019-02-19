@@ -20,22 +20,21 @@
 #
 set -Eeuo pipefail
 
-DC_UTILS="docker-compose -f ./aether-client-library/docker-compose.yml"
+DC_FILE="docker-compose -f ./aether-client-library/docker-compose.yml"
+$DC_FILE down
 
 APP_VERSION=`cat ./VERSION`
 
-$DC_UTILS down
-
 # create the distribution
-$DC_UTILS build \
+$DC_FILE build \
     --build-arg VERSION=$APP_VERSION \
     client
-$DC_UTILS run client build
+$DC_FILE run client build
 
 PCK_FILE=aether.client-${APP_VERSION}-py2.py3-none-any.whl
-FOLDERS=( test-aether-integration-module aether-producer )
 
 # distribute within the containers
+FOLDERS=( test-aether-integration-module aether-producer )
 for FOLDER in "${FOLDERS[@]}"
 do
     DEST=./${FOLDER}/conf/pip/dependencies/
@@ -48,4 +47,4 @@ do
     echo "----------------------------------------------------------------------"
 done
 
-$DC_UTILS kill
+$DC_FILE kill

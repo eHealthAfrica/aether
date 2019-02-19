@@ -21,18 +21,17 @@
 set -Eeuo pipefail
 
 DC_FILE="docker-compose -f ./aether-common-library/docker-compose.yml"
+$DC_FILE down
 
 APP_REVISION=`git rev-parse --abbrev-ref HEAD`
 APP_VERSION=`cat ./VERSION`
-
-$DC_FILE down
 
 # create the distribution
 $DC_FILE build \
     --build-arg GIT_REVISION=$APP_REVISION \
     --build-arg VERSION=$APP_VERSION \
     common
-$DC_FILE run   common build
+$DC_FILE run common build
 
 PCK_FILE=aether.common-${APP_VERSION}-py2.py3-none-any.whl
 
