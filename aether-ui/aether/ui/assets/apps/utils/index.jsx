@@ -135,3 +135,24 @@ export const generateSchema = (obj) => {
   traverseObject(nameGen, schema)
   return schema
 }
+
+export const generateNewContract = (pipeline, newContracts = []) => {
+  let existingName = null
+  let existingNewName = null
+  let count = 0
+  let newContractName = ''
+  do {
+    newContractName = `Contract_${count}`
+    existingName = pipeline.contracts.filter(x => x.name === newContractName)
+    existingNewName = newContracts.filter(x => x.name === newContractName)
+    count++
+  } while (existingName.length || existingNewName.length)
+
+  return {
+    name: newContractName,
+    entity_types: [],
+    mapping: [],
+    output: {},
+    mapping_errors: []
+  }
+}

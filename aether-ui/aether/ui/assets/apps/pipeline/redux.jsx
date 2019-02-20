@@ -23,7 +23,6 @@
 
 import { clone } from '../utils'
 import urls from '../utils/urls'
-import ApiClient from '../utils/api'
 import { PROJECT_NAME, MAX_PAGE_SIZE } from '../utils/constants'
 
 export const types = {
@@ -41,12 +40,15 @@ export const types = {
   GET_FROM_KERNEL: 'get_from_kernel',
   GET_FROM_KERNEL_ERROR: 'get_from_kernel_error',
   CONTRACT_ERROR: 'contract_error',
-  CONTRACT_ADD_FIRST: 'contract_add_first'
+  CONTRACT_ADD_FIRST: 'contract_add_first',
+  CONTRACT_UPDATE: 'contract_update',
+  SELECTED_CONTRACT_CHANGED: 'selected_contract_changed'
 }
 
 export const INITIAL_PIPELINE = {
   pipelineList: [],
   selectedPipeline: null,
+  selectedContract: null,
   error: null,
   notFound: null,
   publishError: null,
@@ -64,7 +66,7 @@ export const addPipeline = ({ name }) => ({
     { data: { name } })
 })
 
-export const getPipelineById = (pid, cid) => {
+export const getPipelineById = (pid, cid = null) => {
   currentContractId = cid
   return {
     types: ['', types.PIPELINE_BY_ID, types.PIPELINE_NOT_FOUND],
@@ -80,7 +82,7 @@ export const updatePipeline = pipeline => {
   return {
     types: ['', types.PIPELINE_BY_ID, types.PIPELINE_ERROR],
     promise: client => client.put(
-      `${urls.PIPELINES_URL}${pipeline.pipeline}/`,
+      `${urls.PIPELINES_URL}${pipeline.id}/`,
       { 'Content-Type': 'application/json' },
       { data: pipeline }
     )
@@ -100,6 +102,11 @@ export const selectedPipelineChanged = selectedPipeline => ({
   payload: selectedPipeline
 })
 
+export const selectedContractChanged = selectedContract => ({
+  type: types.SELECTED_CONTRACT_CHANGED,
+  payload: selectedContract
+})
+
 export const getPipelines = () => ({
   types: ['', types.GET_ALL, types.PIPELINE_ERROR],
   promise: client => client.get(
@@ -116,23 +123,13 @@ export const fetchPipelines = () => ({
     { 'Content-Type': 'application/json' })
 })
 
-export const updateContract = pipeline => dispatch => {
-  const client = new ApiClient()
-  client.put(
-    `${urls.CONTRACTS_URL}${pipeline.id}/`,
+export const updateContract = contract => ({
+  types: ['', types.CONTRACT_UPDATE, types.CONTRACT_ERROR],
+  promise: client => client.put(
+    `${urls.CONTRACTS_URL}${contract.id}/`,
     { 'Content-Type': 'application/json' },
-    { data: pipeline }
-  )
-    .then(res => {
-      contractToPipeline(res, dispatch)
-    })
-    .catch(err => {
-      dispatch({
-        type: types.CONTRACT_ERROR,
-        error: err
-      })
-    })
-}
+    { data: contract })
+})
 
 export const addInitialContract = ({ name, pipeline }) => ({
   types: ['', types.CONTRACT_ADD_FIRST, types.CONTRACT_ERROR],
@@ -142,7 +139,11 @@ export const addInitialContract = ({ name, pipeline }) => ({
     { data: { name, pipeline, is_active: false } })
 })
 
-const parsePipeline = (pipeline) => {
+const parsePipeline = pipeline => {
+  return { ...pipeline, contracts: pipeline.contracts.map(contract => (parseContract(contract))) }
+}
+
+const parseContract = (contract) => {
   const COLORS = 10 // This value is the number of colors in the `_color-codes.scss`
   // will highlight the relations among mapping rules, entity types and input schema
   const highlightSource = {}
@@ -150,13 +151,13 @@ const parsePipeline = (pipeline) => {
 
   // each EntityType has a color based on the order it was added to the list
   const entityColors = {}
-  const entityTypes = (pipeline.entity_types || [])
+  const entityTypes = (contract.entity_types || [])
   entityTypes.forEach((entity, index) => {
     entityColors[entity.name] = (index % COLORS) + 1
   })
 
   // indicate the color to each JSON path in each rule source and destination
-  const mappingRules = (pipeline.mapping || [])
+  const mappingRules = (contract.mapping || [])
   mappingRules.forEach(rule => {
     // find out the number assigned to the linked Entity Type
     const entityType = rule.destination.split('.')[0]
@@ -167,104 +168,77 @@ const parsePipeline = (pipeline) => {
   })
 
   return {
-    ...clone(pipeline),
+    ...clone(contract),
     highlightSource,
     highlightDestination
   }
 }
 
-const pipelineTranslator = (pipeline) => {
-  const convertedPipelines = []
-  if (pipeline.contracts.length) {
-    const readOnlyMappings = pipeline.contracts.filter(x => (x.is_read_only))
-    let isInputReadOnly = false
-    if (readOnlyMappings.length) {
-      isInputReadOnly = true
-    }
-    pipeline.contracts.map(contract => {
-      convertedPipelines.push(
-        parsePipeline({
-          ...contract,
-          pipeline: pipeline.id,
-          input: pipeline.input,
-          schema: pipeline.schema,
-          mappingset: pipeline.mappingset,
-          isInputReadOnly
-        })
-      )
+const checkReadOnlyPipelines = pipelines => {
+  if (pipelines && pipelines.length) {
+    pipelines.forEach(pipeline => {
+      pipeline = checkReadOnlySinglePipeline(pipeline)
+      pipeline = parsePipeline(pipeline)
     })
-  } else {
-    convertedPipelines.push(
-      {
-        pipeline: pipeline.id,
-        mapping_errors: [],
-        entity_types: [],
-        mapping: [],
-        isInputReadOnly: false,
-        ...pipeline
-      }
-    )
   }
-  return convertedPipelines
+  return pipelines
 }
 
-const contractToPipeline = (contract, dispatch) => {
-  const client = new ApiClient()
-  client.get(contract.pipeline_url)
-    .then(res => {
-      currentContractId = contract.id
-      dispatch({
-        type: types.PIPELINE_BY_ID,
-        payload: res
-      })
-    })
-    .catch(err => {
-      dispatch({
-        type: types.CONTRACT_ERROR,
-        error: err
-      })
-    })
+const checkReadOnlySinglePipeline = pipeline => {
+  const readOnlyMappings = pipeline.contracts.filter(x => (x.is_read_only))
+  let isInputReadOnly = false
+  if (readOnlyMappings.length) {
+    isInputReadOnly = true
+  }
+  pipeline.isInputReadOnly = isInputReadOnly
+  return pipeline
 }
 
 const reducer = (state = INITIAL_PIPELINE, action) => {
-  const flattenPipelineContracts = pipelines => {
-    let results = []
-    if (pipelines && pipelines.length) {
-      pipelines.forEach(pipeline => {
-        results = [...results, ...pipelineTranslator(pipeline)]
-      })
-    }
-    return results
-  }
   const newPipelineList = clone(state.pipelineList)
   state = { ...state, publishError: null, publishSuccess: null, isNewPipeline: false, error: null }
   switch (action.type) {
     case types.PIPELINE_ADD: {
-      const newPipeline = pipelineTranslator(action.payload)
-      return { ...state, pipelineList: [...newPipeline, ...newPipelineList], selectedPipeline: action.payload, isNewPipeline: true }
+      const newPipeline = parsePipeline(action.payload)
+      return { ...state, pipelineList: [newPipeline, ...newPipelineList], selectedPipeline: newPipeline, isNewPipeline: true }
     }
 
     case types.PIPELINE_BY_ID: {
-      const gottenPipelines = pipelineTranslator(action.payload)
-      const currentPipeline = gottenPipelines.find(x => x.id === currentContractId)
-      gottenPipelines.forEach(pipeline => {
-        const index = newPipelineList.findIndex(x => x.id === pipeline.id)
-        if (index >= 0) {
-          newPipelineList[index] = pipeline
-        } else {
-          newPipelineList.push(pipeline)
+      const returnedPipeline = parsePipeline(action.payload)
+      const index = newPipelineList.findIndex(x => x.id === returnedPipeline.id)
+      let currentContract = null
+      if (returnedPipeline.contracts && returnedPipeline.contracts.length) {
+        if (currentContractId) {
+          currentContract = returnedPipeline.contracts.find(x => x.id === currentContractId)
         }
-      })
-      currentContractId = null
-      return { ...state, pipelineList: newPipelineList, selectedPipeline: currentPipeline }
+        if (!currentContract) {
+          currentContract = returnedPipeline.contracts[0]
+        }
+      }
+      newPipelineList[index] = returnedPipeline
+      return { ...state, pipelineList: newPipelineList, selectedPipeline: checkReadOnlySinglePipeline(returnedPipeline), selectedContract: currentContract }
+    }
+
+    case types.CONTRACT_UPDATE: {
+      const returnedContract = parseContract(action.payload)
+      const index = state.selectedPipeline.contracts.findIndex(x => x.id === returnedContract.id)
+      const uPipeline = { ...state.selectedPipeline }
+      uPipeline.contracts[index] = returnedContract
+      const pIndex = newPipelineList.findIndex(x => x.id === state.selectedPipeline.id)
+      newPipelineList[pIndex] = uPipeline
+      return { ...state, pipelineList: newPipelineList, selectedPipeline: uPipeline, selectedContract: returnedContract }
     }
 
     case types.SELECTED_PIPELINE_CHANGED: {
-      return { ...state, selectedPipeline: parsePipeline(action.payload) }
+      return { ...state, selectedPipeline: parsePipeline(checkReadOnlySinglePipeline(action.payload)) }
+    }
+
+    case types.SELECTED_CONTRACT_CHANGED: {
+      return { ...state, selectedContract: parseContract(action.payload) }
     }
 
     case types.GET_ALL: {
-      return { ...state, pipelineList: flattenPipelineContracts(action.payload.results) }
+      return { ...state, pipelineList: checkReadOnlyPipelines(action.payload) }
     }
 
     case types.PIPELINE_ERROR: {
@@ -276,31 +250,42 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
     }
 
     case types.PIPELINE_PUBLISH_ERROR: {
-      return { ...state, publishError: action.error.error }
+      return { ...state, publishError: action.error.error || action.error.message || action.error }
     }
 
     case types.PIPELINE_PUBLISH_SUCCESS: {
-      const updatedPipelines = pipelineTranslator(action.payload)
-      const currentPipeline = updatedPipelines.find(x => x.id === state.selectedPipeline.id)
-      updatedPipelines.forEach(pipeline => {
-        const index = newPipelineList.findIndex(x => x.id === pipeline.id)
-        newPipelineList[index] = pipeline
-      })
-      return { ...state, pipelineList: newPipelineList, selectedPipeline: currentPipeline, publishSuccess: true }
+      const updatedPipeline = parsePipeline(checkReadOnlySinglePipeline(action.payload))
+      const currentContract = updatedPipeline.contracts.find(x => x.id === state.selectedContract.id)
+      const index = newPipelineList.findIndex(x => x.id === updatedPipeline.id)
+      newPipelineList[index] = updatedPipeline
+      return {
+        ...state,
+        pipelineList: newPipelineList,
+        selectedPipeline: updatedPipeline,
+        publishSuccess: true,
+        selectedContract: currentContract
+      }
     }
 
     case types.GET_FROM_KERNEL: {
-      return { ...state, pipelineList: flattenPipelineContracts(action.payload) }
+      return { ...state, pipelineList: checkReadOnlyPipelines(action.payload) }
     }
 
     case types.CONTRACT_ADD_FIRST: {
       const index = newPipelineList.findIndex(x => x.id === action.payload.pipeline)
       let pipeline = { ...newPipelineList[index] }
       if (pipeline) {
-        pipeline.contracts = [action.payload, ...pipeline.contracts]
-        const newPipelines = pipelineTranslator(pipeline)
-        const removedInitialPipeline = newPipelineList.filter(e => e !== newPipelineList[index])
-        return { ...state, pipelineList: [...newPipelines, ...removedInitialPipeline], selectedPipeline: newPipelines[0] || {}, isNewPipeline: true }
+        const pContract = parseContract(action.payload)
+        pipeline.contracts = [pContract, ...pipeline.contracts]
+        const processedPipeline = checkReadOnlySinglePipeline(pipeline)
+        newPipelineList[index] = processedPipeline
+        return {
+          ...state,
+          pipelineList: newPipelineList,
+          selectedPipeline: processedPipeline,
+          selectedContract: pContract,
+          isNewPipeline: true
+        }
       } else {
         return { ...state, error: 'Could not find a linked pipeline' }
       }

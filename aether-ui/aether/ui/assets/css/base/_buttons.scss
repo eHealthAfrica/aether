@@ -151,3 +151,31 @@
 .btn-sm {
   padding: .2em .5em;
 }
+
+.btn-icon {
+  display: flex;
+  position: relative;
+  align-items: baseline;
+  color: $action-color-b;
+  cursor: pointer;
+
+  i {
+    @include shadow-flat-dark;
+    text-align: center;
+    display: block;
+    width: 1.8rem;
+    height: 1.8rem;
+    padding: .4em;
+    border-radius: 50%;
+  }
+
+  span {
+    @include label;
+    margin-left: .5em;
+  }
+
+  &:hover {
+    color: $white;
+  }
+}
+

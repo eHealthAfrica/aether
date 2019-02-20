@@ -243,16 +243,6 @@ def upsert_project_with_avro_schemas(
         schemas.append(schema)
         mappings.append(mapping)
 
-        # Include an empty mapping if the schema is new
-        id = schema.get('id')
-        if not Schema.objects.filter(pk=id).exists():
-            mappings.append({
-                # even being the same name it's going to append the suffix `-1`
-                'name': schema.get('name'),
-                # the passthrough mapping has created a mappingset with this id
-                'mappingset': id,
-            })
-
     return upsert_project_artefacts(
         action=action,
         project_id=project_id,

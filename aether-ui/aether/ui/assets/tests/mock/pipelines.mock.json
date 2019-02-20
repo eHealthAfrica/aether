@@ -37,7 +37,9 @@
         "output": null,
         "entity_types": [],
         "id": "124356323",
-        "name": "contract 3"
+        "name": "contract 3",
+        "highlightDestination": [],
+        "highlightSource": {}
       }],
       "schema": null,
       "input": null
