@@ -15,7 +15,7 @@
 
 # Main libraries
 
-# Aether common module with extras
+# Aether common library with extras
 aether.common[cas,server,storage,test]
 
 

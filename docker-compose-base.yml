@@ -140,10 +140,6 @@ services:
     volumes:
       - ./aether-kernel:/code
 
-      # app version
-      - ./tmp/VERSION:/code/VERSION
-      - ./tmp/REVISION:/code/REVISION
-
       # static folder
       - ./.persistent_data/static/kernel:/var/www/static
       # temporary folder for Excel files
@@ -209,10 +205,6 @@ services:
     volumes:
       - ./aether-odk-module:/code
 
-      # app version
-      - ./tmp/VERSION:/code/VERSION
-      - ./tmp/REVISION:/code/REVISION
-
       # static folder
       - ./.persistent_data/static/odk:/var/www/static
       # backup folder
@@ -276,10 +268,6 @@ services:
     volumes: &sync-volumes
       - ./aether-couchdb-sync-module:/code
 
-      # app version
-      - ./tmp/VERSION:/code/VERSION
-      - ./tmp/REVISION:/code/REVISION
-
       # static folder
       - ./.persistent_data/static/sync:/var/www/static
       # backup folder
@@ -336,10 +324,6 @@ services:
     volumes:
       - ./aether-ui:/code
 
-      # app version
-      - ./tmp/VERSION:/code/VERSION
-      - ./tmp/REVISION:/code/REVISION
-
       # static folder
       - ./.persistent_data/static/ui:/var/www/static
       # backup folder
@@ -376,7 +360,7 @@ services:
   # ---------------------------------
 
   zookeeper-base:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:5.1.1
     environment:
       ZOOKEEPER_CLIENT_PORT: 32181
       ZOOKEEPER_TICK_TIME: 2000
@@ -384,7 +368,7 @@ services:
       - "moby:127.0.0.1"
 
   kafka-base:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:5.1.1
     ports:
       - "29092:29092"
     environment:
@@ -406,8 +390,7 @@ services:
     build: ./aether-producer
     stdin_open: true
     volumes:
-     - ./aether-producer:/code
-     - ./VERSION:/code/VERSION
+      - ./aether-producer:/code
     environment:
       PYTHONUNBUFFERED: 1
 
