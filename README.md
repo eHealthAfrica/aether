@@ -8,7 +8,7 @@
 - [Setup](#Setup)
   - [Dependencies](#dependencies)
   - [Installation](#installation)
-  - [Common Module](#common-module)
+  - [Common Library](#common-library)
   - [Environment Variables](#environment-variables)
     - [Aether Kernel](#aether-kernel)
     - [Aether ODK Module](#aether-odk-module)
@@ -51,13 +51,13 @@ git clone git@github.com:eHealthAfrica/aether.git && cd aether
 **Note:** Make sure you have `openssl` installed in your system.
 
 ```bash
-./scripts/generate-docker-compose-credentials.sh > .env
+./scripts/build_docker_credentials.sh > .env
 ```
 
 ##### Build containers and start the applications
 
 ```bash
-./scripts/build_aether_containers.sh && ./scripts/docker_start.sh
+./scripts/build_all_containers.sh && ./scripts/docker_start.sh
 ```
 or
 
@@ -76,9 +76,9 @@ for local development. Never deploy these to publicly accessible servers.
 
 *[Return to TOC](#table-of-contents)*
 
-### Common module
+### Common library
 
-This module contains the shared features among different containers.
+This library contains the shared features among different containers.
 
 To create a new version and distribute it:
 
@@ -86,7 +86,7 @@ To create a new version and distribute it:
 ./scripts/build_common_and_distribute.sh
 ```
 
-See more in [README](/aether-common-module/README.md).
+See more in [README](/aether-common-library/README.md).
 
 *[Return to TOC](#table-of-contents)*
 
@@ -214,7 +214,7 @@ This will start:
 
 If you generated an `.env` file during installation, passwords for all superusers can be found there.
 
-To start any app/module separately:
+To start any container separately:
 
 ```bash
 ./scripts/docker_start.sh kernel          # starts Aether Kernel app and its dependencies
@@ -341,7 +341,20 @@ This will stop ALL running containers and execute the containers tests.
 ./scripts/test_all.sh
 ```
 
-To execute tests in just one container.
+or making sure that all the requirements are up to date:
+
+```bash
+./scripts/test_travis.sh all
+```
+
+To execute tests in just one container:
+  - `kernel`
+  - `client`
+  - `ui`
+  - `odk`
+  - `couchdb-sync`
+  - `producer`
+  - `integration`
 
 ```bash
 ./scripts/test_container.sh <container-name>
@@ -351,7 +364,6 @@ or
 
 ```bash
 docker-compose run <container-name> test
-
 ```
 
 or
