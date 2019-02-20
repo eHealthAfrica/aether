@@ -16,33 +16,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django import template
+from django.test import TestCase
 
-from ..utils import json_prettified
-
-register = template.Library()
+from .. import utils
 
 
-@register.filter(name='get_fullname')
-def get_fullname(user):
-    '''
-    Returns a readable name of the user.
+class UtilsTests(TestCase):
 
-    - ``first_name`` + ``last_name``
-    - ``name``
-    - ``username``
-    '''
+    def test_json_prettified_simple(self):
+        data = {}
+        expected = '<pre><span></span><span class="p">{}</span>\n</pre>'
 
-    if user.first_name and user.last_name:
-        return '{} {}'. format(user.first_name, user.last_name)
-
-    return user.username
-
-
-@register.filter(name='prettified')
-def prettified(value):
-    '''
-    Returns the pretty version of the value
-    '''
-
-    return json_prettified(value)
+        pretty = str(utils.json_prettified(data))
+        self.assertIn(expected, pretty)

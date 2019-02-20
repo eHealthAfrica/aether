@@ -12,9 +12,9 @@
 #                                                                              #
 ################################################################################
 
-aether.common==1.2.0
-boto3==1.9.97
-botocore==1.12.97
+aether.common
+boto3==1.9.98
+botocore==1.12.98
 cachetools==3.1.0
 certifi==2018.11.29
 chardet==3.0.4
@@ -44,7 +44,7 @@ et-xmlfile==1.0.1
 flake8==3.7.6
 flake8-quotes==1.0.0
 google-api-core==1.7.0
-google-auth==1.6.2
+google-auth==1.6.3
 google-cloud-core==0.29.1
 google-cloud-storage==1.14.0
 google-resumable-media==0.3.2
@@ -65,7 +65,7 @@ mock==2.0.0
 openpyxl==2.6.0
 pbr==5.1.2
 ply==3.11
-prometheus-client==0.5.0
+prometheus-client==0.6.0
 protobuf==3.6.1
 psycopg2-binary==2.7.7
 pyasn1==0.4.5
