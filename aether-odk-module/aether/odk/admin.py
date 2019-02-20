@@ -39,7 +39,7 @@ class BaseAdmin(admin.ModelAdmin):
 
 class ProjectAdmin(BaseAdmin):
 
-    def propagate(self, request, queryset):  # pragma: no cover
+    def propagate(self, request, queryset):
         try:
             for item in queryset:
                 propagate_kernel_project(item)
@@ -79,7 +79,7 @@ class ProjectAdmin(BaseAdmin):
 
 class XFormAdmin(BaseAdmin):
 
-    def propagate(self, request, queryset):  # pragma: no cover
+    def propagate(self, request, queryset):
         try:
             for item in queryset:
                 propagate_kernel_artefacts(item)

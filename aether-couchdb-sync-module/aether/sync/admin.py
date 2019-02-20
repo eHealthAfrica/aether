@@ -62,7 +62,7 @@ class DeviceDBAdmin(BaseAdmin):
 
 class ProjectAdmin(BaseAdmin):
 
-    def propagate(self, request, queryset):  # pragma: no cover
+    def propagate(self, request, queryset):
         try:
             for item in queryset:
                 propagate_kernel_project(item)
@@ -94,7 +94,7 @@ class ProjectAdmin(BaseAdmin):
 
 class SchemaAdmin(BaseAdmin):
 
-    def propagate(self, request, queryset):  # pragma: no cover
+    def propagate(self, request, queryset):
         try:
             for item in queryset:
                 propagate_kernel_artefacts(item)
