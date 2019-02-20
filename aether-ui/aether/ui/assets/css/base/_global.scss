@@ -127,6 +127,12 @@ textarea {
     &::Placeholder {
       color: rgba($white, .4);
     }
+
+    &:disabled {
+      @include stripy(rgba($text-color, .3), transparent);
+      box-shadow: none;
+      color: $grey;
+    }
   }
 
   &.error {
