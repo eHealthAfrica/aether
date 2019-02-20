@@ -373,7 +373,7 @@ export class IdentityMapping extends Component {
     const content = (
       <FormattedMessage
         id='pipeline.input.identityMapping.content'
-        defaultMessage='Are you sure that you want to create an identity contract? This action will overwrite all existing entity types and mappings.'
+        defaultMessage='Are you sure that you want to create an identity contract? This action will overwrite any entity types and mappings that you have created in this contract.'
       />
     )
     const buttons = (
