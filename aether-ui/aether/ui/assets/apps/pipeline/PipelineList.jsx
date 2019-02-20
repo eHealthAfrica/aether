@@ -127,9 +127,9 @@ class PipelineList extends Component {
           {this.state.errorMessage}
         </Modal>
         <div
-          className={`preview-input ${pipeline.isInputReadOnly ?
-            'pipeline-readonly' :
-            ''}`}
+          className={`preview-input ${pipeline.isInputReadOnly
+            ? 'pipeline-readonly'
+            : ''}`}
           onClick={this.onSelectPipeline.bind(this, pipeline)}>
           { pipeline.isInputReadOnly &&
             <span className='tag'>
@@ -152,9 +152,10 @@ class PipelineList extends Component {
           {
             pipeline.contracts.map(contract => (
               <React.Fragment key={contract.id}>
-                <div className={`preview-contract ${contract.is_read_only ?
-                  'pipeline-readonly' :
-                  ''}`}
+                <div
+                  className={`preview-contract ${contract.is_read_only
+                    ? 'pipeline-readonly'
+                    : ''}`}
                   onClick={() => { this.onSelectContract(pipeline, contract) }}>
 
                   { contract.is_read_only &&
