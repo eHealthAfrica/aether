@@ -199,7 +199,7 @@ class PipelineList extends Component {
                           <FormattedMessage
                             id='contract.list.publish-status.published'
                             defaultMessage='Published on '
-                          /> { moment(contract.published_on).format('MMMM DD, YYYY HH:mm') } :
+                          /> { moment(contract.published_on).format('MMMM DD, YYYY HH:mm') }
                         </React.Fragment> }
                       { !contract.published_on &&
                         <FormattedMessage
