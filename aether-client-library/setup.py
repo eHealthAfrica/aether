@@ -39,7 +39,7 @@ setup(
     license='Apache2 License',
 
     install_requires=[
-        'bravado<10.3',  # breaking changes
+        'bravado',
         'requests',
     ],
     setup_requires=['pytest-runner'],
