@@ -140,7 +140,7 @@ test_coverage () {
     export RCFILE=/code/conf/extras/coverage.rc
     export TESTING=true
 
-    coverage run    --rcfile="$RCFILE" manage.py test "${@:1}"
+    coverage run    --rcfile="$RCFILE" manage.py test --noinput "${@:1}"
     coverage report --rcfile="$RCFILE"
     coverage erase
 
