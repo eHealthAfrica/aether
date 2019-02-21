@@ -22,7 +22,8 @@ from time import sleep
 import bravado
 import bravado_core
 from bravado.client import SwaggerClient, ResourceDecorator, CallableOperation, construct_request
-from bravado.config import BravadoConfig
+from bravado.config import BravadoConfig                    # 10.2.2
+# from bravado.config import bravado_config_from_config_dict  # 10.3.0
 from bravado_core.spec import Spec
 from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
@@ -69,7 +70,8 @@ class Client(SwaggerClient):
 
         # We take this from the from_url class method of SwaggerClient
         # Apply bravado config defaults
-        bravado_config = BravadoConfig.from_config_dict(config)
+        bravado_config = BravadoConfig.from_config_dict(config)     # 10.2.2
+        # bravado_config = bravado_config_from_config_dict(config)  # 10.3.0
         # remove bravado configs from config dict
         for key in set(bravado_config._fields).intersection(set(config)):
             del config[key]
