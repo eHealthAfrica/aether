@@ -25,31 +25,6 @@ from . import EXAMPLE_NESTED_SOURCE_DATA
 
 class UtilsTests(TestCase):
 
-    def test_json_prettified_simple(self):
-        data = {}
-        expected = '<pre><span></span><span class="p">{}</span>\n</pre>'
-        pretty = str(utils.json_prettified(data))
-        self.assertTrue(expected in pretty, pretty)
-
-    def test_code_prettified_simple(self):
-        data = 'print "Hello world!"'
-        expected = '<span class="s2">&quot;Hello world!&quot;</span>'
-
-        pretty = str(utils.code_prettified(data))
-        self.assertTrue(expected in pretty, pretty)
-
-    def test_json_printable(self):
-        data = [{'dob': '2000-01-01', 'name': 'PersonA'}]
-        expected = [{'dob': '2000-01-01', 'name': 'PersonA'}]
-        printable = utils.json_printable(data)
-        self.assertEquals(printable, expected)
-
-    def test_json_printable_other_obj(self):
-        data = 2
-        expected = 2
-        printable = utils.json_printable(data)
-        self.assertEquals(printable, expected)
-
     def test_merge_objects(self):
         source = {'a': 0, 'c': 3}
         target = {'a': 1, 'b': 2}

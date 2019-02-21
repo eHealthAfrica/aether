@@ -18,6 +18,7 @@
 
 from django import template
 
+from ..utils import json_prettified
 
 register = template.Library()
 
@@ -36,3 +37,12 @@ def get_fullname(user):
         return '{} {}'. format(user.first_name, user.last_name)
 
     return user.username
+
+
+@register.filter(name='prettified')
+def prettified(value):
+    '''
+    Returns the pretty version of the value
+    '''
+
+    return json_prettified(value)

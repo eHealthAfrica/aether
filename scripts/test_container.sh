@@ -69,7 +69,7 @@ fi
 if [[ $1 != "kernel" ]]
 then
     # rename kernel test database in each case
-    export TEST_KERNEL_DB_NAME=test-kernel-"$1"
+    export TEST_KERNEL_DB_NAME=test-kernel-"$1"-$(date "+%Y%m%d%H%M%S")
 
     build_container kernel
 
