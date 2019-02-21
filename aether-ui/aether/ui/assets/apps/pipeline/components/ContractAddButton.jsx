@@ -20,26 +20,29 @@
 
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { Route, Switch } from 'react-router-dom'
-import { hot } from 'react-hot-loader'
+import { FormattedMessage } from 'react-intl'
 
-import PipelineList from './PipelineList'
-import Pipeline from './Pipeline'
+import { addContract } from '../redux'
 
-class PipelineApp extends Component {
+class ContractAddButton extends Component {
   render () {
     return (
-      <Route render={() => (
-        <React.Fragment>
-          <Switch>
-            <Route exact path='/' component={PipelineList} />
-            <Route path='/:pid/:view/:cid' component={Pipeline} />
-            <Route path='/:pid' component={Pipeline} />
-          </Switch>
-        </React.Fragment>
-      )} />
+      <button
+        type='button'
+        className={this.props.className || 'btn btn-c'}
+        onClick={() => { this.props.addContract(this.props.pipeline) }}>
+        <span className='details-title'>
+          <FormattedMessage
+            id='contract.add.button'
+            defaultMessage='Add contract'
+          />
+        </span>
+      </button>
     )
   }
 }
 
-export default hot(module)(connect()(PipelineApp))
+const mapStateToProps = () => ({})
+const mapDispatchToProps = { addContract }
+
+export default connect(mapStateToProps, mapDispatchToProps)(ContractAddButton)

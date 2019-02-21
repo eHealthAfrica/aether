@@ -66,8 +66,15 @@
   .contract-name {
     font-size: $font-size-l;
     font-weight: 300;
-    width: 100%;
+    width: 85%;
+    margin-right: 1rem;
   }
+}
+
+.identity-mapping {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px dashed rgba($light-grey, .4);
 }
 
 .settings-section {

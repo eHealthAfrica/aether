@@ -23,18 +23,38 @@ import logging
 # ------------------------------------------------------------------------------
 
 from aether.common.conf.settings import *  # noqa
-from aether.common.conf.settings import INSTALLED_APPS, STATIC_ROOT
+from aether.common.conf.settings import (
+    DEBUG,
+    INSTALLED_APPS,
+    LOGGING_LEVEL,
+    STATIC_ROOT,
+)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(LOGGING_LEVEL)
 
 
 # UI Configuration
 # ------------------------------------------------------------------------------
 
 ROOT_URLCONF = 'aether.ui.urls'
-DEBUG = bool(os.environ.get('DEBUG'))
-LOGGING_LEVEL = os.environ.get('LOGGING_LEVEL', logging.INFO)
 
-logger = logging.getLogger(__name__)
-logger.setLevel(LOGGING_LEVEL)
+INSTALLED_APPS += [
+    'webpack_loader',
+    'aether.ui',
+]
+
+MIGRATION_MODULES = {
+    'ui': 'aether.ui.api.migrations'
+}
+
+
+DEFAULT_PROJECT_NAME = os.environ.get('DEFAULT_PROJECT_NAME', 'AUX')
+logger.debug(f'Default project name:  {DEFAULT_PROJECT_NAME}')
+
+
+# Webpack Configuration
+# ------------------------------------------------------------------------------
 
 WEBPACK_STATS_FILE = os.environ.get(
     'WEBPACK_STATS_FILE',
@@ -53,13 +73,4 @@ WEBPACK_LOADER = {
         'TIMEOUT': None,
         'IGNORE': [r'.+\.hot-update.js', r'.+\.map'],
     },
-}
-
-INSTALLED_APPS += [
-    'webpack_loader',
-    'aether.ui',
-]
-
-MIGRATION_MODULES = {
-    'ui': 'aether.ui.api.migrations'
 }

@@ -23,28 +23,31 @@
 import React from 'react'
 import { mountWithIntl } from 'enzyme-react-intl'
 
-import mockAvroSchema from '../../tests/mock/schema_input.mock.json'
+import { mockInputSchema } from '../../tests/mock'
 import { AvroSchemaViewer } from '../components'
 
 describe('AvroSchemaViewer', () => {
   it('should take a valid avro schema and render an avro visualizer', () => {
     const component = mountWithIntl(
-      <AvroSchemaViewer schema={mockAvroSchema} highlight={{ 'person.forename': 1 }} />
+      <AvroSchemaViewer schema={mockInputSchema} highlight={{ 'person.forename': 1 }} />
     )
+
     expect(component.find('[data-qa^="group-title-"]').length).toEqual(9)
     expect(component.find('[data-qa="no-children-surname"]').html())
-      .toContain('<span class="name">surname</span>')
+      .toContain('<span class="name"> surname </span>')
     expect(component.find('[data-qa="no-children-forename"]').html())
-      .toContain('<span class="name">forename</span><span class="type"> string,int</span>')
+      .toContain('<span class="name"> forename </span><span class="type">string,int</span>')
     expect(component.find('[data-qa="no-children-gender"]').html())
       .toContain('<span class="type"> (nullable)</span>')
     expect(component.find('[id="input_person.iterate_one.item"]').html())
-      .toContain('<span class="name item">item</span>')
+      .toContain('<span class="name item"> item </span>')
   })
 
   it('should take a invalid avro schema and render an invalid error message', () => {
-    delete mockAvroSchema['name']
-    const component = mountWithIntl(<AvroSchemaViewer schema={mockAvroSchema} />)
+    let inputSchemaWithoutName = { ...mockInputSchema }
+    delete inputSchemaWithoutName['name']
+
+    const component = mountWithIntl(<AvroSchemaViewer schema={inputSchemaWithoutName} />)
     expect(component.html()).toContain('You have provided an invalid AVRO schema.')
   })
 
