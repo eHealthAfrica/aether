@@ -20,10 +20,8 @@
 
 import mockEntityTypes from './schema_entityTypes.mock'
 import mockInputSchema from './schema_input.mock'
-import mockPipelines from './pipelines.mock'
 
 export {
   mockEntityTypes,
-  mockInputSchema,
-  mockPipelines
+  mockInputSchema
 }

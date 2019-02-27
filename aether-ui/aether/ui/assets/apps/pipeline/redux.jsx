@@ -46,7 +46,7 @@ export const types = {
   CONTRACT_PUBLISH_ERROR: 'contract.publish.error'
 }
 
-export const INITIAL_PIPELINE = {
+export const INITIAL_STATE = {
   pipelineList: [],
 
   currentView: null,
@@ -54,14 +54,13 @@ export const INITIAL_PIPELINE = {
   currentContract: null,
 
   error: null,
-  notFound: null,
 
   publishError: null,
   publishState: null,
-  publishSuccess: null
+  publishSuccess: false
 }
 
-export const fetchPipelines = () => ({
+export const getPipelines = () => ({
   types: ['', types.REQUEST_ALL, types.REQUEST_ERROR],
   promise: client => client.post(
     `${PIPELINES_URL}fetch/`,
@@ -103,7 +102,7 @@ export const addPipeline = ({ name }) => ({
 
 export const updatePipeline = (pipeline) => {
   return {
-    types: ['', types.PIPELINE_BY_ID, types.REQUEST_ERROR],
+    types: ['', types.PIPELINE_UPDATE, types.REQUEST_ERROR],
     promise: client => client.put(
       `${PIPELINES_URL}${pipeline.id}/`,
       { 'Content-Type': 'application/json' },
@@ -210,15 +209,14 @@ const generateNewContractName = (pipeline) => {
   } while (true)
 }
 
-const reducer = (state = INITIAL_PIPELINE, action) => {
+const reducer = (state = INITIAL_STATE, action) => {
   state = {
     ...state,
+    // clean previous state changes
     error: null,
-    notFound: null,
-
     publishError: null,
     publishState: null,
-    publishSuccess: null
+    publishSuccess: false
   }
 
   switch (action.type) {
@@ -291,6 +289,18 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
       }
     }
 
+    case types.PIPELINE_UPDATE: {
+      const currentPipeline = parsePipeline(action.payload)
+      const currentContract = findContract(currentPipeline, state.currentContract && state.currentContract.id)
+
+      return {
+        ...state,
+        pipelineList: replaceItemInList(state.pipelineList, currentPipeline),
+        currentPipeline,
+        currentContract
+      }
+    }
+
     case types.CONTRACT_ADD: {
       const currentContract = parseContract(action.payload)
       const currentPipeline = state.pipelineList.find(p => p.id === currentContract.pipeline) || state.currentPipeline
@@ -340,7 +350,7 @@ const reducer = (state = INITIAL_PIPELINE, action) => {
     case types.PIPELINE_NOT_FOUND: {
       return {
         ...state,
-        notFound: action.error,
+        error: action.error,
         currentPipeline: null,
         currentContract: null
       }

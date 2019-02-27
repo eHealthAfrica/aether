@@ -44,8 +44,10 @@ describe('AvroSchemaViewer', () => {
   })
 
   it('should take a invalid avro schema and render an invalid error message', () => {
-    let inputSchemaWithoutName = { ...mockInputSchema }
-    delete inputSchemaWithoutName['name']
+    const inputSchemaWithoutName = {
+      type: 'record',
+      fields: []
+    }
 
     const component = mountWithIntl(<AvroSchemaViewer schema={inputSchemaWithoutName} />)
     expect(component.html()).toContain('You have provided an invalid AVRO schema.')

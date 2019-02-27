@@ -27,14 +27,14 @@ import { ModalError, NavBar } from '../components'
 import PipelineNew from './components/PipelineNew'
 import PipelineCard from './components/PipelineCard'
 
-import { fetchPipelines } from './redux'
+import { getPipelines } from './redux'
 
 class PipelineList extends Component {
   constructor (props) {
     super(props)
 
     // fetch pipelines list
-    props.fetchPipelines()
+    props.getPipelines()
   }
 
   componentWillReceiveProps (nextProps) {
@@ -83,6 +83,6 @@ const mapStateToProps = ({ pipelines }) => ({
   pid: (pipelines.currentPipeline || {}).id,
   cid: (pipelines.currentContract || {}).id
 })
-const mapDispatchToProps = { fetchPipelines }
+const mapDispatchToProps = { getPipelines }
 
 export default connect(mapStateToProps, mapDispatchToProps)(PipelineList)

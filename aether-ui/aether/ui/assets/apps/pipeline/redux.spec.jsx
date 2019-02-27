@@ -21,23 +21,58 @@
 /* global describe, it, expect, beforeEach */
 
 import { createStore, applyMiddleware } from 'redux'
-// import nock from 'nock'
+import nock from 'nock'
 
 import reducer, {
-  INITIAL_PIPELINE
-  // types,
+  INITIAL_STATE,
+  types,
 
-  // addPipeline,
-  // getPipelineById,
-  // getPipelines,
-  // publishContract,
-  // selectContract,
-  // selectPipeline,
-  // updatePipeline
+  addPipeline,
+  getPipelineById,
+  getPipelines,
+  publishContract,
+  selectContract,
+  selectPipeline,
+  updatePipeline
 } from './redux'
 
 import middleware from '../redux/middleware'
-// import { mockPipelines } from '../../tests/mock'
+
+const mockPipelines = [
+  {
+    id: 1,
+    name: 'Pipeline Mock 1',
+    contracts: [
+      {
+        id: '1-1',
+        name: 'contract 1.1',
+        pipeline: 1
+      }
+    ]
+  },
+  {
+    id: 2,
+    name: 'Pipeline Mock 2',
+    contracts: [
+      {
+        id: '2-1',
+        name: 'contract 2.1',
+        pipeline: 2
+      }
+    ]
+  },
+  {
+    id: 3,
+    name: 'Pipeline Mock 3',
+    contracts: [
+      {
+        id: '3-1',
+        name: 'contract 3.1',
+        pipeline: 3
+      }
+    ]
+  }
+]
 
 describe('Pipeline actions', () => {
   let store
@@ -58,250 +93,281 @@ describe('Pipeline actions', () => {
   })
 
   it('should return the initial redux store state', () => {
-    expect(store.getState()).toEqual(INITIAL_PIPELINE)
+    expect(store.getState()).toEqual(INITIAL_STATE)
   })
 
-  // it('should dispatch a selected pipeline changed action and update the redux store', () => {
-  //   const pipeline = {
-  //     id: 1,
-  //     contracts: [
-  //       {
-  //         id: 2,
-  //         pipeline: 1
-  //       }
-  //     ]
-  //   }
-  //   const expectedAction = {
-  //     type: types.PIPELINE_SELECT,
-  //     payload: pipeline.id
-  //   }
+  it('should create an action when adding a new pipeline and store in redux', () => {
+    nock('http://localhost')
+      .post('/api/pipelines/')
+      .reply(200, { id: 'mockid', contracts: [] })
 
-  //   expect(selectPipeline(pipeline.id)).toEqual(expectedAction)
-  //   store.dispatch(selectPipeline(pipeline.id))
-  //   expect(store.getState().currentPipeline.id).toEqual(1)
-  //   expect(store.getState().currentContract.id).toEqual(2)
-  // })
+    expect(store.getState().pipelineList.length).toEqual(0)
 
-  // it('should create an action when adding a new pipeline and store in redux', () => {
-  //   const newPipeline = { name: 'mock new name' }
+    return store.dispatch(addPipeline({ name: 'mock new name' }))
+      .then(() => {
+        expect(store.getState().pipelineList.length).toEqual(1)
+        expect(store.getState().pipelineList[0].id).toEqual('mockid')
+      })
+  })
 
-  //   nock('http://localhost')
-  //     .post('/api/pipelines/')
-  //     .reply(200, Object.assign(newPipeline, { id: 'mockid', 'contracts': [] }))
+  it('should get all pipelines and add to store', () => {
+    nock('http://localhost')
+      .post(`/api/pipelines/fetch/`)
+      .reply(200, mockPipelines)
 
-  //   expect(typeof addPipeline(newPipeline)).toEqual('object')
+    expect(store.getState().pipelineList.length).toEqual(0)
 
-  //   return store.dispatch(addPipeline(newPipeline))
-  //     .then(() => {
-  //       expect(store.getState().pipelineList[0].id).toEqual('mockid')
-  //     })
-  // })
+    return store.dispatch(getPipelines())
+      .then(() => {
+        expect(store.getState().pipelineList.length).toEqual(3)
 
-  // it('should dispatch an update action and update redux store', () => {
-  //   const pipeline = {
-  //     id: 1,
-  //     name: 'Pipeline Mock 1 Updated',
-  //     schema: null,
-  //     input: null,
-  //     contracts: [
-  //       {
-  //         pipeline: 1,
-  //         mapping_errors: null,
-  //         mapping_rules: [],
-  //         output: null,
-  //         entity_types: [],
-  //         id: '124356323',
-  //         name: 'contract 1'
-  //       }
-  //     ]
-  //   }
+        expect(store.getState().pipelineList).toEqual(
+          mockPipelines.map(pipeline => ({
+            ...pipeline,
+            isInputReadOnly: false, // added by "parsePipeline"
+            contracts: pipeline.contracts.map(contract => ({
+              ...contract,
+              highlightDestination: [], // added by "parseContract"
+              highlightSource: {} // added by "parseContract"
+            }))
+          }))
+        )
+      })
+  })
 
-  //   nock('http://localhost')
-  //     .get(`/api/pipelines/?limit=${MAX_PAGE_SIZE}`)
-  //     .reply(200, mockPipelines)
+  it('should fail on getting all pipelines and store error', () => {
+    nock('http://localhost')
+      .post(`/api/pipelines/fetch/`)
+      .reply(404)
 
-  //   nock('http://localhost')
-  //     .put(`/api/pipelines/${pipeline.id}/`)
-  //     .reply(200, pipeline)
+    return store.dispatch(getPipelines())
+      .then(() => {
+        expect(store.getState().error).toBeTruthy()
+        expect(store.getState().error.status).toEqual(404)
+      })
+  })
 
-  //   expect(typeof updatePipeline(pipeline)).toEqual('object')
-  //   return store.dispatch(getPipelines())
-  //     .then(() => {
-  //       return store.dispatch(updatePipeline(pipeline))
-  //         .then(() => {
-  //           const proContracts = pipeline.contracts.map(contract => (
-  //             {
-  //               ...contract,
-  //               highlightDestination: [],
-  //               highlightSource: {}
-  //             })
-  //           )
-  //           expect(store.getState().pipelineList[0]).toEqual(
-  //             { ...pipeline, contracts: proContracts, isInputReadOnly: false }
-  //           )
-  //         })
-  //     })
-  // })
+  it('should dispatch a select pipeline action and update the redux store', () => {
+    const expectedAction = {
+      type: types.PIPELINE_SELECT,
+      payload: 1
+    }
+    expect(selectPipeline(1)).toEqual(expectedAction)
 
-  // it('should try updating pipeline with wrong id and fail', () => {
-  //   const wrongPipeline = {
-  //     id: 1001,
-  //     name: 'Pipeline Mock 1',
-  //     schema: null,
-  //     input: null,
-  //     contracts: [
-  //       {
-  //         pipeline: 1001,
-  //         mapping_errors: null,
-  //         mapping_rules: [],
-  //         output: null,
-  //         entity_types: [],
-  //         id: '124356323',
-  //         name: 'contract 1'
-  //       }
-  //     ]
-  //   }
+    nock('http://localhost')
+      .post(`/api/pipelines/fetch/`)
+      .reply(200, mockPipelines)
 
-  //   nock('http://localhost')
-  //     .get(`/api/pipelines/?limit=${MAX_PAGE_SIZE}`)
-  //     .reply(200, mockPipelines)
+    return store.dispatch(getPipelines())
+      .then(() => {
+        expect(store.getState().currentPipeline).toBeFalsy()
+        expect(store.getState().currentContract).toBeFalsy()
 
-  //   nock('http://localhost')
-  //     .put(`/api/pipelines/${wrongPipeline.id}/`)
-  //     .reply(404)
+        store.dispatch(selectPipeline(1))
+        expect(store.getState().currentPipeline).toBeTruthy()
+        expect(store.getState().currentContract).toBeTruthy()
 
-  //   expect(typeof updatePipeline(wrongPipeline)).toEqual('object')
+        expect(store.getState().currentPipeline.id).toEqual(1)
+        expect(store.getState().currentContract.id).toEqual('1-1')
+      })
+  })
 
-  //   return store.dispatch(getPipelines())
-  //     .then(() => {
-  //       return store.dispatch(updatePipeline(wrongPipeline))
-  //         .then(res => {
-  //           expect(store.getState().error).toEqual(
-  //             { error: 'Not Found', message: 'Resource Not Found', status: 404 }
-  //           )
-  //         })
-  //     })
-  // })
+  it('should dispatch a select contract action and update the redux store', () => {
+    const expectedAction = {
+      type: types.CONTRACT_SELECT,
+      payload: { pipeline: 2, contract: '2-1' }
+    }
+    expect(selectContract(2, '2-1')).toEqual(expectedAction)
 
-  // it('should successfully get all pipelines and add to store', () => {
-  //   nock('http://localhost')
-  //     .get(`/api/pipelines/?limit=${MAX_PAGE_SIZE}`)
-  //     .reply(200, mockPipelines)
+    nock('http://localhost')
+      .post(`/api/pipelines/fetch/`)
+      .reply(200, mockPipelines)
 
-  //   store.dispatch({ type: types.GET_ALL, payload: [] })
-  //   expect(store.getState().pipelineList).toEqual([])
+    return store.dispatch(getPipelines())
+      .then(() => {
+        expect(store.getState().currentPipeline).toBeFalsy()
+        expect(store.getState().currentContract).toBeFalsy()
 
-  //   return store.dispatch(getPipelines())
-  //     .then(() => {
-  //       expect(store.getState().pipelineList).toEqual(
-  //         mockPipelines.map(p => ({
-  //           ...p,
-  //           isInputReadOnly: false,
-  //           contracts: p.contracts.map(c => ({
-  //             ...c,
-  //             highlightDestination: [],
-  //             highlightSource: {}
-  //           }))
-  //         }))
-  //       )
-  //     })
-  // })
+        store.dispatch(selectPipeline(2, '2-1'))
+        expect(store.getState().currentPipeline).toBeTruthy()
+        expect(store.getState().currentContract).toBeTruthy()
 
-  // it('should fail on getting all pipelines and store error', () => {
-  //   nock('http://localhost')
-  //     .get('/api/nojson.json')
-  //     .reply(404)
+        expect(store.getState().currentPipeline.id).toEqual(2)
+        expect(store.getState().currentContract.id).toEqual('2-1')
+      })
+  })
 
-  //   const NotFoundUrl = 'http://localhost/api/nojson.json'
-  //   const action = () => ({
-  //     types: ['', types.GET_ALL, types.REQUEST_ERROR],
-  //     promise: client => client.get(NotFoundUrl)
-  //   }) // Sample usage of request middleware (client) plugged into redux
-  //   const expectedStoreData = {
-  //     pipelineList: [],
-  //     currentPipeline: null,
-  //     currentContract: null,
-  //     error: { error: 'Not Found', message: 'Resource Not Found', status: 404 },
-  //     notFound: null,
-  //     publishSuccess: null,
-  //     publishError: null
-  //   }
+  it('should dispatch an update action and update redux store I', () => {
+    const pipeline = {
+      id: 1,
+      name: 'Pipeline Mock 1 Updated',
+      contracts: [
+        { pipeline: 1, id: '1-1-a', name: 'Another name' }
+      ]
+    }
 
-  //   return store.dispatch(action())
-  //     .then(() => {
-  //       expect(store.getState()).toEqual(expectedStoreData)
-  //     })
-  // })
+    nock('http://localhost')
+      .post(`/api/pipelines/fetch/`)
+      .reply(200, mockPipelines)
 
-  // it('should dispatch an action to get pipeline and contract by id and set it as selected pipeline in the redux store', () => {
-  //   const pipeline = {
-  //     id: 3,
-  //     name: 'Pipeline Mock 3',
-  //     contracts: [
-  //       {
-  //         pipeline: 3,
-  //         mapping_errors: null,
-  //         mapping_rules: [],
-  //         output: null,
-  //         entity_types: [],
-  //         id: '124356323',
-  //         name: 'contract 3'
-  //       }
-  //     ],
-  //     schema: null,
-  //     input: null
-  //   }
+    nock('http://localhost')
+      .put(`/api/pipelines/1/`)
+      .reply(200, pipeline)
 
-  //   nock('http://localhost')
-  //     .get(`/api/pipelines/${pipeline.id}/`)
-  //     .reply(200, pipeline)
+    return store.dispatch(getPipelines())
+      .then(() => {
+        expect(store.getState().currentPipeline).toBeFalsy()
+        expect(store.getState().currentContract).toBeFalsy()
 
-  //   expect(typeof getPipelineById(pipeline.id, pipeline.contracts[0].id)).toEqual('object')
+        return store.dispatch(updatePipeline({ id: 1 }))
+          .then(() => {
+            expect(store.getState().currentPipeline).toBeTruthy()
+            expect(store.getState().currentContract).toBeTruthy()
 
-  //   return store.dispatch(getPipelineById(pipeline.id, pipeline.contracts[0].id))
-  //     .then(() => {
-  //       expect(store.getState().currentPipeline).toEqual(
-  //         {
-  //           ...mockPipelines[2],
-  //           isInputReadOnly: false
-  //         }
-  //       )
-  //       expect(store.getState().selectedContract).toEqual(
-  //         mockPipelines[2].contracts[0]
-  //       )
-  //     })
-  // })
+            expect(store.getState().currentPipeline.id).toEqual(1)
+            expect(store.getState().currentPipeline.name).toEqual('Pipeline Mock 1 Updated')
 
-  // it('should dispatch a publish contract action and save response in the redux store', () => {
-  //   const contract = mockPipelines[0].contracts[0]
+            expect(store.getState().currentContract.id).toEqual('1-1-a')
+            expect(store.getState().currentContract.name).toEqual('Another name')
 
-  //   nock('http://localhost')
-  //     .post(`/api/contracts/${contract.id}/publish/`)
-  //     .reply(200, contract)
+            // the pipelines list was also updated
+            const newPipelineList = store.getState().pipelineList
+            expect(newPipelineList[0].name).toEqual('Pipeline Mock 1 Updated')
+            expect(newPipelineList[0].contracts[0].name).toEqual('Another name')
+          })
+      })
+  })
 
-  //   expect(typeof publishContract(contract.id)).toEqual('object')
+  it('should dispatch an update action and update redux store II', () => {
+    const pipeline = {
+      id: 1,
+      name: 'Pipeline Mock 1 Updated',
+      contracts: [
+        { pipeline: 1, id: '1-1-a', name: 'Another name' }
+      ]
+    }
+    nock('http://localhost')
+      .put(`/api/pipelines/1/`)
+      .reply(200, pipeline)
 
-  //   store.dispatch(selectContract(contract.pipeline, contract.id))
-  //   return store.dispatch(publishContract(contract.id))
-  //     .then(() => {
-  //       expect(store.getState().publishSuccess).toEqual(true)
-  //       expect(store.getState().publishError).toEqual(null)
-  //     })
-  // })
+    expect(store.getState().pipelineList).toEqual([])
+    expect(store.getState().currentPipeline).toBeFalsy()
+    expect(store.getState().currentContract).toBeFalsy()
 
-  // it('should dispatch a wrong publish contract action and save response in the redux store', () => {
-  //   const returnedData = {
-  //     error: ['error 1']
-  //   }
+    return store.dispatch(updatePipeline({ id: 1 }))
+      .then(() => {
+        expect(store.getState().currentPipeline).toBeTruthy()
+        expect(store.getState().currentContract).toBeTruthy()
 
-  //   nock('http://localhost')
-  //     .post('/api/contracts/100/publish/')
-  //     .reply(400, returnedData)
+        expect(store.getState().currentPipeline.id).toEqual(1)
+        expect(store.getState().currentPipeline.name).toEqual('Pipeline Mock 1 Updated')
 
-  //   return store.dispatch(publishContract(100))
-  //     .then(() => {
-  //       expect(store.getState().publishError).toEqual(returnedData)
-  //       expect(store.getState().publishSuccess).toEqual(null)
-  //     })
-  // })
+        expect(store.getState().currentContract.id).toEqual('1-1-a')
+        expect(store.getState().currentContract.name).toEqual('Another name')
+
+        // the pipelines list was not updated (is still empty)
+        expect(store.getState().pipelineList).toEqual([])
+      })
+  })
+
+  it('should try updating pipeline with wrong id and fail', () => {
+    nock('http://localhost')
+      .put(`/api/pipelines/4/`)
+      .reply(404)
+
+    return store.dispatch(updatePipeline({ id: 4 }))
+      .then(() => {
+        expect(store.getState().error).toBeTruthy()
+        expect(store.getState().error.status).toEqual(404)
+      })
+  })
+
+  it('should dispatch an action to get pipeline by id and set it as selected pipeline in the redux store', () => {
+    const pipeline = {
+      id: 3,
+      name: 'Pipeline Mock 3',
+      contracts: [
+        {
+          pipeline: 3,
+          id: '3-1'
+        }
+      ]
+    }
+
+    nock('http://localhost')
+      .get(`/api/pipelines/3/`)
+      .reply(200, pipeline)
+
+    return store.dispatch(getPipelineById(3))
+      .then(() => {
+        expect(store.getState().currentPipeline.id).toEqual(3)
+        expect(store.getState().currentContract.id).toEqual('3-1')
+      })
+  })
+
+  it('should dispatch a publish contract action and save response in the redux store', () => {
+    const pipeline = {
+      id: 3,
+      name: 'Pipeline Mock 3',
+      contracts: [
+        {
+          pipeline: 3,
+          id: '3-1'
+        }
+      ]
+    }
+
+    nock('http://localhost')
+      .get(`/api/pipelines/3/`)
+      .reply(200, pipeline)
+
+    nock('http://localhost')
+      .post(`/api/contracts/3-1/publish/`)
+      .reply(200, pipeline.contracts[0])
+
+    return store.dispatch(getPipelineById(3))
+      .then(() => {
+        return store.dispatch(publishContract('3-1'))
+          .then(() => {
+            expect(store.getState().publishError).toBeFalsy()
+            expect(store.getState().publishState).toBeFalsy()
+            expect(store.getState().publishSuccess).toBeTruthy()
+          })
+      })
+  })
+
+  it('should dispatch a wrong publish contract action and save response in the redux store', () => {
+    const pipeline = {
+      id: 3,
+      name: 'Pipeline Mock 3',
+      contracts: [
+        {
+          pipeline: 3,
+          id: '3-1'
+        }
+      ]
+    }
+
+    const returnedData = {
+      error: ['error 1']
+    }
+
+    nock('http://localhost')
+      .get(`/api/pipelines/3/`)
+      .reply(200, pipeline)
+
+    nock('http://localhost')
+      .post('/api/contracts/3-1/publish/')
+      .reply(400, returnedData)
+
+    return store.dispatch(getPipelineById(3))
+      .then(() => {
+        return store.dispatch(publishContract('3-1'))
+          .then(() => {
+            expect(store.getState().publishError).toEqual(returnedData)
+            expect(store.getState().publishState).toBeFalsy()
+            expect(store.getState().publishSuccess).toBeFalsy()
+          })
+      })
+  })
 })
