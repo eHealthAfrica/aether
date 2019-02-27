@@ -28,7 +28,14 @@ from .api.kernel_utils import (
 )
 
 
-class MobileUserAdmin(admin.ModelAdmin):
+class BaseAdmin(admin.ModelAdmin):
+
+    empty_value_display = '---'
+    list_per_page = 25
+    show_full_result_count = True
+
+
+class MobileUserAdmin(BaseAdmin):
 
     list_display = (
         'id',
@@ -38,7 +45,7 @@ class MobileUserAdmin(admin.ModelAdmin):
     ordering = list_display
 
 
-class DeviceDBAdmin(admin.ModelAdmin):
+class DeviceDBAdmin(BaseAdmin):
 
     list_display = (
         'id',
@@ -53,9 +60,9 @@ class DeviceDBAdmin(admin.ModelAdmin):
     ordering = list_display
 
 
-class ProjectAdmin(admin.ModelAdmin):
+class ProjectAdmin(BaseAdmin):
 
-    def propagate(self, request, queryset):  # pragma: no cover
+    def propagate(self, request, queryset):
         try:
             for item in queryset:
                 propagate_kernel_project(item)
@@ -85,9 +92,9 @@ class ProjectAdmin(admin.ModelAdmin):
     )
 
 
-class SchemaAdmin(admin.ModelAdmin):
+class SchemaAdmin(BaseAdmin):
 
-    def propagate(self, request, queryset):  # pragma: no cover
+    def propagate(self, request, queryset):
         try:
             for item in queryset:
                 propagate_kernel_artefacts(item)
@@ -111,6 +118,7 @@ class SchemaAdmin(admin.ModelAdmin):
     )
     search_fields = ('name', 'kernel_id',)
     ordering = list_display
+    readonly_fields = ('avro_schema_prettified',)
 
     fieldsets = (
         (_('Schema'), {

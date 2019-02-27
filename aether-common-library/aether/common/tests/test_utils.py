@@ -16,11 +16,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.urls import include, path
+from django.test import TestCase
 
-from aether.common.conf.urls import generate_urlpatterns
+from .. import utils
 
 
-urlpatterns = generate_urlpatterns(token=True, kernel=True, app=[
-    path('', include('aether.odk.api.urls')),
-])
+class UtilsTests(TestCase):
+
+    def test_json_prettified_simple(self):
+        data = {}
+        expected = '<pre><span></span><span class="p">{}</span>\n</pre>'
+
+        pretty = str(utils.json_prettified(data))
+        self.assertIn(expected, pretty)

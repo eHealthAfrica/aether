@@ -24,10 +24,6 @@ under the License.
 
 
 {% block scripts %}
-  {# HTML5 shim, for IE6-8 support of HTML5 elements #}
-  <!--[if lt IE 9]>
-    {% render_bundle 'html5shiv' %}
-  <![endif]-->
 
   {# Common JS libraries #}
   {% render_bundle 'common' %}
@@ -37,7 +33,7 @@ under the License.
 {% block styles %}
   {% if dev_mode %}
     {# this is for CSS Hot reloading in development (render as another JS file) #}
-    {% render_bundle 'styles' %}
+    {% render_bundle 'styles' 'js' %}
   {% else %}
     {# render as CSS file #}
     {% render_bundle 'styles' 'css' %}

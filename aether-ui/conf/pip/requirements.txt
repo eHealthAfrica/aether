@@ -12,11 +12,11 @@
 #                                                                              #
 ################################################################################
 
-aether.common
+aether.common>=0
 certifi==2018.11.29
 chardet==3.0.4
 coverage==4.5.2
-Django==1.11.20
+Django==2.1.7
 django-cas-ng==3.5.10
 django-cors-headers==2.4.0
 django-debug-toolbar==1.11
@@ -34,10 +34,11 @@ lxml==4.3.1
 mccabe==0.6.1
 mock==2.0.0
 pbr==5.1.2
-prometheus-client==0.5.0
+prometheus-client==0.6.0
 psycopg2-binary==2.7.7
 pycodestyle==2.5.0
 pyflakes==2.1.0
+Pygments==2.3.1
 python-cas==1.4.0
 python-json-logger==0.1.10
 pytz==2018.9

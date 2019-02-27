@@ -21,8 +21,8 @@ from django.db.utils import OperationalError
 
 
 def test_db_connection():  # pragma: no cover
-    db_conn = connections['default']
     try:
+        db_conn = connections['default']
         db_conn.cursor()
     except OperationalError:
         return False

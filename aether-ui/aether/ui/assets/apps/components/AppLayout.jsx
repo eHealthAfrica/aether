@@ -27,7 +27,7 @@ import createStore from '../redux/store'
 
 const store = createStore()
 
-export default class AppLayout extends Component {
+class AppLayout extends Component {
   render () {
     return (
       <Provider store={store}>
@@ -42,3 +42,5 @@ export default class AppLayout extends Component {
     )
   }
 }
+
+export default AppLayout
