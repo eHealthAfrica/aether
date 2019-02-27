@@ -105,11 +105,10 @@ class SubmissionFilter(filters.FilterSet):
             return queryset.filter(mappingset__name=value)
 
     class Meta:
-        fields = '__all__'
         exclude = ('payload',)
         model = models.Submission
         filter_overrides = {
-            models.DateTimeField: {
+            model.created: {
                 'filter_class': filters.IsoDateTimeFilter
             },
         }
@@ -211,11 +210,10 @@ class EntityFilter(filters.FilterSet):
         return queryset
 
     class Meta:
-        fields = '__all__'
         exclude = ('payload',)
         model = models.Entity
         filter_overrides = {
-            models.DateTimeField: {
+            model.created: {
                 'filter_class': filters.IsoDateTimeFilter
             },
         }
