@@ -112,6 +112,62 @@ docker-compose run couchdb-sync manage rqenqueue "aether.sync.tasks.import_synce
    If running on mobile, you need `GOOGLE_CLIENT_ID` and `AETHER_COUCHDB_SYNC_URL`.
    Use the same key as in 1, it should be a Web Application key, **not** a Mobile Application key.
 
+## Step by step guide to testing locally with Gather DRC (Microcensus App)
+
+This guide assumes that you want to run Gather DRC on an Android device and Gather on your local development machine. You'll need to have the Gather and Aether repos, with a working `.env` files in the `gather` directory. We're going to submit a POI ("village") from the app and have it created as an entity in Kernel. You will also need the Gather DRC repo, and the requisite Android SDK and build tools installed.
+
+1. You will need a domain name that can be resolved by the Android device. One way to do this is with [Ngrok](https://ngrok.com/):
+```
+> ngrok http 80
+ngrok by @inconshreveable                                      (Ctrl+C to quit)
+
+Session Status                online
+Session Expires               7 hours, 59 minutes
+Update                        update available (version 2.2.8, Ctrl-U to update
+Version                       2.1.18
+Region                        United States (us)
+Web Interface                 http://127.0.0.1:4040
+Forwarding                    http://502deefa.ngrok.io -> localhost:80
+Forwarding                    https://502deefa.ngrok.io -> localhost:80
+```
+Make a note of the domain name that has been assigned to you (in this case `502deefa.ngrok.io`)
+
+2. Make a build of Gather DRC that submits to this URL:
+```
+KEYSTORE_PASS=[keystore pass] AETHER_COUCHDB_SYNC_URL=https://502deefa.ngrok.io GOOGLE_CLIENT_ID=[google client id] NODE_ENV=production LOCALE=fr npm run build-release
+```
+The values for `KEYSTORE_PASS` and `GOOGLE_CLIENT_ID` are in Lastpass (`Shared-Microcensus-DRC > Keystore pass and Google client ID`).
+
+3. Configure the CouchDB Sync Nginx to work with this URL. Edit `gather/local-setup/nginx/sites-enabled/sync.conf`, so that the `server_name` matches your Ngrok URL:
+```
+server {
+  listen                    80;
+  charset                   utf-8;
+  server_name               502deefa.ngrok.io;
+  client_max_body_size      75M;
+  ...
+```
+
+4. Add the Google Client ID to your `.env` file as the value for `COUCHDB_SYNC_GOOGLE_CLIENT_ID` in the `Aether CouchDB-Sync Module` section
+
+5. Start up Gather:
+```
+docker-compose -f docker-compose-local.yml up
+```
+
+6. Go the CouchDB Sync module and create the necessary artefacts in the [admin](http://sync.aether.local/admin/sync/). You will need to create a `Project`, and a `Schema` called `village` that is associated with that project. The Avro schema for a village can be found in the `hat-microcensus` repo: `hat-microcensus/src/schemas/village.avsc`.
+
+7. Propagate the artefacts to Kernel. In the projects list, select your new project and choose _Propagate selected projects to Aether Kernel_ from the _Action_ dropdown. Press _Go_.
+
+8. Add the email Google user of your Android device as a `Mobile user`. (You can also do this from the Gather UI by creating a new `Sync User`.)
+
+9. Install the app on your Android device using `adb install`. Create a new village by pressing the big `+` button, then sync the data by pressing the `...` button in the top right hand corner.
+
+10. Verify that the data has been replicated to CouchDB on your local machine by going to `https://104b04df.ngrok.io/_couchdb/_utils` (or `http://localhost:5984/_utils`).
+
+11. Now you need to wait for RQ to pick up the village and submit it to Kernel. If you don't feel like waiting, you can go to [http://sync.aether.local/rq/queues/0/finished/](http://sync.aether.local/rq/queues/0/finished/), click on the queue, then press the _Enqueue_ button at the bottom.
+
+12. Your village should now have been submitted to Kernel, and extracted into an Entity. If you go to Gather, you should also see the `village` Survey with one row in the table.
 
 ## Everything about the Google Tokens
 
