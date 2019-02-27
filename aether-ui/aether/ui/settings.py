@@ -17,6 +17,7 @@
 # under the License.
 
 import os
+import logging
 
 # Common settings
 # ------------------------------------------------------------------------------
@@ -29,13 +30,26 @@ from aether.common.conf.settings import INSTALLED_APPS, STATIC_ROOT
 # ------------------------------------------------------------------------------
 
 ROOT_URLCONF = 'aether.ui.urls'
+DEBUG = bool(os.environ.get('DEBUG'))
+LOGGING_LEVEL = os.environ.get('LOGGING_LEVEL', logging.INFO)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(LOGGING_LEVEL)
+
+WEBPACK_STATS_FILE = os.environ.get(
+    'WEBPACK_STATS_FILE',
+    os.path.join(STATIC_ROOT, 'webpack-stats.json')
+)
+logger.debug(f'Assets served by file:  {WEBPACK_STATS_FILE}')
 
 # Javascript/CSS Files:
+# https://github.com/owais/django-webpack-loader#default-configuration
 WEBPACK_LOADER = {
     'DEFAULT': {
+        'CACHE': not DEBUG,
         'BUNDLE_DIR_NAME': '/',
-        'STATS_FILE': os.path.join(STATIC_ROOT, 'webpack-stats.json'),
-        'POLL_INTERVAL': 0.1,  # in miliseconds
+        'STATS_FILE': WEBPACK_STATS_FILE,
+        'POLL_INTERVAL': 0.1,
         'TIMEOUT': None,
         'IGNORE': [r'.+\.hot-update.js', r'.+\.map'],
     },

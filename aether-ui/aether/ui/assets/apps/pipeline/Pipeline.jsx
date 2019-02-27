@@ -24,50 +24,177 @@ import { FormattedMessage } from 'react-intl'
 import { Link } from 'react-router-dom'
 import moment from 'moment'
 
-import { NavBar } from '../components'
+import { NavBar, Modal } from '../components'
 import PublishButton from './PublishButton'
-import InfoButton from './InfoButton'
 
 import Input from './sections/Input'
 import EntityTypes from './sections/EntityTypes'
 import Mapping from './sections/Mapping'
 import Output from './sections/Output'
-import { getPipelineById, getPipelines } from './redux'
+import {
+  getPipelineById,
+  getPipelines,
+  selectedContractChanged,
+  updateContract,
+  addInitialContract
+} from './redux'
+import { getKernelURL } from '../utils/constants'
+import { generateNewContract } from '../utils'
 
 class Pipeline extends Component {
   constructor (props) {
     super(props)
-
     this.state = {
       pipelineView: 'input',
+      showSettings: false,
       showOutput: false,
-      fullscreen: false
+      fullscreen: false,
+      newContracts: [],
+      contractName: '',
+      pipelineTabs: null,
+      errorMessage: '',
+      errorHeader: '',
+      showError: false
     }
   }
 
   componentDidMount () {
+    this.props.getKernelURL()
+    const { match } = this.props
     if (!this.props.selectedPipeline) {
-      if (this.props.match && this.props.match.params && this.props.match.params.cid) {
-        this.props.getPipelineById(this.props.match.params.pid, this.props.match.params.cid)
+      if (match && match.params && match.params.pid) {
+        this.props.getPipelineById(match.params.pid, match.params.cid)
       } else {
         this.props.history.replace('/')
       }
     }
+    if (!this.props.selectedContract && this.props.selectedPipeline) {
+      this.props.selectedContractChanged(this.props.selectedPipeline.contracts[0] || null)
+    }
+
+    if (this.props.location.state && this.props.location.state.createNewContract) {
+      this.setState({
+        pipelineView: 'entityTypes',
+        newContracts: [...this.state.newContracts, this.props.selectedContract]
+      }, () => this.renderNewContractTabs())
+      this.toggleSettings()
+    }
+
+    if (match && match.params && match.params.cid) {
+      this.setDefaultContract(match.params.cid)
+    }
   }
 
-  componentWillReceiveProps (nextProps) {
-    if (!nextProps.selectedPipeline) {
-      this.props.history.replace('/')
+  componentDidUpdate (prevProps) {
+    if (prevProps.selectedContract !== this.props.selectedContract) {
+      this.setState({
+        contractName: this.props.selectedContract.name
+      })
+      this.renderNewContractTabs()
     }
+    if (prevProps.selectedPipeline !== this.props.selectedPipeline) {
+      this.renderTabs(this.props.selectedPipeline.contracts, this.props.selectedContract)
+    }
+    if (this.props.error && prevProps.error !== this.props.error) {
+      this.setState({
+        showError: true,
+        errorHeader: `Error code ${this.props.error.status}`,
+        errorMessage: this.props.error.message
+      })
+      if (!this.props.selectedContract.id) {
+        const floatingContract = { ...this.props.selectedContract }
+        this.setState({
+          newContracts: [floatingContract],
+          showSettings: true
+        })
+        this.renderNewContractTabs([floatingContract])
+      }
+    }
+  }
+
+  setDefaultContract (contractId) {
+    this.setState({ pipelineView: 'entityTypes' })
+    if (this.props.selectedPipeline) {
+      const selectedContract = this.props.selectedPipeline.contracts
+        .find(x => x.id === contractId)
+      if (selectedContract) {
+        this.props.selectedContractChanged(selectedContract)
+      }
+    }
+  }
+
+  onTabChange (contract) {
+    this.props.selectedContractChanged(contract)
+  }
+
+  renderTabs (contracts, selectedContract) {
+    return (
+      <React.Fragment>
+        {
+          contracts.map(contract => (
+            <div className={`pipeline-tab ${selectedContract.name === contract.name ? 'active' : ''}`}
+              onClick={this.onTabChange.bind(this, contract)}
+              key={contract.id}>
+              <span className='contract-name'>{contract.name}</span>
+              {contract.mapping.length ? <span className={`status ${contract.mapping_errors.length ? 'red' : 'green'}`} /> : null}
+              <div
+                className={`btn-icon settings-button ${this.state.showSettings ? 'active' : ''}`}
+                onClick={() => this.toggleSettings()}>
+                <i className='fas fa-ellipsis-h' />
+              </div>
+            </div>
+          ))
+        }
+      </React.Fragment>
+    )
+  }
+
+  renderNewContractTabs (contracts) {
+    contracts = contracts || this.state.newContracts
+    this.setState({
+      newContractTabs: (
+        <React.Fragment>
+          {
+            contracts.length ? contracts.map(contract => (
+              <div className={`pipeline-tab ${this.props.selectedContract && this.props.selectedContract.name === contract.name ? 'active' : ''}`}
+                key={contract.name}
+                onClick={this.onTabChange.bind(this, contract)}
+              >
+                {contract.name}
+              </div>
+            )) : null
+          }
+        </React.Fragment>
+      )
+    })
+  }
+
+  setErrorModal (visible) {
+    this.setState({
+      showError: visible
+    })
   }
 
   render () {
     const { selectedPipeline } = this.props
+    let firstContract = {}
     if (!selectedPipeline) {
       return ''
+    } else {
+      firstContract = selectedPipeline.contracts[0] || {}
     }
     return (
-      <div className={`pipelines-container show-pipeline ${selectedPipeline.is_read_only ? 'selected-pipeline-readonly' : ''}`}>
+      <div className={`pipelines-container show-pipeline pipeline--${this.state.pipelineView}`}>
+        <Modal buttons={
+          <button type='button' className='btn btn-w btn-primary' onClick={this.setErrorModal.bind(this, false)}>
+            <FormattedMessage
+              id='single.pipeline.modal.error.ok'
+              defaultMessage='Ok'
+            />
+          </button>
+        } header={this.state.errorHeader} show={this.state.showError}>
+          {this.state.errorMessage}
+        </Modal>
         <NavBar showBreadcrumb>
           <div className='breadcrumb-links'>
             <Link to='/'>
@@ -78,7 +205,7 @@ class Pipeline extends Component {
             </Link>
             <span> // </span>
             { selectedPipeline.name }
-            { selectedPipeline.is_read_only &&
+            { selectedPipeline.isInputReadOnly &&
               <span className='tag'>
                 <FormattedMessage
                   id='selected-pipeline.read-only.indicator'
@@ -87,31 +214,38 @@ class Pipeline extends Component {
               </span>
             }
           </div>
-          <div className='top-nav-publish'>
-            <div className='status-publish'>
-              <FormattedMessage
-                id='pipeline.publish-status'
-                defaultMessage={this.props.selectedPipeline.published_on
-                  ? `Published on ${moment(this.props.selectedPipeline.published_on).format('MMMM DD, YYYY HH:mm')}`
-                  : 'Not published'}
-              />
-              {this.props.selectedPipeline.published_on &&
-                <InfoButton pipeline={this.props.selectedPipeline} />
-              }
-            </div>
-            { !this.props.selectedPipeline.is_read_only &&
-              <PublishButton pipeline={this.props.selectedPipeline} className='btn btn-c btn-publish' />
-            }
-          </div>
         </NavBar>
 
-        <div className={`pipeline pipeline--${this.state.pipelineView} ${this.state.showOutput ? 'show-output' : ''} ${this.state.fullscreen ? 'fullscreen' : ''}`}>
+        <div className={`pipeline ${this.state.showOutput ? 'show-output' : ''} ${this.state.fullscreen ? 'fullscreen' : ''}`}>
+          <div className='pipeline-tabs'>
+            {
+              this.renderTabs(this.props.selectedPipeline.contracts, this.props.selectedContract)
+            }
+            {
+              this.state.newContractTabs
+            }
+            <button
+              type='button'
+              className='btn btn-c btn-sm new-contract'
+              onClick={this.addNewContract.bind(this)}
+            >
+              <span className='details-title'>
+                <FormattedMessage
+                  id='contract.add.button.add'
+                  defaultMessage='Add contract'
+                />
+              </span>
+            </button>
+
+          </div>
           <div className='pipeline-nav'>
             <div className='pipeline-nav-items'>
               <div
                 className='pipeline-nav-item__input'
-                onClick={() => this.setState({ pipelineView: 'input' })}>
-                <div className='badge'>1</div>
+                onClick={() => this.viewInput()}>
+                <div className='badge'>
+                  <i className='fas fa-file' />
+                </div>
                 <FormattedMessage
                   id='pipeline.navbar.input'
                   defaultMessage='Input'
@@ -120,7 +254,9 @@ class Pipeline extends Component {
               <div
                 className='pipeline-nav-item__entityTypes'
                 onClick={() => this.setState({ pipelineView: 'entityTypes' })}>
-                <div className='badge'>2</div>
+                <div className='badge'>
+                  <i className='fas fa-caret-right' />
+                </div>
                 <FormattedMessage
                   id='pipeline.navbar.entity.types'
                   defaultMessage='Entity Types'
@@ -134,7 +270,9 @@ class Pipeline extends Component {
               <div
                 className='pipeline-nav-item__mapping'
                 onClick={() => this.setState({ pipelineView: 'mapping' })}>
-                <div className='badge'>3</div>
+                <div className='badge'>
+                  <i className='fas fa-caret-right' />
+                </div>
                 <FormattedMessage
                   id='pipeline.navbar.mapping'
                   defaultMessage='Mapping'
@@ -145,19 +283,33 @@ class Pipeline extends Component {
                   <span>{this.state.fullscreen ? 'close' : 'fullscreen'}</span>
                 </div>
               </div>
+              <div
+                className='pipeline-nav-item__contracts'
+                onClick={() => this.setState({ pipelineView: 'entityTypes' })}>
+                <div className='badge'>
+                  <i className='fas fa-caret-right' />
+                </div>
+                <FormattedMessage
+                  id='pipeline.navbar.contracts'
+                  defaultMessage='Contracts'
+                />
+              </div>
             </div>
             <div
               className='pipeline-nav-item__output'
               onClick={() => this.toggleOutput()}>
-              <div className='badge badge-small' />
-              { this.props.selectedPipeline.mapping.length > 0 &&
-                <span className={`status ${this.props.selectedPipeline.mapping_errors.length > 0
-                  ? 'red' : 'green'}`} /> }
+              <div className='badge'>
+                <i className='fas fa-caret-right' />
+              </div>
               <FormattedMessage
                 id='pipeline.navbar.output'
                 defaultMessage='Output'
               />
-              <div className='output-toggle' />
+              {
+                this.props.selectedContract.mapping.length > 0 && <span
+                  className={`status ${this.props.selectedContract.mapping_errors.length ? 'red' : 'green'}`}
+                />
+              }
             </div>
           </div>
 
@@ -166,18 +318,46 @@ class Pipeline extends Component {
               <Input />
             </div>
             <div className='pipeline-section__entityTypes'>
-              <EntityTypes />
+              <EntityTypes contract={this.props.selectedContract || firstContract} />
             </div>
             <div className='pipeline-section__mapping'>
-              <Mapping />
+              <Mapping contract={this.props.selectedContract || firstContract} />
             </div>
           </div>
           <div className='pipeline-output'>
-            <Output />
+            <Output contract={this.props.selectedContract || firstContract} />
           </div>
+
+          { this.state.showSettings &&
+            this.renderSettings()
+          }
+
         </div>
       </div>
     )
+  }
+
+  addNewContract () {
+    const nContract = generateNewContract(this.props.selectedPipeline, this.state.newContracts)
+    this.props.selectedContractChanged(nContract)
+    this.setState({
+      newContracts: [...this.state.newContracts, nContract],
+      showSettings: true
+    }, () => this.renderNewContractTabs())
+  }
+
+  toggleSettings () {
+    if (!this.state.showSettings) {
+      this.setState({ showSettings: true, contractName: this.props.selectedContract.name })
+    } else {
+      if (!this.props.selectedContract.id) {
+        this.setState({
+          newContracts: []
+        })
+        this.renderNewContractTabs([])
+      }
+      this.setState({ showSettings: false })
+    }
   }
 
   toggleOutput () {
@@ -190,16 +370,150 @@ class Pipeline extends Component {
 
   toggleFullscreen () {
     if (!this.state.fullscreen) {
-      this.setState({ fullscreen: true })
+      this.setState({
+        fullscreen: true,
+        showOutput: false
+      })
     } else {
       this.setState({ fullscreen: false })
     }
   }
+
+  viewInput () {
+    this.setState({
+      showOutput: false,
+      pipelineView: 'input',
+      showSettings: false
+    })
+  }
+
+  onSettingsSave () {
+    const { selectedContract } = this.props
+    if (!selectedContract.id) {
+      const newContract = { ...selectedContract, pipeline: this.props.selectedPipeline.id, name: this.state.contractName }
+      this.props.addInitialContract(newContract)
+      this.setState({
+        newContracts: []
+      })
+      this.renderNewContractTabs([])
+    } else {
+      this.props.updateContract({ ...selectedContract, name: this.state.contractName })
+    }
+    this.toggleSettings()
+  }
+
+  renderSettings () {
+    return (
+      <div className='pipeline-settings'>
+        <div
+          className='btn-icon close-button'
+          onClick={() => this.toggleSettings()}>
+          <i className='fas fa-times' />
+          <span>close settings</span>
+        </div>
+
+        <div className='contract-form'>
+          <div className='form-group'>
+            <label className='form-label'>
+              <FormattedMessage
+                id='contract.new.name'
+                defaultMessage='Contract name'
+              />
+            </label>
+            <input
+              type='text'
+              required
+              name='name'
+              className='input-d contract-name'
+              value={this.state.contractName}
+              onChange={e => this.setState({ contractName: e.target.value })}
+            />
+          </div>
+
+          <div className='settings-section'>
+            <label className='form-label'>
+              <FormattedMessage
+                id='settings.puplish.title'
+                defaultMessage='Publish status'
+              />
+            </label>
+            <div className='status-publish'>
+              { this.props.selectedContract.published_on &&
+                <React.Fragment>
+                  <FormattedMessage
+                    id='pipeline.publish-status.published'
+                    defaultMessage='Published on'
+                  /> { moment(this.props.selectedContract.published_on).format('MMMM DD, YYYY HH:mm') }
+                </React.Fragment>
+              }
+              { !this.props.selectedContract.published_on &&
+                <FormattedMessage
+                  id='pipeline.publish-status.not-published'
+                  defaultMessage='Not published'
+                />
+              }
+              <PublishButton
+                pipeline={this.props.selectedPipeline}
+                contract={this.props.selectedContract}
+                className='btn btn-d btn-publish' />
+            </div>
+            { this.props.selectedContract.published_on
+              ? <div>
+                <label className='form-label'>
+                  <FormattedMessage
+                    id='settings.submission.title'
+                    defaultMessage='Submission URL'
+                  />
+                </label>
+
+                <a className='submission-url'
+                  href={`${this.props.kernelUrl}/submissions/?mappingset=${this.props.selectedPipeline.mappingset}`}>
+                  {this.props.selectedPipeline.mappingset &&
+                  `${this.props.kernelUrl}/submissions/?mappingset=${this.props.selectedPipeline.mappingset}`}</a>
+              </div> : null
+            }
+          </div>
+          <button
+            onClick={() => this.toggleSettings()}
+            type='button'
+            className='btn btn-d btn-big'>
+            <span className='details-title'>
+              <FormattedMessage
+                id='pipeline.new.button.cancel'
+                defaultMessage='Cancel'
+              />
+            </span>
+          </button>
+          <button
+            className='btn btn-d btn-primary btn-big ml-4'
+            onClick={this.onSettingsSave.bind(this)}>
+            <span className='details-title'>
+              <FormattedMessage
+                id='contract.save'
+                defaultMessage='Save'
+              />
+            </span>
+          </button>
+        </div>
+
+      </div>
+    )
+  }
 }
 
-const mapStateToProps = ({ pipelines }) => ({
+const mapStateToProps = ({ pipelines, constants }) => ({
   selectedPipeline: pipelines.selectedPipeline,
-  pipelineList: pipelines.pipelineList
+  pipelineList: pipelines.pipelineList,
+  selectedContract: pipelines.selectedContract,
+  kernelUrl: constants.kernelUrl,
+  error: pipelines.error
 })
 
-export default connect(mapStateToProps, { getPipelineById, getPipelines })(Pipeline)
+export default connect(mapStateToProps, {
+  getPipelineById,
+  getPipelines,
+  selectedContractChanged,
+  getKernelURL,
+  updateContract,
+  addInitialContract
+})(Pipeline)

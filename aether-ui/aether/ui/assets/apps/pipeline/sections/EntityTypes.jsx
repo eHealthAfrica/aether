@@ -52,7 +52,7 @@ class EntityTypes extends Component {
   }
 
   parseProps (props) {
-    const { entity_types: entityTypes } = props.selectedPipeline
+    const { entity_types: entityTypes } = props.contract
     return entityTypes.length ? JSON.stringify(entityTypes, 0, 2) : ''
   }
 
@@ -76,7 +76,7 @@ class EntityTypes extends Component {
           throw new Error(formatMessage(MESSAGES.missingIdError))
         }
       })
-      this.props.updateContract({ ...this.props.selectedPipeline, entity_types: schemas })
+      this.props.updateContract({ ...this.props.contract, entity_types: schemas })
     } catch (error) {
       this.setState({ error: error.message })
     }
@@ -85,7 +85,7 @@ class EntityTypes extends Component {
   hasChanged () {
     try {
       const schemas = JSON.parse(this.state.entityTypesSchema)
-      return !deepEqual(schemas, this.props.selectedPipeline.entity_types)
+      return !deepEqual(schemas, this.props.contract.entity_types)
     } catch (e) {
       return true
     }
@@ -96,8 +96,8 @@ class EntityTypes extends Component {
       <div className='section-body'>
         <div className='section-left'>
           <EntityTypeViewer
-            schema={this.props.selectedPipeline.entity_types}
-            highlight={this.props.selectedPipeline.highlightDestination}
+            schema={this.props.contract.entity_types}
+            highlight={this.props.contract.highlightDestination}
           />
         </div>
 
@@ -132,7 +132,7 @@ class EntityTypes extends Component {
                   onChange={this.onSchemaTextChanged.bind(this)}
                   placeholder={message}
                   rows='10'
-                  disabled={this.props.selectedPipeline.is_read_only}
+                  disabled={this.props.contract.is_read_only}
                 />
               )}
             </FormattedMessage>

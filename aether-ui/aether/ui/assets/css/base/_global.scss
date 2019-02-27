@@ -70,6 +70,11 @@ small {
   @include shadow-cutout-white;
 }
 
+.badge-c {
+  @include shadow-cutout-white;
+  background: rgba($text-color, .2);
+}
+
 .tag {
   font-size: $font-size-xxs;
   font-weight: 600;
@@ -118,6 +123,10 @@ textarea {
     @include shadow-cutout-dark;
     background: rgba($text-color, .3);
     color: $white;
+
+    &::Placeholder {
+      color: rgba($white, .4);
+    }
 
     &:disabled {
       @include stripy(rgba($text-color, .3), transparent);
@@ -227,25 +236,22 @@ select:-webkit-autofill {
   }
 }
 
-.selected-pipeline-readonly {
+.status {
+  @include shadow-cutout-dark;
+  border-radius: 50%;
+  width: .5em;
+  height: .5em;
+  content: '';
+  display: inline-block;
+  margin-left: .5em;
+}
 
-  .textarea-header,
-  .pipeline-section__entityTypes .textarea-header {
-    box-shadow: none;
-  }
+.red {
+  background-color: $red;
+}
 
-  .tabs .tab.selected {
-    box-shadow: none;
-  }
-
-  .pipeline-section__mapping .rule-input {
-    box-shadow: none;
-
-    &.source::before,
-    &.destination::before {
-      border: 0;
-    }
-  }
+.green {
+  background-color: $green;
 }
 
 .monospace {

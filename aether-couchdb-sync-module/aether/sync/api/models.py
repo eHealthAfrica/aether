@@ -26,6 +26,7 @@ from django.utils.translation import ugettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
 from aether.common.multitenancy.utils import MtModelAbstract
+from aether.common.utils import json_prettified
 
 from .couchdb_helpers import delete_user, generate_db_name
 
@@ -119,6 +120,10 @@ class Schema(ExportModelOperationsMixin('couchdbsync_schema'), models.Model):
         help_text=_('This ID corresponds to an Aether Kernel Artefact ID.'),
     )
     avro_schema = JSONField(verbose_name=_('AVRO schema'), blank=True, default=dict)
+
+    @property
+    def avro_schema_prettified(self):
+        return json_prettified(self.avro_schema)
 
     def is_accessible(self, realm):
         return self.project.is_accessible(realm)

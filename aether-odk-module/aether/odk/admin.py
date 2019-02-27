@@ -30,9 +30,16 @@ from .api.kernel_utils import (
 )
 
 
-class ProjectAdmin(admin.ModelAdmin):
+class BaseAdmin(admin.ModelAdmin):
 
-    def propagate(self, request, queryset):  # pragma: no cover
+    empty_value_display = '---'
+    list_per_page = 25
+    show_full_result_count = True
+
+
+class ProjectAdmin(BaseAdmin):
+
+    def propagate(self, request, queryset):
         try:
             for item in queryset:
                 propagate_kernel_project(item)
@@ -70,9 +77,9 @@ class ProjectAdmin(admin.ModelAdmin):
     )
 
 
-class XFormAdmin(admin.ModelAdmin):
+class XFormAdmin(BaseAdmin):
 
-    def propagate(self, request, queryset):  # pragma: no cover
+    def propagate(self, request, queryset):
         try:
             for item in queryset:
                 propagate_kernel_artefacts(item)
@@ -97,9 +104,8 @@ class XFormAdmin(admin.ModelAdmin):
         'created_at',
         'version',
     )
-    list_filter = ('created_at',)
     date_hierarchy = 'created_at'
-    readonly_fields = ('title', 'form_id', 'version',)
+    readonly_fields = ('title', 'form_id', 'version', 'md5sum', 'avro_schema', 'avro_schema_prettified',)
     search_fields = ('project', 'title', 'form_id',)
     ordering = list_display
 
@@ -109,21 +115,21 @@ class XFormAdmin(admin.ModelAdmin):
             'fields': ['project', 'kernel_id', ]
         }),
 
-        (_('xForm definition'), {
-            'description': _('Please upload an XLS Form or an XML File, or enter the XML data.'),
-            'fields': ['xml_file', 'xml_data', 'description', 'title', 'form_id', 'version', ],
-        }),
-
         (_('Granted surveyors'), {
             'description': _(
                 'If you do not specify any surveyors, EVERYONE will be able to access this xForm.'
             ),
             'fields': ['surveyors', ],
         }),
+
+        (_('xForm definition'), {
+            'description': _('Please upload an XLS Form or an XML File, or enter the XML data.'),
+            'fields': ['xml_file', 'xml_data', 'description', 'title', 'form_id', 'version', 'avro_schema', ],
+        }),
     )
 
 
-class MediaFileAdmin(admin.ModelAdmin):
+class MediaFileAdmin(BaseAdmin):
 
     list_display = (
         'xform',

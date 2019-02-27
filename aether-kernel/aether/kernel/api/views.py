@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.db.models import Count, Min, Max, TextField, Q, Case, When
+from django.db.models import Count, Min, Max, TextField, Q
 from django.db.models.functions import Cast
 from django.shortcuts import get_object_or_404
 
@@ -511,19 +511,11 @@ class SubmissionStatsMixin(MtViewSetMixin):
                 entities_filter = Q(submissions__entities__projectschema__schema__family=family)
 
         if entities_filter:
-            # Django 1: use Case+When
             entities_count = Count(
-                expression=Case(When(entities_filter, then='submissions__entities__id')),
+                expression='submissions__entities__id',
                 distinct=True,
+                filter=entities_filter,
             )
-
-            # Django 2: filter in Count
-            # (replace code above with this block when we upgrade to Django 2)
-            # entities_count = Count(
-            #     expression='submissions__entities__id',
-            #     distinct=True,
-            #     filter=entities_filter,
-            # )
 
         return qs.values('id', 'name', 'created') \
                  .annotate(

@@ -30,6 +30,7 @@ from django.utils.translation import ugettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
 from aether.common.multitenancy.utils import MtModelAbstract
+from aether.common.utils import json_prettified
 
 from .xform_utils import (
     get_xform_data_from_xml,
@@ -205,6 +206,10 @@ class XForm(ExportModelOperationsMixin('odk_xform'), models.Model):
         verbose_name=_('surveyors'),
         help_text=_('If you do not specify any surveyors, EVERYONE will be able to access this xForm.'),
     )
+
+    @property
+    def avro_schema_prettified(self):
+        return json_prettified(self.avro_schema)
 
     @property
     def hash(self):

@@ -88,6 +88,9 @@ class ModelsTests(CustomTestCase):
         self.assertEqual(instance.md5sum, '5e97c4e929f64d7701804043e3b544ba')
         self.assertEqual(instance.hash, 'md5:5e97c4e929f64d7701804043e3b544ba')
 
+        self.assertIsNotNone(instance.avro_schema)
+        self.assertIsNotNone(instance.avro_schema_prettified)
+
     def test__project__surveyors(self):
         instance = Project.objects.create()
         self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')
