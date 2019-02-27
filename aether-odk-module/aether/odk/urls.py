@@ -16,11 +16,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.conf.urls import include, url
+from django.urls import include, path
 
 from aether.common.conf.urls import generate_urlpatterns
 
 
 urlpatterns = generate_urlpatterns(token=True, kernel=True, app=[
-    url(r'^', include('aether.odk.api.urls')),
+    path('', include('aether.odk.api.urls')),
 ])

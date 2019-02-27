@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.conf.urls import include, url
+from django.urls import include, path, re_path
 
 from aether.common.conf.urls import generate_urlpatterns
 from aether.kernel.api.views import AetherSchemaView
@@ -25,13 +25,13 @@ API_PREFIX = '^(?P<version>v1)'
 
 
 urlpatterns = generate_urlpatterns(token=True, app=[
-    url(r'^', include('aether.kernel.api.urls')),
-    url(f'{API_PREFIX}/', include('aether.kernel.api.urls')),
+    path('', include('aether.kernel.api.urls')),
+    re_path(f'{API_PREFIX}/', include('aether.kernel.api.urls')),
 
-    url(f'{API_PREFIX}/schema/',
-        view=AetherSchemaView.without_ui(cache_timeout=0),
-        name='api_schema'),
-    url(f'{API_PREFIX}/swagger/$',
-        view=AetherSchemaView.with_ui('swagger', cache_timeout=0),
-        name='schema-swagger-ui'),
+    re_path(f'{API_PREFIX}/schema/',
+            view=AetherSchemaView.without_ui(cache_timeout=0),
+            name='api_schema'),
+    re_path(f'{API_PREFIX}/swagger/$',
+            view=AetherSchemaView.with_ui('swagger', cache_timeout=0),
+            name='schema-swagger-ui'),
 ])
