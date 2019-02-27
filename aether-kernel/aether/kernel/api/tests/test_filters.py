@@ -26,6 +26,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from aether.kernel.api import models
+from aether.kernel.api.filters import EntityFilter, SubmissionFilter
 from aether.kernel.api.tests.utils.generators import generate_project
 
 
@@ -357,6 +358,23 @@ class TestFilters(TestCase):
         # Check both sets of ids for equality.
         self.assertEqual(response['count'], entities_count, 'All entities belong to the same family')
 
+    def test_entity_filter__by_date(self):
+        for _ in range(random.randint(5, 10)):
+            generate_project()
+        count = models.Entity.objects.count()
+        single = models.Entity.objects.first()
+        entities = models.Entity.objects.all()
+        for attr in ['created', 'modified']:
+            single_value = getattr(single, attr)
+            just_single = EntityFilter(data={f'{attr}': single_value}, queryset=entities)
+            gt_single = EntityFilter(data={f'{attr}__gt': single_value}, queryset=entities)
+            lt_single = EntityFilter(data={f'{attr}__lt': single_value}, queryset=entities)
+            single_count = sum([1 for i in just_single.qs])
+            gt_count = sum([1 for i in gt_single.qs])
+            lt_count = sum([1 for i in lt_single.qs])
+            self.assertEqual(single_count, 1)
+            self.assertEqual(count, (single_count + gt_count + lt_count))
+
     def test_submission_filter__by_project(self):
         url = reverse(viewname='submission-list')
         # Generate projects.
@@ -538,6 +556,23 @@ class TestFilters(TestCase):
             self.assertEqual(response['count'], len(expected))
             result = set([r['id'] for r in response['results']])
             self.assertEqual(expected, result)
+
+    def test_submission_filter__by_date(self):
+        for _ in range(random.randint(5, 10)):
+            generate_project()
+        count = models.Submission.objects.count()
+        single = models.Submission.objects.first()
+        submissions = models.Submission.objects.all()
+        for attr in ['created', 'modified']:
+            single_value = getattr(single, attr)
+            just_single = SubmissionFilter(data={f'{attr}': single_value}, queryset=submissions)
+            gt_single = SubmissionFilter(data={f'{attr}__gt': single_value}, queryset=submissions)
+            lt_single = SubmissionFilter(data={f'{attr}__lt': single_value}, queryset=submissions)
+            single_count = sum([1 for i in just_single.qs])
+            gt_count = sum([1 for i in gt_single.qs])
+            lt_count = sum([1 for i in lt_single.qs])
+            self.assertEqual(single_count, 1)
+            self.assertEqual(count, (single_count + gt_count + lt_count))
 
     def test_submission_filter__by_payload(self):
         url = reverse(viewname='submission-list')
