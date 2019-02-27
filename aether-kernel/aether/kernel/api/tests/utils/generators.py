@@ -150,17 +150,18 @@ def generate_project(
             mappingset.input = random_avro(mappingset.schema)
             mappingset.save()
 
-        AutoFixture(
-            model=models.Mapping,
-            field_values=get_field_values(
+        # django-autofixture does not support Django 2 models with m2m relations.
+        # https://github.com/gregmuellegger/django-autofixture/pull/110
+        models.Mapping.objects.create(
+            **get_field_values(
                 default=dict(
+                    name=mappingset.name,
                     mappingset=mappingset,
                     definition=mapping_definition(projectschema.pk),
-                    projectschemas=[projectschema],
                 ),
                 values=mapping_field_values,
             ),
-        ).create_one()
+        )
 
         for _ in range(random.randint(*SUBMISSIONS_COUNT_RANGE)):
             submission = AutoFixture(
