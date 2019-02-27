@@ -24,6 +24,7 @@ from django.utils.translation import ugettext as _
 class MtInstance(models.Model):
 
     instance = models.OneToOneField(
+        on_delete=models.CASCADE,
         related_name='mt',
         to=settings.MULTITENANCY_MODEL,
         verbose_name=_('instance'),
