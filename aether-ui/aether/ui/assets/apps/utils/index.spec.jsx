@@ -24,7 +24,8 @@ import {
   clone,
   deepEqual,
   generateGUID,
-  getLoggedInUser
+  getLoggedInUser,
+  isEmpty
 } from './index'
 
 describe('utils', () => {
@@ -98,6 +99,17 @@ describe('utils', () => {
       element.setAttribute('data-user-name', 'user')
       document.body.appendChild(element)
       expect(getLoggedInUser()).toEqual({ id: 1, name: 'user' })
+    })
+  })
+
+  describe('isEmpty', () => {
+    it('should detect null, undefined empty arrays, objects, strings but not "false" booleans', () => {
+      expect(isEmpty(null)).toBeTruthy()
+      expect(isEmpty(undefined)).toBeTruthy()
+      expect(isEmpty('        ')).toBeTruthy()
+      expect(isEmpty({})).toBeTruthy()
+      expect(isEmpty([])).toBeTruthy()
+      expect(isEmpty(false)).toBeFalsy()
     })
   })
 })

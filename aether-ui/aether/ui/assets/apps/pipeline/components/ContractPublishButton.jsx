@@ -162,8 +162,8 @@ class ContractPublishButton extends Component {
       </React.Fragment>
     )
 
-    const content = (
-      <React.Fragment>
+    return (
+      <Modal header={header} buttons={buttons}>
         <label className='form-label'>
           <FormattedMessage
             id='contract.publish.status'
@@ -174,6 +174,7 @@ class ContractPublishButton extends Component {
             <i className='ml-5 fa fa-cog fa-spin' />
           }
         </label>
+
         <ul>
           {
             errors.map((msg, index) => (
@@ -191,12 +192,6 @@ class ContractPublishButton extends Component {
             ))
           }
         </ul>
-      </React.Fragment>
-    )
-
-    return (
-      <Modal header={header} buttons={buttons}>
-        { content }
       </Modal>
     )
   }

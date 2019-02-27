@@ -81,6 +81,26 @@ export const deepEqual = (a, b, ignoreNull = false) => {
 }
 
 /**
+ * Indicates if the object is blank.
+ *
+ * Options:
+ *    - "null"
+ *    - "undefined"
+ *    - blank strings
+ *    - empty arrays
+ *    - empty objects
+ *    - "false" is not blank.
+ *
+ * @param {*} value -- the object
+ */
+export const isEmpty = (value) => (
+  value === null ||
+  value === undefined ||
+  JSON.stringify(value) === '{}' ||
+  value.toString().trim() === ''
+)
+
+/**
  * Replaces the given object in the list, identified by the `id`
  *
  * @param {Array}   list

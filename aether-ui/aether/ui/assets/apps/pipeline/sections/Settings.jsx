@@ -24,6 +24,7 @@ import { FormattedMessage } from 'react-intl'
 
 import { getKernelURL } from '../../redux/settings'
 import { updateContract } from '../redux'
+import { isEmpty } from '../../utils'
 import { deriveEntityTypes, deriveMappingRules } from '../../utils/avro-utils'
 
 import { Modal } from '../../components'
@@ -149,6 +150,7 @@ class Settings extends Component {
   render () {
     const { contract } = this.props
     const submissionUrl = `${this.props.kernelUrl}/submissions/?mappingset=${this.props.mappingset || ''}`
+    const showIdentityOption = (!contract.is_read_only && !isEmpty(this.props.inputSchema))
 
     return (
       <div className='pipeline-settings'>
@@ -199,9 +201,7 @@ class Settings extends Component {
             }
           </div>
 
-          { this.props.inputData && !contract.is_read_only &&
-            <IdentityMapping {...this.props} />
-          }
+          { showIdentityOption && <IdentityMapping {...this.props} /> }
 
           <div className='settings-section'>
             <div>
