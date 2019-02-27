@@ -108,6 +108,15 @@ class SubmissionFilter(filters.FilterSet):
         fields = '__all__'
         exclude = ('payload',)
         model = models.Submission
+        filter_overrides = {
+            models.DateTimeField: {
+                'filter_class': filters.IsoDateTimeFilter
+            },
+        }
+        fields = {
+            'created': ('lt', 'gt', 'lte', 'gte'),
+            'modified': ('lt', 'gt', 'lte', 'gte')
+        }
 
 
 class AttachmentFilter(filters.FilterSet):
@@ -205,6 +214,15 @@ class EntityFilter(filters.FilterSet):
         fields = '__all__'
         exclude = ('payload',)
         model = models.Entity
+        filter_overrides = {
+            models.DateTimeField: {
+                'filter_class': filters.IsoDateTimeFilter
+            },
+        }
+        fields = {
+            'created': ('lt', 'gt', 'lte', 'gte'),
+            'modified': ('lt', 'gt', 'lte', 'gte')
+        }
 
 
 def is_uuid(value):
