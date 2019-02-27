@@ -206,6 +206,10 @@ class DataInput extends Component {
       const input = JSON.parse(this.state.inputData)
       const schema = generateSchema(input)
 
+      // Take pipeline name and remove forbidden characters
+      const name = this.props.pipeline.name.replace(/[^a-zA-Z0-9]/g, '')
+      schema.name = name.substring(0, 25)
+
       this.props.updatePipeline({
         ...this.props.pipeline,
         schema,
