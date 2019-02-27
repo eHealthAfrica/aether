@@ -99,7 +99,7 @@ services:
         condition: service_healthy
       kernel:
         condition: service_started
-      # use this dependency with HRM, otherwise comment it out
+      # use this dependency with "start_dev" command and webpack (optional)
       # ui-assets:
       #   condition: service_started
     networks:

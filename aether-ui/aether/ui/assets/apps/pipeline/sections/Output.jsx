@@ -31,7 +31,7 @@ class Output extends Component {
             <FormattedMessage id='output.mapping_errors' defaultMessage='Mapping errors' />
           </h3>
           <ul>
-            { this.props.selectedPipeline.mapping_errors && this.props.selectedPipeline.mapping_errors.map((error, index) => (
+            { this.props.contract.mapping_errors && this.props.contract.mapping_errors.map((error, index) => (
               <li key={`${error.path}_${index}`}>
                 <span className='error-description'>{error.description}</span>
                 <span className='error-path'>{error.path ? `"${error.path}"` : ''}</span>
@@ -44,7 +44,7 @@ class Output extends Component {
             <FormattedMessage id='output.data' defaultMessage='Output.data' />
           </h3>
           <code>
-            { JSON.stringify(this.props.selectedPipeline.output || [], 0, 2) }
+            { JSON.stringify(this.props.contract.output || [], 0, 2) }
           </code>
         </div>
       </div>
@@ -52,8 +52,4 @@ class Output extends Component {
   }
 }
 
-const mapStateToProps = ({ pipelines }) => ({
-  selectedPipeline: pipelines.selectedPipeline
-})
-
-export default connect(mapStateToProps)(Output)
+export default connect()(Output)

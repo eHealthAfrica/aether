@@ -28,19 +28,23 @@ const BUNDLES_DIR = path.resolve(__dirname, '../bundles/')
 
 module.exports = (custom) => ({
   mode: (custom.production ? 'production' : 'development'),
-  context: __dirname,
+  context: path.resolve(__dirname, '../'),
 
-  entry: buildEntries(custom.entryOptions),
+  entry: buildEntries(custom.hmr),
 
   output: Object.assign({
     filename: '[name]-[hash].js',
     library: ['ui', '[name]'],
     libraryTarget: 'var',
     path: BUNDLES_DIR
-  }, custom.output),
+  }, custom.output || {}),
 
   optimization: {
-    minimize: custom.production
+    minimize: custom.production,
+    concatenateModules: true,
+    namedChunks: true,
+    namedModules: true,
+    noEmitOnErrors: true
   },
 
   module: {
@@ -88,9 +92,7 @@ module.exports = (custom) => ({
 
     // Environment variables
     new webpack.DefinePlugin({
-      'process.env': {
-        'NODE_ENV': JSON.stringify(custom.production ? 'production' : 'development')
-      }
+      'process.env.NODE_ENV': JSON.stringify(custom.production ? 'production' : 'development')
     }),
 
     // extract styles as a CSS file not JS file

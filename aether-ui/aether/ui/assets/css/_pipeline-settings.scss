@@ -18,32 +18,60 @@
  * under the License.
  */
 
-.pipeline-output {
-  background: $text-color;
-  color: $white;
-  box-shadow: -1px 0 0 rgba($black, .2), 1px 0 1px rgba($white, .3) inset;
-
-  .section-body {
-    min-width: $output-width;
-    padding: 1.2rem;
+@keyframes show {
+  0% {
+    opacity: 0;
   }
 
-  .pipeline-errors {
-    ul {
-      color: $red;
-    }
-
-    .error-description {
-      margin-right: 7px;
-    }
-
-    .error-path {
-      font-style: italic;
-    }
+  50% {
+    opacity: 0;
   }
 
-  .pipeline-data,
-  .pipeline-errors {
-    margin-top: 2rem;
+  100% {
+    opacity: 1;
   }
+}
+
+.pipeline-settings {
+  background: lighten($dark-blue, 5);
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: $column-width;
+  right: 0;
+  z-index: 4;
+  animation: show .5s;
+  padding: .6rem 1rem;
+
+  .status-publish {
+    margin: 2rem 0 3rem;
+  }
+
+  .btn-publish {
+    margin-top: 1rem;
+  }
+
+  .submission-url {
+    color: $action-color-b;
+  }
+}
+
+.fullscreen .pipeline-settings {
+  left: 0;
+}
+
+.contract-form {
+  margin: 3rem 2.3rem 1rem;
+
+  .contract-name {
+    font-size: $font-size-l;
+    font-weight: 300;
+    width: 100%;
+  }
+}
+
+.settings-section {
+  margin: 2rem 0;
+  padding: 2rem 0;
+  border-top: 1px dashed rgba($light-grey, .4);
 }

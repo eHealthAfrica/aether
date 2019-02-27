@@ -30,9 +30,9 @@ from django_prometheus.models import ExportModelOperationsMixin
 
 from model_utils.models import TimeStampedModel
 
-from .constants import NAMESPACE
-from .utils import json_prettified
+from aether.common.utils import json_prettified
 
+from .constants import NAMESPACE
 from .validators import (
     validate_avro_schema,
     validate_entity_payload,

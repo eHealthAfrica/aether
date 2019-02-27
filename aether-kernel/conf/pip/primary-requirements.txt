@@ -25,7 +25,6 @@ django-model-utils
 django-reversion-compare
 drf-dynamic-fields
 drf_yasg
-pygments
 python-dateutil
 
 

@@ -46,6 +46,7 @@ setup(
         'django-prometheus',
         'djangorestframework',
         'psycopg2-binary',
+        'pygments',
         'python-json-logger',
         'requests',
     ],

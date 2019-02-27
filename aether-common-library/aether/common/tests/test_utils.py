@@ -16,15 +16,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.db import connections
-from django.db.utils import OperationalError
+from django.test import TestCase
+
+from .. import utils
 
 
-def test_db_connection():  # pragma: no cover
-    try:
-        db_conn = connections['default']
-        db_conn.cursor()
-    except OperationalError:
-        return False
+class UtilsTests(TestCase):
 
-    return True
+    def test_json_prettified_simple(self):
+        data = {}
+        expected = '<pre><span></span><span class="p">{}</span>\n</pre>'
+
+        pretty = str(utils.json_prettified(data))
+        self.assertIn(expected, pretty)
