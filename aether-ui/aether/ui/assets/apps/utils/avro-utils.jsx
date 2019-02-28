@@ -24,7 +24,7 @@ import { generateGUID } from './index'
 
 // In-house workaround to the avsc library to avoid null values
 // in case of union types
-avro.types.UnwrappedUnionType.prototype.random = () => {
+avro.types.UnwrappedUnionType.prototype.random = function () {
   const types = this.types.filter(({ typeName }) => typeName !== 'null')
   if (types.length === 0) {
     return null
