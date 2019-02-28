@@ -82,6 +82,7 @@ echo "Images repository: $IMAGE_REPO"
 echo "Images:            ${RELEASE_APPS[@]}"
 echo "_____________________________________________"
 
+./scripts/build_docker_assets.sh
 ./scripts/build_common_and_distribute.sh
 ./scripts/build_client_and_distribute.sh
 
