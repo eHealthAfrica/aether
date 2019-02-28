@@ -47,7 +47,7 @@ const MESSAGES = defineMessages({
     id: 'input.schema.invalid.message.head'
   },
   inputDataPlaceholder: {
-    defaultMessage: 'We will generate some sample data for you, once you have added a schema. Or, Add data in JSON Format and Aether will derive an AVRO schema for you.',
+    defaultMessage: 'Once you have added a schema, we will generate some sample data for you. Alternatively, you can enter some JSON data and Aether will derive an AVRO schema for you.',
     id: 'input.data.placeholder'
   },
   inputSchemaPlacehoder: {
