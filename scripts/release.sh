@@ -85,6 +85,9 @@ echo "_____________________________________________"
 ./scripts/build_common_and_distribute.sh
 ./scripts/build_client_and_distribute.sh
 
+docker-compose build ui-assets
+docker-compose run   ui-assets build
+
 for APP in "${RELEASE_APPS[@]}"
 do
     build_app $APP
