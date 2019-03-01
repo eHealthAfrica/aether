@@ -174,8 +174,8 @@ class Settings extends Component {
               required
               name='name'
               className='input-d contract-name'
-              value={contract.name}
-              onChange={e => this.setState({ contractName: e.target.value })}
+              value={this.state.contractName}
+              onChange={(e) => { this.setState({ contractName: e.target.value }) }}
               disabled={contract.is_read_only}
             />
 
