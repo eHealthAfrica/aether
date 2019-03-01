@@ -68,7 +68,7 @@ class SubmissionCard extends Component {
   }
 }
 
-const mapStateToProps = ({ pipelines, settings }) => ({
+const mapStateToProps = ({ settings }) => ({
   kernelUrl: settings.kernelUrl
 })
 const mapDispatchToProps = { getKernelURL }

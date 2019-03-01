@@ -241,7 +241,7 @@ class Settings extends Component {
   }
 }
 
-const mapStateToProps = ({ pipelines, settings }) => ({
+const mapStateToProps = ({ pipelines }) => ({
   mappingset: pipelines.currentPipeline.mappingset,
   inputData: pipelines.currentPipeline.input,
   inputSchema: pipelines.currentPipeline.schema,
