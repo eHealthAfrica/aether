@@ -56,6 +56,13 @@
   }
 }
 
+div.code {
+  background-color: lighten($dark-blue, 3);
+  padding: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
 .fullscreen .pipeline-settings {
   left: 0;
 }

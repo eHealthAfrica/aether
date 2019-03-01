@@ -23,8 +23,7 @@ import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
 import Modal from '../../components/Modal'
-
-import { getKernelURL } from '../../redux/settings'
+import SubmissionCard from './SubmissionCard'
 
 class PipelineInfoButton extends Component {
   constructor (props) {
@@ -33,18 +32,10 @@ class PipelineInfoButton extends Component {
     this.state = {
       showInfo: false
     }
-
-    props.getKernelURL()
   }
 
   render () {
-    const { pipeline, kernelUrl } = this.props
-    const submissionUrl = `${kernelUrl}/submissions/?mappingset=${pipeline.mappingset}`
-
-    const sampleData = {
-      mappingset: pipeline.mappingset,
-      payload: pipeline.input || {}
-    }
+    const { pipeline } = this.props
 
     const execute = (event, showInfo) => {
       event.stopPropagation()
@@ -53,9 +44,9 @@ class PipelineInfoButton extends Component {
     }
 
     return (
-      <span>
+      <React.Fragment>
         <i
-          className='fas fa-info-circle published-info-icon'
+          className='ml-1 fas fa-info-circle published-info-icon'
           onClick={(event) => { execute(event, true) }}
         />
 
@@ -71,40 +62,16 @@ class PipelineInfoButton extends Component {
               </button>
             }>
             <div>
-              <div className='modal-section'>
-                <label className='form-label'>
-                  <FormattedMessage
-                    id='pipeline.info.modal.url'
-                    defaultMessage='Submission URL'
-                  />
-                </label>
-                <a href={submissionUrl}>{submissionUrl}</a>
-              </div>
-
-              <div className='modal-section mt-5'>
-                <label className='form-label'>
-                  <FormattedMessage
-                    id='pipeline.info.modal.sample'
-                    defaultMessage='Submission sample data'
-                  />
-                </label>
-                <div className='code'>
-                  <code>
-                    { JSON.stringify(sampleData || [], 0, 2) }
-                  </code>
-                </div>
-              </div>
+              <SubmissionCard
+                mappingset={pipeline.mappingset}
+                inputData={pipeline.input}
+              />
             </div>
           </Modal>
         }
-      </span>
+      </React.Fragment>
     )
   }
 }
 
-const mapStateToProps = ({ settings }) => ({
-  kernelUrl: settings.kernelUrl
-})
-const mapDispatchToProps = { getKernelURL }
-
-export default connect(mapStateToProps, mapDispatchToProps)(PipelineInfoButton)
+export default connect()(PipelineInfoButton)

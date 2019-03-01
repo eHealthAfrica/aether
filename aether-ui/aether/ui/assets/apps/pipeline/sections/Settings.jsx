@@ -22,13 +22,13 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
-import { getKernelURL } from '../../redux/settings'
 import { updateContract } from '../redux'
 import { isEmpty } from '../../utils'
 import { deriveEntityTypes, deriveMappingRules } from '../../utils/avro-utils'
 
 import { Modal } from '../../components'
 import ContractPublishButton from '../components/ContractPublishButton'
+import SubmissionCard from '../components/SubmissionCard'
 
 export class IdentityMapping extends Component {
   constructor (props) {
@@ -137,8 +137,6 @@ class Settings extends Component {
     this.state = {
       contractName: props.contract.name
     }
-
-    props.getKernelURL()
   }
 
   componentWillReceiveProps (nextProps) {
@@ -149,7 +147,6 @@ class Settings extends Component {
 
   render () {
     const { contract } = this.props
-    const submissionUrl = `${this.props.kernelUrl}/submissions/?mappingset=${this.props.mappingset || ''}`
     const showIdentityOption = (!contract.is_read_only && !isEmpty(this.props.inputSchema))
 
     return (
@@ -217,17 +214,12 @@ class Settings extends Component {
               />
             </div>
 
-            { this.props.mappingset && contract.published_on &&
+            { contract.published_on &&
               <div className='mt-4'>
-                <label className='form-label'>
-                  <FormattedMessage
-                    id='settings.submission.url'
-                    defaultMessage='Submission URL'
-                  />
-                </label>
-                <a className='submission-url' href={submissionUrl}>
-                  { submissionUrl }
-                </a>
+                <SubmissionCard
+                  mappingset={this.props.mappingset}
+                  inputData={this.props.inputData}
+                />
               </div>
             }
           </div>
@@ -254,10 +246,8 @@ const mapStateToProps = ({ pipelines, settings }) => ({
   inputData: pipelines.currentPipeline.input,
   inputSchema: pipelines.currentPipeline.schema,
 
-  contract: pipelines.currentContract,
-
-  kernelUrl: settings.kernelUrl
+  contract: pipelines.currentContract
 })
-const mapDispatchToProps = { updateContract, getKernelURL }
+const mapDispatchToProps = { updateContract }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Settings)
