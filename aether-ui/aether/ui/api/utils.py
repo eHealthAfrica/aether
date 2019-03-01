@@ -20,6 +20,8 @@ import json
 import requests
 import uuid
 
+from time import sleep
+
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
@@ -546,7 +548,7 @@ def kernel_data_request(url='', method='get', data=None):
     Handle requests to the kernel server
     '''
 
-    res = requests.request(
+    res = __request(
         method=method,
         url=f'{utils.get_kernel_server_url()}/{url}',
         json=data or {},
@@ -558,3 +560,26 @@ def kernel_data_request(url='', method='get', data=None):
     if res.status_code == status.HTTP_204_NO_CONTENT:
         return None
     return json.loads(res.content.decode('utf-8'))
+
+
+def __request(*args, **kwargs):  # pragma: no cover
+    count = 0
+    exception = None
+
+    while count < 3:
+        try:
+            return requests.request(*args, **kwargs)
+        except Exception as e:
+            exception = e
+
+            # ConnectionResetError: [Errno 104] Connection reset by peer
+            # http.client.RemoteDisconnected: Remote end closed connection without response
+
+            # This happens randomly in Travis
+            # There is nothig we can do so... ignore it
+
+        # try again
+        count += 1
+        sleep(1)
+
+    raise exception
