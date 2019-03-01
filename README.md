@@ -27,6 +27,7 @@
   - [Upgrade python dependencies](#upgrade-python-dependencies)
     - [Check outdated dependencies](#check-outdated-dependencies)
     - [Update requirements file](#update-requirements-file)
+- [Troubleshooting](/TROUBLESHOOTING.md)
 
 
 ## Setup
