@@ -354,7 +354,43 @@ def publish_contract(contract):
 
 def publish_preflight(contract):
     '''
-    Performs a check for possible contract publish errors against kernel
+    Performs a check for possible contract publish consequences against kernel.
+
+
+    Expected outcome by type:
+
+    - Error (blockers, with any of them the contract cannot be published)
+
+        - Pipeline has no input
+        - Pipeline belongs to a different project in kernel
+        - Contract is read only
+        - Contract has no entity types
+        - Contract has no mapping rules
+        - Contract mapping rules have errors
+        - Contract belongs to a different project in kernel
+        - Contract belongs to a different pipeline (mapping set) in kernel
+        - Entity type "XXX" (as project schema) belongs to a different project in kernel
+
+    - Warning (warns if any of the artefacts is already published)
+
+        - Project is already published
+        - Pipeline (as mapping set) is already published
+        - Contract (as mapping) is already published
+        - Entity type "XXX" (as schema) is already published
+        - Entity type "XXX" (as project schema) is already published
+
+    - Info (informs about the publish effects)
+
+        - Project will be published
+        - Pipeline (as mapping set) will be published
+        - Input data will be changed
+        - Schema data will be changed
+        - Contract (as mapping) will be published
+        - Mapping rules data will be changed
+        - Entity type "XXX" (as schema) will be published
+        - Entity type "XXX" (as schema) data will be changed
+        - Entity type "XXX" (as project schema) will be published
+
     '''
 
     def __get(model, pk):
@@ -386,16 +422,16 @@ def publish_preflight(contract):
     # 1. Check the project in Kernel
     kernel_project = __get('projects', project.project_id)
     if kernel_project:
-        outcome['info'].append(MSG_PROJECT_IN_KERNEL)
+        outcome['warning'].append(MSG_PROJECT_IN_KERNEL)
     else:
-        outcome['warning'].append(MSG_PROJECT_NOT_IN_KERNEL)
+        outcome['info'].append(MSG_PROJECT_NOT_IN_KERNEL)
 
     # 2. Check the pipeline in Kernel (as mapping set)
     mappingset = None
     if pipeline.mappingset:
         mappingset = __get('mappingsets', pipeline.mappingset)
         if mappingset:
-            outcome['info'].append(MSG_PIPELINE_IN_KERNEL)
+            outcome['warning'].append(MSG_PIPELINE_IN_KERNEL)
 
             # 2.1 Check linked project
             if mappingset['project'] != str(project.project_id):
@@ -403,18 +439,18 @@ def publish_preflight(contract):
 
             # 2.2 Check data: input & schema
             if json.dumps(mappingset['input'], sort_keys=True) != json.dumps(pipeline.input, sort_keys=True):
-                outcome['warning'].append(MSG_PIPELINE_INPUT_CHANGED)
+                outcome['info'].append(MSG_PIPELINE_INPUT_CHANGED)
             if json.dumps(mappingset['schema'], sort_keys=True) != json.dumps(pipeline.schema, sort_keys=True):
-                outcome['warning'].append(MSG_PIPELINE_SCHEMA_CHANGED)
+                outcome['info'].append(MSG_PIPELINE_SCHEMA_CHANGED)
     if not mappingset:
-        outcome['warning'].append(MSG_PIPELINE_NOT_IN_KERNEL)
+        outcome['info'].append(MSG_PIPELINE_NOT_IN_KERNEL)
 
     # 3. Check the contract in Kernel (as mapping)
     mapping = None
     if contract.mapping:
         mapping = __get('mappings', contract.mapping)
         if mapping:
-            outcome['info'].append(MSG_CONTRACT_IN_KERNEL)
+            outcome['warning'].append(MSG_CONTRACT_IN_KERNEL)
 
             # 3.1 Check linked project
             if mapping['project'] != str(project.project_id):
@@ -428,14 +464,14 @@ def publish_preflight(contract):
             kernel_rules = mapping['definition']['mapping']
             ui_rules = contract.kernel_rules
             if len(kernel_rules) != len(ui_rules):
-                outcome['warning'].append(MSG_CONTRACT_MAPPING_RULES_CHANGED)
+                outcome['info'].append(MSG_CONTRACT_MAPPING_RULES_CHANGED)
             else:
                 for i in range(len(kernel_rules)):
                     if kernel_rules[i][0] != ui_rules[i][0] or kernel_rules[i][1] != ui_rules[i][1]:
-                        outcome['warning'].append(MSG_CONTRACT_MAPPING_RULES_CHANGED)
+                        outcome['info'].append(MSG_CONTRACT_MAPPING_RULES_CHANGED)
                         break
     if not mapping:
-        outcome['warning'].append(MSG_CONTRACT_NOT_IN_KERNEL)
+        outcome['info'].append(MSG_CONTRACT_NOT_IN_KERNEL)
 
     # 4. Check the contract entity types in Kernel (as schemas and project schemas)
     kernel_refs = contract.kernel_refs if contract.kernel_refs else {}
@@ -450,25 +486,25 @@ def publish_preflight(contract):
             if schema_id:
                 schema = __get('schemas', schema_id)
                 if schema:
-                    outcome['info'].append(MSG_ENTITY_IN_KERNEL_SCHEMA.format(name))
+                    outcome['warning'].append(MSG_ENTITY_IN_KERNEL_SCHEMA.format(name))
 
                     # 4.1.1 Check schema definition
                     if json.dumps(schema['definition'], sort_keys=True) != json.dumps(entity, sort_keys=True):
-                        outcome['warning'].append(MSG_ENTITY_SCHEMA_CHANGED.format(name))
+                        outcome['info'].append(MSG_ENTITY_SCHEMA_CHANGED.format(name))
             if not schema:
-                outcome['warning'].append(MSG_ENTITY_NOT_IN_KERNEL_SCHEMA.format(name))
+                outcome['info'].append(MSG_ENTITY_NOT_IN_KERNEL_SCHEMA.format(name))
 
             # 4.2 Check as project schema
             ps_id = kernel_refs.get('entities', {}).get(name)
             if ps_id:
                 ps = __get('projectschemas', ps_id)
                 if ps:
-                    outcome['info'].append(MSG_ENTITY_IN_KERNEL_PROJECT_SCHEMA.format(name))
+                    outcome['warning'].append(MSG_ENTITY_IN_KERNEL_PROJECT_SCHEMA.format(name))
                     # 4.2.1 Check linked project
                     if ps['project'] != str(project.project_id):
                         outcome['error'].append(MSG_ENTITY_WRONG_PROJECT.format(name))
             if not ps:
-                outcome['warning'].append(MSG_ENTITY_NOT_IN_KERNEL_PROJECT_SCHEMA.format(name))
+                outcome['info'].append(MSG_ENTITY_NOT_IN_KERNEL_PROJECT_SCHEMA.format(name))
 
     return outcome
 
@@ -576,7 +612,7 @@ def __request(*args, **kwargs):  # pragma: no cover
             # http.client.RemoteDisconnected: Remote end closed connection without response
 
             # This happens randomly in Travis
-            # There is nothig we can do so... ignore it
+            # There is nothing we can do so... ignore it and try again
 
         # try again
         count += 1
