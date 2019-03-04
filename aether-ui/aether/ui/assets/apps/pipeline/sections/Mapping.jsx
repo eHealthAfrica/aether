@@ -22,7 +22,7 @@ import React, { Component } from 'react'
 import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
 import { connect } from 'react-redux'
 
-import { generateGUID, deepEqual } from '../../utils'
+import { generateGUID, deepEqual, objectToString } from '../../utils'
 import { updateContract } from '../redux'
 
 const MESSAGES = defineMessages({
@@ -54,11 +54,15 @@ class Mapping extends Component {
     }
   }
 
-  componentWillReceiveProps (nextProps) {
-    this.setState({
-      mappingRules: nextProps.contract.mapping_rules || [],
-      mappingRulesInput: this.mappingToJSON(nextProps.contract.mapping_rules || [])
-    })
+  componentDidUpdate (prevProps) {
+    if (!deepEqual(prevProps.contract.mapping_rules, this.props.contract.mapping_rules)) {
+      this.setState({
+        mappingRules: this.props.contract.mapping_rules || [],
+        mappingRulesInput: this.mappingToJSON(this.props.contract.mapping_rules || []),
+        error: null,
+        jsonError: null
+      })
+    }
   }
 
   JSONToMapping (rules) {
@@ -72,7 +76,7 @@ class Mapping extends Component {
   }
 
   mappingToJSON (rules) {
-    return JSON.stringify(rules.map(item => ([item.source, item.destination])), 0, 2)
+    return objectToString(rules.map(item => ([item.source, item.destination])))
   }
 
   notifyChange (event) {

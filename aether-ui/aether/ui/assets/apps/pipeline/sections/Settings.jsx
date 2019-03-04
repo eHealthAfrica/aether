@@ -139,9 +139,9 @@ class Settings extends Component {
     }
   }
 
-  componentWillReceiveProps (nextProps) {
-    if (this.props.contract.id !== nextProps.contract.id) {
-      this.setState({ contractName: nextProps.contract.name })
+  componentDidUpdate (prevProps) {
+    if (prevProps.contract.name !== this.props.contract.name) {
+      this.setState({ contractName: this.props.contract.name })
     }
   }
 

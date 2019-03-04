@@ -23,6 +23,7 @@ import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
 import { getKernelURL } from '../../redux/settings'
+import { objectToString } from '../../utils'
 
 class SubmissionCard extends Component {
   constructor (props) {
@@ -59,7 +60,7 @@ class SubmissionCard extends Component {
           </label>
           <div className='code'>
             <code>
-              { JSON.stringify(sampleData || [], 0, 2) }
+              { objectToString(sampleData) }
             </code>
           </div>
         </div>
