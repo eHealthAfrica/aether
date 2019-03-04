@@ -31,3 +31,9 @@ export const CONTRACTS_URL = '/api/contracts/'
 export const KERNEL_URL = '/api/kernel-url/'
 
 export const DATE_FORMAT = 'MMMM DD, YYYY HH:mm'
+
+// pipeline/contract view sections
+export const PIPELINE_SECTION_INPUT = 'input'
+export const CONTRACT_SECTION_ENTITY_TYPES = 'entityTypes'
+export const CONTRACT_SECTION_MAPPING = 'mapping'
+export const CONTRACT_SECTION_SETTINGS = 'settings'

@@ -33,7 +33,8 @@ class PipelineApp extends Component {
         <React.Fragment>
           <Switch>
             <Route exact path='/' component={PipelineList} />
-            <Route path='/:pid/:view/:cid' component={Pipeline} />
+            <Route path='/:pid/:cid/:view' component={Pipeline} />
+            <Route path='/:pid/:cid' component={Pipeline} />
             <Route path='/:pid' component={Pipeline} />
           </Switch>
         </React.Fragment>

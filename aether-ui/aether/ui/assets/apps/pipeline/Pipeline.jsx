@@ -32,23 +32,65 @@ import Mapping from './sections/Mapping'
 import Output from './sections/Output'
 import Settings from './sections/Settings'
 
-import { clearSelection, getPipelineById, selectContract } from './redux'
+import { clearSelection, getPipelineById, selectContract, selectSection } from './redux'
+
+import {
+  PIPELINE_SECTION_INPUT,
+  CONTRACT_SECTION_ENTITY_TYPES,
+  CONTRACT_SECTION_MAPPING,
+  CONTRACT_SECTION_SETTINGS
+} from '../utils/constants'
 
 class Pipeline extends Component {
   constructor (props) {
     super(props)
 
-    const view = props.match.params.view || 'input'
+    const view = props.section || props.match.params.section || PIPELINE_SECTION_INPUT
 
     this.state = {
-      pipelineView: (view === 'settings') ? 'entityTypes' : view,
-      showSettings: (view === 'settings'),
+      view: (view === CONTRACT_SECTION_SETTINGS) ? CONTRACT_SECTION_ENTITY_TYPES : view,
+      showSettings: (view === CONTRACT_SECTION_SETTINGS),
       showOutput: false,
       fullscreen: false
     }
 
     // load current pipeline using location address (router props)
     props.getPipelineById(props.match.params.pid)
+  }
+
+  componentDidUpdate (prevProps, prevState) {
+    if (
+      prevProps.section !== this.props.section ||
+      (prevProps.contract && this.props.contract && prevProps.contract.id !== this.props.contract.id)
+    ) {
+      // update router history
+      this.props.history.push(`/${this.props.pipeline.id}/${this.props.contract.id}/${this.props.section}`)
+    }
+
+    if (prevProps.section !== this.props.section) {
+      // update state
+      if (this.props.section === PIPELINE_SECTION_INPUT) {
+        return this.setState({
+          view: this.props.section,
+          showSettings: false,
+          showOutput: false,
+          fullscreen: false
+        })
+      }
+
+      if (this.props.section === CONTRACT_SECTION_SETTINGS) {
+        return this.setState({
+          view: this.state.view === PIPELINE_SECTION_INPUT ? CONTRACT_SECTION_ENTITY_TYPES : this.state.view,
+          showSettings: true,
+          showOutput: false
+        })
+      }
+
+      return this.setState({
+        view: this.props.section,
+        showSettings: false
+      })
+    }
   }
 
   render () {
@@ -58,7 +100,7 @@ class Pipeline extends Component {
     }
 
     return (
-      <div className={`pipelines-container show-pipeline pipeline--${this.state.pipelineView}`}>
+      <div className={`pipelines-container show-pipeline pipeline--${this.state.view}`}>
         { this.props.error && <ModalError error={this.props.error} /> }
         <NavBar showBreadcrumb>
           <div className='breadcrumb-links'>
@@ -97,7 +139,7 @@ class Pipeline extends Component {
           { this.renderSectionTabs() }
 
           { this.state.showSettings &&
-            <Settings onClose={() => { this.setState({ showSettings: false }) }} />
+            <Settings onClose={() => { this.props.selectSection(this.state.view) }} />
           }
           <div className='pipeline-sections'>
             <div className='pipeline-section__input'><Input /></div>
@@ -124,7 +166,7 @@ class Pipeline extends Component {
 
         <div
           className={`btn-icon settings-button ${this.state.showSettings ? 'active' : ''}`}
-          onClick={() => { this.setState({ showSettings: !this.state.showSettings }) }}>
+          onClick={() => { this.props.selectSection(CONTRACT_SECTION_SETTINGS) }}>
           <i className='fas fa-ellipsis-h' />
         </div>
       </div>
@@ -137,14 +179,9 @@ class Pipeline extends Component {
     const fullscreenDiv = (
       <div
         className='btn-icon fullscreen-toggle'
-        onClick={() => {
-          this.setState({
-            fullscreen: !this.state.fullscreen,
-            showOutput: !this.state.fullscreen && this.state.showOutput
-          })
-        }}>
+        onClick={() => { this.setState({ fullscreen: !this.state.fullscreen }) }}>
         { this.state.fullscreen
-          ? <FormattedMessage id='pipeline.navbar.close' defaultMessage='close' />
+          ? <FormattedMessage id='pipeline.navbar.shrink' defaultMessage='shrink' />
           : <FormattedMessage id='pipeline.navbar.fullscreen' defaultMessage='fullscreen' />
         }
       </div>
@@ -155,7 +192,7 @@ class Pipeline extends Component {
         <div className='pipeline-nav-items'>
           <div
             className='pipeline-nav-item__input'
-            onClick={() => { this.setState({ pipelineView: 'input', showOutput: false, showSettings: false }) }}>
+            onClick={() => { this.props.selectSection(PIPELINE_SECTION_INPUT) }}>
             <div className='badge'>
               <i className='fas fa-file' />
             </div>
@@ -167,7 +204,7 @@ class Pipeline extends Component {
 
           <div
             className='pipeline-nav-item__entityTypes'
-            onClick={() => { this.setState({ pipelineView: 'entityTypes' }) }}>
+            onClick={() => { this.props.selectSection(CONTRACT_SECTION_ENTITY_TYPES) }}>
             <div className='badge'>
               <i className='fas fa-caret-right' />
             </div>
@@ -180,7 +217,7 @@ class Pipeline extends Component {
 
           <div
             className='pipeline-nav-item__mapping'
-            onClick={() => { this.setState({ pipelineView: 'mapping' }) }}>
+            onClick={() => { this.props.selectSection(CONTRACT_SECTION_MAPPING) }}>
             <div className='badge'>
               <i className='fas fa-caret-right' />
             </div>
@@ -193,7 +230,7 @@ class Pipeline extends Component {
 
           <div
             className='pipeline-nav-item__contracts'
-            onClick={() => { this.setState({ pipelineView: 'entityTypes' }) }}>
+            onClick={() => { this.props.selectSection(CONTRACT_SECTION_ENTITY_TYPES) }}>
             <div className='badge'>
               <i className='fas fa-caret-right' />
             </div>
@@ -224,6 +261,7 @@ class Pipeline extends Component {
 }
 
 const mapStateToProps = ({ pipelines }) => ({
+  section: pipelines.currentSection,
   pipeline: pipelines.currentPipeline,
   contract: pipelines.currentContract,
   error: pipelines.error
@@ -231,7 +269,8 @@ const mapStateToProps = ({ pipelines }) => ({
 const mapDispatchToProps = {
   clearSelection,
   getPipelineById,
-  selectContract
+  selectContract,
+  selectSection
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Pipeline)
