@@ -18,12 +18,14 @@
  * under the License.
  */
 
-/* global test, expect */
-import * as constants from './constants.jsx'
+/* global describe, it, expect */
 
-test('constants', () => {
-  expect(constants.MAX_PAGE_SIZE).toBe(5000)
-  expect(constants.PROJECT_NAME).toBeDefined()
-  expect(constants.MASKING_ANNOTATION).toBe('aetherDataClassification')
-  expect(constants.MASKING_PUBLIC).toBe('public')
+import * as constants from './constants'
+
+describe('constants', () => {
+  it('basic constants are defined', () => {
+    expect(constants.MAX_PAGE_SIZE).toEqual(5000)
+    expect(constants.MASKING_ANNOTATION).toEqual('aetherDataClassification')
+    expect(constants.MASKING_PUBLIC).toEqual('public')
+  })
 })

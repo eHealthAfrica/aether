@@ -57,26 +57,32 @@
       padding: .2rem 0;
       list-style: none;
       font-size: $font-size-s;
-    }
 
-    .error {
-      li {
+      &.error {
         color: $red;
 
         &::before {
-          content: '\f06a ';
+          content: '\f06a '; // fa-exclamation-circle
           font: 1rem $icon-font;
           margin-right: .3rem;
         }
       }
-    }
 
-    .success {
-      li {
+      &.warning {
+        color: $orange;
+
+        &::before {
+          content: '\f071 '; // fa-exclamation-triangle
+          font: 1rem $icon-font;
+          margin-right: .3rem;
+        }
+      }
+
+      &.success {
         color: $green;
 
         &::before {
-          content: '\f058 ';
+          content: '\f058 '; // fa-check-circle
           font: 1rem $icon-font;
           margin-right: .3rem;
         }

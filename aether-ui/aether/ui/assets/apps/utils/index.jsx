@@ -18,8 +18,6 @@
  * under the License.
  */
 
-import avro from 'avsc'
-
 /**
  * Clones object.
  *
@@ -83,6 +81,36 @@ export const deepEqual = (a, b, ignoreNull = false) => {
 }
 
 /**
+ * Indicates if the object is blank.
+ *
+ * Options:
+ *    - "null"
+ *    - "undefined"
+ *    - blank strings
+ *    - empty arrays
+ *    - empty objects
+ *    - "false" is not blank.
+ *
+ * @param {*} value -- the object
+ */
+export const isEmpty = (value) => (
+  value === null ||
+  value === undefined ||
+  JSON.stringify(value) === '{}' ||
+  value.toString().trim() === ''
+)
+
+/**
+ * Replaces the given object in the list, identified by the `id`
+ *
+ * @param {Array}   list
+ * @param {Object}  obj
+ */
+export const replaceItemInList = (list, obj) => (
+  list.map(item => item.id === obj.id ? obj : item)
+)
+
+/**
  * Takes the logged in user, id (int) and name, from the DOM element
  */
 export const getLoggedInUser = () => {
@@ -90,69 +118,5 @@ export const getLoggedInUser = () => {
   return {
     id: parseInt(loggedInUserElement ? loggedInUserElement.getAttribute('data-user-id') : null, 10),
     name: loggedInUserElement ? loggedInUserElement.getAttribute('data-user-name') : ''
-  }
-}
-
-/**
- * Traverse object `obj` and apply function `f` to every node.
- */
-export const traverseObject = (f, obj) => {
-  f(obj)
-  for (var k in obj) {
-    if (typeof obj[k] === 'object' && obj.hasOwnProperty(k)) {
-      traverseObject(f, obj[k])
-    } else {
-      f(obj[k])
-    }
-  }
-}
-
-/* This function is applied to all named types in a derived avro record.
- * Background: when `avsc` derives avro schemas from sample data, all
- * records, enums and fixed types will be anonymous.
- * To ensure compatibility with other avro implementations, we need to
- * generate a name for each such type.
- *
- * See: https://github.com/mtth/avsc/issues/108#issuecomment-302436388
- */
-export const generateSchemaName = (prefix) => {
-  let index = 0
-  return (schema) => {
-    switch (schema.type) {
-      case 'enum':
-      case 'fixed':
-      case 'record':
-        schema.name = `${prefix}_${index++}`
-        break
-      default:
-    }
-  }
-}
-
-export const generateSchema = (obj) => {
-  const schema = avro.Type.forValue(obj).schema()
-  const nameGen = generateSchemaName('Auto')
-  traverseObject(nameGen, schema)
-  return schema
-}
-
-export const generateNewContract = (pipeline, newContracts = []) => {
-  let existingName = null
-  let existingNewName = null
-  let count = 0
-  let newContractName = ''
-  do {
-    newContractName = `Contract_${count}`
-    existingName = pipeline.contracts.filter(x => x.name === newContractName)
-    existingNewName = newContracts.filter(x => x.name === newContractName)
-    count++
-  } while (existingName.length || existingNewName.length)
-
-  return {
-    name: newContractName,
-    entity_types: [],
-    mapping: [],
-    output: {},
-    mapping_errors: []
   }
 }

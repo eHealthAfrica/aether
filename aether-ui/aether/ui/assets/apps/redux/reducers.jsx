@@ -21,9 +21,9 @@
 import { combineReducers } from 'redux'
 
 import pipelines from '../pipeline/redux'
-import constants from '../utils/constants'
+import settings from './settings'
 
 export default combineReducers({
   pipelines,
-  constants
+  settings
 })
