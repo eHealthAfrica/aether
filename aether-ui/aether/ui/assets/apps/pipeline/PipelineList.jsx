@@ -44,7 +44,7 @@ class PipelineList extends Component {
     // - a new contract is added
     // - a contract is selected
     if (nextProps.pid) {
-      this.props.history.push(`/${nextProps.pid}/${nextProps.view}/${nextProps.cid}`)
+      this.props.history.push(`/${nextProps.pid}/${nextProps.cid}/${nextProps.section}`)
     }
   }
 
@@ -76,10 +76,10 @@ class PipelineList extends Component {
 }
 
 const mapStateToProps = ({ pipelines }) => ({
-  list: pipelines.pipelineList,
+  list: pipelines.pipelineList || [],
   error: pipelines.error,
 
-  view: pipelines.currentView,
+  section: pipelines.currentSection,
   pid: (pipelines.currentPipeline || {}).id,
   cid: (pipelines.currentContract || {}).id
 })

@@ -357,8 +357,7 @@ div[class^='pipeline-section__'],
 .pipeline--entityTypes .fullscreen {
 
   div.pipeline-nav-item__input,
-  div.pipeline-nav-item__mapping,
-  div.pipeline-nav-item__output {
+  div.pipeline-nav-item__mapping {
     width: 0;
   }
 
@@ -409,8 +408,7 @@ div[class^='pipeline-section__'],
 .pipeline--mapping .fullscreen {
 
   div.pipeline-nav-item__input,
-  div.pipeline-nav-item__entityTypes,
-  div.pipeline-nav-item__output {
+  div.pipeline-nav-item__entityTypes {
     width: 0;
   }
 
