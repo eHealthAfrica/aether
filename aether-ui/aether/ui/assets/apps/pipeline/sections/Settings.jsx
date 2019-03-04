@@ -56,7 +56,7 @@ export class IdentityMapping extends Component {
           </p>
           <button
             data-qa='contract.identity.button.apply'
-            className='btn btn-w'
+            className='btn btn-d'
             onClick={() => { this.setState({ showModal: true }) }}
             disabled={this.props.contract.is_read_only}
           >
@@ -181,26 +181,6 @@ class Settings extends Component {
                   disabled={contract.is_read_only}
                 />
               </div>
-
-              { !contract.is_read_only &&
-                <div className='col-auto'>
-                  <button
-                    className='btn btn-d btn-primary btn-big'
-                    onClick={() => {
-                      this.props.updateContract({
-                        ...contract,
-                        name: this.state.contractName
-                      })
-                    }}>
-                    <span className='details-title'>
-                      <FormattedMessage
-                        id='settings.contract.save'
-                        defaultMessage='Save'
-                      />
-                    </span>
-                  </button>
-                </div>
-              }
             </div>
           </div>
 
@@ -230,17 +210,24 @@ class Settings extends Component {
             }
           </div>
 
-          <button
-            onClick={() => this.props.onClose()}
-            type='button'
-            className='btn btn-d btn-big'>
-            <span className='details-title'>
-              <FormattedMessage
-                id='settings.button.close'
-                defaultMessage='Close'
-              />
-            </span>
-          </button>
+          { !contract.is_read_only &&
+            <button
+              className='btn btn-d btn-primary btn-big'
+              onClick={() => {
+                this.props.updateContract({
+                  ...contract,
+                  name: this.state.contractName
+                })
+                this.props.onClose()
+              }}>
+              <span className='details-title'>
+                <FormattedMessage
+                  id='settings.contract.save'
+                  defaultMessage='Save'
+                />
+              </span>
+            </button>
+          }
         </div>
       </div>
     )
