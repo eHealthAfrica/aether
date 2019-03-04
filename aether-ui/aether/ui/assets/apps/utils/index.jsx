@@ -45,7 +45,11 @@ export const generateGUID = () => {
  * @param {bool}   ignoreNull -- ignore null values
  */
 export const deepEqual = (a, b, ignoreNull = false) => {
-  if (typeof a !== 'object' || isEmpty(a) || isEmpty(b)) {
+  if (typeof a !== typeof b) {
+    return false
+  }
+
+  if (isEmpty(a) || isEmpty(b) || (!Array.isArray(a) && typeof a !== 'object')) {
     return a === b
   }
 
