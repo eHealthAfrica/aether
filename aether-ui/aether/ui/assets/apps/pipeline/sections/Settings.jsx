@@ -169,33 +169,39 @@ class Settings extends Component {
                 defaultMessage='Contract name'
               />
             </label>
-            <input
-              type='text'
-              required
-              name='name'
-              className='input-d contract-name'
-              value={this.state.contractName}
-              onChange={(e) => { this.setState({ contractName: e.target.value }) }}
-              disabled={contract.is_read_only}
-            />
+            <div className='row'>
+              <div className='col'>
+                <input
+                  type='text'
+                  required
+                  name='name'
+                  className='input-d contract-name'
+                  value={this.state.contractName}
+                  onChange={(e) => { this.setState({ contractName: e.target.value }) }}
+                  disabled={contract.is_read_only}
+                />
+              </div>
 
-            { !contract.is_read_only &&
-              <button
-                className='btn btn-d btn-primary btn-big ml-4'
-                onClick={() => {
-                  this.props.updateContract({
-                    ...contract,
-                    name: this.state.contractName
-                  })
-                }}>
-                <span className='details-title'>
-                  <FormattedMessage
-                    id='settings.contract.save'
-                    defaultMessage='Save'
-                  />
-                </span>
-              </button>
-            }
+              { !contract.is_read_only &&
+                <div className='col-auto'>
+                  <button
+                    className='btn btn-d btn-primary btn-big'
+                    onClick={() => {
+                      this.props.updateContract({
+                        ...contract,
+                        name: this.state.contractName
+                      })
+                    }}>
+                    <span className='details-title'>
+                      <FormattedMessage
+                        id='settings.contract.save'
+                        defaultMessage='Save'
+                      />
+                    </span>
+                  </button>
+                </div>
+              }
+            </div>
           </div>
 
           { showIdentityOption && <IdentityMapping {...this.props} /> }
