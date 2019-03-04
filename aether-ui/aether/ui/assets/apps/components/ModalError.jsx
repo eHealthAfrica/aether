@@ -32,10 +32,12 @@ export default class ModalError extends Component {
     }
   }
 
-  componentWillReceiveProps (nextProps) {
-    this.setState({
-      showError: nextProps.error && nextProps.error.message
-    })
+  componentDidUpdate (prevProps) {
+    if (prevProps.error !== this.props.error) {
+      this.setState({
+        showError: this.props.error && this.props.error.message
+      })
+    }
   }
 
   render () {

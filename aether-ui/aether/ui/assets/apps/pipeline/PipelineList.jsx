@@ -37,14 +37,14 @@ class PipelineList extends Component {
     props.getPipelines()
   }
 
-  componentWillReceiveProps (nextProps) {
+  componentDidUpdate (prevProps) {
     // this happens after:
     // - a new pipeline is added
     // - a pipeline is selected
     // - a new contract is added
     // - a contract is selected
-    if (nextProps.pid) {
-      this.props.history.push(`/${nextProps.pid}/${nextProps.cid}/${nextProps.section}`)
+    if (this.props.pid && prevProps.pid !== this.props.pid) {
+      this.props.history.push(`/${this.props.pid}/${this.props.cid}/${this.props.section}`)
     }
   }
 

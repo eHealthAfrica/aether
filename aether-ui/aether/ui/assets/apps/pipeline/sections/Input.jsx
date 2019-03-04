@@ -23,7 +23,7 @@ import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
 import { connect } from 'react-redux'
 
 import { AvroSchemaViewer } from '../../components'
-import { deepEqual, generateGUID } from '../../utils'
+import { deepEqual, generateGUID, objectToString } from '../../utils'
 import { generateSchema, parseSchema } from '../../utils/avro-utils'
 
 import { updatePipeline } from '../redux'
@@ -61,20 +61,21 @@ class SchemaInput extends Component {
     super(props)
 
     this.state = {
-      inputSchema: this.parseProps(props),
+      inputSchema: objectToString(props.pipeline.schema),
       view: SCHEMA_VIEW,
       error: null,
       errorHead: null
     }
   }
 
-  componentWillReceiveProps (nextProps) {
-    this.setState({ inputSchema: this.parseProps(nextProps) })
-  }
-
-  parseProps (props) {
-    const { schema } = props.pipeline
-    return Object.keys(schema).length ? JSON.stringify(schema, 0, 2) : ''
+  componentDidUpdate (prevProps) {
+    if (!deepEqual(prevProps.pipeline, this.props.pipeline)) {
+      this.setState({
+        inputSchema: objectToString(this.props.pipeline.schema),
+        error: null,
+        errorHead: null
+      })
+    }
   }
 
   onSchemaTextChanged (event) {
@@ -174,21 +175,18 @@ class DataInput extends Component {
   constructor (props) {
     super(props)
     this.state = {
-      inputData: this.parseProps(props),
+      inputData: objectToString(props.pipeline.input),
       error: null
     }
   }
 
-  componentWillReceiveProps (nextProps) {
-    this.setState({
-      inputData: this.parseProps(nextProps),
-      error: null
-    })
-  }
-
-  parseProps (props) {
-    const { input } = props.pipeline
-    return Object.keys(input).length ? JSON.stringify(input, 0, 2) : ''
+  componentDidUpdate (prevProps) {
+    if (!deepEqual(prevProps.pipeline, this.props.pipeline)) {
+      this.setState({
+        inputData: objectToString(this.props.pipeline.input),
+        error: null
+      })
+    }
   }
 
   onDataChanged (event) {
