@@ -28,6 +28,7 @@ APP_VERSION=`cat ./VERSION`
 
 # create the distribution
 $DC_FILE build \
+    --no-cache --force-rm --pull \
     --build-arg GIT_REVISION=$APP_REVISION \
     --build-arg VERSION=$APP_VERSION \
     common
