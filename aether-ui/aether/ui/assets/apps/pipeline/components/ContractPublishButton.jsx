@@ -27,6 +27,7 @@ import moment from 'moment'
 import Modal from '../../components/Modal'
 
 import { publishPreflightContract, publishContract } from '../redux'
+import { objectToString } from '../../utils'
 import { DATE_FORMAT } from '../../utils/constants'
 
 class ContractPublishButton extends Component {
@@ -110,7 +111,7 @@ class ContractPublishButton extends Component {
           id='contract.publish.status.error'
           defaultMessage='An unexpected error produced while publishing'
         />,
-        (publishError.detail || JSON.stringify(publishError))
+        (publishError.detail || objectToString(publishError))
       ]
     }
 

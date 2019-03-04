@@ -45,9 +45,10 @@ export const generateGUID = () => {
  * @param {bool}   ignoreNull -- ignore null values
  */
 export const deepEqual = (a, b, ignoreNull = false) => {
-  if (typeof a !== 'object') {
+  if (typeof a !== 'object' || isEmpty(a) || isEmpty(b)) {
     return a === b
   }
+
   let ka = Object.keys(a)
   let kb = Object.keys(b)
   let key, i
@@ -56,19 +57,23 @@ export const deepEqual = (a, b, ignoreNull = false) => {
     ka = ka.filter((x) => a[x] != null)
     kb = kb.filter((x) => b[x] != null)
   }
+
   // having the same number of owned properties (keys incorporates hasOwnProperty)
   if (ka.length !== kb.length) {
     return false
   }
+
   // the same set of keys (although not necessarily the same order),
   ka.sort()
   kb.sort()
+
   // cheap key test
   for (i = ka.length - 1; i >= 0; i--) {
     if (ka[i] !== kb[i]) {
       return false
     }
   }
+
   // equivalent values for every corresponding key, and
   // possibly expensive deep test
   for (i = ka.length - 1; i >= 0; i--) {
@@ -77,6 +82,7 @@ export const deepEqual = (a, b, ignoreNull = false) => {
       return false
     }
   }
+
   return true
 }
 
@@ -120,3 +126,10 @@ export const getLoggedInUser = () => {
     name: loggedInUserElement ? loggedInUserElement.getAttribute('data-user-name') : ''
   }
 }
+
+/**
+ * Stringifies the object.
+ *
+ * @param {*} x -- the object
+ */
+export const objectToString = (obj) => !isEmpty(obj) ? JSON.stringify(obj, 0, 2) : ''

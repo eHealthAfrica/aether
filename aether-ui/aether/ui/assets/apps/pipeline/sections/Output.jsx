@@ -22,6 +22,8 @@ import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 import { connect } from 'react-redux'
 
+import { objectToString } from '../../utils'
+
 class Output extends Component {
   render () {
     const { errors, output } = this.props
@@ -53,7 +55,7 @@ class Output extends Component {
           </h3>
 
           <code>
-            { JSON.stringify(output, 0, 2) }
+            { objectToString(output) }
           </code>
         </div>
       </div>

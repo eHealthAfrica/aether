@@ -58,7 +58,7 @@ class Pipeline extends Component {
     props.getPipelineById(props.match.params.pid)
   }
 
-  componentDidUpdate (prevProps, prevState) {
+  componentDidUpdate (prevProps) {
     if (
       prevProps.section !== this.props.section ||
       (prevProps.contract && this.props.contract && prevProps.contract.id !== this.props.contract.id)
