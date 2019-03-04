@@ -29,3 +29,5 @@ export const PROJECTS_URL = '/api/projects/'
 export const PIPELINES_URL = '/api/pipelines/'
 export const CONTRACTS_URL = '/api/contracts/'
 export const KERNEL_URL = '/api/kernel-url/'
+
+export const DATE_FORMAT = 'MMMM DD, YYYY HH:mm'

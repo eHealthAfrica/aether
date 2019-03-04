@@ -27,6 +27,7 @@ import moment from 'moment'
 import Modal from '../../components/Modal'
 
 import { publishPreflightContract, publishContract } from '../redux'
+import { DATE_FORMAT } from '../../utils/constants'
 
 class ContractPublishButton extends Component {
   constructor (props) {
@@ -50,7 +51,7 @@ class ContractPublishButton extends Component {
               <FormattedMessage
                 id='contract.publish-status.published'
                 defaultMessage='Published on'
-              /> { moment(contract.published_on).format('MMMM DD, YYYY HH:mm') }
+              /> { moment(contract.published_on).format(DATE_FORMAT) }
             </React.Fragment>
           }
 
@@ -136,12 +137,18 @@ class ContractPublishButton extends Component {
           className='btn btn-w'
           onClick={(event) => {
             event.stopPropagation()
-            this.setState({ showModal: null })
+            this.setState({ showModal: false })
           }}>
-          <FormattedMessage
-            id='contract.publish.button.cancel'
-            defaultMessage='Cancel'
-          />
+          { publishSuccess
+            ? <FormattedMessage
+              id='contract.publish.button.close'
+              defaultMessage='Close'
+            />
+            : <FormattedMessage
+              id='contract.publish.button.cancel'
+              defaultMessage='Cancel'
+            />
+          }
         </button>
 
         { /* show publish button only after publish preflight and without "errors" */ }
