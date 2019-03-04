@@ -84,7 +84,7 @@ class PipelineNew extends Component {
             className='text-input'
             placeholder={formatMessage(MESSAGES.namePlaceholder)}
             value={this.state.pipelineName}
-            onChange={event => this.setState({ pipelineName: event.target.value })}
+            onChange={event => { this.setState({ pipelineName: event.target.value }) }}
           />
           <label className='form-label'>
             { formatMessage(MESSAGES.namePlaceholder) }
@@ -94,7 +94,7 @@ class PipelineNew extends Component {
         <button
           type='button'
           className='btn btn-c btn-big btn-transparent'
-          onClick={() => this.setState({ view: 'button', pipelineName: '' })}>
+          onClick={() => { this.setState({ view: 'button', pipelineName: '' }) }}>
           <span className='details-title'>
             <FormattedMessage
               id='pipeline.new.button.cancel'

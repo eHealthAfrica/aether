@@ -57,7 +57,7 @@ export default class ModalError extends Component {
             <FormattedMessage
               id='modal.error.header'
               defaultMessage='Error code'
-            /> {this.props.error.status}
+            /> { this.props.error.status }
           </React.Fragment>
         }
         buttons={
