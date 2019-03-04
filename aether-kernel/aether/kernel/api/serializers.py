@@ -293,6 +293,11 @@ class ProjectSchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='mapping-list',
     )
 
+    schema_definition = serializers.JSONField(
+        read_only=True,
+        source='schema.definition',
+    )
+
     project = MtPrimaryKeyRelatedField(
         queryset=models.Project.objects.all(),
     )

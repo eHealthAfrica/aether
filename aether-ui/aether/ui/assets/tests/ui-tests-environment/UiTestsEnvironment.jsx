@@ -43,6 +43,9 @@ class UiTestsEnvironment extends JSDOMEnvironment {
     // https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Array/from
     this.global.range = (start, end) => Array.from({length: end - start}, (v, i) => i + start)
 
+    // Locate a DOM element by its data-qa attribute
+    this.global.findByDataQa = (component, dataQa) => component.find(`[data-qa="${dataQa}"]`)
+
     // uses "node-fetch" in tests, "whatwg-fetch" only works in browsers
     // check that the url is not an relative url, otherwise include it
     // Fixes: [TypeError: Only absolute URLs are supported]

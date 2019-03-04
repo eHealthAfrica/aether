@@ -54,9 +54,9 @@ describe('test environment', () => {
     })
 
     it('should include the testURL in the call with relative URLs', () => {
-      nock('http://localhost').get('/foo').reply(200, {ok: true})
+      nock('http://localhost').get('/foo').reply(200, { ok: true })
 
-      return global.window.fetch('/foo', {method: 'GET'})
+      return global.window.fetch('/foo', { method: 'GET' })
         .then(body => {
           expect(body.ok).toBeTruthy()
         })
@@ -66,9 +66,9 @@ describe('test environment', () => {
     })
 
     it('should not include the testURL in the call if not needed', () => {
-      nock('http://sample.com').get('/foo').reply(200, {ok: true})
+      nock('http://sample.com').get('/foo').reply(200, { ok: true })
 
-      return global.window.fetch('http://sample.com/foo', {method: 'GET'})
+      return global.window.fetch('http://sample.com/foo', { method: 'GET' })
         .then(body => {
           expect(body.ok).toBeTruthy()
         })

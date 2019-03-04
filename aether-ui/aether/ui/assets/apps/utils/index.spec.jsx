@@ -24,10 +24,8 @@ import {
   clone,
   deepEqual,
   generateGUID,
-  generateSchema,
-  generateSchemaName,
   getLoggedInUser,
-  traverseObject
+  isEmpty
 } from './index'
 
 describe('utils', () => {
@@ -95,100 +93,26 @@ describe('utils', () => {
 
   describe('getLoggedInUserId', () => {
     it('should take logged in user from document', () => {
+      expect(getLoggedInUser()).toEqual({ id: NaN, name: '' })
+
       const element = document.createElement('div')
       element.id = 'logged-in-user-info'
       element.setAttribute('data-user-id', '1')
       element.setAttribute('data-user-name', 'user')
       document.body.appendChild(element)
+
       expect(getLoggedInUser()).toEqual({ id: 1, name: 'user' })
     })
   })
 
-  describe('traverseObject', () => {
-    it('traverses object and applies a function to each node', () => {
-      let result = []
-      const f = (node) => { result.push(node) }
-      const input = { a: [1, { b: [2, 3] }] }
-      traverseObject(f, input)
-      const expected = [
-        { 'a': [1, { 'b': [2, 3] }] },
-        [1, { 'b': [2, 3] }],
-        1,
-        { 'b': [2, 3] },
-        [2, 3],
-        2,
-        3
-      ]
-      expect(expected).toEqual(result)
-    })
-  })
-
-  describe('generateSchemaName', () => {
-    it('should generate valid schema names', () => {
-      const prefix = 'TestPrefix'
-      const generator = generateSchemaName(prefix)
-      const schemas = [
-        [
-          { type: 'enum' },
-          { type: 'enum', name: `${prefix}_0` }
-        ],
-        [
-          { type: 'fixed' },
-          { type: 'fixed', name: `${prefix}_1` }
-        ],
-        [
-          { type: 'record' },
-          { type: 'record', name: `${prefix}_2` }
-        ],
-        [
-          { type: 'int' },
-          { type: 'int' }
-        ]
-      ]
-      schemas.map(([input, output]) => {
-        generator(input)
-        expect(input).toEqual(output)
-      })
-    })
-  })
-
-  describe('generateSchema', () => {
-    it('should generate a valid avro schema', () => {
-      const input = { a: [{ b: 1 }, { c: 1 }] }
-      const expected = {
-        type: 'record',
-        fields: [
-          {
-            name: 'a',
-            type: {
-              type: 'array',
-              items: {
-                type: 'record',
-                fields: [
-                  {
-                    name: 'b',
-                    type: [
-                      'null',
-                      'int'
-                    ]
-                  },
-                  {
-                    name: 'c',
-                    type: [
-                      'null',
-                      'int'
-                    ]
-                  }
-                ],
-                name: 'Auto_1'
-              }
-            }
-          }
-        ],
-        name: 'Auto_0'
-      }
-      const result = generateSchema(input)
-      expect(expected).toEqual(result)
+  describe('isEmpty', () => {
+    it('should detect null, undefined empty arrays, objects, strings but not "false" booleans', () => {
+      expect(isEmpty(null)).toBeTruthy()
+      expect(isEmpty(undefined)).toBeTruthy()
+      expect(isEmpty('        ')).toBeTruthy()
+      expect(isEmpty({})).toBeTruthy()
+      expect(isEmpty([])).toBeTruthy()
+      expect(isEmpty(false)).toBeFalsy()
     })
   })
 })

@@ -6,34 +6,33 @@ import django.contrib.postgres.fields.jsonb
 from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
-import django_prometheus.models
 import model_utils.fields
 import uuid
 
 
 def migrate_current_pipelines_to_contracts(apps, schema_editor):
-        Pipeline = apps.get_model('ui', 'Pipeline')
-        Contract = apps.get_model('ui', 'Contract')
+    Pipeline = apps.get_model('ui', 'Pipeline')
+    Contract = apps.get_model('ui', 'Contract')
 
-        for pipeline in Pipeline.objects.all():
-            if 'schema' in pipeline.kernel_refs:
-                pipeline.kernel_refs['schemas'] = pipeline.kernel_refs['schema']
-            if 'mapping' in pipeline.kernel_refs:
-                pipeline.kernel_refs['mappings'] = pipeline.kernel_refs['mapping']
-            if 'projectschema' in pipeline.kernel_refs:
-                pipeline.kernel_refs['projectschemas'] = pipeline.kernel_refs['projectschema']
-            Contract.objects.create(
-                pk=pipeline.pk,
-                name=pipeline.name,
-                pipeline=pipeline,
-                entity_types=pipeline.entity_types,
-                mapping=pipeline.mapping,
-                mapping_errors=pipeline.mapping_errors,
-                output=pipeline.output,
-                kernel_refs=pipeline.kernel_refs,
-            )
-            pipeline.mappingset = pipeline.kernel_refs.get('mapping') if pipeline.kernel_refs else None
-            pipeline.save()
+    for pipeline in Pipeline.objects.all():
+        if 'schema' in pipeline.kernel_refs:
+            pipeline.kernel_refs['schemas'] = pipeline.kernel_refs['schema']
+        if 'mapping' in pipeline.kernel_refs:
+            pipeline.kernel_refs['mappings'] = pipeline.kernel_refs['mapping']
+        if 'projectschema' in pipeline.kernel_refs:
+            pipeline.kernel_refs['projectschemas'] = pipeline.kernel_refs['projectschema']
+        Contract.objects.create(
+            pk=pipeline.pk,
+            name=pipeline.name,
+            pipeline=pipeline,
+            entity_types=pipeline.entity_types,
+            mapping=pipeline.mapping,
+            mapping_errors=pipeline.mapping_errors,
+            output=pipeline.output,
+            kernel_refs=pipeline.kernel_refs,
+        )
+        pipeline.mappingset = pipeline.kernel_refs.get('mapping') if pipeline.kernel_refs else None
+        pipeline.save()
 
 
 class Migration(migrations.Migration):
@@ -74,7 +73,6 @@ class Migration(migrations.Migration):
             name='pipeline',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='contracts', to='ui.Pipeline'),
         ),
-
         migrations.RunPython(
             code=migrate_current_pipelines_to_contracts,
             reverse_code=migrations.RunPython.noop,
@@ -82,7 +80,6 @@ class Migration(migrations.Migration):
             # will be removed (elided) when squashing migrations.
             elidable=True,
         ),
-
         migrations.RemoveField(
             model_name='pipeline',
             name='entity_types',
