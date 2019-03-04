@@ -18,7 +18,31 @@
  * under the License.
  */
 
-module.exports = {
-  /* Locate a DOM element by its data-qa attribute */
-  findByDataQa: (component, dataQa) => component.find(`[data-qa="${dataQa}"]`)
+import { KERNEL_URL } from '../utils/constants'
+
+const types = {
+  GET_KERNEL_URL: 'get_kernel_url',
+  GET_KERNEL_URL_ERROR: 'get_kernel_url_error'
 }
+
+const INITIAL_CONST = {
+  kernelUrl: ''
+}
+
+export const getKernelURL = () => ({
+  types: ['', types.GET_KERNEL_URL, ''],
+  promise: client => client.get(KERNEL_URL)
+})
+
+const reducer = (state = INITIAL_CONST, action) => {
+  switch (action.type) {
+    case types.GET_KERNEL_URL: {
+      return { ...state, kernelUrl: action.payload }
+    }
+
+    default:
+      return state
+  }
+}
+
+export default reducer

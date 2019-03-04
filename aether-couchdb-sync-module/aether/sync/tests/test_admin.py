@@ -74,10 +74,10 @@ class AdminTest(TestCase):
         Schema.objects.create(name='Testing', project=Project.objects.create(name='Testing'))
 
         with mock.patch('aether.sync.admin.propagate_kernel_artefacts') as mock_propagate_once:
-            app_admin.propagate(self.request, Project.objects.all())
+            app_admin.propagate(self.request, Schema.objects.all())
             mock_propagate_once.assert_called_once()
 
         with mock.patch('aether.sync.admin.propagate_kernel_artefacts',
                         side_effect=KernelPropagationError(':(')) as mock_propagate_err:
-            app_admin.propagate(self.request, Project.objects.all())
+            app_admin.propagate(self.request, Schema.objects.all())
             mock_propagate_err.assert_called_once()

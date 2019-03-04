@@ -29,11 +29,11 @@ import Pipeline from './Pipeline'
 class PipelineApp extends Component {
   render () {
     return (
-      <Route render={props => (
+      <Route render={() => (
         <React.Fragment>
           <Switch>
             <Route exact path='/' component={PipelineList} />
-            <Route path='/:pid/:cid' component={Pipeline} />
+            <Route path='/:pid/:view/:cid' component={Pipeline} />
             <Route path='/:pid' component={Pipeline} />
           </Switch>
         </React.Fragment>

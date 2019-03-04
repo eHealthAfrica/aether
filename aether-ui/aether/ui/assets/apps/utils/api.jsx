@@ -18,17 +18,15 @@
  * under the License.
  */
 
-/* global jQuery */
-import 'whatwg-fetch'
 import { NotFoundError, HTTPError } from './errors'
 
 const methods = ['get', 'post', 'put', 'patch', 'del']
 
 export default class ApiClient {
-  constructor (req) {
+  constructor () {
     methods.forEach(method => {
       this[method] = (path, headers, { params, data } = {}) => {
-        const csrfToken = jQuery('[name=csrfmiddlewaretoken]').val()
+        const csrfToken = (document.querySelector('[name=csrfmiddlewaretoken]') || {}).value
         const appendParams = (path, params) => {
           if (!params || Object.keys(params).length === 0) {
             return path
@@ -58,29 +56,43 @@ export default class ApiClient {
           body: JSON.stringify(data)
         }
         path = appendParams(path, params)
+
         return new Promise((resolve, reject) => {
           window.fetch(path, options)
-            .then(res => {
-              if (res.status >= 200 && res.status < 400) {
-                res.json().then(res => resolve(res)).catch(err => reject(err)) // Should be extended to cater for other content-types other than json
-              } else {
-                if (res.status === 404) {
-                  reject(new NotFoundError('Resource Not Found'))
-                } else {
-                  try {
-                    res.json().then(err => {
-                      const message = err.name && err.name.length && err.name[0]
-                      reject(new HTTPError(message, err, res.status))
-                    })
-                  } catch (err) {
-                    reject(err)
-                  }
+            .then(response => {
+              if (response.ok) {
+                // `DEL` method returns a 204 status code without response content
+                if (response.status === 204) {
+                  return resolve() // NO-CONTENT response
                 }
+
+                return response.json()
+                  .then(content => { resolve(content) })
+                  // Should be extended to cater for content-types other than json
+                  .catch(error => { reject(error) })
+              } else {
+                const defaultError = new HTTPError(response.statusText, response, response.status)
+
+                if (response.status === 403) { // Forbidden
+                  // redirect to root -> login page
+                  return window.location.assign(window.location.origin)
+                }
+
+                if (response.status === 404) {
+                  return reject(new NotFoundError('Resource Not Found'))
+                }
+
+                if (!response.body) {
+                  return reject(defaultError)
+                }
+
+                response.json()
+                  .then(error => { reject(new HTTPError(error.detail, error, response.status)) })
+                  // Should be extended to cater for content-types other than json
+                  .catch(() => { reject(defaultError) })
               }
             })
-            .catch(err => {
-              reject(err)
-            })
+            .catch(err => { reject(err) })
         })
       }
     })

@@ -20,17 +20,23 @@
 
 import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
+
 import { generateGUID } from '../utils'
 import { MASKING_ANNOTATION, MASKING_PUBLIC } from '../utils/constants'
 
-const PropertyList = props => {
-  const isMasked = field => (Boolean(field && field[MASKING_ANNOTATION] &&
-    field[MASKING_ANNOTATION].toLowerCase() !== MASKING_PUBLIC))
+const PropertyList = (props) => {
+  const isMasked = (field) => (
+    Boolean(
+      field &&
+      field[MASKING_ANNOTATION] &&
+      field[MASKING_ANNOTATION].toLowerCase() !== MASKING_PUBLIC
+    )
+  )
 
   if (!props.fields || !props.fields.length) {
     return (
       <FormattedMessage
-        id='entityTypes.entity.empty.properties.message'
+        id='viewer.entity.type.no-fields'
         defaultMessage='Entity has no properties'
       />
     )
@@ -54,6 +60,7 @@ const PropertyList = props => {
     } else if (Array.isArray(field.type)) {
       let typeStringOptions = null
       let isNullable = false
+
       field.type.forEach(typeItem => {
         if (!typeStringOptions) {
           typeStringOptions = []
@@ -68,6 +75,7 @@ const PropertyList = props => {
           typeStringOptions.push(typeItem.type)
         }
       })
+
       return PropertyList({
         highlight: props.highlight,
         fields: [{
@@ -81,6 +89,7 @@ const PropertyList = props => {
       })
     } else {
       let fieldType = ''
+
       if (typeof field.type === 'object') {
         fieldType = field.type.symbols ? `{${field.type.symbols.toString()}}` : field.type.type
       } else {
@@ -90,30 +99,40 @@ const PropertyList = props => {
       if (props.parent) {
         const jsonPath = `${props.name}.${props.parent}.${field.name}`
         const className = props.highlight.indexOf(jsonPath) > -1 ? 'entityType-mapped' : ''
+
         return (
           <li
             key={`${props.parent}.${field.name}`}
             className={className}
-            id={`entityType_${jsonPath}`}>
-            {isMasked(field) && <i className='fas fa-lock' />}
-            <span className='name'>{`${props.parent}.${field.name}`}</span>
-            <span className='type'> {fieldType === 'enum' && field.symbols
-              ? `${fieldType}: [${field.symbols.toString()}]` : fieldType}</span>
-            {props.isNullable ? <span className='type'> (nullable)</span> : null}
+            id={`entityType_${jsonPath}`}
+          >
+            { isMasked(field) && <i className='fas fa-lock' /> }
+            <span className='name'>
+              { `${props.parent}.${field.name}` }
+            </span>
+            <span className='type'>
+              { fieldType === 'enum' && field.symbols
+                ? `${fieldType}: [${field.symbols.toString()}]`
+                : fieldType
+              }
+            </span>
+            { props.isNullable && <span className='type'> (nullable)</span> }
           </li>
         )
       } else {
         const jsonPath = `${props.name}.${field.name}`
         const className = props.highlight.indexOf(jsonPath) > -1 ? 'entityType-mapped' : ''
+
         return (
           <li
             key={field.name}
             className={className}
-            id={`entityType_${jsonPath}`}>
-            {isMasked(field) && <i className='fas fa-lock' />}
-            <span className='name'>{field.name}</span>
-            <span className='type'> {fieldType}</span>
-            {props.isNullable ? <span className='type'> (nullable)</span> : null}
+            id={`entityType_${jsonPath}`}
+          >
+            { isMasked(field) && <i className='fas fa-lock' /> }
+            <span className='name'>{ field.name }</span>
+            <span className='type'> { fieldType }</span>
+            { props.isNullable && <span className='type'> (nullable)</span> }
           </li>
         )
       }
@@ -124,7 +143,7 @@ const PropertyList = props => {
 const EntityType = props => {
   return (
     <div className='entity-type'>
-      <h2 className='title'>{props.name}</h2>
+      <h2 className='title'>{ props.name }</h2>
       <ul className='properties'>
         <PropertyList
           highlight={props.highlight}
@@ -137,19 +156,8 @@ const EntityType = props => {
 }
 
 class EntityTypeViewer extends Component {
-  iterateTypes (entityTypes) {
-    if (!entityTypes || !entityTypes.length) {
-      return (
-        <div className='hint'>
-          <FormattedMessage
-            id='entityTypes.entity.invalid.schema'
-            defaultMessage='No Entity Types added to this pipeline yet.'
-          />
-        </div>
-      )
-    }
-
-    return entityTypes.map(entityType => {
+  iterateList (list) {
+    return list.map(entityType => {
       if (entityType.name && entityType.fields) {
         return (
           <EntityType
@@ -163,7 +171,7 @@ class EntityTypeViewer extends Component {
         return (
           <div className='hint' key={generateGUID()}>
             <FormattedMessage
-              id='entityTypes.entity.invalid.message'
+              id='viewer.entity.type.invalid'
               defaultMessage='Invalid entity type'
             />
           </div>
@@ -173,11 +181,11 @@ class EntityTypeViewer extends Component {
   }
 
   render () {
-    if (!this.props.schema) {
+    if (!this.props.schema || !this.props.schema.length) {
       return (
         <div className='hint'>
           <FormattedMessage
-            id='entityTypes.entity.empty.message'
+            id='viewer.entity.types.empty'
             defaultMessage='No entity types added to this pipeline yet.'
           />
         </div>
@@ -186,7 +194,7 @@ class EntityTypeViewer extends Component {
 
     return (
       <div className='entity-types-schema'>
-        { this.iterateTypes(this.props.schema) }
+        { this.iterateList(this.props.schema) }
       </div>
     )
   }

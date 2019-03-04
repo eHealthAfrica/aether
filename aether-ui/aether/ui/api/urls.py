@@ -22,6 +22,7 @@ from rest_framework import routers
 from . import views
 
 router = routers.DefaultRouter()
+router.register('projects', views.ProjectViewSet)
 router.register('pipelines', views.PipelineViewSet)
 router.register('contracts', views.ContractViewSet)
 

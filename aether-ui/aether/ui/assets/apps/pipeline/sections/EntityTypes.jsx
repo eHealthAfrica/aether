@@ -21,16 +21,20 @@
 import React, { Component } from 'react'
 import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
 import { connect } from 'react-redux'
-import avro from 'avsc'
 
 import { EntityTypeViewer } from '../../components'
 import { deepEqual } from '../../utils'
+import { parseSchema } from '../../utils/avro-utils'
 import { updateContract } from '../redux'
 
 const MESSAGES = defineMessages({
   missingIdError: {
     defaultMessage: 'The AVRO schemas MUST have an "id" field with type "string".',
-    id: 'entitytype.missing.id.message'
+    id: 'entity.types.missing-id-field'
+  },
+  entityTypeSchemaPlaceHolder: {
+    defaultMessage: 'Enter your schemas',
+    id: 'entity.types.schema.placeholder'
   }
 })
 
@@ -64,18 +68,23 @@ class EntityTypes extends Component {
 
   notifyChange (event) {
     event.preventDefault()
+    if (this.props.contract.is_read_only) {
+      return
+    }
+
     const { formatMessage } = this.props.intl
 
     try {
       // validate schemas
       const schemas = JSON.parse(this.state.entityTypesSchema)
       schemas.forEach(schema => {
-        avro.parse(schema, { noAnonymousTypes: true, wrapUnions: false })
+        parseSchema(schema)
         // all entity types must have an "id" field with type "string"
         if (!schema.fields.find(field => field.name === 'id' && field.type === 'string')) {
           throw new Error(formatMessage(MESSAGES.missingIdError))
         }
       })
+
       this.props.updateContract({ ...this.props.contract, entity_types: schemas })
     } catch (error) {
       this.setState({ error: error.message })
@@ -92,6 +101,8 @@ class EntityTypes extends Component {
   }
 
   render () {
+    const { formatMessage } = this.props.intl
+
     return (
       <div className='section-body'>
         <div className='section-left'>
@@ -105,7 +116,7 @@ class EntityTypes extends Component {
           <form onSubmit={this.notifyChange.bind(this)}>
             <label className='form-label'>
               <FormattedMessage
-                id='entitytype.empty.message'
+                id='entity.types.empty'
                 defaultMessage='Paste Entity Type definitions'
               />
             </label>
@@ -115,7 +126,7 @@ class EntityTypes extends Component {
                 <div className='hint error-message'>
                   <h4 className='hint-title'>
                     <FormattedMessage
-                      id='entitytype.invalid.message'
+                      id='entity.types.invalid'
                       defaultMessage='You have provided invalid AVRO schemas.'
                     />
                   </h4>
@@ -124,27 +135,25 @@ class EntityTypes extends Component {
               }
             </div>
 
-            <FormattedMessage id='entityTypeSchema.placeholder' defaultMessage='Enter your schemas'>
-              {message => (
-                <textarea
-                  className={`input-d monospace ${this.state.error ? 'error' : ''}`}
-                  value={this.state.entityTypesSchema}
-                  onChange={this.onSchemaTextChanged.bind(this)}
-                  placeholder={message}
-                  rows='10'
-                  disabled={this.props.contract.is_read_only}
-                />
-              )}
-            </FormattedMessage>
+            <textarea
+              className={`input-d monospace ${this.state.error ? 'error' : ''}`}
+              value={this.state.entityTypesSchema}
+              onChange={this.onSchemaTextChanged.bind(this)}
+              placeholder={formatMessage(MESSAGES.entityTypeSchemaPlaceHolder)}
+              rows='10'
+              disabled={this.props.contract.is_read_only}
+            />
 
-            <button type='submit' className='btn btn-d btn-primary mt-3' disabled={!this.hasChanged()}>
-              <span className='details-title'>
-                <FormattedMessage
-                  id='entitytype.button.ok'
-                  defaultMessage='Add to pipeline'
-                />
-              </span>
-            </button>
+            { !this.props.contract.is_read_only &&
+              <button type='submit' className='btn btn-d btn-primary mt-3' disabled={!this.hasChanged()}>
+                <span className='details-title'>
+                  <FormattedMessage
+                    id='entity.types.button.ok'
+                    defaultMessage='Add to pipeline'
+                  />
+                </span>
+              </button>
+            }
           </form>
         </div>
       </div>
@@ -153,7 +162,8 @@ class EntityTypes extends Component {
 }
 
 const mapStateToProps = ({ pipelines }) => ({
-  selectedPipeline: pipelines.selectedPipeline
+  contract: pipelines.currentContract
 })
+const mapDispatchToProps = { updateContract }
 
-export default connect(mapStateToProps, { updateContract })(injectIntl(EntityTypes))
+export default connect(mapStateToProps, mapDispatchToProps)(injectIntl(EntityTypes))

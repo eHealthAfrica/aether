@@ -14,19 +14,31 @@
       {
         "name": "lastName",
         "aetherDataClassification": "Public",
-        "type": ["null", "string"]
+        "type": [
+          "null",
+          "string"
+        ]
       },
       {
         "name": "age",
         "aetherDataClassification": "Restricted",
-        "type": ["int", {"name": "data-type", "type": "string"}]
+        "type": [
+          "int",
+          {
+            "name": "data-type",
+            "type": "string"
+          }
+        ]
       },
       {
         "name": "gender",
         "type": {
           "type": "enum",
           "name": "Gender",
-          "symbols": [ "MALE", "FEMALE" ]
+          "symbols": [
+            "MALE",
+            "FEMALE"
+          ]
         }
       }
     ]
@@ -44,7 +56,14 @@
         "type": {
           "type": "enum",
           "name": "ScreeningType",
-          "symbols": [ "maect", "catt", "pg", "ctcwoo", "ge", "pl" ]
+          "symbols": [
+            "maect",
+            "catt",
+            "pg",
+            "ctcwoo",
+            "ge",
+            "pl"
+          ]
         }
       },
       {
@@ -69,7 +88,10 @@
         "type": {
           "type": "enum",
           "name": "Result",
-          "symbols": [ "positive", "negative" ]
+          "symbols": [
+            "positive",
+            "negative"
+          ]
         }
       }
     ]
