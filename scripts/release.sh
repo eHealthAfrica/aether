@@ -93,7 +93,7 @@ increment_version () {
             v+=.0; done;
     fi
     val=`echo -e "$v" | perl -pe 's/^.*'$rgx'.*$/$2/'`
-    TAG_INCRESED_VERSION=$(echo "$v" | perl -pe s/$rgx.*$'/${1}'`printf %0${#val}s $(($val+1))`/)
+    TAG_INCREASED_VERSION=$(echo "$v" | perl -pe s/$rgx.*$'/${1}'`printf %0${#val}s $(($val+1))`/)
 }
 
 version_compare () {
@@ -157,7 +157,7 @@ function git_branch_commit_and_release() {
         git branch $TRAVIS_BRANCH FETCH_HEAD
         COMMIT_BRANCH=HEAD
         increment_version $BRANCH_OR_TAG_VALUE 3
-        BRANCH_OR_TAG_VALUE=$TAG_INCRESED_VERSION
+        BRANCH_OR_TAG_VALUE=$TAG_INCREASED_VERSION
         echo "Version incremented to ${BRANCH_OR_TAG_VALUE}"
     fi
 
@@ -197,7 +197,7 @@ function git_branch_commit_and_release() {
     fi
 }
 
-TAG_INCRESED_VERSION="0.0.0"
+TAG_INCREASED_VERSION="0.0.0"
 
 # release version depending on TRAVIS_BRANCH/ TRAVIS_TAG
 if [[ $TRAVIS_TAG =~ ^[0-9]+\.[0-9]+[\.0-9]*$ ]]
