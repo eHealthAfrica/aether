@@ -88,7 +88,7 @@ class KernelUtilsTest(CustomTestCase):
         requests.delete(self.SCHEMA_URL_1, headers=self.KERNEL_HEADERS)
         requests.delete(self.SCHEMA_URL_2, headers=self.KERNEL_HEADERS)
 
-    @mock.patch('requests.patch', return_value=MockResponse(status_code=400))
+    @mock.patch('aether.odk.api.kernel_utils.request', return_value=MockResponse(status_code=400))
     @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value=None)
     def test__upsert_kernel_artefacts__no_connection(self, mock_auth, mock_patch):
         with self.assertRaises(KernelPropagationError) as kpe:
@@ -103,7 +103,7 @@ class KernelUtilsTest(CustomTestCase):
         mock_auth.assert_called_once()
         mock_patch.assert_not_called()
 
-    @mock.patch('requests.patch', return_value=MockResponse(status_code=400))
+    @mock.patch('aether.odk.api.kernel_utils.request', return_value=MockResponse(status_code=400))
     @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value={
         'Authorization': 'Token ABCDEFGH'
     })
@@ -122,12 +122,13 @@ class KernelUtilsTest(CustomTestCase):
         self.assertIn(f'"{str(self.project.project_id)}"', str(kpe.exception), kpe)
         mock_auth.assert_called_once()
         mock_patch.assert_called_once_with(
+            method='patch',
             url=f'{self.kernel_url}/projects/{str(self.project.project_id)}/avro-schemas/',
             json={'avro_schemas': []},
             headers={'Authorization': 'Token ABCDEFGH'},
         )
 
-    @mock.patch('requests.patch', return_value=MockResponse(status_code=200))
+    @mock.patch('aether.odk.api.kernel_utils.request', return_value=MockResponse(status_code=200))
     @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value={
         'Authorization': 'Token ABCDEFGH'
     })
@@ -139,6 +140,7 @@ class KernelUtilsTest(CustomTestCase):
 
         mock_auth.assert_called_once()
         mock_patch.assert_called_once_with(
+            method='patch',
             url=f'{self.kernel_url}/projects/{str(self.project.project_id)}/avro-schemas/',
             json={'avro_schemas': []},
             headers={'Authorization': 'Token ABCDEFGH'},

@@ -158,7 +158,7 @@ class MultitenancyTests(CustomTestCase):
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    @mock.patch('requests.patch', return_value=MockResponse(status_code=200))
+    @mock.patch('aether.odk.api.kernel_utils.request', return_value=MockResponse(status_code=200))
     @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value={
         'Authorization': 'Token ABCDEFGH'
     })
@@ -175,6 +175,7 @@ class MultitenancyTests(CustomTestCase):
 
         mock_auth.assert_called_once()
         mock_patch.assert_called_once_with(
+            method='patch',
             url=f'{kernel_url}/projects/{str(project.project_id)}/avro-schemas/',
             json={'avro_schemas': []},
             headers={

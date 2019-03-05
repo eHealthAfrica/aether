@@ -52,6 +52,7 @@ class SubmissionTests(CustomTestCase):
     def test__submission__204(self):
         response = self.client.head(self.url, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response['X-OpenRosa-Version'], '1.0')
 
     def test__submission__404(self):
         # submit response without xForm
@@ -75,7 +76,7 @@ class SubmissionTests(CustomTestCase):
                 {XML_SUBMISSION_PARAM: f},
                 **self.headers_user
             )
-        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+            self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     def test__submission__424__propagation(self):
         # with xform and right xml but not kernel propagation
@@ -193,10 +194,17 @@ class PostSubmissionTests(CustomTestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.helper_check_submission(succeed=False)
 
-    @mock.patch('requests.delete')
-    @mock.patch('requests.post', side_effect=Exception)
-    def test__submission__post__with_unexpected_error(self, mock_post, mock_delete):
-        # there is going to be an unexpected error during attachment post
+    def test__submission__post__no_instance_id(self):
+        with open(self.samples['submission']['file-err-missing-instance-id'], 'rb') as f:
+            response = self.client.post(
+                self.url,
+                {XML_SUBMISSION_PARAM: f},
+                **self.headers_user
+            )
+            self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+    @mock.patch('aether.odk.api.views.exec_request', side_effect=Exception)
+    def test__submission__post__with_error_on_check_previous_submission(self, mock_req):
         with open(self.samples['submission']['file-ok'], 'rb') as f:
             response = self.client.post(
                 self.url,
@@ -204,30 +212,92 @@ class PostSubmissionTests(CustomTestCase):
                 **self.headers_user
             )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        mock_post.assert_called_once_with(
-            self.SUBMISSIONS_URL,
+
+        mock_req.assert_called_once_with(
+            method='get',
+            url=self.SUBMISSIONS_URL,
             headers=self.KERNEL_HEADERS,
-            json=mock.ANY,
+            params={'payload__meta__instanceID': mock.ANY},
         )
-        mock_delete.assert_not_called()
+
+    def test__submission__post__with_unexpected_error(self):
+        def my_side_effect(*args, **kwargs):
+            if kwargs['method'] != 'post':
+                # real method
+                return requests.request(*args, **kwargs)
+            else:
+                # there is going to be an unexpected error during attachment post
+                raise Exception
+
+        with mock.patch('aether.odk.api.views.exec_request', side_effect=my_side_effect) as mock_req:
+            with open(self.samples['submission']['file-ok'], 'rb') as f:
+                response = self.client.post(
+                    self.url,
+                    {XML_SUBMISSION_PARAM: f},
+                    **self.headers_user
+                )
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+            mock_req.assert_has_calls([
+                mock.call(
+                    method='get',
+                    url=self.SUBMISSIONS_URL,
+                    headers=self.KERNEL_HEADERS,
+                    params={'payload__meta__instanceID': mock.ANY},
+                ),
+                mock.call(
+                    method='post',
+                    url=self.ATTACHMENTS_URL,
+                    headers=self.KERNEL_HEADERS,
+                    data=mock.ANY,
+                    files=mock.ANY,
+                ),
+                mock.call(
+                    method='delete',
+                    url=mock.ANY,
+                    headers=mock.ANY,
+                ),
+            ])
+
         self.helper_check_submission(succeed=False)
 
-    @mock.patch('requests.delete')
-    @mock.patch('requests.post', return_value=MockResponse(status_code=500))
-    def test__submission__post__with_kernel_error(self, mock_post, mock_delete):
-        with open(self.samples['submission']['file-ok'], 'rb') as f:
-            response = self.client.post(
-                self.url,
-                {XML_SUBMISSION_PARAM: f},
-                **self.headers_user
-            )
-        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        mock_post.assert_called_once_with(
-            self.SUBMISSIONS_URL,
-            headers=self.KERNEL_HEADERS,
-            json=mock.ANY,
-        )
-        mock_delete.assert_not_called()
+    def test__submission__post__with_kernel_error(self):
+        def my_side_effect(*args, **kwargs):
+            if kwargs['method'] != 'post':
+                # real method
+                return requests.request(*args, **kwargs)
+            else:
+                return MockResponse(status_code=500)
+
+        with mock.patch('aether.odk.api.views.exec_request', side_effect=my_side_effect) as mock_req:
+            with open(self.samples['submission']['file-ok'], 'rb') as f:
+                response = self.client.post(
+                    self.url,
+                    {XML_SUBMISSION_PARAM: f},
+                    **self.headers_user
+                )
+            self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            mock_req.assert_has_calls([
+                mock.call(
+                    method='get',
+                    url=self.SUBMISSIONS_URL,
+                    headers=self.KERNEL_HEADERS,
+                    params={'payload__meta__instanceID': mock.ANY},
+                ),
+                mock.call(
+                    method='post',
+                    url=self.ATTACHMENTS_URL,
+                    headers=self.KERNEL_HEADERS,
+                    data=mock.ANY,
+                    files=mock.ANY,
+                ),
+                mock.call(
+                    method='delete',
+                    url=mock.ANY,
+                    headers=mock.ANY,
+                ),
+            ])
         self.helper_check_submission(succeed=False)
 
     def test__submission__post(self):
@@ -312,80 +382,116 @@ class PostSubmissionTests(CustomTestCase):
             self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content.decode())
         self.helper_check_submission(entity=entity_payload, attachments=count)
 
-    def test__submission__post__no_instance_id(self):
-        with open(self.samples['submission']['file-err-missing-instance-id'], 'rb') as f:
-            response = self.client.post(
-                self.url,
-                {
-                    XML_SUBMISSION_PARAM: f,
-                    'attach': SimpleUploadedFile('audio.wav', b'abc'),
-                },
-                **self.headers_user
-            )
-            self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+    def test__submission__post__with_attachments__with_kernel_error(self):
+        def my_side_effect(*args, **kwargs):
+            if kwargs['method'] != 'post':
+                # real method
+                return requests.request(*args, **kwargs)
+            else:
+                if kwargs['files']['attachment_file'][0] != 'audio.wav':
+                    return MockResponse(status_code=201)
+                else:
+                    return MockResponse(status_code=404)
 
-    @mock.patch('requests.delete')
-    @mock.patch('requests.post',
-                side_effect=[
-                    MockResponse(status_code=201, json_data={'id': 'submission-id'}),
-                    MockResponse(status_code=404)
-                ])
-    def test__submission__post__with_attachments__with_kernel_error(self, mock_post, mock_delete):
-        # there is going to be an error during attachment post
-        with open(self.samples['submission']['file-ok'], 'rb') as f:
-            response = self.client.post(
-                self.url,
-                {
-                    XML_SUBMISSION_PARAM: f,
-                    'attach': SimpleUploadedFile('audio.wav', b'abc'),
-                },
-                **self.headers_user
-            )
-        mock_post.assert_any_call(
-            self.SUBMISSIONS_URL,
-            headers=self.KERNEL_HEADERS,
-            json=mock.ANY,
-        )
-        mock_post.assert_any_call(
-            self.ATTACHMENTS_URL,
-            headers=self.KERNEL_HEADERS,
-            data={'submission': 'submission-id'},
-            files=mock.ANY,
-        )
-        mock_delete.assert_called_once()
+        with mock.patch('aether.odk.api.views.exec_request', side_effect=my_side_effect) as mock_req:
+            # there is going to be an error during second attachment post
+            with open(self.samples['submission']['file-ok'], 'rb') as f:
+                response = self.client.post(
+                    self.url,
+                    {
+                        XML_SUBMISSION_PARAM: f,
+                        'attach': SimpleUploadedFile('audio.wav', b'abc'),
+                    },
+                    **self.headers_user
+                )
 
-        self.assertEqual(response.status_code, 404, 'returns the last status code')
+            mock_req.assert_has_calls([
+                mock.call(
+                    method='get',
+                    url=self.SUBMISSIONS_URL,
+                    headers=self.KERNEL_HEADERS,
+                    params={'payload__meta__instanceID': mock.ANY},
+                ),
+                # 1st attachment
+                mock.call(
+                    method='post',
+                    url=self.ATTACHMENTS_URL,
+                    headers=self.KERNEL_HEADERS,
+                    data=mock.ANY,
+                    files=mock.ANY,
+                ),
+                # 2nd attachment (with 404 response)
+                mock.call(
+                    method='post',
+                    url=self.ATTACHMENTS_URL,
+                    headers=self.KERNEL_HEADERS,
+                    data=mock.ANY,
+                    files=mock.ANY,
+                ),
+                mock.call(
+                    method='delete',
+                    url=mock.ANY,
+                    headers=mock.ANY,
+                ),
+            ])
+
+            self.assertEqual(response.status_code, 404, 'returns the last status code')
+
         self.helper_check_submission(succeed=False)
 
-    @mock.patch('requests.delete')
-    @mock.patch('requests.post',
-                side_effect=[
-                    MockResponse(status_code=201, json_data={'id': 'submission-id'}),
-                    Exception
-                ])
-    def test__submission__post__with_attachments__with_unexpected_error(self, mock_post, mock_del):
-        # there is going to be an unexpected error during attachment post
-        with open(self.samples['submission']['file-ok'], 'rb') as f:
-            response = self.client.post(
-                self.url,
-                {
-                    XML_SUBMISSION_PARAM: f,
-                    'attach': SimpleUploadedFile('audio.wav', b'abc'),
-                },
-                **self.headers_user
-            )
-        mock_post.assert_any_call(
-            self.SUBMISSIONS_URL,
-            headers=self.KERNEL_HEADERS,
-            json=mock.ANY,
-        )
-        mock_post.assert_any_call(
-            self.ATTACHMENTS_URL,
-            headers=self.KERNEL_HEADERS,
-            data={'submission': 'submission-id'},
-            files=mock.ANY,
-        )
-        mock_del.assert_called_once()
+    def test__submission__post__with_attachments__with_unexpected_error(self):
+        def my_side_effect(*args, **kwargs):
+            if kwargs['method'] != 'post':
+                # real method
+                return requests.request(*args, **kwargs)
+            else:
+                if kwargs['files']['attachment_file'][0] != 'audio.wav':
+                    return MockResponse(status_code=201)
+                else:
+                    raise Exception
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.content.decode())
+        with mock.patch('aether.odk.api.views.exec_request', side_effect=my_side_effect) as mock_req:
+            # there is going to be an error during second attachment post
+            with open(self.samples['submission']['file-ok'], 'rb') as f:
+                response = self.client.post(
+                    self.url,
+                    {
+                        XML_SUBMISSION_PARAM: f,
+                        'attach': SimpleUploadedFile('audio.wav', b'abc'),
+                    },
+                    **self.headers_user
+                )
+
+            mock_req.assert_has_calls([
+                mock.call(
+                    method='get',
+                    url=self.SUBMISSIONS_URL,
+                    headers=self.KERNEL_HEADERS,
+                    params={'payload__meta__instanceID': mock.ANY},
+                ),
+                # 1st attachment
+                mock.call(
+                    method='post',
+                    url=self.ATTACHMENTS_URL,
+                    headers=self.KERNEL_HEADERS,
+                    data=mock.ANY,
+                    files=mock.ANY,
+                ),
+                # 2nd attachment (raises exception)
+                mock.call(
+                    method='post',
+                    url=self.ATTACHMENTS_URL,
+                    headers=self.KERNEL_HEADERS,
+                    data=mock.ANY,
+                    files=mock.ANY,
+                ),
+                mock.call(
+                    method='delete',
+                    url=mock.ANY,
+                    headers=mock.ANY,
+                ),
+            ])
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.content.decode())
+
         self.helper_check_submission(succeed=False)
