@@ -19,6 +19,7 @@
 # under the License.
 #
 
+
 function prepare_dependencies {
     ./scripts/build_docker_assets.sh
     ./scripts/build_common_and_distribute.sh
