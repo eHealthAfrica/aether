@@ -16,10 +16,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import requests
-
 from django.utils.translation import ugettext as _
 
+from aether.common.utils import request
 from aether.common.kernel.utils import get_auth_header, get_kernel_server_url
 from aether.common.multitenancy.utils import assign_realm_in_headers
 
@@ -96,7 +95,7 @@ def __upsert_kernel_artefacts(project, artefacts={}):
     kernel_url = get_kernel_server_url()
     url = f'{kernel_url}/projects/{project_id}/avro-schemas/'
 
-    response = requests.patch(url=url, json=artefacts, headers=headers)
+    response = request(method='patch', url=url, json=artefacts, headers=headers)
     if response.status_code != 200:
         content = response.content.decode('utf-8')
         raise KernelPropagationError(

@@ -139,7 +139,7 @@ def import_synced_docs(docs, db_name):
             stats['up-to-date'] += 1
             continue
 
-        aether_id = status.get('aether_id') or False
+        aether_id = status.get('aether_id') or None
 
         try:
             resp = post_to_aether(doc, aether_id=aether_id)
@@ -176,7 +176,7 @@ def import_synced_docs(docs, db_name):
     return stats
 
 
-def post_to_aether(document, aether_id=False):
+def post_to_aether(document, aether_id=None):
     # first of all check if the connection is possible
     if not kernel_utils.test_connection():
         raise RuntimeError(_('Cannot connect to Aether Kernel server'))

@@ -119,19 +119,29 @@ class CouchDbSyncTestCase(TestCase):
             document={'_id': 1},
         )
 
-    @mock.patch('requests.put')
-    @mock.patch('requests.post')
-    def test_post_to_aether__without_aether_id(self, mock_post, mock_put):
+    @mock.patch('aether.sync.api.couchdb_sync.propagate_kernel_artefacts')
+    @mock.patch('aether.sync.api.couchdb_sync.kernel_utils.test_connection', return_value=True)
+    @mock.patch('aether.common.kernel.utils.request')
+    def test_post_to_aether__without_aether_id(self, mock_req, mock_auth, mock_propagate):
         post_to_aether(document={'_id': f'{self.SCHEMA_NAME}-b'}, aether_id=None)
-        mock_put.assert_not_called()
-        mock_post.assert_called()
+        mock_req.assert_called_with(
+            method='post',
+            url='http://kernel-test:9100/submissions/',
+            json={'payload': {'_id': f'{self.SCHEMA_NAME}-b'}, 'mappingset': mock.ANY},
+            headers={'Authorization': mock.ANY},
+        )
 
-    @mock.patch('requests.put')
-    @mock.patch('requests.post')
-    def test_post_to_aether__with_aether_id(self, mock_post, mock_put):
+    @mock.patch('aether.sync.api.couchdb_sync.propagate_kernel_artefacts')
+    @mock.patch('aether.sync.api.couchdb_sync.kernel_utils.test_connection', return_value=True)
+    @mock.patch('aether.common.kernel.utils.request')
+    def test_post_to_aether__with_aether_id(self, mock_req, mock_auth, mock_propagate):
         post_to_aether(document={'_id': f'{self.SCHEMA_NAME}-b'}, aether_id=1)
-        mock_put.assert_called()
-        mock_post.assert_not_called()
+        mock_req.assert_called_with(
+            method='put',
+            url='http://kernel-test:9100/submissions/1/',
+            json={'payload': {'_id': f'{self.SCHEMA_NAME}-b'}, 'mappingset': mock.ANY},
+            headers={'Authorization': mock.ANY},
+        )
 
     @mock.patch('aether.sync.api.couchdb_sync.import_synced_docs',
                 side_effect=Exception('mocked exception'))
