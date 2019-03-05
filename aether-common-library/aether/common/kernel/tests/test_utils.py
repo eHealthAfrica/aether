@@ -31,9 +31,9 @@ AETHER_ENV_MOCK = {
 }
 
 
+@mock.patch.dict('os.environ', AETHER_ENV_MOCK)
 class UtilsTests(TestCase):
 
-    @mock.patch.dict('os.environ', AETHER_ENV_MOCK)
     def test__get_mapping_url_testing(self):
         self.assertEqual(
             utils.get_mappings_url(),
@@ -66,7 +66,6 @@ class UtilsTests(TestCase):
         )
 
     @mock.patch.dict('os.environ', {'TESTING': ''})
-    @mock.patch.dict('os.environ', AETHER_ENV_MOCK)
     def test__get_mapping_url__no_testing(self):
         self.assertEqual(
             utils.get_mappings_url(),
@@ -85,12 +84,23 @@ class UtilsTests(TestCase):
             'http://kernel/attachments/1/'
         )
 
-    @mock.patch('requests.head', return_value=mock.Mock(status_code=403))
-    @mock.patch('requests.get', return_value=mock.Mock(status_code=200))
-    @mock.patch.dict('os.environ', AETHER_ENV_MOCK)
-    def test__test_connection_testing_env(self, mock_get, mock_head):
+    @mock.patch('aether.common.kernel.utils.request',
+                side_effect=[
+                    mock.Mock(status_code=403),  # HEAD
+                    mock.Mock(status_code=200),  # GET
+                ])
+    def test__test_connection_testing_env(self, mock_req):
         self.assertTrue(utils.test_connection())
+        self.assertEqual(mock_req.call_count, 2)
+
+    @mock.patch('aether.common.kernel.utils.request',
+                side_effect=[
+                    mock.Mock(status_code=403),  # HEAD
+                    mock.Mock(status_code=200),  # GET
+                ])
+    def test__test_connection_testing_env__header(self, mock_req):
         self.assertNotEqual(utils.get_auth_header(), None)
+        self.assertEqual(mock_req.call_count, 2)
 
     def test__test_connection_env_fail(self):
         with mock.patch.dict('os.environ', {
@@ -117,29 +127,52 @@ class UtilsTests(TestCase):
             self.assertFalse(utils.test_connection())
             self.assertEqual(utils.get_auth_header(), None)
 
-    @mock.patch('requests.head', return_value=mock.Mock(status_code=404))
-    @mock.patch.dict('os.environ', AETHER_ENV_MOCK)
+    @mock.patch('aether.common.kernel.utils.request', return_value=mock.Mock(status_code=404))
     def test__test_connection_head_fail(self, mock_head):
         with mock.patch.dict('os.environ', AETHER_ENV_MOCK):
             self.assertFalse(utils.test_connection())
-            mock_head.assert_called_with(AETHER_KERNEL_URL_TEST_MOCK)
+            mock_head.assert_called_with(method='head', url=AETHER_KERNEL_URL_TEST_MOCK)
 
-    @mock.patch('requests.head', return_value=mock.Mock(status_code=403))
-    @mock.patch('requests.get', return_value=mock.Mock(status_code=401))
-    @mock.patch.dict('os.environ', AETHER_ENV_MOCK)
-    def test__test_connection_get_fail(self, mock_get, mock_head):
-        with mock.patch.dict('os.environ', AETHER_ENV_MOCK):
-            self.assertFalse(utils.test_connection())
-            self.assertEqual(utils.get_auth_header(), None)
-            mock_head.assert_called_with(AETHER_KERNEL_URL_TEST_MOCK)
-            mock_get.assert_called_with(
-                AETHER_KERNEL_URL_TEST_MOCK,
-                headers={
-                    'Authorization': 'Token {}'.format(AETHER_KERNEL_TOKEN_MOCK)
-                },
-            )
+    @mock.patch('aether.common.kernel.utils.request',
+                side_effect=[
+                    mock.Mock(status_code=403),  # HEAD
+                    mock.Mock(status_code=401),  # GET
+                ])
+    def test__test_connection_get_fail(self, mock_req):
+        self.assertFalse(utils.test_connection())
 
-    @mock.patch.dict('os.environ', AETHER_ENV_MOCK)
+        mock_req.assert_has_calls([
+            mock.call(
+                method='head',
+                url=AETHER_KERNEL_URL_TEST_MOCK,
+            ),
+            mock.call(
+                method='get',
+                url=AETHER_KERNEL_URL_TEST_MOCK,
+                headers={'Authorization': 'Token {}'.format(AETHER_KERNEL_TOKEN_MOCK)},
+            ),
+        ])
+
+    @mock.patch('aether.common.kernel.utils.request',
+                side_effect=[
+                    mock.Mock(status_code=403),  # HEAD
+                    mock.Mock(status_code=401),  # GET
+                ])
+    def test__test_connection_get_fail__header(self, mock_req):
+        self.assertEqual(utils.get_auth_header(), None)
+
+        mock_req.assert_has_calls([
+            mock.call(
+                method='head',
+                url=AETHER_KERNEL_URL_TEST_MOCK,
+            ),
+            mock.call(
+                method='get',
+                url=AETHER_KERNEL_URL_TEST_MOCK,
+                headers={'Authorization': 'Token {}'.format(AETHER_KERNEL_TOKEN_MOCK)},
+            ),
+        ])
+
     def test_submit_to_kernel__without_mappingset_id(self):
         self.assertRaises(
             Exception,
@@ -148,7 +181,6 @@ class UtilsTests(TestCase):
             mappingset_id=None,
         )
 
-    @mock.patch.dict('os.environ', AETHER_ENV_MOCK)
     def test_submit_to_kernel__without_submission(self):
         self.assertRaises(
             Exception,
@@ -157,23 +189,26 @@ class UtilsTests(TestCase):
             mappingset_id=1,
         )
 
-    @mock.patch('requests.put')
-    @mock.patch('requests.post')
-    @mock.patch.dict('os.environ', AETHER_ENV_MOCK)
-    def test_submit_to_kernel__without_submission_id(self, mock_post, mock_put):
+    @mock.patch('aether.common.kernel.utils.request')
+    def test_submit_to_kernel__without_submission_id(self, mock_req):
         utils.submit_to_kernel(submission={'_id': 'a'}, mappingset_id=1, submission_id=None)
-        mock_put.assert_not_called()
-        mock_post.assert_called()
+        mock_req.assert_called_with(
+            method='post',
+            url='http://kernel-test/submissions/',
+            json={'payload': {'_id': 'a'}, 'mappingset': 1},
+            headers=None,
+        )
 
-    @mock.patch('requests.put')
-    @mock.patch('requests.post')
-    @mock.patch.dict('os.environ', AETHER_ENV_MOCK)
-    def test_submit_to_kernel__with_submission_id(self, mock_post, mock_put):
+    @mock.patch('aether.common.kernel.utils.request')
+    def test_submit_to_kernel__with_submission_id(self, mock_req):
         utils.submit_to_kernel(submission={'_id': 'a'}, mappingset_id=1, submission_id=1)
-        mock_put.assert_called()
-        mock_post.assert_not_called()
+        mock_req.assert_called_with(
+            method='put',
+            url='http://kernel-test/submissions/1/',
+            json={'payload': {'_id': 'a'}, 'mappingset': 1},
+            headers=None,
+        )
 
-    @mock.patch.dict('os.environ', AETHER_ENV_MOCK)
     def test_get_all_docs(self):
         class MockResponse:
             def __init__(self, json_data):
@@ -186,11 +221,12 @@ class UtilsTests(TestCase):
                 pass
 
         def my_side_effect(*args, **kwargs):
-            if args[0] == 'http://first':
+            self.assertEqual(kwargs['method'], 'get')
+            if kwargs['url'] == 'http://first':
                 return MockResponse(json_data={'results': [2], 'next': 'http://next'})
             else:
                 return MockResponse(json_data={'results': [1], 'next': None})
 
-        with mock.patch('requests.get', side_effect=my_side_effect) as mock_get:
+        with mock.patch('aether.common.kernel.utils.request', side_effect=my_side_effect) as mock_get:
             self.assertEqual(utils.get_all_docs('http://first'), [2, 1])
             mock_get.assert_called()

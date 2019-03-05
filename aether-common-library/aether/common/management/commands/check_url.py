@@ -18,10 +18,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import requests
-
 from django.core.management.base import BaseCommand
 from django.utils.translation import ugettext as _
+
+from aether.common.utils import request
 
 MESSAGE_ERROR = _('{url} is not responding.') + '\n'
 MESSAGE_OK = _('{url} is responding.') + '\n'
@@ -61,9 +61,9 @@ class Command(BaseCommand):
 
         try:
             if token:
-                response = requests.head(url, headers={'Authorization': f'Token {token}'})
+                response = request(method='head', url=url, headers={'Authorization': f'Token {token}'})
             else:
-                response = requests.head(url)
+                response = request(method='head', url=url)
 
             response.raise_for_status()
             self.stdout.write(MESSAGE_OK.format(url=url))
