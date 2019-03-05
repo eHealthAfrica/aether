@@ -75,8 +75,50 @@ class UtilsTests(TestCase):
                         side_effect=[Exception('1'), Exception('2'), Exception('3'), 'ok']) as mock_req:
             with self.assertRaises(Exception) as e:
                 response = utils.request(url='raises exception')
-                self.assertNotEqual(response, 'ok')
+                self.assertIsNone(response)
                 self.assertIsNotNone(e)
                 self.assertEqual(str(e), '3')
 
             self.assertEqual(mock_req.call_count, 3)
+
+    def test_get_all_docs(self):
+        class MockResponse:
+            def __init__(self, json_data):
+                self.json_data = json_data
+
+            def json(self):
+                return self.json_data
+
+            def raise_for_status(self):
+                pass
+
+        def my_side_effect(*args, **kwargs):
+            self.assertEqual(kwargs['method'], 'get')
+            if kwargs['url'] == 'http://first':
+                return MockResponse(json_data={'results': [2], 'next': 'http://next'})
+            else:
+                return MockResponse(json_data={'results': [1], 'next': None})
+
+        with mock.patch('aether.common.utils.request', side_effect=my_side_effect) as mock_get:
+            iterable = utils.get_all_docs('http://first', headers={})
+
+            self.assertEqual(next(iterable), 2)
+            self.assertEqual(next(iterable), 1)
+            self.assertRaises(
+                StopIteration,
+                next,
+                iterable,
+            )
+
+            mock_get.assert_has_calls([
+                mock.call(
+                    method='get',
+                    url='http://first',
+                    headers={},
+                ),
+                mock.call(
+                    method='get',
+                    url='http://next',
+                    headers={},
+                ),
+            ])

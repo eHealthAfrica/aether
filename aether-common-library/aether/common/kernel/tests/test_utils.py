@@ -208,25 +208,3 @@ class UtilsTests(TestCase):
             json={'payload': {'_id': 'a'}, 'mappingset': 1},
             headers=None,
         )
-
-    def test_get_all_docs(self):
-        class MockResponse:
-            def __init__(self, json_data):
-                self.json_data = json_data
-
-            def json(self):
-                return self.json_data
-
-            def raise_for_status(self):
-                pass
-
-        def my_side_effect(*args, **kwargs):
-            self.assertEqual(kwargs['method'], 'get')
-            if kwargs['url'] == 'http://first':
-                return MockResponse(json_data={'results': [2], 'next': 'http://next'})
-            else:
-                return MockResponse(json_data={'results': [1], 'next': None})
-
-        with mock.patch('aether.common.kernel.utils.request', side_effect=my_side_effect) as mock_get:
-            self.assertEqual(utils.get_all_docs('http://first'), [2, 1])
-            mock_get.assert_called()

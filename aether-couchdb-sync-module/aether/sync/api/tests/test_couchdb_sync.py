@@ -21,6 +21,7 @@ import mock
 import requests
 from django.test import TestCase
 
+from aether.common.utils import get_all_docs
 from aether.common.kernel import utils as kernel_utils
 
 from ...couchdb import api as couchdb
@@ -35,14 +36,14 @@ from ..couchdb_sync import (
 from . import clean_couch
 
 
+HEADERS_TESTING = kernel_utils.get_auth_header()
 SUBMISSION_FK = 'mappingset'
-headers_testing = kernel_utils.get_auth_header()
-device_id = 'test_import-from-couch'
+DEVICE_ID = 'test_import-from-couch'
 
 
 def get_aether_submissions():
     url = kernel_utils.get_submissions_url()
-    return kernel_utils.get_all_docs(url)
+    return list(get_all_docs(url, headers=HEADERS_TESTING))
 
 
 class CouchDbSyncTestCase(TestCase):
@@ -89,14 +90,14 @@ class CouchDbSyncTestCase(TestCase):
         # the model `aether.kernel.api.models.Submission`
         self.example_doc = {
             '_id': f'{self.SCHEMA_NAME}-aabbbdddccc',
-            'deviceId': device_id,
+            'deviceId': DEVICE_ID,
             'firstname': 'Han',
             'lastname': 'Solo',
         }
 
     def tearDown(self):
-        requests.delete(f'{self.KERNEL_URL}/projects/{self.KERNEL_ID}/', headers=headers_testing)
-        requests.delete(f'{self.KERNEL_URL}/schemas/{self.KERNEL_ID}/', headers=headers_testing)
+        requests.delete(f'{self.KERNEL_URL}/projects/{self.KERNEL_ID}/', headers=HEADERS_TESTING)
+        requests.delete(f'{self.KERNEL_URL}/schemas/{self.KERNEL_ID}/', headers=HEADERS_TESTING)
         clean_couch()
 
     @mock.patch('aether.sync.api.couchdb_sync.kernel_utils.test_connection', return_value=False)
@@ -147,9 +148,9 @@ class CouchDbSyncTestCase(TestCase):
                 side_effect=Exception('mocked exception'))
     def test_import_one_document_with_error(self, mock_synced):
         # this creates a test couchdb
-        device = DeviceDB(device_id=device_id)
+        device = DeviceDB(device_id=DEVICE_ID)
         device.save()
-        create_db(device_id)
+        create_db(DEVICE_ID)
 
         resp = couchdb.put('{}/{}'.format(device.db_name, self.example_doc['_id']),
                            json=self.example_doc)
@@ -164,9 +165,9 @@ class CouchDbSyncTestCase(TestCase):
                 side_effect=Exception('mocked exception'))
     def test_import_one_document_with_with_error_in_kernel(self, mock_post):
         # this creates a test couchdb
-        device = DeviceDB(device_id=device_id)
+        device = DeviceDB(device_id=DEVICE_ID)
         device.save()
-        create_db(device_id)
+        create_db(DEVICE_ID)
 
         resp = couchdb.put('{}/{}'.format(device.db_name, self.example_doc['_id']),
                            json=self.example_doc)
@@ -179,9 +180,9 @@ class CouchDbSyncTestCase(TestCase):
 
     def test_import_one_document(self):
         # this creates a test couchdb
-        device = DeviceDB(device_id=device_id)
+        device = DeviceDB(device_id=DEVICE_ID)
         device.save()
-        create_db(device_id)
+        create_db(DEVICE_ID)
 
         docs = get_aether_submissions()
         self.assertEqual(len(docs), 0, 'Nothing in Kernel yet')
@@ -217,9 +218,9 @@ class CouchDbSyncTestCase(TestCase):
 
     def test_dont_reimport_document(self):
         # this creates a test couchdb
-        device = DeviceDB(device_id=device_id)
+        device = DeviceDB(device_id=DEVICE_ID)
         device.save()
-        create_db(device_id)
+        create_db(DEVICE_ID)
 
         resp = couchdb.put('{}/{}'.format(device.db_name, self.example_doc['_id']),
                            json=self.example_doc)
@@ -244,9 +245,9 @@ class CouchDbSyncTestCase(TestCase):
 
     def test_update_document(self):
         # this creates a test couchdb
-        device = DeviceDB(device_id=device_id)
+        device = DeviceDB(device_id=DEVICE_ID)
         device.save()
-        create_db(device_id)
+        create_db(DEVICE_ID)
 
         doc_url = '{}/{}'.format(device.db_name, self.example_doc['_id'])
 
@@ -290,9 +291,9 @@ class CouchDbSyncTestCase(TestCase):
                 raise requests.exceptions.HTTPError
 
         # this creates a test couchdb
-        device = DeviceDB(device_id=device_id)
+        device = DeviceDB(device_id=DEVICE_ID)
         device.save()
-        create_db(device_id)
+        create_db(DEVICE_ID)
 
         doc_url = '{}/{}'.format(device.db_name, self.example_doc['_id'])
 

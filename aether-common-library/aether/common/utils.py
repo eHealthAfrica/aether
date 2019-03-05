@@ -71,3 +71,19 @@ def request(*args, **kwargs):
         sleep(1)
 
     raise exception
+
+
+def get_all_docs(url, **kwargs):
+    '''
+    Returns all documents linked to an url, even with pagination
+    '''
+    def get_data(url):
+        resp = request(method='get', url=url, **kwargs)
+        resp.raise_for_status()
+        return resp.json()
+
+    data = {'next': url}
+    while data.get('next'):
+        data = get_data(data['next'])
+        for x in data['results']:
+            yield x

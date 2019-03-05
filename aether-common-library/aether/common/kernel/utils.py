@@ -126,24 +126,6 @@ def __get_type_url(model_type, id=None):
         )
 
 
-def get_all_docs(url):
-    '''
-    Returns all documents linked to an url, even with pagination
-    '''
-    def get_data(url):
-        resp = request(method='get', url=url, headers=get_auth_header())
-        resp.raise_for_status()
-        return resp.json()
-
-    data = {'next': url}
-    results = []
-    while data.get('next'):
-        data = get_data(data['next'])
-        results += data['results']
-
-    return results
-
-
 def submit_to_kernel(submission, mappingset_id, submission_id=None):
     '''
     Push the submission to Aether Kernel

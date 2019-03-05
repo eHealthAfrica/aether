@@ -26,7 +26,7 @@ from django.utils.translation import ugettext as _
 from rest_framework import status
 
 from aether.common.kernel import utils
-from aether.common.utils import request
+from aether.common.utils import get_all_docs, request
 
 from . import models
 
@@ -73,8 +73,9 @@ def kernel_artefacts_to_ui_artefacts():
     taking also the linked mappings+schemas and transform them into contracts.
     '''
     KERNEL_URL = utils.get_kernel_server_url()
+    AUTH_HEADERS = utils.get_auth_header()
 
-    projects = utils.get_all_docs(f'{KERNEL_URL}/projects/')
+    projects = get_all_docs(f'{KERNEL_URL}/projects/', headers=AUTH_HEADERS)
     for kernel_project in projects:
         project_id = kernel_project['id']
 
@@ -84,7 +85,7 @@ def kernel_artefacts_to_ui_artefacts():
         project = models.Project.objects.get(pk=project_id)
 
         # fetch linked mapping sets
-        mappingsets = utils.get_all_docs(kernel_project['mappingset_url'])
+        mappingsets = get_all_docs(kernel_project['mappingset_url'], headers=AUTH_HEADERS)
         for mappingset in mappingsets:
             mappingset_id = mappingset['id']
 
@@ -101,7 +102,7 @@ def kernel_artefacts_to_ui_artefacts():
             pipeline = models.Pipeline.objects.get(mappingset=mappingset_id)
 
             # fetch linked mappings
-            mappings = utils.get_all_docs(mappingset['mappings_url'])
+            mappings = get_all_docs(mappingset['mappings_url'], headers=AUTH_HEADERS)
             for mapping in mappings:
                 mapping_id = mapping['id']
 
@@ -111,7 +112,7 @@ def kernel_artefacts_to_ui_artefacts():
 
                 ps_fields = 'id,schema,schema_definition'
                 ps_url = mapping['projectschemas_url'] + f'&fields={ps_fields}'
-                project_schemas = utils.get_all_docs(ps_url)
+                project_schemas = get_all_docs(ps_url, headers=AUTH_HEADERS)
 
                 # find out the linked schema ids from the project schema ids (mapping entities)
                 entities = mapping['definition']['entities']              # format    {entity name: ps id}
