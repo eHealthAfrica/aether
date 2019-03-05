@@ -46,11 +46,6 @@ release_process () {
     echo "Release version:  $VERSION"
     echo "Release revision: $TRAVIS_COMMIT"
 
-    # create temporal files with VERSION+REVISION data
-    mkdir ./tmp/
-    echo $VERSION       > ./tmp/VERSION
-    echo $TRAVIS_COMMIT > ./tmp/REVISION
-
     # Login in dockerhub with write permissions (repos are public)
     docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
 
@@ -68,13 +63,34 @@ release_process () {
 
     # Build docker images
     IMAGE_REPO='ehealthafrica'
-    RELEASE_APPS=( kernel odk couchdb-sync ui producer integration-test )
-    RELEASE_COMPOSE='docker-compose-release.yml'
+    CORE_APPS=( kernel odk couchdb-sync ui )
+    CORE_COMPOSE='docker-compose.yml'
+    CONNECT_APPS=( producer )
+    CONNECT_COMPOSE='docker-compose-connect.yml'
 
-    for APP in "${RELEASE_APPS[@]}"
+    for APP in "${CORE_APPS[@]}"
     do
-        release_app $APP $RELEASE_COMPOSE
+        release_app $APP $CORE_COMPOSE
     done
+
+    for CONNECT_APP in "${CONNECT_APPS[@]}"
+    do
+        release_app $CONNECT_APP $CONNECT_COMPOSE
+    done
+}
+
+# Usage: increment_version <version> [<position>]
+increment_version () {
+    local v=$1
+    if [ -z $2 ]; then 
+        local rgx='^((?:[0-9]+\.)*)([0-9]+)($)'
+    else 
+        local rgx='^((?:[0-9]+\.){'$(($2-1))'})([0-9]+)(\.|$)'
+        for (( p=`grep -o "\."<<<".$v"|wc -l`; p<$2; p++)); do 
+            v+=.0; done;
+    fi
+    val=`echo -e "$v" | perl -pe 's/^.*'$rgx'.*$/$2/'`
+    TAG_INCRESED_VERSION=$(echo "$v" | perl -pe s/$rgx.*$'/${1}'`printf %0${#val}s $(($val+1))`/)
 }
 
 version_compare () {
@@ -134,10 +150,12 @@ function git_branch_commit_and_release() {
     
     if [[ $3 = "tag" ]];
     then
-        TRAVIS_BRANCH=$(git ls-remote origin | sed -n "\|$TRAVIS_COMMIT\s\+refs/heads/|{s///p}")
         git fetch ${REMOTE} $TRAVIS_BRANCH
         git branch $TRAVIS_BRANCH FETCH_HEAD
         COMMIT_BRANCH=HEAD
+        increment_version $BRANCH_OR_TAG_VALUE 3
+        BRANCH_OR_TAG_VALUE=$TAG_INCRESED_VERSION
+        echo "Version incremented to ${BRANCH_OR_TAG_VALUE}"
     fi
 
     git checkout $TRAVIS_BRANCH
@@ -154,7 +172,7 @@ function git_branch_commit_and_release() {
         VERSION=${BRANCH_OR_TAG_VALUE}-$4
     fi
     echo "Starting version" ${VERSION} "release"
-    release_process
+    # release_process
 
     # Update develop VERSION value to match the latest released version
     git fetch ${REMOTE} develop
@@ -175,6 +193,8 @@ function git_branch_commit_and_release() {
         echo "New VERSION ${BRANCH_OR_TAG_VALUE} is same or less than develop VERSION ${DEV_VERSION}"
     fi
 }
+
+TAG_INCRESED_VERSION="0.0.0"
 
 # release version depending on TRAVIS_BRANCH/ TRAVIS_TAG
 if [[ $TRAVIS_TAG =~ ^[0-9]+\.[0-9]+[\.0-9]*$ ]]
@@ -197,7 +217,7 @@ then
 elif [[ $TRAVIS_BRANCH = "develop" ]]
 then
     VERSION='alpha'
-    release_process
+    # release_process
 else
     echo "Skipping a release because this branch is not permitted: ${TRAVIS_BRANCH}"
 fi
