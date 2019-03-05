@@ -17,6 +17,8 @@
 # under the License.
 
 import json
+import requests
+from time import sleep
 
 from django.conf import settings
 from django.utils.safestring import mark_safe
@@ -45,3 +47,26 @@ def json_prettified(value, indent=2):
     https://www.pydanny.com/pretty-formatting-json-django-admin.html
     '''
     return __prettified__(json.dumps(value, indent=indent), JsonLexer())
+
+
+def request(*args, **kwargs):
+    count = 0
+    exception = None
+
+    while count < 3:
+        try:
+            return requests.request(*args, **kwargs)
+        except Exception as e:
+            exception = e
+
+            # ConnectionResetError: [Errno 104] Connection reset by peer
+            # http.client.RemoteDisconnected: Remote end closed connection without response
+
+            # This happens randomly in Travis
+            # There is nothing we can do so... ignore it and try again
+
+        # try again
+        count += 1
+        sleep(1)
+
+    raise exception
