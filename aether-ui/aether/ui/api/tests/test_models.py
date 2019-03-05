@@ -172,7 +172,8 @@ class ModelsTests(TestCase):
         self.assertEqual(contract.output, [])
 
     @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
-    @mock.patch('requests.post', return_value=MockResponse(500, text='Internal Server Error'))
+    @mock.patch('aether.ui.api.utils.request',
+                return_value=MockResponse(500, text='Internal Server Error'))
     def test__contract__save__with_server_error(self, mock_post):
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
@@ -192,6 +193,7 @@ class ModelsTests(TestCase):
         self.assertEqual(contract.output, [])
         mock_post.assert_called_once()
         mock_post.assert_called_once_with(
+            method='post',
             url=self.KERNEL_URL,
             headers=self.KERNEL_HEADERS,
             json={
@@ -211,7 +213,7 @@ class ModelsTests(TestCase):
         )
 
     @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
-    @mock.patch('requests.post',
+    @mock.patch('aether.ui.api.utils.request',
                 return_value=MockResponse(400, {
                     'entities': [],
                     'mapping_errors': ['test']
@@ -235,6 +237,7 @@ class ModelsTests(TestCase):
         self.assertEqual(contract.output, [])
         mock_post.assert_called_once()
         mock_post.assert_called_once_with(
+            method='post',
             url=self.KERNEL_URL,
             headers=self.KERNEL_HEADERS,
             json={
@@ -254,7 +257,7 @@ class ModelsTests(TestCase):
         )
 
     @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
-    @mock.patch('requests.post',
+    @mock.patch('aether.ui.api.utils.request',
                 return_value=MockResponse(200, {
                     'entities_2': 'something',
                     'mapping_errors_2': 'something else',
@@ -274,6 +277,7 @@ class ModelsTests(TestCase):
         self.assertEqual(contract.output, [])
         mock_post.assert_called_once()
         mock_post.assert_called_once_with(
+            method='post',
             url=self.KERNEL_URL,
             headers=self.KERNEL_HEADERS,
             json={
@@ -293,7 +297,7 @@ class ModelsTests(TestCase):
         )
 
     @mock.patch('aether.ui.api.utils.utils.test_connection', new=mock_return_true)
-    @mock.patch('requests.post',
+    @mock.patch('aether.ui.api.utils.request',
                 return_value=MockResponse(200, {
                     'entities': 'something',
                     'mapping_errors': 'something else',
@@ -317,6 +321,7 @@ class ModelsTests(TestCase):
         self.assertEqual(contract.output, 'something')
         mock_post.assert_called_once()
         mock_post.assert_called_once_with(
+            method='post',
             url=self.KERNEL_URL,
             headers=self.KERNEL_HEADERS,
             json={

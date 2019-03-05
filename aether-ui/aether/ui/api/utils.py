@@ -17,10 +17,8 @@
 # under the License.
 
 import json
-import requests
 import uuid
 
-from time import sleep
 
 from django.utils import timezone
 from django.utils.translation import ugettext as _
@@ -28,6 +26,7 @@ from django.utils.translation import ugettext as _
 from rest_framework import status
 
 from aether.common.kernel import utils
+from aether.common.utils import request
 
 from . import models
 
@@ -201,9 +200,9 @@ def validate_contract(contract):
     #    "submission_payload": { json sample },
     #    "mapping_definition": {
     #      "entities": {
-    #        "entity-type-name-1": None,
-    #        "entity-type-name-2": None,
-    #        "entity-type-name-3": None,
+    #        "entity-type-name-1": UUID,
+    #        "entity-type-name-2": UUID,
+    #        "entity-type-name-3": UUID,
     #        ...
     #      },
     #      "mapping": [
@@ -237,9 +236,10 @@ def validate_contract(contract):
         },
         'schemas': schemas,
     }
-    kernel_url = utils.get_kernel_server_url()
-    resp = requests.post(
-        url=f'{kernel_url}/validate-mappings/',
+
+    resp = request(
+        method='post',
+        url=f'{utils.get_kernel_server_url()}/validate-mappings/',
         json=json.loads(json.dumps(payload)),
         headers=utils.get_auth_header(),
     )
@@ -248,8 +248,8 @@ def validate_contract(contract):
         errors = data.get('mapping_errors', [])
         output = data.get('entities', [])
         return (errors, output)
-    # The 400 response we get from the restframework serializers is a
-    # dictionary. The keys are serializer field names and the values are
+    # The 400 response we get from the rest-framework serializers is a
+    # dictionary. The keys are the serializer field names and the values are
     # lists of errors. Concatenate all lists and return the result as
     # `errors`.
     elif resp.status_code == status.HTTP_400_BAD_REQUEST:
@@ -584,7 +584,7 @@ def kernel_data_request(url='', method='get', data=None):
     Handle requests to the kernel server
     '''
 
-    res = __request(
+    res = request(
         method=method,
         url=f'{utils.get_kernel_server_url()}/{url}',
         json=data or {},
@@ -596,26 +596,3 @@ def kernel_data_request(url='', method='get', data=None):
     if res.status_code == status.HTTP_204_NO_CONTENT:
         return None
     return json.loads(res.content.decode('utf-8'))
-
-
-def __request(*args, **kwargs):  # pragma: no cover
-    count = 0
-    exception = None
-
-    while count < 3:
-        try:
-            return requests.request(*args, **kwargs)
-        except Exception as e:
-            exception = e
-
-            # ConnectionResetError: [Errno 104] Connection reset by peer
-            # http.client.RemoteDisconnected: Remote end closed connection without response
-
-            # This happens randomly in Travis
-            # There is nothing we can do so... ignore it and try again
-
-        # try again
-        count += 1
-        sleep(1)
-
-    raise exception
