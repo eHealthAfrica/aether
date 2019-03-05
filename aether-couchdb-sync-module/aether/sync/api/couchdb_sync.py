@@ -18,7 +18,8 @@
 
 import logging
 import re
-import requests
+
+from requests.exceptions import HTTPError
 
 from django.conf import settings
 from django.utils import timezone
@@ -145,7 +146,7 @@ def import_synced_docs(docs, db_name):
             resp = post_to_aether(doc, aether_id=aether_id)
             try:
                 resp.raise_for_status()
-            except requests.exceptions.HTTPError:
+            except HTTPError:
                 logger.error('post survey to aether failed: ' + resp.text)
                 stats['errors'].append(resp.content)
                 stats['errored'] += 1
