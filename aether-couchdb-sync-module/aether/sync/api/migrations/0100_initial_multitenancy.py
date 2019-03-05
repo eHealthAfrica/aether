@@ -32,6 +32,12 @@ class Migration(migrations.Migration):
                 ('last_synced_seq', models.TextField(default='0', null=True)),
                 ('last_synced_log_message', models.TextField(null=True)),
             ],
+            options={
+                'default_related_name': 'devices',
+                'ordering': ['-last_synced_date'],
+                'verbose_name': 'device',
+                'verbose_name_plural': 'devices',
+            },
         ),
         migrations.CreateModel(
             name='MobileUser',
@@ -40,6 +46,7 @@ class Migration(migrations.Migration):
                 ('email', models.EmailField(max_length=254, unique=True, verbose_name='e-mail')),
             ],
             options={
+                'default_related_name': 'mobileusers',
                 'ordering': ['email'],
                 'verbose_name': 'mobile user',
                 'verbose_name_plural': 'mobile users',
@@ -64,10 +71,6 @@ class Migration(migrations.Migration):
                 'verbose_name': 'schema',
                 'verbose_name_plural': 'schemas',
             },
-        ),
-        migrations.AlterModelOptions(
-            name='devicedb',
-            options={'ordering': ['-last_synced_date'], 'verbose_name': 'device', 'verbose_name_plural': 'devices'},
         ),
         migrations.AlterField(
             model_name='devicedb',
@@ -101,10 +104,10 @@ class Migration(migrations.Migration):
                 ('name', models.TextField(blank=True, default='', null=True, verbose_name='name')),
             ],
             options={
-                'verbose_name': 'project',
-                'verbose_name_plural': 'projects',
-                'ordering': ['name'],
                 'default_related_name': 'projects',
+                'ordering': ['name'],
+                'verbose_name_plural': 'projects',
+                'verbose_name': 'project',
             },
         ),
         migrations.AddField(

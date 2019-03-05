@@ -38,7 +38,10 @@ class Migration(migrations.Migration):
                 ('surveyors', models.ManyToManyField(blank=True, related_name='mappings', to=settings.AUTH_USER_MODEL)),
             ],
             options={
+                'default_related_name': 'projects',
                 'ordering': ['name'],
+                'verbose_name': 'project',
+                'verbose_name_plural': 'projects',
             },
         ),
         migrations.CreateModel(
@@ -59,6 +62,7 @@ class Migration(migrations.Migration):
                 ('modified_at', models.DateTimeField(default=django.utils.timezone.now, verbose_name='modified at')),
             ],
             options={
+                'default_related_name': 'xforms',
                 'ordering': ['title', 'form_id', 'version'],
                 'verbose_name': 'xform',
                 'verbose_name_plural': 'xforms',
@@ -74,8 +78,8 @@ class Migration(migrations.Migration):
                 ('xform', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='media_files', to='odk.XForm', verbose_name='xForm')),
             ],
             options={
-                'ordering': ['xform', 'name'],
                 'default_related_name': 'media_files',
+                'ordering': ['xform', 'name'],
                 'verbose_name': 'media file',
                 'verbose_name_plural': 'media files',
             },
@@ -84,10 +88,6 @@ class Migration(migrations.Migration):
             model_name='project',
             name='surveyors',
             field=models.ManyToManyField(blank=True, related_name='projects', to=settings.AUTH_USER_MODEL),
-        ),
-        migrations.AlterModelOptions(
-            name='project',
-            options={'ordering': ['name'], 'verbose_name': 'project', 'verbose_name_plural': 'projects'},
         ),
         migrations.AlterField(
             model_name='project',
