@@ -62,9 +62,9 @@ export const deriveEntityTypes = (schema) => {
   const fields = schema.fields.map(makeOptionalField)
   if (!fields.find(field => field.name === 'id')) {
     // DETECTED CONFLICT
-    // the "id" must be an string if the schema defines it with
-    // another type the validation could fail
-    // this step only includes it if missing but does not change the type to "string"
+    // the "id" must be an string if the schema defines it with another type
+    // the validation could fail
+    // this step only includes it if missing but does not change its type to "string"
     fields.push({
       name: 'id',
       type: 'string'

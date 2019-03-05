@@ -18,6 +18,8 @@
  * under the License.
  */
 
+export const DEFAULT_LOCALE = 'en'
+
 // MAX_PAGE_SIZE ==> used as a hack to return all records via api
 // calls pending when pagination is fully implemented
 export const MAX_PAGE_SIZE = 5000
@@ -31,3 +33,9 @@ export const CONTRACTS_URL = '/api/contracts/'
 export const KERNEL_URL = '/api/kernel-url/'
 
 export const DATE_FORMAT = 'MMMM DD, YYYY HH:mm'
+
+// pipeline/contract view sections
+export const PIPELINE_SECTION_INPUT = 'input'
+export const CONTRACT_SECTION_ENTITY_TYPES = 'entityTypes'
+export const CONTRACT_SECTION_MAPPING = 'mapping'
+export const CONTRACT_SECTION_SETTINGS = 'settings'

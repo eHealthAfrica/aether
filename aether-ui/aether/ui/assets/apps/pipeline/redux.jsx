@@ -22,7 +22,13 @@
 // module in one file for easy redux management
 
 import { replaceItemInList } from '../utils'
-import { PIPELINES_URL, CONTRACTS_URL } from '../utils/constants'
+import {
+  PIPELINES_URL,
+  CONTRACTS_URL,
+  PIPELINE_SECTION_INPUT,
+  CONTRACT_SECTION_ENTITY_TYPES,
+  CONTRACT_SECTION_SETTINGS
+} from '../utils/constants'
 
 export const types = {
   REQUEST_ALL: 'request.all',
@@ -34,6 +40,7 @@ export const types = {
   CLEAR_SELECTION: 'pipeline.selected.none',
   PIPELINE_SELECT: 'pipeline.select',
   CONTRACT_SELECT: 'contract.select',
+  SECTION_SELECT: 'section.select',
 
   PIPELINE_ADD: 'pipeline.add',
   PIPELINE_UPDATE: 'pipeline.update',
@@ -49,7 +56,7 @@ export const types = {
 export const INITIAL_STATE = {
   pipelineList: [],
 
-  currentView: null,
+  currentSection: null,
   currentPipeline: null,
   currentContract: null,
 
@@ -80,6 +87,11 @@ export const selectPipeline = (pid) => ({
 export const selectContract = (pid, cid) => ({
   type: types.CONTRACT_SELECT,
   payload: { pipeline: pid, contract: cid }
+})
+
+export const selectSection = (section) => ({
+  type: types.SECTION_SELECT,
+  payload: section
 })
 
 export const getPipelineById = (pid) => {
@@ -244,7 +256,7 @@ const reducer = (state = INITIAL_STATE, action) => {
     case types.CLEAR_SELECTION: {
       return {
         ...state,
-        currentView: null,
+        currentSection: null,
         currentPipeline: null,
         currentContract: null
       }
@@ -256,7 +268,7 @@ const reducer = (state = INITIAL_STATE, action) => {
 
       return {
         ...state,
-        currentView: 'input',
+        currentSection: PIPELINE_SECTION_INPUT,
         currentPipeline,
         currentContract
       }
@@ -265,12 +277,22 @@ const reducer = (state = INITIAL_STATE, action) => {
     case types.CONTRACT_SELECT: {
       const currentPipeline = state.pipelineList.find(p => p.id === action.payload.pipeline) || state.currentPipeline
       const currentContract = findContract(currentPipeline, action.payload.contract)
+      const currentSection = !state.currentSection || state.currentSection === PIPELINE_SECTION_INPUT
+        ? CONTRACT_SECTION_ENTITY_TYPES
+        : state.currentSection
 
       return {
         ...state,
-        currentView: 'settings',
+        currentSection,
         currentPipeline,
         currentContract
+      }
+    }
+
+    case types.SECTION_SELECT: {
+      return {
+        ...state,
+        currentSection: action.payload
       }
     }
 
@@ -283,7 +305,7 @@ const reducer = (state = INITIAL_STATE, action) => {
         ...state,
         pipelineList: [ newPipeline, ...state.pipelineList ],
 
-        currentView: 'input',
+        currentSection: PIPELINE_SECTION_INPUT,
         currentPipeline: newPipeline,
         currentContract: newPipeline.contracts[0]
       }
@@ -310,7 +332,7 @@ const reducer = (state = INITIAL_STATE, action) => {
         ...state,
         pipelineList: replaceItemInList(state.pipelineList, currentPipeline),
 
-        currentView: 'settings',
+        currentSection: CONTRACT_SECTION_SETTINGS,
         currentPipeline,
         currentContract
       }

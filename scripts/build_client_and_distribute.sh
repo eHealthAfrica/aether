@@ -27,6 +27,7 @@ APP_VERSION=`cat ./VERSION`
 
 # create the distribution
 $DC_FILE build \
+    --no-cache --force-rm --pull \
     --build-arg VERSION=$APP_VERSION \
     client
 $DC_FILE run client build

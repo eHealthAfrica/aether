@@ -22,7 +22,7 @@ set -Eeuo pipefail
 
 function build_container {
     echo "_____________________________________________ Building $1 container"
-    $DC_TEST build "$1"-test
+    $DC_TEST build --no-cache --force-rm --pull "$1"-test
 }
 
 function wait_for_kernel {

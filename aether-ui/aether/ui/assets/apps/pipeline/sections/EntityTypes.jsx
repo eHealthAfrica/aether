@@ -23,7 +23,7 @@ import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
 import { connect } from 'react-redux'
 
 import { EntityTypeViewer } from '../../components'
-import { deepEqual } from '../../utils'
+import { deepEqual, objectToString } from '../../utils'
 import { parseSchema } from '../../utils/avro-utils'
 import { updateContract } from '../redux'
 
@@ -43,21 +43,18 @@ class EntityTypes extends Component {
     super(props)
 
     this.state = {
-      entityTypesSchema: this.parseProps(props),
+      entityTypesSchema: objectToString(props.contract.entity_types),
       error: null
     }
   }
 
-  componentWillReceiveProps (nextProps) {
-    this.setState({
-      entityTypesSchema: this.parseProps(nextProps),
-      error: null
-    })
-  }
-
-  parseProps (props) {
-    const { entity_types: entityTypes } = props.contract
-    return entityTypes.length ? JSON.stringify(entityTypes, 0, 2) : ''
+  componentDidUpdate (prevProps) {
+    if (!deepEqual(prevProps.contract.entity_types, this.props.contract.entity_types)) {
+      this.setState({
+        entityTypesSchema: objectToString(this.props.contract.entity_types),
+        error: null
+      })
+    }
   }
 
   onSchemaTextChanged (event) {

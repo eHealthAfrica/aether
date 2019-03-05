@@ -25,8 +25,8 @@ function prepare_dependencies {
     ./scripts/build_common_and_distribute.sh
     ./scripts/build_client_and_distribute.sh
 
-    docker-compose build ui-assets
-    docker-compose run   ui-assets build
+    build_app ui-assets
+    docker-compose run ui-assets build
 }
 
 function build_app {
@@ -35,6 +35,7 @@ function build_app {
 
     echo "Building Docker container $APP_NAME"
     $DC build \
+        --no-cache --force-rm --pull \
         --build-arg GIT_REVISION=$TRAVIS_COMMIT \
         --build-arg VERSION=$VERSION \
         $APP_NAME
