@@ -96,29 +96,6 @@ class ProjectSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = '__all__'
 
 
-class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField(
-        read_only=True,
-        view_name='mapping-detail',
-    )
-    mappingset_url = serializers.HyperlinkedRelatedField(
-        read_only=True,
-        source='mappingset',
-        view_name='mappingset-detail',
-    )
-
-    projectschemas_url = FilteredHyperlinkedRelatedField(
-        lookup_field='mapping',
-        read_only=True,
-        source='projectschemas',
-        view_name='projectschema-list',
-    )
-
-    class Meta:
-        model = models.Mapping
-        fields = '__all__'
-
-
 class MappingSetSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         read_only=True,
@@ -144,6 +121,29 @@ class MappingSetSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     class Meta:
         model = models.MappingSet
+        fields = '__all__'
+
+
+class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        read_only=True,
+        view_name='mapping-detail',
+    )
+    mappingset_url = serializers.HyperlinkedRelatedField(
+        read_only=True,
+        source='mappingset',
+        view_name='mappingset-detail',
+    )
+
+    projectschemas_url = FilteredHyperlinkedRelatedField(
+        lookup_field='mapping',
+        read_only=True,
+        source='projectschemas',
+        view_name='projectschema-list',
+    )
+
+    class Meta:
+        model = models.Mapping
         fields = '__all__'
 
 
@@ -263,6 +263,11 @@ class ProjectSchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         read_only=True,
         source='mappings',
         view_name='mapping-list',
+    )
+
+    schema_definition = serializers.JSONField(
+        read_only=True,
+        source='schema.definition',
     )
 
     class Meta:

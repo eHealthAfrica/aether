@@ -16,18 +16,22 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.conf import settings
 from django.shortcuts import get_object_or_404
 
-from http import HTTPStatus
-
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 
 from aether.common.kernel.utils import get_kernel_server_url
 
 from . import models, serializers, utils
+
+
+class ProjectViewSet(viewsets.ModelViewSet):
+    queryset = models.Project.objects.all()
+    serializer_class = serializers.ProjectSerializer
+    ordering = ('name',)
+    search_fields = ('name',)
 
 
 class PipelineViewSet(viewsets.ModelViewSet):
@@ -39,52 +43,50 @@ class PipelineViewSet(viewsets.ModelViewSet):
     @action(methods=['post'], detail=False)
     def fetch(self, request):
         '''
-        This view gets kernel objects, transforms and loads into a pipeline
+        This endpoint fetches kernel artefacts and transforms them into UI models.
+
+        Afterwards returns the list of pipelines.
         '''
 
-        utils.kernel_to_pipeline()
+        utils.kernel_artefacts_to_ui_artefacts()
         return self.list(request)
-
-    @action(methods=['post'], detail=True)
-    def publish(self, request, pk=None):
-        '''
-        This view transforms the supplied pipeline to kernel artefacts,
-        publish and update the pipeline/contract with related kernel artefacts ids.
-        '''
-
-        project_name = request.data.get('project_name', settings.APP_NAME)
-        overwrite = request.data.get('overwrite', False)
-        contract_id = request.data.get('contract_id')
-        objects_to_overwrite = request.data.get('ids', {})
-
-        try:
-            contract = get_object_or_404(models.Contract, pk=contract_id)
-        except Exception as e:
-            return Response({'error': [str(e)]}, status=HTTPStatus.BAD_REQUEST)
-
-        outcome = utils.publish_preflight(contract)
-        if len(outcome.get('error', [])):
-            return Response(outcome, status=HTTPStatus.BAD_REQUEST)
-
-        publish_result = {}
-        if len(outcome.get('exists', [])):
-            if overwrite:
-                publish_result = utils.publish_contract(project_name, contract, objects_to_overwrite)
-            else:
-                return Response(outcome, status=HTTPStatus.BAD_REQUEST)
-        else:
-            publish_result = utils.publish_contract(project_name, contract)
-
-        if 'error' in publish_result:
-            return Response(publish_result, status=HTTPStatus.BAD_REQUEST)
-
-        return self.retrieve(request, pk)
 
 
 class ContractViewSet(viewsets.ModelViewSet):
     queryset = models.Contract.objects.all()
     serializer_class = serializers.ContractSerializer
     ordering = ('name',)
+
+    @action(methods=['post'], detail=True)
+    def publish(self, request, pk=None):
+        '''
+        This endpoint transforms the supplied contract to kernel artefacts,
+        publish and update the contract with the related kernel artefacts ids.
+
+        Afterwards returns the contract.
+        '''
+
+        contract = get_object_or_404(models.Contract, pk=pk)
+        try:
+            utils.publish_contract(contract)
+            return self.retrieve(request, pk)
+        except utils.PublishError as pe:
+            return Response(
+                data={'detail': str(pe)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    @action(methods=['get'], detail=True, url_path='publish-preflight')
+    def publish_preflight(self, request, pk=None):
+        '''
+        This endpoint checks if the contract is publishable
+        and returns the list of failing reasons.
+        '''
+
+        contract = get_object_or_404(models.Contract, pk=pk)
+
+        data = utils.publish_preflight(contract)
+        return Response(data=data)
 
 
 @api_view(['GET'])

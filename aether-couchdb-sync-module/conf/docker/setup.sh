@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
@@ -36,17 +36,14 @@ POSTGRES_PACKAGE=postgresql-client-9.6
 PACKAGE_LIST=/tmp/apt-packages.txt
 if [ -f "$PACKAGE_LIST" ]; then
     apt-get update -qq
-    apt-get -qq --yes --force-yes install `cat $PACKAGE_LIST`
+    apt-get -qq --yes --allow-downgrades --allow-remove-essential --allow-change-held-packages install `cat $PACKAGE_LIST`
 fi
 
 # add postgres apt repo to get more recent postgres versions
-echo 'deb http://apt.postgresql.org/pub/repos/apt/ jessie-pgdg main' > /etc/apt/sources.list.d/pgdg.list
+echo 'deb http://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main' > /etc/apt/sources.list.d/pgdg.list
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
 apt-get update -qq
-apt-get -qq --yes --force-yes install $POSTGRES_PACKAGE
-
-# upgrade pip
-pip install --upgrade pip
+apt-get -qq --yes --allow-downgrades --allow-remove-essential --allow-change-held-packages install $POSTGRES_PACKAGE
 
 
 ################################################################################

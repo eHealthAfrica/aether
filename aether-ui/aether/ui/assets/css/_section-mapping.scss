@@ -180,3 +180,22 @@
     color: $light-grey;
   }
 }
+
+@keyframes show {
+  0% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+.pipeline--mapping .pipeline-section__mapping .section-body {
+  display: flex;
+  animation: show 1s;
+}

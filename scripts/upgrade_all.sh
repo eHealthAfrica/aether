@@ -20,12 +20,11 @@
 #
 set -Eeuo pipefail
 
-# create the common module
-./scripts/build_common_and_distribute.sh
+source ./scripts/aether_functions.sh
 
 # default values
 build=no
-containers=( kernel odk couchdb-sync ui )
+containers=( kernel odk couchdb-sync ui producer )
 
 while [[ $# -gt 0 ]]
 do
@@ -46,19 +45,16 @@ do
     esac
 done
 
+create_docker_assets
+build_libraries_and_distribute
 
 for container in "${containers[@]}"
 do
-    # upgrade pip dependencies
-    echo "_____________________________________________ Updating $container"
-    docker-compose run --no-deps $container pip_freeze
-    echo "_____________________________________________ $container updated!"
+    pip_freeze_container $container
 
     if [[ $build = "yes" ]]
     then
-        echo "_____________________________________________ Rebuilding $container with updates"
-        docker-compose build --no-cache $container
-        echo "_____________________________________________ $container rebuilt!"
+        build_container $container
     fi
 done
 

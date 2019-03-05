@@ -28,6 +28,18 @@ EXAMPLE_MAPPING = {
     ],
 }
 
+EXAMPLE_MAPPING_EDGE = {
+    'entities': {
+        'Person': '1',
+    },
+    'mapping': [
+        ['#!uuid', 'Person.id'],
+        ['[*].village', 'Person.villageID'],
+        ['$[*].name', 'Person.name'],
+        ['$.data.people[*].dob', 'Person.dob.nested'],
+    ],
+}
+
 EXAMPLE_SCHEMA = {
     'extends': 'http://ehealthafrica.org/#CouchDoc',
     'type': 'record',
@@ -76,6 +88,70 @@ EXAMPLE_SCHEMA = {
             'doc': 'VILLAGE',
         },
     ],
+}
+
+EXAMPLE_NESTED_SCHEMA = {
+    'type': 'record',
+    'fields': [
+        {
+            'name': 'name',
+            'type': 'string'
+        },
+        {
+            'name': 'location',
+            'type': {
+                'type': 'record',
+                'fields': [
+                    {
+                        'name': 'lat',
+                        'type': 'int'
+                    },
+                    {
+                        'name': 'lng',
+                        'type': 'int'
+                    }
+                ],
+                'name': 'Nested'
+            }
+        }
+    ],
+    'name': 'Nested'
+}
+
+NESTED_ARRAY_SCHEMA = {
+    'fields': [
+        {
+            'name': 'id',
+            'type': 'string'
+        },
+        {
+            'name': 'geom',
+            'namespace': 'Test',
+            'type': {
+                'fields': [
+                    {
+                        'name': 'coordinates',
+                        'namespace': 'Test.geom',
+                        'type': {
+                            'items': 'float',
+                            'type': 'array'
+                        }
+                    },
+                    {
+                        'name': 'type',
+                        'namespace': 'Test.geom',
+                        'type': 'string'
+                    }
+                ],
+                'name': 'geom',
+                'namespace': 'Test',
+                'type': 'record'
+            }
+        }
+    ],
+    'name': 'Test',
+    'namespace': 'org.eha.Test',
+    'type': 'record'
 }
 
 EXAMPLE_SOURCE_DATA = {
@@ -140,6 +216,26 @@ EXAMPLE_NESTED_SOURCE_DATA = {
     },
 }
 
+
+EXAMPLE_DATA_FOR_NESTED_SCHEMA = [
+    {
+        'name': 'a',
+        'lat': 10,
+        'lng': 20
+    },
+    {
+        'name': 'b',
+        'lat': 11,
+        'lng': 21
+    },
+    {
+        'name': 'c',
+        'lat': 12,
+        'lng': 22
+    },
+]
+
+
 EXAMPLE_PARTIAL_WILDCARDS = {
     'households': [
         {
@@ -167,11 +263,53 @@ EXAMPLE_SOURCE_DATA_ENTITY = {
 EXAMPLE_REQUIREMENTS = {
     'Person': {
         'id': ['#!uuid'],
-        '_rev': [],
         'name': ['data.people[*].name'],
         'dob': ['data.people[*].dob'],
         'villageID': ['data.village'],
     },
+}
+
+EXAMPLE_REQUIREMENTS_NESTED_SCHEMA = {
+    'Nested': {
+        'name': '[*].name',
+        'location.lat': '[*].lat',
+        'location.lng': '[*].lng'
+    }
+}
+
+EXAMPLE_REQUIREMENTS_ARRAY_BASE = {
+    'Person': {
+        'id': ['#!uuid'],
+        'name': ['[*].name'],
+        'dob': ['[*].dob'],
+        'villageID': ['[*].village']
+    }
+}
+
+EXAMPLE_ENTITY_NESTED = {
+    'Nested': [
+        {
+            'name': 'a',
+            'location': {
+                'lat': 10,
+                'lng': 20
+            }
+        },
+        {
+            'name': 'b',
+            'location': {
+                'lat': 11,
+                'lng': 21
+            }
+        },
+        {
+            'name': 'c',
+            'location': {
+                'lat': 12,
+                'lng': 22
+            }
+        },
+    ]
 }
 
 EXAMPLE_ENTITY = {
@@ -197,13 +335,31 @@ EXAMPLE_ENTITY = {
     ],
 }
 
-EXAMPLE_ENTITY_DEFINITION = {'Person': ['id', '_rev', 'name', 'dob', 'villageID']}
+EXAMPLE_ENTITY_DEFINITION = {
+    'Person': [
+        'id', '_rev', 'name', 'dob', 'villageID'
+    ]
+}
 
 EXAMPLE_FIELD_MAPPINGS = [
     ['#!uuid', 'Person.id'],
     ['data.village', 'Person.villageID'],
     ['data.people[*].name', 'Person.name'],
     ['data.people[*].dob', 'Person.dob'],
+]
+
+EXAMPLE_FIELD_MAPPINGS_EDGE = [
+    ['#!uuid', 'Person.id'],
+    ['[*].village', 'Person.villageID'],
+    ['$[*].name', 'Person.name'],
+    ['$.data.people[*].dob', 'Person.dob.nested']
+]
+
+EXAMPLE_FIELD_MAPPINGS_ARRAY_BASE = [
+    ['#!uuid', 'Person.id'],
+    ['[*].village', 'Person.villageID'],
+    ['[*].name', 'Person.name'],
+    ['[*].dob', 'Person.dob'],
 ]
 
 SAMPLE_LOCATION_SCHEMA_DEFINITION = {

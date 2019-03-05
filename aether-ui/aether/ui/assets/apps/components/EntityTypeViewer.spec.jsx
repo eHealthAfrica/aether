@@ -23,13 +23,14 @@
 import React from 'react'
 import { mountWithIntl } from 'enzyme-react-intl'
 
-import mockEntityTypesSchema from '../../tests/mock/schema_entityTypes.mock.json'
+import { mockEntityTypes } from '../../tests/mock'
 import { EntityTypeViewer } from '../components'
 
 describe('EntityTypeViewer', () => {
   it('should take a valid json list of schemas and render entity visualizers', () => {
-    const component = mountWithIntl(<EntityTypeViewer schema={mockEntityTypesSchema}
-      highlight={['Person.firstName']} />)
+    const component = mountWithIntl(
+      <EntityTypeViewer schema={mockEntityTypes} highlight={['Person.firstName']} />
+    )
     expect(component.find('div.entity-types-schema').children().length).toEqual(2)
     expect(component.html()).not.toContain('Invalid entity type')
     expect(component.html()).not.toContain('Invalid schema')
@@ -53,7 +54,7 @@ describe('EntityTypeViewer', () => {
   it('should take an empty schema and render error', () => {
     const inValidSchema = []
     const component = mountWithIntl(<EntityTypeViewer schema={inValidSchema} />)
-    expect(component.html()).toContain('No Entity Types added to this pipeline yet.')
+    expect(component.html()).toContain('No entity types added to this pipeline yet.')
   })
 
   it('should take an empty schema input and render message', () => {
@@ -68,7 +69,7 @@ describe('EntityTypeViewer', () => {
   })
 
   it('should render type name if symbols are missing', () => {
-    const entityTypeWithoutSymbols = [...mockEntityTypesSchema]
+    const entityTypeWithoutSymbols = [...mockEntityTypes]
     entityTypeWithoutSymbols[0]['fields'].push({
       'name': 'building',
       'type': {
@@ -84,7 +85,7 @@ describe('EntityTypeViewer', () => {
   })
 
   it('should take schema JSON with a min depth of 3', () => {
-    const entityTypeDepth3 = [...mockEntityTypesSchema]
+    const entityTypeDepth3 = [...mockEntityTypes]
     entityTypeDepth3[1]['fields'][2]['type']['fields'].push({
       name: 'cordinates',
       type: {

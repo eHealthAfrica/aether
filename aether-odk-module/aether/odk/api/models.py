@@ -29,7 +29,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
-from aether.common.utils import resolve_file_url
+from aether.common.utils import json_prettified
 
 from .xform_utils import (
     get_xform_data_from_xml,
@@ -207,6 +207,10 @@ class XForm(ExportModelOperationsMixin('odk_xform'), models.Model):
     )
 
     @property
+    def avro_schema_prettified(self):
+        return json_prettified(self.avro_schema)
+
+    @property
     def hash(self):
         return 'md5:{}'.format(self.md5sum)
 
@@ -344,7 +348,7 @@ class MediaFile(ExportModelOperationsMixin('odk_mediafile'), models.Model):
 
     @property
     def media_file_url(self):
-        return resolve_file_url(self.media_file.url)
+        return self.media_file.url
 
     def save(self, *args, **kwargs):
         # calculate hash

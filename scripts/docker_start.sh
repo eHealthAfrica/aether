@@ -20,7 +20,7 @@
 #
 set -Eeuo pipefail
 
-# start the indicated app/module with the necessary dependencies
+# start the indicated container with the necessary dependencies
 #
 #   ./scripts/docker_start.sh [--force | --kill | -f | -k] [--build | -b] <name>
 #
@@ -74,11 +74,7 @@ do
 done
 
 
-# Try to create the Aether network+volume if missing
-docker network create aether_internal       2>/dev/null || true
-docker volume  create aether_database_data  2>/dev/null || true
-
-./scripts/generate-aether-version-assets.sh
+./scripts/build_docker_assets.sh
 
 echo ""
 docker-compose ps
@@ -103,7 +99,7 @@ then
     echo "---- Building containers                                          ----"
     echo "----------------------------------------------------------------------"
 
-    ./scripts/build_aether_containers.sh
+    ./scripts/build_all_containers.sh
     echo ""
 fi
 
@@ -114,19 +110,19 @@ echo "----------------------------------------------------------------------"
 
 case $app in
     kernel)
-        PRE_CONTAINERS=(db)
+        PRE_CONTAINERS=(db minio)
         SETUP_CONTAINERS=(kernel)
         POST_CONTAINERS=(nginx)
     ;;
 
     odk)
-        PRE_CONTAINERS=(db)
+        PRE_CONTAINERS=(db minio)
         SETUP_CONTAINERS=(kernel odk)
         POST_CONTAINERS=(nginx)
     ;;
 
     ui)
-        PRE_CONTAINERS=(ui-assets db)
+        PRE_CONTAINERS=(ui-assets db minio)
         SETUP_CONTAINERS=(kernel ui)
         POST_CONTAINERS=(nginx)
     ;;
@@ -134,7 +130,7 @@ case $app in
     sync|couchdb-sync)
         app=couchdb-sync
 
-        PRE_CONTAINERS=(db couchdb redis)
+        PRE_CONTAINERS=(db couchdb redis minio)
         SETUP_CONTAINERS=(kernel couchdb-sync)
         POST_CONTAINERS=(couchdb-sync-rq nginx)
     ;;
@@ -142,13 +138,13 @@ case $app in
     *)
         app=
 
-        PRE_CONTAINERS=(ui-assets db couchdb redis)
+        PRE_CONTAINERS=(ui-assets db couchdb redis minio)
         SETUP_CONTAINERS=(kernel odk ui couchdb-sync)
         POST_CONTAINERS=(couchdb-sync-rq nginx)
     ;;
 esac
 
-start_container () {
+function start_container {
     if [[ $force = "yes" ]]; then
         docker-compose kill $1
     fi

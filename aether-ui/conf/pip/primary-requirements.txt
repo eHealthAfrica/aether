@@ -15,37 +15,11 @@
 
 # Main libraries
 
-# Aether common module, will also require:
-#   django < 2
-#   django-cors-headers
-#   django-debug-toolbar
-#   django-prometheus
-#   django-storages
-#   djangorestframework
-#   psycopg2-binary
-#   python-json-logger
-#   requests
-aether.common
+# Aether common library with extras
+aether.common[cas,server,test]
 
 
 # Django specific
 django-model-utils
 django-webpack-loader  # load JS assets
 drf-dynamic-fields
-
-
-# CAS libraries
-django-cas-ng<3.6.0  # breaking changes
-django-ums-client
-
-
-# Server side
-sentry-sdk             # Sentry
-uwsgi                  # Server behind NGINX
-
-
-# Test libraries
-coverage
-flake8
-flake8-quotes
-mock

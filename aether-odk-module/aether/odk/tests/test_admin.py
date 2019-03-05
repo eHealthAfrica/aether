@@ -16,17 +16,32 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import mock
 from django.urls import reverse
 
+from django.contrib.admin.sites import AdminSite
+from django.contrib.messages.storage.fallback import FallbackStorage
+from django.test.client import RequestFactory
+
+from ..api.kernel_utils import KernelPropagationError
+
 from ..api.tests import CustomTestCase
-from ..api.models import XForm
+from ..api.models import Project, XForm
+from ..admin import ProjectAdmin, XFormAdmin
 
 
 class AdminTests(CustomTestCase):
 
     def setUp(self):
         super(AdminTests, self).setUp()
-        self.helper_create_superuser()
+        user = self.helper_create_superuser()
+
+        self.request = RequestFactory().get('/admin/')
+        self.request.user = user
+        setattr(self.request, 'session', 'session')
+        messages = FallbackStorage(self.request)
+        setattr(self.request, '_messages', messages)
+
         self.url = reverse('admin:odk_xform_add')
 
         self.project = self.helper_create_project()
@@ -143,3 +158,43 @@ class AdminTests(CustomTestCase):
         self.assertIn(surveyor, instance.surveyors.all())
         self.assertTrue(instance.is_surveyor(surveyor))
         self.assertTrue(instance.is_surveyor(self.admin))
+
+    def test__project__actions(self):
+        app_admin = ProjectAdmin(Project, AdminSite())
+
+        self.assertEqual(Project.objects.count(), 1)
+
+        with mock.patch('aether.odk.admin.propagate_kernel_project') as mock_propagate_once:
+            app_admin.propagate(self.request, Project.objects.all())
+            mock_propagate_once.assert_called_once()
+
+        with mock.patch('aether.odk.admin.propagate_kernel_project',
+                        side_effect=KernelPropagationError(':(')) as mock_propagate_err:
+            app_admin.propagate(self.request, Project.objects.all())
+            mock_propagate_err.assert_called_once()
+
+        Project.objects.all().delete()
+        self.assertEqual(Project.objects.count(), 0)
+
+        with mock.patch('aether.odk.admin.propagate_kernel_project') as mock_propagate:
+            app_admin.propagate(self.request, Project.objects.all())
+            mock_propagate.assert_not_called()
+
+    def test__xform__actions(self):
+        app_admin = XFormAdmin(XForm, AdminSite())
+
+        self.assertEqual(XForm.objects.count(), 0)
+        with mock.patch('aether.odk.admin.propagate_kernel_artefacts') as mock_propagate:
+            app_admin.propagate(self.request, XForm.objects.all())
+            mock_propagate.assert_not_called()
+
+        self.helper_create_xform(project_id=self.PROJECT_ID)
+
+        with mock.patch('aether.odk.admin.propagate_kernel_artefacts') as mock_propagate_once:
+            app_admin.propagate(self.request, XForm.objects.all())
+            mock_propagate_once.assert_called_once()
+
+        with mock.patch('aether.odk.admin.propagate_kernel_artefacts',
+                        side_effect=KernelPropagationError(':(')) as mock_propagate_err:
+            app_admin.propagate(self.request, XForm.objects.all())
+            mock_propagate_err.assert_called_once()

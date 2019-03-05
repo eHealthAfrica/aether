@@ -30,7 +30,7 @@ $pipeline-nav-height: 4rem;
 $input-nav-width: 6rem;
 $entityTypes-nav-width: 11rem;
 $mapping-nav-width: 9rem;
-$output-nav-width: 8rem;
+$output-nav-width: 10rem;
 
 .pipeline {
   background: $white;
@@ -40,9 +40,79 @@ $output-nav-width: 8rem;
   top: $navbar-height-xs;
   bottom: 0;
   width: 100vw;
-  transition: top .2s;
+  transition: top .4s .5s;
   animation: slide-up .6s;
-  z-index: 2;
+  z-index: 4;
+}
+
+.pipeline-tabs {
+  position: absolute;
+  top: $navbar-height-xs * -1;
+  height: $navbar-height-xs;
+  left: $column-width;
+  width: calc(100% - #{$column-width});
+  display: flex;
+  transition: left $transition-speed;
+}
+
+.pipeline-tab {
+  padding: .4rem .8rem;
+  display: flex;
+  align-items: center;
+  height: $navbar-height-xs;
+  cursor: pointer;
+  min-width: 0;
+  border-left: 1px solid rgba($white, .1);
+
+  .contract-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .settings-button {
+
+    padding: 0;
+    margin-left: 2rem;
+    display: none;
+
+    i {
+      box-shadow: none;
+      width: 1.6rem;
+      height: 1.6rem;
+      padding: .3em;
+    }
+
+    &.active {
+      color: $white;
+    }
+  }
+
+  &.active {
+    background: lighten($dark-blue, 5);
+    border-bottom: 1px solid rgba($white, .1);
+    border-left: 0;
+
+    .settings-button {
+      display: inline-block;
+    }
+
+    .status {
+      display: none;
+    }
+  }
+
+  &:last-of-type {
+    margin-right: .3rem;
+  }
+}
+
+.new-contract {
+  margin-left: auto;
+  transition: opacity .4s;
+  align-self: center;
+  margin-right: .3rem;
+  flex: 0 0 auto;
 }
 
 .pipeline-nav {
@@ -51,7 +121,7 @@ $output-nav-width: 8rem;
   width: 100%;
   align-items: baseline;
   justify-content: space-between;
-  z-index: 3;
+  z-index: 4;
 }
 
 .fullscreen-toggle {
@@ -60,11 +130,10 @@ $output-nav-width: 8rem;
   margin-left: 1rem;
   align-items: center;
   transition: margin-left $transition-speed;
-  color: $action-color;
   display: none;
 
   &::before {
-    @include shadow-flat-dark;
+    // @include shadow-flat-dark;
     content: '';
     display: block;
     position: absolute;
@@ -108,9 +177,12 @@ $output-nav-width: 8rem;
   }
 }
 
+.fullscreen .pipeline-nav-items {
+  width: 100%;
+}
+
 .fullscreen .fullscreen-toggle {
   margin-left: calc(100% - 19rem);
-  border-right: 1px solid $grey;
 
   &::before {
     display: none;
@@ -176,45 +248,14 @@ div.pipeline-nav-item__mapping {
   width: $mapping-nav-width;
 }
 
+div.pipeline-nav-item__contracts {
+  position: absolute;
+  right: 1rem;
+  display: none;
+}
+
 div.pipeline-nav-item__output {
-
-  text-align: right;
-  justify-content: flex-end;
-  padding-right: 2rem;
   width: $output-nav-width;
-  position: relative;
-
-  .output-toggle {
-    width: 0;
-    height: 0;
-    border-top: .4rem solid transparent;
-    border-bottom: .4rem solid transparent;
-    border-left: .6rem solid $action-color;
-
-    position: absolute;
-    top: .8rem;
-    right: .6rem;
-
-    transition: right $transition-speed;
-  }
-
-  .status {
-    @include shadow-cutout-dark;
-    border-radius: 50%;
-    width: .8em;
-    height: .8em;
-    content: '';
-    display: block;
-    margin-right: .5em;
-  }
-
-  .red {
-    background-color: $red;
-  }
-
-  .green {
-    background-color: $green;
-  }
 }
 
 .pipeline-sections {
@@ -246,6 +287,10 @@ div[class^='pipeline-section__'],
   .badge {
     @include bg-gradient;
     opacity: 1;
+
+    .fa-caret-right {
+      transform: rotate(90deg);
+    }
   }
 
   .fullscreen-toggle {
@@ -257,10 +302,28 @@ div[class^='pipeline-section__'],
 
 .pipeline--input {
 
+  .pipeline-tabs {
+    left: 100vw;
+  }
+
+  div.pipeline-nav-items {
+    width: 100%;
+  }
+
   div.pipeline-nav-item__input {
     @include selected;
     width: calc(100% - (#{$entityTypes-nav-width} + #{$mapping-nav-width}));
     color: $text-color;
+  }
+
+  div.pipeline-nav-item__contracts {
+    display: block;
+  }
+
+  div.pipeline-nav-item__entityTypes,
+  div.pipeline-nav-item__mapping,
+  div.pipeline-nav-item__output {
+    width: 0;
   }
 
   div.pipeline-section__input {
@@ -291,7 +354,7 @@ div[class^='pipeline-section__'],
   }
 }
 
-.pipeline--entityTypes.fullscreen {
+.pipeline--entityTypes .fullscreen {
 
   div.pipeline-nav-item__input,
   div.pipeline-nav-item__mapping {
@@ -342,7 +405,7 @@ div[class^='pipeline-section__'],
   }
 }
 
-.pipeline--mapping.fullscreen {
+.pipeline--mapping .fullscreen {
 
   div.pipeline-nav-item__input,
   div.pipeline-nav-item__entityTypes {
@@ -373,11 +436,8 @@ div[class^='pipeline-section__'],
   }
 
   div.pipeline-nav-item__output {
+    @include selected;
     width: $output-width;
-
-    .output-toggle {
-      right: calc(100% - 1.6rem);
-    }
   }
 
   .pipeline-sections {
@@ -385,6 +445,7 @@ div[class^='pipeline-section__'],
   }
 
   .pipeline-output {
-    width: $output-width;
+    width: calc(#{$output-width} + .2vw);
+    border-left: 1px solid rgba($black, .5);
   }
 }

@@ -441,7 +441,7 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(Schema.objects.count(), 1)
         self.assertEqual(ProjectSchema.objects.count(), 1)
         self.assertEqual(MappingSet.objects.count(), 1)
-        self.assertEqual(Mapping.objects.count(), 2, 'The passthrough mapping and the empty one')
+        self.assertEqual(Mapping.objects.count(), 1)
 
         schema = Schema.objects.first()
         self.assertEqual(schema.family, 'test')
@@ -489,32 +489,4 @@ class ProjectArtefactsTests(TestCase):
                 self.assertEqual(mapping.definition, {'mapping': [], 'entities': {}})
 
         self.assertTrue(there_is_passthrough)
-        self.assertTrue(there_is_empty)
-
-        # if we try again, it's not creating a new empty mapping
-        # delete both mappings
-        Mapping.objects.all().delete()
-
-        # generate again (update, not create)
-        generate_from_avro(
-            project_id=str(Project.objects.first().pk),
-            avro_schemas=[{'definition': avro_schema, 'id': str(schema.id)}],
-        )
-
-        schema.refresh_from_db()
-        self.assertEqual(schema.family, 'test')
-
-        self.assertEqual(Mapping.objects.count(), 1, 'Only the passthrough mapping')
-
-        mapping = Mapping.objects.first()
-        self.assertEqual(schema.id, mapping.id)
-        self.assertEqual(mapping.definition, {
-            'entities': {
-                'Person': str(schema.id),
-            },
-            'mapping': [
-                ['$.first_name', 'Person.first_name'],
-                ['$.last_name', 'Person.last_name'],
-                ['#!uuid', 'Person.id'],
-            ]
-        })
+        self.assertFalse(there_is_empty)

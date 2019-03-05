@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
@@ -37,7 +37,7 @@ test_flake8() {
     flake8 /code/. --config=/code/setup.cfg
 }
 
-test_coverage() {
+test_python() {
     # Python3 Tests
     python3 setup.py -q test "${@:1}"
 
@@ -58,7 +58,7 @@ case "$1" in
 
     test)
         test_flake8
-        test_coverage "${@:2}"
+        test_python "${@:2}"
     ;;
 
     test_lint)

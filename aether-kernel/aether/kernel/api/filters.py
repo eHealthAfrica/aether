@@ -105,9 +105,21 @@ class SubmissionFilter(filters.FilterSet):
             return queryset.filter(mappingset__name=value)
 
     class Meta:
-        fields = '__all__'
         exclude = ('payload',)
         model = models.Submission
+        filter_overrides = {
+            model.created: {
+                'filter_class': filters.IsoDateTimeFilter
+            },
+        }
+        # since we can't use __all__ and then extend the syntax on specific
+        # fields, we have to enumerate all fields and give them the exact
+        # filter
+        fields = {str(k.name): ('exact',)
+                  for k in model._meta.get_fields()
+                  if k.name not in ['payload']}  # exclude not accessible from here
+        fields['created'] = ('lt', 'gt', 'lte', 'gte', 'exact',)
+        fields['modified'] = ('lt', 'gt', 'lte', 'gte', 'exact',)
 
 
 class AttachmentFilter(filters.FilterSet):
@@ -202,9 +214,21 @@ class EntityFilter(filters.FilterSet):
         return queryset
 
     class Meta:
-        fields = '__all__'
         exclude = ('payload',)
         model = models.Entity
+        filter_overrides = {
+            model.created: {
+                'filter_class': filters.IsoDateTimeFilter
+            },
+        }
+        # since we can't use __all__ and then extend the syntax on specific
+        # fields, we have to enumerate all fields and give them the exact
+        # filter
+        fields = {str(k.name): ('exact',)
+                  for k in model._meta.get_fields()
+                  if k.name not in ['payload']}  # exclude not accessible from here
+        fields['created'] = ('lt', 'gt', 'lte', 'gte', 'exact',)
+        fields['modified'] = ('lt', 'gt', 'lte', 'gte', 'exact',)
 
 
 def is_uuid(value):

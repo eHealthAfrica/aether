@@ -27,8 +27,8 @@ class HTTPError extends Error {
 }
 
 class NotFoundError extends HTTPError {
-  constructor (message, error = 'Not Found', status = 404) {
-    super(message, error, status)
+  constructor (message) {
+    super(message, 'Not Found', 404)
   }
 }
 

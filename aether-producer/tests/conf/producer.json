@@ -14,7 +14,7 @@
     "offset_db_pool_size" : 1,
     "kernel_db_pool_size" : 1,
 
-    "kernel_url": "http://kernel-test:9000",
+    "kernel_url": "http://kernel-test:9100",
     "kernel_admin_username" : "admin",
     "kernel_admin_password" : "adminadmin",
 

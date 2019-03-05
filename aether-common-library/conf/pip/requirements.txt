@@ -1,0 +1,23 @@
+################################################################################
+#                                                                              #
+#                           Requirements for testing                           #
+#    (If you need production dependencies, add them to the `setup.py` file)    #
+#                                                                              #
+################################################################################
+
+django
+django-cors-headers
+django-minio-storage
+django-prometheus
+djangorestframework
+psycopg2-binary
+pygments
+python-json-logger
+requests
+
+
+# test libraries
+coverage
+flake8
+flake8-quotes
+mock

@@ -17,29 +17,27 @@
 # under the License.
 
 import os
+import logging
 
 # Common settings
 # ------------------------------------------------------------------------------
 
 from aether.common.conf.settings import *  # noqa
-from aether.common.conf.settings import INSTALLED_APPS, STATIC_ROOT
+from aether.common.conf.settings import (
+    DEBUG,
+    INSTALLED_APPS,
+    LOGGING_LEVEL,
+    STATIC_ROOT,
+)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(LOGGING_LEVEL)
 
 
 # UI Configuration
 # ------------------------------------------------------------------------------
 
 ROOT_URLCONF = 'aether.ui.urls'
-
-# Javascript/CSS Files:
-WEBPACK_LOADER = {
-    'DEFAULT': {
-        'BUNDLE_DIR_NAME': '/',
-        'STATS_FILE': os.path.join(STATIC_ROOT, 'webpack-stats.json'),
-        'POLL_INTERVAL': 0.1,  # in miliseconds
-        'TIMEOUT': None,
-        'IGNORE': [r'.+\.hot-update.js', r'.+\.map'],
-    },
-}
 
 INSTALLED_APPS += [
     'webpack_loader',
@@ -48,4 +46,31 @@ INSTALLED_APPS += [
 
 MIGRATION_MODULES = {
     'ui': 'aether.ui.api.migrations'
+}
+
+
+DEFAULT_PROJECT_NAME = os.environ.get('DEFAULT_PROJECT_NAME', 'AUX')
+logger.debug(f'Default project name:  {DEFAULT_PROJECT_NAME}')
+
+
+# Webpack Configuration
+# ------------------------------------------------------------------------------
+
+WEBPACK_STATS_FILE = os.environ.get(
+    'WEBPACK_STATS_FILE',
+    os.path.join(STATIC_ROOT, 'webpack-stats.json')
+)
+logger.debug(f'Assets served by file:  {WEBPACK_STATS_FILE}')
+
+# Javascript/CSS Files:
+# https://github.com/owais/django-webpack-loader#default-configuration
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'CACHE': not DEBUG,
+        'BUNDLE_DIR_NAME': '/',
+        'STATS_FILE': WEBPACK_STATS_FILE,
+        'POLL_INTERVAL': 0.1,
+        'TIMEOUT': None,
+        'IGNORE': [r'.+\.hot-update.js', r'.+\.map'],
+    },
 }

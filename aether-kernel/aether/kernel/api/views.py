@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.db.models import Count, Min, Max, TextField, Q, Case, When
+from django.db.models import Count, Min, Max, TextField, Q
 from django.db.models.functions import Cast
 from django.shortcuts import get_object_or_404
 
@@ -474,6 +474,8 @@ class SubmissionStatsMixin(object):
     ordering = ('name',)
 
     def get_queryset(self):
+        qs = super(SubmissionStatsMixin, self).get_queryset()
+
         entities_count = Count('submissions__entities__id', distinct=True)
 
         entities_filter = None
@@ -495,38 +497,29 @@ class SubmissionStatsMixin(object):
                 entities_filter = Q(submissions__entities__projectschema__schema__family=family)
 
         if entities_filter:
-            # Django 1: use Case+When
             entities_count = Count(
-                expression=Case(When(entities_filter, then='submissions__entities__id')),
+                expression='submissions__entities__id',
                 distinct=True,
+                filter=entities_filter,
             )
 
-            # Django 2: filter in Count
-            # (replace code above with this block when we upgrade to Django 2)
-            # entities_count = Count(
-            #     expression='submissions__entities__id',
-            #     distinct=True,
-            #     filter=entities_filter,
-            # )
-
-        return self.model.objects \
-                   .values('id', 'name', 'created') \
-                   .annotate(
-                       first_submission=Min('submissions__created'),
-                       last_submission=Max('submissions__created'),
-                       submissions_count=Count('submissions__id', distinct=True),
-                       attachments_count=Count('submissions__attachments__id', distinct=True),
-                       entities_count=entities_count,
-                   )
+        return qs.values('id', 'name', 'created') \
+                 .annotate(
+                     first_submission=Min('submissions__created'),
+                     last_submission=Max('submissions__created'),
+                     submissions_count=Count('submissions__id', distinct=True),
+                     attachments_count=Count('submissions__attachments__id', distinct=True),
+                     entities_count=entities_count,
+                 )
 
 
 class ProjectStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
-    model = models.Project  # required by SubmissionStatsMixin
+    queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectStatsSerializer
 
 
 class MappingSetStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
-    model = models.MappingSet  # required by SubmissionStatsMixin
+    queryset = models.MappingSet.objects.all()
     serializer_class = serializers.MappingSetStatsSerializer
 
 

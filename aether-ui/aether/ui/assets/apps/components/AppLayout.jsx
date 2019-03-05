@@ -23,15 +23,16 @@ import { Provider } from 'react-redux'
 import { IntlProvider } from 'react-intl'
 import { HashRouter, Switch, Route } from 'react-router-dom'
 
+import { DEFAULT_LOCALE } from '../utils/constants'
 import createStore from '../redux/store'
 
 const store = createStore()
 
-export default class AppLayout extends Component {
+class AppLayout extends Component {
   render () {
     return (
       <Provider store={store}>
-        <IntlProvider defaultLocale='en' locale={navigator.locale || 'en'}>
+        <IntlProvider defaultLocale={DEFAULT_LOCALE} locale={navigator.locale || DEFAULT_LOCALE}>
           <HashRouter>
             <Switch>
               <Route path='/' component={this.props.app} />
@@ -42,3 +43,5 @@ export default class AppLayout extends Component {
     )
   }
 }
+
+export default AppLayout

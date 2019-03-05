@@ -19,16 +19,31 @@
 # under the License.
 #
 
-release_app () {
-    APP_NAME=$1
-    COMPOSE_PATH=$2
-    AETHER_APP="aether-${1}"
+function prepare_dependencies {
+    ./scripts/build_docker_assets.sh
+    ./scripts/build_common_and_distribute.sh
+    ./scripts/build_client_and_distribute.sh
 
-    echo "Building Docker image ${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
-    docker-compose -f $COMPOSE_PATH build \
+    build_app ui-assets
+    docker-compose run ui-assets build
+}
+
+function build_app {
+    APP_NAME=$1
+    DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml -f docker-compose-test.yml"
+
+    echo "Building Docker container $APP_NAME"
+    $DC build \
+        --no-cache --force-rm --pull \
         --build-arg GIT_REVISION=$TRAVIS_COMMIT \
         --build-arg VERSION=$VERSION \
         $APP_NAME
+    echo "_____________________________________________"
+}
+
+function release_app {
+    APP_NAME=$1
+    AETHER_APP="aether-${APP_NAME}"
 
     echo "Pushing Docker image ${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
     docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
@@ -40,42 +55,30 @@ release_app () {
         docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:latest"
         docker push "${IMAGE_REPO}/${AETHER_APP}:latest"
     fi
+    echo "_____________________________________________"
 }
 
 release_process () {
-    echo "Release version:  $VERSION"
-    echo "Release revision: $TRAVIS_COMMIT"
 
     # Login in dockerhub with write permissions (repos are public)
     docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
 
-    # Try to create the aether network+volume if they don't exist.
-    docker network create aether_internal      2>/dev/null || true
-    docker volume  create aether_database_data 2>/dev/null || true
-
-    # Build dependencies
-    ./scripts/build_aether_utils_and_distribute.sh
-    ./scripts/build_common_and_distribute.sh
-
-    # Prepare Aether UI assets
-    docker-compose build ui-assets
-    docker-compose run   ui-assets build
-
-    # Build docker images
     IMAGE_REPO='ehealthafrica'
-    CORE_APPS=( kernel odk couchdb-sync ui )
-    CORE_COMPOSE='docker-compose.yml'
-    CONNECT_APPS=( producer )
-    CONNECT_COMPOSE='docker-compose-connect.yml'
+    RELEASE_APPS=( kernel odk couchdb-sync ui producer integration-test )
 
-    for APP in "${CORE_APPS[@]}"
-    do
-        release_app $APP $CORE_COMPOSE
-    done
+    echo "_____________________________________________"
+    echo "Release version:   $VERSION"
+    echo "Release revision:  $TRAVIS_COMMIT"
+    echo "Images repository: $IMAGE_REPO"
+    echo "Images:            ${RELEASE_APPS[@]}"
+    echo "_____________________________________________"
 
-    for CONNECT_APP in "${CONNECT_APPS[@]}"
+    prepare_dependencies
+
+    for APP in "${RELEASE_APPS[@]}"
     do
-        release_app $CONNECT_APP $CONNECT_COMPOSE
+        build_app $APP
+        release_app $APP
     done
 }
 
@@ -172,7 +175,7 @@ function git_branch_commit_and_release() {
         VERSION=${BRANCH_OR_TAG_VALUE}-$4
     fi
     echo "Starting version" ${VERSION} "release"
-    # release_process
+    release_process
 
     # Update develop VERSION value to match the latest released version
     git fetch ${REMOTE} develop
@@ -217,7 +220,7 @@ then
 elif [[ $TRAVIS_BRANCH = "develop" ]]
 then
     VERSION='alpha'
-    # release_process
+    release_process
 else
     echo "Skipping a release because this branch is not permitted: ${TRAVIS_BRANCH}"
 fi

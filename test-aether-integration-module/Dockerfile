@@ -1,31 +1,32 @@
 FROM python:3.6-slim-jessie
 
 ################################################################################
-## setup container
-################################################################################
-
-RUN apt-get update -qq \
-    && apt-get -qq --yes --force-yes install gcc \
-    && pip install --upgrade pip
-
-################################################################################
 ## install app
-## copy files one by one and split commands to use docker cache
 ################################################################################
 
 WORKDIR /code
-
-COPY ./conf/pip /code/conf/pip
-RUN pip install -q -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt
-
 COPY ./ /code
+
+RUN useradd -ms /bin/false aether && \
+    chown -R aether: /code && \
+    apt-get update -qq && \
+    apt-get -qq --yes --force-yes install gcc && \
+    pip install -q --upgrade pip && \
+    pip install -q -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt
+
+################################################################################
+## copy application version and create git revision
+################################################################################
+
+ARG VERSION
+ARG GIT_REVISION
+
+RUN mkdir -p /var/tmp && \
+    echo $VERSION > /var/tmp/VERSION && \
+    echo $GIT_REVISION > /var/tmp/REVISION
 
 ################################################################################
 ## last setup steps
 ################################################################################
-
-# create user to run container (avoid root user)
-RUN useradd -ms /bin/false aether
-RUN chown -R aether: /code
 
 ENTRYPOINT ["/code/entrypoint.sh"]

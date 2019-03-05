@@ -170,6 +170,7 @@ class ModelsTests(ApiTestCase):
 
         schema = Schema.objects.create(name=name, project=project)
         self.assertEqual(str(schema), name)
+        self.assertIsNotNone(schema.avro_schema_prettified)
 
         schema_2 = Schema.objects.create(
             project=project,
