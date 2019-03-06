@@ -16,11 +16,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 
 from aether.ui.api import models, serializers
 
 
+@override_settings(MULTITENANCY=False)
 class SerializersTests(TestCase):
 
     def setUp(self):

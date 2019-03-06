@@ -24,6 +24,7 @@ from django.utils.translation import ugettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 from model_utils.models import TimeStampedModel
 
+from aether.common.multitenancy.utils import MtModelAbstract
 from aether.common.utils import json_prettified
 
 from .utils import validate_contract
@@ -54,7 +55,7 @@ Data model schema:
 '''
 
 
-class Project(ExportModelOperationsMixin('ui_project'), TimeStampedModel):
+class Project(ExportModelOperationsMixin('ui_project'), TimeStampedModel, MtModelAbstract):
     '''
     Database link of an Aether Kernel Project.
 
@@ -138,6 +139,9 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
         # revalidate linked contracts against updated fields
         contracts = Contract.objects.filter(pipeline=self)
         [contract.save() for contract in contracts]
+
+    def is_accessible(self, realm):
+        return self.project.is_accessible(realm)
 
     class Meta:
         app_label = 'ui'
@@ -312,6 +316,9 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
         self.output = output
 
         super(Contract, self).save(*args, **kwargs)
+
+    def is_accessible(self, realm):
+        return self.pipeline.project.is_accessible(realm)
 
     class Meta:
         app_label = 'ui'

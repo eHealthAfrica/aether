@@ -19,6 +19,7 @@
 import json
 import uuid
 
+from django.conf import settings
 
 from django.utils import timezone
 from django.utils.translation import ugettext as _
@@ -27,6 +28,7 @@ from rest_framework import status
 
 from aether.common.kernel import utils
 from aether.common.utils import get_all_docs, request
+from aether.common.multitenancy import utils as mt_utils
 
 from . import models
 
@@ -65,6 +67,28 @@ MSG_ENTITY_WRONG_PROJECT = _('Entity type "{}" (as project schema) belongs to a 
 
 class PublishError(Exception):
     pass
+
+
+def get_default_project(request):
+    '''
+    Returns (creates when needed) the default project to assign to new pipelines.
+    '''
+
+    # find the default projects
+    default_projects = mt_utils.filter_by_realm(request, models.Project.objects.filter(is_default=True))
+    if default_projects.count() == 0:
+        # create a default one
+        if not settings.MULTITENANCY:
+            name = settings.DEFAULT_PROJECT_NAME
+        else:
+            name = mt_utils.get_current_realm(request)
+
+        project = models.Project.objects.create(name=name, is_default=True)
+        mt_utils.assign_to_realm(request, project)
+
+        return project
+    else:
+        return default_projects.first()
 
 
 def kernel_artefacts_to_ui_artefacts():

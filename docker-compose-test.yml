@@ -147,6 +147,7 @@ services:
       AETHER_KERNEL_URL: http://kernel-test:9100
       DB_NAME: test-ui
       DEBUG: null # set to null to remove previous value
+      MULTITENANCY: "true"
       PGHOST: db-test
       TESTING: "true"
       WEB_SERVER_PORT: 9104
