@@ -86,6 +86,7 @@ class ModelsTests(TestCase):
     def test__models(self):
         project = Project.objects.create(name='Project test')
         self.assertEqual(str(project), 'Project test')
+        self.assertFalse(project.is_accessible('realm'))
 
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
@@ -95,6 +96,7 @@ class ModelsTests(TestCase):
         self.assertEqual(str(pipeline), 'Pipeline test')
         self.assertIsNotNone(pipeline.input_prettified)
         self.assertIsNotNone(pipeline.schema_prettified)
+        self.assertFalse(pipeline.is_accessible('realm'))
 
         contract = Contract.objects.create(
             name='Contract test',
@@ -108,6 +110,7 @@ class ModelsTests(TestCase):
         self.assertIsNotNone(contract.output_errors_prettified)
         self.assertIsNotNone(contract.kernel_refs_errors_prettified)
         self.assertEqual(contract.kernel_rules, [['#!uuid', 'Person.id']])
+        self.assertFalse(contract.is_accessible('realm'))
 
     def test__pipeline__and__contract__save__missing_requirements(self):
         pipeline = Pipeline.objects.create(

@@ -78,10 +78,8 @@ def get_default_project(request):
     default_projects = mt_utils.filter_by_realm(request, models.Project.objects.filter(is_default=True))
     if default_projects.count() == 0:
         # create a default one
-        if not settings.MULTITENANCY:
-            name = settings.DEFAULT_PROJECT_NAME
-        else:
-            name = mt_utils.get_current_realm(request)
+        realm = mt_utils.get_current_realm(request)
+        name = settings.DEFAULT_PROJECT_NAME if not settings.MULTITENANCY else realm
 
         project = models.Project.objects.create(name=name, is_default=True)
         mt_utils.assign_to_realm(request, project)

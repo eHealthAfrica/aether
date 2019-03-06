@@ -19,12 +19,14 @@
 import uuid
 import mock
 
-from django.test import TestCase
+from django.conf import settings
+from django.test import RequestFactory, TestCase, override_settings
 
 from ..models import Project, Pipeline, Contract
 from .. import utils
 
 
+@override_settings(MULTITENANCY=False)
 class UtilsTest(TestCase):
 
     def setUp(self):
@@ -43,6 +45,21 @@ class UtilsTest(TestCase):
             utils.kernel_data_request(f'{model}/{pk}/', 'delete')
         except Exception:
             pass  # ignore
+
+    def test_get_default_project(self):
+        self.assertEqual(Project.objects.count(), 0)
+        request = RequestFactory().get('/')
+
+        # creates a project
+        project = utils.get_default_project(request)
+        self.assertEqual(project.name, settings.DEFAULT_PROJECT_NAME)
+        self.assertTrue(project.is_default)
+        self.assertEqual(Project.objects.count(), 1)
+
+        # call it a second time does not create a new one
+        project_2 = utils.get_default_project(request)
+        self.assertEqual(project.pk, project_2.pk)
+        self.assertEqual(Project.objects.count(), 1)
 
     def test_kernel_data_request(self):
         result = utils.kernel_data_request('projects/')
