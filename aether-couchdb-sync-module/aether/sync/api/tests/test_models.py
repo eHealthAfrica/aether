@@ -17,7 +17,10 @@
 # under the License.
 
 import uuid
+
+from django.conf import settings
 from django.db import IntegrityError
+from django.test import override_settings
 
 from ...couchdb import api
 from . import ApiTestCase
@@ -25,6 +28,7 @@ from .. import couchdb_helpers
 from ..models import MobileUser, DeviceDB, Project, Schema
 
 
+@override_settings(MULTITENANCY=False)
 class ModelsTests(ApiTestCase):
 
     def test_mobileuser_str(self):
@@ -167,12 +171,14 @@ class ModelsTests(ApiTestCase):
 
         project = Project.objects.create(name=name, project_id=id)
         self.assertEqual(str(project), f'{id} - {name}')
-        self.assertFalse(project.is_accessible('realm'))
+        self.assertFalse(project.is_accessible(settings.DEFAULT_REALM))
+        self.assertIsNone(project.get_realm())
 
         schema = Schema.objects.create(name=name, project=project)
         self.assertEqual(str(schema), name)
         self.assertIsNotNone(schema.avro_schema_prettified)
-        self.assertFalse(schema.is_accessible('realm'))
+        self.assertFalse(schema.is_accessible(settings.DEFAULT_REALM))
+        self.assertIsNone(schema.get_realm())
 
         schema_2 = Schema.objects.create(
             project=project,

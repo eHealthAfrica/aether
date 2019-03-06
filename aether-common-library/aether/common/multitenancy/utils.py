@@ -124,6 +124,7 @@ class MtModelAbstract(Model):
 
         if not settings.MULTITENANCY:
             return None
+
         try:
             return self.mt.realm
         except ObjectDoesNotExist:

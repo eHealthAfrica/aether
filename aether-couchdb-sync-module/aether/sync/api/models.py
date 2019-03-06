@@ -128,6 +128,9 @@ class Schema(ExportModelOperationsMixin('couchdbsync_schema'), models.Model):
     def is_accessible(self, realm):
         return self.project.is_accessible(realm)
 
+    def get_realm(self):
+        return self.project.get_realm()
+
     def __str__(self):
         return self.name
 
