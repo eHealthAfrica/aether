@@ -89,7 +89,7 @@ def get_default_project(request):
         return default_projects.first()
 
 
-def kernel_artefacts_to_ui_artefacts():
+def kernel_artefacts_to_ui_artefacts(request):
     '''
     Fetches all projects in kernel and all linked mappingsets and tranform them into pipelines,
     taking also the linked mappings+schemas and transform them into contracts.
@@ -105,7 +105,9 @@ def kernel_artefacts_to_ui_artefacts():
         if not models.Project.objects.filter(pk=project_id).exists():
             # create the project
             models.Project.objects.create(project_id=project_id, name=kernel_project['name'])
+
         project = models.Project.objects.get(pk=project_id)
+        project.save_mt(request)
 
         # fetch linked mapping sets
         mappingsets = get_all_docs(kernel_project['mappingset_url'], headers=AUTH_HEADERS)

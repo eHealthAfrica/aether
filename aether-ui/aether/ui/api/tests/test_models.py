@@ -19,7 +19,8 @@
 import json
 import mock
 
-from django.test import TestCase
+from django.conf import settings
+from django.test import TestCase, override_settings
 
 from aether.common.kernel import utils as kernel_utils
 
@@ -73,6 +74,7 @@ class MockResponse:
         return self.json_data
 
 
+@override_settings(MULTITENANCY=False)
 class ModelsTests(TestCase):
 
     def setUp(self):
@@ -86,7 +88,8 @@ class ModelsTests(TestCase):
     def test__models(self):
         project = Project.objects.create(name='Project test')
         self.assertEqual(str(project), 'Project test')
-        self.assertFalse(project.is_accessible('realm'))
+        self.assertFalse(project.is_accessible(settings.DEFAULT_REALM))
+        self.assertIsNone(project.get_realm())
 
         pipeline = Pipeline.objects.create(
             name='Pipeline test',
@@ -96,7 +99,8 @@ class ModelsTests(TestCase):
         self.assertEqual(str(pipeline), 'Pipeline test')
         self.assertIsNotNone(pipeline.input_prettified)
         self.assertIsNotNone(pipeline.schema_prettified)
-        self.assertFalse(pipeline.is_accessible('realm'))
+        self.assertFalse(pipeline.is_accessible(settings.DEFAULT_REALM))
+        self.assertIsNone(pipeline.get_realm())
 
         contract = Contract.objects.create(
             name='Contract test',
@@ -110,7 +114,8 @@ class ModelsTests(TestCase):
         self.assertIsNotNone(contract.output_errors_prettified)
         self.assertIsNotNone(contract.kernel_refs_errors_prettified)
         self.assertEqual(contract.kernel_rules, [['#!uuid', 'Person.id']])
-        self.assertFalse(contract.is_accessible('realm'))
+        self.assertFalse(contract.is_accessible(settings.DEFAULT_REALM))
+        self.assertIsNone(contract.get_realm())
 
     def test__pipeline__and__contract__save__missing_requirements(self):
         pipeline = Pipeline.objects.create(

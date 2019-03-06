@@ -143,6 +143,9 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
     def is_accessible(self, realm):
         return self.project.is_accessible(realm)
 
+    def get_realm(self):
+        return self.project.get_realm()
+
     class Meta:
         app_label = 'ui'
         default_related_name = 'pipelines'
@@ -319,6 +322,9 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
 
     def is_accessible(self, realm):
         return self.pipeline.project.is_accessible(realm)
+
+    def get_realm(self):
+        return self.pipeline.project.get_realm()
 
     class Meta:
         app_label = 'ui'

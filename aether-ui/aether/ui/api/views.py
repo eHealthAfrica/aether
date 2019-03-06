@@ -50,7 +50,7 @@ class PipelineViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         Afterwards returns the list of pipelines.
         '''
 
-        utils.kernel_artefacts_to_ui_artefacts()
+        utils.kernel_artefacts_to_ui_artefacts(request)
         return self.list(request)
 
 

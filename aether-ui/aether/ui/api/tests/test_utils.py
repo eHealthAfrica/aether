@@ -33,6 +33,7 @@ class UtilsTest(TestCase):
         super(UtilsTest, self).setUp()
 
         self.KERNEL_ID = str(uuid.uuid4())
+        self.request = RequestFactory().get('/')
 
     def tearDown(self):
         self.helper__delete_in_kernel('projects', self.KERNEL_ID)
@@ -48,16 +49,15 @@ class UtilsTest(TestCase):
 
     def test_get_default_project(self):
         self.assertEqual(Project.objects.count(), 0)
-        request = RequestFactory().get('/')
 
         # creates a project
-        project = utils.get_default_project(request)
+        project = utils.get_default_project(self.request)
         self.assertEqual(project.name, settings.DEFAULT_PROJECT_NAME)
         self.assertTrue(project.is_default)
         self.assertEqual(Project.objects.count(), 1)
 
         # call it a second time does not create a new one
-        project_2 = utils.get_default_project(request)
+        project_2 = utils.get_default_project(self.request)
         self.assertEqual(project.pk, project_2.pk)
         self.assertEqual(Project.objects.count(), 1)
 
@@ -256,7 +256,7 @@ class UtilsTest(TestCase):
         self.assertFalse(Project.objects.filter(pk=self.KERNEL_ID).exists())
 
         # bring them to ui
-        utils.kernel_artefacts_to_ui_artefacts()
+        utils.kernel_artefacts_to_ui_artefacts(self.request)
 
         self.assertTrue(Project.objects.filter(pk=self.KERNEL_ID).exists())
         project = Project.objects.get(pk=self.KERNEL_ID)
@@ -274,7 +274,7 @@ class UtilsTest(TestCase):
         )
 
         # bring them again to ui
-        utils.kernel_artefacts_to_ui_artefacts()
+        utils.kernel_artefacts_to_ui_artefacts(self.request)
         project.refresh_from_db()
 
         # nothing new
