@@ -308,6 +308,9 @@ class XForm(ExportModelOperationsMixin('odk_xform'), models.Model):
     def is_accessible(self, realm):
         return self.project.is_accessible(realm)
 
+    def get_realm(self):
+        return self.project.get_realm()
+
     def __str__(self):
         return '{} - {}'.format(self.title, self.form_id)
 
@@ -369,6 +372,9 @@ class MediaFile(ExportModelOperationsMixin('odk_mediafile'), models.Model):
 
     def is_accessible(self, realm):
         return self.xform.project.is_accessible(realm)
+
+    def get_realm(self):
+        return self.xform.project.get_realm()
 
     def __str__(self):
         return self.name

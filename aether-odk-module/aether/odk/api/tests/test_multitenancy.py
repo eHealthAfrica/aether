@@ -68,6 +68,15 @@ class MultitenancyTests(CustomTestCase):
         self.assertFalse(project.is_accessible(CURRENT_REALM))
         self.assertFalse(xform.is_accessible(CURRENT_REALM))
         self.assertFalse(media_file.is_accessible(CURRENT_REALM))
+
+        self.assertTrue(project.is_accessible(settings.DEFAULT_REALM))
+        self.assertTrue(xform.is_accessible(settings.DEFAULT_REALM))
+        self.assertTrue(media_file.is_accessible(settings.DEFAULT_REALM))
+
+        self.assertEqual(project.get_realm(), settings.DEFAULT_REALM)
+        self.assertEqual(xform.get_realm(), settings.DEFAULT_REALM)
+        self.assertEqual(media_file.get_realm(), settings.DEFAULT_REALM)
+
         self.assertTrue(MtInstance.objects.count() == 0)
 
     def test_models__assign_realm(self):
@@ -77,10 +86,13 @@ class MultitenancyTests(CustomTestCase):
 
         project.save_mt(self.request)
 
-        self.assertEqual(project.get_realm(), CURRENT_REALM)
         self.assertTrue(project.is_accessible(CURRENT_REALM))
         self.assertTrue(xform.is_accessible(CURRENT_REALM))
         self.assertTrue(media_file.is_accessible(CURRENT_REALM))
+
+        self.assertEqual(project.get_realm(), CURRENT_REALM)
+        self.assertEqual(xform.get_realm(), CURRENT_REALM)
+        self.assertEqual(media_file.get_realm(), CURRENT_REALM)
 
         self.assertTrue(MtInstance.objects.count() > 0)
         mt1 = MtInstance.objects.get(instance=project)
@@ -216,10 +228,17 @@ class NoMultitenancyTests(CustomTestCase):
     def test_models(self):
         obj1 = self.helper_create_project()
         child1 = self.helper_create_xform(project_id=obj1.project_id)
+
         self.assertFalse(obj1.is_accessible(CURRENT_REALM))
         self.assertFalse(child1.is_accessible(CURRENT_REALM))
-        self.assertTrue(MtInstance.objects.count() == 0)
 
+        self.assertFalse(obj1.is_accessible(settings.DEFAULT_REALM))
+        self.assertFalse(child1.is_accessible(settings.DEFAULT_REALM))
+
+        self.assertIsNone(obj1.get_realm())
+        self.assertIsNone(child1.get_realm())
+
+        self.assertTrue(MtInstance.objects.count() == 0)
         obj1.save_mt(self.request)
         self.assertTrue(MtInstance.objects.count() == 0)
 

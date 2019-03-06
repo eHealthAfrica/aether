@@ -16,13 +16,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError
+from django.test import override_settings
 
 from . import CustomTestCase
 from ..models import Project, XForm, MediaFile
 
 
+@override_settings(MULTITENANCY=False)
 class ModelsTests(CustomTestCase):
 
     def test__xform__create__raises_errors(self):
@@ -160,12 +163,10 @@ class ModelsTests(CustomTestCase):
             project=Project.objects.create(),
             xml_data=self.samples['xform']['xml-ok'],
         )
-        self.assertFalse(xform.is_accessible('realm'))
         media = MediaFile.objects.create(
             xform=xform,
             media_file=SimpleUploadedFile('sample.txt', b'abc'),
         )
-        self.assertFalse(media.is_accessible('realm'))
         self.assertEqual(media.name, 'sample.txt', 'takes file name')
         self.assertEqual(media.md5sum, '900150983cd24fb0d6963f7d28e17f72')
         self.assertEqual(str(media), 'sample.txt')
@@ -207,3 +208,22 @@ class ModelsTests(CustomTestCase):
         self.assertNotEqual(last_version, xform.version, 'changed xml data')
         self.assertNotEqual(last_avro_schema, xform.avro_schema, 'changed AVRO schema')
         self.assertNotEqual(last_kernel_id, xform.kernel_id, 'changed Kernel ID')
+
+    def test__model_methods(self):
+        project = Project.objects.create()
+        xform = XForm.objects.create(
+            project=project,
+            xml_data=self.samples['xform']['xml-ok'],
+        )
+        media_file = MediaFile.objects.create(
+            xform=xform,
+            media_file=SimpleUploadedFile('sample.txt', b'abc'),
+        )
+
+        self.assertFalse(project.is_accessible(settings.DEFAULT_REALM))
+        self.assertFalse(xform.is_accessible(settings.DEFAULT_REALM))
+        self.assertFalse(media_file.is_accessible(settings.DEFAULT_REALM))
+
+        self.assertIsNone(project.get_realm())
+        self.assertIsNone(xform.get_realm())
+        self.assertIsNone(media_file.get_realm())

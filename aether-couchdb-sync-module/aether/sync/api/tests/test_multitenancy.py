@@ -67,7 +67,6 @@ class MultitenancyTests(TestCase):
 
         obj1 = models.Project.objects.create(name='p')
         child1 = models.Schema.objects.create(name='s', project=obj1)
-        self.assertTrue(MtInstance.objects.count() == 0)
 
         self.assertFalse(obj1.is_accessible(CURRENT_REALM))
         self.assertFalse(child1.is_accessible(CURRENT_REALM))
@@ -77,6 +76,7 @@ class MultitenancyTests(TestCase):
         self.assertEqual(obj1.get_realm(), settings.DEFAULT_REALM)
         self.assertEqual(child1.get_realm(), settings.DEFAULT_REALM)
 
+        self.assertTrue(MtInstance.objects.count() == 0)
         obj1.save_mt(self.request)
         self.assertTrue(MtInstance.objects.count() > 0)
 
@@ -235,7 +235,6 @@ class NoMultitenancyTests(TestCase):
         self.assertIsNone(child1.get_realm())
 
         self.assertTrue(MtInstance.objects.count() == 0)
-
         obj1.save_mt(self.request)
         self.assertTrue(MtInstance.objects.count() == 0)
 
