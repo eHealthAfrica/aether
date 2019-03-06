@@ -20,7 +20,7 @@ from django.utils.translation import ugettext as _
 
 from aether.common.utils import request
 from aether.common.kernel.utils import get_auth_header, get_kernel_server_url
-from aether.common.multitenancy.utils import assign_realm_in_headers
+from aether.common.multitenancy.utils import assign_instance_realm_in_headers
 
 from ..errors import KernelPropagationError
 
@@ -90,7 +90,7 @@ def __upsert_kernel_artefacts(project, artefacts={}):
     auth_header = get_auth_header()
     if not auth_header:
         raise KernelPropagationError(MSG_KERNEL_CONNECTION_ERR)
-    headers = assign_realm_in_headers(project, auth_header)
+    headers = assign_instance_realm_in_headers(project, auth_header)
 
     kernel_url = get_kernel_server_url()
     url = f'{kernel_url}/projects/{project_id}/avro-schemas/'

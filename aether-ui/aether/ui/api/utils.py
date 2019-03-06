@@ -82,7 +82,7 @@ def get_default_project(request):
         name = settings.DEFAULT_PROJECT_NAME if not settings.MULTITENANCY else realm
 
         project = models.Project.objects.create(name=name, is_default=True)
-        mt_utils.assign_to_realm(request, project)
+        project.save_mt(request)
 
         return project
     else:
@@ -96,9 +96,10 @@ def kernel_artefacts_to_ui_artefacts(request):
     '''
 
     KERNEL_URL = utils.get_kernel_server_url()
-    AUTH_HEADERS = utils.get_auth_header()
+    # restrict by current realm (if enabled)
+    headers = mt_utils.assign_current_realm_in_headers(request, utils.get_auth_header())
 
-    projects = get_all_docs(f'{KERNEL_URL}/projects/', headers=AUTH_HEADERS)
+    projects = get_all_docs(f'{KERNEL_URL}/projects/', headers=headers)
     for kernel_project in projects:
         project_id = kernel_project['id']
 
@@ -110,7 +111,7 @@ def kernel_artefacts_to_ui_artefacts(request):
         project.save_mt(request)
 
         # fetch linked mapping sets
-        mappingsets = get_all_docs(kernel_project['mappingset_url'], headers=AUTH_HEADERS)
+        mappingsets = get_all_docs(kernel_project['mappingset_url'], headers=headers)
         for mappingset in mappingsets:
             mappingset_id = mappingset['id']
 
@@ -127,7 +128,7 @@ def kernel_artefacts_to_ui_artefacts(request):
             pipeline = models.Pipeline.objects.get(mappingset=mappingset_id)
 
             # fetch linked mappings
-            mappings = get_all_docs(mappingset['mappings_url'], headers=AUTH_HEADERS)
+            mappings = get_all_docs(mappingset['mappings_url'], headers=headers)
             for mapping in mappings:
                 mapping_id = mapping['id']
 
@@ -138,7 +139,7 @@ def kernel_artefacts_to_ui_artefacts(request):
                 ps_fields = 'id,schema,schema_definition'
                 ps_url = mapping['projectschemas_url'] + f'&fields={ps_fields}'
                 # get_all_docs is a generator, wrap results as list to get them
-                project_schemas = list(get_all_docs(ps_url, headers=AUTH_HEADERS))
+                project_schemas = list(get_all_docs(ps_url, headers=headers))
 
                 # find out the linked schema ids from the project schema ids (mapping entities)
                 entities = mapping['definition']['entities']              # format    {entity name: ps id}
@@ -303,7 +304,12 @@ def publish_project(project):
     artefacts = model_to_artefacts(project)
 
     try:
-        kernel_data_request(f'projects/{pk}/artefacts/', 'patch', artefacts)
+        kernel_data_request(
+            url=f'projects/{pk}/artefacts/',
+            method='patch',
+            data=artefacts,
+            headers=wrap_kernel_headers(project),
+        )
     except Exception as e:
         raise PublishError(e)
 
@@ -326,7 +332,12 @@ def publish_pipeline(pipeline):
     }
 
     try:
-        kernel_data_request(f'projects/{pk}/artefacts/', 'patch', data)
+        kernel_data_request(
+            url=f'projects/{pk}/artefacts/',
+            method='patch',
+            data=data,
+            headers=wrap_kernel_headers(pipeline),
+        )
     except Exception as e:
         raise PublishError(e)
 
@@ -352,7 +363,12 @@ def publish_contract(contract):
     mapping_id = artefacts['mappings'][0]['id']
 
     try:
-        kernel_data_request(f'projects/{pk}/artefacts/', 'patch', artefacts)
+        kernel_data_request(
+            url=f'projects/{pk}/artefacts/',
+            method='patch',
+            data=artefacts,
+            headers=wrap_kernel_headers(contract),
+        )
     except Exception as e:
         raise PublishError(e)
 
@@ -422,6 +438,7 @@ def publish_preflight(contract):
 
     def __get(model, pk):
         try:
+            # do not restrict by current realm and check multitenancy conflicts
             return kernel_data_request(f'{model}/{pk}/')
         except Exception:
             return None
@@ -606,7 +623,7 @@ def model_to_artefacts(instance):
     }
 
 
-def kernel_data_request(url='', method='get', data=None):
+def kernel_data_request(url='', method='get', data=None, headers=None):
     '''
     Handle requests to the kernel server
     '''
@@ -615,7 +632,7 @@ def kernel_data_request(url='', method='get', data=None):
         method=method,
         url=f'{utils.get_kernel_server_url()}/{url}',
         json=data or {},
-        headers=utils.get_auth_header(),
+        headers=headers if headers else utils.get_auth_header(),
     )
 
     res.raise_for_status()
@@ -623,3 +640,7 @@ def kernel_data_request(url='', method='get', data=None):
     if res.status_code == status.HTTP_204_NO_CONTENT:
         return None
     return json.loads(res.content.decode('utf-8'))
+
+
+def wrap_kernel_headers(instance):
+    return mt_utils.assign_instance_realm_in_headers(instance, utils.get_auth_header())

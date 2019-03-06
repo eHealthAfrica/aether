@@ -167,25 +167,29 @@ class MultitenancyTests(TestCase):
 
         obj1 = TestModel.objects.create(name='one')
         self.assertFalse(utils.is_accessible_by_realm(self.request, obj1))
-        self.assertEqual(utils.assign_realm_in_headers(obj1, {}),
+        self.assertEqual(utils.assign_instance_realm_in_headers(obj1, {}),
                          {settings.REALM_COOKIE: settings.DEFAULT_REALM})
+        self.assertEqual(utils.assign_current_realm_in_headers(self.request, {}),
+                         {settings.REALM_COOKIE: 'realm1'})
 
         obj1.save_mt(self.request)
         self.assertTrue(utils.is_accessible_by_realm(self.request, obj1))
-        self.assertEqual(utils.assign_realm_in_headers(obj1, {}),
+        self.assertEqual(utils.assign_instance_realm_in_headers(obj1, {}),
                          {settings.REALM_COOKIE: obj1.mt.realm})
 
         # change realm
         self.request.COOKIES[settings.REALM_COOKIE] = 'realm2'
         self.assertEqual(obj1.mt.realm, 'realm1')
-        self.assertEqual(utils.assign_realm_in_headers(obj1, {}),
+        self.assertEqual(utils.assign_instance_realm_in_headers(obj1, {}),
                          {settings.REALM_COOKIE: 'realm1'})
+        self.assertEqual(utils.assign_current_realm_in_headers(self.request, {}),
+                         {settings.REALM_COOKIE: 'realm2'})
         self.assertFalse(utils.is_accessible_by_realm(self.request, obj1))
 
         obj1.save_mt(self.request)
         self.assertTrue(utils.is_accessible_by_realm(self.request, obj1))
         self.assertEqual(obj1.mt.realm, 'realm2')
-        self.assertEqual(utils.assign_realm_in_headers(obj1, {}),
+        self.assertEqual(utils.assign_instance_realm_in_headers(obj1, {}),
                          {settings.REALM_COOKIE: 'realm2'})
 
     @mock.patch('aether.common.multitenancy.utils.settings', MULTITENANCY=False)
@@ -197,7 +201,8 @@ class MultitenancyTests(TestCase):
         self.assertTrue(MtInstance.objects.count() == 0)
 
         self.assertTrue(utils.is_accessible_by_realm(self.request, obj1))
-        self.assertEqual(utils.assign_realm_in_headers(obj1, {}), {})
+        self.assertEqual(utils.assign_instance_realm_in_headers(obj1, {}), {})
+        self.assertEqual(utils.assign_current_realm_in_headers(self.request, {}), {})
 
         initial_data = TestModel.objects.all()
         self.assertEqual(utils.filter_by_realm(self.request, initial_data), initial_data)

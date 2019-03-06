@@ -76,7 +76,15 @@ def assign_to_realm(request, instance):
     return True
 
 
-def assign_realm_in_headers(instance, headers={}):
+def assign_current_realm_in_headers(request, headers={}):
+    if not settings.MULTITENANCY:
+        return headers
+
+    headers[settings.REALM_COOKIE] = get_current_realm(request)
+    return headers
+
+
+def assign_instance_realm_in_headers(instance, headers={}):
     if not settings.MULTITENANCY:
         return headers
 

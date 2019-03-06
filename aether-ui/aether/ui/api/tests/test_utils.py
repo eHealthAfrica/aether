@@ -137,9 +137,10 @@ class UtilsTest(TestCase):
         with mock.patch('aether.ui.api.utils.kernel_data_request') as mock_kernel:
             utils.publish_project(project)
             mock_kernel.assert_called_once_with(
-                f'projects/{project_id}/artefacts/',
-                'patch',
-                {'name': 'Publishing project'},
+                url=f'projects/{project_id}/artefacts/',
+                method='patch',
+                data={'name': 'Publishing project'},
+                headers={'Authorization': mock.ANY},
             )
 
         contract.is_read_only = True
@@ -148,9 +149,9 @@ class UtilsTest(TestCase):
         with mock.patch('aether.ui.api.utils.kernel_data_request') as mock_kernel:
             utils.publish_pipeline(pipeline)
             mock_kernel.assert_called_once_with(
-                f'projects/{project_id}/artefacts/',
-                'patch',
-                {
+                url=f'projects/{project_id}/artefacts/',
+                method='patch',
+                data={
                     'action': 'create',  # contract is read only
                     'name': 'Publishing project',
                     'mappingsets': [{
@@ -160,6 +161,7 @@ class UtilsTest(TestCase):
                         'schema': ENTITY_SAMPLE,
                     }]
                 },
+                headers={'Authorization': mock.ANY},
             )
 
         contract.is_read_only = False
@@ -168,9 +170,9 @@ class UtilsTest(TestCase):
         with mock.patch('aether.ui.api.utils.kernel_data_request') as mock_kernel:
             utils.publish_pipeline(pipeline)
             mock_kernel.assert_called_once_with(
-                f'projects/{project_id}/artefacts/',
-                'patch',
-                {
+                url=f'projects/{project_id}/artefacts/',
+                method='patch',
+                data={
                     'action': 'upsert',  # no read only contracts
                     'name': 'Publishing project',
                     'mappingsets': [{
@@ -180,6 +182,7 @@ class UtilsTest(TestCase):
                         'schema': ENTITY_SAMPLE,
                     }]
                 },
+                headers={'Authorization': mock.ANY},
             )
 
         with mock.patch('aether.ui.api.utils.kernel_data_request') as mock_kernel:
@@ -189,9 +192,9 @@ class UtilsTest(TestCase):
                 mock_preflight.assert_called_once()
 
             mock_kernel.assert_called_once_with(
-                f'projects/{project_id}/artefacts/',
-                'patch',
-                {
+                url=f'projects/{project_id}/artefacts/',
+                method='patch',
+                data={
                     'name': 'Publishing project',
                     'mappingsets': [{
                         'id': mock.ANY,
@@ -216,6 +219,7 @@ class UtilsTest(TestCase):
                         'is_ready_only': False,
                     }],
                 },
+                headers={'Authorization': mock.ANY},
             )
 
     def test__kernel_workflow(self):
