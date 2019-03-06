@@ -183,7 +183,13 @@ class ProjectChildAbstract(KernelAbstract):
     '''
 
     def is_accessible(self, realm):
-        return self.project.is_accessible(realm) if self.project else False
+        return self.get_project().is_accessible(realm)
+
+    def get_realm(self):
+        return self.get_project().get_realm()
+
+    def get_project(self):
+        return self.project
 
     class Meta:
         abstract = True
@@ -273,6 +279,10 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
 
     def __str__(self):
         return f'{self.id}'
+
+    def get_project(self):
+        # because project can be null we need to override the method
+        return self.mappingset.project
 
     class Meta:
         default_related_name = 'submissions'
@@ -498,6 +508,10 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
             ps_list.append(ProjectSchema.objects.get(pk=entity_pk, project=self.project))
         self.projectschemas.add(*ps_list)
 
+    def get_project(self):
+        # because project can be null we need to override the method
+        return self.mappingset.project
+
     class Meta:
         default_related_name = 'mappings'
         ordering = ['project__id', '-modified']
@@ -652,6 +666,14 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
 
     def __str__(self):
         return f'{self.id}'
+
+    def is_accessible(self, realm):
+        # because project can be null we need to override the method
+        return self.project.is_accessible(realm) if self.project else False
+
+    def get_realm(self):
+        # because project can be null we need to override the method
+        return self.get_project().get_realm() if self.project else None
 
     class Meta:
         default_related_name = 'entities'

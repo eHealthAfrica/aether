@@ -65,14 +65,26 @@ class MultitenancyTests(TestCase):
 
         obj1 = models.Project.objects.create(name='p')
         child1 = models.MappingSet.objects.create(name='ms', project=obj1)
+        self.assertTrue(MtInstance.objects.count() == 0)
+
         self.assertFalse(obj1.is_accessible(CURRENT_REALM))
         self.assertFalse(child1.is_accessible(CURRENT_REALM))
-        self.assertTrue(MtInstance.objects.count() == 0)
+
+        self.assertTrue(obj1.is_accessible(settings.DEFAULT_REALM))
+        self.assertTrue(child1.is_accessible(settings.DEFAULT_REALM))
+        self.assertEqual(obj1.get_realm(), settings.DEFAULT_REALM)
+        self.assertEqual(child1.get_realm(), settings.DEFAULT_REALM)
 
         obj1.save_mt(self.request)
         self.assertTrue(MtInstance.objects.count() > 0)
+
         self.assertTrue(obj1.is_accessible(CURRENT_REALM))
         self.assertTrue(child1.is_accessible(CURRENT_REALM))
+        self.assertEqual(obj1.get_realm(), CURRENT_REALM)
+        self.assertEqual(child1.get_realm(), CURRENT_REALM)
+
+        self.assertFalse(obj1.is_accessible(settings.DEFAULT_REALM))
+        self.assertFalse(child1.is_accessible(settings.DEFAULT_REALM))
 
         mt1 = MtInstance.objects.get(instance=obj1)
         self.assertEqual(str(mt1), str(obj1))
@@ -216,8 +228,16 @@ class NoMultitenancyTests(TestCase):
     def test_models(self):
         obj1 = models.Project.objects.create(name='p')
         child1 = models.MappingSet.objects.create(name='ms', project=obj1)
+
         self.assertFalse(obj1.is_accessible(CURRENT_REALM))
         self.assertFalse(child1.is_accessible(CURRENT_REALM))
+
+        self.assertFalse(obj1.is_accessible(settings.DEFAULT_REALM))
+        self.assertFalse(child1.is_accessible(settings.DEFAULT_REALM))
+
+        self.assertIsNone(obj1.get_realm())
+        self.assertIsNone(child1.get_realm())
+
         self.assertTrue(MtInstance.objects.count() == 0)
 
         obj1.save_mt(self.request)

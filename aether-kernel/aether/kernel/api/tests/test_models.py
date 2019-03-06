@@ -18,21 +18,23 @@
 
 import uuid
 
+from django.conf import settings
 from django.db.utils import IntegrityError
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from django.test import TransactionTestCase
+from django.test import TransactionTestCase, override_settings
 
 from aether.kernel.api import models
 
 from . import EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA, EXAMPLE_SOURCE_DATA_ENTITY, EXAMPLE_MAPPING
 
 
+@override_settings(MULTITENANCY=False)
 class ModelsTests(TransactionTestCase):
 
     def test_models(self):
 
-        REALM = 'testing'
+        REALM = settings.DEFAULT_REALM
 
         project = models.Project.objects.create(
             revision='rev 1',
@@ -41,6 +43,7 @@ class ModelsTests(TransactionTestCase):
         self.assertEqual(str(project), project.name)
         self.assertNotEqual(models.Project.objects.count(), 0)
         self.assertFalse(project.is_accessible(REALM))
+        self.assertIsNone(project.get_realm())
 
         schema = models.Schema.objects.create(
             name='sample schema',
@@ -65,6 +68,7 @@ class ModelsTests(TransactionTestCase):
         self.assertNotEqual(models.ProjectSchema.objects.count(), 0)
         self.assertIsNone(projectschema.revision)
         self.assertFalse(projectschema.is_accessible(REALM))
+        self.assertIsNone(projectschema.get_realm())
 
         mappingset = models.MappingSet.objects.create(
             revision='a sample revision',
@@ -75,10 +79,10 @@ class ModelsTests(TransactionTestCase):
         )
         self.assertEqual(str(mappingset), mappingset.name)
         self.assertNotEqual(models.MappingSet.objects.count(), 0)
-        self.assertEqual(str(mappingset.project), str(project))
         self.assertIsNotNone(mappingset.input_prettified)
         self.assertIsNotNone(mappingset.schema_prettified)
         self.assertFalse(mappingset.is_accessible(REALM))
+        self.assertIsNone(mappingset.get_realm())
 
         mapping = models.Mapping.objects.create(
             name='sample mapping',
@@ -89,8 +93,11 @@ class ModelsTests(TransactionTestCase):
         self.assertEqual(str(mapping), mapping.name)
         self.assertNotEqual(models.Mapping.objects.count(), 0)
         self.assertIsNotNone(mapping.definition_prettified)
+        self.assertEqual(mapping.project, project)
+        self.assertEqual(mapping.get_project(), project)
         self.assertEqual(mapping.projectschemas.count(), 0, 'No entities in definition')
         self.assertFalse(mapping.is_accessible(REALM))
+        self.assertIsNone(mapping.get_realm())
 
         mapping_definition = dict(EXAMPLE_MAPPING)
         mapping_definition['entities']['Person'] = str(projectschema.pk)
@@ -114,8 +121,10 @@ class ModelsTests(TransactionTestCase):
         self.assertIsNotNone(submission.payload_prettified)
         self.assertEqual(str(submission), str(submission.id))
         self.assertEqual(submission.project, project, 'submission inherits mapping project')
+        self.assertEqual(submission.get_project(), project)
         self.assertEqual(submission.name, 'a project name-a sample mapping set')
         self.assertFalse(submission.is_accessible(REALM))
+        self.assertIsNone(submission.get_realm())
 
         attachment = models.Attachment.objects.create(
             submission=submission,
@@ -129,6 +138,7 @@ class ModelsTests(TransactionTestCase):
         self.assertEqual(attachment.project, submission.project)
         self.assertEqual(attachment.attachment_file_url, attachment.attachment_file.url)
         self.assertFalse(attachment.is_accessible(REALM))
+        self.assertIsNone(attachment.get_realm())
 
         attachment_2 = models.Attachment.objects.create(
             submission=submission,
@@ -164,10 +174,12 @@ class ModelsTests(TransactionTestCase):
         self.assertIsNotNone(entity.payload_prettified)
         self.assertEqual(str(entity), str(entity.id))
         self.assertEqual(entity.project, project, 'entity inherits submission project')
+        self.assertEqual(entity.get_project(), project)
         self.assertEqual(entity.name, f'{project.name}-{schema.schema_name}')
         self.assertEqual(entity.mapping_revision, mapping.revision,
                          'entity takes mapping revision if missing')
         self.assertFalse(entity.is_accessible(REALM))
+        self.assertIsNone(entity.get_realm())
 
         project_2 = models.Project.objects.create(
             revision='rev 1',
@@ -193,6 +205,7 @@ class ModelsTests(TransactionTestCase):
         entity.mapping = None
         entity.save()
         self.assertEqual(entity.project, project_2, 'entity inherits projectschema project')
+        self.assertEqual(entity.get_project(), project_2)
         self.assertEqual(entity.name, f'{project_2.name}-{schema.schema_name}')
 
         # keeps last project
