@@ -154,6 +154,15 @@ function git_branch_commit_and_release() {
     
     if [[ $3 = "tag" ]];
     then
+        major=0
+        minor=0
+        # break down the version number into it's components
+        regex="([0-9]+).([0-9]+).([0-9]+)"
+        if [[ $BRANCH_OR_TAG_VALUE =~ $regex ]]; then
+            major="${BASH_REMATCH[1]}"
+            minor="${BASH_REMATCH[2]}"
+        fi
+        TRAVIS_BRANCH="release-${major}.${minor}"
         git fetch ${REMOTE} $TRAVIS_BRANCH
         git branch $TRAVIS_BRANCH FETCH_HEAD
         COMMIT_BRANCH=HEAD
