@@ -19,6 +19,7 @@
 # under the License.
 #
 
+set -Eo pipefail
 
 function prepare_dependencies {
     ./scripts/build_docker_assets.sh
