@@ -96,6 +96,7 @@ def kernel_artefacts_to_ui_artefacts():
     Fetches all projects in kernel and all linked mappingsets and tranform them into pipelines,
     taking also the linked mappings+schemas and transform them into contracts.
     '''
+
     KERNEL_URL = utils.get_kernel_server_url()
     AUTH_HEADERS = utils.get_auth_header()
 
@@ -136,7 +137,8 @@ def kernel_artefacts_to_ui_artefacts():
 
                 ps_fields = 'id,schema,schema_definition'
                 ps_url = mapping['projectschemas_url'] + f'&fields={ps_fields}'
-                project_schemas = get_all_docs(ps_url, headers=AUTH_HEADERS)
+                # get_all_docs is a generator, wrap results as list to get them
+                project_schemas = list(get_all_docs(ps_url, headers=AUTH_HEADERS))
 
                 # find out the linked schema ids from the project schema ids (mapping entities)
                 entities = mapping['definition']['entities']              # format    {entity name: ps id}
