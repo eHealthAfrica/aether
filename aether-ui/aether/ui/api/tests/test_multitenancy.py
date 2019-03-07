@@ -254,6 +254,8 @@ class MultitenancyTests(TestCase):
                 )
 
     def test__kernel_workflow(self):
+        NEW_REALM = 'another'
+
         # create a project in kernel and bring it to ui
         url = f'projects/{self.KERNEL_ID}/avro-schemas/'
         artefacts = {
@@ -291,7 +293,14 @@ class MultitenancyTests(TestCase):
         self.assertFalse(models.Project.objects.filter(pk=self.KERNEL_ID).exists())
 
         self.assertEqual(models.Project.objects.count(), 0)
-        # bring them to ui
+
+        # change realm and try to bring the kernel artefacts
+        self.request.COOKIES[settings.REALM_COOKIE] = NEW_REALM
+        utils.kernel_artefacts_to_ui_artefacts(self.request)
+        self.assertEqual(models.Project.objects.count(), 0, 'No artefacts in this realm')
+
+        # bring them to ui with the correct realm
+        self.request.COOKIES[settings.REALM_COOKIE] = CURRENT_REALM
         utils.kernel_artefacts_to_ui_artefacts(self.request)
 
         self.assertTrue(models.Project.objects.filter(pk=self.KERNEL_ID).exists())
@@ -335,7 +344,6 @@ class MultitenancyTests(TestCase):
         )
 
         # assign project to another realm
-        NEW_REALM = 'another'
         self.request.COOKIES[settings.REALM_COOKIE] = NEW_REALM
         project.save_mt(self.request)
         self.assertEqual(project.get_realm(), NEW_REALM)
