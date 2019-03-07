@@ -19,6 +19,8 @@
 import json
 import uuid
 
+from requests.exceptions import HTTPError
+
 from django.conf import settings
 
 from django.utils import timezone
@@ -37,6 +39,7 @@ MSG_CONTRACT_VALIDATION_ERROR = _('It was not possible to validate the contract:
 MSG_CONTRACT_VALIDATION_KERNEL_ERROR = _('It was not possible to connect to Aether Kernel.')
 
 MSG_PROJECT_IN_KERNEL = _('Project is already published')
+MSG_PROJECT_IN_KERNEL_WRONG = _('Project in kernel belongs to a different tenant')
 MSG_PROJECT_NOT_IN_KERNEL = _('Project will be published')
 
 MSG_PIPELINE_NO_INPUT = _('Pipeline has no input')
@@ -414,6 +417,10 @@ def publish_preflight(contract):
         - Contract belongs to a different pipeline (mapping set) in kernel
         - Entity type "XXX" (as project schema) belongs to a different project in kernel
 
+        In case of multitenancy is enabled also:
+            - Project in kernel belongs to a different tenant
+
+
     - Warning (warns if any of the artefacts is already published)
 
         - Project is already published
@@ -438,8 +445,10 @@ def publish_preflight(contract):
 
     def __get(model, pk):
         try:
-            # do not restrict by current realm and check multitenancy conflicts
-            return kernel_data_request(f'{model}/{pk}/')
+            return kernel_data_request(
+                url=f'{model}/{pk}/',
+                headers=wrap_kernel_headers(project),
+            )
         except Exception:
             return None
 
@@ -464,6 +473,18 @@ def publish_preflight(contract):
         outcome['error'].append(MSG_CONTRACT_MAPPING_RULES_ERROR)
 
     # 1. Check the project in Kernel
+    try:
+        kernel_data_request(
+            url=f'projects/{project.project_id}/is-accessible/',
+            method='head',
+            headers=wrap_kernel_headers(project),
+        )
+    except HTTPError as e:
+        if e.response.status_code == status.HTTP_403_FORBIDDEN:
+            # not accessible by realm
+            outcome['error'].append(MSG_PROJECT_IN_KERNEL_WRONG)
+            return outcome
+
     kernel_project = __get('projects', project.project_id)
     if kernel_project:
         outcome['warning'].append(MSG_PROJECT_IN_KERNEL)

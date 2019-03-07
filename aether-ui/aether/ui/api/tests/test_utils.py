@@ -41,11 +41,14 @@ class UtilsTest(TestCase):
 
         super(UtilsTest, self).tearDown()
 
-    def helper__delete_in_kernel(self, model, pk):
+    def helper__kernel_data(self, *args, **kwargs):
         try:
-            utils.kernel_data_request(f'{model}/{pk}/', 'delete')
+            return utils.kernel_data_request(*args, **kwargs)
         except Exception:
             pass  # ignore
+
+    def helper__delete_in_kernel(self, model, pk):
+        self.helper__kernel_data(f'{model}/{pk}/', 'delete')
 
     def test_get_default_project(self):
         self.assertEqual(Project.objects.count(), 0)
@@ -139,13 +142,16 @@ class UtilsTest(TestCase):
         with self.assertRaises(utils.PublishError) as pe:
             with mock.patch('aether.ui.api.utils.kernel_data_request',
                             side_effect=Exception('Error in contract')) as mock_kernel:
-                utils.publish_contract(contract)
-                mock_kernel.assert_called_once_with(
-                    url=f'projects/{project_id}/artefacts/',
-                    method='patch',
-                    data=mock.ANY,
-                    headers={'Authorization': mock.ANY},
-                )
+                with mock.patch('aether.ui.api.utils.publish_preflight',
+                                return_value={}) as mock_preflight:
+                    utils.publish_contract(contract)
+                    mock_preflight.assert_called_once()
+                    mock_kernel.assert_called_once_with(
+                        url=f'projects/{project_id}/artefacts/',
+                        method='patch',
+                        data=mock.ANY,
+                        headers={'Authorization': mock.ANY},
+                    )
             self.assertIn('Error in contract', str(pe.exception))
 
         # publish without exceptions
@@ -257,9 +263,9 @@ class UtilsTest(TestCase):
                 },
             ],
         }
-        utils.kernel_data_request(url=url, method='patch', data=artefacts)
+        self.helper__kernel_data(url=url, method='patch', data=artefacts)
         # fetch its artefacts and check
-        res = utils.kernel_data_request(url=f'projects/{self.KERNEL_ID}/artefacts/')
+        res = self.helper__kernel_data(url=f'projects/{self.KERNEL_ID}/artefacts/')
         self.assertEqual(
             res,
             {
@@ -322,9 +328,9 @@ class UtilsTest(TestCase):
         self.helper__delete_in_kernel('schemas', self.KERNEL_ID)
 
         # check that nothing is there
-        res = utils.kernel_data_request(url='projects')
+        res = self.helper__kernel_data(url='projects')
         self.assertEqual(res['count'], 0)
-        res = utils.kernel_data_request(url='schemas')
+        res = self.helper__kernel_data(url='schemas')
         self.assertEqual(res['count'], 0)
 
         # check publish preflight again
@@ -382,11 +388,11 @@ class UtilsTest(TestCase):
         )
 
         # check that the project is back in kernel
-        res = utils.kernel_data_request(url='projects')
+        res = self.helper__kernel_data(url='projects')
         self.assertEqual(res['count'], 1)
 
         # bring its artefacts and compare
-        res = utils.kernel_data_request(url=f'projects/{self.KERNEL_ID}/artefacts/')
+        res = self.helper__kernel_data(url=f'projects/{self.KERNEL_ID}/artefacts/')
         self.assertEqual(
             res,
             {
