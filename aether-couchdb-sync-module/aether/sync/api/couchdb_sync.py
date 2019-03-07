@@ -140,7 +140,7 @@ def import_synced_docs(docs, db_name):
             stats['up-to-date'] += 1
             continue
 
-        aether_id = status.get('aether_id') or None
+        aether_id = status.get('aether_id')
 
         try:
             resp = post_to_aether(doc, aether_id=aether_id)
