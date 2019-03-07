@@ -321,7 +321,7 @@ if MULTITENANCY:
     INSTALLED_APPS += ['aether.common.multitenancy', ]
     MIGRATION_MODULES['multitenancy'] = 'aether.common.multitenancy.migrations'
     REST_FRAMEWORK['DEFAULT_PERMISSION_CLASSES'] = [
-        'aether.common.multitenancy.utils.IsAccessibleByRealm',
+        'aether.common.multitenancy.permissions.IsAccessibleByRealm',
     ]
 
 else:

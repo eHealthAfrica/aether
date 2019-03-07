@@ -16,26 +16,15 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from rest_framework.serializers import ModelSerializer
+from rest_framework.permissions import IsAuthenticated
 
-from aether.common.multitenancy.serializers import MtPrimaryKeyRelatedField, MtModelSerializer
-
-from .models import TestModel, TestChildModel
+from .utils import is_accessible_by_realm
 
 
-class TestModelSerializer(MtModelSerializer):
+class IsAccessibleByRealm(IsAuthenticated):
+    '''
+    Object-level permission to allow access to objects linked to the current realm.
+    '''
 
-    class Meta:
-        model = TestModel
-        fields = '__all__'
-
-
-class TestChildModelSerializer(ModelSerializer):
-
-    parent = MtPrimaryKeyRelatedField(
-        queryset=TestModel.objects.all(),
-    )
-
-    class Meta:
-        model = TestChildModel
-        fields = '__all__'
+    def has_object_permission(self, request, view, obj):
+        return is_accessible_by_realm(request, obj)

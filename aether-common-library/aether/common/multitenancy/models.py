@@ -17,8 +17,11 @@
 # under the License.
 
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.utils.translation import ugettext as _
+
+from .utils import get_current_realm
 
 
 class MtInstance(models.Model):
@@ -45,3 +48,48 @@ class MtInstance(models.Model):
         ]
         verbose_name = _('instance by realm')
         verbose_name_plural = _('instances by realm')
+
+
+class MtModelAbstract(models.Model):
+    '''
+    The ``settings.MULTITENANCY_MODEL`` class must extend this one.
+    '''
+
+    def save_mt(self, request):
+        '''
+        Assigns the instance to the current realm.
+        '''
+
+        if not settings.MULTITENANCY:
+            return
+
+        # assign to current realm
+        realm = get_current_realm(request)
+        try:
+            self.mt.realm = realm
+            self.mt.save()
+        except ObjectDoesNotExist:
+            MtInstance.objects.create(instance=self, realm=realm)
+
+    def is_accessible(self, realm):
+        '''
+        Check if the instance "realm" is the given realm.
+        '''
+
+        return settings.MULTITENANCY and self.get_realm() == realm
+
+    def get_realm(self):
+        '''
+        Returns the instance "realm" or the default one if missing.
+        '''
+
+        if not settings.MULTITENANCY:
+            return None
+
+        try:
+            return self.mt.realm
+        except ObjectDoesNotExist:
+            return settings.DEFAULT_REALM
+
+    class Meta:
+        abstract = True

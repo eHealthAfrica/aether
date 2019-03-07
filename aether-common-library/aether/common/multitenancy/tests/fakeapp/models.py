@@ -18,7 +18,7 @@
 
 from django.db import models
 
-from aether.common.multitenancy.utils import MtModelAbstract
+from aether.common.multitenancy.models import MtModelAbstract
 
 
 class TestModel(MtModelAbstract):

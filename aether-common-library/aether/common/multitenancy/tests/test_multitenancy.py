@@ -16,12 +16,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import mock
-
 from http.cookies import SimpleCookie
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.test import TestCase, RequestFactory
+from django.test import TestCase, RequestFactory, override_settings
 from django.urls import reverse
 
 from rest_framework import status
@@ -149,6 +147,17 @@ class MultitenancyTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+        # is-accessible endpoint
+        url = reverse('testmodel-is-accessible', kwargs={'pk': obj1.pk})
+        response = self.client.head(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        url = reverse('testchildmodel-is-accessible', kwargs={'pk': child1.pk})
+        response = self.client.head(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        url = reverse('testchildmodel-is-accessible', kwargs={'pk': 99})
+        response = self.client.head(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
         # custom endpoint
         url = reverse('testmodel-custom-404', kwargs={'pk': obj1.pk})
         response = self.client.get(url)
@@ -168,6 +177,17 @@ class MultitenancyTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         url = reverse('testchildmodel-detail', kwargs={'pk': child2.pk})
         response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # is-accessible endpoint
+        url = reverse('testmodel-is-accessible', kwargs={'pk': obj2.pk})
+        response = self.client.head(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        url = reverse('testchildmodel-is-accessible', kwargs={'pk': child2.pk})
+        response = self.client.head(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        url = reverse('testchildmodel-is-accessible', kwargs={'pk': 99})
+        response = self.client.head(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
         # custom endpoint
@@ -218,7 +238,7 @@ class MultitenancyTests(TestCase):
         self.assertEqual(utils.assign_instance_realm_in_headers(obj1, {}),
                          {settings.REALM_COOKIE: TEST_REALM_2})
 
-    @mock.patch('aether.common.multitenancy.utils.settings', MULTITENANCY=False)
+    @override_settings(MULTITENANCY=False)
     def test_no_multitenancy(self, *args):
         obj1 = TestModel.objects.create(name='two')
         self.assertFalse(obj1.is_accessible(TEST_REALM))
@@ -233,5 +253,5 @@ class MultitenancyTests(TestCase):
         initial_data = TestModel.objects.all()
         self.assertEqual(utils.filter_by_realm(self.request, initial_data), initial_data)
 
-        self.assertFalse(utils.assign_to_realm(self.request, obj1))
+        obj1.save_mt(self.request)
         self.assertTrue(MtInstance.objects.count() == 0)
