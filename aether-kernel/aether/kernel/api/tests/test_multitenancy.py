@@ -161,6 +161,8 @@ class MultitenancyTests(TestCase):
         url = reverse('project-artefacts', kwargs={'pk': obj2.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        response = self.client.patch(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         url = reverse('mappingset-detail', kwargs={'pk': child2.pk})
         response = self.client.get(url)
