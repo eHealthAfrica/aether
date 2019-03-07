@@ -35,6 +35,9 @@ class TestChildModel(models.Model):
     def is_accessible(self, realm):
         return self.parent.is_accessible(realm)
 
+    def get_realm(self):
+        return self.parent.get_realm()
+
     class Meta:
         app_label = 'fakeapp'
 

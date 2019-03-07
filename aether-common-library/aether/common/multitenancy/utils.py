@@ -20,7 +20,10 @@ from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Model, F
+from django.shortcuts import get_object_or_404
+from django.utils.translation import ugettext as _
 
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import PrimaryKeyRelatedField, ModelSerializer
 
@@ -31,6 +34,7 @@ def get_current_realm(request):
     '''
     Find the current realm within the cookies or within the request headers.
     '''
+
     return getattr(request, 'COOKIES', {}).get(
         settings.REALM_COOKIE,
         getattr(request, 'headers', {}).get(
@@ -41,6 +45,10 @@ def get_current_realm(request):
 
 
 def is_accessible_by_realm(request, obj):
+    '''
+    Indicates if the instance is accessible by the current realm/tenant.
+    '''
+
     if not settings.MULTITENANCY:
         return True
 
@@ -53,6 +61,10 @@ def is_accessible_by_realm(request, obj):
 
 
 def filter_by_realm(request, data, mt_field='mt'):
+    '''
+    Include the realm filter in the given data object (Queryset or Manager)
+    '''
+
     if not settings.MULTITENANCY:
         return data
 
@@ -62,6 +74,10 @@ def filter_by_realm(request, data, mt_field='mt'):
 
 
 def assign_to_realm(request, instance):
+    '''
+    Assigns the intance the the current realm
+    '''
+
     if not settings.MULTITENANCY:
         return False
 
@@ -77,6 +93,9 @@ def assign_to_realm(request, instance):
 
 
 def assign_current_realm_in_headers(request, headers={}):
+    '''
+    Includes the current realm in the headers
+    '''
     if not settings.MULTITENANCY:
         return headers
 
@@ -85,6 +104,9 @@ def assign_current_realm_in_headers(request, headers={}):
 
 
 def assign_instance_realm_in_headers(instance, headers={}):
+    '''
+    Includes the instance realm in the headers
+    '''
     if not settings.MULTITENANCY:
         return headers
 
@@ -116,6 +138,10 @@ class MtModelAbstract(Model):
     '''
 
     def save_mt(self, request):
+        '''
+        Assigns the instance to the current realm.
+        '''
+
         assign_to_realm(request, self)
 
     def is_accessible(self, realm):
@@ -148,12 +174,21 @@ class MtModelSerializer(ModelSerializer):
     '''
 
     def create(self, validated_data):
+        '''
+        Assigns the new instance to the current realm
+        '''
+
         instance = super(MtModelSerializer, self).create(validated_data)
-        assign_to_realm(self.context['request'], instance)
+        instance.save_mt(self.context['request'])
         return instance
 
 
 class MtPrimaryKeyRelatedField(PrimaryKeyRelatedField):
+    '''
+    Overrides `get_queryset` method to include filter by realm.
+    Expects `mt_field` property.
+    '''
+
     mt_field = 'mt'
 
     def __init__(self, **kwargs):
@@ -161,14 +196,59 @@ class MtPrimaryKeyRelatedField(PrimaryKeyRelatedField):
         super(MtPrimaryKeyRelatedField, self).__init__(**kwargs)
 
     def get_queryset(self):
+        '''
+        Overrides `get_queryset` method to include filter by realm
+        '''
+
         qs = super(MtPrimaryKeyRelatedField, self).get_queryset()
         qs = filter_by_realm(self.context['request'], qs, self.mt_field)
         return qs
 
 
 class MtViewSetMixin(object):
+    '''
+    Overrides `get_queryset` method to include filter by realm.
+    Expects `mt_field` property.
+
+    Adds two new method:
+        - `get_object_or_404(pk)` raises NO_FOUND error if the instacne is not accessible
+        - `get_object_or_403(pk)` raises FORBIDDEN error if the instacne is not accessible
+    '''
+
     mt_field = 'mt'
 
     def get_queryset(self):
+        '''
+        Overrides `get_queryset` method to include filter by realm in each query
+        '''
+
         qs = super(MtViewSetMixin, self).get_queryset()
         return filter_by_realm(self.request, qs, self.mt_field)
+
+    def get_object_or_404(self, pk):
+        '''
+        Custom method that raises NO_FOUND error
+        if the instance that not exists
+        or is not accessible by current realm
+        otherwise return the instance
+        '''
+
+        return get_object_or_404(self.get_queryset(), pk=pk)
+
+    def get_object_or_403(self, pk):
+        '''
+        Custom method that raises FORBIDDEN error
+        if the instance is not accessible by current realm
+        otherwise returns the instance or None if it does not exist
+        '''
+
+        # without filtering by realm
+        qs = super(MtViewSetMixin, self).get_queryset()
+        if not qs.filter(pk=pk).exists():
+            return None
+
+        obj = qs.get(pk=pk)
+        if not is_accessible_by_realm(self.request, obj):
+            raise PermissionDenied(_('Not accessible by this realm'))
+
+        return obj

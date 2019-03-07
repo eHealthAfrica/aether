@@ -32,6 +32,7 @@ show_help() {
     test          : run tests
     test_lint     : run flake8 tests
     test_coverage : run tests with coverage output
+    test_py       : alias of test_coverage
 
     build         : build package library
     """
@@ -75,7 +76,7 @@ case "$1" in
         test_flake8
     ;;
 
-    test_coverage)
+    test_py | test_coverage)
         test_coverage "${@:2}"
     ;;
 

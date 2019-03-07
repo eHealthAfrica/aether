@@ -16,6 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from aether.common.multitenancy.utils import MtViewSetMixin
@@ -35,8 +37,22 @@ class TestModelViewSet(MtViewSetMixin, ModelViewSet):
     serializer_class = TestModelSerializer
     # mt_field = 'mt'  # not needed in this case
 
+    @action(detail=True, methods=['get'], url_path='custom-404')
+    def custom_404(self, request, pk=None, *args, **kwargs):
+        obj = self.get_object_or_404(pk=pk)
+        return Response(data=self.serializer_class(obj, context={'request': request}).data)
+
 
 class TestChildModelViewSet(MtViewSetMixin, ModelViewSet):
     queryset = TestChildModel.objects.order_by('name')
     serializer_class = TestChildModelSerializer
     mt_field = 'parent__mt'
+
+    @action(detail=True, methods=['get'], url_path='custom-403')
+    def custom_403(self, request, pk=None, *args, **kwargs):
+        obj = self.get_object_or_403(pk=pk)
+
+        if not obj:
+            return Response(status=400)
+
+        return Response(data=self.serializer_class(obj, context={'request': request}).data)

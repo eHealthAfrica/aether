@@ -40,13 +40,16 @@ from aether.common.multitenancy import utils
 
 factory = RequestFactory()
 
+TEST_REALM = 'realm-test'
+TEST_REALM_2 = 'realm-test-2'
+
 
 class MultitenancyTests(TestCase):
 
     def setUp(self):
         super(MultitenancyTests, self).setUp()
         self.request = RequestFactory().get('/')
-        self.request.COOKIES[settings.REALM_COOKIE] = 'realm1'
+        self.request.COOKIES[settings.REALM_COOKIE] = TEST_REALM
         self.request.headers = {}
 
         username = 'user'
@@ -55,7 +58,7 @@ class MultitenancyTests(TestCase):
 
         user = get_user_model().objects.create_user(username, email, password)
         self.request.user = user
-        self.client.cookies = SimpleCookie({settings.REALM_COOKIE: 'realm1'})
+        self.client.cookies = SimpleCookie({settings.REALM_COOKIE: TEST_REALM})
         self.assertTrue(self.client.login(username=username, password=password))
 
     def test_get_multitenancy_model(self):
@@ -64,26 +67,28 @@ class MultitenancyTests(TestCase):
 
     def test_models(self):
         obj1 = TestModel.objects.create(name='one')
-        self.assertFalse(obj1.is_accessible('realm1'))
+        self.assertFalse(obj1.is_accessible(TEST_REALM))
         self.assertTrue(obj1.is_accessible(settings.DEFAULT_REALM))
         self.assertEqual(obj1.get_realm(), settings.DEFAULT_REALM)
 
         child1 = TestChildModel.objects.create(name='child', parent=obj1)
-        self.assertFalse(child1.is_accessible('realm1'))
+        self.assertFalse(child1.is_accessible(TEST_REALM))
         self.assertTrue(child1.is_accessible(settings.DEFAULT_REALM))
+        self.assertEqual(child1.get_realm(), settings.DEFAULT_REALM)
 
         self.assertTrue(MtInstance.objects.count() == 0)
 
         obj1.save_mt(self.request)
 
         self.assertTrue(MtInstance.objects.count() > 0)
-        self.assertTrue(obj1.is_accessible('realm1'))
-        self.assertEqual(obj1.get_realm(), 'realm1')
-        self.assertTrue(child1.is_accessible('realm1'))
+        self.assertTrue(obj1.is_accessible(TEST_REALM))
+        self.assertEqual(obj1.get_realm(), TEST_REALM)
+        self.assertTrue(child1.is_accessible(TEST_REALM))
+        self.assertEqual(child1.get_realm(), TEST_REALM)
 
         realm1 = MtInstance.objects.get(instance=obj1)
         self.assertEqual(str(realm1), str(obj1))
-        self.assertEqual(realm1.realm, 'realm1')
+        self.assertEqual(realm1.realm, TEST_REALM)
 
     def test_serializers(self):
         obj1 = TestModelSerializer(
@@ -98,11 +103,11 @@ class MultitenancyTests(TestCase):
 
         realm1 = MtInstance.objects.first()
         self.assertEqual(realm1.instance.pk, obj1.data['id'])
-        self.assertEqual(realm1.realm, 'realm1')
+        self.assertEqual(realm1.realm, TEST_REALM)
 
         # create another TestModel instance
         obj2 = TestModel.objects.create(name='two')
-        self.assertFalse(obj2.is_accessible('realm1'))
+        self.assertFalse(obj2.is_accessible(TEST_REALM))
 
         child1 = TestChildModelSerializer(
             data={'name': 'child', 'parent': obj1.data['id']},
@@ -116,49 +121,71 @@ class MultitenancyTests(TestCase):
         obj1 = TestModel.objects.create(name='one')
         child1 = TestChildModel.objects.create(name='child1', parent=obj1)
         obj1.save_mt(self.request)
-        self.assertEqual(obj1.mt.realm, 'realm1')
+        self.assertEqual(obj1.mt.realm, TEST_REALM)
 
         # change realm
-        self.request.COOKIES[settings.REALM_COOKIE] = 'realm2'
+        self.request.COOKIES[settings.REALM_COOKIE] = TEST_REALM_2
         obj2 = TestModel.objects.create(name='two')
         child2 = TestChildModel.objects.create(name='child2', parent=obj2)
         obj2.save_mt(self.request)
-        self.assertEqual(obj2.mt.realm, 'realm2')
+        self.assertEqual(obj2.mt.realm, TEST_REALM_2)
 
         self.assertEqual(TestModel.objects.count(), 2)
         self.assertEqual(TestChildModel.objects.count(), 2)
 
         # check that views only return instances linked to "realm1"
         url = reverse('testmodel-list')
-        response = self.client.get(url, format='json')
-        self.assertEqual(response.client.cookies[settings.REALM_COOKIE].value, 'realm1')
+        response = self.client.get(url)
+        self.assertEqual(response.client.cookies[settings.REALM_COOKIE].value, TEST_REALM)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
         data = response.json()
         self.assertEqual(data['count'], 1)
 
+        # detail endpoint
         url = reverse('testmodel-detail', kwargs={'pk': obj1.pk})
-        response = self.client.get(url, format='json')
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         url = reverse('testchildmodel-detail', kwargs={'pk': child1.pk})
-        response = self.client.get(url, format='json')
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        # linked to another realm "realm2"
+        # custom endpoint
+        url = reverse('testmodel-custom-404', kwargs={'pk': obj1.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        url = reverse('testchildmodel-custom-403', kwargs={'pk': child1.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        url = reverse('testchildmodel-custom-403', kwargs={'pk': 99})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # linked to another realm "realm2" *************************************
+
+        # detail endpoint
         url = reverse('testmodel-detail', kwargs={'pk': obj2.pk})
-        response = self.client.get(url, format='json')
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         url = reverse('testchildmodel-detail', kwargs={'pk': child2.pk})
-        response = self.client.get(url, format='json')
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # custom endpoint
+        url = reverse('testmodel-custom-404', kwargs={'pk': obj2.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        url = reverse('testchildmodel-custom-403', kwargs={'pk': child2.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_current_realm(self):
         request = RequestFactory().get('/')
-        self.assertEquals(utils.get_current_realm(request), settings.DEFAULT_REALM)
+        self.assertEqual(utils.get_current_realm(request), settings.DEFAULT_REALM)
         request.headers = {settings.REALM_COOKIE: 'in-headers'}
-        self.assertEquals(utils.get_current_realm(request), 'in-headers')
+        self.assertEqual(utils.get_current_realm(request), 'in-headers')
         request.COOKIES[settings.REALM_COOKIE] = 'in-cookies'
-        self.assertEquals(utils.get_current_realm(request), 'in-cookies')
+        self.assertEqual(utils.get_current_realm(request), 'in-cookies')
 
     def test_is_accessible_by_realm(self):
         # no affected by realm value
@@ -170,7 +197,7 @@ class MultitenancyTests(TestCase):
         self.assertEqual(utils.assign_instance_realm_in_headers(obj1, {}),
                          {settings.REALM_COOKIE: settings.DEFAULT_REALM})
         self.assertEqual(utils.assign_current_realm_in_headers(self.request, {}),
-                         {settings.REALM_COOKIE: 'realm1'})
+                         {settings.REALM_COOKIE: TEST_REALM})
 
         obj1.save_mt(self.request)
         self.assertTrue(utils.is_accessible_by_realm(self.request, obj1))
@@ -178,24 +205,24 @@ class MultitenancyTests(TestCase):
                          {settings.REALM_COOKIE: obj1.mt.realm})
 
         # change realm
-        self.request.COOKIES[settings.REALM_COOKIE] = 'realm2'
-        self.assertEqual(obj1.mt.realm, 'realm1')
+        self.request.COOKIES[settings.REALM_COOKIE] = TEST_REALM_2
+        self.assertEqual(obj1.mt.realm, TEST_REALM)
         self.assertEqual(utils.assign_instance_realm_in_headers(obj1, {}),
-                         {settings.REALM_COOKIE: 'realm1'})
+                         {settings.REALM_COOKIE: TEST_REALM})
         self.assertEqual(utils.assign_current_realm_in_headers(self.request, {}),
-                         {settings.REALM_COOKIE: 'realm2'})
+                         {settings.REALM_COOKIE: TEST_REALM_2})
         self.assertFalse(utils.is_accessible_by_realm(self.request, obj1))
 
         obj1.save_mt(self.request)
         self.assertTrue(utils.is_accessible_by_realm(self.request, obj1))
-        self.assertEqual(obj1.mt.realm, 'realm2')
+        self.assertEqual(obj1.mt.realm, TEST_REALM_2)
         self.assertEqual(utils.assign_instance_realm_in_headers(obj1, {}),
-                         {settings.REALM_COOKIE: 'realm2'})
+                         {settings.REALM_COOKIE: TEST_REALM_2})
 
     @mock.patch('aether.common.multitenancy.utils.settings', MULTITENANCY=False)
     def test_no_multitenancy(self, *args):
         obj1 = TestModel.objects.create(name='two')
-        self.assertFalse(obj1.is_accessible('realm1'))
+        self.assertFalse(obj1.is_accessible(TEST_REALM))
         self.assertFalse(obj1.is_accessible(settings.DEFAULT_REALM))
         self.assertIsNone(obj1.get_realm())
         self.assertTrue(MtInstance.objects.count() == 0)
