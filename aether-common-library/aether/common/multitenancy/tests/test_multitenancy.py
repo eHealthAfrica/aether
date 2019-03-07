@@ -106,12 +106,20 @@ class MultitenancyTests(TestCase):
         obj2 = TestModel.objects.create(name='two')
         self.assertFalse(obj2.is_accessible(TEST_REALM))
 
-        child1 = TestChildModelSerializer(
-            data={'name': 'child', 'parent': obj1.data['id']},
+        child1 = TestChildModelSerializer(context={'request': self.request})
+        # obj2 is not in the child1 parent queryset
+        self.assertEqual(child1.fields['parent'].get_queryset().count(), 1)
+        self.assertEqual(child1.fields['parent'].get_queryset().first().pk, obj1.data['id'])
+
+        # try to save a child with the wrong parent
+        child2 = TestChildModelSerializer(
+            data={'name': 'child', 'parent': str(obj2.pk)},
             context={'request': self.request},
         )
-        self.assertTrue(child1.is_valid(), child1.errors)
-        self.assertEqual(child1.fields['parent'].get_queryset().count(), 1)
+        self.assertFalse(child2.is_valid(), child2.errors)
+        # {'parent': [ErrorDetail(string='Invalid pk "#" - object does not exist.', code='does_not_exist')]
+        self.assertEqual(child2.errors['parent'][0].code, 'does_not_exist')
+        self.assertEqual(str(child2.errors['parent'][0]), f'Invalid pk "{obj2.pk}" - object does not exist.')
 
     def test_views(self):
         # create data assigned to different realms
