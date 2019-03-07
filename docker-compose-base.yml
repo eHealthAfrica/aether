@@ -103,6 +103,8 @@ services:
       HTML_SELECT_CUTOFF: 10
 
       MULTITENANCY: null
+      DEFAULT_REALM: ${DEFAULT_REALM}
+      REALM_COOKIE: ${REALM_COOKIE}
 
       BUCKET_NAME: kernel
       DJANGO_STORAGE_BACKEND: minio
@@ -174,6 +176,8 @@ services:
       HTML_SELECT_CUTOFF: 10
 
       MULTITENANCY: null
+      DEFAULT_REALM: ${DEFAULT_REALM}
+      REALM_COOKIE: ${REALM_COOKIE}
 
       BUCKET_NAME: odk
       DJANGO_STORAGE_BACKEND: minio
@@ -242,6 +246,8 @@ services:
       HTML_SELECT_CUTOFF: 10
 
       MULTITENANCY: null
+      DEFAULT_REALM: ${DEFAULT_REALM}
+      REALM_COOKIE: ${REALM_COOKIE}
 
       APP_NAME: Aether CouchDB-Sync
 
@@ -310,6 +316,8 @@ services:
       HTML_SELECT_CUTOFF: 10
 
       MULTITENANCY: null
+      DEFAULT_REALM: ${DEFAULT_REALM}
+      REALM_COOKIE: ${REALM_COOKIE}
 
       APP_NAME: Aether
 
