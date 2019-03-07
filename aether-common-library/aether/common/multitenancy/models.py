@@ -93,3 +93,33 @@ class MtModelAbstract(models.Model):
 
     class Meta:
         abstract = True
+
+
+class MtModelChildAbstract(models.Model):
+    '''
+    The ``settings.MULTITENANCY_MODEL`` child classes must extend this one
+    and implement the abstract methods.
+    '''
+
+    def is_accessible(self, realm):
+        '''
+        Check if the instance "realm" is the given realm.
+        '''
+
+        return self.get_mt_instance().is_accessible(realm)
+
+    def get_realm(self):
+        '''
+        Returns the instance "realm" or the default one if missing.
+        '''
+
+        return self.get_mt_instance().get_realm()
+
+    def get_mt_instance(self):
+        '''
+        Returns the ``settings.MULTITENANCY_MODEL`` instance linked to this one.
+        '''
+        raise NotImplementedError
+
+    class Meta:
+        abstract = True

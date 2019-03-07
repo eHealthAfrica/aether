@@ -25,7 +25,7 @@ from django.dispatch import receiver
 from django.utils.translation import ugettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
-from aether.common.multitenancy.models import MtModelAbstract
+from aether.common.multitenancy.models import MtModelAbstract, MtModelChildAbstract
 from aether.common.utils import json_prettified
 
 from .couchdb_helpers import delete_user, generate_db_name
@@ -92,7 +92,7 @@ class Project(ExportModelOperationsMixin('couchdbsync_project'), MtModelAbstract
         verbose_name_plural = _('projects')
 
 
-class Schema(ExportModelOperationsMixin('couchdbsync_schema'), models.Model):
+class Schema(ExportModelOperationsMixin('couchdbsync_schema'), MtModelChildAbstract):
     '''
     Keeps the relation between the Aether-mobile App JSON schema and the
     Aether Kernel submissions.
@@ -125,11 +125,9 @@ class Schema(ExportModelOperationsMixin('couchdbsync_schema'), models.Model):
     def avro_schema_prettified(self):
         return json_prettified(self.avro_schema)
 
-    def is_accessible(self, realm):
-        return self.project.is_accessible(realm)
 
-    def get_realm(self):
-        return self.project.get_realm()
+    def get_mt_instance(self):
+        return self.project
 
     def __str__(self):
         return self.name

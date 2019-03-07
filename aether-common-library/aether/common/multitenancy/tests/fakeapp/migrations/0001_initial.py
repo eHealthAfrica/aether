@@ -31,6 +31,16 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name='TestGrandChildModel',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.TextField()),
+                ('parent', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='children', to='fakeapp.TestChildModel'))
+            ],
+            options={
+            },
+        ),
+        migrations.CreateModel(
             name='TestNoMtModel',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),

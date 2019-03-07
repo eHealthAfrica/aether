@@ -24,7 +24,7 @@ from django.utils.translation import ugettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 from model_utils.models import TimeStampedModel
 
-from aether.common.multitenancy.models import MtModelAbstract
+from aether.common.multitenancy.models import MtModelAbstract, MtModelChildAbstract
 from aether.common.utils import json_prettified
 
 from .utils import validate_contract
@@ -89,7 +89,7 @@ class Project(ExportModelOperationsMixin('ui_project'), TimeStampedModel, MtMode
         verbose_name_plural = _('projects')
 
 
-class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
+class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel, MtModelChildAbstract):
     '''
     Pipeline
 
@@ -140,11 +140,8 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
         contracts = Contract.objects.filter(pipeline=self)
         [contract.save() for contract in contracts]
 
-    def is_accessible(self, realm):
-        return self.project.is_accessible(realm)
-
-    def get_realm(self):
-        return self.project.get_realm()
+    def get_mt_instance(self):
+        return self.project
 
     class Meta:
         app_label = 'ui'
@@ -158,7 +155,7 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
         ]
 
 
-class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
+class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel, MtModelChildAbstract):
     '''
     Contract
 
@@ -320,11 +317,8 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
 
         super(Contract, self).save(*args, **kwargs)
 
-    def is_accessible(self, realm):
-        return self.pipeline.project.is_accessible(realm)
-
-    def get_realm(self):
-        return self.pipeline.project.get_realm()
+    def get_mt_instance(self):
+        return self.pipeline.project
 
     class Meta:
         app_label = 'ui'

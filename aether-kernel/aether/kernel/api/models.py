@@ -30,7 +30,7 @@ from django_prometheus.models import ExportModelOperationsMixin
 
 from model_utils.models import TimeStampedModel
 
-from aether.common.multitenancy.models import MtModelAbstract
+from aether.common.multitenancy.models import MtModelAbstract, MtModelChildAbstract
 from aether.common.utils import json_prettified
 
 from .constants import NAMESPACE
@@ -175,20 +175,14 @@ class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract, MtMo
         verbose_name_plural = _('projects')
 
 
-class ProjectChildAbstract(KernelAbstract):
+class ProjectChildAbstract(KernelAbstract, MtModelChildAbstract):
     '''
     Use this model class for each Project dependant model.
 
     .. note:: Extends from :class:`aether.kernel.api.models.KernelAbstract`
     '''
 
-    def is_accessible(self, realm):
-        return self.get_project().is_accessible(realm)
-
-    def get_realm(self):
-        return self.get_project().get_realm()
-
-    def get_project(self):
+    def get_mt_instance(self):
         return self.project
 
     class Meta:
@@ -280,7 +274,7 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
     def __str__(self):
         return f'{self.id}'
 
-    def get_project(self):
+    def get_mt_instance(self):
         # because project can be null we need to override the method
         return self.mappingset.project
 
@@ -508,7 +502,7 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
             ps_list.append(ProjectSchema.objects.get(pk=entity_pk, project=self.project))
         self.projectschemas.add(*ps_list)
 
-    def get_project(self):
+    def get_mt_instance(self):
         # because project can be null we need to override the method
         return self.mappingset.project
 
@@ -673,7 +667,7 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
 
     def get_realm(self):
         # because project can be null we need to override the method
-        return self.get_project().get_realm() if self.project else None
+        return self.project.get_realm() if self.project else None
 
     class Meta:
         default_related_name = 'entities'

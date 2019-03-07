@@ -29,7 +29,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
-from aether.common.multitenancy.models import MtModelAbstract
+from aether.common.multitenancy.models import MtModelAbstract, MtModelChildAbstract
 from aether.common.utils import json_prettified
 
 from .xform_utils import (
@@ -135,7 +135,7 @@ def __validate_xml_data__(value):
         raise ValidationError(str(e))
 
 
-class XForm(ExportModelOperationsMixin('odk_xform'), models.Model):
+class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
     '''
     Database representation of an XForm.
 
@@ -305,11 +305,8 @@ class XForm(ExportModelOperationsMixin('odk_xform'), models.Model):
     def increase_version(self):
         self.version = '{:%Y%m%d%H}'.format(timezone.now())
 
-    def is_accessible(self, realm):
-        return self.project.is_accessible(realm)
-
-    def get_realm(self):
-        return self.project.get_realm()
+    def get_mt_instance(self):
+        return self.project
 
     def __str__(self):
         return '{} - {}'.format(self.title, self.form_id)
@@ -331,7 +328,7 @@ def __media_path__(instance, filename):
     )
 
 
-class MediaFile(ExportModelOperationsMixin('odk_mediafile'), models.Model):
+class MediaFile(ExportModelOperationsMixin('odk_mediafile'), MtModelChildAbstract):
     '''
     Database representation of a media file linked to an XForm.
 
@@ -370,11 +367,8 @@ class MediaFile(ExportModelOperationsMixin('odk_mediafile'), models.Model):
 
         super(MediaFile, self).save(*args, **kwargs)
 
-    def is_accessible(self, realm):
-        return self.xform.project.is_accessible(realm)
-
-    def get_realm(self):
-        return self.xform.project.get_realm()
+    def get_mt_instance(self):
+        return self.xform.project
 
     def __str__(self):
         return self.name

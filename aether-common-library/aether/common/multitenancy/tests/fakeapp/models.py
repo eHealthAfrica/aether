@@ -18,7 +18,7 @@
 
 from django.db import models
 
-from aether.common.multitenancy.models import MtModelAbstract
+from aether.common.multitenancy.models import MtModelAbstract, MtModelChildAbstract
 
 
 class TestModel(MtModelAbstract):
@@ -28,15 +28,24 @@ class TestModel(MtModelAbstract):
         app_label = 'fakeapp'
 
 
-class TestChildModel(models.Model):
+class TestChildModel(MtModelChildAbstract):
     name = models.TextField()
     parent = models.ForeignKey(to=TestModel, on_delete=models.CASCADE, related_name='children')
 
-    def is_accessible(self, realm):
-        return self.parent.is_accessible(realm)
+    def get_mt_instance(self):
+        return self.parent
 
-    def get_realm(self):
-        return self.parent.get_realm()
+    class Meta:
+        app_label = 'fakeapp'
+
+
+class TestGrandChildModel(MtModelChildAbstract):
+    name = models.TextField()
+    parent = models.ForeignKey(to=TestChildModel, on_delete=models.CASCADE, related_name='children')
+
+    # does not implement the missing method
+    # def get_mt_instance(self):
+    #     return self.parent.parent
 
     class Meta:
         app_label = 'fakeapp'

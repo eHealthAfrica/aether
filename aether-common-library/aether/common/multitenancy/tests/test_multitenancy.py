@@ -27,6 +27,7 @@ from rest_framework import status
 from aether.common.multitenancy.tests.fakeapp.models import (
     TestModel,
     TestChildModel,
+    TestGrandChildModel,
     TestNoMtModel,
 )
 from aether.common.multitenancy.tests.fakeapp.serializers import (
@@ -69,6 +70,7 @@ class MultitenancyTests(TestCase):
         self.assertEqual(obj1.get_realm(), settings.DEFAULT_REALM)
 
         child1 = TestChildModel.objects.create(name='child', parent=obj1)
+        self.assertEqual(child1.get_mt_instance(), obj1)
         self.assertFalse(child1.is_accessible(TEST_REALM))
         self.assertTrue(child1.is_accessible(settings.DEFAULT_REALM))
         self.assertEqual(child1.get_realm(), settings.DEFAULT_REALM)
@@ -82,6 +84,12 @@ class MultitenancyTests(TestCase):
         self.assertEqual(obj1.get_realm(), TEST_REALM)
         self.assertTrue(child1.is_accessible(TEST_REALM))
         self.assertEqual(child1.get_realm(), TEST_REALM)
+
+        # grandchildren
+        grandchild = TestGrandChildModel.objects.create(name='grandchild', parent=child1)
+        self.assertRaises(NotImplementedError, grandchild.get_mt_instance)
+        self.assertRaises(NotImplementedError, grandchild.is_accessible, TEST_REALM)
+        self.assertRaises(NotImplementedError, grandchild.get_realm)
 
         realm1 = MtInstance.objects.get(instance=obj1)
         self.assertEqual(str(realm1), str(obj1))
