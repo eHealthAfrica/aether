@@ -55,9 +55,7 @@ class TestFilters(TestCase):
 
             # by id
             kwargs = {'schema': str(schema.id), 'fields': 'id', 'page_size': projects_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result_by_id = set([r['id'] for r in response['results']])
@@ -65,9 +63,7 @@ class TestFilters(TestCase):
 
             # by name
             kwargs = {'schema': schema.name, 'fields': 'id', 'page_size': projects_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result_by_name = set([r['id'] for r in response['results']])
@@ -88,9 +84,7 @@ class TestFilters(TestCase):
 
             # by id
             kwargs = {'project': str(project.id), 'fields': 'id', 'page_size': schemas_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result_by_id = set([r['id'] for r in response['results']])
@@ -99,7 +93,7 @@ class TestFilters(TestCase):
             # by name
             kwargs = {'project': project.name, 'fields': 'id', 'page_size': schemas_count}
             response = json.loads(
-                self.client.get(url, kwargs, format='json').content
+                self.client.get(url, kwargs).content
             )
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
@@ -117,9 +111,7 @@ class TestFilters(TestCase):
             expected = set([str(ps.schema.id) for ps in mapping.projectschemas.all()])
             # by id
             kwargs = {'mapping': str(mapping.id), 'fields': 'id', 'page_size': mappings_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result = set([r['id'] for r in response['results']])
@@ -127,9 +119,7 @@ class TestFilters(TestCase):
 
             # by name
             kwargs = {'mapping': mapping.name, 'fields': 'id', 'page_size': mappings_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result = set([r['id'] for r in response['results']])
@@ -150,9 +140,7 @@ class TestFilters(TestCase):
 
             # by id
             kwargs = {'project': str(project.id), 'fields': 'id', 'page_size': entities_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result_by_id = set([r['id'] for r in response['results']])
@@ -161,7 +149,7 @@ class TestFilters(TestCase):
             # by name
             kwargs = {'project': project.name, 'fields': 'id', 'page_size': entities_count}
             response = json.loads(
-                self.client.get(url, kwargs, format='json').content
+                self.client.get(url, kwargs).content
             )
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
@@ -183,9 +171,7 @@ class TestFilters(TestCase):
 
             # by id
             kwargs = {'mapping': str(mapping.id), 'fields': 'id', 'page_size': entities_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result_by_id = set([r['id'] for r in response['results']])
@@ -193,9 +179,7 @@ class TestFilters(TestCase):
 
             # by name
             kwargs = {'mapping': mapping.name, 'fields': 'id', 'page_size': entities_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result_by_name = set([r['id'] for r in response['results']])
@@ -216,9 +200,7 @@ class TestFilters(TestCase):
 
             # by id
             kwargs = {'schema': str(schema.id), 'fields': 'id', 'page_size': entities_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result_by_id = set([r['id'] for r in response['results']])
@@ -226,9 +208,7 @@ class TestFilters(TestCase):
 
             # by name
             kwargs = {'schema': schema.name, 'fields': 'id', 'page_size': entities_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result_by_name = set([r['id'] for r in response['results']])
@@ -248,9 +228,7 @@ class TestFilters(TestCase):
             expected = set([str(e.id) for e in submission.entities.all()])
 
             kwargs = {'submission': str(submission.id), 'fields': 'id', 'page_size': entities_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result = set([r['id'] for r in response['results']])
@@ -277,9 +255,7 @@ class TestFilters(TestCase):
 
             # by family
             kwargs = {'family': family, 'fields': 'id', 'page_size': entities_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result_by_id = set([r['id'] for r in response['results']])
@@ -293,9 +269,7 @@ class TestFilters(TestCase):
         entities_count = models.Entity.objects.count()
 
         kwargs = {'passthrough': 'true', 'fields': 'id', 'page_size': entities_count}
-        response = json.loads(
-            self.client.get(url, kwargs, format='json').content
-        )
+        response = json.loads(self.client.get(url, kwargs).content)
         self.assertEqual(response['count'], 0, 'there are no passthrough entities')
 
         # there are at least 5 schemas
@@ -315,9 +289,7 @@ class TestFilters(TestCase):
 
         self.assertNotEqual(len(expected), 0, 'there are passthrough entities')
         self.assertNotEqual(entities_count, len(expected), 'there are even more entities')
-        response = json.loads(
-            self.client.get(url, kwargs, format='json').content
-        )
+        response = json.loads(self.client.get(url, kwargs).content)
         # Check both sets of ids for equality.
         self.assertEqual(response['count'], len(expected))
         result = set([r['id'] for r in response['results']])
@@ -344,18 +316,14 @@ class TestFilters(TestCase):
         self.assertNotEqual(len(expected), 0, 'there are passthrough entities')
         self.assertNotEqual(entities_count, len(expected), 'there are even more entities')
 
-        response = json.loads(
-            self.client.get(url, kwargs, format='json').content
-        )
+        response = json.loads(self.client.get(url, kwargs).content)
         self.assertEqual(response['count'], len(expected))
         result = set([r['id'] for r in response['results']])
         self.assertEqual(expected, result, 'by passthrough')
 
         # by family
         kwargs = {'passthrough': 'false', 'family': str(project.pk), 'fields': 'id', 'page_size': entities_count}
-        response = json.loads(
-            self.client.get(url, kwargs, format='json').content
-        )
+        response = json.loads(self.client.get(url, kwargs).content)
         # Check both sets of ids for equality.
         self.assertEqual(response['count'], entities_count, 'All entities belong to the same family')
 
@@ -391,9 +359,7 @@ class TestFilters(TestCase):
 
             # by id
             kwargs = {'project': str(project.id), 'fields': 'id', 'page_size': submissions_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result_by_id = set([r['id'] for r in response['results']])
@@ -401,9 +367,7 @@ class TestFilters(TestCase):
 
             # by name
             kwargs = {'project': project.name, 'fields': 'id', 'page_size': submissions_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result_by_name = set([r['id'] for r in response['results']])
@@ -424,9 +388,7 @@ class TestFilters(TestCase):
 
             # by id
             kwargs = {'mappingset': str(mappingset.id), 'fields': 'id', 'page_size': submissions_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result_by_id = set([r['id'] for r in response['results']])
@@ -434,9 +396,7 @@ class TestFilters(TestCase):
 
             # by name
             kwargs = {'mappingset': mappingset.name, 'fields': 'id', 'page_size': submissions_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result_by_name = set([r['id'] for r in response['results']])
@@ -453,9 +413,7 @@ class TestFilters(TestCase):
             expected = set([str(e.id) for e in mappingset.mappings.all()])
             # by id
             kwargs = {'mappingset': str(mappingset.id), 'fields': 'id', 'page_size': mappings_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result = set([r['id'] for r in response['results']])
@@ -463,9 +421,7 @@ class TestFilters(TestCase):
 
             # by name
             kwargs = {'mappingset': mappingset.name, 'fields': 'id', 'page_size': mappings_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result = set([r['id'] for r in response['results']])
@@ -482,9 +438,7 @@ class TestFilters(TestCase):
             expected = set([str(e.id) for e in projectschema.mappings.all()])
             # by id
             kwargs = {'projectschema': str(projectschema.id), 'fields': 'id', 'page_size': mappings_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result = set([r['id'] for r in response['results']])
@@ -492,9 +446,7 @@ class TestFilters(TestCase):
 
             # by name
             kwargs = {'projectschema': projectschema.name, 'fields': 'id', 'page_size': mappings_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result = set([r['id'] for r in response['results']])
@@ -511,9 +463,7 @@ class TestFilters(TestCase):
             expected = set([str(ps.id) for ps in mapping.projectschemas.all()])
             # by id
             kwargs = {'mapping': str(mapping.id), 'fields': 'id', 'page_size': mappings_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result = set([r['id'] for r in response['results']])
@@ -521,9 +471,7 @@ class TestFilters(TestCase):
 
             # by name
             kwargs = {'mapping': mapping.name, 'fields': 'id', 'page_size': mappings_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result = set([r['id'] for r in response['results']])
@@ -540,9 +488,7 @@ class TestFilters(TestCase):
             expected = set([str(s.id) for s in project.mappingsets.all()])
             # by id
             kwargs = {'project': str(project.id), 'fields': 'id', 'page_size': mappingsets_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result = set([r['id'] for r in response['results']])
@@ -550,9 +496,7 @@ class TestFilters(TestCase):
 
             # by name
             kwargs = {'project': project.name, 'fields': 'id', 'page_size': mappingsets_count}
-            response = json.loads(
-                self.client.get(url, kwargs, format='json').content
-            )
+            response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result = set([r['id'] for r in response['results']])
@@ -593,9 +537,11 @@ class TestFilters(TestCase):
 
         filtered_submissions_count = 0
         for kwargs, payload in zip(filters, payloads):
-            response = self.client.get(url,
-                                       {'fields': 'payload', 'page_size': submissions_count, **kwargs},
-                                       format='json')
+            response = self.client.get(url, {
+                'fields': 'payload',
+                'page_size': submissions_count,
+                **kwargs
+            })
             submissions = json.loads(response.content)
             filtered_submissions_count += submissions['count']
             for submission in submissions['results']:
@@ -631,9 +577,7 @@ class TestFilters(TestCase):
 
         filtered_submissions_count = 0
         for kwargs, payload in zip(filters, payloads):
-            response = self.client.post(url + f'?fields=payload&page_size={submissions_count}',
-                                        kwargs,
-                                        format='json')
+            response = self.client.post(f'{url}?fields=payload&page_size={submissions_count}', kwargs)
             submissions = json.loads(response.content)
             filtered_submissions_count += submissions['count']
             for submission in submissions['results']:
@@ -656,12 +600,8 @@ class TestFilters(TestCase):
         generate_project(submission_field_values={'payload': {'a': '[1', 'z': 3}})
         submissions_count = models.Submission.objects.count()
 
-        response = self.client.get(
-            url,
-            {
-                'page_size': submissions_count,
-                'payload__a': '[1',  # raise json.decoder.JSONDecodeError
-            },
-            format='json',
-        )
+        response = self.client.get(url, {
+            'page_size': submissions_count,
+            'payload__a': '[1',  # raise json.decoder.JSONDecodeError
+        })
         self.assertEqual(json.loads(response.content)['count'], submissions_count)
