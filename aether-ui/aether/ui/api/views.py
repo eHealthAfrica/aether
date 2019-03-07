@@ -16,8 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.shortcuts import get_object_or_404
-
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
@@ -69,7 +67,7 @@ class ContractViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         Afterwards returns the contract.
         '''
 
-        contract = get_object_or_404(models.Contract, pk=pk)
+        contract = self.get_object_or_404(pk=pk)
         try:
             utils.publish_contract(contract)
             return self.retrieve(request, pk)
@@ -86,7 +84,7 @@ class ContractViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         and returns the list of failing reasons.
         '''
 
-        contract = get_object_or_404(models.Contract, pk=pk)
+        contract = self.get_object_or_404(pk=pk)
 
         data = utils.publish_preflight(contract)
         return Response(data=data)
