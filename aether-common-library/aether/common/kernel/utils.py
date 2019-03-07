@@ -137,19 +137,9 @@ def submit_to_kernel(submission, mappingset_id, submission_id=None):
     if mappingset_id is None:
         raise errors.SubmissionError(_('Cannot make submission without mapping set!'))
 
-    if submission_id:
-        # update existing doc
-        method = 'put'
-        url = get_submissions_url(submission_id)
-    else:
-        # create new doc
-        method = 'post'
-        url = get_submissions_url()
-
-    logger.debug(f'{method} to {url}')
     return request(
-        method=method,
-        url=url,
+        method='put' if submission_id else 'post',
+        url=get_submissions_url(submission_id),
         json={
             'payload': submission,
             'mappingset': mappingset_id,
