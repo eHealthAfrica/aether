@@ -116,22 +116,37 @@ class UtilsTest(TestCase):
             with mock.patch('aether.ui.api.utils.kernel_data_request',
                             side_effect=Exception('Error in project')) as mock_kernel:
                 utils.publish_project(project)
-                mock_kernel.assert_called_once()
-        self.assertIn('Error in project', str(pe.exception))
+                mock_kernel.assert_called_once_with(
+                    url=f'projects/{project_id}/artefacts/',
+                    method='patch',
+                    data=mock.ANY,
+                    headers={'Authorization': mock.ANY},
+                )
+            self.assertIn('Error in project', str(pe.exception))
 
         with self.assertRaises(utils.PublishError) as pe:
             with mock.patch('aether.ui.api.utils.kernel_data_request',
                             side_effect=Exception('Error in pipeline')) as mock_kernel:
                 utils.publish_pipeline(pipeline)
-                mock_kernel.assert_called_once()
-        self.assertIn('Error in pipeline', str(pe.exception))
+                mock_kernel.assert_called_once_with(
+                    url=f'projects/{project_id}/artefacts/',
+                    method='patch',
+                    data=mock.ANY,
+                    headers={'Authorization': mock.ANY},
+                )
+            self.assertIn('Error in pipeline', str(pe.exception))
 
         with self.assertRaises(utils.PublishError) as pe:
             with mock.patch('aether.ui.api.utils.kernel_data_request',
                             side_effect=Exception('Error in contract')) as mock_kernel:
                 utils.publish_contract(contract)
-                mock_kernel.assert_called_once()
-        self.assertIn('Error in contract', str(pe.exception))
+                mock_kernel.assert_called_once_with(
+                    url=f'projects/{project_id}/artefacts/',
+                    method='patch',
+                    data=mock.ANY,
+                    headers={'Authorization': mock.ANY},
+                )
+            self.assertIn('Error in contract', str(pe.exception))
 
         # publish without exceptions
         with mock.patch('aether.ui.api.utils.kernel_data_request') as mock_kernel:
@@ -190,37 +205,36 @@ class UtilsTest(TestCase):
                             return_value={}) as mock_preflight:
                 utils.publish_contract(contract)
                 mock_preflight.assert_called_once()
-
-            mock_kernel.assert_called_once_with(
-                url=f'projects/{project_id}/artefacts/',
-                method='patch',
-                data={
-                    'name': 'Publishing project',
-                    'mappingsets': [{
-                        'id': mock.ANY,
-                        'name': 'Publishing pipeline',
-                        'input': INPUT_SAMPLE,
-                        'schema': ENTITY_SAMPLE,
-                    }],
-                    'schemas': [{
-                        'id': mock.ANY,
-                        'name': 'Person',
-                        'definition': ENTITY_SAMPLE,
-                    }],
-                    'mappings': [{
-                        'id': mock.ANY,
-                        'name': 'Publishing contract',
-                        'definition': {
-                            'mapping': [['#!uuid', 'Person.id']],
-                            'entities': {'Person': mock.ANY},
-                        },
-                        'mappingset': mock.ANY,
-                        'is_active': True,
-                        'is_ready_only': False,
-                    }],
-                },
-                headers={'Authorization': mock.ANY},
-            )
+                mock_kernel.assert_called_once_with(
+                    url=f'projects/{project_id}/artefacts/',
+                    method='patch',
+                    data={
+                        'name': 'Publishing project',
+                        'mappingsets': [{
+                            'id': mock.ANY,
+                            'name': 'Publishing pipeline',
+                            'input': INPUT_SAMPLE,
+                            'schema': ENTITY_SAMPLE,
+                        }],
+                        'schemas': [{
+                            'id': mock.ANY,
+                            'name': 'Person',
+                            'definition': ENTITY_SAMPLE,
+                        }],
+                        'mappings': [{
+                            'id': mock.ANY,
+                            'name': 'Publishing contract',
+                            'definition': {
+                                'mapping': [['#!uuid', 'Person.id']],
+                                'entities': {'Person': mock.ANY},
+                            },
+                            'mappingset': mock.ANY,
+                            'is_active': True,
+                            'is_ready_only': False,
+                        }],
+                    },
+                    headers={'Authorization': mock.ANY},
+                )
 
     def test__kernel_workflow(self):
         # create a project in kernel and bring it to ui
@@ -244,7 +258,7 @@ class UtilsTest(TestCase):
             ],
         }
         utils.kernel_data_request(url=url, method='patch', data=artefacts)
-        # bring its artefacts and check
+        # fetch its artefacts and check
         res = utils.kernel_data_request(url=f'projects/{self.KERNEL_ID}/artefacts/')
         self.assertEqual(
             res,
