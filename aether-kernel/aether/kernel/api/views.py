@@ -71,7 +71,7 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
 
         '''
 
-        project = get_object_or_404(models.Project, pk=pk)
+        project = self.get_object_or_404(pk=pk)
 
         # extract jsonpaths and docs from linked schemas definition
         jsonpaths = []
@@ -139,7 +139,7 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         Returns the list of project and all its artefact ids by type.
         '''
 
-        project = get_object_or_404(models.Project, pk=pk)
+        project = self.get_object_or_404(pk=pk)
         results = project_artefacts.get_project_artefacts(project)
 
         return Response(data=results)
@@ -227,6 +227,8 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
             }
 
         '''
+        # check that the existent project is accessible
+        self.get_object_or_403(pk=pk)
 
         data = request.data
         results = project_artefacts.upsert_project_artefacts(
@@ -286,6 +288,8 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
             }
 
         '''
+        # check that the existent project is accessible
+        self.get_object_or_403(pk=pk)
 
         data = request.data
         results = project_artefacts.upsert_project_with_avro_schemas(
@@ -330,7 +334,7 @@ class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
         Reachable at ``PATCH /submissions/{pk}/extract/``
         '''
 
-        instance = get_object_or_404(models.Submission, pk=pk)
+        instance = self.get_object_or_404(pk=pk)
 
         try:
             run_entity_extraction(instance, overwrite=True)
@@ -402,7 +406,7 @@ class ProjectSchemaViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         Reachable at ``/projectschemas/{pk}/skeleton/``
         '''
 
-        project_schema = get_object_or_404(models.ProjectSchema, pk=pk)
+        project_schema = self.get_object_or_404(pk=pk)
         schema = project_schema.schema
 
         # extract jsonpaths and docs from the schema definition
@@ -471,7 +475,7 @@ class EntityViewSet(MtViewSetMixin, ExporterViewSet):
         except Exception:
             depth = 0
 
-        instance = get_object_or_404(models.Entity, pk=pk)
+        instance = self.get_object_or_404(pk=pk)
         try:
             if depth:
                 instance.resolved = get_entity_linked_data(instance, request, {}, depth)

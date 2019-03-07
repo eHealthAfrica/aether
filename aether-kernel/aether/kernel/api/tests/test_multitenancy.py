@@ -139,7 +139,7 @@ class MultitenancyTests(TestCase):
 
         # check that views only return instances linked to CURRENT_REALM
         url = reverse('project-list')
-        response = self.client.get(url, format='json')
+        response = self.client.get(url)
         self.assertEqual(response.client.cookies[settings.REALM_COOKIE].value, CURRENT_REALM)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -147,18 +147,23 @@ class MultitenancyTests(TestCase):
         self.assertEqual(data['count'], 1)
 
         url = reverse('project-detail', kwargs={'pk': obj1.pk})
-        response = self.client.get(url, format='json')
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         url = reverse('mappingset-detail', kwargs={'pk': child1.pk})
-        response = self.client.get(url, format='json')
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # linked to another realm
         url = reverse('project-detail', kwargs={'pk': obj2.pk})
-        response = self.client.get(url, format='json')
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        # custom endpoints
+        url = reverse('project-artefacts', kwargs={'pk': obj2.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
         url = reverse('mappingset-detail', kwargs={'pk': child2.pk})
-        response = self.client.get(url, format='json')
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_views__project(self):
