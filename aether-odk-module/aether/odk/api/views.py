@@ -139,7 +139,7 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         Reachable at ``.../projects/{pk}/propagate/``
         '''
 
-        project = get_object_or_404(Project, pk=pk)
+        project = self.get_object_or_404(pk=pk)
 
         try:
             propagate_kernel_project(project=project, family=request.data.get('family'))
@@ -185,7 +185,7 @@ class XFormViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         Reachable at ``.../xforms/{pk}/propagate/``
         '''
 
-        xform = get_object_or_404(XForm, pk=pk)
+        xform = self.get_object_or_404(pk=pk)
         xform.save()  # creates avro schema if missing
 
         try:
