@@ -25,7 +25,7 @@ from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
-from aether.common.multitenancy.utils import MtPrimaryKeyRelatedField, MtModelSerializer
+from aether.common.multitenancy.serializers import MtPrimaryKeyRelatedField, MtModelSerializer
 
 from .constants import MergeOptions as MERGE_OPTIONS
 from .entity_extractor import run_entity_extraction, ENTITY_EXTRACTION_ERRORS

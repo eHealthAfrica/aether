@@ -43,7 +43,7 @@ from aether.common.kernel.utils import (
     get_submissions_url,
     submit_to_kernel,
 )
-from aether.common.multitenancy.utils import MtViewSetMixin
+from aether.common.multitenancy.views import MtViewSetMixin
 from aether.common.utils import request as exec_request
 
 from .models import Project, XForm, MediaFile

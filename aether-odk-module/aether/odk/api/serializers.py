@@ -22,7 +22,7 @@ from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
-from aether.common.multitenancy.utils import MtPrimaryKeyRelatedField, MtModelSerializer
+from aether.common.multitenancy.serializers import MtPrimaryKeyRelatedField, MtModelSerializer
 
 from .models import Project, XForm, MediaFile
 from .xform_utils import parse_xform_file, validate_xform

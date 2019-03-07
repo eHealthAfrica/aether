@@ -24,7 +24,7 @@ from django.utils.translation import ugettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 from model_utils.models import TimeStampedModel
 
-from aether.common.multitenancy.utils import MtModelAbstract
+from aether.common.multitenancy.models import MtModelAbstract
 from aether.common.utils import json_prettified
 
 from .utils import validate_contract

@@ -222,7 +222,7 @@ class NoMultitenancyTests(CustomTestCase):
         initial_data = models.Project.objects.all()
         self.assertEqual(utils.filter_by_realm(self.request, initial_data), initial_data)
 
-        self.assertFalse(utils.assign_to_realm(self.request, obj1))
+        obj1.save_mt(self.request)
         self.assertTrue(MtInstance.objects.count() == 0)
 
     def test_models(self):

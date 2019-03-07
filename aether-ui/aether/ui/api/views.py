@@ -21,7 +21,7 @@ from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 
 from aether.common.kernel.utils import get_kernel_server_url
-from aether.common.multitenancy.utils import MtViewSetMixin
+from aether.common.multitenancy.views import MtViewSetMixin
 
 from . import models, serializers, utils
 

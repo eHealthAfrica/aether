@@ -32,7 +32,7 @@ from rest_framework.decorators import (
 )
 from rest_framework.renderers import JSONRenderer
 
-from aether.common.multitenancy.utils import MtViewSetMixin
+from aether.common.multitenancy.views import MtViewSetMixin
 
 from .avro_tools import extract_jsonpaths_and_docs
 from .constants import LINKED_DATA_MAX_DEPTH

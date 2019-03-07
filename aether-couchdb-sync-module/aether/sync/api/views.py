@@ -38,7 +38,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
-from aether.common.multitenancy.utils import MtViewSetMixin
+from aether.common.multitenancy.views import MtViewSetMixin
 
 from .couchdb_file import load_backup_file
 from .couchdb_helpers import create_db, create_or_update_user

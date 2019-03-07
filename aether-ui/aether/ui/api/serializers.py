@@ -21,7 +21,7 @@ from drf_dynamic_fields import DynamicFieldsMixin
 
 from rest_framework import serializers
 
-from aether.common.multitenancy.utils import MtPrimaryKeyRelatedField, MtModelSerializer
+from aether.common.multitenancy.serializers import MtPrimaryKeyRelatedField, MtModelSerializer
 
 from . import models
 from .utils import get_default_project
