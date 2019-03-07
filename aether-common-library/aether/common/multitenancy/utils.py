@@ -96,6 +96,7 @@ def assign_current_realm_in_headers(request, headers={}):
     '''
     Includes the current realm in the headers
     '''
+
     if not settings.MULTITENANCY:
         return headers
 
@@ -107,6 +108,7 @@ def assign_instance_realm_in_headers(instance, headers={}):
     '''
     Includes the instance realm in the headers
     '''
+
     if not settings.MULTITENANCY:
         return headers
 

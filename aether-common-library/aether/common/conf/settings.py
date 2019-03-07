@@ -317,9 +317,7 @@ if MULTITENANCY:
     REALM_COOKIE = os.environ.get('REALM_COOKIE', 'aether-realm')
     DEFAULT_REALM = os.environ.get('DEFAULT_REALM', 'aether')
 
-    INSTALLED_APPS += [
-        'aether.common.multitenancy',
-    ]
+    INSTALLED_APPS += ['aether.common.multitenancy', ]
     MIGRATION_MODULES['multitenancy'] = 'aether.common.multitenancy.migrations'
     REST_FRAMEWORK['DEFAULT_PERMISSION_CLASSES'] = [
         'aether.common.multitenancy.utils.IsAccessibleByRealm',

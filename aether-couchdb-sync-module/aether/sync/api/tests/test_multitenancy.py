@@ -163,10 +163,10 @@ class MultitenancyTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    @mock.patch('aether.sync.api.kernel_utils.request', return_value=MockResponse(status_code=200))
-    @mock.patch('aether.sync.api.kernel_utils.get_auth_header', return_value={
-        'Authorization': 'Token ABCDEFGH'
-    })
+    @mock.patch('aether.sync.api.kernel_utils.request',
+                return_value=MockResponse(status_code=200))
+    @mock.patch('aether.sync.api.kernel_utils.get_auth_header',
+                return_value={'Authorization': 'Token ABCDEFGH'})
     def test__upsert_kernel_artefacts(self, mock_auth, mock_patch):
         kernel_url = get_kernel_server_url()
 
@@ -185,7 +185,7 @@ class MultitenancyTests(TestCase):
             json={'avro_schemas': []},
             headers={
                 'Authorization': 'Token ABCDEFGH',
-                'aether-realm': CURRENT_REALM,
+                settings.REALM_COOKIE: CURRENT_REALM,
             },
         )
 

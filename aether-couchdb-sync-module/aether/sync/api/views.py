@@ -19,7 +19,6 @@
 import logging
 
 from django.conf import settings
-from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext as _
 from django.views.decorators.csrf import csrf_exempt
 
@@ -75,7 +74,7 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         Reachable at ``.../projects/{pk}/propagate/``
         '''
 
-        project = get_object_or_404(Project, pk=pk)
+        project = self.get_object_or_404(pk=pk)
 
         try:
             propagate_kernel_project(project=project, family=request.data.get('family'))
@@ -115,7 +114,7 @@ class SchemaViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         Reachable at ``.../schemas/{pk}/propagate/``
         '''
 
-        schema = get_object_or_404(Schema, pk=pk)
+        schema = self.get_object_or_404(pk=pk)
 
         try:
             propagate_kernel_artefacts(schema=schema, family=request.data.get('family'))
