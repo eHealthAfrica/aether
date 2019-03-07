@@ -33,12 +33,15 @@ from .models import MtInstance
 def get_current_realm(request):
     '''
     Find the current realm within the cookies or within the request headers.
+
+    https://docs.djangoproject.com/en/2.1/ref/request-response/#django.http.HttpRequest.COOKIES
+    https://docs.djangoproject.com/en/2.1/ref/request-response/#django.http.HttpRequest.META
     '''
 
     return getattr(request, 'COOKIES', {}).get(
         settings.REALM_COOKIE,
-        getattr(request, 'headers', {}).get(
-            settings.REALM_COOKIE,
+        getattr(request, 'META', {}).get(
+            settings.REALM_HEADER,
             settings.DEFAULT_REALM
         )
     )

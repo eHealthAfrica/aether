@@ -50,7 +50,6 @@ class MultitenancyTests(TestCase):
         super(MultitenancyTests, self).setUp()
         self.request = RequestFactory().get('/')
         self.request.COOKIES[settings.REALM_COOKIE] = TEST_REALM
-        self.request.headers = {}
 
         username = 'user'
         email = 'user@example.com'
@@ -182,7 +181,7 @@ class MultitenancyTests(TestCase):
     def test_get_current_realm(self):
         request = RequestFactory().get('/')
         self.assertEqual(utils.get_current_realm(request), settings.DEFAULT_REALM)
-        request.headers = {settings.REALM_COOKIE: 'in-headers'}
+        request.META[settings.REALM_HEADER] = 'in-headers'
         self.assertEqual(utils.get_current_realm(request), 'in-headers')
         request.COOKIES[settings.REALM_COOKIE] = 'in-cookies'
         self.assertEqual(utils.get_current_realm(request), 'in-cookies')

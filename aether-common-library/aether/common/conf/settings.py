@@ -315,6 +315,7 @@ else:
 MULTITENANCY = bool(os.environ.get('MULTITENANCY'))
 if MULTITENANCY:
     REALM_COOKIE = os.environ.get('REALM_COOKIE', 'aether-realm')
+    REALM_HEADER = 'HTTP_' + REALM_COOKIE.replace('-', '_').upper()  # HTTP_AETHER_REALM
     DEFAULT_REALM = os.environ.get('DEFAULT_REALM', 'aether')
 
     INSTALLED_APPS += ['aether.common.multitenancy', ]
