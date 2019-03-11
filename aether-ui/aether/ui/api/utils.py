@@ -22,6 +22,7 @@ import uuid
 
 from time import sleep
 
+from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
@@ -66,6 +67,23 @@ MSG_ENTITY_WRONG_PROJECT = _('Entity type "{}" (as project schema) belongs to a 
 
 class PublishError(Exception):
     pass
+
+
+def get_default_project():
+    '''
+    Returns (creates when needed) the default project to assign to new pipelines.
+    '''
+
+    # find the default projects
+    default_projects = models.Project.objects.filter(is_default=True)
+    if default_projects.count() == 0:
+        # create a default one
+        name = settings.DEFAULT_PROJECT_NAME
+        project = models.Project.objects.create(name=name, is_default=True)
+
+        return project
+    else:
+        return default_projects.first()
 
 
 def kernel_artefacts_to_ui_artefacts():
