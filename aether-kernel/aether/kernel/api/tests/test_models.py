@@ -94,7 +94,7 @@ class ModelsTests(TransactionTestCase):
         self.assertNotEqual(models.Mapping.objects.count(), 0)
         self.assertIsNotNone(mapping.definition_prettified)
         self.assertEqual(mapping.project, project)
-        self.assertEqual(mapping.get_project(), project)
+        self.assertEqual(mapping.get_mt_instance(), project)
         self.assertEqual(mapping.projectschemas.count(), 0, 'No entities in definition')
         self.assertFalse(mapping.is_accessible(REALM))
         self.assertIsNone(mapping.get_realm())
@@ -121,7 +121,7 @@ class ModelsTests(TransactionTestCase):
         self.assertIsNotNone(submission.payload_prettified)
         self.assertEqual(str(submission), str(submission.id))
         self.assertEqual(submission.project, project, 'submission inherits mapping project')
-        self.assertEqual(submission.get_project(), project)
+        self.assertEqual(submission.get_mt_instance(), project)
         self.assertEqual(submission.name, 'a project name-a sample mapping set')
         self.assertFalse(submission.is_accessible(REALM))
         self.assertIsNone(submission.get_realm())
@@ -174,7 +174,7 @@ class ModelsTests(TransactionTestCase):
         self.assertIsNotNone(entity.payload_prettified)
         self.assertEqual(str(entity), str(entity.id))
         self.assertEqual(entity.project, project, 'entity inherits submission project')
-        self.assertEqual(entity.get_project(), project)
+        self.assertEqual(entity.get_mt_instance(), project)
         self.assertEqual(entity.name, f'{project.name}-{schema.schema_name}')
         self.assertEqual(entity.mapping_revision, mapping.revision,
                          'entity takes mapping revision if missing')
@@ -205,7 +205,7 @@ class ModelsTests(TransactionTestCase):
         entity.mapping = None
         entity.save()
         self.assertEqual(entity.project, project_2, 'entity inherits projectschema project')
-        self.assertEqual(entity.get_project(), project_2)
+        self.assertEqual(entity.get_mt_instance(), project_2)
         self.assertEqual(entity.name, f'{project_2.name}-{schema.schema_name}')
 
         # keeps last project

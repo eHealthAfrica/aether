@@ -125,7 +125,6 @@ class Schema(ExportModelOperationsMixin('couchdbsync_schema'), MtModelChildAbstr
     def avro_schema_prettified(self):
         return json_prettified(self.avro_schema)
 
-
     def get_mt_instance(self):
         return self.project
 
