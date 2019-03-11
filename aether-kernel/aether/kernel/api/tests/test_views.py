@@ -179,7 +179,7 @@ class ViewsTest(TestCase):
         self.assertEqual(passthrough_entities_count, 20)
 
         url = reverse('projects_stats-detail', kwargs={'pk': self.project.pk})
-        response = self.client.get(url, format='json')
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         json = response.json()
         self.assertEqual(json['id'], str(self.project.pk))
@@ -191,27 +191,27 @@ class ViewsTest(TestCase):
         )
 
         # let's try with the family filter
-        response = self.client.get(f'{url}?family=Person', format='json')
+        response = self.client.get(f'{url}?family=Person')
         json = response.json()
         self.assertEqual(json['submissions_count'], submissions_count)
         self.assertNotEqual(json['entities_count'], entities_count)
         self.assertEqual(json['entities_count'], family_person_entities_count)
 
         # let's try again but with an unexistent family
-        response = self.client.get(f'{url}?family=unknown', format='json')
+        response = self.client.get(f'{url}?family=unknown')
         json = response.json()
         self.assertEqual(json['submissions_count'], submissions_count)
         self.assertEqual(json['entities_count'], 0, 'No entities in this family')
 
         # let's try with using the project id
-        response = self.client.get(f'{url}?family={str(self.project.pk)}', format='json')
+        response = self.client.get(f'{url}?family={str(self.project.pk)}')
         json = response.json()
         self.assertEqual(json['submissions_count'], submissions_count)
         self.assertNotEqual(json['entities_count'], entities_count)
         self.assertEqual(json['entities_count'], passthrough_entities_count)
 
         # let's try with the passthrough filter
-        response = self.client.get(f'{url}?passthrough=true', format='json')
+        response = self.client.get(f'{url}?passthrough=true')
         json = response.json()
         self.assertEqual(json['submissions_count'], submissions_count)
         self.assertNotEqual(json['entities_count'], entities_count)
@@ -219,7 +219,7 @@ class ViewsTest(TestCase):
 
     def test_mapping_set_stats_view(self):
         url = reverse('mappingsets_stats-detail', kwargs={'pk': self.mappingset.pk})
-        response = self.client.get(url, format='json')
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         json = response.json()
         self.assertEqual(json['id'], str(self.mappingset.pk))
@@ -340,7 +340,7 @@ class ViewsTest(TestCase):
     # Test resolving linked entities
     def helper_read_linked_data_entities(self, obj, depth):
         url = reverse('entity-detail', kwargs={'pk': obj.pk}) + '?depth=' + str(depth)
-        response = self.client.get(url, format='json')
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
         return json.loads(response.content)
 

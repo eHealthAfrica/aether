@@ -94,9 +94,7 @@ class SigninViewTests(ApiTestCase):
     @mock.patch('oauth2client.client.verify_id_token', side_effect=valid_token)
     def test_get_credentials(self, verify_token_function):
         '''happy path test, the user is in the MobileUsers pool '''
-        response = self.client.post(self.url,
-                                    {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
-                                    format='json')
+        response = self.client.post(self.url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'})
         self.assertEqual(response.status_code, 201)
         creds = response.data
 
@@ -111,15 +109,11 @@ class SigninViewTests(ApiTestCase):
     @mock.patch('oauth2client.client.verify_id_token', side_effect=valid_token)
     def test_update_credentials(self, verify_token_function):
         '''happy path test, the user is in the MobileUsers pool '''
-        response = self.client.post(self.url,
-                                    {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
-                                    format='json')
+        response = self.client.post(self.url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'})
         self.assertEqual(response.status_code, 201)
         creds = response.data
 
-        response2 = self.client.post(self.url,
-                                     {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
-                                     format='json')
+        response2 = self.client.post(self.url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'})
         self.assertEqual(response2.status_code, 201)
         creds2 = response2.data
 
@@ -131,15 +125,11 @@ class SigninViewTests(ApiTestCase):
     @mock.patch('oauth2client.client.verify_id_token', side_effect=valid_token)
     def test_two_users_one_email(self, verify_token_function):
         '''should be able to create multiple users on one email address'''
-        response = self.client.post(self.url,
-                                    {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
-                                    format='json')
+        response = self.client.post(self.url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'})
         self.assertEqual(response.status_code, 201)
         creds = response.data
 
-        response2 = self.client.post(self.url,
-                                     {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx2'},
-                                     format='json')
+        response2 = self.client.post(self.url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx2'})
         self.assertEqual(response2.status_code, 201)
         creds2 = response2.data
 
@@ -158,33 +148,25 @@ class SigninViewTests(ApiTestCase):
     @mock.patch('oauth2client.client.verify_id_token', side_effect=just_return)
     def test_no_token(self, valid_token_function):
         '''what happens if no token is posted?'''
-        response = self.client.post(self.url,
-                                    {'idToken': '', 'deviceId': 'test_xxx'},
-                                    format='json')
+        response = self.client.post(self.url, {'idToken': '', 'deviceId': 'test_xxx'})
         self.assertEqual(response.status_code, 400, 'returns error when no token is passed')
 
     @mock.patch('oauth2client.client.verify_id_token', side_effect=valid_token)
     def test_no_device_id(self, valid_token_function):
         '''what happens if no device id is posted?'''
-        response = self.client.post(self.url,
-                                    {'idToken': 'Long JWT Token', 'deviceId': ''},
-                                    format='json')
+        response = self.client.post(self.url, {'idToken': 'Long JWT Token', 'deviceId': ''})
         self.assertEqual(response.status_code, 400, 'returns error when no device_id is passed')
 
     @mock.patch('oauth2client.client.verify_id_token', side_effect=identity_error)
     def test_invalid_token(self, valid_token_function):
         '''what happens if token can not be verified?'''
-        response = self.client.post(self.url,
-                                    {'idToken': 'invalid', 'deviceId': 'test_xxx'},
-                                    format='json')
+        response = self.client.post(self.url, {'idToken': 'invalid', 'deviceId': 'test_xxx'})
         self.assertEqual(response.status_code, 401, 'returns error when no token is passed')
 
     @mock.patch('oauth2client.client.verify_id_token', side_effect=wrong_email)
     def test_valid_token_no_access(self, valid_token_function):
         '''a token with an email not in the MobileUsers list'''
-        response = self.client.post(self.url,
-                                    {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
-                                    format='json')
+        response = self.client.post(self.url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'})
         self.assertEqual(
             response.status_code, 403,
             'returns forbidden when email is not recognized')
@@ -192,25 +174,19 @@ class SigninViewTests(ApiTestCase):
     @mock.patch('oauth2client.client.verify_id_token', side_effect=no_email)
     def test_weird_token_no_email(self, valid_token_function):
         '''somehow, the token has no email address'''
-        response = self.client.post(self.url,
-                                    {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
-                                    format='json')
+        response = self.client.post(self.url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'})
         self.assertEqual(response.status_code, 500, 'returns server error on no email')
 
     @override_settings(GOOGLE_CLIENT_ID='')
     @mock.patch('oauth2client.client.verify_id_token', side_effect=just_return)
     def test_no_client_id(self, valid_token_function):
         '''forgot to set GOOGLE_CLIENT_ID, this would open up for any google JW Token'''
-        response = self.client.post(self.url,
-                                    {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
-                                    format='json')
+        response = self.client.post(self.url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'})
         self.assertEqual(response.status_code, 500, 'returns server error on no email')
 
     @mock.patch('oauth2client.client.verify_id_token', side_effect=http_error)
     def test_no_google_certs(self, valid_token_function):
-        response = self.client.post(self.url,
-                                    {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
-                                    format='json')
+        response = self.client.post(self.url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'})
         self.assertEqual(response.status_code, 500, 'returns server error')
 
     @mock.patch('aether.sync.api.views.create_or_update_user', side_effect=ValueError)
@@ -219,9 +195,7 @@ class SigninViewTests(ApiTestCase):
                                          valid_token_function,
                                          create_or_update_user_function):
         '''somehow, the couchdb database does not respond'''
-        response = self.client.post(self.url,
-                                    {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
-                                    format='json')
+        response = self.client.post(self.url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'})
         self.assertEqual(response.status_code, 500, 'returns server error')
         create_or_update_user_function.assert_called_with(
             'test_karl@ehealthnigeria.org',
@@ -232,8 +206,6 @@ class SigninViewTests(ApiTestCase):
     @mock.patch('oauth2client.client.verify_id_token', side_effect=valid_token)
     def test_create_db_error(self, valid_token_function, create_db_function):
         '''somehow, the couchdb database does not respond'''
-        response = self.client.post(self.url,
-                                    {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'},
-                                    format='json')
+        response = self.client.post(self.url, {'idToken': 'Long JWT Token', 'deviceId': 'test_xxx'})
         self.assertEqual(response.status_code, 500, 'returns server error')
         create_db_function.assert_called_with('test_xxx',)
