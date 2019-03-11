@@ -142,7 +142,7 @@ $output-nav-width: 10rem;
     width: 1.8rem;
     height: 1.8rem;
     border-radius: 50%;
-    background: url('/static/images/fullscreen-icon.svg') center center no-repeat;
+    background: url('/static/images/fullscreen-icon.png') center center no-repeat;
   }
 
   &::after {
@@ -154,7 +154,7 @@ $output-nav-width: 10rem;
     width: 1.8rem;
     height: 1.8rem;
     border-radius: 50%;
-    background: url('/static/images/fullscreen-exit-icon.svg') center center no-repeat;
+    background: url('/static/images/fullscreen-exit-icon.png') center center no-repeat;
     display: none;
   }
 
