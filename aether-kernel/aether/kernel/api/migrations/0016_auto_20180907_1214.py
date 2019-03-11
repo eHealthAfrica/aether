@@ -6,7 +6,6 @@ import django.contrib.postgres.fields.jsonb
 from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
-import django_prometheus.models
 import model_utils.fields
 import uuid
 
