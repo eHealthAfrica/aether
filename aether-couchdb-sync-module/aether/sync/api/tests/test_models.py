@@ -49,7 +49,7 @@ class ModelsTests(ApiTestCase):
 
         found_user = MobileUser.objects.get(email=email)
 
-        self.assertEquals(first_user, found_user, 'retrieves user via email')
+        self.assertEqual(first_user, found_user, 'retrieves user via email')
 
     def test_delete_user_model(self):
         '''
@@ -104,7 +104,7 @@ class ModelsTests(ApiTestCase):
 
         found_db = DeviceDB.objects.get(device_id=device_id)
 
-        self.assertEquals(devicedb, found_db, 'retrieves db via device-id')
+        self.assertEqual(devicedb, found_db, 'retrieves db via device-id')
 
     def test_devicedb_and_user_roles(self):
         device_id = 'test_Xx'

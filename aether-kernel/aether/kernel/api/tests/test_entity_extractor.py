@@ -83,52 +83,52 @@ class EntityExtractorTests(TestCase):
         entity_name = 'Person'
         stub = entity_extractor.get_entity_stub(
             requirements, entity_definitions, entity_name, source_data)
-        self.assertEquals(len(stub.get('dob')), 3)
+        self.assertEqual(len(stub.get('dob')), 3)
 
     def test_nest_object__simple_object(self):
         obj = {}
         path = 'a.b.c'
         value = 1
         entity_extractor.nest_object(obj, path, value)
-        self.assertEquals(obj['a']['b']['c'], value)
+        self.assertEqual(obj['a']['b']['c'], value)
 
     def test_nest_object__unlikely_dotted_reference(self):
         obj = {'a.b': 2, 'a.b.c': None}
         path = 'a.b.c'
         value = 1
         entity_extractor.nest_object(obj, path, value)
-        self.assertEquals(obj['a']['b']['c'], value)
-        self.assertEquals(obj['a.b'], 2)
+        self.assertEqual(obj['a']['b']['c'], value)
+        self.assertEqual(obj['a.b'], 2)
 
     def test_put_nested__simple_object(self):
         keys = ['a', 'b', 'c']
         obj = entity_extractor.put_nested({}, keys, 1)
-        self.assertEquals(obj['a']['b']['c'], 1)
+        self.assertEqual(obj['a']['b']['c'], 1)
 
     def test_put_nested__array(self):
         keys = ['a', 'b', 'c', 'de[0]']
         obj = entity_extractor.put_nested({}, keys, 1)
-        self.assertEquals(obj['a']['b']['c']['de'][0], 1)
+        self.assertEqual(obj['a']['b']['c']['de'][0], 1)
 
     def test_put_in_array__simple(self):
         obj = None
         val = 'a'
         obj = entity_extractor.put_in_array(obj, 0, val)
-        self.assertEquals(obj[0], val)
+        self.assertEqual(obj[0], val)
 
     def test_put_in_array__existing_value(self):
         starting = 1
         obj = [starting]
         val = 'a'
         obj = entity_extractor.put_in_array(obj, 0, val)
-        self.assertEquals(obj[0], val)
-        self.assertEquals(obj[1], starting)
+        self.assertEqual(obj[0], val)
+        self.assertEqual(obj[1], starting)
 
     def test_put_in_array__large_idx(self):
         obj = None
         val = 'a'
         obj = entity_extractor.put_in_array(obj, 100, val)
-        self.assertEquals(obj[0], val)
+        self.assertEqual(obj[0], val)
 
     def test_resolve_source_reference__single_resolution(self):
         data = EXAMPLE_SOURCE_DATA
@@ -139,7 +139,7 @@ class EntityExtractorTests(TestCase):
         path = requirements.get(entity_name, {}).get(field)[0]
         resolved_count = entity_extractor.resolve_source_reference(
             path, entities, entity_name, 0, field, data)
-        self.assertEquals(resolved_count, 1)
+        self.assertEqual(resolved_count, 1)
 
     def test_resolve_source_reference__multiple_resolutions(self):
         data = EXAMPLE_SOURCE_DATA
@@ -150,7 +150,7 @@ class EntityExtractorTests(TestCase):
         path = requirements.get(entity_name, {}).get(field)[0]
         resolved_count = entity_extractor.resolve_source_reference(
             path, entities, entity_name, 0, field, data)
-        self.assertEquals(resolved_count, 3)
+        self.assertEqual(resolved_count, 3)
 
     def test_resolve_source_reference__wildcard_resolutions(self):
         data = EXAMPLE_SOURCE_DATA
@@ -160,7 +160,7 @@ class EntityExtractorTests(TestCase):
         path = 'data.pe*[*].dob'
         resolved_count = entity_extractor.resolve_source_reference(
             path, entities, entity_name, 0, field, data)
-        self.assertEquals(resolved_count, 3)
+        self.assertEqual(resolved_count, 3)
 
     def test_resolve_source_reference__nested_schema(self):
         data = EXAMPLE_DATA_FOR_NESTED_SCHEMA
@@ -171,7 +171,7 @@ class EntityExtractorTests(TestCase):
         path = requirements.get(entity_name, {}).get(field)
         resolved_count = entity_extractor.resolve_source_reference(
             path, entities, entity_name, 0, field, data)
-        self.assertEquals(resolved_count, 3)
+        self.assertEqual(resolved_count, 3)
 
     def test_keyed_object_partial_wildcard(self):
         data = EXAMPLE_PARTIAL_WILDCARDS
@@ -190,7 +190,7 @@ class EntityExtractorTests(TestCase):
             ('$.households[*].name1', 2)
         ]
         for path, matches in expected:
-            self.assertEquals(len(entity_extractor.find_by_jsonpath(data, path)), matches), (path, matches)
+            self.assertEqual(len(entity_extractor.find_by_jsonpath(data, path)), matches), (path, matches)
 
     def test_coercion(self):
         test_cases = [
@@ -239,7 +239,7 @@ class EntityExtractorTests(TestCase):
         instance_number = 5
         idx = entity_extractor.anchor_reference(
             source, context, source_data, instance_number)
-        self.assertEquals(idx, 1), 'Person #5 be found in second house, index @ 1'
+        self.assertEqual(idx, 1), 'Person #5 be found in second house, index @ 1'
 
     def test_get_or_make_uuid(self):
         entity_type = 'Person'
@@ -248,7 +248,7 @@ class EntityExtractorTests(TestCase):
         source_data = EXAMPLE_SOURCE_DATA
         uuid = str(entity_extractor.get_or_make_uuid(
             entity_type, field_name, instance_number, source_data))
-        self.assertEquals(uuid.count('-'), 4)
+        self.assertEqual(uuid.count('-'), 4)
 
     def test_extractor_action__entity_reference(self):
         source_path = '#!entity-reference#bad-reference'
@@ -263,13 +263,13 @@ class EntityExtractorTests(TestCase):
         source_path = '#!none'
         res = entity_extractor.extractor_action(
             source_path, None, None, None, None, None)
-        self.assertEquals(res, None)
+        self.assertEqual(res, None)
 
     def test_extractor_action__constant(self):
         source_path = '#!constant#1#int'
         res = entity_extractor.extractor_action(
             source_path, None, None, None, None, None)
-        self.assertEquals(res, 1)
+        self.assertEqual(res, 1)
 
     def test_extractor_action__missing(self):
         source_path = '#!undefined#1#int'
@@ -293,9 +293,9 @@ class EntityExtractorTests(TestCase):
         failed_actions = entity_extractor.extract_entity(
             entity_name, entities, requirements, response_data, entity_stub
         )
-        self.assertEquals(
+        self.assertEqual(
             len(expected_entity['Person']), len(entities['Person']))
-        self.assertEquals(len(failed_actions), 0)
+        self.assertEqual(len(failed_actions), 0)
 
     def test_extract_entities(self):
         '''
@@ -313,7 +313,7 @@ class EntityExtractorTests(TestCase):
             schemas,
         )
         expected_entity = EXAMPLE_ENTITY
-        self.assertEquals(
+        self.assertEqual(
             len(expected_entity['Person']), len(entities['Person']))
 
     def test_extract_create_entities__no_requirements(self):
@@ -330,8 +330,8 @@ class EntityExtractorTests(TestCase):
             schemas,
         )
         submission_errors = submission_data['aether_errors']
-        self.assertEquals(len(submission_errors), 0)
-        self.assertEquals(len(entities), 0)
+        self.assertEqual(len(submission_errors), 0)
+        self.assertEqual(len(entities), 0)
 
     def test_extract_create_entities__success(self):
         '''
@@ -347,11 +347,11 @@ class EntityExtractorTests(TestCase):
             schemas,
         )
         submission_errors = submission_data['aether_errors']
-        self.assertEquals(len(submission_errors), 0)
+        self.assertEqual(len(submission_errors), 0)
         self.assertTrue(len(entities) > 0)
         for entity in entities:
             self.assertIn(entity.projectschema_name, schemas.keys())
-            self.assertEquals(entity.status, 'Publishable')
+            self.assertEqual(entity.status, 'Publishable')
 
     def test_extract_create_entities__validation_error(self):
         '''
@@ -389,11 +389,11 @@ class EntityExtractorTests(TestCase):
             schemas,
         )
         submission_errors = submission_data['aether_errors']
-        self.assertEquals(
+        self.assertEqual(
             len(submission_errors),
             len(EXAMPLE_SOURCE_DATA['data']['people']) * error_count,
         )
-        self.assertEquals(len(entities), 0)
+        self.assertEqual(len(entities), 0)
 
     def test_extract_create_entities__error_not_a_uuid(self):
         submission_payload = {'id': 'not-a-uuid', 'a': 1}
@@ -470,7 +470,7 @@ class EntityExtractorTests(TestCase):
         expected = set([1, 2])
         path = '$.dose-*.id'
         result = set([x.value for x in entity_extractor.find_by_jsonpath(obj, path)])
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_find_by_jsonpath__filter_by_prefix_nested_base(self):
         obj = {
@@ -489,7 +489,7 @@ class EntityExtractorTests(TestCase):
         expected = set([1, 2])
         path = '$.data.dose-*.id'
         result = set([x.value for x in entity_extractor.find_by_jsonpath(obj, path)])
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_find_by_jsonpath__nested(self):
         obj = {
@@ -509,7 +509,7 @@ class EntityExtractorTests(TestCase):
         expected = set([4])
         path = '$.person-*.household.id'
         result = set([x.value for x in entity_extractor.find_by_jsonpath(obj, path)])
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_find_by_jsonpath__fallback_to_jsonpath_ng(self):
         obj = {
@@ -526,7 +526,7 @@ class EntityExtractorTests(TestCase):
         expected = set([1, 2, 3])
         path = '$.*.id'
         result = set([x.value for x in entity_extractor.find_by_jsonpath(obj, path)])
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_find_by_jsonpath__fallback_array(self):
         obj = {
@@ -545,4 +545,4 @@ class EntityExtractorTests(TestCase):
         expected = set([1, 2, 3])
         path = '$.households[*].id'
         result = set([x.value for x in entity_extractor.find_by_jsonpath(obj, path)])
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
