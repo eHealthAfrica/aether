@@ -19,7 +19,6 @@
 import uuid
 import mock
 import requests
-from django.test import TestCase
 
 from aether.common.kernel import utils as kernel_utils
 
@@ -32,7 +31,7 @@ from ..couchdb_sync import (
     import_synced_devices,
     post_to_aether,
 )
-from . import clean_couch
+from . import ApiTestCase
 
 
 SUBMISSION_FK = 'mappingset'
@@ -45,10 +44,10 @@ def get_aether_submissions():
     return kernel_utils.get_all_docs(url)
 
 
-class CouchDbSyncTestCase(TestCase):
+class CouchDbSyncTestCase(ApiTestCase):
 
     def setUp(self):
-        clean_couch()
+        super(CouchDbSyncTestCase, self).setUp()
 
         # Check that we can connect to the kernel container.
         self.assertTrue(kernel_utils.test_connection())
@@ -94,10 +93,13 @@ class CouchDbSyncTestCase(TestCase):
             'lastname': 'Solo',
         }
 
+        self.helper__add_device_id(device_id)
+
     def tearDown(self):
+        super(CouchDbSyncTestCase, self).tearDown()
+
         requests.delete(f'{self.KERNEL_URL}/projects/{self.KERNEL_ID}/', headers=headers_testing)
         requests.delete(f'{self.KERNEL_URL}/schemas/{self.KERNEL_ID}/', headers=headers_testing)
-        clean_couch()
 
     @mock.patch('aether.sync.api.couchdb_sync.kernel_utils.test_connection', return_value=False)
     def test_post_to_aether_no_kernel(self, mock_test):

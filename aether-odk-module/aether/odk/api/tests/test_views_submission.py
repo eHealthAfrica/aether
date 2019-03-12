@@ -44,10 +44,10 @@ class SubmissionTests(CustomTestCase):
     @mock.patch('aether.common.kernel.utils.test_connection', return_value=False)
     def test__submission__424__connection(self, mock_test):
         response = self.client.head(self.url, **self.headers_user)
-        self.assertEqual(response.status_code, status.HTTP_424_FAILED_DEPENDENCY)
+        self.assertEqual(response.status_code, status.HTTP_424_FAILED_DEPENDENCY, response.content)
 
         response = self.client.post(self.url, **self.headers_user)
-        self.assertEqual(response.status_code, status.HTTP_424_FAILED_DEPENDENCY)
+        self.assertEqual(response.status_code, status.HTTP_424_FAILED_DEPENDENCY, response.content)
 
     def test__submission__204(self):
         response = self.client.head(self.url, **self.headers_user)
@@ -61,12 +61,12 @@ class SubmissionTests(CustomTestCase):
                 {XML_SUBMISSION_PARAM: f},
                 **self.headers_user
             )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.content)
 
     def test__submission__422(self):
         # submit without xml file
         response = self.client.post(self.url, {}, **self.headers_user)
-        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.content)
 
         # submit wrong xml
         with open(self.samples['submission']['file-err'], 'rb') as f:
@@ -75,7 +75,7 @@ class SubmissionTests(CustomTestCase):
                 {XML_SUBMISSION_PARAM: f},
                 **self.headers_user
             )
-        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+            self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.content)
 
     def test__submission__424__propagation(self):
         # with xform and right xml but not kernel propagation
@@ -88,21 +88,7 @@ class SubmissionTests(CustomTestCase):
                     {XML_SUBMISSION_PARAM: f},
                     **self.headers_user
                 )
-        self.assertEqual(response.status_code, status.HTTP_424_FAILED_DEPENDENCY)
-
-    @mock.patch('aether.odk.api.views.propagate_kernel_artefacts', return_value=True)
-    def test__submission__400(self, mock_propagate):
-        # create xForm entry
-        self.helper_create_xform(surveyor=self.user, xml_data=self.samples['xform']['raw-xml'])
-
-        # submit right response but server is not available yet
-        with open(self.samples['submission']['file-ok'], 'rb') as f:
-            response = self.client.post(
-                self.url,
-                {XML_SUBMISSION_PARAM: f},
-                **self.headers_user
-            )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertEqual(response.status_code, status.HTTP_424_FAILED_DEPENDENCY, response.content)
 
 
 class PostSubmissionTests(CustomTestCase):
@@ -146,12 +132,12 @@ class PostSubmissionTests(CustomTestCase):
             self.MAPPINGSET_URL + '?fields=submissions_url',
             headers=self.KERNEL_HEADERS,
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
         content = response.json()
 
         # get submissions
         response = requests.get(content['submissions_url'], headers=self.KERNEL_HEADERS)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
         content = response.json()
         self.assertEqual(content['count'], 1 if succeed else 0)
 
@@ -160,7 +146,7 @@ class PostSubmissionTests(CustomTestCase):
 
             # get entities
             response = requests.get(submission['entities_url'], headers=self.KERNEL_HEADERS)
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
             content = response.json()
             self.assertEqual(content['count'], 1)  # using identity mapping
             if entity:  # check that the entity payload matches
@@ -170,7 +156,7 @@ class PostSubmissionTests(CustomTestCase):
 
             # get attachments
             response = requests.get(submission['attachments_url'], headers=self.KERNEL_HEADERS)
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
             content = response.json()
             # there is always one more attachment, the original submission content itself
             self.assertEqual(content['count'], attachments + 1)
@@ -190,7 +176,7 @@ class PostSubmissionTests(CustomTestCase):
                 {XML_SUBMISSION_PARAM: f},
                 **self.headers_user
             )
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.content)
         self.helper_check_submission(succeed=False)
 
     @mock.patch('requests.delete')
@@ -203,14 +189,14 @@ class PostSubmissionTests(CustomTestCase):
                 {XML_SUBMISSION_PARAM: f},
                 **self.headers_user
             )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.content)
+        self.helper_check_submission(succeed=False)
         mock_post.assert_called_once_with(
             self.SUBMISSIONS_URL,
             headers=self.KERNEL_HEADERS,
             json=mock.ANY,
         )
         mock_delete.assert_not_called()
-        self.helper_check_submission(succeed=False)
 
     @mock.patch('requests.delete')
     @mock.patch('requests.post', return_value=MockResponse(status_code=500))
@@ -221,14 +207,14 @@ class PostSubmissionTests(CustomTestCase):
                 {XML_SUBMISSION_PARAM: f},
                 **self.headers_user
             )
-        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR, response.content)
+        self.helper_check_submission(succeed=False)
         mock_post.assert_called_once_with(
             self.SUBMISSIONS_URL,
             headers=self.KERNEL_HEADERS,
             json=mock.ANY,
         )
         mock_delete.assert_not_called()
-        self.helper_check_submission(succeed=False)
 
     def test__submission__post(self):
         with open(self.samples['submission']['file-ok-json'], 'rb') as content:
@@ -241,7 +227,7 @@ class PostSubmissionTests(CustomTestCase):
                 {XML_SUBMISSION_PARAM: f},
                 **self.headers_user
             )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content.decode())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content)
         self.helper_check_submission(entity=entity_payload)
 
     def test__submission__post__with_attachment(self):
@@ -259,7 +245,7 @@ class PostSubmissionTests(CustomTestCase):
                 },
                 **self.headers_user
             )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content.decode())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content)
 
         # check that submission was created with one attachment
         self.helper_check_submission(attachments=1)
@@ -282,7 +268,7 @@ class PostSubmissionTests(CustomTestCase):
                 },
                 **self.headers_user
             )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content.decode())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content)
 
         # check that submission was created with four attachments
         self.helper_check_submission(entity=entity_payload, attachments=4)
@@ -309,7 +295,7 @@ class PostSubmissionTests(CustomTestCase):
                     },
                     **self.headers_user
                 )
-            self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content.decode())
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content)
         self.helper_check_submission(entity=entity_payload, attachments=count)
 
     def test__submission__post__no_instance_id(self):
@@ -322,7 +308,7 @@ class PostSubmissionTests(CustomTestCase):
                 },
                 **self.headers_user
             )
-            self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     @mock.patch('requests.delete')
     @mock.patch('requests.post',
@@ -341,6 +327,8 @@ class PostSubmissionTests(CustomTestCase):
                 },
                 **self.headers_user
             )
+        self.assertEqual(response.status_code, 404, 'returns the last status code')
+        self.helper_check_submission(succeed=False)
         mock_post.assert_any_call(
             self.SUBMISSIONS_URL,
             headers=self.KERNEL_HEADERS,
@@ -353,9 +341,6 @@ class PostSubmissionTests(CustomTestCase):
             files=mock.ANY,
         )
         mock_delete.assert_called_once()
-
-        self.assertEqual(response.status_code, 404, 'returns the last status code')
-        self.helper_check_submission(succeed=False)
 
     @mock.patch('requests.delete')
     @mock.patch('requests.post',
@@ -374,6 +359,8 @@ class PostSubmissionTests(CustomTestCase):
                 },
                 **self.headers_user
             )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.content)
+        self.helper_check_submission(succeed=False)
         mock_post.assert_any_call(
             self.SUBMISSIONS_URL,
             headers=self.KERNEL_HEADERS,
@@ -386,6 +373,3 @@ class PostSubmissionTests(CustomTestCase):
             files=mock.ANY,
         )
         mock_del.assert_called_once()
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.content.decode())
-        self.helper_check_submission(succeed=False)
