@@ -12,9 +12,9 @@
 #                                                                              #
 ################################################################################
 
-aether.common=>=0
-boto3==1.9.111
-botocore==1.12.111
+aether.common>=0
+boto3==1.9.112
+botocore==1.12.112
 cachetools==3.1.0
 certifi==2019.3.9
 chardet==3.0.4
@@ -67,7 +67,7 @@ s3transfer==0.2.0
 sentry-sdk==0.7.6
 six==1.12.0
 spavro==1.1.21
-sqlparse==0.2.4
+sqlparse==0.3.0
 traceback2==1.4.0
 unicodecsv==0.14.1
 unittest2==1.1.0
