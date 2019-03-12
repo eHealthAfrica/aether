@@ -63,7 +63,7 @@ class PipelineCard extends Component {
             ))
           }
 
-          <ContractAddButton pipeline={pipeline} />
+          <ContractAddButton pipeline={pipeline} {...this.props} />
         </div>
       </div>
     )

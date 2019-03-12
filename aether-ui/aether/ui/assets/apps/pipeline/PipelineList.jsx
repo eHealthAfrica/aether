@@ -66,7 +66,7 @@ class PipelineList extends Component {
 
           <div className='pipeline-previews'>
             { this.props.list.map(pipeline => (
-              <PipelineCard key={pipeline.id} pipeline={pipeline} />
+              <PipelineCard key={pipeline.id} pipeline={pipeline} {...this.props} />
             )) }
           </div>
         </div>

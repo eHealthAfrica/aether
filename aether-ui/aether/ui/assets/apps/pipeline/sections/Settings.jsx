@@ -22,7 +22,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
-import { updateContract } from '../redux'
+import { updateContract, addContract } from '../redux'
 import { isEmpty } from '../../utils'
 import { deriveEntityTypes, deriveMappingRules } from '../../utils/avro-utils'
 
@@ -145,6 +145,18 @@ class Settings extends Component {
     }
   }
 
+  onSave (contract) {
+    if (this.props.isNew) {
+      this.props.addContract({ ...contract, name: this.state.contractName })
+      this.props.onSave()
+    } else {
+      this.props.updateContract({
+        ...contract,
+        name: this.state.contractName
+      })
+    }
+  }
+
   render () {
     const { contract } = this.props
     const showIdentityOption = (!contract.is_read_only && !isEmpty(this.props.inputSchema))
@@ -182,12 +194,7 @@ class Settings extends Component {
             { !contract.is_read_only &&
               <button
                 className='btn btn-d btn-primary btn-big ml-4'
-                onClick={() => {
-                  this.props.updateContract({
-                    ...contract,
-                    name: this.state.contractName
-                  })
-                }}>
+                onClick={this.onSave.bind(this, contract)}>
                 <span className='details-title'>
                   <FormattedMessage
                     id='settings.contract.save'
@@ -248,6 +255,6 @@ const mapStateToProps = ({ pipelines }) => ({
 
   contract: pipelines.currentContract
 })
-const mapDispatchToProps = { updateContract }
+const mapDispatchToProps = { updateContract, addContract }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Settings)
