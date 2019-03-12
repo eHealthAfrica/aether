@@ -63,7 +63,7 @@ class PipelineCard extends Component {
         <div className='preview-contracts'>
           {
             pipeline.contracts.map(contract => (
-              <ContractCard key={contract.id} contract={contract} {...this.props}/>
+              <ContractCard key={contract.id} contract={contract} {...this.props} />
             ))
           }
 
