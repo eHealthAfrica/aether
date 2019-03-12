@@ -29,9 +29,9 @@ class LoadFileViewsTests(ApiTestCase):
         with open(DEVICE_TEST_FILE, 'rb') as fp:
             stats = load_backup_file(fp)
 
-        self.assertEqual(stats['total'], 3)
-        self.assertEqual(stats['success'], 3)
-        self.assertEqual(stats['erred'], 0)
+            self.assertEqual(stats['total'], 3)
+            self.assertEqual(stats['success'], 3)
+            self.assertEqual(stats['erred'], 0)
 
     @mock.patch('aether.sync.api.couchdb_file.create_db', side_effect=Exception)
     def test__load_backup_file__couchdb_error(self, mock_create_db):
@@ -39,6 +39,6 @@ class LoadFileViewsTests(ApiTestCase):
             stats = load_backup_file(fp)
             mock_create_db.assert_called_once()
 
-        self.assertEqual(stats['total'], 3)
-        self.assertEqual(stats['success'], 0)
-        self.assertEqual(stats['erred'], 3)
+            self.assertEqual(stats['total'], 3)
+            self.assertEqual(stats['success'], 0)
+            self.assertEqual(stats['erred'], 3)
