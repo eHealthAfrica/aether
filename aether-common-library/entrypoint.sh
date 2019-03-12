@@ -43,11 +43,13 @@ test_flake8() {
 }
 
 test_coverage() {
-    export RCFILE=/code/conf/extras/coverage.rc
-    export TESTING=true
+    RCFILE=/code/conf/extras/coverage.rc
+    PARALLEL_COV="--concurrency=multiprocessing --parallel-mode"
+    PARALLEL_PY="--parallel=4"
 
-    coverage run    --rcfile="$RCFILE" manage.py test --noinput "${@:1}"
-    coverage report --rcfile="$RCFILE"
+    coverage run     --rcfile="$RCFILE" $PARALLEL_COV manage.py test --noinput "${@:1}" $PARALLEL_PY
+    coverage combine --rcfile="$RCFILE" --append
+    coverage report  --rcfile="$RCFILE"
     coverage erase
 
     cat /code/conf/extras/good_job.txt
@@ -68,15 +70,18 @@ case "$1" in
     ;;
 
     test)
+        export TESTING=true
         test_flake8
         test_coverage "${@:2}"
     ;;
 
     test_lint)
+        export TESTING=true
         test_flake8
     ;;
 
     test_py | test_coverage )
+        export TESTING=true
         test_coverage "${@:2}"
     ;;
 
