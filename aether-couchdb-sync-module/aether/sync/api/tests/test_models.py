@@ -45,7 +45,8 @@ class ModelsTests(ApiTestCase):
         self.assertRaises(
             IntegrityError,
             MobileUser.objects.create,
-            email=email)
+            email=email,
+        )
 
         found_user = MobileUser.objects.get(email=email)
 
@@ -174,6 +175,6 @@ class ModelsTests(ApiTestCase):
 
         schema_2 = Schema.objects.create(
             project=project,
-            avro_schema={'name': 'name'}
+            avro_schema={'name': 'name'},
         )
         self.assertEqual(str(schema_2), 'name')

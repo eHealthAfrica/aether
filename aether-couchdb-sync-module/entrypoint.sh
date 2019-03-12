@@ -146,7 +146,7 @@ test_flake8 () {
 test_coverage () {
     RCFILE=/code/conf/extras/coverage.rc
     PARALLEL_COV="--concurrency=multiprocessing --parallel-mode"
-    PARALLEL_PY="--parallel=4"
+    PARALLEL_PY="--parallel=1"
 
     coverage run     --rcfile="$RCFILE" $PARALLEL_COV manage.py test --noinput "${@:1}" $PARALLEL_PY
     coverage combine --rcfile="$RCFILE" --append
