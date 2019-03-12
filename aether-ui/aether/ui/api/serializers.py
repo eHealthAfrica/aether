@@ -22,6 +22,7 @@ from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
 from . import models
+from .utils import get_default_project
 
 
 class ContractSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
@@ -63,7 +64,7 @@ class PipelineSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     def create(self, validated_data):
         if not validated_data.get('project'):
             # assign new pipelines to the default project
-            default_project = models.Project.objects.filter(is_default=True).first()
+            default_project = get_default_project()
             validated_data['project'] = default_project
 
         instance = super(PipelineSerializer, self).create(validated_data)
