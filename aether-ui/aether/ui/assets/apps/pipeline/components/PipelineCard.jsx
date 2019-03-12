@@ -29,6 +29,10 @@ import ContractCard from './ContractCard'
 import { selectPipeline } from '../redux'
 
 class PipelineCard extends Component {
+  onPipelineSelect (pipeline) {
+    this.props.selectPipeline(pipeline.id)
+    this.props.history.push(`/${pipeline.id}`)
+  }
   render () {
     const { pipeline } = this.props
 
@@ -36,7 +40,7 @@ class PipelineCard extends Component {
       <div className='pipeline-preview'>
         <div
           className={`preview-input ${pipeline.isInputReadOnly ? 'pipeline-readonly' : ''}`}
-          onClick={() => { this.props.selectPipeline(pipeline.id) }}>
+          onClick={this.onPipelineSelect.bind(this, pipeline)}>
           { pipeline.isInputReadOnly &&
             <span className='tag'>
               <FormattedMessage
@@ -59,7 +63,7 @@ class PipelineCard extends Component {
         <div className='preview-contracts'>
           {
             pipeline.contracts.map(contract => (
-              <ContractCard key={contract.id} contract={contract} />
+              <ContractCard key={contract.id} contract={contract} {...this.props}/>
             ))
           }
 

@@ -137,21 +137,3 @@ export const getLoggedInUser = () => {
  * @param {*} x -- the object
  */
 export const objectToString = (obj) => !isEmpty(obj) ? JSON.stringify(obj, 0, 2) : ''
-
-/**
- * Generates a unique contract name per pipeline
- *
- * @param {Object}   pipeline
- */
-export const generateNewContractName = (pipeline) => {
-  let count = 0
-  let newContractName = `Contract ${count}`
-
-  do {
-    if (!pipeline.contracts.find(c => c.name === newContractName)) {
-      return newContractName
-    }
-    count++
-    newContractName = `Contract ${count}`
-  } while (true)
-}

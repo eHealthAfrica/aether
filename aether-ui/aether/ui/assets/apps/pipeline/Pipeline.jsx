@@ -32,7 +32,7 @@ import Output from './sections/Output'
 import Settings from './sections/Settings'
 
 import { clearSelection, getPipelineById, selectContract, selectSection, contractChanged } from './redux'
-import { generateNewContractName, generateGUID } from '../utils'
+import { generateGUID } from '../utils'
 
 import {
   PIPELINE_SECTION_INPUT,
@@ -40,6 +40,19 @@ import {
   CONTRACT_SECTION_MAPPING,
   CONTRACT_SECTION_SETTINGS
 } from '../utils/constants'
+
+const generateNewContractName = (pipeline) => {
+  let count = 0
+  let newContractName = `Contract ${count}`
+
+  do {
+    if (!pipeline.contracts.find(c => c.name === newContractName)) {
+      return newContractName
+    }
+    count++
+    newContractName = `Contract ${count}`
+  } while (true)
+}
 
 class Pipeline extends Component {
   constructor (props) {
@@ -52,7 +65,7 @@ class Pipeline extends Component {
       showSettings: (view === CONTRACT_SECTION_SETTINGS),
       showOutput: false,
       fullscreen: false,
-      newContracts: [],
+      newContract: null,
       isNew: props.location.state && props.location.state.isNewContract,
       showCancelModal: false
     }
@@ -80,9 +93,9 @@ class Pipeline extends Component {
     }
 
     // persist in-memory new contract
-    if (this.state.isNew && this.props.contract && this.props.contract !== this.state.newContracts[0]) {
+    if (this.state.isNew && this.props.contract && this.props.contract !== this.state.newContract) {
       this.setState({
-        newContracts: [this.props.contract]
+        newContract: this.props.contract
       })
     }
 
@@ -194,7 +207,7 @@ class Pipeline extends Component {
     this.props.contractChanged(newContract)
     this.props.selectSection(CONTRACT_SECTION_SETTINGS)
     this.setState({
-      newContracts: [newContract],
+      newContract: newContract,
       isNew: true
     })
   }
@@ -253,7 +266,7 @@ class Pipeline extends Component {
 
   onCancelContract () {
     this.setState({
-      newContracts: [],
+      newContract: null,
       isNew: false,
       showCancelModal: false
     })
@@ -264,7 +277,7 @@ class Pipeline extends Component {
   onSave () {
     this.setState({
       isNew: false,
-      newContracts: []
+      newContract: null
     })
   }
 
@@ -279,7 +292,7 @@ class Pipeline extends Component {
     this.setState({
       isNew: true
     })
-    this.props.contractChanged(this.state.newContracts[0] || {})
+    this.props.contractChanged(this.state.newContract || {})
   }
 
   renderContractTabs () {
@@ -304,7 +317,8 @@ class Pipeline extends Component {
   }
 
   renderNewContractTab () {
-    return (this.state.newContracts.map(newContract => (
+    const newContract = this.state.newContract
+    return newContract && (
       <div
         key={newContract.id}
         className={`pipeline-tab ${newContract.id === this.props.contract.id ? 'active' : ''}`}
@@ -318,7 +332,7 @@ class Pipeline extends Component {
           <i className='fas fa-ellipsis-h' />
         </div>
       </div>
-    )))
+    )
   }
 
   renderSectionTabs () {
