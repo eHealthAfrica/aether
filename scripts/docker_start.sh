@@ -20,20 +20,27 @@
 #
 set -Eeuo pipefail
 
-# start the indicated container with the necessary dependencies
-#
-#   ./scripts/docker_start.sh [--force | --kill | -f | -k] [--build | -b] <name>
-#
-# arguments:
-#   --kill  | -k   kill all running containers before start
-#   --clean | -c   kill and remove all running containers and volumes before start
-#   --build | -b   kill and build all containers before start
-#   --force | -f   ensure that the container will be restarted if needed
+function show_help {
+    echo """
+    start the indicated container with the necessary dependencies
 
-#   <name>
-#      Expected values: kernel, odk, ui, couchdb-sync or sync.
-#      Any other value will start all containers.
-#
+    ./scripts/docker_start.sh [options] <name>
+
+    options:
+
+    --build | -b   kill and build all containers before start
+    --clean | -c   stop and remove all running containers and volumes before start
+    --force | -f   ensure that the container will be restarted if needed
+    --kill  | -k   kill all running containers before start
+
+    --help  | -h   shows this message
+
+    <name>
+        Expected values: kernel, odk, ui, couchdb-sync or sync (alias of couchdb-sync).
+        Any other value will start all containers.
+
+    """
+}
 
 function start_container {
     if [[ $force = "yes" ]]; then
@@ -54,6 +61,12 @@ kill=no
 while [[ $# -gt 0 ]]
 do
     case "$1" in
+        -h|--help)
+            # shows help
+            show_help
+            exit 0
+        ;;
+
         -k|--kill)
             # stop all containers
             kill=yes
