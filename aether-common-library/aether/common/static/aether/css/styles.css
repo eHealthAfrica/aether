@@ -26,7 +26,7 @@ body {
   background: #50aef3;
   background-image: linear-gradient(to right, #50aef3, #7175dd);
   color: #fff;
-  font-family: "Open Sans", Helvetica, Arial, sans-serif;
+  font-family: 'Open Sans', Helvetica, Arial, sans-serif;
   font-size: 15px;
   line-height: 1.3em;
 }
@@ -96,7 +96,7 @@ body {
 }
 
 .navbar-brand span {
-  font-family: "Open Sans", Helvetica, Arial, sans-serif;
+  font-family: 'Open Sans', Helvetica, Arial, sans-serif;
   display: inline-block;
   margin-left: 32px;
   line-height: 24px;
