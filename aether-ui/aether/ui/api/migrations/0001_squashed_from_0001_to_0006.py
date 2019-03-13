@@ -10,29 +10,16 @@ import uuid
 
 
 class Migration(migrations.Migration):
-    #
-    # https://docs.djangoproject.com/en/2.1/topics/migrations/
-    #
-    # Once you’ve squashed your migration, you should then commit it alongside
-    # the migrations it replaces and distribute this change to all running
-    # instances of your application, making sure that they run migrate
-    # to store the change in their database.
-    # You must then transition the squashed migration to a normal migration by:
 
-    # - Deleting all the migration files it replaces.
-    # - Updating all migrations that depend on the deleted migrations
-    #   to depend on the squashed migration instead.
-    # - Removing the replaces attribute in the Migration class of the
-    #   squashed migration (this is how Django tells that it is a squashed migration).
-
-    # replaces = [
-    #     ('ui', '0001_initial'),
-    #     ('ui', '0002_remove_usertokens_odk_token'),
-    #     ('ui', '0003_pipeline'),
-    #     ('ui', '0004_pipeline_kernel_refs'),
-    #     ('ui', '0005_pipeline_published_on'),
-    #     ('ui', '0006_remove_usertokens'),
-    # ]
+    replaces = [
+        # NOTE: transition to a normal migration file
+        # ('ui', '0001_initial'),
+        # ('ui', '0002_remove_usertokens_odk_token'),
+        # ('ui', '0003_pipeline'),
+        # ('ui', '0004_pipeline_kernel_refs'),
+        # ('ui', '0005_pipeline_published_on'),
+        # ('ui', '0006_remove_usertokens'),
+    ]
 
     initial = True
 

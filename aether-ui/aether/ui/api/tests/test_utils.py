@@ -37,6 +37,8 @@ class UtilsTest(TestCase):
 
         Project.objects.all().delete()
 
+        Project.objects.all().delete()
+
     def tearDown(self):
         self.helper__delete_in_kernel('projects', self.KERNEL_ID)
         self.helper__delete_in_kernel('schemas', self.KERNEL_ID)

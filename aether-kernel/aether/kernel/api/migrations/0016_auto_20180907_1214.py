@@ -6,7 +6,6 @@ import django.contrib.postgres.fields.jsonb
 from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
-import django_prometheus.models
 import model_utils.fields
 import uuid
 
@@ -91,7 +90,6 @@ class Migration(migrations.Migration):
             name='mappingset',
             field=models.ForeignKey(null=True, blank=True, on_delete=django.db.models.deletion.CASCADE, related_name='submissions', to='kernel.MappingSet'),
         ),
-
         migrations.RunPython(
             code=migrate_current_mappings_to_mappingsets,
             reverse_code=migrations.RunPython.noop,
@@ -99,7 +97,6 @@ class Migration(migrations.Migration):
             # will be removed (elided) when squashing migrations.
             elidable=True,
         ),
-
         migrations.AlterField(
             model_name='mapping',
             name='project',
