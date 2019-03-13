@@ -1,6 +1,12 @@
 FROM node:dubnium-slim
 
-RUN apt-get update -qq && apt-get -qq --yes --allow-downgrades --allow-remove-essential --allow-change-held-packages install git mercurial
+RUN apt-get update -qq && \
+    apt-get -qq \
+        --yes \
+        --allow-downgrades \
+        --allow-remove-essential \
+        --allow-change-held-packages \
+        install git mercurial
 
 WORKDIR /code/
 
