@@ -59,6 +59,7 @@ services:
       MINIO_STORAGE_ENDPOINT: minio-test:9000
       PGHOST: db-test
       TESTING: "true"
+      TEST_PARALLEL: ${TEST_PARALLEL}
       WEB_SERVER_PORT: 9100
     volumes:
       # volumes in tests
@@ -100,6 +101,7 @@ services:
       MINIO_STORAGE_ENDPOINT: minio-test:9000
       PGHOST: db-test
       TESTING: "true"
+      TEST_PARALLEL: ${TEST_PARALLEL}
       WEB_SERVER_PORT: 9102
     volumes:
       # volumes in tests
@@ -126,6 +128,7 @@ services:
       PGHOST: db-test
       REDIS_HOST: redis-test
       TESTING: "true"
+      TEST_PARALLEL: ${TEST_PARALLEL}
       WEB_SERVER_PORT: 9106
     ports:
       - "9106:9106"
@@ -146,6 +149,7 @@ services:
       DEBUG: null # set to null to remove previous value
       PGHOST: db-test
       TESTING: "true"
+      TEST_PARALLEL: ${TEST_PARALLEL}
       WEB_SERVER_PORT: 9104
     ports:
       - "9104:9104"
