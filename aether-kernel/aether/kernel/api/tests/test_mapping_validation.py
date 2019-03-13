@@ -112,14 +112,14 @@ class TestMappingValidation(TestCase):
         path = '#!uuid'
         expected = mapping_validation.Success(path, [])
         result = mapping_validation.validate_getter(submission_payload, path)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_validate_getter__success_2(self):
         submission_payload = {'a': {'b': 'x'}}
         path = '$.a.b'
         expected = mapping_validation.Success(path, ['x'])
         result = mapping_validation.validate_getter(submission_payload, path)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_validate_getter__failure(self):
         submission_payload = {'a': {'b': 'x'}}
@@ -127,79 +127,79 @@ class TestMappingValidation(TestCase):
         description = mapping_validation.NO_MATCH
         expected = mapping_validation.Failure(path, description)
         result = mapping_validation.validate_getter(submission_payload, path)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_validate_setter__success(self):
         path = 'Person.firstName'
         expected = mapping_validation.Success(path, [])
         result = mapping_validation.validate_setter(valid_schemas, path)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_validate_setter__success__optional_nested(self):
         path = 'Person.optional_location.lat'
         expected = mapping_validation.Success(path, [])
         result = mapping_validation.validate_setter(valid_schemas, path)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_validate_setter__success__set_array(self):
         path = 'Nested.geom.coordinates'
         expected = mapping_validation.Success(path, [])
         result = mapping_validation.validate_setter(valid_schemas, path)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_validate_setter__success__set_array_at_idndex(self):
         path = 'Nested.geom.coordinates[0]'
         expected = mapping_validation.Success(path, [])
         result = mapping_validation.validate_setter(valid_schemas, path)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_validate_setter__success__mandatory_nested(self):
         path = 'Person.location.lat'
         expected = mapping_validation.Success(path, [])
         result = mapping_validation.validate_setter(valid_schemas, path)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_validate_setter__failure__missing_schema(self):
         path = 'a.b.c'
         description = mapping_validation.no_schema('a')
         expected = mapping_validation.Failure(path, description)
         result = mapping_validation.validate_setter(valid_schemas, path)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_validate_setter__failure__invalid_schema(self):
         path = 'Person.firstName'
         description = mapping_validation.invalid_schema('Person')
         expected = mapping_validation.Failure(path, description)
         result = mapping_validation.validate_setter(invalid_schemas, path)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_validate_setter__failure__mandatory_nested(self):
         path = 'Person.location.lat.missing'
         description = mapping_validation.NO_MATCH
         expected = mapping_validation.Failure(path, description)
         result = mapping_validation.validate_setter(valid_schemas, path)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_validate_setter__failure__optional_nested(self):
         path = 'Person.optional_location.lat.missing'
         description = mapping_validation.NO_MATCH
         expected = mapping_validation.Failure(path, description)
         result = mapping_validation.validate_setter(valid_schemas, path)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_validate_setter__failure__no_match(self):
         path = 'Person.nonexistentField'
         description = mapping_validation.NO_MATCH
         expected = mapping_validation.Failure(path, description)
         result = mapping_validation.validate_setter(valid_schemas, path)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_validate_setter__failure__no_schema(self):
         path = 'NonexistantSchema.firstName'
         description = mapping_validation.no_schema('NonexistantSchema')
         expected = mapping_validation.Failure(path, description)
         result = mapping_validation.validate_setter(valid_schemas, path)
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_validate_mapping__success(self):
         submission_payload = {'a': {'b': 'x'}, 'c': {'d': 'y'}}
@@ -213,7 +213,7 @@ class TestMappingValidation(TestCase):
         result = mapping_validation.validate_mappings(
             submission_payload, valid_schemas, mapping_definition,
         )
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_validate_mapping__wildcard_success(self):
         submission_payload = {'data': {'a1': {'b': 'x'}, 'a2': {'d': 'y'}}}
@@ -226,7 +226,7 @@ class TestMappingValidation(TestCase):
         result = mapping_validation.validate_mappings(
             submission_payload, valid_schemas, mapping_definition,
         )
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)
 
     def test_validate_mapping__failure(self):
         submission_payload = {'a': {'b': 'x'}, 'c': {'d': 'y'}}
@@ -253,4 +253,4 @@ class TestMappingValidation(TestCase):
         result = mapping_validation.validate_mappings(
             submission_payload, valid_schemas, mapping_definition,
         )
-        self.assertEquals(expected, result)
+        self.assertEqual(expected, result)

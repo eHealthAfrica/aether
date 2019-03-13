@@ -68,6 +68,7 @@ setup(
             'flake8',
             'flake8-quotes',
             'mock',
+            'tblib',  # for paralell test runner
         ],
     },
 

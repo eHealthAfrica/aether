@@ -19,87 +19,98 @@
  */
 
 import React, { Component } from 'react'
-import { FormattedMessage } from 'react-intl'
+import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
 import { connect } from 'react-redux'
 
-import { generateGUID, deepEqual } from '../../utils'
+import { generateGUID, deepEqual, objectToString } from '../../utils'
 import { updateContract } from '../redux'
+
+const MESSAGES = defineMessages({
+  mappingRuleSourcePlaceholder: {
+    defaultMessage: 'define source',
+    id: 'mapping.rule.source.placeholder'
+  },
+  mappingRuleDestinationPlaceholder: {
+    defaultMessage: 'define destination',
+    id: 'mapping.rule.destination.placeholder'
+  },
+  mappingRulesPlaceHolder: {
+    defaultMessage: 'Enter your mapping rules as an array',
+    id: 'mapping.rules.placeholder'
+  }
+})
 
 class Mapping extends Component {
   constructor (props) {
     super(props)
 
     this.state = {
-      mappingRules: props.contract.mapping || [],
+      mappingRules: props.contract.mapping_rules || [],
+      mappingRulesInput: this.mappingToJSON(props.contract.mapping_rules || []),
+
       view: 'rules',
       error: null,
-      mappingRulesInput: props.contract.mapping
-        ? this.mappingToJSON(props.contract.mapping) : JSON.stringify([]),
-      current_rules: [],
       jsonError: null
     }
   }
 
-  componentDidMount () {
-    this.setState({
-      current_rules: JSON.parse(this.state.mappingRulesInput)
-    })
-  }
-
-  componentWillReceiveProps (nextProps) {
-    this.setState({
-      mappingRules: nextProps.contract.mapping || []
-    })
-    if (nextProps.contract.mapping !== this.props.contract.mapping) {
+  componentDidUpdate (prevProps) {
+    if (!deepEqual(prevProps.contract.mapping_rules, this.props.contract.mapping_rules)) {
       this.setState({
-        current_rules: [...nextProps.contract.mapping],
-        mappingRulesInput: this.mappingToJSON(nextProps.contract.mapping)
+        mappingRules: this.props.contract.mapping_rules || [],
+        mappingRulesInput: this.mappingToJSON(this.props.contract.mapping_rules || []),
+        error: null,
+        jsonError: null
       })
     }
   }
 
-  JSONToMapping (json) {
-    try {
-      const mapping = JSON.parse(json).map(rule => ({
-        id: generateGUID(),
-        source: rule[0],
-        destination: rule[1]
-      }))
-      return mapping
-    } catch (error) {
-      throw error
-    }
+  JSONToMapping (rules) {
+    const mappingRules = JSON.parse(rules).map(rule => ({
+      id: generateGUID(),
+      source: rule[0],
+      destination: rule[1]
+    }))
+
+    return mappingRules
   }
 
-  mappingToJSON (mapping) {
-    return JSON.stringify(mapping.map(item => ([item.source, item.destination])), 0, 2)
+  mappingToJSON (rules) {
+    return objectToString(rules.map(item => ([item.source, item.destination])))
   }
 
   notifyChange (event) {
     event.preventDefault()
-    this.props.updateContract({ ...this.props.contract, mapping: this.state.mappingRules })
+    if (this.props.contract.is_read_only) {
+      return
+    }
+
+    this.props.updateContract({ ...this.props.contract, mapping_rules: this.state.mappingRules })
   }
 
   notifyChangeJSON (event) {
     event.preventDefault()
-    let rules = []
+    if (this.props.contract.is_read_only) {
+      return
+    }
+
     this.setState({ jsonError: null })
+
     try {
-      rules = this.JSONToMapping(this.state.mappingRulesInput)
-      this.props.updateContract({ ...this.props.contract, mapping: rules })
-      this.setState({ current_rules: JSON.parse(this.state.mappingRulesInput) })
+      const rules = this.JSONToMapping(this.state.mappingRulesInput)
+      this.props.updateContract({ ...this.props.contract, mapping_rules: rules })
     } catch (error) {
       this.setState({ jsonError: error.message })
     }
   }
 
   hasChanged () {
-    return !deepEqual(this.state.mappingRules, this.props.contract.mapping)
+    return !deepEqual(this.state.mappingRules, this.props.contract.mapping_rules)
   }
 
   hasChangedJson () {
     try {
-      return !deepEqual(JSON.parse(this.state.mappingRulesInput), this.state.current_rules)
+      return !deepEqual(JSON.parse(this.state.mappingRulesInput), this.props.contract.mapping_rules)
     } catch (error) {
       return true
     }
@@ -126,45 +137,48 @@ class Mapping extends Component {
               className={`tab ${this.state.view === 'rules' ? 'selected' : ''}`}
               onClick={this.toggleMappingView.bind(this)}>
               <FormattedMessage
-                id='pipeline.mapping.toggle.rules'
+                id='mapping.toogle.rules'
                 defaultMessage='Mapping rules'
               />
             </button>
+
             <button
               className={`tab ${this.state.view === 'definitions' ? 'selected' : ''}`}
               onClick={this.toggleMappingView.bind(this)}>
               <FormattedMessage
-                id='pipeline.mapping.toggle.definitions'
+                id='mapping.toggle.definitions'
                 defaultMessage='JSON'
               />
             </button>
           </div>
 
-          {this.state.view === 'rules' &&
+          { this.state.view === 'rules' &&
             <div className='rules'>
               <form onSubmit={this.notifyChange.bind(this)}>
                 { this.state.mappingRules.map(this.renderRule.bind(this)) }
 
-                <div className='rules-buttons'>
-                  { this.renderAddNewRuleButton() }
+                { !this.props.contract.is_read_only &&
+                  <div className='rules-buttons'>
+                    { this.renderAddNewRuleButton() }
 
-                  <button type='submit' className='btn btn-d btn-primary' disabled={this.props.contract.is_read_only || !this.hasChanged()}>
-                    <span className='details-title'>
-                      <FormattedMessage
-                        id='mapping.rules.button.ok'
-                        defaultMessage='Apply mapping rules to pipeline'
-                      />
-                    </span>
-                  </button>
-                </div>
+                    <button
+                      type='submit'
+                      className='btn btn-d btn-primary'
+                      disabled={!this.hasChanged()}>
+                      <span className='details-title'>
+                        <FormattedMessage
+                          id='mapping.rules.button.ok'
+                          defaultMessage='Apply mapping rules to pipeline'
+                        />
+                      </span>
+                    </button>
+                  </div>
+                }
               </form>
             </div>
           }
 
-          {this.state.view === 'definitions' &&
-            this.renderDefinition()
-          }
-
+          { this.state.view === 'definitions' && this.renderDefinition() }
         </div>
       </div>
     )
@@ -186,13 +200,18 @@ class Mapping extends Component {
     }
 
     return (
-      <button type='button' className='btn btn-d btn-primary' onClick={addNewRule} disabled={this.props.contract.is_read_only}>
-        <FormattedMessage id='mapping.button.add' defaultMessage='Add rule' />
+      <button
+        type='button'
+        className='btn btn-d btn-primary'
+        onClick={addNewRule}>
+        <FormattedMessage id='mapping.rules.button.add' defaultMessage='Add rule' />
       </button>
     )
   }
 
   renderRule (rule) {
+    const { formatMessage } = this.props.intl
+
     const modifyRule = (rule) => {
       this.setState({
         mappingRules: this.state.mappingRules.map(r => r.id !== rule.id ? r : rule)
@@ -212,71 +231,69 @@ class Mapping extends Component {
       })
     }
 
-    const hasError = (source, destination = null) => (Boolean(this.props.contract.mapping_errors.find(
-      error => (error.path && (error.path === source || error.path === destination))
-    )))
+    const hasError = (source, destination = null) => (
+      Boolean(this.props.contract.mapping_errors.find(
+        error => (error.path && (error.path === source || error.path === destination))
+      ))
+    )
 
     return (
       <div key={rule.id} className={`${hasError(rule.source, rule.destination) && 'error'} rule`}>
         <div className='rule-input source'>
-          <FormattedMessage id='mapping.rule.source.placeholder' defaultMessage='define source'>
-            {message => (
-              <input
-                type='text'
-                required
-                className={`${hasError(rule.source) && 'error'} input-d`}
-                name='source'
-                value={rule.source}
-                onChange={onChangeInput}
-                placeholder={message}
-              />
-            )}
-          </FormattedMessage>
+          <input
+            type='text'
+            required
+            className={`${hasError(rule.source) && 'error'} input-d`}
+            name='source'
+            value={rule.source}
+            onChange={onChangeInput}
+            placeholder={formatMessage(MESSAGES.mappingRuleSourcePlaceholder)}
+            disabled={this.props.contract.is_read_only}
+          />
         </div>
 
         <div className='rule-input destination'>
-          <FormattedMessage id='mapping.rule.destination.placeholder' defaultMessage='define destination'>
-            {message => (
-              <input
-                type='text'
-                required
-                className={`${hasError(rule.destination) && 'error'} input-d`}
-                name='destination'
-                value={rule.destination}
-                onChange={onChangeInput}
-                placeholder={message}
-              />
-            )}
-          </FormattedMessage>
+          <input
+            type='text'
+            required
+            className={`${hasError(rule.destination) && 'error'} input-d`}
+            name='destination'
+            value={rule.destination}
+            onChange={onChangeInput}
+            placeholder={formatMessage(MESSAGES.mappingRuleDestinationPlaceholder)}
+            disabled={this.props.contract.is_read_only}
+          />
         </div>
 
-        <button
-          type='button'
-          className='btn btn-d btn-flat btn-transparent'
-          onClick={removeRule}
-          disabled={this.props.contract.is_read_only}>
-          <span className='details-title'>
-            <FormattedMessage
-              id='mapping.rule.button.delete'
-              defaultMessage='Remove'
-            />
-          </span>
-        </button>
+        { !this.props.contract.is_read_only &&
+          <button
+            type='button'
+            className='btn btn-d btn-flat btn-transparent'
+            onClick={removeRule}>
+            <span className='details-title'>
+              <FormattedMessage
+                id='mapping.rule.button.delete'
+                defaultMessage='Remove'
+              />
+            </span>
+          </button>
+        }
       </div>
     )
   }
 
   renderDefinition () {
+    const { formatMessage } = this.props.intl
+
     return (
       <div className='definition'>
         <form onSubmit={this.notifyChangeJSON.bind(this)}>
-
           <div className='textarea-header'>
             { this.state.jsonError &&
               <div className='hint error-message'>
                 <h4 className='hint-title'>
                   <FormattedMessage
-                    id='mapping.invalid.message'
+                    id='mapping.rules.invalid'
                     defaultMessage='You have provided invalid mapping rules.'
                   />
                 </h4>
@@ -285,27 +302,25 @@ class Mapping extends Component {
             }
           </div>
 
-          <FormattedMessage id='mappingRules.placeholder' defaultMessage='Enter your mapping rules as an array'>
-            {message => (
-              <textarea
-                className={`input-d monospace ${this.state.error ? 'error' : ''}`}
-                value={this.state.mappingRulesInput}
-                onChange={this.onMappingRulesTextChanged.bind(this)}
-                placeholder={message}
-                rows='10'
-                disabled={this.props.contract.is_read_only}
-              />
-            )}
-          </FormattedMessage>
+          <textarea
+            className={`input-d monospace ${this.state.error ? 'error' : ''}`}
+            value={this.state.mappingRulesInput}
+            onChange={this.onMappingRulesTextChanged.bind(this)}
+            placeholder={formatMessage(MESSAGES.mappingRulesPlaceHolder)}
+            rows='10'
+            disabled={this.props.contract.is_read_only}
+          />
 
-          <button type='submit' className='btn btn-d btn-primary mt-3' disabled={!this.hasChangedJson()}>
-            <span className='details-title'>
-              <FormattedMessage
-                id='mapping.button.ok'
-                defaultMessage='Apply mapping rules to pipeline'
-              />
-            </span>
-          </button>
+          { !this.props.contract.is_read_only &&
+            <button type='submit' className='btn btn-d btn-primary mt-3' disabled={!this.hasChangedJson()}>
+              <span className='details-title'>
+                <FormattedMessage
+                  id='mapping.rules.button.ok'
+                  defaultMessage='Apply mapping rules to pipeline'
+                />
+              </span>
+            </button>
+          }
         </form>
       </div>
     )
@@ -313,7 +328,8 @@ class Mapping extends Component {
 }
 
 const mapStateToProps = ({ pipelines }) => ({
-  selectedPipeline: pipelines.selectedPipeline
+  contract: pipelines.currentContract
 })
+const mapDispatchToProps = { updateContract }
 
-export default connect(mapStateToProps, { updateContract })(Mapping)
+export default connect(mapStateToProps, mapDispatchToProps)(injectIntl(Mapping))

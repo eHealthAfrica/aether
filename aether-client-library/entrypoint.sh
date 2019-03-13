@@ -36,11 +36,11 @@ show_help() {
     """
 }
 
-test_flake8() {
+test_flake8 () {
     flake8 /code/. --config=/code/setup.cfg
 }
 
-test(){
+test () {
     python3 setup.py -q test "${@:1}"
     cat /code/conf/extras/good_job.txt
     rm -R ./*.egg*

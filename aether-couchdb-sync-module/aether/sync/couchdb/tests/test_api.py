@@ -21,6 +21,7 @@ from .. import api
 
 
 class ApiTests(CouchDBTestCase):
+
     def test_get_db(self):
         r = api.get(self.test_db)
         self.assertLess(r.status_code, 400)

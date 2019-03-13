@@ -132,30 +132,29 @@ $output-nav-width: 10rem;
   transition: margin-left $transition-speed;
   display: none;
 
-  &::before {
-    // @include shadow-flat-dark;
-    content: '';
-    display: block;
+  &::before,
+  &::after {
+    font: 1rem $icon-font;
+    padding: .45rem;
     position: absolute;
     top: 0;
-    left: 0;
     width: 1.8rem;
     height: 1.8rem;
     border-radius: 50%;
-    background: url('/static/images/fullscreen-icon.svg') center center no-repeat;
+  }
+
+  &::before {
+    content: '\f31e'; // fa-expand-arrows-alt
+    display: block;
+    left: 0;
   }
 
   &::after {
     @include shadow-flat-dark;
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 1rem;
-    width: 1.8rem;
-    height: 1.8rem;
-    border-radius: 50%;
-    background: url('/static/images/fullscreen-exit-icon.svg') center center no-repeat;
+
+    content: '\f78c'; // fa-compress-arrows-alt
     display: none;
+    right: 1rem;
   }
 
   span {
@@ -357,8 +356,7 @@ div[class^='pipeline-section__'],
 .pipeline--entityTypes .fullscreen {
 
   div.pipeline-nav-item__input,
-  div.pipeline-nav-item__mapping,
-  div.pipeline-nav-item__output {
+  div.pipeline-nav-item__mapping {
     width: 0;
   }
 
@@ -409,8 +407,7 @@ div[class^='pipeline-section__'],
 .pipeline--mapping .fullscreen {
 
   div.pipeline-nav-item__input,
-  div.pipeline-nav-item__entityTypes,
-  div.pipeline-nav-item__output {
+  div.pipeline-nav-item__entityTypes {
     width: 0;
   }
 

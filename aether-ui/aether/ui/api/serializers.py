@@ -22,6 +22,7 @@ from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
 from . import models
+from .utils import get_default_project
 
 
 class ContractSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
@@ -36,6 +37,12 @@ class ContractSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='pipeline-detail',
     )
 
+    def update(self, instance, validated_data):
+        if instance.is_read_only:
+            raise serializers.ValidationError({'detail': _('Contract is read only')})
+
+        return super(ContractSerializer, self).update(instance, validated_data)
+
     class Meta:
         model = models.Contract
         fields = '__all__'
@@ -49,12 +56,47 @@ class PipelineSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     contracts = ContractSerializer(many=True, read_only=True)
 
+    project = serializers.PrimaryKeyRelatedField(
+        required=False,
+        queryset=models.Project.objects.all(),
+    )
+
+    def create(self, validated_data):
+        if not validated_data.get('project'):
+            # assign new pipelines to the default project
+            default_project = get_default_project()
+            validated_data['project'] = default_project
+
+        instance = super(PipelineSerializer, self).create(validated_data)
+
+        # create initial contract
+        models.Contract.objects.create(
+            pk=instance.pk,      # re-use same uuid
+            name=instance.name,  # re-use same name
+            pipeline=instance,
+        )
+
+        return instance
+
     def update(self, instance, validated_data):
         if instance.contracts.filter(is_read_only=True).count() > 0:
-            raise serializers.ValidationError({'description': _('Input is readonly')})
+            raise serializers.ValidationError({'detail': _('Pipeline is read only')})
 
         return super(PipelineSerializer, self).update(instance, validated_data)
 
     class Meta:
         model = models.Pipeline
+        fields = '__all__'
+
+
+class ProjectSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        read_only=True,
+        view_name='project-detail',
+    )
+
+    pipelines = PipelineSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = models.Project
         fields = '__all__'

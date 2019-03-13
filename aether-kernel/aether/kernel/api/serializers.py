@@ -265,6 +265,11 @@ class ProjectSchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='mapping-list',
     )
 
+    schema_definition = serializers.JSONField(
+        read_only=True,
+        source='schema.definition',
+    )
+
     class Meta:
         model = models.ProjectSchema
         fields = '__all__'

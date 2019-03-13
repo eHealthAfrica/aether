@@ -22,29 +22,40 @@ import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
 import { connect } from 'react-redux'
 
+import { objectToString } from '../../utils'
+
 class Output extends Component {
   render () {
+    const { errors, output } = this.props
+
     return (
       <div className='section-body'>
-        <div className='pipeline-data pipeline-errors'>
-          <h3 className='title-medium'>
-            <FormattedMessage id='output.mapping_errors' defaultMessage='Mapping errors' />
-          </h3>
-          <ul>
-            { this.props.contract.mapping_errors && this.props.contract.mapping_errors.map((error, index) => (
-              <li key={`${error.path}_${index}`}>
-                <span className='error-description'>{error.description}</span>
-                <span className='error-path'>{error.path ? `"${error.path}"` : ''}</span>
-              </li>
-            )) }
-          </ul>
-        </div>
+        { errors.length > 0 &&
+          <div className='pipeline-data pipeline-errors'>
+            <h3 className='title-medium'>
+              <FormattedMessage id='output.mapping.errors' defaultMessage='Mapping errors' />
+            </h3>
+
+            <ul>
+              { errors.map((error, index) => (
+                <li key={index}>
+                  <span className='error-description'>{ error.description }</span>
+                  { error.path &&
+                    <span className='error-path'>"{ error.path }"</span>
+                  }
+                </li>
+              )) }
+            </ul>
+          </div>
+        }
+
         <div className='pipeline-data'>
           <h3 className='title-medium'>
-            <FormattedMessage id='output.data' defaultMessage='Output.data' />
+            <FormattedMessage id='output.data' defaultMessage='Output data' />
           </h3>
+
           <code>
-            { JSON.stringify(this.props.contract.output || [], 0, 2) }
+            { objectToString(output) }
           </code>
         </div>
       </div>
@@ -52,4 +63,10 @@ class Output extends Component {
   }
 }
 
-export default connect()(Output)
+const mapStateToProps = ({ pipelines }) => ({
+  errors: pipelines.currentContract.mapping_errors || [],
+  output: pipelines.currentContract.output || []
+})
+const mapDispatchToProps = {}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Output)

@@ -320,6 +320,7 @@ services:
 
       # use this value with "start_dev" command and webpack otherwise comment it out
       WEBPACK_STATS_FILE: /code/aether/ui/assets/bundles/webpack-stats.json
+
       WEB_SERVER_PORT: 8104
     volumes:
       - ./aether-ui:/code

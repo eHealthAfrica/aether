@@ -43,8 +43,10 @@ function build_libraries_and_distribute {
 
 # build Aether UI assets
 function build_ui_assets {
-    docker-compose build ui-assets
-    docker-compose run   ui-assets build
+    container=ui-assets
+
+    build_container $container
+    docker-compose run $container build
 }
 
 # build the indicated container
@@ -57,6 +59,7 @@ function build_container {
 
     echo "_____________________________________________ Building container $container"
     $DC build \
+        --no-cache --force-rm --pull \
         --build-arg GIT_REVISION=$APP_REVISION \
         --build-arg VERSION=$APP_VERSION \
         $container
@@ -74,6 +77,7 @@ function pip_freeze_container {
 # kernel readonly user (used by Aether Producer)
 function create_readonly_user {
     docker-compose up -d db
+    docker-compose run --no-deps kernel setup
     docker-compose run --no-deps kernel eval python /code/sql/create_readonly_user.py
     docker-compose kill
 }

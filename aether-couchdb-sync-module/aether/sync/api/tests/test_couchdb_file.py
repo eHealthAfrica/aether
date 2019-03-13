@@ -26,6 +26,8 @@ from ..couchdb_file import load_backup_file
 class LoadFileViewsTests(ApiTestCase):
 
     def test__load_backup_file(self):
+        self.helper__add_device_id('test_abc123')
+
         with open(DEVICE_TEST_FILE, 'rb') as fp:
             stats = load_backup_file(fp)
 
@@ -37,8 +39,9 @@ class LoadFileViewsTests(ApiTestCase):
     def test__load_backup_file__couchdb_error(self, mock_create_db):
         with open(DEVICE_TEST_FILE, 'rb') as fp:
             stats = load_backup_file(fp)
-            mock_create_db.assert_called_once()
 
         self.assertEqual(stats['total'], 3)
         self.assertEqual(stats['success'], 0)
         self.assertEqual(stats['erred'], 3)
+
+        mock_create_db.assert_called_once()

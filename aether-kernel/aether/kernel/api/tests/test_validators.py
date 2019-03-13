@@ -239,4 +239,4 @@ class ValidatorsTest(TestCase):
             },
         }
         result = validators.validate_entities(entities=entities, schemas=schemas)
-        self.assertEquals(len(result.validation_errors), len(entity_list) * 2)
+        self.assertEqual(len(result.validation_errors), len(entity_list) * 2)

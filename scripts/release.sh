@@ -20,12 +20,22 @@
 #
 set -Eeuo pipefail
 
+function prepare_dependencies {
+    ./scripts/build_docker_assets.sh
+    ./scripts/build_common_and_distribute.sh
+    ./scripts/build_client_and_distribute.sh
+
+    build_app ui-assets
+    docker-compose run ui-assets build
+}
+
 function build_app {
     APP_NAME=$1
     DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml -f docker-compose-test.yml"
 
     echo "Building Docker container $APP_NAME"
     $DC build \
+        --no-cache --force-rm --pull \
         --build-arg GIT_REVISION=$TRAVIS_COMMIT \
         --build-arg VERSION=$VERSION \
         $APP_NAME
@@ -82,9 +92,7 @@ echo "Images repository: $IMAGE_REPO"
 echo "Images:            ${RELEASE_APPS[@]}"
 echo "_____________________________________________"
 
-./scripts/build_docker_assets.sh
-./scripts/build_common_and_distribute.sh
-./scripts/build_client_and_distribute.sh
+prepare_dependencies
 
 docker-compose build ui-assets
 docker-compose run   ui-assets build
