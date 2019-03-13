@@ -469,12 +469,12 @@ class UtilsTest(TestCase):
             outcome,
             {
                 'error': [
-                    'Contract mapping rules have errors',
                     'Contract belongs to a different project in kernel',
                     'Contract belongs to a different pipeline (mapping set) in kernel',
                     'Entity type "Person" (as project schema) belongs to a different project in kernel',
                 ],
                 'warning': [
+                    'Contract mapping rules have errors',
                     'Contract (as mapping) is already published',
                     'Entity type "Person" (as project schema) is already published',
                 ],
@@ -501,11 +501,11 @@ class UtilsTest(TestCase):
             outcome,
             {
                 'error': [
-                    'Contract mapping rules have errors',
                     'Contract belongs to a different project in kernel',
                     'Contract belongs to a different pipeline (mapping set) in kernel',
                 ],
                 'warning': [
+                    'Contract mapping rules have errors',
                     'Contract (as mapping) is already published',
                 ],
                 'info': [
