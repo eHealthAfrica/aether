@@ -26,6 +26,7 @@ set -Eeuo pipefail
 #
 # arguments:
 #   --kill  | -k   kill all running containers before start
+#   --clean | -c   kill and remove all running containers and volumes before start
 #   --build | -b   kill and build all containers before start
 #   --force | -f   ensure that the container will be restarted if needed
 
@@ -34,11 +35,21 @@ set -Eeuo pipefail
 #      Any other value will start all containers.
 #
 
+function start_container {
+    if [[ $force = "yes" ]]; then
+        docker-compose kill $1
+    fi
+    docker-compose up --no-deps -d $1
+    sleep 2
+    docker-compose logs --tail 20 $1
+}
+
 # default values
-kill=no
-force=no
-build=no
 app=
+build=no
+clean=no
+force=no
+kill=no
 
 while [[ $# -gt 0 ]]
 do
@@ -53,6 +64,14 @@ do
         -b|--build)
             # build all containers
             build=yes
+
+            shift # past argument
+        ;;
+
+        -c|--clean)
+            # clean all containers
+            kill=yes
+            clean=yes
 
             shift # past argument
         ;;
@@ -72,41 +91,6 @@ do
         ;;
     esac
 done
-
-
-./scripts/build_docker_assets.sh
-
-echo ""
-docker-compose ps
-echo "----------------------------------------------------------------------"
-echo ""
-
-
-if [[ $kill = "yes" ]]
-then
-    echo "----------------------------------------------------------------------"
-    echo "---- Killing containers                                           ----"
-    echo "----------------------------------------------------------------------"
-
-    ./scripts/kill_all.sh
-    echo ""
-fi
-
-
-if [[ $build = "yes" ]]
-then
-    echo "----------------------------------------------------------------------"
-    echo "---- Building containers                                          ----"
-    echo "----------------------------------------------------------------------"
-
-    ./scripts/build_all_containers.sh
-    echo ""
-fi
-
-
-echo "----------------------------------------------------------------------"
-echo "---- Starting containers                                          ----"
-echo "----------------------------------------------------------------------"
 
 case $app in
     kernel)
@@ -144,14 +128,49 @@ case $app in
     ;;
 esac
 
-function start_container {
-    if [[ $force = "yes" ]]; then
-        docker-compose kill $1
-    fi
-    docker-compose up --no-deps -d $1
-    sleep 2
-    docker-compose logs --tail 20 $1
-}
+
+echo ""
+docker-compose ps
+echo "----------------------------------------------------------------------"
+echo ""
+
+
+if [[ $kill = "yes" ]]
+then
+    echo "----------------------------------------------------------------------"
+    echo "---- Killing containers                                           ----"
+    echo "----------------------------------------------------------------------"
+
+    ./scripts/kill_all.sh
+    echo ""
+fi
+
+if [[ $clean = "yes" ]]
+then
+    echo "----------------------------------------------------------------------"
+    echo "---- Cleaning containers and volumes                              ----"
+    echo "----------------------------------------------------------------------"
+
+    ./scripts/clean_all.sh
+    echo ""
+fi
+
+if [[ $build = "yes" ]]
+then
+    echo "----------------------------------------------------------------------"
+    echo "---- Building containers                                          ----"
+    echo "----------------------------------------------------------------------"
+
+    ./scripts/build_all_containers.sh
+    echo ""
+fi
+
+./scripts/build_docker_assets.sh
+
+
+echo "----------------------------------------------------------------------"
+echo "---- Starting containers                                          ----"
+echo "----------------------------------------------------------------------"
 
 for container in "${PRE_CONTAINERS[@]}"
 do
