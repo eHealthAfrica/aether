@@ -32,7 +32,7 @@ def get_multitenancy_model():
 
 def get_current_realm(request):
     '''
-    Find the current realm within the cookies or within the request headers.
+    Finds the current realm within the cookies or within the request headers.
 
     https://docs.djangoproject.com/en/2.1/ref/request-response/#django.http.HttpRequest.COOKIES
     https://docs.djangoproject.com/en/2.1/ref/request-response/#django.http.HttpRequest.META
@@ -65,7 +65,7 @@ def is_accessible_by_realm(request, obj):
 
 def filter_by_realm(request, data, mt_field='mt'):
     '''
-    Include the realm filter in the given data object (Queryset or Manager)
+    Includes the realm filter in the given data object (Queryset or Manager)
     '''
 
     if not settings.MULTITENANCY:

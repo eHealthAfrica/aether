@@ -80,7 +80,7 @@ class MtModelAbstract(models.Model):
 
     def is_accessible(self, realm):
         '''
-        Check if the instance "realm" is the given realm.
+        Checks if the instance "realm" is the given realm.
         '''
 
         return settings.MULTITENANCY and self.get_realm() == realm
