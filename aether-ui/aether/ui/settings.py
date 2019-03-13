@@ -45,7 +45,6 @@ INSTALLED_APPS += [
     'aether.ui',
 ]
 
-# In case of Mutitenancy is enabled!
 MULTITENANCY_MODEL = 'ui.Project'
 MIGRATION_MODULES['ui'] = 'aether.ui.api.migrations'
 

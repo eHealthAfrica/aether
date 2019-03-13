@@ -39,7 +39,6 @@ INSTALLED_APPS += [
     'aether.odk',
 ]
 
-# In case of Mutitenancy is enabled!
 MULTITENANCY_MODEL = 'odk.Project'
 MIGRATION_MODULES['odk'] = 'aether.odk.api.migrations'
 

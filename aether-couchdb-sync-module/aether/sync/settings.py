@@ -45,7 +45,6 @@ INSTALLED_APPS += [
     'aether.sync',
 ]
 
-# In case of Mutitenancy is enabled!
 MULTITENANCY_MODEL = 'sync.Project'
 MIGRATION_MODULES['sync'] = 'aether.sync.api.migrations'
 
