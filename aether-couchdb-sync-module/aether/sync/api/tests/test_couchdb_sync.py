@@ -94,7 +94,7 @@ class CouchDbSyncTestCase(ApiTestCase):
             'lastname': 'Solo',
         }
 
-        self.helper__add_device_id(device_id)
+        self.helper__add_device_id(DEVICE_ID)
 
     def tearDown(self):
         super(CouchDbSyncTestCase, self).tearDown()
