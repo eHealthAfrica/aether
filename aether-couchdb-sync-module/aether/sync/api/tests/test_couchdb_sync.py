@@ -20,6 +20,7 @@ import uuid
 import mock
 import requests
 
+from aether.common.utils import get_all_docs
 from aether.common.kernel import utils as kernel_utils
 
 from ...couchdb import api as couchdb
@@ -34,14 +35,14 @@ from ..couchdb_sync import (
 from . import ApiTestCase
 
 
+HEADERS_TESTING = kernel_utils.get_auth_header()
 SUBMISSION_FK = 'mappingset'
-headers_testing = kernel_utils.get_auth_header()
-device_id = 'test_import-from-couch'
+DEVICE_ID = 'test_import-from-couch'
 
 
 def get_aether_submissions():
     url = kernel_utils.get_submissions_url()
-    return kernel_utils.get_all_docs(url)
+    return list(get_all_docs(url, headers=HEADERS_TESTING))
 
 
 class CouchDbSyncTestCase(ApiTestCase):
@@ -88,18 +89,18 @@ class CouchDbSyncTestCase(ApiTestCase):
         # the model `aether.kernel.api.models.Submission`
         self.example_doc = {
             '_id': f'{self.SCHEMA_NAME}-aabbbdddccc',
-            'deviceId': device_id,
+            'deviceId': DEVICE_ID,
             'firstname': 'Han',
             'lastname': 'Solo',
         }
 
-        self.helper__add_device_id(device_id)
+        self.helper__add_device_id(DEVICE_ID)
 
     def tearDown(self):
         super(CouchDbSyncTestCase, self).tearDown()
 
-        requests.delete(f'{self.KERNEL_URL}/projects/{self.KERNEL_ID}/', headers=headers_testing)
-        requests.delete(f'{self.KERNEL_URL}/schemas/{self.KERNEL_ID}/', headers=headers_testing)
+        requests.delete(f'{self.KERNEL_URL}/projects/{self.KERNEL_ID}/', headers=HEADERS_TESTING)
+        requests.delete(f'{self.KERNEL_URL}/schemas/{self.KERNEL_ID}/', headers=HEADERS_TESTING)
 
     @mock.patch('aether.sync.api.couchdb_sync.kernel_utils.test_connection', return_value=False)
     def test_post_to_aether_no_kernel(self, mock_test):
@@ -121,27 +122,37 @@ class CouchDbSyncTestCase(ApiTestCase):
             document={'_id': 1},
         )
 
-    @mock.patch('requests.put')
-    @mock.patch('requests.post')
-    def test_post_to_aether__without_aether_id(self, mock_post, mock_put):
+    @mock.patch('aether.sync.api.couchdb_sync.propagate_kernel_artefacts')
+    @mock.patch('aether.sync.api.couchdb_sync.kernel_utils.test_connection', return_value=True)
+    @mock.patch('aether.common.kernel.utils.request')
+    def test_post_to_aether__without_aether_id(self, mock_req, mock_auth, mock_propagate):
         post_to_aether(document={'_id': f'{self.SCHEMA_NAME}-b'}, aether_id=None)
-        mock_put.assert_not_called()
-        mock_post.assert_called()
+        mock_req.assert_called_with(
+            method='post',
+            url='http://kernel-test:9100/submissions/',
+            json={'payload': {'_id': f'{self.SCHEMA_NAME}-b'}, 'mappingset': mock.ANY},
+            headers={'Authorization': mock.ANY},
+        )
 
-    @mock.patch('requests.put')
-    @mock.patch('requests.post')
-    def test_post_to_aether__with_aether_id(self, mock_post, mock_put):
+    @mock.patch('aether.sync.api.couchdb_sync.propagate_kernel_artefacts')
+    @mock.patch('aether.sync.api.couchdb_sync.kernel_utils.test_connection', return_value=True)
+    @mock.patch('aether.common.kernel.utils.request')
+    def test_post_to_aether__with_aether_id(self, mock_req, mock_auth, mock_propagate):
         post_to_aether(document={'_id': f'{self.SCHEMA_NAME}-b'}, aether_id=1)
-        mock_put.assert_called()
-        mock_post.assert_not_called()
+        mock_req.assert_called_with(
+            method='put',
+            url='http://kernel-test:9100/submissions/1/',
+            json={'payload': {'_id': f'{self.SCHEMA_NAME}-b'}, 'mappingset': mock.ANY},
+            headers={'Authorization': mock.ANY},
+        )
 
     @mock.patch('aether.sync.api.couchdb_sync.import_synced_docs',
                 side_effect=Exception('mocked exception'))
     def test_import_one_document_with_error(self, mock_synced):
         # this creates a test couchdb
-        device = DeviceDB(device_id=device_id)
+        device = DeviceDB(device_id=DEVICE_ID)
         device.save()
-        create_db(device_id)
+        create_db(DEVICE_ID)
 
         resp = couchdb.put('{}/{}'.format(device.db_name, self.example_doc['_id']),
                            json=self.example_doc)
@@ -156,9 +167,9 @@ class CouchDbSyncTestCase(ApiTestCase):
                 side_effect=Exception('mocked exception'))
     def test_import_one_document_with_with_error_in_kernel(self, mock_post):
         # this creates a test couchdb
-        device = DeviceDB(device_id=device_id)
+        device = DeviceDB(device_id=DEVICE_ID)
         device.save()
-        create_db(device_id)
+        create_db(DEVICE_ID)
 
         resp = couchdb.put('{}/{}'.format(device.db_name, self.example_doc['_id']),
                            json=self.example_doc)
@@ -171,9 +182,9 @@ class CouchDbSyncTestCase(ApiTestCase):
 
     def test_import_one_document(self):
         # this creates a test couchdb
-        device = DeviceDB(device_id=device_id)
+        device = DeviceDB(device_id=DEVICE_ID)
         device.save()
-        create_db(device_id)
+        create_db(DEVICE_ID)
 
         docs = get_aether_submissions()
         self.assertEqual(len(docs), 0, 'Nothing in Kernel yet')
@@ -209,9 +220,9 @@ class CouchDbSyncTestCase(ApiTestCase):
 
     def test_dont_reimport_document(self):
         # this creates a test couchdb
-        device = DeviceDB(device_id=device_id)
+        device = DeviceDB(device_id=DEVICE_ID)
         device.save()
-        create_db(device_id)
+        create_db(DEVICE_ID)
 
         resp = couchdb.put('{}/{}'.format(device.db_name, self.example_doc['_id']),
                            json=self.example_doc)
@@ -236,9 +247,9 @@ class CouchDbSyncTestCase(ApiTestCase):
 
     def test_update_document(self):
         # this creates a test couchdb
-        device = DeviceDB(device_id=device_id)
+        device = DeviceDB(device_id=DEVICE_ID)
         device.save()
-        create_db(device_id)
+        create_db(DEVICE_ID)
 
         doc_url = '{}/{}'.format(device.db_name, self.example_doc['_id'])
 
@@ -282,9 +293,9 @@ class CouchDbSyncTestCase(ApiTestCase):
                 raise requests.exceptions.HTTPError
 
         # this creates a test couchdb
-        device = DeviceDB(device_id=device_id)
+        device = DeviceDB(device_id=DEVICE_ID)
         device.save()
-        create_db(device_id)
+        create_db(DEVICE_ID)
 
         doc_url = '{}/{}'.format(device.db_name, self.example_doc['_id'])
 

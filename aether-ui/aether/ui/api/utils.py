@@ -17,10 +17,7 @@
 # under the License.
 
 import json
-import requests
 import uuid
-
-from time import sleep
 
 from django.conf import settings
 from django.utils import timezone
@@ -29,6 +26,7 @@ from django.utils.translation import ugettext as _
 from rest_framework import status
 
 from aether.common.kernel import utils
+from aether.common.utils import get_all_docs, request
 
 from . import models
 
@@ -92,8 +90,9 @@ def kernel_artefacts_to_ui_artefacts():
     taking also the linked mappings+schemas and transform them into contracts.
     '''
     KERNEL_URL = utils.get_kernel_server_url()
+    headers = utils.get_auth_header()
 
-    projects = utils.get_all_docs(f'{KERNEL_URL}/projects/')
+    projects = get_all_docs(f'{KERNEL_URL}/projects/', headers=headers)
     for kernel_project in projects:
         project_id = kernel_project['id']
 
@@ -103,7 +102,7 @@ def kernel_artefacts_to_ui_artefacts():
         project = models.Project.objects.get(pk=project_id)
 
         # fetch linked mapping sets
-        mappingsets = utils.get_all_docs(kernel_project['mappingset_url'])
+        mappingsets = get_all_docs(kernel_project['mappingset_url'], headers=headers)
         for mappingset in mappingsets:
             mappingset_id = mappingset['id']
 
@@ -120,7 +119,7 @@ def kernel_artefacts_to_ui_artefacts():
             pipeline = models.Pipeline.objects.get(mappingset=mappingset_id)
 
             # fetch linked mappings
-            mappings = utils.get_all_docs(mappingset['mappings_url'])
+            mappings = get_all_docs(mappingset['mappings_url'], headers=headers)
             for mapping in mappings:
                 mapping_id = mapping['id']
 
@@ -130,7 +129,8 @@ def kernel_artefacts_to_ui_artefacts():
 
                 ps_fields = 'id,schema,schema_definition'
                 ps_url = mapping['projectschemas_url'] + f'&fields={ps_fields}'
-                project_schemas = utils.get_all_docs(ps_url)
+                # get_all_docs is a generator, wrap results as list to get them
+                project_schemas = list(get_all_docs(ps_url, headers=headers))
 
                 # find out the linked schema ids from the project schema ids (mapping entities)
                 entities = mapping['definition']['entities']              # format    {entity name: ps id}
@@ -219,9 +219,9 @@ def validate_contract(contract):
     #    "submission_payload": { json sample },
     #    "mapping_definition": {
     #      "entities": {
-    #        "entity-type-name-1": None,
-    #        "entity-type-name-2": None,
-    #        "entity-type-name-3": None,
+    #        "entity-type-name-1": UUID,
+    #        "entity-type-name-2": UUID,
+    #        "entity-type-name-3": UUID,
     #        ...
     #      },
     #      "mapping": [
@@ -255,9 +255,10 @@ def validate_contract(contract):
         },
         'schemas': schemas,
     }
-    kernel_url = utils.get_kernel_server_url()
-    resp = requests.post(
-        url=f'{kernel_url}/validate-mappings/',
+
+    resp = request(
+        method='post',
+        url=f'{utils.get_kernel_server_url()}/validate-mappings/',
         json=json.loads(json.dumps(payload)),
         headers=utils.get_auth_header(),
     )
@@ -266,11 +267,11 @@ def validate_contract(contract):
         errors = data.get('mapping_errors', [])
         output = data.get('entities', [])
         return (errors, output)
-    # The 400 response we get from the restframework serializers is a
-    # dictionary. The keys are serializer field names and the values are
-    # lists of errors. Concatenate all lists and return the result as
-    # `errors`.
-    elif resp.status_code == status.HTTP_400_BAD_REQUEST:
+
+    if resp.status_code == status.HTTP_400_BAD_REQUEST:
+        # The 400 response we get from the rest-framework serializers is a
+        # dictionary. The keys are the serializer field names and the values are
+        # lists of errors. Concatenate all lists and return the result as `errors`.
         data = resp.json()
         errors = []
         for error_group in data.values():
@@ -278,11 +279,11 @@ def validate_contract(contract):
                 error = {'description': str(error_detail)}
                 errors.append(error)
         return (errors, [])
-    else:
-        data = resp.text
-        description = MSG_CONTRACT_VALIDATION_ERROR.format(str(data))
-        errors = [{'description': description}]
-        return (errors, [])
+
+    data = resp.text
+    description = MSG_CONTRACT_VALIDATION_ERROR.format(str(data))
+    errors = [{'description': description}]
+    return (errors, [])
 
 
 def publish_project(project):
@@ -294,7 +295,7 @@ def publish_project(project):
     artefacts = model_to_artefacts(project)
 
     try:
-        kernel_data_request(f'projects/{pk}/artefacts/', 'patch', artefacts)
+        kernel_data_request(url=f'projects/{pk}/artefacts/', method='patch', data=artefacts)
     except Exception as e:
         raise PublishError(e)
 
@@ -317,7 +318,7 @@ def publish_pipeline(pipeline):
     }
 
     try:
-        kernel_data_request(f'projects/{pk}/artefacts/', 'patch', data)
+        kernel_data_request(url=f'projects/{pk}/artefacts/', method='patch', data=data)
     except Exception as e:
         raise PublishError(e)
 
@@ -343,7 +344,7 @@ def publish_contract(contract):
     mapping_id = artefacts['mappings'][0]['id']
 
     try:
-        kernel_data_request(f'projects/{pk}/artefacts/', 'patch', artefacts)
+        kernel_data_request(url=f'projects/{pk}/artefacts/', method='patch', data=artefacts)
     except Exception as e:
         raise PublishError(e)
 
@@ -413,7 +414,7 @@ def publish_preflight(contract):
 
     def __get(model, pk):
         try:
-            return kernel_data_request(f'{model}/{pk}/')
+            return kernel_data_request(url=f'{model}/{pk}/')
         except Exception:
             return None
 
@@ -435,7 +436,7 @@ def publish_preflight(contract):
     if not contract.mapping_rules:
         outcome['error'].append(MSG_CONTRACT_NO_MAPPING_RULES)
     if contract.mapping_errors:
-        outcome['error'].append(MSG_CONTRACT_MAPPING_RULES_ERROR)
+        outcome['warning'].append(MSG_CONTRACT_MAPPING_RULES_ERROR)
 
     # 1. Check the project in Kernel
     kernel_project = __get('projects', project.project_id)
@@ -597,16 +598,16 @@ def model_to_artefacts(instance):
     }
 
 
-def kernel_data_request(url='', method='get', data=None):
+def kernel_data_request(url='', method='get', data=None, headers=None):
     '''
-    Handle requests to the kernel server
+    Handle request calls to the kernel server
     '''
 
-    res = __request(
+    res = request(
         method=method,
         url=f'{utils.get_kernel_server_url()}/{url}',
         json=data or {},
-        headers=utils.get_auth_header(),
+        headers=headers or utils.get_auth_header(),
     )
 
     res.raise_for_status()
@@ -614,26 +615,3 @@ def kernel_data_request(url='', method='get', data=None):
     if res.status_code == status.HTTP_204_NO_CONTENT:
         return None
     return json.loads(res.content.decode('utf-8'))
-
-
-def __request(*args, **kwargs):  # pragma: no cover
-    count = 0
-    exception = None
-
-    while count < 3:
-        try:
-            return requests.request(*args, **kwargs)
-        except Exception as e:
-            exception = e
-
-            # ConnectionResetError: [Errno 104] Connection reset by peer
-            # http.client.RemoteDisconnected: Remote end closed connection without response
-
-            # This happens randomly in Travis
-            # There is nothing we can do so... ignore it and try again
-
-        # try again
-        count += 1
-        sleep(1)
-
-    raise exception

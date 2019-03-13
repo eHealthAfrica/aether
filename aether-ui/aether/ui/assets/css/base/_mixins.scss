@@ -33,14 +33,6 @@
   box-shadow: 1px 1px 2px $shadow-color;
 }
 
-@mixin logo-ui {
-  background: url('/static/aether/images/aether-white.png');
-}
-
-@mixin logo-eha {
-  background: url('/static/aether/images/eHA-icon.svg');
-}
-
 @mixin bg-gradient {
   background: $action-color-b;
   background-image: linear-gradient(to right, rgba($purple, 0), $purple);
