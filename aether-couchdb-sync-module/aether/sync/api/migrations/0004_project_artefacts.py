@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 import django.contrib.postgres.fields.jsonb
 from django.db import migrations, models
 import django.db.models.deletion
-import django_prometheus.models
 import uuid
 
 
@@ -105,7 +104,13 @@ class Migration(migrations.Migration):
             name='project',
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='schemas', to='sync.Project', verbose_name='project'),
         ),
-        migrations.RunPython(migrate_current_schemas, migrations.RunPython.noop),
+        migrations.RunPython(
+            code=migrate_current_schemas,
+            reverse_code=migrations.RunPython.noop,
+            # The optional elidable argument determines whether or not the operation
+            # will be removed (elided) when squashing migrations.
+            elidable=True,
+        ),
         migrations.AlterField(
             model_name='schema',
             name='project',

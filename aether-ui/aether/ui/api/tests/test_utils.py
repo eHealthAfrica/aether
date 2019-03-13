@@ -33,6 +33,8 @@ class UtilsTest(TestCase):
 
         self.KERNEL_ID = str(uuid.uuid4())
 
+        Project.objects.all().delete()
+
     def tearDown(self):
         self.helper__delete_in_kernel('projects', self.KERNEL_ID)
         self.helper__delete_in_kernel('schemas', self.KERNEL_ID)
@@ -49,8 +51,6 @@ class UtilsTest(TestCase):
         self.helper__kernel_data(f'{model}/{pk}/', 'delete')
 
     def test_get_default_project(self):
-        Project.objects.all().delete()
-
         self.assertEqual(Project.objects.count(), 0)
 
         # creates a project

@@ -32,5 +32,11 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='entities', to='kernel.Project', verbose_name='project'),
         ),
 
-        migrations.RunPython(migrate_entities, migrations.RunPython.noop),
+        migrations.RunPython(
+            code=migrate_entities,
+            reverse_code=migrations.RunPython.noop,
+            # The optional elidable argument determines whether or not the operation
+            # will be removed (elided) when squashing migrations.
+            elidable=True,
+        ),
     ]

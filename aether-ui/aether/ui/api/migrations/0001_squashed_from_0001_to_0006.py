@@ -12,12 +12,13 @@ import uuid
 class Migration(migrations.Migration):
 
     replaces = [
-        ('ui', '0001_initial'),
-        ('ui', '0002_remove_usertokens_odk_token'),
-        ('ui', '0003_pipeline'),
-        ('ui', '0004_pipeline_kernel_refs'),
-        ('ui', '0005_pipeline_published_on'),
-        ('ui', '0006_remove_usertokens'),
+        # NOTE: transition to a normal migration file
+        # ('ui', '0001_initial'),
+        # ('ui', '0002_remove_usertokens_odk_token'),
+        # ('ui', '0003_pipeline'),
+        # ('ui', '0004_pipeline_kernel_refs'),
+        # ('ui', '0005_pipeline_published_on'),
+        # ('ui', '0006_remove_usertokens'),
     ]
 
     initial = True
