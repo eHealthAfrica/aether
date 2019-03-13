@@ -34,7 +34,6 @@ from aether.common.multitenancy import utils
 from .. import models, serializers
 
 CURRENT_REALM = 'realm'
-factory = RequestFactory()
 
 
 class MultitenancyTests(TestCase):

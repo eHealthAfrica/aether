@@ -37,8 +37,6 @@ from aether.common.multitenancy.tests.fakeapp.serializers import (
 from aether.common.multitenancy.models import MtInstance
 from aether.common.multitenancy import utils
 
-factory = RequestFactory()
-
 TEST_REALM = 'realm-test'
 TEST_REALM_2 = 'realm-test-2'
 

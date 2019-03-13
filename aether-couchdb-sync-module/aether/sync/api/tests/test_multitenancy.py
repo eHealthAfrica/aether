@@ -36,7 +36,6 @@ from ..kernel_utils import __upsert_kernel_artefacts as upsert_kernel
 from . import MockResponse
 
 CURRENT_REALM = 'realm'
-factory = RequestFactory()
 
 
 class MultitenancyTests(TestCase):
