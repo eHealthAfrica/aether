@@ -49,7 +49,8 @@ class ModelsTests(ApiTestCase):
         self.assertRaises(
             IntegrityError,
             MobileUser.objects.create,
-            email=email)
+            email=email,
+        )
 
         found_user = MobileUser.objects.get(email=email)
 
@@ -62,7 +63,7 @@ class ModelsTests(ApiTestCase):
         but that the database is kept (so we don't delete data)
         '''
         email = 'test_till@ehealthnigeria.org'
-        device_id = 'device_x'
+        device_id = self.helper__random_device_id()
         test_user = MobileUser.objects.create(email=email)
         test_device = DeviceDB(device_id=device_id, mobileuser=test_user)
 
@@ -94,7 +95,7 @@ class ModelsTests(ApiTestCase):
         self.assertTrue(True, 'Non-existing couch user did not throw an error')
 
     def test_create_devicedb_model(self):
-        device_id = 'test_Xx'
+        device_id = self.helper__random_device_id()
         devicedb = DeviceDB(device_id=device_id)
         devicedb.save()
         self.assertEqual(str(devicedb), device_id)
@@ -107,12 +108,11 @@ class ModelsTests(ApiTestCase):
             DeviceDB(device_id=device_id).save()
 
         found_db = DeviceDB.objects.get(device_id=device_id)
-
         self.assertEqual(devicedb, found_db, 'retrieves db via device-id')
 
     def test_devicedb_and_user_roles(self):
-        device_id = 'test_Xx'
-        device_id2 = 'test_Xx_2'
+        device_id = self.helper__random_device_id()
+        device_id2 = self.helper__random_device_id()
         db_name = couchdb_helpers.generate_db_name(device_id)
         db_name2 = couchdb_helpers.generate_db_name(device_id2)
 
@@ -180,8 +180,5 @@ class ModelsTests(ApiTestCase):
         self.assertFalse(schema.is_accessible(settings.DEFAULT_REALM))
         self.assertIsNone(schema.get_realm())
 
-        schema_2 = Schema.objects.create(
-            project=project,
-            avro_schema={'name': 'name'}
-        )
+        schema_2 = Schema.objects.create(project=project, avro_schema={'name': 'name'})
         self.assertEqual(str(schema_2), 'name')

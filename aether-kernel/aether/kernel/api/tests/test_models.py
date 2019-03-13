@@ -310,11 +310,28 @@ class ModelsTests(TransactionTestCase):
             status='Publishable',
             projectschema=projectschema,
         )
-
         entity_2 = models.Entity.objects.create(
             payload=EXAMPLE_SOURCE_DATA_ENTITY,
             status='Publishable',
             schema=schema,
+        )
+
+        # delete the project schema will delete one of the entities
+        projectschema.delete()
+
+        self.assertFalse(models.Entity.objects.filter(pk=entity.pk).exists(), 'project schema CASCADE action')
+        self.assertTrue(models.Entity.objects.filter(pk=entity_2.pk).exists(), 'Not linked to the project schema')
+
+        # create again the deleted instances
+        projectschema = models.ProjectSchema.objects.create(
+            name='project schema',
+            project=project,
+            schema=schema,
+        )
+        entity = models.Entity.objects.create(
+            payload=EXAMPLE_SOURCE_DATA_ENTITY,
+            status='Publishable',
+            projectschema=projectschema,
         )
 
         # delete the project will not delete the schema but one of the entities

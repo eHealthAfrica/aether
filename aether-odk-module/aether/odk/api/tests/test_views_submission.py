@@ -38,16 +38,14 @@ class SubmissionTests(CustomTestCase):
         self.helper_create_user()
         self.url = reverse('xform-submission')
 
-    #
-    # Test submission with authorization error on kernel server side
-    #
     @mock.patch('aether.common.kernel.utils.test_connection', return_value=False)
-    def test__submission__424__connection(self, mock_test):
+    def test__submission__424__connection(self, *args):
+        # Test submission with authorization error on kernel server side
         response = self.client.head(self.url, **self.headers_user)
-        self.assertEqual(response.status_code, status.HTTP_424_FAILED_DEPENDENCY)
+        self.assertEqual(response.status_code, status.HTTP_424_FAILED_DEPENDENCY, response.content)
 
         response = self.client.post(self.url, **self.headers_user)
-        self.assertEqual(response.status_code, status.HTTP_424_FAILED_DEPENDENCY)
+        self.assertEqual(response.status_code, status.HTTP_424_FAILED_DEPENDENCY, response.content)
 
     def test__submission__204(self):
         response = self.client.head(self.url, **self.headers_user)
@@ -57,26 +55,18 @@ class SubmissionTests(CustomTestCase):
     def test__submission__404(self):
         # submit response without xForm
         with open(self.samples['submission']['file-ok'], 'rb') as f:
-            response = self.client.post(
-                self.url,
-                {XML_SUBMISSION_PARAM: f},
-                **self.headers_user
-            )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+            response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.content)
 
     def test__submission__422(self):
         # submit without xml file
         response = self.client.post(self.url, {}, **self.headers_user)
-        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.content)
 
         # submit wrong xml
         with open(self.samples['submission']['file-err'], 'rb') as f:
-            response = self.client.post(
-                self.url,
-                {XML_SUBMISSION_PARAM: f},
-                **self.headers_user
-            )
-            self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+            response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.content)
 
     def test__submission__424__propagation(self):
         # with xform and right xml but not kernel propagation
@@ -84,26 +74,8 @@ class SubmissionTests(CustomTestCase):
         with mock.patch('aether.odk.api.views.propagate_kernel_artefacts',
                         side_effect=KernelPropagationError):
             with open(self.samples['submission']['file-ok'], 'rb') as f:
-                response = self.client.post(
-                    self.url,
-                    {XML_SUBMISSION_PARAM: f},
-                    **self.headers_user
-                )
-        self.assertEqual(response.status_code, status.HTTP_424_FAILED_DEPENDENCY)
-
-    @mock.patch('aether.odk.api.views.propagate_kernel_artefacts', return_value=True)
-    def test__submission__400(self, mock_propagate):
-        # create xForm entry
-        self.helper_create_xform(surveyor=self.user, xml_data=self.samples['xform']['raw-xml'])
-
-        # submit right response but server is not available yet
-        with open(self.samples['submission']['file-ok'], 'rb') as f:
-            response = self.client.post(
-                self.url,
-                {XML_SUBMISSION_PARAM: f},
-                **self.headers_user
-            )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+                response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_424_FAILED_DEPENDENCY, response.content)
 
 
 class PostSubmissionTests(CustomTestCase):
@@ -127,13 +99,13 @@ class PostSubmissionTests(CustomTestCase):
         # check Kernel testing server
         self.assertTrue(common_kernel_utils.test_connection())
         self.KERNEL_HEADERS = common_kernel_utils.get_auth_header()
-        kernel_url = common_kernel_utils.get_kernel_server_url()
-        self.MAPPINGSET_URL = f'{kernel_url}/mappingsets/{str(self.xform.kernel_id)}/'
+        self.KERNEL_URL = common_kernel_utils.get_kernel_server_url()
+        self.MAPPINGSET_URL = f'{self.KERNEL_URL}/mappingsets/{str(self.xform.kernel_id)}/'
         self.SUBMISSIONS_URL = common_kernel_utils.get_submissions_url()
         self.ATTACHMENTS_URL = common_kernel_utils.get_attachments_url()
         # cleaning the house
-        self.PROJECT_URL = f'{kernel_url}/projects/{str(self.xform.project.project_id)}/'
-        self.SCHEMA_URL = f'{kernel_url}/schemas/{str(self.xform.kernel_id)}/'
+        self.PROJECT_URL = f'{self.KERNEL_URL}/projects/{str(self.xform.project.project_id)}/'
+        self.SCHEMA_URL = f'{self.KERNEL_URL}/schemas/{str(self.xform.kernel_id)}/'
 
     def tearDown(self):
         super(PostSubmissionTests, self).tearDown()
@@ -147,12 +119,12 @@ class PostSubmissionTests(CustomTestCase):
             self.MAPPINGSET_URL + '?fields=submissions_url',
             headers=self.KERNEL_HEADERS,
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
         content = response.json()
 
         # get submissions
         response = requests.get(content['submissions_url'], headers=self.KERNEL_HEADERS)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
         content = response.json()
         self.assertEqual(content['count'], 1 if succeed else 0)
 
@@ -161,7 +133,7 @@ class PostSubmissionTests(CustomTestCase):
 
             # get entities
             response = requests.get(submission['entities_url'], headers=self.KERNEL_HEADERS)
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
             content = response.json()
             self.assertEqual(content['count'], 1)  # using identity mapping
             if entity:  # check that the entity payload matches
@@ -171,7 +143,7 @@ class PostSubmissionTests(CustomTestCase):
 
             # get attachments
             response = requests.get(submission['attachments_url'], headers=self.KERNEL_HEADERS)
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.content)
             content = response.json()
             # there is always one more attachment, the original submission content itself
             self.assertEqual(content['count'], attachments + 1)
@@ -186,32 +158,20 @@ class PostSubmissionTests(CustomTestCase):
         self.assertFalse(self.xform.is_surveyor(self.user))
 
         with open(self.samples['submission']['file-ok'], 'rb') as f:
-            response = self.client.post(
-                self.url,
-                {XML_SUBMISSION_PARAM: f},
-                **self.headers_user
-            )
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+            response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED, response.content)
         self.helper_check_submission(succeed=False)
 
     def test__submission__post__no_instance_id(self):
         with open(self.samples['submission']['file-err-missing-instance-id'], 'rb') as f:
-            response = self.client.post(
-                self.url,
-                {XML_SUBMISSION_PARAM: f},
-                **self.headers_user
-            )
-            self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
+            response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_user)
+            self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY, response.content)
 
     @mock.patch('aether.odk.api.views.exec_request', side_effect=Exception)
     def test__submission__post__with_error_on_check_previous_submission(self, mock_req):
         with open(self.samples['submission']['file-ok'], 'rb') as f:
-            response = self.client.post(
-                self.url,
-                {XML_SUBMISSION_PARAM: f},
-                **self.headers_user
-            )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.content)
 
         mock_req.assert_called_once_with(
             method='get',
@@ -219,6 +179,17 @@ class PostSubmissionTests(CustomTestCase):
             headers=self.KERNEL_HEADERS,
             params={'payload__meta__instanceID': mock.ANY},
         )
+
+    def test__submission__post__not_201(self, *args):
+        with mock.patch('aether.odk.api.views.submit_to_kernel',
+                        return_value=MockResponse(status_code=204)) as mock_submit:
+            with open(self.samples['submission']['file-ok'], 'rb') as f:
+                response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_user)
+            self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.content)
+            mock_submit.assert_called_once_with(
+                mappingset_id=str(self.xform.kernel_id),
+                submission=mock.ANY,
+            )
 
     def test__submission__post__with_unexpected_error(self):
         def my_side_effect(*args, **kwargs):
@@ -231,13 +202,8 @@ class PostSubmissionTests(CustomTestCase):
 
         with mock.patch('aether.odk.api.views.exec_request', side_effect=my_side_effect) as mock_req:
             with open(self.samples['submission']['file-ok'], 'rb') as f:
-                response = self.client.post(
-                    self.url,
-                    {XML_SUBMISSION_PARAM: f},
-                    **self.headers_user
-                )
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
+                response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_user)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.content)
             mock_req.assert_has_calls([
                 mock.call(
                     method='get',
@@ -271,13 +237,8 @@ class PostSubmissionTests(CustomTestCase):
 
         with mock.patch('aether.odk.api.views.exec_request', side_effect=my_side_effect) as mock_req:
             with open(self.samples['submission']['file-ok'], 'rb') as f:
-                response = self.client.post(
-                    self.url,
-                    {XML_SUBMISSION_PARAM: f},
-                    **self.headers_user
-                )
-            self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+                response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_user)
+            self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR, response.content)
             mock_req.assert_has_calls([
                 mock.call(
                     method='get',
@@ -298,6 +259,7 @@ class PostSubmissionTests(CustomTestCase):
                     headers=mock.ANY,
                 ),
             ])
+
         self.helper_check_submission(succeed=False)
 
     def test__submission__post(self):
@@ -306,15 +268,11 @@ class PostSubmissionTests(CustomTestCase):
             del entity_payload['not_in_the_definition']  # not in the AVRO schema
 
         with open(self.samples['submission']['file-ok'], 'rb') as f:
-            response = self.client.post(
-                self.url,
-                {XML_SUBMISSION_PARAM: f},
-                **self.headers_user
-            )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content.decode())
+            response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_user)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content)
         self.helper_check_submission(entity=entity_payload)
 
-    def test__submission__post__with_attachment(self):
+    def test__submission__post__with_one_attachment(self):
         with open(self.samples['submission']['file-ok-json'], 'rb') as content:
             entity_payload = dict(json.load(content))
             del entity_payload['not_in_the_definition']  # not in the AVRO schema
@@ -329,12 +287,12 @@ class PostSubmissionTests(CustomTestCase):
                 },
                 **self.headers_user
             )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content.decode())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content)
 
         # check that submission was created with one attachment
         self.helper_check_submission(attachments=1)
 
-    def test__submission__post__with_attachments(self):
+    def test__submission__post__with_attachments__in_one_request(self):
         with open(self.samples['submission']['file-ok-json'], 'rb') as content:
             entity_payload = dict(json.load(content))
             del entity_payload['not_in_the_definition']  # not in the AVRO schema
@@ -352,12 +310,12 @@ class PostSubmissionTests(CustomTestCase):
                 },
                 **self.headers_user
             )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content.decode())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content)
 
         # check that submission was created with four attachments
         self.helper_check_submission(entity=entity_payload, attachments=4)
 
-    def test__submission__post__with_attachments__multiple_requests(self):
+    def test__submission__post__with_attachments__in_multiple_requests(self):
         with open(self.samples['submission']['file-ok-json'], 'rb') as content:
             entity_payload = dict(json.load(content))
             del entity_payload['not_in_the_definition']  # not in the AVRO schema
@@ -379,7 +337,8 @@ class PostSubmissionTests(CustomTestCase):
                     },
                     **self.headers_user
                 )
-            self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content.decode())
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content)
+
         self.helper_check_submission(entity=entity_payload, attachments=count)
 
     def test__submission__post__with_attachments__with_kernel_error(self):
@@ -404,7 +363,7 @@ class PostSubmissionTests(CustomTestCase):
                     },
                     **self.headers_user
                 )
-
+            self.assertEqual(response.status_code, 404, 'returns the last status code')
             mock_req.assert_has_calls([
                 mock.call(
                     method='get',
@@ -435,8 +394,6 @@ class PostSubmissionTests(CustomTestCase):
                 ),
             ])
 
-            self.assertEqual(response.status_code, 404, 'returns the last status code')
-
         self.helper_check_submission(succeed=False)
 
     def test__submission__post__with_attachments__with_unexpected_error(self):
@@ -461,7 +418,7 @@ class PostSubmissionTests(CustomTestCase):
                     },
                     **self.headers_user
                 )
-
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.content)
             mock_req.assert_has_calls([
                 mock.call(
                     method='get',
@@ -491,7 +448,5 @@ class PostSubmissionTests(CustomTestCase):
                     headers=mock.ANY,
                 ),
             ])
-
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.content.decode())
 
         self.helper_check_submission(succeed=False)

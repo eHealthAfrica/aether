@@ -16,21 +16,30 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import random
+import string
+
 from django.test import TestCase
-from uuid import uuid4
 
 from .. import api
 
+ALPHANUM = string.ascii_lowercase + string.digits
+
 
 class CouchDBTestCase(TestCase):
-    test_db = 'test-' + str(uuid4())
 
     def setUp(self):
+        super(CouchDBTestCase, self).setUp()
+
+        self.test_db = 'test_' + ''.join([random.choice(ALPHANUM) for x in range(20)])
+
         r = api.get(self.test_db)
         if r.status_code == 404:
             api.put(self.test_db)
 
     def tearDown(self):
+        super(CouchDBTestCase, self).tearDown()
+
         r = api.get(self.test_db)
         if r.status_code != 404:
             api.delete(self.test_db)

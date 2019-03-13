@@ -47,8 +47,8 @@ DC_TEST="docker-compose -f docker-compose-test.yml"
 if [[ $1 == "ui" ]]
 then
     build_container ui-assets
-    $DC_TEST run   ui-assets-test test
-    $DC_TEST run   ui-assets-test build
+    $DC_TEST run ui-assets-test test
+    $DC_TEST run ui-assets-test build
     echo "_____________________________________________ Tested and built ui assets"
 fi
 
