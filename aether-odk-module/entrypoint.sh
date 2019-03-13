@@ -20,13 +20,6 @@
 #
 set -Eeuo pipefail
 
-# set DEBUG if missing
-set +u
-DEBUG="$DEBUG"
-set -u
-
-BACKUPS_FOLDER=/backups
-
 function show_help {
     echo """
     Commands
@@ -150,6 +143,7 @@ function test_coverage {
     cat /code/conf/extras/good_job.txt
 }
 
+BACKUPS_FOLDER=/backups
 
 case "$1" in
     bash )
@@ -199,12 +193,12 @@ case "$1" in
 
     start )
         setup
+        [ -z "${DEBUG:-}" ] && UWSGI_LOGGING="--disable-logging" || UWSGI_LOGGING=""
 
-        [ -z "$DEBUG" ] && LOGGING="--disable-logging" || LOGGING=""
         /usr/local/bin/uwsgi \
             --ini /code/conf/uwsgi.ini \
             --http 0.0.0.0:$WEB_SERVER_PORT \
-            $LOGGING
+            $UWSGI_LOGGING
     ;;
 
     start_dev )
