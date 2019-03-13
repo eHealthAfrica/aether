@@ -28,14 +28,17 @@ from .utils import filter_by_realm, is_accessible_by_realm
 
 class MtViewSetMixin(object):
     '''
-    Overrides `get_queryset` method to include filter by realm.
+    Defines `get_queryset` method to include filter by realm.
+
     Expects `mt_field` property.
 
     Adds two new methods:
-        - `get_object_or_404(pk)` raises NO_FOUND error if the instacne is not accessible
-        - `get_object_or_403(pk)` raises FORBIDDEN error if the instacne is not accessible
+        - `get_object_or_404(pk)` raises NO_FOUND error if the instance
+          does not exists or is not accessible by current realm.
+        - `get_object_or_403(pk)` raises FORBIDDEN error if the instance
+          exists and is not accessible by current realm.
 
-    Adds a detail endpoint only allowed by HEAD method `is-accessible`, returns status:
+    Adds a detail endpoint only permitted with HEAD method `is-accessible`, returns status:
         - 403 FORBIDDEN   if the instance is not accessible by current realm
         - 404 NOT_FOUND   if the instance does not exist
         - 204 NO_CONTENT  otherwise
@@ -54,8 +57,7 @@ class MtViewSetMixin(object):
     def get_object_or_404(self, pk):
         '''
         Custom method that raises NO_FOUND error
-        if the instance that not exists
-        or is not accessible by current realm
+        if the instance does not exists or is not accessible by current realm
         otherwise return the instance
         '''
 
@@ -64,7 +66,7 @@ class MtViewSetMixin(object):
     def get_object_or_403(self, pk):
         '''
         Custom method that raises FORBIDDEN error
-        if the instance is not accessible by current realm
+        if the instance exists and is not accessible by current realm
         otherwise returns the instance or None if it does not exist
         '''
 

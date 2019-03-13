@@ -25,6 +25,13 @@ from .utils import get_current_realm
 
 
 class MtInstance(models.Model):
+    '''
+    Multitenancy model to keep the relation between the instances and the realms.
+
+    :ivar Model  instance: One to one relations with the model class
+                           indicated in the setting `MULTITENANCY_MODEL`.
+    :ivar text   realm:    The realm name.
+    '''
 
     instance = models.OneToOneField(
         on_delete=models.CASCADE,
@@ -97,13 +104,15 @@ class MtModelAbstract(models.Model):
 
 class MtModelChildAbstract(models.Model):
     '''
-    The ``settings.MULTITENANCY_MODEL`` child classes must extend this one
-    and implement the abstract methods.
+    The ``settings.MULTITENANCY_MODEL`` linked classes must extend this one
+    and implement the ``get_mt_instance`` method.
+
+    The type of relation could be one to one or one to many but never many to many.
     '''
 
     def is_accessible(self, realm):
         '''
-        Check if the instance "realm" is the given realm.
+        Checks if the instance "realm" is the given realm.
         '''
 
         return self.get_mt_instance().is_accessible(realm)

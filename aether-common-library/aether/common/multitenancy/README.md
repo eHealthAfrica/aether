@@ -1,0 +1,285 @@
+# Multi-tenancy
+
+> A place for everything and everything in its place.
+
+## Definition of multi-tenancy
+
+A *tenant* is a group of users sharing the same view on an application they use.
+This view includes the data they access, the configuration, the user management,
+particular functionality and related non-functional properties.
+Usually the groups are members of different legal entities.
+This comes with restrictions (e.g. data security and privacy).
+
+*Multi-tenancy* is an approach to share an application instance between multiple
+tenants by providing every tenant a dedicated ”share” of the instance,
+which is isolated from other shares with regard to performance and data privacy.
+A commonly used analogy for explanation is a living complex where different
+parties share some of their resources like heating to reduce costs,
+but also love to enjoy their privacy and therefore demand a certain level
+of isolation (in particular when it comes to noise).
+
+
+*Rouven Krebs, Christof Momm and Samuel Kounev*
+
+["Architectural Concerns in Multi-tenant SaaS Applications" (PDF)](https://se2.informatik.uni-wuerzburg.de/pa/uploads/papers/paper-371.pdf).
+
+Read more: [multi-tenancy wikipedia entry](https://en.wikipedia.org/wiki/Multitenancy)
+
+
+## How to start Aether with multi-tenancy
+
+There are a couple of environment variables that play a role here:
+
+- `MULTITENANCY`, that simply enables or disables the feature, is `false`
+  if unset or set to empty string, anything else is considered `true`.
+
+- `DEFAULT_REALM`, that indicates the default realm for the objects created
+  while multi-tenancy was not enabled. Defaults to `aether`.
+
+- `REALM_COOKIE`, indicates the name of the cookie that keeps the current
+  tenant id in the request headers. Defaults to `aether-realm`.
+
+
+Example with multi-tenancy enabled:
+
+```bash
+export MULTITENANCY=yes
+export DEFAULT_REALM=my-current-tenant
+export REALM_COOKIE=cookie-realm
+
+# name of script that starts aether app and its modules
+./start-aether-script.sh
+```
+
+Example with multi-tenancy disabled:
+
+```bash
+export MULTITENANCY=''
+
+# name of script that starts aether app and its modules
+./start-aether-script.sh
+```
+
+## Technical implementation
+
+The module `aether.common.multitenancy` contains all the relevant code to make
+multi-tenancy work.
+
+Check the [tests](/tests/fakeapp/) to better understand how to use it in the app.
+
+In each module/app `settings.py` file is mandatory to indicate the setting
+`MULTITENANCY_MODEL` with the model that supports the multi-tenancy one to one
+relation, i.e. `my_app.MyModel`.
+
+### `permissions.py`
+
+### `IsAccessibleByRealm`
+
+An object-level permission class to allow access to objects linked to the
+current realm for authenticated users. The current realm value is saved in the
+request cookie indicated in `settings.REALM_COOKIE`.
+
+This permission is included in the REST-Framework `DEFAULT_PERMISSION_CLASSES`
+list if multi-tenacy is enabled.
+
+
+### `models.py`
+
+#### `MtInstance`
+
+A model class to keep the relation between the objects and the realms.
+
+It has two required fields:
+
+- `instance`: (model) one to one relation with the model class indicated in
+  the setting `MULTITENANCY_MODEL`.
+
+- `realm`: (text) The realm name.
+
+
+#### `MtModelAbstract`
+
+The `settings.MULTITENANCY_MODEL` class must extend this abstract model class.
+It includes the necessary methods to check permissions and to assign the objects
+to the realms.
+
+Defined methods:
+
+- `is_accessible(realm)`, check if the object "realm" is the given realm.
+  This method is the one used by `utils.is_accessible_by_realm(request, obj)`
+  to check the object accessibility. If multi-tenancy is not enabled returns `true`.
+
+- `get_realm()`, returns the object linked "realm" or the default one
+  (`settings.DEFAULT_REALM`) if missing. If multi-tenancy is not enabled
+  returns `None`.
+
+- `save_mt(request)` assigns the object to the current realm.
+  If multi-tenancy is not enabled does nothing.
+
+```python
+class MyModel(MtModelAbstract):
+    class Meta:
+        app_label = 'my_app'
+```
+
+#### `MtModelChildAbstract`
+
+An abstract model class with the methods that any model linked with the
+multi-tenancy model must have.
+
+The type of relation could be one to one or one to many but never many to many.
+
+Defined methods:
+
+- `is_accessible(realm)`, check if the object "realm" is the given realm.
+  This method is the one used by `IsAccessibleByRealm` permission class
+  to check the object accessibility. If multi-tenancy is not enabled returns
+  `true`.
+
+- `get_realm()`, returns the object linked "realm" or the default one
+  (`settings.DEFAULT_REALM`) if missing. If multi-tenancy is not enabled
+  returns `None`.
+
+- `get_mt_instance()` returns the `settings.MULTITENANCY_MODEL` object linked
+  to this one (**needs to be implemented**).
+
+
+```python
+class AnotherModel(MtModelChildAbstract):
+    my_model = models.ForeignKey(to=MyModel)
+
+    def get_mt_instance(self):
+        return self.my_model
+
+    class Meta:
+        app_label = 'my_app'
+
+
+class EvenAnotherModel(MtModelChildAbstract):
+    another_model = models.ForeignKey(to=AnotherModel)
+
+    def get_mt_instance(self):
+        return self.another_model.my_model
+
+    class Meta:
+        app_label = 'my_app'
+```
+
+
+### `serializers.py`
+
+#### `MtModelSerializer`
+
+Extends the Rest-Framework `rest_framework.serializers.ModelSerializer` and
+overrides the `create` method to assign the newly created object to the
+current realm.
+
+The ``settings.MULTITENANCY_MODEL`` serializer class must extend this class.
+
+#### `MtPrimaryKeyRelatedField`
+
+Extends the Rest-Framework `rest_framework.serializers.PrimaryKeyRelatedField`
+class and overrides `get_queryset` method to filter the data by the current realm.
+
+This is useful for two reasons:
+
+- In the REST API browsable view, the HTML select options generated to fulfill
+  the field will be restricted to the objects linked to the current realm.
+- Most important, the `save` method complains if an object that belongs to a
+  different realm is assigned to this field.
+
+Expects a `mt_field` property with the path to the `MtInstance` field, for the
+`MtModelAbstract` class is `mt`, for the rest of classes concatenates the path
+of the relation tree to `MtModelAbstract` field with `__` (double underscore).
+Defaults to `mt`.
+
+```python
+class AnotherModelSerializer(rest_framework.serializers.ModelSerializer):
+    my_model = MtPrimaryKeyRelatedField(
+        queryset=models.MyModel.objects.all(),
+        mt_field='my_model__mt',
+    )
+
+
+class EvenAnotherModelSerializer(rest_framework.serializers.ModelSerializer):
+    another_model = MtPrimaryKeyRelatedField(
+        queryset=models.AnotherModel.objects.all(),
+        mt_field='another_model__my_model__mt',
+    )
+```
+
+### `views.py`
+
+#### `MtViewSetMixin`
+
+Defines `get_queryset` method to include filter by realm.
+
+Expects a `mt_field` property with the path to the `MtInstance` field, for the
+`MtModelAbstract` class is `mt`, for the rest of classes concatenates the path
+of the relation tree to `MtModelAbstract` field with `__` (double underscore).
+Defaults to `mt`.
+
+Adds two new methods:
+- `get_object_or_404(pk)` raises `NO_FOUND` error if the object does not exist
+  or if it is not accessible by current realm, otherwise returns the object.
+
+- `get_object_or_403(pk)` raises `FORBIDDEN` error if the object is not
+  accessible by current realm, otherwise returns the object or
+  `None` if it does not exist.
+
+Adds a detail endpoint only permitted with `HEAD` method `/{model}/{pk}/is-accessible`,
+returns status:
+  - `403 FORBIDDEN`  if the object is not accessible by current realm
+  - `404 NOT_FOUND ` if the object does not exist
+  - `204 NO_CONTENT` otherwise
+
+All the model view classes controlled by realms could extend this class.
+Otherwise the `get_query_set` method must be overriden to filter the data by
+current realm.
+
+```python
+class MyModelViewSet(MtViewSetMixin, rest_framework.viewsets.ModelViewSet):
+    queryset = MyModel.objects.all()
+    serializer_class = MyModelSerializer
+    # mt_field = 'mt'  # not needed in this case
+
+
+class AnotherModelViewSet(MtViewSetMixin, rest_framework.viewsets.ModelViewSet):
+    queryset = AnotherModel.objects.all()
+    serializer_class = AnotherModelSerializer
+    mt_field = 'my_model__mt'
+
+
+class EvenAnotherModelViewSet(MtViewSetMixin, rest_framework.viewsets.ModelViewSet):
+    queryset = EvenAnotherModel.objects.all()
+    serializer_class = EvenAnotherModelSerializer
+    mt_field = 'another_model__my_model__mt'
+```
+
+
+### `utils.py`
+
+A list of useful methods.
+
+- `get_multitenancy_model()`, returns the `settings.MULTITENANCY_MODEL` class.
+
+- `get_current_realm(request)`, finds the current realm within the request
+  cookies or within the request headers. While using the token authentication
+  no cookie is included in the requests, in this case the realm value is
+  included as an HTTP header, i.e., if the `REALM_COOKIE` value is `my-realm`
+  the HTTP header is `HTTP_MY_REALM`.
+
+- `is_accessible_by_realm(request, obj)`, indicates if the object is
+  accessible by the current realm. This method is the one used by
+  `IsAccessibleByRealm` permission class to check the object accessibility.
+
+- `filter_by_realm(request, data, mt_field='mt')`, includes the realm filter
+   in the given data object (Queryset or Manager). This method is the one used by
+  `MtPrimaryKeyRelatedField.get_query_set` and `MtViewSetMixin.get_query_set` methods
+  to get the list of accessible objects.
+
+- `assign_current_realm_in_headers(request, headers={})`, includes the current
+  realm in the request headers.
+
+- `assign_instance_realm_in_headers(instance, headers={})`, includes the
+  object realm in the request headers.
