@@ -65,11 +65,11 @@ export MULTITENANCY=''
 The module `aether.common.multitenancy` contains all the relevant code to make
 multi-tenancy work.
 
-Check the [tests](/tests/fakeapp/) to better understand how to use it in the app.
+Check the [tests sample](/tests/fakeapp/) to understand how to use it in the app.
 
 In each module/app `settings.py` file is mandatory to indicate the setting
 `MULTITENANCY_MODEL` with the model that supports the multi-tenancy one to one
-relation, i.e. `my_app.MyModel`.
+relation, i.e. `MULTITENANCY_MODEL='my_app.MyModel'`.
 
 ### `permissions.py`
 
@@ -94,7 +94,7 @@ It has two required fields:
 - `instance`: (model) one to one relation with the model class indicated in
   the setting `MULTITENANCY_MODEL`.
 
-- `realm`: (text) The realm name.
+- `realm`: (text) a string that identifies the realm/tenant.
 
 
 #### `MtModelAbstract`
@@ -105,7 +105,7 @@ to the realms.
 
 Defined methods:
 
-- `is_accessible(realm)`, check if the object "realm" is the given realm.
+- `is_accessible(realm)`, checks if the object "realm" is the given realm.
   This method is the one used by `utils.is_accessible_by_realm(request, obj)`
   to check the object accessibility. If multi-tenancy is not enabled returns `true`.
 
@@ -131,14 +131,9 @@ The type of relation could be one to one or one to many but never many to many.
 
 Defined methods:
 
-- `is_accessible(realm)`, check if the object "realm" is the given realm.
-  This method is the one used by `IsAccessibleByRealm` permission class
-  to check the object accessibility. If multi-tenancy is not enabled returns
-  `true`.
+- `is_accessible(realm)`, checks if the object "realm" is the given realm.
 
-- `get_realm()`, returns the object linked "realm" or the default one
-  (`settings.DEFAULT_REALM`) if missing. If multi-tenancy is not enabled
-  returns `None`.
+- `get_realm()`, returns the object linked "realm".
 
 - `get_mt_instance()` returns the `settings.MULTITENANCY_MODEL` object linked
   to this one (**needs to be implemented**).
@@ -170,7 +165,7 @@ class EvenAnotherModel(MtModelChildAbstract):
 
 #### `MtModelSerializer`
 
-Extends the Rest-Framework `rest_framework.serializers.ModelSerializer` and
+Extends the Rest-Framework `rest_framework.serializers.ModelSerializer` class and
 overrides the `create` method to assign the newly created object to the
 current realm.
 
@@ -181,17 +176,17 @@ The ``settings.MULTITENANCY_MODEL`` serializer class must extend this class.
 Extends the Rest-Framework `rest_framework.serializers.PrimaryKeyRelatedField`
 class and overrides `get_queryset` method to filter the data by the current realm.
 
-This is useful for two reasons:
-
-- In the REST API browsable view, the HTML select options generated to fulfill
-  the field will be restricted to the objects linked to the current realm.
-- Most important, the `save` method complains if an object that belongs to a
-  different realm is assigned to this field.
-
 Expects a `mt_field` property with the path to the `MtInstance` field, for the
 `MtModelAbstract` class is `mt`, for the rest of classes concatenates the path
 of the relation tree to `MtModelAbstract` field with `__` (double underscore).
 Defaults to `mt`.
+
+This class is useful for two reasons:
+
+- In the REST API browsable view, the HTML select options generated to fulfill
+  the field will be restricted to the objects linked to the current realm.
+- Most important, the `save` method complains if an object that does not belong
+  to the current realm is assigned to this field.
 
 ```python
 class AnotherModelSerializer(rest_framework.serializers.ModelSerializer):
@@ -223,14 +218,14 @@ Adds two new methods:
 - `get_object_or_404(pk)` raises `NO_FOUND` error if the object does not exist
   or if it is not accessible by current realm, otherwise returns the object.
 
-- `get_object_or_403(pk)` raises `FORBIDDEN` error if the object is not
-  accessible by current realm, otherwise returns the object or
-  `None` if it does not exist.
+- `get_object_or_403(pk)` raises `FORBIDDEN` error if the object exists and is
+  not accessible by current realm, otherwise returns the object or `None` if
+  it does not exist.
 
 Adds a detail endpoint only permitted with `HEAD` method `/{model}/{pk}/is-accessible`,
 returns status:
-  - `403 FORBIDDEN`  if the object is not accessible by current realm
   - `404 NOT_FOUND ` if the object does not exist
+  - `403 FORBIDDEN`  if the object is not accessible by current realm
   - `204 NO_CONTENT` otherwise
 
 All the model view classes controlled by realms could extend this class.

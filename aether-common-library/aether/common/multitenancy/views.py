@@ -85,8 +85,8 @@ class MtViewSetMixin(object):
     def is_accessible(self, request, pk=None):
         '''
         Returns status:
-            - 403 FORBIDDEN   if the instance is not accessible by current realm
             - 404 NOT_FOUND   if the instance does not exist
+            - 403 FORBIDDEN   if the instance is not accessible by current realm
             - 204 NO_CONTENT  otherwise
         '''
 
