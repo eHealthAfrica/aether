@@ -469,7 +469,7 @@ def publish_preflight(contract):
     if not contract.mapping_rules:
         outcome['error'].append(MSG_CONTRACT_NO_MAPPING_RULES)
     if contract.mapping_errors:
-        outcome['error'].append(MSG_CONTRACT_MAPPING_RULES_ERROR)
+        outcome['warning'].append(MSG_CONTRACT_MAPPING_RULES_ERROR)
 
     # 1. Check the project in Kernel
     try:
