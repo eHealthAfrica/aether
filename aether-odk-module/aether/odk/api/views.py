@@ -541,7 +541,9 @@ def xform_submission(request):
     # check sent version with current one
     if version < xform.version:  # pragma: no cover
         logger.warning(MSG_SUBMISSION_XFORM_VERSION_WARNING.format(
-            submission_version=version, current_version=xform.version, form_id=form_id,
+            submission_version=version,
+            current_version=xform.version,
+            form_id=form_id,
         ))
 
     # make sure that the xForm artefacts already exist in Aether Kernel

@@ -22,15 +22,14 @@ import uuid
 from requests.exceptions import HTTPError
 
 from django.conf import settings
-
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
 from rest_framework import status
 
 from aether.common.kernel import utils
-from aether.common.utils import get_all_docs, request
 from aether.common.multitenancy import utils as mt_utils
+from aether.common.utils import get_all_docs, request
 
 from . import models
 
@@ -279,11 +278,11 @@ def validate_contract(contract):
         errors = data.get('mapping_errors', [])
         output = data.get('entities', [])
         return (errors, output)
-    # The 400 response we get from the rest-framework serializers is a
-    # dictionary. The keys are the serializer field names and the values are
-    # lists of errors. Concatenate all lists and return the result as
-    # `errors`.
-    elif resp.status_code == status.HTTP_400_BAD_REQUEST:
+
+    if resp.status_code == status.HTTP_400_BAD_REQUEST:
+        # The 400 response we get from the rest-framework serializers is a
+        # dictionary. The keys are the serializer field names and the values are
+        # lists of errors. Concatenate all lists and return the result as `errors`.
         data = resp.json()
         errors = []
         for error_group in data.values():
@@ -291,11 +290,11 @@ def validate_contract(contract):
                 error = {'description': str(error_detail)}
                 errors.append(error)
         return (errors, [])
-    else:
-        data = resp.text
-        description = MSG_CONTRACT_VALIDATION_ERROR.format(str(data))
-        errors = [{'description': description}]
-        return (errors, [])
+
+    data = resp.text
+    description = MSG_CONTRACT_VALIDATION_ERROR.format(str(data))
+    errors = [{'description': description}]
+    return (errors, [])
 
 
 def publish_project(project):
@@ -646,14 +645,14 @@ def model_to_artefacts(instance):
 
 def kernel_data_request(url='', method='get', data=None, headers=None):
     '''
-    Handle requests to the kernel server
+    Handle request calls to the kernel server
     '''
 
     res = request(
         method=method,
         url=f'{utils.get_kernel_server_url()}/{url}',
         json=data or {},
-        headers=headers if headers else utils.get_auth_header(),
+        headers=headers or utils.get_auth_header(),
     )
 
     res.raise_for_status()

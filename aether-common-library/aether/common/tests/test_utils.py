@@ -104,11 +104,7 @@ class UtilsTests(TestCase):
 
             self.assertEqual(next(iterable), 2)
             self.assertEqual(next(iterable), 1)
-            self.assertRaises(
-                StopIteration,
-                next,
-                iterable,
-            )
+            self.assertRaises(StopIteration, next, iterable)
 
             mock_get.assert_has_calls([
                 mock.call(

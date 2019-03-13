@@ -103,10 +103,10 @@ class KernelUtilsTest(CustomTestCase):
         mock_auth.assert_called_once()
         mock_patch.assert_not_called()
 
-    @mock.patch('aether.odk.api.kernel_utils.request', return_value=MockResponse(status_code=400))
-    @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value={
-        'Authorization': 'Token ABCDEFGH'
-    })
+    @mock.patch('aether.odk.api.kernel_utils.request',
+                return_value=MockResponse(status_code=400))
+    @mock.patch('aether.odk.api.kernel_utils.get_auth_header',
+                return_value={'Authorization': 'Token ABCDEFGH'})
     def test__upsert_kernel_artefacts__unexpected_error(self, mock_auth, mock_patch):
         with self.assertRaises(KernelPropagationError) as kpe:
             upsert_kernel(
@@ -128,10 +128,10 @@ class KernelUtilsTest(CustomTestCase):
             headers={'Authorization': 'Token ABCDEFGH'},
         )
 
-    @mock.patch('aether.odk.api.kernel_utils.request', return_value=MockResponse(status_code=200))
-    @mock.patch('aether.odk.api.kernel_utils.get_auth_header', return_value={
-        'Authorization': 'Token ABCDEFGH'
-    })
+    @mock.patch('aether.odk.api.kernel_utils.request',
+                return_value=MockResponse(status_code=200))
+    @mock.patch('aether.odk.api.kernel_utils.get_auth_header',
+                return_value={'Authorization': 'Token ABCDEFGH'})
     def test__upsert_kernel_artefacts__ok(self, mock_auth, mock_patch):
         self.assertTrue(upsert_kernel(
             project=self.project,
@@ -147,7 +147,6 @@ class KernelUtilsTest(CustomTestCase):
         )
 
     def test__propagate_kernel_project(self):
-
         self.assertTrue(propagate_kernel_project(self.project))
 
         response = requests.get(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
@@ -186,7 +185,6 @@ class KernelUtilsTest(CustomTestCase):
         self.assertEqual(kernel_schema_2['id'], self.KERNEL_ID_2)
 
     def test__propagate_kernel_artefacts(self):
-
         self.assertTrue(propagate_kernel_artefacts(self.xform_1))
 
         response = requests.get(self.PROJECT_URL, headers=self.KERNEL_HEADERS)

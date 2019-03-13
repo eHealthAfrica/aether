@@ -160,7 +160,6 @@ class KernelUtilsTest(TestCase):
         )
 
     def test__propagate_kernel_project(self):
-
         self.assertTrue(propagate_kernel_project(self.project))
 
         response = requests.get(self.PROJECT_URL, headers=self.KERNEL_HEADERS)
@@ -195,7 +194,6 @@ class KernelUtilsTest(TestCase):
         self.assertEqual(kernel_schema_2['id'], self.KERNEL_ID_2)
 
     def test__propagate_kernel_artefacts(self):
-
         self.assertTrue(propagate_kernel_artefacts(self.schema_1))
 
         response = requests.get(self.PROJECT_URL, headers=self.KERNEL_HEADERS)

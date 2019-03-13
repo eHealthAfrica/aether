@@ -58,6 +58,7 @@ def mock_return_true(*args):
 
 
 class MockResponse:
+
     def __init__(self, status_code, json_data=None, text=None):
         if json_data is None:
             json_data = {}

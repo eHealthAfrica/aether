@@ -20,9 +20,9 @@ import copy
 
 from django.utils.translation import ugettext as _
 
-from aether.common.utils import request
 from aether.common.kernel.utils import get_auth_header, get_kernel_server_url
 from aether.common.multitenancy.utils import assign_instance_realm_in_headers
+from aether.common.utils import request
 
 # list of messages that can be translated
 MSG_KERNEL_CONNECTION_ERR = _(

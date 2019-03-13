@@ -35,6 +35,8 @@ class UtilsTest(TestCase):
         self.KERNEL_ID = str(uuid.uuid4())
         self.request = RequestFactory().get('/')
 
+        Project.objects.all().delete()
+
     def tearDown(self):
         self.helper__delete_in_kernel('projects', self.KERNEL_ID)
         self.helper__delete_in_kernel('schemas', self.KERNEL_ID)
@@ -328,9 +330,9 @@ class UtilsTest(TestCase):
         self.helper__delete_in_kernel('schemas', self.KERNEL_ID)
 
         # check that nothing is there
-        res = self.helper__kernel_data(url='projects')
+        res = self.helper__kernel_data(url=f'projects?id={self.KERNEL_ID}')
         self.assertEqual(res['count'], 0)
-        res = self.helper__kernel_data(url='schemas')
+        res = self.helper__kernel_data(url=f'schemas?id={self.KERNEL_ID}')
         self.assertEqual(res['count'], 0)
 
         # check publish preflight again
@@ -388,7 +390,7 @@ class UtilsTest(TestCase):
         )
 
         # check that the project is back in kernel
-        res = self.helper__kernel_data(url='projects')
+        res = self.helper__kernel_data(url=f'projects?id={self.KERNEL_ID}')
         self.assertEqual(res['count'], 1)
 
         # bring its artefacts and compare

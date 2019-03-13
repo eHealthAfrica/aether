@@ -78,7 +78,7 @@ class KernelViewsTests(CustomTestCase):
             mock_kernel.assert_called_once_with(xform=xform, family=None)
 
         with mock.patch('aether.odk.api.views.propagate_kernel_artefacts',
-                        side_effect=[KernelPropagationError]) as mock_kernel:
+                        side_effect=KernelPropagationError) as mock_kernel:
             response = self.client.patch(url, json.dumps({'family': 'testing'}), content_type='application/json')
             self.assertEqual(response.status_code, 400)
             mock_kernel.assert_called_once_with(xform=xform, family='testing')
