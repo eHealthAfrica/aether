@@ -20,8 +20,7 @@
 #
 set -Eeuo pipefail
 
-# Define help message
-show_help() {
+function show_help {
     echo """
     Commands
     ----------------------------------------------------------------------------
@@ -38,11 +37,11 @@ show_help() {
     """
 }
 
-test_flake8() {
+function test_flake8 {
     flake8 /code/. --config=/code/conf/extras/flake8.cfg
 }
 
-test_coverage() {
+function test_coverage {
     RCFILE=/code/conf/extras/coverage.rc
     PARALLEL_COV="--concurrency=multiprocessing --parallel-mode"
     PARALLEL_PY="--parallel=4"
@@ -57,25 +56,25 @@ test_coverage() {
 
 
 case "$1" in
-    bash)
+    bash )
         bash
     ;;
 
-    eval)
+    eval )
         eval "${@:2}"
     ;;
 
-    manage)
+    manage )
         ./manage.py "${@:2}"
     ;;
 
-    test)
+    test )
         export TESTING=true
         test_flake8
         test_coverage "${@:2}"
     ;;
 
-    test_lint)
+    test_lint )
         export TESTING=true
         test_flake8
     ;;
@@ -85,7 +84,7 @@ case "$1" in
         test_coverage "${@:2}"
     ;;
 
-    build)
+    build )
         # test before building
         test_flake8
         test_coverage
@@ -103,7 +102,7 @@ case "$1" in
         rm -rf aether.common.egg-info
     ;;
 
-    help)
+    help )
         show_help
     ;;
 
