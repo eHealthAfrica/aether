@@ -188,6 +188,8 @@ case "$1" in
 
     test )
         export TESTING=true
+        export MULTITENANCY=true
+
         setup
         test_flake8
         test_coverage "${@:2}"
@@ -195,11 +197,15 @@ case "$1" in
 
     test_lint )
         export TESTING=true
+        export MULTITENANCY=true
+
         test_flake8
     ;;
 
     test_py | test_coverage )
         export TESTING=true
+        export MULTITENANCY=true
+
         # create system databases if missing (since CouchDB 2.X)
         ./manage.py setup_couchdb
         test_coverage "${@:2}"
