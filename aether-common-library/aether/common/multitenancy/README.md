@@ -100,7 +100,7 @@ It has two required fields:
 #### `MtModelAbstract`
 
 The `settings.MULTITENANCY_MODEL` class must extend this abstract model class.
-It includes the necessary methods to check permissions and to assign the objects
+It includes the necessary methods to check permissions and to add the objects
 to the realms.
 
 Defined methods:
@@ -113,8 +113,8 @@ Defined methods:
   (`settings.DEFAULT_REALM`) if missing. If multi-tenancy is not enabled
   returns `None`.
 
-- `save_mt(request)` assigns the object to the current realm.
-  If multi-tenancy is not enabled does nothing.
+- `add_to_realm(request)` adds the object to the current realm even if it
+  already belongs to another one. If multi-tenancy is not enabled does nothing.
 
 ```python
 class MyModel(MtModelAbstract):
@@ -166,7 +166,7 @@ class EvenAnotherModel(MtModelChildAbstract):
 #### `MtModelSerializer`
 
 Extends the Rest-Framework `rest_framework.serializers.ModelSerializer` class and
-overrides the `create` method to assign the newly created object to the
+overrides the `create` method to add the newly created object to the
 current realm.
 
 The `settings.MULTITENANCY_MODEL` serializer class must extend this class.
@@ -245,8 +245,8 @@ class MyModelViewSet(MtViewSetMixin, rest_framework.viewsets.ModelViewSet):
             # extract fields from request.data
         )
 
-        # needs to assign the realm manually
-        obj.save_mt(request)
+        # needs to add the object to the realm manually
+        obj.add_to_realm(request)
 
         return Response(data=MyModelSerializer(obj).data, status=201)
 
@@ -308,8 +308,8 @@ A list of useful methods.
   `MtPrimaryKeyRelatedField.get_query_set` and `MtViewSetMixin.get_query_set`
   methods to get the list of accessible objects.
 
-- `assign_current_realm_in_headers(request, headers={})`, includes the current
+- `add_current_realm_in_headers(request, headers={})`, includes the current
   realm in the request headers.
 
-- `assign_instance_realm_in_headers(instance, headers={})`, includes the
+- `add_instance_realm_in_headers(instance, headers={})`, includes the
   object realm in the request headers.

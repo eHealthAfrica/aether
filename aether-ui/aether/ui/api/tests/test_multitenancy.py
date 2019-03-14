@@ -57,7 +57,7 @@ class MultitenancyTests(TestCase):
         self.assertTrue(self.client.login(username=username, password=password))
 
         auth_header = get_auth_header()
-        self.HEADERS = mt_utils.assign_current_realm_in_headers(self.request, auth_header)
+        self.HEADERS = mt_utils.add_current_realm_in_headers(self.request, auth_header)
 
     def tearDown(self):
         self.helper__delete_in_kernel('projects', self.KERNEL_ID)
@@ -102,7 +102,7 @@ class MultitenancyTests(TestCase):
         pipeline = models.Pipeline.objects.create(name='Pipeline test', project=project)
         contract = models.Contract.objects.create(name='Contract test', pipeline=pipeline)
 
-        project.save_mt(self.request)
+        project.add_to_realm(self.request)
 
         self.assertTrue(project.is_accessible(CURRENT_REALM))
         self.assertTrue(pipeline.is_accessible(CURRENT_REALM))
@@ -122,7 +122,7 @@ class MultitenancyTests(TestCase):
         self.assertEqual(project.mt.realm, CURRENT_REALM)
         self.assertFalse(mt_utils.is_accessible_by_realm(self.request, project))
 
-        project.save_mt(self.request)
+        project.add_to_realm(self.request)
         self.assertTrue(mt_utils.is_accessible_by_realm(self.request, project))
         self.assertEqual(project.mt.realm, 'another')
 
@@ -152,7 +152,7 @@ class MultitenancyTests(TestCase):
         # create data assigned to different realms
         obj1 = models.Project.objects.create(name='Project 1')
         child1 = models.Pipeline.objects.create(name='Pipeline 1', project=obj1)
-        obj1.save_mt(self.request)
+        obj1.add_to_realm(self.request)
         self.assertEqual(obj1.mt.realm, CURRENT_REALM)
 
         # change realm
@@ -208,7 +208,7 @@ class MultitenancyTests(TestCase):
         pipeline = models.Pipeline.objects.create(name='Pipeline test', project=project)
         contract = models.Contract.objects.create(name='Contract test', pipeline=pipeline)
 
-        project.save_mt(self.request)  # assign project to current realm
+        project.add_to_realm(self.request)  # add project to current realm
         project_id = str(project.pk)
 
         # check headers in kernel request
@@ -342,9 +342,9 @@ class MultitenancyTests(TestCase):
             }
         )
 
-        # assign project to another realm
+        # move project to another realm
         self.request.COOKIES[settings.REALM_COOKIE] = NEW_REALM
-        project.save_mt(self.request)
+        project.add_to_realm(self.request)
         self.assertEqual(project.get_realm(), NEW_REALM)
         self.assertEqual(pipeline.get_realm(), NEW_REALM)
         self.assertEqual(contract.get_realm(), NEW_REALM)
@@ -391,7 +391,7 @@ class NoMultitenancyTests(TestCase):
         initial_data = models.Project.objects.all()
         self.assertEqual(mt_utils.filter_by_realm(self.request, initial_data), initial_data)
 
-        self.assertFalse(obj1.save_mt(self.request))
+        self.assertFalse(obj1.add_to_realm(self.request))
         self.assertTrue(MtInstance.objects.count() == 0)
 
     def test_models(self):
@@ -408,7 +408,7 @@ class NoMultitenancyTests(TestCase):
         self.assertIsNone(child1.get_realm())
 
         self.assertTrue(MtInstance.objects.count() == 0)
-        obj1.save_mt(self.request)
+        obj1.add_to_realm(self.request)
         self.assertTrue(MtInstance.objects.count() == 0)
 
     def test_serializers(self):

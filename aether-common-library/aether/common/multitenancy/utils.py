@@ -77,7 +77,7 @@ def filter_by_realm(request, data, mt_field=None):
     return data.annotate(mt_realm=F(field)).filter(mt_realm=realm)
 
 
-def assign_current_realm_in_headers(request, headers={}):
+def add_current_realm_in_headers(request, headers={}):
     '''
     Includes the current realm in the headers
     '''
@@ -89,7 +89,7 @@ def assign_current_realm_in_headers(request, headers={}):
     return headers
 
 
-def assign_instance_realm_in_headers(instance, headers={}):
+def add_instance_realm_in_headers(instance, headers={}):
     '''
     Includes the instance realm in the headers
     '''

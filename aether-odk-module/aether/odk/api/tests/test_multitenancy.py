@@ -83,7 +83,7 @@ class MultitenancyTests(CustomTestCase):
         project = xform.project
         media_file = xform.media_files.first()
 
-        project.save_mt(self.request)
+        project.add_to_realm(self.request)
 
         self.assertTrue(project.is_accessible(CURRENT_REALM))
         self.assertTrue(xform.is_accessible(CURRENT_REALM))
@@ -103,7 +103,7 @@ class MultitenancyTests(CustomTestCase):
         self.assertEqual(project.mt.realm, CURRENT_REALM)
         self.assertFalse(utils.is_accessible_by_realm(self.request, project))
 
-        project.save_mt(self.request)
+        project.add_to_realm(self.request)
         self.assertTrue(utils.is_accessible_by_realm(self.request, project))
         self.assertEqual(project.mt.realm, 'another')
 
@@ -133,7 +133,7 @@ class MultitenancyTests(CustomTestCase):
         # create data assigned to different realms
         obj1 = self.helper_create_project()
         child1 = self.helper_create_xform(project_id=obj1.project_id)
-        obj1.save_mt(self.request)
+        obj1.add_to_realm(self.request)
         self.assertEqual(obj1.mt.realm, CURRENT_REALM)
 
         # change realm
@@ -177,7 +177,7 @@ class MultitenancyTests(CustomTestCase):
         kernel_url = get_kernel_server_url()
 
         project = self.helper_create_project()
-        project.save_mt(self.request)
+        project.add_to_realm(self.request)
 
         self.assertTrue(upsert_kernel(
             project=project,
@@ -221,7 +221,7 @@ class NoMultitenancyTests(CustomTestCase):
         initial_data = models.Project.objects.all()
         self.assertEqual(utils.filter_by_realm(self.request, initial_data), initial_data)
 
-        obj1.save_mt(self.request)
+        obj1.add_to_realm(self.request)
         self.assertTrue(MtInstance.objects.count() == 0)
 
     def test_models(self):
@@ -238,7 +238,7 @@ class NoMultitenancyTests(CustomTestCase):
         self.assertIsNone(child1.get_realm())
 
         self.assertTrue(MtInstance.objects.count() == 0)
-        obj1.save_mt(self.request)
+        obj1.add_to_realm(self.request)
         self.assertTrue(MtInstance.objects.count() == 0)
 
     def test_serializers(self):

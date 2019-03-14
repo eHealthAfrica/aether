@@ -241,7 +241,7 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         )
 
         project = get_object_or_404(models.Project, pk=results['project'])
-        project.save_mt(request)
+        project.add_to_realm(request)
 
         return Response(data=results)
 
@@ -301,7 +301,7 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         )
 
         project = get_object_or_404(models.Project, pk=results['project'])
-        project.save_mt(request)
+        project.add_to_realm(request)
 
         return Response(data=results)
 

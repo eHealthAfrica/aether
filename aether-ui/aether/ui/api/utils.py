@@ -84,7 +84,7 @@ def get_default_project(request):
         name = settings.DEFAULT_PROJECT_NAME if not settings.MULTITENANCY else realm
 
         project = models.Project.objects.create(name=name, is_default=True)
-        project.save_mt(request)
+        project.add_to_realm(request)
 
         return project
     else:
@@ -99,7 +99,7 @@ def kernel_artefacts_to_ui_artefacts(request):
 
     KERNEL_URL = utils.get_kernel_server_url()
     # restrict by current realm (if enabled)
-    headers = mt_utils.assign_current_realm_in_headers(request, utils.get_auth_header())
+    headers = mt_utils.add_current_realm_in_headers(request, utils.get_auth_header())
 
     projects = get_all_docs(f'{KERNEL_URL}/projects/', headers=headers)
     for kernel_project in projects:
@@ -110,7 +110,7 @@ def kernel_artefacts_to_ui_artefacts(request):
             models.Project.objects.create(project_id=project_id, name=kernel_project['name'])
 
         project = models.Project.objects.get(pk=project_id)
-        project.save_mt(request)
+        project.add_to_realm(request)
 
         # fetch linked mapping sets
         mappingsets = get_all_docs(kernel_project['mappingset_url'], headers=headers)
@@ -663,4 +663,4 @@ def kernel_data_request(url='', method='get', data=None, headers=None):
 
 
 def wrap_kernel_headers(instance):
-    return mt_utils.assign_instance_realm_in_headers(instance, utils.get_auth_header())
+    return mt_utils.add_instance_realm_in_headers(instance, utils.get_auth_header())

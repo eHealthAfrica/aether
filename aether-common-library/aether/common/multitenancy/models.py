@@ -62,15 +62,15 @@ class MtModelAbstract(models.Model):
     The ``settings.MULTITENANCY_MODEL`` class must extend this one.
     '''
 
-    def save_mt(self, request):
+    def add_to_realm(self, request):
         '''
-        Assigns the instance to the current realm.
+        Adds the instance to the current realm.
         '''
 
         if not settings.MULTITENANCY:
             return
 
-        # assign to current realm
+        # add instance to current realm
         realm = get_current_realm(request)
         try:
             self.mt.realm = realm

@@ -32,7 +32,7 @@ class MtModelSerializer(ModelSerializer):
         '''
 
         instance = super(MtModelSerializer, self).create(validated_data)
-        instance.save_mt(self.context['request'])
+        instance.add_to_realm(self.context['request'])
         return instance
 
 
