@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    run_before = run_before_multitenancyv
+    run_before = run_before_multitenancy
 
     dependencies = [
     ]
