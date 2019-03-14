@@ -26,40 +26,6 @@ of isolation (in particular when it comes to noise).
 Read more: [multi-tenancy wikipedia entry](https://en.wikipedia.org/wiki/Multitenancy)
 
 
-## How to start Aether with multi-tenancy
-
-There are a couple of environment variables that play a role here:
-
-- `MULTITENANCY`, that simply enables or disables the feature, is `false`
-  if unset or set to empty string, anything else is considered `true`.
-
-- `DEFAULT_REALM`, that indicates the default realm for the objects created
-  while multi-tenancy was not enabled. Defaults to `aether`.
-
-- `REALM_COOKIE`, indicates the name of the cookie that keeps the current
-  tenant id in the request headers. Defaults to `aether-realm`.
-
-
-Example with multi-tenancy enabled:
-
-```bash
-export MULTITENANCY=yes
-export DEFAULT_REALM=my-current-tenant
-export REALM_COOKIE=cookie-realm
-
-# name of script that starts aether app and its modules
-./start-aether-script.sh
-```
-
-Example with multi-tenancy disabled:
-
-```bash
-export MULTITENANCY=''
-
-# name of script that starts aether app and its modules
-./start-aether-script.sh
-```
-
 ## Technical implementation
 
 The module `aether.common.multitenancy` contains all the relevant code to make
@@ -71,7 +37,7 @@ In each module/app `settings.py` file is mandatory to indicate the setting
 `MULTITENANCY_MODEL` with the model that supports the multi-tenancy one to one
 relation, i.e. `MULTITENANCY_MODEL='my_app.MyModel'`.
 
-### `permissions.py`
+### `aether.common.multitenancy.permissions.py`
 
 #### `IsAccessibleByRealm`
 
@@ -83,7 +49,7 @@ This permission is included in the REST-Framework `DEFAULT_PERMISSION_CLASSES`
 list if multi-tenacy is enabled.
 
 
-### `models.py`
+### `aether.common.multitenancy.models.py`
 
 #### `MtInstance`
 
@@ -159,7 +125,7 @@ class EvenAnotherModel(MtModelChildAbstract):
 ```
 
 
-### `serializers.py`
+### `aether.common.multitenancy.serializers.py`
 
 #### `MtModelSerializer`
 
@@ -223,7 +189,7 @@ class ModelWithUserSerializer(rest_framework.serializers.ModelSerializer):
 ```
 
 
-### `views.py`
+### `aether.common.multitenancy.views.py`
 
 #### `MtViewSetMixin`
 
@@ -319,9 +285,9 @@ class MyUserViewSet(MtUserViewSetMixin, rest_framework.viewsets.ReadOnlyModelVie
 ```
 
 
-### `utils.py`
+### `aether.common.multitenancy.utils.py`
 
-A list of useful methods.
+A collection of useful methods.
 
 - `get_multitenancy_model()`, returns the `settings.MULTITENANCY_MODEL` class.
 
