@@ -29,4 +29,5 @@ class SettingsTest(TestCase):
         self.assertFalse(settings.DEBUG)
 
         self.assertEqual(settings.ROOT_URLCONF, 'aether.odk.urls')
+        self.assertEqual(settings.SURVEYOR_GROUP_NAME, 'surveyor')
         self.assertIsNotNone(settings.DJANGO_STORAGE_BACKEND)

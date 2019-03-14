@@ -16,14 +16,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 
-from .constants import SURVEYOR_GROUP_NAME
-
 
 def get_surveyor_group():
-    group, _ = Group.objects.get_or_create(name=SURVEYOR_GROUP_NAME)
+    group, _ = Group.objects.get_or_create(name=settings.SURVEYOR_GROUP_NAME)
     return group
 
 
@@ -39,5 +38,5 @@ def get_surveyors():
 
     return get_user_model().objects \
                            .filter(is_active=True) \
-                           .filter(groups__name=SURVEYOR_GROUP_NAME) \
+                           .filter(groups__name=settings.SURVEYOR_GROUP_NAME) \
                            .order_by('username')
