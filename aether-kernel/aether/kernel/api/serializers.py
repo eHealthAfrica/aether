@@ -153,7 +153,7 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     )
     mappingset = MtPrimaryKeyRelatedField(
         queryset=models.MappingSet.objects.all(),
-        mt_field='project__mt',
+        mt_field='project',
     )
 
     class Meta:
@@ -208,7 +208,7 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     )
     mappingset = MtPrimaryKeyRelatedField(
         queryset=models.MappingSet.objects.all(),
-        mt_field='project__mt',
+        mt_field='project',
     )
 
     def create(self, validated_data):
@@ -240,7 +240,7 @@ class AttachmentSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     submission = MtPrimaryKeyRelatedField(
         queryset=models.Submission.objects.all(),
-        mt_field='mappingset__project__mt',
+        mt_field='mappingset__project',
     )
 
     class Meta:
@@ -343,17 +343,17 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     )
     submission = MtPrimaryKeyRelatedField(
         queryset=models.Submission.objects.all(),
-        mt_field='mappingset__project__mt',
+        mt_field='mappingset__project',
         required=False,
     )
     mapping = MtPrimaryKeyRelatedField(
         queryset=models.Mapping.objects.all(),
-        mt_field='mappingset__project__mt',
+        mt_field='mappingset__project',
         required=False,
     )
     projectschema = MtPrimaryKeyRelatedField(
         queryset=models.ProjectSchema.objects.all(),
-        mt_field='project__mt',
+        mt_field='project',
         required=False,
     )
 

@@ -166,7 +166,7 @@ class XFormViewSet(MtViewSetMixin, viewsets.ModelViewSet):
                     .order_by('title')
     serializer_class = XFormSerializer
     search_fields = ('title', 'description', 'xml_data',)
-    mt_field = 'project__mt'
+    mt_field = 'project'
 
     def get_queryset(self):
         queryset = super(XFormViewSet, self).get_queryset()
@@ -207,7 +207,7 @@ class MediaFileViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = MediaFile.objects.order_by('name')
     serializer_class = MediaFileSerializer
     search_fields = ('name', 'xform__title',)
-    mt_field = 'xform__project__mt'
+    mt_field = 'xform__project'
 
 
 class SurveyorViewSet(viewsets.ModelViewSet):

@@ -169,17 +169,17 @@ Extends the Rest-Framework `rest_framework.serializers.ModelSerializer` class an
 overrides the `create` method to assign the newly created object to the
 current realm.
 
-The ``settings.MULTITENANCY_MODEL`` serializer class must extend this class.
+The `settings.MULTITENANCY_MODEL` serializer class must extend this class.
 
 #### `MtPrimaryKeyRelatedField`
 
 Extends the Rest-Framework `rest_framework.serializers.PrimaryKeyRelatedField`
 class and overrides `get_queryset` method to filter the data by the current realm.
 
-Expects a `mt_field` property with the path to the `MtInstance` field, for the
-`MtModelAbstract` class is `mt`, for the rest of classes concatenates the path
-of the relation tree to `MtModelAbstract` field with `__` (double underscore).
-Defaults to `mt`.
+Expects a `mt_field` property with the path to the `settings.MULTITENANCY_MODEL`
+field, for the `MtModelAbstract` class is `None`, for the rest of classes
+concatenates the path of the relation tree to `MtModelAbstract` field with `__`
+(double underscore). Defaults to `None`.
 
 This class is useful for two reasons:
 
@@ -192,14 +192,14 @@ This class is useful for two reasons:
 class AnotherModelSerializer(rest_framework.serializers.ModelSerializer):
     my_model = MtPrimaryKeyRelatedField(
         queryset=models.MyModel.objects.all(),
-        mt_field='my_model__mt',
+        mt_field='my_model',
     )
 
 
 class EvenAnotherModelSerializer(rest_framework.serializers.ModelSerializer):
     another_model = MtPrimaryKeyRelatedField(
         queryset=models.AnotherModel.objects.all(),
-        mt_field='another_model__my_model__mt',
+        mt_field='another_model__my_model',
     )
 ```
 
@@ -209,10 +209,10 @@ class EvenAnotherModelSerializer(rest_framework.serializers.ModelSerializer):
 
 Defines `get_queryset` method to include filter by realm.
 
-Expects a `mt_field` property with the path to the `MtInstance` field, for the
-`MtModelAbstract` class is `mt`, for the rest of classes concatenates the path
-of the relation tree to `MtModelAbstract` field with `__` (double underscore).
-Defaults to `mt`.
+Expects a `mt_field` property with the path to the `settings.MULTITENANCY_MODEL`
+field, for the `MtModelAbstract` class is `None`, for the rest of classes
+concatenates the path of the relation tree to `MtModelAbstract` field with `__`
+(double underscore). Defaults to `None`.
 
 Adds two new methods:
 - `get_object_or_404(pk)` raises `NO_FOUND` error if the object does not exist
@@ -236,19 +236,19 @@ current realm.
 class MyModelViewSet(MtViewSetMixin, rest_framework.viewsets.ModelViewSet):
     queryset = MyModel.objects.all()
     serializer_class = MyModelSerializer
-    # mt_field = 'mt'  # not needed in this case
+    # mt_field = None  # not needed in this case
 
 
 class AnotherModelViewSet(MtViewSetMixin, rest_framework.viewsets.ModelViewSet):
     queryset = AnotherModel.objects.all()
     serializer_class = AnotherModelSerializer
-    mt_field = 'my_model__mt'
+    mt_field = 'my_model'
 
 
 class EvenAnotherModelViewSet(MtViewSetMixin, rest_framework.viewsets.ModelViewSet):
     queryset = EvenAnotherModel.objects.all()
     serializer_class = EvenAnotherModelSerializer
-    mt_field = 'another_model__my_model__mt'
+    mt_field = 'another_model__my_model'
 ```
 
 
@@ -268,10 +268,10 @@ A list of useful methods.
   accessible by the current realm. This method is the one used by
   `IsAccessibleByRealm` permission class to check the object accessibility.
 
-- `filter_by_realm(request, data, mt_field='mt')`, includes the realm filter
+- `filter_by_realm(request, data, mt_field)`, includes the realm filter
    in the given data object (Queryset or Manager). This method is the one used by
-  `MtPrimaryKeyRelatedField.get_query_set` and `MtViewSetMixin.get_query_set` methods
-  to get the list of accessible objects.
+  `MtPrimaryKeyRelatedField.get_query_set` and `MtViewSetMixin.get_query_set`
+  methods to get the list of accessible objects.
 
 - `assign_current_realm_in_headers(request, headers={})`, includes the current
   realm in the request headers.

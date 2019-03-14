@@ -310,21 +310,21 @@ class MappingSetViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.MappingSet.objects.all()
     serializer_class = serializers.MappingSetSerializer
     filter_class = filters.MappingSetFilter
-    mt_field = 'project__mt'
+    mt_field = 'project'
 
 
 class MappingViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.Mapping.objects.all()
     serializer_class = serializers.MappingSerializer
     filter_class = filters.MappingFilter
-    mt_field = 'mappingset__project__mt'
+    mt_field = 'mappingset__project'
 
 
 class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
     queryset = models.Submission.objects.all()
     serializer_class = serializers.SubmissionSerializer
     filter_class = filters.SubmissionFilter
-    mt_field = 'mappingset__project__mt'
+    mt_field = 'mappingset__project'
 
     @action(detail=True, methods=['patch'])
     def extract(self, request, pk, *args, **kwargs):
@@ -358,7 +358,7 @@ class AttachmentViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.Attachment.objects.all()
     serializer_class = serializers.AttachmentSerializer
     filter_class = filters.AttachmentFilter
-    mt_field = 'submission__mappingset__project__mt'
+    mt_field = 'submission__mappingset__project'
 
 
 class SchemaViewSet(viewsets.ModelViewSet):
@@ -396,7 +396,7 @@ class ProjectSchemaViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.ProjectSchema.objects.all()
     serializer_class = serializers.ProjectSchemaSerializer
     filter_class = filters.ProjectSchemaFilter
-    mt_field = 'project__mt'
+    mt_field = 'project'
 
     @action(detail=True, methods=['get'])
     def skeleton(self, request, pk=None, *args, **kwargs):
@@ -429,7 +429,7 @@ class EntityViewSet(MtViewSetMixin, ExporterViewSet):
     queryset = models.Entity.objects.all()
     serializer_class = serializers.EntitySerializer
     filter_class = filters.EntityFilter
-    mt_field = 'project__mt'
+    mt_field = 'project'
 
     # Exporter required fields
     schema_field = 'projectschema__schema__definition'
@@ -539,7 +539,7 @@ class ProjectStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
 class MappingSetStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
     queryset = models.MappingSet.objects.all()
     serializer_class = serializers.MappingSetStatsSerializer
-    mt_field = 'project__mt'
+    mt_field = 'project'
 
 
 SchemaView = get_schema_view(

@@ -35,7 +35,7 @@ class MediaFileSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     xform = MtPrimaryKeyRelatedField(
         queryset=XForm.objects.all(),
-        mt_field='project__mt',
+        mt_field='project',
     )
 
     class Meta:

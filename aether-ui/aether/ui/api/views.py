@@ -38,7 +38,7 @@ class PipelineViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     serializer_class = serializers.PipelineSerializer
     ordering = ('name',)
     pagination_class = None
-    mt_field = 'project__mt'
+    mt_field = 'project'
 
     @action(methods=['post'], detail=False)
     def fetch(self, request):
@@ -56,7 +56,7 @@ class ContractViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.Contract.objects.all()
     serializer_class = serializers.ContractSerializer
     ordering = ('name',)
-    mt_field = 'pipeline__project__mt'
+    mt_field = 'pipeline__project'
 
     @action(methods=['post'], detail=True)
     def publish(self, request, pk=None):

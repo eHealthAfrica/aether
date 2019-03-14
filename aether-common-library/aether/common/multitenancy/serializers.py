@@ -42,7 +42,7 @@ class MtPrimaryKeyRelatedField(PrimaryKeyRelatedField):
     Expects `mt_field` property.
     '''
 
-    mt_field = 'mt'
+    mt_field = None
 
     def __init__(self, **kwargs):
         self.mt_field = kwargs.pop('mt_field', self.mt_field)

@@ -35,7 +35,7 @@ from aether.common.multitenancy.tests.fakeapp.serializers import (
 class TestModelViewSet(MtViewSetMixin, ModelViewSet):
     queryset = TestModel.objects.order_by('name')
     serializer_class = TestModelSerializer
-    # mt_field = 'mt'  # not needed in this case
+    # mt_field = None  # not needed in this case
 
     @action(detail=True, methods=['get'], url_path='custom-404')
     def custom_404(self, request, pk=None, *args, **kwargs):
@@ -46,7 +46,7 @@ class TestModelViewSet(MtViewSetMixin, ModelViewSet):
 class TestChildModelViewSet(MtViewSetMixin, ModelViewSet):
     queryset = TestChildModel.objects.order_by('name')
     serializer_class = TestChildModelSerializer
-    mt_field = 'parent__mt'
+    mt_field = 'parent'
 
     @action(detail=True, methods=['get'], url_path='custom-403')
     def custom_403(self, request, pk=None, *args, **kwargs):

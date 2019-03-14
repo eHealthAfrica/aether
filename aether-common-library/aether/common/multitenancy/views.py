@@ -44,7 +44,7 @@ class MtViewSetMixin(object):
         - 204 NO_CONTENT  otherwise
     '''
 
-    mt_field = 'mt'
+    mt_field = None
 
     def get_queryset(self):
         '''

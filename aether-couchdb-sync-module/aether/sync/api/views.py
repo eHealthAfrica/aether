@@ -95,7 +95,7 @@ class SchemaViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = Schema.objects.order_by('name')
     serializer_class = SchemaSerializer
     search_fields = ('name', 'avro_schema',)
-    mt_field = 'project__mt'
+    mt_field = 'project'
 
     def get_queryset(self):
         queryset = super(SchemaViewSet, self).get_queryset()

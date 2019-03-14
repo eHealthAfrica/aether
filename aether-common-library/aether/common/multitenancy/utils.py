@@ -63,7 +63,7 @@ def is_accessible_by_realm(request, obj):
     return True
 
 
-def filter_by_realm(request, data, mt_field='mt'):
+def filter_by_realm(request, data, mt_field=None):
     '''
     Includes the realm filter in the given data object (Queryset or Manager)
     '''
@@ -72,8 +72,9 @@ def filter_by_realm(request, data, mt_field='mt'):
         return data
 
     # only returns the instances linked to the current realm
+    field = f'{mt_field}__mt__realm' if mt_field else 'mt__realm'
     realm = get_current_realm(request)
-    return data.annotate(mt_realm=F(f'{mt_field}__realm')).filter(mt_realm=realm)
+    return data.annotate(mt_realm=F(field)).filter(mt_realm=realm)
 
 
 def assign_current_realm_in_headers(request, headers={}):
