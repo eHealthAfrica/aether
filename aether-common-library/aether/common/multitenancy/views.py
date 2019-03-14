@@ -28,17 +28,18 @@ from .utils import filter_by_realm, is_accessible_by_realm
 
 class MtViewSetMixin(object):
     '''
-    Defines `get_queryset` method to include filter by realm.
+    Defines ``get_queryset`` method to include filter by realm.
 
-    Expects `mt_field` property.
+    Expects ``mt_field`` property.
 
     Adds two new methods:
-        - `get_object_or_404(pk)` raises NO_FOUND error if the instance
+        - ``get_object_or_404(pk)`` raises NO_FOUND error if the instance
           does not exists or is not accessible by current realm.
-        - `get_object_or_403(pk)` raises FORBIDDEN error if the instance
+        - ``get_object_or_403(pk)`` raises FORBIDDEN error if the instance
           exists and is not accessible by current realm.
 
-    Adds a detail endpoint only permitted with HEAD method `is-accessible`, returns status:
+    Adds a detail endpoint ``/is-accessible`` only permitted with HEAD method,
+    returns the following statuses:
         - 403 FORBIDDEN   if the instance is not accessible by current realm
         - 404 NOT_FOUND   if the instance does not exist
         - 204 NO_CONTENT  otherwise
@@ -48,7 +49,7 @@ class MtViewSetMixin(object):
 
     def get_queryset(self):
         '''
-        Overrides `get_queryset` method to include filter by realm in each query
+        Overrides ``get_queryset`` method to include filter by realm in each query
         '''
 
         qs = super(MtViewSetMixin, self).get_queryset()
@@ -67,7 +68,7 @@ class MtViewSetMixin(object):
         '''
         Custom method that raises FORBIDDEN error
         if the instance exists and is not accessible by current realm
-        otherwise returns the instance or None if it does not exist
+        otherwise returns the instance or ``None`` if it does not exist
         '''
 
         # without filtering by realm
@@ -84,7 +85,7 @@ class MtViewSetMixin(object):
     @action(detail=True, methods=['head'], url_path='is-accessible')
     def is_accessible(self, request, pk=None):
         '''
-        Returns status:
+        Returns the following statuses:
             - 404 NOT_FOUND   if the instance does not exist
             - 403 FORBIDDEN   if the instance is not accessible by current realm
             - 204 NO_CONTENT  otherwise

@@ -222,8 +222,8 @@ Adds two new methods:
   not accessible by current realm, otherwise returns the object or `None` if
   it does not exist.
 
-Adds a detail endpoint only permitted with `HEAD` method `/{model}/{pk}/is-accessible`,
-returns status:
+Adds a detail endpoint `/{model}/{pk}/is-accessible` only permitted with `HEAD` method,
+returns the following statuses:
   - `404 NOT_FOUND ` if the object does not exist
   - `403 FORBIDDEN`  if the object is not accessible by current realm
   - `204 NO_CONTENT` otherwise
@@ -238,17 +238,52 @@ class MyModelViewSet(MtViewSetMixin, rest_framework.viewsets.ModelViewSet):
     serializer_class = MyModelSerializer
     # mt_field = None  # not needed in this case
 
+    @action(detail=True, methods=['post'])
+    def manual_creation(self, request, *args, **kwargs):
+        # sample of instance creation without using the serializer class
+        obj = MyModel.objects.create(
+            # extract fields from request.data
+        )
+
+        # needs to assign the realm manually
+        obj.save_mt(request)
+
+        return Response(data=MyModelSerializer(obj).data, status=201)
+
 
 class AnotherModelViewSet(MtViewSetMixin, rest_framework.viewsets.ModelViewSet):
     queryset = AnotherModel.objects.all()
     serializer_class = AnotherModelSerializer
     mt_field = 'my_model'
 
+    @action(detail=True, methods=['patch'])
+    def create_or_update(self, request, pk, *args, **kwargs):
+        # sample of "create or update" object
+        # will respond with 403 status
+        # if the object already exists but does not belong to the current realm
+
+        if not self.get_object_or_403(pk=pk):
+            return self.create(request, *args, **kwargs)
+        else:
+            return self.update(request, pk, *args, **kwargs)
+
 
 class EvenAnotherModelViewSet(MtViewSetMixin, rest_framework.viewsets.ModelViewSet):
     queryset = EvenAnotherModel.objects.all()
     serializer_class = EvenAnotherModelSerializer
     mt_field = 'another_model__my_model'
+
+    @action(detail=True, methods=['patch'])
+    def activate(self, request, pk=None, *args, **kwargs):
+        # sample of custom patch endpoint
+        # will respond with 404 status
+        # if the object does not exists or does not belong to the current realm
+
+        obj = self.get_object_or_404(pk=pk)
+        obj.active = True
+        obj.save()
+
+        return Response(data=MyModelSerializer(obj).data, status=200)
 ```
 
 
@@ -268,7 +303,7 @@ A list of useful methods.
   accessible by the current realm. This method is the one used by
   `IsAccessibleByRealm` permission class to check the object accessibility.
 
-- `filter_by_realm(request, data, mt_field)`, includes the realm filter
+- `filter_by_realm(request, data, mt_field=None)`, includes the realm filter
    in the given data object (Queryset or Manager). This method is the one used by
   `MtPrimaryKeyRelatedField.get_query_set` and `MtViewSetMixin.get_query_set`
   methods to get the list of accessible objects.

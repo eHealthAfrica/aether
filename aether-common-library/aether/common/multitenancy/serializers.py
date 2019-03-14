@@ -38,8 +38,9 @@ class MtModelSerializer(ModelSerializer):
 
 class MtPrimaryKeyRelatedField(PrimaryKeyRelatedField):
     '''
-    Overrides `get_queryset` method to include filter by realm.
-    Expects `mt_field` property.
+    Overrides ``get_queryset`` method to include filter by realm.
+
+    Expects ``mt_field` property.
     '''
 
     mt_field = None
@@ -50,7 +51,7 @@ class MtPrimaryKeyRelatedField(PrimaryKeyRelatedField):
 
     def get_queryset(self):
         '''
-        Overrides `get_queryset` method to include filter by realm
+        Overrides ``get_queryset`` method to include filter by realm
         '''
 
         qs = super(MtPrimaryKeyRelatedField, self).get_queryset()

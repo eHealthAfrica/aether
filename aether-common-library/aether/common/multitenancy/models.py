@@ -29,7 +29,7 @@ class MtInstance(models.Model):
     Multitenancy model to keep the relation between the instances and the realms.
 
     :ivar Model  instance: One to one relations with the model class
-                           indicated in the setting `MULTITENANCY_MODEL`.
+                           indicated in the setting ``MULTITENANCY_MODEL``.
     :ivar text   realm:    The realm name.
     '''
 
