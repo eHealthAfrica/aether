@@ -16,11 +16,13 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.contrib.auth import get_user_model
+
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from aether.common.multitenancy.views import MtViewSetMixin
+from aether.common.multitenancy.views import MtViewSetMixin, MtUserViewSetMixin
 
 from aether.common.multitenancy.tests.fakeapp.models import (
     TestModel,
@@ -29,6 +31,7 @@ from aether.common.multitenancy.tests.fakeapp.models import (
 from aether.common.multitenancy.tests.fakeapp.serializers import (
     TestModelSerializer,
     TestChildModelSerializer,
+    TestUserSerializer,
 )
 
 
@@ -56,3 +59,8 @@ class TestChildModelViewSet(MtViewSetMixin, ModelViewSet):
             return Response(status=400)
 
         return Response(data=self.serializer_class(obj, context={'request': request}).data)
+
+
+class TestUserViewSet(MtUserViewSetMixin, ModelViewSet):
+    queryset = get_user_model().objects.order_by('username')
+    serializer_class = TestUserSerializer

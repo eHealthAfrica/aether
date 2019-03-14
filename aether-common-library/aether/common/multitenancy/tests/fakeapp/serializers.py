@@ -16,14 +16,27 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.contrib.auth import get_user_model
 from rest_framework.serializers import ModelSerializer
 
-from aether.common.multitenancy.serializers import MtPrimaryKeyRelatedField, MtModelSerializer
+from aether.common.multitenancy.serializers import (
+    MtModelSerializer,
+    MtPrimaryKeyRelatedField,
+    MtUserRelatedField,
+)
 
 from .models import TestModel, TestChildModel
 
+UserModel = get_user_model()
+
 
 class TestModelSerializer(MtModelSerializer):
+
+    user = MtUserRelatedField(
+        allow_null=True,
+        default=None,
+        queryset=UserModel.objects.all(),
+    )
 
     class Meta:
         model = TestModel
@@ -39,3 +52,10 @@ class TestChildModelSerializer(ModelSerializer):
     class Meta:
         model = TestChildModel
         fields = '__all__'
+
+
+class TestUserSerializer(ModelSerializer):
+
+    class Meta:
+        model = UserModel
+        fields = ('id', 'username',)

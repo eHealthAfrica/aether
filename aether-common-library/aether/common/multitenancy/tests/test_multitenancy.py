@@ -100,6 +100,12 @@ class MultitenancyTests(TestCase):
         )
         self.assertTrue(obj1.is_valid(), obj1.errors)
 
+        # check the user queryset
+        self.assertEqual(obj1.fields['user'].get_queryset().count(), 0)
+        # we need to add the user to current realm
+        utils.add_user_to_realm(self.request, self.request.user)
+        self.assertEqual(obj1.fields['user'].get_queryset().count(), 1)
+
         self.assertTrue(MtInstance.objects.count() == 0)
         obj1.save()
         self.assertTrue(MtInstance.objects.count() > 0)
@@ -129,20 +135,37 @@ class MultitenancyTests(TestCase):
 
     def test_views(self):
         # create data assigned to different realms
+        realm1_group = utils.get_auth_group(self.request)
         obj1 = TestModel.objects.create(name='one')
         child1 = TestChildModel.objects.create(name='child1', parent=obj1)
         obj1.add_to_realm(self.request)
         self.assertEqual(obj1.mt.realm, TEST_REALM)
+        user1 = get_user_model().objects.create(username='user1')
+        utils.add_user_to_realm(self.request, user1)
 
         # change realm
         self.request.COOKIES[settings.REALM_COOKIE] = TEST_REALM_2
+        realm2_group = utils.get_auth_group(self.request)
+        self.assertNotEqual(realm1_group, realm2_group)
+
         obj2 = TestModel.objects.create(name='two')
         child2 = TestChildModel.objects.create(name='child2', parent=obj2)
         obj2.add_to_realm(self.request)
         self.assertEqual(obj2.mt.realm, TEST_REALM_2)
+        user2 = get_user_model().objects.create(username='user2')
+        utils.add_user_to_realm(self.request, user2)
+
+        # check users realm groups
+        self.assertIn(realm1_group, user1.groups.all())
+        self.assertIn(realm2_group, user2.groups.all())
+        self.assertEqual(self.request.user.groups.count(), 0)
+
+        self.assertNotIn(realm2_group, user1.groups.all())
+        self.assertNotIn(realm1_group, user2.groups.all())
 
         self.assertEqual(TestModel.objects.count(), 2)
         self.assertEqual(TestChildModel.objects.count(), 2)
+        self.assertEqual(get_user_model().objects.count(), 3)
 
         # check that views only return instances linked to "realm1"
         url = reverse('testmodel-list')
@@ -183,6 +206,20 @@ class MultitenancyTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+        # users
+        url = reverse('user-list')
+        response = self.client.get(url)
+        data = response.json()
+        # only user1 belongs to TEST_REALM,
+        # user2 belongs to TEST_REALM_2 and
+        # self.request.user belongs to none
+        self.assertEqual(data['count'], 1)
+        self.assertEqual(data['results'][0]['id'], user1.id, data['results'][0])
+
+        url = reverse('user-detail', kwargs={'pk': user1.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
         # linked to another realm "realm2" *************************************
 
         # detail endpoint
@@ -211,6 +248,10 @@ class MultitenancyTests(TestCase):
         url = reverse('testchildmodel-custom-403', kwargs={'pk': child2.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        url = reverse('user-detail', kwargs={'pk': user2.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get_current_realm(self):
         request = RequestFactory().get('/')
@@ -252,6 +293,16 @@ class MultitenancyTests(TestCase):
         self.assertEqual(utils.add_instance_realm_in_headers(obj1, {}),
                          {settings.REALM_COOKIE: TEST_REALM_2})
 
+    def test_auth(self):
+        realm_group = utils.get_auth_group(self.request)
+        self.assertIsNotNone(realm_group)
+        self.assertEqual(realm_group.name, utils.get_current_realm(self.request))
+
+        self.assertEqual(self.request.user.groups.count(), 0)
+        utils.add_user_to_realm(self.request, self.request.user)
+        self.assertEqual(self.request.user.groups.count(), 1)
+        self.assertIn(realm_group, self.request.user.groups.all())
+
     @override_settings(MULTITENANCY=False)
     def test_no_multitenancy(self, *args):
         obj1 = TestModel.objects.create(name='two')
@@ -267,5 +318,13 @@ class MultitenancyTests(TestCase):
         initial_data = TestModel.objects.all()
         self.assertEqual(utils.filter_by_realm(self.request, initial_data), initial_data)
 
+        initial_users = get_user_model().objects.all()
+        self.assertEqual(utils.filter_users_by_realm(self.request, initial_users), initial_users)
+
         obj1.add_to_realm(self.request)
         self.assertTrue(MtInstance.objects.count() == 0)
+
+        self.assertIsNone(utils.get_auth_group(self.request))
+        self.assertEqual(self.request.user.groups.count(), 0)
+        utils.add_user_to_realm(self.request, self.request.user)
+        self.assertEqual(self.request.user.groups.count(), 0)

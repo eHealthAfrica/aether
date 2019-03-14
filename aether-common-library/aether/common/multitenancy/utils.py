@@ -18,6 +18,7 @@
 
 from django.apps import apps
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.db.models import F
 
 
@@ -99,3 +100,38 @@ def add_instance_realm_in_headers(instance, headers={}):
 
     headers[settings.REALM_COOKIE] = instance.get_realm()
     return headers
+
+
+def get_auth_group(request):
+    '''
+    Returns the authorization group that represents the current realm.
+    '''
+
+    if not settings.MULTITENANCY:
+        return None
+
+    group, _ = Group.objects.get_or_create(name=get_current_realm(request))
+    return group
+
+
+def add_user_to_realm(request, user):
+    '''
+    Adds the current realm authorization group to the user.
+    '''
+
+    if not settings.MULTITENANCY:
+        return
+
+    user.groups.add(get_auth_group(request))
+
+
+def filter_users_by_realm(request, data):
+    '''
+    Includes the realm group filter in the given users data object (Queryset or Manager)
+    '''
+
+    if not settings.MULTITENANCY:
+        return data
+
+    # only returns the users linked to the current realm
+    return data.filter(groups__name=get_auth_group(request).name)

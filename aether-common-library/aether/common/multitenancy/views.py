@@ -23,12 +23,12 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
-from .utils import filter_by_realm, is_accessible_by_realm
+from .utils import filter_by_realm, filter_users_by_realm, is_accessible_by_realm
 
 
 class MtViewSetMixin(object):
     '''
-    Defines ``get_queryset`` method to include filter by realm.
+    Defines ``get_queryset`` method to filter by realm.
 
     Expects ``mt_field`` property.
 
@@ -49,7 +49,7 @@ class MtViewSetMixin(object):
 
     def get_queryset(self):
         '''
-        Overrides ``get_queryset`` method to include filter by realm in each query
+        Includes filter by realm in each query
         '''
 
         qs = super(MtViewSetMixin, self).get_queryset()
@@ -95,3 +95,17 @@ class MtViewSetMixin(object):
         self.get_object_or_404(pk)
 
         return Response(status=204)
+
+
+class MtUserViewSetMixin(object):
+    '''
+    Defines ``get_queryset`` method to filter by realm authorization group.
+    '''
+
+    def get_queryset(self):
+        '''
+        Includes filter by realm authorization group in each query
+        '''
+
+        qs = super(MtUserViewSetMixin, self).get_queryset()
+        return filter_users_by_realm(self.request, qs)

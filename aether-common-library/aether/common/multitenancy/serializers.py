@@ -18,19 +18,17 @@
 
 from rest_framework.serializers import PrimaryKeyRelatedField, ModelSerializer
 
-from .utils import filter_by_realm
+from .utils import filter_by_realm, filter_users_by_realm
 
 
 class MtModelSerializer(ModelSerializer):
     '''
+    Overrides ``create`` method to add the new instance to the current realm.
+
     The ``settings.MULTITENANCY_MODEL`` serializer class must extend this one.
     '''
 
     def create(self, validated_data):
-        '''
-        Assigns the new instance to the current realm
-        '''
-
         instance = super(MtModelSerializer, self).create(validated_data)
         instance.add_to_realm(self.context['request'])
         return instance
@@ -50,10 +48,17 @@ class MtPrimaryKeyRelatedField(PrimaryKeyRelatedField):
         super(MtPrimaryKeyRelatedField, self).__init__(**kwargs)
 
     def get_queryset(self):
-        '''
-        Overrides ``get_queryset`` method to include filter by realm
-        '''
-
         qs = super(MtPrimaryKeyRelatedField, self).get_queryset()
         qs = filter_by_realm(self.context['request'], qs, self.mt_field)
+        return qs
+
+
+class MtUserRelatedField(PrimaryKeyRelatedField):
+    '''
+    Overrides ``get_queryset`` method to include filter by realm group.
+    '''
+
+    def get_queryset(self):
+        qs = super(MtUserRelatedField, self).get_queryset()
+        qs = filter_users_by_realm(self.context['request'], qs)
         return qs

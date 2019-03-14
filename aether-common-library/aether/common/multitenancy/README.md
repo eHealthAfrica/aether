@@ -73,7 +73,7 @@ relation, i.e. `MULTITENANCY_MODEL='my_app.MyModel'`.
 
 ### `permissions.py`
 
-### `IsAccessibleByRealm`
+#### `IsAccessibleByRealm`
 
 An object-level permission class to allow access to objects linked to the
 current realm for authenticated users. The current realm value is saved in the
@@ -95,7 +95,6 @@ It has two required fields:
   the setting `MULTITENANCY_MODEL`.
 
 - `realm`: (text) a string that identifies the realm/tenant.
-
 
 #### `MtModelAbstract`
 
@@ -138,7 +137,6 @@ Defined methods:
 - `get_mt_instance()` returns the `settings.MULTITENANCY_MODEL` object linked
   to this one (**needs to be implemented**).
 
-
 ```python
 class AnotherModel(MtModelChildAbstract):
     my_model = models.ForeignKey(to=MyModel)
@@ -171,6 +169,12 @@ current realm.
 
 The `settings.MULTITENANCY_MODEL` serializer class must extend this class.
 
+```python
+class MyModelSerializer(MtModelSerializer):
+    class Meta:
+        model = MyModel
+```
+
 #### `MtPrimaryKeyRelatedField`
 
 Extends the Rest-Framework `rest_framework.serializers.PrimaryKeyRelatedField`
@@ -202,6 +206,22 @@ class EvenAnotherModelSerializer(rest_framework.serializers.ModelSerializer):
         mt_field='another_model__my_model',
     )
 ```
+
+#### `MtUserRelatedField`
+
+Extends the Rest-Framework `rest_framework.serializers.PrimaryKeyRelatedField`
+class and overrides `get_queryset` method to filter the users data by the
+current realm authorization group.
+
+This class is expected to be used with any users queryset.
+
+```python
+class ModelWithUserSerializer(rest_framework.serializers.ModelSerializer):
+    my_user = MtUserRelatedField(
+        queryset=django.contrib.auth.get_user_model().objects.all(),
+    )
+```
+
 
 ### `views.py`
 
@@ -286,6 +306,18 @@ class EvenAnotherModelViewSet(MtViewSetMixin, rest_framework.viewsets.ModelViewS
         return Response(data=MyModelSerializer(obj).data, status=200)
 ```
 
+#### `MtUserViewSetMixin`
+
+Defines `get_queryset` method to include filter by current realm authorization group.
+
+This class is expected to be used with a subclass of the user model class.
+
+```python
+class MyUserViewSet(MtUserViewSetMixin, rest_framework.viewsets.ReadOnlyModelViewSet):
+    queryset = django.contrib.auth.get_user_model().objects.all()
+    serializer_class = MyUserSerializer
+```
+
 
 ### `utils.py`
 
@@ -297,19 +329,30 @@ A list of useful methods.
   cookies or within the request headers. While using the token authentication
   no cookie is included in the requests, in this case the realm value is
   included as an HTTP header, i.e., if the `REALM_COOKIE` value is `my-realm`
-  the HTTP header is `HTTP_MY_REALM`.
+  the HTTP header name is `HTTP_MY_REALM`.
 
 - `is_accessible_by_realm(request, obj)`, indicates if the object is
   accessible by the current realm. This method is the one used by
   `IsAccessibleByRealm` permission class to check the object accessibility.
 
 - `filter_by_realm(request, data, mt_field=None)`, includes the realm filter
-   in the given data object (Queryset or Manager). This method is the one used by
+  in the given data object (Queryset or Manager). This method is the one used by
   `MtPrimaryKeyRelatedField.get_query_set` and `MtViewSetMixin.get_query_set`
   methods to get the list of accessible objects.
 
 - `add_current_realm_in_headers(request, headers={})`, includes the current
   realm in the request headers.
 
-- `add_instance_realm_in_headers(instance, headers={})`, includes the
-  object realm in the request headers.
+- `add_instance_realm_in_headers(instance, headers={})`, includes the object
+  realm in the request headers.
+
+- `get_auth_group(request)`, returns the authorization group that represents
+  the current realm.
+
+- `add_user_to_realm(request, user)`, adds the current realm authorization
+  group to the given user.
+
+- `filter_users_by_realm(request, data)`, includes the realm authorization group
+  filter in the given data object (Queryset or Manager). This method is the one
+  used by `MtUserRelatedField.get_query_set` and `MtUserViewSetMixin.get_query_set`
+  methods to get the list of accessible users.

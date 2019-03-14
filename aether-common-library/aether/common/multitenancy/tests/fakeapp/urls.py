@@ -18,11 +18,12 @@
 
 from rest_framework.routers import DefaultRouter
 
-from .views import TestModelViewSet, TestChildModelViewSet
+from .views import TestModelViewSet, TestChildModelViewSet, TestUserViewSet
 
 
 router = DefaultRouter()
 router.register('testmodel', TestModelViewSet)
 router.register('testchildmodel', TestChildModelViewSet)
+router.register('user', TestUserViewSet)
 
 urlpatterns = router.urls

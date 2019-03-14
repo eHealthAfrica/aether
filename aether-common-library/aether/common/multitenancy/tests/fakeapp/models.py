@@ -16,6 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.conf import settings
 from django.db import models
 
 from aether.common.multitenancy.models import MtModelAbstract, MtModelChildAbstract
@@ -23,6 +24,14 @@ from aether.common.multitenancy.models import MtModelAbstract, MtModelChildAbstr
 
 class TestModel(MtModelAbstract):
     name = models.TextField()
+
+    user = models.ForeignKey(
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='+',
+        to=settings.AUTH_USER_MODEL,
+    )
 
     class Meta:
         app_label = 'fakeapp'
