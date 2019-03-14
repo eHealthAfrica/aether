@@ -151,10 +151,8 @@ class PostSubmissionTests(CustomTestCase):
     def test__submission__post__no_granted_surveyor(self):
         # remove user as granted surveyor
         self.xform.project.surveyors.clear()
-        self.xform.project.save()
         self.xform.surveyors.clear()
         self.xform.surveyors.add(self.helper_create_surveyor())
-        self.xform.save()
         self.assertFalse(self.xform.is_surveyor(self.user))
 
         with open(self.samples['submission']['file-ok'], 'rb') as f:

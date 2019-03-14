@@ -16,9 +16,18 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.apps import AppConfig
+from django.apps import apps, AppConfig
+
+from .api.constants import SURVEYOR_GROUP_NAME
 
 
 class Config(AppConfig):
     name = 'aether.odk'
     verbose_name = 'Aether ODK'
+
+    def ready(self):
+        super(Config, self).ready()
+
+        # create the group "surveyors"
+        Group = apps.get_model('auth', 'Group', require_ready=True)
+        Group.objects.get_or_create(name=SURVEYOR_GROUP_NAME)

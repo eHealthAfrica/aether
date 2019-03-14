@@ -54,7 +54,6 @@ class ViewsTests(CustomTestCase):
 
     def test__form_get__one_surveyor(self):
         self.xform.surveyors.add(self.helper_create_surveyor())
-        self.xform.save()
 
         response = self.client.get(self.url_get_form, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -64,7 +63,6 @@ class ViewsTests(CustomTestCase):
 
     def test__form_get__as_surveyor(self):
         self.xform.surveyors.add(self.user)
-        self.xform.save()
 
         self.assertEqual(self.xform.download_url, self.url_get_form)
         self.assertEqual(self.xform.manifest_url, self.url_get_media)
@@ -93,7 +91,6 @@ class ViewsTests(CustomTestCase):
         self.helper_create_superuser()
         # with at least one surveyor
         self.xform.surveyors.add(self.helper_create_surveyor())
-        self.xform.save()
 
         response = self.client.get(self.url_get_form, **self.headers_admin)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -147,7 +144,6 @@ class ViewsTests(CustomTestCase):
     def test__form_list__one_surveyor(self):
         # if at least one surveyor
         self.xform.surveyors.add(self.helper_create_surveyor())
-        self.xform.save()
         response = self.client.get(self.url_list, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertNotIn(self.formIdXml,
@@ -156,7 +152,6 @@ class ViewsTests(CustomTestCase):
 
     def test__form_list__as_surveyor(self):
         self.xform.surveyors.add(self.user)
-        self.xform.save()
         response = self.client.get(self.url_list, **self.headers_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn(self.formIdXml,
@@ -167,7 +162,6 @@ class ViewsTests(CustomTestCase):
         self.helper_create_superuser()
         # with at least one surveyor
         self.xform.surveyors.add(self.helper_create_surveyor())
-        self.xform.save()
 
         response = self.client.get(self.url_list, **self.headers_admin)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

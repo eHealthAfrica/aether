@@ -108,7 +108,6 @@ class ModelsTests(CustomTestCase):
 
         surveyor = self.helper_create_surveyor()
         instance.surveyors.add(surveyor)
-        instance.save()
 
         self.assertEqual(instance.surveyors.count(), 1, 'one granted surveyor')
         self.assertTrue(instance.is_surveyor(surveyor))
@@ -134,7 +133,6 @@ class ModelsTests(CustomTestCase):
 
         surveyor = self.helper_create_surveyor(username='surveyor')
         instance.surveyors.add(surveyor)
-        instance.save()
 
         self.assertEqual(instance.surveyors.count(), 1, 'one custom granted surveyor')
         self.assertTrue(instance.is_surveyor(surveyor))
@@ -145,14 +143,12 @@ class ModelsTests(CustomTestCase):
 
         surveyor2 = self.helper_create_surveyor(username='surveyor2')
         instance.project.surveyors.add(surveyor2)
-        instance.project.save()
         self.assertEqual(instance.surveyors.count(), 1, 'one custom granted surveyor')
         self.assertTrue(instance.is_surveyor(surveyor))
         self.assertTrue(instance.is_surveyor(surveyor2),
                         'project surveyors are also xform surveyors')
 
         instance.surveyors.clear()
-        instance.save()
         self.assertEqual(instance.surveyors.count(), 0, 'no custom granted surveyor')
         self.assertFalse(instance.is_surveyor(surveyor))
         self.assertTrue(instance.is_surveyor(surveyor2),

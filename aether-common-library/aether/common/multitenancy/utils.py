@@ -27,8 +27,8 @@ def get_multitenancy_model():
     Returns the ``settings.MULTITENANCY_MODEL`` class.
     '''
 
-    (app_name, model_name) = settings.MULTITENANCY_MODEL.split('.')
-    return apps.get_app_config(app_name).get_model(model_name, require_ready=True)
+    (app_label, model_name) = settings.MULTITENANCY_MODEL.split('.')
+    return apps.get_model(app_label, model_name, require_ready=True)
 
 
 def get_current_realm(request):
