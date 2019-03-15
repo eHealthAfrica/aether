@@ -85,4 +85,4 @@ class MobileUserSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     class Meta:
         model = MobileUser
-        fields = '__all__'
+        fields = ('id', 'email',)
