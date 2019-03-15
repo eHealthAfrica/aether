@@ -33,6 +33,8 @@ from aether.common.multitenancy import utils
 
 from .. import models, serializers
 from ..kernel_utils import __upsert_kernel_artefacts as upsert_kernel
+from ..surveyors_utils import is_surveyor
+
 from . import CustomTestCase, MockResponse
 
 CURRENT_REALM = 'realm'
@@ -42,6 +44,9 @@ class MultitenancyTests(CustomTestCase):
 
     def setUp(self):
         super(MultitenancyTests, self).setUp()
+
+        self.helper_create_superuser()
+        self.helper_create_user()
 
         self.request = RequestFactory().get('/')
         self.request.COOKIES[settings.REALM_COOKIE] = CURRENT_REALM
@@ -168,6 +173,95 @@ class MultitenancyTests(CustomTestCase):
         url = reverse('xform-detail', kwargs={'pk': child2.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_is_surveyor(self):
+        xform = self.helper_create_xform(with_media=True)
+        project = xform.project
+        media = xform.media_files.first()
+
+        self.assertEqual(project.surveyors.count(), 0, 'no granted surveyors')
+        self.assertEqual(xform.surveyors.count(), 0, 'no granted surveyors')
+
+        self.request.user = self.admin
+        # even superusers must also belong to the realm
+        self.assertFalse(is_surveyor(self.request, project))
+        self.assertFalse(is_surveyor(self.request, xform))
+        self.assertFalse(is_surveyor(self.request, media))
+
+        utils.add_user_to_realm(self.request, self.admin)
+        # realm superusers are always granted surveyors
+        self.assertTrue(is_surveyor(self.request, project))
+        self.assertTrue(is_surveyor(self.request, xform))
+        self.assertTrue(is_surveyor(self.request, media))
+
+        self.request.user = self.user
+        # users must also belong to the realm it there are no granted surveyors
+        self.assertFalse(is_surveyor(self.request, project))
+        self.assertFalse(is_surveyor(self.request, xform))
+        self.assertFalse(is_surveyor(self.request, media))
+
+        utils.add_user_to_realm(self.request, self.user)
+        # if not granted surveyors all realm users are surveyors
+        self.assertTrue(is_surveyor(self.request, project))
+        self.assertTrue(is_surveyor(self.request, xform))
+        self.assertTrue(is_surveyor(self.request, media))
+
+        surveyor = self.helper_create_surveyor(username='surveyor')
+        xform.surveyors.add(surveyor)
+        self.assertEqual(xform.surveyors.count(), 1, 'one custom granted surveyor')
+
+        # is in the xform surveyors list but does not belong to the realm
+        self.request.user = surveyor
+        self.assertFalse(is_surveyor(self.request, project))
+        self.assertFalse(is_surveyor(self.request, xform))
+        self.assertFalse(is_surveyor(self.request, media))
+
+        utils.add_user_to_realm(self.request, surveyor)
+        self.assertTrue(is_surveyor(self.request, project), 'project has no surveyors')
+        self.assertTrue(is_surveyor(self.request, xform))
+        self.assertTrue(is_surveyor(self.request, media))
+
+        self.request.user = self.admin
+        # realm superusers are always granted surveyors even with declared surveyors
+        self.assertTrue(is_surveyor(self.request, project))
+        self.assertTrue(is_surveyor(self.request, xform))
+        self.assertTrue(is_surveyor(self.request, media))
+
+        self.request.user = self.user
+        # if granted surveyors not all realm users are surveyors
+        self.assertFalse(is_surveyor(self.request, xform))
+        self.assertFalse(is_surveyor(self.request, media))
+
+        surveyor2 = self.helper_create_surveyor(username='surveyor2')
+        project.surveyors.add(surveyor2)
+        self.assertEqual(xform.surveyors.count(), 1, 'one custom granted surveyor')
+
+        self.request.user = surveyor
+        self.assertFalse(is_surveyor(self.request, project))
+        self.assertTrue(is_surveyor(self.request, xform))
+        self.assertTrue(is_surveyor(self.request, media))
+
+        # is in the project surveyors list but does not belong to the realm
+        self.request.user = surveyor2
+        self.assertFalse(is_surveyor(self.request, xform))
+        self.assertFalse(is_surveyor(self.request, media))
+
+        utils.add_user_to_realm(self.request, surveyor2)
+        # realm project surveyors are also xform surveyors
+        self.assertTrue(is_surveyor(self.request, xform))
+        self.assertTrue(is_surveyor(self.request, media))
+
+        xform.surveyors.clear()
+        self.assertEqual(xform.surveyors.count(), 0, 'no custom granted surveyor')
+
+        self.request.user = surveyor
+        self.assertFalse(is_surveyor(self.request, xform))
+        self.assertFalse(is_surveyor(self.request, media))
+
+        self.request.user = surveyor2
+        # realm project surveyors are also xform surveyors
+        self.assertTrue(is_surveyor(self.request, xform))
+        self.assertTrue(is_surveyor(self.request, media))
 
     @mock.patch('aether.odk.api.kernel_utils.request',
                 return_value=MockResponse(status_code=200))

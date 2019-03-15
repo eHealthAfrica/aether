@@ -58,7 +58,7 @@ from .kernel_utils import (
     propagate_kernel_artefacts,
     KernelPropagationError,
 )
-from .surveyors_utils import get_surveyors
+from .surveyors_utils import get_surveyors, is_surveyor
 from .xform_utils import get_instance_data_from_xml, parse_submission
 
 
@@ -291,7 +291,7 @@ def xform_list(request):
 
     return Response(
         data={
-            'xforms': [f for f in xforms if f.is_surveyor(request.user)],
+            'xforms': [xf for xf in xforms if is_surveyor(request, xf)],
             'host': request.build_absolute_uri().replace(request.get_full_path(), ''),
             'verbose': request.query_params.get('verbose', '').lower() == 'true',
         },
@@ -314,7 +314,7 @@ def xform_get_download(request, pk):
     '''
 
     xform = get_object_or_404(XForm, pk=pk)
-    if not xform.is_surveyor(request.user):
+    if not is_surveyor(request, xform):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
     version = request.query_params.get('version', '0')
@@ -343,7 +343,7 @@ def xform_get_manifest(request, pk):
     '''
 
     xform = get_object_or_404(XForm, pk=pk)
-    if not xform.is_surveyor(request.user):
+    if not is_surveyor(request, xform):
         return Response(
             status=status.HTTP_401_UNAUTHORIZED,
             data={'media_files': []},
@@ -515,10 +515,10 @@ def xform_submission(request):
     # TODO take the one that matches the version
     xform = None
     xforms = False
-    for f in XForm.objects.filter(form_id=form_id):
+    for xf in XForm.objects.filter(form_id=form_id).order_by('-version'):
         xforms = True
-        if f.is_surveyor(request.user):
-            xform = f
+        if is_surveyor(request, xf):
+            xform = xf
             break
     if not xform:
         if xforms:
@@ -609,19 +609,19 @@ def xform_submission(request):
 
         # Submit attachments (if any) to the submission.
         attachments_url = get_attachments_url()
-        for name, f in request.FILES.items():
+        for name, xf in request.FILES.items():
             # submit the XML file as an attachment but only for the first time
             if name != XML_SUBMISSION_PARAM or previous_submissions_count == 0:
                 if name == XML_SUBMISSION_PARAM:
                     file_content = xml_content
                 else:
-                    file_content = f
+                    file_content = xf
 
                 response = exec_request(
                     method='post',
                     url=attachments_url,
                     data={'submission': submission_id},
-                    files={'attachment_file': (f.name, file_content, f.content_type)},
+                    files={'attachment_file': (xf.name, file_content, xf.content_type)},
                     headers=auth_header,
                 )
                 if response.status_code != status.HTTP_201_CREATED:

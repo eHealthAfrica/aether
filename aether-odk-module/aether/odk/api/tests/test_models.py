@@ -94,66 +94,6 @@ class ModelsTests(CustomTestCase):
         self.assertIsNotNone(instance.avro_schema)
         self.assertIsNotNone(instance.avro_schema_prettified)
 
-    def test__project__surveyors(self):
-        instance = Project.objects.create()
-        self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')
-
-        self.helper_create_superuser()
-        self.assertTrue(instance.is_surveyor(self.admin),
-                        'superusers are always granted surveyors')
-
-        self.helper_create_user()
-        self.assertTrue(instance.is_surveyor(self.user),
-                        'if not granted surveyors all users are surveyors')
-
-        surveyor = self.helper_create_surveyor()
-        instance.surveyors.add(surveyor)
-
-        self.assertEqual(instance.surveyors.count(), 1, 'one granted surveyor')
-        self.assertTrue(instance.is_surveyor(surveyor))
-        self.assertTrue(instance.is_surveyor(self.admin),
-                        'superusers are always granted surveyors')
-        self.assertFalse(instance.is_surveyor(self.user),
-                         'if granted surveyors not all users are surveyors')
-
-    def test__xform__surveyors(self):
-        instance = XForm.objects.create(
-            project=Project.objects.create(),
-            xml_data=self.samples['xform']['xml-ok'],
-        )
-        self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')
-
-        self.helper_create_superuser()
-        self.assertTrue(instance.is_surveyor(self.admin),
-                        'superusers are always granted surveyors')
-
-        self.helper_create_user()
-        self.assertTrue(instance.is_surveyor(self.user),
-                        'if not granted surveyors all users are surveyors')
-
-        surveyor = self.helper_create_surveyor(username='surveyor')
-        instance.surveyors.add(surveyor)
-
-        self.assertEqual(instance.surveyors.count(), 1, 'one custom granted surveyor')
-        self.assertTrue(instance.is_surveyor(surveyor))
-        self.assertTrue(instance.is_surveyor(self.admin),
-                        'superusers are always granted surveyors')
-        self.assertFalse(instance.is_surveyor(self.user),
-                         'if granted surveyors not all users are surveyors')
-
-        surveyor2 = self.helper_create_surveyor(username='surveyor2')
-        instance.project.surveyors.add(surveyor2)
-        self.assertEqual(instance.surveyors.count(), 1, 'one custom granted surveyor')
-        self.assertTrue(instance.is_surveyor(surveyor))
-        self.assertTrue(instance.is_surveyor(surveyor2),
-                        'project surveyors are also xform surveyors')
-
-        instance.surveyors.clear()
-        self.assertEqual(instance.surveyors.count(), 0, 'no custom granted surveyor')
-        self.assertFalse(instance.is_surveyor(surveyor))
-        self.assertTrue(instance.is_surveyor(surveyor2),
-                        'project surveyors are always xform surveyors')
-
     def test__xform__media(self):
         xform = XForm.objects.create(
             project=Project.objects.create(),
