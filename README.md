@@ -180,7 +180,7 @@ See more in https://django-minio-storage.readthedocs.io/en/latest/usage
 - `MULTITENANCY`, Enables or disables the feature, is `false` if unset or set
   to empty string, anything else is considered `true`.
 - `DEFAULT_REALM`, `aether` The default realm for artefacts created
-  while multi-tenancy was not enabled.
+  if multi-tenancy is not enabled.
 - `REALM_COOKIE`, `aether-realm` The name of the cookie that keeps the current
   tenant id in the request headers.
 
