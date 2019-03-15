@@ -83,6 +83,7 @@ Defined methods:
 
 ```python
 class MyModel(MtModelAbstract):
+
     class Meta:
         app_label = 'my_app'
 ```
@@ -137,6 +138,7 @@ The `settings.MULTITENANCY_MODEL` serializer class must extend this class.
 
 ```python
 class MyModelSerializer(MtModelSerializer):
+
     class Meta:
         model = MyModel
 ```
@@ -165,12 +167,18 @@ class AnotherModelSerializer(rest_framework.serializers.ModelSerializer):
         mt_field='my_model',
     )
 
+    class Meta:
+        model = AnotherModel
+
 
 class EvenAnotherModelSerializer(rest_framework.serializers.ModelSerializer):
     another_model = MtPrimaryKeyRelatedField(
         queryset=models.AnotherModel.objects.all(),
         mt_field='another_model__my_model',
     )
+
+    class Meta:
+        model = EvenAnotherModel
 ```
 
 #### `MtUserRelatedField`
@@ -179,13 +187,30 @@ Extends the Rest-Framework `rest_framework.serializers.PrimaryKeyRelatedField`
 class and overrides `get_queryset` method to filter the users data by the
 current realm authorization group.
 
-This class is expected to be used with any users queryset.
+This class is expected to be used with any users queryset or at least with any
+model that has a many to many `groups` field with the authorization group model.
 
 ```python
-class ModelWithUserSerializer(rest_framework.serializers.ModelSerializer):
+class MyUserModel(django.db.models.Model):
+    groups = models.ManyToManyField(to='auth.Group')
+
+
+class WithUserModel(django.db.models.Model):
+    my_user = models.ForeignKey(to=MyUserModel)
+    auth_user= models.ForeignKey(to=django.contrib.auth.get_user_model())
+
+
+class WithUserModelSerializer(rest_framework.serializers.ModelSerializer):
     my_user = MtUserRelatedField(
+        queryset=MyUserModel.objects.all(),
+    )
+
+    auth_user = MtUserRelatedField(
         queryset=django.contrib.auth.get_user_model().objects.all(),
     )
+
+    class Meta:
+        model = WithUserModel
 ```
 
 
@@ -234,7 +259,7 @@ class MyModelViewSet(MtViewSetMixin, rest_framework.viewsets.ModelViewSet):
         # needs to add the object to the realm manually
         obj.add_to_realm(request)
 
-        return Response(data=MyModelSerializer(obj).data, status=201)
+        return Response(data=self.serializer_class(obj).data, status=201)
 
 
 class AnotherModelViewSet(MtViewSetMixin, rest_framework.viewsets.ModelViewSet):
@@ -269,19 +294,26 @@ class EvenAnotherModelViewSet(MtViewSetMixin, rest_framework.viewsets.ModelViewS
         obj.active = True
         obj.save()
 
-        return Response(data=MyModelSerializer(obj).data, status=200)
+        return Response(data=self.serializer_class(obj).data, status=200)
 ```
 
 #### `MtUserViewSetMixin`
 
 Defines `get_queryset` method to include filter by current realm authorization group.
 
-This class is expected to be used with a subclass of the user model class.
+This class is expected to be used with a subclass of the user model class
+or at least with any model that has a many to many `groups` field with
+the authorization group model.
 
 ```python
-class MyUserViewSet(MtUserViewSetMixin, rest_framework.viewsets.ReadOnlyModelViewSet):
+class MyUserModelViewSet(MtUserViewSetMixin, rest_framework.viewsets.ReadOnlyModelViewSet):
+    queryset = MyUserModel.objects.all()
+    serializer_class = MyUserModelSerializer
+
+
+class UserModelViewSet(MtUserViewSetMixin, rest_framework.viewsets.ReadOnlyModelViewSet):
     queryset = django.contrib.auth.get_user_model().objects.all()
-    serializer_class = MyUserSerializer
+    serializer_class = UserSerializer
 ```
 
 
