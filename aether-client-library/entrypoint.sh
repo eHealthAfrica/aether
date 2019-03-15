@@ -20,9 +20,7 @@
 #
 set -Eeuo pipefail
 
-
-# Define help message
-show_help() {
+function show_help {
     echo """
     Commands
     ----------------------------------------------------------------------------
@@ -36,11 +34,11 @@ show_help() {
     """
 }
 
-test_flake8 () {
+function test_flake8 {
     flake8 /code/. --config=/code/setup.cfg
 }
 
-test () {
+function test {
     python3 setup.py -q test "${@:1}"
     cat /code/conf/extras/good_job.txt
     rm -R ./*.egg*
@@ -56,16 +54,16 @@ case "$1" in
         eval "${@:2}"
     ;;
 
-    test)
+    test )
         test_flake8
         test
     ;;
 
-    test_lint)
+    test_lint )
         test_flake8
     ;;
 
-    build)
+    build )
         # remove previous build if needed
         rm -rf dist
         rm -rf build
@@ -80,7 +78,7 @@ case "$1" in
         rm -rf .eggs
     ;;
 
-    help)
+    help )
         show_help
     ;;
 
