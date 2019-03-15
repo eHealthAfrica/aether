@@ -223,14 +223,8 @@ The technical implementation is explained in
   - All the schemas are accessible to all tenants.
   - The entities without project are not accessible using the REST API.
 
-- In Aether ODK module:
-  - The surveyors could be assigned to more than one realm.
-
 - In Aether CouchDB-Sync module:
-  - Devices and mobile users are accessible to all tenants.
-  - The module is not fully ready for this feature. It's possible to run
-    an instance assigned to one realm but not to many realms without sharing
-    devices and mobile users among tenants.
+  - Devices are not restricted by realm but its user account is.
 
 *[Return to TOC](#table-of-contents)*
 

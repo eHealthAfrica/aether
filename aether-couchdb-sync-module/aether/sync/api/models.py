@@ -18,6 +18,7 @@
 
 import uuid
 
+from django.contrib.auth.models import Group
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.db.models.signals import pre_delete
@@ -51,9 +52,9 @@ Data model schema:
 +==================+     +=========================+
 | id               |<-+  | id                      |
 | email            |  |  | device_id               |
++::::::::::::::::::+  |  | last_synced_date        |
+| groups (auth)    |  |  | last_synced_seq         |
 +------------------+  |  | last_synced_date        |
-                      |  | last_synced_seq         |
-                      |  | last_synced_date        |
                       |  | last_synced_log_message |
                       |  +:::::::::::::::::::::::::+
                       +-<| mobileuser              |
@@ -151,11 +152,15 @@ class MobileUser(ExportModelOperationsMixin('couchdbsync_mobileuser'), models.Mo
 
     If the device user account is not in this table, the device is not allowed to sync.
 
-    :ivar integer  id:     ID (primary key).
-    :ivar text     email:  Validated google user email (**unique**).
+    :ivar integer  id:      ID (primary key).
+    :ivar text     email:   Validated google user email (**unique**).
+    :ivar Group    groups:  The list of authorization groups the user belongs to.
+                            In case of multi-tenancy is enabled indicates the
+                            realms the user has access to.
     '''
 
     email = models.EmailField(unique=True, verbose_name=_('e-mail'))
+    groups = models.ManyToManyField(to=Group, blank=True, verbose_name=_('groups'))
 
     def __str__(self):
         return self.email

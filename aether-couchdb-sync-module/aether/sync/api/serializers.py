@@ -22,7 +22,8 @@ from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
-from aether.common.multitenancy.serializers import MtPrimaryKeyRelatedField, MtModelSerializer
+from aether.common.multitenancy.serializers import MtModelSerializer, MtPrimaryKeyRelatedField
+from aether.common.multitenancy.utils import add_user_to_realm
 
 from .models import Project, Schema, MobileUser
 
@@ -68,6 +69,19 @@ class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):
 
 
 class MobileUserSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+
+    def create(self, validated_data):
+        instance = super(MobileUserSerializer, self).create(validated_data)
+        self.post_save(instance)
+        return instance
+
+    def update(self, instance, validated_data):
+        instance = super(MobileUserSerializer, self).update(instance, validated_data)
+        self.post_save(instance)
+        return instance
+
+    def post_save(self, instance):
+        add_user_to_realm(self.context['request'], instance)
 
     class Meta:
         model = MobileUser

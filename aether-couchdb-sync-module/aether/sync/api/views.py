@@ -38,7 +38,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
-from aether.common.multitenancy.views import MtViewSetMixin
+from aether.common.multitenancy.views import MtViewSetMixin, MtUserViewSetMixin
 
 from .couchdb_file import load_backup_file
 from .couchdb_helpers import create_db, create_or_update_user
@@ -127,7 +127,7 @@ class SchemaViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         return self.retrieve(request, pk, *args, **kwargs)
 
 
-class MobileUserViewSet(viewsets.ModelViewSet):
+class MobileUserViewSet(MtUserViewSetMixin, viewsets.ModelViewSet):
     '''
     Create new Mobile User entries.
     '''

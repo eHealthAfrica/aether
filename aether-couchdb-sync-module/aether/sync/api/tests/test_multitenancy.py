@@ -122,6 +122,29 @@ class MultitenancyTests(TestCase):
         self.assertEqual(child1.fields['project'].get_queryset().count(), 1)
         self.assertEqual(models.Project.objects.count(), 2)
 
+        user1 = serializers.MobileUserSerializer(
+            data={'email': 'test_karl@ehealthnigeria.org'},
+            context={'request': self.request},
+        )
+        self.assertTrue(user1.is_valid(), user1.errors)
+        user1.save()
+        mobile_user1 = models.MobileUser.objects.get(pk=user1.data['id'])
+        self.assertEqual(mobile_user1.groups.count(), 1)
+        self.assertEqual(mobile_user1.groups.first().name, CURRENT_REALM)
+
+        mobile_user1.groups.clear()
+        user1_upd = serializers.MobileUserSerializer(
+            mobile_user1,
+            data={'email': 'test_till@ehealthnigeria.org'},
+            context={'request': self.request},
+        )
+        self.assertTrue(user1_upd.is_valid(), user1_upd.errors)
+
+        self.assertEqual(mobile_user1.groups.count(), 0)
+        user1_upd.save()
+        self.assertEqual(mobile_user1.groups.count(), 1)
+        self.assertEqual(mobile_user1.groups.first().name, CURRENT_REALM)
+
     def test_views(self):
         # create data assigned to different realms
         obj1 = models.Project.objects.create(name='one')
