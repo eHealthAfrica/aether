@@ -57,7 +57,7 @@ class MtViewSetMixin(object):
 
     def get_object_or_404(self, pk):
         '''
-        Custom method that raises NO_FOUND error
+        Custom method that raises NOT_FOUND error
         if the instance does not exists or is not accessible by current realm
         otherwise return the instance
         '''
