@@ -116,9 +116,10 @@ function setup {
     ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD
 
     # cleaning
-    rm -r -f /code/aether/ui/static/*.*
+    STATIC_UI=/code/aether/ui/static
+    rm -r -f $STATIC_UI && mkdir -p $STATIC_UI
     # copy assets bundles folder into static folder
-    cp -r /code/aether/ui/assets/bundles/* /code/aether/ui/static
+    cp -r /code/aether/ui/assets/bundles/* $STATIC_UI
 
     STATIC_ROOT=/var/www/static
     # create static assets
