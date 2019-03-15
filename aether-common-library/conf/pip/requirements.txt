@@ -9,6 +9,7 @@ django
 django-cors-headers
 django-minio-storage
 django-prometheus
+django-uwsgi
 djangorestframework
 psycopg2-binary
 pygments
