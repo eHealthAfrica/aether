@@ -262,7 +262,7 @@ class MultitenancyTests(TestCase):
         self.assertEqual(utils.get_current_realm(request), 'in-cookies')
 
     def test_is_accessible_by_realm(self):
-        # no affected by realm value
+        # not affected by realm value
         obj2 = TestNoMtModel.objects.create(name='two')
         self.assertTrue(utils.is_accessible_by_realm(self.request, obj2))
 

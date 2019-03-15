@@ -60,7 +60,7 @@ class MultitenancyTests(TestCase):
         self.assertEqual(utils.get_multitenancy_model(), models.Project)
 
     def test_models(self):
-        # no affected by realm value
+        # not affected by realm value
         mobile_user = models.MobileUser.objects.create(email='user@example.com')
         self.assertTrue(utils.is_accessible_by_realm(self.request, mobile_user))
 
@@ -229,7 +229,7 @@ class NoMultitenancyTests(TestCase):
         self.assertTrue(self.client.login(username=username, password=password))
 
     def test_no_multitenancy(self, *args):
-        # no affected by realm value
+        # not affected by realm value
         mobile_user = models.MobileUser.objects.create(email='user@example.com')
         self.assertTrue(utils.is_accessible_by_realm(self.request, mobile_user))
 

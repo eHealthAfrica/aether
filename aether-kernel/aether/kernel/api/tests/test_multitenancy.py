@@ -58,7 +58,7 @@ class MultitenancyTests(TestCase):
         self.assertEqual(utils.get_multitenancy_model(), models.Project)
 
     def test_models(self):
-        # no affected by realm value
+        # not affected by realm value
         schema = models.Schema.objects.create(name='schema', definition={})
         self.assertTrue(utils.is_accessible_by_realm(self.request, schema))
 
