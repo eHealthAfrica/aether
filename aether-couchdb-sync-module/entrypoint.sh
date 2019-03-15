@@ -212,6 +212,8 @@ case "$1" in
         /usr/local/bin/uwsgi \
             --ini /code/conf/uwsgi.ini \
             --http 0.0.0.0:$WEB_SERVER_PORT \
+            --processes ${UWSGI_PROCESSES:-4} \
+            --threads ${UWSGI_THREADS:-2} \
             $LOGGING
     ;;
 
