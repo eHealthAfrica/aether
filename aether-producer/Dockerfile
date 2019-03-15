@@ -4,9 +4,13 @@ FROM python:3.7-slim-stretch
 ## setup container
 ################################################################################
 
-RUN apt-get update -qq \
-    && apt-get -qq --yes --allow-downgrades --allow-remove-essential --allow-change-held-packages install gcc \
-    && pip install --upgrade pip
+RUN apt-get update -qq && \
+    apt-get -qq \
+        --yes \
+        --allow-downgrades \
+        --allow-remove-essential \
+        --allow-change-held-packages \
+        install gcc
 
 ################################################################################
 ## install app

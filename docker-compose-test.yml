@@ -60,6 +60,7 @@ services:
       MULTITENANCY: "true"
       PGHOST: db-test
       TESTING: "true"
+      TEST_PARALLEL: ${TEST_PARALLEL}
       WEB_SERVER_PORT: 9100
     volumes:
       # volumes in tests
@@ -102,6 +103,7 @@ services:
       MULTITENANCY: "true"
       PGHOST: db-test
       TESTING: "true"
+      TEST_PARALLEL: ${TEST_PARALLEL}
       WEB_SERVER_PORT: 9102
     volumes:
       # volumes in tests
@@ -129,6 +131,7 @@ services:
       PGHOST: db-test
       REDIS_HOST: redis-test
       TESTING: "true"
+      TEST_PARALLEL: ${TEST_PARALLEL}
       WEB_SERVER_PORT: 9106
     ports:
       - "9106:9106"
@@ -150,6 +153,7 @@ services:
       MULTITENANCY: "true"
       PGHOST: db-test
       TESTING: "true"
+      TEST_PARALLEL: ${TEST_PARALLEL}
       WEB_SERVER_PORT: 9104
     ports:
       - "9104:9104"
