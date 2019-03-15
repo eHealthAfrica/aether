@@ -35,7 +35,7 @@ Check the [tests sample](/tests/fakeapp/) to understand how to use it in the app
 
 In each module/app `settings.py` file is mandatory to indicate the setting
 `MULTITENANCY_MODEL` with the model that supports the multi-tenancy one to one
-relation, i.e. `MULTITENANCY_MODEL='my_app.MyModel'`.
+relation, e.g. `MULTITENANCY_MODEL='my_app.MyModel'`.
 
 ### `aether.common.multitenancy.permissions.py`
 
