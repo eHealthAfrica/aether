@@ -33,7 +33,7 @@ class MtViewSetMixin(object):
     Expects ``mt_field`` property.
 
     Adds two new methods:
-        - ``get_object_or_404(pk)`` raises NO_FOUND error if the instance
+        - ``get_object_or_404(pk)`` raises NOT_FOUND error if the instance
           does not exists or is not accessible by current realm.
         - ``get_object_or_403(pk)`` raises FORBIDDEN error if the instance
           exists and is not accessible by current realm.
