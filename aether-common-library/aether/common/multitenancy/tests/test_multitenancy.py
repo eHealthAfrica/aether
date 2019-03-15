@@ -299,9 +299,15 @@ class MultitenancyTests(TestCase):
         self.assertEqual(realm_group.name, utils.get_current_realm(self.request))
 
         self.assertEqual(self.request.user.groups.count(), 0)
+        # it does not complain if the user does not belong to the realm
+        utils.remove_user_from_realm(self.request, self.request.user)
+
         utils.add_user_to_realm(self.request, self.request.user)
         self.assertEqual(self.request.user.groups.count(), 1)
         self.assertIn(realm_group, self.request.user.groups.all())
+        utils.remove_user_from_realm(self.request, self.request.user)
+        self.assertEqual(self.request.user.groups.count(), 0)
+        self.assertNotIn(realm_group, self.request.user.groups.all())
 
     @override_settings(MULTITENANCY=False)
     def test_no_multitenancy(self, *args):
@@ -327,4 +333,6 @@ class MultitenancyTests(TestCase):
         self.assertIsNone(utils.get_auth_group(self.request))
         self.assertEqual(self.request.user.groups.count(), 0)
         utils.add_user_to_realm(self.request, self.request.user)
+        self.assertEqual(self.request.user.groups.count(), 0)
+        utils.remove_user_from_realm(self.request, self.request.user)
         self.assertEqual(self.request.user.groups.count(), 0)

@@ -316,7 +316,10 @@ A collection of useful methods.
   the current realm.
 
 - `add_user_to_realm(request, user)`, adds the current realm authorization
-  group to the given user.
+  group to the given user groups.
+
+- `remove_user_to_realm(request, user)`, removes the current realm authorization
+  group from the given user groups.
 
 - `filter_users_by_realm(request, data)`, includes the realm authorization group
   filter in the given data object (Queryset or Manager). This method is the one

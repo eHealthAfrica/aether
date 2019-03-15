@@ -116,13 +116,24 @@ def get_auth_group(request):
 
 def add_user_to_realm(request, user):
     '''
-    Adds the current realm authorization group to the user.
+    Adds the current realm authorization group to the user groups.
     '''
 
     if not settings.MULTITENANCY:
         return
 
     user.groups.add(get_auth_group(request))
+
+
+def remove_user_from_realm(request, user):
+    '''
+    Removes the current realm authorization group form the user groups.
+    '''
+
+    if not settings.MULTITENANCY:
+        return
+
+    user.groups.remove(get_auth_group(request))
 
 
 def filter_users_by_realm(request, data):
