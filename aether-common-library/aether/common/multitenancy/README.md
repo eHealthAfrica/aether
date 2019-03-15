@@ -201,7 +201,7 @@ concatenates the path of the relation tree to `MtModelAbstract` field with `__`
 (double underscore). Defaults to `None`.
 
 Adds two new methods:
-- `get_object_or_404(pk)` raises `NO_FOUND` error if the object does not exist
+- `get_object_or_404(pk)` raises `NOT_FOUND` error if the object does not exist
   or if it is not accessible by current realm, otherwise returns the object.
 
 - `get_object_or_403(pk)` raises `FORBIDDEN` error if the object exists and is
