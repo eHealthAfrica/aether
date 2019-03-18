@@ -25,6 +25,8 @@ from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
+from aether.common.multitenancy.serializers import MtPrimaryKeyRelatedField, MtModelSerializer
+
 from .constants import MergeOptions as MERGE_OPTIONS
 from .entity_extractor import run_entity_extraction, ENTITY_EXTRACTION_ERRORS
 
@@ -73,7 +75,7 @@ class FilteredHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
         return result
 
 
-class ProjectSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         read_only=True,
         view_name='project-detail',
@@ -119,6 +121,10 @@ class MappingSetSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='submission-list',
     )
 
+    project = MtPrimaryKeyRelatedField(
+        queryset=models.Project.objects.all(),
+    )
+
     class Meta:
         model = models.MappingSet
         fields = '__all__'
@@ -134,12 +140,20 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         source='mappingset',
         view_name='mappingset-detail',
     )
-
     projectschemas_url = FilteredHyperlinkedRelatedField(
         lookup_field='mapping',
         read_only=True,
         source='projectschemas',
         view_name='projectschema-list',
+    )
+
+    project = MtPrimaryKeyRelatedField(
+        queryset=models.Project.objects.all(),
+        required=False,
+    )
+    mappingset = MtPrimaryKeyRelatedField(
+        queryset=models.MappingSet.objects.all(),
+        mt_field='project',
     )
 
     class Meta:
@@ -188,6 +202,15 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     # (name, relative url) in one request call
     attachments = AttachmentSerializerNested(many=True, read_only=True)
 
+    project = MtPrimaryKeyRelatedField(
+        queryset=models.Project.objects.all(),
+        required=False,
+    )
+    mappingset = MtPrimaryKeyRelatedField(
+        queryset=models.MappingSet.objects.all(),
+        mt_field='project',
+    )
+
     def create(self, validated_data):
         instance = super(SubmissionSerializer, self).create(validated_data)
         try:
@@ -213,6 +236,11 @@ class AttachmentSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         'submission-detail',
         source='submission',
         read_only=True
+    )
+
+    submission = MtPrimaryKeyRelatedField(
+        queryset=models.Submission.objects.all(),
+        mt_field='mappingset__project',
     )
 
     class Meta:
@@ -270,6 +298,10 @@ class ProjectSchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         source='schema.definition',
     )
 
+    project = MtPrimaryKeyRelatedField(
+        queryset=models.Project.objects.all(),
+    )
+
     class Meta:
         model = models.ProjectSchema
         fields = '__all__'
@@ -303,6 +335,26 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         many=True,
         read_only=True,
         source='submission.attachments',
+    )
+
+    project = MtPrimaryKeyRelatedField(
+        queryset=models.Project.objects.all(),
+        required=False,
+    )
+    submission = MtPrimaryKeyRelatedField(
+        queryset=models.Submission.objects.all(),
+        mt_field='mappingset__project',
+        required=False,
+    )
+    mapping = MtPrimaryKeyRelatedField(
+        queryset=models.Mapping.objects.all(),
+        mt_field='mappingset__project',
+        required=False,
+    )
+    projectschema = MtPrimaryKeyRelatedField(
+        queryset=models.ProjectSchema.objects.all(),
+        mt_field='project',
+        required=False,
     )
 
     def create(self, validated_data):

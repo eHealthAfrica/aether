@@ -22,7 +22,7 @@ import mock
 import uuid
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from rest_framework import status
@@ -41,6 +41,7 @@ from . import (
 )
 
 
+@override_settings(MULTITENANCY=False)
 class ViewsTest(TestCase):
 
     entity_payload = {'name': 'Person name updated'}

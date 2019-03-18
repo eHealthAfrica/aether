@@ -30,6 +30,7 @@ from django_prometheus.models import ExportModelOperationsMixin
 
 from model_utils.models import TimeStampedModel
 
+from aether.common.multitenancy.models import MtModelAbstract, MtModelChildAbstract
 from aether.common.utils import json_prettified
 
 from .constants import NAMESPACE
@@ -105,11 +106,12 @@ class KernelAbstract(TimeStampedModel):
         ordering = ['-modified']
 
 
-class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract):
+class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract, MtModelAbstract):
     '''
     Project
 
     .. note:: Extends from :class:`aether.kernel.api.models.KernelAbstract`
+    .. note:: Extends from :class:`aether.common.multitenancy.models.MultitenancyBaseAbstract`
 
     :ivar text      salad_schema:    Salad schema (optional).
         Semantic Annotations for Linked Avro Data (SALAD)
@@ -173,12 +175,15 @@ class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract):
         verbose_name_plural = _('projects')
 
 
-class ProjectChildAbstract(KernelAbstract):
+class ProjectChildAbstract(KernelAbstract, MtModelChildAbstract):
     '''
     Use this model class for each Project dependant model.
 
     .. note:: Extends from :class:`aether.kernel.api.models.KernelAbstract`
     '''
+
+    def get_mt_instance(self):
+        return self.project
 
     class Meta:
         abstract = True
@@ -268,6 +273,10 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
 
     def __str__(self):
         return f'{self.id}'
+
+    def get_mt_instance(self):
+        # because project can be null we need to override the method
+        return self.mappingset.project
 
     class Meta:
         default_related_name = 'submissions'
@@ -492,6 +501,10 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
             ps_list.append(ProjectSchema.objects.get(pk=entity_pk, project=self.project))
         self.projectschemas.add(*ps_list)
 
+    def get_mt_instance(self):
+        # because project can be null we need to override the method
+        return self.mappingset.project
+
     class Meta:
         default_related_name = 'mappings'
         ordering = ['project__id', '-modified']
@@ -648,6 +661,14 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
 
     def __str__(self):
         return f'{self.id}'
+
+    def is_accessible(self, realm):
+        # because project can be null we need to override the method
+        return self.project.is_accessible(realm) if self.project else False
+
+    def get_realm(self):
+        # because project can be null we need to override the method
+        return self.project.get_realm() if self.project else None
 
     class Meta:
         default_related_name = 'entities'

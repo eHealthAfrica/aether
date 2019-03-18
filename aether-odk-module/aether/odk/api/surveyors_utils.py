@@ -16,16 +16,18 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 
+from aether.common.multitenancy.utils import get_auth_group
 
-SURVEYOR_GROUP_NAME = 'surveyor'
+from .models import Project, XForm, MediaFile
 
 
 def get_surveyor_group():
-    surveyor_group, _ = Group.objects.get_or_create(name=SURVEYOR_GROUP_NAME)
-    return surveyor_group
+    group, _ = Group.objects.get_or_create(name=settings.SURVEYOR_GROUP_NAME)
+    return group
 
 
 def get_surveyors():
@@ -38,31 +40,55 @@ def get_surveyors():
 
     '''
 
-    surveyors = get_user_model().objects \
-                                .filter(is_active=True) \
-                                .order_by('username')
-
-    # skipping annoying error that only happens with an empty database in the bootstrap step
-    #
-    # `django.db.utils.ProgrammingError: relation "auth_group" does not exist`
-    #
-    #   File "/code/aether/odk/api/admin.py", line 12, in <module>
-    #     class XFormForm(forms.ModelForm):
-    #   File "/code/aether/odk/api/admin.py", line 18, in XFormForm
-    #     queryset=get_surveyors(),
-    #
-    try:
-        # make sure that the group exists
-        surveyor_group = get_surveyor_group()
-        return surveyors.filter(groups__name=surveyor_group.name)
-    except Exception:  # pragma: no cover
-        return surveyors
+    return get_user_model().objects \
+                           .filter(is_active=True) \
+                           .filter(groups__name=settings.SURVEYOR_GROUP_NAME) \
+                           .order_by('username')
 
 
-def flag_as_surveyor(user):
+def is_surveyor(request, instance):
     '''
-    Adds the group "surveyor" to the user.
+    Check that the user request is a granted surveyor of the instance:
+
+    - If multitenancy is enabled the user must belong to the same realm
+
+    - User is superuser.
+
+    - If instance is a Project:
+        - Project has no surveyors.
+        - User is in the surveyors list.
+
+    - If instance is an XForm:
+        - xForm and Project have no surveyors.
+        - User is in the xForm or Project surveyors list.
+
+    - If instance is a Media File:
+        - User is surveyor of the XForm
     '''
 
-    user.groups.add(get_surveyor_group())
-    user.save()
+    group = get_auth_group(request)
+    user = request.user
+
+    if group and group not in user.groups.all():
+        return False
+
+    if user.is_superuser:
+        return True
+
+    if isinstance(instance, Project):
+        return (
+            instance.surveyors.count() == 0 or
+            user in instance.surveyors.all()
+        )
+
+    if isinstance(instance, XForm):
+        return (
+            (instance.surveyors.count() == 0 and instance.project.surveyors.count() == 0) or
+            user in instance.surveyors.all() or
+            user in instance.project.surveyors.all()
+        )
+
+    if isinstance(instance, MediaFile):
+        return is_surveyor(request, instance.xform)
+
+    return False  # pragma: no cover

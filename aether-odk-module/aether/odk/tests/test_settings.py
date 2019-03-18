@@ -24,8 +24,10 @@ class SettingsTest(TestCase):
 
     def test_default_variables(self):
 
+        self.assertTrue(settings.MULTITENANCY)
         self.assertTrue(settings.TESTING)
         self.assertFalse(settings.DEBUG)
 
         self.assertEqual(settings.ROOT_URLCONF, 'aether.odk.urls')
+        self.assertEqual(settings.SURVEYOR_GROUP_NAME, 'surveyor')
         self.assertIsNotNone(settings.DJANGO_STORAGE_BACKEND)

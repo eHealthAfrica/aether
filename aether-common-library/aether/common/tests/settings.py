@@ -21,7 +21,11 @@ These settings are only used for testing purposes.
 '''
 
 from aether.common.conf.settings import *  # noqa
-from aether.common.conf.settings import check_storage
+from aether.common.conf.settings import (
+    INSTALLED_APPS,
+    MIGRATION_MODULES,
+    check_storage,
+)
 
 
 ROOT_URLCONF = 'aether.common.tests.urls'
@@ -37,4 +41,15 @@ DATABASES = {
     },
 }
 
+
+# Multitenancy Configuration
+# ------------------------------------------------------------------------------
+
+MULTITENANCY_MODEL = 'fakeapp.TestModel'
+INSTALLED_APPS += ['aether.common.multitenancy.tests.fakeapp', ]
+MIGRATION_MODULES['fakeapp'] = 'aether.common.multitenancy.tests.fakeapp.migrations'
+
+
+# Storage Configuration
+# ------------------------------------------------------------------------------
 check_storage()

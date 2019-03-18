@@ -24,6 +24,7 @@ from django.utils.translation import ugettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 from model_utils.models import TimeStampedModel
 
+from aether.common.multitenancy.models import MtModelAbstract, MtModelChildAbstract
 from aether.common.utils import json_prettified
 
 from .utils import validate_contract
@@ -54,7 +55,7 @@ Data model schema:
 '''
 
 
-class Project(ExportModelOperationsMixin('ui_project'), TimeStampedModel):
+class Project(ExportModelOperationsMixin('ui_project'), TimeStampedModel, MtModelAbstract):
     '''
     Database link of an Aether Kernel Project.
 
@@ -88,7 +89,7 @@ class Project(ExportModelOperationsMixin('ui_project'), TimeStampedModel):
         verbose_name_plural = _('projects')
 
 
-class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
+class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel, MtModelChildAbstract):
     '''
     Pipeline
 
@@ -139,6 +140,9 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
         contracts = Contract.objects.filter(pipeline=self)
         [contract.save() for contract in contracts]
 
+    def get_mt_instance(self):
+        return self.project
+
     class Meta:
         app_label = 'ui'
         default_related_name = 'pipelines'
@@ -151,7 +155,7 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
         ]
 
 
-class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
+class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel, MtModelChildAbstract):
     '''
     Contract
 
@@ -312,6 +316,9 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
         self.output = output
 
         super(Contract, self).save(*args, **kwargs)
+
+    def get_mt_instance(self):
+        return self.pipeline.project
 
     class Meta:
         app_label = 'ui'

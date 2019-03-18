@@ -27,6 +27,7 @@ from aether.common.conf.settings import (
     DEBUG,
     INSTALLED_APPS,
     LOGGING_LEVEL,
+    MIGRATION_MODULES,
     STATIC_ROOT,
 )
 
@@ -44,10 +45,8 @@ INSTALLED_APPS += [
     'aether.ui',
 ]
 
-MIGRATION_MODULES = {
-    'ui': 'aether.ui.api.migrations'
-}
-
+MULTITENANCY_MODEL = 'ui.Project'
+MIGRATION_MODULES['ui'] = 'aether.ui.api.migrations'
 
 DEFAULT_PROJECT_NAME = os.environ.get('DEFAULT_PROJECT_NAME', 'AUX')
 logger.debug(f'Default project name:  {DEFAULT_PROJECT_NAME}')
