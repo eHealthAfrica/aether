@@ -231,7 +231,7 @@ XML_DATA_ERR = '''
 
 
 class MockResponse:
-    def __init__(self, status_code, json_data=None):
+    def __init__(self, status_code, json_data={}):
         self.json_data = json_data
         self.status_code = status_code
         self.content = json.dumps(json_data).encode('utf-8')

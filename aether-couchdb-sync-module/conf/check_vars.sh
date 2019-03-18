@@ -20,7 +20,7 @@
 #
 set -Eeo pipefail
 
-check_variable() {
+function check_variable {
     if [ -z "$1" ];
     then
         echo "Missing $2 in Aether CouchDB-Sync!"

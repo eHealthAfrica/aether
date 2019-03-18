@@ -187,14 +187,15 @@ The tests clean up would **DELETE ALL PROJECTS!!!**
 Start the indicated app/module with the necessary dependencies:
 
 ```bash
-./scripts/docker_start.sh [--kill | -k] [--build | -b] [--force | -f] name
+./scripts/docker_start.sh [options] name
 ```
 
-Arguments:
+Options:
 
-  - `--kill`  | `-k`  kill all running containers before start
-  - `--build` | `-b`  kill and build all containers before start
-  - `--force` | `-f`  ensure that the container will be restarted if it was already running
+  - `--build` | `-b`   kill and build all containers before start
+  - `--clean` | `-c`   stop and remove all running containers and volumes before start
+  - `--force` | `-f`   ensure that the container will be restarted if needed
+  - `--kill`  | `-k`   kill all running containers before start
   - `name` expected values: `kernel`, `odk`, `ui`, `couchdb-sync` or `sync`
     (alias of `couchdb-sync`).
     Any other value will start all containers.
