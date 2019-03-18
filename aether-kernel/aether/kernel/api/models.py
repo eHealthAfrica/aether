@@ -95,7 +95,7 @@ class KernelAbstract(TimeStampedModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
     revision = models.TextField(default='1', verbose_name=_('revision'))
-    name = models.CharField(max_length=50, unique=True, verbose_name=_('name'))
+    name = models.TextField(verbose_name=_('name'))
 
     def __str__(self):
         return self.name
@@ -311,9 +311,7 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), ProjectChildAb
 
     '''
 
-    # http://www.linfo.org/file_name.html
-    # Modern Unix-like systems support long file names, usually up to 255 bytes in length.
-    name = models.CharField(max_length=255, verbose_name=_('filename'))
+    name = models.TextField(verbose_name=_('filename'))
 
     attachment_file = models.FileField(upload_to=__attachment_path__, verbose_name=_('file'))
     # save attachment hash to check later if the file is not corrupted
@@ -373,7 +371,8 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), KernelAbstract):
 
     '''
 
-    type = models.CharField(max_length=50, default=NAMESPACE, verbose_name=_('schema type'))
+    name = models.TextField(unique=True, verbose_name=_('name'))
+    type = models.TextField(default=NAMESPACE, verbose_name=_('schema type'))
     definition = JSONField(validators=[validate_schema_definition], verbose_name=_('AVRO schema'))
 
     # this field is used to group different schemas created automatically
