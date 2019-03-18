@@ -164,7 +164,7 @@ This class is useful for two reasons:
 class AnotherModelSerializer(rest_framework.serializers.ModelSerializer):
     my_model = MtPrimaryKeyRelatedField(
         queryset=models.MyModel.objects.all(),
-        mt_field='my_model',
+        # mt_field=None,  # already refers to the `MtModelAbstract` field
     )
 
     class Meta:
@@ -174,7 +174,7 @@ class AnotherModelSerializer(rest_framework.serializers.ModelSerializer):
 class EvenAnotherModelSerializer(rest_framework.serializers.ModelSerializer):
     another_model = MtPrimaryKeyRelatedField(
         queryset=models.AnotherModel.objects.all(),
-        mt_field='another_model__my_model',
+        mt_field='my_model',  # path to the `MtModelAbstract` field
     )
 
     class Meta:
@@ -265,7 +265,7 @@ class MyModelViewSet(MtViewSetMixin, rest_framework.viewsets.ModelViewSet):
 class AnotherModelViewSet(MtViewSetMixin, rest_framework.viewsets.ModelViewSet):
     queryset = AnotherModel.objects.all()
     serializer_class = AnotherModelSerializer
-    mt_field = 'my_model'
+    mt_field = 'my_model'  # path to the `MtModelAbstract` field
 
     @action(detail=True, methods=['patch'])
     def create_or_update(self, request, pk, *args, **kwargs):
@@ -282,7 +282,7 @@ class AnotherModelViewSet(MtViewSetMixin, rest_framework.viewsets.ModelViewSet):
 class EvenAnotherModelViewSet(MtViewSetMixin, rest_framework.viewsets.ModelViewSet):
     queryset = EvenAnotherModel.objects.all()
     serializer_class = EvenAnotherModelSerializer
-    mt_field = 'another_model__my_model'
+    mt_field = 'another_model__my_model'  # path to the `MtModelAbstract` field
 
     @action(detail=True, methods=['patch'])
     def activate(self, request, pk=None, *args, **kwargs):

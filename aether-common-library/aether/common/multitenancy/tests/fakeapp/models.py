@@ -52,7 +52,7 @@ class TestGrandChildModel(MtModelChildAbstract):
     name = models.TextField()
     parent = models.ForeignKey(to=TestChildModel, on_delete=models.CASCADE, related_name='children')
 
-    # does not implement the missing method
+    # does not implement the required method
     # def get_mt_instance(self):
     #     return self.parent.parent
 
