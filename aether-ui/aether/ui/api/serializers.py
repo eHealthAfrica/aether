@@ -81,7 +81,7 @@ class PipelineSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
-        if instance.contracts.filter(is_read_only=True).count() > 0:
+        if instance.is_read_only:
             raise serializers.ValidationError({'detail': _('Pipeline is read only')})
 
         return super(PipelineSerializer, self).update(instance, validated_data)

@@ -324,7 +324,7 @@ def publish_pipeline(pipeline):
     pk = str(pipeline.project.pk)
 
     # if there is at least one readonly contract do not update only create if missing
-    action = 'create' if pipeline.contracts.filter(is_read_only=True).exists() else 'upsert'
+    action = 'create' if pipeline.is_read_only else 'upsert'
     artefacts = model_to_artefacts(pipeline)
     mappingset_id = artefacts['mappingsets'][0]['id']
 
