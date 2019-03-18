@@ -25,7 +25,7 @@ from aether.kernel.api.avro_tools import random_avro
 from aether.kernel.api.entity_extractor import run_entity_extraction
 
 MAPPINGS_COUNT_RANGE = (1, 3)
-SUBMISSIONS_COUNT_RANGE = (5, 10)
+SUBMISSIONS_COUNT_RANGE = (2, 5)
 
 
 def schema_definition():
