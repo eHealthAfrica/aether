@@ -98,7 +98,7 @@ class TestCheckUrlCommand(TestCase):
             stdout=self.out,
         )
 
-    @mock.patch('requests.head', return_value=MockRequestHeadOK())
+    @mock.patch('aether.common.management.commands.check_url.request', return_value=MockRequestHeadOK())
     def test__check_url__ok(self, *args):
         try:
             call_command('check_url', '--url=http://localhost', stdout=self.out, stderr=self.out)
@@ -118,7 +118,7 @@ class TestCheckUrlCommand(TestCase):
         except Exception:
             self.assertTrue(False)
 
-    @mock.patch('requests.head', return_value=MockRequestHeadError())
+    @mock.patch('aether.common.management.commands.check_url.request', return_value=MockRequestHeadError())
     def test__check_url__error(self, *args):
         self.assertRaises(
             RuntimeError,

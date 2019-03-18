@@ -20,15 +20,7 @@ import mock
 from django.test import TestCase
 
 from .. import couchdb_helpers
-
-
-class MockResponse:
-    def __init__(self, status_code, json_data=None):
-        self.json_data = json_data
-        self.status_code = status_code
-
-    def json(self):
-        return self.json_data
+from . import MockResponse
 
 
 class CouchdbHelpersTests(TestCase):

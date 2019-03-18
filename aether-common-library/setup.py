@@ -44,6 +44,7 @@ setup(
         'django-cors-headers',
         'django-debug-toolbar',
         'django-prometheus',
+        'django-uwsgi',
         'djangorestframework',
         'psycopg2-binary',
         'pygments',
@@ -68,6 +69,7 @@ setup(
             'flake8',
             'flake8-quotes',
             'mock',
+            'tblib',  # for paralell test runner
         ],
     },
 

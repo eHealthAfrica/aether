@@ -548,9 +548,11 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
         blank=True,
         verbose_name=_('mapping revision'),
     )
+
+    # WARNING:  the project schema deletion has consequences
     projectschema = models.ForeignKey(
         to=ProjectSchema,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
         verbose_name=_('project schema'),

@@ -44,10 +44,19 @@ class AdminTest(TestCase):
         messages = FallbackStorage(self.request)
         setattr(self.request, '_messages', messages)
 
+        # remove initial data
+        Project.objects.all().delete()
+
     def test__project__actions(self):
         app_admin = ProjectAdmin(Project, AdminSite())
 
-        self.assertEqual(Project.objects.count(), 1, 'The default contract')
+        self.assertEqual(Project.objects.count(), 0)
+
+        with mock.patch('aether.ui.admin.utils.publish_project') as mock_publish:
+            app_admin.publish(self.request, Project.objects.all())
+            mock_publish.assert_not_called()
+
+        Project.objects.create(name='Testing')
 
         with mock.patch('aether.ui.admin.utils.publish_project') as mock_publish_once:
             app_admin.publish(self.request, Project.objects.all())
@@ -57,13 +66,6 @@ class AdminTest(TestCase):
                         side_effect=PublishError(':(')) as mock_publish_err:
             app_admin.publish(self.request, Project.objects.all())
             mock_publish_err.assert_called_once()
-
-        Project.objects.all().delete()
-        self.assertEqual(Project.objects.count(), 0)
-
-        with mock.patch('aether.ui.admin.utils.publish_project') as mock_publish:
-            app_admin.publish(self.request, Project.objects.all())
-            mock_publish.assert_not_called()
 
     def test__pipeline__actions(self):
         app_admin = PipelineAdmin(Pipeline, AdminSite())
