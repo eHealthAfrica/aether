@@ -302,8 +302,6 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), ProjectChildAb
 
     '''
 
-    # http://www.linfo.org/file_name.html
-    # Modern Unix-like systems support long file names, usually up to 255 bytes in length.
     name = models.TextField(verbose_name=_('filename'))
 
     attachment_file = models.FileField(upload_to=__attachment_path__, verbose_name=_('file'))
