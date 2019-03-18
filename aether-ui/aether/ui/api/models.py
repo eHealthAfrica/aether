@@ -103,7 +103,7 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
     '''
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
-    name = models.CharField(max_length=100, verbose_name=_('name'))
+    name = models.TextField(verbose_name=_('name'))
 
     # this is the avro schema
     schema = JSONField(null=True, blank=True, default=dict, verbose_name=_('AVRO schema'))
@@ -199,7 +199,7 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
     '''
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
-    name = models.CharField(max_length=100, verbose_name=_('name'))
+    name = models.TextField(verbose_name=_('name'))
 
     pipeline = models.ForeignKey(to=Pipeline, on_delete=models.CASCADE, verbose_name=_('pipeline'))
 
