@@ -135,7 +135,8 @@ class MultitenancyTests(TestCase):
         mobile_user1.groups.clear()
         user1_upd = serializers.MobileUserSerializer(
             mobile_user1,
-            data={'email': 'test_till@ehealthnigeria.org'},
+            data={},
+            partial=True,
             context={'request': self.request},
         )
         self.assertTrue(user1_upd.is_valid(), user1_upd.errors)
