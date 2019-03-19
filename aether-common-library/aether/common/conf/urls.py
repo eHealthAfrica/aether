@@ -23,7 +23,6 @@ from django.utils.translation import ugettext as _
 
 from aether.common.health.views import health, check_db, check_app
 
-ERR_MSG = _('Environment variable "{}" is not set')
 
 def generate_urlpatterns(token=False, kernel=False, app=[]):  # pragma: no cover
     '''
