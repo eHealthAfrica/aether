@@ -41,6 +41,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/static/')
 
+PRETTIFIED_CUTOFF = int(os.environ.get('PRETTIFIED_CUTOFF', 10000))
+
 
 # Version and revision
 # ------------------------------------------------------------------------------
@@ -70,6 +72,7 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'django.contrib.sessions',
     'django.contrib.staticfiles',
+    'django_uwsgi',
 
     # REST framework with auth token
     'rest_framework',
@@ -113,6 +116,8 @@ TEMPLATES = [
         },
     },
 ]
+
+MIGRATION_MODULES = {}
 
 
 # REST Framework Configuration
@@ -305,6 +310,25 @@ else:
     logger.info('No CAS enabled!')
 
 
+# Multitenancy Configuration
+# ------------------------------------------------------------------------------
+
+MULTITENANCY = bool(os.environ.get('MULTITENANCY'))
+if MULTITENANCY:
+    REALM_COOKIE = os.environ.get('REALM_COOKIE', 'aether-realm')
+    REALM_HEADER = 'HTTP_' + REALM_COOKIE.replace('-', '_').upper()  # HTTP_AETHER_REALM
+    DEFAULT_REALM = os.environ.get('DEFAULT_REALM', 'aether')
+
+    INSTALLED_APPS += ['aether.common.multitenancy', ]
+    MIGRATION_MODULES['multitenancy'] = 'aether.common.multitenancy.migrations'
+    REST_FRAMEWORK['DEFAULT_PERMISSION_CLASSES'] = [
+        'aether.common.multitenancy.permissions.IsAccessibleByRealm',
+    ]
+
+else:
+    logger.info('No multitenancy enabled!')
+
+
 # Storage Configuration
 # ------------------------------------------------------------------------------
 
@@ -370,6 +394,22 @@ if not TESTING and DEBUG:
         'SHOW_TOOLBAR_CALLBACK': lambda _: True,
         'SHOW_TEMPLATE_CONTEXT': True,
     }
+
+    DEBUG_TOOLBAR_PANELS = [
+        'debug_toolbar.panels.versions.VersionsPanel',
+        'debug_toolbar.panels.timer.TimerPanel',
+        'debug_toolbar.panels.settings.SettingsPanel',
+        'debug_toolbar.panels.headers.HeadersPanel',
+        'debug_toolbar.panels.request.RequestPanel',
+        'debug_toolbar.panels.sql.SQLPanel',
+        'debug_toolbar.panels.staticfiles.StaticFilesPanel',
+        'debug_toolbar.panels.templates.TemplatesPanel',
+        'debug_toolbar.panels.cache.CachePanel',
+        'debug_toolbar.panels.signals.SignalsPanel',
+        'debug_toolbar.panels.logging.LoggingPanel',
+        'debug_toolbar.panels.redirects.RedirectsPanel',
+        'django_uwsgi.panels.UwsgiPanel',
+    ]
 
 
 # Prometheus Configuration

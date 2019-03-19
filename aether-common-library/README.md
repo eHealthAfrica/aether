@@ -23,12 +23,12 @@ Includes the methods that allow:
 Include the view entry in the `urls.py` file.
 
 ```python
-from django.conf.urls import url
+from django.urls import path
 from aether.common.auth.views import obtain_auth_token
 
 
 urlpatterns = [
-    url(r'^get-token$', view=obtain_auth_token, name='token'),
+    path('get-token', view=obtain_auth_token, name='token'),
 ]
 ```
 
@@ -41,14 +41,14 @@ Includes the methods that allow:
 Include the view entry in the `urls.py` file.
 
 ```python
-from django.conf.urls import url
+from django.urls import path
 from aether.common.health.views import health, check_db, check_app
 
 
 urlpatterns = [
-    url(r'^health$', view=health, name='health'),           # checks if django responds
-    url(r'^check-db$', view=check_db, name='check-db'),     # checks if the db responds
-    url(r'^check-app$', view=check_app, name='check-app'),  # returns the app version
+    path('health', view=health, name='health'),           # checks if django responds
+    path('check-db', view=check_db, name='check-db'),     # checks if the db responds
+    path('check-app', view=check_app, name='check-app'),  # returns the app version
 ]
 ```
 
@@ -67,12 +67,12 @@ Includes the methods that allow:
 Include the view entry in the `urls.py` file.
 
 ```python
-from django.conf.urls import url
+from django.urls import path
 from aether.common.kernel.views import check_kernel
 
 
 urlpatterns = [
-    url(r'^check-kernel$', view=check_kernel, name='check-kernel'),
+    path('check-kernel', view=check_kernel, name='check-kernel'),
 ]
 ```
 

@@ -18,12 +18,10 @@
  * under the License.
  */
 
-import entityTypes from './schema_entityTypes.mock'
-import inputSchema from './schema_input.mock'
-import pipelines from './pipelines.mock'
+import mockEntityTypes from './schema_entityTypes.mock'
+import mockInputSchema from './schema_input.mock'
 
 export {
-  entityTypes,
-  inputSchema,
-  pipelines
+  mockEntityTypes,
+  mockInputSchema
 }

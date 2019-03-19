@@ -18,11 +18,11 @@
 
 import logging
 import os
-import requests
 
 from django.conf import settings
 from django.utils.translation import ugettext as _
 
+from ..utils import request
 from . import errors
 
 
@@ -62,13 +62,13 @@ def test_connection():
     if url and token:
         try:
             # check that the server is up
-            h = requests.head(url)
+            h = request(method='head', url=url)
             assert h.status_code == 403  # expected response 403 Forbidden
             logger.info(_('Aether Kernel server ({}) is up and responding!').format(url))
 
             try:
                 # check that the token is valid
-                g = requests.get(url, headers={'Authorization': f'Token {token}'})
+                g = request(method='get', url=url, headers={'Authorization': f'Token {token}'})
                 assert g.status_code == 200, g.content
                 logger.info('Aether Kernel token is valid!')
 
@@ -126,24 +126,6 @@ def __get_type_url(model_type, id=None):
         )
 
 
-def get_all_docs(url):
-    '''
-    Returns all documents linked to an url, even with pagination
-    '''
-    def get_data(url):
-        resp = requests.get(url, headers=get_auth_header())
-        resp.raise_for_status()
-        return resp.json()
-
-    data = {'next': url}
-    results = []
-    while data.get('next'):
-        data = get_data(data['next'])
-        results += data['results']
-
-    return results
-
-
 def submit_to_kernel(submission, mappingset_id, submission_id=None):
     '''
     Push the submission to Aether Kernel
@@ -155,18 +137,9 @@ def submit_to_kernel(submission, mappingset_id, submission_id=None):
     if mappingset_id is None:
         raise errors.SubmissionError(_('Cannot make submission without mapping set!'))
 
-    if submission_id:
-        # update existing doc
-        method = requests.put
-        url = get_submissions_url(submission_id)
-    else:
-        # create new doc
-        method = requests.post
-        url = get_submissions_url()
-
-    logger.debug(f'{method} to {url}')
-    return method(
-        url,
+    return request(
+        method='put' if submission_id else 'post',
+        url=get_submissions_url(submission_id),
         json={
             'payload': submission,
             'mappingset': mappingset_id,

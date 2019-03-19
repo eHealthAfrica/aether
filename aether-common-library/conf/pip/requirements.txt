@@ -5,12 +5,14 @@
 #                                                                              #
 ################################################################################
 
-django<2
+django
 django-cors-headers
 django-minio-storage
 django-prometheus
+django-uwsgi
 djangorestframework
 psycopg2-binary
+pygments
 python-json-logger
 requests
 
@@ -20,3 +22,4 @@ coverage
 flake8
 flake8-quotes
 mock
+tblib

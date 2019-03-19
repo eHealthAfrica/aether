@@ -20,9 +20,9 @@
 
 import React, { Component } from 'react'
 import { FormattedMessage } from 'react-intl'
-import avro from 'avsc'
 
 import { clone, generateGUID } from '../utils'
+import { parseSchema } from '../utils/avro-utils'
 
 class AvroSchemaViewer extends Component {
   getHighlightedClassName (jsonPath) {
@@ -46,27 +46,30 @@ class AvroSchemaViewer extends Component {
       const jsonPath = `${parent || schema.name}`
       const className = this.getHighlightedClassName(jsonPath)
 
-      return isUnion ? (
-        <ul key={`${schema.name}-${generateGUID()}`} className='group-list'>
-          { schema.fields.map(field => this.schemaToMarkup(field, parent, isUnion, isItem)) }
-        </ul>
-      ) : (
-        <ul key={`${schema.name}-${generateGUID()}`} className='group'>
-          <li
-            data-qa={`group-title-${schema.name}`}
-            className={`group-title ${className}`}
-            id={`input_${jsonPath}`}>
-            {schema.name}
-          </li>
+      return isUnion
+        ? (
           <ul key={`${schema.name}-${generateGUID()}`} className='group-list'>
             { schema.fields.map(field => this.schemaToMarkup(field, parent, isUnion, isItem)) }
           </ul>
-        </ul>
-      )
+        )
+        : (
+          <ul key={`${schema.name}-${generateGUID()}`} className='group'>
+            <li
+              data-qa={`group-title-${schema.name}`}
+              className={`group-title ${className}`}
+              id={`input_${jsonPath}`}>
+              {schema.name}
+            </li>
+            <ul key={`${schema.name}-${generateGUID()}`} className='group-list'>
+              { schema.fields.map(field => this.schemaToMarkup(field, parent, isUnion, isItem)) }
+            </ul>
+          </ul>
+        )
     } else if (Array.isArray(schema.type)) {
       let typeStringOptions = []
       const typeObjectOptions = []
       let isNullable = false
+
       schema.type.forEach(typeItem => {
         if (typeof typeItem === 'string') {
           if (typeItem === 'null') {
@@ -79,9 +82,15 @@ class AvroSchemaViewer extends Component {
           typeObjectOptions.push(typeItem)
         }
       })
-      const nestedList = typeObjectOptions.length && typeObjectOptions.map(obj => (this.schemaToMarkup(obj,
-        `${parent ? parent + '.' : ''}${schema.name}`, true, isItem)))
-      return this.deepestRender(schema, parent, true, isItem, typeStringOptions, isNullable, nestedList !== 0 && <ul>{nestedList}</ul>)
+
+      const nestedList = typeObjectOptions.length && typeObjectOptions.map(obj => (
+        this.schemaToMarkup(obj, `${parent ? parent + '.' : ''}${schema.name}`, true, isItem))
+      )
+
+      return this.deepestRender(
+        schema, parent, true, isItem, typeStringOptions, isNullable,
+        nestedList !== 0 && <ul>{nestedList}</ul>
+      )
     } else if (schema.type && typeof schema.type !== 'string') {
       schema.type.name = schema.name
       let parentName = ''
@@ -90,39 +99,56 @@ class AvroSchemaViewer extends Component {
       } else {
         parentName = schema.type.type === 'array' ? '' : schema.name
       }
+
       return this.schemaToMarkup(schema.type, parentName, isUnion, isItem)
     } else {
       return this.deepestRender(schema, parent, isUnion, isItem)
     }
   }
 
-  deepestRender (schema, parent = null, isUnion = false, isItem = false, typesOptions = null, isNullable = false, children = null) {
+  deepestRender (
+    schema,
+    parent = null,
+    isUnion = false,
+    isItem = false,
+    typesOptions = null,
+    isNullable = false,
+    children = null) {
     const jsonPath = `${parent ? parent + '.' : ''}${schema.name}`
     const className = this.getHighlightedClassName(jsonPath)
     let arrayItems = null
     if (schema.type === 'array' && typeof schema.items !== 'string') {
       arrayItems = this.schemaToMarkup(schema.items, parent, isUnion, true)
     }
-    return schema.name ? (
-      <li
-        data-qa={`no-children-${schema.name}`}
-        key={`${schema.name}-${generateGUID()}`}
-        className={className}
-        id={`input_${jsonPath}`}>
-        {schema.name && (<span>
-          <span className={isItem ? 'name item' : 'name'}>{schema.name}</span>
-          <span className='type'> {typesOptions && typesOptions.length ? typesOptions.toString() : schema.type}</span></span>)
-        }
-        { isNullable && <span className='type'> (nullable)</span> }
-        { arrayItems }
-        { children }
-      </li>
-    ) : (
-      <ul key={generateGUID()}>
-        { arrayItems }
-        { children }
-      </ul>
-    )
+
+    return schema.name
+      ? (
+        <li
+          data-qa={`no-children-${schema.name}`}
+          key={`${schema.name}-${generateGUID()}`}
+          className={className}
+          id={`input_${jsonPath}`}>
+          { schema.name &&
+            <span>
+              <span className={isItem ? 'name item' : 'name'}> { schema.name } </span>
+              <span className='type'>
+                { typesOptions && typesOptions.length ? typesOptions.toString() : schema.type }
+              </span>
+            </span>
+          }
+          { isNullable &&
+            <span className='type'> (nullable)</span>
+          }
+          { arrayItems }
+          { children }
+        </li>
+      )
+      : (
+        <ul key={generateGUID()}>
+          { arrayItems }
+          { children }
+        </ul>
+      )
   }
 
   render () {
@@ -130,7 +156,7 @@ class AvroSchemaViewer extends Component {
       return (
         <div className='hint'>
           <FormattedMessage
-            id='pipeline.input.empty.message'
+            id='pipeline.schema.empty'
             defaultMessage='Your schema for this pipeline will be displayed here once you have added a valid source.'
           />
         </div>
@@ -138,7 +164,7 @@ class AvroSchemaViewer extends Component {
     }
 
     try {
-      avro.parse(this.props.schema, { noAnonymousTypes: true, wrapUnions: false })
+      parseSchema(this.props.schema)
       return (
         <div className='input-schema'>
           { this.schemaToMarkup(clone(this.props.schema)) }
@@ -148,7 +174,7 @@ class AvroSchemaViewer extends Component {
       return (
         <div className='hint'>
           <FormattedMessage
-            id='pipeline.input.invalid.message'
+            id='pipeline.schema.invalid'
             defaultMessage='You have provided an invalid AVRO schema.'
           />
         </div>

@@ -31,28 +31,30 @@
     "react": "~16.8.0",
     "react-dom": "~16.8.0",
     "react-intl": "~2.8.0",
-    "react-redux": "~5.1.0",
-    "react-router-dom": "~4.3.0",
+    "react-redux": "~6.0.0",
+    "react-router-dom": "~5.0.0",
     "redux": "~4.0.0",
     "redux-thunk": "~2.3.0",
     "whatwg-fetch": "~3.0.0"
   },
   "devDependencies": {
-    "@babel/core": "~7.2.0",
+    "@babel/plugin-proposal-class-properties": "~7.3.0",
+    "@babel/core": "~7.3.0",
     "@babel/preset-env": "~7.3.0",
     "@babel/preset-react": "~7.0.0",
     "babel-core": "~7.0.0-bridge.0",
     "babel-loader": "~8.0.0",
     "css-loader": "~2.1.0",
-    "enzyme": "~3.8.0",
-    "enzyme-adapter-react-16": "~1.9.0",
+    "enzyme": "~3.9.0",
+    "enzyme-adapter-react-16": "~1.11.0",
     "enzyme-react-intl": "~2.0.0",
+    "express": "~4.16.0",
     "jest": "~23.6.0",
     "mini-css-extract-plugin": "~0.5.0",
     "nock": "~10.0.0",
     "node-fetch": "~2.3.0",
     "node-sass": "~4.11.0",
-    "react-hot-loader": "~4.3.0",
+    "react-hot-loader": "~4.8.0",
     "redux-devtools-extension": "~2.13.0",
     "sass-lint": "~1.12.0",
     "sass-loader": "~7.1.0",
@@ -60,8 +62,9 @@
     "style-loader": "~0.23.0",
     "webpack": "~4.29.0",
     "webpack-bundle-tracker": "~0.4.2-beta",
-    "webpack-cli": "~3.2.0",
-    "webpack-dev-server": "~3.1.0"
+    "webpack-cli": "~3.3.0",
+    "webpack-dev-middleware": "~3.6.0",
+    "webpack-hot-middleware": "~2.24.0"
   },
   "babel": {
     "presets": [
@@ -69,7 +72,8 @@
       "@babel/preset-react"
     ],
     "plugins": [
-      "react-hot-loader/babel"
+      "react-hot-loader/babel",
+      "@babel/plugin-proposal-class-properties"
     ]
   },
   "sasslintConfig": "./conf/sass-lint.yml",

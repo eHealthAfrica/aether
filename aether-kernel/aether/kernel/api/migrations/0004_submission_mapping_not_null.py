@@ -19,5 +19,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(remove_invalid_submissions, migrations.RunPython.noop),
+        migrations.RunPython(
+            code=remove_invalid_submissions,
+            reverse_code=migrations.RunPython.noop,
+            # The optional elidable argument determines whether or not the operation
+            # will be removed (elided) when squashing migrations.
+            elidable=True,
+        ),
     ]

@@ -18,7 +18,7 @@
 
 from django.conf import settings
 from django.contrib import admin
-from django.conf.urls import include, url
+from django.urls import include, path
 from django.utils.translation import ugettext as _
 
 from aether.common.health.views import health, check_db, check_app
@@ -55,16 +55,19 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):  # pragma: no cover
     # `accounts` management
     if settings.CAS_SERVER_URL:
         from django_cas_ng import views
+
         login_view = views.login
         logout_view = views.logout
+
     else:
         from django.contrib.auth import views
+
         login_view = views.LoginView.as_view(template_name=settings.LOGIN_TEMPLATE)
         logout_view = views.LogoutView.as_view(template_name=settings.LOGGED_OUT_TEMPLATE)
 
     auth_views = [
-        url(r'^login/$', view=login_view, name='login'),
-        url(r'^logout/$', view=logout_view, name='logout'),
+        path('login/', view=login_view, name='login'),
+        path('logout/', view=logout_view, name='logout'),
     ]
 
     if token:
@@ -72,24 +75,25 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):  # pragma: no cover
 
         # generates users token
         auth_views += [
-            url('^token$', view=obtain_auth_token, name='token'),
+            path('token', view=obtain_auth_token, name='token'),
         ]
     auth_urls = (auth_views, 'rest_framework')
 
     urlpatterns = [
         # `health` endpoints
-        url(r'^health$', view=health, name='health'),
-        url(r'^check-db$', view=check_db, name='check-db'),
-        url(r'^check-app$', view=check_app, name='check-app'),
+        path('health', view=health, name='health'),
+        path('check-db', view=check_db, name='check-db'),
+        path('check-app', view=check_app, name='check-app'),
 
         # `admin` section
-        url(r'^admin/', admin.site.urls),
+        path('admin/uwsgi/', include('django_uwsgi.urls')),
+        path('admin/', admin.site.urls),
 
         # `accounts` management
-        url(r'^accounts/', include(auth_urls, namespace='rest_framework')),
+        path('accounts/', include(auth_urls, namespace='rest_framework')),
 
         # monitoring
-        url('', include('django_prometheus.urls')),
+        path('', include('django_prometheus.urls')),
     ]
 
     if kernel:
@@ -98,7 +102,7 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):  # pragma: no cover
 
         # checks if Kernel server is available
         urlpatterns += [
-            url('^check-kernel$', view=check_kernel, name='check-kernel'),
+            path('check-kernel', view=check_kernel, name='check-kernel'),
         ]
 
         # `aether.common.kernel.utils.get_kernel_server_url()` returns different
@@ -124,7 +128,7 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):  # pragma: no cover
             import debug_toolbar
 
             urlpatterns += [
-                url(r'^__debug__/', include(debug_toolbar.urls)),
+                path('__debug__/', include(debug_toolbar.urls)),
             ]
 
     return urlpatterns

@@ -20,8 +20,7 @@
 #
 set -Eeuo pipefail
 
-# Define help message
-show_help() {
+function show_help {
     echo """
     Commands
     ----------------------------------------------------------------------------
@@ -32,21 +31,24 @@ show_help() {
     test          : run tests
     test_lint     : run flake8 tests
     test_coverage : run tests with coverage output
+    test_py       : alias of test_coverage
 
     build         : build package library
     """
 }
 
-test_flake8() {
+function test_flake8 {
     flake8 /code/. --config=/code/conf/extras/flake8.cfg
 }
 
-test_coverage() {
-    export RCFILE=/code/conf/extras/coverage.rc
-    export TESTING=true
+function test_coverage {
+    RCFILE=/code/conf/extras/coverage.rc
+    PARALLEL_COV="--concurrency=multiprocessing --parallel-mode"
+    PARALLEL_PY="--parallel=${TEST_PARALLEL:-4}"
 
-    coverage run    --rcfile="$RCFILE" manage.py test "${@:1}"
-    coverage report --rcfile="$RCFILE"
+    coverage run     --rcfile="$RCFILE" $PARALLEL_COV manage.py test --noinput "${@:1}" $PARALLEL_PY
+    coverage combine --rcfile="$RCFILE" --append
+    coverage report  --rcfile="$RCFILE"
     coverage erase
 
     cat /code/conf/extras/good_job.txt
@@ -54,32 +56,35 @@ test_coverage() {
 
 
 case "$1" in
-    bash)
+    bash )
         bash
     ;;
 
-    eval)
+    eval )
         eval "${@:2}"
     ;;
 
-    manage)
+    manage )
         ./manage.py "${@:2}"
     ;;
 
-    test)
+    test )
+        export TESTING=true
         test_flake8
         test_coverage "${@:2}"
     ;;
 
-    test_lint)
+    test_lint )
+        export TESTING=true
         test_flake8
     ;;
 
-    test_coverage)
+    test_py | test_coverage )
+        export TESTING=true
         test_coverage "${@:2}"
     ;;
 
-    build)
+    build )
         # test before building
         test_flake8
         test_coverage
@@ -97,7 +102,7 @@ case "$1" in
         rm -rf aether.common.egg-info
     ;;
 
-    help)
+    help )
         show_help
     ;;
 

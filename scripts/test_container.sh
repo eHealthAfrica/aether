@@ -22,7 +22,7 @@ set -Eeuo pipefail
 
 function build_container {
     echo "_____________________________________________ Building $1 container"
-    $DC_TEST build "$1"-test
+    $DC_TEST build $BUILD_OPTIONS "$1"-test
 }
 
 function wait_for_kernel {
@@ -41,14 +41,15 @@ function wait_for_db {
 }
 
 DC_TEST="docker-compose -f docker-compose-test.yml"
+BUILD_OPTIONS="${BUILD_OPTIONS:-}"
 
 ./scripts/kill_all.sh
 
 if [[ $1 == "ui" ]]
 then
     build_container ui-assets
-    $DC_TEST run   ui-assets-test test
-    $DC_TEST run   ui-assets-test build
+    $DC_TEST run ui-assets-test test
+    $DC_TEST run ui-assets-test build
     echo "_____________________________________________ Tested and built ui assets"
 fi
 
@@ -69,7 +70,7 @@ fi
 if [[ $1 != "kernel" ]]
 then
     # rename kernel test database in each case
-    export TEST_KERNEL_DB_NAME=test-kernel-"$1"
+    export TEST_KERNEL_DB_NAME=test-kernel-"$1"-$(date "+%Y%m%d%H%M%S")
 
     build_container kernel
 

@@ -18,50 +18,31 @@
  * under the License.
  */
 
-.logo-container {
-  perspective: 1000px;
-  position: absolute;
+import { KERNEL_URL } from '../utils/constants'
 
-  &:hover .flipper {
-    transform: rotateY(180deg);
+const types = {
+  GET_KERNEL_URL: 'get_kernel_url',
+  GET_KERNEL_URL_ERROR: 'get_kernel_url_error'
+}
+
+const INITIAL_CONST = {
+  kernelUrl: ''
+}
+
+export const getKernelURL = () => ({
+  types: ['', types.GET_KERNEL_URL, ''],
+  promise: client => client.get(KERNEL_URL)
+})
+
+const reducer = (state = INITIAL_CONST, action) => {
+  switch (action.type) {
+    case types.GET_KERNEL_URL: {
+      return { ...state, kernelUrl: action.payload }
+    }
+
+    default:
+      return state
   }
 }
 
-.back,
-.front,
-.logo-container {
-  border-radius: 50%;
-  height: 46px;
-  width: 46px;
-}
-
-.flipper {
-  position: relative;
-  transform-style: preserve-3d;
-  transition: 1s;
-}
-
-.back,
-.front {
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  box-sizing: border-box;
-  left: 0;
-  position: absolute;
-  top: 0;
-}
-
-// front pane, placed above back
-.front {
-  @include logo-ui;
-  background-size: 100%;
-  transform: rotateY(0deg);
-  z-index: 2;
-}
-
-// back, initially hidden pane
-.back {
-  @include logo-eha;
-  background-size: 100%;
-  transform: rotateY(180deg);
-}
+export default reducer

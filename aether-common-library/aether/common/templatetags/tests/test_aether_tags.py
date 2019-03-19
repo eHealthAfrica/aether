@@ -19,7 +19,7 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from ..aether_tags import get_fullname
+from ..aether_tags import get_fullname, prettified
 
 
 class AetherTagsTests(TestCase):
@@ -46,3 +46,10 @@ class AetherTagsTests(TestCase):
         user.first_name = 'first'
         user.last_name = 'last'
         self.assertEqual(get_fullname(user), 'first last')
+
+    def test_prettified(self):
+        data = {}
+        expected = '<pre><span></span><span class="p">{}</span>\n</pre>'
+
+        pretty = str(prettified(data))
+        self.assertIn(expected, pretty)
