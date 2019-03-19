@@ -42,10 +42,12 @@ const mockPipelines = [
   {
     id: 1,
     name: 'Pipeline Mock 1',
+    is_read_only: false,
     contracts: [
       {
         id: '1-1',
         name: 'contract 1.1',
+        is_read_only: false,
         pipeline: 1
       }
     ]
@@ -53,10 +55,12 @@ const mockPipelines = [
   {
     id: 2,
     name: 'Pipeline Mock 2',
+    is_read_only: false,
     contracts: [
       {
         id: '2-1',
         name: 'contract 2.1',
+        is_read_only: false,
         pipeline: 2
       }
     ]
@@ -64,10 +68,12 @@ const mockPipelines = [
   {
     id: 3,
     name: 'Pipeline Mock 3',
+    is_read_only: false,
     contracts: [
       {
         id: '3-1',
         name: 'contract 3.1',
+        is_read_only: false,
         pipeline: 3
       }
     ]
