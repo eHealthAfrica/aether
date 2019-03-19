@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
@@ -20,14 +20,7 @@
 #
 set -Eeuo pipefail
 
-# set DEBUG if missing
-set +u
-DEBUG="$DEBUG"
-set -u
-
-BACKUPS_FOLDER=/backups
-
-show_help () {
+function show_help {
     echo """
     Commands
     ----------------------------------------------------------------------------
@@ -48,6 +41,7 @@ show_help () {
     test          : run tests
     test_lint     : run flake8 tests
     test_coverage : run tests with coverage output
+    test_py       : alias of test_coverage
 
     start         : start webserver behind nginx
     start_dev     : start webserver for development
@@ -57,7 +51,7 @@ show_help () {
     """
 }
 
-pip_freeze () {
+function pip_freeze {
     pip install -q virtualenv
     rm -rf /tmp/env
 
@@ -68,7 +62,7 @@ pip_freeze () {
     /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
 }
 
-backup_db() {
+function backup_db {
     pg_isready
 
     if psql -c "" $DB_NAME; then
@@ -79,7 +73,7 @@ backup_db() {
     fi
 }
 
-restore_db() {
+function restore_db {
     pg_isready
 
     # backup current data
@@ -102,7 +96,7 @@ restore_db() {
     ./manage.py migrate --noinput
 }
 
-setup () {
+function setup {
     # check if required environment variables were set
     ./conf/check_vars.sh
 
@@ -127,32 +121,29 @@ setup () {
     chmod -R 755 $STATIC_ROOT
 
     # expose version number (if exists)
-    cp ./VERSION $STATIC_ROOT/VERSION   2>/dev/null || :
+    cp /var/tmp/VERSION $STATIC_ROOT/VERSION   2>/dev/null || :
     # add git revision (if exists)
-    cp ./REVISION $STATIC_ROOT/REVISION 2>/dev/null || :
-
-    # media assets storage
-    if [ "$DJANGO_STORAGE_BACKEND" == "filesystem" ]; then
-        echo "Filesystem storage in ${MEDIA_ROOT:-/media}"
-        chown aether: ${MEDIA_ROOT:-/media}
-    fi
+    cp /var/tmp/REVISION $STATIC_ROOT/REVISION 2>/dev/null || :
 }
 
-test_flake8 () {
+function test_flake8 {
     flake8 /code/. --config=/code/conf/extras/flake8.cfg
 }
 
-test_coverage () {
-    export RCFILE=/code/conf/extras/coverage.rc
-    export TESTING=true
+function test_coverage {
+    RCFILE=/code/conf/extras/coverage.rc
+    PARALLEL_COV="--concurrency=multiprocessing --parallel-mode"
+    PARALLEL_PY="--parallel=${TEST_PARALLEL:-4}"
 
-    coverage run    --rcfile="$RCFILE" manage.py test "${@:1}"
-    coverage report --rcfile="$RCFILE"
+    coverage run     --rcfile="$RCFILE" $PARALLEL_COV manage.py test --noinput "${@:1}" $PARALLEL_PY
+    coverage combine --rcfile="$RCFILE" --append
+    coverage report  --rcfile="$RCFILE"
     coverage erase
 
     cat /code/conf/extras/good_job.txt
 }
 
+BACKUPS_FOLDER=/backups
 
 case "$1" in
     bash )
@@ -184,28 +175,38 @@ case "$1" in
     ;;
 
     test )
-        echo "DEBUG=$DEBUG"
+        export TESTING=true
+        export MULTITENANCY=true
+
         setup
         test_flake8
         test_coverage "${@:2}"
     ;;
 
     test_lint )
+        export TESTING=true
+        export MULTITENANCY=true
+
         test_flake8
     ;;
 
-    test_coverage )
+    test_py | test_coverage )
+        export TESTING=true
+        export MULTITENANCY=true
+
         test_coverage "${@:2}"
     ;;
 
     start )
         setup
+        [ -z "${DEBUG:-}" ] && UWSGI_LOGGING="--disable-logging" || UWSGI_LOGGING=""
 
-        [ -z "$DEBUG" ] && LOGGING="--disable-logging" || LOGGING=""
         /usr/local/bin/uwsgi \
             --ini /code/conf/uwsgi.ini \
             --http 0.0.0.0:$WEB_SERVER_PORT \
-            $LOGGING
+            --processes ${UWSGI_PROCESSES:-4} \
+            --threads ${UWSGI_THREADS:-2} \
+            $UWSGI_LOGGING
     ;;
 
     start_dev )

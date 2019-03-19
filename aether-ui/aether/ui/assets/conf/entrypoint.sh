@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
@@ -20,69 +20,68 @@
 #
 set -Eeuo pipefail
 
-# Define help message
-show_help() {
-  echo """
-  Commands
-  ----------------------------------------------------------------------------
-  bash          : run bash
-  eval          : eval shell command
+function show_help {
+    echo """
+    Commands
+    ----------------------------------------------------------------------------
+    bash          : run bash
+    eval          : eval shell command
 
-  test          : run ALL tests
-  test_lint     : run standardjs and sass lint tests
-  test_js       : run js tests with enzyme and jest
+    test          : run ALL tests
+    test_lint     : run standardjs and sass lint tests
+    test_js       : run js tests with enzyme and jest
 
-  build         : create distributed assets
-  start_dev     : start webpack server (only in DEV mode)
-  """
+    build         : create distributed assets
+    start_dev     : start webpack server (only in DEV mode)
+    """
 }
 
-test_lint() {
-  npm run test-lint
+function test_lint {
+    npm run test-lint
 }
 
-test_js() {
-  npm run test-js "${@:1}"
+function test_js {
+    npm run test-js "${@:1}"
 }
 
 
 case "$1" in
-  bash)
-    bash
-  ;;
+    bash )
+        bash
+    ;;
 
-  eval)
-    eval "${@:2}"
-  ;;
+    eval )
+        eval "${@:2}"
+    ;;
 
-  test)
-    test_lint
-    test_js
-    npm run webpack
-  ;;
+    test )
+        test_lint
+        test_js
+        npm run webpack
+    ;;
 
-  test_lint)
-    test_lint
-  ;;
+    test_lint )
+        test_lint
+    ;;
 
-  test_js)
-    test_js "${@:2}"
-  ;;
+    test_js )
+        test_js "${@:2}"
+    ;;
 
-  build)
-    rm -r -f ./bundles/*
-    npm run webpack
-  ;;
+    build )
+        rm -r -f ./bundles/*
+        npm run webpack
+    ;;
 
-  start_dev)
-    npm run webpack-server
-  ;;
+    start_dev )
+        npm run webpack-server
+    ;;
 
-  help)
-    show_help
-  ;;
+    help )
+        show_help
+    ;;
 
-  *)
-    show_help
-  ;;
+    * )
+        show_help
+    ;;
 esac

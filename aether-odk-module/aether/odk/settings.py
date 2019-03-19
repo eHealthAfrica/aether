@@ -20,7 +20,11 @@
 # ------------------------------------------------------------------------------
 
 from aether.common.conf.settings import *  # noqa
-from aether.common.conf.settings import INSTALLED_APPS, MIGRATION_MODULES
+from aether.common.conf.settings import (
+    INSTALLED_APPS,
+    MIGRATION_MODULES,
+    check_storage,
+)
 
 
 # ODK Configuration
@@ -37,3 +41,10 @@ INSTALLED_APPS += [
 
 MULTITENANCY_MODEL = 'odk.Project'
 MIGRATION_MODULES['odk'] = 'aether.odk.api.migrations'
+
+SURVEYOR_GROUP_NAME = 'surveyor'
+
+
+# Storage Configuration
+# ------------------------------------------------------------------------------
+check_storage()

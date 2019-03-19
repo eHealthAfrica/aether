@@ -19,11 +19,13 @@
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError
+from django.test import override_settings
 
 from . import CustomTestCase
 from ..models import Project, XForm, MediaFile
 
 
+@override_settings(MULTITENANCY=False)
 class ModelsTests(CustomTestCase):
 
     def test__xform__create__raises_errors(self):
@@ -53,14 +55,14 @@ class ModelsTests(CustomTestCase):
                 <h:html
                         xmlns="http://www.w3.org/2002/xforms"
                         xmlns:h="http://www.w3.org/1999/xhtml">
-                  <h:head>
-                    <model>
-                      <instance>
-                      </instance>
-                    </model>
-                  </h:head>
-                  <h:body>
-                  </h:body>
+                    <h:head>
+                        <model>
+                            <instance>
+                            </instance>
+                        </model>
+                    </h:head>
+                    <h:body>
+                    </h:body>
                 </h:html>
             ''',
         )
@@ -89,69 +91,8 @@ class ModelsTests(CustomTestCase):
         self.assertEqual(instance.md5sum, '5e97c4e929f64d7701804043e3b544ba')
         self.assertEqual(instance.hash, 'md5:5e97c4e929f64d7701804043e3b544ba')
 
-    def test__project__surveyors(self):
-        instance = Project.objects.create()
-        self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')
-
-        self.helper_create_superuser()
-        self.assertTrue(instance.is_surveyor(self.admin),
-                        'superusers are always granted surveyors')
-
-        self.helper_create_user()
-        self.assertTrue(instance.is_surveyor(self.user),
-                        'if not granted surveyors all users are surveyors')
-
-        surveyor = self.helper_create_surveyor()
-        instance.surveyors.add(surveyor)
-        instance.save()
-
-        self.assertEqual(instance.surveyors.count(), 1, 'one granted surveyor')
-        self.assertTrue(instance.is_surveyor(surveyor))
-        self.assertTrue(instance.is_surveyor(self.admin),
-                        'superusers are always granted surveyors')
-        self.assertFalse(instance.is_surveyor(self.user),
-                         'if granted surveyors not all users are surveyors')
-
-    def test__xform__surveyors(self):
-        instance = XForm.objects.create(
-            project=Project.objects.create(),
-            xml_data=self.samples['xform']['xml-ok'],
-        )
-        self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')
-
-        self.helper_create_superuser()
-        self.assertTrue(instance.is_surveyor(self.admin),
-                        'superusers are always granted surveyors')
-
-        self.helper_create_user()
-        self.assertTrue(instance.is_surveyor(self.user),
-                        'if not granted surveyors all users are surveyors')
-
-        surveyor = self.helper_create_surveyor(username='surveyor')
-        instance.surveyors.add(surveyor)
-        instance.save()
-
-        self.assertEqual(instance.surveyors.count(), 1, 'one custom granted surveyor')
-        self.assertTrue(instance.is_surveyor(surveyor))
-        self.assertTrue(instance.is_surveyor(self.admin),
-                        'superusers are always granted surveyors')
-        self.assertFalse(instance.is_surveyor(self.user),
-                         'if granted surveyors not all users are surveyors')
-
-        surveyor2 = self.helper_create_surveyor(username='surveyor2')
-        instance.project.surveyors.add(surveyor2)
-        instance.project.save()
-        self.assertEqual(instance.surveyors.count(), 1, 'one custom granted surveyor')
-        self.assertTrue(instance.is_surveyor(surveyor))
-        self.assertTrue(instance.is_surveyor(surveyor2),
-                        'project surveyors are also xform surveyors')
-
-        instance.surveyors.clear()
-        instance.save()
-        self.assertEqual(instance.surveyors.count(), 0, 'no custom granted surveyor')
-        self.assertFalse(instance.is_surveyor(surveyor))
-        self.assertTrue(instance.is_surveyor(surveyor2),
-                        'project surveyors are always xform surveyors')
+        self.assertIsNotNone(instance.avro_schema)
+        self.assertIsNotNone(instance.avro_schema_prettified)
 
     def test__xform__media(self):
         xform = XForm.objects.create(
@@ -171,7 +112,7 @@ class ModelsTests(CustomTestCase):
         self.assertEqual(media.name, 'sample.txt', 'no replaces name')
         self.assertEqual(media.md5sum, 'e2fc714c4727ee9395f324cd2e7f331f')
         self.assertEqual(media.hash, 'md5:e2fc714c4727ee9395f324cd2e7f331f')
-        self.assertEqual(media.media_file_url, f'http://{settings.HOSTNAME}{media.media_file.url}')
+        self.assertEqual(media.media_file_url, media.media_file.url)
         # with media files there is manifest_url
         self.assertEqual(xform.manifest_url,
                          '/forms/{}/manifest.xml?version={}'.format(xform.id, xform.version))
@@ -203,3 +144,22 @@ class ModelsTests(CustomTestCase):
         self.assertNotEqual(last_version, xform.version, 'changed xml data')
         self.assertNotEqual(last_avro_schema, xform.avro_schema, 'changed AVRO schema')
         self.assertNotEqual(last_kernel_id, xform.kernel_id, 'changed Kernel ID')
+
+    def test__model_methods(self):
+        project = Project.objects.create()
+        xform = XForm.objects.create(
+            project=project,
+            xml_data=self.samples['xform']['xml-ok'],
+        )
+        media_file = MediaFile.objects.create(
+            xform=xform,
+            media_file=SimpleUploadedFile('sample.txt', b'abc'),
+        )
+
+        self.assertFalse(project.is_accessible(settings.DEFAULT_REALM))
+        self.assertFalse(xform.is_accessible(settings.DEFAULT_REALM))
+        self.assertFalse(media_file.is_accessible(settings.DEFAULT_REALM))
+
+        self.assertIsNone(project.get_realm())
+        self.assertIsNone(xform.get_realm())
+        self.assertIsNone(media_file.get_realm())

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
@@ -20,8 +20,7 @@
 #
 set -Eeuo pipefail
 
-# Define help message
-show_help() {
+function show_help {
     echo """
     Commands
     ----------------------------------------------------------------------------
@@ -34,34 +33,35 @@ show_help() {
     start             : start producer with settings from file at environment path: PRODUCER_SETTINGS_FILE
 
     test              : run unit and integration tests.
+    test_lint         : run flake8 tests
     test_integration  : run integration tests
     test_unit         : run unit tests
     """
 }
 
-test_flake8() {
+function test_flake8 {
     flake8 /code/. --config=/code/setup.cfg
 }
 
-test_unit() {
+function after_test {
+    cat /code/conf/extras/good_job.txt
+    rm -R .pytest_cache
+    rm -rf tests/__pycache__
+}
+
+function test_unit {
     pytest -m unit
-    cat /code/conf/extras/good_job.txt
-    rm -R .pytest_cache
-    rm -rf tests/__pycache__
+    after_test
 }
 
-test_integration() {
+function test_integration {
     pytest -m integration
-    cat /code/conf/extras/good_job.txt
-    rm -R .pytest_cache
-    rm -rf tests/__pycache__
+    after_test
 }
 
-test_all() {
+function test_all {
     pytest
-    cat /code/conf/extras/good_job.txt
-    rm -R .pytest_cache
-    rm -rf tests/__pycache__
+    after_test
 }
 
 case "$1" in
@@ -76,7 +76,7 @@ case "$1" in
     flake8 )
         test_flake8
     ;;
-    
+
     pip_freeze )
         pip install -q virtualenv
         rm -rf /tmp/env
@@ -88,9 +88,12 @@ case "$1" in
         /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
     ;;
 
-
     start )
         ./manage.py
+    ;;
+
+    test_lint )
+        test_flake8
     ;;
 
     test_unit )

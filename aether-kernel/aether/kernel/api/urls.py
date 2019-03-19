@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.conf.urls import url
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from . import views
@@ -25,10 +25,10 @@ router = DefaultRouter()
 
 router.register('schemas', views.SchemaViewSet)
 router.register('projects', views.ProjectViewSet)
-router.register('projects-stats', views.ProjectStatsViewSet, base_name='projects_stats')
+router.register('projects-stats', views.ProjectStatsViewSet, basename='projects_stats')
 router.register('projectschemas', views.ProjectSchemaViewSet)
 router.register('mappingsets', views.MappingSetViewSet)
-router.register('mappingsets-stats', views.MappingSetStatsViewSet, base_name='mappingsets_stats')
+router.register('mappingsets-stats', views.MappingSetStatsViewSet, basename='mappingsets_stats')
 router.register('mappings', views.MappingViewSet)
 router.register('submissions', views.SubmissionViewSet)
 router.register('attachments', views.AttachmentViewSet)
@@ -36,5 +36,5 @@ router.register('entities', views.EntityViewSet)
 
 
 urlpatterns = router.urls + [
-    url(r'^validate-mappings/$', views.validate_mappings_view, name='validate-mappings'),
+    path('validate-mappings/', view=views.validate_mappings_view, name='validate-mappings'),
 ]

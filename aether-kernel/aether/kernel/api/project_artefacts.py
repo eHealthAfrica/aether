@@ -27,9 +27,6 @@ from .models import Project, Schema, ProjectSchema, MappingSet, Mapping
 from .avro_tools import avro_schema_to_passthrough_artefacts as parser
 
 
-NAME_MAX_SIZE = 50
-
-
 def get_project_artefacts(project):
     '''
     Returns the list of project and all its artefact ids by type.
@@ -109,6 +106,7 @@ def upsert_project_artefacts(
             pk=raw_schema.get('id'),
             ignore_fields=ignore_fields,
             action=action,
+            unique_name=True,
             name=raw_schema.get('name', __random_name()),
             definition=raw_schema.get('definition', {}),
             type=raw_schema.get('type', NAMESPACE),
@@ -243,16 +241,6 @@ def upsert_project_with_avro_schemas(
         schemas.append(schema)
         mappings.append(mapping)
 
-        # Include an empty mapping if the schema is new
-        id = schema.get('id')
-        if not Schema.objects.filter(pk=id).exists():
-            mappings.append({
-                # even being the same name it's going to append the suffix `-1`
-                'name': schema.get('name'),
-                # the passthrough mapping has created a mappingset with this id
-                'mappingset': id,
-            })
-
     return upsert_project_artefacts(
         action=action,
         project_id=project_id,
@@ -262,7 +250,7 @@ def upsert_project_with_avro_schemas(
     )
 
 
-def __upsert_instance(model, pk=None, ignore_fields=[], action='upsert', **values):
+def __upsert_instance(model, pk=None, ignore_fields=[], action='upsert', unique_name=False, **values):
     '''
     Creates or updates an instance of the indicated Model.
 
@@ -307,7 +295,7 @@ def __upsert_instance(model, pk=None, ignore_fields=[], action='upsert', **value
 
     # with new instances first check that the same name is not already in use
     # otherwise append a numeric suffix or a random string to it
-    if is_new:
+    if is_new and unique_name:
         item.name = __right_pad(model, item.name)
 
     if is_new or action != 'create':
@@ -321,9 +309,8 @@ def __random_name():
     '''
     Creates a random string of length 50.
     '''
-    # Names are unique so we try to avoid annoying errors with duplicated names.
     alphanum = string.ascii_letters + string.digits
-    return ''.join([random.choice(alphanum) for x in range(NAME_MAX_SIZE)])
+    return ''.join([random.choice(alphanum) for x in range(50)])
 
 
 def __right_pad(model, name):
@@ -331,20 +318,18 @@ def __right_pad(model, name):
     Creates a numeric or a random string suffix for the given name
     '''
     SEP = '-'
+    MAX_ITERATIONS = 10000
 
     numeric_suffix = 0
     new_name = name.strip()
 
-    while model.objects.filter(name=new_name[:NAME_MAX_SIZE]).exists():
-        if len(new_name) > NAME_MAX_SIZE:  # in case of name size overflow
-            break
+    while model.objects.filter(name=new_name).exists():
+        if numeric_suffix > MAX_ITERATIONS:  # pragma: no cover
+            # we already tried hard to find out a name...
+            # append a random string to the original name
+            return (f'{name.strip()}{SEP}{__random_name()}')
+
         numeric_suffix += 1
-        new_name = f'{name}{SEP}{numeric_suffix}'
+        new_name = f'{name.strip()}{SEP}{numeric_suffix}'
 
-    if model.objects.filter(name=new_name[:NAME_MAX_SIZE]).exists():
-        # we cannot add any suffix to the name and is already in use
-        # solution, take only a piece of the name and append a random string
-        piece = name[:(NAME_MAX_SIZE - 17)]  # 16 random chars should be enough
-        return (f'{piece}{SEP}{__random_name()}')[:NAME_MAX_SIZE]
-
-    return new_name[:NAME_MAX_SIZE]
+    return new_name

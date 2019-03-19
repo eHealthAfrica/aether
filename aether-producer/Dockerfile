@@ -4,9 +4,13 @@ FROM python:3.7-slim-stretch
 ## setup container
 ################################################################################
 
-RUN apt-get update -qq \
-    && apt-get -qq --yes --force-yes install gcc \
-    && pip install --upgrade pip
+RUN apt-get update -qq && \
+    apt-get -qq \
+        --yes \
+        --allow-downgrades \
+        --allow-remove-essential \
+        --allow-change-held-packages \
+        install gcc
 
 ################################################################################
 ## install app
@@ -20,6 +24,17 @@ RUN pip install -q --upgrade pip && \
     pip install -q -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt
 
 COPY ./ /code
+
+################################################################################
+## copy application version and create git revision
+################################################################################
+
+ARG VERSION
+ARG GIT_REVISION
+
+RUN mkdir -p /var/tmp && \
+    echo $VERSION > /var/tmp/VERSION && \
+    echo $GIT_REVISION > /var/tmp/REVISION
 
 ################################################################################
 ## last setup steps

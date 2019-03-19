@@ -20,15 +20,7 @@ import mock
 from django.test import TestCase
 
 from .. import couchdb_helpers
-
-
-class MockResponse:
-    def __init__(self, status_code, json_data=None):
-        self.json_data = json_data
-        self.status_code = status_code
-
-    def json(self):
-        return self.json_data
+from . import MockResponse
 
 
 class CouchdbHelpersTests(TestCase):
@@ -165,3 +157,8 @@ class CouchdbHelpersTests(TestCase):
         couchdb_helpers.delete_user(device_id='test_xxx')
         api_mock.get.assert_called_with('_users/org.couchdb.user:test_xxx')
         api_mock.delete.assert_called_with('_users/org.couchdb.user:test_xxx?rev=1')
+
+    @mock.patch('aether.sync.api.couchdb_helpers.api.post')
+    def test_create_document(self, post_function):
+        couchdb_helpers.create_document(device_id='abc123', doc={'_id': 'test'})
+        post_function.assert_called_with('device_abc123', json={'_id': 'test'})

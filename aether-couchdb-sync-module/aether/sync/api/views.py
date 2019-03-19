@@ -19,7 +19,6 @@
 import logging
 
 from django.conf import settings
-from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext as _
 from django.views.decorators.csrf import csrf_exempt
 
@@ -30,11 +29,18 @@ from rest_framework.decorators import (
     api_view,
     authentication_classes,
     permission_classes,
+    renderer_classes,
     throttle_classes,
 )
+
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
+from aether.common.multitenancy.views import MtViewSetMixin, MtUserViewSetMixin
+
+from .couchdb_file import load_backup_file
 from .couchdb_helpers import create_db, create_or_update_user
 from .models import Project, Schema, MobileUser, DeviceDB
 from .serializers import ProjectSerializer, SchemaSerializer, MobileUserSerializer
@@ -44,14 +50,12 @@ from .kernel_utils import (
     KernelPropagationError,
 )
 
-from ..settings import LOGGING_LEVEL
-
 
 logger = logging.getLogger(__name__)
-logger.setLevel(LOGGING_LEVEL)
+logger.setLevel(settings.LOGGING_LEVEL)
 
 
-class ProjectViewSet(viewsets.ModelViewSet):
+class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     '''
     Create new Project entries.
     '''
@@ -70,7 +74,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         Reachable at ``.../projects/{pk}/propagate/``
         '''
 
-        project = get_object_or_404(Project, pk=pk)
+        project = self.get_object_or_404(pk=pk)
 
         try:
             propagate_kernel_project(project=project, family=request.data.get('family'))
@@ -83,7 +87,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return self.retrieve(request, pk, *args, **kwargs)
 
 
-class SchemaViewSet(viewsets.ModelViewSet):
+class SchemaViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     '''
     Create new Schema entries providing the AVRO schema via file or raw data.
     '''
@@ -91,9 +95,10 @@ class SchemaViewSet(viewsets.ModelViewSet):
     queryset = Schema.objects.order_by('name')
     serializer_class = SchemaSerializer
     search_fields = ('name', 'avro_schema',)
+    mt_field = 'project'
 
     def get_queryset(self):
-        queryset = self.queryset
+        queryset = super(SchemaViewSet, self).get_queryset()
 
         project_id = self.request.query_params.get('project_id', None)
         if project_id is not None:
@@ -109,7 +114,7 @@ class SchemaViewSet(viewsets.ModelViewSet):
         Reachable at ``.../schemas/{pk}/propagate/``
         '''
 
-        schema = get_object_or_404(Schema, pk=pk)
+        schema = self.get_object_or_404(pk=pk)
 
         try:
             propagate_kernel_artefacts(schema=schema, family=request.data.get('family'))
@@ -122,7 +127,7 @@ class SchemaViewSet(viewsets.ModelViewSet):
         return self.retrieve(request, pk, *args, **kwargs)
 
 
-class MobileUserViewSet(viewsets.ModelViewSet):
+class MobileUserViewSet(MtUserViewSetMixin, viewsets.ModelViewSet):
     '''
     Create new Mobile User entries.
     '''
@@ -268,3 +273,20 @@ def signin(request):
         'url': request.build_absolute_uri('/_couchdb/' + device_db.db_name),
     }
     return Response(payload, status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@renderer_classes([JSONRenderer])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def load_file(request):
+    '''
+    POST file content into CouchDB server.
+    '''
+
+    try:
+        stats = load_backup_file(fp=request.FILES['file'])
+        return Response(data=stats)
+
+    except Exception as e:
+        logger.exception(e)
+        return Response(data={'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)

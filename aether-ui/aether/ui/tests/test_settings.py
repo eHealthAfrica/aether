@@ -24,8 +24,10 @@ class SettingsTest(TestCase):
 
     def test_default_variables(self):
 
+        self.assertTrue(settings.MULTITENANCY)
         self.assertTrue(settings.TESTING)
         self.assertFalse(settings.DEBUG)
 
         self.assertEqual(settings.ROOT_URLCONF, 'aether.ui.urls')
         self.assertEqual(settings.APP_NAME, 'Aether')
+        self.assertIsNone(settings.DJANGO_STORAGE_BACKEND)

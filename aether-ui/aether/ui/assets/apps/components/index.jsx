@@ -23,6 +23,7 @@ import AppLayout from './AppLayout'
 import AvroSchemaViewer from './AvroSchemaViewer'
 import EntityTypeViewer from './EntityTypeViewer'
 import Modal from './Modal'
+import ModalError from './ModalError'
 import NavBar from './NavBar'
 
 // export all components
@@ -31,5 +32,6 @@ export {
   AvroSchemaViewer,
   EntityTypeViewer,
   Modal,
+  ModalError,
   NavBar
 }

@@ -34,7 +34,6 @@ from aether.common.multitenancy import utils
 from .. import models, serializers
 
 CURRENT_REALM = 'realm'
-factory = RequestFactory()
 
 
 class MultitenancyTests(TestCase):
@@ -59,20 +58,32 @@ class MultitenancyTests(TestCase):
         self.assertEqual(utils.get_multitenancy_model(), models.Project)
 
     def test_models(self):
-        # no affected by realm value
+        # not affected by realm value
         schema = models.Schema.objects.create(name='schema', definition={})
         self.assertTrue(utils.is_accessible_by_realm(self.request, schema))
 
         obj1 = models.Project.objects.create(name='p')
         child1 = models.MappingSet.objects.create(name='ms', project=obj1)
+
         self.assertFalse(obj1.is_accessible(CURRENT_REALM))
         self.assertFalse(child1.is_accessible(CURRENT_REALM))
-        self.assertTrue(MtInstance.objects.count() == 0)
 
-        obj1.save_mt(self.request)
+        self.assertTrue(obj1.is_accessible(settings.DEFAULT_REALM))
+        self.assertTrue(child1.is_accessible(settings.DEFAULT_REALM))
+        self.assertEqual(obj1.get_realm(), settings.DEFAULT_REALM)
+        self.assertEqual(child1.get_realm(), settings.DEFAULT_REALM)
+
+        self.assertTrue(MtInstance.objects.count() == 0)
+        obj1.add_to_realm(self.request)
         self.assertTrue(MtInstance.objects.count() > 0)
+
         self.assertTrue(obj1.is_accessible(CURRENT_REALM))
         self.assertTrue(child1.is_accessible(CURRENT_REALM))
+        self.assertEqual(obj1.get_realm(), CURRENT_REALM)
+        self.assertEqual(child1.get_realm(), CURRENT_REALM)
+
+        self.assertFalse(obj1.is_accessible(settings.DEFAULT_REALM))
+        self.assertFalse(child1.is_accessible(settings.DEFAULT_REALM))
 
         mt1 = MtInstance.objects.get(instance=obj1)
         self.assertEqual(str(mt1), str(obj1))
@@ -83,7 +94,7 @@ class MultitenancyTests(TestCase):
         self.assertEqual(obj1.mt.realm, CURRENT_REALM)
         self.assertFalse(utils.is_accessible_by_realm(self.request, obj1))
 
-        obj1.save_mt(self.request)
+        obj1.add_to_realm(self.request)
         self.assertTrue(utils.is_accessible_by_realm(self.request, obj1))
         self.assertEqual(obj1.mt.realm, 'another')
 
@@ -113,7 +124,7 @@ class MultitenancyTests(TestCase):
         # create data assigned to different realms
         obj1 = models.Project.objects.create(name='one')
         child1 = models.MappingSet.objects.create(name='child1', project=obj1)
-        obj1.save_mt(self.request)
+        obj1.add_to_realm(self.request)
         self.assertEqual(obj1.mt.realm, CURRENT_REALM)
 
         # change realm
@@ -127,7 +138,7 @@ class MultitenancyTests(TestCase):
 
         # check that views only return instances linked to CURRENT_REALM
         url = reverse('project-list')
-        response = self.client.get(url, format='json')
+        response = self.client.get(url)
         self.assertEqual(response.client.cookies[settings.REALM_COOKIE].value, CURRENT_REALM)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -135,18 +146,25 @@ class MultitenancyTests(TestCase):
         self.assertEqual(data['count'], 1)
 
         url = reverse('project-detail', kwargs={'pk': obj1.pk})
-        response = self.client.get(url, format='json')
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         url = reverse('mappingset-detail', kwargs={'pk': child1.pk})
-        response = self.client.get(url, format='json')
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # linked to another realm
         url = reverse('project-detail', kwargs={'pk': obj2.pk})
-        response = self.client.get(url, format='json')
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        # custom endpoints
+        url = reverse('project-artefacts', kwargs={'pk': obj2.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        response = self.client.patch(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
         url = reverse('mappingset-detail', kwargs={'pk': child2.pk})
-        response = self.client.get(url, format='json')
+        response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_views__project(self):
@@ -198,7 +216,7 @@ class NoMultitenancyTests(TestCase):
         self.assertTrue(self.client.login(username=username, password=password))
 
     def test_no_multitenancy(self, *args):
-        # no affected by realm value
+        # not affected by realm value
         schema = models.Schema.objects.create(name='schema', definition={})
         self.assertTrue(utils.is_accessible_by_realm(self.request, schema))
 
@@ -210,17 +228,24 @@ class NoMultitenancyTests(TestCase):
         initial_data = models.Project.objects.all()
         self.assertEqual(utils.filter_by_realm(self.request, initial_data), initial_data)
 
-        self.assertFalse(utils.assign_to_realm(self.request, project))
+        project.add_to_realm(self.request)
         self.assertTrue(MtInstance.objects.count() == 0)
 
     def test_models(self):
         obj1 = models.Project.objects.create(name='p')
         child1 = models.MappingSet.objects.create(name='ms', project=obj1)
+
         self.assertFalse(obj1.is_accessible(CURRENT_REALM))
         self.assertFalse(child1.is_accessible(CURRENT_REALM))
-        self.assertTrue(MtInstance.objects.count() == 0)
 
-        obj1.save_mt(self.request)
+        self.assertFalse(obj1.is_accessible(settings.DEFAULT_REALM))
+        self.assertFalse(child1.is_accessible(settings.DEFAULT_REALM))
+
+        self.assertIsNone(obj1.get_realm())
+        self.assertIsNone(child1.get_realm())
+
+        self.assertTrue(MtInstance.objects.count() == 0)
+        obj1.add_to_realm(self.request)
         self.assertTrue(MtInstance.objects.count() == 0)
 
     def test_serializers(self):

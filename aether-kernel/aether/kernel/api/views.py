@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.db.models import Count, Min, Max, TextField, Q, Case, When
+from django.db.models import Count, Min, Max, TextField, Q
 from django.db.models.functions import Cast
 from django.shortcuts import get_object_or_404
 
@@ -32,7 +32,7 @@ from rest_framework.decorators import (
 )
 from rest_framework.renderers import JSONRenderer
 
-from aether.common.multitenancy.utils import MtViewSetMixin
+from aether.common.multitenancy.views import MtViewSetMixin
 
 from .avro_tools import extract_jsonpaths_and_docs
 from .constants import LINKED_DATA_MAX_DEPTH
@@ -71,7 +71,7 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
 
         '''
 
-        project = get_object_or_404(models.Project, pk=pk)
+        project = self.get_object_or_404(pk=pk)
 
         # extract jsonpaths and docs from linked schemas definition
         jsonpaths = []
@@ -139,7 +139,7 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         Returns the list of project and all its artefact ids by type.
         '''
 
-        project = get_object_or_404(models.Project, pk=pk)
+        project = self.get_object_or_404(pk=pk)
         results = project_artefacts.get_project_artefacts(project)
 
         return Response(data=results)
@@ -227,6 +227,8 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
             }
 
         '''
+        # check that the existent project is accessible
+        self.get_object_or_403(pk=pk)
 
         data = request.data
         results = project_artefacts.upsert_project_artefacts(
@@ -239,7 +241,7 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         )
 
         project = get_object_or_404(models.Project, pk=results['project'])
-        project.save_mt(request)
+        project.add_to_realm(request)
 
         return Response(data=results)
 
@@ -286,6 +288,8 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
             }
 
         '''
+        # check that the existent project is accessible
+        self.get_object_or_403(pk=pk)
 
         data = request.data
         results = project_artefacts.upsert_project_with_avro_schemas(
@@ -297,7 +301,7 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         )
 
         project = get_object_or_404(models.Project, pk=results['project'])
-        project.save_mt(request)
+        project.add_to_realm(request)
 
         return Response(data=results)
 
@@ -306,21 +310,21 @@ class MappingSetViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.MappingSet.objects.all()
     serializer_class = serializers.MappingSetSerializer
     filter_class = filters.MappingSetFilter
-    mt_field = 'project__mt'
+    mt_field = 'project'
 
 
 class MappingViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.Mapping.objects.all()
     serializer_class = serializers.MappingSerializer
     filter_class = filters.MappingFilter
-    mt_field = 'mappingset__project__mt'
+    mt_field = 'mappingset__project'
 
 
 class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
     queryset = models.Submission.objects.all()
     serializer_class = serializers.SubmissionSerializer
     filter_class = filters.SubmissionFilter
-    mt_field = 'mappingset__project__mt'
+    mt_field = 'mappingset__project'
 
     @action(detail=True, methods=['patch'])
     def extract(self, request, pk, *args, **kwargs):
@@ -330,7 +334,7 @@ class SubmissionViewSet(MtViewSetMixin, ExporterViewSet):
         Reachable at ``PATCH /submissions/{pk}/extract/``
         '''
 
-        instance = get_object_or_404(models.Submission, pk=pk)
+        instance = self.get_object_or_404(pk=pk)
 
         try:
             run_entity_extraction(instance, overwrite=True)
@@ -354,7 +358,7 @@ class AttachmentViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.Attachment.objects.all()
     serializer_class = serializers.AttachmentSerializer
     filter_class = filters.AttachmentFilter
-    mt_field = 'submission__mappingset__project__mt'
+    mt_field = 'submission__mappingset__project'
 
 
 class SchemaViewSet(viewsets.ModelViewSet):
@@ -392,7 +396,7 @@ class ProjectSchemaViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.ProjectSchema.objects.all()
     serializer_class = serializers.ProjectSchemaSerializer
     filter_class = filters.ProjectSchemaFilter
-    mt_field = 'project__mt'
+    mt_field = 'project'
 
     @action(detail=True, methods=['get'])
     def skeleton(self, request, pk=None, *args, **kwargs):
@@ -402,7 +406,7 @@ class ProjectSchemaViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         Reachable at ``/projectschemas/{pk}/skeleton/``
         '''
 
-        project_schema = get_object_or_404(models.ProjectSchema, pk=pk)
+        project_schema = self.get_object_or_404(pk=pk)
         schema = project_schema.schema
 
         # extract jsonpaths and docs from the schema definition
@@ -425,7 +429,7 @@ class EntityViewSet(MtViewSetMixin, ExporterViewSet):
     queryset = models.Entity.objects.all()
     serializer_class = serializers.EntitySerializer
     filter_class = filters.EntityFilter
-    mt_field = 'project__mt'
+    mt_field = 'project'
 
     # Exporter required fields
     schema_field = 'projectschema__schema__definition'
@@ -471,7 +475,7 @@ class EntityViewSet(MtViewSetMixin, ExporterViewSet):
         except Exception:
             depth = 0
 
-        instance = get_object_or_404(models.Entity, pk=pk)
+        instance = self.get_object_or_404(pk=pk)
         try:
             if depth:
                 instance.resolved = get_entity_linked_data(instance, request, {}, depth)
@@ -510,19 +514,11 @@ class SubmissionStatsMixin(MtViewSetMixin):
                 entities_filter = Q(submissions__entities__projectschema__schema__family=family)
 
         if entities_filter:
-            # Django 1: use Case+When
             entities_count = Count(
-                expression=Case(When(entities_filter, then='submissions__entities__id')),
+                expression='submissions__entities__id',
                 distinct=True,
+                filter=entities_filter,
             )
-
-            # Django 2: filter in Count
-            # (replace code above with this block when we upgrade to Django 2)
-            # entities_count = Count(
-            #     expression='submissions__entities__id',
-            #     distinct=True,
-            #     filter=entities_filter,
-            # )
 
         return qs.values('id', 'name', 'created') \
                  .annotate(
@@ -542,7 +538,7 @@ class ProjectStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
 class MappingSetStatsViewSet(SubmissionStatsMixin, viewsets.ReadOnlyModelViewSet):
     queryset = models.MappingSet.objects.all()
     serializer_class = serializers.MappingSetStatsSerializer
-    mt_field = 'project__mt'
+    mt_field = 'project'
 
 
 SchemaView = get_schema_view(

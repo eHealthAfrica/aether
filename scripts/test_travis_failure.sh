@@ -20,8 +20,63 @@
 #
 set -Eeuo pipefail
 
+DC="docker-compose -f docker-compose-test.yml logs -t --tail=all"
+
 case "$1" in
-    integration | all )
-        docker-compose -f docker-compose-test.yml logs -t --tail="all"
+    core)
+        $DC db-test
+        echo "_____________________________________________"
+
+        $DC kernel-test
+        echo "_____________________________________________"
+        $DC client-test
+        echo "_____________________________________________"
+    ;;
+
+    modules)
+        $DC db-test
+        echo "_____________________________________________"
+        $DC couchdb-test
+        echo "_____________________________________________"
+        $DC redis-test
+        echo "_____________________________________________"
+
+        $DC kernel-test
+        echo "_____________________________________________"
+        $DC odk-test
+        echo "_____________________________________________"
+        $DC couchdb-sync-test
+        echo "_____________________________________________"
+    ;;
+
+    integration)
+        $DC db-test
+        echo "_____________________________________________"
+
+        $DC kafka-test
+        echo "_____________________________________________"
+        $DC zookeeper-test
+        echo "_____________________________________________"
+
+        $DC kernel-test
+        echo "_____________________________________________"
+        $DC producer-test
+        echo "_____________________________________________"
+        $DC integration-test
+        echo "_____________________________________________"
+    ;;
+
+    ui)
+        $DC db-test
+        echo "_____________________________________________"
+
+        $DC kernel-test
+        echo "_____________________________________________"
+        $DC ui-test
+        echo "_____________________________________________"
+    ;;
+
+    *)
+        $DC
     ;;
 esac

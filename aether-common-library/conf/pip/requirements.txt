@@ -1,0 +1,31 @@
+################################################################################
+#                                                                              #
+#                           Requirements for testing                           #
+#    (If you need production dependencies, add them to the `setup.py` file)    #
+#                                                                              #
+################################################################################
+
+django
+django-cors-headers
+django-minio-storage
+django-prometheus
+django-uwsgi
+djangorestframework
+psycopg2-binary
+pygments
+python-json-logger
+requests
+
+
+# Keycloak libraries
+jwcrypto
+pyjwt
+python-keycloak
+
+
+# test libraries
+coverage
+flake8
+flake8-quotes
+mock
+tblib

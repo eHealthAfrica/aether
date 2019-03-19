@@ -18,54 +18,60 @@
  * under the License.
  */
 
+const express = require('express')
+const http = require('http')
+const path = require('path')
 const webpack = require('webpack')
-const WebpackDevServer = require('webpack-dev-server')
 const buildConfig = require('./webpack.common')
 
 const WEBPACK_PORT = 3004
 const WEBPACK_URL = `http://localhost:${WEBPACK_PORT}`
+const WEBPACK_HMR_PATH = '/__webpack_hmr'
 
-const config = buildConfig({
-  production: false,
-  stylesAsCss: false,
+const HMR_URL = 'webpack-hot-middleware/client?' +
+  '&path=' + WEBPACK_URL + WEBPACK_HMR_PATH +
+  '&timeout=20000' +
+  '&reload=true'
 
-  entryOptions: [
-    // bundle the client for webpack-dev-server
-    // and connect to the provided endpoint
-    'webpack-dev-server/client?' + WEBPACK_URL,
-    // bundle the client for hot reloading
-    // only- means to only hot reload for successful updates
-    'webpack/hot/only-dev-server'
-    // the entry point of our app
-    // ...
-  ],
+const webpackOptions = Object.assign(
+  {},
+  buildConfig({
+    production: false,
+    stylesAsCss: false,
 
-  output: {
-    // Tell django to use this URL to load packages
-    // and not use STATIC_URL + bundle_name
-    publicPath: WEBPACK_URL + '/static/'
-  },
+    hmr: HMR_URL,
 
-  plugins: [
-    // enable HMR globally
-    new webpack.HotModuleReplacementPlugin(),
-    // prints more readable module names in the browser console on HMR updates
-    new webpack.NamedModulesPlugin(),
-    // do not reload if there is an error
-    new webpack.NoEmitOnErrorsPlugin()
-  ]
-})
+    output: {
+      // Tell django to use this URL to load packages
+      // and not use STATIC_URL + bundle_name
+      publicPath: WEBPACK_URL + '/static/'
+    },
 
-new WebpackDevServer(webpack(config), {
-  publicPath: config.output.publicPath,
-  hot: true,
+    plugins: [
+      // enable HMR globally
+      new webpack.HotModuleReplacementPlugin()
+    ]
+  }),
+  {
+    devtool: 'inline-source-map'
+  }
+)
+
+const serverOptions = {
+  publicPath: webpackOptions.output.publicPath,
+  contentBase: path.resolve(__dirname, '../'),
+  host: '0.0.0.0',
+
   inline: true,
   historyApiFallback: true,
+
   // Fixes:
-  //    Access to XXX at 'https://localhost:{port}/static/ZZZ' from origin
+  //    Access to XXX at 'http://localhost:{port}/static/ZZZ' from origin
   //    has been blocked by CORS policy
+  // Triggered by HMR
   headers: { 'Access-Control-Allow-Origin': '*' },
   https: false,
+
   // It suppress error shown in console, so it has to be set to false.
   quiet: false,
   // It suppress everything except error, so it has to be set to false as well
@@ -73,6 +79,7 @@ new WebpackDevServer(webpack(config), {
   noInfo: false,
   stats: {
     // Config for minimal console.log mess.
+    builtAt: true,
     assets: false,
     colors: true,
     version: false,
@@ -81,11 +88,34 @@ new WebpackDevServer(webpack(config), {
     chunks: false,
     chunkModules: false
   },
+
   watchOptions: {
     aggregateTimeout: 300,
     poll: 1000
   }
+}
+
+const app = express()
+
+// Step 1: Create & configure a webpack compiler
+var compiler = webpack(webpackOptions)
+
+// Step 2: Attach the dev middleware to the compiler & the server
+app.use(require('webpack-dev-middleware')(compiler, serverOptions))
+
+// Step 3: Attach the hot middleware to the compiler & the server
+app.use(require('webpack-hot-middleware')(compiler, {
+  log: console.log,
+  path: WEBPACK_HMR_PATH,
+  heartbeat: 10 * 1000
+}))
+
+app.get('/', function (req, res) {
+  res.send(webpackOptions)
 })
-  .listen(WEBPACK_PORT, '0.0.0.0', () => {
-    console.log('Listening at', WEBPACK_URL)
-  })
+
+// Step 4: Start the server
+var server = http.createServer(app)
+server.listen(WEBPACK_PORT, '0.0.0.0', () => {
+  console.log('Listening on %j', server.address())
+})

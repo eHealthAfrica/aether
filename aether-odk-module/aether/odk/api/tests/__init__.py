@@ -231,7 +231,8 @@ XML_DATA_ERR = '''
 
 
 class MockResponse:
-    def __init__(self, status_code, json_data=None):
+
+    def __init__(self, status_code, json_data={}):
         self.json_data = json_data
         self.status_code = status_code
         self.content = json.dumps(json_data).encode('utf-8')
@@ -314,7 +315,6 @@ class CustomTestCase(TransactionTestCase):
         password = 'surveyorsurveyor'
         surveyor = UserModel.create_user(username, email, password)
         surveyor.groups.add(self.surveyor_group)
-        surveyor.save()
         return surveyor
 
     def helper_create_project(self, project_id=None, surveyor=None):
@@ -333,7 +333,6 @@ class CustomTestCase(TransactionTestCase):
                 project.surveyors.set(surveyor)
             else:
                 project.surveyors.add(surveyor)
-            project.save()
 
         return project
 
@@ -363,7 +362,6 @@ class CustomTestCase(TransactionTestCase):
                 xform.surveyors.set(surveyor)
             else:
                 xform.surveyors.add(surveyor)
-            xform.save()
 
         if with_media:
             MediaFile.objects.create(

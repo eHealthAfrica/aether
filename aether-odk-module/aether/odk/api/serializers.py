@@ -22,14 +22,26 @@ from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
+from aether.common.multitenancy.serializers import (
+    MtModelSerializer,
+    MtPrimaryKeyRelatedField,
+    MtUserRelatedField,
+)
+from aether.common.multitenancy.utils import add_user_to_realm
+
 from .models import Project, XForm, MediaFile
 from .xform_utils import parse_xform_file, validate_xform
-from .surveyors_utils import get_surveyors, flag_as_surveyor
+from .surveyors_utils import get_surveyors, get_surveyor_group
 
 
 class MediaFileSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     name = serializers.CharField(allow_null=True, default=None)
+
+    xform = MtPrimaryKeyRelatedField(
+        queryset=XForm.objects.all(),
+        mt_field='project',
+    )
 
     class Meta:
         model = MediaFile
@@ -45,13 +57,13 @@ class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         read_only=True
     )
 
-    surveyors = serializers.PrimaryKeyRelatedField(
-        label=_('Surveyors'),
-        many=True,
-        queryset=get_surveyors(),
+    surveyors = MtUserRelatedField(
         allow_null=True,
         default=[],
         help_text=_('If you do not specify any surveyors, EVERYONE will be able to access this xForm.'),
+        label=_('Surveyors'),
+        many=True,
+        queryset=get_surveyors(),
     )
 
     xml_file = serializers.FileField(
@@ -64,6 +76,10 @@ class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     # this will return all media files in one request call
     media_files = MediaFileSerializer(many=True, read_only=True)
+
+    project = MtPrimaryKeyRelatedField(
+        queryset=Project.objects.all(),
+    )
 
     def validate(self, value):
         if value['xml_file']:
@@ -99,7 +115,7 @@ class SurveyorSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         instance = self.Meta.model(**validated_data)
         instance.set_password(password)
         instance.save()
-        flag_as_surveyor(instance)
+        self.post_save(instance)
 
         return instance
 
@@ -111,25 +127,30 @@ class SurveyorSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
             else:
                 setattr(instance, attr, value)
         instance.save()
-        flag_as_surveyor(instance)
+        self.post_save(instance)
 
         return instance
+
+    def post_save(self, instance):
+        instance.groups.add(get_surveyor_group())
+        add_user_to_realm(self.context['request'], instance)
 
     class Meta:
         model = get_user_model()
         fields = ('id', 'username', 'password', )
 
 
-class ProjectSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):
 
     url = serializers.HyperlinkedIdentityField('project-detail', read_only=True)
-    surveyors = serializers.PrimaryKeyRelatedField(
-        label=_('Surveyors'),
-        many=True,
-        queryset=get_surveyors(),
+
+    surveyors = MtUserRelatedField(
         allow_null=True,
         default=[],
         help_text=_('If you do not specify any surveyors, EVERYONE will be able to access this project xForms.'),
+        label=_('Surveyors'),
+        many=True,
+        queryset=get_surveyors(),
     )
     # this will return all linked xForms with media files in one request call
     xforms = XFormSerializer(read_only=True, many=True)

@@ -1,4 +1,3 @@
-
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -18,18 +17,166 @@
 # under the License.
 
 import json
-import requests
 import uuid
 
+from requests.exceptions import HTTPError
+
+from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
 from rest_framework import status
 
 from aether.common.kernel import utils
-
+from aether.common.multitenancy import utils as mt_utils
+from aether.common.utils import get_all_docs, request
 
 from . import models
+
+
+MSG_CONTRACT_VALIDATION_ERROR = _('It was not possible to validate the contract: {}')
+MSG_CONTRACT_VALIDATION_KERNEL_ERROR = _('It was not possible to connect to Aether Kernel.')
+
+MSG_PROJECT_IN_KERNEL = _('Project is already published')
+MSG_PROJECT_IN_KERNEL_WRONG = _('Project in kernel belongs to a different tenant')
+MSG_PROJECT_NOT_IN_KERNEL = _('Project will be published')
+
+MSG_PIPELINE_NO_INPUT = _('Pipeline has no input')
+MSG_PIPELINE_IN_KERNEL = _('Pipeline (as mapping set) is already published')
+MSG_PIPELINE_NOT_IN_KERNEL = _('Pipeline (as mapping set) will be published')
+MSG_PIPELINE_WRONG_PROJECT = _('Pipeline belongs to a different project in kernel')
+MSG_PIPELINE_INPUT_CHANGED = _('Input data will be changed')
+MSG_PIPELINE_SCHEMA_CHANGED = _('Schema data will be changed')
+
+MSG_CONTRACT_READ_ONLY = _('Contract is read only')
+MSG_CONTRACT_NO_ENTITIES = _('Contract has no entity types')
+MSG_CONTRACT_NO_MAPPING_RULES = _('Contract has no mapping rules')
+MSG_CONTRACT_MAPPING_RULES_ERROR = _('Contract mapping rules have errors')
+MSG_CONTRACT_IN_KERNEL = _('Contract (as mapping) is already published')
+MSG_CONTRACT_NOT_IN_KERNEL = _('Contract (as mapping) will be published')
+MSG_CONTRACT_WRONG_MAPPINGSET = _('Contract belongs to a different pipeline (mapping set) in kernel')
+MSG_CONTRACT_WRONG_PROJECT = _('Contract belongs to a different project in kernel')
+MSG_CONTRACT_MAPPING_RULES_CHANGED = _('Mapping rules data will be changed')
+
+MSG_ENTITY_IN_KERNEL_SCHEMA = _('Entity type "{}" (as schema) is already published')
+MSG_ENTITY_NOT_IN_KERNEL_SCHEMA = _('Entity type "{}" (as schema) will be published')
+MSG_ENTITY_SCHEMA_CHANGED = _('Entity type "{}" (as schema) data will be changed')
+
+MSG_ENTITY_IN_KERNEL_PROJECT_SCHEMA = _('Entity type "{}" (as project schema) is already published')
+MSG_ENTITY_NOT_IN_KERNEL_PROJECT_SCHEMA = _('Entity type "{}" (as project schema) will be published')
+MSG_ENTITY_WRONG_PROJECT = _('Entity type "{}" (as project schema) belongs to a different project in kernel')
+
+
+class PublishError(Exception):
+    pass
+
+
+def get_default_project(request):
+    '''
+    Returns (creates when needed) the default project to assign to new pipelines.
+    '''
+
+    # find the default projects
+    default_projects = mt_utils.filter_by_realm(request, models.Project.objects.filter(is_default=True))
+    if default_projects.count() == 0:
+        # create a default one
+        realm = mt_utils.get_current_realm(request)
+        name = settings.DEFAULT_PROJECT_NAME if not settings.MULTITENANCY else realm
+
+        project = models.Project.objects.create(name=name, is_default=True)
+        project.add_to_realm(request)
+
+        return project
+    else:
+        return default_projects.first()
+
+
+def kernel_artefacts_to_ui_artefacts(request):
+    '''
+    Fetches all projects in kernel and all linked mappingsets and tranform them into pipelines,
+    taking also the linked mappings+schemas and transform them into contracts.
+    '''
+
+    KERNEL_URL = utils.get_kernel_server_url()
+    # restrict by current realm (if enabled)
+    headers = mt_utils.add_current_realm_in_headers(request, utils.get_auth_header())
+
+    projects = get_all_docs(f'{KERNEL_URL}/projects/', headers=headers)
+    for kernel_project in projects:
+        project_id = kernel_project['id']
+
+        if not models.Project.objects.filter(pk=project_id).exists():
+            # create the project
+            models.Project.objects.create(project_id=project_id, name=kernel_project['name'])
+
+        project = models.Project.objects.get(pk=project_id)
+        project.add_to_realm(request)
+
+        # fetch linked mapping sets
+        mappingsets = get_all_docs(kernel_project['mappingset_url'], headers=headers)
+        for mappingset in mappingsets:
+            mappingset_id = mappingset['id']
+
+            if not models.Pipeline.objects.filter(mappingset=mappingset_id).exists():
+                # create the pipeline
+                models.Pipeline.objects.create(
+                    id=mappingset_id,  # use mappingset id as pipeline id
+                    name=mappingset['name'],
+                    schema=mappingset['schema'],
+                    input=mappingset['input'],
+                    mappingset=mappingset_id,
+                    project=project,
+                )
+            pipeline = models.Pipeline.objects.get(mappingset=mappingset_id)
+
+            # fetch linked mappings
+            mappings = get_all_docs(mappingset['mappings_url'], headers=headers)
+            for mapping in mappings:
+                mapping_id = mapping['id']
+
+                if models.Contract.objects.filter(mapping=mapping_id).exists():
+                    # do not update the current contract
+                    continue
+
+                ps_fields = 'id,schema,schema_definition'
+                ps_url = mapping['projectschemas_url'] + f'&fields={ps_fields}'
+                # get_all_docs is a generator, wrap results as list to get them
+                project_schemas = list(get_all_docs(ps_url, headers=headers))
+
+                # find out the linked schema ids from the project schema ids (mapping entities)
+                entities = mapping['definition']['entities']              # format    {entity name: ps id}
+                entity_names_by_id = {v: k for k, v in entities.items()}  # turn into {ps id: entity name}
+                schemas = {
+                    entity_names_by_id[ps['id']]: ps['schema']
+                    for ps in project_schemas
+                }
+
+                models.Contract.objects.create(
+                    id=mapping_id,  # use mapping id as contract id
+                    name=mapping['name'],
+                    pipeline=pipeline,
+
+                    mapping_rules=[
+                        {'id': str(uuid.uuid4()), 'source': rule[0], 'destination': rule[1]}
+                        for rule in mapping['definition']['mapping']
+                    ],
+                    entity_types=[
+                        ps['schema_definition']
+                        for ps in project_schemas
+                    ],
+
+                    is_active=mapping['is_active'],
+                    is_read_only=mapping['is_read_only'],
+
+                    mapping=mapping_id,
+                    kernel_refs={
+                        # Refers to project schemas in Kernel {entity name: project schema id}
+                        'entities': entities,
+                        # Refers to schemas in Kernel {entity name: schema id}
+                        'schemas': schemas,
+                    },
+                    published_on=mapping['modified'],
+                )
 
 
 def validate_contract(contract):
@@ -66,13 +213,13 @@ def validate_contract(contract):
 
     '''
 
-    if not contract.pipeline.input or not contract.mapping or not contract.entity_types:
+    if not contract.pipeline.input or not contract.mapping_rules or not contract.entity_types:
         return [], []
 
     # check kernel connection
     if not utils.test_connection():
         return (
-            [{'description': _('It was not possible to connect to Aether Kernel.')}],
+            [{'description': MSG_CONTRACT_VALIDATION_KERNEL_ERROR}],
             [],
         )
 
@@ -83,9 +230,9 @@ def validate_contract(contract):
     #    "submission_payload": { json sample },
     #    "mapping_definition": {
     #      "entities": {
-    #        "entity-type-name-1": None,
-    #        "entity-type-name-2": None,
-    #        "entity-type-name-3": None,
+    #        "entity-type-name-1": UUID,
+    #        "entity-type-name-2": UUID,
+    #        "entity-type-name-3": UUID,
     #        ...
     #      },
     #      "mapping": [
@@ -111,22 +258,18 @@ def validate_contract(contract):
         entities[name] = str(uuid.uuid4())  # the value must be UUID complaint
         schemas[name] = entity_type
 
-    mapping = [
-        [rule['source'], rule['destination']]
-        for rule in contract.mapping
-    ]
-
     payload = {
         'submission_payload': contract.pipeline.input,
         'mapping_definition': {
             'entities': entities,
-            'mapping': mapping,
+            'mapping': contract.kernel_rules,
         },
         'schemas': schemas,
     }
-    kernel_url = utils.get_kernel_server_url()
-    resp = requests.post(
-        url=f'{kernel_url}/validate-mappings/',
+
+    resp = request(
+        method='post',
+        url=f'{utils.get_kernel_server_url()}/validate-mappings/',
         json=json.loads(json.dumps(payload)),
         headers=utils.get_auth_header(),
     )
@@ -135,11 +278,11 @@ def validate_contract(contract):
         errors = data.get('mapping_errors', [])
         output = data.get('entities', [])
         return (errors, output)
-    # The 400 response we get from the restframework serializers is a
-    # dictionary. The keys are serializer field names and the values are
-    # lists of errors. Concatenate all lists and return the result as
-    # `errors`.
-    elif resp.status_code == status.HTTP_400_BAD_REQUEST:
+
+    if resp.status_code == status.HTTP_400_BAD_REQUEST:
+        # The 400 response we get from the rest-framework serializers is a
+        # dictionary. The keys are the serializer field names and the values are
+        # lists of errors. Concatenate all lists and return the result as `errors`.
         data = resp.json()
         errors = []
         for error_group in data.values():
@@ -147,290 +290,377 @@ def validate_contract(contract):
                 error = {'description': str(error_detail)}
                 errors.append(error)
         return (errors, [])
-    else:
-        data = resp.text
-        description = _('It was not possible to validate the pipeline: {}').format(str(data))
-        errors = [{'description': description}]
-        return (errors, [])
+
+    data = resp.text
+    description = MSG_CONTRACT_VALIDATION_ERROR.format(str(data))
+    errors = [{'description': description}]
+    return (errors, [])
 
 
-def kernel_to_pipeline():
+def publish_project(project):
     '''
-    Fetches all mappingsets in kernel and tranform them into pipelines,
-    taking also the linked mappings+schemas and transform them into contracts.
+    Publish the project in Kernel (without linked data)
     '''
-    KERNEL_URL = utils.get_kernel_server_url()
 
-    mappingsets = utils.get_all_docs(f'{KERNEL_URL}/mappingsets/')
-    for mappingset in mappingsets:
-        mappingset_id = mappingset['id']
+    pk = str(project.pk)
+    artefacts = model_to_artefacts(project)
 
-        if models.Pipeline.objects.filter(mappingset=mappingset_id).count() > 0:
-            # do not update the current pipeline but bring new contracts
-            pipeline = models.Pipeline.objects.filter(mappingset=mappingset_id).first()
-        else:
-            # create the pipeline
-            pipeline = models.Pipeline.objects.create(
-                id=mappingset_id,  # use mappingset id as pipeline id
-                name=mappingset['name'],
-                schema=mappingset['schema'],
-                input=mappingset['input'],
-                mappingset=mappingset_id,
-            )
+    try:
+        kernel_data_request(
+            url=f'projects/{pk}/artefacts/',
+            method='patch',
+            data=artefacts,
+            headers=wrap_kernel_headers(project),
+        )
+    except Exception as e:
+        raise PublishError(e)
 
-        # fetch linked mappings
-        url = f'{KERNEL_URL}/mappings/?mappingset={mappingset_id}'
-        mappings = utils.get_all_docs(url)
 
-        for mapping in mappings:
-            mapping_id = mapping['id']
+def publish_pipeline(pipeline):
+    '''
+    Transform pipeline to kernel artefacts and publish (without linked data)
+    '''
 
-            if models.Contract.objects.filter(kernel_refs__mapping=mapping_id).count() > 0:
-                # do not update the current contract
-                continue
+    pk = str(pipeline.project.pk)
 
-            schemas_url = f'{KERNEL_URL}/schemas/?fields=definition&mapping={mapping_id}'
+    # if there is at least one readonly contract do not update only create if missing
+    action = 'create' if pipeline.contracts.filter(is_read_only=True).exists() else 'upsert'
+    artefacts = model_to_artefacts(pipeline)
+    mappingset_id = artefacts['mappingsets'][0]['id']
 
-            models.Contract.objects.create(
-                id=mapping_id,  # use mapping id as contract id
-                name=mapping['name'],
-                pipeline=pipeline,
+    data = {
+        'action': action,
+        **artefacts,
+    }
 
-                mapping=[
-                    {'id': str(uuid.uuid4()), 'source': rule[0], 'destination': rule[1]}
-                    for rule in mapping['definition']['mapping']
-                ],
-                entity_types=[
-                    schema['definition']
-                    for schema in utils.get_all_docs(schemas_url)
-                ],
+    try:
+        kernel_data_request(
+            url=f'projects/{pk}/artefacts/',
+            method='patch',
+            data=data,
+            headers=wrap_kernel_headers(pipeline),
+        )
+    except Exception as e:
+        raise PublishError(e)
 
-                is_active=mapping['is_active'],
-                is_read_only=mapping['is_read_only'],
+    # update pipeline
+    pipeline.mappingset = mappingset_id
+    pipeline.save()
 
-                kernel_refs={
-                    'project': mapping['project'],
-                    'mapping': mapping_id,
-                    'schemas': mapping['definition']['entities'],
-                },
-                published_on=mapping['modified'],
-            )
+
+def publish_contract(contract):
+    '''
+    Transform contract to kernel artefacts and publish
+    '''
+
+    status = publish_preflight(contract)
+    if status.get('error'):
+        raise PublishError(status['error'])
+
+    artefacts = model_to_artefacts(contract)
+
+    # Basic Kernel IDs
+    pk = str(contract.pipeline.project.pk)
+    mappingset_id = artefacts['mappingsets'][0]['id']
+    mapping_id = artefacts['mappings'][0]['id']
+
+    try:
+        kernel_data_request(
+            url=f'projects/{pk}/artefacts/',
+            method='patch',
+            data=artefacts,
+            headers=wrap_kernel_headers(contract),
+        )
+    except Exception as e:
+        raise PublishError(e)
+
+    # update pipeline
+    contract.pipeline.mappingset = mappingset_id
+    contract.pipeline.save()
+
+    # update contract
+    contract.published_on = timezone.now()
+    contract.mapping = mapping_id
+    contract.kernel_refs = {
+        'entities': artefacts['mappings'][0]['definition']['entities'],
+        'schemas': {schema['name']: schema['id'] for schema in artefacts['schemas']},
+    }
+    contract.save()
+
+    return {
+        'artefacts': {
+            'project': pk,
+            'mappingset': mappingset_id,
+            'mapping': mapping_id,
+            **contract.kernel_refs
+        }
+    }
 
 
 def publish_preflight(contract):
     '''
-    Performs a check for possible contract publish errors against kernel
+    Performs a check for possible contract publish consequences against kernel.
+
+
+    Expected outcome by type:
+
+    - Error (blockers, with any of them the contract cannot be published)
+
+        - Pipeline has no input
+        - Pipeline belongs to a different project in kernel
+        - Contract is read only
+        - Contract has no entity types
+        - Contract has no mapping rules
+        - Contract mapping rules have errors
+        - Contract belongs to a different project in kernel
+        - Contract belongs to a different pipeline (mapping set) in kernel
+        - Entity type "XXX" (as project schema) belongs to a different project in kernel
+
+        In case of multitenancy is enabled also:
+            - Project in kernel belongs to a different tenant
+
+
+    - Warning (warns if any of the artefacts is already published)
+
+        - Project is already published
+        - Pipeline (as mapping set) is already published
+        - Contract (as mapping) is already published
+        - Entity type "XXX" (as schema) is already published
+        - Entity type "XXX" (as project schema) is already published
+
+    - Info (informs about the publish effects)
+
+        - Project will be published
+        - Pipeline (as mapping set) will be published
+        - Input data will be changed
+        - Schema data will be changed
+        - Contract (as mapping) will be published
+        - Mapping rules data will be changed
+        - Entity type "XXX" (as schema) will be published
+        - Entity type "XXX" (as schema) data will be changed
+        - Entity type "XXX" (as project schema) will be published
+
     '''
 
-    def get_from_kernel_by_id(model, pk):
+    def __get(model, pk):
         try:
-            return kernel_data_request(f'{model}/{pk}/')
+            return kernel_data_request(
+                url=f'{model}/{pk}/',
+                headers=wrap_kernel_headers(project),
+            )
         except Exception:
-            return None
-
-    def get_from_kernel_by_name(model, name):
-        try:
-            results = kernel_data_request(f'{model}/?name={name}')
-            if results['count'] > 0:
-                return results['results'][0]
-            return None
-        except Exception:  # pragma: no cover
             return None
 
     outcome = {
-        'successful': [],
         'error': [],
-        'exists': [],
-        'ids': {
-            'mapping': {},
-            'schema': {},
-        }
+        'warning': [],
+        'info': [],
     }
 
-    if contract.mapping_errors:
-        outcome['error'].append(_('{} mappings have errors'.format(contract.name)))
-        return outcome
-
-    # check entity types (schemas in kernel)
-    for entity_type in contract.entity_types:
-        name = entity_type['name']
-        id = contract.kernel_refs.get('schemas', {}).get(name) if contract.kernel_refs else None
-
-        if id and get_from_kernel_by_id('schemas', id):
-            outcome['exists'].append({
-                name: _('Entity type (schema) with id {} exists on kernel').format(id)
-            })
-            outcome['ids']['schema'][name] = id
-        else:
-            get_by_name = get_from_kernel_by_name('schemas', name)
-            if get_by_name:
-                outcome['exists'].append({
-                    name: _('Entity type (schema) with name {} exists on kernel').format(name)
-                })
-                outcome['ids']['schema'][name] = get_by_name['id']
-
-    # check the contract (mapping in kernel)
-    if contract.kernel_refs and get_from_kernel_by_id('mappings', contract.kernel_refs.get('mapping')):
-        id = contract.kernel_refs['mapping']
-        outcome['exists'].append({
-            contract.name: _('Contract (mapping) with id {} exists on kernel').format(id)
-        })
-        outcome['ids']['mapping'][contract.name] = id
-    else:
-        get_by_name = get_from_kernel_by_name('mappings', contract.name)
-        if get_by_name:
-            outcome['exists'].append({
-                contract.name: _('Contract (mapping) with name {} exists on kernel.').format(contract.name)
-            })
-            outcome['ids']['mapping'][contract.name] = get_by_name['id']
-
-    # check the pipeline (mappingset in kernel)
     pipeline = contract.pipeline
+    project = pipeline.project
+
+    if not pipeline.input:
+        outcome['error'].append(MSG_PIPELINE_NO_INPUT)
+    if contract.is_read_only:
+        outcome['error'].append(MSG_CONTRACT_READ_ONLY)
+    if not contract.entity_types:
+        outcome['error'].append(MSG_CONTRACT_NO_ENTITIES)
+    if not contract.mapping_rules:
+        outcome['error'].append(MSG_CONTRACT_NO_MAPPING_RULES)
+    if contract.mapping_errors:
+        outcome['warning'].append(MSG_CONTRACT_MAPPING_RULES_ERROR)
+
+    # 1. Check the project in Kernel
+    try:
+        kernel_data_request(
+            url=f'projects/{project.project_id}/is-accessible/',
+            method='head',
+            headers=wrap_kernel_headers(project),
+        )
+    except HTTPError as e:
+        if e.response.status_code == status.HTTP_403_FORBIDDEN:
+            # not accessible by realm
+            outcome['error'].append(MSG_PROJECT_IN_KERNEL_WRONG)
+            return outcome
+
+    kernel_project = __get('projects', project.project_id)
+    if kernel_project:
+        outcome['warning'].append(MSG_PROJECT_IN_KERNEL)
+    else:
+        outcome['info'].append(MSG_PROJECT_NOT_IN_KERNEL)
+
+    # 2. Check the pipeline in Kernel (as mapping set)
+    mappingset = None
     if pipeline.mappingset:
-        mappingset = get_from_kernel_by_id('mappingsets', pipeline.mappingset)
+        mappingset = __get('mappingsets', pipeline.mappingset)
         if mappingset:
+            outcome['warning'].append(MSG_PIPELINE_IN_KERNEL)
+
+            # 2.1 Check linked project
+            if mappingset['project'] != str(project.project_id):
+                outcome['error'].append(MSG_PIPELINE_WRONG_PROJECT)
+
+            # 2.2 Check data: input & schema
             if json.dumps(mappingset['input'], sort_keys=True) != json.dumps(pipeline.input, sort_keys=True):
-                outcome['exists'].append({
-                    pipeline.name: _('Input data will be changed')
-                })
+                outcome['info'].append(MSG_PIPELINE_INPUT_CHANGED)
             if json.dumps(mappingset['schema'], sort_keys=True) != json.dumps(pipeline.schema, sort_keys=True):
-                outcome['exists'].append({
-                    pipeline.name: _('Schema data will be changed')
-                })
+                outcome['info'].append(MSG_PIPELINE_SCHEMA_CHANGED)
+    if not mappingset:
+        outcome['info'].append(MSG_PIPELINE_NOT_IN_KERNEL)
+
+    # 3. Check the contract in Kernel (as mapping)
+    mapping = None
+    if contract.mapping:
+        mapping = __get('mappings', contract.mapping)
+        if mapping:
+            outcome['warning'].append(MSG_CONTRACT_IN_KERNEL)
+
+            # 3.1 Check linked project
+            if mapping['project'] != str(project.project_id):
+                outcome['error'].append(MSG_CONTRACT_WRONG_PROJECT)
+
+            #  3.2 Check linked mapping set
+            if mapping['mappingset'] != str(pipeline.mappingset):
+                outcome['error'].append(MSG_CONTRACT_WRONG_MAPPINGSET)
+
+            # 3.3 Check mapping rules
+            kernel_rules = mapping['definition']['mapping']
+            ui_rules = contract.kernel_rules
+            if len(kernel_rules) != len(ui_rules):
+                outcome['info'].append(MSG_CONTRACT_MAPPING_RULES_CHANGED)
+            else:
+                for i in range(len(kernel_rules)):
+                    if kernel_rules[i][0] != ui_rules[i][0] or kernel_rules[i][1] != ui_rules[i][1]:
+                        outcome['info'].append(MSG_CONTRACT_MAPPING_RULES_CHANGED)
+                        break
+    if not mapping:
+        outcome['info'].append(MSG_CONTRACT_NOT_IN_KERNEL)
+
+    # 4. Check the contract entity types in Kernel (as schemas and project schemas)
+    kernel_refs = contract.kernel_refs if contract.kernel_refs else {}
+    if contract.entity_types:
+        for entity in contract.entity_types:
+            name = entity['name']
+            schema = None
+            ps = None
+
+            # 4.1 Check as schema
+            schema_id = kernel_refs.get('schemas', {}).get(name)
+            if schema_id:
+                schema = __get('schemas', schema_id)
+                if schema:
+                    outcome['warning'].append(MSG_ENTITY_IN_KERNEL_SCHEMA.format(name))
+
+                    # 4.1.1 Check schema definition
+                    if json.dumps(schema['definition'], sort_keys=True) != json.dumps(entity, sort_keys=True):
+                        outcome['info'].append(MSG_ENTITY_SCHEMA_CHANGED.format(name))
+            if not schema:
+                outcome['info'].append(MSG_ENTITY_NOT_IN_KERNEL_SCHEMA.format(name))
+
+            # 4.2 Check as project schema
+            ps_id = kernel_refs.get('entities', {}).get(name)
+            if ps_id:
+                ps = __get('projectschemas', ps_id)
+                if ps:
+                    outcome['warning'].append(MSG_ENTITY_IN_KERNEL_PROJECT_SCHEMA.format(name))
+                    # 4.2.1 Check linked project
+                    if ps['project'] != str(project.project_id):
+                        outcome['error'].append(MSG_ENTITY_WRONG_PROJECT.format(name))
+            if not ps:
+                outcome['info'].append(MSG_ENTITY_NOT_IN_KERNEL_PROJECT_SCHEMA.format(name))
 
     return outcome
-
-
-def publish_contract(project_name, contract, objects_to_overwrite={}):
-    '''
-    Transform pipeline and contract to kernel artefacts and publish
-    '''
-
-    pipeline = contract.pipeline
-    mappingset_id = str(pipeline.mappingset or uuid.uuid4())
-    mapping_id = objects_to_overwrite.get('mapping', {}).get(contract.name, str(contract.id))
-
-    # find out linked project id
-    project_id = None
-
-    # use pipeline mappingset as first source of truth
-    if pipeline.mappingset:
-        try:
-            mappingset = kernel_data_request(f'mappingsets/{pipeline.mappingset}/')
-            project_id = mappingset.get('project')
-        except Exception:
-            pass
-
-    # try with the linked project (if contract was published before)
-    if not project_id and contract.kernel_refs and contract.kernel_refs.get('project'):
-        try:
-            project_pk = contract.kernel_refs['project']
-            project = kernel_data_request(f'projects/{project_pk}/?fields=name')
-
-            project_id = project_pk
-            project_name = project.get('name')
-        except Exception:
-            pass
-
-    if not project_id:
-        # try with the given project name
-        try:
-            results = kernel_data_request(f'projects/?fields=id&name={project_name}')
-            if results['count'] == 1:  # it can only be one
-                project_id = results['results'][0]['id']
-        except Exception:  # pragma: no cover
-            pass
-
-    if not project_id:  # set a new value
-        project_id = str(uuid.uuid4())
-
-    # build schemas from contract entities, include a new id if missing
-    schemas = [
-        {
-            'id': objects_to_overwrite.get('schema', {}).get(entity_type.get('name'), str(uuid.uuid4())),
-            'name': entity_type.get('name'),
-            'definition': entity_type,
-        }
-        for entity_type in contract.entity_types
-    ]
-    entities = {schema['name']: schema['id'] for schema in schemas}
-
-    # payload to POST to kernel with the contract artefacts
-    data = {
-        'name': project_name,
-
-        # the contract entity types correspond to kernel schemas
-        'schemas': schemas,
-
-        # the pipelines have a 1:1 relationship with kernel mappingsets
-        'mappingsets': [{
-            'id': mappingset_id,
-            'name': pipeline.name,
-            'input': pipeline.input,
-            'schema': pipeline.schema,
-        }],
-
-        # the contract mapping corresponds to kernel mapping but with different rules format
-        'mappings': [{
-            'id': mapping_id,
-            'name': contract.name,
-            'definition': {
-                'mapping': [
-                    [rule['source'], rule['destination']]
-                    for rule in contract.mapping
-                ],
-                'entities': entities,
-            },
-            'mappingset': mappingset_id,
-            'is_active': True,
-            'is_ready_only': contract.is_read_only,
-        }],
-    }
-
-    try:
-        result = kernel_data_request(f'projects/{project_id}/artefacts/', 'patch', data)
-
-        # update pipeline
-        pipeline.mappingset = mappingset_id
-        pipeline.save()
-
-        kernel_refs = {
-            'project': result['project'],
-            'mapping': mapping_id,  # 1:1
-            'schemas': entities,
-        }
-
-        contract.published_on = timezone.now()
-        contract.kernel_refs = kernel_refs
-        contract.save()
-
-        return {'artefacts': kernel_refs}
-
-    except Exception as e:
-        return {'error': str(e)}
 
 
 ################################################################################
 # HELPERS
 ################################################################################
 
+def model_to_artefacts(instance):
+    if isinstance(instance, models.Project):
+        return {'name': instance.name}
 
-def kernel_data_request(url='', method='get', data=None):
+    if isinstance(instance, models.Pipeline):
+        project_artefacts = model_to_artefacts(instance.project)
+        mappingset_id = str(instance.mappingset or uuid.uuid4())
+
+        return {
+            **project_artefacts,
+
+            # the pipelines have a 1:1 relationship with kernel mappingsets
+            'mappingsets': [{
+                'id': mappingset_id,
+                'name': instance.name,
+                'input': instance.input,
+                'schema': instance.schema,
+            }],
+        }
+
+    pipeline_artefacts = model_to_artefacts(instance.pipeline)
+    mappingset_id = pipeline_artefacts['mappingsets'][0]['id']
+
+    mapping_id = str(instance.mapping or uuid.uuid4())
+
+    if not instance.kernel_refs:
+        instance.kernel_refs = {}
+    schema_ids = instance.kernel_refs.get('schemas', {})
+    entity_ids = instance.kernel_refs.get('entities', {})
+
+    # build schemas/project schemas from contract entities, include a new id if missing
+    schemas = []
+    entities = {}
+    for entity_type in instance.entity_types:
+        name = entity_type['name']
+        schema = {
+            'id': schema_ids.get(name, str(uuid.uuid4())),
+            'name': name,
+            'definition': entity_type,
+        }
+        schemas.append(schema)
+        entities[name] = entity_ids.get(name, schema['id'])
+
+    return {
+        **pipeline_artefacts,
+
+        # the contract entity types correspond to kernel schemas
+        'schemas': schemas,
+
+        # the contracts have a 1:1 relationship with kernel mappings
+        'mappings': [{
+            'id': mapping_id,
+            'name': instance.name,
+            'definition': {
+                # the contract mapping_rules property corresponds
+                # to definition mapping but with different rules format
+                'mapping': instance.kernel_rules,
+                'entities': entities,
+            },
+            'mappingset': mappingset_id,
+            'is_active': True,
+            'is_ready_only': instance.is_read_only,
+        }],
+    }
+
+
+def kernel_data_request(url='', method='get', data=None, headers=None):
     '''
-    Handle requests to the kernel server
+    Handle request calls to the kernel server
     '''
 
-    res = requests.request(
+    res = request(
         method=method,
         url=f'{utils.get_kernel_server_url()}/{url}',
         json=data or {},
-        headers=utils.get_auth_header(),
+        headers=headers or utils.get_auth_header(),
     )
 
-    if res.status_code == 204:  # NO-CONTENT
-        return None
+    res.raise_for_status()
 
-    if res.status_code >= 200 and res.status_code < 400:
-        return res.json()
-    else:
-        raise Exception(res.json())
+    if res.status_code == status.HTTP_204_NO_CONTENT:
+        return None
+    return json.loads(res.content.decode('utf-8'))
+
+
+def wrap_kernel_headers(instance):
+    return mt_utils.add_instance_realm_in_headers(instance, utils.get_auth_header())

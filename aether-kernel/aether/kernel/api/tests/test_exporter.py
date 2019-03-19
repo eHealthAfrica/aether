@@ -657,7 +657,7 @@ class ExporterViewsTest(TestCase):
     )
     def test_submissions_export__error__mocked(self, mock_export):
         response = self.client.get(reverse('submission-xlsx'))
-        self.assertEquals(response.status_code, 500)
+        self.assertEqual(response.status_code, 500)
         data = response.json()['detail']
         self.assertIn('Got an error while creating the file:', data)
         self.assertIn('[Errno 2] No such file or directory', data)
@@ -669,7 +669,7 @@ class ExporterViewsTest(TestCase):
     )
     def test_submissions_export__xlsx__mocked(self, mock_export):
         response = self.client.get(reverse('submission-xlsx'))
-        self.assertEquals(response.status_code, 500)
+        self.assertEqual(response.status_code, 500)
         mock_export.assert_called_once_with(
             data=mock.ANY,
             paths=[],
@@ -709,7 +709,7 @@ class ExporterViewsTest(TestCase):
             'header_shorten': 'maybe yes',  # not valid, switch to "no"
             'data_format': 'flattening',  # not valid, switch to "split"
         }), content_type='application/json')
-        self.assertEquals(response.status_code, 500)
+        self.assertEqual(response.status_code, 500)
         mock_export.assert_called_once_with(
             data=mock.ANY,
             paths=['_id', '_rev'],
@@ -741,7 +741,7 @@ class ExporterViewsTest(TestCase):
     )
     def test_entities_export___error__mocked(self, mock_export):
         response = self.client.get(reverse('entity-csv'))
-        self.assertEquals(response.status_code, 500)
+        self.assertEqual(response.status_code, 500)
         data = response.json()['detail']
         self.assertIn('Got an error while creating the file:', data)
         self.assertIn('[Errno 2] No such file or directory', data)
@@ -753,7 +753,7 @@ class ExporterViewsTest(TestCase):
     )
     def test_entities_export__xlsx__mocked(self, mock_export):
         response = self.client.get(reverse('entity-xlsx'))
-        self.assertEquals(response.status_code, 500)
+        self.assertEqual(response.status_code, 500)
         mock_export.assert_called_once_with(
             data=mock.ANY,
             paths=mock.ANY,
@@ -782,7 +782,7 @@ class ExporterViewsTest(TestCase):
 
     def test_entities_export__xlsx(self):
         response = self.client.get(reverse('entity-xlsx'))
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response, FileResponse))
         self.assertEqual(response['Content-Type'], XLSX_CONTENT_TYPE)
 
@@ -799,7 +799,7 @@ class ExporterViewsTest(TestCase):
             'csv_separator': 'TAB',  # will be replaced with `\t`
         }), content_type='application/json')
 
-        self.assertEquals(response.status_code, 500)
+        self.assertEqual(response.status_code, 500)
         mock_export.assert_called_once_with(
             data=mock.ANY,
             paths=mock.ANY,
@@ -824,6 +824,6 @@ class ExporterViewsTest(TestCase):
 
     def test_entities_export__csv(self):
         response = self.client.post(reverse('entity-csv'))
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response, FileResponse))
         self.assertEqual(response['Content-Type'], CSV_CONTENT_TYPE)

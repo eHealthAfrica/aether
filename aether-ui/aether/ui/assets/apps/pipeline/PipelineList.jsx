@@ -21,174 +21,68 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
-import moment from 'moment'
 
-import { PROJECT_NAME, getKernelURL } from '../utils/constants'
-import { NavBar, Modal } from '../components'
-import PublishButton from './PublishButton'
-import InfoButton from './InfoButton'
+import { ModalError, NavBar } from '../components'
 
-import NewPipeline from './NewPipeline'
-import { addPipeline, selectedPipelineChanged, getPipelines, fetchPipelines, addInitialContract } from './redux'
+import PipelineNew from './components/PipelineNew'
+import PipelineCard from './components/PipelineCard'
+
+import { getPipelines } from './redux'
 
 class PipelineList extends Component {
   constructor (props) {
     super(props)
-    this.state = {
-      view: 'show-index',
-      showError: false,
-      errorHeader: '',
-      errorMessage: ''
-    }
+
+    // fetch pipelines list
+    props.getPipelines()
   }
 
-  componentWillMount () {
-    if (!this.props.pipelineList.length) {
-      this.props.getPipelines()
+  componentDidUpdate (prevProps) {
+    // this happens after:
+    // - a new pipeline is added
+    // - a pipeline is selected
+    // - a new contract is added
+    // - a contract is selected
+    if (this.props.pid && prevProps.pid !== this.props.pid) {
+      this.props.history.push(`/${this.props.pid}/${this.props.cid}/${this.props.section}`)
     }
-    this.props.getKernelURL()
-  }
-
-  componentDidMount () {
-    this.props.fetchPipelines()
-  }
-
-  componentWillReceiveProps (nextProps) {
-    if (nextProps.error) {
-      this.setState({
-        showError: true,
-        errorHeader: `Error code ${nextProps.error.status}`,
-        errorMessage: nextProps.error.message
-      })
-    }
-    if (nextProps.isNewPipeline && !nextProps.selectedPipeline.mapping) {
-      this.props.addInitialContract({ name: nextProps.selectedPipeline.name, pipeline: nextProps.selectedPipeline.id })
-    }
-    if (nextProps.isNewPipeline && nextProps.selectedPipeline.mapping) {
-      this.props.history.push(`/${nextProps.selectedPipeline.pipeline}/${nextProps.selectedPipeline.id}`)
-    }
-  }
-
-  setErrorModal (visible) {
-    this.setState({ showError: visible })
   }
 
   render () {
     return (
-      <div className={`pipelines-container ${this.state.view}`}>
+      <div className='pipelines-container show-index'>
+        { this.props.error && <ModalError error={this.props.error} /> }
         <NavBar />
 
         <div className='pipelines'>
           <h1 className='pipelines-heading'>
-            { PROJECT_NAME }
-            <span> // </span>
             <FormattedMessage
               id='pipeline.list.pipelines'
               defaultMessage='Pipelines'
             />
           </h1>
-          <NewPipeline
-            onStartPipeline={newPipeline => { this.onStartPipeline(newPipeline) }}
-          />
+
+          <PipelineNew />
 
           <div className='pipeline-previews'>
-            { this.renderPipelineCards() }
+            { this.props.list.map(pipeline => (
+              <PipelineCard key={pipeline.id} pipeline={pipeline} />
+            )) }
           </div>
         </div>
       </div>
     )
   }
-
-  renderPipelineCards () {
-    return this.props.pipelineList.map(pipeline => (
-      <div
-        key={pipeline.id}
-        className={`pipeline-preview ${pipeline.is_read_only ? 'pipeline-readonly' : ''}`}>
-        <Modal buttons={
-          <button type='button' className='btn btn-w btn-primary' onClick={this.setErrorModal.bind(this, false)}>
-            <FormattedMessage
-              id='pipeline.modal.error.ok'
-              defaultMessage='Ok'
-            />
-          </button>
-        } header={this.state.errorHeader} show={this.state.showError}>
-          {this.state.errorMessage}
-        </Modal>
-        <div
-          onClick={() => { this.onSelectPipeline(pipeline) }}>
-          { pipeline.is_read_only &&
-            <span className='tag'>
-              <FormattedMessage
-                id='pipeline.read-only.indicator'
-                defaultMessage='read-only'
-              />
-            </span>
-          }
-          <h2 className='preview-heading'>{pipeline.name}</h2>
-
-          <div className='summary-entity-types'>
-            <span className='badge badge-b badge-big'>
-              { pipeline.entity_types ? pipeline.entity_types.length : 0 }
-            </span>
-            <FormattedMessage
-              id='pipeline.list.entity.types'
-              defaultMessage='Entity-Types'
-            />
-          </div>
-
-          <div className='summary-errors'>
-            <span className={`badge badge-b badge-big
-            ${pipeline && pipeline.mapping_errors.length && 'error'}`}>
-              { pipeline.mapping_errors ? pipeline.mapping_errors.length : 0 }
-            </span>
-            <FormattedMessage
-              id='pipeline.list.errors'
-              defaultMessage='Errors'
-            />
-          </div>
-        </div>
-        <div className='pipeline-publish'>
-          <div className='status-publish'>
-            <FormattedMessage
-              id='pipeline.list.publish-status'
-              defaultMessage={pipeline.published_on ? `Published on ${moment(pipeline.published_on).format('MMMM DD')}`
-                : 'Not published'}
-            />
-            { pipeline.published_on &&
-              <InfoButton pipeline={pipeline} />
-            }
-          </div>
-          { !pipeline.is_read_only &&
-            <PublishButton pipeline={pipeline} className='btn btn-w btn-publish' />
-          }
-        </div>
-
-      </div>
-    ))
-  }
-
-  onStartPipeline (newPipeline) {
-    this.props.addPipeline(newPipeline)
-  }
-
-  onSelectPipeline (pipeline) {
-    this.props.selectedPipelineChanged(pipeline)
-    this.props.history.push(`/${pipeline.pipeline}/${pipeline.id}`)
-  }
 }
 
 const mapStateToProps = ({ pipelines }) => ({
-  pipelineList: pipelines.pipelineList,
+  list: pipelines.pipelineList || [],
   error: pipelines.error,
-  isNewPipeline: pipelines.isNewPipeline,
-  selectedPipeline: pipelines.selectedPipeline
-})
 
-export default connect(mapStateToProps, {
-  getPipelines,
-  selectedPipelineChanged,
-  addPipeline,
-  fetchPipelines,
-  getKernelURL,
-  addInitialContract
-})(PipelineList)
+  section: pipelines.currentSection,
+  pid: (pipelines.currentPipeline || {}).id,
+  cid: (pipelines.currentContract || {}).id
+})
+const mapDispatchToProps = { getPipelines }
+
+export default connect(mapStateToProps, mapDispatchToProps)(PipelineList)

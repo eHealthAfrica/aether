@@ -19,10 +19,12 @@
  */
 
 /* global describe, it, expect */
+
 import React from 'react'
 import { IntlProvider } from 'react-intl'
 import { Provider } from 'react-redux'
 import { mount } from 'enzyme'
+
 import AppLayout from './AppLayout'
 
 class Foo extends React.Component {

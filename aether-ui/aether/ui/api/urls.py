@@ -16,17 +16,17 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.urls import path
 from rest_framework import routers
-from django.conf.urls import url
 
 from . import views
 
 router = routers.DefaultRouter()
+router.register('projects', views.ProjectViewSet)
 router.register('pipelines', views.PipelineViewSet)
 router.register('contracts', views.ContractViewSet)
 
+
 urlpatterns = router.urls + [
-  url(r'^kernel-url/$',
-      views.get_kernel_url,
-      name='kernel-url')
+    path('kernel-url/', view=views.get_kernel_url, name='kernel-url')
 ]

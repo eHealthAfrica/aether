@@ -22,19 +22,6 @@ from .. import utils
 
 
 class UtilsTests(CouchDBTestCase):
-    def test_walk_changes(self):
-        num_total = 10
-        glob = {'num_seen': 0}  # instead of nonlocal
-
-        for i in range(num_total):
-            couchdb.post(self.test_db, json={'i': i})
-
-        def f(c):
-            self.assertEqual(c['doc']['i'], glob['num_seen'])
-            glob['num_seen'] += 1
-
-        utils.walk_changes(self.test_db, f, params={'limit': 2, 'include_docs': 'true'})
-        self.assertEqual(glob['num_seen'], num_total)
 
     def test_force_put_doc(self):
         path = self.test_db + '/foo'
@@ -52,7 +39,9 @@ class UtilsTests(CouchDBTestCase):
     def test_fetch_db_docs(self):
         # clean db
         d1 = utils.fetch_db_docs(self.test_db, 0)
-        self.assertEqual(d1['last_seq'], 0, msg='last seq starts in 0')
+        # Note: in CouchDB 1.x the `last_seq` values are integers,
+        # but since CouchDB 2.x they turned into strings like `0-zzzzzzz`
+        self.assertEqual(str(d1['last_seq'])[0], '0', msg='last seq starts in 0')
         self.assertEqual(len(d1['docs']), 0, msg='empty db')
 
         # two new docs

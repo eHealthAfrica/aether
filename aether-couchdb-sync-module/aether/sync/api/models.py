@@ -18,12 +18,16 @@
 
 import uuid
 
+from django.contrib.auth.models import Group
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from django.utils.translation import ugettext as _
 from django_prometheus.models import ExportModelOperationsMixin
+
+from aether.common.multitenancy.models import MtModelAbstract, MtModelChildAbstract
+from aether.common.utils import json_prettified
 
 from .couchdb_helpers import delete_user, generate_db_name
 
@@ -48,9 +52,9 @@ Data model schema:
 +==================+     +=========================+
 | id               |<-+  | id                      |
 | email            |  |  | device_id               |
++::::::::::::::::::+  |  | last_synced_date        |
+| groups (auth)    |  |  | last_synced_seq         |
 +------------------+  |  | last_synced_date        |
-                      |  | last_synced_seq         |
-                      |  | last_synced_date        |
                       |  | last_synced_log_message |
                       |  +:::::::::::::::::::::::::+
                       +-<| mobileuser              |
@@ -59,7 +63,7 @@ Data model schema:
 '''
 
 
-class Project(ExportModelOperationsMixin('couchdbsync_project'), models.Model):
+class Project(ExportModelOperationsMixin('couchdbsync_project'), MtModelAbstract):
     '''
     Database link of an Aether Kernel Project
 
@@ -89,7 +93,7 @@ class Project(ExportModelOperationsMixin('couchdbsync_project'), models.Model):
         verbose_name_plural = _('projects')
 
 
-class Schema(ExportModelOperationsMixin('couchdbsync_schema'), models.Model):
+class Schema(ExportModelOperationsMixin('couchdbsync_schema'), MtModelChildAbstract):
     '''
     Keeps the relation between the Aether-mobile App JSON schema and the
     Aether Kernel submissions.
@@ -118,6 +122,13 @@ class Schema(ExportModelOperationsMixin('couchdbsync_schema'), models.Model):
     )
     avro_schema = JSONField(verbose_name=_('AVRO schema'), blank=True, default=dict)
 
+    @property
+    def avro_schema_prettified(self):
+        return json_prettified(self.avro_schema)
+
+    def get_mt_instance(self):
+        return self.project
+
     def __str__(self):
         return self.name
 
@@ -141,11 +152,15 @@ class MobileUser(ExportModelOperationsMixin('couchdbsync_mobileuser'), models.Mo
 
     If the device user account is not in this table, the device is not allowed to sync.
 
-    :ivar integer  id:     ID (primary key).
-    :ivar text     email:  Validated google user email (**unique**).
+    :ivar integer  id:      ID (primary key).
+    :ivar text     email:   Validated google user email (**unique**).
+    :ivar Group    groups:  The list of authorization groups the user belongs to.
+                            In case of multi-tenancy is enabled indicates the
+                            realms the user has access to.
     '''
 
     email = models.EmailField(unique=True, verbose_name=_('e-mail'))
+    groups = models.ManyToManyField(to=Group, blank=True, verbose_name=_('groups'))
 
     def __str__(self):
         return self.email

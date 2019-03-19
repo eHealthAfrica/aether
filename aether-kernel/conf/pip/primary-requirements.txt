@@ -15,17 +15,8 @@
 
 # Main libraries
 
-# Aether common module, will also require:
-#   django < 2
-#   django-cors-headers
-#   django-debug-toolbar
-#   django-prometheus
-#   django-storages
-#   djangorestframework
-#   psycopg2-binary
-#   python-json-logger
-#   requests
-aether.common
+# Aether common library with extras
+aether.common[cas,server,storage,test]
 
 
 # Django specific
@@ -34,7 +25,6 @@ django-model-utils
 django-reversion-compare
 drf-dynamic-fields
 drf_yasg
-pygments
 python-dateutil
 
 
@@ -44,29 +34,10 @@ jsonschema
 spavro
 
 
-# Storage
-boto3
-google-cloud-storage
-
-
 # XLSX libraries
 openpyxl
 lxml
 
 
-# CAS libraries
-django-cas-ng<3.6.0  # breaking changes
-django-ums-client
-
-
-# Server side
-sentry-sdk             # Sentry
-uwsgi                  # Server behind NGINX
-
-
 # Test libraries
-coverage
 django-autofixture
-flake8
-flake8-quotes
-mock

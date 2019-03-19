@@ -22,23 +22,22 @@
 const apps = [
   {
     name: 'styles',
-    path: '../css/index.scss'
+    path: './css/index.scss'
   },
   {
     name: 'pipeline',
-    path: '../apps/pipeline'
+    path: './apps/pipeline'
   }
 ]
 
 const buildEntries = (hmr) => {
   const list = {
     // the apps that DO NOT need Hot Module Replacement in development mode
-    'common': [ 'jquery', 'popper.js', 'bootstrap' ],
-    'html5shiv': 'html5shiv'
+    'common': [ 'jquery', 'popper.js', 'bootstrap', 'whatwg-fetch' ]
   }
 
   apps.forEach(app => {
-    list[app.name] = (hmr ? [ ...hmr, app.path ] : app.path)
+    list[app.name] = (hmr ? [ app.path, hmr ] : app.path)
   })
 
   return list

@@ -18,8 +18,10 @@
 
 import logging
 import re
-import requests
 
+from requests.exceptions import HTTPError
+
+from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import ugettext as _
 
@@ -28,12 +30,11 @@ from aether.common.kernel import utils as kernel_utils
 from .kernel_utils import propagate_kernel_artefacts
 from .models import DeviceDB, Schema
 from ..couchdb import utils, api
-from ..settings import LOGGING_LEVEL
 from .. import errors
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(LOGGING_LEVEL)
+logger.setLevel(settings.LOGGING_LEVEL)
 
 SYNC_DOC = 'sync_doc'
 
@@ -139,13 +140,13 @@ def import_synced_docs(docs, db_name):
             stats['up-to-date'] += 1
             continue
 
-        aether_id = status.get('aether_id') or False
+        aether_id = status.get('aether_id')
 
         try:
             resp = post_to_aether(doc, aether_id=aether_id)
             try:
                 resp.raise_for_status()
-            except requests.exceptions.HTTPError:
+            except HTTPError:
                 logger.error('post survey to aether failed: ' + resp.text)
                 stats['errors'].append(resp.content)
                 stats['errored'] += 1
@@ -176,7 +177,7 @@ def import_synced_docs(docs, db_name):
     return stats
 
 
-def post_to_aether(document, aether_id=False):
+def post_to_aether(document, aether_id=None):
     # first of all check if the connection is possible
     if not kernel_utils.test_connection():
         raise RuntimeError(_('Cannot connect to Aether Kernel server'))

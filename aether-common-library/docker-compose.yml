@@ -1,0 +1,43 @@
+version: "2.1"
+
+services:
+
+  common:
+    build:
+      context: .
+    environment:
+      TESTING: "true"
+
+      # required environment variables
+      DJANGO_SECRET_KEY: django_secret_key
+
+      DJANGO_STORAGE_BACKEND: minio
+      BUCKET_NAME: common
+      MINIO_STORAGE_ENDPOINT: minio-common
+      MINIO_STORAGE_USE_HTTPS: null
+      MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET: null
+      MINIO_STORAGE_ACCESS_KEY: minio_access_key
+      MINIO_STORAGE_SECRET_KEY: minio_secret_key
+
+      PGPASSWORD: secretsecret
+      PGUSER: db-test-user
+      PGHOST: db-test
+      PGPORT: 9999
+      DB_NAME: common
+
+      MULTITENANCY: "true"
+
+      # required by kernel module
+      AETHER_KERNEL_URL_TEST: http://kernel-test
+      AETHER_KERNEL_TOKEN: kernel_secret_token
+
+      # optional
+      APP_NAME: aether-test
+      APP_LINK: http://aether-link-test
+
+      # pagination
+      PAGE_SIZE: 10
+      MAX_PAGE_SIZE: 30
+    volumes:
+      - ./:/code
+    command: build

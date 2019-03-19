@@ -25,7 +25,7 @@ from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
-from aether.common.multitenancy.utils import MtPrimaryKeyRelatedField, MtModelSerializer
+from aether.common.multitenancy.serializers import MtPrimaryKeyRelatedField, MtModelSerializer
 
 from .constants import MergeOptions as MERGE_OPTIONS
 from .entity_extractor import run_entity_extraction, ENTITY_EXTRACTION_ERRORS
@@ -153,7 +153,7 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     )
     mappingset = MtPrimaryKeyRelatedField(
         queryset=models.MappingSet.objects.all(),
-        mt_field='project__mt',
+        mt_field='project',
     )
 
     class Meta:
@@ -208,7 +208,7 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     )
     mappingset = MtPrimaryKeyRelatedField(
         queryset=models.MappingSet.objects.all(),
-        mt_field='project__mt',
+        mt_field='project',
     )
 
     def create(self, validated_data):
@@ -240,7 +240,7 @@ class AttachmentSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     submission = MtPrimaryKeyRelatedField(
         queryset=models.Submission.objects.all(),
-        mt_field='mappingset__project__mt',
+        mt_field='mappingset__project',
     )
 
     class Meta:
@@ -293,6 +293,11 @@ class ProjectSchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='mapping-list',
     )
 
+    schema_definition = serializers.JSONField(
+        read_only=True,
+        source='schema.definition',
+    )
+
     project = MtPrimaryKeyRelatedField(
         queryset=models.Project.objects.all(),
     )
@@ -338,17 +343,17 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     )
     submission = MtPrimaryKeyRelatedField(
         queryset=models.Submission.objects.all(),
-        mt_field='mappingset__project__mt',
+        mt_field='mappingset__project',
         required=False,
     )
     mapping = MtPrimaryKeyRelatedField(
         queryset=models.Mapping.objects.all(),
-        mt_field='mappingset__project__mt',
+        mt_field='mappingset__project',
         required=False,
     )
     projectschema = MtPrimaryKeyRelatedField(
         queryset=models.ProjectSchema.objects.all(),
-        mt_field='project__mt',
+        mt_field='project',
         required=False,
     )
 

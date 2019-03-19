@@ -200,3 +200,10 @@ def delete_user(device_id):
     couch_user = get_user.json()
     r = api.delete('{url}?rev={rev}'.format(url=user_url, rev=couch_user['_rev']))
     r.raise_for_status()
+
+
+def create_document(device_id, doc):
+    '''
+    Creates document in the device database.
+    '''
+    return api.post(generate_db_name(device_id), json=doc)
