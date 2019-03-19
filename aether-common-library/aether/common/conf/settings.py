@@ -29,7 +29,7 @@ DEBUG = bool(os.environ.get('DEBUG'))
 TESTING = bool(os.environ.get('TESTING'))
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
-APP_ID = os.environ.get('APP_ID', 'aether')  # URL Friendly
+APP_ID = os.environ.get('APP_ID', 'aether')
 APP_NAME = os.environ.get('APP_NAME', 'aether')
 APP_LINK = os.environ.get('APP_LINK', 'http://aether.ehealthafrica.org')
 
@@ -39,7 +39,10 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-STATIC_URL = '/static/'
+# Indicates the path for the app endpoints like "my-app/protected/entry"
+URL_ID = os.environ.get('URL_ID', '')  # URL Friendly
+
+STATIC_URL = '/static/' if not URL_ID else f'/{URL_ID}/static/'
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/static/')
 
 PRETTIFIED_CUTOFF = int(os.environ.get('PRETTIFIED_CUTOFF', 10000))
@@ -313,11 +316,9 @@ else:
 
 KEYCLOAK_URL = os.environ.get('KEYCLOAK_URL')
 if KEYCLOAK_URL:
-    APP_ID = os.environ['APP_ID']  # URL Friendly
     BASE_HOST = os.environ['BASE_HOST']
     JWT_COOKIE = os.environ.get('JWT_COOKIE', 'aether-jwt')
 
-    STATIC_URL = f'/{APP_ID}/static/'
     LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login_jwt.html')
     REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] += [
         'aether.common.drf.authentication.JwtTokenAuthentication',

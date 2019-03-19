@@ -19,7 +19,7 @@
 
 from django.conf import settings
 
-from .drf.authentication import get_current_realm
+from .multitenancy.utils import get_current_realm
 
 
 def aether_context(request):
@@ -34,7 +34,7 @@ def aether_context(request):
 
     if settings.KEYCLOAK_URL:
         realm = get_current_realm(request)
-        redirect = f'{settings.BASE_HOST}/{settings.APP_ID}'
+        redirect = request.build_absolute_uri().replace(request.get_full_path(), '/') + settings.URL_ID
         url = f'{settings.BASE_HOST}/auth/user/{realm}/refresh?redirect={redirect}'
 
         context['jwt_login'] = url

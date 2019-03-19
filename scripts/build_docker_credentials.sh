@@ -69,10 +69,10 @@ cat << EOF
 # ------------------------------------------------------------------
 # Authorization & Authentication
 # ==================================================================
-KEYCLOAK_GLOBAL_ADMIN=admin
-KEYCLOAK_GLOBAL_PASSWORD=$(gen_random_string)
-KEYCLOAK_PG_PASSWORD=$(gen_random_string)
-KONG_PG_PASSWORD=$(gen_random_string)
+KEYCLOAK_ADMIN_USERNAME=admin
+KEYCLOAK_ADMIN_PASSWORD=$(gen_random_string)
+KEYCLOAK_DB_PASSWORD=$(gen_random_string)
+KONG_DB_PASSWORD=$(gen_random_string)
 
 JWT_COOKIE=aether-jwt
 DEFAULT_REALM=aether

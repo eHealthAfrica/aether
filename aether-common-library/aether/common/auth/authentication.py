@@ -24,7 +24,7 @@ from django.contrib.auth import get_user_model
 
 from rest_framework.authentication import BaseAuthentication
 
-from ..utils import request
+from ..utils import request as exec_request
 
 
 def get_current_realm(request):
@@ -77,7 +77,7 @@ class JwtTokenAuthentication(BaseAuthentication):
     def __get_public_key(self, realm):
         url = f'{settings.KEYCLOAK_URL}/keycloak/auth/realms/{realm}/protocol/openid-connect/certs'
 
-        res = requests(method='get', url=url)
+        res = exec_request(method='get', url=url)
         res.raise_for_status()
 
         jwk_key = res.json()['keys'][0]

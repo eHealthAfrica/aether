@@ -38,7 +38,7 @@ class ContextProcessorsTests(TestCase):
     @override_settings(
         KEYCLOAK_URL='http://0.0.0.0:8080',
         BASE_HOST='http://localhost',
-        APP_ID='testing',
+        URL_ID='testing',
         DEFAULT_REALM='aether-testing',
     )
     def test_aether_context__with_keycloak(self):
@@ -46,5 +46,5 @@ class ContextProcessorsTests(TestCase):
 
         self.assertEqual(
             aether_context(request)['jwt_login'],
-            'http://localhost/auth/user/aether-testing/refresh?redirect=http://localhost/testing',
+            'http://localhost/auth/user/aether-testing/refresh?redirect=http://testserver/testing',
         )

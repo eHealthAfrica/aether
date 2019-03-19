@@ -20,7 +20,7 @@ from django.conf import settings
 from django.contrib import admin
 
 
-admin.site.site_url = '/'
+admin.site.site_url = f'/{settings.URL_ID}'
 admin.site.site_header = settings.APP_NAME
 admin.site.site_title = settings.APP_NAME
 

@@ -131,10 +131,9 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):  # pragma: no cover
                 path('__debug__/', include(debug_toolbar.urls)),
             ]
 
-    if settings.KEYCLOAK_URL:
-        # Prepend urls with "{APP_ID}/"
+    if settings.URL_ID:  # Prepend urls with "{URL_ID}/"
         urlpatterns = [
-            path(f'{settings.APP_ID}/', include(urlpatterns))
+            path(f'{settings.URL_ID}/', include(urlpatterns))
         ]
 
     return urlpatterns
