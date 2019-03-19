@@ -80,10 +80,7 @@ def get_default_project(request):
     default_projects = mt_utils.filter_by_realm(request, models.Project.objects.filter(is_default=True))
     if default_projects.count() == 0:
         # create a default one
-        realm = mt_utils.get_current_realm(request)
-        name = settings.DEFAULT_PROJECT_NAME if not settings.MULTITENANCY else realm
-
-        project = models.Project.objects.create(name=name, is_default=True)
+        project = models.Project.objects.create(name=settings.DEFAULT_PROJECT_NAME, is_default=True)
         project.add_to_realm(request)
 
         return project
@@ -324,7 +321,7 @@ def publish_pipeline(pipeline):
     pk = str(pipeline.project.pk)
 
     # if there is at least one readonly contract do not update only create if missing
-    action = 'create' if pipeline.contracts.filter(is_read_only=True).exists() else 'upsert'
+    action = 'create' if pipeline.is_read_only else 'upsert'
     artefacts = model_to_artefacts(pipeline)
     mappingset_id = artefacts['mappingsets'][0]['id']
 

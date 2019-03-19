@@ -193,7 +193,7 @@ class MultitenancyTests(TestCase):
 
         # creates a project
         project = utils.get_default_project(self.request)
-        self.assertEqual(project.name, CURRENT_REALM)
+        self.assertEqual(project.name, settings.DEFAULT_PROJECT_NAME)
         self.assertTrue(project.is_default)
         self.assertEqual(project.get_realm(), CURRENT_REALM)
         self.assertEqual(models.Project.objects.count(), 1)

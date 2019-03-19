@@ -161,8 +161,8 @@ export const publishContract = (cid) => ({
 const parsePipeline = (pipeline) => {
   return {
     ...pipeline,
-    isInputReadOnly: (pipeline.contracts.filter(c => (c.is_read_only)).length > 0),
-    contracts: pipeline.contracts.map(parseContract)
+    isInputReadOnly: pipeline.is_read_only,
+    contracts: (pipeline.contracts || []).map(parseContract)
   }
 }
 
