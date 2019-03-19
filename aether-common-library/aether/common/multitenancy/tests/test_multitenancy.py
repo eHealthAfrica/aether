@@ -311,6 +311,9 @@ class MultitenancyTests(TestCase):
 
     @override_settings(MULTITENANCY=False)
     def test_no_multitenancy(self, *args):
+        self.assertIsNone(utils.get_multitenancy_model())
+        self.assertIsNone(utils.get_current_realm(None))
+
         obj1 = TestModel.objects.create(name='two')
         self.assertFalse(obj1.is_accessible(TEST_REALM))
         self.assertFalse(obj1.is_accessible(settings.DEFAULT_REALM))

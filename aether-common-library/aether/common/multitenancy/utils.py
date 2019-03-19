@@ -27,6 +27,9 @@ def get_multitenancy_model():
     Returns the ``settings.MULTITENANCY_MODEL`` class.
     '''
 
+    if not settings.MULTITENANCY:
+        return None
+
     (app_label, model_name) = settings.MULTITENANCY_MODEL.split('.')
     return apps.get_model(app_label, model_name, require_ready=True)
 
@@ -38,6 +41,9 @@ def get_current_realm(request):
     https://docs.djangoproject.com/en/2.1/ref/request-response/#django.http.HttpRequest.COOKIES
     https://docs.djangoproject.com/en/2.1/ref/request-response/#django.http.HttpRequest.META
     '''
+
+    if not settings.MULTITENANCY:
+        return None
 
     return getattr(request, 'COOKIES', {}).get(
         settings.REALM_COOKIE,
