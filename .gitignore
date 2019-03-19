@@ -140,6 +140,9 @@ demo
 # npm
 **/package-lock.json
 
+# certificates
+*.pem
+
 # docker-compose variables
 .env
 

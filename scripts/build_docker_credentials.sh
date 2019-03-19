@@ -74,6 +74,7 @@ KEYCLOAK_GLOBAL_PASSWORD=$(gen_random_string)
 KEYCLOAK_PG_PASSWORD=$(gen_random_string)
 KONG_PG_PASSWORD=$(gen_random_string)
 
+JWT_COOKIE=aether-jwt
 DEFAULT_REALM=aether
 REALM_COOKIE=aether-realm
 MULTITENANCY=yes

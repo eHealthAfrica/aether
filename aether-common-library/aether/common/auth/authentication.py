@@ -16,15 +16,15 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import jwt
-import requests
-
+from jwt import decode, ExpiredSignatureError
 from jwcrypto.jwk import JWK
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
 from rest_framework.authentication import BaseAuthentication
+
+from ..utils import request
 
 
 def get_current_realm(request):
@@ -51,7 +51,7 @@ class JwtTokenAuthentication(BaseAuthentication):
             if realm not in self.PUBLIC_KEYS:
                 self.PUBLIC_KEYS[realm] = self.__get_public_key(realm)
 
-            decoded = jwt.decode(token, self.PUBLIC_KEYS[realm], audience='account', algorithms='RS256')
+            decoded = decode(token, self.PUBLIC_KEYS[realm], audience='account', algorithms='RS256')
             username = decoded['preferred_username']
 
             # Create user
@@ -65,7 +65,7 @@ class JwtTokenAuthentication(BaseAuthentication):
             finally:
                 return (user, None)
 
-        except (jwt.ExpiredSignatureError, KeyError, Exception):
+        except (ExpiredSignatureError, KeyError, Exception):
             return None
 
         return None
@@ -77,7 +77,7 @@ class JwtTokenAuthentication(BaseAuthentication):
     def __get_public_key(self, realm):
         url = f'{settings.KEYCLOAK_URL}/keycloak/auth/realms/{realm}/protocol/openid-connect/certs'
 
-        res = requests.get(url)
+        res = requests(method='get', url=url)
         res.raise_for_status()
 
         jwk_key = res.json()['keys'][0]

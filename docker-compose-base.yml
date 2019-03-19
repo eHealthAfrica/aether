@@ -207,8 +207,6 @@ services:
       PGPORT: 5432
       PGUSER: postgres
 
-      LOGGING_FORMATTER: verbose
-
       # behind ngnix
       WEB_SERVER_PORT: 8102
       # standalone (without nginx) (ODK Collect only accepts 443 and 8443 ports)
@@ -338,8 +336,6 @@ services:
       PGPASSWORD: ${UI_DB_PASSWORD}
       PGPORT: 5432
       PGUSER: postgres
-
-      LOGGING_FORMATTER: verbose
 
       # use this value with "start_dev" command and webpack otherwise comment it out
       WEBPACK_STATS_FILE: /code/aether/ui/assets/bundles/webpack-stats.json
