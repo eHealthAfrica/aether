@@ -45,17 +45,16 @@ docker container exec -i $DB_ID psql <<- EOSQL
     DROP DATABASE kong;
     DROP USER kong;
 
-    CREATE USER kong PASSWORD '${KONG_PG_PASSWORD}';
+    CREATE USER kong PASSWORD '${KONG_DB_PASSWORD}';
     CREATE DATABASE kong OWNER kong;
 EOSQL
 docker container exec -i $DB_ID psql <<- EOSQL
     DROP DATABASE keycloak;
     DROP USER keycloak;
 
-    CREATE USER keycloak PASSWORD '${KEYCLOAK_PG_PASSWORD}';
+    CREATE USER keycloak PASSWORD '${KEYCLOAK_DB_PASSWORD}';
     CREATE DATABASE keycloak OWNER keycloak;
 EOSQL
-$DCA logs db
 
 $DCA build auth keycloak kernel
 

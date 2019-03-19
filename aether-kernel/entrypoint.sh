@@ -199,15 +199,16 @@ case "$1" in
     start )
         setup
         [ -z "${DEBUG:-}" ] && UWSGI_LOGGING="--disable-logging" || UWSGI_LOGGING=""
-        [ -z "${KEYCLOAK_URL:-}" ] && PREFIX="" || PREFIX="/${APP_ID:-kernel}"
+        UWSGI_STATIC="--static-map /${URL_ID:-kernel}/static=/var/www/static"
+        [ -z "${UWSGI_SERVE_STATIC:-}" ] && UWSGI_STATIC=""
 
         /usr/local/bin/uwsgi \
             --ini /code/conf/uwsgi.ini \
             --http 0.0.0.0:${WEB_SERVER_PORT} \
-            --static-map ${PREFIX}/static=/var/www/static \
             --processes ${UWSGI_PROCESSES:-4} \
             --threads ${UWSGI_THREADS:-2} \
-            $UWSGI_LOGGING
+            ${UWSGI_STATIC} \
+            ${UWSGI_LOGGING}
     ;;
 
     start_dev )
