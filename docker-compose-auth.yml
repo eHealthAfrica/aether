@@ -42,15 +42,18 @@ services:
       KONG_PG_PASSWORD: ${KONG_PG_PASSWORD}
 
       KONG_ADMIN_LISTEN: 0.0.0.0:8001
-      KONG_PROXY_LISTEN: 0.0.0.0:8090
+      KONG_PROXY_LISTEN: 0.0.0.0:80
+      KONG_LOG_LEVEL: debug
     depends_on:
       db:
         condition: service_healthy
     ports:
-      - 8090:8090
+      - 80:80
       # - 8001:8001  # internal only
     networks:
       - internal
+    command: ["kong", "start"]
+
 
 
   keycloak:
@@ -89,7 +92,7 @@ services:
       APP_PORT: 3012
 
       APP_INTERNAL: http://auth:3012
-      BASE_HOST: http://aether.local:8090
+      BASE_HOST: http://aether.local
       KEYCLOAK_INTERNAL: http://keycloak:8080
       KONG_INTERNAL: http://kong:8001
     volumes:
@@ -118,7 +121,7 @@ services:
       CSRF_COOKIE_DOMAIN: aether.local
       HOSTNAME: aether.local
 
-      BASE_HOST: http://aether.local:8090
+      BASE_HOST: http://aether.local
       KEYCLOAK_URL: http://keycloak:8080
     depends_on:
       db:
