@@ -22,6 +22,9 @@ from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
+from aether.common.multitenancy.serializers import MtModelSerializer, MtPrimaryKeyRelatedField
+from aether.common.multitenancy.utils import add_user_to_realm
+
 from .models import Project, Schema, MobileUser
 
 
@@ -33,6 +36,10 @@ class SchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         default=None,
         label=_('AVRO Schema file'),
         help_text=_('Upload an AVRO Schema file'),
+    )
+
+    project = MtPrimaryKeyRelatedField(
+        queryset=Project.objects.all(),
     )
 
     def validate(self, value):
@@ -51,7 +58,7 @@ class SchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ProjectSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):
 
     # this will return all linked schemas in one request call
     schemas = SchemaSerializer(read_only=True, many=True)
@@ -63,6 +70,19 @@ class ProjectSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 class MobileUserSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
+    def create(self, validated_data):
+        instance = super(MobileUserSerializer, self).create(validated_data)
+        self.post_save(instance)
+        return instance
+
+    def update(self, instance, validated_data):
+        instance = super(MobileUserSerializer, self).update(instance, validated_data)
+        self.post_save(instance)
+        return instance
+
+    def post_save(self, instance):
+        add_user_to_realm(self.context['request'], instance)
+
     class Meta:
         model = MobileUser
-        fields = '__all__'
+        fields = ('id', 'email',)

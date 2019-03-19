@@ -21,16 +21,19 @@ import mock
 import requests
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import RequestFactory, override_settings
 from django.urls import reverse
 from rest_framework import status
 
 from aether.common.kernel import utils as common_kernel_utils
 
 from . import CustomTestCase, MockResponse
-from ..views import XML_SUBMISSION_PARAM
 from ..kernel_utils import propagate_kernel_artefacts, KernelPropagationError
+from ..surveyors_utils import is_surveyor
+from ..views import XML_SUBMISSION_PARAM
 
 
+@override_settings(MULTITENANCY=False)
 class SubmissionTests(CustomTestCase):
 
     def setUp(self):
@@ -78,12 +81,16 @@ class SubmissionTests(CustomTestCase):
         self.assertEqual(response.status_code, status.HTTP_424_FAILED_DEPENDENCY, response.content)
 
 
+@override_settings(MULTITENANCY=False)
 class PostSubmissionTests(CustomTestCase):
 
     def setUp(self):
         super(PostSubmissionTests, self).setUp()
 
         self.helper_create_user()
+        self.request = RequestFactory().get('/')
+        self.request.user = self.user
+
         self.url = reverse('xform-submission')
 
         # create xForm entry
@@ -91,7 +98,7 @@ class PostSubmissionTests(CustomTestCase):
             surveyor=self.user,
             xml_data=self.samples['xform']['raw-xml'],
         )
-        self.assertTrue(self.xform.is_surveyor(self.user))
+        self.assertTrue(is_surveyor(self.request, self.xform))
         self.assertIsNotNone(self.xform.kernel_id)
         # propagate in kernel
         self.assertTrue(propagate_kernel_artefacts(self.xform))
@@ -151,11 +158,9 @@ class PostSubmissionTests(CustomTestCase):
     def test__submission__post__no_granted_surveyor(self):
         # remove user as granted surveyor
         self.xform.project.surveyors.clear()
-        self.xform.project.save()
         self.xform.surveyors.clear()
         self.xform.surveyors.add(self.helper_create_surveyor())
-        self.xform.save()
-        self.assertFalse(self.xform.is_surveyor(self.user))
+        self.assertFalse(is_surveyor(self.request, self.xform))
 
         with open(self.samples['submission']['file-ok'], 'rb') as f:
             response = self.client.post(self.url, {XML_SUBMISSION_PARAM: f}, **self.headers_user)

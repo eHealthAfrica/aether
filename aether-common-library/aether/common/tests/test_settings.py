@@ -24,6 +24,7 @@ class SettingsTest(TestCase):
 
     def test_default_variables(self):
 
+        self.assertTrue(settings.MULTITENANCY)
         self.assertTrue(settings.TESTING)
         self.assertFalse(settings.DEBUG)
 

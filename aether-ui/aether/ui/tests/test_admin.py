@@ -44,9 +44,6 @@ class AdminTest(TestCase):
         messages = FallbackStorage(self.request)
         setattr(self.request, '_messages', messages)
 
-        # remove initial data
-        Project.objects.all().delete()
-
     def test__project__actions(self):
         app_admin = ProjectAdmin(Project, AdminSite())
 

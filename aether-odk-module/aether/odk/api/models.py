@@ -29,6 +29,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 
+from aether.common.multitenancy.models import MtModelAbstract, MtModelChildAbstract
 from aether.common.utils import json_prettified
 
 from .xform_utils import (
@@ -64,7 +65,7 @@ Data model schema:
 '''
 
 
-class Project(ExportModelOperationsMixin('odk_project'), models.Model):
+class Project(ExportModelOperationsMixin('odk_project'), MtModelAbstract):
     '''
     Database link of an Aether Kernel Project.
 
@@ -95,23 +96,6 @@ class Project(ExportModelOperationsMixin('odk_project'), models.Model):
         help_text=_('If you do not specify any surveyors, EVERYONE will be able to access this project xForms.'),
     )
 
-    def is_surveyor(self, user):
-        '''
-        Indicates if the given user is a granted surveyor of the Project.
-
-        Rules:
-            - User is superuser.
-            - Project has no surveyors.
-            - User is in the surveyors list.
-
-        '''
-
-        return (
-            user.is_superuser or
-            self.surveyors.count() == 0 or
-            user in self.surveyors.all()
-        )
-
     def __str__(self):
         return '{} - {}'.format(str(self.project_id), self.name)
 
@@ -134,7 +118,7 @@ def __validate_xml_data__(value):
         raise ValidationError(str(e))
 
 
-class XForm(ExportModelOperationsMixin('odk_xform'), models.Model):
+class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
     '''
     Database representation of an XForm.
 
@@ -277,24 +261,6 @@ class XForm(ExportModelOperationsMixin('odk_xform'), models.Model):
         self.modified_at = timezone.now()
         return super(XForm, self).save(*args, **kwargs)
 
-    def is_surveyor(self, user):
-        '''
-        Indicates if the given user is a granted surveyor of the xForm.
-
-        Rules:
-            - User is superuser.
-            - xForm and Project have no surveyors.
-            - User is in the xForm or Project surveyors list.
-
-        '''
-
-        return (
-            user.is_superuser or
-            (self.surveyors.count() == 0 and self.project.surveyors.count() == 0) or
-            user in self.surveyors.all() or
-            user in self.project.surveyors.all()
-        )
-
     def update_hash(self, increase_version=False):
         md5sum = md5(self.xml_data.encode('utf8')).hexdigest()
         if md5sum != self.md5sum and increase_version:
@@ -303,6 +269,9 @@ class XForm(ExportModelOperationsMixin('odk_xform'), models.Model):
 
     def increase_version(self):
         self.version = '{:%Y%m%d%H}'.format(timezone.now())
+
+    def get_mt_instance(self):
+        return self.project
 
     def __str__(self):
         return '{} - {}'.format(self.title, self.form_id)
@@ -324,7 +293,7 @@ def __media_path__(instance, filename):
     )
 
 
-class MediaFile(ExportModelOperationsMixin('odk_mediafile'), models.Model):
+class MediaFile(ExportModelOperationsMixin('odk_mediafile'), MtModelChildAbstract):
     '''
     Database representation of a media file linked to an XForm.
 
@@ -362,6 +331,9 @@ class MediaFile(ExportModelOperationsMixin('odk_mediafile'), models.Model):
             self.name = self.media_file.name
 
         super(MediaFile, self).save(*args, **kwargs)
+
+    def get_mt_instance(self):
+        return self.xform.project
 
     def __str__(self):
         return self.name

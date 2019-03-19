@@ -131,7 +131,6 @@ class AdminTests(CustomTestCase):
         self.assertEqual(instance.description, 'some text')
         self.assertEqual(instance.project, self.project)
         self.assertEqual(instance.surveyors.count(), 0, 'no granted surveyors')
-        self.assertTrue(instance.is_surveyor(self.admin), 'superusers are always granted surveyors')
 
     def test__post__surveyors(self):
         surveyor = self.helper_create_surveyor()
@@ -156,8 +155,6 @@ class AdminTests(CustomTestCase):
 
         self.assertEqual(instance.surveyors.count(), 1)
         self.assertIn(surveyor, instance.surveyors.all())
-        self.assertTrue(instance.is_surveyor(surveyor))
-        self.assertTrue(instance.is_surveyor(self.admin))
 
     def test__project__actions(self):
         app_admin = ProjectAdmin(Project, AdminSite())

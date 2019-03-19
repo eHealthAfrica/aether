@@ -16,29 +16,29 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.shortcuts import get_object_or_404
-
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 
 from aether.common.kernel.utils import get_kernel_server_url
+from aether.common.multitenancy.views import MtViewSetMixin
 
 from . import models, serializers, utils
 
 
-class ProjectViewSet(viewsets.ModelViewSet):
+class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectSerializer
     ordering = ('name',)
     search_fields = ('name',)
 
 
-class PipelineViewSet(viewsets.ModelViewSet):
+class PipelineViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.Pipeline.objects.all()
     serializer_class = serializers.PipelineSerializer
     ordering = ('name',)
     pagination_class = None
+    mt_field = 'project'
 
     @action(methods=['post'], detail=False)
     def fetch(self, request):
@@ -48,14 +48,15 @@ class PipelineViewSet(viewsets.ModelViewSet):
         Afterwards returns the list of pipelines.
         '''
 
-        utils.kernel_artefacts_to_ui_artefacts()
+        utils.kernel_artefacts_to_ui_artefacts(request)
         return self.list(request)
 
 
-class ContractViewSet(viewsets.ModelViewSet):
+class ContractViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     queryset = models.Contract.objects.all()
     serializer_class = serializers.ContractSerializer
     ordering = ('name',)
+    mt_field = 'pipeline__project'
 
     @action(methods=['post'], detail=True)
     def publish(self, request, pk=None):
@@ -66,7 +67,7 @@ class ContractViewSet(viewsets.ModelViewSet):
         Afterwards returns the contract.
         '''
 
-        contract = get_object_or_404(models.Contract, pk=pk)
+        contract = self.get_object_or_404(pk=pk)
         try:
             utils.publish_contract(contract)
             return self.retrieve(request, pk)
@@ -83,7 +84,7 @@ class ContractViewSet(viewsets.ModelViewSet):
         and returns the list of failing reasons.
         '''
 
-        contract = get_object_or_404(models.Contract, pk=pk)
+        contract = self.get_object_or_404(pk=pk)
 
         data = utils.publish_preflight(contract)
         return Response(data=data)

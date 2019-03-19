@@ -57,6 +57,7 @@ services:
       BUCKET_NAME: test-kernel
       DEBUG: null # set to null to remove previous value
       MINIO_STORAGE_ENDPOINT: minio-test:9000
+      MULTITENANCY: "true"
       PGHOST: db-test
       TESTING: "true"
       TEST_PARALLEL: ${TEST_PARALLEL}
@@ -99,6 +100,7 @@ services:
       DB_NAME: test-odk
       DEBUG: null # set to null to remove previous value
       MINIO_STORAGE_ENDPOINT: minio-test:9000
+      MULTITENANCY: "true"
       PGHOST: db-test
       TESTING: "true"
       TEST_PARALLEL: ${TEST_PARALLEL}
@@ -125,6 +127,7 @@ services:
       DB_NAME: test-couchdb-sync
       DEBUG: null # set to null to remove previous value
       GOOGLE_CLIENT_ID: secret_google_client_id
+      MULTITENANCY: "true"
       PGHOST: db-test
       REDIS_HOST: redis-test
       TESTING: "true"
@@ -147,6 +150,7 @@ services:
       AETHER_KERNEL_URL: http://kernel-test:9100
       DB_NAME: test-ui
       DEBUG: null # set to null to remove previous value
+      MULTITENANCY: "true"
       PGHOST: db-test
       TESTING: "true"
       TEST_PARALLEL: ${TEST_PARALLEL}

@@ -21,6 +21,8 @@ from drf_dynamic_fields import DynamicFieldsMixin
 
 from rest_framework import serializers
 
+from aether.common.multitenancy.serializers import MtPrimaryKeyRelatedField, MtModelSerializer
+
 from . import models
 from .utils import get_default_project
 
@@ -56,7 +58,7 @@ class PipelineSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     contracts = ContractSerializer(many=True, read_only=True)
 
-    project = serializers.PrimaryKeyRelatedField(
+    project = MtPrimaryKeyRelatedField(
         required=False,
         queryset=models.Project.objects.all(),
     )
@@ -64,7 +66,7 @@ class PipelineSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     def create(self, validated_data):
         if not validated_data.get('project'):
             # assign new pipelines to the default project
-            default_project = get_default_project()
+            default_project = get_default_project(self.context['request'])
             validated_data['project'] = default_project
 
         instance = super(PipelineSerializer, self).create(validated_data)
@@ -89,7 +91,7 @@ class PipelineSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ProjectSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         read_only=True,
         view_name='project-detail',

@@ -19,7 +19,7 @@
 import json
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 
 from ..serializers import SchemaSerializer
 from ..models import Project
@@ -47,6 +47,7 @@ AVRO_SAMPLE = {
 }
 
 
+@override_settings(MULTITENANCY=False)
 class SerializersTests(TestCase):
 
     def setUp(self):

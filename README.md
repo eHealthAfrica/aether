@@ -15,6 +15,7 @@
     - [Aether UI](#aether-ui)
     - [Aether CouchDB Sync Module](#aether-couchdb-sync-module)
     - [File Storage System](#file-storage-system)
+    - [Multi-tenancy](#multi-tenancy)
 - [Usage](#usage)
   - [Users & Authentication](#users--authentication)
     - [Basic Authentication](#basic-authentication)
@@ -174,11 +175,56 @@ See more in https://django-minio-storage.readthedocs.io/en/latest/usage
 - `GS_SECRET_ACCESS_KEY`: Google Cloud Secret Access Key.
   [How to create Access Keys on Google Cloud Storage](https://cloud.google.com/storage/docs/migrating#keys)
 
+#### Multi-tenancy
 
-**WARNING**
+- `MULTITENANCY`, Enables or disables the feature, is `false` if unset or set
+  to empty string, anything else is considered `true`.
+- `DEFAULT_REALM`, `aether` The default realm for artefacts created
+  if multi-tenancy is not enabled.
+- `REALM_COOKIE`, `aether-realm` The name of the cookie that keeps the current
+  tenant id in the request headers.
 
-Never run `odk`, `ui` or `couchdb-sync` tests against any PRODUCTION server.
-The tests clean up would **DELETE ALL PROJECTS!!!**
+
+These variables are included in the `.env` file. Change them to enable or disable
+the multi-tenancy feature.
+
+Example with multi-tenancy enabled:
+
+```text
+# .env file
+MULTITENANCY=yes
+DEFAULT_REALM=my-current-tenant
+REALM_COOKIE=cookie-realm
+```
+
+```bash
+./scripts/docker_start.sh
+```
+
+Example with multi-tenancy disabled:
+
+```text
+# .env file
+MULTITENANCY=
+```
+
+```bash
+./scripts/docker_start.sh
+```
+
+The technical implementation is explained in
+[Multi-tenancy README](/aether-common-library/aether/common/multitenancy/README.md).
+
+**Notes:**
+
+- Everything is accessible to admin users in the `admin` section.
+
+- In Aether Kernel:
+  - All the schemas are accessible to all tenants.
+  - The entities without project are not accessible using the REST API.
+
+- In Aether CouchDB-Sync module:
+  - Devices are not restricted by realm but its user account is.
 
 *[Return to TOC](#table-of-contents)*
 
