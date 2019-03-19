@@ -57,6 +57,7 @@ class PipelineSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     )
 
     contracts = ContractSerializer(many=True, read_only=True)
+    is_read_only = serializers.BooleanField(read_only=True)
 
     project = MtPrimaryKeyRelatedField(
         required=False,
