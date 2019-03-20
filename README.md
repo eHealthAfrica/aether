@@ -21,6 +21,7 @@
     - [Basic Authentication](#basic-authentication)
     - [Token Authentication](#token-authentication)
 - [Development](#development)
+- [Release Management](#release-management)
 - [Deployment](#deployment)
 - [Containers and services](#containers-and-services)
 - [Run commands in the containers](#run-commands-in-the-containers)
@@ -322,6 +323,10 @@ Visit the [Aether Website](http://aether.ehealthafrica.org) for more information
 on [Try it for yourself](http://aether.ehealthafrica.org/documentation/try/index.html).
 
 *[Return to TOC](#table-of-contents)*
+
+## Release Management
+
+To learn more about the Aether release process, refer to the [release management](https://github.com/eHealthAfrica/aether/wiki/Release-Management) page on the wiki.
 
 ## Deployment
 
