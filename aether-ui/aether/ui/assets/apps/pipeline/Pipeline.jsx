@@ -74,18 +74,16 @@ class Pipeline extends Component {
   componentDidMount () {
     if (this.state.isNew) {
       this.createNewContract()
-    }
-
-    // load current pipeline using location address (router props)
-    if (!this.state.isNew) {
+    } else {
+      // load current pipeline using location address (router props)
       this.props.getPipelineById(this.props.match.params.pid)
     }
   }
 
   componentDidUpdate (prevProps) {
     if (
-      (prevProps.section !== this.props.section ||
-      (prevProps.contract && this.props.contract && prevProps.contract.id !== this.props.contract.id)) &&
+      (this.props.contract && (prevProps.section !== this.props.section ||
+      (prevProps.contract && prevProps.contract.id !== this.props.contract.id))) &&
       !this.state.isNew
     ) {
       // update router history
@@ -178,7 +176,7 @@ class Pipeline extends Component {
 
           { this.renderSectionTabs() }
 
-          { this.state.showSettings &&
+          { this.props.contract && this.state.showSettings &&
             <Settings
               onClose={this.onSettingsClosed.bind(this)}
               isNew={this.state.isNew}
@@ -187,10 +185,10 @@ class Pipeline extends Component {
           }
           <div className='pipeline-sections'>
             <div className='pipeline-section__input'><Input /></div>
-            <div className='pipeline-section__entityTypes'><EntityTypes isNew={this.state.isNew} /></div>
-            <div className='pipeline-section__mapping'><Mapping isNew={this.state.isNew} /></div>
+            {this.props.contract && <div className='pipeline-section__entityTypes'><EntityTypes isNew={this.state.isNew} /></div>}
+            {this.props.contract && <div className='pipeline-section__mapping'><Mapping isNew={this.state.isNew} /></div>}
           </div>
-          <div className='pipeline-output'><Output isNew={this.state.isNew} /></div>
+          {this.props.contract && <div className='pipeline-output'><Output isNew={this.state.isNew} /></div>}
         </div>
         { this.renderCancelationModal() }
       </div>
@@ -214,16 +212,6 @@ class Pipeline extends Component {
 
   onNewContract () {
     this.createNewContract()
-  }
-
-  onSettingsClosed () {
-    if (this.state.isNew) {
-      this.setState({
-        showCancelModal: true
-      })
-    } else {
-      this.props.selectSection(this.state.view)
-    }
   }
 
   renderCancelationModal () {
@@ -270,15 +258,27 @@ class Pipeline extends Component {
       isNew: false,
       showCancelModal: false
     })
-    this.props.selectContract(this.props.pipeline.contracts[0] || {})
-    this.props.selectSection(this.state.view)
+    const nextContract = this.props.pipeline.contracts.length > 0
+      ? this.props.pipeline.contracts[0] : null
+    this.props.selectContract(nextContract)
+    this.props.selectSection(nextContract ? this.state.view : PIPELINE_SECTION_INPUT)
   }
 
-  onSave () {
+  onSave (view) {
     this.setState({
       isNew: false,
       newContract: null
-    })
+    }, () => this.onSettingsClosed(view))
+  }
+
+  onSettingsClosed (view = null) {
+    if (this.state.isNew) {
+      this.setState({
+        showCancelModal: true
+      })
+    } else {
+      this.props.selectSection(view || this.state.view)
+    }
   }
 
   onContractTabSelected (contract) {
@@ -335,8 +335,15 @@ class Pipeline extends Component {
     )
   }
 
+  onContracts () {
+    if (!this.props.pipeline.contracts.length) {
+      this.createNewContract()
+    }
+    this.props.selectSection(CONTRACT_SECTION_SETTINGS)
+  }
+
   renderSectionTabs () {
-    const { contract } = this.props
+    const { contract = {} } = this.props
 
     const fullscreenDiv = (
       <div
@@ -392,7 +399,7 @@ class Pipeline extends Component {
 
           <div
             className='pipeline-nav-item__contracts'
-            onClick={() => { this.props.selectSection(CONTRACT_SECTION_ENTITY_TYPES) }}>
+            onClick={this.onContracts.bind(this)}>
             <div className='badge'>
               <i className='fas fa-caret-right' />
             </div>

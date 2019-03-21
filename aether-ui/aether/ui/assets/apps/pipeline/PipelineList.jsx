@@ -43,8 +43,12 @@ class PipelineList extends Component {
     // - a pipeline is selected
     // - a new contract is added
     // - a contract is selected
-    if (this.props.pid && prevProps.pid !== this.props.pid) {
+    if (this.props.pid && prevProps.pid !== this.props.pid && this.props.cid) {
       this.props.history.push(`/${this.props.pid}/${this.props.cid}/${this.props.section}`)
+    }
+
+    if (this.props.pid && prevProps.pid !== this.props.pid) {
+      this.props.history.push(`/${this.props.pid}`)
     }
   }
 

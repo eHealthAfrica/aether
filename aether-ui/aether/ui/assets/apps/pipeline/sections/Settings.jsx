@@ -22,7 +22,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
-import { updateContract, addContract } from '../redux'
+import { updateContract, addContract, selectSection } from '../redux'
 import { isEmpty } from '../../utils'
 import { deriveEntityTypes, deriveMappingRules } from '../../utils/avro-utils'
 
@@ -30,60 +30,123 @@ import { Modal } from '../../components'
 import ContractPublishButton from '../components/ContractPublishButton'
 import SubmissionCard from '../components/SubmissionCard'
 
+import {
+  CONTRACT_SECTION_MAPPING
+} from '../../utils/constants'
+
 export class IdentityMapping extends Component {
   constructor (props) {
     super(props)
 
     this.state = {
-      showModal: false
+      entityTypeName: props.inputSchema.name || ''
     }
   }
 
   render () {
     return (
       <React.Fragment>
-        <div className='identity-mapping'>
-          <p>
-            <FormattedMessage
-              id='settings.identity.help-1'
-              defaultMessage='You can use an identity contract to leave submitted data unchanged.'
+        {
+          !this.props.contract.is_identity &&
+          <div className='identity-mapping'>
+            <input
+              type='checkbox'
+              checked={this.props.isIdentity}
+              onChange={(e) => this.props.onChange(e)}
             />
-            &nbsp;
-            <FormattedMessage
-              id='settings.identity.help-2'
-              defaultMessage='This will automatically create both Entity Types and Mappings.'
-            />
-          </p>
-          <button
-            data-qa='contract.identity.button.apply'
-            className='btn btn-w'
-            onClick={() => { this.setState({ showModal: true }) }}
-            disabled={this.props.contract.is_read_only}
-          >
-            <FormattedMessage
-              id='settings.identity.button'
-              defaultMessage='Create identity contract'
-            />
-          </button>
-        </div>
+            <h5>
+              <FormattedMessage
+                id='settings.identity.help-1'
+                defaultMessage='This is an identity contract'
+              />
+            </h5>
+            <p>
+              <FormattedMessage
+                id='settings.identity.help-2'
+                defaultMessage='An identity contract will produce entities
+                that are identical with the input. If you choose this setting.
+                Aether will generate an Entity Type and Mapping for you.'
+              />
+            </p>
+            <p>
+              <FormattedMessage
+                id='settings.identity.help-3'
+                defaultMessage="This can be useful in situations where you
+                want to make use of Aether's functionality without transforming
+                  the data Alternatively, you can use the generate Entity Type
+                  and Mapping as a starting point for a more complex contract."
+              />
+            </p>
+            { this.props.isIdentity && <div className='form-group'>
+              <label className='form-label'>
+                <FormattedMessage
+                  id='settings.contract.identity.name'
+                  defaultMessage='Generated entity name'
+                />
+              </label>
+              <input
+                type='text'
+                required
+                name='name'
+                className='input-d contract-name'
+                value={this.state.entityTypeName}
+                onChange={(e) => { this.setState({ entityTypeName: e.target.value }) }}
+              />
+            </div>}
+          </div>
+        }
 
-        { this.state.showModal && this.renderModal() }
+        {
+          this.props.contract.is_identity &&
+          <div className='identity-mapping'>
+            <input
+              type='checkbox'
+              checked
+              readOnly
+            />
+            <h5>
+              <FormattedMessage
+                id='settings.identity.checked.help-1'
+                defaultMessage='This is an identity contract'
+              />
+            </h5>
+            <p>
+              <FormattedMessage
+                id='settings.identity.checked.help-2'
+                defaultMessage='All Entity Types and Mappings were generated automatically from the input'
+              />
+            </p>
+          </div>
+        }
+
+        { this.props.showModal && this.renderModal() }
       </React.Fragment>
     )
   }
 
   generateIdentityMapping () {
     const schema = this.props.inputSchema
-    const mappingRules = deriveMappingRules(schema)
-    const entityTypes = deriveEntityTypes(schema)
+    const mappingRules = deriveMappingRules(schema, this.state.entityTypeName)
+    const entityTypes = deriveEntityTypes(schema, this.state.entityTypeName)
 
-    this.props.updateContract({
+    const updatedContract = {
       ...this.props.contract,
       mapping_rules: mappingRules,
-      entity_types: entityTypes
-    })
+      entity_types: entityTypes,
+      name: this.props.contractName,
+      is_identity: true
+    }
 
-    this.setState({ showModal: false })
+    this.props.onSave(updatedContract)
+    this.props.onModalToggle(false)
+    this.props.selectSection(CONTRACT_SECTION_MAPPING)
+  }
+
+  onChange (e) {
+    this.setState({
+      isIdentity: e.target.checked
+    })
+    this.props.onChange(e)
   }
 
   renderModal () {
@@ -106,7 +169,7 @@ export class IdentityMapping extends Component {
           />
         </button>
 
-        <button className='btn btn-w' onClick={() => { this.setState({ showModal: false }) }}>
+        <button className='btn btn-w' onClick={() => { this.props.onModalToggle(false) }}>
           <FormattedMessage
             id='settings.identity.button.cancel'
             defaultMessage='Cancel'
@@ -135,7 +198,9 @@ class Settings extends Component {
     super(props)
 
     this.state = {
-      contractName: props.contract.name
+      contractName: props.contract.name,
+      isIdentity: false,
+      showIdentityModal: false
     }
   }
 
@@ -146,14 +211,22 @@ class Settings extends Component {
   }
 
   onSave (contract) {
-    if (this.props.isNew) {
-      this.props.addContract({ ...contract, name: this.state.contractName })
-      this.props.onSave()
-    } else {
-      this.props.updateContract({
-        ...contract,
-        name: this.state.contractName
+    if (this.state.isIdentity) {
+      this.setState({
+        showIdentityModal: true
       })
+    } else {
+      this.performSave({ ...contract, name: this.state.contractName })
+    }
+  }
+
+  performSave (contract) {
+    if (this.props.isNew) {
+      this.props.addContract(contract)
+      this.props.onSave(this.state.isIdentity ? CONTRACT_SECTION_MAPPING : null)
+    } else {
+      this.props.updateContract(contract)
+      this.props.onClose()
     }
   }
 
@@ -163,16 +236,6 @@ class Settings extends Component {
 
     return (
       <div className='pipeline-settings'>
-        <div
-          className='btn-icon close-button'
-          onClick={() => this.props.onClose()}>
-          <i className='fas fa-times' />
-          <FormattedMessage
-            id='settings.button.close'
-            defaultMessage='close settings'
-          />
-        </div>
-
         <div className='contract-form'>
           <div className='form-group'>
             <label className='form-label'>
@@ -190,31 +253,18 @@ class Settings extends Component {
               onChange={(e) => { this.setState({ contractName: e.target.value }) }}
               disabled={contract.is_read_only}
             />
-
-            { !contract.is_read_only &&
-              <button
-                className='btn btn-d btn-primary btn-big ml-4'
-                onClick={this.onSave.bind(this, contract)}>
-                <span className='details-title'>
-                  <FormattedMessage
-                    id='settings.contract.save'
-                    defaultMessage='Save'
-                  />
-                </span>
-              </button>
-            }
           </div>
 
-          { showIdentityOption && <IdentityMapping {...this.props} /> }
+          { showIdentityOption && <IdentityMapping {...this.props}
+            onChange={(e) => this.setState({ isIdentity: e.target.checked })}
+            isIdentity={this.state.isIdentity}
+            showModal={this.state.showIdentityModal}
+            onModalToggle={(e) => this.setState({ showIdentityModal: e })}
+            contractName={this.state.contractName}
+            onSave={this.performSave.bind(this)} /> }
 
           <div className='settings-section'>
             <div>
-              <label className='form-label'>
-                <FormattedMessage
-                  id='settings.puplish.status'
-                  defaultMessage='Publish status'
-                />
-              </label>
               <ContractPublishButton
                 contract={contract}
                 className='btn btn-d btn-publish'
@@ -237,11 +287,23 @@ class Settings extends Component {
             className='btn btn-d btn-big'>
             <span className='details-title'>
               <FormattedMessage
-                id='settings.button.close'
-                defaultMessage='Close'
+                id='settings.button.cancel'
+                defaultMessage='Cancel'
               />
             </span>
           </button>
+          { !contract.is_read_only &&
+            <button
+              className='btn btn-d btn-primary btn-big ml-4'
+              onClick={this.onSave.bind(this, contract)}>
+              <span className='details-title'>
+                <FormattedMessage
+                  id='settings.contract.save'
+                  defaultMessage='Save'
+                />
+              </span>
+            </button>
+          }
         </div>
       </div>
     )
@@ -255,6 +317,6 @@ const mapStateToProps = ({ pipelines }) => ({
 
   contract: pipelines.currentContract
 })
-const mapDispatchToProps = { updateContract, addContract }
+const mapDispatchToProps = { updateContract, addContract, selectSection }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Settings)

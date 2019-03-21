@@ -85,10 +85,16 @@ class Mapping extends Component {
       return
     }
 
+    const updatedContract = {
+      ...this.props.contract,
+      mapping_rules: this.state.mappingRules,
+      is_identity: false
+    }
+
     if (this.props.isNew) {
-      this.props.contractChanged({ ...this.props.contract, mapping_rules: this.state.mappingRules })
+      this.props.contractChanged(updatedContract)
     } else {
-      this.props.updateContract({ ...this.props.contract, mapping_rules: this.state.mappingRules })
+      this.props.updateContract(updatedContract)
     }
   }
 

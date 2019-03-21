@@ -199,6 +199,7 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel, MtMo
     :ivar datetime  published_on:    Timestamp of last published to Aether Kernel.
     :ivar bool      is_active:       Is the contract active?
     :ivar bool      is_read_only:    Can the contract be modified manually?
+    :ivar bool      is_identity:     Is the contract generated as an identity contract?
 
     '''
 
@@ -275,6 +276,8 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel, MtMo
 
     # the read only property is fulfilled by kernel fetched mappings
     is_read_only = models.BooleanField(default=False, editable=False, verbose_name=_('is read only?'))
+
+    is_identity = models.BooleanField(default=False, verbose_name=_('is identity?'))
 
     @property
     def entity_types_prettified(self):

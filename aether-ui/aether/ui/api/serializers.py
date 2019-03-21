@@ -71,13 +71,6 @@ class PipelineSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
         instance = super(PipelineSerializer, self).create(validated_data)
 
-        # create initial contract
-        models.Contract.objects.create(
-            pk=instance.pk,      # re-use same uuid
-            name=instance.name,  # re-use same name
-            pipeline=instance,
-        )
-
         return instance
 
     def update(self, instance, validated_data):

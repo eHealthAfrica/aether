@@ -26,8 +26,7 @@ import {
   PIPELINES_URL,
   CONTRACTS_URL,
   PIPELINE_SECTION_INPUT,
-  CONTRACT_SECTION_ENTITY_TYPES,
-  CONTRACT_SECTION_SETTINGS
+  CONTRACT_SECTION_ENTITY_TYPES
 } from '../utils/constants'
 
 export const types = {
@@ -294,8 +293,7 @@ const reducer = (state = INITIAL_STATE, action) => {
         pipelineList: [ newPipeline, ...state.pipelineList ],
 
         currentSection: PIPELINE_SECTION_INPUT,
-        currentPipeline: newPipeline,
-        currentContract: newPipeline.contracts[0]
+        currentPipeline: newPipeline
       }
     }
 
@@ -319,8 +317,6 @@ const reducer = (state = INITIAL_STATE, action) => {
       return {
         ...nextState,
         pipelineList: replaceItemInList(state.pipelineList, currentPipeline),
-
-        currentSection: CONTRACT_SECTION_SETTINGS,
         currentPipeline,
         currentContract
       }

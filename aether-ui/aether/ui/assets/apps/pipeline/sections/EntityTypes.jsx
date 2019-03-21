@@ -81,10 +81,15 @@ class EntityTypes extends Component {
           throw new Error(formatMessage(MESSAGES.missingIdError))
         }
       })
+      const updatedContract = {
+        ...this.props.contract,
+        entity_types: schemas,
+        is_identity: false
+      }
       if (this.props.isNew) {
-        this.props.contractChanged({ ...this.props.contract, entity_types: schemas })
+        this.props.contractChanged(updatedContract)
       } else {
-        this.props.updateContract({ ...this.props.contract, entity_types: schemas })
+        this.props.updateContract(updatedContract)
       }
     } catch (error) {
       this.setState({ error: error.message })

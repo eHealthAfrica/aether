@@ -46,7 +46,7 @@ class ContractPublishButton extends Component {
       <React.Fragment>
         { this.renderModal() }
 
-        <div className='status-publish'>
+        <div>
           { contract.published_on &&
             <React.Fragment>
               <FormattedMessage
@@ -56,15 +56,15 @@ class ContractPublishButton extends Component {
             </React.Fragment>
           }
 
-          { !contract.published_on &&
+          { contract.created && !contract.published_on &&
             <FormattedMessage
               id='contract.publish-status.not-published'
-              defaultMessage='Not published'
+              defaultMessage='Not published yet'
             />
           }
         </div>
 
-        { !contract.is_read_only &&
+        { contract.created && !contract.is_read_only &&
           <button type='button'
             className={this.props.className}
             onClick={(event) => {
