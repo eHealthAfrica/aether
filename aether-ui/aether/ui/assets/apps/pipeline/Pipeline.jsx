@@ -323,8 +323,12 @@ class Pipeline extends Component {
         key={newContract.id}
         className={`pipeline-tab ${newContract.id === this.props.contract.id ? 'active' : ''}`}
         onClick={this.onNewContractTabSelected.bind(this)}>
-        <span className='contract-name'>{ newContract.name }</span>
-        <span className='status white' />
+        <span className='contract-name new'>
+          <FormattedMessage
+            id='pipeline.tab.newContract'
+            defaultMessage='new Contract'
+          />
+        </span>
 
         <div
           className={`btn-icon settings-button ${this.state.showSettings ? 'active' : ''}`}
