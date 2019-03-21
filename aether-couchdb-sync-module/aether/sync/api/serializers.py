@@ -76,6 +76,13 @@ class MobileUserSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
+        email = validated_data.get('email', instance.email)
+        # changing the email could head to weird permission issues with linked devices
+        # in order to skip those errors we do not allow to change it
+        # delete and create a new one will be the solution
+        if email != instance.email:
+            raise serializers.ValidationError({'email': _('email field cannot be changed.')})
+
         instance = super(MobileUserSerializer, self).update(instance, validated_data)
         self.post_save(instance)
         return instance

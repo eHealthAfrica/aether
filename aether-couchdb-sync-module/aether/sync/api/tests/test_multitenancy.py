@@ -36,6 +36,11 @@ from ..kernel_utils import __upsert_kernel_artefacts as upsert_kernel
 from . import MockResponse
 
 CURRENT_REALM = 'realm'
+ANOTHER_REALM = 'another'
+
+_username = 'user'
+_email = 'user@example.com'
+_password = 'secretsecret'
 
 
 class MultitenancyTests(TestCase):
@@ -46,14 +51,13 @@ class MultitenancyTests(TestCase):
         self.request = RequestFactory().get('/')
         self.request.COOKIES[settings.REALM_COOKIE] = CURRENT_REALM
 
-        username = 'user'
-        email = 'user@example.com'
-        password = 'secretsecret'
-
-        user = get_user_model().objects.create_user(username, email, password)
+        user = get_user_model().objects.create_user(_username, _email, _password)
         self.request.user = user
-        self.client.cookies = SimpleCookie({settings.REALM_COOKIE: CURRENT_REALM})
-        self.assertTrue(self.client.login(username=username, password=password))
+        self.helper__change_cookies_realm(CURRENT_REALM)
+
+    def helper__change_cookies_realm(self, realm):
+        self.client.cookies = SimpleCookie({settings.REALM_COOKIE: realm})
+        self.assertTrue(self.client.login(username=_username, password=_password))
 
     def test_get_multitenancy_model(self):
         self.assertEqual(settings.MULTITENANCY_MODEL, 'sync.Project')
@@ -135,7 +139,8 @@ class MultitenancyTests(TestCase):
         mobile_user1.groups.clear()
         user1_upd = serializers.MobileUserSerializer(
             mobile_user1,
-            data={'email': 'test_till@ehealthnigeria.org'},
+            data={},
+            partial=True,
             context={'request': self.request},
         )
         self.assertTrue(user1_upd.is_valid(), user1_upd.errors)
@@ -210,6 +215,57 @@ class MultitenancyTests(TestCase):
                 settings.REALM_COOKIE: CURRENT_REALM,
             },
         )
+
+    def test_views__mobile_user__lifecycle(self):
+        self.assertEqual(models.MobileUser.objects.count(), 0)
+        url = reverse('api:mobileuser-list')
+
+        response = self.client.post(url, data={'email': 'test_karl@ehealthnigeria.org'})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content)
+        self.assertEqual(models.MobileUser.objects.count(), 1)
+
+        user_id = response.json()['id']
+        mobile_user = models.MobileUser.objects.get(pk=user_id)
+        self.assertEqual(mobile_user.groups.count(), 1)
+        self.assertEqual(mobile_user.groups.first().name, CURRENT_REALM)
+
+        # create another user with the same email
+        response = self.client.post(url, data={'email': 'test_karl@ehealthnigeria.org'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.content)
+        self.assertEqual(models.MobileUser.objects.count(), 1)
+
+        # change realm
+        self.helper__change_cookies_realm(ANOTHER_REALM)
+
+        # create another user with the same email again
+        response = self.client.post(url, data={'email': 'test_karl@ehealthnigeria.org'})
+        self.assertEqual(response.client.cookies[settings.REALM_COOKIE].value, ANOTHER_REALM)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.content)
+        self.assertEqual(models.MobileUser.objects.count(), 1)
+
+        user2_id = response.json()['id']
+        self.assertEqual(user_id, user2_id)
+        self.assertEqual(mobile_user.groups.count(), 2)
+        self.assertIn(CURRENT_REALM, mobile_user.groups.values_list('name', flat=True))
+        self.assertIn(ANOTHER_REALM, mobile_user.groups.values_list('name', flat=True))
+
+        url_detail = reverse('api:mobileuser-detail', kwargs={'pk': user_id})
+
+        # delete the user
+        response = self.client.delete(url_detail)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(models.MobileUser.objects.count(), 1)
+        self.assertEqual(mobile_user.groups.count(), 1)
+        self.assertEqual(mobile_user.groups.first().name, CURRENT_REALM)
+
+        # back to first realm
+        self.helper__change_cookies_realm(CURRENT_REALM)
+
+        # delete the user again
+        response = self.client.delete(url_detail)
+        self.assertEqual(response.client.cookies[settings.REALM_COOKIE].value, CURRENT_REALM)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.content)
+        self.assertEqual(models.MobileUser.objects.count(), 0)
 
 
 @override_settings(MULTITENANCY=False)
