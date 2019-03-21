@@ -329,12 +329,6 @@ class Pipeline extends Component {
             defaultMessage='new Contract'
           />
         </span>
-
-        <div
-          className={`btn-icon settings-button ${this.state.showSettings ? 'active' : ''}`}
-          onClick={() => { this.props.selectSection(CONTRACT_SECTION_SETTINGS) }}>
-          <i className='fas fa-ellipsis-h' />
-        </div>
       </div>
     )
   }

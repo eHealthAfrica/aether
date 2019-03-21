@@ -68,9 +68,10 @@ $output-nav-width: 10rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    
+
     &.new {
       font-style: italic;
+      padding-right: 2rem;
     }
   }
 
