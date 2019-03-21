@@ -33,6 +33,7 @@ class PipelineCard extends Component {
     this.props.selectPipeline(pipeline.id)
     this.props.history.push(`/${pipeline.id}`)
   }
+  
   render () {
     const { pipeline } = this.props
 

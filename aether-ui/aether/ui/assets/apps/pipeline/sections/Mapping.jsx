@@ -118,7 +118,6 @@ class Mapping extends Component {
 
   hasChangedJson () {
     try {
-      console.log(JSON.parse(this.state.mappingRulesInput), this.props.contract.mapping_rules)
       return !deepEqual(JSON.parse(this.state.mappingRulesInput), this.props.contract.mapping_rules.map(rule => (
         [rule.source, rule.destination]
       )))
