@@ -109,7 +109,7 @@ of the most common ones with non default values. For more info take a look at th
 - `APP_NAME`: `aether`. The app name displayed in the web pages.
 - `APP_URL`, `/`. The app url in the server.
   If host is `http://my-server.org` and the app url is `/my-module`,
-  the app enpoints will be accessible at `http://my-server.org/my-dev-instance/...`.
+  the app enpoints will be accessible at `http://my-server.org/my-module/...`.
   The local behavior is: `http://my-module.aether.local/`.
 - `DB_NAME` Database name.
 - `DEBUG` Enables debug mode. Is `false` if unset or set to empty string,
