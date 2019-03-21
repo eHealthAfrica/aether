@@ -108,7 +108,7 @@ of the most common ones with non default values. For more info take a look at th
 - `APP_LINK`: `http://aether.ehealthafrica.org`. The link that appears in the DRF web pages.
 - `APP_NAME`: `aether`. The app name displayed in the web pages.
 - `APP_URL`, `/`. The app url in the server.
-  If host is `http://my-server.org` and the app url is `/my-dev-instance`,
+  If host is `http://my-server.org` and the app url is `/my-module`,
   the app enpoints will be accessible at `http://my-server.org/my-dev-instance/...`.
   The local behavior is: `http://my-module.aether.local/`.
 - `DB_NAME` Database name.
