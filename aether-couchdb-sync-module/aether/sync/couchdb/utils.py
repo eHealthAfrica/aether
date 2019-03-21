@@ -35,21 +35,6 @@ def force_put_doc(path, document):
     return r
 
 
-def fetch_dbs_info():
-    r = api.get('_all_dbs')
-
-    # get the list of non-private databases
-    dbs = [db for db in r.json() if not db.startswith('_')]
-
-    # create the dict of existing and valid databases with info
-    results = {}
-    for dbname in dbs:
-        db = api.get(dbname)
-        db.raise_for_status()
-        results[dbname] = db.json()
-    return results
-
-
 def fetch_db_docs(dbname, last_seq):
     '''
     get all changed documents in the database since last sequence
