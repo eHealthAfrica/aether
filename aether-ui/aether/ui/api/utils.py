@@ -19,6 +19,8 @@
 import json
 import uuid
 
+from requests.exceptions import HTTPError
+
 from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import ugettext as _
@@ -26,6 +28,7 @@ from django.utils.translation import ugettext as _
 from rest_framework import status
 
 from aether.common.kernel import utils
+from aether.common.multitenancy import utils as mt_utils
 from aether.common.utils import get_all_docs, request
 
 from . import models
@@ -35,6 +38,7 @@ MSG_CONTRACT_VALIDATION_ERROR = _('It was not possible to validate the contract:
 MSG_CONTRACT_VALIDATION_KERNEL_ERROR = _('It was not possible to connect to Aether Kernel.')
 
 MSG_PROJECT_IN_KERNEL = _('Project is already published')
+MSG_PROJECT_IN_KERNEL_WRONG = _('Project in kernel belongs to a different tenant')
 MSG_PROJECT_NOT_IN_KERNEL = _('Project will be published')
 
 MSG_PIPELINE_NO_INPUT = _('Pipeline has no input')
@@ -67,30 +71,32 @@ class PublishError(Exception):
     pass
 
 
-def get_default_project():
+def get_default_project(request):
     '''
     Returns (creates when needed) the default project to assign to new pipelines.
     '''
 
     # find the default projects
-    default_projects = models.Project.objects.filter(is_default=True)
+    default_projects = mt_utils.filter_by_realm(request, models.Project.objects.filter(is_default=True))
     if default_projects.count() == 0:
         # create a default one
-        name = settings.DEFAULT_PROJECT_NAME
-        project = models.Project.objects.create(name=name, is_default=True)
+        project = models.Project.objects.create(name=settings.DEFAULT_PROJECT_NAME, is_default=True)
+        project.add_to_realm(request)
 
         return project
     else:
         return default_projects.first()
 
 
-def kernel_artefacts_to_ui_artefacts():
+def kernel_artefacts_to_ui_artefacts(request):
     '''
     Fetches all projects in kernel and all linked mappingsets and tranform them into pipelines,
     taking also the linked mappings+schemas and transform them into contracts.
     '''
+
     KERNEL_URL = utils.get_kernel_server_url()
-    headers = utils.get_auth_header()
+    # restrict by current realm (if enabled)
+    headers = mt_utils.add_current_realm_in_headers(request, utils.get_auth_header())
 
     projects = get_all_docs(f'{KERNEL_URL}/projects/', headers=headers)
     for kernel_project in projects:
@@ -99,7 +105,9 @@ def kernel_artefacts_to_ui_artefacts():
         if not models.Project.objects.filter(pk=project_id).exists():
             # create the project
             models.Project.objects.create(project_id=project_id, name=kernel_project['name'])
+
         project = models.Project.objects.get(pk=project_id)
+        project.add_to_realm(request)
 
         # fetch linked mapping sets
         mappingsets = get_all_docs(kernel_project['mappingset_url'], headers=headers)
@@ -295,7 +303,12 @@ def publish_project(project):
     artefacts = model_to_artefacts(project)
 
     try:
-        kernel_data_request(url=f'projects/{pk}/artefacts/', method='patch', data=artefacts)
+        kernel_data_request(
+            url=f'projects/{pk}/artefacts/',
+            method='patch',
+            data=artefacts,
+            headers=wrap_kernel_headers(project),
+        )
     except Exception as e:
         raise PublishError(e)
 
@@ -308,7 +321,7 @@ def publish_pipeline(pipeline):
     pk = str(pipeline.project.pk)
 
     # if there is at least one readonly contract do not update only create if missing
-    action = 'create' if pipeline.contracts.filter(is_read_only=True).exists() else 'upsert'
+    action = 'create' if pipeline.is_read_only else 'upsert'
     artefacts = model_to_artefacts(pipeline)
     mappingset_id = artefacts['mappingsets'][0]['id']
 
@@ -318,7 +331,12 @@ def publish_pipeline(pipeline):
     }
 
     try:
-        kernel_data_request(url=f'projects/{pk}/artefacts/', method='patch', data=data)
+        kernel_data_request(
+            url=f'projects/{pk}/artefacts/',
+            method='patch',
+            data=data,
+            headers=wrap_kernel_headers(pipeline),
+        )
     except Exception as e:
         raise PublishError(e)
 
@@ -344,7 +362,12 @@ def publish_contract(contract):
     mapping_id = artefacts['mappings'][0]['id']
 
     try:
-        kernel_data_request(url=f'projects/{pk}/artefacts/', method='patch', data=artefacts)
+        kernel_data_request(
+            url=f'projects/{pk}/artefacts/',
+            method='patch',
+            data=artefacts,
+            headers=wrap_kernel_headers(contract),
+        )
     except Exception as e:
         raise PublishError(e)
 
@@ -390,6 +413,10 @@ def publish_preflight(contract):
         - Contract belongs to a different pipeline (mapping set) in kernel
         - Entity type "XXX" (as project schema) belongs to a different project in kernel
 
+        In case of multitenancy is enabled also:
+            - Project in kernel belongs to a different tenant
+
+
     - Warning (warns if any of the artefacts is already published)
 
         - Project is already published
@@ -414,7 +441,10 @@ def publish_preflight(contract):
 
     def __get(model, pk):
         try:
-            return kernel_data_request(url=f'{model}/{pk}/')
+            return kernel_data_request(
+                url=f'{model}/{pk}/',
+                headers=wrap_kernel_headers(project),
+            )
         except Exception:
             return None
 
@@ -439,6 +469,18 @@ def publish_preflight(contract):
         outcome['warning'].append(MSG_CONTRACT_MAPPING_RULES_ERROR)
 
     # 1. Check the project in Kernel
+    try:
+        kernel_data_request(
+            url=f'projects/{project.project_id}/is-accessible/',
+            method='head',
+            headers=wrap_kernel_headers(project),
+        )
+    except HTTPError as e:
+        if e.response.status_code == status.HTTP_403_FORBIDDEN:
+            # not accessible by realm
+            outcome['error'].append(MSG_PROJECT_IN_KERNEL_WRONG)
+            return outcome
+
     kernel_project = __get('projects', project.project_id)
     if kernel_project:
         outcome['warning'].append(MSG_PROJECT_IN_KERNEL)
@@ -615,3 +657,7 @@ def kernel_data_request(url='', method='get', data=None, headers=None):
     if res.status_code == status.HTTP_204_NO_CONTENT:
         return None
     return json.loads(res.content.decode('utf-8'))
+
+
+def wrap_kernel_headers(instance):
+    return mt_utils.add_instance_realm_in_headers(instance, utils.get_auth_header())

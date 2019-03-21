@@ -52,9 +52,14 @@ def json_prettified(value, indent=2):
 
 def request(*args, **kwargs):
     '''
-    Executes the request call at least three times before raising an error.
-    '''
+    Executes the request call at least three times to avoid
+    unexpected connection errors (not request expected ones).
 
+    Like:
+
+        # ConnectionResetError: [Errno 104] Connection reset by peer
+        # http.client.RemoteDisconnected: Remote end closed connection without response
+    '''
     count = 0
     exception = None
 
@@ -63,14 +68,6 @@ def request(*args, **kwargs):
             return requests.request(*args, **kwargs)
         except Exception as e:
             exception = e
-
-            # ConnectionResetError: [Errno 104] Connection reset by peer
-            # http.client.RemoteDisconnected: Remote end closed connection without response
-
-            # This happens randomly in Travis
-            # There is nothing we can do so... ignore it and try again
-
-        # try again
         count += 1
         sleep(1)
 

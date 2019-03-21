@@ -22,3 +22,4 @@ coverage
 flake8
 flake8-quotes
 mock
+tblib

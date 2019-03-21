@@ -117,6 +117,8 @@ TEMPLATES = [
     },
 ]
 
+MIGRATION_MODULES = {}
+
 
 # REST Framework Configuration
 # ------------------------------------------------------------------------------
@@ -306,6 +308,25 @@ if CAS_SERVER_URL:
 
 else:
     logger.info('No CAS enabled!')
+
+
+# Multitenancy Configuration
+# ------------------------------------------------------------------------------
+
+MULTITENANCY = bool(os.environ.get('MULTITENANCY'))
+if MULTITENANCY:
+    REALM_COOKIE = os.environ.get('REALM_COOKIE', 'aether-realm')
+    REALM_HEADER = 'HTTP_' + REALM_COOKIE.replace('-', '_').upper()  # HTTP_AETHER_REALM
+    DEFAULT_REALM = os.environ.get('DEFAULT_REALM', 'aether')
+
+    INSTALLED_APPS += ['aether.common.multitenancy', ]
+    MIGRATION_MODULES['multitenancy'] = 'aether.common.multitenancy.migrations'
+    REST_FRAMEWORK['DEFAULT_PERMISSION_CLASSES'] = [
+        'aether.common.multitenancy.permissions.IsAccessibleByRealm',
+    ]
+
+else:
+    logger.info('No multitenancy enabled!')
 
 
 # Storage Configuration

@@ -20,20 +20,20 @@ import uuid
 import mock
 
 from django.conf import settings
-from django.test import TestCase
+from django.test import RequestFactory, TestCase, override_settings
 
 from ..models import Project, Pipeline, Contract
 from .. import utils
 
 
+@override_settings(MULTITENANCY=False)
 class UtilsTest(TestCase):
 
     def setUp(self):
         super(UtilsTest, self).setUp()
 
         self.KERNEL_ID = str(uuid.uuid4())
-
-        Project.objects.all().delete()
+        self.request = RequestFactory().get('/')
 
     def tearDown(self):
         self.helper__delete_in_kernel('projects', self.KERNEL_ID)
@@ -54,13 +54,13 @@ class UtilsTest(TestCase):
         self.assertEqual(Project.objects.count(), 0)
 
         # creates a project
-        project = utils.get_default_project()
+        project = utils.get_default_project(self.request)
         self.assertEqual(project.name, settings.DEFAULT_PROJECT_NAME)
         self.assertTrue(project.is_default)
         self.assertEqual(Project.objects.count(), 1)
 
         # call it a second time does not create a new one
-        project_2 = utils.get_default_project()
+        project_2 = utils.get_default_project(self.request)
         self.assertEqual(project.pk, project_2.pk)
         self.assertEqual(Project.objects.count(), 1)
 
@@ -161,6 +161,7 @@ class UtilsTest(TestCase):
                 url=f'projects/{project_id}/artefacts/',
                 method='patch',
                 data={'name': 'Publishing project'},
+                headers={'Authorization': mock.ANY},
             )
 
         contract.is_read_only = True
@@ -181,6 +182,7 @@ class UtilsTest(TestCase):
                         'schema': ENTITY_SAMPLE,
                     }]
                 },
+                headers={'Authorization': mock.ANY},
             )
 
         contract.is_read_only = False
@@ -201,6 +203,7 @@ class UtilsTest(TestCase):
                         'schema': ENTITY_SAMPLE,
                     }]
                 },
+                headers={'Authorization': mock.ANY},
             )
 
         with mock.patch('aether.ui.api.utils.kernel_data_request') as mock_kernel:
@@ -236,6 +239,7 @@ class UtilsTest(TestCase):
                             'is_ready_only': False,
                         }],
                     },
+                    headers={'Authorization': mock.ANY},
                 )
 
     def test__kernel_workflow(self):
@@ -276,7 +280,7 @@ class UtilsTest(TestCase):
         self.assertFalse(Project.objects.filter(pk=self.KERNEL_ID).exists())
 
         # bring them to ui
-        utils.kernel_artefacts_to_ui_artefacts()
+        utils.kernel_artefacts_to_ui_artefacts(self.request)
 
         self.assertTrue(Project.objects.filter(pk=self.KERNEL_ID).exists())
         project = Project.objects.get(pk=self.KERNEL_ID)
@@ -294,7 +298,7 @@ class UtilsTest(TestCase):
         )
 
         # bring them again to ui
-        utils.kernel_artefacts_to_ui_artefacts()
+        utils.kernel_artefacts_to_ui_artefacts(self.request)
         project.refresh_from_db()
 
         # nothing new

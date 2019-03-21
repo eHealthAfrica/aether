@@ -54,18 +54,21 @@ export const types = {
   CONTRACT_PUBLISH_ERROR: 'contract.publish.error'
 }
 
+const ACTIONS_INITIAL_STATE = {
+  error: null,
+  publishError: null,
+  publishState: null,
+  publishSuccess: false
+}
+
 export const INITIAL_STATE = {
+  ...ACTIONS_INITIAL_STATE,
+
   pipelineList: [],
 
   currentSection: null,
   currentPipeline: null,
-  currentContract: null,
-
-  error: null,
-
-  publishError: null,
-  publishState: null,
-  publishSuccess: false
+  currentContract: null
 }
 
 export const getPipelines = () => ({
@@ -164,8 +167,8 @@ export const publishContract = (cid) => ({
 const parsePipeline = (pipeline) => {
   return {
     ...pipeline,
-    isInputReadOnly: (pipeline.contracts.filter(c => (c.is_read_only)).length > 0),
-    contracts: pipeline.contracts.map(parseContract)
+    isInputReadOnly: pipeline.is_read_only,
+    contracts: (pipeline.contracts || []).map(parseContract)
   }
 }
 
@@ -214,19 +217,12 @@ const findContract = (pipeline, cid) => {
 }
 
 const reducer = (state = INITIAL_STATE, action) => {
-  state = {
-    ...state,
-    // clean previous state changes
-    error: null,
-    publishError: null,
-    publishState: null,
-    publishSuccess: false
-  }
+  const nextState = { ...state, ...ACTIONS_INITIAL_STATE }
 
   switch (action.type) {
     case types.REQUEST_ALL: {
       return {
-        ...state,
+        ...nextState,
         pipelineList: action.payload.map(parsePipeline)
       }
     }
@@ -236,7 +232,7 @@ const reducer = (state = INITIAL_STATE, action) => {
       const currentContract = findContract(currentPipeline, state.currentContract && state.currentContract.id)
 
       return {
-        ...state,
+        ...nextState,
         pipelineList: replaceItemInList(state.pipelineList, currentPipeline),
         currentPipeline,
         currentContract
@@ -247,7 +243,7 @@ const reducer = (state = INITIAL_STATE, action) => {
 
     case types.CLEAR_SELECTION: {
       return {
-        ...state,
+        ...nextState,
         currentSection: null,
         currentPipeline: null,
         currentContract: null
@@ -259,7 +255,7 @@ const reducer = (state = INITIAL_STATE, action) => {
       const currentContract = findContract(currentPipeline, state.currentContract && state.currentContract.id)
 
       return {
-        ...state,
+        ...nextState,
         currentSection: PIPELINE_SECTION_INPUT,
         currentPipeline,
         currentContract
@@ -274,7 +270,7 @@ const reducer = (state = INITIAL_STATE, action) => {
         : state.currentSection
 
       return {
-        ...state,
+        ...nextState,
         currentSection,
         currentPipeline,
         currentContract
@@ -283,7 +279,7 @@ const reducer = (state = INITIAL_STATE, action) => {
 
     case types.SECTION_SELECT: {
       return {
-        ...state,
+        ...nextState,
         currentSection: action.payload
       }
     }
@@ -294,7 +290,7 @@ const reducer = (state = INITIAL_STATE, action) => {
       const newPipeline = parsePipeline(action.payload)
 
       return {
-        ...state,
+        ...nextState,
         pipelineList: [ newPipeline, ...state.pipelineList ],
 
         currentSection: PIPELINE_SECTION_INPUT,
@@ -308,7 +304,7 @@ const reducer = (state = INITIAL_STATE, action) => {
       const currentContract = findContract(currentPipeline, state.currentContract && state.currentContract.id)
 
       return {
-        ...state,
+        ...nextState,
         pipelineList: replaceItemInList(state.pipelineList, currentPipeline),
         currentPipeline,
         currentContract
@@ -321,7 +317,7 @@ const reducer = (state = INITIAL_STATE, action) => {
       currentPipeline.contracts = [ currentContract, ...currentPipeline.contracts ]
 
       return {
-        ...state,
+        ...nextState,
         pipelineList: replaceItemInList(state.pipelineList, currentPipeline),
 
         currentSection: CONTRACT_SECTION_SETTINGS,
@@ -361,7 +357,7 @@ const reducer = (state = INITIAL_STATE, action) => {
       }
 
       return {
-        ...state,
+        ...nextState,
         publishSuccess: (action.type === types.CONTRACT_PUBLISH_SUCCESS),
         currentPipeline,
         currentContract
@@ -372,7 +368,7 @@ const reducer = (state = INITIAL_STATE, action) => {
 
     case types.CONTRACT_PUBLISH_PREFLIGHT: {
       return {
-        ...state,
+        ...nextState,
         publishState: action.payload
       }
     }
@@ -380,12 +376,12 @@ const reducer = (state = INITIAL_STATE, action) => {
     // ERRORS ******************************************************************
 
     case types.REQUEST_ERROR: {
-      return { ...state, error: action.error }
+      return { ...nextState, error: action.error }
     }
 
     case types.PIPELINE_NOT_FOUND: {
       return {
-        ...state,
+        ...nextState,
         error: action.error,
         currentPipeline: null,
         currentContract: null
@@ -394,7 +390,7 @@ const reducer = (state = INITIAL_STATE, action) => {
 
     case types.CONTRACT_PUBLISH_ERROR: {
       return {
-        ...state,
+        ...nextState,
         publishError: (action.error.error || action.error.message || action.error)
       }
     }

@@ -25,10 +25,19 @@ import uuid
 #   squashed migration (this is how Django tells that it is a squashed migration).
 #
 
+if settings.MULTITENANCY:
+    run_before_multitenancy = [
+        ('multitenancy', '0001_initial'),
+    ]
+else:
+    run_before_multitenancy = []
+
 
 class Migration(migrations.Migration):
 
     initial = True
+
+    run_before = run_before_multitenancy
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),

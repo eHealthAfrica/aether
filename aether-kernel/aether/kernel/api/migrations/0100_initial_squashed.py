@@ -3,6 +3,7 @@
 import aether.kernel.api.models
 import aether.kernel.api.validators
 import django.contrib.postgres.fields.jsonb
+from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
@@ -27,9 +28,19 @@ import uuid
 #
 
 
+if settings.MULTITENANCY:
+    run_before_multitenancy = [
+        ('multitenancy', '0001_initial'),
+    ]
+else:
+    run_before_multitenancy = []
+
+
 class Migration(migrations.Migration):
 
     initial = True
+
+    run_before = run_before_multitenancy
 
     dependencies = [
     ]
