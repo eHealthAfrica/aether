@@ -72,9 +72,10 @@ or
 **IMPORTANT NOTE**: the docker-compose files are intended to be used exclusively
 for local development. Never deploy these to publicly accessible servers.
 
-##### Include this entry in your `/etc/hosts` file
+##### Include this entry in your `/etc/hosts` or `C:\Windows\System32\Drivers\etc\hosts` file
 
 ```text
+127.0.0.1    aether.local
 127.0.0.1    kernel.aether.local odk.aether.local ui.aether.local sync.aether.local
 ```
 
@@ -110,7 +111,48 @@ of the most common ones with non default values. For more info take a look at th
 - `APP_URL`, `/`. The app url in the server.
   If host is `http://my-server.org` and the app url is `/my-module`,
   the app enpoints will be accessible at `http://my-server.org/my-module/...`.
-  The local behavior is: `http://my-module.aether.local/`.
+  The local behavior is: `http://my-module.aether.local/` implemented in the NGINX files.
+
+  Current NGINX set up (requires changes in `hosts` file for each new module):
+  ```ini
+  # my-module-1.ini NGINX file (WEB_SERVER_PORT is 8801)
+  server {
+    listen                    80;
+    server_name               my-module-1.aether.local;
+
+    location / {
+      proxy_pass              http://my-module-1:8802;
+    }
+  }
+
+  # my-module-2.ini NGINX file (WEB_SERVER_PORT is 8802)
+  server {
+    listen                    80;
+    server_name               my-module-2.aether.local;
+
+    location / {
+      proxy_pass              http://my-module-2:8802;
+    }
+  }
+  ```
+
+  Possible NGINX set up (does not require any change in `hosts` file for any module):
+  ```ini
+  # one NGINX ini file for all modules
+  server {
+    listen                    80;
+    server_name               localhost;
+
+    location /my-module-1 {
+      proxy_pass              http://localhost:8801/my-module-1;
+    }
+
+    location /my-module-2 {
+      proxy_pass              http://localhost:8802/my-module-2;
+    }
+  }
+  ```
+
 - `DB_NAME` Database name.
 - `DEBUG` Enables debug mode. Is `false` if unset or set to empty string,
   anything else is considered `true`.
@@ -223,10 +265,10 @@ the WSGI interface in production.
 
 We have a couple of environment variables to tune it up:
 
-- `UWSGI_PROCESSES`, Indicates the number of processes.
+- `UWSGI_PROCESSES`: `4` Indicates the number of processes.
 - `UWSGI_STATIC` Indicates if uWSGI also serves the static content.
   Is `false` if unset or set to empty string, anything else is considered `true`.
-- `UWSGI_THREADS` Indicates the number of threads.
+- `UWSGI_THREADS`: `2` Indicates the number of threads.
 
 https://uwsgi-docs.readthedocs.io/
 
