@@ -323,11 +323,11 @@ A collection of useful methods.
 
 - `get_multitenancy_model()`, returns the `settings.MULTITENANCY_MODEL` class.
 
-- `get_current_realm(request)`, finds the current realm within the request
-  cookies or within the request headers. While using the token authentication
-  no cookie is included in the requests, in this case the realm value is
-  included as an HTTP header, i.e., if the `REALM_COOKIE` value is `my-realm`
-  the HTTP header name is `HTTP_MY_REALM`.
+- `get_current_realm(request)`, finds the current realm in the session or
+  within the request cookies or within the request headers.
+  While using the token authentication no session/cookie is included in
+  the requests, in this case the realm value is included as an HTTP header,
+  i.e., if the `REALM_COOKIE` value is `my-realm` the HTTP header name is `HTTP_MY_REALM`.
 
 - `is_accessible_by_realm(request, obj)`, indicates if the object is
   accessible by the current realm. This method is the one used by

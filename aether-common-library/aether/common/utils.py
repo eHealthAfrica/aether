@@ -50,6 +50,31 @@ def json_prettified(value, indent=2):
     return __prettified__(json.dumps(value, indent=indent), JsonLexer())
 
 
+def find_in_request(request, key, default_value=None):
+    '''
+    Finds the key in
+        - the request session or
+        - within the request cookies or
+        - within the request headers.
+
+    https://docs.djangoproject.com/en/2.1/ref/request-response/#django.http.HttpRequest.COOKIES
+    https://docs.djangoproject.com/en/2.1/ref/request-response/#django.http.HttpRequest.META
+    '''
+
+    meta_key = 'HTTP_' + key.replace('-', '_').upper()  # HTTP_<KEY>,
+
+    return getattr(request, 'session', {}).get(
+        key,
+        getattr(request, 'COOKIES', {}).get(
+            key,
+            getattr(request, 'META', {}).get(
+                meta_key,
+                default_value
+            )
+        )
+    )
+
+
 def request(*args, **kwargs):
     '''
     Executes the request call at least three times to avoid

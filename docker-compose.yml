@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 # Config file for these containers:
 #
-#  * Databases + NGINX
+#  * Databases + Minio + Keycloak + NGINX
 #  * Aether Kernel
 #  * ODK Module
 #  * CouchDB Sync Module
@@ -27,7 +27,7 @@ volumes:
 services:
 
   # ---------------------------------
-  # Databases
+  # Databases + Minio + Keycloak
   # ---------------------------------
 
   db:
@@ -38,7 +38,6 @@ services:
       - database_data:/var/lib/postgresql/data
     networks:
       - internal
-
 
   couchdb:
     extends:
@@ -61,6 +60,16 @@ services:
     networks:
       - internal
 
+  keycloak:
+    extends:
+      file: ./docker-compose-base.yml
+      service: keycloak-base
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - internal
+
 
   # ---------------------------------
   # Aether Kernel
@@ -73,6 +82,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      keycloak:
+        condition: service_started
     networks:
       internal:
         aliases:
@@ -97,6 +108,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      keycloak:
+        condition: service_started
       kernel:
         condition: service_started
       # use this dependency with "start_dev" command and webpack (optional)
@@ -119,6 +132,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      keycloak:
+        condition: service_started
     networks:
       internal:
         aliases:
@@ -136,6 +151,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      keycloak:
+        condition: service_started
       couchdb:
         condition: service_started
       redis:
@@ -152,6 +169,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      keycloak:
+        condition: service_started
       couchdb:
         condition: service_started
       redis:

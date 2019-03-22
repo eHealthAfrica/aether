@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 # Base settings for these containers:
 #
-#  * Databases + NGINX containers (use same settings in all files)
+#  * Databases + Minio + Keycloak + NGINX containers (use same settings in all files)
 #  * Aether Kernel
 #  * ODK Module
 #  * CouchDB Sync Module
@@ -69,7 +69,6 @@ services:
       timeout: 3s
       retries: 30
 
-
   minio-base:
     image: minio/minio:latest
     volumes:
@@ -80,6 +79,23 @@ services:
     command: minio server --quiet --address minio:9000 /data
     ports:
       - "9000:9000"
+
+  keycloak-base:
+    image: jboss/keycloak:latest
+    environment:
+      DB_VENDOR: POSTGRES
+      DB_ADDR: db
+      DB_DATABASE: keycloak
+      DB_USER: keycloak
+      DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+
+      KEYCLOAK_USER: ${KEYCLOAK_ADMIN_USERNAME}
+      KEYCLOAK_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+
+      PROXY_ADDRESS_FORWARDING: 'true'
+      PROXY_PORT_FORWARDING: 'true'
+    ports:
+      - 8080:8080
 
 
   # ---------------------------------
@@ -101,6 +117,9 @@ services:
       DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
+
+      KEYCLOAK_SERVER_URL: http://keycloak:8080
+      KEYCLOAK_CLIENT_ID: aether
 
       MULTITENANCY: ${MULTITENANCY}
       DEFAULT_REALM: ${DEFAULT_REALM}
@@ -175,6 +194,9 @@ services:
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
 
+      KEYCLOAK_SERVER_URL: http://keycloak:8080
+      KEYCLOAK_CLIENT_ID: aether
+
       MULTITENANCY: ${MULTITENANCY}
       DEFAULT_REALM: ${DEFAULT_REALM}
       REALM_COOKIE: ${REALM_COOKIE}
@@ -245,6 +267,9 @@ services:
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
 
+      KEYCLOAK_SERVER_URL: http://keycloak:8080
+      KEYCLOAK_CLIENT_ID: aether
+
       MULTITENANCY: ${MULTITENANCY}
       DEFAULT_REALM: ${DEFAULT_REALM}
       REALM_COOKIE: ${REALM_COOKIE}
@@ -314,6 +339,9 @@ services:
       DJANGO_SECRET_KEY: ${UI_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
+
+      KEYCLOAK_SERVER_URL: http://keycloak:8080
+      KEYCLOAK_CLIENT_ID: aether
 
       MULTITENANCY: ${MULTITENANCY}
       DEFAULT_REALM: ${DEFAULT_REALM}

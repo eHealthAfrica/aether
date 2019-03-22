@@ -18,14 +18,14 @@
 
 import mock
 
-from django.test import TestCase
+from django.test import TestCase, RequestFactory
 
 from .. import utils
 
 
 class UtilsTests(TestCase):
 
-    def test_json_prettified_simple(self):
+    def test__json_prettified_simple(self):
         data = {}
         expected = '<pre><span></span><span class="p">{}</span>\n</pre>'
 
@@ -81,7 +81,7 @@ class UtilsTests(TestCase):
 
             self.assertEqual(mock_req.call_count, 3)
 
-    def test_get_all_docs(self):
+    def test__get_all_docs(self):
         class MockResponse:
             def __init__(self, json_data):
                 self.json_data = json_data
@@ -118,3 +118,19 @@ class UtilsTests(TestCase):
                     headers={},
                 ),
             ])
+
+    def test__find_in_request(self):
+        request = RequestFactory().get('/')
+        key = 'my-key'
+
+        self.assertIsNone(utils.find_in_request(request, key))
+
+        request.META['HTTP_MY_KEY'] = 'in-headers'
+        self.assertEqual(utils.find_in_request(request, key), 'in-headers')
+
+        request.COOKIES[key] = 'in-cookies'
+        self.assertEqual(utils.find_in_request(request, key), 'in-cookies')
+
+        setattr(request, 'session', {})
+        request.session[key] = 'in-session'
+        self.assertEqual(utils.find_in_request(request, key), 'in-session')

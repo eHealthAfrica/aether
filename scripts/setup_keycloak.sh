@@ -18,44 +18,20 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+
 set -Eeuo pipefail
 
-source ./scripts/aether_functions.sh
+source .env
 
-# default values
-build=no
-containers=( kernel odk couchdb-sync ui producer )
+docker-compose up -d db
+sleep 5
 
-while [[ $# -gt 0 ]]
-do
-    case "$1" in
-        -b | --build )
-            # build containers after upgrade
-            build=yes
+DB_ID=$(docker-compose ps -q db)
+docker container exec -i $DB_ID psql <<- EOSQL
+    DROP DATABASE keycloak;
+    DROP USER keycloak;
+    CREATE USER keycloak PASSWORD '${KEYCLOAK_DB_PASSWORD}';
+    CREATE DATABASE keycloak OWNER keycloak;
+EOSQL
 
-            shift # past argument
-        ;;
-
-        * )
-            # otherwise is the container name
-            containers=( "$1" )
-
-            shift # past argument
-        ;;
-    esac
-done
-
-create_docker_assets
-build_libraries_and_distribute
-
-for container in "${containers[@]}"
-do
-    pip_freeze_container $container
-
-    if [[ $build = "yes" ]]
-    then
-        build_container $container
-    fi
-done
-
-./scripts/kill_all.sh
+docker-compose kill db

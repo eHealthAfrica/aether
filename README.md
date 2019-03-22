@@ -19,6 +19,7 @@
     - [Aether UI](#aether-ui)
     - [Aether CouchDB Sync Module](#aether-couchdb-sync-module)
 - [Usage](#usage)
+  - [Start the app](#start-the-app)
   - [Users & Authentication](#users--authentication)
     - [Basic Authentication](#basic-authentication)
     - [Token Authentication](#token-authentication)
@@ -163,6 +164,9 @@ of the most common ones with non default values. For more info take a look at th
 - `TESTING` Indicates if the app executes under test conditions.
   Is `false` if unset or set to empty string, anything else is considered `true`.
 - `WEB_SERVER_PORT` Web server port for the app.
+
+Read [Users & Authentication](#users--authentication) to know the environment
+variables that set up the different authentication options.
 
 *[Return to TOC](#table-of-contents)*
 
@@ -316,6 +320,8 @@ The default values for the export feature:
 
 ## Usage
 
+### Start the app
+
 Start the indicated app/module with the necessary dependencies:
 
 ```bash
@@ -364,6 +370,17 @@ To start any container separately:
 
 ### Users & Authentication
 
+Set the `KEYCLOAK_SERVER_URL` and `KEYCLOAK_CLIENT_ID` environment variables if
+you want to use Keycloak as authentication server.
+`KEYCLOAK_CLIENT_ID` (defaults to `aether`) is the public client that allows
+the aether module to authenticate using the Keycloak REST API.
+This client id must be added to all the realms used by the aether module.
+
+Read more in [Keycloak](https://www.keycloak.org).
+
+**Note**: Multi-tenancy is automatically enabled if the authentication server
+is keycloak.
+
 Set the `HOSTNAME` and `CAS_SERVER_URL` environment variables if you want to
 activate the CAS integration in the app.
 See more in [Django CAS client](https://github.com/mingchen/django-cas-ng).
@@ -384,7 +401,7 @@ The communication between Aether ODK Module and ODK Collect is done via
 
 #### Token Authentication
 
-The communication between the containers is done via
+The internal communication between the containers is done via
 [token authentication](http://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication).
 
 In the case of `aether-odk-module`, `aether-ui` and `aether-couchdb-sync-module`

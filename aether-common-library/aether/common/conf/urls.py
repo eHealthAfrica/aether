@@ -24,7 +24,7 @@ from django.utils.translation import ugettext as _
 from aether.common.health.views import health, check_db, check_app
 
 
-def generate_urlpatterns(token=False, kernel=False, app=[]):  # pragma: no cover
+def generate_urlpatterns(token=False, kernel=False, app=[]):
     '''
     Generates the most common url patterns in the apps.
 
@@ -61,13 +61,17 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):  # pragma: no cover
 
     else:
         from django.contrib.auth import views
+        from aether.common.auth.forms import get_auth_form
 
-        login_view = views.LoginView.as_view(template_name=settings.LOGIN_TEMPLATE)
+        login_view = views.LoginView.as_view(
+            template_name=settings.LOGIN_TEMPLATE,
+            authentication_form=get_auth_form(),
+        )
         logout_view = views.LogoutView.as_view(template_name=settings.LOGGED_OUT_TEMPLATE)
 
     auth_views = [
-        path('login/', view=login_view, name='login'),
-        path('logout/', view=logout_view, name='logout'),
+        path(route='login/', view=login_view, name='login'),
+        path(route='logout/', view=logout_view, name='logout'),
     ]
 
     if token:
@@ -75,25 +79,25 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):  # pragma: no cover
 
         # generates users token
         auth_views += [
-            path('token', view=obtain_auth_token, name='token'),
+            path(route='token', view=obtain_auth_token, name='token'),
         ]
     auth_urls = (auth_views, 'rest_framework')
 
     urlpatterns = [
         # `health` endpoints
-        path('health', view=health, name='health'),
-        path('check-db', view=check_db, name='check-db'),
-        path('check-app', view=check_app, name='check-app'),
+        path(route='health', view=health, name='health'),
+        path(route='check-db', view=check_db, name='check-db'),
+        path(route='check-app', view=check_app, name='check-app'),
 
         # `admin` section
-        path('admin/uwsgi/', include('django_uwsgi.urls')),
-        path('admin/', admin.site.urls),
+        path(route='admin/uwsgi/', view=include('django_uwsgi.urls')),
+        path(route='admin/', view=admin.site.urls),
 
         # `accounts` management
-        path('accounts/', include(auth_urls, namespace='rest_framework')),
+        path(route='accounts/', view=include(auth_urls, namespace='rest_framework')),
 
         # monitoring
-        path('', include('django_prometheus.urls')),
+        path(route='', view=include('django_prometheus.urls')),
     ]
 
     if kernel:
@@ -102,7 +106,7 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):  # pragma: no cover
 
         # checks if Kernel server is available
         urlpatterns += [
-            path('check-kernel', view=check_kernel, name='check-kernel'),
+            path(route='check-kernel', view=check_kernel, name='check-kernel'),
         ]
 
         # `aether.common.kernel.utils.get_kernel_server_url()` returns different
@@ -111,11 +115,8 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):  # pragma: no cover
         # will seem to be in order until `get_kernel_server_url()` is called.
         ERR_MSG = _('Environment variable "{}" is not set')
 
-        if settings.TESTING:
-            msg = ERR_MSG.format('AETHER_KERNEL_URL_TEST')
-        else:
-            msg = ERR_MSG.format('AETHER_KERNEL_URL')
-        assert get_kernel_server_url(), msg
+        key = 'AETHER_KERNEL_URL_TEST' if settings.TESTING else 'AETHER_KERNEL_URL'
+        assert get_kernel_server_url(), ERR_MSG.format(key)
 
         msg_token = ERR_MSG.format('AETHER_KERNEL_TOKEN')
         assert get_kernel_server_token(), msg_token
@@ -123,13 +124,12 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):  # pragma: no cover
     # add app specific
     urlpatterns += app
 
-    if settings.DEBUG:
-        if 'debug_toolbar' in settings.INSTALLED_APPS:
-            import debug_toolbar
+    if settings.DEBUG and 'debug_toolbar' in settings.INSTALLED_APPS:  # pragma: no cover
+        import debug_toolbar
 
-            urlpatterns += [
-                path('__debug__/', include(debug_toolbar.urls)),
-            ]
+        urlpatterns += [
+            path(route='__debug__/', view=include(debug_toolbar.urls)),
+        ]
 
     app_url = settings.APP_URL[1:]  # remove leading slash
     if app_url:
@@ -138,7 +138,7 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):  # pragma: no cover
         # all the url endpoints will be  `<my-server>/aether-app/<endpoint-url>`
         # before they were  `<my-server>/<endpoint-url>`
         urlpatterns = [
-            path(f'{app_url}/', include(urlpatterns))
+            path(route=f'{app_url}/', view=include(urlpatterns))
         ]
 
     return urlpatterns
