@@ -292,7 +292,7 @@ code {
   }
 
   label::before {
-    content: "\f00c";
+    content: '\f00c';
     font-family: $icon-font;
     font-weight: 900;
     font-size: 11px;
