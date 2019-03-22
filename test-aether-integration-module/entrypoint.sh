@@ -20,8 +20,7 @@
 #
 set -Eeuo pipefail
 
-# Define help message
-show_help() {
+function show_help {
     echo """
     Commands
     ----------------------------------------------------------------------------
@@ -33,11 +32,11 @@ show_help() {
     """
 }
 
-test_flake8() {
+function test_flake8 {
     flake8 /code/. --config=/code/setup.cfg
 }
 
-test_python() {
+function test_python {
     # Python3 Tests
     python3 setup.py -q test "${@:1}"
 
@@ -56,20 +55,20 @@ case "$1" in
         eval "${@:2}"
     ;;
 
-    test)
+    test )
         test_flake8
         test_python "${@:2}"
     ;;
 
-    test_lint)
+    test_lint )
         test_flake8
     ;;
 
-    help)
+    help )
         show_help
     ;;
 
-    *)
+    * )
         show_help
     ;;
 esac

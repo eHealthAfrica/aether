@@ -44,6 +44,7 @@ setup(
         'django-cors-headers',
         'django-debug-toolbar',
         'django-prometheus',
+        'django-uwsgi',
         'djangorestframework',
         'psycopg2-binary',
         'pygments',

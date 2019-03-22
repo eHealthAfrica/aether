@@ -358,63 +358,26 @@ class ProjectArtefactsTests(TestCase):
         self.assertIn('Contact', mapping.definition['entities'])
 
     def test__upsert_project_artefacts__duplicated_name(self):
-        PROJECT_NAME = 'Project'
-        new_project = Project.objects.create(name=PROJECT_NAME)
-        project_id_2 = str(uuid.uuid4())
-        self.assertNotEqual(str(new_project.pk), project_id_2)
+        SCHEMA_NAME = 'Schema'
 
-        self.assertEqual(Project.objects.filter(pk=project_id_2).count(), 0)
-        generate(
-            project_id=project_id_2,
-            project_name=PROJECT_NAME,
-        )
-        self.assertEqual(Project.objects.filter(pk=project_id_2).count(), 1)
-        project_2 = Project.objects.get(pk=project_id_2)
-        self.assertEqual(PROJECT_NAME + '-1', project_2.name)
+        # create the first schema with that name
+        Schema.objects.create(name=SCHEMA_NAME, definition={})
 
-        # once again
-        project_id_3 = str(uuid.uuid4())
-        self.assertNotEqual(str(new_project.pk), project_id_3)
-        self.assertEqual(Project.objects.filter(pk=project_id_3).count(), 0)
-        generate(
-            project_id=project_id_3,
-            project_name=PROJECT_NAME,
-        )
-        self.assertEqual(Project.objects.filter(pk=project_id_3).count(), 1)
-        project_3 = Project.objects.get(pk=project_id_3)
-        self.assertEqual(PROJECT_NAME + '-2', project_3.name)
+        schemas = []
+        schema_ids = []
+        for i in range(5):
+            schema_id = str(uuid.uuid4())
+            schemas.append({'id': schema_id, 'name': SCHEMA_NAME})
+            schema_ids.append(schema_id)
 
-    def test__upsert_project_artefacts__long_name(self):
-        new_project = Project.objects.create(name='Project')
-        project_id = str(uuid.uuid4())
-        self.assertNotEqual(str(new_project.pk), project_id)
+        # try to generate 5 more schemas with the same name
+        generate(schemas=schemas)
 
-        # in the middle of the process with objects already created
-        self.assertEqual(Project.objects.filter(pk=project_id).count(), 0)
-        self.assertEqual(Schema.objects.all().count(), 0)
-        # we cannot append more chars to the name, its length is already 50
-        name_50 = 'Schema_0123456789_0123456789_0123456789_0123456789'
-        schema_1_id = str(uuid.uuid4())
-        schema_2_id = str(uuid.uuid4())
-        generate(
-            project_id=project_id,
-            project_name='Project',    # in use but will append `-1` to it.
-            schemas=[
-                {'id': schema_1_id, 'name': name_50},  # this will be created with the given name
-                {'id': schema_2_id, 'name': name_50},  # this will be created with another name
-            ]
-        )
-        project_2 = Project.objects.get(pk=project_id)
-        self.assertEqual('Project-1', project_2.name)
-
-        schema_1 = Schema.objects.get(pk=schema_1_id)
-        self.assertEqual(schema_1.name, name_50)
-
-        schema_2 = Schema.objects.get(pk=schema_2_id)
-        self.assertNotEqual(schema_2.name, name_50)
-        self.assertEqual(schema_2.name[:33], name_50[:33])
-        self.assertEqual(schema_2.name[33], '-')
-        self.assertNotEqual(schema_2.name[34:], name_50[34:])
+        for i in range(5):
+            schema_id = schema_ids[i]
+            schema = Schema.objects.get(pk=schema_id)
+            # the new schemas have a numerical suffix
+            self.assertEqual(schema.name, f'{SCHEMA_NAME}-{str(i + 1)}')
 
     def test__upsert_project_with_avro_schemas(self):
         self.assertEqual(Project.objects.count(), 0)

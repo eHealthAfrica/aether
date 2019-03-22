@@ -86,6 +86,7 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):  # pragma: no cover
         path('check-app', view=check_app, name='check-app'),
 
         # `admin` section
+        path('admin/uwsgi/', include('django_uwsgi.urls')),
         path('admin/', admin.site.urls),
 
         # `accounts` management

@@ -20,14 +20,7 @@
 #
 set -Eeuo pipefail
 
-# set DEBUG if missing
-set +u
-DEBUG="$DEBUG"
-set -u
-
-BACKUPS_FOLDER=/backups
-
-show_help () {
+function show_help {
     echo """
     Commands
     ----------------------------------------------------------------------------
@@ -60,7 +53,7 @@ show_help () {
     """
 }
 
-pip_freeze () {
+function pip_freeze {
     pip install -q virtualenv
     rm -rf /tmp/env
 
@@ -71,7 +64,7 @@ pip_freeze () {
     /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
 }
 
-backup_db() {
+function backup_db {
     pg_isready
 
     if psql -c "" $DB_NAME; then
@@ -82,7 +75,7 @@ backup_db() {
     fi
 }
 
-restore_db() {
+function restore_db {
     pg_isready
 
     # backup current data
@@ -105,7 +98,7 @@ restore_db() {
     ./manage.py migrate --noinput
 }
 
-setup () {
+function setup {
     # check if required environment variables were set
     ./conf/check_vars.sh
 
@@ -139,14 +132,14 @@ setup () {
     cp /var/tmp/REVISION $STATIC_ROOT/REVISION 2>/dev/null || :
 }
 
-test_flake8 () {
+function test_flake8 {
     flake8 /code/. --config=/code/conf/extras/flake8.cfg
 }
 
-test_coverage () {
+function test_coverage {
     RCFILE=/code/conf/extras/coverage.rc
     PARALLEL_COV="--concurrency=multiprocessing --parallel-mode"
-    PARALLEL_PY="--parallel=4"
+    PARALLEL_PY="--parallel=${TEST_PARALLEL:-4}"
 
     coverage run     --rcfile="$RCFILE" $PARALLEL_COV manage.py test --noinput "${@:1}" $PARALLEL_PY
     coverage combine --rcfile="$RCFILE" --append
@@ -156,6 +149,7 @@ test_coverage () {
     cat /code/conf/extras/good_job.txt
 }
 
+BACKUPS_FOLDER=/backups
 
 case "$1" in
     bash )
@@ -207,12 +201,14 @@ case "$1" in
 
     start )
         setup
+        [ -z "${DEBUG:-}" ] && UWSGI_LOGGING="--disable-logging" || UWSGI_LOGGING=""
 
-        [ -z "$DEBUG" ] && LOGGING="--disable-logging" || LOGGING=""
         /usr/local/bin/uwsgi \
             --ini /code/conf/uwsgi.ini \
             --http 0.0.0.0:$WEB_SERVER_PORT \
-            $LOGGING
+            --processes ${UWSGI_PROCESSES:-4} \
+            --threads ${UWSGI_THREADS:-2} \
+            $UWSGI_LOGGING
     ;;
 
     start_dev )
@@ -225,7 +221,7 @@ case "$1" in
         # Start the rq worker and rq scheduler.
         # To cleanly shutdown both, this script needs to capture SIGINT
         # and SIGTERM and forward them to the worker and scheduler.
-        _term() {
+        function _term {
             kill -TERM "$scheduler" 2>/dev/null
             kill -TERM "$worker" 2>/dev/null
         }

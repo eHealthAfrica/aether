@@ -238,36 +238,36 @@ class ModelsTests(TransactionTestCase):
         first_id = uuid.uuid4()
         second_id = uuid.uuid4()
         self.assertNotEqual(first_id, second_id)
-        self.assertEqual(models.Project.objects.filter(pk=first_id).count(), 0)
-        self.assertEqual(models.Project.objects.filter(pk=second_id).count(), 0)
+        self.assertFalse(models.Schema.objects.filter(pk=first_id).exists())
+        self.assertFalse(models.Schema.objects.filter(pk=second_id).exists())
 
-        # can create project assigning the id
-        project = models.Project.objects.create(
+        # can create schema setting the id
+        schema = models.Schema.objects.create(
             id=first_id,
-            revision='rev 1',
-            name='a first project name',
+            name='a first schema name',
+            definition={},
         )
 
         # trying to update id
-        project.id = second_id
-        # it's trying to create a new project (not replacing the current one)
+        schema.id = second_id
+        # it's trying to create a new schema (not replacing the current one)
         with self.assertRaises(IntegrityError) as ie:
-            project.save()
+            schema.save()
 
         self.assertIsNotNone(ie)
-        self.assertIn('Key (name)=(a first project name) already exists.', str(ie.exception))
+        self.assertIn('Key (name)=(a first schema name) already exists.', str(ie.exception))
 
-        # if we change the name we'll ended up with two projects
-        project.name = 'a second project name'
-        project.save()
+        # if we change the name we'll end up with two schemas
+        schema.name = 'a second schema name'
+        schema.save()
 
-        first_project = models.Project.objects.get(pk=first_id)
-        self.assertIsNotNone(first_project)
-        self.assertEqual(first_project.name, 'a first project name')
+        self.assertTrue(models.Schema.objects.filter(pk=first_id).exists())
+        first_schema = models.Schema.objects.get(pk=first_id)
+        self.assertEqual(first_schema.name, 'a first schema name')
 
-        second_project = models.Project.objects.get(pk=second_id)
-        self.assertIsNotNone(second_project)
-        self.assertEqual(second_project.name, 'a second project name')
+        self.assertTrue(models.Schema.objects.filter(pk=second_id).exists())
+        second_project = models.Schema.objects.get(pk=second_id)
+        self.assertEqual(second_project.name, 'a second schema name')
 
     def test_model_deletion(self):
 
