@@ -81,9 +81,22 @@ div.code {
 
 .identity-mapping {
   margin-top: 2rem;
-  padding: 2rem;
-  border-radius: 10px;
-  background-color: rgba($light-grey, .1)
+  padding: 1.6rem 2rem 1.2rem 4rem;
+  border-radius: $border-radius * 4;
+  background-color: rgba($light-grey, .1);
+
+  .check-default {
+    margin-left: -1.8rem;
+  }
+
+  p {
+    font-size: $font-size-s;
+    color: $light-grey;
+  }
+
+  .form-group {
+    margin: 2rem 0 0;
+  }
 }
 
 .settings-section {

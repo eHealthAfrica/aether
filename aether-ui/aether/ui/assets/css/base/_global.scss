@@ -24,7 +24,7 @@ html {
   -webkit-font-smoothing: antialiased;
   color: $text-color;
   font: 15px $body-font-family;
-  line-height: 1.3em;
+  line-height: 1.4em;
 }
 
 a {
@@ -36,6 +36,10 @@ a {
     color: $hover-color;
     text-decoration: none;
   }
+}
+
+p {
+  margin-bottom: .5rem;
 }
 
 ul {
@@ -276,6 +280,47 @@ code {
   font: $font-size-xs $code-font-family;
   white-space: pre-wrap;
 }
+
+.check-default {
+  font-weight: 400;
+  margin: 0;
+  display: inline-block;
+
+  label {
+    align-items: center;
+    display: flex;
+  }
+
+  label::before {
+    content: "\f00c";
+    font-family: $icon-font;
+    font-weight: 900;
+    font-size: 11px;
+    text-align: center;
+    color: transparent;
+    line-height: 1.4em;
+    display: block;
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 100px;
+    border: 2px solid $grey;
+    margin-right: .6rem;
+  }
+
+  input {
+    display: none;
+  }
+
+  input:checked + label {
+
+    &::before {
+      background: $action-color;
+      border-color: $action-color;
+      color: $white;
+    }
+  }
+}
+
 
 @media screen and (max-width: 768px) {
 

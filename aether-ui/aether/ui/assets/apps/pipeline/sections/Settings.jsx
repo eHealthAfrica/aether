@@ -49,17 +49,22 @@ export class IdentityMapping extends Component {
         {
           !this.props.contract.is_identity &&
           <div className='identity-mapping'>
-            <input
-              type='checkbox'
-              checked={this.props.isIdentity}
-              onChange={(e) => this.props.onChange(e)}
-            />
-            <h5>
-              <FormattedMessage
-                id='settings.identity.help-1'
-                defaultMessage='This is an identity contract'
+            <div className='check-default'>
+              <input
+                type='checkbox'
+                id='toggle'
+                checked={this.props.isIdentity}
+                onChange={(e) => this.props.onChange(e)}
               />
-            </h5>
+              <label
+                for='toggle'
+                className='title-medium'>
+                <FormattedMessage
+                  id='settings.identity.help-1'
+                  defaultMessage='This is an identity contract'
+                />
+              </label>
+            </div>
             <p>
               <FormattedMessage
                 id='settings.identity.help-2'
@@ -99,11 +104,6 @@ export class IdentityMapping extends Component {
         {
           this.props.contract.is_identity &&
           <div className='identity-mapping'>
-            <input
-              type='checkbox'
-              checked
-              readOnly
-            />
             <h5>
               <FormattedMessage
                 id='settings.identity.checked.help-1'
