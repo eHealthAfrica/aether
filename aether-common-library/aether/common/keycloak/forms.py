@@ -46,6 +46,7 @@ class RealmAuthenticationForm(AuthenticationForm):
         '''
         Authenticates against keycloak server.
         '''
+
         username = self.cleaned_data.get('username')
         password = self.cleaned_data.get('password')
         realm = self.cleaned_data.get('realm')

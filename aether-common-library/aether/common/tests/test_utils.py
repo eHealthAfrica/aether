@@ -21,6 +21,7 @@ import mock
 from django.test import TestCase, RequestFactory
 
 from .. import utils
+from . import MockResponse
 
 
 class UtilsTests(TestCase):
@@ -82,15 +83,6 @@ class UtilsTests(TestCase):
             self.assertEqual(mock_req.call_count, 3)
 
     def test__get_all_docs(self):
-        class MockResponse:
-            def __init__(self, json_data):
-                self.json_data = json_data
-
-            def json(self):
-                return self.json_data
-
-            def raise_for_status(self):
-                pass
 
         def my_side_effect(*args, **kwargs):
             self.assertEqual(kwargs['method'], 'get')

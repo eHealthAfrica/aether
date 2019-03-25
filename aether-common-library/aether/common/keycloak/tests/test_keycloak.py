@@ -16,7 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import json
 import mock
 
 from http.cookies import SimpleCookie
@@ -27,24 +26,10 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
+from ...tests import MockResponse
 from ..utils import _KC_TOKEN_SESSION as TOKEN_KEY
 
 UserModel = get_user_model()
-
-
-class MockResponse:
-
-    def __init__(self, status_code, json_data={}):
-        self.json_data = json_data
-        self.status_code = status_code
-        self.content = json.dumps(json_data).encode('utf-8')
-
-    def json(self):
-        return self.json_data
-
-    def raise_for_status(self):
-        if self.status_code >= 400:
-            raise Exception
 
 
 class KeycloakTests(TestCase):
