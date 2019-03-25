@@ -22,7 +22,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
-import { addContract, selectPipeline } from '../redux'
+import { selectPipeline } from '../redux'
 
 class ContractAddButton extends Component {
   createNewContract () {
@@ -52,6 +52,6 @@ class ContractAddButton extends Component {
 }
 
 const mapStateToProps = () => ({})
-const mapDispatchToProps = { addContract, selectPipeline }
+const mapDispatchToProps = { selectPipeline }
 
 export default connect(mapStateToProps, mapDispatchToProps)(ContractAddButton)

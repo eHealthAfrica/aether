@@ -23,7 +23,7 @@ import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
 import { connect } from 'react-redux'
 
 import { generateGUID, deepEqual, objectToString } from '../../utils'
-import { updateContract, contractChanged } from '../redux'
+import { updateContract } from '../redux'
 
 const MESSAGES = defineMessages({
   mappingRuleSourcePlaceholder: {
@@ -84,12 +84,7 @@ class Mapping extends Component {
     if (this.props.contract.is_read_only) {
       return
     }
-
-    if (this.props.isNew) {
-      this.props.contractChanged({ ...this.props.contract, mapping_rules: this.state.mappingRules })
-    } else {
-      this.props.updateContract({ ...this.props.contract, mapping_rules: this.state.mappingRules })
-    }
+    this.props.updateContract({ ...this.props.contract, mapping_rules: this.state.mappingRules })
   }
 
   notifyChangeJSON (event) {
@@ -102,11 +97,7 @@ class Mapping extends Component {
 
     try {
       const rules = this.JSONToMapping(this.state.mappingRulesInput)
-      if (this.props.isNew) {
-        this.props.contractChanged({ ...this.props.contract, mapping_rules: rules })
-      } else {
-        this.props.updateContract({ ...this.props.contract, mapping_rules: rules })
-      }
+      this.props.updateContract({ ...this.props.contract, mapping_rules: rules })
     } catch (error) {
       this.setState({ jsonError: error.message })
     }
@@ -340,6 +331,6 @@ class Mapping extends Component {
 const mapStateToProps = ({ pipelines }) => ({
   contract: pipelines.currentContract
 })
-const mapDispatchToProps = { updateContract, contractChanged }
+const mapDispatchToProps = { updateContract }
 
 export default connect(mapStateToProps, mapDispatchToProps)(injectIntl(Mapping))

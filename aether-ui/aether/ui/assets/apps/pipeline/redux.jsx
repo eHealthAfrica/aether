@@ -26,8 +26,7 @@ import {
   PIPELINES_URL,
   CONTRACTS_URL,
   PIPELINE_SECTION_INPUT,
-  CONTRACT_SECTION_ENTITY_TYPES,
-  CONTRACT_SECTION_SETTINGS
+  CONTRACT_SECTION_ENTITY_TYPES
 } from '../utils/constants'
 
 export const types = {
@@ -319,8 +318,6 @@ const reducer = (state = INITIAL_STATE, action) => {
       return {
         ...nextState,
         pipelineList: replaceItemInList(state.pipelineList, currentPipeline),
-
-        currentSection: CONTRACT_SECTION_SETTINGS,
         currentPipeline,
         currentContract
       }
@@ -328,7 +325,6 @@ const reducer = (state = INITIAL_STATE, action) => {
 
     case types.CONTRACT_UPDATE: {
       const currentContract = parseContract(action.payload)
-      console.log('UContrac', currentContract)
       const uPipeline = { ...state.currentPipeline }
       uPipeline.contracts = replaceItemInList(state.currentPipeline.contracts, currentContract)
       return { ...state,
@@ -341,7 +337,11 @@ const reducer = (state = INITIAL_STATE, action) => {
       const currentContract = parseContract(action.payload)
       let currentPipeline = state.currentPipeline
       if (currentPipeline.id !== currentContract.pipeline) {
-        currentPipeline = state.pipelineList.find(p => p.id === currentContract.pipeline) || state.currentPipeline
+        currentPipeline = state.pipelineList.find(p => p.id === currentContract.pipeline)
+        if (!currentPipeline) {
+          currentPipeline = state.currentPipeline
+          currentContract.pipeline = currentPipeline.id
+        }
       }
       return {
         ...state,

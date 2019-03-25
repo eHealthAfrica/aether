@@ -25,7 +25,7 @@ import { connect } from 'react-redux'
 import { EntityTypeViewer } from '../../components'
 import { deepEqual, objectToString } from '../../utils'
 import { parseSchema } from '../../utils/avro-utils'
-import { updateContract, contractChanged } from '../redux'
+import { updateContract } from '../redux'
 
 const MESSAGES = defineMessages({
   missingIdError: {
@@ -81,11 +81,7 @@ class EntityTypes extends Component {
           throw new Error(formatMessage(MESSAGES.missingIdError))
         }
       })
-      if (this.props.isNew) {
-        this.props.contractChanged({ ...this.props.contract, entity_types: schemas })
-      } else {
-        this.props.updateContract({ ...this.props.contract, entity_types: schemas })
-      }
+      this.props.updateContract({ ...this.props.contract, entity_types: schemas })
     } catch (error) {
       this.setState({ error: error.message })
     }
@@ -164,6 +160,6 @@ class EntityTypes extends Component {
 const mapStateToProps = ({ pipelines }) => ({
   contract: pipelines.currentContract
 })
-const mapDispatchToProps = { updateContract, contractChanged }
+const mapDispatchToProps = { updateContract }
 
 export default connect(mapStateToProps, mapDispatchToProps)(injectIntl(EntityTypes))
