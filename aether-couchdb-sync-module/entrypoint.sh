@@ -141,6 +141,7 @@ function test_coverage {
     PARALLEL_COV="--concurrency=multiprocessing --parallel-mode"
     PARALLEL_PY="--parallel=${TEST_PARALLEL:-4}"
 
+    rm -R /code/.coverage* 2>/dev/null || :
     coverage run     --rcfile="$RCFILE" $PARALLEL_COV manage.py test --noinput "${@:1}" $PARALLEL_PY
     coverage combine --rcfile="$RCFILE" --append
     coverage report  --rcfile="$RCFILE"
@@ -209,12 +210,16 @@ case "$1" in
         setup
         [ -z "${DEBUG:-}" ] && UWSGI_LOGGING="--disable-logging" || UWSGI_LOGGING=""
 
+        UWSGI_STATIC="--static-map ${APP_URL:-'/'}static=/var/www/static"
+        [ -z "${UWSGI_SERVE_STATIC:-}" ] && UWSGI_STATIC=""
+
         /usr/local/bin/uwsgi \
             --ini /code/conf/uwsgi.ini \
-            --http 0.0.0.0:$WEB_SERVER_PORT \
+            --http 0.0.0.0:${WEB_SERVER_PORT} \
             --processes ${UWSGI_PROCESSES:-4} \
             --threads ${UWSGI_THREADS:-2} \
-            $UWSGI_LOGGING
+            ${UWSGI_STATIC} \
+            ${UWSGI_LOGGING}
     ;;
 
     start_dev )

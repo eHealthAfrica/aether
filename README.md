@@ -10,12 +10,14 @@
   - [Installation](#installation)
   - [Common Library](#common-library)
   - [Environment Variables](#environment-variables)
+    - [Generic](#generic)
+    - [File Storage System](#file-storage-system)
+    - [Multi-tenancy](#multi-tenancy)
+    - [uWSGI](#uwsgi)
     - [Aether Kernel](#aether-kernel)
     - [Aether ODK Module](#aether-odk-module)
     - [Aether UI](#aether-ui)
     - [Aether CouchDB Sync Module](#aether-couchdb-sync-module)
-    - [File Storage System](#file-storage-system)
-    - [Multi-tenancy](#multi-tenancy)
 - [Usage](#usage)
   - [Users & Authentication](#users--authentication)
     - [Basic Authentication](#basic-authentication)
@@ -70,9 +72,10 @@ or
 **IMPORTANT NOTE**: the docker-compose files are intended to be used exclusively
 for local development. Never deploy these to publicly accessible servers.
 
-##### Include this entry in your `/etc/hosts` file
+##### Include this entry in your `/etc/hosts` or `C:\Windows\System32\Drivers\etc\hosts` file
 
 ```text
+127.0.0.1    aether.local
 127.0.0.1    kernel.aether.local odk.aether.local ui.aether.local sync.aether.local
 ```
 
@@ -98,44 +101,70 @@ Most of the environment variables are set to default values. This is the short l
 of the most common ones with non default values. For more info take a look at the file
 [docker-compose-base.yml](docker-compose-base.yml).
 
-#### Aether Kernel
+#### Generic
 
-- `DB_NAME`: `aether` Database name.
-- `WEB_SERVER_PORT`: `8100` Web server port.
-- `ADMIN_TOKEN`: `kernel_admin_user_auth_token`
-  to connect to it from other modules. It's used within the start up scripts.
-- `CSV_SEPARATOR`: `,` fields separator in the CSV export format.
+- `ADMIN_USERNAME`: `admin` The setup scripts create an initial admin user for the app.
+- `ADMIN_PASSWORD`: `secresecret`.
+- `ADMIN_TOKEN`: `admin_user_auth_token` Used to connect from other modules.
+- `APP_LINK`: `http://aether.ehealthafrica.org`. The link that appears in the DRF web pages.
+- `APP_NAME`: `aether`. The app name displayed in the web pages.
+- `APP_URL`, `/`. The app url in the server.
+  If host is `http://my-server.org` and the app url is `/my-module`,
+  the app enpoints will be accessible at `http://my-server.org/my-module/...`.
+  The local behavior is: `http://my-module.aether.local/` implemented in the NGINX files.
 
-#### Aether ODK Module
+  Current NGINX set up (requires changes in `hosts` file for each new module):
+  ```ini
+  # my-module-1.ini NGINX file (WEB_SERVER_PORT is 8801)
+  server {
+    listen                    80;
+    server_name               my-module-1.aether.local;
 
-- `DB_NAME`: `odk` Database name.
-- `WEB_SERVER_PORT`: `8102` Web server port.
-- `ADMIN_TOKEN`: `odk_admin_user_auth_token`
-  to connect to it from other modules. It's used within the start up scripts.
-- `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
-- `AETHER_KERNEL_URL`: `http://kernel:8100` Aether Kernel Server url.
-- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
+    location / {
+      proxy_pass              http://my-module-1:8802;
+    }
+  }
 
-#### Aether UI
+  # my-module-2.ini NGINX file (WEB_SERVER_PORT is 8802)
+  server {
+    listen                    80;
+    server_name               my-module-2.aether.local;
 
-- `DB_NAME`: `ui` Database name.
-- `WEB_SERVER_PORT`: `8104` Web server port.
-- `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
-- `AETHER_KERNEL_URL`: `http://kernel:8100` Aether Kernel Server url.
-- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
+    location / {
+      proxy_pass              http://my-module-2:8802;
+    }
+  }
+  ```
 
-#### Aether CouchDB Sync Module
+  Possible NGINX set up (does not require any change in `hosts` file for any module):
+  ```ini
+  # one NGINX ini file for all modules
+  server {
+    listen                    80;
+    server_name               localhost;
 
-- `DB_NAME`: `couchdb-sync` Database name.
-- `WEB_SERVER_PORT`: `8106` Web server port.
-- `ADMIN_TOKEN`: `sync_admin_user_auth_token`
-  to connect to it from other modules. It's used within the start up scripts.
-- `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
-- `AETHER_KERNEL_URL`: `http://kernel:8100` Aether Kernel Server url.
-- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
-- `GOOGLE_CLIENT_ID`: `generate_it_in_your_google_developer_console`
-  Token used to verify the device identity with Google.
-  See more in https://developers.google.com/identity/protocols/OAuth2
+    location /my-module-1 {
+      proxy_pass              http://localhost:8801/my-module-1;
+    }
+
+    location /my-module-2 {
+      proxy_pass              http://localhost:8802/my-module-2;
+    }
+  }
+  ```
+
+- `DB_NAME` Database name.
+- `DEBUG` Enables debug mode. Is `false` if unset or set to empty string,
+  anything else is considered `true`.
+- `LOGGING_FORMATTER`: `json`. The app messages format.
+  Possible values: `verbose` or `json`.
+- `LOGGING_LEVEL`: `info` Logging level for app messages.
+  https://docs.python.org/3.7/library/logging.html#levels
+- `TESTING` Indicates if the app executes under test conditions.
+  Is `false` if unset or set to empty string, anything else is considered `true`.
+- `WEB_SERVER_PORT` Web server port for the app.
+
+*[Return to TOC](#table-of-contents)*
 
 #### File Storage System
 
@@ -175,6 +204,8 @@ See more in https://django-minio-storage.readthedocs.io/en/latest/usage
 - `GS_SECRET_ACCESS_KEY`: Google Cloud Secret Access Key.
   [How to create Access Keys on Google Cloud Storage](https://cloud.google.com/storage/docs/migrating#keys)
 
+*[Return to TOC](#table-of-contents)*
+
 #### Multi-tenancy
 
 - `MULTITENANCY`, Enables or disables the feature, is `false` if unset or set
@@ -183,7 +214,6 @@ See more in https://django-minio-storage.readthedocs.io/en/latest/usage
   if multi-tenancy is not enabled.
 - `REALM_COOKIE`, `aether-realm` The name of the cookie that keeps the current
   tenant id in the request headers.
-
 
 These variables are included in the `.env` file. Change them to enable or disable
 the multi-tenancy feature.
@@ -227,6 +257,62 @@ The technical implementation is explained in
   - Devices are not restricted by realm but its user account is.
 
 *[Return to TOC](#table-of-contents)*
+
+#### uWSGI
+
+The uWSGI server is responsible for loading our Django applications using
+the WSGI interface in production.
+
+We have a couple of environment variables to tune it up:
+
+- `UWSGI_PROCESSES`: `4` Indicates the number of processes.
+- `UWSGI_STATIC` Indicates if uWSGI also serves the static content.
+  Is `false` if unset or set to empty string, anything else is considered `true`.
+- `UWSGI_THREADS`: `2` Indicates the number of threads.
+
+https://uwsgi-docs.readthedocs.io/
+
+*[Return to TOC](#table-of-contents)*
+
+#### Aether Kernel
+
+The default values for the export feature:
+
+- `EXPORT_CSV_ESCAPE`: `\\`. A one-character string used to escape the separator
+  and the quotechar char.
+- `EXPORT_CSV_QUOTE`: `"`. A one-character string used to quote fields containing
+  special characters, such as the separator or quote char, or which contain
+  new-line characters.
+- `EXPORT_CSV_SEPARATOR`: `,`. A one-character string used to separate the columns.
+- `EXPORT_DATA_FORMAT`: `split`. Indicates how to parse the data into the
+  file or files. Values: `flatten`, any other `split`.
+- `EXPORT_HEADER_CONTENT`: `labels`. Indicates what to include in the header.
+  Options: ``labels`` (default), ``paths``, ``both``.
+- `EXPORT_HEADER_SEPARATOR`: `/`. A one-character string used to separate the
+  nested columns in the headers row.
+- `EXPORT_HEADER_SHORTEN`: `no`. Indicates if the header includes the full
+  jsonpath/label or only the column one. Values: ``yes``, any other ``no``.
+
+#### Aether ODK Module
+
+- `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
+- `AETHER_KERNEL_URL`: `http://kernel:8100` Aether Kernel Server url.
+- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
+
+#### Aether UI
+
+- `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
+- `AETHER_KERNEL_URL`: `http://kernel:8100` Aether Kernel Server url.
+- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
+
+#### Aether CouchDB Sync Module
+
+- `GOOGLE_CLIENT_ID`: `generate_it_in_your_google_developer_console`
+  Token used to verify the device identity with Google.
+  See more in https://developers.google.com/identity/protocols/OAuth2
+- `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
+- `AETHER_KERNEL_URL`: `http://kernel:8100` Aether Kernel Server url.
+- `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
 
 ## Usage
 
@@ -437,6 +523,9 @@ The tests clean up would **DELETE ALL PROJECTS!!!**
 
 Look into [docker-compose-base.yml](docker-compose-base.yml), the variable
 `AETHER_KERNEL_URL_TEST` indicates the Aether Kernel Server used in tests.
+
+The tests are run in parallel, use the `TEST_PARALLEL` environment variable
+to indicate the number of concurrent jobs.
 
 *[Return to TOC](#table-of-contents)*
 
