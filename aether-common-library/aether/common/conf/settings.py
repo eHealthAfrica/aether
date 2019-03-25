@@ -29,6 +29,7 @@ DEBUG = bool(os.environ.get('DEBUG'))
 TESTING = bool(os.environ.get('TESTING'))
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
+APP_URL = os.environ.get('APP_URL', '/')  # URL Friendly
 APP_NAME = os.environ.get('APP_NAME', 'aether')
 APP_LINK = os.environ.get('APP_LINK', 'http://aether.ehealthafrica.org')
 
@@ -38,7 +39,7 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-STATIC_URL = '/static/'
+STATIC_URL = f'{APP_URL}static/'
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/static/')
 
 PRETTIFIED_CUTOFF = int(os.environ.get('PRETTIFIED_CUTOFF', 10000))
@@ -193,7 +194,7 @@ if os.environ.get('DJANGO_HTTP_X_FORWARDED_PROTO', False):
 # Logging Configuration
 # ------------------------------------------------------------------------------
 
-# https://docs.python.org/3.6/library/logging.html#levels
+# https://docs.python.org/3.7/library/logging.html#levels
 LOGGING_LEVEL = os.environ.get('LOGGING_LEVEL', logging.INFO)
 LOGGING_CLASS = 'logging.StreamHandler' if not TESTING else 'logging.NullHandler'
 LOGGING_FORMAT = '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'

@@ -23,7 +23,7 @@ import { FormattedMessage, defineMessages, injectIntl } from 'react-intl'
 import { connect } from 'react-redux'
 
 import { generateGUID, deepEqual, objectToString } from '../../utils'
-import { updateContract, contractChanged } from '../redux'
+import { updateContract } from '../redux'
 
 const MESSAGES = defineMessages({
   mappingRuleSourcePlaceholder: {
@@ -84,18 +84,7 @@ class Mapping extends Component {
     if (this.props.contract.is_read_only) {
       return
     }
-
-    const updatedContract = {
-      ...this.props.contract,
-      mapping_rules: this.state.mappingRules,
-      is_identity: false
-    }
-
-    if (this.props.isNew) {
-      this.props.contractChanged(updatedContract)
-    } else {
-      this.props.updateContract(updatedContract)
-    }
+    this.props.updateContract({ ...this.props.contract, mapping_rules: this.state.mappingRules })
   }
 
   notifyChangeJSON (event) {
@@ -108,11 +97,7 @@ class Mapping extends Component {
 
     try {
       const rules = this.JSONToMapping(this.state.mappingRulesInput)
-      if (this.props.isNew) {
-        this.props.contractChanged({ ...this.props.contract, mapping_rules: rules })
-      } else {
-        this.props.updateContract({ ...this.props.contract, mapping_rules: rules })
-      }
+      this.props.updateContract({ ...this.props.contract, mapping_rules: rules })
     } catch (error) {
       this.setState({ jsonError: error.message })
     }
@@ -124,7 +109,6 @@ class Mapping extends Component {
 
   hasChangedJson () {
     try {
-      console.log(JSON.parse(this.state.mappingRulesInput), this.props.contract.mapping_rules)
       return !deepEqual(JSON.parse(this.state.mappingRulesInput), this.props.contract.mapping_rules.map(rule => (
         [rule.source, rule.destination]
       )))
@@ -347,6 +331,6 @@ class Mapping extends Component {
 const mapStateToProps = ({ pipelines }) => ({
   contract: pipelines.currentContract
 })
-const mapDispatchToProps = { updateContract, contractChanged }
+const mapDispatchToProps = { updateContract }
 
 export default connect(mapStateToProps, mapDispatchToProps)(injectIntl(Mapping))

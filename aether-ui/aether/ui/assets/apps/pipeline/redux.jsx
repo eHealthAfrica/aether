@@ -166,8 +166,8 @@ export const publishContract = (cid) => ({
 const parsePipeline = (pipeline) => {
   return {
     ...pipeline,
-    isInputReadOnly: (pipeline.contracts.filter(c => (c.is_read_only)).length > 0),
-    contracts: pipeline.contracts.map(parseContract)
+    isInputReadOnly: pipeline.is_read_only,
+    contracts: (pipeline.contracts || []).map(parseContract)
   }
 }
 
@@ -324,7 +324,6 @@ const reducer = (state = INITIAL_STATE, action) => {
 
     case types.CONTRACT_UPDATE: {
       const currentContract = parseContract(action.payload)
-      console.log('UContrac', currentContract)
       const uPipeline = { ...state.currentPipeline }
       uPipeline.contracts = replaceItemInList(state.currentPipeline.contracts, currentContract)
       return { ...state,
@@ -337,7 +336,11 @@ const reducer = (state = INITIAL_STATE, action) => {
       const currentContract = parseContract(action.payload)
       let currentPipeline = state.currentPipeline
       if (currentPipeline.id !== currentContract.pipeline) {
-        currentPipeline = state.pipelineList.find(p => p.id === currentContract.pipeline) || state.currentPipeline
+        currentPipeline = state.pipelineList.find(p => p.id === currentContract.pipeline)
+        if (!currentPipeline) {
+          currentPipeline = state.currentPipeline
+          currentContract.pipeline = currentPipeline.id
+        }
       }
       return {
         ...state,

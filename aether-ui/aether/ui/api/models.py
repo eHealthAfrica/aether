@@ -131,6 +131,10 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel, MtMo
     def input_prettified(self):
         return json_prettified(self.input)
 
+    @property
+    def is_read_only(self):
+        return Contract.objects.filter(pipeline=self, is_read_only=True).exists()
+
     def __str__(self):
         return self.name
 

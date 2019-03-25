@@ -22,17 +22,26 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
-import { updateContract, addContract, selectSection } from '../redux'
-import { isEmpty } from '../../utils'
+import { updateContract, addContract, contractChanged } from '../redux'
+import { isEmpty, generateGUID } from '../../utils'
 import { deriveEntityTypes, deriveMappingRules } from '../../utils/avro-utils'
 
 import { Modal } from '../../components'
 import ContractPublishButton from '../components/ContractPublishButton'
 import SubmissionCard from '../components/SubmissionCard'
 
-import {
-  CONTRACT_SECTION_MAPPING
-} from '../../utils/constants'
+const generateNewContractName = (pipeline) => {
+  let count = 0
+  let newContractName = `Contract ${count}`
+
+  do {
+    if (!pipeline.contracts.find(c => c.name === newContractName)) {
+      return newContractName
+    }
+    count++
+    newContractName = `Contract ${count}`
+  } while (true)
+}
 
 export class IdentityMapping extends Component {
   constructor (props) {
@@ -202,12 +211,30 @@ class Settings extends Component {
       isIdentity: false,
       showIdentityModal: false
     }
+
+    if (props.isNew) {
+      this.createNewContract()
+    }
   }
 
   componentDidUpdate (prevProps) {
+    if (this.props.isNew && !prevProps.isNew) {
+      this.createNewContract()
+    }
     if (prevProps.contract.name !== this.props.contract.name) {
       this.setState({ contractName: this.props.contract.name })
     }
+  }
+
+  createNewContract () {
+    const newContract = {
+      name: generateNewContractName(this.props.pipeline),
+      id: generateGUID(),
+      pipeline: this.props.pipeline.id,
+      mapping_errors: []
+    }
+    this.props.contractChanged(newContract)
+    this.props.onNew(newContract)
   }
 
   onSave (contract) {
@@ -225,7 +252,10 @@ class Settings extends Component {
       this.props.addContract(contract)
       this.props.onSave(this.state.isIdentity ? CONTRACT_SECTION_MAPPING : null)
     } else {
-      this.props.updateContract(contract)
+      this.props.updateContract({
+        ...contract,
+        name: this.state.contractName
+      })
       this.props.onClose()
     }
   }
@@ -315,8 +345,9 @@ const mapStateToProps = ({ pipelines }) => ({
   inputData: pipelines.currentPipeline.input,
   inputSchema: pipelines.currentPipeline.schema,
 
-  contract: pipelines.currentContract
+  contract: pipelines.currentContract,
+  pipeline: pipelines.currentPipeline
 })
-const mapDispatchToProps = { updateContract, addContract, selectSection }
+const mapDispatchToProps = { updateContract, addContract, contractChanged }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Settings)
