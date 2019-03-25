@@ -376,6 +376,10 @@ you want to use Keycloak as authentication server.
 the aether module to authenticate using the Keycloak REST API.
 This client id must be added to all the realms used by the aether module.
 
+Execute once the `./scripts/setup_keycloak.sh` script to create the keycloak
+database and the default realm+client along with the first user
+(find credentials in the `.env` file).
+
 Read more in [Keycloak](https://www.keycloak.org).
 
 **Note**: Multi-tenancy is automatically enabled if the authentication server

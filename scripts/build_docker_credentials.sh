@@ -72,6 +72,10 @@ cat << EOF
 KEYCLOAK_ADMIN_USERNAME=admin
 KEYCLOAK_ADMIN_PASSWORD=$(gen_random_string)
 KEYCLOAK_DB_PASSWORD=$(gen_random_string)
+KEYCLOAK_CLIENT_ID=aether
+
+KEYCLOAK_USER_USERNAME=aether
+KEYCLOAK_USER_PASSWORD=$(gen_random_string)
 
 DEFAULT_REALM=aether
 REALM_COOKIE=aether-realm
