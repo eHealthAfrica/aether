@@ -83,9 +83,9 @@ def authenticate(request, username, password, realm):
         )
 
     add_user_to_realm(request, user)
-    user.first_name = userinfo.get('given_name')
-    user.last_name = userinfo.get('family_name')
-    user.email = userinfo.get('email')
+    user.first_name = userinfo.get('given_name', '')
+    user.last_name = userinfo.get('family_name', '')
+    user.email = userinfo.get('email', '')
     user.save()
 
     # save the current realm in the session
