@@ -61,7 +61,7 @@ export class IdentityMapping extends Component {
                 className='title-medium'>
                 <FormattedMessage
                   id='settings.identity.help-1'
-                  defaultMessage='This is an identity contract'
+                  defaultMessage='Create an identity contract'
                 />
               </label>
             </div>
@@ -86,7 +86,7 @@ export class IdentityMapping extends Component {
               <label className='form-label'>
                 <FormattedMessage
                   id='settings.contract.identity.name'
-                  defaultMessage='Generated entity name'
+                  defaultMessage='Entity Type name'
                 />
               </label>
               <input
