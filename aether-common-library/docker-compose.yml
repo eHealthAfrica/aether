@@ -26,6 +26,8 @@ services:
       PGPORT: 9999
       DB_NAME: common
 
+      KEYCLOAK_SERVER_URL: http://localhost:8090
+      KEYCLOAK_CLIENT_ID: testing
       MULTITENANCY: "true"
 
       # required by kernel module
