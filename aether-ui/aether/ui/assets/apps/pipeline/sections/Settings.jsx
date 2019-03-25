@@ -49,7 +49,7 @@ export class IdentityMapping extends Component {
         {
           !this.props.contract.is_identity &&
           <div className='identity-mapping'>
-            <div className='check-default'>
+            <div className='toggle-default'>
               <input
                 type='checkbox'
                 id='toggle'

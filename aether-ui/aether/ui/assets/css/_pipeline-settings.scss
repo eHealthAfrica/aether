@@ -85,8 +85,9 @@ div.code {
   border-radius: $border-radius * 4;
   background-color: rgba($light-grey, .1);
 
-  .check-default {
-    margin-left: -1.8rem;
+  .toggle-default {
+    margin-left: -2.4rem;
+    margin-bottom: 1rem;
   }
 
   p {
