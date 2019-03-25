@@ -17,6 +17,9 @@
 # under the License.
 
 import json
+import requests
+
+from time import sleep
 
 from django.conf import settings
 from django.utils.safestring import mark_safe
@@ -45,3 +48,44 @@ def json_prettified(value, indent=2):
     https://www.pydanny.com/pretty-formatting-json-django-admin.html
     '''
     return __prettified__(json.dumps(value, indent=indent), JsonLexer())
+
+
+def request(*args, **kwargs):
+    '''
+    Executes the request call at least three times to avoid
+    unexpected connection errors (not request expected ones).
+
+    Like:
+
+        # ConnectionResetError: [Errno 104] Connection reset by peer
+        # http.client.RemoteDisconnected: Remote end closed connection without response
+    '''
+    count = 0
+    exception = None
+
+    while count < 3:
+        try:
+            return requests.request(*args, **kwargs)
+        except Exception as e:
+            exception = e
+        count += 1
+        sleep(1)
+
+    raise exception
+
+
+def get_all_docs(url, **kwargs):
+    '''
+    Returns all documents linked to an url, even with pagination
+    '''
+
+    def _get_data(url):
+        resp = request(method='get', url=url, **kwargs)
+        resp.raise_for_status()
+        return resp.json()
+
+    data = {'next': url}
+    while data.get('next'):
+        data = _get_data(data['next'])
+        for x in data['results']:
+            yield x

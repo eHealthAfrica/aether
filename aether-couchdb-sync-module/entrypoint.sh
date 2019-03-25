@@ -20,14 +20,7 @@
 #
 set -Eeuo pipefail
 
-# set DEBUG if missing
-set +u
-DEBUG="$DEBUG"
-set -u
-
-BACKUPS_FOLDER=/backups
-
-show_help () {
+function show_help {
     echo """
     Commands
     ----------------------------------------------------------------------------
@@ -48,6 +41,7 @@ show_help () {
     test          : run tests
     test_lint     : run flake8 tests
     test_coverage : run tests with coverage output
+    test_py       : alias of test_coverage
 
     start         : start webserver behind nginx
     start_dev     : start webserver for development
@@ -59,7 +53,7 @@ show_help () {
     """
 }
 
-pip_freeze () {
+function pip_freeze {
     pip install -q virtualenv
     rm -rf /tmp/env
 
@@ -70,7 +64,7 @@ pip_freeze () {
     /tmp/env/bin/pip freeze --local | grep -v appdir | tee -a conf/pip/requirements.txt
 }
 
-backup_db() {
+function backup_db {
     pg_isready
 
     if psql -c "" $DB_NAME; then
@@ -81,7 +75,7 @@ backup_db() {
     fi
 }
 
-restore_db() {
+function restore_db {
     pg_isready
 
     # backup current data
@@ -104,7 +98,7 @@ restore_db() {
     ./manage.py migrate --noinput
 }
 
-setup () {
+function setup {
     # check if required environment variables were set
     ./conf/check_vars.sh
 
@@ -138,21 +132,25 @@ setup () {
     cp /var/tmp/REVISION $STATIC_ROOT/REVISION 2>/dev/null || :
 }
 
-test_flake8 () {
+function test_flake8 {
     flake8 /code/. --config=/code/conf/extras/flake8.cfg
 }
 
-test_coverage () {
-    export RCFILE=/code/conf/extras/coverage.rc
-    export TESTING=true
+function test_coverage {
+    RCFILE=/code/conf/extras/coverage.rc
+    PARALLEL_COV="--concurrency=multiprocessing --parallel-mode"
+    PARALLEL_PY="--parallel=${TEST_PARALLEL:-4}"
 
-    coverage run    --rcfile="$RCFILE" manage.py test --noinput "${@:1}"
-    coverage report --rcfile="$RCFILE"
+    rm -R /code/.coverage* 2>/dev/null || :
+    coverage run     --rcfile="$RCFILE" $PARALLEL_COV manage.py test --noinput "${@:1}" $PARALLEL_PY
+    coverage combine --rcfile="$RCFILE" --append
+    coverage report  --rcfile="$RCFILE"
     coverage erase
 
     cat /code/conf/extras/good_job.txt
 }
 
+BACKUPS_FOLDER=/backups
 
 case "$1" in
     bash )
@@ -184,17 +182,25 @@ case "$1" in
     ;;
 
     test )
-        echo "DEBUG=$DEBUG"
+        export TESTING=true
+        export MULTITENANCY=true
+
         setup
         test_flake8
         test_coverage "${@:2}"
     ;;
 
     test_lint )
+        export TESTING=true
+        export MULTITENANCY=true
+
         test_flake8
     ;;
 
-    test_coverage )
+    test_py | test_coverage )
+        export TESTING=true
+        export MULTITENANCY=true
+
         # create system databases if missing (since CouchDB 2.X)
         ./manage.py setup_couchdb
         test_coverage "${@:2}"
@@ -202,12 +208,18 @@ case "$1" in
 
     start )
         setup
+        [ -z "${DEBUG:-}" ] && UWSGI_LOGGING="--disable-logging" || UWSGI_LOGGING=""
 
-        [ -z "$DEBUG" ] && LOGGING="--disable-logging" || LOGGING=""
+        UWSGI_STATIC="--static-map ${APP_URL:-'/'}static=/var/www/static"
+        [ -z "${UWSGI_SERVE_STATIC:-}" ] && UWSGI_STATIC=""
+
         /usr/local/bin/uwsgi \
             --ini /code/conf/uwsgi.ini \
-            --http 0.0.0.0:$WEB_SERVER_PORT \
-            $LOGGING
+            --http 0.0.0.0:${WEB_SERVER_PORT} \
+            --processes ${UWSGI_PROCESSES:-4} \
+            --threads ${UWSGI_THREADS:-2} \
+            ${UWSGI_STATIC} \
+            ${UWSGI_LOGGING}
     ;;
 
     start_dev )
@@ -220,7 +232,7 @@ case "$1" in
         # Start the rq worker and rq scheduler.
         # To cleanly shutdown both, this script needs to capture SIGINT
         # and SIGTERM and forward them to the worker and scheduler.
-        _term() {
+        function _term {
             kill -TERM "$scheduler" 2>/dev/null
             kill -TERM "$worker" 2>/dev/null
         }

@@ -18,19 +18,23 @@
 
 import uuid
 
+from django.conf import settings
 from django.db.utils import IntegrityError
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from django.test import TransactionTestCase
+from django.test import TransactionTestCase, override_settings
 
 from aether.kernel.api import models
 
 from . import EXAMPLE_SCHEMA, EXAMPLE_SOURCE_DATA, EXAMPLE_SOURCE_DATA_ENTITY, EXAMPLE_MAPPING
 
 
+@override_settings(MULTITENANCY=False)
 class ModelsTests(TransactionTestCase):
 
     def test_models(self):
+
+        REALM = settings.DEFAULT_REALM
 
         project = models.Project.objects.create(
             revision='rev 1',
@@ -38,6 +42,8 @@ class ModelsTests(TransactionTestCase):
         )
         self.assertEqual(str(project), project.name)
         self.assertNotEqual(models.Project.objects.count(), 0)
+        self.assertFalse(project.is_accessible(REALM))
+        self.assertIsNone(project.get_realm())
 
         schema = models.Schema.objects.create(
             name='sample schema',
@@ -61,6 +67,8 @@ class ModelsTests(TransactionTestCase):
         self.assertEqual(str(projectschema), projectschema.name)
         self.assertNotEqual(models.ProjectSchema.objects.count(), 0)
         self.assertIsNone(projectschema.revision)
+        self.assertFalse(projectschema.is_accessible(REALM))
+        self.assertIsNone(projectschema.get_realm())
 
         mappingset = models.MappingSet.objects.create(
             revision='a sample revision',
@@ -71,9 +79,10 @@ class ModelsTests(TransactionTestCase):
         )
         self.assertEqual(str(mappingset), mappingset.name)
         self.assertNotEqual(models.MappingSet.objects.count(), 0)
-        self.assertEqual(str(mappingset.project), str(project))
         self.assertIsNotNone(mappingset.input_prettified)
         self.assertIsNotNone(mappingset.schema_prettified)
+        self.assertFalse(mappingset.is_accessible(REALM))
+        self.assertIsNone(mappingset.get_realm())
 
         mapping = models.Mapping.objects.create(
             name='sample mapping',
@@ -84,7 +93,11 @@ class ModelsTests(TransactionTestCase):
         self.assertEqual(str(mapping), mapping.name)
         self.assertNotEqual(models.Mapping.objects.count(), 0)
         self.assertIsNotNone(mapping.definition_prettified)
+        self.assertEqual(mapping.project, project)
+        self.assertEqual(mapping.get_mt_instance(), project)
         self.assertEqual(mapping.projectschemas.count(), 0, 'No entities in definition')
+        self.assertFalse(mapping.is_accessible(REALM))
+        self.assertIsNone(mapping.get_realm())
 
         mapping_definition = dict(EXAMPLE_MAPPING)
         mapping_definition['entities']['Person'] = str(projectschema.pk)
@@ -108,7 +121,10 @@ class ModelsTests(TransactionTestCase):
         self.assertIsNotNone(submission.payload_prettified)
         self.assertEqual(str(submission), str(submission.id))
         self.assertEqual(submission.project, project, 'submission inherits mapping project')
+        self.assertEqual(submission.get_mt_instance(), project)
         self.assertEqual(submission.name, 'a project name-a sample mapping set')
+        self.assertFalse(submission.is_accessible(REALM))
+        self.assertIsNone(submission.get_realm())
 
         attachment = models.Attachment.objects.create(
             submission=submission,
@@ -118,9 +134,11 @@ class ModelsTests(TransactionTestCase):
         self.assertEqual(attachment.name, 'sample.txt')
         self.assertEqual(attachment.md5sum, '900150983cd24fb0d6963f7d28e17f72')
         self.assertEqual(attachment.submission_revision, submission.revision)
+        self.assertIsNone(attachment.revision)
         self.assertEqual(attachment.project, submission.project)
         self.assertEqual(attachment.attachment_file_url, attachment.attachment_file.url)
-        self.assertIsNone(attachment.revision)
+        self.assertFalse(attachment.is_accessible(REALM))
+        self.assertIsNone(attachment.get_realm())
 
         attachment_2 = models.Attachment.objects.create(
             submission=submission,
@@ -156,9 +174,12 @@ class ModelsTests(TransactionTestCase):
         self.assertIsNotNone(entity.payload_prettified)
         self.assertEqual(str(entity), str(entity.id))
         self.assertEqual(entity.project, project, 'entity inherits submission project')
+        self.assertEqual(entity.get_mt_instance(), project)
         self.assertEqual(entity.name, f'{project.name}-{schema.schema_name}')
         self.assertEqual(entity.mapping_revision, mapping.revision,
                          'entity takes mapping revision if missing')
+        self.assertFalse(entity.is_accessible(REALM))
+        self.assertIsNone(entity.get_realm())
 
         project_2 = models.Project.objects.create(
             revision='rev 1',
@@ -184,6 +205,7 @@ class ModelsTests(TransactionTestCase):
         entity.mapping = None
         entity.save()
         self.assertEqual(entity.project, project_2, 'entity inherits projectschema project')
+        self.assertEqual(entity.get_mt_instance(), project_2)
         self.assertEqual(entity.name, f'{project_2.name}-{schema.schema_name}')
 
         # keeps last project
@@ -238,36 +260,36 @@ class ModelsTests(TransactionTestCase):
         first_id = uuid.uuid4()
         second_id = uuid.uuid4()
         self.assertNotEqual(first_id, second_id)
-        self.assertEqual(models.Project.objects.filter(pk=first_id).count(), 0)
-        self.assertEqual(models.Project.objects.filter(pk=second_id).count(), 0)
+        self.assertFalse(models.Schema.objects.filter(pk=first_id).exists())
+        self.assertFalse(models.Schema.objects.filter(pk=second_id).exists())
 
-        # can create project assigning the id
-        project = models.Project.objects.create(
+        # can create schema setting the id
+        schema = models.Schema.objects.create(
             id=first_id,
-            revision='rev 1',
-            name='a first project name',
+            name='a first schema name',
+            definition={},
         )
 
         # trying to update id
-        project.id = second_id
-        # it's trying to create a new project (not replacing the current one)
+        schema.id = second_id
+        # it's trying to create a new schema (not replacing the current one)
         with self.assertRaises(IntegrityError) as ie:
-            project.save()
+            schema.save()
 
         self.assertIsNotNone(ie)
-        self.assertIn('Key (name)=(a first project name) already exists.', str(ie.exception))
+        self.assertIn('Key (name)=(a first schema name) already exists.', str(ie.exception))
 
-        # if we change the name we'll ended up with two projects
-        project.name = 'a second project name'
-        project.save()
+        # if we change the name we'll end up with two schemas
+        schema.name = 'a second schema name'
+        schema.save()
 
-        first_project = models.Project.objects.get(pk=first_id)
-        self.assertIsNotNone(first_project)
-        self.assertEqual(first_project.name, 'a first project name')
+        self.assertTrue(models.Schema.objects.filter(pk=first_id).exists())
+        first_schema = models.Schema.objects.get(pk=first_id)
+        self.assertEqual(first_schema.name, 'a first schema name')
 
-        second_project = models.Project.objects.get(pk=second_id)
-        self.assertIsNotNone(second_project)
-        self.assertEqual(second_project.name, 'a second project name')
+        self.assertTrue(models.Schema.objects.filter(pk=second_id).exists())
+        second_project = models.Schema.objects.get(pk=second_id)
+        self.assertEqual(second_project.name, 'a second schema name')
 
     def test_model_deletion(self):
 
@@ -288,11 +310,28 @@ class ModelsTests(TransactionTestCase):
             status='Publishable',
             projectschema=projectschema,
         )
-
         entity_2 = models.Entity.objects.create(
             payload=EXAMPLE_SOURCE_DATA_ENTITY,
             status='Publishable',
             schema=schema,
+        )
+
+        # delete the project schema will delete one of the entities
+        projectschema.delete()
+
+        self.assertFalse(models.Entity.objects.filter(pk=entity.pk).exists(), 'project schema CASCADE action')
+        self.assertTrue(models.Entity.objects.filter(pk=entity_2.pk).exists(), 'Not linked to the project schema')
+
+        # create again the deleted instances
+        projectschema = models.ProjectSchema.objects.create(
+            name='project schema',
+            project=project,
+            schema=schema,
+        )
+        entity = models.Entity.objects.create(
+            payload=EXAMPLE_SOURCE_DATA_ENTITY,
+            status='Publishable',
+            projectschema=projectschema,
         )
 
         # delete the project will not delete the schema but one of the entities

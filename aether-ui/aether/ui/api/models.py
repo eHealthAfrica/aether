@@ -24,6 +24,7 @@ from django.utils.translation import ugettext as _
 from django_prometheus.models import ExportModelOperationsMixin
 from model_utils.models import TimeStampedModel
 
+from aether.common.multitenancy.models import MtModelAbstract, MtModelChildAbstract
 from aether.common.utils import json_prettified
 
 from .utils import validate_contract
@@ -54,7 +55,7 @@ Data model schema:
 '''
 
 
-class Project(ExportModelOperationsMixin('ui_project'), TimeStampedModel):
+class Project(ExportModelOperationsMixin('ui_project'), TimeStampedModel, MtModelAbstract):
     '''
     Database link of an Aether Kernel Project.
 
@@ -88,7 +89,7 @@ class Project(ExportModelOperationsMixin('ui_project'), TimeStampedModel):
         verbose_name_plural = _('projects')
 
 
-class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
+class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel, MtModelChildAbstract):
     '''
     Pipeline
 
@@ -103,7 +104,7 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
     '''
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
-    name = models.CharField(max_length=100, verbose_name=_('name'))
+    name = models.TextField(verbose_name=_('name'))
 
     # this is the avro schema
     schema = JSONField(null=True, blank=True, default=dict, verbose_name=_('AVRO schema'))
@@ -130,6 +131,10 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
     def input_prettified(self):
         return json_prettified(self.input)
 
+    @property
+    def is_read_only(self):
+        return Contract.objects.filter(pipeline=self, is_read_only=True).exists()
+
     def __str__(self):
         return self.name
 
@@ -138,6 +143,9 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
         # revalidate linked contracts against updated fields
         contracts = Contract.objects.filter(pipeline=self)
         [contract.save() for contract in contracts]
+
+    def get_mt_instance(self):
+        return self.project
 
     class Meta:
         app_label = 'ui'
@@ -151,7 +159,7 @@ class Pipeline(ExportModelOperationsMixin('ui_pipeline'), TimeStampedModel):
         ]
 
 
-class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
+class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel, MtModelChildAbstract):
     '''
     Contract
 
@@ -199,7 +207,7 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
     '''
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
-    name = models.CharField(max_length=100, verbose_name=_('name'))
+    name = models.TextField(verbose_name=_('name'))
 
     pipeline = models.ForeignKey(to=Pipeline, on_delete=models.CASCADE, verbose_name=_('pipeline'))
 
@@ -312,6 +320,9 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel):
         self.output = output
 
         super(Contract, self).save(*args, **kwargs)
+
+    def get_mt_instance(self):
+        return self.pipeline.project
 
     class Meta:
         app_label = 'ui'

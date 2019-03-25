@@ -102,6 +102,10 @@ services:
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
 
+      MULTITENANCY: ${MULTITENANCY}
+      DEFAULT_REALM: ${DEFAULT_REALM}
+      REALM_COOKIE: ${REALM_COOKIE}
+
       BUCKET_NAME: kernel
       DJANGO_STORAGE_BACKEND: minio
       MINIO_STORAGE_ACCESS_KEY: ${MINIO_STORAGE_ACCESS_KEY}
@@ -171,6 +175,10 @@ services:
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
 
+      MULTITENANCY: ${MULTITENANCY}
+      DEFAULT_REALM: ${DEFAULT_REALM}
+      REALM_COOKIE: ${REALM_COOKIE}
+
       BUCKET_NAME: odk
       DJANGO_STORAGE_BACKEND: minio
       MINIO_STORAGE_ACCESS_KEY: ${MINIO_STORAGE_ACCESS_KEY}
@@ -236,6 +244,10 @@ services:
       DJANGO_SECRET_KEY: ${COUCHDB_SYNC_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
+
+      MULTITENANCY: ${MULTITENANCY}
+      DEFAULT_REALM: ${DEFAULT_REALM}
+      REALM_COOKIE: ${REALM_COOKIE}
 
       APP_NAME: Aether CouchDB-Sync
 
@@ -303,6 +315,10 @@ services:
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
 
+      MULTITENANCY: ${MULTITENANCY}
+      DEFAULT_REALM: ${DEFAULT_REALM}
+      REALM_COOKIE: ${REALM_COOKIE}
+
       APP_NAME: Aether
 
       ADMIN_USERNAME: ${UI_ADMIN_USERNAME}
@@ -320,6 +336,7 @@ services:
 
       # use this value with "start_dev" command and webpack otherwise comment it out
       WEBPACK_STATS_FILE: /code/aether/ui/assets/bundles/webpack-stats.json
+
       WEB_SERVER_PORT: 8104
     volumes:
       - ./aether-ui:/code

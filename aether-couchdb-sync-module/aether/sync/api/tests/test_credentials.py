@@ -40,9 +40,11 @@ class CouchDBHelpersCredentialsTests(ApiTestCase):
         self.assertEqual(db_name, 'device_test_xxxx99123')
 
     def test_create_device_db(self):
-        device_id = 'test_xxx'
+        device_id = self.helper__random_device_id()
+
         helpers.create_db(device_id)
         db_name = helpers.generate_db_name(device_id)
+
         db_req = api.get(db_name)
         self.assertEqual(db_req.status_code, 200, msg=db_req.text)
 
@@ -54,7 +56,8 @@ class CouchDBHelpersCredentialsTests(ApiTestCase):
     def test_create_couchdb_user(self):
         email = 'test_user@ehealthnigeria.org'
         password = helpers.generate_password()
-        device_id = 'test_db'
+        device_id = self.helper__random_device_id()
+
         helpers.create_user(email, password, device_id)
 
         # Check the user exists
@@ -65,7 +68,8 @@ class CouchDBHelpersCredentialsTests(ApiTestCase):
     def test_delete_couchdb_user(self):
         email = 'test_user@ehealthnigeria.org'
         password = helpers.generate_password()
-        device_id = 'test_db'
+        device_id = self.helper__random_device_id()
+
         helpers.create_user(email, password, device_id)
 
         # Check the user exists
@@ -81,7 +85,8 @@ class CouchDBHelpersCredentialsTests(ApiTestCase):
     def test_update_user_password(self):
         email = 'test_user2@ehealthnigeria.org'
         password = helpers.generate_password()
-        device_id = 'test_db'
+        device_id = self.helper__random_device_id()
+
         helpers.create_user(email, password, device_id)
 
         new_password = 'super secure new password'
@@ -97,7 +102,8 @@ class CouchDBHelpersCredentialsTests(ApiTestCase):
 
     def test_create_or_update(self):
         email = 'test_user3@ehealthnigeria.org'
-        device_id = 'test_db'
+        device_id = self.helper__random_device_id()
+
         helpers.create_or_update_user(email, device_id)
 
         user_url = '_users/' + helpers.generate_user_id(device_id)

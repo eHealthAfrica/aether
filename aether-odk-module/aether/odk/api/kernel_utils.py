@@ -17,11 +17,12 @@
 # under the License.
 
 import copy
-import requests
 
 from django.utils.translation import ugettext as _
 
 from aether.common.kernel.utils import get_auth_header, get_kernel_server_url
+from aether.common.multitenancy.utils import add_instance_realm_in_headers
+from aether.common.utils import request
 
 # list of messages that can be translated
 MSG_KERNEL_CONNECTION_ERR = _(
@@ -94,11 +95,12 @@ def __upsert_kernel_artefacts(project, artefacts={}):
     auth_header = get_auth_header()
     if not auth_header:
         raise KernelPropagationError(MSG_KERNEL_CONNECTION_ERR)
+    headers = add_instance_realm_in_headers(project, auth_header)
 
     kernel_url = get_kernel_server_url()
     url = f'{kernel_url}/projects/{project_id}/avro-schemas/'
 
-    response = requests.patch(url=url, json=artefacts, headers=auth_header)
+    response = request(method='patch', url=url, json=artefacts, headers=headers)
     if response.status_code != 200:
         content = response.content.decode('utf-8')
         raise KernelPropagationError(

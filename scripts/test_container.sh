@@ -22,7 +22,7 @@ set -Eeuo pipefail
 
 function build_container {
     echo "_____________________________________________ Building $1 container"
-    $DC_TEST build --no-cache --force-rm --pull "$1"-test
+    $DC_TEST build $BUILD_OPTIONS "$1"-test
 }
 
 function wait_for_kernel {
@@ -41,14 +41,15 @@ function wait_for_db {
 }
 
 DC_TEST="docker-compose -f docker-compose-test.yml"
+BUILD_OPTIONS="${BUILD_OPTIONS:-}"
 
 ./scripts/kill_all.sh
 
 if [[ $1 == "ui" ]]
 then
     build_container ui-assets
-    $DC_TEST run   ui-assets-test test
-    $DC_TEST run   ui-assets-test build
+    $DC_TEST run ui-assets-test test
+    $DC_TEST run ui-assets-test build
     echo "_____________________________________________ Tested and built ui assets"
 fi
 

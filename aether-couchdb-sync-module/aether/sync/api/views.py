@@ -39,6 +39,13 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
+from aether.common.multitenancy.utils import (
+    add_user_to_realm,
+    get_auth_group,
+    remove_user_from_realm,
+)
+from aether.common.multitenancy.views import MtViewSetMixin, MtUserViewSetMixin
+
 from .couchdb_file import load_backup_file
 from .couchdb_helpers import create_db, create_or_update_user
 from .models import Project, Schema, MobileUser, DeviceDB
@@ -54,7 +61,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(settings.LOGGING_LEVEL)
 
 
-class ProjectViewSet(viewsets.ModelViewSet):
+class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     '''
     Create new Project entries.
     '''
@@ -73,7 +80,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         Reachable at ``.../projects/{pk}/propagate/``
         '''
 
-        project = get_object_or_404(Project, pk=pk)
+        project = self.get_object_or_404(pk=pk)
 
         try:
             propagate_kernel_project(project=project, family=request.data.get('family'))
@@ -86,7 +93,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return self.retrieve(request, pk, *args, **kwargs)
 
 
-class SchemaViewSet(viewsets.ModelViewSet):
+class SchemaViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     '''
     Create new Schema entries providing the AVRO schema via file or raw data.
     '''
@@ -94,9 +101,10 @@ class SchemaViewSet(viewsets.ModelViewSet):
     queryset = Schema.objects.order_by('name')
     serializer_class = SchemaSerializer
     search_fields = ('name', 'avro_schema',)
+    mt_field = 'project'
 
     def get_queryset(self):
-        queryset = self.queryset
+        queryset = super(SchemaViewSet, self).get_queryset()
 
         project_id = self.request.query_params.get('project_id', None)
         if project_id is not None:
@@ -112,7 +120,7 @@ class SchemaViewSet(viewsets.ModelViewSet):
         Reachable at ``.../schemas/{pk}/propagate/``
         '''
 
-        schema = get_object_or_404(Schema, pk=pk)
+        schema = self.get_object_or_404(pk=pk)
 
         try:
             propagate_kernel_artefacts(schema=schema, family=request.data.get('family'))
@@ -125,7 +133,7 @@ class SchemaViewSet(viewsets.ModelViewSet):
         return self.retrieve(request, pk, *args, **kwargs)
 
 
-class MobileUserViewSet(viewsets.ModelViewSet):
+class MobileUserViewSet(MtUserViewSetMixin, viewsets.ModelViewSet):
     '''
     Create new Mobile User entries.
     '''
@@ -133,6 +141,34 @@ class MobileUserViewSet(viewsets.ModelViewSet):
     queryset = MobileUser.objects.order_by('email')
     serializer_class = MobileUserSerializer
     search_fields = ('email',)
+
+    def create(self, request):
+        email = request.data['email']
+        # because mobile users are shared among realms the
+        # "mobile user with this e-mail already exists."
+        # error cannot be raised if the user with the same email
+        # does not belong to the current realm yet.
+        if settings.MULTITENANCY and MobileUser.objects.filter(email=email).exists():
+            auth_group = get_auth_group(self.request)
+            mobile_user = MobileUser.objects.get(email=email)
+            # the user was not already added to the realm group
+            if auth_group not in mobile_user.groups.all():
+                add_user_to_realm(self.request, mobile_user)
+                data = self.serializer_class(mobile_user, context={'request': self.request}).data
+                return Response(data=data, status=status.HTTP_201_CREATED)
+
+        return super(MobileUserViewSet, self).create(request)
+
+    def destroy(self, request, pk=None):
+        # because mobile users are shared among realms the
+        # mobile user cannot be deleted if belongs to another realm too.
+        mobile_user = get_object_or_404(self.get_queryset(), pk=pk)
+        remove_user_from_realm(self.request, mobile_user)
+
+        if not settings.MULTITENANCY or mobile_user.groups.count() == 0:
+            mobile_user.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # Sync credentials endpoint

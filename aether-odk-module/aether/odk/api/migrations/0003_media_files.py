@@ -16,10 +16,6 @@ def apply_default_values(apps, schema_editor):
         xform.save()
 
 
-def reverse_default_values(apps, schema_editor):
-    pass
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -72,6 +68,9 @@ class Migration(migrations.Migration):
         # load default values
         migrations.RunPython(
             code=apply_default_values,
-            reverse_code=reverse_default_values,
+            reverse_code=migrations.RunPython.noop,
+            # The optional elidable argument determines whether or not the operation
+            # will be removed (elided) when squashing migrations.
+            elidable=True,
         ),
     ]

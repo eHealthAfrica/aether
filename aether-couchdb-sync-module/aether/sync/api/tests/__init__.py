@@ -16,36 +16,67 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import json
+import random
 import re
+import string
+
 from django.test import TransactionTestCase
 
 from ...couchdb import api
+from .. import couchdb_helpers
 
-db_name_test = re.compile('^device_test_')
-
+ALPHANUM = string.ascii_lowercase + string.digits
+DB_NAME_TEST_RE = re.compile(r'^device_test_')
 DEVICE_TEST_FILE = '/code/aether/sync/api/tests/files/device_sync.json'
 
 
-def clean_couch():
-    '''
-    Cleans up all the CouchDB users starting with test_
-    and all the databases starting with device_test
-    '''
-    testusers = api \
-        .get('_users/_all_docs?' +
-             'startkey="org.couchdb.user:test_"' +
-             '&endkey="org.couchdb.user:test_%7B%7D"') \
-        .json()
-    for user in testusers['rows']:
-        api.delete('_users/{}?rev={}'.format(user['id'], user['value']['rev']))
+class MockResponse:
+    def __init__(self, status_code, json_data=None):
+        self.json_data = json_data
+        self.status_code = status_code
+        self.content = json.dumps(json_data).encode('utf-8')
 
-    # deleteing all the test dbs
-    testdbs = filter(db_name_test.match, api.get('_all_dbs').json())
-    for db in testdbs:
-        api.delete(db)
+    def json(self):
+        return self.json_data
 
 
 class ApiTestCase(TransactionTestCase):
 
+    def setUp(self):
+        super(ApiTestCase, self).setUp()
+
+        self.TEST_DEVICES = set()
+        self.TEST_USERS = set()
+
     def tearDown(self):
-        clean_couch()
+        '''
+        Cleans up all the CouchDB users starting with "test_"
+        and all the databases starting with "device_test_"
+        '''
+
+        testusers = api \
+            .get('_users/_all_docs?startkey="org.couchdb.user:test_"&endkey="org.couchdb.user:test_%7B%7D"') \
+            .json()
+        for user in testusers['rows']:
+            if user['id'] in self.TEST_USERS:
+                api.delete('_users/{}?rev={}'.format(user['id'], user['value']['rev']))
+
+        # deleting all the test dbs
+        testdbs = filter(DB_NAME_TEST_RE.match, api.get('_all_dbs').json())
+        for db in testdbs:
+            if db in self.TEST_DEVICES:
+                api.delete(db)
+
+        super(ApiTestCase, self).tearDown()
+
+    def helper__add_device_id(self, device_id):
+        # add the id to the users and devices list
+        self.TEST_DEVICES.add(couchdb_helpers.generate_db_name(device_id))
+        self.TEST_USERS.add(couchdb_helpers.generate_user_id(device_id))
+
+    def helper__random_device_id(self):
+        # Tests are run in parallel so we try to avoid annoying errors with duplicated devices.
+        device_id = 'test_' + ''.join([random.choice(ALPHANUM) for x in range(10)])
+        self.helper__add_device_id(device_id)
+        return device_id

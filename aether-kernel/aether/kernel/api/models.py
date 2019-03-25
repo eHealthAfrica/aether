@@ -30,6 +30,7 @@ from django_prometheus.models import ExportModelOperationsMixin
 
 from model_utils.models import TimeStampedModel
 
+from aether.common.multitenancy.models import MtModelAbstract, MtModelChildAbstract
 from aether.common.utils import json_prettified
 
 from .constants import NAMESPACE
@@ -94,7 +95,7 @@ class KernelAbstract(TimeStampedModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, verbose_name=_('ID'))
     revision = models.TextField(default='1', verbose_name=_('revision'))
-    name = models.CharField(max_length=50, unique=True, verbose_name=_('name'))
+    name = models.TextField(verbose_name=_('name'))
 
     def __str__(self):
         return self.name
@@ -105,11 +106,12 @@ class KernelAbstract(TimeStampedModel):
         ordering = ['-modified']
 
 
-class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract):
+class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract, MtModelAbstract):
     '''
     Project
 
     .. note:: Extends from :class:`aether.kernel.api.models.KernelAbstract`
+    .. note:: Extends from :class:`aether.common.multitenancy.models.MultitenancyBaseAbstract`
 
     :ivar text      salad_schema:    Salad schema (optional).
         Semantic Annotations for Linked Avro Data (SALAD)
@@ -173,12 +175,15 @@ class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract):
         verbose_name_plural = _('projects')
 
 
-class ProjectChildAbstract(KernelAbstract):
+class ProjectChildAbstract(KernelAbstract, MtModelChildAbstract):
     '''
     Use this model class for each Project dependant model.
 
     .. note:: Extends from :class:`aether.kernel.api.models.KernelAbstract`
     '''
+
+    def get_mt_instance(self):
+        return self.project
 
     class Meta:
         abstract = True
@@ -269,6 +274,10 @@ class Submission(ExportModelOperationsMixin('kernel_submission'), ProjectChildAb
     def __str__(self):
         return f'{self.id}'
 
+    def get_mt_instance(self):
+        # because project can be null we need to override the method
+        return self.mappingset.project
+
     class Meta:
         default_related_name = 'submissions'
         ordering = ['project__id', '-modified']
@@ -302,9 +311,7 @@ class Attachment(ExportModelOperationsMixin('kernel_attachment'), ProjectChildAb
 
     '''
 
-    # http://www.linfo.org/file_name.html
-    # Modern Unix-like systems support long file names, usually up to 255 bytes in length.
-    name = models.CharField(max_length=255, verbose_name=_('filename'))
+    name = models.TextField(verbose_name=_('filename'))
 
     attachment_file = models.FileField(upload_to=__attachment_path__, verbose_name=_('file'))
     # save attachment hash to check later if the file is not corrupted
@@ -364,7 +371,8 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), KernelAbstract):
 
     '''
 
-    type = models.CharField(max_length=50, default=NAMESPACE, verbose_name=_('schema type'))
+    name = models.TextField(unique=True, verbose_name=_('name'))
+    type = models.TextField(default=NAMESPACE, verbose_name=_('schema type'))
     definition = JSONField(validators=[validate_schema_definition], verbose_name=_('AVRO schema'))
 
     # this field is used to group different schemas created automatically
@@ -493,6 +501,10 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
             ps_list.append(ProjectSchema.objects.get(pk=entity_pk, project=self.project))
         self.projectschemas.add(*ps_list)
 
+    def get_mt_instance(self):
+        # because project can be null we need to override the method
+        return self.mappingset.project
+
     class Meta:
         default_related_name = 'mappings'
         ordering = ['project__id', '-modified']
@@ -548,9 +560,11 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
         blank=True,
         verbose_name=_('mapping revision'),
     )
+
+    # WARNING:  the project schema deletion has consequences
     projectschema = models.ForeignKey(
         to=ProjectSchema,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
         verbose_name=_('project schema'),
@@ -647,6 +661,14 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
 
     def __str__(self):
         return f'{self.id}'
+
+    def is_accessible(self, realm):
+        # because project can be null we need to override the method
+        return self.project.is_accessible(realm) if self.project else False
+
+    def get_realm(self):
+        # because project can be null we need to override the method
+        return self.project.get_realm() if self.project else None
 
     class Meta:
         default_related_name = 'entities'

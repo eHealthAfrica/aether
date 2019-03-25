@@ -17,7 +17,10 @@
 # under the License.
 
 import uuid
+
+from django.conf import settings
 from django.db import IntegrityError
+from django.test import override_settings
 
 from ...couchdb import api
 from . import ApiTestCase
@@ -25,6 +28,7 @@ from .. import couchdb_helpers
 from ..models import MobileUser, DeviceDB, Project, Schema
 
 
+@override_settings(MULTITENANCY=False)
 class ModelsTests(ApiTestCase):
 
     def test_mobileuser_str(self):
@@ -45,11 +49,12 @@ class ModelsTests(ApiTestCase):
         self.assertRaises(
             IntegrityError,
             MobileUser.objects.create,
-            email=email)
+            email=email,
+        )
 
         found_user = MobileUser.objects.get(email=email)
 
-        self.assertEquals(first_user, found_user, 'retrieves user via email')
+        self.assertEqual(first_user, found_user, 'retrieves user via email')
 
     def test_delete_user_model(self):
         '''
@@ -58,7 +63,7 @@ class ModelsTests(ApiTestCase):
         but that the database is kept (so we don't delete data)
         '''
         email = 'test_till@ehealthnigeria.org'
-        device_id = 'device_x'
+        device_id = self.helper__random_device_id()
         test_user = MobileUser.objects.create(email=email)
         test_device = DeviceDB(device_id=device_id, mobileuser=test_user)
 
@@ -90,7 +95,7 @@ class ModelsTests(ApiTestCase):
         self.assertTrue(True, 'Non-existing couch user did not throw an error')
 
     def test_create_devicedb_model(self):
-        device_id = 'test_Xx'
+        device_id = self.helper__random_device_id()
         devicedb = DeviceDB(device_id=device_id)
         devicedb.save()
         self.assertEqual(str(devicedb), device_id)
@@ -103,12 +108,11 @@ class ModelsTests(ApiTestCase):
             DeviceDB(device_id=device_id).save()
 
         found_db = DeviceDB.objects.get(device_id=device_id)
-
-        self.assertEquals(devicedb, found_db, 'retrieves db via device-id')
+        self.assertEqual(devicedb, found_db, 'retrieves db via device-id')
 
     def test_devicedb_and_user_roles(self):
-        device_id = 'test_Xx'
-        device_id2 = 'test_Xx_2'
+        device_id = self.helper__random_device_id()
+        device_id2 = self.helper__random_device_id()
         db_name = couchdb_helpers.generate_db_name(device_id)
         db_name2 = couchdb_helpers.generate_db_name(device_id2)
 
@@ -167,13 +171,14 @@ class ModelsTests(ApiTestCase):
 
         project = Project.objects.create(name=name, project_id=id)
         self.assertEqual(str(project), f'{id} - {name}')
+        self.assertFalse(project.is_accessible(settings.DEFAULT_REALM))
+        self.assertIsNone(project.get_realm())
 
         schema = Schema.objects.create(name=name, project=project)
         self.assertEqual(str(schema), name)
         self.assertIsNotNone(schema.avro_schema_prettified)
+        self.assertFalse(schema.is_accessible(settings.DEFAULT_REALM))
+        self.assertIsNone(schema.get_realm())
 
-        schema_2 = Schema.objects.create(
-            project=project,
-            avro_schema={'name': 'name'}
-        )
+        schema_2 = Schema.objects.create(project=project, avro_schema={'name': 'name'})
         self.assertEqual(str(schema_2), 'name')

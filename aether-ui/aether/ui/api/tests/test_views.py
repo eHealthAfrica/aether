@@ -22,11 +22,12 @@ import uuid
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from django.test import TransactionTestCase
+from django.test import TransactionTestCase, override_settings
 
 from ..models import Project, Pipeline, Contract
 
 
+@override_settings(MULTITENANCY=False)
 class ViewsTest(TransactionTestCase):
 
     def setUp(self):

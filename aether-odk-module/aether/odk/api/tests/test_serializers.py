@@ -18,12 +18,13 @@
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth import get_user_model
-from django.test import RequestFactory
+from django.test import RequestFactory, override_settings
 
 from . import CustomTestCase
 from ..serializers import SurveyorSerializer, XFormSerializer, MediaFileSerializer
 
 
+@override_settings(MULTITENANCY=False)
 class SerializersTests(CustomTestCase):
 
     def setUp(self):

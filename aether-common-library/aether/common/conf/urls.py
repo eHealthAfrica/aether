@@ -86,6 +86,7 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):  # pragma: no cover
         path('check-app', view=check_app, name='check-app'),
 
         # `admin` section
+        path('admin/uwsgi/', include('django_uwsgi.urls')),
         path('admin/', admin.site.urls),
 
         # `accounts` management
@@ -129,5 +130,15 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):  # pragma: no cover
             urlpatterns += [
                 path('__debug__/', include(debug_toolbar.urls)),
             ]
+
+    app_url = settings.APP_URL[1:]  # remove leading slash
+    if app_url:
+        # Prepend url endpoints with "{APP_URL}/"
+        # if APP_URL = "/aether-app" then
+        # all the url endpoints will be  `<my-server>/aether-app/<endpoint-url>`
+        # before they were  `<my-server>/<endpoint-url>`
+        urlpatterns = [
+            path(f'{app_url}/', include(urlpatterns))
+        ]
 
     return urlpatterns

@@ -19,10 +19,12 @@
 import json
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 
-from ..serializers import SchemaSerializer
-from ..models import Project
+from rest_framework.serializers import ValidationError
+
+from ..serializers import SchemaSerializer, MobileUserSerializer
+from ..models import Project, MobileUser
 
 
 AVRO_SAMPLE = {
@@ -47,6 +49,7 @@ AVRO_SAMPLE = {
 }
 
 
+@override_settings(MULTITENANCY=False)
 class SerializersTests(TestCase):
 
     def setUp(self):
@@ -100,3 +103,25 @@ class SerializersTests(TestCase):
 
         self.assertFalse(schema.is_valid(), schema.errors)
         self.assertIn('avro_file', schema.errors)
+
+    def test_mobile_user_serializer(self):
+        user1 = MobileUserSerializer(
+            data={'email': 'test_karl@ehealthnigeria.org'},
+            context={'request': self.request},
+        )
+        self.assertTrue(user1.is_valid(), user1.errors)
+        user1.save()
+        mobile_user1 = MobileUser.objects.get(pk=user1.data['id'])
+
+        user1_upd = MobileUserSerializer(
+            mobile_user1,
+            data={'email': 'test_till@ehealthnigeria.org'},
+            context={'request': self.request},
+        )
+        self.assertTrue(user1_upd.is_valid(), user1_upd.errors)
+
+        with self.assertRaises(ValidationError) as ve:
+            user1_upd.save()
+
+        self.assertIsNotNone(ve)
+        self.assertIn('email field cannot be changed.', str(ve.exception))
