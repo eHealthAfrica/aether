@@ -143,6 +143,7 @@ function git_branch_commit_and_release() {
     if [[ ${COMPARE} = 1 ]]
     then
         echo "VERSION value" $1 "is greater than" $3 "version" $2
+        BRANCH_OR_TAG_VALUE=$1
     elif [[ ${COMPARE} = 2 ]]
     then
         echo "VERSION value" $1 "is less than" $3 "version" $2
@@ -151,6 +152,10 @@ function git_branch_commit_and_release() {
     for (( p=`grep -o "\."<<<".$BRANCH_OR_TAG_VALUE"|wc -l`; p<3; p++)); do 
         BRANCH_OR_TAG_VALUE+=.0;
         done;
+    
+    increment_version $BRANCH_OR_TAG_VALUE 3
+    BRANCH_OR_TAG_VALUE=$TAG_INCREASED_VERSION
+
     echo "Setting VERSION to " ${BRANCH_OR_TAG_VALUE}
     
     if [[ $3 = "tag" ]];
@@ -187,25 +192,6 @@ function git_branch_commit_and_release() {
     fi
     echo "Starting version" ${VERSION} "release"
     release_process
-
-    # Update develop VERSION value to match the latest released version
-    git fetch ${REMOTE} develop
-    git branch develop FETCH_HEAD
-    git checkout develop
-    DEV_VERSION=`cat VERSION`
-    version_compare ${DEV_VERSION} ${BRANCH_OR_TAG_VALUE}
-    COMPARE=$?
-    if [[ ${COMPARE} = 2 ]]
-    then
-        echo "Updating develop branch version to " ${BRANCH_OR_TAG_VALUE}
-        echo ${BRANCH_OR_TAG_VALUE} > VERSION
-        git add VERSION
-        git commit -m "${COMMIT_MESSAGE}" #Skip travis build on develop commit
-        git push ${REMOTE} develop
-    else
-        echo "Develop branch VERSION value is not updated"
-        echo "New VERSION ${BRANCH_OR_TAG_VALUE} is same or less than develop VERSION ${DEV_VERSION}"
-    fi
 }
 
 TAG_INCREASED_VERSION="0.0.0"
