@@ -182,9 +182,8 @@ function git_branch_commit_and_release() {
         git fetch ${REMOTE} $TRAVIS_BRANCH
         git branch $TRAVIS_BRANCH FETCH_HEAD
         COMMIT_BRANCH=HEAD
-        increment_version $BRANCH_OR_TAG_VALUE 3
-        BRANCH_OR_TAG_VALUE=$TAG_INCREASED_VERSION
-        echo "Version incremented to ${BRANCH_OR_TAG_VALUE}"
+
+        echo "VERSION file set to ${BRANCH_OR_TAG_VALUE} on ${TRAVIS_BRANCH} branch"
 
         git checkout $TRAVIS_BRANCH
         echo ${BRANCH_OR_TAG_VALUE} > VERSION
