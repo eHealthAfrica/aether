@@ -20,9 +20,9 @@
 #
 set -Eeuo pipefail
 
-docker volume rm aether_database_data
-
 for dc_file in $(find docker-compose*.yml 2> /dev/null)
 do
     docker-compose -f $dc_file down
 done
+
+docker volume rm aether_database_data

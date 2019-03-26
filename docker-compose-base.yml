@@ -350,6 +350,7 @@ services:
     command: start_dev
 
   ui-assets-base:
+    image: aether-ui-assets
     build: ./aether-ui/aether/ui/assets
     stdin_open: true
     tty: true

@@ -3,8 +3,8 @@ version: "2.1"
 services:
 
   common:
-    build:
-      context: .
+    image: aether-common
+    build: .
     environment:
       TESTING: "true"
 
