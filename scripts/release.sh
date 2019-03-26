@@ -132,6 +132,7 @@ version_compare () {
 function git_branch_commit_and_release() {
     local BRANCH_OR_TAG_VALUE=$2
     local REMOTE=origin COMMIT_BRANCH=$TRAVIS_BRANCH
+    local ALLOW_RELEASE=1
     if [[ $GITHUB_TOKEN ]]; then
         REMOTE=https://$GITHUB_TOKEN@github.com/$TRAVIS_REPO_SLUG
     else
@@ -153,8 +154,15 @@ function git_branch_commit_and_release() {
         BRANCH_OR_TAG_VALUE+=.0;
         done;
     
-    increment_version $BRANCH_OR_TAG_VALUE 3
-    BRANCH_OR_TAG_VALUE=$TAG_INCREASED_VERSION
+    if git rev-list $BRANCH_OR_TAG_VALUE.. >/dev/null 2>&1
+    then
+        echo "Tag ${BRANCH_OR_TAG_VALUE} has been released. Setting next version"
+        increment_version $BRANCH_OR_TAG_VALUE 3
+        BRANCH_OR_TAG_VALUE=$TAG_INCREASED_VERSION
+    else
+        echo "Release ${BRANCH_OR_TAG_VALUE} not found"
+        ALLOW_RELEASE=0
+    fi
 
     echo "Setting VERSION to " ${BRANCH_OR_TAG_VALUE}
     
@@ -190,8 +198,14 @@ function git_branch_commit_and_release() {
     if [ ! -z $4 ]; then
         VERSION=${BRANCH_OR_TAG_VALUE}-$4
     fi
-    echo "Starting version" ${VERSION} "release"
-    release_process
+
+    if [[ ${ALLOW_RELEASE} = 1 ]]
+    then
+        echo "Starting version" ${VERSION} "release"
+        release_process
+    else
+        echo "Skipping release for version ${VERSION}"
+    fi
 }
 
 TAG_INCREASED_VERSION="0.0.0"
