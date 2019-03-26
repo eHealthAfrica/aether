@@ -50,11 +50,15 @@ export const types = {
 
   CONTRACT_PUBLISH_PREFLIGHT: 'contract.publish.preflight',
   CONTRACT_PUBLISH_SUCCESS: 'contract.publish.success',
-  CONTRACT_PUBLISH_ERROR: 'contract.publish.error'
+  CONTRACT_PUBLISH_ERROR: 'contract.publish.error',
+  CONTRACT_SET_EDITING: 'contract_set_editing',
+  CONTRACT_EXIT_WARNING: 'contract_exit_warning'
 }
 
 const ACTIONS_INITIAL_STATE = {
   error: null,
+  isEditing: false,
+  exitWarning: false,
   publishError: null,
   publishState: null,
   publishSuccess: false
@@ -80,6 +84,16 @@ export const getPipelines = () => ({
 
 export const clearSelection = () => ({
   type: types.CLEAR_SELECTION
+})
+
+export const setEditing = (value) => ({
+  type: types.CONTRACT_SET_EDITING,
+  payload: value
+})
+
+export const setExitWarning = (value) => ({
+  type: types.CONTRACT_EXIT_WARNING,
+  payload: value
 })
 
 export const selectPipeline = (pid) => ({
@@ -360,6 +374,20 @@ const reducer = (state = INITIAL_STATE, action) => {
         publishSuccess: (action.type === types.CONTRACT_PUBLISH_SUCCESS),
         currentPipeline,
         currentContract
+      }
+    }
+
+    case types.CONTRACT_SET_EDITING: {
+      return {
+        ...nextState,
+        isEditing: action.payload
+      }
+    }
+
+    case types.CONTRACT_EXIT_WARNING: {
+      return {
+        ...nextState,
+        exitWarning: action.payload
       }
     }
 

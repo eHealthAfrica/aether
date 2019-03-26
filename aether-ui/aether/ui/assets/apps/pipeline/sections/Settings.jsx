@@ -30,6 +30,8 @@ import { Modal } from '../../components'
 import ContractPublishButton from '../components/ContractPublishButton'
 import SubmissionCard from '../components/SubmissionCard'
 
+import { CONTRACT_SECTION_MAPPING } from '../../utils/constants'
+
 const generateNewContractName = (pipeline) => {
   let count = 0
   let newContractName = `Contract ${count}`
@@ -53,10 +55,11 @@ export class IdentityMapping extends Component {
   }
 
   render () {
+    const { contract = {} } = this.props
     return (
       <React.Fragment>
         {
-          !this.props.contract.is_identity &&
+          !contract.is_identity &&
           <div className='identity-mapping'>
             <div className='check-default'>
               <input
@@ -66,7 +69,7 @@ export class IdentityMapping extends Component {
                 onChange={(e) => this.props.onChange(e)}
               />
               <label
-                for='toggle'
+                htmlFor='toggle'
                 className='title-medium'>
                 <FormattedMessage
                   id='settings.identity.help-1'
@@ -111,7 +114,7 @@ export class IdentityMapping extends Component {
         }
 
         {
-          this.props.contract.is_identity &&
+          contract.is_identity &&
           <div className='identity-mapping'>
             <h5>
               <FormattedMessage
@@ -148,7 +151,6 @@ export class IdentityMapping extends Component {
 
     this.props.onSave(updatedContract)
     this.props.onModalToggle(false)
-    this.props.selectSection(CONTRACT_SECTION_MAPPING)
   }
 
   onChange (e) {
@@ -207,7 +209,7 @@ class Settings extends Component {
     super(props)
 
     this.state = {
-      contractName: props.contract.name,
+      contractName: props.contract ? props.contract.name : '',
       isIdentity: false,
       showIdentityModal: false
     }
@@ -221,9 +223,13 @@ class Settings extends Component {
     if (this.props.isNew && !prevProps.isNew) {
       this.createNewContract()
     }
-    if (prevProps.contract.name !== this.props.contract.name) {
+    if (this.props.contract && prevProps.contract !== this.props.contract) {
       this.setState({ contractName: this.props.contract.name })
     }
+  }
+
+  componentWillUnmount () {
+    this.props.onClose()
   }
 
   createNewContract () {
@@ -261,8 +267,8 @@ class Settings extends Component {
   }
 
   render () {
-    const { contract } = this.props
-    const showIdentityOption = (!contract.is_read_only && !isEmpty(this.props.inputSchema))
+    const { contract = {} } = this.props
+    const showIdentityOption = (!contract.is_read_only  && !isEmpty(this.props.inputSchema))
 
     return (
       <div className='pipeline-settings'>

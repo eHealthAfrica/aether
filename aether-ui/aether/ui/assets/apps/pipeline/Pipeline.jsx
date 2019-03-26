@@ -149,22 +149,23 @@ class Pipeline extends Component {
           <div className='pipeline-tabs'>
             { this.renderContractTabs() }
             { this.renderNewContractTab() }
-            <button
-              type='button'
-              className='btn btn-c btn-sm new-contract'
-              onClick={this.addNewContract.bind(this)}>
-              <span className='details-title'>
-                <FormattedMessage
-                  id='contract.add.button'
-                  defaultMessage='Add contract'
-                />
-              </span>
-            </button>
+            { !this.state.newContract && <button
+                type='button'
+                className='btn btn-c btn-sm new-contract'
+                onClick={this.addNewContract.bind(this)}>
+                <span className='details-title'>
+                  <FormattedMessage
+                    id='contract.add.button'
+                    defaultMessage='Add contract'
+                  />
+                </span>
+              </button>
+            }
           </div>
 
           { this.renderSectionTabs() }
 
-          { this.props.contract && this.state.showSettings &&
+          { this.state.showSettings &&
             <Settings
               onClose={this.onSettingsClosed.bind(this)}
               isNew={this.state.isNew}
@@ -174,10 +175,10 @@ class Pipeline extends Component {
           }
           <div className='pipeline-sections'>
             <div className='pipeline-section__input'><Input /></div>
-            <div className='pipeline-section__entityTypes'><EntityTypes /></div>
-            <div className='pipeline-section__mapping'><Mapping /></div>
+            { this.props.contract && <div className='pipeline-section__entityTypes'><EntityTypes /></div> }
+            { this.props.contract && <div className='pipeline-section__mapping'><Mapping /></div> }
           </div>
-          <div className='pipeline-output'><Output /></div>
+          { this.props.contract && <div className='pipeline-output'><Output /></div> }
         </div>
         { this.renderCancelationModal() }
       </div>
@@ -262,7 +263,7 @@ class Pipeline extends Component {
     this.setState({
       isNew: false,
       newContract: null
-    }, () => this.props.selectSection(CONTRACT_SECTION_ENTITY_TYPES))
+    }, () => this.props.selectSection(view || CONTRACT_SECTION_ENTITY_TYPES))
   }
 
   onContractTabSelected (contract) {
@@ -317,9 +318,10 @@ class Pipeline extends Component {
 
   onContracts () {
     if (!this.props.pipeline.contracts.length) {
-      this.createNewContract()
+      this.addNewContract()
+    } else {
+      this.props.selectSection(CONTRACT_SECTION_ENTITY_TYPES)
     }
-    this.props.selectSection(CONTRACT_SECTION_SETTINGS)
   }
 
   renderSectionTabs () {
@@ -400,7 +402,7 @@ class Pipeline extends Component {
             id='pipeline.navbar.output'
             defaultMessage='Output'
           />
-          { (contract.mapping_errors || []).length > 0 &&
+          { (contract && contract.mapping_errors || []).length > 0 &&
             <span className={`status ${(contract.mapping_errors || []).length ? 'red' : 'green'}`} />
           }
         </div>
