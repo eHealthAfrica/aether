@@ -201,8 +201,9 @@ case "$1" in
         setup
         [ -z "${DEBUG:-}" ] && UWSGI_LOGGING="--disable-logging" || UWSGI_LOGGING=""
 
-        UWSGI_STATIC="--static-map ${APP_URL:-'/'}static=/var/www/static"
-        [ -z "${UWSGI_SERVE_STATIC:-}" ] && UWSGI_STATIC=""
+        UWSGI_STATIC="--static-map ${APP_URL:-/}static=/var/www/static"
+        UWSGI_FAVICO="--static-map ${APP_URL:-/}favicon.ico=/var/www/static/aether/images/aether.ico"
+        [ -z "${UWSGI_SERVE_STATIC:-}" ] && UWSGI_STATIC="" && UWSGI_FAVICO=""
 
         /usr/local/bin/uwsgi \
             --ini /code/conf/uwsgi.ini \
@@ -210,6 +211,7 @@ case "$1" in
             --processes ${UWSGI_PROCESSES:-4} \
             --threads ${UWSGI_THREADS:-2} \
             ${UWSGI_STATIC} \
+            ${UWSGI_FAVICO} \
             ${UWSGI_LOGGING}
     ;;
 
