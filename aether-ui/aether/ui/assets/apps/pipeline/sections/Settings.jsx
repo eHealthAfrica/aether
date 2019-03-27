@@ -22,13 +22,26 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
-import { updateContract } from '../redux'
-import { isEmpty } from '../../utils'
+import { updateContract, addContract, contractChanged } from '../redux'
+import { isEmpty, generateGUID } from '../../utils'
 import { deriveEntityTypes, deriveMappingRules } from '../../utils/avro-utils'
 
 import { Modal } from '../../components'
 import ContractPublishButton from '../components/ContractPublishButton'
 import SubmissionCard from '../components/SubmissionCard'
+
+const generateNewContractName = (pipeline) => {
+  let count = 0
+  let newContractName = `Contract ${count}`
+
+  do {
+    if (!pipeline.contracts.find(c => c.name === newContractName)) {
+      return newContractName
+    }
+    count++
+    newContractName = `Contract ${count}`
+  } while (true)
+}
 
 export class IdentityMapping extends Component {
   constructor (props) {
@@ -137,11 +150,42 @@ class Settings extends Component {
     this.state = {
       contractName: props.contract.name
     }
+
+    if (props.isNew) {
+      this.createNewContract()
+    }
   }
 
   componentDidUpdate (prevProps) {
+    if (this.props.isNew && !prevProps.isNew) {
+      this.createNewContract()
+    }
     if (prevProps.contract.name !== this.props.contract.name) {
       this.setState({ contractName: this.props.contract.name })
+    }
+  }
+
+  createNewContract () {
+    const newContract = {
+      name: generateNewContractName(this.props.pipeline),
+      id: generateGUID(),
+      pipeline: this.props.pipeline.id,
+      mapping_errors: []
+    }
+    this.props.contractChanged(newContract)
+    this.props.onNew(newContract)
+  }
+
+  onSave (contract) {
+    if (this.props.isNew) {
+      this.props.addContract({ ...contract, name: this.state.contractName })
+      this.props.onSave()
+    } else {
+      this.props.updateContract({
+        ...contract,
+        name: this.state.contractName
+      })
+      this.props.onClose()
     }
   }
 
@@ -182,12 +226,7 @@ class Settings extends Component {
             { !contract.is_read_only &&
               <button
                 className='btn btn-d btn-primary btn-big ml-4'
-                onClick={() => {
-                  this.props.updateContract({
-                    ...contract,
-                    name: this.state.contractName
-                  })
-                }}>
+                onClick={this.onSave.bind(this, contract)}>
                 <span className='details-title'>
                   <FormattedMessage
                     id='settings.contract.save'
@@ -246,8 +285,9 @@ const mapStateToProps = ({ pipelines }) => ({
   inputData: pipelines.currentPipeline.input,
   inputSchema: pipelines.currentPipeline.schema,
 
-  contract: pipelines.currentContract
+  contract: pipelines.currentContract,
+  pipeline: pipelines.currentPipeline
 })
-const mapDispatchToProps = { updateContract }
+const mapDispatchToProps = { updateContract, addContract, contractChanged }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Settings)

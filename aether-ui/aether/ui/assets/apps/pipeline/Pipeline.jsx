@@ -23,9 +23,8 @@ import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 import { Link } from 'react-router-dom'
 
-import { ModalError, NavBar } from '../components'
+import { ModalError, NavBar, Modal } from '../components'
 
-import ContractAddButton from './components/ContractAddButton'
 import Input from './sections/Input'
 import EntityTypes from './sections/EntityTypes'
 import Mapping from './sections/Mapping'
@@ -51,20 +50,39 @@ class Pipeline extends Component {
       view: (view === CONTRACT_SECTION_SETTINGS) ? CONTRACT_SECTION_ENTITY_TYPES : view,
       showSettings: (view === CONTRACT_SECTION_SETTINGS),
       showOutput: false,
-      fullscreen: false
+      fullscreen: false,
+      newContract: null,
+      isNew: props.location.state && props.location.state.isNewContract,
+      showCancelModal: false
+    }
+  }
+
+  componentDidMount () {
+    if (this.state.isNew) {
+      this.addNewContract()
     }
 
     // load current pipeline using location address (router props)
-    props.getPipelineById(props.match.params.pid)
+    if (!this.state.isNew) {
+      this.props.getPipelineById(this.props.match.params.pid)
+    }
   }
 
   componentDidUpdate (prevProps) {
     if (
-      prevProps.section !== this.props.section ||
-      (prevProps.contract && this.props.contract && prevProps.contract.id !== this.props.contract.id)
+      (prevProps.section !== this.props.section ||
+      (prevProps.contract && this.props.contract && prevProps.contract.id !== this.props.contract.id)) &&
+      !this.state.isNew
     ) {
       // update router history
       this.props.history.push(`/${this.props.pipeline.id}/${this.props.contract.id}/${this.props.section}`)
+    }
+
+    // persist in-memory new contract
+    if (this.state.isNew && this.props.contract && this.props.contract !== this.state.newContract) {
+      this.setState({
+        newContract: this.props.contract
+      })
     }
 
     if (prevProps.section !== this.props.section) {
@@ -130,16 +148,29 @@ class Pipeline extends Component {
         `}>
           <div className='pipeline-tabs'>
             { this.renderContractTabs() }
-            <ContractAddButton
+            { this.renderNewContractTab() }
+            <button
+              type='button'
               className='btn btn-c btn-sm new-contract'
-              pipeline={pipeline}
-            />
+              onClick={this.addNewContract.bind(this)}>
+              <span className='details-title'>
+                <FormattedMessage
+                  id='contract.add.button'
+                  defaultMessage='Add contract'
+                />
+              </span>
+            </button>
           </div>
 
           { this.renderSectionTabs() }
 
           { this.state.showSettings &&
-            <Settings onClose={() => { this.props.selectSection(this.state.view) }} />
+            <Settings
+              onClose={this.onSettingsClosed.bind(this)}
+              isNew={this.state.isNew}
+              onSave={this.onSave.bind(this)}
+              onNew={this.onNewContractCreated.bind(this)}
+            />
           }
           <div className='pipeline-sections'>
             <div className='pipeline-section__input'><Input /></div>
@@ -148,8 +179,98 @@ class Pipeline extends Component {
           </div>
           <div className='pipeline-output'><Output /></div>
         </div>
+        { this.renderCancelationModal() }
       </div>
     )
+  }
+
+  onNewContractCreated (contract) {
+    this.setState({
+      newContract: contract
+    })
+  }
+
+  addNewContract () {
+    this.setState({
+      isNew: true
+    })
+    this.props.selectSection(CONTRACT_SECTION_SETTINGS)
+  }
+
+  onSettingsClosed () {
+    if (this.state.isNew) {
+      this.setState({
+        showCancelModal: true
+      })
+    } else {
+      this.props.selectSection(this.state.view === CONTRACT_SECTION_SETTINGS
+        ? CONTRACT_SECTION_ENTITY_TYPES : this.state.view)
+    }
+  }
+
+  renderCancelationModal () {
+    if (!this.state.showCancelModal) {
+      return null
+    }
+
+    const header = (
+      <FormattedMessage
+        id='pipeline.new.contract.header'
+        defaultMessage='Cancel the new contract?'
+      />
+    )
+
+    const buttons = (
+      <div>
+        <button
+          data-qa='pipeline.new.contract.continue'
+          className='btn btn-w'
+          onClick={() => { this.setState({ showCancelModal: false }) }}>
+          <FormattedMessage
+            id='pipeline.new.contract.continue.message'
+            defaultMessage='No, Continue Editing'
+          />
+        </button>
+
+        <button className='btn btn-w btn-primary' onClick={this.onCancelContract.bind(this)}>
+          <FormattedMessage
+            id='pipeline.new.contract.cancel'
+            defaultMessage='Yes, Cancel'
+          />
+        </button>
+      </div>
+    )
+
+    return (
+      <Modal header={header} buttons={buttons} />
+    )
+  }
+
+  onCancelContract () {
+    this.setState({
+      newContract: null,
+      isNew: false,
+      showCancelModal: false
+    })
+    this.props.selectContract(this.props.pipeline.contracts[0] || {})
+    this.props.selectSection(this.state.view)
+  }
+
+  onSave () {
+    this.setState({
+      isNew: false,
+      newContract: null
+    }, () => this.props.selectSection(CONTRACT_SECTION_ENTITY_TYPES))
+  }
+
+  onContractTabSelected (contract) {
+    if (this.state.isNew) {
+      this.setState({
+        showCancelModal: true
+      })
+    } else {
+      this.props.selectContract(contract.pipeline, contract.id)
+    }
   }
 
   renderContractTabs () {
@@ -157,7 +278,7 @@ class Pipeline extends Component {
       <div
         key={contract.id}
         className={`pipeline-tab ${contract.id === this.props.contract.id ? 'active' : ''}`}
-        onClick={() => { this.props.selectContract(contract.pipeline, contract.id) }}>
+        onClick={this.onContractTabSelected.bind(this, contract)}>
         <span className='contract-name'>{ contract.name }</span>
 
         { (contract.mapping_errors || []).length > 0 &&
@@ -171,6 +292,25 @@ class Pipeline extends Component {
         </div>
       </div>
     ))
+  }
+
+  renderNewContractTab () {
+    const newContract = this.state.newContract
+    return newContract && !newContract.created && (
+      <div
+        key={newContract.id}
+        className={`pipeline-tab ${newContract.id === this.props.contract.id ? 'active' : ''}`}
+      >
+        <span className='contract-name'>{ newContract.name }</span>
+        <span className='status white' />
+
+        <div
+          className={`btn-icon settings-button ${this.state.showSettings ? 'active' : ''}`}
+          onClick={() => { this.props.selectSection(CONTRACT_SECTION_SETTINGS) }}>
+          <i className='fas fa-ellipsis-h' />
+        </div>
+      </div>
+    )
   }
 
   renderSectionTabs () {
