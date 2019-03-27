@@ -197,9 +197,9 @@ class Pipeline extends Component {
           <div className='pipeline-sections'>
             <div className='pipeline-section__input'><Input /></div>
             {this.props.contract && <div className='pipeline-section__entityTypes'><EntityTypes isNew={this.state.isNew} />
-            { fullscreenDiv }</div>}
+              { fullscreenDiv }</div>}
             {this.props.contract && <div className='pipeline-section__mapping'><Mapping isNew={this.state.isNew} />
-            { fullscreenDiv }</div>}
+              { fullscreenDiv }</div>}
           </div>
           {this.props.contract && <div className='pipeline-output'><Output isNew={this.state.isNew} /></div>}
         </div>
@@ -381,7 +381,7 @@ class Pipeline extends Component {
               id='pipeline.navbar.entity.types'
               defaultMessage='Entity Types'
             />
-            
+
           </div>
 
           <div
@@ -394,7 +394,7 @@ class Pipeline extends Component {
               id='pipeline.navbar.mapping'
               defaultMessage='Mapping'
             />
-            
+
           </div>
 
           <div
