@@ -311,23 +311,35 @@ else:
     logger.info('No CAS enabled!')
 
 
+KEYCLOAK_SERVER_URL = os.environ.get('KEYCLOAK_SERVER_URL')
+if KEYCLOAK_SERVER_URL:
+    KEYCLOAK_CLIENT_ID = os.environ.get('KEYCLOAK_CLIENT_ID', 'aether')
+    LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login_keycloak.html')
+
+    MIDDLEWARE += [
+        'aether.common.keycloak.middleware.KeycloakAuthenticationMiddleware',
+    ]
+
+else:
+    logger.info('No Keycloak enabled!')
+
+
 # Multitenancy Configuration
 # ------------------------------------------------------------------------------
 
-MULTITENANCY = bool(os.environ.get('MULTITENANCY'))
+MULTITENANCY = bool(os.environ.get('MULTITENANCY')) or bool(KEYCLOAK_SERVER_URL)
 if MULTITENANCY:
     REALM_COOKIE = os.environ.get('REALM_COOKIE', 'aether-realm')
-    REALM_HEADER = 'HTTP_' + REALM_COOKIE.replace('-', '_').upper()  # HTTP_AETHER_REALM
     DEFAULT_REALM = os.environ.get('DEFAULT_REALM', 'aether')
 
     INSTALLED_APPS += ['aether.common.multitenancy', ]
     MIGRATION_MODULES['multitenancy'] = 'aether.common.multitenancy.migrations'
-    REST_FRAMEWORK['DEFAULT_PERMISSION_CLASSES'] = [
+    REST_FRAMEWORK['DEFAULT_PERMISSION_CLASSES'] += [
         'aether.common.multitenancy.permissions.IsAccessibleByRealm',
     ]
 
 else:
-    logger.info('No multitenancy enabled!')
+    logger.info('No multi-tenancy enabled!')
 
 
 # Storage Configuration

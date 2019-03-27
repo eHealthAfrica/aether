@@ -16,43 +16,89 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.test import TestCase
-from django.urls import reverse
+import sys
+from importlib import reload, import_module
+
+from django.conf import settings
+from django.test import TestCase, override_settings
+from django.urls import reverse, resolve, exceptions, clear_url_caches
 
 
-class UtilsTest(TestCase):
+class UrlsTestCase(TestCase):
 
-    def test__urls__health(self):
-        self.assertEqual(
-            reverse('health'),
-            '/health',
-            'There is a "/health" endpoint'
-        )
+    def setUp(self):
+        reload(sys.modules[settings.ROOT_URLCONF])
+        import_module(settings.ROOT_URLCONF)
+        clear_url_caches()
 
-    def test__urls__accounts_login(self):
-        self.assertEqual(
-            reverse('rest_framework:login'),
-            '/accounts/login/',
-            'There is a "/accounts/login/" endpoint'
-        )
+    def tearDown(self):
+        clear_url_caches()
 
-    def test__urls__accounts_logout(self):
-        self.assertEqual(
-            reverse('rest_framework:logout'),
-            '/accounts/logout/',
-            'There is a "/accounts/logout/" endpoint'
-        )
 
-    def test__urls__accounts_token(self):
-        self.assertEqual(
-            reverse('rest_framework:token'),
-            '/accounts/token',
-            'There is a "/accounts/token" endpoint'
-        )
+class UrlsTest(UrlsTestCase):
 
-    def test__urls__check_core(self):
-        self.assertEqual(
-            reverse('check-kernel'),
-            '/check-kernel',
-            'There is a "/check-kernel" endpoint'
-        )
+    def test__urls__checks(self):
+        self.assertEqual(reverse('health'), '/health')
+        self.assertEqual(reverse('check-db'), '/check-db')
+        self.assertEqual(reverse('check-app'), '/check-app')
+        self.assertEqual(reverse('check-kernel'), '/check-kernel')
+        self.assertEqual(reverse('admin:index'), '/admin/')
+
+    def test__urls__accounts(self):
+        self.assertEqual(reverse('rest_framework:login'), '/accounts/login/')
+        self.assertEqual(reverse('rest_framework:logout'), '/accounts/logout/')
+        self.assertEqual(reverse('rest_framework:token'), '/accounts/token')
+
+    def test__urls__accounts__views(self):
+        from django.contrib.auth import views
+
+        self.assertEqual(resolve('/accounts/login/').func.view_class,
+                         views.LoginView.as_view().view_class)
+        self.assertEqual(resolve('/accounts/logout/').func.view_class,
+                         views.LogoutView.as_view().view_class)
+
+
+@override_settings(APP_URL='/aether')
+class UrlsAppUrlTest(UrlsTestCase):
+
+    def test__urls__checks(self):
+        self.assertEqual(reverse('health'), '/aether/health')
+        self.assertEqual(reverse('check-db'), '/aether/check-db')
+        self.assertEqual(reverse('check-app'), '/aether/check-app')
+        self.assertEqual(reverse('check-kernel'), '/aether/check-kernel')
+        self.assertEqual(reverse('admin:index'), '/aether/admin/')
+
+    def test__urls__accounts(self):
+        self.assertEqual(reverse('rest_framework:login'), '/aether/accounts/login/')
+        self.assertEqual(reverse('rest_framework:logout'), '/aether/accounts/logout/')
+        self.assertEqual(reverse('rest_framework:token'), '/aether/accounts/token')
+
+
+@override_settings(TEST_KERNEL_ACTIVE=False)
+class UrlsNoKernelTest(UrlsTestCase):
+
+    def test__urls__checks(self):
+        self.assertRaises(exceptions.NoReverseMatch, reverse, 'check-kernel')
+
+
+@override_settings(TEST_TOKEN_ACTIVE=False)
+class UrlsNoTokenTest(UrlsTestCase):
+
+    def test__urls__accounts(self):
+        self.assertRaises(exceptions.NoReverseMatch, reverse, 'rest_framework:token')
+
+
+@override_settings(
+    CAS_SERVER_URL='http://localhost:6666',
+    INSTALLED_APPS=[*settings.INSTALLED_APPS, 'django_cas_ng'],
+)
+class UrlsCASServerTest(UrlsTestCase):
+
+    def test__urls__accounts(self):
+        from django_cas_ng import views
+
+        self.assertEqual(reverse('rest_framework:login'), '/accounts/login/')
+        self.assertEqual(reverse('rest_framework:logout'), '/accounts/logout/')
+
+        self.assertEqual(resolve('/accounts/login/').func, views.login)
+        self.assertEqual(resolve('/accounts/logout/').func, views.logout)

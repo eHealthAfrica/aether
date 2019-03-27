@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-#
 # Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
 #
 # See the NOTICE file distributed with this work for additional information
@@ -17,45 +15,18 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
-set -Eeuo pipefail
 
-source ./scripts/aether_functions.sh
+from django.contrib.auth.middleware import AuthenticationMiddleware
 
-# default values
-build=no
-containers=( kernel odk couchdb-sync ui producer )
+from .utils import check_user_token
 
-while [[ $# -gt 0 ]]
-do
-    case "$1" in
-        -b | --build )
-            # build containers after upgrade
-            build=yes
 
-            shift # past argument
-        ;;
+class KeycloakAuthenticationMiddleware(AuthenticationMiddleware):
 
-        * )
-            # otherwise is the container name
-            containers=( "$1" )
+    def process_request(self, request):
+        # AuthenticationMiddleware sets the authenticated user in the request
+        # being accessible at `request.user`
+        super(KeycloakAuthenticationMiddleware, self).process_request(request)
 
-            shift # past argument
-        ;;
-    esac
-done
-
-create_docker_assets
-build_libraries_and_distribute
-
-for container in "${containers[@]}"
-do
-    pip_freeze_container $container
-
-    if [[ $build = "yes" ]]
-    then
-        build_container $container
-    fi
-done
-
-./scripts/kill_all.sh
+        # checks the user keycloak token, if fails then forces logout
+        check_user_token(request)

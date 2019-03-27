@@ -69,9 +69,17 @@ cat << EOF
 # ------------------------------------------------------------------
 # Authentication
 # ==================================================================
+KEYCLOAK_ADMIN_USERNAME=admin
+KEYCLOAK_ADMIN_PASSWORD=$(gen_random_string)
+KEYCLOAK_DB_PASSWORD=$(gen_random_string)
+KEYCLOAK_CLIENT_ID=aether
+
+KEYCLOAK_USER_USERNAME=aether
+KEYCLOAK_USER_PASSWORD=$(gen_random_string)
+
 DEFAULT_REALM=aether
 REALM_COOKIE=aether-realm
-MULTITENANCY=
+MULTITENANCY=yes
 # ------------------------------------------------------------------
 
 
@@ -149,6 +157,6 @@ PRODUCER_ADMIN_PW=$(gen_random_string)
 # ------------------------------------------------------------------
 # Other
 # ==================================================================
-TEST_PARALLEL=4
+TEST_PARALLEL=8
 # ------------------------------------------------------------------
 EOF
