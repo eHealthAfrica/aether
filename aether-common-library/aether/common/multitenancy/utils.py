@@ -21,6 +21,8 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.db.models import F
 
+from ..utils import find_in_request
+
 
 def get_multitenancy_model():
     '''
@@ -36,22 +38,13 @@ def get_multitenancy_model():
 
 def get_current_realm(request):
     '''
-    Finds the current realm within the cookies or within the request headers.
-
-    https://docs.djangoproject.com/en/2.1/ref/request-response/#django.http.HttpRequest.COOKIES
-    https://docs.djangoproject.com/en/2.1/ref/request-response/#django.http.HttpRequest.META
+    Returns the current realm or the default one if missing.
     '''
 
     if not settings.MULTITENANCY:
         return None
 
-    return getattr(request, 'COOKIES', {}).get(
-        settings.REALM_COOKIE,
-        getattr(request, 'META', {}).get(
-            settings.REALM_HEADER,
-            settings.DEFAULT_REALM
-        )
-    )
+    return find_in_request(request, settings.REALM_COOKIE, settings.DEFAULT_REALM)
 
 
 def is_accessible_by_realm(request, obj):

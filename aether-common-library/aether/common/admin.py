@@ -23,6 +23,3 @@ from django.contrib import admin
 admin.site.site_url = settings.APP_URL
 admin.site.site_header = settings.APP_NAME
 admin.site.site_title = settings.APP_NAME
-
-admin.site.login_template = settings.LOGIN_TEMPLATE
-admin.site.logout_template = settings.LOGGED_OUT_TEMPLATE

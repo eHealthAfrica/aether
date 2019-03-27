@@ -27,7 +27,10 @@ from aether.common.conf.settings import (
     check_storage,
 )
 
-
+# to check URLs builder
+# ------------------------------------------------------------------------------
+TEST_KERNEL_ACTIVE = True
+TEST_TOKEN_ACTIVE = True
 ROOT_URLCONF = 'aether.common.tests.urls'
 
 
