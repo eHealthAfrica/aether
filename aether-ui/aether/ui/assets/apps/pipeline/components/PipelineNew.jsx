@@ -37,7 +37,16 @@ class PipelineNew extends Component {
 
     this.state = {
       view: 'button',
-      pipelineName: ''
+      pipelineName: '',
+      submitted: false
+    }
+  }
+
+  componentDidUpdate (prevProps) {
+    if (this.state.submitted) {
+      if (this.props.pipeline && prevProps.pipeline !== this.props.pipeline) {
+        this.props.history.push(`/${this.props.pipeline.id}`)
+      }
     }
   }
 
@@ -70,8 +79,9 @@ class PipelineNew extends Component {
 
     const onSubmit = (event) => {
       event.preventDefault()
-
-      this.props.addPipeline({ name: this.state.pipelineName })
+      this.setState({
+        submitted: true
+      }, () => this.props.addPipeline({ name: this.state.pipelineName }))
     }
 
     return (
@@ -118,7 +128,9 @@ class PipelineNew extends Component {
   }
 }
 
-const mapStateToProps = () => ({})
+const mapStateToProps = ({ pipelines }) => ({
+  pipeline: pipelines.currentPipeline
+})
 const mapDispatchToProps = { addPipeline }
 
 export default connect(mapStateToProps, mapDispatchToProps)(injectIntl(PipelineNew))
