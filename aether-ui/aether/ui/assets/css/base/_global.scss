@@ -281,30 +281,44 @@ code {
   white-space: pre-wrap;
 }
 
-.check-default {
+.toggle-default {
   font-weight: 400;
   margin: 0;
   display: inline-block;
+  position: relative;
 
   label {
     align-items: center;
     display: flex;
+    cursor: pointer;
+    margin: 0;
+    padding-left: 2.4rem;
   }
 
   label::before {
-    content: '\f00c';
-    font-family: $icon-font;
-    font-weight: 900;
-    font-size: 11px;
-    text-align: center;
-    color: transparent;
-    line-height: 1.4em;
+    content: '';
     display: block;
-    width: 1.2rem;
-    height: 1.2rem;
-    border-radius: 100px;
-    border: 2px solid $grey;
-    margin-right: .6rem;
+    position: absolute;
+    left: 0;
+    top: 3px;
+    width: 26px;
+    height: 16px;
+    background-color: rgba($black, .2);
+    box-shadow: 0 0 2px rgba($black, .2) inset;
+    border-radius: 12px;
+  }
+
+  label::after {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 4px;
+    left: 1px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: $white;
+    transition: all .2s;
   }
 
   input {
@@ -315,8 +329,11 @@ code {
 
     &::before {
       background: $action-color;
-      border-color: $action-color;
-      color: $white;
+    }
+
+    &::after {
+      background: $white;
+      left: 11px;
     }
   }
 }
