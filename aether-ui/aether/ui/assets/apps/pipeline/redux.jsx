@@ -91,6 +91,13 @@ export const setEditing = (value) => ({
   payload: value
 })
 
+export const checkUnsavedContract = () => (dispatch, getState) => {
+  const state = getState()
+  if (state.isEditing) {
+    dispatch(setExitWarning(true))
+  }
+}
+
 export const setExitWarning = (value) => ({
   type: types.CONTRACT_EXIT_WARNING,
   payload: value
