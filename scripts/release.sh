@@ -132,43 +132,41 @@ version_compare () {
 function git_branch_commit_and_release() {
     local BRANCH_OR_TAG_VALUE=$2
     local REMOTE=origin COMMIT_BRANCH=$TRAVIS_BRANCH
-    local ALLOW_RELEASE=1
     if [[ $GITHUB_TOKEN ]]; then
         REMOTE=https://$GITHUB_TOKEN@github.com/$TRAVIS_REPO_SLUG
     else
         echo "Missing environment variable GITHUB_TOKEN=[GitHub Personal Access Token]"
         exit 1
     fi
-    
-    if [[ $3 = "branch" ]];
-    then
-        version_compare $1 $2
-        COMPARE=$?
-        if [[ ${COMPARE} = 1 ]]
-        then
-            echo "VERSION value" $1 "is greater than" $3 "version" $2
-            BRANCH_OR_TAG_VALUE=$1
-        elif [[ ${COMPARE} = 2 ]]
-        then
-            echo "VERSION value" $1 "is less than" $3 "version" $2
-        fi
 
+    if [[ $3 = "branch" ]]; then
         for (( p=`grep -o "\."<<<".$BRANCH_OR_TAG_VALUE"|wc -l`; p<3; p++)); do 
             BRANCH_OR_TAG_VALUE+=.0;
-            done;
-        
-        if git rev-list $BRANCH_OR_TAG_VALUE.. >/dev/null 2>&1
-        then
-            echo "Tag ${BRANCH_OR_TAG_VALUE} has been released. Preparing next version"
-            increment_version $BRANCH_OR_TAG_VALUE 3
-            BRANCH_OR_TAG_VALUE=$TAG_INCREASED_VERSION
-        else
-            echo "Release ${BRANCH_OR_TAG_VALUE} not found"
-            ALLOW_RELEASE=0
+        done;
+
+        version_compare $1 $BRANCH_OR_TAG_VALUE
+        COMPARE=$?
+        if [[ ${COMPARE} = 1 ]]; then
+            echo "VERSION value" $1 "is greater than" $3 "version" $2
+            BRANCH_OR_TAG_VALUE=$1 
         fi
-    
-    elif [[ $3 = "tag" ]];
-    then
+
+        if [[ -z $VERSION ]]; then
+            echo "No VERSION file found, creating one and setting value to ${BRANCH_OR_TAG_VALUE}"
+            VERSION=$BRANCH_OR_TAG_VALUE
+
+            git checkout $TRAVIS_BRANCH
+            echo ${BRANCH_OR_TAG_VALUE} > VERSION
+            git add VERSION
+            # make Travis CI skip this build
+            COMMIT_MESSAGE="chore: Create VERSION file ${BRANCH_OR_TAG_VALUE} [ci skip]"
+            git commit -m "${COMMIT_MESSAGE}"
+            if ! git push --quiet --follow-tags ${REMOTE} ${COMMIT_BRANCH} > /dev/null 2>&1; then
+                echo "Failed to push git changes to" $TRAVIS_BRANCH
+                exit 1
+            fi
+        fi
+    elif [[ $3 = "tag" ]]; then
         major=0
         minor=0
         # break down the version number into it's components
@@ -182,6 +180,9 @@ function git_branch_commit_and_release() {
         git fetch ${REMOTE} $TRAVIS_BRANCH
         git branch $TRAVIS_BRANCH FETCH_HEAD
         COMMIT_BRANCH=HEAD
+
+        increment_version $BRANCH_OR_TAG_VALUE 3
+        BRANCH_OR_TAG_VALUE=$TAG_INCREASED_VERSION
 
         echo "VERSION file set to ${BRANCH_OR_TAG_VALUE} on ${TRAVIS_BRANCH} branch"
 
@@ -197,43 +198,37 @@ function git_branch_commit_and_release() {
         fi
     fi
 
-    echo "Setting VERSION to " ${BRANCH_OR_TAG_VALUE}
-
     if [ ! -z $4 ]; then
         VERSION=${BRANCH_OR_TAG_VALUE}-$4
     fi
-
-    if [[ ${ALLOW_RELEASE} = 1 ]]
-    then
-        echo "Starting version" ${VERSION} "release"
-        release_process
-    else
-        echo "Skipping release for version ${VERSION}"
-    fi
+    
+    echo "Starting version" ${VERSION} "release"
+    release_process
 }
 
 TAG_INCREASED_VERSION="0.0.0"
+FILE_VERSION=`cat VERSION`
+
+if [ -z $FILE_VERSION ]; then
+    FILE_VERSION=$TAG_INCREASED_VERSION
+fi
 
 # release version depending on TRAVIS_BRANCH/ TRAVIS_TAG
 if [[ $TRAVIS_TAG =~ ^[0-9]+\.[0-9]+[\.0-9]*$ ]]
 then
     VERSION=$TRAVIS_TAG
-    FILE_VERSION=`cat VERSION`
 
     # Release with unified branch and file versions
     git_branch_commit_and_release ${FILE_VERSION} $TRAVIS_TAG tag
 
-elif [[ $TRAVIS_BRANCH =~ ^release\-[0-9]+\.[0-9]+[\.0-9]*$ ]]
-then
+elif [[ $TRAVIS_BRANCH =~ ^release\-[0-9]+\.[0-9]+[\.0-9]*$ ]]; then
     VERSION=`cat VERSION`
-    FILE_VERSION=${VERSION}
 
     IFS=- read -a ver_number <<< "$TRAVIS_BRANCH"
     BRANCH_VERSION=${ver_number[1]}
     # Release with unified branch and file versions
     git_branch_commit_and_release ${FILE_VERSION} ${BRANCH_VERSION} branch rc
-elif [[ $TRAVIS_BRANCH = "develop" ]]
-then
+elif [[ $TRAVIS_BRANCH = "develop" ]]; then
     VERSION='alpha'
     release_process
 else
