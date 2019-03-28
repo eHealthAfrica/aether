@@ -34,19 +34,15 @@ fi
 if [ ! -z "${CUSTOM_UWSGI_SERVE_STATIC:-}" ]; then
     export UWSGI_STATIC_EXPIRES=${UWSGI_STATIC_EXPIRES:-"/* 7776000"}
 
-    MAP_STATIC="--static-map ${APP_URL:-/}static=/var/www/static"
-    MAP_FAVICO="--static-map2 ${APP_URL:-/}favicon.ico=/var/www/static/aether/images/aether.ico"
+    ROOT_URL=${APP_URL:-/}
+    STATIC_DIR="/var/www/static"
+
+    MAP_STATIC="--static-map ${ROOT_URL}static=${STATIC_DIR}"
+    MAP_FAVICO="--static-map2 ${ROOT_URL}favicon.ico=${STATIC_DIR}/aether/images/aether.ico"
     STATIC_CONTENT="$MAP_STATIC $MAP_FAVICO"
 fi
 
 # set default values
-
-export UWSGI_ENABLE_THREADS=${UWSGI_ENABLE_THREADS:-1}
-export UWSGI_PROCESSES=${UWSGI_PROCESSES:-5}
-export UWSGI_THREADS=${UWSGI_THREADS:-"%k"}
-export UWSGI_OFFLOAD_THREADS=${UWSGI_OFFLOAD_THREADS:-"%k"}
-
-export UWSGI_HTTP="0.0.0.0:${WEB_SERVER_PORT}"
 export UWSGI_INI=${UWSGI_INI:-/code/conf/uwsgi/config.ini}
 
 # ensure that DEBUG mode is disabled
