@@ -276,7 +276,7 @@ We have a couple of environment variables to tune it up:
 
 - Any `UWSGI_A_B_C` Translates into the `a-b-c` uswgi option.
 
-  [
+  > [
     *When passed as environment variables, options are capitalized and prefixed
     with UWSGI_, and dashes are substituted with underscores.*
   ](https://uwsgi-docs.readthedocs.io/en/latest/Configuration.html#environment-variables)
