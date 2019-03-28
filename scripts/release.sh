@@ -207,10 +207,12 @@ function git_branch_commit_and_release() {
 }
 
 TAG_INCREASED_VERSION="0.0.0"
-FILE_VERSION=`cat VERSION`
-
-if [ -z $FILE_VERSION ]; then
+VERSION=
+if [ ! -f VERSION ]; then
     FILE_VERSION=$TAG_INCREASED_VERSION
+else
+    FILE_VERSION=`cat VERSION`
+    VERSION=$FILE_VERSION
 fi
 
 # release version depending on TRAVIS_BRANCH/ TRAVIS_TAG
@@ -222,7 +224,6 @@ then
     git_branch_commit_and_release ${FILE_VERSION} $TRAVIS_TAG tag
 
 elif [[ $TRAVIS_BRANCH =~ ^release\-[0-9]+\.[0-9]+[\.0-9]*$ ]]; then
-    VERSION=`cat VERSION`
 
     IFS=- read -a ver_number <<< "$TRAVIS_BRANCH"
     BRANCH_VERSION=${ver_number[1]}
