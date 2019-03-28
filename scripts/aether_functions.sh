@@ -54,7 +54,7 @@ function build_container {
     container=$1
     APP_REVISION=`git rev-parse --abbrev-ref HEAD`
     if [ ! -f VERSION ]; then
-        APP_VERSION="0.0.0"
+        APP_VERSION="alpha"
     else
         APP_VERSION=`cat ./VERSION`
     fi

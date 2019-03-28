@@ -23,7 +23,11 @@ set -Eeuo pipefail
 DC_FILE="docker-compose -f ./aether-client-library/docker-compose.yml"
 $DC_FILE down
 
-APP_VERSION=`cat ./VERSION`
+if [ ! -f VERSION ]; then
+    APP_VERSION="alpha"
+else
+    APP_VERSION=`cat ./VERSION`
+fi
 
 # create the distribution
 $DC_FILE build \
