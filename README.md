@@ -269,10 +269,17 @@ the WSGI interface in production.
 
 We have a couple of environment variables to tune it up:
 
-- `UWSGI_PROCESSES`: `4` Indicates the number of processes.
-- `UWSGI_STATIC` Indicates if uWSGI also serves the static content.
+- `CUSTOM_UWSGI_ENV_FILE` Path to a file of environment variables to use with uWSGI.
+
+- `CUSTOM_UWSGI_SERVE_STATIC` Indicates if uWSGI also serves the static content.
   Is `false` if unset or set to empty string, anything else is considered `true`.
-- `UWSGI_THREADS`: `2` Indicates the number of threads.
+
+- Any `UWSGI_A_B_C` Translates into the `a-b-c` uswgi option.
+
+  > [
+    *When passed as environment variables, options are capitalized and prefixed
+    with UWSGI_, and dashes are substituted with underscores.*
+  ](https://uwsgi-docs.readthedocs.io/en/latest/Configuration.html#environment-variables)
 
 https://uwsgi-docs.readthedocs.io/
 
