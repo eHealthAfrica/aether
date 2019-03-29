@@ -17,16 +17,13 @@
 # under the License.
 
 from django.contrib.auth.forms import AuthenticationForm
-from django.forms import CharField, TextInput, ValidationError
+from django.forms import Form, CharField, TextInput, ValidationError
 from django.utils.translation import ugettext as _
 
 from .utils import authenticate, check_realm
 
 
-class RealmAuthenticationForm(AuthenticationForm):
-    '''
-    Extends Authentication form adding the "realm" field.
-    '''
+class RealmForm(Form):
 
     realm = CharField(label=_('Realm'), strip=True, widget=TextInput)
 
@@ -41,6 +38,12 @@ class RealmAuthenticationForm(AuthenticationForm):
             return realm
         except Exception:
             raise ValidationError(_('Invalid realm'))
+
+
+class RealmAuthenticationForm(AuthenticationForm, RealmForm):
+    '''
+    Extends Authentication form adding the "realm" field.
+    '''
 
     def clean(self):
         '''
