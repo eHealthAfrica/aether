@@ -79,7 +79,7 @@ class KeycloakTests(TestCase):
 
             mock_req_1.assert_called_once_with(
                 method='head',
-                url=f'{settings.KEYCLOAK_SERVER_URL}/auth/realms/fake/account',
+                url=f'{settings.KEYCLOAK_SERVER_URL}/fake/account',
             )
 
         # make get `token` from keyclock fail
@@ -102,11 +102,11 @@ class KeycloakTests(TestCase):
             mock_req_2.assert_has_calls([
                 mock.call(
                     method='head',
-                    url=f'{settings.KEYCLOAK_SERVER_URL}/auth/realms/{REALM}/account',
+                    url=f'{settings.KEYCLOAK_SERVER_URL}/{REALM}/account',
                 ),
                 mock.call(
                     method='post',
-                    url=f'{settings.KEYCLOAK_SERVER_URL}/auth/realms/{REALM}/protocol/openid-connect/token',
+                    url=f'{settings.KEYCLOAK_SERVER_URL}/{REALM}/protocol/openid-connect/token',
                     data={
                         'grant_type': 'password',
                         'client_id': settings.KEYCLOAK_CLIENT_ID,
@@ -138,11 +138,11 @@ class KeycloakTests(TestCase):
             mock_req_3.assert_has_calls([
                 mock.call(
                     method='head',
-                    url=f'{settings.KEYCLOAK_SERVER_URL}/auth/realms/{REALM}/account',
+                    url=f'{settings.KEYCLOAK_SERVER_URL}/{REALM}/account',
                 ),
                 mock.call(
                     method='post',
-                    url=f'{settings.KEYCLOAK_SERVER_URL}/auth/realms/{REALM}/protocol/openid-connect/token',
+                    url=f'{settings.KEYCLOAK_SERVER_URL}/{REALM}/protocol/openid-connect/token',
                     data={
                         'grant_type': 'password',
                         'client_id': settings.KEYCLOAK_CLIENT_ID,
@@ -152,7 +152,7 @@ class KeycloakTests(TestCase):
                 ),
                 mock.call(
                     method='get',
-                    url=f'{settings.KEYCLOAK_SERVER_URL}/auth/realms/{REALM}/protocol/openid-connect/userinfo',
+                    url=f'{settings.KEYCLOAK_SERVER_URL}/{REALM}/protocol/openid-connect/userinfo',
                     headers={'Authorization': 'Bearer {}'.format(FAKE_TOKEN['access_token'])},
                 ),
             ])
@@ -190,11 +190,11 @@ class KeycloakTests(TestCase):
             mock_req_4.assert_has_calls([
                 mock.call(
                     method='head',
-                    url=f'{settings.KEYCLOAK_SERVER_URL}/auth/realms/{REALM}/account',
+                    url=f'{settings.KEYCLOAK_SERVER_URL}/{REALM}/account',
                 ),
                 mock.call(
                     method='post',
-                    url=f'{settings.KEYCLOAK_SERVER_URL}/auth/realms/{REALM}/protocol/openid-connect/token',
+                    url=f'{settings.KEYCLOAK_SERVER_URL}/{REALM}/protocol/openid-connect/token',
                     data={
                         'grant_type': 'password',
                         'client_id': settings.KEYCLOAK_CLIENT_ID,
@@ -204,7 +204,7 @@ class KeycloakTests(TestCase):
                 ),
                 mock.call(
                     method='get',
-                    url=f'{settings.KEYCLOAK_SERVER_URL}/auth/realms/{REALM}/protocol/openid-connect/userinfo',
+                    url=f'{settings.KEYCLOAK_SERVER_URL}/{REALM}/protocol/openid-connect/userinfo',
                     headers={'Authorization': 'Bearer {}'.format(FAKE_TOKEN['access_token'])},
                 ),
             ])
@@ -221,7 +221,7 @@ class KeycloakTests(TestCase):
 
             mock_req_5.assert_called_once_with(
                 method='post',
-                url=f'{settings.KEYCLOAK_SERVER_URL}/auth/realms/{REALM}/protocol/openid-connect/token',
+                url=f'{settings.KEYCLOAK_SERVER_URL}/{REALM}/protocol/openid-connect/token',
                 data={
                     'grant_type': 'refresh_token',
                     'client_id': settings.KEYCLOAK_CLIENT_ID,
@@ -244,7 +244,7 @@ class KeycloakTests(TestCase):
             mock_req_6.assert_has_calls([
                 mock.call(
                     method='post',
-                    url=f'{settings.KEYCLOAK_SERVER_URL}/auth/realms/{REALM}/protocol/openid-connect/token',
+                    url=f'{settings.KEYCLOAK_SERVER_URL}/{REALM}/protocol/openid-connect/token',
                     data={
                         'grant_type': 'refresh_token',
                         'client_id': settings.KEYCLOAK_CLIENT_ID,
@@ -253,7 +253,7 @@ class KeycloakTests(TestCase):
                 ),
                 mock.call(
                     method='post',
-                    url=f'{settings.KEYCLOAK_SERVER_URL}/auth/realms/{REALM}/protocol/openid-connect/logout',
+                    url=f'{settings.KEYCLOAK_SERVER_URL}/{REALM}/protocol/openid-connect/logout',
                     data={
                         'client_id': settings.KEYCLOAK_CLIENT_ID,
                         'refresh_token': FAKE_TOKEN['refresh_token'],
@@ -297,7 +297,7 @@ class KeycloakTests(TestCase):
 
             mock_req_7.assert_called_once_with(
                 method='post',
-                url=f'{settings.KEYCLOAK_SERVER_URL}/auth/realms/{REALM}/protocol/openid-connect/logout',
+                url=f'{settings.KEYCLOAK_SERVER_URL}/{REALM}/protocol/openid-connect/logout',
                 data={
                     'client_id': settings.KEYCLOAK_CLIENT_ID,
                     'refresh_token': FAKE_TOKEN['refresh_token'],

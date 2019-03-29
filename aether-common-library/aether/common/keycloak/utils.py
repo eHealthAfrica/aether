@@ -25,7 +25,7 @@ from ..multitenancy.utils import get_current_realm, add_user_to_realm
 from ..utils import request as exec_request
 
 _KC_TOKEN_SESSION = '__keycloak__token__session__'
-_KC_URL = f'{settings.KEYCLOAK_SERVER_URL}/auth/realms'
+_KC_URL = settings.KEYCLOAK_SERVER_URL
 _KC_OID_URL = 'protocol/openid-connect'
 
 UserModel = get_user_model()
