@@ -24,7 +24,7 @@ DC_FILE="docker-compose -f ./aether-client-library/docker-compose.yml"
 $DC_FILE down
 
 if [ ! -f VERSION ]; then
-    APP_VERSION="alpha"
+    APP_VERSION="0.0.0"
 else
     APP_VERSION=`cat ./VERSION`
 fi

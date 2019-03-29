@@ -25,7 +25,7 @@ $DC_FILE down
 
 APP_REVISION=`git rev-parse --abbrev-ref HEAD`
 if [ ! -f VERSION ]; then
-    APP_VERSION="alpha"
+    APP_VERSION="0.0.0"
 else
     APP_VERSION=`cat ./VERSION`
 fi

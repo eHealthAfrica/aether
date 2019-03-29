@@ -215,15 +215,15 @@ else
     VERSION=$FILE_VERSION
 fi
 
-# release version depending on TRAVIS_BRANCH/ TRAVIS_TAG
-if [[ $TRAVIS_TAG =~ ^[0-9]+\.[0-9]+[\.0-9]*$ ]]
+# release version depending on TRAVIS_BRANCH (develop | release-#.#) / TRAVIS_TAG (#.#.#)
+if [[ ${TRAVIS_TAG} =~ ^[0-9]+(\.[0-9]+){2}$ ]]
 then
     VERSION=$TRAVIS_TAG
 
     # Release with unified branch and file versions
     git_branch_commit_and_release ${FILE_VERSION} $TRAVIS_TAG tag
 
-elif [[ $TRAVIS_BRANCH =~ ^release\-[0-9]+\.[0-9]+[\.0-9]*$ ]]; then
+elif [[ ${TRAVIS_BRANCH} =~ ^release\-[0-9]+\.[0-9]+$ ]]; then
 
     IFS=- read -a ver_number <<< "$TRAVIS_BRANCH"
     BRANCH_VERSION=${ver_number[1]}
