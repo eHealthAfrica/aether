@@ -19,6 +19,7 @@
     - [Aether UI](#aether-ui)
     - [Aether CouchDB Sync Module](#aether-couchdb-sync-module)
 - [Usage](#usage)
+  - [Start the app](#start-the-app)
   - [Users & Authentication](#users--authentication)
     - [Basic Authentication](#basic-authentication)
     - [Token Authentication](#token-authentication)
@@ -164,6 +165,9 @@ of the most common ones with non default values. For more info take a look at th
   Is `false` if unset or set to empty string, anything else is considered `true`.
 - `WEB_SERVER_PORT` Web server port for the app.
 
+Read [Users & Authentication](#users--authentication) to know the environment
+variables that set up the different authentication options.
+
 *[Return to TOC](#table-of-contents)*
 
 #### File Storage System
@@ -265,10 +269,17 @@ the WSGI interface in production.
 
 We have a couple of environment variables to tune it up:
 
-- `UWSGI_PROCESSES`: `4` Indicates the number of processes.
-- `UWSGI_STATIC` Indicates if uWSGI also serves the static content.
+- `CUSTOM_UWSGI_ENV_FILE` Path to a file of environment variables to use with uWSGI.
+
+- `CUSTOM_UWSGI_SERVE_STATIC` Indicates if uWSGI also serves the static content.
   Is `false` if unset or set to empty string, anything else is considered `true`.
-- `UWSGI_THREADS`: `2` Indicates the number of threads.
+
+- Any `UWSGI_A_B_C` Translates into the `a-b-c` uswgi option.
+
+  > [
+    *When passed as environment variables, options are capitalized and prefixed
+    with UWSGI_, and dashes are substituted with underscores.*
+  ](https://uwsgi-docs.readthedocs.io/en/latest/Configuration.html#environment-variables)
 
 https://uwsgi-docs.readthedocs.io/
 
@@ -315,6 +326,8 @@ The default values for the export feature:
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
 
 ## Usage
+
+### Start the app
 
 Start the indicated app/module with the necessary dependencies:
 
@@ -364,6 +377,21 @@ To start any container separately:
 
 ### Users & Authentication
 
+Set the `KEYCLOAK_SERVER_URL` and `KEYCLOAK_CLIENT_ID` environment variables if
+you want to use Keycloak as authentication server.
+`KEYCLOAK_CLIENT_ID` (defaults to `aether`) is the public client that allows
+the aether module to authenticate using the Keycloak REST API.
+This client id must be added to all the realms used by the aether module.
+
+Execute once the `./scripts/setup_keycloak.sh` script to create the keycloak
+database and the default realm+client along with the first user
+(find credentials in the `.env` file).
+
+Read more in [Keycloak](https://www.keycloak.org).
+
+**Note**: Multi-tenancy is automatically enabled if the authentication server
+is keycloak.
+
 Set the `HOSTNAME` and `CAS_SERVER_URL` environment variables if you want to
 activate the CAS integration in the app.
 See more in [Django CAS client](https://github.com/mingchen/django-cas-ng).
@@ -384,7 +412,7 @@ The communication between Aether ODK Module and ODK Collect is done via
 
 #### Token Authentication
 
-The communication between the containers is done via
+The internal communication between the containers is done via
 [token authentication](http://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication).
 
 In the case of `aether-odk-module`, `aether-ui` and `aether-couchdb-sync-module`

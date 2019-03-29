@@ -17,6 +17,7 @@
 # under the License.
 
 from django import template
+from django.utils.html import escape
 
 from ..utils import json_prettified
 
@@ -33,10 +34,11 @@ def get_fullname(user):
     - ``username``
     '''
 
+    name = user.username
     if user.first_name and user.last_name:
-        return '{} {}'. format(user.first_name, user.last_name)
+        name = '{} {}'. format(user.first_name, user.last_name)
 
-    return user.username
+    return escape(name)
 
 
 @register.filter(name='prettified')

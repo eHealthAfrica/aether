@@ -26,8 +26,7 @@ import {
   PIPELINES_URL,
   CONTRACTS_URL,
   PIPELINE_SECTION_INPUT,
-  CONTRACT_SECTION_ENTITY_TYPES,
-  CONTRACT_SECTION_SETTINGS
+  CONTRACT_SECTION_ENTITY_TYPES
 } from '../utils/constants'
 
 export const types = {
@@ -41,6 +40,7 @@ export const types = {
   PIPELINE_SELECT: 'pipeline.select',
   CONTRACT_SELECT: 'contract.select',
   SECTION_SELECT: 'section.select',
+  CONTRACT_CHANGED: 'contract_changed',
 
   PIPELINE_ADD: 'pipeline.add',
   PIPELINE_UPDATE: 'pipeline.update',
@@ -97,6 +97,11 @@ export const selectSection = (section) => ({
   payload: section
 })
 
+export const contractChanged = (contract) => ({
+  type: types.CONTRACT_CHANGED,
+  payload: contract
+})
+
 export const getPipelineById = (pid) => {
   return {
     types: ['', types.PIPELINE_BY_ID, types.PIPELINE_NOT_FOUND],
@@ -126,12 +131,12 @@ export const updatePipeline = (pipeline) => {
   }
 }
 
-export const addContract = (pipeline) => ({
+export const addContract = (contract) => ({
   types: ['', types.CONTRACT_ADD, types.REQUEST_ERROR],
   promise: client => client.post(
     `${CONTRACTS_URL}`,
     { 'Content-Type': 'application/json' },
-    { data: { name: generateNewContractName(pipeline), pipeline: pipeline.id } })
+    { data: contract })
 })
 
 export const updateContract = (contract) => ({
@@ -208,20 +213,6 @@ const findContract = (pipeline, cid) => {
     }
   }
   return contract
-}
-
-const generateNewContractName = (pipeline) => {
-  let count = 0
-  let newContractName = pipeline.name
-
-  do {
-    if (!pipeline.contracts.find(c => c.name === newContractName)) {
-      return newContractName
-    }
-
-    newContractName = `Contract ${count}`
-    count++
-  } while (true)
 }
 
 const reducer = (state = INITIAL_STATE, action) => {
@@ -327,14 +318,37 @@ const reducer = (state = INITIAL_STATE, action) => {
       return {
         ...nextState,
         pipelineList: replaceItemInList(state.pipelineList, currentPipeline),
-
-        currentSection: CONTRACT_SECTION_SETTINGS,
         currentPipeline,
         currentContract
       }
     }
 
-    case types.CONTRACT_UPDATE:
+    case types.CONTRACT_UPDATE: {
+      const currentContract = parseContract(action.payload)
+      const uPipeline = { ...state.currentPipeline }
+      uPipeline.contracts = replaceItemInList(state.currentPipeline.contracts, currentContract)
+      return { ...state,
+        pipelineList: replaceItemInList(state.pipelineList, uPipeline),
+        currentPipeline: uPipeline,
+        currentContract: currentContract
+      }
+    }
+    case types.CONTRACT_CHANGED: {
+      const currentContract = parseContract(action.payload)
+      let currentPipeline = state.currentPipeline
+      if (currentPipeline.id !== currentContract.pipeline) {
+        currentPipeline = state.pipelineList.find(p => p.id === currentContract.pipeline)
+        if (!currentPipeline) {
+          currentPipeline = state.currentPipeline
+          currentContract.pipeline = currentPipeline.id
+        }
+      }
+      return {
+        ...state,
+        currentContract,
+        currentPipeline
+      }
+    }
     case types.CONTRACT_PUBLISH_SUCCESS: {
       const currentContract = parseContract(action.payload)
       const currentPipeline = {

@@ -81,7 +81,6 @@ class EntityTypes extends Component {
           throw new Error(formatMessage(MESSAGES.missingIdError))
         }
       })
-
       this.props.updateContract({ ...this.props.contract, entity_types: schemas })
     } catch (error) {
       this.setState({ error: error.message })

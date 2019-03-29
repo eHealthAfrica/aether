@@ -142,7 +142,7 @@ class MobileUserViewSet(MtUserViewSetMixin, viewsets.ModelViewSet):
     serializer_class = MobileUserSerializer
     search_fields = ('email',)
 
-    def create(self, request):
+    def create(self, request, *args, **kwargs):
         email = request.data['email']
         # because mobile users are shared among realms the
         # "mobile user with this e-mail already exists."
@@ -159,7 +159,7 @@ class MobileUserViewSet(MtUserViewSetMixin, viewsets.ModelViewSet):
 
         return super(MobileUserViewSet, self).create(request)
 
-    def destroy(self, request, pk=None):
+    def destroy(self, request, pk=None, *args, **kwargs):
         # because mobile users are shared among realms the
         # mobile user cannot be deleted if belongs to another realm too.
         mobile_user = get_object_or_404(self.get_queryset(), pk=pk)
