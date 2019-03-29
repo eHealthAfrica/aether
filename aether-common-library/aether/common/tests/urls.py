@@ -20,10 +20,14 @@
 These urls are only used for testing purposes.
 '''
 
+from django.conf import settings
 from django.conf.urls import include, url
 
 from aether.common.conf.urls import generate_urlpatterns
 
-urlpatterns = generate_urlpatterns(kernel=True, token=True, app=[
-    url(r'^test', include('aether.common.multitenancy.tests.fakeapp.urls')),
-])
+
+urlpatterns = generate_urlpatterns(
+    kernel=settings.TEST_KERNEL_ACTIVE,
+    token=settings.TEST_TOKEN_ACTIVE,
+    app=[url(r'^test', include('aether.common.multitenancy.tests.fakeapp.urls'))],
+)

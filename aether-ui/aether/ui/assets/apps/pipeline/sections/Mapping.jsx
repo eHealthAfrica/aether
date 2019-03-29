@@ -84,7 +84,6 @@ class Mapping extends Component {
     if (this.props.contract.is_read_only) {
       return
     }
-
     this.props.updateContract({ ...this.props.contract, mapping_rules: this.state.mappingRules })
   }
 
@@ -110,7 +109,9 @@ class Mapping extends Component {
 
   hasChangedJson () {
     try {
-      return !deepEqual(JSON.parse(this.state.mappingRulesInput), this.props.contract.mapping_rules)
+      return !deepEqual(JSON.parse(this.state.mappingRulesInput), this.props.contract.mapping_rules.map(rule => (
+        [rule.source, rule.destination]
+      )))
     } catch (error) {
       return true
     }

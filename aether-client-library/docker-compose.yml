@@ -3,6 +3,7 @@ version: "2.1"
 services:
 
   client:
+    image: aether-client
     build: .
     volumes:
       - .:/code

@@ -45,17 +45,22 @@ export const generateGUID = () => {
  * @param {bool}   ignoreNull -- ignore null values
  */
 export const deepEqual = (a, b, ignoreNull = false) => {
-  if (typeof a !== typeof b) {
+  // Note:
+  //   [x, y, z,...]  equals to  {'0': x, '1': y, '2': z, ...}
+  const getType = (value) => Object.prototype.toString.call(value)
+
+  if (getType(a) !== getType(b)) {
     return false
   }
 
-  if (isEmpty(a) || isEmpty(b) || (!Array.isArray(a) && typeof a !== 'object')) {
+  if (['[object Object]', '[object Array]'].indexOf(getType(a)) === -1) {
     return a === b
   }
 
   let ka = Object.keys(a)
   let kb = Object.keys(b)
   let key, i
+
   // ignore null and undefined values
   if (ignoreNull) {
     ka = ka.filter((x) => a[x] != null)

@@ -37,17 +37,6 @@ class PipelineList extends Component {
     props.getPipelines()
   }
 
-  componentDidUpdate (prevProps) {
-    // this happens after:
-    // - a new pipeline is added
-    // - a pipeline is selected
-    // - a new contract is added
-    // - a contract is selected
-    if (this.props.pid && prevProps.pid !== this.props.pid) {
-      this.props.history.push(`/${this.props.pid}/${this.props.cid}/${this.props.section}`)
-    }
-  }
-
   render () {
     return (
       <div className='pipelines-container show-index'>
@@ -62,11 +51,15 @@ class PipelineList extends Component {
             />
           </h1>
 
-          <PipelineNew />
+          <PipelineNew history={this.props.history} />
 
           <div className='pipeline-previews'>
             { this.props.list.map(pipeline => (
-              <PipelineCard key={pipeline.id} pipeline={pipeline} />
+              <PipelineCard
+                key={pipeline.id}
+                pipeline={pipeline}
+                history={this.props.history}
+              />
             )) }
           </div>
         </div>
@@ -77,11 +70,7 @@ class PipelineList extends Component {
 
 const mapStateToProps = ({ pipelines }) => ({
   list: pipelines.pipelineList || [],
-  error: pipelines.error,
-
-  section: pipelines.currentSection,
-  pid: (pipelines.currentPipeline || {}).id,
-  cid: (pipelines.currentContract || {}).id
+  error: pipelines.error
 })
 const mapDispatchToProps = { getPipelines }
 

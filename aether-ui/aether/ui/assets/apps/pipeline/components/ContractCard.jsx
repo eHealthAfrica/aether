@@ -24,9 +24,17 @@ import { FormattedMessage } from 'react-intl'
 
 import ContractPublishButton from './ContractPublishButton'
 
-import { selectContract } from '../redux'
+import { selectContract, selectSection } from '../redux'
+import {
+  CONTRACT_SECTION_ENTITY_TYPES
+} from '../../utils/constants'
 
 class ContractCard extends Component {
+  onContractSelected (contract) {
+    this.props.selectContract(contract.pipeline, contract.id)
+    this.props.selectSection(CONTRACT_SECTION_ENTITY_TYPES)
+    this.props.history.push(`/${contract.pipeline}/${contract.id}/${CONTRACT_SECTION_ENTITY_TYPES}`)
+  }
   render () {
     const { contract } = this.props
 
@@ -34,7 +42,7 @@ class ContractCard extends Component {
       <div
         key={contract.id}
         className={`preview-contract ${contract.is_read_only ? 'pipeline-readonly' : ''}`}
-        onClick={() => { this.props.selectContract(contract.pipeline, contract.id) }}>
+        onClick={this.onContractSelected.bind(this, contract)}>
         { contract.is_read_only &&
           <span className='tag'>
             <FormattedMessage
@@ -83,6 +91,6 @@ class ContractCard extends Component {
 }
 
 const mapStateToProps = () => ({})
-const mapDispatchToProps = { selectContract }
+const mapDispatchToProps = { selectContract, selectSection }
 
 export default connect(mapStateToProps, mapDispatchToProps)(ContractCard)
