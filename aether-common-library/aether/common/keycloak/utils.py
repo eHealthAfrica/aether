@@ -17,19 +17,17 @@
 # under the License.
 
 from django.conf import settings
-from django.contrib.auth import get_user_model, logout
+from django.contrib.auth import logout
 from django.contrib.auth.signals import user_logged_out
 from django.dispatch import receiver
 
-from ..multitenancy.utils import get_current_realm, add_user_to_realm
+from ..auth.utils import get_or_create_user
+from ..multitenancy.utils import get_current_realm
 from ..utils import request as exec_request
 
 _KC_TOKEN_SESSION = '__keycloak__token__session__'
 _KC_URL = settings.KEYCLOAK_SERVER_URL
 _KC_OID_URL = 'protocol/openid-connect'
-
-UserModel = get_user_model()
-user_model = UserModel.objects
 
 
 def check_realm(realm):
@@ -72,26 +70,17 @@ def authenticate(request, username, password, realm):
     except Exception:
         return None
 
-    # the internal username prepends the realm name
-    _username = f'{realm}__{username}'
-    try:
-        user = user_model.get(username=_username)
-    except UserModel.DoesNotExist:
-        user = user_model.create_user(
-            username=_username,
-            password=user_model.make_random_password(length=100),
-        )
-
-    add_user_to_realm(request, user)
-    user.first_name = userinfo.get('given_name', '')
-    user.last_name = userinfo.get('family_name', '')
-    user.email = userinfo.get('email', '')
-    user.save()
-
     # save the current realm in the session
     request.session[settings.REALM_COOKIE] = realm
     # save the user token in the session
     request.session[_KC_TOKEN_SESSION] = token
+
+    # the internal username prepends the realm name
+    user = get_or_create_user(request, username)
+    user.first_name = userinfo.get('given_name') or ''
+    user.last_name = userinfo.get('family_name') or ''
+    user.email = userinfo.get('email') or ''
+    user.save()
 
     return user
 
