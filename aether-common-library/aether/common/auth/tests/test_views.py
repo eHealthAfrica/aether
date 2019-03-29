@@ -24,7 +24,7 @@ from django.urls import reverse
 
 from rest_framework import status
 
-user_model = get_user_model().objects
+user_objects = get_user_model().objects
 
 
 @override_settings(MULTITENANCY=False)
@@ -37,25 +37,25 @@ class ViewsTest(TestCase):
         username = 'user'
         email = 'user@example.com'
         password = 'useruser'
-        user_model.create_user(username, email, password)
+        user_objects.create_user(username, email, password)
         self.assertTrue(self.client.login(username=username, password=password))
 
         token_username = 'username-for-token'
-        self.assertEqual(user_model.filter(username=token_username).count(), 0)
+        self.assertEqual(user_objects.filter(username=token_username).count(), 0)
 
         response = self.client.post(self.token_url, data={'username': token_username})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(user_model.filter(username=token_username).count(), 0)
+        self.assertEqual(user_objects.filter(username=token_username).count(), 0)
 
     def test_obtain_auth_token__as_admin(self):
         username = 'admin'
         email = 'admin@example.com'
         password = 'adminadmin'
-        user_model.create_superuser(username, email, password)
+        user_objects.create_superuser(username, email, password)
         self.assertTrue(self.client.login(username=username, password=password))
 
         token_username = 'username-for-token'
-        self.assertEqual(user_model.filter(username=token_username).count(), 0)
+        self.assertEqual(user_objects.filter(username=token_username).count(), 0)
 
         response = self.client.post(self.token_url, data={'username': token_username})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -63,7 +63,7 @@ class ViewsTest(TestCase):
         self.assertNotEqual(token, None)
 
         self.assertEqual(
-            user_model.filter(username=token_username).count(),
+            user_objects.filter(username=token_username).count(),
             1,
             'request a token for a non-existing user creates the user'
         )
@@ -74,7 +74,7 @@ class ViewsTest(TestCase):
         self.assertEqual(token, token_again, 'returns the same token')
 
         self.assertEqual(
-            user_model.filter(username=token_username).count(),
+            user_objects.filter(username=token_username).count(),
             1,
             'request a token for an existing user does not create a new user'
         )
@@ -83,11 +83,11 @@ class ViewsTest(TestCase):
         username = 'admin'
         email = 'admin@example.com'
         password = 'adminadmin'
-        user_model.create_superuser(username, email, password)
+        user_objects.create_superuser(username, email, password)
         self.assertTrue(self.client.login(username=username, password=password))
 
         token_username = 'username-for-token'
-        self.assertEqual(user_model.filter(username=token_username).count(), 0)
+        self.assertEqual(user_objects.filter(username=token_username).count(), 0)
 
         with mock.patch(
             'aether.common.auth.views.Token.objects.get_or_create',

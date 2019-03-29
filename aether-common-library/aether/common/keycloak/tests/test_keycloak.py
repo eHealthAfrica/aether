@@ -29,7 +29,7 @@ from django.urls import reverse
 from ...tests import MockResponse
 from ..utils import _KC_TOKEN_SESSION as TOKEN_KEY
 
-UserModel = get_user_model()
+user_objects = get_user_model().objects
 
 
 class KeycloakTests(TestCase):
@@ -171,14 +171,14 @@ class KeycloakTests(TestCase):
                                 'email': 'user@example.com',
                             }),
                         ]) as mock_req_4:
-            self.assertEqual(UserModel.objects.filter(username='testing__user').count(), 0)
+            self.assertEqual(user_objects.filter(username='testing__user').count(), 0)
             response = self.client.post(LOGIN_URL, data={
                 'username': 'user',
                 'password': 'secretsecret',
                 'realm': REALM,
             })
-            self.assertEqual(UserModel.objects.filter(username='testing__user').count(), 1)
-            user = UserModel.objects.get(username='testing__user')
+            self.assertEqual(user_objects.filter(username='testing__user').count(), 1)
+            user = user_objects.get(username='testing__user')
             self.assertEqual(user.first_name, 'given')
             self.assertEqual(user.last_name, 'family')
             self.assertEqual(user.email, 'user@example.com')
@@ -286,7 +286,7 @@ class KeycloakTests(TestCase):
                 'realm': REALM,
             })
             # user data is updated
-            user = UserModel.objects.get(username='testing__user')
+            user = user_objects.get(username='testing__user')
             self.assertEqual(user.first_name, 'John')
             self.assertEqual(user.last_name, 'Doe')
             self.assertEqual(user.email, 'john.doe@example.com')
