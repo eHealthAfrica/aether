@@ -69,7 +69,7 @@ cat << EOF
 # ------------------------------------------------------------------
 # Authentication
 # ==================================================================
-KEYCLOAK_SERVER_URL=http://keycloak:8080
+KEYCLOAK_SERVER_URL=http://keycloak:8080/auth/realms
 KEYCLOAK_ADMIN_USERNAME=admin
 KEYCLOAK_ADMIN_PASSWORD=$(gen_random_string)
 KEYCLOAK_DB_PASSWORD=$(gen_random_string)
