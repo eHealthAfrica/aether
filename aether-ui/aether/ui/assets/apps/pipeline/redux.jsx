@@ -26,7 +26,8 @@ import {
   PIPELINES_URL,
   CONTRACTS_URL,
   PIPELINE_SECTION_INPUT,
-  CONTRACT_SECTION_ENTITY_TYPES
+  CONTRACT_SECTION_ENTITY_TYPES,
+  CONTRACT_SECTION_SETTINGS
 } from '../utils/constants'
 
 export const types = {
@@ -91,17 +92,22 @@ export const setEditing = (value) => ({
   payload: value
 })
 
-export const checkUnsavedContract = () => (dispatch, getState) => {
-  const state = getState()
-  if (state.isEditing) {
-    dispatch(setExitWarning(true))
-  }
-}
-
 export const setExitWarning = (value) => ({
   type: types.CONTRACT_EXIT_WARNING,
   payload: value
 })
+
+export const checkUnsavedContract = (cb) => (dispatch, getState) => {
+  const state = getState()
+  if (state.exitWarning !== state.isEditing) {
+    dispatch(setExitWarning(state.isEditing))
+  }
+  if (!state.isEditing) {
+    cb()
+  } else {
+    dispatch(selectSection(CONTRACT_SECTION_SETTINGS))
+  }
+}
 
 export const selectPipeline = (pid) => ({
   type: types.PIPELINE_SELECT,

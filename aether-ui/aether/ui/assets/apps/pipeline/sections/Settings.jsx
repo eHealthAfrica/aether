@@ -22,7 +22,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
-import { updateContract, addContract, contractChanged } from '../redux'
+import { updateContract, addContract, contractChanged, setExitWarning } from '../redux'
 import { isEmpty, generateGUID } from '../../utils'
 import { deriveEntityTypes, deriveMappingRules } from '../../utils/avro-utils'
 
@@ -268,7 +268,7 @@ class Settings extends Component {
 
   render () {
     const { contract = {} } = this.props
-    const showIdentityOption = (!contract.is_read_only  && !isEmpty(this.props.inputSchema))
+    const showIdentityOption = (!contract.is_read_only && !isEmpty(this.props.inputSchema))
 
     return (
       <div className='pipeline-settings'>
@@ -354,6 +354,6 @@ const mapStateToProps = ({ pipelines }) => ({
   contract: pipelines.currentContract,
   pipeline: pipelines.currentPipeline
 })
-const mapDispatchToProps = { updateContract, addContract, contractChanged }
+const mapDispatchToProps = { updateContract, addContract, contractChanged, setExitWarning }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Settings)
