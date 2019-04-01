@@ -135,7 +135,7 @@ version_compare () {
 function git_branch_commit_and_release() {
     # Evaluates the VERSION file, increases the version value if its a tag and commit changes to base branch
     # Expected Args:
-    ## <VERSION_ON_FILE> <VERISON_FROM_BRANCH/TAG> <BRANCH_TYPE> <IS_RC>
+    ## <VERSION_ON_FILE> <VERSION_FROM_BRANCH/TAG> <BRANCH_TYPE> <IS_RC>
     ### VERSION_ON_FILE : The version value read from the VERSION file
     ### VERSION_FROM_BRANCH/TAG : version value retrieved from the branch name (TRAVIS_TAG / TRAVIS_BRANCH)
     ### BRANCH_TYPE : branch type (options: "branch", "tag")
