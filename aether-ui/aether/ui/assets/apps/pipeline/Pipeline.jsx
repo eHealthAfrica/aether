@@ -125,6 +125,17 @@ class Pipeline extends Component {
       return '' // still loading data
     }
 
+    const fullscreenDiv = (
+      <div
+        className='btn-icon fullscreen-toggle'
+        onClick={() => { this.setState({ fullscreen: !this.state.fullscreen }) }}>
+        { this.state.fullscreen
+          ? <FormattedMessage id='pipeline.navbar.shrink' defaultMessage='fullscreen off' />
+          : <FormattedMessage id='pipeline.navbar.fullscreen' defaultMessage='fullscreen on' />
+        }
+      </div>
+    )
+
     return (
       <div className={`pipelines-container show-pipeline pipeline--${this.state.view}`}>
         { this.props.error && <ModalError error={this.props.error} /> }
@@ -183,8 +194,10 @@ class Pipeline extends Component {
           }
           <div className='pipeline-sections'>
             <div className='pipeline-section__input'><Input /></div>
-            { this.props.contract && <div className='pipeline-section__entityTypes'><EntityTypes /></div> }
-            { this.props.contract && <div className='pipeline-section__mapping'><Mapping /></div> }
+            {this.props.contract && <div className='pipeline-section__entityTypes'><EntityTypes />
+              { fullscreenDiv }</div>}
+            {this.props.contract && <div className='pipeline-section__mapping'><Mapping />
+              { fullscreenDiv }</div>}
           </div>
           { this.props.contract && <div className='pipeline-output'><Output /></div> }
         </div>
@@ -328,17 +341,6 @@ class Pipeline extends Component {
   renderSectionTabs () {
     const { contract = {} } = this.props
 
-    const fullscreenDiv = (
-      <div
-        className='btn-icon fullscreen-toggle'
-        onClick={() => { this.setState({ fullscreen: !this.state.fullscreen }) }}>
-        { this.state.fullscreen
-          ? <FormattedMessage id='pipeline.navbar.shrink' defaultMessage='shrink' />
-          : <FormattedMessage id='pipeline.navbar.fullscreen' defaultMessage='fullscreen' />
-        }
-      </div>
-    )
-
     return (
       <div className='pipeline-nav'>
         <div className='pipeline-nav-items'>
@@ -364,7 +366,7 @@ class Pipeline extends Component {
               id='pipeline.navbar.entity.types'
               defaultMessage='Entity Types'
             />
-            { fullscreenDiv }
+
           </div>
 
           <div
@@ -377,7 +379,7 @@ class Pipeline extends Component {
               id='pipeline.navbar.mapping'
               defaultMessage='Mapping'
             />
-            { fullscreenDiv }
+
           </div>
 
           <div
