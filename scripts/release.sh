@@ -101,6 +101,7 @@ increment_version () {
 version_compare () {
     if [[ $1 == $2 ]]
     then
+        # version on file and (branch | tag) versions are equal
         return 0
     fi
     local IFS=.
@@ -119,10 +120,12 @@ version_compare () {
         fi
         if ((10#${ver1[i]} > 10#${ver2[i]}))
         then
+            # version on file is greater than (branch | tag) version
             return 1
         fi
         if ((10#${ver1[i]} < 10#${ver2[i]}))
         then
+            # version on file is less than (branch | tag) version
             return 2
         fi
     done
@@ -130,6 +133,14 @@ version_compare () {
 }
 
 function git_branch_commit_and_release() {
+    # Evaluates the VERSION file, increases the version value if its a tag and commit changes to base branch
+    # Expected Args:
+    ## <VERSION_ON_FILE> <VERISON_FROM_BRANCH/TAG> <BRANCH_TYPE> <IS_RC>
+    ### VERSION_ON_FILE : The version value read from the VERSION file
+    ### VERSION_FROM_BRANCH/TAG : version value retrieved from the branch name (TRAVIS_TAG / TRAVIS_BRANCH)
+    ### BRANCH_TYPE : branch type (options: "branch", "tag")
+    ### IS_RC: (optional) if a release candidate should be released (options : "rc")
+
     local BRANCH_OR_TAG_VALUE=$2
     local REMOTE=origin COMMIT_BRANCH=$TRAVIS_BRANCH
     if [[ $GITHUB_TOKEN ]]; then
