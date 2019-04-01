@@ -16,6 +16,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from django.conf import settings
+from django.contrib.auth.views import LoginView
+
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import (
@@ -28,6 +31,8 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
 from .utils import get_or_create_user
+
+from ..keycloak.views import KeycloakLoginView
 
 
 @api_view(['POST'])
@@ -51,3 +56,10 @@ def obtain_auth_token(request):
 
     except Exception as e:
         return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+def get_login_view():
+    if not settings.KEYCLOAK_SERVER_URL:
+        return LoginView.as_view(template_name=settings.LOGIN_TEMPLATE)
+
+    return KeycloakLoginView.as_view(template_name=settings.KEYCLOAK_TEMPLATE)

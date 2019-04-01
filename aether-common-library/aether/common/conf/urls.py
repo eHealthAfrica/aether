@@ -60,14 +60,11 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):
         logout_view = views.logout
 
     else:
-        from django.contrib.auth import views
-        from aether.common.auth.forms import get_auth_form
+        from django.contrib.auth.views import LogoutView
+        from aether.common.auth.views import get_login_view
 
-        login_view = views.LoginView.as_view(
-            template_name=settings.LOGIN_TEMPLATE,
-            authentication_form=get_auth_form(),
-        )
-        logout_view = views.LogoutView.as_view(template_name=settings.LOGGED_OUT_TEMPLATE)
+        login_view = get_login_view()
+        logout_view = LogoutView.as_view(template_name=settings.LOGGED_OUT_TEMPLATE)
 
     auth_views = [
         path(route='login/', view=login_view, name='login'),

@@ -27,6 +27,15 @@ class RealmForm(Form):
 
     realm = CharField(label=_('Realm'), strip=True, widget=TextInput)
 
+    def __init__(self, request=None, *args, **kwargs):
+        '''
+        The 'request' parameter is set for custom auth use by subclasses.
+        The form data comes in via the standard 'data' kwarg.
+        '''
+
+        self.request = request
+        super(RealmForm, self).__init__(*args, **kwargs)
+
     def clean_realm(self):
         '''
         Checks that the realm exists in keycloak server.
@@ -40,7 +49,7 @@ class RealmForm(Form):
             raise ValidationError(_('Invalid realm'))
 
 
-class RealmAuthenticationForm(AuthenticationForm, RealmForm):
+class RealmAuthenticationForm(RealmForm, AuthenticationForm):
     '''
     Extends Authentication form adding the "realm" field.
     '''

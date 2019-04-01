@@ -35,6 +35,7 @@ class UrlsTestCase(TestCase):
         clear_url_caches()
 
 
+@override_settings(KEYCLOAK_SERVER_URL=None)
 class UrlsTest(UrlsTestCase):
 
     def test__urls__checks(self):
@@ -102,3 +103,14 @@ class UrlsCASServerTest(UrlsTestCase):
 
         self.assertEqual(resolve('/accounts/login/').func, views.login)
         self.assertEqual(resolve('/accounts/logout/').func, views.logout)
+
+
+@override_settings(KEYCLOAK_SERVER_URL='http://localhost:6666')
+class UrlsKeycloakServerTest(UrlsTestCase):
+
+    def test__urls__accounts__login(self):
+        from aether.common.keycloak.views import KeycloakLoginView
+
+        self.assertEqual(reverse('rest_framework:login'), '/accounts/login/')
+        self.assertEqual(resolve('/accounts/login/').func.view_class,
+                         KeycloakLoginView.as_view().view_class)
