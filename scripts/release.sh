@@ -51,12 +51,6 @@ function release_app {
     docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
     docker push "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
 
-    if [[ $VERSION != "alpha" ]]
-    then
-        echo "Pushing Docker image ${IMAGE_REPO}/${AETHER_APP}:latest"
-        docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:latest"
-        docker push "${IMAGE_REPO}/${AETHER_APP}:latest"
-    fi
     echo "_____________________________________________"
 }
 
@@ -240,9 +234,6 @@ elif [[ ${TRAVIS_BRANCH} =~ ^release\-[0-9]+\.[0-9]+$ ]]; then
     BRANCH_VERSION=${ver_number[1]}
     # Release with unified branch and file versions
     git_branch_commit_and_release ${FILE_VERSION} ${BRANCH_VERSION} branch rc
-elif [[ $TRAVIS_BRANCH = "develop" ]]; then
-    VERSION='alpha'
-    release_process
 else
     echo "Skipping a release because this branch is not permitted: ${TRAVIS_BRANCH}"
 fi
