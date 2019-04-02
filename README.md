@@ -112,6 +112,8 @@ of the most common ones with non default values. For more info take a look at th
 - `APP_URL`, `/`. The app url in the server.
   If host is `http://my-server.org` and the app url is `/my-module`,
   the app enpoints will be accessible at `http://my-server.org/my-module/...`.
+  In the case of an API gateway, or proxy, wildcards can be used in the `APP_URL` to match 
+  multiple routes like `/<realm>/<service-alias>/`
   The local behavior is: `http://my-module.aether.local/` implemented in the NGINX files.
 
   Current NGINX set up (requires changes in `hosts` file for each new module):
@@ -163,6 +165,7 @@ of the most common ones with non default values. For more info take a look at th
   https://docs.python.org/3.7/library/logging.html#levels
 - `TESTING` Indicates if the app executes under test conditions.
   Is `false` if unset or set to empty string, anything else is considered `true`.
+- `STATIC_URL_PREFIX` : provides a base url for the static assets to be served from.
 - `WEB_SERVER_PORT` Web server port for the app.
 
 Read [Users & Authentication](#users--authentication) to know the environment

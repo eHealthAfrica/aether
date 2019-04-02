@@ -34,7 +34,7 @@ fi
 if [ ! -z "${CUSTOM_UWSGI_SERVE_STATIC:-}" ]; then
     export UWSGI_STATIC_EXPIRES=${UWSGI_STATIC_EXPIRES:-"/* 7776000"}
 
-    ROOT_URL=${APP_URL:-/}
+    ROOT_URL=${STATIC_URL_PREFIX:-/}
     STATIC_DIR="/var/www/static"
 
     MAP_STATIC="--static-map ${ROOT_URL}static=${STATIC_DIR}"
