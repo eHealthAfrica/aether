@@ -33,12 +33,13 @@ fi
 # Are static assets served by uWSGI?
 if [ ! -z "${CUSTOM_UWSGI_SERVE_STATIC:-}" ]; then
     export UWSGI_STATIC_EXPIRES=${UWSGI_STATIC_EXPIRES:-"/* 7776000"}
-
-    ROOT_URL=${STATIC_URL_PREFIX:-/}
+    
+    APP_URL=${APP_URL:-/}
+    STATIC_URL=${STATIC_URL:-/static}
     STATIC_DIR="/var/www/static"
 
-    MAP_STATIC="--static-map ${ROOT_URL}static=${STATIC_DIR}"
-    MAP_FAVICO="--static-map2 ${ROOT_URL}favicon.ico=${STATIC_DIR}/aether/images/aether.ico"
+    MAP_STATIC="--static-map ${STATIC_URL}=${STATIC_DIR}"
+    MAP_FAVICO="--static-map2 ${APP_URL}favicon.ico=${STATIC_DIR}/aether/images/aether.ico"
     STATIC_CONTENT="$MAP_STATIC $MAP_FAVICO"
 fi
 
