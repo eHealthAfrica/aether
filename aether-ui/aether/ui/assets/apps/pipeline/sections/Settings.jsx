@@ -217,6 +217,10 @@ class Settings extends Component {
     if (props.isNew) {
       this.createNewContract()
     }
+
+    if (props.isNew) {
+      this.createNewContract()
+    }
   }
 
   componentDidUpdate (prevProps) {

@@ -19,6 +19,7 @@
     - [Aether UI](#aether-ui)
     - [Aether CouchDB Sync Module](#aether-couchdb-sync-module)
 - [Usage](#usage)
+  - [Start the app](#start-the-app)
   - [Users & Authentication](#users--authentication)
     - [Basic Authentication](#basic-authentication)
     - [Token Authentication](#token-authentication)
@@ -77,6 +78,7 @@ for local development. Never deploy these to publicly accessible servers.
 ```text
 127.0.0.1    aether.local
 127.0.0.1    kernel.aether.local odk.aether.local ui.aether.local sync.aether.local
+127.0.0.1    keycloak.aether.local
 ```
 
 *[Return to TOC](#table-of-contents)*
@@ -111,10 +113,12 @@ of the most common ones with non default values. For more info take a look at th
 - `APP_URL`, `/`. The app url in the server.
   If host is `http://my-server.org` and the app url is `/my-module`,
   the app enpoints will be accessible at `http://my-server.org/my-module/...`.
+  In the case of an API gateway, or proxy, wildcards can be used in the `APP_URL` to match 
+  multiple routes like `/<realm>/<service-alias>/`
   The local behavior is: `http://my-module.aether.local/` implemented in the NGINX files.
 
   Current NGINX set up (requires changes in `hosts` file for each new module):
-  ```ini
+  ```nginx
   # my-module-1.ini NGINX file (WEB_SERVER_PORT is 8801)
   server {
     listen                    80;
@@ -137,7 +141,7 @@ of the most common ones with non default values. For more info take a look at th
   ```
 
   Possible NGINX set up (does not require any change in `hosts` file for any module):
-  ```ini
+  ```nginx
   # one NGINX ini file for all modules
   server {
     listen                    80;
@@ -162,7 +166,11 @@ of the most common ones with non default values. For more info take a look at th
   https://docs.python.org/3.7/library/logging.html#levels
 - `TESTING` Indicates if the app executes under test conditions.
   Is `false` if unset or set to empty string, anything else is considered `true`.
+- `STATIC_URL` : provides a base url for the static assets to be served from.
 - `WEB_SERVER_PORT` Web server port for the app.
+
+Read [Users & Authentication](#users--authentication) to know the environment
+variables that set up the different authentication options.
 
 *[Return to TOC](#table-of-contents)*
 
@@ -220,7 +228,7 @@ the multi-tenancy feature.
 
 Example with multi-tenancy enabled:
 
-```text
+```ini
 # .env file
 MULTITENANCY=yes
 DEFAULT_REALM=my-current-tenant
@@ -233,7 +241,7 @@ REALM_COOKIE=cookie-realm
 
 Example with multi-tenancy disabled:
 
-```text
+```ini
 # .env file
 MULTITENANCY=
 ```
@@ -265,10 +273,17 @@ the WSGI interface in production.
 
 We have a couple of environment variables to tune it up:
 
-- `UWSGI_PROCESSES`: `4` Indicates the number of processes.
-- `UWSGI_STATIC` Indicates if uWSGI also serves the static content.
+- `CUSTOM_UWSGI_ENV_FILE` Path to a file of environment variables to use with uWSGI.
+
+- `CUSTOM_UWSGI_SERVE_STATIC` Indicates if uWSGI also serves the static content.
   Is `false` if unset or set to empty string, anything else is considered `true`.
-- `UWSGI_THREADS`: `2` Indicates the number of threads.
+
+- Any `UWSGI_A_B_C` Translates into the `a-b-c` uswgi option.
+
+  > [
+    *When passed as environment variables, options are capitalized and prefixed
+    with UWSGI_, and dashes are substituted with underscores.*
+  ](https://uwsgi-docs.readthedocs.io/en/latest/Configuration.html#environment-variables)
 
 https://uwsgi-docs.readthedocs.io/
 
@@ -315,6 +330,8 @@ The default values for the export feature:
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
 
 ## Usage
+
+### Start the app
 
 Start the indicated app/module with the necessary dependencies:
 
@@ -364,6 +381,41 @@ To start any container separately:
 
 ### Users & Authentication
 
+Set the `KEYCLOAK_SERVER_URL` and `KEYCLOAK_CLIENT_ID` environment variables if
+you want to use Keycloak as authentication server.
+`KEYCLOAK_CLIENT_ID` (defaults to `aether`) is the public client that allows
+the aether module to authenticate using the Keycloak REST API.
+This client id must be added to all the realms used by the aether module.
+The `KEYCLOAK_SERVER_URL` must include all the path till the realm is indicated,
+usually until `/auth/realms`.
+
+There are two ways of setting up keycloak:
+
+a) In this case the authentication process happens in the server side without
+any further user interaction.
+```ini
+# .env file
+KEYCLOAK_SERVER_URL=http://keycloak:8080/auth/realms
+KEYCLOAK_BEHIND_SCENES=true
+```
+
+b) In this case the user is redirected to the keycloak server to finish the
+sign in step.
+```ini
+# .env file
+KEYCLOAK_SERVER_URL=http://keycloak.aether.local:8080/auth/realms
+KEYCLOAK_BEHIND_SCENES=
+```
+
+Execute once the `./scripts/setup_keycloak.sh` script to create the keycloak
+database and the default realm+client along with the first user
+(find credentials in the `.env` file).
+
+Read more in [Keycloak](https://www.keycloak.org).
+
+**Note**: Multi-tenancy is automatically enabled if the authentication server
+is keycloak.
+
 Set the `HOSTNAME` and `CAS_SERVER_URL` environment variables if you want to
 activate the CAS integration in the app.
 See more in [Django CAS client](https://github.com/mingchen/django-cas-ng).
@@ -384,7 +436,7 @@ The communication between Aether ODK Module and ODK Collect is done via
 
 #### Token Authentication
 
-The communication between the containers is done via
+The internal communication between the containers is done via
 [token authentication](http://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication).
 
 In the case of `aether-odk-module`, `aether-ui` and `aether-couchdb-sync-module`

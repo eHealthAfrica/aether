@@ -1,4 +1,4 @@
-{% extends "rest_framework/login_base.html" %}
+{% extends "rest_framework/base.html" %}
 
 {% comment 'LICENSE' %}
 Copyright (C) 2018 by eHealth Africa : http://www.eHealthAfrica.org
@@ -20,6 +20,7 @@ specific language governing permissions and limitations
 under the License.
 {% endcomment %}
 
+{% load i18n %}
 {% load static %}
 
 {% block title %}{{ app_name }}{% endblock %}
@@ -34,6 +35,111 @@ under the License.
   <link rel="stylesheet" type="text/css" href="{% static 'aether/css/authentication.css' %}"/>
 {% endblock %}
 
-{% block branding %}
-  {% include 'aether/branding.html' with classname='brand' link='#' %}
+{% block body %}
+<body class="container">
+  <div class="container-fluid" style="margin-top: 30px">
+    <div class="row-fluid">
+      <div class="well" style="width: 320px; margin-left: auto; margin-right: auto">
+        <div class="row-fluid">
+          <div>
+            {% block branding %}
+              {% include 'aether/branding.html' with classname='brand' link='#' %}
+            {% endblock %}
+          </div>
+        </div>
+
+        {% if form.errors and not form.non_field_errors %}
+          <p class="errornote">
+            {% if form.errors.items|length == 1 %}
+              {% trans 'Please correct the error below.' %}
+            {% else %}
+              {% trans 'Please correct the errors below.' %}
+            {% endif %}
+          </p>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+          <p class="errornote">
+            {% blocktrans trimmed %}
+              You are authenticated as {{ username }}, but are not authorized to
+              access this page. Would you like to login to a different account?
+            {% endblocktrans %}
+          </p>
+        {% endif %}
+
+        <div class="row-fluid">
+          <div>
+            <form action="{% url 'rest_framework:login' %}" role="form" method="post">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ next }}" />
+
+              {% block username %}
+                <div id="div_id_username" class="clearfix control-group {% if form.username.errors %}error{% endif %}">
+                  <div class="form-group">
+                    <label for="id_username">{{ form.username.label }}:</label>
+                    <input
+                        id="id_username"
+                        type="text"
+                        name="username"
+                        {% if form.username.value %}value="{{ form.username.value }}"{% endif %}
+                        maxlength="100"
+                        autocapitalize="off"
+                        autocorrect="off"
+                        class="form-control textinput textInput"
+                        required
+                        autofocus>
+                    {% if form.username.errors %}
+                      <p class="text-error">
+                        {{ form.username.errors|striptags }}
+                      </p>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endblock %}
+
+              {% block password %}
+                <div id="div_id_password" class="clearfix control-group {% if form.password.errors %}error{% endif %}">
+                  <div class="form-group">
+                    <label for="id_password">{{ form.password.label }}:</label>
+                    <input
+                        id="id_password"
+                        type="password"
+                        name="password"
+                        maxlength="100"
+                        autocapitalize="off"
+                        autocorrect="off"
+                        class="form-control textinput textInput"
+                        required>
+                    {% if form.password.errors %}
+                      <p class="text-error">
+                        {{ form.password.errors|striptags }}
+                      </p>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endblock %}
+
+              {% block extrafields %}{% endblock %}
+
+              {% if form.non_field_errors %}
+                {% for error in form.non_field_errors %}
+                  <div class="well well-small text-error" style="border: none">{{ error }}</div>
+                {% endfor %}
+              {% endif %}
+
+              <div class="form-actions-no-box">
+                <input
+                    type="submit"
+                    name="submit"
+                    value="{% trans 'Log in' %}"
+                    class="btn btn-primary form-control"
+                    id="submit-id-submit">
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
 {% endblock %}

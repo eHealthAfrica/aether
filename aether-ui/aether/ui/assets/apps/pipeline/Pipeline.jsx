@@ -82,6 +82,13 @@ class Pipeline extends Component {
       this.props.history.push(`/${this.props.pipeline.id}/${this.props.contract.id}/${this.props.section}`)
     }
 
+    // persist in-memory new contract
+    if (this.state.isNew && this.props.contract && this.props.contract !== this.state.newContract) {
+      this.setState({
+        newContract: this.props.contract
+      })
+    }
+
     if (prevProps.section !== this.props.section) {
       // update state
       if (this.props.section === PIPELINE_SECTION_INPUT) {

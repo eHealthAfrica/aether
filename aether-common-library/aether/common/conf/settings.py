@@ -39,7 +39,7 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-STATIC_URL = f'{APP_URL}static/'
+STATIC_URL = os.environ.get('STATIC_URL', '/static/')
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/static/')
 
 PRETTIFIED_CUTOFF = int(os.environ.get('PRETTIFIED_CUTOFF', 10000))
@@ -288,6 +288,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login.html')
 LOGGED_OUT_TEMPLATE = os.environ.get('LOGGED_OUT_TEMPLATE', 'aether/logged_out.html')
+LOGIN_REDIRECT_URL = APP_URL
+LOGOUT_REDIRECT_URL = APP_URL
 
 
 # Authentication Server Configuration
@@ -311,23 +313,41 @@ else:
     logger.info('No CAS enabled!')
 
 
+KEYCLOAK_SERVER_URL = os.environ.get('KEYCLOAK_SERVER_URL')
+if KEYCLOAK_SERVER_URL:
+    KEYCLOAK_CLIENT_ID = os.environ.get('KEYCLOAK_CLIENT_ID', 'aether')
+    KEYCLOAK_BEHIND_SCENES = bool(os.environ.get('KEYCLOAK_BEHIND_SCENES'))
+
+    DEFAULT_KEYCLOAK_TEMPLATE = 'aether/login_realm.html'
+    KEYCLOAK_TEMPLATE = os.environ.get('KEYCLOAK_TEMPLATE', DEFAULT_KEYCLOAK_TEMPLATE)
+
+    DEFAULT_KEYCLOAK_BEHIND_TEMPLATE = 'aether/login_keycloak.html'
+    KEYCLOAK_BEHIND_TEMPLATE = os.environ.get('KEYCLOAK_BEHIND_TEMPLATE', DEFAULT_KEYCLOAK_BEHIND_TEMPLATE)
+
+    MIDDLEWARE += [
+        'aether.common.keycloak.middleware.KeycloakAuthenticationMiddleware',
+    ]
+
+else:
+    logger.info('No Keycloak enabled!')
+
+
 # Multitenancy Configuration
 # ------------------------------------------------------------------------------
 
-MULTITENANCY = bool(os.environ.get('MULTITENANCY'))
+MULTITENANCY = bool(os.environ.get('MULTITENANCY')) or bool(KEYCLOAK_SERVER_URL)
 if MULTITENANCY:
     REALM_COOKIE = os.environ.get('REALM_COOKIE', 'aether-realm')
-    REALM_HEADER = 'HTTP_' + REALM_COOKIE.replace('-', '_').upper()  # HTTP_AETHER_REALM
     DEFAULT_REALM = os.environ.get('DEFAULT_REALM', 'aether')
 
     INSTALLED_APPS += ['aether.common.multitenancy', ]
     MIGRATION_MODULES['multitenancy'] = 'aether.common.multitenancy.migrations'
-    REST_FRAMEWORK['DEFAULT_PERMISSION_CLASSES'] = [
+    REST_FRAMEWORK['DEFAULT_PERMISSION_CLASSES'] += [
         'aether.common.multitenancy.permissions.IsAccessibleByRealm',
     ]
 
 else:
-    logger.info('No multitenancy enabled!')
+    logger.info('No multi-tenancy enabled!')
 
 
 # Storage Configuration

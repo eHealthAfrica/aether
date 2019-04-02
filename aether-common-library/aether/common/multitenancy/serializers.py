@@ -38,7 +38,7 @@ class MtPrimaryKeyRelatedField(PrimaryKeyRelatedField):
     '''
     Overrides ``get_queryset`` method to include filter by realm.
 
-    Expects ``mt_field` property.
+    Expects ``mt_field`` property.
     '''
 
     mt_field = None

@@ -256,10 +256,17 @@ class MultitenancyTests(TestCase):
     def test_get_current_realm(self):
         request = RequestFactory().get('/')
         self.assertEqual(utils.get_current_realm(request), settings.DEFAULT_REALM)
-        request.META[settings.REALM_HEADER] = 'in-headers'
+
+        meta_key = 'HTTP_' + settings.REALM_COOKIE.replace('-', '_').upper()  # HTTP_<KEY>,
+        request.META[meta_key] = 'in-headers'
         self.assertEqual(utils.get_current_realm(request), 'in-headers')
+
         request.COOKIES[settings.REALM_COOKIE] = 'in-cookies'
         self.assertEqual(utils.get_current_realm(request), 'in-cookies')
+
+        setattr(request, 'session', {})
+        request.session[settings.REALM_COOKIE] = 'in-session'
+        self.assertEqual(utils.get_current_realm(request), 'in-session')
 
     def test_is_accessible_by_realm(self):
         # not affected by realm value
