@@ -81,15 +81,23 @@ $KCADM \
     -s realm=${DEFAULT_REALM} \
     -s enabled=true
 
-echo "_____________________________________________ Creating default client ${KEYCLOAK_CLIENT_ID}..."
-$KCADM \
-    create clients \
-    -r ${DEFAULT_REALM} \
-    -s clientId=${KEYCLOAK_CLIENT_ID} \
-    -s publicClient=true \
-    -s directAccessGrantsEnabled=true \
-    -s 'redirectUris=["http://kernel.aether.local","http://odk.aether.local","http://ui.aether.local","http://sync.aether.local"]' \
-    -s enabled=true
+echo "_____________________________________________ Creating default clients..."
+CLIENTS=( kernel odk sync ui )
+for CLIENT in "${CLIENTS[@]}"
+do
+    CLIENT_URL="http://${CLIENT}.aether.local"
+    echo "_____________________________________________ Creating client ${CLIENT}..."
+    $KCADM \
+        create clients \
+        -r ${DEFAULT_REALM} \
+        -s clientId=${CLIENT} \
+        -s publicClient=true \
+        -s directAccessGrantsEnabled=true \
+        -s rootUrl=${CLIENT_URL} \
+        -s baseUrl=${CLIENT_URL} \
+        -s 'redirectUris=["/accounts/login/"]' \
+        -s enabled=true
+done
 
 echo "_____________________________________________ Creating initial user ${KEYCLOAK_USER_USERNAME}..."
 $KCADM \

@@ -78,6 +78,7 @@ for local development. Never deploy these to publicly accessible servers.
 ```text
 127.0.0.1    aether.local
 127.0.0.1    kernel.aether.local odk.aether.local ui.aether.local sync.aether.local
+127.0.0.1    keycloak.aether.local
 ```
 
 *[Return to TOC](#table-of-contents)*
@@ -117,7 +118,7 @@ of the most common ones with non default values. For more info take a look at th
   The local behavior is: `http://my-module.aether.local/` implemented in the NGINX files.
 
   Current NGINX set up (requires changes in `hosts` file for each new module):
-  ```ini
+  ```nginx
   # my-module-1.ini NGINX file (WEB_SERVER_PORT is 8801)
   server {
     listen                    80;
@@ -140,7 +141,7 @@ of the most common ones with non default values. For more info take a look at th
   ```
 
   Possible NGINX set up (does not require any change in `hosts` file for any module):
-  ```ini
+  ```nginx
   # one NGINX ini file for all modules
   server {
     listen                    80;
@@ -227,7 +228,7 @@ the multi-tenancy feature.
 
 Example with multi-tenancy enabled:
 
-```text
+```ini
 # .env file
 MULTITENANCY=yes
 DEFAULT_REALM=my-current-tenant
@@ -240,7 +241,7 @@ REALM_COOKIE=cookie-realm
 
 Example with multi-tenancy disabled:
 
-```text
+```ini
 # .env file
 MULTITENANCY=
 ```
@@ -385,6 +386,26 @@ you want to use Keycloak as authentication server.
 `KEYCLOAK_CLIENT_ID` (defaults to `aether`) is the public client that allows
 the aether module to authenticate using the Keycloak REST API.
 This client id must be added to all the realms used by the aether module.
+The `KEYCLOAK_SERVER_URL` must include all the path till the realm is indicated,
+usually until `/auth/realms`.
+
+There are two ways of setting up keycloak:
+
+a) In this case the authentication process happens in the server side without
+any further user interaction.
+```ini
+# .env file
+KEYCLOAK_SERVER_URL=http://keycloak:8080/auth/realms
+KEYCLOAK_BEHIND_SCENES=true
+```
+
+b) In this case the user is redirected to the keycloak server to finish the
+sign in step.
+```ini
+# .env file
+KEYCLOAK_SERVER_URL=http://keycloak.aether.local:8080/auth/realms
+KEYCLOAK_BEHIND_SCENES=
+```
 
 Execute once the `./scripts/setup_keycloak.sh` script to create the keycloak
 database and the default realm+client along with the first user

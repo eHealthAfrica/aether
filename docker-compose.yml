@@ -68,7 +68,9 @@ services:
       db:
         condition: service_healthy
     networks:
-      - internal
+      internal:
+        aliases:
+          - keycloak.aether.local
 
 
   # ---------------------------------
