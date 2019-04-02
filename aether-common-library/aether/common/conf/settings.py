@@ -316,13 +316,13 @@ else:
 KEYCLOAK_SERVER_URL = os.environ.get('KEYCLOAK_SERVER_URL')
 if KEYCLOAK_SERVER_URL:
     KEYCLOAK_CLIENT_ID = os.environ.get('KEYCLOAK_CLIENT_ID', 'aether')
-    GO_TO_KEYCLOAK = not bool(os.environ.get('KEYCLOAK_BEHIND_SCENES'))
-    if GO_TO_KEYCLOAK:
-        DEFAULT_KEYCLOAK_TEMPLATE = 'aether/login_realm.html'
-    else:
-        DEFAULT_KEYCLOAK_TEMPLATE = 'aether/login_keycloak.html'
+    KEYCLOAK_BEHIND_SCENES = bool(os.environ.get('KEYCLOAK_BEHIND_SCENES'))
 
+    DEFAULT_KEYCLOAK_TEMPLATE = 'aether/login_realm.html'
     KEYCLOAK_TEMPLATE = os.environ.get('KEYCLOAK_TEMPLATE', DEFAULT_KEYCLOAK_TEMPLATE)
+
+    DEFAULT_KEYCLOAK_BEHIND_TEMPLATE = 'aether/login_keycloak.html'
+    KEYCLOAK_BEHIND_TEMPLATE = os.environ.get('KEYCLOAK_BEHIND_TEMPLATE', DEFAULT_KEYCLOAK_BEHIND_TEMPLATE)
 
     MIDDLEWARE += [
         'aether.common.keycloak.middleware.KeycloakAuthenticationMiddleware',

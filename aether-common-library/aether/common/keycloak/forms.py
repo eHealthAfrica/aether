@@ -23,18 +23,7 @@ from django.utils.translation import ugettext as _
 from .utils import authenticate, check_realm
 
 
-class RealmForm(Form):
-
-    realm = CharField(label=_('Realm'), strip=True, widget=TextInput)
-
-    def __init__(self, request=None, *args, **kwargs):
-        '''
-        The 'request' parameter is set for custom auth use by subclasses.
-        The form data comes in via the standard 'data' kwarg.
-        '''
-
-        self.request = request
-        super(RealmForm, self).__init__(*args, **kwargs)
+class RealmMixin(object):
 
     def clean_realm(self):
         '''
@@ -49,10 +38,27 @@ class RealmForm(Form):
             raise ValidationError(_('Invalid realm'))
 
 
-class RealmAuthenticationForm(RealmForm, AuthenticationForm):
+class RealmForm(Form, RealmMixin):
+
+    realm = CharField(label=_('Realm'), strip=True, widget=TextInput(attrs={'autofocus': True}))
+
+    def __init__(self, request=None, *args, **kwargs):
+        '''
+        The 'request' parameter is set for custom auth use by subclasses.
+        The form data comes in via the standard 'data' kwarg.
+        '''
+
+        self.request = request
+
+        super().__init__(*args, **kwargs)
+
+
+class RealmAuthenticationForm(AuthenticationForm, RealmMixin):
     '''
     Extends Authentication form adding the "realm" field.
     '''
+
+    realm = CharField(label=_('Realm'), strip=True, widget=TextInput)
 
     def clean(self):
         '''

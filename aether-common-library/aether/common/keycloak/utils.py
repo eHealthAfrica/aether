@@ -170,6 +170,7 @@ def _authenticate(realm, data):
         data=data,
     )
     response.raise_for_status()
+
     token = response.json()
     userinfo = _get_user_info(realm, token)
     return token, userinfo
@@ -182,6 +183,7 @@ def _get_user_info(realm, token):
         headers={'Authorization': 'Bearer {}'.format(token['access_token'])},
     )
     response.raise_for_status()
+
     return response.json()
 
 

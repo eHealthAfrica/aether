@@ -24,7 +24,7 @@ from django.contrib.auth.views import LoginView
 
 from django.utils.translation import ugettext as _
 
-from .forms import RealmForm, RealmAuthenticationForm
+from .forms import RealmForm
 from .utils import post_authenticate, get_realm_auth_url
 
 
@@ -33,38 +33,28 @@ class KeycloakLoginView(LoginView):
     Executes Login process in three steps:
 
     1.- Displays the realm form. (GET)
-
     2.- Checks the realm and redirects to keycloak server to continue login. (POST)
-
     3.- Receives keycloak response and finalize authentication process. (GET)
     '''
 
     template_name = settings.DEFAULT_KEYCLOAK_TEMPLATE
-
-    def __init__(self, *args, **kwargs):
-        if settings.GO_TO_KEYCLOAK:
-            self.authentication_form = RealmForm
-        else:
-            self.authentication_form = RealmAuthenticationForm
-
-        super(KeycloakLoginView, self).__init__(*args, **kwargs)
+    authentication_form = RealmForm
 
     def get(self, request, *args, **kwargs):
-        if settings.GO_TO_KEYCLOAK:
-            try:
-                user = post_authenticate(request)
-                if user:
-                    auth_login(request, user)
-                    return HttpResponseRedirect(self.get_success_url())
-            except Exception:
-                messages.error(request, _('An error ocurred while authenticating against keycloak'))
+        try:
+            user = post_authenticate(request)
+            if user:
+                auth_login(request, user)
+                return HttpResponseRedirect(self.get_success_url())
+        except Exception:
+            # remove realm
+            request.session[settings.REALM_COOKIE] = None
+            messages.error(request, _('An error ocurred while authenticating against keycloak'))
 
         return super(KeycloakLoginView, self).get(request, *args, **kwargs)
 
     def form_valid(self, form):
-        if settings.GO_TO_KEYCLOAK:
-            # save the current realm in the session
-            self.request.session[settings.REALM_COOKIE] = form.cleaned_data.get('realm')
-            return HttpResponseRedirect(get_realm_auth_url(self.request))
-
-        return super(KeycloakLoginView, self).form_valid(form)
+        # save the current realm in the session
+        self.request.session[settings.REALM_COOKIE] = form.cleaned_data.get('realm')
+        # redirect to keycloak
+        return HttpResponseRedirect(get_realm_auth_url(self.request))

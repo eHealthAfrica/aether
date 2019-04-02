@@ -60,11 +60,26 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):
         logout_view = views.logout
 
     else:
-        from django.contrib.auth.views import LogoutView
-        from aether.common.auth.views import get_login_view
+        from django.contrib.auth.views import LoginView, LogoutView
 
-        login_view = get_login_view()
         logout_view = LogoutView.as_view(template_name=settings.LOGGED_OUT_TEMPLATE)
+        if not settings.KEYCLOAK_SERVER_URL:
+            login_view = LoginView.as_view(template_name=settings.LOGIN_TEMPLATE)
+
+        else:
+            from aether.common.keycloak.forms import RealmForm, RealmAuthenticationForm
+            from aether.common.keycloak.views import KeycloakLoginView
+
+            if not settings.KEYCLOAK_BEHIND_SCENES:
+                login_view = KeycloakLoginView.as_view(
+                    template_name=settings.KEYCLOAK_TEMPLATE,
+                    authentication_form=RealmForm,
+                )
+            else:
+                login_view = LoginView.as_view(
+                    template_name=settings.KEYCLOAK_BEHIND_TEMPLATE,
+                    authentication_form=RealmAuthenticationForm,
+                )
 
     auth_views = [
         path(route='login/', view=login_view, name='login'),
