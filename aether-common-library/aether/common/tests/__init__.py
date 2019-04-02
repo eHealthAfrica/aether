@@ -17,6 +17,24 @@
 # under the License.
 
 import json
+import sys
+
+from importlib import reload, import_module
+
+from django.conf import settings
+from django.test import TestCase
+from django.urls import clear_url_caches
+
+
+class UrlsTestCase(TestCase):
+
+    def setUp(self):
+        reload(sys.modules[settings.ROOT_URLCONF])
+        import_module(settings.ROOT_URLCONF)
+        clear_url_caches()
+
+    def tearDown(self):
+        clear_url_caches()
 
 
 class MockResponse:
