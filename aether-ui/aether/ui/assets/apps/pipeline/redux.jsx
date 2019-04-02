@@ -26,8 +26,7 @@ import {
   PIPELINES_URL,
   CONTRACTS_URL,
   PIPELINE_SECTION_INPUT,
-  CONTRACT_SECTION_ENTITY_TYPES,
-  CONTRACT_SECTION_SETTINGS
+  CONTRACT_SECTION_ENTITY_TYPES
 } from '../utils/constants'
 
 export const types = {
@@ -53,13 +52,13 @@ export const types = {
   CONTRACT_PUBLISH_SUCCESS: 'contract.publish.success',
   CONTRACT_PUBLISH_ERROR: 'contract.publish.error',
   CONTRACT_SET_EDITING: 'contract_set_editing',
-  CONTRACT_EXIT_WARNING: 'contract_exit_warning'
+  CONTRACT_EXIT_WARNING: 'contract_exit_warning',
+
+  SET_CALL_BACK: 'set_call_back'
 }
 
 const ACTIONS_INITIAL_STATE = {
   error: null,
-  isEditing: false,
-  exitWarning: false,
   publishError: null,
   publishState: null,
   publishSuccess: false
@@ -72,7 +71,10 @@ export const INITIAL_STATE = {
 
   currentSection: null,
   currentPipeline: null,
-  currentContract: null
+  currentContract: null,
+  isEditing: false,
+  exitWarning: false,
+  callback: () => {}
 }
 
 export const getPipelines = () => ({
@@ -97,15 +99,20 @@ export const setExitWarning = (value) => ({
   payload: value
 })
 
+export const setCallBackFunc = (cb) => ({
+  type: types.SET_CALL_BACK,
+  payload: cb
+})
+
 export const checkUnsavedContract = (cb) => (dispatch, getState) => {
-  const state = getState()
-  if (state.exitWarning !== state.isEditing) {
-    dispatch(setExitWarning(state.isEditing))
+  const pipelineState = getState().pipelines
+  if (pipelineState.exitWarning !== pipelineState.isEditing) {
+    dispatch(setExitWarning(pipelineState.isEditing))
   }
-  if (!state.isEditing) {
-    cb()
+  if (pipelineState.isEditing) {
+    dispatch(setCallBackFunc(cb))
   } else {
-    dispatch(selectSection(CONTRACT_SECTION_SETTINGS))
+    cb()
   }
 }
 
@@ -401,6 +408,13 @@ const reducer = (state = INITIAL_STATE, action) => {
       return {
         ...nextState,
         exitWarning: action.payload
+      }
+    }
+
+    case types.SET_CALL_BACK: {
+      return {
+        ...nextState,
+        callback: action.payload
       }
     }
 

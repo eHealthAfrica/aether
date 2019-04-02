@@ -22,7 +22,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
-import { updateContract, addContract, contractChanged, setExitWarning } from '../redux'
+import { updateContract, addContract, contractChanged } from '../redux'
 import { isEmpty, generateGUID } from '../../utils'
 import { deriveEntityTypes, deriveMappingRules } from '../../utils/avro-utils'
 
@@ -228,10 +228,6 @@ class Settings extends Component {
     }
   }
 
-  componentWillUnmount () {
-    this.props.onClose()
-  }
-
   createNewContract () {
     const newContract = {
       name: generateNewContractName(this.props.pipeline),
@@ -354,6 +350,6 @@ const mapStateToProps = ({ pipelines }) => ({
   contract: pipelines.currentContract,
   pipeline: pipelines.currentPipeline
 })
-const mapDispatchToProps = { updateContract, addContract, contractChanged, setExitWarning }
+const mapDispatchToProps = { updateContract, addContract, contractChanged }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Settings)

@@ -61,18 +61,14 @@ class Pipeline extends Component {
       fullscreen: false,
       newContract: null
     }
-
-    props.setEditing(props.location.state && props.location.state.isNewContract)
   }
 
   componentDidMount () {
-    if (this.props.isNew) {
-      this.addNewContract()
-    }
-
     // load current pipeline using location address (router props)
     if (!this.props.isNew) {
       this.props.getPipelineById(this.props.match.params.pid)
+    } else {
+      this.addNewContract()
     }
   }
 
@@ -84,13 +80,6 @@ class Pipeline extends Component {
     ) {
       // update router history
       this.props.history.push(`/${this.props.pipeline.id}/${this.props.contract.id}/${this.props.section}`)
-    }
-
-    // persist in-memory new contract
-    if (this.props.isNew && this.props.contract && this.props.contract !== this.state.newContract) {
-      this.setState({
-        newContract: this.props.contract
-      })
     }
 
     if (prevProps.section !== this.props.section) {
@@ -119,6 +108,13 @@ class Pipeline extends Component {
     }
   }
 
+  linksCallBack () {
+    this.props.checkUnsavedContract(() => {
+      this.props.history.push('/')
+      this.props.clearSelection()
+    })
+  }
+
   render () {
     const { pipeline } = this.props
     if (!pipeline) {
@@ -139,9 +135,9 @@ class Pipeline extends Component {
     return (
       <div className={`pipelines-container show-pipeline pipeline--${this.state.view}`}>
         { this.props.error && <ModalError error={this.props.error} /> }
-        <NavBar showBreadcrumb>
+        <NavBar showBreadcrumb cb={this.linksCallBack.bind(this)}>
           <div className='breadcrumb-links'>
-            <Link to='/' onClick={() => { this.props.clearSelection() }}>
+            <Link onClick={this.linksCallBack.bind(this)}>
               <FormattedMessage
                 id='pipeline.navbar.pipelines'
                 defaultMessage='Pipelines'
@@ -219,7 +215,7 @@ class Pipeline extends Component {
 
   onSettingsClosed () {
     if (this.props.isNew) {
-      this.props.setExitWarning(true)
+      this.props.checkUnsavedContract(() => {})
     } else {
       this.props.selectSection(this.state.view === CONTRACT_SECTION_SETTINGS
         ? CONTRACT_SECTION_ENTITY_TYPES : this.state.view)
@@ -251,7 +247,7 @@ class Pipeline extends Component {
           />
         </button>
 
-        <button className='btn btn-w btn-primary' onClick={this.onCancelContract.bind(this)}>
+        <button className='btn btn-w btn-primary' onClick={this.onCancelContract.bind(this, this.props.callback)}>
           <FormattedMessage
             id='pipeline.new.contract.cancel'
             defaultMessage='Yes, Cancel'
@@ -265,7 +261,7 @@ class Pipeline extends Component {
     )
   }
 
-  onCancelContract () {
+  onCancelContract (cb) {
     this.setState({
       newContract: null
     })
@@ -275,6 +271,9 @@ class Pipeline extends Component {
       ? this.props.pipeline.contracts[0] : null
     this.props.selectContract(nextContract)
     this.props.selectSection(nextContract ? this.state.view : PIPELINE_SECTION_INPUT)
+    if (cb) {
+      cb()
+    }
   }
 
   onSave (view) {
@@ -287,7 +286,7 @@ class Pipeline extends Component {
   }
 
   onContractTabSelected (contract) {
-    this.props.checkUnsavedContract(this.props.selectContract(contract.pipeline, contract.id))
+    this.props.checkUnsavedContract(() => { this.props.selectContract(contract.pipeline, contract.id) })
   }
 
   renderContractTabs () {
@@ -338,6 +337,12 @@ class Pipeline extends Component {
     }
   }
 
+  onInputHandle () {
+    this.props.checkUnsavedContract(() => {
+      this.props.selectSection(PIPELINE_SECTION_INPUT)
+    })
+  }
+
   renderSectionTabs () {
     const { contract = {} } = this.props
 
@@ -346,7 +351,7 @@ class Pipeline extends Component {
         <div className='pipeline-nav-items'>
           <div
             className='pipeline-nav-item__input'
-            onClick={() => { this.props.selectSection(PIPELINE_SECTION_INPUT) }}>
+            onClick={this.onInputHandle.bind(this)}>
             <div className='badge'>
               <i className='fas fa-file' />
             </div>
@@ -420,7 +425,8 @@ const mapStateToProps = ({ pipelines }) => ({
   contract: pipelines.currentContract,
   error: pipelines.error,
   showCancelModal: pipelines.exitWarning,
-  isNew: pipelines.isEditing
+  isNew: pipelines.isEditing,
+  callback: pipelines.callback
 })
 const mapDispatchToProps = {
   clearSelection,
