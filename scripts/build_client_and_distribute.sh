@@ -45,6 +45,9 @@ do
     DEST=./${FOLDER}/conf/pip/dependencies/
     mkdir -p ${DEST}
 
+    # remove previous releases of the package
+    rm -f ${DEST}/aether.client-*-py2.py3-none-any.whl
+    # copy new release
     cp -r ./aether-client-library/dist/${PCK_FILE} ${DEST}
 
     echo "----------------------------------------------------------------------"
