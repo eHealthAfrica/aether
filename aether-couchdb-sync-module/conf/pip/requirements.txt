@@ -18,7 +18,7 @@ chardet==3.0.4
 Click==7.0
 coverage==4.5.3
 croniter==0.3.28
-Django==2.1.7
+Django==2.2
 django-cas-ng==3.5.10
 django-cors-headers==2.5.2
 django-debug-toolbar==1.11
