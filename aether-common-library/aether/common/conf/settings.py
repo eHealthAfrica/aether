@@ -39,7 +39,7 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-STATIC_URL = f'{APP_URL}static/'
+STATIC_URL = os.environ.get('STATIC_URL', '/static/')
 STATIC_ROOT = os.environ.get('STATIC_ROOT', '/var/www/static/')
 
 PRETTIFIED_CUTOFF = int(os.environ.get('PRETTIFIED_CUTOFF', 10000))
