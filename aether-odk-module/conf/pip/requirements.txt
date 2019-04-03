@@ -19,7 +19,7 @@ cachetools==3.1.0
 certifi==2019.3.9
 chardet==3.0.4
 coverage==4.5.3
-Django==2.1.8
+Django==2.2
 django-cas-ng==3.5.10
 django-cors-headers==2.5.2
 django-debug-toolbar==1.11
