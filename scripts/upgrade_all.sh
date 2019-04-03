@@ -29,14 +29,14 @@ containers=( kernel odk couchdb-sync ui producer )
 while [[ $# -gt 0 ]]
 do
     case "$1" in
-        -b|--build)
+        -b | --build )
             # build containers after upgrade
             build=yes
 
             shift # past argument
         ;;
 
-        *)
+        * )
             # otherwise is the container name
             containers=( "$1" )
 

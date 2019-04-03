@@ -69,9 +69,19 @@ cat << EOF
 # ------------------------------------------------------------------
 # Authentication
 # ==================================================================
+# KEYCLOAK_SERVER_URL=http://keycloak:8080/auth/realms
+# KEYCLOAK_BEHIND_SCENES=true
+KEYCLOAK_SERVER_URL=http://keycloak.aether.local:8080/auth/realms
+KEYCLOAK_ADMIN_USERNAME=admin
+KEYCLOAK_ADMIN_PASSWORD=$(gen_random_string)
+KEYCLOAK_DB_PASSWORD=$(gen_random_string)
+
+KEYCLOAK_USER_USERNAME=aether-user
+KEYCLOAK_USER_PASSWORD=$(gen_random_string)
+
 DEFAULT_REALM=aether
 REALM_COOKIE=aether-realm
-MULTITENANCY=
+MULTITENANCY=yes
 # ------------------------------------------------------------------
 
 
@@ -124,7 +134,7 @@ COUCHDB_SYNC_ADMIN_PASSWORD=$(gen_random_string)
 COUCHDB_SYNC_ADMIN_TOKEN=$(gen_random_string)
 COUCHDB_SYNC_DJANGO_SECRET_KEY=$(gen_random_string)
 COUCHDB_SYNC_DB_PASSWORD=$(gen_random_string)
-COUCHDB_SYNC_GOOGLE_CLIENT_ID=${COUCHDB_SYNC_GOOGLE_CLIENT_ID:-¯\_(ツ)_/¯}
+COUCHDB_SYNC_GOOGLE_CLIENT_ID=${COUCHDB_SYNC_GOOGLE_CLIENT_ID:-"¯\_(ツ)_/¯"}
 # ------------------------------------------------------------------
 
 
@@ -149,6 +159,6 @@ PRODUCER_ADMIN_PW=$(gen_random_string)
 # ------------------------------------------------------------------
 # Other
 # ==================================================================
-TEST_PARALLEL=4
+TEST_PARALLEL=8
 # ------------------------------------------------------------------
 EOF

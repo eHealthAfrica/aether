@@ -80,15 +80,15 @@ class Command(BaseCommand):
 
         token_key = options['token']
 
-        user_model = get_user_model().objects
+        user_objects = get_user_model().objects
 
         # create admin user if needed
-        if not user_model.filter(username=username).exists():
-            user_model.create_superuser(username, email, password)
+        if not user_objects.filter(username=username).exists():
+            user_objects.create_superuser(username, email, password)
             self.stdout.write(_('Created superuser "{}"').format(username))
 
         # update password
-        admin = user_model.get(username=username)
+        admin = user_objects.get(username=username)
         admin.set_password(password)
         admin.save()
         self.stdout.write(_('Updated user "{}"').format(username))

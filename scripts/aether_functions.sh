@@ -53,7 +53,11 @@ function build_ui_assets {
 function build_container {
     container=$1
     APP_REVISION=`git rev-parse --abbrev-ref HEAD`
-    APP_VERSION=`cat ./VERSION`
+    if [ ! -f VERSION ]; then
+        APP_VERSION="0.0.0"
+    else
+        APP_VERSION=`cat ./VERSION`
+    fi
 
     DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml -f docker-compose-test.yml"
 

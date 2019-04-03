@@ -1,4 +1,4 @@
-FROM python:3.6-slim-jessie
+FROM python:3.6-slim-stretch
 
 ################################################################################
 ## install app
@@ -10,7 +10,12 @@ COPY ./ /code
 RUN useradd -ms /bin/false aether && \
     chown -R aether: /code && \
     apt-get update -qq && \
-    apt-get -qq --yes --force-yes install gcc && \
+    apt-get -qq \
+        --yes \
+        --allow-downgrades \
+        --allow-remove-essential \
+        --allow-change-held-packages \
+        install gcc && \
     pip install -q --upgrade pip && \
     pip install -q -f /code/conf/pip/dependencies -r /code/conf/pip/requirements.txt
 

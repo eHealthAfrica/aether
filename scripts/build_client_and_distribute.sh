@@ -23,7 +23,11 @@ set -Eeuo pipefail
 DC_FILE="docker-compose -f ./aether-client-library/docker-compose.yml"
 $DC_FILE down
 
-APP_VERSION=`cat ./VERSION`
+if [ ! -f VERSION ]; then
+    APP_VERSION="0.0.0"
+else
+    APP_VERSION=`cat ./VERSION`
+fi
 
 # create the distribution
 $DC_FILE build \
@@ -41,6 +45,9 @@ do
     DEST=./${FOLDER}/conf/pip/dependencies/
     mkdir -p ${DEST}
 
+    # remove previous releases of the package
+    rm -f ${DEST}/aether.client-*-py2.py3-none-any.whl
+    # copy new release
     cp -r ./aether-client-library/dist/${PCK_FILE} ${DEST}
 
     echo "----------------------------------------------------------------------"

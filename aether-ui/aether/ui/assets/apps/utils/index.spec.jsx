@@ -53,6 +53,18 @@ describe('utils', () => {
   })
 
   describe('deepEqual', () => {
+    it('should compare different types', () => {
+      expect(deepEqual(undefined, {})).toBeFalsy()
+      expect(deepEqual(null, [])).toBeFalsy()
+      expect(deepEqual('', {})).toBeFalsy()
+      expect(deepEqual(NaN, [])).toBeFalsy()
+
+      expect(deepEqual(1, {})).toBeFalsy()
+      expect(deepEqual('1', [])).toBeFalsy()
+      expect(deepEqual({}, [])).toBeFalsy()
+      expect(deepEqual({ '0': 1 }, [1])).toBeFalsy()
+    })
+
     it('should compare primitives', () => {
       let a = 1
       let b = 1

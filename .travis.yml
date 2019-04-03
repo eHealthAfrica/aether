@@ -31,6 +31,11 @@ matrix:
     - name: "Aether release"
       stage: deploy
       script: ./scripts/release.sh
+      # release only in:
+        #  branch   develop
+        #  branch   release-#.#
+        #  tag      #.#.#
+      if: (branch = develop) OR (branch =~ ^release\-[0-9]+\.[0-9]+$) OR (tag =~ ^[0-9]+(\.[0-9]+){2}$)
 
 install: true
 
