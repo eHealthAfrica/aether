@@ -300,8 +300,7 @@ class Pipeline extends Component {
     console.log(this.state.showSettings)
     if (this.state.showSettings) {
       this.props.selectSection(CONTRACT_SECTION_ENTITY_TYPES)
-    }
-    else if (!this.state.showSettings) {
+    } else if (!this.state.showSettings) {
       this.props.selectSection(CONTRACT_SECTION_SETTINGS)
     }
   }
