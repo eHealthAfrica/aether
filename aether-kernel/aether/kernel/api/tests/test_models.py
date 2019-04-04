@@ -59,16 +59,16 @@ class ModelsTests(TransactionTestCase):
         schema.save()
         self.assertEqual(schema.schema_name, 'Person')
 
-        projectschema = models.ProjectSchema.objects.create(
-            name='sample project schema',
+        schemadecorator = models.SchemaDecorator.objects.create(
+            name='sample schema decorator',
             project=project,
             schema=schema,
         )
-        self.assertEqual(str(projectschema), projectschema.name)
-        self.assertNotEqual(models.ProjectSchema.objects.count(), 0)
-        self.assertIsNone(projectschema.revision)
-        self.assertFalse(projectschema.is_accessible(REALM))
-        self.assertIsNone(projectschema.get_realm())
+        self.assertEqual(str(schemadecorator), schemadecorator.name)
+        self.assertNotEqual(models.SchemaDecorator.objects.count(), 0)
+        self.assertIsNone(schemadecorator.revision)
+        self.assertFalse(schemadecorator.is_accessible(REALM))
+        self.assertIsNone(schemadecorator.get_realm())
 
         mappingset = models.MappingSet.objects.create(
             revision='a sample revision',
@@ -95,15 +95,15 @@ class ModelsTests(TransactionTestCase):
         self.assertIsNotNone(mapping.definition_prettified)
         self.assertEqual(mapping.project, project)
         self.assertEqual(mapping.get_mt_instance(), project)
-        self.assertEqual(mapping.projectschemas.count(), 0, 'No entities in definition')
+        self.assertEqual(mapping.schemadecorators.count(), 0, 'No entities in definition')
         self.assertFalse(mapping.is_accessible(REALM))
         self.assertIsNone(mapping.get_realm())
 
         mapping_definition = dict(EXAMPLE_MAPPING)
-        mapping_definition['entities']['Person'] = str(projectschema.pk)
+        mapping_definition['entities']['Person'] = str(schemadecorator.pk)
         mapping.definition = mapping_definition
         mapping.save()
-        self.assertEqual(mapping.projectschemas.count(), 1)
+        self.assertEqual(mapping.schemadecorators.count(), 1)
 
         # check mapping definition validation
         mapping.definition = {'entities': {'a': str(uuid.uuid4())}}
@@ -157,7 +157,7 @@ class ModelsTests(TransactionTestCase):
                 revision='a sample revision',
                 payload=EXAMPLE_SOURCE_DATA,  # this is the submission payload without ID
                 status='Publishable',
-                projectschema=projectschema,
+                schemadecorator=schemadecorator,
             )
         message = str(err.exception)
         self.assertIn('Extracted record did not conform to registered schema', message)
@@ -166,7 +166,7 @@ class ModelsTests(TransactionTestCase):
             revision='a sample revision',
             payload=EXAMPLE_SOURCE_DATA_ENTITY,
             status='Publishable',
-            projectschema=projectschema,
+            schemadecorator=schemadecorator,
             mapping=mapping,
             submission=submission,
         )
@@ -185,14 +185,14 @@ class ModelsTests(TransactionTestCase):
             revision='rev 1',
             name='a second project name',
         )
-        projectschema_2 = models.ProjectSchema.objects.create(
-            name='sample second project schema',
+        schemadecorator_2 = models.SchemaDecorator.objects.create(
+            name='sample second schema decorator',
             is_encrypted=False,
             project=project_2,
             schema=schema,
         )
-        self.assertNotEqual(entity.submission.project, projectschema_2.project)
-        entity.projectschema = projectschema_2
+        self.assertNotEqual(entity.submission.project, schemadecorator_2.project)
+        entity.schemadecorator = schemadecorator_2
         with self.assertRaises(IntegrityError) as ie:
             entity.save()
 
@@ -204,12 +204,12 @@ class ModelsTests(TransactionTestCase):
         entity.submission = None
         entity.mapping = None
         entity.save()
-        self.assertEqual(entity.project, project_2, 'entity inherits projectschema project')
+        self.assertEqual(entity.project, project_2, 'entity inherits schemadecorator project')
         self.assertEqual(entity.get_mt_instance(), project_2)
         self.assertEqual(entity.name, f'{project_2.name}-{schema.schema_name}')
 
         # keeps last project
-        entity.projectschema = None
+        entity.schemadecorator = None
         entity.save()
         self.assertEqual(entity.project, project_2, 'entity keeps project')
         self.assertEqual(entity.name, entity.project.name)
@@ -218,10 +218,10 @@ class ModelsTests(TransactionTestCase):
         entity.save()
         self.assertEqual(entity.name, None)
 
-        # till new submission or new projectschema is set
+        # till new submission or new schemadecorator is set
         entity.project = project_2  # this is going to be replaced
         entity.submission = submission
-        entity.projectschema = None
+        entity.schemadecorator = None
         entity.schema = None
         entity.save()
         self.assertEqual(entity.project, project, 'entity inherits submission project')
@@ -232,27 +232,27 @@ class ModelsTests(TransactionTestCase):
         self.assertEqual(entity.project, project, 'entity inherits mapping project')
 
         entity.submission = None
-        entity.projectschema = projectschema
+        entity.schemadecorator = schemadecorator
         entity.save()
         self.assertEqual(entity.name, f'{project.name}-{schema.schema_name}')
 
         # try to build entity name with mapping entity entries
-        projectschema_3 = models.ProjectSchema.objects.create(
-            name='sample project schema 3',
+        schemadecorator_3 = models.SchemaDecorator.objects.create(
+            name='sample schema decorator 3',
             project=project,
             schema=schema,
         )
 
-        self.assertEqual(mapping.projectschemas.count(), 1)
+        self.assertEqual(mapping.schemadecorators.count(), 1)
         mapping.definition = {
             'entities': {
-                'None': str(projectschema_3.pk),
-                'Some': str(entity.projectschema.pk),
+                'None': str(schemadecorator_3.pk),
+                'Some': str(entity.schemadecorator.pk),
             },
             'mapping': [],
         }
         mapping.save()
-        self.assertEqual(mapping.projectschemas.count(), 2)
+        self.assertEqual(mapping.schemadecorators.count(), 2)
         self.assertEqual(entity.name, f'{entity.project.name}-Some')
 
     def test_models_ids(self):
@@ -300,15 +300,15 @@ class ModelsTests(TransactionTestCase):
             name='schema',
             definition=EXAMPLE_SCHEMA,
         )
-        projectschema = models.ProjectSchema.objects.create(
-            name='project schema',
+        schemadecorator = models.SchemaDecorator.objects.create(
+            name='schema decorator',
             project=project,
             schema=schema,
         )
         entity = models.Entity.objects.create(
             payload=EXAMPLE_SOURCE_DATA_ENTITY,
             status='Publishable',
-            projectschema=projectschema,
+            schemadecorator=schemadecorator,
         )
         entity_2 = models.Entity.objects.create(
             payload=EXAMPLE_SOURCE_DATA_ENTITY,
@@ -317,21 +317,21 @@ class ModelsTests(TransactionTestCase):
         )
 
         # delete the project schema will delete one of the entities
-        projectschema.delete()
+        schemadecorator.delete()
 
-        self.assertFalse(models.Entity.objects.filter(pk=entity.pk).exists(), 'project schema CASCADE action')
-        self.assertTrue(models.Entity.objects.filter(pk=entity_2.pk).exists(), 'Not linked to the project schema')
+        self.assertFalse(models.Entity.objects.filter(pk=entity.pk).exists(), 'schema decorator CASCADE action')
+        self.assertTrue(models.Entity.objects.filter(pk=entity_2.pk).exists(), 'Not linked to the schema decorator')
 
         # create again the deleted instances
-        projectschema = models.ProjectSchema.objects.create(
-            name='project schema',
+        schemadecorator = models.SchemaDecorator.objects.create(
+            name='schema decorator',
             project=project,
             schema=schema,
         )
         entity = models.Entity.objects.create(
             payload=EXAMPLE_SOURCE_DATA_ENTITY,
             status='Publishable',
-            projectschema=projectschema,
+            schemadecorator=schemadecorator,
         )
 
         # delete the project will not delete the schema but one of the entities
@@ -341,15 +341,15 @@ class ModelsTests(TransactionTestCase):
         self.assertFalse(models.Entity.objects.filter(pk=entity.pk).exists(), 'project CASCADE action')
         self.assertTrue(models.Entity.objects.filter(pk=entity_2.pk).exists(), 'Not linked to the project')
         self.assertFalse(models.Project.objects.filter(pk=project.pk).exists())
-        self.assertFalse(models.ProjectSchema.objects.filter(pk=projectschema.pk).exists())
+        self.assertFalse(models.SchemaDecorator.objects.filter(pk=schemadecorator.pk).exists())
 
         # repeat again but this time the schema is a passthrough schema
 
         project = models.Project.objects.create(
             name='project',
         )
-        projectschema = models.ProjectSchema.objects.create(
-            name='project schema',
+        schemadecorator = models.SchemaDecorator.objects.create(
+            name='schema decorator',
             project=project,
             schema=schema,
         )
@@ -362,7 +362,7 @@ class ModelsTests(TransactionTestCase):
         self.assertFalse(models.Schema.objects.filter(pk=schema.pk).exists())
         self.assertFalse(models.Entity.objects.filter(pk=entity_2.pk).exists(), 'schema CASCADE action')
         self.assertFalse(models.Project.objects.filter(pk=project.pk).exists())
-        self.assertFalse(models.ProjectSchema.objects.filter(pk=projectschema.pk).exists())
+        self.assertFalse(models.SchemaDecorator.objects.filter(pk=schemadecorator.pk).exists())
 
         # one more time but with more agents in the loop
 
@@ -374,13 +374,13 @@ class ModelsTests(TransactionTestCase):
             definition={},
             family=str(project.pk),
         )
-        projectschema = models.ProjectSchema.objects.create(
-            name='project schema',
+        schemadecorator = models.SchemaDecorator.objects.create(
+            name='schema decorator',
             project=project,
             schema=schema,
         )
-        models.ProjectSchema.objects.create(
-            name='project schema 2',
+        models.SchemaDecorator.objects.create(
+            name='schema decorator 2',
             project=models.Project.objects.create(name='project 2'),
             schema=schema,
         )

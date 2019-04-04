@@ -41,7 +41,7 @@ logger.setLevel(settings.LOGGING_LEVEL)
 
 Entity = collections.namedtuple(
     'Entity',
-    ['payload', 'projectschema_name', 'status'],
+    ['payload', 'schemadecorator_name', 'status'],
 )
 
 ENTITY_EXTRACTION_ERRORS = 'aether_errors'
@@ -617,11 +617,11 @@ def extract_create_entities(submission_payload, mapping_definition, schemas):
             schemas,
         )
     entities = []
-    for projectschema_name, entity_payloads in entity_types.items():
+    for schemadecorator_name, entity_payloads in entity_types.items():
         for entity_payload in entity_payloads:
             entity = Entity(
                 payload=entity_payload,
-                projectschema_name=projectschema_name,
+                schemadecorator_name=schemadecorator_name,
                 status='Publishable',
             )
             entities.append(entity)
@@ -645,16 +645,16 @@ def run_entity_extraction(submission, overwrite=False):
                          .exclude(definition__entities={})
 
     for mapping in mappings:
-        # Get the primary key of the projectschema
+        # Get the primary key of the schemadecorator
         entity_ps_ids = mapping.definition.get('entities')
-        # Get the schema of the projectschema
-        project_schemas = {
-            name: models.ProjectSchema.objects.get(pk=_id)
+        # Get the schema of the schemadecorator
+        schema_decorator = {
+            name: models.SchemaDecorator.objects.get(pk=_id)
             for name, _id in entity_ps_ids.items()
         }
         schemas = {
             name: ps.schema.definition
-            for name, ps in project_schemas.items()
+            for name, ps in schema_decorator.items()
         }
         _, entities = extract_create_entities(
             submission_payload=submission.payload,
@@ -662,12 +662,12 @@ def run_entity_extraction(submission, overwrite=False):
             schemas=schemas,
         )
         for entity in entities:
-            projectschema_name = entity.projectschema_name
-            projectschema = project_schemas[projectschema_name]
+            schemadecorator_name = entity.schemadecorator_name
+            schemadecorator = schema_decorator[schemadecorator_name]
             entity_instance = models.Entity(
                 payload=entity.payload,
                 status=entity.status,
-                projectschema=projectschema,
+                schemadecorator=schemadecorator,
                 submission=submission,
                 mapping=mapping,
                 mapping_revision=mapping.revision

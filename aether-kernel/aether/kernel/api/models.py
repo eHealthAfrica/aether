@@ -63,7 +63,7 @@ Data model schema:
 +------------------+    |                          |                          |  +---------------------+
                         |                          |                          |
 +------------------+    |  +------------------+    |  +------------------+    |  +------------------+
-| Schema           |    |  | ProjectSchema    |    |  | Mapping          |    |  | Entity           |
+| Schema           |    |  | SchemaDecorator  |    |  | Mapping          |    |  | Entity           |
 +==================+    |  +==================+    |  +==================+    |  +==================+
 | Base fields      |<-+ |  | Base fields      |<-+ |  | Base fields      |<-+ |  | Base fields      |
 | definition       |  | |  | mandatory_fields |  | |  | definition       |  | |  | payload          |
@@ -71,8 +71,8 @@ Data model schema:
 | family           |  | |  | masked_fields    |  | |  | is_read_only     |  | |  +::::::::::::::::::+
 +------------------+  | |  | is_encrypted     |  | |  +::::::::::::::::::+  | +-<| submission       |
                       | |  +::::::::::::::::::+  | +-<| mappingset       |  +---<| mapping          |
-                      | +-<| project          |  +==<<| projectschemas   |  |    | mapping_revision |
-                      +---<| schema           |  |    | project(**)      |  +---<| projectschema    |
+                      | +-<| project          |  +==<<| schemadecorator  |  |    | mapping_revision |
+                      +---<| schema           |  |    | project(**)      |  +---<| schemadecorator schesss |
                            +------------------+  |    +------------------+  |    | project(**)      |
                                                  +--------------------------+    | schema(**)       |
                                                                                  +------------------+
@@ -157,7 +157,7 @@ class Project(ExportModelOperationsMixin('kernel_project'), KernelAbstract, MtMo
         # find the linked passthrough schemas
         for schema in Schema.objects.filter(family=str(self.pk)):
             # delete the schema if is not used in more projects
-            if schema.projectschemas.exclude(project=self).count() == 0:
+            if schema.schemadecorators.exclude(project=self).count() == 0:
                 schema.delete()
             else:
                 schema.family = None  # remove passthrough flag
@@ -398,9 +398,9 @@ class Schema(ExportModelOperationsMixin('kernel_schema'), KernelAbstract):
         verbose_name_plural = _('schemas')
 
 
-class ProjectSchema(ExportModelOperationsMixin('kernel_projectschema'), ProjectChildAbstract):
+class SchemaDecorator(ExportModelOperationsMixin('kernel_schemadecorator'), ProjectChildAbstract):
     '''
-    Project Schema
+    Schema Decorator
 
     .. note:: Extends from :class:`aether.kernel.api.models.ProjectChildAbstract`
 
@@ -427,7 +427,7 @@ class ProjectSchema(ExportModelOperationsMixin('kernel_projectschema'), ProjectC
         return None
 
     class Meta:
-        default_related_name = 'projectschemas'
+        default_related_name = 'schemadecorators'
         ordering = ['project__id', '-modified']
         indexes = [
             models.Index(fields=['project', '-modified']),
@@ -443,14 +443,14 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
 
     .. note:: Extends from :class:`aether.kernel.api.models.ProjectChildAbstract`
 
-    :ivar JSON           definition:      The list of mapping rules between
+    :ivar JSON              definition:      The list of mapping rules between
         a source (submission) and a destination (entity).
-    :ivar bool           is_active:       Is the mapping active?
-    :ivar bool           is_read_only:    Can the mapping rules be modified manually?
-    :ivar MappingSet     mappingset:      Mapping set.
-    :ivar ProjectSchema  projectschemas:  The list of project schemas included
+    :ivar bool              is_active:       Is the mapping active?
+    :ivar bool              is_read_only:    Can the mapping rules be modified manually?
+    :ivar MappingSet        mappingset:      Mapping set.
+    :ivar SchemaDecorator   schemadecorators:  The list of project schemas included
         in the mapping rules.
-    :ivar Project        project:         Project (redundant but speed up queries).
+    :ivar Project           project:         Project (redundant but speed up queries).
 
     '''
 
@@ -463,11 +463,11 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
         on_delete=models.CASCADE,
         verbose_name=_('mapping set'),
     )
-    projectschemas = models.ManyToManyField(
-        to=ProjectSchema,
+    schemadecorators = models.ManyToManyField(
+        to=SchemaDecorator,
         blank=True,
         editable=False,
-        verbose_name=_('project schemas'),
+        verbose_name=_('schema decorators'),
     )
 
     # redundant but speed up queries
@@ -494,12 +494,12 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
 
         super(Mapping, self).save(*args, **kwargs)
 
-        self.projectschemas.clear()
+        self.schemadecorators.clear()
         entities = self.definition.get('entities', {})
         ps_list = []
         for entity_pk in entities.values():
-            ps_list.append(ProjectSchema.objects.get(pk=entity_pk, project=self.project))
-        self.projectschemas.add(*ps_list)
+            ps_list.append(SchemaDecorator.objects.get(pk=entity_pk, project=self.project))
+        self.schemadecorators.add(*ps_list)
 
     def get_mt_instance(self):
         # because project can be null we need to override the method
@@ -524,15 +524,15 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
         Replaces:
         :ivar text           modified:          Last update timestamp in ISO format along with the id.
 
-    :ivar JSON           payload:           The extracted data.
-    :ivar text           status:            Status: "Pending Approval" or "Publishable".
-    :ivar text           modified:          Last modified timestamp with ID or previous modified timestamp.
-    :ivar Submission     submission:        Submission.
-    :ivar Mapping        mapping:           Mapping rules applied to get the entity.
-    :ivar text           mapping_revision:  Mapping revision at the moment of the extraction.
-    :ivar ProjectSchema  projectschema:     The AVRO schema of the extracted data.
-    :ivar Project        project:           Project (redundant but speed up queries).
-    :ivar Schema         schema :           Schema (redundant but speed up queries).
+    :ivar JSON            payload:           The extracted data.
+    :ivar text            status:            Status: "Pending Approval" or "Publishable".
+    :ivar text            modified:          Last modified timestamp with ID or previous modified timestamp.
+    :ivar Submission      submission:        Submission.
+    :ivar Mapping         mapping:           Mapping rules applied to get the entity.
+    :ivar text            mapping_revision:  Mapping revision at the moment of the extraction.
+    :ivar SchemaDecorator schemadecorator:   The AVRO schema of the extracted data.
+    :ivar Project         project:           Project (redundant but speed up queries).
+    :ivar Schema          schema :           Schema (redundant but speed up queries).
 
     '''
 
@@ -562,8 +562,8 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
     )
 
     # WARNING:  the project schema deletion has consequences
-    projectschema = models.ForeignKey(
-        to=ProjectSchema,
+    schemadecorator = models.ForeignKey(
+        to=SchemaDecorator,
         on_delete=models.CASCADE,
         null=True,
         blank=True,
@@ -597,12 +597,12 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
     @property
     def name(self):  # overrides base model field
         # try to build a name for the extracted entity base on the linked data
-        if self.projectschema and self.mapping:
+        if self.schemadecorator and self.mapping:
             # find in the mapping definition the name used by this project schema
             for k, v in self.mapping.definition.get('entities', {}).items():
-                if v == str(self.projectschema.pk):
+                if v == str(self.schemadecorator.pk):
                     return f'{self.project.name}-{k}'
-        if self.projectschema:
+        if self.schemadecorator:
             return f'{self.project.name}-{self.schema.schema_name}'
         if self.submission:
             return self.submission.name
@@ -616,9 +616,9 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
         # check linked projects
         project_ids = set()
         possible_project = None
-        if self.projectschema:
-            project_ids.add(self.projectschema.project.pk)
-            possible_project = self.projectschema.project
+        if self.schemadecorator:
+            project_ids.add(self.schemadecorator.project.pk)
+            possible_project = self.schemadecorator.project
         if self.submission:
             project_ids.add(self.submission.project.pk)
             possible_project = self.submission.project
@@ -627,12 +627,12 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
             possible_project = self.mapping.project
 
         if len(project_ids) > 1:
-            raise ValidationError(_('Submission, Mapping and Project Schema MUST belong to the same Project'))
+            raise ValidationError(_('Submission, Mapping and Schema Decoration MUST belong to the same Project'))
         elif len(project_ids) == 1:
             self.project = possible_project
 
-        if self.projectschema:  # redundant values taken from project schema
-            self.schema = self.projectschema.schema
+        if self.schemadecorator:  # redundant values taken from project schema
+            self.schema = self.schemadecorator.schema
 
         if self.mapping and not self.mapping_revision:
             self.mapping_revision = self.mapping.revision

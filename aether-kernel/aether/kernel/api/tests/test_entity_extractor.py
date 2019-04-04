@@ -350,7 +350,7 @@ class EntityExtractorTests(TestCase):
         self.assertEqual(len(submission_errors), 0)
         self.assertTrue(len(entities) > 0)
         for entity in entities:
-            self.assertIn(entity.projectschema_name, schemas.keys())
+            self.assertIn(entity.schemadecorator_name, schemas.keys())
             self.assertEqual(entity.status, 'Publishable')
 
     def test_extract_create_entities__validation_error(self):

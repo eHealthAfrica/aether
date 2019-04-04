@@ -49,7 +49,7 @@ class FilteredHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
 
         {
             ...
-            'entities_url': '/entities?projectschema=<projectschema-id>'
+            'entities_url': '/entities?schemadecorator=<schemadecorator-id>'
             ...
         }
 
@@ -86,11 +86,11 @@ class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):
         source='mappingsets',
         view_name='mappingset-list',
     )
-    projectschemas_url = FilteredHyperlinkedRelatedField(
+    schemadecorators_url = FilteredHyperlinkedRelatedField(
         lookup_field='project',
         read_only=True,
-        source='projectschemas',
-        view_name='projectschema-list',
+        source='schemadecorators',
+        view_name='schemadecorator-list',
     )
 
     class Meta:
@@ -140,11 +140,11 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         source='mappingset',
         view_name='mappingset-detail',
     )
-    projectschemas_url = FilteredHyperlinkedRelatedField(
+    schemadecorators_url = FilteredHyperlinkedRelatedField(
         lookup_field='mapping',
         read_only=True,
-        source='projectschemas',
-        view_name='projectschema-list',
+        source='schemadecorators',
+        view_name='schemadecorator-list',
     )
 
     project = MtPrimaryKeyRelatedField(
@@ -253,11 +253,11 @@ class SchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='schema-detail',
         read_only=True,
     )
-    projectschemas_url = FilteredHyperlinkedRelatedField(
+    schemadecorators_url = FilteredHyperlinkedRelatedField(
         lookup_field='schema',
         read_only=True,
-        source='projectschemas',
-        view_name='projectschema-list',
+        source='schemadecorators',
+        view_name='schemadecorator-list',
     )
 
     class Meta:
@@ -265,10 +265,10 @@ class SchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ProjectSchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class SchemaDecoratorSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         read_only=True,
-        view_name='projectschema-detail',
+        view_name='schemadecorator-detail',
     )
     project_url = serializers.HyperlinkedRelatedField(
         view_name='project-detail',
@@ -281,13 +281,13 @@ class ProjectSchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         read_only=True,
     )
     entities_url = FilteredHyperlinkedRelatedField(
-        lookup_field='projectschema',
+        lookup_field='schemadecorator',
         read_only=True,
         source='entities',
         view_name='entity-list',
     )
     mappings_url = FilteredHyperlinkedRelatedField(
-        lookup_field='projectschema',
+        lookup_field='schemadecorator',
         read_only=True,
         source='mappings',
         view_name='mapping-list',
@@ -303,7 +303,7 @@ class ProjectSchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     )
 
     class Meta:
-        model = models.ProjectSchema
+        model = models.SchemaDecorator
         fields = '__all__'
 
 
@@ -312,10 +312,10 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         view_name='entity-detail',
         read_only=True
     )
-    projectschema_url = serializers.HyperlinkedRelatedField(
+    schemadecorator_url = serializers.HyperlinkedRelatedField(
         read_only=True,
-        source='projectschema',
-        view_name='projectschema-detail',
+        source='schemadecorator',
+        view_name='schemadecorator-detail',
     )
     submission_url = serializers.HyperlinkedRelatedField(
         read_only=True,
@@ -351,8 +351,8 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         mt_field='mappingset__project',
         required=False,
     )
-    projectschema = MtPrimaryKeyRelatedField(
-        queryset=models.ProjectSchema.objects.all(),
+    schemadecorator = MtPrimaryKeyRelatedField(
+        queryset=models.SchemaDecorator.objects.all(),
         mt_field='project',
         required=False,
     )
