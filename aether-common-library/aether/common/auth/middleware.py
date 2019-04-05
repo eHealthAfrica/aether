@@ -52,7 +52,7 @@ class GatewayAuthenticationMiddleware(SessionMiddleware):  # pragma: no cover
                 realm = iss_url.split('/')[-1]
                 request.session[settings.REALM_COOKIE] = realm
 
-                user = get_or_create_user_from_userinfo(userinfo)
+                user = get_or_create_user_from_userinfo(request, userinfo)
                 login(request, user)
 
                 # flags that we are using the gateway to authenticate
