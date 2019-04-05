@@ -339,6 +339,9 @@ else:
 GATEWAY_HEADER_TOKEN = os.environ.get('GATEWAY_HEADER_TOKEN')  # 'X-Oauth-Token'
 if GATEWAY_HEADER_TOKEN:
     GATEWAY_HOST = os.environ['GATEWAY_HOST']
+    # the views are served behind the gateway
+    USE_X_FORWARDED_HOST = True
+    USE_X_FORWARDED_PORT = True
 
     MIDDLEWARE += [
         'aether.common.auth.middleware.GatewayAuthenticationMiddleware',
