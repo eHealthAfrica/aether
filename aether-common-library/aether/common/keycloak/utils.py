@@ -24,7 +24,7 @@ from django.contrib.auth.signals import user_logged_out
 from django.dispatch import receiver
 from django.urls import reverse
 
-from ..auth.utils import get_or_create_user
+from ..auth.utils import get_or_create_user_from_userinfo
 from ..utils import request as exec_request
 
 _KC_TOKEN_SESSION = '__keycloak__token__session__'
@@ -77,7 +77,7 @@ def authenticate(request, username, password, realm):
     # save the user token in the session
     request.session[_KC_TOKEN_SESSION] = token
 
-    return _get_or_create_user(request, userinfo)
+    return get_or_create_user_from_userinfo(request, userinfo)
 
 
 def post_authenticate(request):
@@ -103,7 +103,7 @@ def post_authenticate(request):
     # save the user token in the session
     request.session[_KC_TOKEN_SESSION] = token
 
-    return _get_or_create_user(request, userinfo)
+    return get_or_create_user_from_userinfo(request, userinfo)
 
 
 def check_user_token(request):
@@ -185,14 +185,3 @@ def _get_user_info(realm, token):
     response.raise_for_status()
 
     return response.json()
-
-
-def _get_or_create_user(request, userinfo):
-    user = get_or_create_user(request, userinfo.get('preferred_username'))
-
-    user.first_name = userinfo.get('given_name') or ''
-    user.last_name = userinfo.get('family_name') or ''
-    user.email = userinfo.get('email') or ''
-    user.save()
-
-    return user

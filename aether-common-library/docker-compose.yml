@@ -26,6 +26,9 @@ services:
       PGPORT: 9999
       DB_NAME: common
 
+      GATEWAY_HEADER_TOKEN: X-Oauth-Token
+      GATEWAY_HOST: http://localhost
+
       KEYCLOAK_SERVER_URL: http://localhost:8090
       KEYCLOAK_CLIENT_ID: testing
       MULTITENANCY: "true"

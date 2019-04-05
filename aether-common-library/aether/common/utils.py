@@ -58,23 +58,32 @@ def find_in_request(request, key, default_value=None):
         - within the request headers.
 
     https://docs.djangoproject.com/en/2.2/ref/request-response/#django.http.HttpRequest.COOKIES
-    https://docs.djangoproject.com/en/2.2/ref/request-response/#django.http.HttpRequest.META
-
-    New in Django.2.2
-    https://docs.djangoproject.com/en/2.2/ref/request-response/#django.http.HttpRequest.headers
     '''
 
     return getattr(request, 'session', {}).get(
         key,
         getattr(request, 'COOKIES', {}).get(
             key,
-            getattr(request, 'headers', {}).get(  # New in Django.2.2
-                key,
-                getattr(request, 'META', {}).get(
-                    'HTTP_' + key.replace('-', '_').upper(),  # HTTP_<KEY>,
-                    default_value
-                )
-            )
+            find_in_request_headers(request, key, default_value)
+        )
+    )
+
+
+def find_in_request_headers(request, key, default_value=None):
+    '''
+    Finds the key in within the request headers.
+
+    https://docs.djangoproject.com/en/2.2/ref/request-response/#django.http.HttpRequest.META
+
+    New in Django.2.2
+    https://docs.djangoproject.com/en/2.2/ref/request-response/#django.http.HttpRequest.headers
+    '''
+
+    return getattr(request, 'headers', {}).get(  # New in Django.2.2
+        key,
+        getattr(request, 'META', {}).get(
+            'HTTP_' + key.replace('-', '_').upper(),  # HTTP_<KEY>,
+            default_value
         )
     )
 

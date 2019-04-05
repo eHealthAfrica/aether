@@ -150,7 +150,7 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):
         # all the url endpoints will be  `<my-server>/aether-app/<endpoint-url>`
         # before they were  `<my-server>/<endpoint-url>`
         urlpatterns = [
-            path(route=f'{app_url}/', view=include(urlpatterns))
+            path(route=f'{app_url}/', view=include(urlpatterns)),
         ]
 
     return urlpatterns

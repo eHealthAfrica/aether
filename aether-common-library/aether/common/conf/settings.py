@@ -288,6 +288,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login.html')
 LOGGED_OUT_TEMPLATE = os.environ.get('LOGGED_OUT_TEMPLATE', 'aether/logged_out.html')
+
+LOGIN_URL = os.environ.get('LOGIN_URL', '/accounts/login/')
 LOGIN_REDIRECT_URL = APP_URL
 LOGOUT_REDIRECT_URL = APP_URL
 
@@ -334,11 +336,25 @@ if KEYCLOAK_SERVER_URL:
 else:
     logger.info('No Keycloak enabled!')
 
+GATEWAY_HEADER_TOKEN = os.environ.get('GATEWAY_HEADER_TOKEN')  # 'X-Oauth-Token'
+if GATEWAY_HEADER_TOKEN:
+    GATEWAY_HOST = os.environ['GATEWAY_HOST']
+
+    MIDDLEWARE += [
+        'aether.common.auth.middleware.GatewayAuthenticationMiddleware',
+    ]
+else:
+    logger.info('No auth gateway enabled!')
+
 
 # Multitenancy Configuration
 # ------------------------------------------------------------------------------
 
-MULTITENANCY = bool(os.environ.get('MULTITENANCY')) or bool(KEYCLOAK_SERVER_URL)
+MULTITENANCY = (
+    bool(os.environ.get('MULTITENANCY')) or
+    bool(KEYCLOAK_SERVER_URL) or
+    bool(GATEWAY_HEADER_TOKEN)
+)
 if MULTITENANCY:
     REALM_COOKIE = os.environ.get('REALM_COOKIE', 'aether-realm')
     DEFAULT_REALM = os.environ.get('DEFAULT_REALM', 'aether')
