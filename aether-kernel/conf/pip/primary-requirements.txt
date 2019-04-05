@@ -16,7 +16,7 @@
 # Main libraries
 
 # Aether common library with extras
-aether.common[cas,server,storage,test]
+aether.common[cas,gateway,server,storage,test]
 
 
 # Django specific
