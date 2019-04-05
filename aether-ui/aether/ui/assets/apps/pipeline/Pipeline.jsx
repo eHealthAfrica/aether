@@ -296,6 +296,15 @@ class Pipeline extends Component {
     this.props.checkUnsavedContract(() => { this.props.selectContract(contract.pipeline, contract.id) })
   }
 
+  toggleSettings () {
+    console.log(this.state.showSettings)
+    if (this.state.showSettings) {
+      this.props.selectSection(CONTRACT_SECTION_ENTITY_TYPES)
+    } else if (!this.state.showSettings) {
+      this.props.selectSection(CONTRACT_SECTION_SETTINGS)
+    }
+  }
+
   renderContractTabs () {
     return this.props.pipeline.contracts.map(contract => (
       <div
@@ -310,7 +319,7 @@ class Pipeline extends Component {
 
         <div
           className={`btn-icon settings-button ${this.state.showSettings ? 'active' : ''}`}
-          onClick={() => { this.props.selectSection(CONTRACT_SECTION_SETTINGS) }}>
+          onClick={() => { this.toggleSettings() }}>
           <i className='fas fa-ellipsis-h' />
         </div>
       </div>
@@ -324,14 +333,12 @@ class Pipeline extends Component {
         key={newContract.id}
         className={`pipeline-tab ${newContract.id === this.props.contract.id ? 'active' : ''}`}
       >
-        <span className='contract-name'>{ newContract.name }</span>
-        <span className='status white' />
-
-        <div
-          className={`btn-icon settings-button ${this.state.showSettings ? 'active' : ''}`}
-          onClick={() => { this.props.selectSection(CONTRACT_SECTION_SETTINGS) }}>
-          <i className='fas fa-ellipsis-h' />
-        </div>
+        <span className='contract-name new'>
+          <FormattedMessage
+            id='pipeline.tab.newContract'
+            defaultMessage='new Contract'
+          />
+        </span>
       </div>
     )
   }
