@@ -297,7 +297,6 @@ class Pipeline extends Component {
   }
 
   toggleSettings () {
-    console.log(this.state.showSettings)
     if (this.state.showSettings) {
       this.props.selectSection(CONTRACT_SECTION_ENTITY_TYPES)
     } else if (!this.state.showSettings) {
