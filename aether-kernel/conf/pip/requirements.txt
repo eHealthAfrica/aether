@@ -23,7 +23,7 @@ coreapi==2.3.3
 coreschema==0.0.4
 coverage==4.5.3
 decorator==4.4.0
-Django==2.1.8
+Django==2.2
 django-autofixture==0.12.1
 django-cas-ng==3.5.10
 django-cors-headers==2.5.2
