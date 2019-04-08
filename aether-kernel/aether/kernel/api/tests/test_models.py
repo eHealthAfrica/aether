@@ -197,7 +197,7 @@ class ModelsTests(TransactionTestCase):
             entity.save()
 
         self.assertIsNotNone(ie)
-        self.assertIn('Submission, Mapping and Project Schema MUST belong to the same Project',
+        self.assertIn('Submission, Mapping and Schema Decorator MUST belong to the same Project',
                       str(ie.exception))
 
         # it works without submission

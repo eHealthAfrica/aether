@@ -166,7 +166,7 @@ class SchemaDecoratorFilter(filters.FilterSet):
 
     class Meta:
         fields = '__all__'
-        model = models.ProjectSchema
+        model = models.SchemaDecorator
 
 
 class EntityFilter(filters.FilterSet):

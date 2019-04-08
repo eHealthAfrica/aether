@@ -627,7 +627,7 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
             possible_project = self.mapping.project
 
         if len(project_ids) > 1:
-            raise ValidationError(_('Submission, Mapping and Schema Decoration MUST belong to the same Project'))
+            raise ValidationError(_('Submission, Mapping and Schema Decorator MUST belong to the same Project'))
         elif len(project_ids) == 1:
             self.project = possible_project
 
