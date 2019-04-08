@@ -9,19 +9,27 @@ import uuid
 def migrate_ProjectSchema_to_SchemaDecorator(apps, schema_editor):
     ProjectSchemas = apps.get_model('kernel', 'ProjectSchema')
     SchemaDecorators = apps.get_model('kernel', 'SchemaDecorator')
-    if ProjectSchemas:
-        for projectschema in ProjectSchemas.objects.all():
-            SchemaDecorators.objects.create(
-                name=projectschema.name,
-                project=projectschema.project,
-                schema=projectschema.schema,
-                mandatory_fields=projectschema.mandatory_fields,
-                transport_rule=projectschema.transport_rule,
-                masked_fields=projectschema.masked_fields,
-                is_encrypted=projectschema.is_encrypted,
-                id=projectschema.id,
-                revision=projectschema.revision,
-            )
+    Mappings = apps.get_model('kernel', 'Mapping')
+    Entities = apps.get_model('kernel', 'Entity')
+
+    for projectschema in ProjectSchemas.objects.all():
+        SchemaDecorators.objects.create(
+            name=projectschema.name,
+            project=projectschema.project,
+            schema=projectschema.schema,
+            mandatory_fields=projectschema.mandatory_fields,
+            transport_rule=projectschema.transport_rule,
+            masked_fields=projectschema.masked_fields,
+            is_encrypted=projectschema.is_encrypted,
+            id=projectschema.id,
+        )
+
+    for mapping in Mappings:
+        mapping.schemadecorators = mapping.projectschemas
+
+    for entity in Entities:
+        entity.schemadecorator = entity.projectschema
+
 
 class Migration(migrations.Migration):
 
