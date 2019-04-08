@@ -433,8 +433,8 @@ class SchemaDecorator(ExportModelOperationsMixin('kernel_schemadecorator'), Proj
             models.Index(fields=['project', '-modified']),
             models.Index(fields=['-modified']),
         ]
-        verbose_name = _('project schema')
-        verbose_name_plural = _('project schemas')
+        verbose_name = _('schema decorator')
+        verbose_name_plural = _('schema decorators')
 
 
 class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract):
