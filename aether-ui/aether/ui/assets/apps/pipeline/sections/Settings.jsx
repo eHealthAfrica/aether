@@ -81,7 +81,7 @@ export class IdentityMapping extends Component {
               <FormattedMessage
                 id='settings.identity.help-2'
                 defaultMessage='An identity contract will produce entities
-                that are identical with the input. If you choose this setting.
+                that are identical with the input. If you choose this setting,
                 Aether will generate an Entity Type and Mapping for you.'
               />
             </p>
