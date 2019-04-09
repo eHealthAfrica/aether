@@ -41,7 +41,7 @@ class PipelineViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     mt_field = 'project'
 
     @action(methods=['post'], detail=False)
-    def fetch(self, request):
+    def fetch(self, request, *args, **kwargs):
         '''
         This endpoint fetches kernel artefacts and transforms them into UI models.
 
@@ -59,7 +59,7 @@ class ContractViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     mt_field = 'pipeline__project'
 
     @action(methods=['post'], detail=True)
-    def publish(self, request, pk=None):
+    def publish(self, request, pk=None, *args, **kwargs):
         '''
         This endpoint transforms the supplied contract to kernel artefacts,
         publish and update the contract with the related kernel artefacts ids.
@@ -78,7 +78,7 @@ class ContractViewSet(MtViewSetMixin, viewsets.ModelViewSet):
             )
 
     @action(methods=['get'], detail=True, url_path='publish-preflight')
-    def publish_preflight(self, request, pk=None):
+    def publish_preflight(self, request, pk=None, *args, **kwargs):
         '''
         This endpoint checks if the contract is publishable
         and returns the list of failing reasons.

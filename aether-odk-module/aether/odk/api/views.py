@@ -278,7 +278,7 @@ XML_SUBMISSION_PARAM = 'xml_submission_file'
 @renderer_classes([TemplateHTMLRenderer])
 @authentication_classes([BasicAuthentication])
 @permission_classes([IsAuthenticated])
-def xform_list(request):
+def xform_list(request, *args, **kwargs):
     '''
     https://docs.opendatakit.org/openrosa-form-list/
 
@@ -305,7 +305,7 @@ def xform_list(request):
 @renderer_classes([StaticHTMLRenderer])
 @authentication_classes([BasicAuthentication])
 @permission_classes([IsAuthenticated])
-def xform_get_download(request, pk):
+def xform_get_download(request, pk, *args, **kwargs):
     '''
     https://docs.opendatakit.org/openrosa-form-list/
 
@@ -334,7 +334,7 @@ def xform_get_download(request, pk):
 @renderer_classes([TemplateHTMLRenderer])
 @authentication_classes([BasicAuthentication])
 @permission_classes([IsAuthenticated])
-def xform_get_manifest(request, pk):
+def xform_get_manifest(request, pk, *args, **kwargs):
     '''
     https://docs.opendatakit.org/openrosa-form-list/
 
@@ -370,7 +370,7 @@ def xform_get_manifest(request, pk):
 @renderer_classes([TemplateHTMLRenderer])
 @authentication_classes([BasicAuthentication])
 @permission_classes([IsAuthenticated])
-def xform_submission(request):
+def xform_submission(request, *args, **kwargs):
     '''
     Submission specification:
     https://docs.opendatakit.org/openrosa-form-submission/
