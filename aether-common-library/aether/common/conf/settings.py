@@ -291,7 +291,6 @@ LOGGED_OUT_TEMPLATE = os.environ.get('LOGGED_OUT_TEMPLATE', 'aether/logged_out.h
 
 LOGIN_URL = os.environ.get('LOGIN_URL', '/accounts/login/')
 LOGIN_REDIRECT_URL = APP_URL
-LOGOUT_REDIRECT_URL = APP_URL
 
 
 # Authentication Server Configuration
@@ -336,9 +335,10 @@ if KEYCLOAK_SERVER_URL:
 else:
     logger.info('No Keycloak enabled!')
 
-GATEWAY_HEADER_TOKEN = os.environ.get('GATEWAY_HEADER_TOKEN')  # 'X-Oauth-Token'
-if GATEWAY_HEADER_TOKEN:
-    GATEWAY_HOST = os.environ['GATEWAY_HOST']
+GATEWAY_HOST = os.environ.get('GATEWAY_HOST')
+if GATEWAY_HOST:
+    GATEWAY_HEADER_TOKEN = os.environ.get('GATEWAY_HEADER_TOKEN', 'X-Oauth-Token')
+
     # the views are served behind the gateway
     USE_X_FORWARDED_HOST = True
     USE_X_FORWARDED_PORT = True
@@ -356,7 +356,7 @@ else:
 MULTITENANCY = (
     bool(os.environ.get('MULTITENANCY')) or
     bool(KEYCLOAK_SERVER_URL) or
-    bool(GATEWAY_HEADER_TOKEN)
+    bool(GATEWAY_HOST)
 )
 if MULTITENANCY:
     REALM_COOKIE = os.environ.get('REALM_COOKIE', 'aether-realm')

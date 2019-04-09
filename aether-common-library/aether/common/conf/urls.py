@@ -52,6 +52,8 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):
 
     '''
 
+    urlpatterns = []
+
     # `accounts` management
     if settings.CAS_SERVER_URL:
         from django_cas_ng import views
@@ -95,7 +97,7 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):
         ]
     auth_urls = (auth_views, 'rest_framework')
 
-    urlpatterns = [
+    urlpatterns += [
         # `health` endpoints
         path(route='health', view=health, name='health'),
         path(route='check-db', view=check_db, name='check-db'),
