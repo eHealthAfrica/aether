@@ -90,7 +90,7 @@ export class IdentityMapping extends Component {
                 id='settings.identity.help-3'
                 defaultMessage="This can be useful in situations where you
                 want to make use of Aether's functionality without transforming
-                  the data Alternatively, you can use the generate Entity Type
+                  the data. Alternatively, you can use the generate Entity Type
                   and Mapping as a starting point for a more complex contract."
               />
             </p>
