@@ -125,7 +125,7 @@ export class IdentityMapping extends Component {
             <p>
               <FormattedMessage
                 id='settings.identity.checked.help-2'
-                defaultMessage='All Entity Types and Mappings were generated automatically from the input'
+                defaultMessage='All Entity Types and Mappings were automatically generated from the input data'
               />
             </p>
           </div>
