@@ -62,9 +62,9 @@ MSG_ENTITY_IN_KERNEL_SCHEMA = _('Entity type "{}" (as schema) is already publish
 MSG_ENTITY_NOT_IN_KERNEL_SCHEMA = _('Entity type "{}" (as schema) will be published')
 MSG_ENTITY_SCHEMA_CHANGED = _('Entity type "{}" (as schema) data will be changed')
 
-MSG_ENTITY_IN_KERNEL_PROJECT_SCHEMA = _('Entity type "{}" (as project schema) is already published')
-MSG_ENTITY_NOT_IN_KERNEL_PROJECT_SCHEMA = _('Entity type "{}" (as project schema) will be published')
-MSG_ENTITY_WRONG_PROJECT = _('Entity type "{}" (as project schema) belongs to a different project in kernel')
+MSG_ENTITY_IN_KERNEL_SCHEMA_DECORATOR = _('Entity type "{}" (as schema decorator) is already published')
+MSG_ENTITY_NOT_IN_KERNEL_SCHEMA_DECORATOR = _('Entity type "{}" (as schema decorator) will be published')
+MSG_ENTITY_WRONG_PROJECT = _('Entity type "{}" (as schema decorator) belongs to a different project in kernel')
 
 
 class PublishError(Exception):
@@ -135,17 +135,17 @@ def kernel_artefacts_to_ui_artefacts(request):
                     # do not update the current contract
                     continue
 
-                ps_fields = 'id,schema,schema_definition'
-                ps_url = mapping['projectschemas_url'] + f'&fields={ps_fields}'
+                sd_fields = 'id,schema,schema_definition'
+                sd_url = mapping['schemadecorators_url'] + f'&fields={sd_fields}'
                 # get_all_docs is a generator, wrap results as list to get them
-                project_schemas = list(get_all_docs(ps_url, headers=headers))
+                schema_decorators = list(get_all_docs(sd_url, headers=headers))
 
-                # find out the linked schema ids from the project schema ids (mapping entities)
+                # find out the linked schema ids from the schema decorator ids (mapping entities)
                 entities = mapping['definition']['entities']              # format    {entity name: ps id}
                 entity_names_by_id = {v: k for k, v in entities.items()}  # turn into {ps id: entity name}
                 schemas = {
-                    entity_names_by_id[ps['id']]: ps['schema']
-                    for ps in project_schemas
+                    entity_names_by_id[sd['id']]: sd['schema']
+                    for sd in schema_decorators
                 }
 
                 models.Contract.objects.create(
@@ -158,8 +158,8 @@ def kernel_artefacts_to_ui_artefacts(request):
                         for rule in mapping['definition']['mapping']
                     ],
                     entity_types=[
-                        ps['schema_definition']
-                        for ps in project_schemas
+                        sd['schema_definition']
+                        for sd in schema_decorators
                     ],
 
                     is_active=mapping['is_active'],
@@ -167,7 +167,7 @@ def kernel_artefacts_to_ui_artefacts(request):
 
                     mapping=mapping_id,
                     kernel_refs={
-                        # Refers to project schemas in Kernel {entity name: project schema id}
+                        # Refers to schema decorators in Kernel {entity name: schema decorator id}
                         'entities': entities,
                         # Refers to schemas in Kernel {entity name: schema id}
                         'schemas': schemas,
@@ -411,7 +411,7 @@ def publish_preflight(contract):
         - Contract mapping rules have errors
         - Contract belongs to a different project in kernel
         - Contract belongs to a different pipeline (mapping set) in kernel
-        - Entity type "XXX" (as project schema) belongs to a different project in kernel
+        - Entity type "XXX" (as schema decorator) belongs to a different project in kernel
 
         In case of multitenancy is enabled also:
             - Project in kernel belongs to a different tenant
@@ -423,7 +423,7 @@ def publish_preflight(contract):
         - Pipeline (as mapping set) is already published
         - Contract (as mapping) is already published
         - Entity type "XXX" (as schema) is already published
-        - Entity type "XXX" (as project schema) is already published
+        - Entity type "XXX" (as schema decorator) is already published
 
     - Info (informs about the publish effects)
 
@@ -435,7 +435,7 @@ def publish_preflight(contract):
         - Mapping rules data will be changed
         - Entity type "XXX" (as schema) will be published
         - Entity type "XXX" (as schema) data will be changed
-        - Entity type "XXX" (as project schema) will be published
+        - Entity type "XXX" (as schema decorator) will be published
 
     '''
 
@@ -534,13 +534,13 @@ def publish_preflight(contract):
     if not mapping:
         outcome['info'].append(MSG_CONTRACT_NOT_IN_KERNEL)
 
-    # 4. Check the contract entity types in Kernel (as schemas and project schemas)
+    # 4. Check the contract entity types in Kernel (as schemas and schema decorators)
     kernel_refs = contract.kernel_refs if contract.kernel_refs else {}
     if contract.entity_types:
         for entity in contract.entity_types:
             name = entity['name']
             schema = None
-            ps = None
+            sd = None
 
             # 4.1 Check as schema
             schema_id = kernel_refs.get('schemas', {}).get(name)
@@ -555,17 +555,17 @@ def publish_preflight(contract):
             if not schema:
                 outcome['info'].append(MSG_ENTITY_NOT_IN_KERNEL_SCHEMA.format(name))
 
-            # 4.2 Check as project schema
-            ps_id = kernel_refs.get('entities', {}).get(name)
-            if ps_id:
-                ps = __get('projectschemas', ps_id)
-                if ps:
-                    outcome['warning'].append(MSG_ENTITY_IN_KERNEL_PROJECT_SCHEMA.format(name))
+            # 4.2 Check as schema decorator
+            sd_id = kernel_refs.get('entities', {}).get(name)
+            if sd_id:
+                sd = __get('schemadecorators', sd_id)
+                if sd:
+                    outcome['warning'].append(MSG_ENTITY_IN_KERNEL_SCHEMA_DECORATOR.format(name))
                     # 4.2.1 Check linked project
-                    if ps['project'] != str(project.project_id):
+                    if sd['project'] != str(project.project_id):
                         outcome['error'].append(MSG_ENTITY_WRONG_PROJECT.format(name))
-            if not ps:
-                outcome['info'].append(MSG_ENTITY_NOT_IN_KERNEL_PROJECT_SCHEMA.format(name))
+            if not sd:
+                outcome['info'].append(MSG_ENTITY_NOT_IN_KERNEL_SCHEMA_DECORATOR.format(name))
 
     return outcome
 
@@ -604,7 +604,7 @@ def model_to_artefacts(instance):
     schema_ids = instance.kernel_refs.get('schemas', {})
     entity_ids = instance.kernel_refs.get('entities', {})
 
-    # build schemas/project schemas from contract entities, include a new id if missing
+    # build schemas/schema decorators from contract entities, include a new id if missing
     schemas = []
     entities = {}
     for entity_type in instance.entity_types:

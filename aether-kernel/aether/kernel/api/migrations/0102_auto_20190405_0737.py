@@ -24,10 +24,11 @@ def migrate_ProjectSchema_to_SchemaDecorator(apps, schema_editor):
             id=projectschema.id,
         )
 
-    for mapping in Mappings:
-        mapping.schemadecorators = mapping.projectschemas
+    for mapping in Mappings.objects.all():
+        for ps in mapping.projectschemas.all():
+            mapping.schemadecorators.add(str(ps.pk))
 
-    for entity in Entities:
+    for entity in Entities.objects.all():
         entity.schemadecorator = entity.projectschema
 
 

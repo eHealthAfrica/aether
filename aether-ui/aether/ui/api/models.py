@@ -258,7 +258,7 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel, MtMo
     # this contains the information related to the linked artefacts in kernel
     # {
     #     "entities": {
-    #         "entity name": uuid,  # the Kernel project schema ID
+    #         "entity name": uuid,  # the Kernel schema decorator ID
     #         ...
     #     },
     #     "schemas": {
