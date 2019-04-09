@@ -19,6 +19,7 @@ under the License.
 {% endcomment %}
 
 {% load i18n %}
+{% load static %}
 
 <meta charset="utf-8">
 
@@ -33,3 +34,6 @@ under the License.
 <meta name="author" content="eHealth Africa">
 <meta name="version" content="{{app_version}}">
 <meta name="revision" content="{{app_revision}}">
+
+<link rel="icon" type="image/png" href="{% static 'aether/images/aether.png' %}"/>
+<link rel="shortcut icon" type="image/png" sizes="48x48" href="{% static 'aether/images/aether.png' %}"/>
