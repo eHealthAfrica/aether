@@ -52,8 +52,7 @@ from spavro.io import DatumWriter, DatumReader
 from spavro.io import validate
 from urllib3.exceptions import MaxRetryError
 
-from producer import db
-from producer.db import Offset
+from producer.db import OFFSET_MANAGER
 from producer.db import KERNEL_DB as POSTGRES
 from producer.logger import LOG
 from producer.settings import PRODUCER_CONFIG
@@ -70,7 +69,6 @@ class KernelHandler(object):
     # Errors of type ignored_exceptions are logged but don't null kernel
     def __init__(self, handler, ignored_exceptions=None):
         self.handler = handler
-        self.log = self.handler.logger
         self.ignored_exceptions = ignored_exceptions
 
     def __enter__(self):
@@ -81,7 +79,7 @@ class KernelHandler(object):
             if self.ignored_exceptions and exc_type in self.ignored_exceptions:
                 return True
             self.handler.kernel = None
-            self.log.info("Kernel Connection Failed: %s" % exc_type)
+            LOG.info("Kernel Connection Failed: %s" % exc_type)
             return False
         return True
 
@@ -106,8 +104,6 @@ class ProducerManager(object):
         self.admin_password = settings.get('PRODUCER_ADMIN_PW')
         self.serve()
         self.add_endpoints()
-        # Initialize Offsetdb
-        self.init_db()
         # Clear objects and start
         self.kernel = None
         self.kafka = KafkaStatus.SUBMISSION_PENDING
@@ -162,11 +158,6 @@ class ProducerManager(object):
             LOG.debug("Connection problem: %s" % rce)
             return False
         return True
-
-    # Connect to sqlite
-    def init_db(self):
-        db.init()
-        LOG.info("OffsetDB initialized")
 
     # Maintain Aether Connection
     def connect_aether(self):
@@ -890,11 +881,11 @@ class TopicManager(object):
 
     def get_offset(self):
         # Get current offset from Database
-        offset = Offset.get_offset(self.name)
-        if offset:
-            LOG.debug(f'Got offset for {self.name} | {offset}')
-            return offset
-        else:
+        try:
+            offset = OFFSET_MANAGER.get(self.name)
+            LOG.debug(f'Got offset for {self.name} | {offset.value}')
+            return offset.value
+        except ValueError:
             LOG.debug(
                 f'Could not get offset for {self.name} it is a new type')
             # No valid offset so return None; query will use empty string
@@ -903,7 +894,7 @@ class TopicManager(object):
 
     def set_offset(self, offset):
         # Set a new offset in the database
-        new_offset = Offset.update(self.name, offset)
+        new_offset = OFFSET_MANAGER.set(self.name, offset)
         LOG.debug(f'new offset for {self.name} | {new_offset}')
         self.status['offset'] = new_offset
 

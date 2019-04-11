@@ -45,7 +45,6 @@ function test_flake8 {
 
 function after_test {
     cat /code/conf/extras/good_job.txt
-    rm -R .pytest_cache
     rm -rf tests/__pycache__
 }
 

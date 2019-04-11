@@ -33,6 +33,14 @@ services:
       file: ./docker-compose-base.yml
       service: redis-base
 
+  redis-producer-test:
+    extends:
+      file: ./docker-compose-base.yml
+      service: redis3-base
+    command: ["--requirepass", "${REDIS_PASSWORD}", "--notify-keyspace-events", "KEA", "--appendonly", "yes"]
+    env_file:
+      - aether-producer/tests/conf/test_environment.env
+
   minio-test:
     extends:
       file: ./docker-compose-base.yml
@@ -195,21 +203,19 @@ services:
     extends:
       file: ./docker-compose-base.yml
       service: aether-producer-base
+    env_file:
+      - aether-producer/tests/conf/test_environment.env
     environment:
       # These variables will override the ones indicated in the settings file
       PRODUCER_SETTINGS_FILE: /code/tests/conf/producer.json
       PRODUCER_ADMIN_USER: ${PRODUCER_ADMIN_USER}
       PRODUCER_ADMIN_PW: ${PRODUCER_ADMIN_PW}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
       KAFKA_URL: kafka-test:29092
       KERNEL_URL: http://kernel-test:9100
       POSTGRES_DBNAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
       POSTGRES_HOST: db-test
       SERVER_PORT: 9005
-      OFFSET_DB_HOST: db-test
-      OFFSET_DB_USER: postgres
-      OFFSET_DB_PORT: 5432
-      OFFSET_DB_PASSWORD: ${KERNEL_DB_PASSWORD}
-      OFFSET_DB_NAME: producer_offset_db_test
     ports:
       - "9005:9005"
     volumes:

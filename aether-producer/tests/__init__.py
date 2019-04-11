@@ -18,19 +18,30 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import logging
 import pytest
 import os
+from typing import (
+    Iterable,
+    List
+)
 
 from .timeout import timeout as Timeout  # noqa
 from producer import *  # noqa
+from producer.resource import Event, ResourceHelper, RESOURCE_HELPER
 from producer.settings import Settings
-Offset = db.Offset
+from producer.logger import LOG
 
-log = logging.getLogger()
 
 USER = os.environ['PRODUCER_ADMIN_USER']
 PW = os.environ['PRODUCER_ADMIN_PW']
+
+
+class MockCallable(object):
+    events: List[Event] = []
+
+    def add_event(self, evt: Event):
+        LOG.debug(f'MockCallable got msg: {evt}')
+        self.events.append(evt)
 
 
 class MockProducerManager(ProducerManager):
@@ -42,7 +53,6 @@ class MockProducerManager(ProducerManager):
         self.killed = False
         self.kernel = None
         self.kafka = False
-        self.logger = log
         self.topic_managers = {}
 
 
@@ -50,7 +60,14 @@ class ObjectWithKernel(object):
 
     def __init__(self, initial_kernel_value=None):
         self.kernel = initial_kernel_value
-        self.logger = log
+
+
+@pytest.mark.integration
+@pytest.fixture(scope='session')
+def get_resource_helper() -> Iterable[ResourceHelper]:
+    yield RESOURCE_HELPER
+    # cleanup at end of session
+    RESOURCE_HELPER.stop()
 
 
 @pytest.mark.integration
@@ -61,13 +78,5 @@ def ProducerManagerSettings():
 
 @pytest.mark.integration
 @pytest.fixture(scope='session')
-def OffsetDB(ProducerManagerSettings):
-    man = MockProducerManager(ProducerManagerSettings)
-    man.init_db()
-    return Offset
-
-
-@pytest.mark.integration
-@pytest.fixture(scope='function')
-def OffsetQueue():
-    return db.OFFSET_DB
+def OffsetDB():
+    return OFFSET_MANAGER

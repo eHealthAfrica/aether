@@ -19,5 +19,6 @@ gevent
 pytest
 psycopg2-binary
 psycogreen
+redis
 spavro
 sqlalchemy

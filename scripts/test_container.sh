@@ -62,8 +62,8 @@ then
 fi
 if [[ $1 = "integration" ]]
 then
-    echo "_____________________________________________ Starting Zookeeper and Kafka"
-    $DC_TEST up -d zookeeper-test kafka-test
+    echo "_____________________________________________ Starting Zookeeper Kafka & Redis"
+    $DC_TEST up -d zookeeper-test kafka-test redis-producer-test
 fi
 
 
@@ -84,8 +84,9 @@ then
     if [[ $1 = "producer" || $1 == "integration" ]]
     then
         echo "_____________________________________________ Creating readonlyuser on Kernel DB"
-        $DC_TEST run kernel-test eval python /code/sql/create_readonly_user.py
-
+        $DC_TEST run --rm kernel-test eval python /code/sql/create_readonly_user.py
+        echo "_____________________________________________ Starting Redis"
+        $DC_TEST up -d redis-producer-test
         if [[ $1 = "integration" ]]
         then
             build_container producer
@@ -101,7 +102,7 @@ echo "_____________________________________________ Preparing $1 container"
 build_container $1
 echo "_____________________________________________ $1 ready!"
 wait_for_db
-$DC_TEST run "$1"-test test
+$DC_TEST run --rm "$1"-test test
 echo "_____________________________________________ $1 tests passed!"
 
 

@@ -47,6 +47,9 @@ services:
     image: redis:alpine
     command: "redis-server --requirepass ${REDIS_PASSWORD}"
 
+  redis3-base:
+    image: redis:3-alpine
+
   nginx-base:
     image: nginx:alpine
     volumes:

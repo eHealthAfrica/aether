@@ -26,20 +26,26 @@ from typing import (
     Callable,
     Dict,
     Iterable,
-    NamedTuple,
-    Union
+    NamedTuple
 )
 
-from .logger import LOG
+from producer.logger import LOG
+from producer.settings import PRODUCER_CONFIG
 
 
-class Task(NamedTuple):
+class Event(NamedTuple):
+    resource_id: str
+    resource_type: str
+    event_type: str
+
+
+class Resource(NamedTuple):
     id: str
     type: str
-    data: Union[Dict, None] = None  # None is not set
+    data: Dict
 
 
-class TaskHelper(object):
+class ResourceHelper(object):
 
     def __init__(self, settings):
         self.settings = settings
@@ -55,41 +61,45 @@ class TaskHelper(object):
         self.pubsub = None
         self._subscribe_thread = None
 
-    # Generic Redis Task Functions
-    def add(self, task: Dict[str, Any], type: str) -> bool:
+    # Generic Redis Resource Functions
+    def add(self, resource: Dict[str, Any], type: str) -> bool:
         key = '_{type}:{_id}'.format(
-            type=type, _id=task['id']
+            type=type, _id=resource['id']
         )
-        task['modified'] = datetime.now().isoformat()
-        return self.redis.set(key, json.dumps(task))
+        resource['modified'] = datetime.now().isoformat()
+        return self.redis.set(key, json.dumps(resource))
 
     def exists(self, _id: str, type: str) -> bool:
-        task_id = '_{type}:{_id}'.format(
+        resource_id = '_{type}:{_id}'.format(
             type=type,
             _id=_id
         )
-        if self.redis.exists(task_id):
+        if self.redis.exists(resource_id):
             return True
         return False
 
     def remove(self, _id: str, type: str) -> bool:
-        task_id = '_{type}:{_id}'.format(
+        resource_id = '_{type}:{_id}'.format(
             type=type,
             _id=_id
         )
-        res = self.redis.delete(task_id)
+        res = self.redis.delete(resource_id)
         if not res:
             return False
         return True
 
-    def get(self, _id: str, type: str) -> Dict:
-        task_id = f'_{type}:{_id}'
-        task = self.redis.get(task_id)
-        if not task:
-            raise ValueError('No task with id {task_id}'.format(task_id=task_id))
-        return json.loads(task)
+    def get(self, _id: str, type: str) -> Resource:
+        resource_id = f'_{type}:{_id}'
+        resource = self.redis.get(resource_id)
+        if not resource:
+            raise ValueError('No resource with id {resource_id}'.format(resource_id=resource_id))
+        return Resource(
+            id=_id,
+            type=type,
+            data=json.loads(resource)
+        )
 
-    def list(self, type: str = None) -> Iterable[str]:
+    def list_ids(self, type: str) -> Iterable[str]:
         # ids of matching assets as a generator
         if type:
             key_identifier = '_{type}:*'.format(type=type)
@@ -100,7 +110,20 @@ class TaskHelper(object):
             for i in self.redis.scan_iter(key_identifier):
                 yield str(i).split(':')[-1]
 
-    # subscription tasks
+    def list(self, type: str) -> Iterable[Resource]:
+        # matching assets as a generator
+        if type:
+            key_identifier = '_{type}:*'.format(type=type)
+            for i in self.redis.scan_iter(key_identifier):
+                _id = str(i).split(key_identifier[:-1])[1]
+                yield(self.get(_id, type))
+        else:
+            key_identifier = '*'
+            for i in self.redis.scan_iter(key_identifier):
+                _id = str(i).split(':')[-1]
+                yield(self.get(_id, type))
+
+    # subscription resources
 
     def subscribe(self, callback: Callable, pattern: str):
         if not self._subscribe_thread or not self._subscribe_thread._running:
@@ -117,7 +140,7 @@ class TaskHelper(object):
 
     def _subscribe(self, callback: Callable, pattern: str):
         LOG.debug(f'Subscribing to {pattern}')
-        keyspace = f'__keyspace@{self.redis_db}__:{pattern}'
+        keyspace = f'__keyspace@{self.redis_db}__:_{pattern}'
         self.pubsub.psubscribe(**{
             f'{keyspace}': self._subscriber_wrapper(callback, keyspace)
         })
@@ -134,25 +157,27 @@ class TaskHelper(object):
             LOG.debug(f'callback got message: {msg}')
             channel = msg['channel']
             # get _id from channel: __keyspace@0__:_test:00001 where _id is "_test:00001"
-            _id = ':'.join(channel.split(':')[1:])
+            resource_string = ':'.join(channel.split(':')[1:])
+            # split resource into type in name _test:00001 -> _type, 00001
+            resource_type, resource_id = resource_string.split(':')
             redis_op = msg['data']
             LOG.debug(f'Channel: {channel} received {redis_op};'
                       + f' registered on: {registered_channel}')
-            if redis_op in ('set',):
-                _redis_msg = self.redis.get(_id)
-                res = Task(
-                    id=_id,
-                    type=redis_op,
-                    data=json.loads(_redis_msg)
-                )
-                LOG.debug(f'ID: {_id} data: {_redis_msg}')
-            else:
-                res = Task(
-                    id=_id,
-                    type=redis_op
-                )
+            res = Event(
+                resource_id=resource_id,
+                resource_type=resource_type,
+                event_type=redis_op
+            )
             fn(res)  # On callback, hit registered function with proper data
         return wrapper
+
+    def unsubscribe(self, pattern: str) -> None:
+        if pattern == '':
+            raise AttributeError('A valid pattern must be passed to unsubscribe.')
+        LOG.debug(f'Unsubscribing to {pattern}')
+        keyspace = f'__keyspace@{self.redis_db}__:_{pattern}'
+        self.pubsub.punsubscribe(keyspace)
+        LOG.debug(f'Removed {keyspace}')
 
     def _unsubscribe_all(self) -> None:
         LOG.debug('Unsubscribing from all pub-sub topics')
@@ -170,3 +195,6 @@ class TaskHelper(object):
                 AttributeError
             ):
                 LOG.error('Could not explicitly stop subscribe thread: no connection')
+
+
+RESOURCE_HELPER = ResourceHelper(PRODUCER_CONFIG)
