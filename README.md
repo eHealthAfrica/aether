@@ -23,6 +23,7 @@
   - [Users & Authentication](#users--authentication)
     - [Basic Authentication](#basic-authentication)
     - [Token Authentication](#token-authentication)
+    - [Gateway Authentication](#gateway-authentication)
 - [Development](#development)
 - [Release Management](#release-management)
 - [Deployment](#deployment)
@@ -114,8 +115,7 @@ of the most common ones with non default values. For more info take a look at th
 - `APP_URL`, `/`. The app url in the server.
   If host is `http://my-server.org` and the app url is `/my-module`,
   the app enpoints will be accessible at `http://my-server.org/my-module/...`.
-  In the case of an API gateway, or proxy, wildcards can be used in the `APP_URL` to match 
-  multiple routes like `/<realm>/<service-alias>/`
+
   The local behavior is: `http://my-module.aether.local/` implemented in the NGINX files.
 
   Current NGINX set up (requires changes in `hosts` file for each new module):
@@ -444,6 +444,38 @@ In the case of `aether-odk-module`, `aether-ui` and `aether-couchdb-sync-module`
 there is a global token to connect to `aether-kernel` set in the **required**
 environment variable `AETHER_KERNEL_TOKEN`. Take in mind that this token
 belongs to an active `aether-kernel` user but not necessarily to an admin user.
+
+*[Return to TOC](#table-of-contents)*
+
+#### Gateway Authentication
+
+Set `GATEWAY_HOST` and `GATEWAY_HEADER_TOKEN` (defaults to `X-Oauth-Token`) to
+enable gateway authentication. This means that the authentication is handled by
+a third party system (like [Kong](https://konghq.com)) that includes in each
+request the JSON Web Token (JWT) header with the remote user info.
+
+In this case the app urls can be reached in several ways:
+
+Trying to access the health endpoint `/health`:
+
+- http://kernel:8100/health using the internal url
+- http://aether.local/my-realm/kernel/health using the gateway url
+
+For those endpoints that don't depend on the realm and must also be available
+"unprotected" we need two more environment variables:
+
+- `GATEWAY_PUBLIC_REALM`: `-` This represents the fake realm that is not protected
+  by the gateway server. In this case the authentication is handled by the other
+  available options, i.e., basic, token, CAS...
+- `GATEWAY_SERVICE_ID`: `aether-app-id` Indicates the gateway service, usually matches
+  the app/module name like `kernel`, `odk`, `ui`, `sync`.
+
+The authorization and admin endpoints don't depend on any realm so the final urls
+use the public realm.
+
+- http://aether.local/-/{aether-app}/accounts/
+- http://aether.local/-/{aether-app}/admin/
+
 
 *[Return to TOC](#table-of-contents)*
 
