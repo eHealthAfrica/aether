@@ -34,6 +34,7 @@ under the License.
     id="logged-in-user-info"
     data-user-id="{{ request.user.id }}"
     data-user-name="{{ request.user|get_fullname }}"
+    data-user-logout-url="{% url 'rest_framework:logout' %}"
     class="invisible"></span>
 
   <div id="pipeline-app"></div>
