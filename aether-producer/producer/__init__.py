@@ -29,7 +29,6 @@ from functools import wraps
 import io
 import json
 import logging
-import os
 import signal
 import socket
 import spavro.schema
@@ -56,7 +55,8 @@ from urllib3.exceptions import MaxRetryError
 from producer import db
 from producer.db import Offset
 from producer.db import KERNEL_DB as POSTGRES
-from producer.settings import Settings
+from producer.logger import LOG
+from producer.settings import PRODUCER_CONFIG
 
 
 class KafkaStatus(enum.Enum):
@@ -157,16 +157,16 @@ class ProducerManager(object):
         except (InterruptedError,
                 ConnectionRefusedError,
                 socket.gaierror) as rce:
-            self.logger.debug(
+            LOG.debug(
                 "Could not connect to Kafka on url: %s:%s" % (kafka_ip, kafka_port))
-            self.logger.debug("Connection problem: %s" % rce)
+            LOG.debug("Connection problem: %s" % rce)
             return False
         return True
 
     # Connect to sqlite
     def init_db(self):
         db.init()
-        self.logger.info("OffsetDB initialized")
+        LOG.info("OffsetDB initialized")
 
     # Maintain Aether Connection
     def connect_aether(self):
@@ -175,18 +175,18 @@ class ProducerManager(object):
             errored = False
             try:
                 if not self.kernel:
-                    self.logger.info('Connecting to Aether...')
+                    LOG.info('Connecting to Aether...')
                     with KernelHandler(self):
                         res = requests.head("%s/healthcheck" % self.settings['kernel_url'])
                         if res.status_code != 404:
-                            self.logger.info('Kernel available without credentials.')
+                            LOG.info('Kernel available without credentials.')
                         try:
                             self.kernel = Client(
                                 self.settings['kernel_url'],
                                 self.settings['kernel_username'],
                                 self.settings['kernel_password'],
                             )
-                            self.logger.info('Connected to Aether.')
+                            LOG.info('Connected to Aether.')
                             continue
                         except UnboundLocalError:
                             # This is an unclear error from AetherClient
@@ -195,20 +195,20 @@ class ProducerManager(object):
 
             except ConnectionError as ce:
                 errored = True
-                self.logger.debug(ce)
+                LOG.debug(ce)
             except MaxRetryError as mre:
                 errored = True
-                self.logger.debug(mre)
+                LOG.debug(mre)
             except Exception as err:
                 errored = True
-                self.logger.debug(err)
+                LOG.debug(err)
 
             if errored:
-                self.logger.info('No Aether connection...')
+                LOG.info('No Aether connection...')
                 self.safe_sleep(self.settings['start_delay'])
             errored = False
 
-        self.logger.debug('No longer attempting to connect to Aether')
+        LOG.debug('No longer attempting to connect to Aether')
 
     # Main Schema Loop
     # Spawns TopicManagers for new schemas, updates schemas for workers on change.
@@ -227,7 +227,7 @@ class ProducerManager(object):
                 for schema in schemas:
                     schema_name = schema['name']
                     if schema_name not in self.topic_managers.keys():
-                        self.logger.info(
+                        LOG.info(
                             "New topic connected: %s" % schema_name)
                         self.topic_managers[schema_name] = TopicManager(
                             self, schema)
@@ -235,14 +235,14 @@ class ProducerManager(object):
                         topic_manager = self.topic_managers[schema_name]
                         if topic_manager.schema_changed(schema):
                             topic_manager.update_schema(schema)
-                            self.logger.debug(
+                            LOG.debug(
                                 "Schema %s updated" % schema_name)
                         else:
-                            self.logger.debug(
+                            LOG.debug(
                                 "Schema %s unchanged" % schema_name)
                 # Time between checks for schema change
                 self.safe_sleep(self.settings['sleep_time'])
-        self.logger.debug('No longer checking schemas')
+        LOG.debug('No longer checking schemas')
 
     # Flask Functions
 
@@ -260,18 +260,16 @@ class ProducerManager(object):
 
     def serve(self):
         self.app = Flask('AetherProducer')  # pylint: disable=invalid-name
-        self.logger = self.app.logger
         try:
-            handler = self.logger.handlers[0]
+            handler = self.app.logger.handlers[0]
         except IndexError:
             handler = logging.StreamHandler()
-            self.logger.addHandler(handler)
+            self.app.logger.addHandler(handler)
         handler.setFormatter(logging.Formatter(
             '%(asctime)s [Producer] %(levelname)-8s %(message)s'))
         log_level = logging.getLevelName(self.settings
                                          .get('log_level', 'DEBUG'))
-        self.logger.setLevel(log_level)
-        # self.logger.setLevel(logging.INFO)
+        self.app.logger.setLevel(log_level)
         if log_level == "DEBUG":
             self.app.debug = True
         self.app.config['JSONIFY_PRETTYPRINT_REGULAR'] = self.settings \
@@ -428,7 +426,6 @@ class TopicManager(object):
 
     def __init__(self, server_handler, schema):
         self.context = server_handler
-        self.logger = self.context.logger
         self.name = schema['name']
         self.offset = ""
         self.operating_status = TopicStatus.NORMAL
@@ -453,11 +450,11 @@ class TopicManager(object):
                 .get('name_modifier', "%s") \
                 % self.name
         except Exception:  # Bad Name
-            self.logger.critical(("invalid name_modifier using topic name for topic: %s."
-                                  " Update configuration for"
-                                  " topic_settings.name_modifier") % self.name)
-            # This is a failure which could cause topics to collide. We'll kill the producer
-            # so the configuration can be updated.
+            LOG.critical(('invalid name_modifier using topic name for topic:'
+                         f'{self.name} Update configuration for'
+                          ' topic_settings.name_modifier'))
+            # This is a failure which could cause topics to collide. We'll kill
+            # the producer so the configuration can be updated.
             sys.exit(1)
         self.update_schema(schema)
         kafka_settings = self.context.settings.get('kafka_settings')
@@ -472,22 +469,24 @@ class TopicManager(object):
     # API Calls to Control Topic
 
     def pause(self):
-        # Stops sending of data on this topic until resume is called or Producer restarts.
+        # Stops sending of data on this topic until resume is called
+        # or Producer restarts.
         if self.operating_status is not TopicStatus.NORMAL:
-            self.logger.info(
-                f'Topic {self.name} could not pause, status: {self.operating_status}.')
+            LOG.info(
+                f'Topic {self.name} could not pause,'
+                f' status: {self.operating_status}.')
             return False
-        self.logger.info(f'Topic {self.name} is pausing.')
+        LOG.info(f'Topic {self.name} is pausing.')
         self.operating_status = TopicStatus.PAUSED
         return True
 
     def resume(self):
         # Resume sending data after pausing.
         if self.operating_status is not TopicStatus.PAUSED:
-            self.logger.info(
+            LOG.info(
                 f'Topic {self.name} could not resume, status: {self.operating_status}.')
             return False
-        self.logger.info(f'Topic {self.name} is resuming.')
+        LOG.info(f'Topic {self.name} is resuming.')
         self.operating_status = TopicStatus.NORMAL
         return True
 
@@ -495,7 +494,7 @@ class TopicManager(object):
 
     def rebuild(self):
         # API Call
-        self.logger.warn(f'Topic {self.name} is being REBUIT!')
+        LOG.warn(f'Topic {self.name} is being REBUIT!')
         # kick off rebuild process
         self.context.threads.append(gevent.spawn(self.handle_rebuild))
         return True
@@ -504,21 +503,21 @@ class TopicManager(object):
         # greened background task to handle rebuilding of topic
         self.operating_status = TopicStatus.REBUILDING
         tag = f'REBUILDING {self.name}:'
-        self.logger.info(f'{tag} waiting'
-                         + f' {self.wait_time *1.5}(sec) for inflight ops to resolve')
+        LOG.info(f'{tag} waiting'
+                 f' {self.wait_time *1.5}(sec) for inflight ops to resolve')
         self.context.safe_sleep(int(self.wait_time * 1.5))
-        self.logger.info(f'{tag} Deleting Topic')
+        LOG.info(f'{tag} Deleting Topic')
         self.producer = None
         ok = self.delete_this_topic()
         if not ok:
-            self.logger.critical(f'{tag} FAILED. Topic will not resume.')
+            LOG.critical(f'{tag} FAILED. Topic will not resume.')
             self.operating_status = TopicStatus.LOCKED
             return
-        self.logger.warn(f'{tag} Resetting Offset.')
+        LOG.warn(f'{tag} Resetting Offset.')
         self.set_offset("")
-        self.logger.info(f'{tag} Rebuilding Topic Producer')
+        LOG.info(f'{tag} Rebuilding Topic Producer')
         self.producer = Producer(**self.kafka_settings)
-        self.logger.warn(f'{tag} Wipe Complete. /resume to complete operation.')
+        LOG.warn(f'{tag} Wipe Complete. /resume to complete operation.')
         self.operating_status = TopicStatus.PAUSED
 
     def delete_this_topic(self):
@@ -528,7 +527,8 @@ class TopicManager(object):
         for x in range(60):
             if not future.done():
                 if (x % 5 == 0):
-                    self.logger.debug(f'REBUILDING {self.name}: Waiting for future to complete')
+                    LOG.debug(f'REBUILDING {self.name}: '
+                              'Waiting for future to complete')
                 sleep(1)
             else:
                 return True
@@ -538,26 +538,29 @@ class TopicManager(object):
 
     def updates_available(self):
 
-        modified = "" if not self.offset else self.offset  # "" evals to < all strings
+        # "" evals to < all strings
+        modified = "" if not self.offset else self.offset
         query = sql.SQL(TopicManager.NEW_STR).format(
             modified=sql.Literal(modified),
             schema_name=sql.Literal(self.name),
         )
         try:
-            promise = POSTGRES.request_connection(1, self.name)  # Medium priority
+            # Medium priority
+            promise = POSTGRES.request_connection(1, self.name)
             conn = promise.get()
             cursor = conn.cursor(cursor_factory=DictCursor)
             cursor.execute(query)
             return sum([1 for i in cursor]) > 0
         except psycopg2.OperationalError as pgerr:
-            self.logger.critical(
+            LOG.critical(
                 'Could not access Database to look for updates: %s' % pgerr)
             return False
         finally:
             try:
                 POSTGRES.release(self.name, conn)
             except UnboundLocalError:
-                self.logger.error(f'{self.name} could not release a connection it never received.')
+                LOG.error(f'{self.name} could not release a connection'
+                          ' it never received.')
 
     def get_time_window_filter(self, query_time):
         # You can't always trust that a set from kernel made up of time window
@@ -574,16 +577,17 @@ class TopicManager(object):
                 return True
             elif lag_time < -30.0:
                 # Sometimes fractional negatives show up. More than 30 seconds is an issue though.
-                self.logger.critical(
-                    "INVALID LAG INTERVAL: %s. Check time settings on server." % lag_time)
+                LOG.critical(
+                    f'INVALID LAG INTERVAL: {lag_time}.'
+                    ' Check time settings on server.')
             _id = row.get('id')
-            self.logger.debug("WINDOW EXCLUDE: ID: %s, LAG: %s" %
-                              (_id, lag_time))
+            LOG.debug(f'WINDOW EXCLUDE: ID: {_id}, LAG: {lag_time}')
             return False
         return fn
 
     def get_db_updates(self):
-        modified = "" if not self.offset else self.offset  # "" evals to < all strings
+        # "" evals to < all strings
+        modified = "" if not self.offset else self.offset
         query = sql.SQL(TopicManager.QUERY_STR).format(
             modified=sql.Literal(modified),
             schema_name=sql.Literal(self.name),
@@ -597,38 +601,52 @@ class TopicManager(object):
             cursor = conn.cursor(cursor_factory=DictCursor)
             cursor.execute(query)
             window_filter = self.get_time_window_filter(query_time)
-            return [{key: row[key] for key in row.keys()} for row in cursor if window_filter(row)]
+            return [
+                {key: row[key]
+                    for key in row.keys()}
+                for row in cursor
+                if window_filter(row)
+            ]
         except psycopg2.OperationalError as pgerr:
-            self.logger.critical(
+            LOG.critical(
                 'Could not access Database to look for updates: %s' % pgerr)
             return []
         finally:
             try:
                 POSTGRES.release(self.name, conn)
             except UnboundLocalError:
-                self.logger.error(f'{self.name} could not release a connection it never received.')
+                LOG.error(
+                    f'{self.name} could not release a'
+                    ' connection it never received.'
+                )
 
     def get_topic_size(self):
         query = sql.SQL(TopicManager.COUNT_STR).format(
             schema_name=sql.Literal(self.name),
         )
         try:
-            promise = POSTGRES.request_connection(0, self.name)  # needs to be quick
+            # needs to be quick
+            promise = POSTGRES.request_connection(0, self.name)
             conn = promise.get()
             cursor = conn.cursor(cursor_factory=DictCursor)
             cursor.execute(query)
             size = [{key: row[key] for key in row.keys()} for row in cursor][0]
-            self.logger.debug(f'''Reporting requested size for {self.name} of {size['count']}''')
+            LOG.debug(
+                f'Reporting requested size for {self.name} of {size["count"]}'
+            )
             return size
         except psycopg2.OperationalError as pgerr:
-            self.logger.critical(
+            LOG.critical(
                 'Could not access db to get topic size: %s' % pgerr)
             return -1
         finally:
             try:
                 POSTGRES.release(self.name, conn)
             except UnboundLocalError:
-                self.logger.error(f'{self.name} could not release a connection it never received.')
+                LOG.error(
+                    f'{self.name} could not release a'
+                    ' connection it never received.'
+                )
 
     def update_schema(self, schema_obj):
         self.schema_obj = self.parse_schema(schema_obj)
@@ -654,19 +672,20 @@ class TopicManager(object):
     # Callback function registered with Kafka Producer to acknowledge receipt
     def kafka_callback(self, err=None, msg=None, _=None, **kwargs):
         if err:
-            self.logger.error('ERROR %s', [err, msg, kwargs])
+            LOG.error('ERROR %s', [err, msg, kwargs])
         with io.BytesIO() as obj:
             obj.write(msg.value())
             reader = DataFileReader(obj, DatumReader())
             for message in reader:
                 _id = message.get("id")
                 if err:
-                    self.logger.debug("NO-SAVE: %s in topic %s | err %s" %
-                                      (_id, self.topic_name, err.name()))
+                    LOG.debug(
+                        f'NO-SAVE: {_id} in topic {self.topic_name}'
+                        f' | err {err.name()}'
+                    )
                     self.failed_changes[_id] = err
                 else:
-                    self.logger.debug("SAVE: %s in topic %s" %
-                                      (_id, self.topic_name))
+                    LOG.debug('SAVE: {_id} in topic {self.topic_name}')
                     self.successful_changes.append(_id)
 
     def update_kafka(self):
@@ -674,29 +693,32 @@ class TopicManager(object):
         # Monitors postgres for changes via TopicManager.updates_available
         # Consumes updates to the Posgres DB via TopicManager.get_db_updates
         # Sends new messages to Kafka
-        # Registers message callback (ok or fail) to TopicManager.kafka_callback
-        # Waits for all messages to be accepted or timeout in TopicManager.wait_for_kafka
+        # Registers message callback (ok or not) to TopicManager.kafka_callback
+        # Waits for all messages to be accepted or timeout in
+        # TopicManager.wait_for_kafka
 
         while not self.context.killed:
             if self.operating_status is not TopicStatus.NORMAL:
-                self.logger.debug(
-                    f'Topic {self.name} not updating, status: {self.operating_status}'
-                    + f', waiting {self.wait_time}(sec)')
+                LOG.debug(
+                    f'Topic {self.name} not updating, status: '
+                    f'{self.operating_status}'
+                    f', waiting {self.wait_time}(sec)'
+                )
                 self.context.safe_sleep(self.wait_time)
                 continue
 
             if not self.context.kafka_available():
-                self.logger.debug('Kafka Container not accessible, waiting.')
+                LOG.debug('Kafka Container not accessible, waiting.')
                 self.context.safe_sleep(self.wait_time)
                 continue
 
             self.offset = self.get_offset()
             if not self.updates_available():
-                self.logger.debug('No updates')
+                LOG.debug('No updates')
                 self.context.safe_sleep(self.wait_time)
                 continue
             try:
-                self.logger.debug("Getting Changeset for %s" % self.name)
+                LOG.debug("Getting Changeset for %s" % self.name)
                 self.change_set = {}
                 new_rows = self.get_db_updates()
                 if not new_rows:
@@ -704,7 +726,7 @@ class TopicManager(object):
                     continue
                 end_offset = new_rows[-1].get('modified')
             except Exception as pge:
-                self.logger.error(
+                LOG.error(
                     'Could not get new records from kernel: %s' % pge)
                 self.context.safe_sleep(self.wait_time)
                 continue
@@ -712,7 +734,11 @@ class TopicManager(object):
             try:
                 with io.BytesIO() as bytes_writer:
                     writer = DataFileWriter(
-                        bytes_writer, DatumWriter(), self.schema, codec='deflate')
+                        bytes_writer,
+                        DatumWriter(),
+                        self.schema,
+                        codec='deflate'
+                    )
 
                     for row in new_rows:
                         _id = row['id']
@@ -720,7 +746,7 @@ class TopicManager(object):
                         modified = row.get("modified")
                         if validate(self.schema, msg):
                             # Message validates against current schema
-                            self.logger.debug(
+                            LOG.debug(
                                 "ENQUEUE MSG TOPIC: %s, ID: %s, MOD: %s" % (
                                     self.name,
                                     _id,
@@ -729,9 +755,12 @@ class TopicManager(object):
                             self.change_set[_id] = row
                             writer.append(msg)
                         else:
-                            # Message doesn't have the proper format for the current schema.
-                            self.logger.critical(
-                                "SCHEMA_MISMATCH:NOT SAVED! TOPIC:%s, ID:%s" % (self.name, _id))
+                            # Message doesn't have the proper format
+                            # for the current schema.
+                            LOG.critical(
+                                'SCHEMA_MISMATCH:NOT SAVED!'
+                                f' TOPIC:{self.name}, ID:{_id}'
+                            )
 
                     writer.flush()
                     raw_bytes = bytes_writer.getvalue()
@@ -746,33 +775,41 @@ class TopicManager(object):
                     end_offset, failure_wait_time=self.kafka_failure_wait_time)
 
             except Exception as ke:
-                self.logger.error('error in Kafka save: %s' % ke)
-                self.logger.error(traceback.format_exc())
+                LOG.error('error in Kafka save: %s' % ke)
+                LOG.error(traceback.format_exc())
                 self.context.safe_sleep(self.wait_time)
 
-    def wait_for_kafka(self, end_offset, timeout=10, iters_per_sec=10, failure_wait_time=10):
-        # Waits for confirmation of message receipt from Kafka before moving to next changeset
-        # Logs errors and status to log and to web interface
+    def wait_for_kafka(
+        self, end_offset,
+        timeout=10, iters_per_sec=10, failure_wait_time=10
+    ):
+        # Waits for confirmation of message receipt from Kafka before moving to
+        # next changeset. Logs errors and status to log and to web interface
 
         sleep_time = timeout / (timeout * iters_per_sec)
         change_set_size = len(self.change_set)
         errors = {}
         for i in range(timeout * iters_per_sec):
 
-            # whole changeset failed; systemic failure likely; sleep it off and try again
+            # whole changeset failed; systemic failure likely; sleep it off
+            # and try again
             if len(self.failed_changes) >= change_set_size:
                 self.handle_kafka_errors(
-                    change_set_size, all_failed=True, failure_wait_time=failure_wait_time)
+                    change_set_size,
+                    all_failed=True,
+                    failure_wait_time=failure_wait_time
+                )
                 self.clear_changeset()
-                self.logger.info(
-                    'Changeset not saved; likely broker outage, sleeping worker for %s' % self.name)
+                LOG.info(
+                    'Changeset not saved; likely broker outage, '
+                    f'sleeping worker for {self.name}')
                 self.context.safe_sleep(failure_wait_time)
                 return  # all failed; ignore changeset
 
             # All changes were saved
             elif len(self.successful_changes) == change_set_size:
 
-                self.logger.debug(
+                LOG.debug(
                     'All changes saved ok in topic %s.' % self.name)
                 break
 
@@ -805,13 +842,17 @@ class TopicManager(object):
         if errors:
             self.handle_kafka_errors(change_set_size, all_failed=False)
         self.clear_changeset()
-        # Once we're satisfied, we set the new offset past the processed messages
+        # Once we're satisfied, we set the new offset past
+        # the processed messages
         self.context.kafka = KafkaStatus.SUBMISSION_SUCCESS
         self.set_offset(end_offset)
         # Sleep so that elements passed in the current window become eligible
         self.context.safe_sleep(self.window_size_sec)
 
-    def handle_kafka_errors(self, change_set_size, all_failed=False, failure_wait_time=10):
+    def handle_kafka_errors(
+        self, change_set_size,
+        all_failed=False, failure_wait_time=10
+    ):
         # Errors in saving data to Kafka are handled and logged here
         errors = {}
         for _id, err in self.failed_changes.items():
@@ -829,7 +870,7 @@ class TopicManager(object):
         if not all_failed:
             # Collect Error types for reporting
             for _id, err in self.failed_changes.items():
-                self.logger.critical('PRODUCER_FAILURE: T: %s ID %s , ERR_MSG %s' % (
+                LOG.critical('PRODUCER_FAILURE: T: %s ID %s , ERR_MSG %s' % (
                     self.name, _id, err.name()))
             dropped_messages = change_set_size - len(self.successful_changes)
             errors["NO_REPLY"] = dropped_messages - len(self.failed_changes)
@@ -851,24 +892,21 @@ class TopicManager(object):
         # Get current offset from Database
         offset = Offset.get_offset(self.name)
         if offset:
-            self.logger.debug("Got offset for %s | %s" %
-                              (self.name, offset))
+            LOG.debug(f'Got offset for {self.name} | {offset}')
             return offset
         else:
-            self.logger.debug(
-                'Could not get offset for %s it is a new type' % (self.name))
-            # No valid offset so return None; query will use empty string which is < any value
+            LOG.debug(
+                f'Could not get offset for {self.name} it is a new type')
+            # No valid offset so return None; query will use empty string
+            # which is < any value
             return None
 
     def set_offset(self, offset):
         # Set a new offset in the database
         new_offset = Offset.update(self.name, offset)
-        self.logger.debug("new offset for %s | %s" %
-                          (self.name, new_offset))
+        LOG.debug(f'new offset for {self.name} | {new_offset}')
         self.status['offset'] = new_offset
 
 
 def main():
-    file_path = os.environ.get('PRODUCER_SETTINGS_FILE')
-    settings = Settings(file_path)
-    ProducerManager(settings)
+    ProducerManager(PRODUCER_CONFIG)

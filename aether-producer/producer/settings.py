@@ -22,24 +22,56 @@ import os
 
 class Settings(dict):
     # A container for our settings
-    def __init__(self, file_path=None):
-        self.load(file_path)
+    def __init__(self, file_path=None, alias=None, exclude=None):
+        if not exclude:
+            self.exclude = []
+        else:
+            self.exclude = [k.upper() for k in exclude]
+        self.alias = alias if alias else {}
+        if file_path:
+            self.load(file_path)
 
     def get(self, key, default=None):
         try:
-            return self.__getitem__(key)
+            return self.__getitem__(key.upper())
         except KeyError:
             return default
 
     def __getitem__(self, key):
+        if self.alias and key in self.alias:
+            key = self.alias.get(key)
         result = os.environ.get(key.upper())
         if result is None:
-            result = super().__getitem__(key)
+            result = super().__getitem__(key.upper())
 
         return result
+
+    def copy(self):
+        keys = [k for k in self.keys() if k not in self.exclude]
+        for key in self.alias:
+            keys.append(key)
+        return {k: self.get(k) for k in keys}
 
     def load(self, path):
         with open(path) as f:
             obj = json.load(f)
             for k in obj:
-                self[k] = obj.get(k)
+                self[k.upper()] = obj.get(k)
+
+
+def check_required_fields(conf, fields):
+    fields = json.loads(fields)
+    missing = []
+    found = []
+    for f in fields:
+        if not conf.get(f):
+            missing.append(f)
+        else:
+            found.append(f)
+    assert missing == [], 'Required fields are missing: %s' % (missing)
+    return found
+
+
+PRODUCER_CONFIG: Settings = Settings(
+    file_path=os.environ.get('PRODUCER_SETTINGS_FILE')
+)

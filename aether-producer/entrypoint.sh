@@ -50,17 +50,17 @@ function after_test {
 }
 
 function test_unit {
-    pytest -m unit
+    pytest -m unit -p no:cacheprovider
     after_test
 }
 
 function test_integration {
-    pytest -m integration
+    pytest -m integration -p no:cacheprovider
     after_test
 }
 
 function test_all {
-    pytest
+    pytest -p no:cacheprovider
     after_test
 }
 
