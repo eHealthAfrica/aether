@@ -55,7 +55,6 @@ services:
       # use a different database when testing the integration with another container
       DB_NAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
       BUCKET_NAME: test-kernel
-      DEBUG: null # set to null to remove previous value
       MINIO_STORAGE_ENDPOINT: minio-test:9000
       MULTITENANCY: "true"
       PGHOST: db-test
@@ -67,7 +66,7 @@ services:
       - ./tmp/test/kernel/static:/var/www/static
       - ./tmp/test/kernel/tmp:/tmp
     ports:
-      - "9100:9100"
+      - 9100:9100
     command: start
 
 
@@ -98,7 +97,6 @@ services:
       AETHER_KERNEL_URL: http://kernel-test:9100
       BUCKET_NAME: test-odk
       DB_NAME: test-odk
-      DEBUG: null # set to null to remove previous value
       MINIO_STORAGE_ENDPOINT: minio-test:9000
       MULTITENANCY: "true"
       PGHOST: db-test
@@ -109,7 +107,7 @@ services:
       # volumes in tests
       - ./tmp/test/odk/static:/var/www/static
     ports:
-      - "9102:9102"
+      - 9102:9102
     command: start
 
 
@@ -125,7 +123,6 @@ services:
       AETHER_KERNEL_URL: http://kernel-test:9100
       COUCHDB_URL: http://couchdb-test:5984
       DB_NAME: test-couchdb-sync
-      DEBUG: null # set to null to remove previous value
       GOOGLE_CLIENT_ID: secret_google_client_id
       MULTITENANCY: "true"
       PGHOST: db-test
@@ -134,7 +131,7 @@ services:
       TEST_PARALLEL: ${TEST_PARALLEL}
       WEB_SERVER_PORT: 9106
     ports:
-      - "9106:9106"
+      - 9106:9106
     command: start
 
 
@@ -149,14 +146,13 @@ services:
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9100
       DB_NAME: test-ui
-      DEBUG: null # set to null to remove previous value
       MULTITENANCY: "true"
       PGHOST: db-test
       TESTING: "true"
       TEST_PARALLEL: ${TEST_PARALLEL}
       WEB_SERVER_PORT: 9104
     ports:
-      - "9104:9104"
+      - 9104:9104
     command: start
 
   ui-assets-test:
@@ -211,7 +207,7 @@ services:
       OFFSET_DB_PASSWORD: ${KERNEL_DB_PASSWORD}
       OFFSET_DB_NAME: producer_offset_db_test
     ports:
-      - "9005:9005"
+      - 9005:9005
     volumes:
       - ./aether-producer/tests:/code/tests
     command: start
