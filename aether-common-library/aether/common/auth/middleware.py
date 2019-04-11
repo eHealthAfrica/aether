@@ -26,7 +26,7 @@ from aether.common.utils import find_in_request_headers
 from .utils import get_or_create_user_from_userinfo
 
 
-class GatewayAuthenticationMiddleware(SessionMiddleware):  # pragma: no cover
+class GatewayAuthenticationMiddleware(SessionMiddleware):
 
     def _logout(self, request):
         request.session[settings.REALM_COOKIE] = None

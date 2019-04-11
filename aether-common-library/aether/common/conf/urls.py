@@ -182,8 +182,8 @@ def _get_admin_urls():
     ]
 
 
-def _get_debug_urls():
-    if settings.DEBUG and 'debug_toolbar' in settings.INSTALLED_APPS:  # pragma: no cover
+def _get_debug_urls():  # pragma: no cover
+    if settings.DEBUG and 'debug_toolbar' in settings.INSTALLED_APPS:
         import debug_toolbar
 
         return [
