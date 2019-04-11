@@ -30,8 +30,9 @@ def custom_reverse(viewname, args=None, kwargs=None, request=None, format=None, 
         kwargs = {}
 
     if settings.GATEWAY_HOST:
-        path_kwargs = resolve(request.path).kwargs
-        kwargs['realm'] = path_kwargs['realm']
+        realm = resolve(request.path).kwargs.get('realm')
+        if realm:
+            kwargs['realm'] = realm
 
     return reverse(viewname=viewname, args=args, kwargs=kwargs, request=request, format=format, **extra)
 
