@@ -43,12 +43,13 @@ class UrlsTest(UrlsTestCase):
         self.assertEqual(reverse('rest_framework:token'), '/accounts/token')
 
     def test__urls__accounts__views(self):
-        from django.contrib.auth import views
+        from django.contrib.auth.views import LoginView
+        from aether.common.auth.views import AetherLogoutView
 
         self.assertEqual(resolve('/accounts/login/').func.view_class,
-                         views.LoginView.as_view().view_class)
+                         LoginView.as_view().view_class)
         self.assertEqual(resolve('/accounts/logout/').func.view_class,
-                         views.LogoutView.as_view().view_class)
+                         AetherLogoutView.as_view().view_class)
 
 
 @override_settings(

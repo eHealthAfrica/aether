@@ -125,9 +125,11 @@ def _get_auth_urls(token):
         logout_view = views.LogoutView.as_view()
 
     else:
-        from django.contrib.auth.views import LoginView, LogoutView
+        from django.contrib.auth.views import LoginView
+        from aether.common.auth.views import AetherLogoutView
 
-        logout_view = LogoutView.as_view(template_name=settings.LOGGED_OUT_TEMPLATE)
+        logout_view = AetherLogoutView.as_view(template_name=settings.LOGGED_OUT_TEMPLATE)
+
         if not settings.KEYCLOAK_SERVER_URL:
             login_view = LoginView.as_view(template_name=settings.LOGIN_TEMPLATE)
 
