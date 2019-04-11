@@ -61,19 +61,7 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # HEALTH checks
-    urlpatterns += [
-        path(route='health', view=health, name='health'),
-        path(route='check-db', view=check_db, name='check-db'),
-        path(route='check-app', view=check_app, name='check-app'),
-    ]
-
-    if kernel:
-        from aether.common.kernel.views import check_kernel
-
-        # checks if Kernel server is available
-        urlpatterns += [
-            path(route='check-kernel', view=check_kernel, name='check-kernel'),
-        ]
+    urlpatterns += _get_health_urls(kernel)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # GATEWAY endpoints
@@ -87,6 +75,49 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # AUTHORIZATION management
+    urlpatterns += _get_auth_urls(token)
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ADMIN management
+    urlpatterns += _get_admin_urls()
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG toolbar
+    urlpatterns += _get_debug_urls()
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # nesting app urls
+    app_url = settings.APP_URL[1:]  # remove leading slash
+    if app_url:
+        # Prepend url endpoints with "{APP_URL}/"
+        # if APP_URL = "/aether-app" then `<my-server>/aether-app/<endpoint-url>`
+        # if APP_URL = "/"           then `<my-server>/<endpoint-url>`
+        urlpatterns = [
+            path(route=f'{app_url}/', view=include(urlpatterns)),
+        ]
+
+    return urlpatterns
+
+
+def _get_health_urls(kernel):
+    health_urls = [
+        path(route='health', view=health, name='health'),
+        path(route='check-db', view=check_db, name='check-db'),
+        path(route='check-app', view=check_app, name='check-app'),
+    ]
+
+    if kernel:
+        from aether.common.kernel.views import check_kernel
+
+        # checks if Kernel server is available
+        health_urls += [
+            path(route='check-kernel', view=check_kernel, name='check-kernel'),
+        ]
+
+    return health_urls
+
+
+def _get_auth_urls(token):
     if settings.CAS_SERVER_URL:
         from django_cas_ng import views
 
@@ -115,7 +146,7 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):
                     authentication_form=RealmAuthenticationForm,
                 )
 
-    auth_views = [
+    auth_urls = [
         path(route='login/', view=login_view, name='login'),
         path(route='logout/', view=logout_view, name='logout'),
     ]
@@ -124,46 +155,39 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):
         from aether.common.auth.views import obtain_auth_token
 
         # generates users token
-        auth_views += [
+        auth_urls += [
             path(route='token', view=obtain_auth_token, name='token'),
         ]
-    auth_urls = (auth_views, 'rest_framework')
 
-    urlpatterns += [
-        # `accounts` management
-        path(route=f'{settings.AUTH_URL}/', view=include(auth_urls, namespace='rest_framework')),
+    ns = 'rest_framework'
+    return [
+        path(route=f'{settings.AUTH_URL}/', view=include((auth_urls, ns), namespace=ns)),
     ]
 
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # ADMIN management
-    urlpatterns += [
+
+def _get_admin_urls():
+    admin_urls = [
         # monitoring
-        path(route=f'{settings.ADMIN_URL}/prometheus/', view=include('django_prometheus.urls')),
-
+        path(route='prometheus/', view=include('django_prometheus.urls')),
+        # uWSGI monitoring
+        path(route='uwsgi/', view=include('django_uwsgi.urls')),
         # `admin` section
-        path(route=f'{settings.ADMIN_URL}/uwsgi/', view=include('django_uwsgi.urls')),
-        path(route=f'{settings.ADMIN_URL}/', view=admin.site.urls),
-
+        path(route='', view=admin.site.urls),
     ]
 
+    return [
+        path(route=f'{settings.ADMIN_URL}/', view=include(admin_urls)),
+    ]
+
+
+def _get_debug_urls():
     if settings.DEBUG and 'debug_toolbar' in settings.INSTALLED_APPS:  # pragma: no cover
         import debug_toolbar
 
-        urlpatterns += [
+        return [
             path(route=f'{settings.DEBUG_TOOLBAR_URL}/', view=include(debug_toolbar.urls)),
         ]
-
-    app_url = settings.APP_URL[1:]  # remove leading slash
-    if app_url:
-        # Prepend url endpoints with "{APP_URL}/"
-        # if APP_URL = "/aether-app" then
-        # all the url endpoints will be  `<my-server>/aether-app/<endpoint-url>`
-        # before they were  `<my-server>/<endpoint-url>`
-        urlpatterns = [
-            path(route=f'{app_url}/', view=include(urlpatterns)),
-        ]
-
-    return urlpatterns
+    return []
 
 
 def __check_kernel_env():

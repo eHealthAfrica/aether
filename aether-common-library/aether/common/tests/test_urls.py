@@ -23,7 +23,11 @@ from django.urls import reverse, resolve, exceptions
 from . import UrlsTestCase
 
 
-@override_settings(KEYCLOAK_SERVER_URL=None)
+@override_settings(
+    KEYCLOAK_SERVER_URL=None,
+    ADMIN_URL='admin',
+    AUTH_URL='accounts',
+)
 class UrlsTest(UrlsTestCase):
 
     def test__urls__checks(self):
@@ -47,7 +51,11 @@ class UrlsTest(UrlsTestCase):
                          views.LogoutView.as_view().view_class)
 
 
-@override_settings(APP_URL='/aether')
+@override_settings(
+    APP_URL='/aether',
+    ADMIN_URL='admin',
+    AUTH_URL='accounts',
+)
 class UrlsAppUrlTest(UrlsTestCase):
 
     def test__urls__checks(self):
@@ -80,6 +88,7 @@ class UrlsNoTokenTest(UrlsTestCase):
 @override_settings(
     CAS_SERVER_URL='http://localhost:6666',
     INSTALLED_APPS=[*settings.INSTALLED_APPS, 'django_cas_ng'],
+    AUTH_URL='accounts',
 )
 class UrlsCASServerTest(UrlsTestCase):
 
@@ -98,6 +107,7 @@ class UrlsCASServerTest(UrlsTestCase):
 @override_settings(
     KEYCLOAK_SERVER_URL='http://localhost:6666',
     KEYCLOAK_BEHIND_SCENES=True,
+    AUTH_URL='accounts',
 )
 class UrlsKeycloakServerBehindTest(UrlsTestCase):
 
@@ -112,6 +122,7 @@ class UrlsKeycloakServerBehindTest(UrlsTestCase):
 @override_settings(
     KEYCLOAK_SERVER_URL='http://localhost:6666',
     KEYCLOAK_BEHIND_SCENES=False,
+    AUTH_URL='accounts',
 )
 class UrlsKeycloakServerTest(UrlsTestCase):
 
@@ -121,3 +132,40 @@ class UrlsKeycloakServerTest(UrlsTestCase):
         self.assertEqual(reverse('rest_framework:login'), '/accounts/login/')
         self.assertEqual(resolve('/accounts/login/').func.view_class,
                          KeycloakLoginView.as_view().view_class)
+
+
+# using `docker-compose.yml` environment
+class UrlsGatewayUrlTest(UrlsTestCase):
+
+    def test__urls(self):
+        self.assertEqual(reverse('health', kwargs={'realm': 'my-realm'}),
+                         '/my-realm/common/health')
+        self.assertEqual(resolve('/my-realm/common/health').kwargs,
+                         {'realm': 'my-realm'})
+
+        self.assertEqual(reverse('health'), '/health')
+        self.assertEqual(resolve('/health').kwargs, {})
+
+        self.assertEqual(reverse('admin:index'), '/-/common/admin/')
+        self.assertEqual(reverse('rest_framework:login'), '/-/common/accounts/login/')
+
+
+@override_settings(GATEWAY_HOST=None)
+class UrlsNoGatewayUrlTest(UrlsTestCase):
+
+    def test__urls(self):
+        self.assertRaises(exceptions.NoReverseMatch, reverse, 'health', kwargs={'realm': 'my-realm'})
+
+
+@override_settings(ADMIN_URL='private')
+class AdminUrlsUrlTest(UrlsTestCase):
+
+    def test__urls(self):
+        self.assertEqual(reverse('admin:index'), '/private/')
+
+
+@override_settings(AUTH_URL='secure')
+class AuthUrlsUrlTest(UrlsTestCase):
+
+    def test__urls(self):
+        self.assertEqual(reverse('rest_framework:login'), '/secure/login/')

@@ -32,7 +32,7 @@ from ..utils import _KC_TOKEN_SESSION as TOKEN_KEY
 user_objects = get_user_model().objects
 
 
-@override_settings(KEYCLOAK_BEHIND_SCENES=True)
+@override_settings(AUTH_URL='accounts', KEYCLOAK_BEHIND_SCENES=True)
 class KeycloakBehindTests(UrlsTestCase):
 
     def test__urls__accounts__login(self):
@@ -340,7 +340,7 @@ class KeycloakBehindTests(UrlsTestCase):
             mock_req_8.assert_not_called()
 
 
-@override_settings(KEYCLOAK_BEHIND_SCENES=False)
+@override_settings(AUTH_URL='accounts', KEYCLOAK_BEHIND_SCENES=False)
 class KeycloakTests(UrlsTestCase):
 
     def test__urls__accounts__login(self):
