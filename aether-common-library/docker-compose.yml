@@ -27,6 +27,8 @@ services:
       DB_NAME: common
 
       GATEWAY_HOST: http://localhost
+      GATEWAY_SERVICE_ID: common
+      GATEWAY_PUBLIC_REALM: "-"
 
       KEYCLOAK_SERVER_URL: http://localhost:8090
       KEYCLOAK_CLIENT_ID: testing

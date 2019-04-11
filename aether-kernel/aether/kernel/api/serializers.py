@@ -18,14 +18,19 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import urllib
-
 from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
-from rest_framework.reverse import reverse
 
-from aether.common.multitenancy.serializers import MtPrimaryKeyRelatedField, MtModelSerializer
+from aether.common.drf.serializers import (
+    FilteredHyperlinkedRelatedField,
+    HyperlinkedIdentityField,
+    HyperlinkedRelatedField,
+)
+from aether.common.multitenancy.serializers import (
+    MtPrimaryKeyRelatedField,
+    MtModelSerializer,
+)
 
 from .constants import MergeOptions as MERGE_OPTIONS
 from .entity_extractor import run_entity_extraction, ENTITY_EXTRACTION_ERRORS
@@ -41,56 +46,20 @@ MERGE_CHOICES = (
 DEFAULT_MERGE = MERGE_OPTIONS.overwrite.value
 
 
-class FilteredHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
-    '''
-    This custom field does essentially the same thing as
-    serializers.HyperlinkedRelatedField. The only difference is that the url of
-    a foreign key relationship will be:
-
-        {
-            ...
-            'entities_url': '/entities?projectschema=<projectschema-id>'
-            ...
-        }
-
-    Instead of:
-
-        {
-            ...
-            'entities': [
-                '/entities/<entity-id>',
-                '/entities/<entity-id>',
-            ]
-            ...
-        }
-
-    '''
-
-    def get_url(self, obj, view_name, request, format):
-        lookup_field_value = obj.instance.pk
-        result = '{}?{}'.format(
-            reverse(view_name, kwargs={}, request=request, format=format),
-            urllib.parse.urlencode({self.lookup_field: lookup_field_value})
-        )
-        return result
-
-
 class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):
-    url = serializers.HyperlinkedIdentityField(
-        read_only=True,
-        view_name='project-detail',
-    )
+
+    url = HyperlinkedIdentityField(view_name='project-detail')
     mappingset_url = FilteredHyperlinkedRelatedField(
+        view_name='mappingset-list',
         lookup_field='project',
         read_only=True,
         source='mappingsets',
-        view_name='mappingset-list',
     )
     projectschemas_url = FilteredHyperlinkedRelatedField(
+        view_name='projectschema-list',
         lookup_field='project',
         read_only=True,
         source='projectschemas',
-        view_name='projectschema-list',
     )
 
     class Meta:
@@ -99,26 +68,24 @@ class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):
 
 
 class MappingSetSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField(
-        read_only=True,
-        view_name='mappingset-detail',
-    )
-    project_url = serializers.HyperlinkedRelatedField(
+
+    url = HyperlinkedIdentityField(view_name='mappingset-detail')
+    project_url = HyperlinkedRelatedField(
+        view_name='project-detail',
         read_only=True,
         source='project',
-        view_name='project-detail',
     )
     mappings_url = FilteredHyperlinkedRelatedField(
+        view_name='mapping-list',
         lookup_field='mappingset',
         read_only=True,
         source='mappings',
-        view_name='mapping-list',
     )
     submissions_url = FilteredHyperlinkedRelatedField(
+        view_name='submission-list',
         lookup_field='mappingset',
         read_only=True,
         source='submissions',
-        view_name='submission-list',
     )
 
     project = MtPrimaryKeyRelatedField(
@@ -131,20 +98,18 @@ class MappingSetSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 
 class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField(
-        read_only=True,
-        view_name='mapping-detail',
-    )
-    mappingset_url = serializers.HyperlinkedRelatedField(
+
+    url = HyperlinkedIdentityField(view_name='mapping-detail')
+    mappingset_url = HyperlinkedRelatedField(
+        view_name='mappingset-detail',
         read_only=True,
         source='mappingset',
-        view_name='mappingset-detail',
     )
     projectschemas_url = FilteredHyperlinkedRelatedField(
+        view_name='projectschema-list',
         lookup_field='mapping',
         read_only=True,
         source='projectschemas',
-        view_name='projectschema-list',
     )
 
     project = MtPrimaryKeyRelatedField(
@@ -162,6 +127,7 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 
 class AttachmentSerializerNested(DynamicFieldsMixin, serializers.ModelSerializer):
+
     name = serializers.CharField(read_only=True)
     url = serializers.CharField(read_only=True, source='attachment_file_url')
 
@@ -171,29 +137,27 @@ class AttachmentSerializerNested(DynamicFieldsMixin, serializers.ModelSerializer
 
 
 class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField(
-        view_name='submission-detail',
-        read_only=True
-    )
-    project_url = serializers.HyperlinkedRelatedField(
+
+    url = HyperlinkedIdentityField(view_name='submission-detail')
+    project_url = HyperlinkedRelatedField(
         view_name='project-detail',
         source='project',
         read_only=True,
     )
-    mappingset_url = serializers.HyperlinkedRelatedField(
+    mappingset_url = HyperlinkedRelatedField(
         view_name='mappingset-detail',
         source='mappingset',
         read_only=True,
     )
     entities_url = FilteredHyperlinkedRelatedField(
-        lookup_field='submission',
         view_name='entity-list',
+        lookup_field='submission',
         read_only=True,
         source='entities',
     )
     attachments_url = FilteredHyperlinkedRelatedField(
-        lookup_field='submission',
         view_name='attachment-list',
+        lookup_field='submission',
         read_only=True,
         source='attachments',
     )
@@ -227,15 +191,16 @@ class SubmissionSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 
 class AttachmentSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+
     name = serializers.CharField(allow_null=True, default=None)
     submission_revision = serializers.CharField(allow_null=True, default=None)
 
-    url = serializers.HyperlinkedIdentityField('attachment-detail', read_only=True)
+    url = HyperlinkedIdentityField(view_name='attachment-detail')
     attachment_file_url = serializers.CharField(read_only=True)
-    submission_url = serializers.HyperlinkedRelatedField(
-        'submission-detail',
+    submission_url = HyperlinkedRelatedField(
+        view_name='submission-detail',
         source='submission',
-        read_only=True
+        read_only=True,
     )
 
     submission = MtPrimaryKeyRelatedField(
@@ -249,15 +214,13 @@ class AttachmentSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 
 class SchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField(
-        view_name='schema-detail',
-        read_only=True,
-    )
+
+    url = HyperlinkedIdentityField(view_name='schema-detail')
     projectschemas_url = FilteredHyperlinkedRelatedField(
+        view_name='projectschema-list',
         lookup_field='schema',
         read_only=True,
         source='projectschemas',
-        view_name='projectschema-list',
     )
 
     class Meta:
@@ -266,31 +229,29 @@ class SchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 
 class ProjectSchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField(
-        read_only=True,
-        view_name='projectschema-detail',
-    )
-    project_url = serializers.HyperlinkedRelatedField(
+
+    url = HyperlinkedIdentityField(view_name='projectschema-detail')
+    project_url = HyperlinkedRelatedField(
         view_name='project-detail',
+        read_only=True,
         source='project',
-        read_only=True,
     )
-    schema_url = serializers.HyperlinkedRelatedField(
+    schema_url = HyperlinkedRelatedField(
         view_name='schema-detail',
-        source='schema',
         read_only=True,
+        source='schema',
     )
     entities_url = FilteredHyperlinkedRelatedField(
+        view_name='entity-list',
         lookup_field='projectschema',
         read_only=True,
         source='entities',
-        view_name='entity-list',
     )
     mappings_url = FilteredHyperlinkedRelatedField(
+        view_name='mapping-list',
         lookup_field='projectschema',
         read_only=True,
         source='mappings',
-        view_name='mapping-list',
     )
 
     schema_definition = serializers.JSONField(
@@ -308,19 +269,32 @@ class ProjectSchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 
 class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField(
-        view_name='entity-detail',
-        read_only=True
+
+    url = HyperlinkedIdentityField(view_name='entity-detail')
+    project_url = HyperlinkedRelatedField(
+        view_name='project-detail',
+        read_only=True,
+        source='project',
     )
-    projectschema_url = serializers.HyperlinkedRelatedField(
+    schema_url = HyperlinkedRelatedField(
+        view_name='schema-detail',
+        read_only=True,
+        source='schema',
+    )
+    projectschema_url = HyperlinkedRelatedField(
+        view_name='projectschema-detail',
         read_only=True,
         source='projectschema',
-        view_name='projectschema-detail',
     )
-    submission_url = serializers.HyperlinkedRelatedField(
+    submission_url = HyperlinkedRelatedField(
+        view_name='submission-detail',
         read_only=True,
         source='submission',
-        view_name='submission-detail',
+    )
+    mapping_url = HyperlinkedRelatedField(
+        view_name='mapping-detail',
+        read_only=True,
+        source='mapping',
     )
 
     # this field is used to update existing entities, indicates the MERGE strategy
@@ -384,6 +358,7 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 
 class ProjectStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+
     first_submission = serializers.DateTimeField()
     last_submission = serializers.DateTimeField()
     submissions_count = serializers.IntegerField()
@@ -400,6 +375,7 @@ class ProjectStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 
 class MappingSetStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+
     first_submission = serializers.DateTimeField()
     last_submission = serializers.DateTimeField()
     submissions_count = serializers.IntegerField()
@@ -416,6 +392,7 @@ class MappingSetStatsSerializer(DynamicFieldsMixin, serializers.ModelSerializer)
 
 
 class MappingValidationSerializer(serializers.Serializer):
+
     submission_payload = serializers.JSONField()
     mapping_definition = serializers.JSONField(validators=[validators.validate_mapping_definition])
     schemas = serializers.JSONField(validators=[validators.validate_schemas])

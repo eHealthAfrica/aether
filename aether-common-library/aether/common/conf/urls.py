@@ -52,9 +52,41 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):
 
     '''
 
-    urlpatterns = []
+    if kernel:  # bail out ASAP
+        __check_kernel_env()
 
-    # `accounts` management
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # APP specific
+    urlpatterns = app
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # HEALTH checks
+    urlpatterns += [
+        path(route='health', view=health, name='health'),
+        path(route='check-db', view=check_db, name='check-db'),
+        path(route='check-app', view=check_app, name='check-app'),
+    ]
+
+    if kernel:
+        from aether.common.kernel.views import check_kernel
+
+        # checks if Kernel server is available
+        urlpatterns += [
+            path(route='check-kernel', view=check_kernel, name='check-kernel'),
+        ]
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # GATEWAY endpoints
+    if settings.GATEWAY_HOST:
+        urlpatterns = [
+            # this is reachable using internal network
+            path(route='', view=include(urlpatterns)),
+            # this is reachable using the gateway server
+            path(route=f'<slug:realm>/{settings.GATEWAY_SERVICE_ID}/', view=include(urlpatterns)),
+        ]
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # AUTHORIZATION management
     if settings.CAS_SERVER_URL:
         from django_cas_ng import views
 
@@ -98,51 +130,27 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):
     auth_urls = (auth_views, 'rest_framework')
 
     urlpatterns += [
-        # `health` endpoints
-        path(route='health', view=health, name='health'),
-        path(route='check-db', view=check_db, name='check-db'),
-        path(route='check-app', view=check_app, name='check-app'),
-
-        # `admin` section
-        path(route='admin/uwsgi/', view=include('django_uwsgi.urls')),
-        path(route='admin/', view=admin.site.urls),
-
         # `accounts` management
-        path(route='accounts/', view=include(auth_urls, namespace='rest_framework')),
-
-        # monitoring
-        path(route='', view=include('django_prometheus.urls')),
+        path(route=f'{settings.AUTH_URL}/', view=include(auth_urls, namespace='rest_framework')),
     ]
 
-    if kernel:
-        from aether.common.kernel.views import check_kernel
-        from aether.common.kernel.utils import get_kernel_server_url, get_kernel_server_token
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ADMIN management
+    urlpatterns += [
+        # monitoring
+        path(route=f'{settings.ADMIN_URL}/prometheus/', view=include('django_prometheus.urls')),
 
-        # checks if Kernel server is available
-        urlpatterns += [
-            path(route='check-kernel', view=check_kernel, name='check-kernel'),
-        ]
+        # `admin` section
+        path(route=f'{settings.ADMIN_URL}/uwsgi/', view=include('django_uwsgi.urls')),
+        path(route=f'{settings.ADMIN_URL}/', view=admin.site.urls),
 
-        # `aether.common.kernel.utils.get_kernel_server_url()` returns different
-        #  values depending on the value of `settings.TESTING`. Without these
-        # assertions, a deployment configuration missing e.g. `AETHER_KERNEL_URL`
-        # will seem to be in order until `get_kernel_server_url()` is called.
-        ERR_MSG = _('Environment variable "{}" is not set')
-
-        key = 'AETHER_KERNEL_URL_TEST' if settings.TESTING else 'AETHER_KERNEL_URL'
-        assert get_kernel_server_url(), ERR_MSG.format(key)
-
-        msg_token = ERR_MSG.format('AETHER_KERNEL_TOKEN')
-        assert get_kernel_server_token(), msg_token
-
-    # add app specific
-    urlpatterns += app
+    ]
 
     if settings.DEBUG and 'debug_toolbar' in settings.INSTALLED_APPS:  # pragma: no cover
         import debug_toolbar
 
         urlpatterns += [
-            path(route='__debug__/', view=include(debug_toolbar.urls)),
+            path(route=f'{settings.DEBUG_TOOLBAR_URL}/', view=include(debug_toolbar.urls)),
         ]
 
     app_url = settings.APP_URL[1:]  # remove leading slash
@@ -156,3 +164,19 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):
         ]
 
     return urlpatterns
+
+
+def __check_kernel_env():
+    from aether.common.kernel.utils import get_kernel_server_url, get_kernel_server_token
+
+    # `aether.common.kernel.utils.get_kernel_server_url()` returns different
+    #  values depending on the value of `settings.TESTING`. Without these
+    # assertions, a deployment configuration missing e.g. `AETHER_KERNEL_URL`
+    # will seem to be in order until `get_kernel_server_url()` is called.
+    ERR_MSG = _('Environment variable "{}" is not set')
+
+    key = 'AETHER_KERNEL_URL_TEST' if settings.TESTING else 'AETHER_KERNEL_URL'
+    assert get_kernel_server_url(), ERR_MSG.format(key)
+
+    msg_token = ERR_MSG.format('AETHER_KERNEL_TOKEN')
+    assert get_kernel_server_token(), msg_token

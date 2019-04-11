@@ -289,7 +289,9 @@ AUTH_PASSWORD_VALIDATORS = [
 LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login.html')
 LOGGED_OUT_TEMPLATE = os.environ.get('LOGGED_OUT_TEMPLATE', 'aether/logged_out.html')
 
-LOGIN_URL = os.environ.get('LOGIN_URL', '/accounts/login/')
+ADMIN_URL = os.environ.get('ADMIN_URL', 'admin')
+AUTH_URL = os.environ.get('AUTH_URL', 'accounts')
+LOGIN_URL = os.environ.get('LOGIN_URL', f'/{AUTH_URL}/login/')
 LOGIN_REDIRECT_URL = APP_URL
 
 
@@ -335,11 +337,20 @@ if KEYCLOAK_SERVER_URL:
 else:
     logger.info('No Keycloak enabled!')
 
+
 GATEWAY_HOST = os.environ.get('GATEWAY_HOST')
 if GATEWAY_HOST:
     GATEWAY_HEADER_TOKEN = os.environ.get('GATEWAY_HEADER_TOKEN', 'X-Oauth-Token')
+    GATEWAY_SERVICE_ID = os.environ['GATEWAY_SERVICE_ID']
+    GATEWAY_PUBLIC_REALM = os.environ['GATEWAY_PUBLIC_REALM']
+    GATEWAY_PUBLIC_PATH = f'{GATEWAY_PUBLIC_REALM}/{GATEWAY_SERVICE_ID}'
 
-    # the views are served behind the gateway
+    # the endpoints are served behind the gateway
+    ADMIN_URL = os.environ.get('ADMIN_URL', f'{GATEWAY_PUBLIC_PATH}/admin')
+    AUTH_URL = os.environ.get('AUTH_URL', f'{GATEWAY_PUBLIC_PATH}/accounts')
+    LOGIN_URL = os.environ.get('LOGIN_URL', f'/{AUTH_URL}/login/')
+    STATIC_URL = os.environ.get('STATIC_URL', f'{GATEWAY_PUBLIC_PATH}/static/')
+
     USE_X_FORWARDED_HOST = True
     USE_X_FORWARDED_PORT = True
 
@@ -432,6 +443,9 @@ def check_storage():
 if not TESTING and DEBUG:
     INSTALLED_APPS += ['debug_toolbar', ]
     MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware', ]
+    DEBUG_TOOLBAR_URL = os.environ.get('DEBUG_TOOLBAR_URL', '__debug__')
+    if GATEWAY_HOST:
+        DEBUG_TOOLBAR_URL = os.environ.get('DEBUG_TOOLBAR_URL', f'{GATEWAY_PUBLIC_PATH}/__debug__')
 
     DEBUG_TOOLBAR_CONFIG = {
         'SHOW_TOOLBAR_CALLBACK': lambda _: True,
