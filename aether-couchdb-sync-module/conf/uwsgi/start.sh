@@ -30,18 +30,8 @@ fi
 # When passed as environment variables, options are capitalized and prefixed
 # with UWSGI_, and dashes are substituted with underscores.
 
-# Are static assets served by uWSGI?
-if [ ! -z "${CUSTOM_UWSGI_SERVE_STATIC:-}" ]; then
-    export UWSGI_STATIC_EXPIRES=${UWSGI_STATIC_EXPIRES:-"/* 7776000"}
-    
-    APP_URL=${APP_URL:-/}
-    STATIC_URL=${STATIC_URL:-/static}
-    STATIC_DIR="/var/www/static"
-
-    MAP_STATIC="--static-map ${STATIC_URL}=${STATIC_DIR}"
-    MAP_FAVICO="--static-map2 ${APP_URL}favicon.ico=${STATIC_DIR}/aether/images/aether.ico"
-    STATIC_CONTENT="$MAP_STATIC $MAP_FAVICO"
-fi
+export STATIC_URL=${STATIC_URL:-/static}
+export STATIC_DIR=${STATIC_DIR:-/var/www/static}
 
 # set default values
 export UWSGI_INI=${UWSGI_INI:-/code/conf/uwsgi/config.ini}
@@ -49,4 +39,4 @@ export UWSGI_INI=${UWSGI_INI:-/code/conf/uwsgi/config.ini}
 # ensure that DEBUG mode is disabled
 export DEBUG=''
 
-/usr/local/bin/uwsgi ${STATIC_CONTENT:-}
+/usr/local/bin/uwsgi
