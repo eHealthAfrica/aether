@@ -105,16 +105,15 @@ describe('utils', () => {
 
   describe('getLoggedInUserId', () => {
     it('should take logged in user from document', () => {
-      expect(getLoggedInUser()).toEqual({ id: NaN, name: '', logoutUrl: '' })
+      expect(getLoggedInUser()).toEqual({ id: NaN, name: '' })
 
       const element = document.createElement('div')
       element.id = 'logged-in-user-info'
       element.setAttribute('data-user-id', '1')
       element.setAttribute('data-user-name', 'user')
-      element.setAttribute('data-user-logout-url', '/logout')
       document.body.appendChild(element)
 
-      expect(getLoggedInUser()).toEqual({ id: 1, name: 'user', logoutUrl: '/logout' })
+      expect(getLoggedInUser()).toEqual({ id: 1, name: 'user' })
     })
   })
 

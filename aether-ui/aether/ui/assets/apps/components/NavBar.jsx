@@ -35,6 +35,7 @@ class NavBar extends Component {
   render () {
     const { formatMessage } = this.props.intl
     const user = getLoggedInUser()
+    const logoutUrl = window.location.origin + window.location.pathname + 'logout'
 
     return (
       <div data-qa='navbar' className='navbar top-nav'>
@@ -59,7 +60,7 @@ class NavBar extends Component {
             { user.name }
           </span>
           <span className='logout'>
-            <a href={user.logoutUrl}>
+            <a href={logoutUrl}>
               <i className='fas fa-sign-out-alt' title={formatMessage(MESSAGES.logout)} />
             </a>
           </span>

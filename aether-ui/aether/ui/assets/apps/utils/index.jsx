@@ -132,8 +132,7 @@ export const getLoggedInUser = () => {
   const loggedInUserElement = document.getElementById('logged-in-user-info')
   return {
     id: parseInt(loggedInUserElement ? loggedInUserElement.getAttribute('data-user-id') : null, 10),
-    name: loggedInUserElement ? loggedInUserElement.getAttribute('data-user-name') : '',
-    logoutUrl: loggedInUserElement ? loggedInUserElement.getAttribute('data-user-logout-url') : ''
+    name: loggedInUserElement ? loggedInUserElement.getAttribute('data-user-name') : ''
   }
 }
 

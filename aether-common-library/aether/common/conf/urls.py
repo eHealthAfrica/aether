@@ -164,6 +164,7 @@ def _get_auth_urls(token):
     ns = 'rest_framework'
     return [
         path(route=f'{settings.AUTH_URL}/', view=include((auth_urls, ns), namespace=ns)),
+        path(route='logout/', view=logout_view, name='logout'),
     ]
 
 

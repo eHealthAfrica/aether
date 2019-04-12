@@ -63,8 +63,9 @@ class AetherLogoutView(LogoutView):
 
     def get_next_page(self):
         next_page = super(AetherLogoutView, self).get_next_page()
-        realm = resolve(next_page).kwargs.get('realm')
-        if realm and realm != settings.GATEWAY_PUBLIC_REALM:
-            return f'{settings.GATEWAY_HOST}/{realm}/{settings.GATEWAY_SERVICE_ID}/logout'
+        if next_page:
+            realm = resolve(next_page).kwargs.get('realm')
+            if realm and realm != settings.GATEWAY_PUBLIC_REALM:
+                return f'{settings.GATEWAY_HOST}/{realm}/{settings.GATEWAY_SERVICE_ID}/logout'
 
         return next_page
