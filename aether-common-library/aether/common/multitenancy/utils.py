@@ -77,7 +77,7 @@ def filter_by_realm(request, data, mt_field=None):
     return data.annotate(mt_realm=F(field)).filter(mt_realm=realm)
 
 
-def add_current_realm_in_headers(request, headers={}):
+def add_current_realm_in_headers(request, headers=None):
     '''
     Includes the current realm in the headers
     '''
@@ -85,11 +85,12 @@ def add_current_realm_in_headers(request, headers={}):
     if not settings.MULTITENANCY:
         return headers
 
+    headers = headers or {}
     headers[settings.REALM_COOKIE] = get_current_realm(request)
     return headers
 
 
-def add_instance_realm_in_headers(instance, headers={}):
+def add_instance_realm_in_headers(instance, headers=None):
     '''
     Includes the instance realm in the headers
     '''
@@ -97,6 +98,7 @@ def add_instance_realm_in_headers(instance, headers={}):
     if not settings.MULTITENANCY:
         return headers
 
+    headers = headers or {}
     headers[settings.REALM_COOKIE] = instance.get_realm()
     return headers
 
