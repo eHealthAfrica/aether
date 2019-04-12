@@ -21,59 +21,60 @@
 set -Eeuo pipefail
 
 DC="docker-compose -f docker-compose-test.yml logs -t --tail=all"
+LINE="_____________________________________________"
 
 case "$1" in
     core)
         $DC db-test
-        echo "_____________________________________________"
+        echo "${LINE}"
 
         $DC kernel-test
-        echo "_____________________________________________"
+        echo "${LINE}"
         $DC client-test
-        echo "_____________________________________________"
+        echo "${LINE}"
     ;;
 
     modules)
         $DC db-test
-        echo "_____________________________________________"
+        echo "${LINE}"
         $DC couchdb-test
-        echo "_____________________________________________"
+        echo "${LINE}"
         $DC redis-test
-        echo "_____________________________________________"
+        echo "${LINE}"
 
         $DC kernel-test
-        echo "_____________________________________________"
+        echo "${LINE}"
         $DC odk-test
-        echo "_____________________________________________"
+        echo "${LINE}"
         $DC couchdb-sync-test
-        echo "_____________________________________________"
+        echo "${LINE}"
     ;;
 
     integration)
         $DC db-test
-        echo "_____________________________________________"
+        echo "${LINE}"
 
         $DC kafka-test
-        echo "_____________________________________________"
+        echo "${LINE}"
         $DC zookeeper-test
-        echo "_____________________________________________"
+        echo "${LINE}"
 
         $DC kernel-test
-        echo "_____________________________________________"
+        echo "${LINE}"
         $DC producer-test
-        echo "_____________________________________________"
+        echo "${LINE}"
         $DC integration-test
-        echo "_____________________________________________"
+        echo "${LINE}"
     ;;
 
     ui)
         $DC db-test
-        echo "_____________________________________________"
+        echo "${LINE}"
 
         $DC kernel-test
-        echo "_____________________________________________"
+        echo "${LINE}"
         $DC ui-test
-        echo "_____________________________________________"
+        echo "${LINE}"
     ;;
 
     *)

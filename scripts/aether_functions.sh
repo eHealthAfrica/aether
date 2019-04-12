@@ -21,6 +21,8 @@
 
 set -Eeuo pipefail
 
+LINE="_____________________________________________"
+
 # Generate credentials if missing
 function create_credentials {
     if [ -e ".env" ]; then
@@ -61,7 +63,7 @@ function build_container {
 
     DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml -f docker-compose-test.yml"
 
-    echo "_____________________________________________ Building container $container"
+    echo "${LINE} Building container $container"
     $DC build \
         --no-cache --force-rm --pull \
         --build-arg GIT_REVISION=$APP_REVISION \
@@ -74,7 +76,7 @@ function pip_freeze_container {
     container=$1
     DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml"
 
-    echo "_____________________________________________ Upgrading container $container"
+    echo "${LINE} Upgrading container $container"
     $DC run --no-deps $container pip_freeze
 }
 

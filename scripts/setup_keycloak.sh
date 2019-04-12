@@ -26,7 +26,7 @@ source .env
 KC_DB=keycloak
 KC_USER=keycloak
 KC_URL="http://localhost:8080/auth"
-
+LINE="_____________________________________________"
 
 # ensure that the network and volumes were already created
 ./scripts/build_docker_assets.sh
@@ -34,14 +34,14 @@ KC_URL="http://localhost:8080/auth"
 docker-compose kill db keycloak
 docker-compose pull db keycloak
 
-echo "_____________________________________________ Starting database server..."
+echo "${LINE} Starting database server..."
 docker-compose up -d db
 sleep 5
 
 DB_ID=$(docker-compose ps -q db)
 PSQL="docker container exec -i $DB_ID psql"
 
-echo "_____________________________________________ Recreating keycloak database..."
+echo "${LINE} Recreating keycloak database..."
 # drops keycloak database (terminating any previous connection) and creates it again
 $PSQL <<- EOSQL
     UPDATE pg_database SET datallowconn = 'false' WHERE datname = '${KC_DB}';
@@ -55,7 +55,7 @@ $PSQL <<- EOSQL
 EOSQL
 
 
-echo "_____________________________________________ Starting keycloak server..."
+echo "${LINE} Starting keycloak server..."
 
 docker-compose up -d keycloak
 
@@ -63,11 +63,11 @@ KC_ID=$(docker-compose ps -q keycloak)
 KCADM="docker container exec -i ${KC_ID} ./keycloak/bin/kcadm.sh"
 
 until curl -s ${KC_URL} > /dev/null; do
-    >&2 echo "_____________________________________________ Waiting for keycloak server..."
+    >&2 echo "${LINE} Waiting for keycloak server..."
     sleep 2
 done
 
-echo "_____________________________________________ Connecting to keycloak server..."
+echo "${LINE} Connecting to keycloak server..."
 $KCADM \
     config credentials \
     --server ${KC_URL} \
@@ -75,18 +75,18 @@ $KCADM \
     --user ${KEYCLOAK_ADMIN_USERNAME} \
     --password ${KEYCLOAK_ADMIN_PASSWORD}
 
-echo "_____________________________________________ Creating default realm ${DEFAULT_REALM}..."
+echo "${LINE} Creating default realm ${DEFAULT_REALM}..."
 $KCADM \
     create realms \
     -s realm=${DEFAULT_REALM} \
     -s enabled=true
 
-echo "_____________________________________________ Creating default clients..."
+echo "${LINE} Creating default clients..."
 CLIENTS=( kernel odk sync ui )
 for CLIENT in "${CLIENTS[@]}"
 do
     CLIENT_URL="http://${CLIENT}.aether.local"
-    echo "_____________________________________________ Creating client ${CLIENT}..."
+    echo "${LINE} Creating client ${CLIENT}..."
     $KCADM \
         create clients \
         -r ${DEFAULT_REALM} \
@@ -99,20 +99,20 @@ do
         -s enabled=true
 done
 
-echo "_____________________________________________ Creating initial user ${KEYCLOAK_USER_USERNAME}..."
+echo "${LINE} Creating initial user ${KEYCLOAK_USER_USERNAME}..."
 $KCADM \
     create users \
     -r ${DEFAULT_REALM} \
     -s username=${KEYCLOAK_USER_USERNAME} \
     -s enabled=true
 
-echo "_____________________________________________ Setting up initial user password..."
+echo "${LINE} Setting up initial user password..."
 $KCADM \
     set-password \
     -r ${DEFAULT_REALM} \
     --username ${KEYCLOAK_USER_USERNAME} \
     --new-password=${KEYCLOAK_USER_PASSWORD}
 
-echo "_____________________________________________ Done!"
+echo "${LINE} Done!"
 
 docker-compose kill db keycloak
