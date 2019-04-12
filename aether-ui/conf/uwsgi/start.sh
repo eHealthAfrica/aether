@@ -42,7 +42,4 @@ export STATIC_ROOT=${STATIC_ROOT:-/var/www/static}
 # set default values
 export UWSGI_INI=${UWSGI_INI:-/code/conf/uwsgi/config.ini}
 
-# ensure that DEBUG mode is disabled
-export DEBUG=''
-
 /usr/local/bin/uwsgi

@@ -199,16 +199,19 @@ case "$1" in
     ;;
 
     start )
-        setup
-
+        # ensure that DEBUG mode is disabled
+        export DEBUG=
         export DJANGO_SETTINGS_MODULE="aether.odk.settings"
+
+        setup
         ./conf/uwsgi/start.sh
     ;;
 
     start_dev )
-        setup
-
+        # ensure that DEBUG mode is enabled
         export DEBUG=true
+
+        setup
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
 
