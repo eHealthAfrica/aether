@@ -350,6 +350,7 @@ if GATEWAY_HOST:
     AUTH_URL = os.environ.get('AUTH_URL', f'{GATEWAY_PUBLIC_PATH}/accounts')
     LOGIN_URL = os.environ.get('LOGIN_URL', f'/{AUTH_URL}/login/')
     STATIC_URL = os.environ.get('STATIC_URL', f'{GATEWAY_PUBLIC_PATH}/static/')
+    LOGIN_REDIRECT_URL = f'/{GATEWAY_PUBLIC_PATH}/'
 
     USE_X_FORWARDED_HOST = True
     USE_X_FORWARDED_PORT = True
