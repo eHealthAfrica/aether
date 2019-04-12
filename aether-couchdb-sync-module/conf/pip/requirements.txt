@@ -19,7 +19,7 @@ Click==7.0
 coverage==4.5.3
 croniter==0.3.29
 Django==2.2
-django-cas-ng==3.5.10
+django-cas-ng==3.6.0
 django-cors-headers==2.5.2
 django-debug-toolbar==1.11
 django-prometheus==1.0.15

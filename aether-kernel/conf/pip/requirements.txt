@@ -25,7 +25,7 @@ coverage==4.5.3
 decorator==4.4.0
 Django==2.2
 django-autofixture==0.12.1
-django-cas-ng==3.5.10
+django-cas-ng==3.6.0
 django-cors-headers==2.5.2
 django-debug-toolbar==1.11
 django-filter==2.1.0
