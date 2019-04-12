@@ -32,8 +32,6 @@ django-filter==2.1.0
 django-minio-storage==0.2.2
 django-model-utils==3.1.2
 django-prometheus==1.0.15
-django-reversion==3.0.3
-django-reversion-compare==0.8.6
 django-storages==1.7.1
 django-ums-client==0.2.6
 django-uwsgi==0.2.2
