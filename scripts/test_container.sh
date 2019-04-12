@@ -20,6 +20,8 @@
 #
 set -Eeuo pipefail
 
+LINE="_____________________________________________"
+
 function build_container {
     echo "${LINE} Building $1 container"
     $DC_TEST build $BUILD_OPTIONS "$1"-test
