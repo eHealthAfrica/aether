@@ -22,14 +22,16 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { FormattedMessage } from 'react-intl'
 
-import { selectPipeline, setEditing } from '../redux'
+import { selectPipeline } from '../redux'
 
 class ContractAddButton extends Component {
   createNewContract () {
     const { id } = this.props.pipeline
     this.props.selectPipeline(id)
-    this.props.setEditing(true)
-    this.props.history.push(`/${id}`)
+    this.props.history.push({
+      pathname: `/${id}`,
+      state: { isNewContract: true }
+    })
   }
 
   render () {
@@ -50,6 +52,6 @@ class ContractAddButton extends Component {
 }
 
 const mapStateToProps = () => ({})
-const mapDispatchToProps = { selectPipeline, setEditing }
+const mapDispatchToProps = { selectPipeline }
 
 export default connect(mapStateToProps, mapDispatchToProps)(ContractAddButton)

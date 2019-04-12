@@ -35,10 +35,7 @@ import {
   clearSelection,
   getPipelineById,
   selectContract,
-  selectSection,
-  setExitWarning,
-  setEditing,
-  checkUnsavedContract
+  selectSection
 } from './redux'
 
 import {
@@ -59,13 +56,16 @@ class Pipeline extends Component {
       showSettings: (view === CONTRACT_SECTION_SETTINGS),
       showOutput: false,
       fullscreen: false,
-      newContract: null
+      newContract: null,
+      showCancelModal: false,
+      onContractSavedCallback: null,
+      isNew: props.location.state && props.location.state.isNewContract
     }
   }
 
   componentDidMount () {
     // load current pipeline using location address (router props)
-    if (!this.props.isNew) {
+    if (!this.state.isNew) {
       this.props.getPipelineById(this.props.match.params.pid)
     } else {
       this.addNewContract()
@@ -76,7 +76,7 @@ class Pipeline extends Component {
     if (
       (this.props.contract && (prevProps.section !== this.props.section ||
       (prevProps.contract && prevProps.contract.id !== this.props.contract.id))) &&
-      !this.props.isNew
+      !this.state.isNew
     ) {
       // update router history
       this.props.history.push(`/${this.props.pipeline.id}/${this.props.contract.id}/${this.props.section}`)
@@ -116,10 +116,26 @@ class Pipeline extends Component {
   }
 
   linksCallBack () {
-    this.props.checkUnsavedContract(() => {
+    this.checkUnsavedContract(() => {
       this.props.history.push('/')
       this.props.clearSelection()
     })
+  }
+
+  checkUnsavedContract (cb) {
+    if (this.state.newContract) {
+      this.setState({
+        showCancelModal: true,
+        onContractSavedCallback: cb
+      })
+    } else {
+      this.setState({
+        showCancelModal: false
+      })
+      if (cb) {
+        cb()
+      }
+    }
   }
 
   render () {
@@ -190,7 +206,7 @@ class Pipeline extends Component {
           { this.state.showSettings &&
             <Settings
               onClose={this.onSettingsClosed.bind(this)}
-              isNew={this.props.isNew}
+              isNew={this.state.isNew}
               onSave={this.onSave.bind(this)}
               onNew={this.onNewContractCreated.bind(this)}
             />
@@ -216,22 +232,22 @@ class Pipeline extends Component {
   }
 
   addNewContract () {
-    this.props.setEditing(true)
-    this.props.selectSection(CONTRACT_SECTION_SETTINGS)
+    this.setState({
+      isNew: true
+    }, () => { this.props.selectSection(CONTRACT_SECTION_SETTINGS) })
   }
 
   onSettingsClosed () {
-    if (this.props.isNew) {
-      this.props.checkUnsavedContract(() => {})
+    if (this.state.isNew) {
+      this.checkUnsavedContract(null)
     } else {
       this.props.selectSection(this.state.view === CONTRACT_SECTION_SETTINGS
         ? CONTRACT_SECTION_ENTITY_TYPES : this.state.view)
-      this.props.setExitWarning(false)
     }
   }
 
   renderCancelationModal () {
-    if (!this.props.showCancelModal) {
+    if (!this.state.showCancelModal) {
       return null
     }
 
@@ -247,14 +263,14 @@ class Pipeline extends Component {
         <button
           data-qa='pipeline.new.contract.continue'
           className='btn btn-w'
-          onClick={() => { this.props.setExitWarning(false) }}>
+          onClick={() => { this.setState({ showCancelModal: false }) }}>
           <FormattedMessage
             id='pipeline.new.contract.continue.message'
             defaultMessage='No, Continue Editing'
           />
         </button>
 
-        <button className='btn btn-w btn-primary' onClick={this.onCancelContract.bind(this, this.props.callback)}>
+        <button className='btn btn-w btn-primary' onClick={this.onCancelContract.bind(this)}>
           <FormattedMessage
             id='pipeline.new.contract.cancel'
             defaultMessage='Yes, Cancel'
@@ -268,18 +284,21 @@ class Pipeline extends Component {
     )
   }
 
-  onCancelContract (cb) {
+  onCancelContract () {
     this.setState({
-      newContract: null
+      newContract: null,
+      isNew: false,
+      showCancelModal: false
     })
-    this.props.setExitWarning(false)
-    this.props.setEditing(false)
     const nextContract = this.props.pipeline.contracts.length > 0
       ? this.props.pipeline.contracts[0] : null
     this.props.selectContract(nextContract)
     this.props.selectSection(nextContract ? this.state.view : PIPELINE_SECTION_INPUT)
-    if (cb) {
-      cb()
+    if (this.state.onContractSavedCallback) {
+      this.state.onContractSavedCallback()
+      this.setState({
+        onContractSavedCallback: null
+      })
     }
   }
 
@@ -293,7 +312,7 @@ class Pipeline extends Component {
   }
 
   onContractTabSelected (contract) {
-    this.props.checkUnsavedContract(() => { this.props.selectContract(contract.pipeline, contract.id) })
+    this.checkUnsavedContract(() => { this.props.selectContract(contract.pipeline, contract.id) })
   }
 
   toggleSettings () {
@@ -351,7 +370,7 @@ class Pipeline extends Component {
   }
 
   onInputHandle () {
-    this.props.checkUnsavedContract(() => {
+    this.checkUnsavedContract(() => {
       this.props.selectSection(PIPELINE_SECTION_INPUT)
     })
   }
@@ -436,19 +455,13 @@ const mapStateToProps = ({ pipelines }) => ({
   section: pipelines.currentSection,
   pipeline: pipelines.currentPipeline,
   contract: pipelines.currentContract,
-  error: pipelines.error,
-  showCancelModal: pipelines.exitWarning,
-  isNew: pipelines.isEditing,
-  callback: pipelines.callback
+  error: pipelines.error
 })
 const mapDispatchToProps = {
   clearSelection,
   getPipelineById,
   selectContract,
-  selectSection,
-  setExitWarning,
-  setEditing,
-  checkUnsavedContract
+  selectSection
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Pipeline)

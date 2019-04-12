@@ -50,11 +50,7 @@ export const types = {
 
   CONTRACT_PUBLISH_PREFLIGHT: 'contract.publish.preflight',
   CONTRACT_PUBLISH_SUCCESS: 'contract.publish.success',
-  CONTRACT_PUBLISH_ERROR: 'contract.publish.error',
-  CONTRACT_SET_EDITING: 'contract_set_editing',
-  CONTRACT_EXIT_WARNING: 'contract_exit_warning',
-
-  SET_CALL_BACK: 'set_call_back'
+  CONTRACT_PUBLISH_ERROR: 'contract.publish.error'
 }
 
 const ACTIONS_INITIAL_STATE = {
@@ -71,10 +67,7 @@ export const INITIAL_STATE = {
 
   currentSection: null,
   currentPipeline: null,
-  currentContract: null,
-  isEditing: false,
-  exitWarning: false,
-  callback: () => {}
+  currentContract: null
 }
 
 export const getPipelines = () => ({
@@ -88,33 +81,6 @@ export const getPipelines = () => ({
 export const clearSelection = () => ({
   type: types.CLEAR_SELECTION
 })
-
-export const setEditing = (value) => ({
-  type: types.CONTRACT_SET_EDITING,
-  payload: value
-})
-
-export const setExitWarning = (value) => ({
-  type: types.CONTRACT_EXIT_WARNING,
-  payload: value
-})
-
-export const setCallBackFunc = (cb) => ({
-  type: types.SET_CALL_BACK,
-  payload: cb
-})
-
-export const checkUnsavedContract = (cb) => (dispatch, getState) => {
-  const pipelineState = getState().pipelines
-  if (pipelineState.exitWarning !== pipelineState.isEditing) {
-    dispatch(setExitWarning(pipelineState.isEditing))
-  }
-  if (pipelineState.isEditing) {
-    dispatch(setCallBackFunc(cb))
-  } else {
-    cb()
-  }
-}
 
 export const selectPipeline = (pid) => ({
   type: types.PIPELINE_SELECT,
@@ -394,27 +360,6 @@ const reducer = (state = INITIAL_STATE, action) => {
         publishSuccess: (action.type === types.CONTRACT_PUBLISH_SUCCESS),
         currentPipeline,
         currentContract
-      }
-    }
-
-    case types.CONTRACT_SET_EDITING: {
-      return {
-        ...nextState,
-        isEditing: action.payload
-      }
-    }
-
-    case types.CONTRACT_EXIT_WARNING: {
-      return {
-        ...nextState,
-        exitWarning: action.payload
-      }
-    }
-
-    case types.SET_CALL_BACK: {
-      return {
-        ...nextState,
-        callback: action.payload
       }
     }
 
