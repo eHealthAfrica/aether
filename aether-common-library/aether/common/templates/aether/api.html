@@ -21,14 +21,12 @@ under the License.
 {% endcomment %}
 
 {% load i18n %}
-{% load static %}
 
 {% block title %}{{ app_name }} - {% trans 'API' %}{% endblock %}
 
 {% block meta %}
   {% include 'aether/meta.html' %}
   {% include 'aether/styles.html' %}
-  <link rel="shortcut icon" href="{% static 'aether/images/aether.png' %}"/>
 {% endblock %}
 
 {% block branding %}
