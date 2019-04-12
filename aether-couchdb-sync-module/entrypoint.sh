@@ -121,15 +121,15 @@ function setup {
     # create system databases if missing (since CouchDB 2.X)
     ./manage.py setup_couchdb
 
-    STATIC_ROOT=/var/www/static
+    STATIC_ROOT=${STATIC_ROOT:-/var/www/static}
     # create static assets
     ./manage.py collectstatic --noinput --clear --verbosity 0
-    chmod -R 755 $STATIC_ROOT
+    chmod -R 755 ${STATIC_ROOT}
 
     # expose version number (if exists)
-    cp /var/tmp/VERSION $STATIC_ROOT/VERSION   2>/dev/null || :
+    cp /var/tmp/VERSION ${STATIC_ROOT}/VERSION   2>/dev/null || :
     # add git revision (if exists)
-    cp /var/tmp/REVISION $STATIC_ROOT/REVISION 2>/dev/null || :
+    cp /var/tmp/REVISION ${STATIC_ROOT}/REVISION 2>/dev/null || :
 }
 
 function test_flake8 {

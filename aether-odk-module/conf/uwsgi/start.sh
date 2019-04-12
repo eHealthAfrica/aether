@@ -37,7 +37,7 @@ else
 fi
 
 export STATIC_URL=${STATIC_URL:-$DEFAULT_STATIC_URL}
-export STATIC_DIR=${STATIC_DIR:-/var/www/static}
+export STATIC_ROOT=${STATIC_ROOT:-/var/www/static}
 
 # set default values
 export UWSGI_INI=${UWSGI_INI:-/code/conf/uwsgi/config.ini}
