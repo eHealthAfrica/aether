@@ -38,6 +38,7 @@ from producer.resource import RESOURCE_HELPER, ResourceHelper
 
 from typing import (
     ClassVar,
+    Dict,
     NamedTuple,
     TYPE_CHECKING
 )
@@ -58,10 +59,25 @@ log_level = logging.getLevelName(PRODUCER_CONFIG.get('log_level', 'DEBUG'))
 logger.setLevel(log_level)
 
 
+class Schema(NamedTuple):
+    id: str
+    tenant: str
+    name: str
+    schema: Dict[str, str]
+
+
+class Decorator(NamedTuple):
+    id: str
+    tenant: str
+    serialize_mode: str
+    topic_name: str
+    schema_id: str
+
+
 class Offset(NamedTuple):
     type: str
     value: str
-    updated: str
+    modified: str
 
 
 class OffsetManager(object):
@@ -89,7 +105,7 @@ class OffsetManager(object):
             'id': offset_type,
             OffsetManager._value_field: value
         }
-        self.resource_helper.add(resource, OffsetManager._type)
+        self.resource_helper.add(offset_type, resource, OffsetManager._type)
 
 
 class PriorityDatabasePool(object):

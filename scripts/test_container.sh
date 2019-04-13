@@ -60,7 +60,7 @@ if [[ $1 = "couchdb-sync" ]]
 then
     $DC_TEST up -d couchdb-test redis-test
 fi
-if [[ $1 = "integration" ]]
+if [[ $1 = "producer" || $1 == "integration" ]]
 then
     echo "_____________________________________________ Starting Zookeeper Kafka & Redis"
     $DC_TEST up -d zookeeper-test kafka-test redis-producer-test
@@ -72,7 +72,7 @@ then
     # rename kernel test database in each case
     export TEST_KERNEL_DB_NAME=test-kernel-"$1"-$(date "+%Y%m%d%H%M%S")
 
-    build_container kernel
+    # build_container kernel
 
     echo "_____________________________________________ Starting kernel"
     wait_for_db
@@ -85,8 +85,6 @@ then
     then
         echo "_____________________________________________ Creating readonlyuser on Kernel DB"
         $DC_TEST run --rm kernel-test eval python /code/sql/create_readonly_user.py
-        echo "_____________________________________________ Starting Redis"
-        $DC_TEST up -d redis-producer-test
         if [[ $1 = "integration" ]]
         then
             build_container producer

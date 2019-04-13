@@ -23,6 +23,7 @@
     "kafka_bootstrap_servers" : "kafka-test:29092",
     "kafka_settings" : {
         "acks" : 1,
+        "auto.offset.reset": "earliest",
         "max.in.flight.requests.per.connection" : 1,
         "linger.ms" : 200,
         "retry.backoff.ms": 25,

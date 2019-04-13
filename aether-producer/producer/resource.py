@@ -62,47 +62,39 @@ class ResourceHelper(object):
         self._subscribe_thread = None
 
     # Generic Redis Resource Functions
-    def add(self, resource: Dict[str, Any], type: str) -> bool:
-        key = '_{type}:{_id}'.format(
-            type=type, _id=resource['id']
-        )
+    def add(self, _id: str, resource: Dict[str, Any], _type: str) -> bool:
+        resource_id = f'_{_type}:{_id}'
         resource['modified'] = datetime.now().isoformat()
-        return self.redis.set(key, json.dumps(resource))
+        return self.redis.set(resource_id, json.dumps(resource))
 
-    def exists(self, _id: str, type: str) -> bool:
-        resource_id = '_{type}:{_id}'.format(
-            type=type,
-            _id=_id
-        )
+    def exists(self, _id: str, _type: str) -> bool:
+        resource_id = f'_{_type}:{_id}'
         if self.redis.exists(resource_id):
             return True
         return False
 
-    def remove(self, _id: str, type: str) -> bool:
-        resource_id = '_{type}:{_id}'.format(
-            type=type,
-            _id=_id
-        )
+    def remove(self, _id: str, _type: str) -> bool:
+        resource_id = f'_{_type}:{_id}'
         res = self.redis.delete(resource_id)
         if not res:
             return False
         return True
 
-    def get(self, _id: str, type: str) -> Resource:
-        resource_id = f'_{type}:{_id}'
+    def get(self, _id: str, _type: str) -> Resource:
+        resource_id = f'_{_type}:{_id}'
         resource = self.redis.get(resource_id)
         if not resource:
-            raise ValueError('No resource with id {resource_id}'.format(resource_id=resource_id))
+            raise ValueError(f'No resource with id {resource_id}')
         return Resource(
             id=_id,
-            type=type,
+            type=_type,
             data=json.loads(resource)
         )
 
-    def list_ids(self, type: str) -> Iterable[str]:
+    def list_ids(self, _type: str) -> Iterable[str]:
         # ids of matching assets as a generator
-        if type:
-            key_identifier = '_{type}:*'.format(type=type)
+        if _type:
+            key_identifier = f'_{_type}:*'
             for i in self.redis.scan_iter(key_identifier):
                 yield str(i).split(key_identifier[:-1])[1]
         else:
@@ -110,18 +102,11 @@ class ResourceHelper(object):
             for i in self.redis.scan_iter(key_identifier):
                 yield str(i).split(':')[-1]
 
-    def list(self, type: str) -> Iterable[Resource]:
+    def list(self, _type: str) -> Iterable[Resource]:
         # matching assets as a generator
-        if type:
-            key_identifier = '_{type}:*'.format(type=type)
-            for i in self.redis.scan_iter(key_identifier):
-                _id = str(i).split(key_identifier[:-1])[1]
-                yield(self.get(_id, type))
-        else:
-            key_identifier = '*'
-            for i in self.redis.scan_iter(key_identifier):
-                _id = str(i).split(':')[-1]
-                yield(self.get(_id, type))
+        ids = self.list_ids(_type)
+        for _id in ids:
+            yield(self.get(_id, _type))
 
     # subscription resources
 

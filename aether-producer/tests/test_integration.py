@@ -31,13 +31,15 @@ import pytest
 # from producer.logger import LOG
 from producer.resource import (
     Event,
-    Resource
+    Resource,
+    ResourceHelper
 )
 
 from . import *  # noqa
 from . import (
     MockCallable
 )
+from .timeout import timeout as Timeout  # noqa
 
 
 @pytest.mark.integration
@@ -84,36 +86,38 @@ R_BODY = {
 
 @pytest.mark.integration
 def test_resource__io(get_resource_helper):
-    RH = get_resource_helper
+    RH: ResourceHelper = get_resource_helper
     # write resource
-    RH.add(R_BODY, R_TYPE)
+    _id = R_BODY['id']
+    RH.add(_id, R_BODY, R_TYPE)
     # read
-    res = RH.get(R_BODY['id'], R_TYPE)
+    res = RH.get(_id, R_TYPE)
     assert(isinstance(res, Resource))
     assert(res.data['content'] == R_BODY['content'])
     assert(res.type == R_TYPE)
     # delete
-    RH.remove(R_BODY['id'], R_TYPE)
+    RH.remove(_id, R_TYPE)
     with pytest.raises(ValueError):
-        RH.get(R_BODY['id'], R_TYPE)
+        RH.get(_id, R_TYPE)
 
 
 @pytest.mark.integration
 def test_resource__event_listener(get_resource_helper):
-    RH = get_resource_helper
+    RH: ResourceHelper = get_resource_helper
     # register listener
     # callback
     callable: MockCallable = MockCallable()  # results go here
     listener_pattern = f'{R_TYPE}:*'
     RH.subscribe(callable.add_event, listener_pattern)
     # write
-    RH.add(R_BODY, R_TYPE)
+    _id = R_BODY['id']
+    RH.add(_id, R_BODY, R_TYPE)
     # update
     new_body = dict(R_BODY)
     new_body['content'] = 'an arbitrary change'
-    RH.add(new_body, R_TYPE)
+    RH.add(_id, new_body, R_TYPE)
     # delete
-    RH.remove(R_BODY['id'], R_TYPE)
+    RH.remove(_id, R_TYPE)
     # wait a second
     # assert order of events
     sleep(.1)
@@ -127,12 +131,12 @@ def test_resource__event_listener(get_resource_helper):
 
 @pytest.mark.integration
 def test_resource__iteration(get_resource_helper):
-    RH = get_resource_helper
+    RH: ResourceHelper = get_resource_helper
     _ids = ['a', 'b', 'c']
     for _id in _ids:
         body = dict(R_BODY)
         body['id'] = _id
-        RH.add(body, R_TYPE)
+        RH.add(_id, body, R_TYPE)
     expected_ids = _ids[:]
     res_gen = RH.list(R_TYPE)
     for res in res_gen:
@@ -143,3 +147,45 @@ def test_resource__iteration(get_resource_helper):
     for _id in res_gen:
         expected_ids.remove(_id)
     assert(len(expected_ids) == 0)
+
+
+@pytest.mark.integration
+def test_kafka__basic_io(simple_consumer, simple_producer):
+    size = 10
+    topic = 'kafka-basic-io-test'
+    p = simple_producer
+    c = simple_consumer
+    for x in range(size):
+        p.poll(0)
+        p.produce(topic, str(x).encode('utf-8'))
+    p.flush()
+    c.subscribe([topic])
+    remaining = size
+    try:
+        with Timeout(15):
+            while remaining:
+                messages = c.consume(size, timeout=1)
+                for msg in messages:
+                    remaining -= 1
+                if not messages:
+                    sleep(.1)
+            assert(True)
+    except TimeoutError:
+        assert(False), \
+            'basic kafka io timed out, check kafka test configuration'
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize('decorator_name', [
+    'decorator_id_1', 'decorator_id_2', 'decorator_id_3'
+])
+def test_produce__topic_variations(
+    redis_fixture_schemas,
+    get_entity_generator,
+    decorator_name
+):
+    schemas, decorators = redis_fixture_schemas
+    decorator = decorators[decorator_name]
+    print(decorator)
+    tenant = 'test'
+    get_entity_generator(10, tenant, decorator.id)

@@ -18,15 +18,22 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from datetime import datetime
 import pytest
 import os
+from time import sleep
 from typing import (
+    Dict,
     Iterable,
-    List
+    List,
+    Union
 )
+from uuid import uuid4
 
-from .timeout import timeout as Timeout  # noqa
+from confluent_kafka import Producer, Consumer
+
 from producer import *  # noqa
+from producer.db import Decorator
 from producer.resource import Event, ResourceHelper, RESOURCE_HELPER
 from producer.settings import Settings
 from producer.logger import LOG
@@ -34,6 +41,73 @@ from producer.logger import LOG
 
 USER = os.environ['PRODUCER_ADMIN_USER']
 PW = os.environ['PRODUCER_ADMIN_PW']
+
+
+def entity_generator(
+    count: int,
+    tenant: str,
+    decorator_id: str
+) -> Iterable[Dict[str, Union[str, Dict]]]:
+
+    for i in range(count):
+        _id = str(uuid4())
+        yield({
+            'id': _id,
+            'offset': str(datetime.now().isoformat()),
+            'tenant': tenant,
+            'decorator_id': decorator_id,
+            'content': {
+                'id': _id,
+                'name': str(uuid4())
+            }
+        })
+
+
+SCHEMAS = {
+    'simple_schema_id': {
+        'doc': 'A Simple Schema',
+        'name': 'Test',
+        'type': 'record',
+        'fields': [
+            {
+                'doc': 'ID',
+                'name': 'id',
+                'type': 'string',
+                'jsonldPredicate': '@id'
+            },
+            {
+                'doc': 'The Value',
+                'name': 'value',
+                'type': 'string'
+            }
+        ],
+        'namespace': 'eha.aether.producer.test'
+    }
+}
+
+SCHEMA_DECORATORS = {
+    'decorator_id_1': Decorator(**{
+        'id': 'decorator_id_1',
+        'tenant': 'test',
+        'serialize_mode': 'single',
+        'schema_id': 'simple_schema_id',
+        'topic_name': 'd1'
+    }),
+    'decorator_id_2': Decorator(**{
+        'id': 'decorator_id_2',
+        'tenant': 'test2',
+        'serialize_mode': 'multi',
+        'schema_id': 'simple_schema_id',
+        'topic_name': 'd2'
+    }),
+    'decorator_id_3': Decorator(**{
+        'id': 'decorator_id_3',
+        'tenant': 'test',
+        'serialize_mode': 'single',
+        'schema_id': 'simple_schema_id',
+        'topic_name': 'd3'
+    })
+}
 
 
 class MockCallable(object):
@@ -80,3 +154,67 @@ def ProducerManagerSettings():
 @pytest.fixture(scope='session')
 def OffsetDB():
     return OFFSET_MANAGER
+
+
+@pytest.mark.integration
+@pytest.fixture(scope='session')
+def kafka_settings(ProducerManagerSettings):
+    kafka_settings = ProducerManagerSettings.get('kafka_settings')
+    kafka_settings['bootstrap.servers'] = ProducerManagerSettings.get('kafka_bootstrap_servers')
+    return kafka_settings
+
+
+@pytest.mark.integration
+@pytest.fixture(scope='session')
+def simple_producer(kafka_settings):
+    producer = Producer(**kafka_settings)
+    yield producer
+
+
+@pytest.mark.integration
+@pytest.fixture(scope='function')
+def simple_consumer(kafka_settings):
+    ks = dict(kafka_settings)
+    ks['group.id'] = str(uuid4())
+    consumer = Consumer(**ks)
+    yield consumer
+    consumer.close()
+
+
+@pytest.mark.integration
+@pytest.fixture(scope='function')
+def redis_fixture_schemas(get_resource_helper):
+    RH: ResourceHelper = get_resource_helper
+    for _id, schema in SCHEMAS.items():
+        RH.add(_id, schema, 'schema')
+
+    for _id, decorator in SCHEMA_DECORATORS.items():
+        RH.add(_id, decorator._asdict(), 'schema_decorator')
+
+    yield(SCHEMAS, SCHEMA_DECORATORS)
+
+    for _id, schema in SCHEMAS.items():
+        RH.remove(_id, 'schema')
+
+    for _id, decorator in SCHEMA_DECORATORS.items():
+        RH.remove(_id, 'schema_decorator')
+
+
+@pytest.mark.integration
+@pytest.fixture(scope='session')
+def get_entity_generator(get_resource_helper):
+    RH = get_resource_helper
+
+    def make_entity_instances(
+        count: int,
+        tenant: str,
+        decorator_id: str,
+        delay=0.0
+    ):
+        for e in entity_generator(count, tenant, decorator_id):
+            print(e)
+            queue_key = f'{e["offset"]}/{decorator_id}/{e["id"]}'
+            RH.add(queue_key, e, 'entity')
+            if delay:
+                sleep(delay)
+    return make_entity_instances
