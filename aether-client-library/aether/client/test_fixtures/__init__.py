@@ -57,19 +57,19 @@ def schemas(client):
 
 
 @pytest.fixture(scope='session')
-def projectschemas(client, project, schemas):
-    ps_objects = []
+def schemadecorators(client, project, schemas):
+    sd_objects = []
     for schema in schemas:
         # You can also use the model constructor
-        PS = client.get_model('ProjectSchema')
-        ps = PS(
+        SD = client.get_model('SchemaDecorator')
+        sd = SD(
             name=schema.name,
             revision='1',
             project=project.id,
             schema=schema.id
         )
-        ps_objects.append(client.projectschemas.create(data=ps))
-    return ps_objects
+        sd_objects.append(client.schemadecorators.create(data=sd))
+    return sd_objects
 
 
 @pytest.fixture(scope='session')
@@ -80,10 +80,10 @@ def mappingset(client, project):
 
 
 @pytest.fixture(scope='session')
-def mapping(client, project, projectschemas, mappingset):
+def mapping(client, project, schemadecorators, mappingset):
     obj = dict(fix.mapping_template)
     _map = dict(fix.mapping_definition)
-    _map['entities'] = {ps.name: ps.id for ps in projectschemas}
+    _map['entities'] = {sd.name: sd.id for sd in schemadecorators}
     obj['project'] = project['id']
     obj['mappingset'] = mappingset.id
     obj['definition'] = _map

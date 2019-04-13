@@ -24,13 +24,13 @@ from . import *
 ####################################################################################
 
 
-def test_1_check_fixtures(project, schemas, projectschemas, mapping, mappingset):
+def test_1_check_fixtures(project, schemas, schemadecorators, mapping, mappingset):
     for asset in [project, mapping, mappingset]:
         assert(asset.id is not None)
     for sch in schemas:
         assert(sch.id is not None)
-    for ps in projectschemas:
-        assert(ps.id is not None)
+    for sd in schemadecorators:
+        assert(sd.id is not None)
 
 
 def test_2_generate_entities(generate_entities):
