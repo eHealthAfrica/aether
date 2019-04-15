@@ -37,18 +37,21 @@ class UrlsTest(UrlsTestCase):
         self.assertEqual(reverse('check-kernel'), '/check-kernel')
         self.assertEqual(reverse('admin:index'), '/admin/')
 
-    def test__urls__accounts(self):
+    def test__urls__auth(self):
         self.assertEqual(reverse('rest_framework:login'), '/accounts/login/')
         self.assertEqual(reverse('rest_framework:logout'), '/accounts/logout/')
         self.assertEqual(reverse('rest_framework:token'), '/accounts/token')
+        self.assertEqual(reverse('logout'), '/logout/')
 
-    def test__urls__accounts__views(self):
+    def test__urls__auth__views(self):
         from django.contrib.auth.views import LoginView
         from aether.common.auth.views import AetherLogoutView
 
         self.assertEqual(resolve('/accounts/login/').func.view_class,
                          LoginView.as_view().view_class)
         self.assertEqual(resolve('/accounts/logout/').func.view_class,
+                         AetherLogoutView.as_view().view_class)
+        self.assertEqual(resolve('/logout/').func.view_class,
                          AetherLogoutView.as_view().view_class)
 
 
@@ -66,23 +69,24 @@ class UrlsAppUrlTest(UrlsTestCase):
         self.assertEqual(reverse('check-kernel'), '/aether/check-kernel')
         self.assertEqual(reverse('admin:index'), '/aether/admin/')
 
-    def test__urls__accounts(self):
+    def test__urls__auth(self):
         self.assertEqual(reverse('rest_framework:login'), '/aether/accounts/login/')
         self.assertEqual(reverse('rest_framework:logout'), '/aether/accounts/logout/')
         self.assertEqual(reverse('rest_framework:token'), '/aether/accounts/token')
+        self.assertEqual(reverse('logout'), '/aether/logout/')
 
 
 @override_settings(TEST_KERNEL_ACTIVE=False)
 class UrlsNoKernelTest(UrlsTestCase):
 
-    def test__urls__checks(self):
+    def test__urls(self):
         self.assertRaises(exceptions.NoReverseMatch, reverse, 'check-kernel')
 
 
 @override_settings(TEST_TOKEN_ACTIVE=False)
 class UrlsNoTokenTest(UrlsTestCase):
 
-    def test__urls__accounts(self):
+    def test__urls(self):
         self.assertRaises(exceptions.NoReverseMatch, reverse, 'rest_framework:token')
 
 
@@ -93,7 +97,7 @@ class UrlsNoTokenTest(UrlsTestCase):
 )
 class UrlsCASServerTest(UrlsTestCase):
 
-    def test__urls__accounts(self):
+    def test__urls(self):
         from django_cas_ng import views
 
         self.assertEqual(reverse('rest_framework:login'), '/accounts/login/')
@@ -102,6 +106,8 @@ class UrlsCASServerTest(UrlsTestCase):
         self.assertEqual(resolve('/accounts/login/').func.view_class,
                          views.LoginView.as_view().view_class)
         self.assertEqual(resolve('/accounts/logout/').func.view_class,
+                         views.LogoutView.as_view().view_class)
+        self.assertEqual(resolve('/logout/').func.view_class,
                          views.LogoutView.as_view().view_class)
 
 
@@ -112,7 +118,7 @@ class UrlsCASServerTest(UrlsTestCase):
 )
 class UrlsKeycloakServerBehindTest(UrlsTestCase):
 
-    def test__urls__accounts__login(self):
+    def test__urls(self):
         from django.contrib.auth import views
 
         self.assertEqual(reverse('rest_framework:login'), '/accounts/login/')
@@ -127,7 +133,7 @@ class UrlsKeycloakServerBehindTest(UrlsTestCase):
 )
 class UrlsKeycloakServerTest(UrlsTestCase):
 
-    def test__urls__accounts__login(self):
+    def test__urls(self):
         from aether.common.keycloak.views import KeycloakLoginView
 
         self.assertEqual(reverse('rest_framework:login'), '/accounts/login/')
