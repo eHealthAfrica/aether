@@ -161,7 +161,10 @@ class UrlsGatewayUrlTest(UrlsTestCase):
 class UrlsNoGatewayUrlTest(UrlsTestCase):
 
     def test__urls(self):
-        self.assertRaises(exceptions.NoReverseMatch, reverse, 'health', kwargs={'realm': 'my-realm'})
+        self.assertRaises(exceptions.NoReverseMatch,
+                          reverse,
+                          'health',
+                          kwargs={'realm': 'my-realm'})
 
 
 @override_settings(ADMIN_URL='private')

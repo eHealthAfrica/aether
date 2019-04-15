@@ -36,7 +36,12 @@ def custom_reverse(viewname, args=None, kwargs=None, request=None, format=None, 
         # sometimes there is no valid path or resolve fails...
         pass
 
-    return reverse(viewname=viewname, args=args, kwargs=kwargs, request=request, format=format, **extra)
+    return reverse(viewname=viewname,
+                   args=args,
+                   kwargs=kwargs,
+                   request=request,
+                   format=format,
+                   **extra)
 
 
 class HyperlinkedRelatedField(serializers.HyperlinkedRelatedField):

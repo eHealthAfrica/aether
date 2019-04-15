@@ -119,7 +119,10 @@ class ViewsTest(TestCase):
         setattr(request, 'session', store)
 
         # No next page: displays logged out template
-        response = AetherLogoutView.as_view(next_page=None, template_name=settings.LOGGED_OUT_TEMPLATE)(request)
+        response = AetherLogoutView.as_view(
+            next_page=None,
+            template_name=settings.LOGGED_OUT_TEMPLATE,
+        )(request)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.template_name[0], settings.LOGGED_OUT_TEMPLATE)
 
@@ -138,4 +141,6 @@ class ViewsTest(TestCase):
         next_page = f'/realm-name/{settings.GATEWAY_SERVICE_ID}/check-app'
         response = AetherLogoutView.as_view(next_page=next_page)(request)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response.url, f'{settings.GATEWAY_HOST}/realm-name/{settings.GATEWAY_SERVICE_ID}/logout')
+        self.assertEqual(
+            response.url,
+            f'{settings.GATEWAY_HOST}/realm-name/{settings.GATEWAY_SERVICE_ID}/logout')

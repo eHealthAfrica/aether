@@ -114,7 +114,8 @@ class MultitenancyTests(TestCase):
         self.assertEqual(realm1.instance.pk, obj1.data['id'])
         self.assertEqual(realm1.realm, TEST_REALM)
         self.assertIn('/testtestmodel/' + str(obj1.data['id']), obj1.data['url'])
-        self.assertIn('/testtestchildmodel/?parent=' + str(obj1.data['id']), obj1.data['children_url'])
+        self.assertIn('/testtestchildmodel/?parent=' + str(obj1.data['id']),
+                      obj1.data['children_url'])
 
         # create another TestModel instance
         obj2 = TestModel.objects.create(name='two')
@@ -131,9 +132,17 @@ class MultitenancyTests(TestCase):
             context={'request': self.request},
         )
         self.assertFalse(child2.is_valid(), child2.errors)
-        # {'parent': [ErrorDetail(string='Invalid pk "#" - object does not exist.', code='does_not_exist')]
+        # {
+        #      'parent': [
+        #          ErrorDetail(
+        #              string='Invalid pk "#" - object does not exist.',
+        #              code='does_not_exist',
+        #          )
+        #      ]
+        # }
         self.assertEqual(child2.errors['parent'][0].code, 'does_not_exist')
-        self.assertEqual(str(child2.errors['parent'][0]), f'Invalid pk "{obj2.pk}" - object does not exist.')
+        self.assertEqual(str(child2.errors['parent'][0]),
+                         f'Invalid pk "{obj2.pk}" - object does not exist.')
 
     def test_views(self):
         # create data assigned to different realms
@@ -347,7 +356,8 @@ class MultitenancyTests(TestCase):
         obj1_realm_data = self.client.get(obj1_realm_url).json()
         self.assertNotEqual(obj1_data, obj1_realm_data, 'url fields are different')
 
-        child1_realm_url = reverse('testchildmodel-detail', kwargs={'pk': child1.pk, 'realm': TEST_REALM})
+        child1_realm_url = reverse('testchildmodel-detail',
+                                   kwargs={'pk': child1.pk, 'realm': TEST_REALM})
         self.assertEqual(
             child1_realm_url,
             f'/{TEST_REALM}/{settings.GATEWAY_SERVICE_ID}/testtestchildmodel/{child1.pk}/')
