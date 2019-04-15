@@ -22,6 +22,7 @@ import json
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.utils.translation import ugettext as _
 
 from rest_framework import viewsets, status
@@ -289,10 +290,12 @@ def xform_list(request, *args, **kwargs):
     if formID:
         xforms = xforms.filter(form_id=formID)
 
+    host = request.build_absolute_uri(request.get_full_path()).replace(reverse('xform-list-xml'), '')
+
     return Response(
         data={
             'xforms': [xf for xf in xforms if is_surveyor(request, xf)],
-            'host': request.build_absolute_uri().replace(request.get_full_path(), ''),
+            'host': host,
             'verbose': request.query_params.get('verbose', '').lower() == 'true',
         },
         template_name='xformList.xml',
