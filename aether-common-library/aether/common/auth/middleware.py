@@ -22,7 +22,7 @@ from django.conf import settings
 from django.contrib.auth import login, logout
 from django.contrib.sessions.middleware import SessionMiddleware
 
-from aether.common.utils import find_in_request_headers
+from aether.common.utils import find_in_request_headers, request as exec_request
 from .utils import get_or_create_user_from_userinfo
 
 
@@ -41,17 +41,26 @@ class GatewayAuthenticationMiddleware(SessionMiddleware):
         token = find_in_request_headers(request, settings.GATEWAY_HEADER_TOKEN)
         if token:
             try:
-                userinfo = jwt.decode(token, verify=False)
-                iss_url = userinfo['iss']
+                tokeninfo = jwt.decode(token, verify=False)
+                iss_url = tokeninfo['iss']
 
-                # the only security check we are implementing so far... more coming
+                # check that the token host is the same gateway host
                 if not iss_url.startswith(settings.GATEWAY_HOST):
                     return
 
-                # get realm info from "iss"
-                realm = iss_url.split('/')[-1]
-                request.session[settings.REALM_COOKIE] = realm
+                # go to ISS to get the realm+user info
+                realminfo = exec_request(method='get', url=iss_url).json()
+                realm = realminfo['realm']
+                userinfo_url = realminfo['token-service'] + '/userinfo'
 
+                # if this call fails the token is not longer valid
+                userinfo = exec_request(
+                    method='get',
+                    url=userinfo_url,
+                    headers={'Authorization': '{} {}'.format(tokeninfo['typ'], token)},
+                ).json()
+
+                request.session[settings.REALM_COOKIE] = realm
                 user = get_or_create_user_from_userinfo(request, userinfo)
                 login(request, user)
 
