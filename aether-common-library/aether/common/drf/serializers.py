@@ -18,7 +18,6 @@
 
 import urllib
 
-from django.conf import settings
 from django.urls import resolve
 
 from rest_framework import serializers
@@ -29,10 +28,13 @@ def custom_reverse(viewname, args=None, kwargs=None, request=None, format=None, 
     if not kwargs:
         kwargs = {}
 
-    if settings.GATEWAY_HOST:
+    try:
         realm = resolve(request.get_full_path()).kwargs.get('realm')
         if realm:
             kwargs['realm'] = realm
+    except Exception:
+        # sometimes there is no valid path or resolve fails...
+        pass
 
     return reverse(viewname=viewname, args=args, kwargs=kwargs, request=request, format=format, **extra)
 

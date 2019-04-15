@@ -113,6 +113,8 @@ class MultitenancyTests(TestCase):
         realm1 = MtInstance.objects.first()
         self.assertEqual(realm1.instance.pk, obj1.data['id'])
         self.assertEqual(realm1.realm, TEST_REALM)
+        self.assertIn('/testtestmodel/' + str(obj1.data['id']), obj1.data['url'])
+        self.assertIn('/testtestchildmodel/?parent=' + str(obj1.data['id']), obj1.data['children_url'])
 
         # create another TestModel instance
         obj2 = TestModel.objects.create(name='two')
@@ -315,6 +317,53 @@ class MultitenancyTests(TestCase):
         utils.remove_user_from_realm(self.request, self.request.user)
         self.assertEqual(self.request.user.groups.count(), 0)
         self.assertNotIn(realm_group, self.request.user.groups.all())
+
+    def test_serializers_gateway(self):
+        obj1 = TestModel.objects.create(name='one')
+        obj1.add_to_realm(self.request)
+        child1 = TestChildModel.objects.create(name='child', parent=obj1)
+
+        # check without gateway
+        obj1_url = reverse('testmodel-detail', kwargs={'pk': obj1.pk})
+        self.assertEqual(obj1_url, f'/testtestmodel/{obj1.pk}/')
+        obj1_data = self.client.get(obj1_url).json()
+
+        child1_url = reverse('testchildmodel-detail', kwargs={'pk': child1.pk})
+        children_url = reverse('testchildmodel-list')
+        self.assertEqual(child1_url, f'/testtestchildmodel/{child1.pk}/')
+        self.assertEqual(children_url, '/testtestchildmodel/')
+        child1_data = self.client.get(child1_url).json()
+
+        self.assertIn(obj1_url, obj1_data['url'])
+        self.assertIn(f'{children_url}?parent={obj1.pk}', obj1_data['children_url'])
+        self.assertIn(child1_url, child1_data['url'])
+        self.assertEqual(obj1_data['url'], child1_data['parent_url'])
+
+        # check with gateway
+        obj1_realm_url = reverse('testmodel-detail', kwargs={'pk': obj1.pk, 'realm': TEST_REALM})
+        self.assertEqual(
+            obj1_realm_url,
+            f'/{TEST_REALM}/{settings.GATEWAY_SERVICE_ID}/testtestmodel/{obj1.pk}/')
+        obj1_realm_data = self.client.get(obj1_realm_url).json()
+        self.assertNotEqual(obj1_data, obj1_realm_data, 'url fields are different')
+
+        child1_realm_url = reverse('testchildmodel-detail', kwargs={'pk': child1.pk, 'realm': TEST_REALM})
+        self.assertEqual(
+            child1_realm_url,
+            f'/{TEST_REALM}/{settings.GATEWAY_SERVICE_ID}/testtestchildmodel/{child1.pk}/')
+
+        children_realm_url = reverse('testchildmodel-list', kwargs={'realm': TEST_REALM})
+        self.assertEqual(
+            children_realm_url,
+            f'/{TEST_REALM}/{settings.GATEWAY_SERVICE_ID}/testtestchildmodel/')
+
+        child1_realm_data = self.client.get(child1_realm_url).json()
+        self.assertNotEqual(child1_data, child1_realm_data, 'url fields are different')
+
+        self.assertIn(obj1_realm_url, obj1_realm_data['url'])
+        self.assertIn(f'{children_realm_url}?parent={obj1.pk}', obj1_realm_data['children_url'])
+        self.assertIn(child1_realm_url, child1_realm_data['url'])
+        self.assertEqual(obj1_realm_data['url'], child1_realm_data['parent_url'])
 
     @override_settings(MULTITENANCY=False)
     def test_no_multitenancy(self, *args):
