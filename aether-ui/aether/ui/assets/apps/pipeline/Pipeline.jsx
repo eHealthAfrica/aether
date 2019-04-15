@@ -304,9 +304,9 @@ class Pipeline extends Component {
 
   onSave (view) {
     this.setState({
-      newContract: null
+      newContract: null,
+      isNew: false
     }, () => {
-      this.props.setEditing(false)
       this.props.selectSection(view || CONTRACT_SECTION_ENTITY_TYPES)
     })
   }
