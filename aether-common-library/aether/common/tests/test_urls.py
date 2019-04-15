@@ -89,8 +89,10 @@ class UrlsCASServerTest(UrlsTestCase):
         self.assertEqual(reverse('rest_framework:login'), '/accounts/login/')
         self.assertEqual(reverse('rest_framework:logout'), '/accounts/logout/')
 
-        self.assertEqual(resolve('/accounts/login/').func, views.login)
-        self.assertEqual(resolve('/accounts/logout/').func, views.logout)
+        self.assertEqual(resolve('/accounts/login/').func.view_class,
+                         views.LoginView.as_view().view_class)
+        self.assertEqual(resolve('/accounts/logout/').func.view_class,
+                         views.LogoutView.as_view().view_class)
 
 
 @override_settings(

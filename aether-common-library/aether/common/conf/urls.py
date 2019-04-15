@@ -56,8 +56,8 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):
     if settings.CAS_SERVER_URL:
         from django_cas_ng import views
 
-        login_view = views.login
-        logout_view = views.logout
+        login_view = views.LoginView.as_view()
+        logout_view = views.LogoutView.as_view()
 
     else:
         from django.contrib.auth.views import LoginView, LogoutView
