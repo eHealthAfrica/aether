@@ -20,8 +20,22 @@
 #
 set -Eeuo pipefail
 
-docker network create aether_internal      2>/dev/null || true
-docker volume  create aether_database_data 2>/dev/null || true
+source .env
+
+{
+    docker network create ${NETWORK_NAME} \
+        --attachable \
+        --subnet=${NETWORK_SUBNET} \
+        --gateway=${NETWORK_GATEWAY}
+} || {
+    echo "${NETWORK_NAME} network is ready."
+}
+
+{
+    docker volume create ${DB_VOLUME}
+} || {
+    echo "${DB_VOLUME} volume is ready."
+}
 
 # refresh the docker images
 docker-compose pull db nginx redis couchdb minio

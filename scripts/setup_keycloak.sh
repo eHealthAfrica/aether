@@ -85,7 +85,11 @@ echo "${LINE} Creating default clients..."
 CLIENTS=( kernel odk sync ui )
 for CLIENT in "${CLIENTS[@]}"
 do
-    CLIENT_URL="http://${CLIENT}.aether.local"
+    CLIENT_URL="http://${NETWORK_DOMAIN}/${CLIENT}"
+    REDIRECT_URI_80="${CLIENT_URL}/accounts/login/"
+    # required by ODK Collect
+    REDIRECT_URI_8443="http://${NETWORK_DOMAIN}:8443/${CLIENT}/accounts/login/"
+
     echo "${LINE} Creating client ${CLIENT}..."
     $KCADM \
         create clients \
@@ -93,9 +97,8 @@ do
         -s clientId=${CLIENT} \
         -s publicClient=true \
         -s directAccessGrantsEnabled=true \
-        -s rootUrl=${CLIENT_URL} \
         -s baseUrl=${CLIENT_URL} \
-        -s 'redirectUris=["/accounts/login/"]' \
+        -s 'redirectUris=["'${REDIRECT_URI_80}'","'${REDIRECT_URI_8443}'"]' \
         -s enabled=true
 done
 
