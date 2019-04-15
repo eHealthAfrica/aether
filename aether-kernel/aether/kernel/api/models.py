@@ -71,8 +71,8 @@ Data model schema:
 | family           |  | |  | masked_fields    |  | |  | is_read_only     |  | |  +::::::::::::::::::+
 +------------------+  | |  | is_encrypted     |  | |  +::::::::::::::::::+  | +-<| submission       |
                       | |  +::::::::::::::::::+  | +-<| mappingset       |  +---<| mapping          |
-                      | +-<| project          |  +==<<| schemadecorator  |  |    | mapping_revision |
-                      +---<| schema           |  |    | project(**)      |  +---<| schemadecorator schesss |
+                      | +-<| project          |  +==<<| schemadecorators |  |    | mapping_revision |
+                      +---<| schema           |  |    | project(**)      |  +---<| schemadecorator  |
                            +------------------+  |    +------------------+  |    | project(**)      |
                                                  +--------------------------+    | schema(**)       |
                                                                                  +------------------+

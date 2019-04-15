@@ -85,9 +85,9 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
             family = request.query_params.get('family')
 
         schemas = [
-            ps.schema
-            for ps in project.schemadecorators.order_by('-created')
-            if not family or ps.schema.family == family
+            sd.schema
+            for sd in project.schemadecorators.order_by('-created')
+            if not family or sd.schema.family == family
         ]
         for schema in schemas:
             if not name:
