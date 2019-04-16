@@ -22,12 +22,13 @@ from http.cookies import SimpleCookie
 from importlib import import_module
 
 from django.conf import settings
-from django.test import override_settings
 from django.contrib.auth import get_user_model
+from django.test import RequestFactory, override_settings
 from django.urls import reverse, resolve
 
 from ...tests import MockResponse, UrlsTestCase
 from ..utils import _KC_TOKEN_SESSION as TOKEN_KEY
+from ..views import KeycloakLogoutView
 
 user_objects = get_user_model().objects
 
@@ -670,3 +671,50 @@ class KeycloakTests(UrlsTestCase):
             self.assertEqual(self.client.get(SAMPLE_URL).status_code, 403)
 
             mock_req_9.assert_not_called()
+
+
+class KeycloakGatewayTests(UrlsTestCase):
+
+    def test_logout(self):
+        logout_url = reverse('logout')
+        self.assertEqual(logout_url, '/logout/')
+        self.assertNotEqual(logout_url, reverse('rest_framework:logout'))
+
+        response = self.client.get(logout_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.template_name[0], settings.LOGGED_OUT_TEMPLATE)
+
+        settings.SESSION_ENGINE = 'django.contrib.sessions.backends.file'
+        engine = import_module(settings.SESSION_ENGINE)
+        store = engine.SessionStore()
+        store.save()
+
+        request = RequestFactory().get('/')
+        setattr(request, 'session', store)
+
+        # No next page: displays logged out template
+        response = KeycloakLogoutView.as_view(
+            next_page=None,
+            template_name=settings.LOGGED_OUT_TEMPLATE,
+        )(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.template_name[0], settings.LOGGED_OUT_TEMPLATE)
+
+        # No realm: goes to next page
+        response = KeycloakLogoutView.as_view(next_page='/check-app')(request)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/check-app')
+
+        # Public realm: goes to next page
+        next_page = f'/{settings.GATEWAY_PUBLIC_REALM}/{settings.GATEWAY_SERVICE_ID}/check-app'
+        response = KeycloakLogoutView.as_view(next_page=next_page)(request)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, next_page)
+
+        # No public realm: goes to gateway logout
+        next_page = f'/realm-name/{settings.GATEWAY_SERVICE_ID}/check-app'
+        response = KeycloakLogoutView.as_view(next_page=next_page)(request)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(
+            f'/realm-name/{settings.GATEWAY_SERVICE_ID}/logout',
+            response.url)

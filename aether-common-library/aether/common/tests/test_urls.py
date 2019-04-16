@@ -118,11 +118,16 @@ class UrlsCASServerTest(UrlsTestCase):
 class UrlsKeycloakServerBehindTest(UrlsTestCase):
 
     def test__urls(self):
-        from django.contrib.auth import views
+        from django.contrib.auth.views import LoginView
+        from aether.common.keycloak.views import KeycloakLogoutView
 
         self.assertEqual(reverse('rest_framework:login'), '/accounts/login/')
         self.assertEqual(resolve('/accounts/login/').func.view_class,
-                         views.LoginView.as_view().view_class)
+                         LoginView.as_view().view_class)
+        self.assertEqual(resolve('/accounts/logout/').func.view_class,
+                         KeycloakLogoutView.as_view().view_class)
+        self.assertEqual(resolve('/logout/').func.view_class,
+                         KeycloakLogoutView.as_view().view_class)
 
 
 @override_settings(
@@ -133,11 +138,15 @@ class UrlsKeycloakServerBehindTest(UrlsTestCase):
 class UrlsKeycloakServerTest(UrlsTestCase):
 
     def test__urls(self):
-        from aether.common.keycloak.views import KeycloakLoginView
+        from aether.common.keycloak.views import KeycloakLoginView, KeycloakLogoutView
 
         self.assertEqual(reverse('rest_framework:login'), '/accounts/login/')
         self.assertEqual(resolve('/accounts/login/').func.view_class,
                          KeycloakLoginView.as_view().view_class)
+        self.assertEqual(resolve('/accounts/logout/').func.view_class,
+                         KeycloakLogoutView.as_view().view_class)
+        self.assertEqual(resolve('/logout/').func.view_class,
+                         KeycloakLogoutView.as_view().view_class)
 
 
 # using `docker-compose.yml` environment
