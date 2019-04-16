@@ -27,6 +27,14 @@ class Migration(migrations.Migration):
                 'default_related_name': 'schemadecorators',
             },
         ),
+        migrations.RemoveIndex(
+            model_name='schemadecorator',
+            name='kernel_proj_project_2dfa87_idx',
+        ),
+        migrations.RemoveIndex(
+            model_name='schemadecorator',
+            name='kernel_proj_modifie_3ecab4_idx',
+        ),
         migrations.RenameField(
             model_name='entity',
             old_name='projectschema',
@@ -36,6 +44,26 @@ class Migration(migrations.Migration):
             model_name='mapping',
             old_name='projectschemas',
             new_name='schemadecorators',
+        ),
+        migrations.AlterField(
+            model_name='mapping',
+            name='schemadecorators',
+            field=models.ManyToManyField(blank=True, editable=False, related_name='mappings', to='kernel.SchemaDecorator', verbose_name='schema decorators'),
+        ),
+        migrations.AlterField(
+            model_name='entity',
+            name='schemadecorator',
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='entities', to='kernel.SchemaDecorator', verbose_name='schema decorator'),
+        ),
+        migrations.AlterField(
+            model_name='schemadecorator',
+            name='project',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='schemadecorators', to='kernel.Project', verbose_name='project'),
+        ),
+        migrations.AlterField(
+            model_name='schemadecorator',
+            name='schema',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='schemadecorators', to='kernel.Schema', verbose_name='schema'),
         ),
         migrations.AddIndex(
             model_name='schemadecorator',

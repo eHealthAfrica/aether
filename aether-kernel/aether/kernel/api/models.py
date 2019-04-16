@@ -496,10 +496,10 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
 
         self.schemadecorators.clear()
         entities = self.definition.get('entities', {})
-        ps_list = []
+        sd_list = []
         for entity_pk in entities.values():
-            ps_list.append(SchemaDecorator.objects.get(pk=entity_pk, project=self.project))
-        self.schemadecorators.add(*ps_list)
+            sd_list.append(SchemaDecorator.objects.get(pk=entity_pk, project=self.project))
+        self.schemadecorators.add(*sd_list)
 
     def get_mt_instance(self):
         # because project can be null we need to override the method
@@ -567,7 +567,7 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        verbose_name=_('project schema'),
+        verbose_name=_('schema decorator'),
     )
 
     # redundant but speed up queries
