@@ -338,10 +338,8 @@ if KEYCLOAK_SERVER_URL:
 
     GATEWAY_SERVICE_ID = os.environ.get('GATEWAY_SERVICE_ID')
     if GATEWAY_SERVICE_ID:
-        # GATEWAY_HOST = os.environ['GATEWAY_HOST']  # required only for manual logout
         GATEWAY_HEADER_TOKEN = os.environ.get('GATEWAY_HEADER_TOKEN', 'X-Oauth-Token')
-
-        GATEWAY_PUBLIC_REALM = os.environ['GATEWAY_PUBLIC_REALM']
+        GATEWAY_PUBLIC_REALM = os.environ.get('GATEWAY_PUBLIC_REALM', '-')
         GATEWAY_PUBLIC_PATH = f'{GATEWAY_PUBLIC_REALM}/{GATEWAY_SERVICE_ID}'
 
         # the endpoints are served behind the gateway

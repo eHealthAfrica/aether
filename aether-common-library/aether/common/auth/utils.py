@@ -42,14 +42,3 @@ def get_or_create_user(request, username):
     add_user_to_realm(request, user)
 
     return user
-
-
-def get_or_create_user_from_userinfo(request, userinfo):
-    user = get_or_create_user(request, userinfo.get('preferred_username'))
-
-    user.first_name = userinfo.get('given_name') or ''
-    user.last_name = userinfo.get('family_name') or ''
-    user.email = userinfo.get('email') or ''
-    user.save()
-
-    return user
