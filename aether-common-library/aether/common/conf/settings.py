@@ -336,42 +336,38 @@ if KEYCLOAK_SERVER_URL:
         'aether.common.keycloak.middleware.KeycloakAuthenticationMiddleware',
     ]
 
+    GATEWAY_SERVICE_ID = os.environ.get('GATEWAY_SERVICE_ID')
+    if GATEWAY_SERVICE_ID:
+        # GATEWAY_HOST = os.environ['GATEWAY_HOST']  # required only for manual logout
+        GATEWAY_HEADER_TOKEN = os.environ.get('GATEWAY_HEADER_TOKEN', 'X-Oauth-Token')
+
+        GATEWAY_PUBLIC_REALM = os.environ['GATEWAY_PUBLIC_REALM']
+        GATEWAY_PUBLIC_PATH = f'{GATEWAY_PUBLIC_REALM}/{GATEWAY_SERVICE_ID}'
+
+        # the endpoints are served behind the gateway
+        ADMIN_URL = os.environ.get('ADMIN_URL', f'{GATEWAY_PUBLIC_PATH}/admin')
+        AUTH_URL = os.environ.get('AUTH_URL', f'{GATEWAY_PUBLIC_PATH}/accounts')
+        LOGIN_URL = os.environ.get('LOGIN_URL', f'/{AUTH_URL}/login/')
+        STATIC_URL = os.environ.get('STATIC_URL', f'{GATEWAY_PUBLIC_PATH}/static/')
+        LOGIN_REDIRECT_URL = f'/{GATEWAY_PUBLIC_PATH}/'
+
+        USE_X_FORWARDED_HOST = True
+        USE_X_FORWARDED_PORT = True
+
+        MIDDLEWARE += [
+            'aether.common.keycloak.middleware.GatewayAuthenticationMiddleware',
+        ]
+    else:
+        logger.info('No Keycloak gateway enabled!')
+
 else:
     logger.info('No Keycloak enabled!')
-
-
-GATEWAY_HOST = os.environ.get('GATEWAY_HOST')
-if GATEWAY_HOST:
-    GATEWAY_HEADER_TOKEN = os.environ.get('GATEWAY_HEADER_TOKEN', 'X-Oauth-Token')
-    GATEWAY_SERVICE_ID = os.environ['GATEWAY_SERVICE_ID']
-    GATEWAY_PUBLIC_REALM = os.environ['GATEWAY_PUBLIC_REALM']
-    GATEWAY_PUBLIC_PATH = f'{GATEWAY_PUBLIC_REALM}/{GATEWAY_SERVICE_ID}'
-
-    # the endpoints are served behind the gateway
-    ADMIN_URL = os.environ.get('ADMIN_URL', f'{GATEWAY_PUBLIC_PATH}/admin')
-    AUTH_URL = os.environ.get('AUTH_URL', f'{GATEWAY_PUBLIC_PATH}/accounts')
-    LOGIN_URL = os.environ.get('LOGIN_URL', f'/{AUTH_URL}/login/')
-    STATIC_URL = os.environ.get('STATIC_URL', f'{GATEWAY_PUBLIC_PATH}/static/')
-    LOGIN_REDIRECT_URL = f'/{GATEWAY_PUBLIC_PATH}/'
-
-    USE_X_FORWARDED_HOST = True
-    USE_X_FORWARDED_PORT = True
-
-    MIDDLEWARE += [
-        'aether.common.auth.middleware.GatewayAuthenticationMiddleware',
-    ]
-else:
-    logger.info('No auth gateway enabled!')
 
 
 # Multitenancy Configuration
 # ------------------------------------------------------------------------------
 
-MULTITENANCY = (
-    bool(os.environ.get('MULTITENANCY')) or
-    bool(KEYCLOAK_SERVER_URL) or
-    bool(GATEWAY_HOST)
-)
+MULTITENANCY = bool(os.environ.get('MULTITENANCY')) or bool(KEYCLOAK_SERVER_URL)
 if MULTITENANCY:
     REALM_COOKIE = os.environ.get('REALM_COOKIE', 'aether-realm')
     DEFAULT_REALM = os.environ.get('DEFAULT_REALM', 'aether')
@@ -457,7 +453,7 @@ if not TESTING and DEBUG:
     INSTALLED_APPS += ['debug_toolbar', ]
     MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware', ]
     DEBUG_TOOLBAR_URL = os.environ.get('DEBUG_TOOLBAR_URL', '__debug__')
-    if GATEWAY_HOST:
+    if GATEWAY_SERVICE_ID:
         DEBUG_TOOLBAR_URL = os.environ.get('DEBUG_TOOLBAR_URL', f'{GATEWAY_PUBLIC_PATH}/__debug__')
 
     DEBUG_TOOLBAR_CONFIG = {

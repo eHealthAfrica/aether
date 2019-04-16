@@ -44,15 +44,14 @@ class UrlsTest(UrlsTestCase):
         self.assertEqual(reverse('logout'), '/logout/')
 
     def test__urls__auth__views(self):
-        from django.contrib.auth.views import LoginView
-        from aether.common.auth.views import AetherLogoutView
+        from django.contrib.auth.views import LoginView, LogoutView
 
         self.assertEqual(resolve('/accounts/login/').func.view_class,
                          LoginView.as_view().view_class)
         self.assertEqual(resolve('/accounts/logout/').func.view_class,
-                         AetherLogoutView.as_view().view_class)
+                         LogoutView.as_view().view_class)
         self.assertEqual(resolve('/logout/').func.view_class,
-                         AetherLogoutView.as_view().view_class)
+                         LogoutView.as_view().view_class)
 
 
 @override_settings(
@@ -157,7 +156,7 @@ class UrlsGatewayUrlTest(UrlsTestCase):
         self.assertEqual(reverse('rest_framework:login'), '/-/common/accounts/login/')
 
 
-@override_settings(GATEWAY_HOST=None)
+@override_settings(GATEWAY_SERVICE_ID=None)
 class UrlsNoGatewayUrlTest(UrlsTestCase):
 
     def test__urls(self):

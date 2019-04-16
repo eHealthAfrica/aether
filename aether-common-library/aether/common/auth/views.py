@@ -16,10 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from django.conf import settings
-from django.contrib.auth.views import LogoutView
-from django.urls import resolve
-
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes, renderer_classes
@@ -51,24 +47,3 @@ def obtain_auth_token(request, *args, **kwargs):
 
     except Exception as e:
         return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
-class AetherLogoutView(LogoutView):
-    '''
-    Extends LogoutView overriding ``get_next_page`` method.
-
-    In case of Gateway Authentication is enabled and the next page refers to the
-    Gateway urls redirect to Gateway logout endpoint.
-    '''
-
-    def get_next_page(self):
-        next_page = super(AetherLogoutView, self).get_next_page()
-        try:
-            realm = resolve(next_page).kwargs.get('realm')
-            if realm and realm != settings.GATEWAY_PUBLIC_REALM:
-                return f'{settings.GATEWAY_HOST}/{realm}/{settings.GATEWAY_SERVICE_ID}/logout'
-        except Exception:
-            # sometimes there is no next_page or resolve fails...
-            pass
-
-        return next_page

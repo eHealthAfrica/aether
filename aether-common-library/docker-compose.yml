@@ -26,12 +26,12 @@ services:
       PGPORT: 9999
       DB_NAME: common
 
-      GATEWAY_HOST: http://localhost
+      KEYCLOAK_SERVER_URL: http://localhost:8090
+      KEYCLOAK_CLIENT_ID: testing
+
       GATEWAY_SERVICE_ID: common
       GATEWAY_PUBLIC_REALM: "-"
 
-      KEYCLOAK_SERVER_URL: http://localhost:8090
-      KEYCLOAK_CLIENT_ID: testing
       MULTITENANCY: "true"
 
       # required by kernel module

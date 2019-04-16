@@ -64,8 +64,8 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):
     urlpatterns += _get_health_urls(kernel)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    # GATEWAY endpoints
-    if settings.GATEWAY_HOST:
+    # KEYCLOAK GATEWAY endpoints
+    if settings.GATEWAY_SERVICE_ID:
         urlpatterns = [
             # this is reachable using internal network
             path(route='', view=include(urlpatterns)),
@@ -125,28 +125,28 @@ def _get_auth_urls(token):
         logout_view = views.LogoutView.as_view()
 
     else:
-        from django.contrib.auth.views import LoginView
-        from aether.common.auth.views import AetherLogoutView
+        from django.contrib.auth.views import LoginView, LogoutView
 
-        logout_view = AetherLogoutView.as_view(template_name=settings.LOGGED_OUT_TEMPLATE)
+        logout_view = LogoutView.as_view(template_name=settings.LOGGED_OUT_TEMPLATE)
 
         if not settings.KEYCLOAK_SERVER_URL:
             login_view = LoginView.as_view(template_name=settings.LOGIN_TEMPLATE)
 
-        else:
-            from aether.common.keycloak.forms import RealmForm, RealmAuthenticationForm
+        elif not settings.KEYCLOAK_BEHIND_SCENES:
+            from aether.common.keycloak.forms import RealmForm
             from aether.common.keycloak.views import KeycloakLoginView
 
-            if not settings.KEYCLOAK_BEHIND_SCENES:
-                login_view = KeycloakLoginView.as_view(
-                    template_name=settings.KEYCLOAK_TEMPLATE,
-                    authentication_form=RealmForm,
-                )
-            else:
-                login_view = LoginView.as_view(
-                    template_name=settings.KEYCLOAK_BEHIND_TEMPLATE,
-                    authentication_form=RealmAuthenticationForm,
-                )
+            login_view = KeycloakLoginView.as_view(
+                template_name=settings.KEYCLOAK_TEMPLATE,
+                authentication_form=RealmForm,
+            )
+        else:
+            from aether.common.keycloak.forms import RealmAuthenticationForm
+
+            login_view = LoginView.as_view(
+                template_name=settings.KEYCLOAK_BEHIND_TEMPLATE,
+                authentication_form=RealmAuthenticationForm,
+            )
 
     auth_urls = [
         path(route='login/', view=login_view, name='login'),

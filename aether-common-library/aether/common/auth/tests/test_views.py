@@ -17,16 +17,12 @@
 # under the License.
 
 import mock
-from importlib import import_module
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.test import RequestFactory, TestCase, override_settings
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from rest_framework import status
-
-from ..views import AetherLogoutView
 
 user_objects = get_user_model().objects
 
@@ -100,47 +96,3 @@ class ViewsTest(TestCase):
             response = self.client.post(self.token_url, data={'username': token_username})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.json()['message'], ':(')
-
-    def test_logout(self):
-        logout_url = reverse('logout')
-        self.assertEqual(logout_url, '/logout/')
-        self.assertNotEqual(logout_url, reverse('rest_framework:logout'))
-
-        response = self.client.get(logout_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.template_name[0], settings.LOGGED_OUT_TEMPLATE)
-
-        settings.SESSION_ENGINE = 'django.contrib.sessions.backends.file'
-        engine = import_module(settings.SESSION_ENGINE)
-        store = engine.SessionStore()
-        store.save()
-
-        request = RequestFactory().get('/')
-        setattr(request, 'session', store)
-
-        # No next page: displays logged out template
-        response = AetherLogoutView.as_view(
-            next_page=None,
-            template_name=settings.LOGGED_OUT_TEMPLATE,
-        )(request)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.template_name[0], settings.LOGGED_OUT_TEMPLATE)
-
-        # No realm: goes to next page
-        response = AetherLogoutView.as_view(next_page='/check-app')(request)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response.url, '/check-app')
-
-        # Public realm: goes to next page
-        next_page = f'/{settings.GATEWAY_PUBLIC_REALM}/{settings.GATEWAY_SERVICE_ID}/check-app'
-        response = AetherLogoutView.as_view(next_page=next_page)(request)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response.url, next_page)
-
-        # No public realm: goes to gateway logout
-        next_page = f'/realm-name/{settings.GATEWAY_SERVICE_ID}/check-app'
-        response = AetherLogoutView.as_view(next_page=next_page)(request)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(
-            response.url,
-            f'{settings.GATEWAY_HOST}/realm-name/{settings.GATEWAY_SERVICE_ID}/logout')
