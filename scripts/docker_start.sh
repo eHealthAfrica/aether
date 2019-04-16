@@ -20,6 +20,8 @@
 #
 set -Eeuo pipefail
 
+source ./scripts/aether_functions.sh
+
 function show_help {
     echo """
     start the indicated container with the necessary dependencies
@@ -141,13 +143,12 @@ case $app in
     ;;
 esac
 
+create_credentials
 
 echo ""
 docker-compose ps
 echo "----------------------------------------------------------------------"
 echo ""
-
-./scripts/build_docker_credentials.sh
 
 if [[ $kill = "yes" ]]
 then
@@ -169,18 +170,23 @@ then
     echo ""
 fi
 
+create_docker_assets
+
 if [[ $build = "yes" ]]
 then
     echo "----------------------------------------------------------------------"
     echo "---- Building containers                                          ----"
     echo "----------------------------------------------------------------------"
 
-    ./scripts/build_all_containers.sh
+    build_libraries_and_distribute
+    build_ui_assets
+
+    for container in "${SETUP_CONTAINERS[@]}"
+    do
+        build_container $container
+    done
     echo ""
 fi
-
-./scripts/build_docker_assets.sh
-
 
 echo "----------------------------------------------------------------------"
 echo "---- Starting containers                                          ----"
