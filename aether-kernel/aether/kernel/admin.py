@@ -17,12 +17,11 @@
 # under the License.
 
 from django.contrib import admin
-from reversion_compare.admin import CompareVersionAdmin
 
 from .api import models, forms
 
 
-class BaseAdmin(CompareVersionAdmin):
+class BaseAdmin(admin.ModelAdmin):
     empty_value_display = '---'
     list_per_page = 25
     readonly_fields = ('id',)

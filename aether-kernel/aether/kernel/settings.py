@@ -33,13 +33,10 @@ from aether.common.conf.settings import (
 # ------------------------------------------------------------------------------
 
 ROOT_URLCONF = 'aether.kernel.urls'
-ADD_REVERSION_ADMIN = True
 
 INSTALLED_APPS += [
     'django_filters',
     'drf_yasg',
-    'reversion',
-    'reversion_compare',
     'aether.kernel',
 ]
 

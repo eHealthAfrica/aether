@@ -6,7 +6,7 @@
 ################################################################################
 
 django
-django-cas-ng<3.6.0
+django-cas-ng
 django-cors-headers
 django-minio-storage
 django-prometheus

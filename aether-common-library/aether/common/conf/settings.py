@@ -302,6 +302,9 @@ if CAS_SERVER_URL:
         'django_cas_ng',
         'ums_client',
     ]
+    MIDDLEWARE += [
+        'django_cas_ng.middleware.CASMiddleware',
+    ]
     AUTHENTICATION_BACKENDS += [
         'ums_client.backends.UMSRoleBackend',
     ]
