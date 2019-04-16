@@ -2,34 +2,13 @@
 
 from django.db import migrations, models
 import django.db.models.deletion
-import django.utils.timezone
-import model_utils.fields
 import uuid
 
-def migrate_ProjectSchema_to_SchemaDecorator(apps, schema_editor):
-    ProjectSchemas = apps.get_model('kernel', 'ProjectSchema')
-    SchemaDecorators = apps.get_model('kernel', 'SchemaDecorator')
+
+def migrate__update_mapping__many_to_many(apps, schema_editor):
     Mappings = apps.get_model('kernel', 'Mapping')
-    Entities = apps.get_model('kernel', 'Entity')
-
-    for projectschema in ProjectSchemas.objects.all():
-        SchemaDecorators.objects.create(
-            name=projectschema.name,
-            project=projectschema.project,
-            schema=projectschema.schema,
-            mandatory_fields=projectschema.mandatory_fields,
-            transport_rule=projectschema.transport_rule,
-            masked_fields=projectschema.masked_fields,
-            is_encrypted=projectschema.is_encrypted,
-            id=projectschema.id,
-        )
-
     for mapping in Mappings.objects.all():
-        for ps in mapping.projectschemas.all():
-            mapping.schemadecorators.add(str(ps.pk))
-
-    for entity in Entities.objects.all():
-        entity.schemadecorator = entity.projectschema
+        mapping.save()  # this updates the many-to-many relation
 
 
 class Migration(migrations.Migration):
@@ -39,37 +18,56 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.CreateModel(
-            name='SchemaDecorator',
-            fields=[
-                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
-                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
-                ('id', models.UUIDField(default=uuid.uuid4, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.TextField(verbose_name='name')),
-                ('mandatory_fields', models.TextField(blank=True, null=True, verbose_name='mandatory fields')),
-                ('transport_rule', models.TextField(blank=True, null=True, verbose_name='transport rule')),
-                ('masked_fields', models.TextField(blank=True, null=True, verbose_name='masked fields')),
-                ('is_encrypted', models.BooleanField(default=False, verbose_name='encrypted?')),
-                ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='schemadecorators', to='kernel.Project', verbose_name='project')),
-                ('schema', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='schemadecorators', to='kernel.Schema', verbose_name='schema')),
-            ],
+        # changing related name/verbose name in foreign keys
+        migrations.AlterModelOptions(
+            name='projectschema',
             options={
-                'verbose_name': 'schema decorator',
+                'default_related_name': 'schemadecorators', 
+                'ordering': ['project__id', '-modified'], 
+                'verbose_name': 'schema decorator', 
                 'verbose_name_plural': 'schema decorators',
-                'ordering': ['project__id', '-modified'],
-                'default_related_name': 'schemadecorators',
             },
         ),
-        migrations.AddField(
-            model_name='entity',
+        migrations.AlterField(
+            model_name='projectschema',
+            name='project',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='schemadecorators', to='kernel.Project', verbose_name='project'),
+        ),
+        migrations.AlterField(
+            model_name='projectschema',
+            name='schema',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='schemadecorators', to='kernel.Schema', verbose_name='schema'),
+        ),
+
+        # remove old indices
+        migrations.RemoveIndex(
+            model_name='projectschema',
+            name='kernel_proj_project_2dfa87_idx',
+        ),
+        migrations.RemoveIndex(
+            model_name='projectschema',
+            name='kernel_proj_modifie_3ecab4_idx',
+        ),
+
+        # rename database table name
+        migrations.AlterModelTable(
+            name='projectschema',
+            table='kernel_schemadecorator',
+        ),
+
+        # RENAME MODEL!!!
+        migrations.RenameModel(
+            old_name='ProjectSchema',
+            new_name='SchemaDecorator',
+        ),
+        
+        # use default table name
+        migrations.AlterModelTable(
             name='schemadecorator',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='entities', to='kernel.SchemaDecorator', verbose_name='schema decorator'),
+            table=None,
         ),
-        migrations.AddField(
-            model_name='mapping',
-            name='schemadecorators',
-            field=models.ManyToManyField(blank=True, editable=False, related_name='mappings', to='kernel.SchemaDecorator', verbose_name='schema decorators'),
-        ),
+
+        # add new indices
         migrations.AddIndex(
             model_name='schemadecorator',
             index=models.Index(fields=['project', '-modified'], name='kernel_sche_project_49476e_idx'),
@@ -78,30 +76,36 @@ class Migration(migrations.Migration):
             model_name='schemadecorator',
             index=models.Index(fields=['-modified'], name='kernel_sche_modifie_7a154a_idx'),
         ),
+
+        # update relationships
+        migrations.RenameField(
+            model_name='mapping',
+            old_name='projectschemas',
+            new_name='schemadecorators',
+        ),
+        migrations.AlterField(
+            model_name='mapping',
+            name='schemadecorators',
+            field=models.ManyToManyField(blank=True, editable=False, related_name='mappings', to='kernel.SchemaDecorator', verbose_name='schema decorators'),
+        ),
+
+        migrations.RenameField(
+            model_name='entity',
+            old_name='projectschema',
+            new_name='schemadecorator',
+        ),
+        migrations.AlterField(
+            model_name='entity',
+            name='schemadecorator',
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='entities', to='kernel.SchemaDecorator', verbose_name='schema decorator'),
+        ),
+
+        # not sure if this is needed but... it doesn't hurt
         migrations.RunPython(
-            code=migrate_ProjectSchema_to_SchemaDecorator,
+            code=migrate__update_mapping__many_to_many,
             reverse_code=migrations.RunPython.noop,
             # The optional elidable argument determines whether or not the operation
             # will be removed (elided) when squashing migrations.
             elidable=True,
-        ),
-        migrations.RemoveField(
-            model_name='projectschema',
-            name='project',
-        ),
-        migrations.RemoveField(
-            model_name='projectschema',
-            name='schema',
-        ),
-        migrations.RemoveField(
-            model_name='entity',
-            name='projectschema',
-        ),
-        migrations.RemoveField(
-            model_name='mapping',
-            name='projectschemas',
-        ),
-        migrations.DeleteModel(
-            name='ProjectSchema',
         ),
     ]
