@@ -718,3 +718,71 @@ class KeycloakGatewayTests(UrlsTestCase):
         self.assertIn(
             f'/realm-name/{settings.GATEWAY_SERVICE_ID}/logout',
             response.url)
+
+    def test_workflow(self):
+        FAKE_TOKEN = 'access-keycloak'
+        REALM = 'testing'
+        SAMPLE_URL = reverse('testmodel-list', kwargs={'realm': REALM})
+        HTTP_HEADER = 'HTTP_' + settings.GATEWAY_HEADER_TOKEN.replace('-', '_').upper()
+
+        self.assertEqual(SAMPLE_URL, f'/{REALM}/{settings.GATEWAY_SERVICE_ID}/testtestmodel/')
+
+        # visit any page without a valid token
+        response = self.client.get(SAMPLE_URL)
+        self.assertEqual(response.status_code, 403)
+
+        with mock.patch('aether.common.keycloak.utils.exec_request',
+                        side_effect=[
+                            # get userinfo from keycloak
+                            MockResponse(status_code=404),
+                        ]) as mock_req_1:
+            response = self.client.get(SAMPLE_URL, **{HTTP_HEADER: FAKE_TOKEN})
+            self.assertEqual(response.status_code, 403)
+
+            mock_req_1.assert_called_once_with(
+                method='get',
+                url=f'{settings.KEYCLOAK_SERVER_URL}/{REALM}/protocol/openid-connect/userinfo',
+                headers={'Authorization': f'Bearer {FAKE_TOKEN}'},
+            )
+
+        # visit any page with a valid token
+        with mock.patch('aether.common.keycloak.utils.exec_request',
+                        side_effect=[
+                            # get userinfo from keycloak
+                            MockResponse(status_code=200, json_data={
+                                'preferred_username': 'user',
+                                'given_name': 'John',
+                                'family_name': 'Doe',
+                                'email': 'john.doe@example.com',
+                            }),
+                        ]) as mock_req_2:
+            self.assertEqual(user_objects.filter(username='testing__user').count(), 0)
+
+            response = self.client.get(SAMPLE_URL, **{HTTP_HEADER: FAKE_TOKEN})
+            self.assertEqual(response.status_code, 200)
+
+            self.assertEqual(user_objects.filter(username='testing__user').count(), 1)
+            user = user_objects.get(username='testing__user')
+            self.assertEqual(user.first_name, 'John')
+            self.assertEqual(user.last_name, 'Doe')
+            self.assertEqual(user.email, 'john.doe@example.com')
+
+            mock_req_2.assert_called_once_with(
+                method='get',
+                url=f'{settings.KEYCLOAK_SERVER_URL}/{REALM}/protocol/openid-connect/userinfo',
+                headers={'Authorization': f'Bearer {FAKE_TOKEN}'},
+            )
+
+        session = self.client.session
+        self.assertTrue(session.get(settings.GATEWAY_HEADER_TOKEN),
+                        'flagged as gateway authenticated')
+        self.assertEqual(session.get(settings.REALM_COOKIE), REALM)
+
+        # visit any page without a valid token
+        response = self.client.get(SAMPLE_URL)
+        self.assertEqual(response.status_code, 403)
+
+        # the user is logged out
+        session = self.client.session
+        self.assertIsNone(session.get(settings.GATEWAY_HEADER_TOKEN))
+        self.assertIsNone(session.get(settings.REALM_COOKIE))
