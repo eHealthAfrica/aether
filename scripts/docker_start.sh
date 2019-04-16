@@ -147,6 +147,7 @@ docker-compose ps
 echo "----------------------------------------------------------------------"
 echo ""
 
+./scripts/build_docker_credentials.sh
 
 if [[ $kill = "yes" ]]
 then
