@@ -191,7 +191,7 @@ class Contract(ExportModelOperationsMixin('ui_contract'), TimeStampedModel, MtMo
         Object expected format:
             {
                 "entities": {
-                    "entity name": uuid,  # the Kernel project schema ID
+                    "entity name": uuid,  # the Kernel schema decorator ID
                     ...
                 },
                 "schemas": {

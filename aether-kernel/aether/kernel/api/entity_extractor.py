@@ -646,11 +646,11 @@ def run_entity_extraction(submission, overwrite=False):
 
     for mapping in mappings:
         # Get the primary key of the schemadecorator
-        entity_ps_ids = mapping.definition.get('entities')
+        entity_sd_ids = mapping.definition.get('entities')
         # Get the schema of the schemadecorator
         schema_decorator = {
             name: models.SchemaDecorator.objects.get(pk=_id)
-            for name, _id in entity_ps_ids.items()
+            for name, _id in entity_sd_ids.items()
         }
         schemas = {
             name: ps.schema.definition

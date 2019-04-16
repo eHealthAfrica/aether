@@ -77,7 +77,7 @@ def upsert_project_artefacts(
         'mappingsets': set(),
         'mappings': set(),
     }
-    # keeps the list of created project schemas and their ids
+    # keeps the list of created schema decorators and their ids
     # with those the list of used entities in the mapping rules can be filled
     mapping_schema_decorators = {}
 
@@ -114,7 +114,7 @@ def upsert_project_artefacts(
         )
         results['schemas'].add(str(schema.pk))
 
-        # project schemas are a special case, it's useless looking for their "pk"
+        # schema decorators are a special case, it's useless looking for their "pk"
         # but for the relationship between project and schema
         try:
             schema_decorator = SchemaDecorator.objects.get(project=project, schema=schema)

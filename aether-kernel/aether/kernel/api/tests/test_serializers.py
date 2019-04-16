@@ -118,7 +118,7 @@ class SerializersTests(TestCase):
 
         schemadecorator = serializers.SchemaDecoratorSerializer(
             data={
-                'name': 'a project schema name',
+                'name': 'a schema decorator name',
                 'project': project.data['id'],
                 'schema': schema.data['id'],
             },

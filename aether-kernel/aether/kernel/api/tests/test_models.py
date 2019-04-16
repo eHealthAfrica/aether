@@ -316,7 +316,7 @@ class ModelsTests(TransactionTestCase):
             schema=schema,
         )
 
-        # delete the project schema will delete one of the entities
+        # delete the schema decorator will delete one of the entities
         schemadecorator.delete()
 
         self.assertFalse(models.Entity.objects.filter(pk=entity.pk).exists(), 'schema decorator CASCADE action')

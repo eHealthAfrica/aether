@@ -443,14 +443,14 @@ class Mapping(ExportModelOperationsMixin('kernel_mapping'), ProjectChildAbstract
 
     .. note:: Extends from :class:`aether.kernel.api.models.ProjectChildAbstract`
 
-    :ivar JSON              definition:      The list of mapping rules between
+    :ivar JSON              definition:        The list of mapping rules between
         a source (submission) and a destination (entity).
-    :ivar bool              is_active:       Is the mapping active?
-    :ivar bool              is_read_only:    Can the mapping rules be modified manually?
-    :ivar MappingSet        mappingset:      Mapping set.
-    :ivar SchemaDecorator   schemadecorators:  The list of project schemas included
+    :ivar bool              is_active:         Is the mapping active?
+    :ivar bool              is_read_only:      Can the mapping rules be modified manually?
+    :ivar MappingSet        mappingset:        Mapping set.
+    :ivar SchemaDecorator   schemadecorators:  The list of schema decorators included
         in the mapping rules.
-    :ivar Project           project:         Project (redundant but speed up queries).
+    :ivar Project           project:           Project (redundant but speed up queries).
 
     '''
 
@@ -561,7 +561,7 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
         verbose_name=_('mapping revision'),
     )
 
-    # WARNING:  the project schema deletion has consequences
+    # WARNING:  the schema decorator deletion has consequences
     schemadecorator = models.ForeignKey(
         to=SchemaDecorator,
         on_delete=models.CASCADE,
@@ -598,7 +598,7 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
     def name(self):  # overrides base model field
         # try to build a name for the extracted entity base on the linked data
         if self.schemadecorator and self.mapping:
-            # find in the mapping definition the name used by this project schema
+            # find in the mapping definition the name used by this schema decorator
             for k, v in self.mapping.definition.get('entities', {}).items():
                 if v == str(self.schemadecorator.pk):
                     return f'{self.project.name}-{k}'
@@ -631,7 +631,7 @@ class Entity(ExportModelOperationsMixin('kernel_entity'), ProjectChildAbstract):
         elif len(project_ids) == 1:
             self.project = possible_project
 
-        if self.schemadecorator:  # redundant values taken from project schema
+        if self.schemadecorator:  # redundant values taken from schema decorator
             self.schema = self.schemadecorator.schema
 
         if self.mapping and not self.mapping_revision:

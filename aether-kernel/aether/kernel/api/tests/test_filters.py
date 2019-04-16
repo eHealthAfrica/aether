@@ -433,7 +433,7 @@ class TestFilters(TestCase):
         for _ in range(random.randint(5, 10)):
             generate_project()
         mappings_count = models.Mapping.objects.count()
-        # Get a list of all project schemas.
+        # Get a list of all schema decorators.
         for schemadecorator in models.SchemaDecorator.objects.all():
             expected = set([str(e.id) for e in schemadecorator.mappings.all()])
             # by id

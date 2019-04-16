@@ -156,7 +156,7 @@ class ProjectArtefactsTests(TestCase):
             # in this case nothing changes
             {'id': schema_id, 'name': 'Schema 2'},
         ])
-        self.assertEqual(results_1, results_2, 'it does no generate a new project schema')
+        self.assertEqual(results_1, results_2, 'it does no generate a new schema decorator')
 
         schema.refresh_from_db()
         self.assertEqual(schema.name, 'Schema')
@@ -165,10 +165,10 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(schema.type, 'org.ehealthafrica.aether')
         self.assertIsNone(schema.family)
 
-        # delete project schema
+        # delete schema decorator
         schema_decorator.delete()
         results_3 = generate(project_id=project.pk, project_name=project.name, schemas=[
-            # in this case the definition is updated and the deleted project schema re-generated
+            # in this case the definition is updated and the deleted schema decorator re-generated
             {'id': schema_id, 'definition': {'name': 'Schema'}, 'type': 't', 'family': 'f'},
         ])
         self.assertEqual(results_1, results_3, 'generates a new schema decorator with the schema id')

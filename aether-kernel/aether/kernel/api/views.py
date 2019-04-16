@@ -248,7 +248,7 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     def __upsert_schemas(self, request, pk=None):
         '''
         Creates or updates the project and links it with the given AVRO schemas
-        and related artefacts: project schemas and passthrough mappings.
+        and related artefacts: schema decorators and passthrough mappings.
 
         Returns the list of project and its affected artefact ids by type.
 
