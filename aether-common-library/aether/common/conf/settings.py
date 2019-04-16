@@ -333,7 +333,7 @@ if KEYCLOAK_SERVER_URL:
         DEFAULT_KEYCLOAK_BEHIND_TEMPLATE)
 
     MIDDLEWARE += [
-        'aether.common.keycloak.middleware.KeycloakAuthenticationMiddleware',
+        'aether.common.keycloak.middleware.TokenAuthenticationMiddleware',
     ]
 
     GATEWAY_SERVICE_ID = os.environ.get('GATEWAY_SERVICE_ID')
@@ -357,6 +357,7 @@ if KEYCLOAK_SERVER_URL:
         MIDDLEWARE += [
             'aether.common.keycloak.middleware.GatewayAuthenticationMiddleware',
         ]
+
     else:
         logger.info('No Keycloak gateway enabled!')
 
