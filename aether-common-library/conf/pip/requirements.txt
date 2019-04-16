@@ -14,7 +14,6 @@ django-uwsgi
 djangorestframework
 psycopg2-binary
 pygments
-pyjwt
 python-json-logger
 requests
 

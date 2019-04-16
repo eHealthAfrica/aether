@@ -40,7 +40,6 @@ psycopg2-binary==2.8.1
 pycodestyle==2.5.0
 pyflakes==2.1.1
 Pygments==2.3.1
-PyJWT==1.7.1
 python-cas==1.4.0
 python-json-logger==0.1.11
 pytz==2019.1

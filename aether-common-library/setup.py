@@ -56,9 +56,6 @@ setup(
             'django-cas-ng',
             'django-ums-client',
         ],
-        'gateway': [
-            'pyjwt',
-        ],
         'storage': [
             'django-minio-storage',
             'django-storages[boto3,google]',
