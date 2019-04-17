@@ -32,7 +32,11 @@ from uuid import uuid4
 
 from confluent_kafka import Producer, Consumer
 
-from producer import *  # noqa
+from producer import (
+    ProducerManager,
+    OFFSET_MANAGER
+)
+
 from producer.db import Decorator
 from producer.resource import Event, ResourceHelper, RESOURCE_HELPER
 from producer.settings import Settings
@@ -201,8 +205,8 @@ def redis_fixture_schemas(get_resource_helper):
 
 
 @pytest.mark.integration
-@pytest.fixture(scope='session')
-def get_entity_generator(get_resource_helper):
+@pytest.fixture(scope='function')
+def generate_redis_entities(get_resource_helper):
     RH = get_resource_helper
 
     def make_entity_instances(
@@ -212,9 +216,8 @@ def get_entity_generator(get_resource_helper):
         delay=0.0
     ):
         for e in entity_generator(count, tenant, decorator_id):
-            print(e)
             queue_key = f'{e["offset"]}/{decorator_id}/{e["id"]}'
             RH.add(queue_key, e, 'entity')
             if delay:
                 sleep(delay)
-    return make_entity_instances
+    yield make_entity_instances

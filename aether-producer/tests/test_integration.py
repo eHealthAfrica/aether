@@ -19,6 +19,7 @@
 # under the License.
 
 
+import pytest
 import requests
 from time import sleep
 from typing import (
@@ -26,44 +27,48 @@ from typing import (
 )
 import uuid
 
-import pytest
-
-# from producer.logger import LOG
 from producer.resource import (
     Event,
     Resource,
     ResourceHelper
 )
 
-from . import *  # noqa
+# Test Assets
 from . import (
-    MockCallable
+    MockCallable,
+    MockProducerManager,
+    USER,
+    PW
 )
+from . import *  # noqa  # get fixtures
 from .timeout import timeout as Timeout  # noqa
 
 
 @pytest.mark.integration
 def test_manager_http_endpoint_service(ProducerManagerSettings):
     man = MockProducerManager(ProducerManagerSettings)
-    try:
-        auth = requests.auth.HTTPBasicAuth(USER, PW)
-        man.serve()
-        man.add_endpoints()
-        sleep(1)
-        url = 'http://localhost:%s' % man.settings.get('server_port')
-        r = requests.head(f'{url}/healthcheck')
-        assert(r.status_code == 200)
-        protected_endpoints = ['status', 'topics']
-        for e in protected_endpoints:
-            r = requests.head(f'{url}/{e}')
-            assert(r.status_code == 401)
-        for e in protected_endpoints:
-            r = requests.head(f'{url}/{e}', auth=auth)
+    with Timeout(5):
+        try:
+            auth = requests.auth.HTTPBasicAuth(USER, PW)
+            man.serve()
+            man.add_endpoints()
+            sleep(1)
+            url = 'http://localhost:%s' % man.settings.get('server_port')
+            r = requests.head(f'{url}/healthcheck')
             assert(r.status_code == 200)
-    finally:
-        man.http.stop()
-        man.http.close()
-        man.worker_pool.kill()
+            protected_endpoints = ['status', 'topics']
+            for e in protected_endpoints:
+                r = requests.head(f'{url}/{e}')
+                assert(r.status_code == 401)
+            for e in protected_endpoints:
+                r = requests.head(f'{url}/{e}', auth=auth)
+                assert(r.status_code == 200)
+        except TimeoutError:
+            assert(False), 'Endpoint check timed out'
+        finally:
+            man.http.stop()
+            man.http.close()
+            man.worker_pool.kill()
 
 
 @pytest.mark.integration
@@ -181,11 +186,11 @@ def test_kafka__basic_io(simple_consumer, simple_producer):
 ])
 def test_produce__topic_variations(
     redis_fixture_schemas,
-    get_entity_generator,
+    generate_redis_entities,
     decorator_name
 ):
     schemas, decorators = redis_fixture_schemas
     decorator = decorators[decorator_name]
     print(decorator)
     tenant = 'test'
-    get_entity_generator(10, tenant, decorator.id)
+    generate_redis_entities(10, tenant, decorator.id)
