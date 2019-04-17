@@ -86,16 +86,16 @@ $KCADM \
 
 echo "${LINE} Creating default client..."
 
-CLIENT_URL="http://${NETWORK_DOMAIN}"
+BASE_URL="http://${NETWORK_DOMAIN}"
 
 # NGINX ports
-RU_80="${CLIENT_URL}/*"
-RU_8443="http://${NETWORK_DOMAIN}:8443/*"
+RU_80="${BASE_URL}/*"
+RU_8443="${BASE_URL}:8443/*"
 # standalone app ports
-RU_8100="http://${NETWORK_DOMAIN}:8100/*"
-RU_8102="http://${NETWORK_DOMAIN}:8102/*"
-RU_8104="http://${NETWORK_DOMAIN}:8104/*"
-RU_8106="http://${NETWORK_DOMAIN}:8106/*"
+RU_8100="${BASE_URL}:8100/*"
+RU_8102="${BASE_URL}:8102/*"
+RU_8104="${BASE_URL}:8104/*"
+RU_8106="${BASE_URL}:8106/*"
 
 $KCADM \
     create clients \
@@ -103,7 +103,7 @@ $KCADM \
     -s clientId=${KEYCLOAK_AETHER_CLIENT} \
     -s publicClient=true \
     -s directAccessGrantsEnabled=true \
-    -s baseUrl="http://${NETWORK_DOMAIN}" \
+    -s baseUrl="${BASE_URL}" \
     -s 'redirectUris=["'${RU_80}'","'${RU_8443}'","'${RU_8100}'","'${RU_8102}'","'${RU_8104}'","'${RU_8106}'"]' \
     -s enabled=true
 

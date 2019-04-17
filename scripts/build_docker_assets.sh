@@ -23,16 +23,18 @@ set -Eeuo pipefail
 source .env
 
 # recreate network
-docker network rm ${NETWORK_NAME} || :
-docker network create ${NETWORK_NAME} \
-    --attachable \
-    --subnet=${NETWORK_SUBNET} \
-    --gateway=${NETWORK_GATEWAY}
+docker network rm ${NETWORK_NAME} || true
+{
+    docker network create ${NETWORK_NAME} \
+        --attachable \
+        --subnet=${NETWORK_SUBNET} \
+        --gateway=${NETWORK_GATEWAY}
+} || true
 echo "${NETWORK_NAME} network is ready."
 
 
 # check that the volume exists or create it
-docker volume create ${DB_VOLUME} || :
+docker volume create ${DB_VOLUME} || true
 echo "${DB_VOLUME} volume is ready."
 
 # refresh the docker images

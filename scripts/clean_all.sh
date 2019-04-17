@@ -22,9 +22,60 @@ set -Eeuo pipefail
 
 source .env
 
+# default values
+network=no
+volume=no
+env=no
+
+while [[ $# -gt 0 ]]
+do
+    case "$1" in
+        -e|--env-file)
+            # remove credentials
+            env=yes
+            shift # past argument
+        ;;
+
+        -v|--volume)
+            # remove volume
+            volume=yes
+            shift # past argument
+        ;;
+
+        -n|--network)
+            # remove network
+            network=yes
+            shift # past argument
+        ;;
+
+        -a|--all)
+            # remove volume, network and credentials
+            volume=yes
+            network=yes
+            env=yes
+            shift # past argument
+        ;;
+
+        *)
+            shift # past argument
+        ;;
+    esac
+done
+
 for dc_file in $(find docker-compose*.yml 2> /dev/null)
 do
+    docker-compose -f $dc_file kill
     docker-compose -f $dc_file down
 done
 
-docker volume rm ${DB_VOLUME}
+if [[ $volume = "yes" ]]; then
+    docker volume  rm ${DB_VOLUME}
+fi
+
+if [[ $network = "yes" ]]; then
+    docker network rm ${NETWORK_NAME}
+fi
+
+if [[ $env = "yes" ]]; then
+    rm -f .env
+fi

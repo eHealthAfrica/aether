@@ -46,7 +46,7 @@ function test_coverage {
     PARALLEL_COV="--concurrency=multiprocessing --parallel-mode"
     PARALLEL_PY="--parallel=${TEST_PARALLEL:-4}"
 
-    rm -R /code/.coverage* 2>/dev/null || :
+    rm -R /code/.coverage* 2>/dev/null || true
     coverage run     --rcfile="$RCFILE" $PARALLEL_COV manage.py test --noinput "${@:1}" $PARALLEL_PY
     coverage combine --rcfile="$RCFILE" --append
     coverage report  --rcfile="$RCFILE"
