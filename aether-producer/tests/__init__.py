@@ -37,7 +37,7 @@ from producer import (
     OFFSET_MANAGER
 )
 
-from producer.db import Decorator
+from producer.db import Decorator, Entity
 from producer.resource import Event, ResourceHelper, RESOURCE_HELPER
 from producer.settings import Settings
 from producer.logger import LOG
@@ -51,20 +51,20 @@ def entity_generator(
     count: int,
     tenant: str,
     decorator_id: str
-) -> Iterable[Dict[str, Union[str, Dict]]]:
+) -> Iterable[Entity]:
 
     for i in range(count):
         _id = str(uuid4())
-        yield({
-            'id': _id,
-            'offset': str(datetime.now().isoformat()),
-            'tenant': tenant,
-            'decorator_id': decorator_id,
-            'content': {
+        yield(Entity(
+            id=_id,
+            offset=str(datetime.now().isoformat()),
+            tenant=tenant,
+            decorator_id=decorator_id,
+            payload={
                 'id': _id,
                 'name': str(uuid4())
             }
-        })
+        ))
 
 
 SCHEMAS = {
@@ -216,8 +216,8 @@ def generate_redis_entities(get_resource_helper):
         delay=0.0
     ):
         for e in entity_generator(count, tenant, decorator_id):
-            queue_key = f'{e["offset"]}/{decorator_id}/{e["id"]}'
-            RH.add(queue_key, e, 'entity')
+            queue_key = f'{e.offset}/{decorator_id}/{e.id}'
+            RH.add(queue_key, e._asdict(), 'entity')
             if delay:
                 sleep(delay)
     yield make_entity_instances

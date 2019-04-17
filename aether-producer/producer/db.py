@@ -59,6 +59,14 @@ log_level = logging.getLevelName(PRODUCER_CONFIG.get('log_level', 'DEBUG'))
 logger.setLevel(log_level)
 
 
+class Entity(NamedTuple):
+    id: str
+    offset: str
+    tenant: str
+    decorator_id: str
+    payload: Dict
+
+
 class Schema(NamedTuple):
     id: str
     tenant: str
@@ -223,4 +231,5 @@ pg_requires = ['user', 'dbname', 'port', 'host', 'password']
 pg_creds = {key: PRODUCER_CONFIG.get(
     "postgres_%s" % key) for key in pg_requires}
 kernel_db_pool_size = PRODUCER_CONFIG.get('kernel_db_pool_size', 6)
-KERNEL_DB = PriorityDatabasePool(pg_creds, 'KernelDB', kernel_db_pool_size)  # imported from here
+KERNEL_DB = None
+# PriorityDatabasePool(pg_creds, 'KernelDB', kernel_db_pool_size)  # imported from here
