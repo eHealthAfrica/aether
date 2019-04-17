@@ -346,7 +346,7 @@ if KEYCLOAK_SERVER_URL:
         ADMIN_URL = os.environ.get('ADMIN_URL', f'{GATEWAY_PUBLIC_PATH}/admin')
         AUTH_URL = os.environ.get('AUTH_URL', f'{GATEWAY_PUBLIC_PATH}/accounts')
         LOGIN_URL = os.environ.get('LOGIN_URL', f'/{AUTH_URL}/login/')
-        STATIC_URL = os.environ.get('STATIC_URL', f'{GATEWAY_PUBLIC_PATH}/static/')
+        STATIC_URL = os.environ.get('STATIC_URL', f'/{GATEWAY_PUBLIC_PATH}/static/')
         LOGIN_REDIRECT_URL = f'/{GATEWAY_PUBLIC_PATH}/'
 
         USE_X_FORWARDED_HOST = True
