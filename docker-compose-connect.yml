@@ -10,7 +10,7 @@ version: "2.1"
 networks:
   aether:
     external:
-      name: aether_internal
+      name: ${NETWORK_NAME}
 
 services:
 

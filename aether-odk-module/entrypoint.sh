@@ -121,9 +121,9 @@ function setup {
     chmod -R 755 ${STATIC_ROOT}
 
     # expose version number (if exists)
-    cp /var/tmp/VERSION ${STATIC_ROOT}/VERSION   2>/dev/null || :
+    cp /var/tmp/VERSION ${STATIC_ROOT}/VERSION   2>/dev/null || true
     # add git revision (if exists)
-    cp /var/tmp/REVISION ${STATIC_ROOT}/REVISION 2>/dev/null || :
+    cp /var/tmp/REVISION ${STATIC_ROOT}/REVISION 2>/dev/null || true
 }
 
 function test_flake8 {
@@ -135,7 +135,7 @@ function test_coverage {
     PARALLEL_COV="--concurrency=multiprocessing --parallel-mode"
     PARALLEL_PY="--parallel=${TEST_PARALLEL:-4}"
 
-    rm -R /code/.coverage* 2>/dev/null || :
+    rm -R /code/.coverage* 2>/dev/null || true
     coverage run     --rcfile="$RCFILE" $PARALLEL_COV manage.py test --noinput "${@:1}" $PARALLEL_PY
     coverage combine --rcfile="$RCFILE" --append
     coverage report  --rcfile="$RCFILE"
