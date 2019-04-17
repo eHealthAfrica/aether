@@ -216,6 +216,7 @@ def redis_fixture_schemas(get_resource_helper):
 @pytest.fixture(scope='function')
 def generate_redis_entities(get_resource_helper):
     RH = get_resource_helper
+    cleanup_keys = []
 
     def make_entity_instances(
         count: int,
@@ -225,7 +226,11 @@ def generate_redis_entities(get_resource_helper):
     ):
         for e in entity_generator(count, tenant, decorator_id):
             queue_key = f'{e.offset}/{decorator_id}/{e.id}'
+            cleanup_keys.append(queue_key)
             RH.add(queue_key, e._asdict(), 'entity')
             if delay:
                 sleep(delay)
     yield make_entity_instances
+
+    for key in cleanup_keys:
+        RH.remove(key, 'entity')

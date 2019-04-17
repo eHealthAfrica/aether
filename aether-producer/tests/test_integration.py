@@ -189,26 +189,22 @@ def test_read_entities_list_from_redis(
 ):
     redis_producer: RedisProducer = get_redis_producer
     schemas, decorators = redis_fixture_schemas
+    # create some entities in redis, as the DB service / direct-inject would
     tenant = 'test'
     loads = [10, 100, 1000]
-    # start = datetime.now()
     for i, load in enumerate(loads):
         decorator = decorators[list(decorators.keys())[i]]
         generate_redis_entities(load, tenant, decorator.id)
+    # unfiltered
     expect_all_ids = redis_producer.get_entity_keys()
-    middle = datetime.now()
+    assert(len(expect_all_ids) == sum(loads))
+    ignore = decorators[list(decorators.keys())[0]].id
+    # filtered
+    expect_ids_12 = redis_producer.get_entity_keys(ignored_decorators=[ignore])
+    assert(len(expect_ids_12) == sum(loads[1:]))
     g = redis_producer.get_entity_generator(expect_all_ids)
     force_fetch_all = sum([1 for i in g])
     assert(force_fetch_all == sum(loads))
-    end = datetime.now()
-    # d1 = (middle - start).total_seconds()
-    d2 = (end - middle).total_seconds()
-    # print(d1, d2)
-    print(d2)
-    assert(len(expect_all_ids) == sum(loads))
-    ignore = decorators[list(decorators.keys())[0]].id
-    expect_ids_12 = redis_producer.get_entity_keys(ignored_decorators=[ignore])
-    assert(len(expect_ids_12) == sum(loads[1:]))
 
 
 @pytest.mark.integration
