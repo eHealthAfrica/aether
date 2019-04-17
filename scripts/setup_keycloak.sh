@@ -21,6 +21,11 @@
 
 set -Eeuo pipefail
 
+# ensure that the network and volumes were already created
+source ./scripts/aether_functions.sh
+create_credentials
+create_docker_assets
+
 source .env
 
 KC_DB=keycloak
@@ -28,8 +33,6 @@ KC_USER=keycloak
 KC_URL="http://localhost:8080/auth"
 LINE="_____________________________________________"
 
-# ensure that the network and volumes were already created
-./scripts/build_docker_assets.sh
 
 docker-compose kill db keycloak
 docker-compose pull db keycloak
@@ -81,23 +84,29 @@ $KCADM \
     -s realm=${DEFAULT_REALM} \
     -s enabled=true
 
-echo "${LINE} Creating default clients..."
-CLIENTS=( kernel odk sync ui )
-for CLIENT in "${CLIENTS[@]}"
-do
-    CLIENT_URL="http://${CLIENT}.aether.local"
-    echo "${LINE} Creating client ${CLIENT}..."
-    $KCADM \
-        create clients \
-        -r ${DEFAULT_REALM} \
-        -s clientId=${CLIENT} \
-        -s publicClient=true \
-        -s directAccessGrantsEnabled=true \
-        -s rootUrl=${CLIENT_URL} \
-        -s baseUrl=${CLIENT_URL} \
-        -s 'redirectUris=["/accounts/login/"]' \
-        -s enabled=true
-done
+echo "${LINE} Creating default client..."
+
+BASE_URL="http://${NETWORK_DOMAIN}"
+
+# NGINX ports
+RU_80="${BASE_URL}/*"
+RU_8443="${BASE_URL}:8443/*"
+# standalone app ports
+RU_8100="${BASE_URL}:8100/*"
+RU_8102="${BASE_URL}:8102/*"
+RU_8104="${BASE_URL}:8104/*"
+RU_8106="${BASE_URL}:8106/*"
+
+$KCADM \
+    create clients \
+    -r ${DEFAULT_REALM} \
+    -s clientId=${KEYCLOAK_AETHER_CLIENT} \
+    -s publicClient=true \
+    -s directAccessGrantsEnabled=true \
+    -s baseUrl="${BASE_URL}" \
+    -s 'redirectUris=["'${RU_80}'","'${RU_8443}'","'${RU_8100}'","'${RU_8102}'","'${RU_8104}'","'${RU_8106}'"]' \
+    -s enabled=true
+
 
 echo "${LINE} Creating initial user ${KEYCLOAK_USER_USERNAME}..."
 $KCADM \
