@@ -56,7 +56,6 @@ services:
       BUCKET_NAME: test-kernel
       # use a different database when testing the integration with another container
       DB_NAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
-      DEBUG: null # set to null to remove previous value
       MINIO_STORAGE_ENDPOINT: minio-test:9000
       MULTITENANCY: "true"
       PGHOST: db-test
@@ -101,7 +100,6 @@ services:
       APP_URL: /
       BUCKET_NAME: test-odk
       DB_NAME: test-odk
-      DEBUG: null # set to null to remove previous value
       MINIO_STORAGE_ENDPOINT: minio-test:9000
       MULTITENANCY: "true"
       PGHOST: db-test
@@ -130,7 +128,6 @@ services:
       APP_URL: /
       COUCHDB_URL: http://couchdb-test:5984
       DB_NAME: test-couchdb-sync
-      DEBUG: null # set to null to remove previous value
       GOOGLE_CLIENT_ID: secret_google_client_id
       MULTITENANCY: "true"
       PGHOST: db-test
@@ -156,7 +153,6 @@ services:
       AETHER_KERNEL_URL: http://kernel-test:9100
       APP_URL: /
       DB_NAME: test-ui
-      DEBUG: null # set to null to remove previous value
       MULTITENANCY: "true"
       PGHOST: db-test
       STATIC_URL: /static/

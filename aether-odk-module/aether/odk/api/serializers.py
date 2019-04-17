@@ -22,6 +22,10 @@ from django.utils.translation import ugettext as _
 from drf_dynamic_fields import DynamicFieldsMixin
 from rest_framework import serializers
 
+from aether.common.drf.serializers import (
+    HyperlinkedIdentityField,
+    HyperlinkedRelatedField,
+)
 from aether.common.multitenancy.serializers import (
     MtModelSerializer,
     MtPrimaryKeyRelatedField,
@@ -50,11 +54,11 @@ class MediaFileSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 class XFormSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
-    url = serializers.HyperlinkedIdentityField('xform-detail', read_only=True)
-    project_url = serializers.HyperlinkedRelatedField(
-        'project-detail',
+    url = HyperlinkedIdentityField(view_name='xform-detail')
+    project_url = HyperlinkedRelatedField(
+        view_name='project-detail',
+        read_only=True,
         source='project',
-        read_only=True
     )
 
     surveyors = MtUserRelatedField(
@@ -142,7 +146,7 @@ class SurveyorSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):
 
-    url = serializers.HyperlinkedIdentityField('project-detail', read_only=True)
+    url = HyperlinkedIdentityField(view_name='project-detail')
 
     surveyors = MtUserRelatedField(
         allow_null=True,

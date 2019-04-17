@@ -83,7 +83,7 @@ class MtViewSetMixin(object):
         return obj
 
     @action(detail=True, methods=['head'], url_path='is-accessible')
-    def is_accessible(self, request, pk=None):
+    def is_accessible(self, request, pk=None, *args, **kwargs):
         '''
         Returns the following statuses:
             - 404 NOT_FOUND   if the instance does not exist

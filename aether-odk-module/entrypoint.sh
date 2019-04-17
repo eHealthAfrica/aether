@@ -115,15 +115,15 @@ function setup {
     # arguments: -u=admin -p=secretsecret -e=admin@aether.org -t=01234656789abcdefghij
     ./manage.py setup_admin -u=$ADMIN_USERNAME -p=$ADMIN_PASSWORD -t=$ADMIN_TOKEN
 
-    STATIC_ROOT=/var/www/static
+    STATIC_ROOT=${STATIC_ROOT:-/var/www/static}
     # create static assets
     ./manage.py collectstatic --noinput --clear --verbosity 0
-    chmod -R 755 $STATIC_ROOT
+    chmod -R 755 ${STATIC_ROOT}
 
     # expose version number (if exists)
-    cp /var/tmp/VERSION $STATIC_ROOT/VERSION   2>/dev/null || true
+    cp /var/tmp/VERSION ${STATIC_ROOT}/VERSION   2>/dev/null || true
     # add git revision (if exists)
-    cp /var/tmp/REVISION $STATIC_ROOT/REVISION 2>/dev/null || true
+    cp /var/tmp/REVISION ${STATIC_ROOT}/REVISION 2>/dev/null || true
 }
 
 function test_flake8 {
@@ -199,15 +199,19 @@ case "$1" in
     ;;
 
     start )
-        setup
-
+        # ensure that DEBUG mode is disabled
+        export DEBUG=
         export DJANGO_SETTINGS_MODULE="aether.odk.settings"
+
+        setup
         ./conf/uwsgi/start.sh
     ;;
 
     start_dev )
-        setup
+        # ensure that DEBUG mode is enabled
+        export DEBUG=true
 
+        setup
         ./manage.py runserver 0.0.0.0:$WEB_SERVER_PORT
     ;;
 
