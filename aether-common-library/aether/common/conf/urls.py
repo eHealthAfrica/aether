@@ -201,7 +201,7 @@ def __check_kernel_env():
     from aether.common.kernel.utils import get_kernel_server_url, get_kernel_server_token
 
     # `aether.common.kernel.utils.get_kernel_server_url()` returns different
-    #  values depending on the value of `settings.TESTING`. Without these
+    # values depending on the value of `settings.TESTING`. Without these
     # assertions, a deployment configuration missing e.g. `AETHER_KERNEL_URL`
     # will seem to be in order until `get_kernel_server_url()` is called.
     ERR_MSG = _('Environment variable "{}" is not set')
