@@ -18,11 +18,7 @@
 
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-from rest_framework.decorators import (
-    api_view,
-    permission_classes,
-    renderer_classes,
-)
+from rest_framework.decorators import api_view, permission_classes, renderer_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -33,7 +29,7 @@ from .utils import get_or_create_user
 @api_view(['POST'])
 @renderer_classes([JSONRenderer])
 @permission_classes([IsAuthenticated, IsAdminUser])
-def obtain_auth_token(request):
+def obtain_auth_token(request, *args, **kwargs):
     '''
     Given a username generates an auth token for him/her.
     If the username does not belong to an existing user,

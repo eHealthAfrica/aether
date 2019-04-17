@@ -22,6 +22,7 @@ import json
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.utils.translation import ugettext as _
 
 from rest_framework import viewsets, status
@@ -278,7 +279,7 @@ XML_SUBMISSION_PARAM = 'xml_submission_file'
 @renderer_classes([TemplateHTMLRenderer])
 @authentication_classes([BasicAuthentication])
 @permission_classes([IsAuthenticated])
-def xform_list(request):
+def xform_list(request, *args, **kwargs):
     '''
     https://docs.opendatakit.org/openrosa-form-list/
 
@@ -289,10 +290,12 @@ def xform_list(request):
     if formID:
         xforms = xforms.filter(form_id=formID)
 
+    host = request.build_absolute_uri(request.get_full_path()).replace(reverse('xform-list-xml'), '')
+
     return Response(
         data={
             'xforms': [xf for xf in xforms if is_surveyor(request, xf)],
-            'host': request.build_absolute_uri().replace(request.get_full_path(), ''),
+            'host': host,
             'verbose': request.query_params.get('verbose', '').lower() == 'true',
         },
         template_name='xformList.xml',
@@ -305,7 +308,7 @@ def xform_list(request):
 @renderer_classes([StaticHTMLRenderer])
 @authentication_classes([BasicAuthentication])
 @permission_classes([IsAuthenticated])
-def xform_get_download(request, pk):
+def xform_get_download(request, pk, *args, **kwargs):
     '''
     https://docs.opendatakit.org/openrosa-form-list/
 
@@ -334,7 +337,7 @@ def xform_get_download(request, pk):
 @renderer_classes([TemplateHTMLRenderer])
 @authentication_classes([BasicAuthentication])
 @permission_classes([IsAuthenticated])
-def xform_get_manifest(request, pk):
+def xform_get_manifest(request, pk, *args, **kwargs):
     '''
     https://docs.opendatakit.org/openrosa-form-list/
 
@@ -370,7 +373,7 @@ def xform_get_manifest(request, pk):
 @renderer_classes([TemplateHTMLRenderer])
 @authentication_classes([BasicAuthentication])
 @permission_classes([IsAuthenticated])
-def xform_submission(request):
+def xform_submission(request, *args, **kwargs):
     '''
     Submission specification:
     https://docs.opendatakit.org/openrosa-form-submission/

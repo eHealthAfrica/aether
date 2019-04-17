@@ -113,7 +113,6 @@ services:
     tty: true
     environment:
       CSRF_COOKIE_DOMAIN: ${NETWORK_DOMAIN}
-      DEBUG: "true"
       DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
@@ -188,7 +187,6 @@ services:
     tty: true
     environment:
       CSRF_COOKIE_DOMAIN: ${NETWORK_DOMAIN}
-      DEBUG: "true"
       DJANGO_SECRET_KEY: ${ODK_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
@@ -260,7 +258,6 @@ services:
     tty: true
     environment: &sync-environment
       CSRF_COOKIE_DOMAIN: ${NETWORK_DOMAIN}
-      DEBUG: "true"
       DJANGO_SECRET_KEY: ${COUCHDB_SYNC_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
@@ -333,7 +330,6 @@ services:
     tty: true
     environment:
       CSRF_COOKIE_DOMAIN: ${NETWORK_DOMAIN}
-      DEBUG: "true"
       DJANGO_SECRET_KEY: ${UI_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10

@@ -23,6 +23,7 @@
   - [Users & Authentication](#users--authentication)
     - [Basic Authentication](#basic-authentication)
     - [Token Authentication](#token-authentication)
+    - [Gateway Authentication](#gateway-authentication)
 - [Development](#development)
 - [Release Management](#release-management)
 - [Deployment](#deployment)
@@ -416,6 +417,37 @@ belongs to an active `aether-kernel` user but not necessarily to an admin user.
 
 *[Return to TOC](#table-of-contents)*
 
+#### Gateway Authentication
+
+Set `GATEWAY_SERVICE_ID` to enable gateway authentication with keycloak.
+This means that the authentication is handled by a third party system
+(like [Kong](https://konghq.com)) that includes in each request the JSON Web
+Token (JWT) in the `GATEWAY_HEADER_TOKEN` header (defaults to `X-Oauth-Token`).
+The `GATEWAY_SERVICE_ID` indicates the gateway service, usually matches the
+app/module name like `kernel`, `odk`, `ui`, `sync`.
+
+In this case the app urls can be reached in several ways:
+
+Trying to access the health endpoint `/health`:
+
+- http://kernel:8100/health using the internal url
+- http://aether.local/my-realm/kernel/health using the gateway url
+
+For those endpoints that don't depend on the realm and must also be available
+"unprotected" we need one more environment variable:
+
+- `GATEWAY_PUBLIC_REALM`: `-` This represents the fake realm that is not protected
+  by the gateway server. In this case the authentication is handled by the other
+  available options, i.e., basic, token, CAS...
+
+The authorization and admin endpoints don't depend on any realm so the final urls
+use the public realm.
+
+- http://aether.local/-/odk/accounts/
+- http://aether.local/-/kernel/admin/
+
+*[Return to TOC](#table-of-contents)*
+
 ## Development
 
 All development should be tested within the container, but developed in the host folder.
@@ -469,12 +501,13 @@ The list of the main containers:
 | db                | [PostgreSQL](https://www.postgresql.org/) database                      |
 | couchdb           | [CouchDB](http://couchdb.apache.org/) database for sync                 |
 | redis             | [Redis](https://redis.io/) for task queueing and task result storage    |
+| keycloak          | [Keycloak](https://www.keycloak.org/) for authentication                |
+| nginx             | [NGINX](https://www.nginx.com/) the web server                          |
 | **kernel**        | Aether Kernel                                                           |
 | **odk**           | Aether ODK module (imports data from ODK Collect)                       |
 | **ui**            | Aether Kernel UI (advanced mapping functionality)                       |
 | **couchdb-sync**  | Aether CouchDB Sync module (imports data from Aether Mobile app)        |
 | couchdb-sync-rq   | [RQ python](http://python-rq.org/) task runner to perform sync jobs     |
-| kernel-test       | Aether Kernel TESTING app (used only in e2e tests by other containers)  |
 
 
 All of the containers definition for development can be found in the
