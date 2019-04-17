@@ -20,24 +20,28 @@
 #
 set -Eeuo pipefail
 
+source ./scripts/aether_functions.sh
+
 function show_help {
     echo """
-    start the indicated container with the necessary dependencies
+    Start the indicated container with the necessary dependencies
 
-    ./scripts/docker_start.sh [options] <name>
+    Usage:
 
-    options:
+        ./scripts/docker_start.sh [options] <name>
 
-    --build | -b   kill and build all containers before start
-    --clean | -c   stop and remove all running containers and volumes before start
-    --force | -f   ensure that the container will be restarted if needed
-    --kill  | -k   kill all running containers before start
+    Options:
 
-    --help  | -h   shows this message
+        --build | -b   kill and build all containers before start
+        --clean | -c   stop and remove all running containers and volumes before start
+        --force | -f   ensure that the container will be restarted if needed
+        --kill  | -k   kill all running containers before start
 
-    <name>
-        Expected values: kernel, odk, ui, couchdb-sync or sync (alias of couchdb-sync).
-        Any other value will start all containers.
+        --help  | -h   show this message
+
+        <name>
+            Expected values: kernel, odk, ui, couchdb-sync or sync (alias of couchdb-sync).
+            Any other value will start all containers.
 
     """
 }
@@ -107,46 +111,46 @@ done
 
 case $app in
     kernel)
-        PRE_CONTAINERS=(db minio keycloak)
+        PRE_CONTAINERS=(db nginx minio keycloak)
         SETUP_CONTAINERS=(kernel)
-        POST_CONTAINERS=(nginx)
+        POST_CONTAINERS=()
     ;;
 
     odk)
-        PRE_CONTAINERS=(db minio keycloak)
+        PRE_CONTAINERS=(db nginx minio keycloak)
         SETUP_CONTAINERS=(kernel odk)
-        POST_CONTAINERS=(nginx)
+        POST_CONTAINERS=()
     ;;
 
     ui)
-        PRE_CONTAINERS=(ui-assets db minio keycloak)
+        PRE_CONTAINERS=(ui-assets db nginx minio keycloak)
         SETUP_CONTAINERS=(kernel ui)
-        POST_CONTAINERS=(nginx)
+        POST_CONTAINERS=()
     ;;
 
     sync|couchdb-sync)
         app=couchdb-sync
 
-        PRE_CONTAINERS=(db couchdb redis minio keycloak)
+        PRE_CONTAINERS=(db couchdb redis nginx minio keycloak)
         SETUP_CONTAINERS=(kernel couchdb-sync)
-        POST_CONTAINERS=(couchdb-sync-rq nginx)
+        POST_CONTAINERS=(couchdb-sync-rq)
     ;;
 
     *)
         app=
 
-        PRE_CONTAINERS=(ui-assets db couchdb redis minio keycloak)
+        PRE_CONTAINERS=(ui-assets db couchdb redis nginx minio keycloak)
         SETUP_CONTAINERS=(kernel odk ui couchdb-sync)
-        POST_CONTAINERS=(couchdb-sync-rq nginx)
+        POST_CONTAINERS=(couchdb-sync-rq)
     ;;
 esac
 
+create_credentials
 
 echo ""
 docker-compose ps
 echo "----------------------------------------------------------------------"
 echo ""
-
 
 if [[ $kill = "yes" ]]
 then
@@ -168,18 +172,23 @@ then
     echo ""
 fi
 
+create_docker_assets
+
 if [[ $build = "yes" ]]
 then
     echo "----------------------------------------------------------------------"
     echo "---- Building containers                                          ----"
     echo "----------------------------------------------------------------------"
 
-    ./scripts/build_all_containers.sh
+    build_libraries_and_distribute
+    build_ui_assets
+
+    for container in "${SETUP_CONTAINERS[@]}"
+    do
+        build_container $container
+    done
     echo ""
 fi
-
-./scripts/build_docker_assets.sh
-
 
 echo "----------------------------------------------------------------------"
 echo "---- Starting containers                                          ----"
