@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 # Config file for these containers:
 #
-#  * Databases + Minio + Keycloak + NGINX
+#  * Databases + NGINX + Minio + Keycloak
 #  * Aether Kernel
 #  * ODK Module
 #  * CouchDB Sync Module
@@ -11,24 +11,24 @@
 version: "2.1"
 
 networks:
-  # docker network create aether_internal
+  # docker network create ${NETWORK_NAME}
   internal:
     external:
       # if this isn't explicitly set it inherits from the containing folder name (aether or not)
-      name: aether_internal
+      name: ${NETWORK_NAME}
 
 volumes:
-  # docker volume create aether_database_data
+  # docker volume create ${DB_VOLUME}
   database_data:
     external:
-      name: aether_database_data
+      name: ${DB_VOLUME}
 
 
 services:
 
-  # ---------------------------------
-  # Databases + Minio + Keycloak
-  # ---------------------------------
+  # -------------------------------------
+  # Databases + NGINX + Minio + Keycloak
+  # -------------------------------------
 
   db:
     extends:
@@ -53,10 +53,21 @@ services:
     networks:
       - internal
 
+  nginx:
+    extends:
+      file: ./docker-compose-base.yml
+      service: nginx-base
+    networks:
+      internal:
+        ipv4_address: ${NETWORK_NGINX_IP}
+
   minio:
     extends:
       file: ./docker-compose-base.yml
       service: minio-base
+    depends_on:
+      nginx:
+        condition: service_healthy
     networks:
       - internal
 
@@ -66,6 +77,8 @@ services:
       service: keycloak-base
     depends_on:
       db:
+        condition: service_healthy
+      nginx:
         condition: service_healthy
     networks:
       - internal
@@ -82,12 +95,14 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      nginx:
+        condition: service_healthy
       keycloak:
         condition: service_started
+      minio:
+        condition: service_started
     networks:
-      internal:
-        aliases:
-          - kernel.aether.local
+      - internal
 
 
   # ---------------------------------
@@ -108,6 +123,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      nginx:
+        condition: service_healthy
       keycloak:
         condition: service_started
       kernel:
@@ -116,9 +133,7 @@ services:
       # ui-assets:
       #   condition: service_started
     networks:
-      internal:
-        aliases:
-          - ui.aether.local
+      - internal
 
 
   # ---------------------------------
@@ -132,12 +147,16 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      nginx:
+        condition: service_healthy
       keycloak:
         condition: service_started
+      minio:
+        condition: service_started
+      kernel:
+        condition: service_started
     networks:
-      internal:
-        aliases:
-          - odk.aether.local
+      - internal
 
 
   # ---------------------------------
@@ -151,16 +170,18 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      nginx:
+        condition: service_healthy
       keycloak:
         condition: service_started
       couchdb:
         condition: service_started
       redis:
         condition: service_started
+      kernel:
+        condition: service_started
     networks:
-      internal:
-        aliases:
-          - sync.aether.local
+      - internal
 
   couchdb-sync-rq:
     extends:
@@ -169,25 +190,17 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      nginx:
+        condition: service_healthy
       keycloak:
         condition: service_started
       couchdb:
         condition: service_started
       redis:
         condition: service_started
+      kernel:
+        condition: service_started
       couchdb-sync:
         condition: service_started
-    networks:
-      - internal
-
-
-  # ---------------------------------
-  # NGINX container
-  # ---------------------------------
-
-  nginx:
-    extends:
-      file: ./docker-compose-base.yml
-      service: nginx-base
     networks:
       - internal

@@ -57,6 +57,14 @@ under the License.
           </p>
         {% endif %}
 
+        {% if messages %}
+          <p class="messages">
+            {% for message in messages %}
+              <span{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</span>
+            {% endfor %}
+          </p>
+        {% endif %}
+
         {% if user.is_authenticated %}
           <p class="errornote">
             {% blocktrans trimmed %}
@@ -72,53 +80,27 @@ under the License.
               {% csrf_token %}
               <input type="hidden" name="next" value="{{ next }}" />
 
-              {% block username %}
-                <div id="div_id_username" class="clearfix control-group {% if form.username.errors %}error{% endif %}">
-                  <div class="form-group">
-                    <label for="id_username">{{ form.username.label }}:</label>
-                    <input
-                        id="id_username"
-                        type="text"
-                        name="username"
-                        {% if form.username.value %}value="{{ form.username.value }}"{% endif %}
-                        maxlength="100"
-                        autocapitalize="off"
-                        autocorrect="off"
-                        class="form-control textinput textInput"
-                        required
-                        autofocus>
-                    {% if form.username.errors %}
-                      <p class="text-error">
-                        {{ form.username.errors|striptags }}
-                      </p>
-                    {% endif %}
-                  </div>
+              <div id="div_id_realm" class="clearfix control-group {% if form.realm.errors %}error{% endif %}">
+                <div class="form-group">
+                  <label for="id_realm">{{ form.realm.label }}:</label>
+                  <input
+                      id="id_realm"
+                      type="text"
+                      name="realm"
+                      {% if form.realm.value %}value="{{ form.realm.value }}"{% endif %}
+                      maxlength="100"
+                      autocapitalize="off"
+                      autocorrect="off"
+                      class="form-control textinput textInput"
+                      required
+                      autofocus>
+                  {% if form.realm.errors %}
+                    <p class="text-error">
+                      {{ form.realm.errors|striptags }}
+                    </p>
+                  {% endif %}
                 </div>
-              {% endblock %}
-
-              {% block password %}
-                <div id="div_id_password" class="clearfix control-group {% if form.password.errors %}error{% endif %}">
-                  <div class="form-group">
-                    <label for="id_password">{{ form.password.label }}:</label>
-                    <input
-                        id="id_password"
-                        type="password"
-                        name="password"
-                        maxlength="100"
-                        autocapitalize="off"
-                        autocorrect="off"
-                        class="form-control textinput textInput"
-                        required>
-                    {% if form.password.errors %}
-                      <p class="text-error">
-                        {{ form.password.errors|striptags }}
-                      </p>
-                    {% endif %}
-                  </div>
-                </div>
-              {% endblock %}
-
-              {% block extrafields %}{% endblock %}
+              </div>
 
               {% if form.non_field_errors %}
                 {% for error in form.non_field_errors %}
@@ -130,7 +112,7 @@ under the License.
                 <input
                     type="submit"
                     name="submit"
-                    value="{% trans 'Log in' %}"
+                    value="{% trans 'Continue with Keycloak' %}"
                     class="btn btn-primary form-control"
                     id="submit-id-submit">
               </div>

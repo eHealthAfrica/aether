@@ -17,13 +17,28 @@
 # under the License.
 
 from django.conf import settings
-from django.contrib.auth.forms import AuthenticationForm as AuthForm
-from aether.common.keycloak.forms import RealmAuthenticationForm as RealmAuthForm
+from django.contrib.auth import get_user_model
+
+from ..multitenancy.utils import get_current_realm, add_user_to_realm
+
+UserModel = get_user_model()
+user_objects = UserModel.objects
 
 
-def get_auth_form():
-    '''
-    Returns the authentication form for the login page
-    '''
+def get_or_create_user(request, username):
 
-    return RealmAuthForm if settings.KEYCLOAK_SERVER_URL else AuthForm
+    realm = get_current_realm(request)
+
+    # gets the existing user or creates a new one
+    # the internal username prepends the realm name
+    _username = f'{realm}__{username}' if settings.MULTITENANCY else username
+    try:
+        user = user_objects.get(username=_username)
+    except UserModel.DoesNotExist:
+        user = user_objects.create_user(
+            username=_username,
+            password=user_objects.make_random_password(length=100),
+        )
+    add_user_to_realm(request, user)
+
+    return user

@@ -18,8 +18,6 @@ specific language governing permissions and limitations
 under the License.
 {% endcomment %}
 
-{% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -31,11 +29,6 @@ under the License.
     {% block meta %}
       {# This is the block META, redefine it in the child template #}
     {% endblock meta %}
-
-    {% block favicon %}
-      {# This is the block FAVICON, redefine it in the child template #}
-      <link rel="shortcut icon" href="{% static 'aether/images/aether.png' %}"/>
-    {% endblock favicon %}
 
     {% block scripts %}
       {# This is the block SCRIPTS, redefine it in the child template #}

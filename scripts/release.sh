@@ -40,7 +40,7 @@ function build_app {
         --build-arg GIT_REVISION=$TRAVIS_COMMIT \
         --build-arg VERSION=$VERSION \
         $APP_NAME
-    echo "_____________________________________________"
+    echo "${LINE}"
 }
 
 function release_app {
@@ -51,10 +51,10 @@ function release_app {
     docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
     docker push "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
 
-    echo "_____________________________________________"
+    echo "${LINE}"
 }
 
-release_process () {
+function release_process {
 
     # Login in dockerhub with write permissions (repos are public)
     docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
@@ -62,12 +62,12 @@ release_process () {
     IMAGE_REPO='ehealthafrica'
     RELEASE_APPS=( kernel odk couchdb-sync ui producer integration-test )
 
-    echo "_____________________________________________"
+    echo "${LINE}"
     echo "Release version:   $VERSION"
     echo "Release revision:  $TRAVIS_COMMIT"
     echo "Images repository: $IMAGE_REPO"
     echo "Images:            ${RELEASE_APPS[@]}"
-    echo "_____________________________________________"
+    echo "${LINE}"
 
     prepare_dependencies
 
@@ -79,20 +79,20 @@ release_process () {
 }
 
 # Usage: increment_version <version> [<position>]
-increment_version () {
+function increment_version {
     local v=$1
-    if [ -z $2 ]; then 
+    if [ -z $2 ]; then
         local rgx='^((?:[0-9]+\.)*)([0-9]+)($)'
-    else 
+    else
         local rgx='^((?:[0-9]+\.){'$(($2-1))'})([0-9]+)(\.|$)'
-        for (( p=`grep -o "\."<<<".$v"|wc -l`; p<$2; p++)); do 
+        for (( p=`grep -o "\."<<<".$v"|wc -l`; p<$2; p++)); do
             v+=.0; done;
     fi
     val=`echo -e "$v" | perl -pe 's/^.*'$rgx'.*$/$2/'`
     TAG_INCREASED_VERSION=$(echo "$v" | perl -pe s/$rgx.*$'/${1}'`printf %0${#val}s $(($val+1))`/)
 }
 
-version_compare () {
+function version_compare {
     if [[ $1 == $2 ]]
     then
         # version on file and (branch | tag) versions are equal
@@ -126,7 +126,7 @@ version_compare () {
     return 0
 }
 
-function git_branch_commit_and_release() {
+function git_branch_commit_and_release {
     # Evaluates the VERSION file, increases the version value if its a tag and commit changes to base branch
     # Expected Args:
     ## <VERSION_ON_FILE> <VERSION_FROM_BRANCH/TAG> <BRANCH_TYPE> <IS_RC>
@@ -145,7 +145,7 @@ function git_branch_commit_and_release() {
     fi
 
     if [[ $3 = "branch" ]]; then
-        for (( p=`grep -o "\."<<<".$BRANCH_OR_TAG_VALUE"|wc -l`; p<3; p++)); do 
+        for (( p=`grep -o "\."<<<".$BRANCH_OR_TAG_VALUE"|wc -l`; p<3; p++)); do
             BRANCH_OR_TAG_VALUE+=.0;
         done;
 
@@ -153,7 +153,7 @@ function git_branch_commit_and_release() {
         COMPARE=$?
         if [[ ${COMPARE} = 1 ]]; then
             echo "VERSION value" $1 "is greater than" $3 "version" $2
-            BRANCH_OR_TAG_VALUE=$1 
+            BRANCH_OR_TAG_VALUE=$1
         fi
 
         if [[ -z $VERSION ]]; then
@@ -206,10 +206,12 @@ function git_branch_commit_and_release() {
     if [ ! -z $4 ]; then
         VERSION=${BRANCH_OR_TAG_VALUE}-$4
     fi
-    
+
     echo "Starting version" ${VERSION} "release"
     release_process
 }
+
+LINE="_____________________________________________"
 
 TAG_INCREASED_VERSION="0.0.0"
 VERSION=

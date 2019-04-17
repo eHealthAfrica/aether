@@ -108,7 +108,7 @@ docker-compose run couchdb-sync manage rqenqueue "aether.sync.tasks.import_synce
 3. Run/build Aether Mobile App.
    If running in the browser, you'll need to setup `GOOGLE_CLIENT_ID`,
    `GOOGLE_CLIENT_SECRET` and `AETHER_COUCHDB_SYNC_URL`.
-   The URL should be pointing to http://sync.aether.local.
+   The URL should be pointing to http://aether.local/sync/.
    If running on mobile, you need `GOOGLE_CLIENT_ID` and `AETHER_COUCHDB_SYNC_URL`.
    Use the same key as in 1, it should be a Web Application key, **not** a Mobile Application key.
 

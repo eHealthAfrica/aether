@@ -53,7 +53,7 @@ setup(
     ],
     extras_require={
         'cas': [
-            'django-cas-ng<3.6.0',  # breaking changes
+            'django-cas-ng',
             'django-ums-client',
         ],
         'storage': [

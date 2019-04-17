@@ -18,44 +18,23 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+
 set -Eeuo pipefail
 
 source ./scripts/aether_functions.sh
 
-# default values
-build=no
-containers=( kernel odk couchdb-sync ui producer )
-
-while [[ $# -gt 0 ]]
-do
-    case "$1" in
-        -b | --build )
-            # build containers after upgrade
-            build=yes
-
-            shift # past argument
-        ;;
-
-        * )
-            # otherwise is the container name
-            containers=( "$1" )
-
-            shift # past argument
-        ;;
-    esac
-done
-
+create_credentials
 create_docker_assets
 build_libraries_and_distribute
 
-for container in "${containers[@]}"
-do
-    pip_freeze_container $container
+if [[ $1 == "ui" ]]
+then
+    build_ui_assets
+fi
 
-    if [[ $build = "yes" ]]
-    then
-        build_container $container
-    fi
-done
+build_container $1
 
-./scripts/kill_all.sh
+if [[ $1 == "kernel" ]]
+then
+    create_readonly_user
+fi

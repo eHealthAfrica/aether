@@ -267,7 +267,7 @@ def __upsert_instance(model, pk=None, ignore_fields=[], action='upsert', unique_
     if not pk:
         item = model()
     else:
-        # ``update_or_create``` could be an option but if we have a
+        # ``update_or_create`` could be an option but if we have a
         # list of `ignore_fields` that method will override them.
         # We need those values only in case of creation because they are required,
         # but we don't want to change them in any other circumstances.

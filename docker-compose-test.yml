@@ -52,22 +52,23 @@ services:
       file: ./docker-compose-base.yml
       service: kernel-base
     environment:
+      APP_URL: /
+      BUCKET_NAME: test-kernel
       # use a different database when testing the integration with another container
       DB_NAME: ${TEST_KERNEL_DB_NAME:-test-kernel}
-      BUCKET_NAME: test-kernel
-      DEBUG: null # set to null to remove previous value
       MINIO_STORAGE_ENDPOINT: minio-test:9000
       MULTITENANCY: "true"
       PGHOST: db-test
-      TESTING: "true"
+      STATIC_URL: /static/
       TEST_PARALLEL: ${TEST_PARALLEL}
+      TESTING: "true"
       WEB_SERVER_PORT: 9100
     volumes:
       # volumes in tests
       - ./tmp/test/kernel/static:/var/www/static
       - ./tmp/test/kernel/tmp:/tmp
     ports:
-      - "9100:9100"
+      - 9100:9100
     command: start
 
 
@@ -96,20 +97,21 @@ services:
       service: odk-base
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9100
+      APP_URL: /
       BUCKET_NAME: test-odk
       DB_NAME: test-odk
-      DEBUG: null # set to null to remove previous value
       MINIO_STORAGE_ENDPOINT: minio-test:9000
       MULTITENANCY: "true"
       PGHOST: db-test
-      TESTING: "true"
+      STATIC_URL: /static/
       TEST_PARALLEL: ${TEST_PARALLEL}
+      TESTING: "true"
       WEB_SERVER_PORT: 9102
     volumes:
       # volumes in tests
       - ./tmp/test/odk/static:/var/www/static
     ports:
-      - "9102:9102"
+      - 9102:9102
     command: start
 
 
@@ -123,18 +125,19 @@ services:
       service: couchdb-sync-base
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9100
+      APP_URL: /
       COUCHDB_URL: http://couchdb-test:5984
       DB_NAME: test-couchdb-sync
-      DEBUG: null # set to null to remove previous value
       GOOGLE_CLIENT_ID: secret_google_client_id
       MULTITENANCY: "true"
       PGHOST: db-test
       REDIS_HOST: redis-test
-      TESTING: "true"
+      STATIC_URL: /static/
       TEST_PARALLEL: ${TEST_PARALLEL}
+      TESTING: "true"
       WEB_SERVER_PORT: 9106
     ports:
-      - "9106:9106"
+      - 9106:9106
     command: start
 
 
@@ -148,15 +151,16 @@ services:
       service: ui-base
     environment:
       AETHER_KERNEL_URL: http://kernel-test:9100
+      APP_URL: /
       DB_NAME: test-ui
-      DEBUG: null # set to null to remove previous value
       MULTITENANCY: "true"
       PGHOST: db-test
-      TESTING: "true"
+      STATIC_URL: /static/
       TEST_PARALLEL: ${TEST_PARALLEL}
+      TESTING: "true"
       WEB_SERVER_PORT: 9104
     ports:
-      - "9104:9104"
+      - 9104:9104
     command: start
 
   ui-assets-test:
@@ -211,7 +215,7 @@ services:
       OFFSET_DB_PASSWORD: ${KERNEL_DB_PASSWORD}
       OFFSET_DB_NAME: producer_offset_db_test
     ports:
-      - "9005:9005"
+      - 9005:9005
     volumes:
       - ./aether-producer/tests:/code/tests
     command: start

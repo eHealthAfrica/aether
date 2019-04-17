@@ -69,13 +69,14 @@ cat << EOF
 # ------------------------------------------------------------------
 # Authentication
 # ==================================================================
-KEYCLOAK_SERVER_URL=http://keycloak:8080
+# KEYCLOAK_BEHIND_SCENES=true
+KEYCLOAK_SERVER_URL=http://aether.local/auth/realms
 KEYCLOAK_ADMIN_USERNAME=admin
 KEYCLOAK_ADMIN_PASSWORD=$(gen_random_string)
 KEYCLOAK_DB_PASSWORD=$(gen_random_string)
-KEYCLOAK_CLIENT_ID=aether
+KEYCLOAK_AETHER_CLIENT=aether-client
 
-KEYCLOAK_USER_USERNAME=aether
+KEYCLOAK_USER_USERNAME=aether-user
 KEYCLOAK_USER_PASSWORD=$(gen_random_string)
 
 DEFAULT_REALM=aether
@@ -90,6 +91,8 @@ MULTITENANCY=yes
 COUCHDB_USER=admin
 COUCHDB_PASSWORD=$(gen_random_string)
 REDIS_PASSWORD=$(gen_random_string)
+
+DB_VOLUME=aether_dev_database_data
 # ------------------------------------------------------------------
 
 
@@ -133,7 +136,7 @@ COUCHDB_SYNC_ADMIN_PASSWORD=$(gen_random_string)
 COUCHDB_SYNC_ADMIN_TOKEN=$(gen_random_string)
 COUCHDB_SYNC_DJANGO_SECRET_KEY=$(gen_random_string)
 COUCHDB_SYNC_DB_PASSWORD=$(gen_random_string)
-COUCHDB_SYNC_GOOGLE_CLIENT_ID=${COUCHDB_SYNC_GOOGLE_CLIENT_ID:-"¯\_(ツ)_/¯"}
+COUCHDB_SYNC_GOOGLE_CLIENT_ID="${COUCHDB_SYNC_GOOGLE_CLIENT_ID:-¯\_(ツ)_/¯}"
 # ------------------------------------------------------------------
 
 
@@ -159,5 +162,12 @@ PRODUCER_ADMIN_PW=$(gen_random_string)
 # Other
 # ==================================================================
 TEST_PARALLEL=8
+
+# Docker network
+NETWORK_NAME=aether_dev
+NETWORK_DOMAIN=aether.local
+NETWORK_GATEWAY=192.168.2.1
+NETWORK_NGINX_IP=192.168.2.10
+NETWORK_SUBNET=192.168.2.0/24
 # ------------------------------------------------------------------
 EOF

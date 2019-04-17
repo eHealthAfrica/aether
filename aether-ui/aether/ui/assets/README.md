@@ -16,7 +16,7 @@ Frontend assets are mounted on the pages via the
 * There are three webpack configuration files:
 
   - `conf/webpack.common.js`  -- contains the common features to build the webpack files.
-  - `conf/webpack.server.js`  -- starts the server in port `3000` with HOT reloading.
+  - `conf/webpack.server.js`  -- starts the server in port `3004` with HOT reloading.
   - `conf/webpack.prod.js`    -- compiles the files to be used in the Django app.
 
 * The `start_dev` entry point starts a webpack development server (port 3004),
@@ -36,7 +36,7 @@ They spit out a webpack build called `styles.css`.
 ### JS Build
 
 Each page has their own JS entry point (needs to be defined in `webpack.apps.js`).
-On top of that, they load a common chunk, containing `jquery`, `bootstrap` and other
+On top of that, they load a common chunk, containing `bootstrap`, `popper.js` and other
 stuff that the `webpack common chunk` plugin finds is shared between the apps.
 
 
@@ -90,7 +90,7 @@ There are a couple of naming/coding conventions followed by the React Components
 * The file name will match the default Component name defined inside,
   it might be the case that auxiliary components are also defined in the same file.
 
-* Names are self-explanatory like `RefreshingSpinner`, `ProjectList`,
+* Names are self-explanatory like `PipelinesList`, `ContractCard`,
   `constants` and so on.
 
 * Coding conventions:

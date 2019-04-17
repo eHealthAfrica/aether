@@ -9,7 +9,7 @@ import django.utils.timezone
 import uuid
 
 #
-# https://docs.djangoproject.com/en/2.1/topics/migrations/
+# https://docs.djangoproject.com/en/2.2/topics/migrations/
 #
 # Once you’ve squashed your migration, you should then commit it alongside
 # the migrations it replaces and distribute this change to all running

@@ -52,24 +52,107 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):
 
     '''
 
-    # `accounts` management
+    if kernel:  # bail out ASAP
+        __check_kernel_env()
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # APP specific
+    urlpatterns = app
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # HEALTH checks
+    urlpatterns += _get_health_urls(kernel)
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # KEYCLOAK GATEWAY endpoints
+    if settings.GATEWAY_SERVICE_ID:
+        urlpatterns = [
+            # this is reachable using internal network
+            path(route='', view=include(urlpatterns)),
+            # this is reachable using the gateway server
+            path(route=f'<slug:realm>/{settings.GATEWAY_SERVICE_ID}/', view=include(urlpatterns)),
+        ]
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # AUTHORIZATION management
+    urlpatterns += _get_auth_urls(token)
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ADMIN management
+    urlpatterns += _get_admin_urls()
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # DEBUG toolbar
+    urlpatterns += _get_debug_urls()
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # nesting app urls
+    app_url = settings.APP_URL[1:]  # remove leading slash
+    if app_url:
+        # Prepend url endpoints with "{APP_URL}/"
+        # if APP_URL = "/aether-app" then `<my-server>/aether-app/<endpoint-url>`
+        # if APP_URL = "/"           then `<my-server>/<endpoint-url>`
+        urlpatterns = [
+            path(route=f'{app_url}/', view=include(urlpatterns)),
+        ]
+
+    return urlpatterns
+
+
+def _get_health_urls(kernel):
+    health_urls = [
+        path(route='health', view=health, name='health'),
+        path(route='check-db', view=check_db, name='check-db'),
+        path(route='check-app', view=check_app, name='check-app'),
+    ]
+
+    if kernel:
+        from aether.common.kernel.views import check_kernel
+
+        # checks if Kernel server is available
+        health_urls += [
+            path(route='check-kernel', view=check_kernel, name='check-kernel'),
+        ]
+
+    return health_urls
+
+
+def _get_auth_urls(token):
     if settings.CAS_SERVER_URL:
         from django_cas_ng import views
 
-        login_view = views.login
-        logout_view = views.logout
+        login_view = views.LoginView.as_view()
+        logout_view = views.LogoutView.as_view()
 
     else:
-        from django.contrib.auth import views
-        from aether.common.auth.forms import get_auth_form
+        from django.contrib.auth.views import LoginView, LogoutView
 
-        login_view = views.LoginView.as_view(
-            template_name=settings.LOGIN_TEMPLATE,
-            authentication_form=get_auth_form(),
-        )
-        logout_view = views.LogoutView.as_view(template_name=settings.LOGGED_OUT_TEMPLATE)
+        if not settings.KEYCLOAK_SERVER_URL:
+            logout_view = LogoutView.as_view(template_name=settings.LOGGED_OUT_TEMPLATE)
+            login_view = LoginView.as_view(template_name=settings.LOGIN_TEMPLATE)
 
-    auth_views = [
+        else:
+            from aether.common.keycloak.views import KeycloakLogoutView
+
+            logout_view = KeycloakLogoutView.as_view(template_name=settings.LOGGED_OUT_TEMPLATE)
+
+            if not settings.KEYCLOAK_BEHIND_SCENES:
+                from aether.common.keycloak.forms import RealmForm
+                from aether.common.keycloak.views import KeycloakLoginView
+
+                login_view = KeycloakLoginView.as_view(
+                    template_name=settings.KEYCLOAK_TEMPLATE,
+                    authentication_form=RealmForm,
+                )
+            else:
+                from aether.common.keycloak.forms import RealmAuthenticationForm
+
+                login_view = LoginView.as_view(
+                    template_name=settings.KEYCLOAK_BEHIND_TEMPLATE,
+                    authentication_form=RealmAuthenticationForm,
+                )
+
+    auth_urls = [
         path(route='login/', view=login_view, name='login'),
         path(route='logout/', view=logout_view, name='logout'),
     ]
@@ -78,67 +161,53 @@ def generate_urlpatterns(token=False, kernel=False, app=[]):
         from aether.common.auth.views import obtain_auth_token
 
         # generates users token
-        auth_views += [
+        auth_urls += [
             path(route='token', view=obtain_auth_token, name='token'),
         ]
-    auth_urls = (auth_views, 'rest_framework')
 
-    urlpatterns = [
-        # `health` endpoints
-        path(route='health', view=health, name='health'),
-        path(route='check-db', view=check_db, name='check-db'),
-        path(route='check-app', view=check_app, name='check-app'),
-
-        # `admin` section
-        path(route='admin/uwsgi/', view=include('django_uwsgi.urls')),
-        path(route='admin/', view=admin.site.urls),
-
-        # `accounts` management
-        path(route='accounts/', view=include(auth_urls, namespace='rest_framework')),
-
-        # monitoring
-        path(route='', view=include('django_prometheus.urls')),
+    ns = 'rest_framework'
+    return [
+        path(route=f'{settings.AUTH_URL}/', view=include((auth_urls, ns), namespace=ns)),
+        path(route='logout/', view=logout_view, name='logout'),
     ]
 
-    if kernel:
-        from aether.common.kernel.views import check_kernel
-        from aether.common.kernel.utils import get_kernel_server_url, get_kernel_server_token
 
-        # checks if Kernel server is available
-        urlpatterns += [
-            path(route='check-kernel', view=check_kernel, name='check-kernel'),
-        ]
+def _get_admin_urls():
+    admin_urls = [
+        # monitoring
+        path(route='prometheus/', view=include('django_prometheus.urls')),
+        # uWSGI monitoring
+        path(route='uwsgi/', view=include('django_uwsgi.urls')),
+        # `admin` section
+        path(route='', view=admin.site.urls),
+    ]
 
-        # `aether.common.kernel.utils.get_kernel_server_url()` returns different
-        #  values depending on the value of `settings.TESTING`. Without these
-        # assertions, a deployment configuration missing e.g. `AETHER_KERNEL_URL`
-        # will seem to be in order until `get_kernel_server_url()` is called.
-        ERR_MSG = _('Environment variable "{}" is not set')
+    return [
+        path(route=f'{settings.ADMIN_URL}/', view=include(admin_urls)),
+    ]
 
-        key = 'AETHER_KERNEL_URL_TEST' if settings.TESTING else 'AETHER_KERNEL_URL'
-        assert get_kernel_server_url(), ERR_MSG.format(key)
 
-        msg_token = ERR_MSG.format('AETHER_KERNEL_TOKEN')
-        assert get_kernel_server_token(), msg_token
-
-    # add app specific
-    urlpatterns += app
-
-    if settings.DEBUG and 'debug_toolbar' in settings.INSTALLED_APPS:  # pragma: no cover
+def _get_debug_urls():  # pragma: no cover
+    if settings.DEBUG and 'debug_toolbar' in settings.INSTALLED_APPS:
         import debug_toolbar
 
-        urlpatterns += [
-            path(route='__debug__/', view=include(debug_toolbar.urls)),
+        return [
+            path(route=f'{settings.DEBUG_TOOLBAR_URL}/', view=include(debug_toolbar.urls)),
         ]
+    return []
 
-    app_url = settings.APP_URL[1:]  # remove leading slash
-    if app_url:
-        # Prepend url endpoints with "{APP_URL}/"
-        # if APP_URL = "/aether-app" then
-        # all the url endpoints will be  `<my-server>/aether-app/<endpoint-url>`
-        # before they were  `<my-server>/<endpoint-url>`
-        urlpatterns = [
-            path(route=f'{app_url}/', view=include(urlpatterns))
-        ]
 
-    return urlpatterns
+def __check_kernel_env():
+    from aether.common.kernel.utils import get_kernel_server_url, get_kernel_server_token
+
+    # `aether.common.kernel.utils.get_kernel_server_url()` returns different
+    # values depending on the value of `settings.TESTING`. Without these
+    # assertions, a deployment configuration missing e.g. `AETHER_KERNEL_URL`
+    # will seem to be in order until `get_kernel_server_url()` is called.
+    ERR_MSG = _('Environment variable "{}" is not set')
+
+    key = 'AETHER_KERNEL_URL_TEST' if settings.TESTING else 'AETHER_KERNEL_URL'
+    assert get_kernel_server_url(), ERR_MSG.format(key)
+
+    msg_token = ERR_MSG.format('AETHER_KERNEL_TOKEN')
+    assert get_kernel_server_token(), msg_token

@@ -23,7 +23,9 @@
   - [Users & Authentication](#users--authentication)
     - [Basic Authentication](#basic-authentication)
     - [Token Authentication](#token-authentication)
+    - [Gateway Authentication](#gateway-authentication)
 - [Development](#development)
+- [Release Management](#release-management)
 - [Deployment](#deployment)
 - [Containers and services](#containers-and-services)
 - [Run commands in the containers](#run-commands-in-the-containers)
@@ -77,8 +79,9 @@ for local development. Never deploy these to publicly accessible servers.
 
 ```text
 127.0.0.1    aether.local
-127.0.0.1    kernel.aether.local odk.aether.local ui.aether.local sync.aether.local
 ```
+
+> Note: `aether.local` is the `NETWORK_DOMAIN` value (see generated `.env` file).
 
 *[Return to TOC](#table-of-contents)*
 
@@ -112,35 +115,8 @@ of the most common ones with non default values. For more info take a look at th
 - `APP_URL`, `/`. The app url in the server.
   If host is `http://my-server.org` and the app url is `/my-module`,
   the app enpoints will be accessible at `http://my-server.org/my-module/...`.
-  In the case of an API gateway, or proxy, wildcards can be used in the `APP_URL` to match 
-  multiple routes like `/<realm>/<service-alias>/`
-  The local behavior is: `http://my-module.aether.local/` implemented in the NGINX files.
 
-  Current NGINX set up (requires changes in `hosts` file for each new module):
-  ```ini
-  # my-module-1.ini NGINX file (WEB_SERVER_PORT is 8801)
-  server {
-    listen                    80;
-    server_name               my-module-1.aether.local;
-
-    location / {
-      proxy_pass              http://my-module-1:8802;
-    }
-  }
-
-  # my-module-2.ini NGINX file (WEB_SERVER_PORT is 8802)
-  server {
-    listen                    80;
-    server_name               my-module-2.aether.local;
-
-    location / {
-      proxy_pass              http://my-module-2:8802;
-    }
-  }
-  ```
-
-  Possible NGINX set up (does not require any change in `hosts` file for any module):
-  ```ini
+  ```nginx
   # one NGINX ini file for all modules
   server {
     listen                    80;
@@ -227,7 +203,7 @@ the multi-tenancy feature.
 
 Example with multi-tenancy enabled:
 
-```text
+```ini
 # .env file
 MULTITENANCY=yes
 DEFAULT_REALM=my-current-tenant
@@ -240,7 +216,7 @@ REALM_COOKIE=cookie-realm
 
 Example with multi-tenancy disabled:
 
-```text
+```ini
 # .env file
 MULTITENANCY=
 ```
@@ -310,13 +286,13 @@ The default values for the export feature:
 #### Aether ODK Module
 
 - `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
-- `AETHER_KERNEL_URL`: `http://kernel:8100` Aether Kernel Server url.
+- `AETHER_KERNEL_URL`: `http://aether.local/kernel/` Aether Kernel Server url.
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
 
 #### Aether UI
 
 - `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
-- `AETHER_KERNEL_URL`: `http://kernel:8100` Aether Kernel Server url.
+- `AETHER_KERNEL_URL`: `http://aether.local/kernel/` Aether Kernel Server url.
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
 
 #### Aether CouchDB Sync Module
@@ -325,7 +301,7 @@ The default values for the export feature:
   Token used to verify the device identity with Google.
   See more in https://developers.google.com/identity/protocols/OAuth2
 - `AETHER_KERNEL_TOKEN`: `kernel_any_user_auth_token` Token to connect to kernel server.
-- `AETHER_KERNEL_URL`: `http://kernel:8100` Aether Kernel Server url.
+- `AETHER_KERNEL_URL`: `http://aether.local/kernel/` Aether Kernel Server url.
 - `AETHER_KERNEL_URL_TEST`: `http://kernel-test:9100` Aether Kernel Testing Server url.
 
 ## Usage
@@ -350,17 +326,13 @@ Options:
 
 This will start:
 
-- **Aether Kernel** on `http://kernel.aether.local`
-  and create a superuser `$ADMIN_USERNAME` with the given credentials.
+- **Aether UI** on `http://aether.local/`.
 
-- **Aether ODK Module** on `http://odk.aether.local`
-  and create a superuser `$ADMIN_USERNAME` with the given credentials.
+- **Aether Kernel** on `http://aether.local/kernel/`.
 
-- **Aether UI** on `http://ui.aether.local`
-  and create a superuser `$ADMIN_USERNAME` with the given credentials.
+- **Aether ODK Module** on `http://aether.local/odk/` or `http://aether.local:8443/odk/`.
 
-- **Aether CouchDB Sync Module** on `http://sync.aether.local`
-  and create a superuser `$ADMIN_USERNAME` with the given credentials.
+- **Aether CouchDB Sync Module** on `http://aether.local/sync/`.
 
 If you generated an `.env` file during installation, passwords for all superusers can be found there.
 
@@ -385,6 +357,26 @@ you want to use Keycloak as authentication server.
 `KEYCLOAK_CLIENT_ID` (defaults to `aether`) is the public client that allows
 the aether module to authenticate using the Keycloak REST API.
 This client id must be added to all the realms used by the aether module.
+The `KEYCLOAK_SERVER_URL` must include all the path till the realm is indicated,
+usually until `/auth/realms`.
+
+There are two ways of setting up keycloak:
+
+a) In this case the authentication process happens in the server side without
+any further user interaction.
+```ini
+# .env file
+KEYCLOAK_SERVER_URL=http://aether.local/auth/realms
+KEYCLOAK_BEHIND_SCENES=true
+```
+
+b) In this case the user is redirected to the keycloak server to finish the
+sign in step.
+```ini
+# .env file
+KEYCLOAK_SERVER_URL=http://aether.local/auth/realms
+KEYCLOAK_BEHIND_SCENES=
+```
 
 Execute once the `./scripts/setup_keycloak.sh` script to create the keycloak
 database and the default realm+client along with the first user
@@ -425,6 +417,37 @@ belongs to an active `aether-kernel` user but not necessarily to an admin user.
 
 *[Return to TOC](#table-of-contents)*
 
+#### Gateway Authentication
+
+Set `GATEWAY_SERVICE_ID` to enable gateway authentication with keycloak.
+This means that the authentication is handled by a third party system
+(like [Kong](https://konghq.com)) that includes in each request the JSON Web
+Token (JWT) in the `GATEWAY_HEADER_TOKEN` header (defaults to `X-Oauth-Token`).
+The `GATEWAY_SERVICE_ID` indicates the gateway service, usually matches the
+app/module name like `kernel`, `odk`, `ui`, `sync`.
+
+In this case the app urls can be reached in several ways:
+
+Trying to access the health endpoint `/health`:
+
+- http://kernel:8100/health using the internal url
+- http://aether.local/my-realm/kernel/health using the gateway url
+
+For those endpoints that don't depend on the realm and must also be available
+"unprotected" we need one more environment variable:
+
+- `GATEWAY_PUBLIC_REALM`: `-` This represents the fake realm that is not protected
+  by the gateway server. In this case the authentication is handled by the other
+  available options, i.e., basic, token, CAS...
+
+The authorization and admin endpoints don't depend on any realm so the final urls
+use the public realm.
+
+- http://aether.local/-/odk/accounts/
+- http://aether.local/-/kernel/admin/
+
+*[Return to TOC](#table-of-contents)*
+
 ## Development
 
 All development should be tested within the container, but developed in the host folder.
@@ -439,6 +462,10 @@ Visit the [Aether Website](http://aether.ehealthafrica.org) for more information
 on [Try it for yourself](http://aether.ehealthafrica.org/documentation/try/index.html).
 
 *[Return to TOC](#table-of-contents)*
+
+## Release Management
+
+To learn more about the Aether release process, refer to the [release management](https://github.com/eHealthAfrica/aether/wiki/Release-Management) page on the wiki.
 
 ## Deployment
 
@@ -474,12 +501,13 @@ The list of the main containers:
 | db                | [PostgreSQL](https://www.postgresql.org/) database                      |
 | couchdb           | [CouchDB](http://couchdb.apache.org/) database for sync                 |
 | redis             | [Redis](https://redis.io/) for task queueing and task result storage    |
+| keycloak          | [Keycloak](https://www.keycloak.org/) for authentication                |
+| nginx             | [NGINX](https://www.nginx.com/) the web server                          |
 | **kernel**        | Aether Kernel                                                           |
 | **odk**           | Aether ODK module (imports data from ODK Collect)                       |
 | **ui**            | Aether Kernel UI (advanced mapping functionality)                       |
 | **couchdb-sync**  | Aether CouchDB Sync module (imports data from Aether Mobile app)        |
 | couchdb-sync-rq   | [RQ python](http://python-rq.org/) task runner to perform sync jobs     |
-| kernel-test       | Aether Kernel TESTING app (used only in e2e tests by other containers)  |
 
 
 All of the containers definition for development can be found in the
@@ -571,7 +599,7 @@ docker-compose run --no-deps <container-name> eval pip list --outdated
 #### Update requirements file
 
 ```bash
-./scripts/upgrade_all.sh
+./scripts/upgrade_container.sh [--build] [<container-name>]
 ```
 
 This also rebuilds `aether.common` module and distributes it within the containers.
