@@ -69,6 +69,7 @@ class RedisProducer(object):
         return valid_keys
 
     def get_entity_generator(self, entity_keys: List[str]) -> Iterator[Entity]:
+        # entity_keys are sorted by offset -> decorator_id -> entity_id
         for key in entity_keys:
             r: Resource = self.resoure_helper.get(key, 'entity')
             yield Entity(**r.data)
