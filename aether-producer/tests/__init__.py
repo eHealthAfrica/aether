@@ -231,6 +231,6 @@ def generate_redis_entities(get_resource_helper):
             if delay:
                 sleep(delay)
     yield make_entity_instances
-
+    # cleanup redis
     for key in cleanup_keys:
         RH.remove(key, 'entity')

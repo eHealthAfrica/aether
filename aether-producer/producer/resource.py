@@ -63,7 +63,7 @@ class ResourceHelper(object):
 
     # Generic Redis Resource Functions
     def add(self, _id: str, resource: Dict[str, Any], _type: str) -> bool:
-        # Can handle around 5k serial 'add' operations / second
+        # Tests at around 5k serial 'add' operations / second
         resource_id = f'_{_type}:{_id}'
         return self.redis.set(resource_id, json.dumps(resource))
 
@@ -81,7 +81,7 @@ class ResourceHelper(object):
         return True
 
     def get(self, _id: str, _type: str) -> Resource:
-        # Handles around 8.5k serial get operations / second
+        # Tests at around 8.5k serial 'get' operations / second
         resource_id = f'_{_type}:{_id}'
         resource = self.redis.get(resource_id)
         if not resource:
