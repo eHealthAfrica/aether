@@ -38,6 +38,7 @@ from producer import (
 )
 
 from producer.db import Decorator, Entity
+from producer.redis_producer import RedisProducer
 from producer.resource import Event, ResourceHelper, RESOURCE_HELPER
 from producer.settings import Settings
 from producer.logger import LOG
@@ -146,6 +147,13 @@ def get_resource_helper() -> Iterable[ResourceHelper]:
     yield RESOURCE_HELPER
     # cleanup at end of session
     RESOURCE_HELPER.stop()
+
+
+@pytest.mark.integration
+@pytest.fixture(scope='session')
+def get_redis_producer(get_resource_helper) -> Iterable[RedisProducer]:
+    RH = get_resource_helper
+    yield RedisProducer(RH)
 
 
 @pytest.mark.integration

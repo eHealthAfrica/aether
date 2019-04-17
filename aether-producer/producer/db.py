@@ -40,6 +40,7 @@ from typing import (
     ClassVar,
     Dict,
     NamedTuple,
+    Union,
     TYPE_CHECKING
 )
 
@@ -111,7 +112,8 @@ class OffsetManager(object):
     def set(self, offset_type: str, value: str) -> None:
         resource = {
             'id': offset_type,
-            OffsetManager._value_field: value
+            OffsetManager._value_field: value,
+            OffsetManager._updated_field: datetime.now().isoformat()
         }
         self.resource_helper.add(offset_type, resource, OffsetManager._type)
 

@@ -18,7 +18,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-
+from datetime import datetime
 import pytest
 import requests
 from time import sleep
@@ -27,6 +27,7 @@ from typing import (
 )
 import uuid
 
+from producer.redis_producer import RedisProducer
 from producer.resource import (
     Event,
     Resource,
@@ -154,30 +155,60 @@ def test_resource__iteration(get_resource_helper):
     assert(len(expected_ids) == 0)
 
 
+# @pytest.mark.integration
+# def test_kafka__basic_io(simple_consumer, simple_producer):
+#     size = 10
+#     topic = 'kafka-basic-io-test'
+#     p = simple_producer
+#     c = simple_consumer
+#     for x in range(size):
+#         p.poll(0)
+#         p.produce(topic, str(x).encode('utf-8'))
+#     p.flush()
+#     c.subscribe([topic])
+#     remaining = size
+#     try:
+#         with Timeout(15):
+#             while remaining:
+#                 messages = c.consume(size, timeout=1)
+#                 for msg in messages:
+#                     remaining -= 1
+#                 if not messages:
+#                     sleep(.1)
+#             assert(True)
+#     except TimeoutError:
+#         assert(False), \
+#             'basic kafka io timed out, check kafka test configuration'
+
+
 @pytest.mark.integration
-def test_kafka__basic_io(simple_consumer, simple_producer):
-    size = 10
-    topic = 'kafka-basic-io-test'
-    p = simple_producer
-    c = simple_consumer
-    for x in range(size):
-        p.poll(0)
-        p.produce(topic, str(x).encode('utf-8'))
-    p.flush()
-    c.subscribe([topic])
-    remaining = size
-    try:
-        with Timeout(15):
-            while remaining:
-                messages = c.consume(size, timeout=1)
-                for msg in messages:
-                    remaining -= 1
-                if not messages:
-                    sleep(.1)
-            assert(True)
-    except TimeoutError:
-        assert(False), \
-            'basic kafka io timed out, check kafka test configuration'
+def test_read_entities_list_from_redis(
+    redis_fixture_schemas,
+    generate_redis_entities,
+    get_redis_producer
+):
+    redis_producer: RedisProducer = get_redis_producer
+    schemas, decorators = redis_fixture_schemas
+    tenant = 'test'
+    loads = [10, 100, 1000]
+    # start = datetime.now()
+    for i, load in enumerate(loads):
+        decorator = decorators[list(decorators.keys())[i]]
+        generate_redis_entities(load, tenant, decorator.id)
+    expect_all_ids = redis_producer.get_entity_keys()
+    middle = datetime.now()
+    g = redis_producer.get_entity_generator(expect_all_ids)
+    force_fetch_all = sum([1 for i in g])
+    assert(force_fetch_all == sum(loads))
+    end = datetime.now()
+    # d1 = (middle - start).total_seconds()
+    d2 = (end - middle).total_seconds()
+    # print(d1, d2)
+    print(d2)
+    assert(len(expect_all_ids) == sum(loads))
+    ignore = decorators[list(decorators.keys())[0]].id
+    expect_ids_12 = redis_producer.get_entity_keys(ignored_decorators=[ignore])
+    assert(len(expect_ids_12) == sum(loads[1:]))
 
 
 @pytest.mark.integration

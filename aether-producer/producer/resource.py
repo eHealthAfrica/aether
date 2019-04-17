@@ -63,8 +63,8 @@ class ResourceHelper(object):
 
     # Generic Redis Resource Functions
     def add(self, _id: str, resource: Dict[str, Any], _type: str) -> bool:
+        # Can handle around 5k serial 'add' operations / second
         resource_id = f'_{_type}:{_id}'
-        resource['modified'] = datetime.now().isoformat()
         return self.redis.set(resource_id, json.dumps(resource))
 
     def exists(self, _id: str, _type: str) -> bool:
