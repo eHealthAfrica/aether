@@ -566,7 +566,7 @@ docker-compose run --no-deps <container-name> eval pip list --outdated
 #### Update requirements file
 
 ```bash
-./scripts/upgrade_all.sh
+./scripts/upgrade_container.sh [--build] [<container-name>]
 ```
 
 This also rebuilds `aether.common` module and distributes it within the containers.

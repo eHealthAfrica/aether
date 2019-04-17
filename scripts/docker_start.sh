@@ -24,22 +24,24 @@ source ./scripts/aether_functions.sh
 
 function show_help {
     echo """
-    start the indicated container with the necessary dependencies
+    Start the indicated container with the necessary dependencies
 
-    ./scripts/docker_start.sh [options] <name>
+    Usage:
 
-    options:
+        ./scripts/docker_start.sh [options] <name>
 
-    --build | -b   kill and build all containers before start
-    --clean | -c   stop and remove all running containers and volumes before start
-    --force | -f   ensure that the container will be restarted if needed
-    --kill  | -k   kill all running containers before start
+    Options:
 
-    --help  | -h   shows this message
+        --build | -b   kill and build all containers before start
+        --clean | -c   stop and remove all running containers and volumes before start
+        --force | -f   ensure that the container will be restarted if needed
+        --kill  | -k   kill all running containers before start
 
-    <name>
-        Expected values: kernel, odk, ui, couchdb-sync or sync (alias of couchdb-sync).
-        Any other value will start all containers.
+        --help  | -h   show this message
+
+        <name>
+            Expected values: kernel, odk, ui, couchdb-sync or sync (alias of couchdb-sync).
+            Any other value will start all containers.
 
     """
 }
