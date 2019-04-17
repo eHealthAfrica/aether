@@ -21,11 +21,20 @@ from typing import (
     Dict,
     Iterator,
     List,
+    Tuple,
     Union
 )
-
-from producer.db import Entity, OFFSET_MANAGER
-from producer.resource import RESOURCE_HELPER, ResourceHelper, Resource
+from producer.db import (
+    Entity,
+    Decorator,
+    Schema,
+    OFFSET_MANAGER
+)
+from producer.resource import (
+    RESOURCE_HELPER,
+    ResourceHelper,
+    Resource
+)
 
 
 class RedisProducer(object):
@@ -73,3 +82,29 @@ class RedisProducer(object):
         for key in entity_keys:
             r: Resource = self.resoure_helper.get(key, 'entity')
             yield Entity(**r.data)
+
+    def get_unique_decorator_ids(self, entity_keys: List[str]) -> List[str]:
+        unique_keys = set()
+        for key in entity_keys:
+            _, decorator_id, _ = RedisProducer.get_entity_key_parts(key)
+            unique_keys.add(decorator_id)
+        return list(unique_keys)
+
+    def get_production_options(
+        self,
+        decorator_id: str
+    ) -> Tuple[str, str, Schema]:  # topic, serialize_mode, schema
+        # get decorator by id & cast from Resource -> Decorator
+        d: Decorator = Decorator(
+            **self.resoure_helper.get(
+                decorator_id,
+                'decorator').data
+        )
+        schema: Schema = Schema(
+            **self.resoure_helper.get(
+                d.schema_id,
+                'schema').data
+        )
+        topic = f'{d.tenant}:{d.topic_name}'
+        serialize_mode = d.serialize_mode
+        return topic, serialize_mode, schema

@@ -200,6 +200,9 @@ def test_read_entities_list_from_redis(
     #   check ordering
     t0, t1 = expect_all_ids[0:2]
     assert(t0 < t1), f'{t1} should have a later offset than {t0}'
+    #   check correct unique decorator ids
+    unique_decorators = redis_producer.get_unique_decorator_ids(expect_all_ids)
+    assert(all([i in unique_decorators for i in decorators.keys()]))
     #   check correct number
     assert(len(expect_all_ids) == sum(loads))
     ignore = decorators[list(decorators.keys())[0]].id

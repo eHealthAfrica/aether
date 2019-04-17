@@ -30,8 +30,10 @@ import signal
 import gevent
 from gevent.event import AsyncResult
 from gevent.queue import PriorityQueue, Queue
+import json
 
 import psycopg2
+import spavro
 
 from producer.settings import PRODUCER_CONFIG
 from producer.resource import RESOURCE_HELPER, ResourceHelper
@@ -73,6 +75,11 @@ class Schema(NamedTuple):
     tenant: str
     name: str
     schema: Dict[str, str]
+
+    def as_avro_schema(self):
+        return spavro.schema.parse(
+            json.dumps(self.schema)
+        )
 
 
 class Decorator(NamedTuple):
