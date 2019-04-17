@@ -74,6 +74,7 @@ KEYCLOAK_SERVER_URL=http://aether.local/auth/realms
 KEYCLOAK_ADMIN_USERNAME=admin
 KEYCLOAK_ADMIN_PASSWORD=$(gen_random_string)
 KEYCLOAK_DB_PASSWORD=$(gen_random_string)
+KEYCLOAK_AETHER_CLIENT=aether-client
 
 KEYCLOAK_USER_USERNAME=aether-user
 KEYCLOAK_USER_PASSWORD=$(gen_random_string)
@@ -91,7 +92,7 @@ COUCHDB_USER=admin
 COUCHDB_PASSWORD=$(gen_random_string)
 REDIS_PASSWORD=$(gen_random_string)
 
-DB_VOLUME=aether_database_data
+DB_VOLUME=aether_dev_database_data
 # ------------------------------------------------------------------
 
 
@@ -163,7 +164,7 @@ PRODUCER_ADMIN_PW=$(gen_random_string)
 TEST_PARALLEL=8
 
 # Docker network
-NETWORK_NAME=aether_internal
+NETWORK_NAME=aether_dev
 NETWORK_DOMAIN=aether.local
 NETWORK_GATEWAY=192.168.2.1
 NETWORK_NGINX_IP=192.168.2.10

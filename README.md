@@ -325,11 +325,11 @@ Options:
 
 This will start:
 
+- **Aether UI** on `http://aether.local/`.
+
 - **Aether Kernel** on `http://aether.local/kernel/`.
 
-- **Aether ODK Module** on `http://aether.local/odk/`.
-
-- **Aether UI** on `http://aether.local/ui/`.
+- **Aether ODK Module** on `http://aether.local/odk/` or `http://aether.local:8443/odk/`.
 
 - **Aether CouchDB Sync Module** on `http://aether.local/sync/`.
 
