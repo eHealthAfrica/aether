@@ -191,8 +191,9 @@ def test_read_entities_list_from_redis(
     schemas, decorators = redis_fixture_schemas
     # create some entities in redis, as the DB service / direct-inject would
     tenant = 'test'
-    loads = [10, 100, 1000]
+    loads = [10, 100, 1000]  # one load for each decorator
     for key, load in zip(decorators.keys(), loads):
+        # make some entites for each decorator
         generate_redis_entities(load, tenant, decorators[key].id)
     # unfiltered
     expect_all_ids = redis_producer.get_entity_keys()
