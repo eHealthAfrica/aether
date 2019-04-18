@@ -116,16 +116,16 @@ class SerializersTests(TestCase):
         self.assertTrue(schema.is_valid(), schema.errors)
         schema.save()
 
-        projectschema = serializers.ProjectSchemaSerializer(
+        schemadecorator = serializers.SchemaDecoratorSerializer(
             data={
-                'name': 'a project schema name',
+                'name': 'a schema decorator name',
                 'project': project.data['id'],
                 'schema': schema.data['id'],
             },
             context={'request': self.request},
         )
-        self.assertTrue(projectschema.is_valid(), projectschema.errors)
-        projectschema.save()
+        self.assertTrue(schemadecorator.is_valid(), schemadecorator.errors)
+        schemadecorator.save()
 
         mappingset = serializers.MappingSetSerializer(
             data={
@@ -155,7 +155,7 @@ class SerializersTests(TestCase):
                       mapping.errors['definition'][0])
 
         mapping_definition = copy.deepcopy(EXAMPLE_MAPPING)
-        mapping_definition['entities']['Person'] = projectschema.data['id']
+        mapping_definition['entities']['Person'] = schemadecorator.data['id']
         mapping = serializers.MappingSerializer(
             data={
                 'name': 'a sample mapping',
@@ -208,7 +208,7 @@ class SerializersTests(TestCase):
             data={
                 'merge': 'overwrite',  # ignore in `create`
                 'submission': submission.data['id'],
-                'projectschema': projectschema.data['id'],
+                'schemadecorator': schemadecorator.data['id'],
                 'status': 'Pending Approval',
                 'payload': EXAMPLE_SOURCE_DATA,  # has no id
             },
@@ -225,7 +225,7 @@ class SerializersTests(TestCase):
         entity_2 = serializers.EntitySerializer(
             data={
                 'submission': submission.data['id'],
-                'projectschema': projectschema.data['id'],
+                'schemadecorator': schemadecorator.data['id'],
                 'mapping': mapping.data['id'],
                 'status': 'Pending Approval',
                 'payload': EXAMPLE_SOURCE_DATA_ENTITY,

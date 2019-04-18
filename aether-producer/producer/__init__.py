@@ -388,8 +388,8 @@ class TopicManager(object):
             e.id,
             e.modified
         FROM kernel_entity e
-        inner join kernel_projectschema ps on e.projectschema_id = ps.id
-        inner join kernel_schema s on ps.schema_id = s.id
+        inner join kernel_schemadecorator sd on e.schemadecorator_id = sd.id
+        inner join kernel_schema s on sd.schema_id = s.id
         WHERE e.modified > {modified}
         AND s.name = {schema_name}
         LIMIT 1; '''
@@ -399,8 +399,8 @@ class TopicManager(object):
             SELECT
                 count(e.id)
             FROM kernel_entity e
-            inner join kernel_projectschema ps on e.projectschema_id = ps.id
-            inner join kernel_schema s on ps.schema_id = s.id
+            inner join kernel_schemadecorator sd on e.schemadecorator_id = sd.id
+            inner join kernel_schema s on sd.schema_id = s.id
             WHERE s.name = {schema_name};
     '''
 
@@ -412,14 +412,14 @@ class TopicManager(object):
                 e.payload,
                 e.modified,
                 e.status,
-                ps.id as project_schema_id,
-                ps.name as project_schema_name,
+                sd.id as schema_decorator_id,
+                sd.name as schema_decorator_name,
                 s.name as schema_name,
                 s.id as schema_id,
                 s.revision as schema_revision
             FROM kernel_entity e
-            inner join kernel_projectschema ps on e.projectschema_id = ps.id
-            inner join kernel_schema s on ps.schema_id = s.id
+            inner join kernel_schemadecorator sd on e.schemadecorator_id = sd.id
+            inner join kernel_schema s on sd.schema_id = s.id
             WHERE e.modified > {modified}
             AND s.name = {schema_name}
             ORDER BY e.modified ASC

@@ -23,7 +23,7 @@ import pytest
 import requests
 
 # Register Test Project and provide access to artifacts through client test fixtures
-from aether.client.test_fixtures import client, project, schemas, projectschemas, mapping, mappingset  # noqa
+from aether.client.test_fixtures import client, project, schemas, schemadecorators, mapping, mappingset  # noqa
 from aether.client import fixtures  # noqa
 
 from .consumer import get_consumer, read
@@ -81,13 +81,13 @@ def wait_for_producer_status():
 
 
 @pytest.fixture(scope='function')  # noqa
-def entities(client, projectschemas):  # noqa: F811
+def entities(client, schemadecorators):  # noqa: F811
     entities = {}
-    for ps in projectschemas:
-        name = ps['name']
-        ps_id = ps.id
+    for sd in schemadecorators:
+        name = sd['name']
+        sd_id = sd.id
         entities[name] = [i for i in client.entities.paginated(
-            'list', projectschema=ps_id)]
+            'list', schemadecorator=sd_id)]
     return entities
 
 

@@ -20,7 +20,7 @@ import uuid
 
 from django.test import TestCase
 
-from aether.kernel.api.models import Project, Schema, ProjectSchema, Mapping, MappingSet
+from aether.kernel.api.models import Project, Schema, SchemaDecorator, Mapping, MappingSet
 from aether.kernel.api.project_artefacts import (
     get_project_artefacts as retrieve,
     upsert_project_artefacts as generate,
@@ -94,7 +94,7 @@ class ProjectArtefactsTests(TestCase):
 
         self.assertEqual(results['project'], str(project_id))
         self.assertEqual(results['schemas'], set())
-        self.assertEqual(results['project_schemas'], set())
+        self.assertEqual(results['schema_decorators'], set())
         self.assertEqual(results['mappingsets'], set())
 
         new_project = Project.objects.get(pk=project_id)
@@ -105,7 +105,7 @@ class ProjectArtefactsTests(TestCase):
 
         self.assertIsNotNone(results['project'])
         self.assertEqual(results['schemas'], set())
-        self.assertEqual(results['project_schemas'], set())
+        self.assertEqual(results['schema_decorators'], set())
         self.assertEqual(results['mappings'], set())
 
         project = Project.objects.get(pk=results['project'])
@@ -119,7 +119,7 @@ class ProjectArtefactsTests(TestCase):
         project.refresh_from_db()
         self.assertEqual(results['project'], str(project.pk))
         self.assertEqual(results['schemas'], set())
-        self.assertEqual(results['project_schemas'], set())
+        self.assertEqual(results['schema_decorators'], set())
         self.assertEqual(results['mappings'], set())
         self.assertEqual(project.name, 'New project', 'name is not updated')
 
@@ -135,11 +135,11 @@ class ProjectArtefactsTests(TestCase):
 
         self.assertEqual(results_1['project'], str(project.pk))
         self.assertEqual(results_1['schemas'], set([schema_id]))
-        self.assertEqual(results_1['project_schemas'], set([schema_id]),
-                         'Project schemas inherit schema ids')
+        self.assertEqual(results_1['schema_decorators'], set([schema_id]),
+                         'Schema decorators inherit schema ids')
         self.assertEqual(results_1['mappings'], set())
 
-        project_schema_id = list(results_1['project_schemas'])[0]
+        schema_decorator_id = list(results_1['schema_decorators'])[0]
 
         schema = Schema.objects.get(pk=schema_id)
         self.assertEqual(schema.name, 'Schema')
@@ -148,15 +148,15 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(schema.type, 'org.ehealthafrica.aether')
         self.assertIsNone(schema.family)
 
-        project_schema = ProjectSchema.objects.get(pk=project_schema_id)
-        self.assertEqual(project_schema.project, project)
-        self.assertEqual(project_schema.schema, schema)
+        schema_decorator = SchemaDecorator.objects.get(pk=schema_decorator_id)
+        self.assertEqual(schema_decorator.project, project)
+        self.assertEqual(schema_decorator.schema, schema)
 
         results_2 = generate(project_id=project.pk, project_name=project.name, schemas=[
             # in this case nothing changes
             {'id': schema_id, 'name': 'Schema 2'},
         ])
-        self.assertEqual(results_1, results_2, 'it does no generate a new project schema')
+        self.assertEqual(results_1, results_2, 'it does no generate a new schema decorator')
 
         schema.refresh_from_db()
         self.assertEqual(schema.name, 'Schema')
@@ -165,16 +165,16 @@ class ProjectArtefactsTests(TestCase):
         self.assertEqual(schema.type, 'org.ehealthafrica.aether')
         self.assertIsNone(schema.family)
 
-        # delete project schema
-        project_schema.delete()
+        # delete schema decorator
+        schema_decorator.delete()
         results_3 = generate(project_id=project.pk, project_name=project.name, schemas=[
-            # in this case the definition is updated and the deleted project schema re-generated
+            # in this case the definition is updated and the deleted schema decorator re-generated
             {'id': schema_id, 'definition': {'name': 'Schema'}, 'type': 't', 'family': 'f'},
         ])
-        self.assertEqual(results_1, results_3, 'generates a new project schema with the schema id')
+        self.assertEqual(results_1, results_3, 'generates a new schema decorator with the schema id')
         self.assertEqual(results_3['project'], str(project.pk))
         self.assertEqual(results_3['schemas'], set([schema_id]))
-        self.assertEqual(len(results_3['project_schemas']), 1)
+        self.assertEqual(len(results_3['schema_decorators']), 1)
         self.assertEqual(results_3['mappings'], set())
 
         schema.refresh_from_db()
@@ -191,7 +191,7 @@ class ProjectArtefactsTests(TestCase):
         ])
         self.assertNotEqual(results_1, results_4, 'only returns the affected ids')
         self.assertEqual(len(results_1['schemas']), 1)
-        self.assertEqual(len(results_1['project_schemas']), 1)
+        self.assertEqual(len(results_1['schema_decorators']), 1)
 
         results_retrieve = retrieve(project=project)
         self.assertNotEqual(results_4, results_retrieve,
@@ -213,7 +213,7 @@ class ProjectArtefactsTests(TestCase):
 
         self.assertEqual(results_1['project'], str(project.pk))
         self.assertEqual(results_1['schemas'], set())
-        self.assertEqual(results_1['project_schemas'], set())
+        self.assertEqual(results_1['schema_decorators'], set())
         self.assertEqual(results_1['mappingsets'], set([mapping_id]))
         self.assertEqual(results_1['mappings'], set([mapping_id]))
 
@@ -402,7 +402,7 @@ class ProjectArtefactsTests(TestCase):
 
         self.assertEqual(Project.objects.count(), 1)
         self.assertEqual(Schema.objects.count(), 1)
-        self.assertEqual(ProjectSchema.objects.count(), 1)
+        self.assertEqual(SchemaDecorator.objects.count(), 1)
         self.assertEqual(MappingSet.objects.count(), 1)
         self.assertEqual(Mapping.objects.count(), 1)
 

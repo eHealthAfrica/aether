@@ -51,7 +51,7 @@ class TestFilters(TestCase):
             # Request a list of all projects, filtered by `schema`.
             # This checks that ProjectFilter.schema exists and that
             # ProjectFilter has been correctly configured.
-            expected = set([str(ps.project.id) for ps in schema.projectschemas.all()])
+            expected = set([str(ps.project.id) for ps in schema.schemadecorators.all()])
 
             # by id
             kwargs = {'schema': str(schema.id), 'fields': 'id', 'page_size': projects_count}
@@ -80,7 +80,7 @@ class TestFilters(TestCase):
             # Request a list of all schemas, filtered by `project`.
             # This checks that SchemaFilter.project exists and that
             # SchemaFilter has been correctly configured.
-            expected = set([str(ps.schema.id) for ps in project.projectschemas.all()])
+            expected = set([str(ps.schema.id) for ps in project.schemadecorators.all()])
 
             # by id
             kwargs = {'project': str(project.id), 'fields': 'id', 'page_size': schemas_count}
@@ -108,7 +108,7 @@ class TestFilters(TestCase):
         mappings_count = models.Mapping.objects.count()
         # Get a list of all mappings.
         for mapping in models.Mapping.objects.all():
-            expected = set([str(ps.schema.id) for ps in mapping.projectschemas.all()])
+            expected = set([str(ps.schema.id) for ps in mapping.schemadecorators.all()])
             # by id
             kwargs = {'mapping': str(mapping.id), 'fields': 'id', 'page_size': mappings_count}
             response = json.loads(self.client.get(url, kwargs).content)
@@ -251,7 +251,7 @@ class TestFilters(TestCase):
             # Request a list of all entities, filtered by `family`.
             # This checks that EntityFilter.family exists and that
             # EntityFilter has been correctly configured.
-            expected = set([str(e.id) for e in models.Entity.objects.filter(projectschema__schema__family=family)])
+            expected = set([str(e.id) for e in models.Entity.objects.filter(schemadecorator__schema__family=family)])
 
             # by family
             kwargs = {'family': family, 'fields': 'id', 'page_size': entities_count}
@@ -276,12 +276,12 @@ class TestFilters(TestCase):
         # Mark the first 3 as passthrough schemas
         expected = set()
         for schema in models.Schema.objects.all()[0:3]:
-            projectschema = schema.projectschemas.first()
-            project = projectschema.project
+            schemadecorator = schema.schemadecorators.first()
+            project = schemadecorator.project
             schema.family = str(project.pk)
             schema.save()
 
-            mapping = projectschema.mappings.first()
+            mapping = schemadecorator.mappings.first()
             mapping.is_read_only = True  # one of the mappings is read only
             mapping.save()
 
@@ -303,11 +303,11 @@ class TestFilters(TestCase):
             schema.family = str(project.pk)
             schema.save()
 
-            projectschema = schema.projectschemas.first()
-            own_project = projectschema.project
+            schemadecorator = schema.schemadecorators.first()
+            own_project = schemadecorator.project
             if own_project == project:  # the only passthrough schema
                 # take only one of the mappings
-                mapping = projectschema.mappings.first()
+                mapping = schemadecorator.mappings.first()
                 mapping.is_read_only = True  # one of the mappings is read only
                 mapping.save()
 
@@ -427,17 +427,17 @@ class TestFilters(TestCase):
             result = set([r['id'] for r in response['results']])
             self.assertEqual(expected, result)
 
-    def test_mapping_filter__by_projectschema(self):
+    def test_mapping_filter__by_schemadecorator(self):
         url = reverse(viewname='mapping-list')
         # Generate projects.
         for _ in range(random.randint(5, 10)):
             generate_project()
         mappings_count = models.Mapping.objects.count()
-        # Get a list of all project schemas.
-        for projectschema in models.ProjectSchema.objects.all():
-            expected = set([str(e.id) for e in projectschema.mappings.all()])
+        # Get a list of all schema decorators.
+        for schemadecorator in models.SchemaDecorator.objects.all():
+            expected = set([str(e.id) for e in schemadecorator.mappings.all()])
             # by id
-            kwargs = {'projectschema': str(projectschema.id), 'fields': 'id', 'page_size': mappings_count}
+            kwargs = {'schemadecorator': str(schemadecorator.id), 'fields': 'id', 'page_size': mappings_count}
             response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
@@ -445,22 +445,22 @@ class TestFilters(TestCase):
             self.assertEqual(expected, result)
 
             # by name
-            kwargs = {'projectschema': projectschema.name, 'fields': 'id', 'page_size': mappings_count}
+            kwargs = {'schemadecorator': schemadecorator.name, 'fields': 'id', 'page_size': mappings_count}
             response = json.loads(self.client.get(url, kwargs).content)
             # Check both sets of ids for equality.
             self.assertEqual(response['count'], len(expected))
             result = set([r['id'] for r in response['results']])
             self.assertEqual(expected, result)
 
-    def test_projectschema_filter__by_mapping(self):
-        url = reverse(viewname='projectschema-list')
+    def test_schemadecorator_filter__by_mapping(self):
+        url = reverse(viewname='schemadecorator-list')
         # Generate projects.
         for _ in range(random.randint(5, 10)):
             generate_project()
         mappings_count = models.Mapping.objects.count()
         # Get a list of all mappings.
         for mapping in models.Mapping.objects.all():
-            expected = set([str(ps.id) for ps in mapping.projectschemas.all()])
+            expected = set([str(ps.id) for ps in mapping.schemadecorators.all()])
             # by id
             kwargs = {'mapping': str(mapping.id), 'fields': 'id', 'page_size': mappings_count}
             response = json.loads(self.client.get(url, kwargs).content)

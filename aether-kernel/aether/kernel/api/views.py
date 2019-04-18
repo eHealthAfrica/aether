@@ -85,9 +85,9 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
             family = request.query_params.get('family')
 
         schemas = [
-            ps.schema
-            for ps in project.projectschemas.order_by('-created')
-            if not family or ps.schema.family == family
+            sd.schema
+            for sd in project.schemadecorators.order_by('-created')
+            if not family or sd.schema.family == family
         ]
         for schema in schemas:
             if not name:
@@ -109,7 +109,7 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     def artefacts(self, request, pk=None, *args, **kwargs):
         '''
         PATCH: Creates or updates the project and its artefacts:
-        schemas, project schemas and mappings.
+        schemas, schema decorators and mappings.
 
         PATCH|GET: Returns the list of project and affected artefact ids by type.
 
@@ -125,7 +125,7 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     def avro_schemas(self, request, pk=None, *args, **kwargs):
         '''
         Creates or updates the project and links it with the given AVRO schemas
-        and related artefacts: project schemas and passthrough mappings.
+        and related artefacts: schema decorators and passthrough mappings.
 
         Returns the list of project and its affected artefact ids by type.
 
@@ -147,7 +147,7 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     def __upsert_artefacts(self, request, pk=None):
         '''
         Creates or updates the project and its artefacts:
-        schemas, project schemas, mapping sets and mappings.
+        schemas, schema decorators, mapping sets and mappings.
 
         Note: this method will never DELETE any artefact.
 
@@ -170,7 +170,7 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
 
                 # this is optional, for each entry the method will
                 # create/update a schema and also link it to the project
-                # (projectschema entry)
+                # (schemadecorator entry)
                 "schemas": [
                     {
                         "id": "schema id (optional)",
@@ -248,7 +248,7 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
     def __upsert_schemas(self, request, pk=None):
         '''
         Creates or updates the project and links it with the given AVRO schemas
-        and related artefacts: project schemas and passthrough mappings.
+        and related artefacts: schema decorators and passthrough mappings.
 
         Returns the list of project and its affected artefact ids by type.
 
@@ -275,7 +275,7 @@ class ProjectViewSet(MtViewSetMixin, viewsets.ModelViewSet):
 
                 # this is optional, for each entry the method will
                 # create/update a schema and also link it to the project
-                # (projectschema entry) creating the passthrough mapping
+                # (schemadecorator entry) creating the passthrough mapping
                 "avro_schemas": [
                     {
                         "id": "schema id (optional and shared with ALL the linked artefacts)",
@@ -392,10 +392,10 @@ class SchemaViewSet(viewsets.ModelViewSet):
         })
 
 
-class ProjectSchemaViewSet(MtViewSetMixin, viewsets.ModelViewSet):
-    queryset = models.ProjectSchema.objects.all()
-    serializer_class = serializers.ProjectSchemaSerializer
-    filter_class = filters.ProjectSchemaFilter
+class SchemaDecoratorViewSet(MtViewSetMixin, viewsets.ModelViewSet):
+    queryset = models.SchemaDecorator.objects.all()
+    serializer_class = serializers.SchemaDecoratorSerializer
+    filter_class = filters.SchemaDecoratorFilter
     mt_field = 'project'
 
     @action(detail=True, methods=['get'])
@@ -403,11 +403,11 @@ class ProjectSchemaViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         '''
         Returns the schema "skeleton".
 
-        Reachable at ``/projectschemas/{pk}/skeleton/``
+        Reachable at ``/schemadecorators/{pk}/skeleton/``
         '''
 
-        project_schema = self.get_object_or_404(pk=pk)
-        schema = project_schema.schema
+        schema_decorator = self.get_object_or_404(pk=pk)
+        schema = schema_decorator.schema
 
         # extract jsonpaths and docs from the schema definition
         jsonpaths = []
@@ -421,7 +421,7 @@ class ProjectSchemaViewSet(MtViewSetMixin, viewsets.ModelViewSet):
         return Response(data={
             'jsonpaths': jsonpaths,
             'docs': docs,
-            'name': f'{project_schema.project.name}-{schema.schema_name}',
+            'name': f'{schema_decorator.project.name}-{schema.schema_name}',
         })
 
 
@@ -432,8 +432,8 @@ class EntityViewSet(MtViewSetMixin, ExporterViewSet):
     mt_field = 'project'
 
     # Exporter required fields
-    schema_field = 'projectschema__schema__definition'
-    schema_order = '-projectschema__schema__created'
+    schema_field = 'schemadecorator__schema__definition'
+    schema_order = '-schemadecorator__schema__created'
 
     def retrieve(self, request, pk=None, *args, **kwargs):
         def get_entity_linked_data(entity, request, resolved, depth, start_depth=0):
@@ -442,7 +442,7 @@ class EntityViewSet(MtViewSetMixin, ExporterViewSet):
 
             jsonld_field_names = [
                 field['name']
-                for field in entity.projectschema.schema.definition.get('fields')
+                for field in entity.schemadecorator.schema.definition.get('fields')
                 if field.get('jsonldPredicate')
             ]
 
@@ -450,7 +450,7 @@ class EntityViewSet(MtViewSetMixin, ExporterViewSet):
                 try:
                     linked_data_ref = entity.payload.get(field_name)
                     linked_entity = models.Entity.objects.filter(payload__id=linked_data_ref).first()
-                    linked_entity_schema_name = linked_entity.projectschema.schema.name
+                    linked_entity_schema_name = linked_entity.schemadecorator.schema.name
 
                     resolved[linked_entity_schema_name] = resolved.get(linked_entity_schema_name, {})
                     resolved[linked_entity_schema_name][linked_data_ref] = self.serializer_class(
@@ -503,16 +503,16 @@ class SubmissionStatsMixin(MtViewSetMixin):
 
             # compare family with project id
             # (issue: need to cast the UUID field into a Text field)
-            project_id = Cast('submissions__entities__projectschema__project', TextField())
+            project_id = Cast('submissions__entities__schemadecorator__project', TextField())
 
             entities_filter = Q(
-                submissions__entities__projectschema__schema__family=project_id,
+                submissions__entities__schemadecorator__schema__family=project_id,
                 submissions__entities__mapping__is_read_only=True,
             )
         else:
             family = self.request.query_params.get('family')
             if family:
-                entities_filter = Q(submissions__entities__projectschema__schema__family=family)
+                entities_filter = Q(submissions__entities__schemadecorator__schema__family=family)
 
         if entities_filter:
             entities_count = Count(

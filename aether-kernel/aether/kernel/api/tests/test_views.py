@@ -46,7 +46,7 @@ class ViewsTest(TestCase):
 
     entity_payload = {'name': 'Person name updated'}
     test_schema = None
-    test_project_schema = None
+    test_schema_decorator = None
 
     def setUp(self):
         username = 'test'
@@ -68,14 +68,14 @@ class ViewsTest(TestCase):
             definition=EXAMPLE_SCHEMA,
         )
 
-        self.projectschema = models.ProjectSchema.objects.create(
-            name='a project schema name',
+        self.schemadecorator = models.SchemaDecorator.objects.create(
+            name='a schema decorator name',
             project=self.project,
             schema=self.schema,
         )
         # update the fake value with a real one
         mapping_definition = dict(EXAMPLE_MAPPING)
-        mapping_definition['entities']['Person'] = str(self.projectschema.pk)
+        mapping_definition['entities']['Person'] = str(self.schemadecorator.pk)
 
         self.mappingset = models.MappingSet.objects.create(
             name='a sample mapping set',
@@ -121,8 +121,8 @@ class ViewsTest(TestCase):
         models.Entity.objects.all().delete()
         self.assertEqual(models.Entity.objects.count(), 0)
 
-        projectschema_2 = models.ProjectSchema.objects.create(
-            name='a project schema with stats',
+        schemadecorator_2 = models.SchemaDecorator.objects.create(
+            name='a schema decorator with stats',
             project=self.project,
             schema=models.Schema.objects.create(
                 name='another schema',
@@ -139,7 +139,7 @@ class ViewsTest(TestCase):
         mapping_2 = models.Mapping.objects.create(
             name='a read only mapping with stats',
             definition={
-                'entities': {'Person': str(projectschema_2.pk)},
+                'entities': {'Person': str(schemadecorator_2.pk)},
                 'mapping': [['#!uuid', 'Person.id']],
             },
             mappingset=self.mappingset,
@@ -149,7 +149,7 @@ class ViewsTest(TestCase):
         for _ in range(4):
             for __ in range(5):
                 # this will also trigger the entities extraction
-                # (4 entities per submission -> 3 for self.projectschema + 1 for projectschema_2)
+                # (4 entities per submission -> 3 for self.schemadecorator + 1 for schemadecorator_2)
                 self.helper_create_object('submission-list', {
                     'payload': EXAMPLE_SOURCE_DATA,
                     'mappingset': str(self.mappingset.pk),
@@ -260,7 +260,7 @@ class ViewsTest(TestCase):
             'submission_payload': EXAMPLE_SOURCE_DATA,
             'mapping_definition': {
                 'entities': {
-                    'Person': str(self.projectschema),
+                    'Person': str(self.schemadecorator),
                 },
                 'mapping': [
                     ['#!uuid', 'Person.id'],
@@ -354,24 +354,24 @@ class ViewsTest(TestCase):
             name='Household',
             definition=SAMPLE_HOUSEHOLD_SCHEMA_DEFINITION,
         )
-        location_projectschema = models.ProjectSchema.objects.create(
+        location_schemadecorator = models.SchemaDecorator.objects.create(
             name='Location',
             project=self.project,
             schema=location_schema,
         )
-        household_projectschema = models.ProjectSchema.objects.create(
+        household_schemadecorator = models.SchemaDecorator.objects.create(
             name='Household',
             project=self.project,
             schema=household_schema,
         )
         location_entity = models.Entity.objects.create(
             payload=SAMPLE_LOCATION_DATA,
-            projectschema=location_projectschema,
+            schemadecorator=location_schemadecorator,
             status='Publishable',
         )
         household_entity = models.Entity.objects.create(
             payload=SAMPLE_HOUSEHOLD_DATA,
-            projectschema=household_projectschema,
+            schemadecorator=household_schemadecorator,
             status='Publishable',
         )
 
@@ -415,7 +415,7 @@ class ViewsTest(TestCase):
         self.assertEqual(response_patch, {
             'project': project_id,
             'schemas': [],
-            'project_schemas': [],
+            'schema_decorators': [],
             'mappings': [],
             'mappingsets': [],
         })
@@ -427,7 +427,7 @@ class ViewsTest(TestCase):
         self.assertEqual(response_get, {
             'project': project_id,
             'schemas': [],
-            'project_schemas': [],
+            'schema_decorators': [],
             'mappings': [],
             'mappingsets': [],
         })
@@ -447,7 +447,7 @@ class ViewsTest(TestCase):
         self.assertEqual(response_patch, {
             'project': project_id,
             'schemas': [],
-            'project_schemas': [],
+            'schema_decorators': [],
             'mappingsets': [],
             'mappings': [],
         })
@@ -600,8 +600,8 @@ class ViewsTest(TestCase):
         })
 
         # create and assign passthrough schema
-        models.ProjectSchema.objects.create(
-            name='a passthrough project schema',
+        models.SchemaDecorator.objects.create(
+            name='a passthrough schema decorator',
             project=self.project,
             schema=models.Schema.objects.create(
                 name='passthrough schema',
@@ -643,12 +643,12 @@ class ViewsTest(TestCase):
             'schemas': 0,
         })
 
-        models.ProjectSchema.objects.create(
+        models.SchemaDecorator.objects.create(
             name='1st',
             project=project,
             schema=models.Schema.objects.create(name='First', definition={}),
         )
-        models.ProjectSchema.objects.create(
+        models.SchemaDecorator.objects.create(
             name='2nd',
             project=project,
             schema=models.Schema.objects.create(name='Second', definition={}),
@@ -676,11 +676,11 @@ class ViewsTest(TestCase):
             'name': 'Person',
         })
 
-    def test_projectschema__skeleton(self):
-        self.assertEqual(reverse('projectschema-skeleton', kwargs={'pk': 1}),
-                         '/projectschemas/1/skeleton/')
+    def test_schemadecorator__skeleton(self):
+        self.assertEqual(reverse('schemadecorator-skeleton', kwargs={'pk': 1}),
+                         '/schemadecorators/1/skeleton/')
 
-        response = self.client.get(reverse('projectschema-skeleton', kwargs={'pk': self.projectschema.pk}))
+        response = self.client.get(reverse('schemadecorator-skeleton', kwargs={'pk': self.schemadecorator.pk}))
         self.assertEqual(response.status_code, 200)
         json = response.json()
         self.assertEqual(json, {

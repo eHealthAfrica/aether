@@ -20,13 +20,13 @@ from .test_fixtures import *  # noqa
 import bravado
 
 
-def test_1_check_fixture_creation(client, project, schemas, projectschemas, mapping):
+def test_1_check_fixture_creation(client, project, schemas, schemadecorators, mapping):
     assert(project.id is not None)
     client_schemas = list(client.schemas.paginated('list'))
     assert len(schemas) != 0
     assert(len(client_schemas) == len(schemas))
-    client_ps = list(client.projectschemas.paginated('list'))
-    assert(len(client_ps) == len(schemas))
+    client_sd = list(client.schemadecorators.paginated('list'))
+    assert(len(client_sd) == len(schemas))
     assert(mapping.id is not None)
 
 

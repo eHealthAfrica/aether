@@ -57,7 +57,7 @@ class SchemaAdmin(BaseAdmin):
     list_display = ('id', 'name', 'revision',)
 
 
-class ProjectSchemaAdmin(BaseAdmin):
+class SchemaDecoratorAdmin(BaseAdmin):
     list_display = ('id', 'name', 'revision', 'project', 'schema',)
 
 
@@ -72,5 +72,5 @@ admin.site.register(models.Mapping, MappingAdmin)
 admin.site.register(models.Submission, SubmissionAdmin)
 admin.site.register(models.Attachment, AttachmentAdmin)
 admin.site.register(models.Schema, SchemaAdmin)
-admin.site.register(models.ProjectSchema, ProjectSchemaAdmin)
+admin.site.register(models.SchemaDecorator, SchemaDecoratorAdmin)
 admin.site.register(models.Entity, EntityAdmin)
