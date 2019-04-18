@@ -22,17 +22,18 @@ from http.cookies import SimpleCookie
 from importlib import import_module
 
 from django.conf import settings
-from django.test import override_settings
 from django.contrib.auth import get_user_model
+from django.test import RequestFactory, override_settings
 from django.urls import reverse, resolve
 
 from ...tests import MockResponse, UrlsTestCase
 from ..utils import _KC_TOKEN_SESSION as TOKEN_KEY
+from ..views import KeycloakLogoutView
 
 user_objects = get_user_model().objects
 
 
-@override_settings(KEYCLOAK_BEHIND_SCENES=True)
+@override_settings(AUTH_URL='accounts', KEYCLOAK_BEHIND_SCENES=True)
 class KeycloakBehindTests(UrlsTestCase):
 
     def test__urls__accounts__login(self):
@@ -340,7 +341,7 @@ class KeycloakBehindTests(UrlsTestCase):
             mock_req_8.assert_not_called()
 
 
-@override_settings(KEYCLOAK_BEHIND_SCENES=False)
+@override_settings(AUTH_URL='accounts', KEYCLOAK_BEHIND_SCENES=False)
 class KeycloakTests(UrlsTestCase):
 
     def test__urls__accounts__login(self):
@@ -670,3 +671,118 @@ class KeycloakTests(UrlsTestCase):
             self.assertEqual(self.client.get(SAMPLE_URL).status_code, 403)
 
             mock_req_9.assert_not_called()
+
+
+class KeycloakGatewayTests(UrlsTestCase):
+
+    def test_logout(self):
+        logout_url = reverse('logout')
+        self.assertEqual(logout_url, '/logout/')
+        self.assertNotEqual(logout_url, reverse('rest_framework:logout'))
+
+        response = self.client.get(logout_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.template_name[0], settings.LOGGED_OUT_TEMPLATE)
+
+        settings.SESSION_ENGINE = 'django.contrib.sessions.backends.file'
+        engine = import_module(settings.SESSION_ENGINE)
+        store = engine.SessionStore()
+        store.save()
+
+        request = RequestFactory().get('/')
+        setattr(request, 'session', store)
+
+        # No next page: displays logged out template
+        response = KeycloakLogoutView.as_view(
+            next_page=None,
+            template_name=settings.LOGGED_OUT_TEMPLATE,
+        )(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.template_name[0], settings.LOGGED_OUT_TEMPLATE)
+
+        # No realm: goes to next page
+        response = KeycloakLogoutView.as_view(next_page='/check-app')(request)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/check-app')
+
+        # Public realm: goes to next page
+        next_page = f'/{settings.GATEWAY_PUBLIC_REALM}/{settings.GATEWAY_SERVICE_ID}/check-app'
+        response = KeycloakLogoutView.as_view(next_page=next_page)(request)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, next_page)
+
+        # No public realm: goes to gateway logout
+        next_page = f'/realm-name/{settings.GATEWAY_SERVICE_ID}/check-app'
+        response = KeycloakLogoutView.as_view(next_page=next_page)(request)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(
+            f'/realm-name/{settings.GATEWAY_SERVICE_ID}/logout',
+            response.url)
+
+    def test_workflow(self):
+        FAKE_TOKEN = 'access-keycloak'
+        REALM = 'testing'
+        SAMPLE_URL = reverse('testmodel-list', kwargs={'realm': REALM})
+        HTTP_HEADER = 'HTTP_' + settings.GATEWAY_HEADER_TOKEN.replace('-', '_').upper()
+
+        self.assertEqual(SAMPLE_URL, f'/{REALM}/{settings.GATEWAY_SERVICE_ID}/testtestmodel/')
+
+        # visit any page without a valid token
+        response = self.client.get(SAMPLE_URL)
+        self.assertEqual(response.status_code, 403)
+
+        with mock.patch('aether.common.keycloak.utils.exec_request',
+                        side_effect=[
+                            # get userinfo from keycloak
+                            MockResponse(status_code=404),
+                        ]) as mock_req_1:
+            response = self.client.get(SAMPLE_URL, **{HTTP_HEADER: FAKE_TOKEN})
+            self.assertEqual(response.status_code, 403)
+
+            mock_req_1.assert_called_once_with(
+                method='get',
+                url=f'{settings.KEYCLOAK_SERVER_URL}/{REALM}/protocol/openid-connect/userinfo',
+                headers={'Authorization': f'Bearer {FAKE_TOKEN}'},
+            )
+
+        # visit any page with a valid token
+        with mock.patch('aether.common.keycloak.utils.exec_request',
+                        side_effect=[
+                            # get userinfo from keycloak
+                            MockResponse(status_code=200, json_data={
+                                'preferred_username': 'user',
+                                'given_name': 'John',
+                                'family_name': 'Doe',
+                                'email': 'john.doe@example.com',
+                            }),
+                        ]) as mock_req_2:
+            self.assertEqual(user_objects.filter(username='testing__user').count(), 0)
+
+            response = self.client.get(SAMPLE_URL, **{HTTP_HEADER: FAKE_TOKEN})
+            self.assertEqual(response.status_code, 200)
+
+            self.assertEqual(user_objects.filter(username='testing__user').count(), 1)
+            user = user_objects.get(username='testing__user')
+            self.assertEqual(user.first_name, 'John')
+            self.assertEqual(user.last_name, 'Doe')
+            self.assertEqual(user.email, 'john.doe@example.com')
+
+            mock_req_2.assert_called_once_with(
+                method='get',
+                url=f'{settings.KEYCLOAK_SERVER_URL}/{REALM}/protocol/openid-connect/userinfo',
+                headers={'Authorization': f'Bearer {FAKE_TOKEN}'},
+            )
+
+        session = self.client.session
+        self.assertTrue(session.get(settings.GATEWAY_HEADER_TOKEN),
+                        'flagged as gateway authenticated')
+        self.assertEqual(session.get(settings.REALM_COOKIE), REALM)
+
+        # visit any page without a valid token
+        response = self.client.get(SAMPLE_URL)
+        self.assertEqual(response.status_code, 403)
+
+        # the user is logged out
+        session = self.client.session
+        self.assertIsNone(session.get(settings.GATEWAY_HEADER_TOKEN))
+        self.assertIsNone(session.get(settings.REALM_COOKIE))

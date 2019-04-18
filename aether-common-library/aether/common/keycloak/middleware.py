@@ -17,16 +17,28 @@
 # under the License.
 
 from django.contrib.auth.middleware import AuthenticationMiddleware
+from django.contrib.sessions.middleware import SessionMiddleware
 
-from .utils import check_user_token
+from .utils import check_user_token, check_gateway_token
 
 
-class KeycloakAuthenticationMiddleware(AuthenticationMiddleware):
+class GatewayAuthenticationMiddleware(SessionMiddleware):
+
+    def process_request(self, request):
+        # SessionMiddleware sets the session object in the request
+        # being accessible at `request.session`
+        super(GatewayAuthenticationMiddleware, self).process_request(request)
+
+        # checks the gateway keycloak token, if fails then forces logout
+        check_gateway_token(request)
+
+
+class TokenAuthenticationMiddleware(AuthenticationMiddleware):
 
     def process_request(self, request):
         # AuthenticationMiddleware sets the authenticated user in the request
         # being accessible at `request.user`
-        super(KeycloakAuthenticationMiddleware, self).process_request(request)
+        super(TokenAuthenticationMiddleware, self).process_request(request)
 
         # checks the user keycloak token, if fails then forces logout
         check_user_token(request)

@@ -57,8 +57,11 @@ export default class ApiClient {
         }
         path = appendParams(path, params)
 
+        const host = window.location.origin + window.location.pathname
+        const url = host + path.substring(1)
+
         return new Promise((resolve, reject) => {
-          window.fetch(path, options)
+          window.fetch(url, options)
             .then(response => {
               if (response.ok) {
                 // `DEL` method returns a 204 status code without response content
@@ -75,7 +78,7 @@ export default class ApiClient {
 
                 if (response.status === 403) { // Forbidden
                   // redirect to root -> login page
-                  return window.location.assign(window.location.origin)
+                  return window.location.assign(host)
                 }
 
                 if (response.status === 404) {

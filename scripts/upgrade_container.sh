@@ -22,6 +22,26 @@ set -Eeuo pipefail
 
 source ./scripts/aether_functions.sh
 
+function show_help {
+    echo """
+    Upgrade python dependencies for the indicated services
+
+    Usage:
+
+        ./scripts/upgrade_container.sh [options] <name>
+
+    Options:
+
+        --build  | -b   build container with the new dependencies
+
+        --help   | -h   show this message
+
+        <name>
+            Expected values: kernel, odk, ui, couchdb-sync or producer.
+            In no name indicated then all the containers will be upgraded.
+    """
+}
+
 # default values
 build=no
 containers=( kernel odk couchdb-sync ui producer )
@@ -29,6 +49,12 @@ containers=( kernel odk couchdb-sync ui producer )
 while [[ $# -gt 0 ]]
 do
     case "$1" in
+        -h|--help)
+            # shows help
+            show_help
+            exit 0
+        ;;
+
         -b | --build )
             # build containers after upgrade
             build=yes

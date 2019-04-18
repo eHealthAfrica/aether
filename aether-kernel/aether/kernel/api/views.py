@@ -559,7 +559,7 @@ class AetherSchemaView(SchemaView):
 @api_view(['POST'])
 @renderer_classes([JSONRenderer])
 @permission_classes([permissions.IsAuthenticated])
-def validate_mappings_view(request):
+def validate_mappings_view(request, *args, **kwargs):
     '''
     Given a `submission_payload`, a `mapping_definition` and a list of
     `entities`, verify that each mapping function in `mapping_definition` can

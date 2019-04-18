@@ -28,6 +28,10 @@ services:
 
       KEYCLOAK_SERVER_URL: http://localhost:8090
       KEYCLOAK_CLIENT_ID: testing
+
+      GATEWAY_SERVICE_ID: common
+      GATEWAY_PUBLIC_REALM: "-"
+
       MULTITENANCY: "true"
 
       # required by kernel module
