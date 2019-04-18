@@ -46,9 +46,9 @@ schema_template = {
     "definition": None
 }
 
-# Project Schemas
+# Schema Decorators
 
-project_schema_template = {
+schema_decorator_template = {
     "revision": "1",
     "name": None
 }

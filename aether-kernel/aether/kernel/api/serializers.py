@@ -53,11 +53,11 @@ class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):
         read_only=True,
         source='mappingsets',
     )
-    projectschemas_url = FilteredHyperlinkedRelatedField(
-        view_name='projectschema-list',
+    schemadecorators_url = FilteredHyperlinkedRelatedField(
         lookup_field='project',
         read_only=True,
-        source='projectschemas',
+        source='schemadecorators',
+        view_name='schemadecorator-list',
     )
 
     class Meta:
@@ -103,11 +103,11 @@ class MappingSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         read_only=True,
         source='mappingset',
     )
-    projectschemas_url = FilteredHyperlinkedRelatedField(
-        view_name='projectschema-list',
+    schemadecorators_url = FilteredHyperlinkedRelatedField(
         lookup_field='mapping',
         read_only=True,
-        source='projectschemas',
+        source='schemadecorators',
+        view_name='schemadecorator-list',
     )
 
     project = MtPrimaryKeyRelatedField(
@@ -214,11 +214,11 @@ class AttachmentSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 class SchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     url = HyperlinkedIdentityField(view_name='schema-detail')
-    projectschemas_url = FilteredHyperlinkedRelatedField(
-        view_name='projectschema-list',
+    schemadecorators_url = FilteredHyperlinkedRelatedField(
+        view_name='schemadecorator-list',
         lookup_field='schema',
         read_only=True,
-        source='projectschemas',
+        source='schemadecorators',
     )
 
     class Meta:
@@ -226,9 +226,9 @@ class SchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ProjectSchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
+class SchemaDecoratorSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
-    url = HyperlinkedIdentityField(view_name='projectschema-detail')
+    url = HyperlinkedIdentityField(view_name='schemadecorator-detail')
     project_url = HyperlinkedRelatedField(
         view_name='project-detail',
         read_only=True,
@@ -241,13 +241,13 @@ class ProjectSchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     )
     entities_url = FilteredHyperlinkedRelatedField(
         view_name='entity-list',
-        lookup_field='projectschema',
+        lookup_field='schemadecorator',
         read_only=True,
         source='entities',
     )
     mappings_url = FilteredHyperlinkedRelatedField(
         view_name='mapping-list',
-        lookup_field='projectschema',
+        lookup_field='schemadecorator',
         read_only=True,
         source='mappings',
     )
@@ -262,7 +262,7 @@ class ProjectSchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     )
 
     class Meta:
-        model = models.ProjectSchema
+        model = models.SchemaDecorator
         fields = '__all__'
 
 
@@ -279,10 +279,10 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         read_only=True,
         source='schema',
     )
-    projectschema_url = HyperlinkedRelatedField(
-        view_name='projectschema-detail',
+    schemadecorator_url = HyperlinkedRelatedField(
+        view_name='schemadecorator-detail',
         read_only=True,
-        source='projectschema',
+        source='schemadecorator',
     )
     submission_url = HyperlinkedRelatedField(
         view_name='submission-detail',
@@ -323,8 +323,8 @@ class EntitySerializer(DynamicFieldsMixin, serializers.ModelSerializer):
         mt_field='mappingset__project',
         required=False,
     )
-    projectschema = MtPrimaryKeyRelatedField(
-        queryset=models.ProjectSchema.objects.all(),
+    schemadecorator = MtPrimaryKeyRelatedField(
+        queryset=models.SchemaDecorator.objects.all(),
         mt_field='project',
         required=False,
     )

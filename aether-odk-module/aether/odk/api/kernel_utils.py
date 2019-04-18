@@ -50,7 +50,7 @@ def propagate_kernel_project(project, family=None):
         - one Project,
         - one Mapping,
         - one Schema and
-        - one ProjectSchema.
+        - one SchemaDecoratror.
     '''
 
     artefacts = {

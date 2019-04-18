@@ -23,7 +23,7 @@ from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
 
 from .constants import NAMESPACE
-from .models import Project, Schema, ProjectSchema, MappingSet, Mapping
+from .models import Project, Schema, SchemaDecorator, MappingSet, Mapping
 from .avro_tools import avro_schema_to_passthrough_artefacts as parser
 
 
@@ -35,7 +35,7 @@ def get_project_artefacts(project):
     results = {
         'project': str(project.pk),
         'schemas': set(),
-        'project_schemas': set(),
+        'schema_decorators': set(),
         'mappingsets': set(),
         'mappings': set(),
     }
@@ -44,9 +44,9 @@ def get_project_artefacts(project):
         for mapping in Mapping.objects.filter(mappingset=mappingset):
             results['mappings'].add(str(mapping.pk))
 
-    for project_schema in ProjectSchema.objects.filter(project=project):
-        results['schemas'].add(str(project_schema.schema.pk))
-        results['project_schemas'].add(str(project_schema.pk))
+    for schema_decorator in SchemaDecorator.objects.filter(project=project):
+        results['schemas'].add(str(schema_decorator.schema.pk))
+        results['schema_decorators'].add(str(schema_decorator.pk))
 
     return results
 
@@ -63,7 +63,7 @@ def upsert_project_artefacts(
     '''
     Creates or updates the project and its artefacts:
         schemas,
-        project schemas,
+        schema decorators,
         mapping sets and
         mappings.
 
@@ -73,13 +73,13 @@ def upsert_project_artefacts(
     results = {
         'project': None,
         'schemas': set(),
-        'project_schemas': set(),
+        'schema_decorators': set(),
         'mappingsets': set(),
         'mappings': set(),
     }
-    # keeps the list of created project schemas and their ids
+    # keeps the list of created schema decorators and their ids
     # with those the list of used entities in the mapping rules can be filled
-    mapping_project_schemas = {}
+    mapping_schema_decorators = {}
 
     # 1. create/update the project
     project = __upsert_instance(
@@ -114,21 +114,21 @@ def upsert_project_artefacts(
         )
         results['schemas'].add(str(schema.pk))
 
-        # project schemas are a special case, it's useless looking for their "pk"
+        # schema decorators are a special case, it's useless looking for their "pk"
         # but for the relationship between project and schema
         try:
-            project_schema = ProjectSchema.objects.get(project=project, schema=schema)
+            schema_decorator = SchemaDecorator.objects.get(project=project, schema=schema)
         except ObjectDoesNotExist:
-            project_schema = __upsert_instance(
-                model=ProjectSchema,
+            schema_decorator = __upsert_instance(
+                model=SchemaDecorator,
                 pk=schema.pk,
                 project=project,
                 schema=schema,
                 name=schema.name,
             )
-        results['project_schemas'].add(str(project_schema.pk))
+        results['schema_decorators'].add(str(schema_decorator.pk))
         # by default use the given name, otherwise the generated one
-        mapping_project_schemas[raw_schema.get('name', project_schema.name)] = str(project_schema.pk)
+        mapping_schema_decorators[raw_schema.get('name', schema_decorator.name)] = str(schema_decorator.pk)
 
     # 3. create/update the mapping sets
     for raw_mappingset in mappingsets:
@@ -168,19 +168,19 @@ def upsert_project_artefacts(
             mapping_definition = {'mapping': [], 'entities': {}}
 
         elif 'entities' not in mapping_definition:
-            # find out the list of used entities (project schemas) within these rules
+            # find out the list of used entities (schema decorators) within these rules
             used_schemas = []
             for mapping in mapping_definition.get('mapping', []):
                 # [ '$.property_name', 'EntityName.another_property_name' ]
                 schema_name = mapping[1].split('.')[0]
                 if not len(list(filter(lambda x: x == schema_name, used_schemas))):
                     used_schemas.append(schema_name)
-            used_mapping_project_schemas = {}
+            used_mapping_schema_decorators = {}
             for used_schema in used_schemas:
-                used_mapping_project_schemas[used_schema] = mapping_project_schemas.get(used_schema)
+                used_mapping_schema_decorators[used_schema] = mapping_schema_decorators.get(used_schema)
             mapping_definition = {
                 'mapping': mapping_definition.get('mapping', []),
-                'entities': used_mapping_project_schemas,
+                'entities': used_mapping_schema_decorators,
             }
 
         # check for the mapping set
@@ -225,7 +225,7 @@ def upsert_project_with_avro_schemas(
 ):
     '''
     Creates or updates the project and links it with the given AVRO schemas
-    and related artefacts: project schemas and passthrough mappings.
+    and related artefacts: schema decorators and passthrough mappings.
 
     Returns the list of project and its affected artefact ids by type.
     '''

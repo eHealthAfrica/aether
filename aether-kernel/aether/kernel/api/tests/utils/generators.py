@@ -80,7 +80,7 @@ def get_field_values(default, values=None):
 def generate_project(
         project_field_values=None,
         schema_field_values=None,
-        projectschema_field_values=None,
+        schemadecorator_field_values=None,
         mappingset_field_values=None,
         mapping_field_values=None,
         submission_field_values=None,
@@ -122,14 +122,14 @@ def generate_project(
         ),
     ).create_one()
 
-    projectschema = AutoFixture(
-        model=models.ProjectSchema,
+    schemadecorator = AutoFixture(
+        model=models.SchemaDecorator,
         field_values=get_field_values(
             default=dict(
                 project=project,
                 schema=schema,
             ),
-            values=projectschema_field_values,
+            values=schemadecorator_field_values,
         ),
     ).create_one()
 
@@ -157,7 +157,7 @@ def generate_project(
                 default=dict(
                     name=mappingset.name,
                     mappingset=mappingset,
-                    definition=mapping_definition(projectschema.pk),
+                    definition=mapping_definition(schemadecorator.pk),
                 ),
                 values=mapping_field_values,
             ),

@@ -271,7 +271,7 @@ class UtilsTest(TestCase):
             {
                 'project': self.KERNEL_ID,
                 'schemas': [self.KERNEL_ID],
-                'project_schemas': [self.KERNEL_ID],
+                'schema_decorators': [self.KERNEL_ID],
                 'mappingsets': [self.KERNEL_ID],
                 'mappings': [self.KERNEL_ID],
             }
@@ -317,7 +317,7 @@ class UtilsTest(TestCase):
                     'Pipeline (as mapping set) is already published',
                     'Contract (as mapping) is already published',
                     'Entity type "Person" (as schema) is already published',
-                    'Entity type "Person" (as project schema) is already published',
+                    'Entity type "Person" (as schema decorator) is already published',
                 ],
                 'info': [],
             }
@@ -345,7 +345,7 @@ class UtilsTest(TestCase):
                     'Pipeline (as mapping set) will be published',
                     'Contract (as mapping) will be published',
                     'Entity type "Person" (as schema) will be published',
-                    'Entity type "Person" (as project schema) will be published',
+                    'Entity type "Person" (as schema decorator) will be published',
                 ],
             }
         )
@@ -370,7 +370,7 @@ class UtilsTest(TestCase):
                     'Pipeline (as mapping set) will be published',
                     'Contract (as mapping) will be published',
                     'Entity type "Person" (as schema) will be published',
-                    'Entity type "Person" (as project schema) will be published',
+                    'Entity type "Person" (as schema decorator) will be published',
                 ],
             }
         )
@@ -398,7 +398,7 @@ class UtilsTest(TestCase):
             {
                 'project': self.KERNEL_ID,
                 'schemas': [self.KERNEL_ID],
-                'project_schemas': [self.KERNEL_ID],
+                'schema_decorators': [self.KERNEL_ID],
                 'mappingsets': [self.KERNEL_ID],
                 'mappings': [self.KERNEL_ID],
             }
@@ -449,7 +449,7 @@ class UtilsTest(TestCase):
                     'Schema data will be changed',
                     'Mapping rules data will be changed',
                     'Entity type "Person" (as schema) data will be changed',
-                    'Entity type "Person" (as project schema) will be published',
+                    'Entity type "Person" (as schema decorator) will be published',
                 ],
             }
         )
@@ -475,12 +475,12 @@ class UtilsTest(TestCase):
                 'error': [
                     'Contract belongs to a different project in kernel',
                     'Contract belongs to a different pipeline (mapping set) in kernel',
-                    'Entity type "Person" (as project schema) belongs to a different project in kernel',
+                    'Entity type "Person" (as schema decorator) belongs to a different project in kernel',
                 ],
                 'warning': [
                     'Contract mapping rules have errors',
                     'Contract (as mapping) is already published',
-                    'Entity type "Person" (as project schema) is already published',
+                    'Entity type "Person" (as schema decorator) is already published',
                 ],
                 'info': [
                     'Project will be published',
@@ -491,7 +491,7 @@ class UtilsTest(TestCase):
             }
         )
 
-        # cannot check schemas or project schemas
+        # cannot check schemas or schema decorators
         contract.kernel_refs = {
             'entities': {},
             'schemas': {},
@@ -517,7 +517,7 @@ class UtilsTest(TestCase):
                     'Pipeline (as mapping set) will be published',
                     'Mapping rules data will be changed',
                     'Entity type "Person" (as schema) will be published',
-                    'Entity type "Person" (as project schema) will be published',
+                    'Entity type "Person" (as schema decorator) will be published',
                 ],
             }
         )
