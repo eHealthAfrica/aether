@@ -22,12 +22,20 @@
 set -Eo pipefail
 
 function prepare_dependencies {
-    ./scripts/build_docker_assets.sh
-    ./scripts/build_common_and_distribute.sh
-    ./scripts/build_client_and_distribute.sh
+    # required to execute the docker commands
+    export DB_VOLUME=aether_release_db
+    export NETWORK_NAME=aether_release_net
+    export NETWORK_DOMAIN=aether.release.net
+    export NETWORK_NGINX_IP=127.0.0.1
+
+    docker network create ${NETWORK_NAME} || true
+    docker volume  create ${DB_VOLUME}    || true
 
     build_app ui-assets
     docker-compose run ui-assets build
+
+    ./scripts/build_common_and_distribute.sh
+    ./scripts/build_client_and_distribute.sh
 }
 
 function build_app {
@@ -50,12 +58,10 @@ function release_app {
     echo "Pushing Docker image ${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
     docker tag ${AETHER_APP} "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
     docker push "${IMAGE_REPO}/${AETHER_APP}:${VERSION}"
-
     echo "${LINE}"
 }
 
 function release_process {
-
     # Login in dockerhub with write permissions (repos are public)
     docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
 
@@ -71,8 +77,7 @@ function release_process {
 
     prepare_dependencies
 
-    for APP in "${RELEASE_APPS[@]}"
-    do
+    for APP in "${RELEASE_APPS[@]}"; do
         build_app $APP
         release_app $APP
     done
@@ -86,25 +91,28 @@ function increment_version {
     else
         local rgx='^((?:[0-9]+\.){'$(($2-1))'})([0-9]+)(\.|$)'
         for (( p=`grep -o "\."<<<".$v"|wc -l`; p<$2; p++)); do
-            v+=.0; done;
+            v+=.0;
+        done;
     fi
     val=`echo -e "$v" | perl -pe 's/^.*'$rgx'.*$/$2/'`
     TAG_INCREASED_VERSION=$(echo "$v" | perl -pe s/$rgx.*$'/${1}'`printf %0${#val}s $(($val+1))`/)
 }
 
 function version_compare {
-    if [[ $1 == $2 ]]
-    then
+    if [[ $1 == $2 ]]; then
         # version on file and (branch | tag) versions are equal
         return 0
     fi
+
     local IFS=.
     local i ver1=($1) ver2=($2)
+
     # fill empty fields in ver1 with zeros
     for ((i=${#ver1[@]}; i<${#ver2[@]}; i++))
     do
         ver1[i]=0
     done
+
     for ((i=0; i<${#ver1[@]}; i++))
     do
         if [[ -z ${ver2[i]} ]]
@@ -123,6 +131,7 @@ function version_compare {
             return 2
         fi
     done
+
     return 0
 }
 
@@ -171,6 +180,7 @@ function git_branch_commit_and_release {
                 exit 1
             fi
         fi
+
     elif [[ $3 = "tag" ]]; then
         major=0
         minor=0
@@ -211,7 +221,8 @@ function git_branch_commit_and_release {
     release_process
 }
 
-LINE="_____________________________________________"
+LINE="_________________________________________________________________________"
+
 
 TAG_INCREASED_VERSION="0.0.0"
 VERSION=
@@ -222,11 +233,11 @@ else
     VERSION=$FILE_VERSION
 fi
 
-# release version depending on TRAVIS_BRANCH (develop | release-#.#) / TRAVIS_TAG (#.#.#)
-if [[ ${TRAVIS_TAG} =~ ^[0-9]+(\.[0-9]+){2}$ ]]
-then
-    VERSION=$TRAVIS_TAG
 
+# release version depending on TRAVIS_BRANCH (develop | release-#.#) / TRAVIS_TAG (#.#.#)
+if [[ ${TRAVIS_TAG} =~ ^[0-9]+(\.[0-9]+){2}$ ]]; then
+
+    VERSION=$TRAVIS_TAG
     # Release with unified branch and file versions
     git_branch_commit_and_release ${FILE_VERSION} $TRAVIS_TAG tag
 
@@ -236,9 +247,10 @@ elif [[ ${TRAVIS_BRANCH} =~ ^release\-[0-9]+\.[0-9]+$ ]]; then
     BRANCH_VERSION=${ver_number[1]}
     # Release with unified branch and file versions
     git_branch_commit_and_release ${FILE_VERSION} ${BRANCH_VERSION} branch rc
+
 elif [[ $TRAVIS_BRANCH = "develop" ]]; then
+
     VERSION='alpha'
     release_process
-else
-    echo "Skipping a release because this branch is not permitted: ${TRAVIS_BRANCH}"
+
 fi
