@@ -35,7 +35,7 @@ under the License.
 {% endblock %}
 
 {% block body %}
-<body class="container">
+<body class="aether-bg container">
   <div class="container-fluid" style="margin-top: 30px">
     <div class="row-fluid">
       <div class="well" style="width: 320px; margin-left: auto; margin-right: auto">
@@ -82,7 +82,7 @@ under the License.
 
               <div id="div_id_realm" class="clearfix control-group {% if form.realm.errors %}error{% endif %}">
                 <div class="form-group">
-                  <label for="id_realm">{{ form.realm.label }}:</label>
+                  <label for="id_realm">{{ form.realm.label }}</label>
                   <input
                       id="id_realm"
                       type="text"
@@ -93,6 +93,7 @@ under the License.
                       autocorrect="off"
                       class="form-control textinput textInput"
                       required
+                      tabindex="1"
                       autofocus>
                   {% if form.realm.errors %}
                     <p class="text-error">
@@ -114,6 +115,7 @@ under the License.
                     name="submit"
                     value="{% trans 'Continue with Keycloak' %}"
                     class="btn btn-primary form-control"
+                    tabindex="2"
                     id="submit-id-submit">
               </div>
             </form>

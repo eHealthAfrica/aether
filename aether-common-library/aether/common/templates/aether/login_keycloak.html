@@ -23,7 +23,7 @@ under the License.
 {% block extrafields %}
   <div id="div_id_realm" class="clearfix control-group {% if form.realm.errors %}error{% endif %}">
     <div class="form-group">
-      <label for="id_realm">{{ form.realm.label }}:</label>
+      <label for="id_realm">{{ form.realm.label }}</label>
       <input
           id="id_realm"
           type="text"
@@ -33,6 +33,7 @@ under the License.
           autocapitalize="off"
           autocorrect="off"
           class="form-control textinput textInput"
+          tabindex="3"
           required>
       {% if form.realm.errors %}
         <p class="text-error">
