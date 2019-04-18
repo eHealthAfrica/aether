@@ -214,7 +214,7 @@ class AttachmentSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 class SchemaSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
     url = HyperlinkedIdentityField(view_name='schema-detail')
-    projectschemas_url = FilteredHyperlinkedRelatedField(
+    schemadecorators_url = FilteredHyperlinkedRelatedField(
         view_name='schemadecorator-list',
         lookup_field='schema',
         read_only=True,
