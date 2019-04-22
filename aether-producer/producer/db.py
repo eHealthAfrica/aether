@@ -73,7 +73,7 @@ class Entity(NamedTuple):
 class Schema(NamedTuple):
     id: str
     tenant: str
-    name: str
+    # name: str
     schema: Dict[str, str]
 
     def as_avro_schema(self):

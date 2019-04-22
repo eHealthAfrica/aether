@@ -180,6 +180,22 @@ def test_resource__iteration(get_resource_helper):
 #         assert(False), \
 #             'basic kafka io timed out, check kafka test configuration'
 
+@pytest.mark.integration
+def test_production_options_from_redis(
+    redis_fixture_schemas,
+    get_redis_producer
+):
+    redis_producer: RedisProducer = get_redis_producer
+    schemas, decorators = redis_fixture_schemas
+    for _id in decorators:
+        decorator = decorators[_id]
+        print(decorator)
+        topic, serialize_mode, schema = redis_producer.get_production_options(_id)
+        assert(topic == f'{decorator.tenant}:{decorator.topic_name}')
+        assert(serialize_mode == decorator.serialize_mode)
+        schema_id = decorator.schema_id
+        assert(schema.id == schema_id)
+
 
 @pytest.mark.integration
 def test_read_entities_list_from_redis(

@@ -201,7 +201,7 @@ def redis_fixture_schemas(get_resource_helper):
         RH.add(_id, schema, 'schema')
 
     for _id, decorator in SCHEMA_DECORATORS.items():
-        RH.add(_id, decorator._asdict(), 'schema_decorator')
+        RH.add(_id, decorator._asdict(), 'decorator')
 
     yield(SCHEMAS, SCHEMA_DECORATORS)
 
@@ -209,7 +209,7 @@ def redis_fixture_schemas(get_resource_helper):
         RH.remove(_id, 'schema')
 
     for _id, decorator in SCHEMA_DECORATORS.items():
-        RH.remove(_id, 'schema_decorator')
+        RH.remove(_id, 'decorator')
 
 
 @pytest.mark.integration
