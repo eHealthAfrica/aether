@@ -63,7 +63,7 @@ def entity_generator(
             decorator_id=decorator_id,
             payload={
                 'id': _id,
-                'name': str(uuid4())
+                'value': str(uuid4())
             }
         ))
 

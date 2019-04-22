@@ -33,6 +33,7 @@ from producer.resource import (
     Resource,
     ResourceHelper
 )
+from producer.timeout import timeout as Timeout
 
 # Test Assets
 from . import (
@@ -42,7 +43,6 @@ from . import (
     PW
 )
 from . import *  # noqa  # get fixtures
-from .timeout import timeout as Timeout  # noqa
 
 
 @pytest.mark.integration
@@ -191,7 +191,7 @@ def test_production_options_from_redis(
         decorator = decorators[_id]
         print(decorator)
         topic, serialize_mode, schema = redis_producer.get_production_options(_id)
-        assert(topic == f'{decorator.tenant}:{decorator.topic_name}')
+        assert(topic == f'{decorator.tenant}__{decorator.topic_name}')
         assert(serialize_mode == decorator.serialize_mode)
         schema_id = decorator.schema_id
         assert(schema.id == schema_id)
@@ -236,12 +236,16 @@ def test_read_entities_list_from_redis(
     'decorator_id_1', 'decorator_id_2', 'decorator_id_3'
 ])
 def test_produce__topic_variations(
+    get_redis_producer,
     redis_fixture_schemas,
     generate_redis_entities,
     decorator_name
 ):
+    redis_producer: RedisProducer = get_redis_producer
     schemas, decorators = redis_fixture_schemas
     decorator = decorators[decorator_name]
-    print(decorator)
     tenant = 'test'
     generate_redis_entities(10, tenant, decorator.id)
+    entity_keys = redis_producer.get_entity_keys()
+    redis_producer.produce_from_pick_list(entity_keys)
+    assert(True)

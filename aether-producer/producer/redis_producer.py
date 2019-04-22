@@ -16,19 +16,30 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from confluent_kafka import Producer
 from datetime import datetime
 import io
 import json
 import spavro
-from spavro.datafile import DataFileWriter
-from spavro.io import DatumWriter, validate
+from spavro.datafile import (
+    DataFileReader,
+    DataFileWriter
+)
+from spavro.io import (
+    DatumReader,
+    DatumWriter,
+    validate
+)
+from time import sleep
 from typing import (
     Dict,
     Iterator,
     List,
+    Set,
     Tuple,
     Union
 )
+import sys
 
 from producer.db import (
     Entity,
@@ -40,13 +51,20 @@ from producer.resource import (
     ResourceHelper,
     Resource
 )
+from producer.settings import PRODUCER_CONFIG
+from producer.timeout import timeout as Timeout
 
 
 class RedisProducer(object):
 
-    resoure_helper: ResourceHelper
+    # muted resource_ids
     ignored_decorator_ids: Dict[str, str]
-    inflight_operations: List[str]
+    # packages sent to kafka but not acknowledged
+    inflight: Set[str]
+    # KafkaProducer
+    producer: Producer
+    # Redis Handler
+    resoure_helper: ResourceHelper
 
     @classmethod
     def get_entity_key(cls, e: Entity) -> str:
@@ -59,17 +77,86 @@ class RedisProducer(object):
     def __init__(self, resoure_helper: ResourceHelper):
         self.resoure_helper = resoure_helper
         self.ignored_decorator_ids = {}
+        self.inflight = set()
+        kafka_settings = PRODUCER_CONFIG.get('kafka_settings')
+        # apply setting from root config to be able to use env variables
+        kafka_settings["bootstrap.servers"] = PRODUCER_CONFIG.get(
+            "kafka_url")
+        self.producer = Producer(**kafka_settings)
 
+    ###
+    # Production Control
+    ###
+
+    #   # Stop a type (decorator_id)
     def ignore_entity_type(self, decorator_id: str) -> None:
         self.ignored_decorator_ids[decorator_id] = datetime.now().isoformat()
 
+    #   # Resume a type (decorator_id)
     def unignore_entity_type(self, decorator_id: str) -> None:
         del self.ignored_decorator_ids[decorator_id]
 
+    #   # Callback on Kafka action
+    def kafka_callback(self, err=None, msg=None, _=None, **kwargs):
+        if err:
+            LOG.error('ERROR %s', [err, msg, kwargs])
+        with io.BytesIO() as obj:
+            obj.write(msg.value())
+            reader = DataFileReader(obj, DatumReader())
+            for message in reader:
+                _id = message.get("id")
+                if err:
+                    LOG.debug(
+                        f'NO-SAVE: {_id}'
+                        f' | err {err.name()}'
+                    )
+                    try:
+                        self.acknowledge_failure(_id)
+                    except KeyError:
+                        pass
+                else:
+                    LOG.debug(f'SAVE: {_id}')
+                    try:
+                        self.acknowledge_success(_id)
+                    except KeyError:
+                        pass
+
+    #   # Success
+    def acknowledge_success(self, _id):
+        # remove entity from redis
+
+        # remove _id from inflight
+        self.inflight.remove(_id)
+
+    #   # Failure
+    def acknowledge_failure(self, _id):
+        self.inflight.remove(_id)
+
+    #   # Wait for acknowledgement of all messages
+    def wait_for_kafka(self, timeout=30):
+        LOG.debug('Waiting for kafka acknowledgement.')
+        with Timeout(timeout):
+            try:
+                while len(self.inflight) > 0:
+                    LOG.debug(f'waiting for confirmation of '
+                              f'{len(self.inflight)} messages')
+                    sleep(.25)
+            except TimeoutError:
+                LOG.critical(f'Inflight timeout. After {timeout} seconds '
+                             f'{len(self.inflight)} messages unaccounted for.')
+                LOG.critical(f'This is Fatal. Check Kafka broker settings.')
+                sys.exit(1)
+        LOG.debug('All messages acknowledged.')
+    ###
+    # Handle Entities from Redis
+    ###
+
     def get_entity_keys(
         self,
-        ignored_decorators: Union[List[str], None] = None
+        ignored_decorators: Union[List[str], None] = None,
+        limit: int = 10_000
     ) -> List[str]:
+
         # Reading / sorting 100k entities takes on the order of 1.8s
         valid_keys = []
         key_generator = self.resoure_helper.list_ids('entity')
@@ -81,12 +168,13 @@ class RedisProducer(object):
         else:
             valid_keys = list(key_generator)
         valid_keys.sort()
-        return valid_keys
+        return valid_keys[:limit]
 
     def get_entity_generator(
         self,
         entity_keys: List[str]
     ) -> Iterator[Entity]:
+
         # entity_keys are sorted by offset -> decorator_id -> entity_id
         for key in entity_keys:
             r: Resource = self.resoure_helper.get(key, 'entity')
@@ -98,6 +186,10 @@ class RedisProducer(object):
             _, decorator_id, _ = RedisProducer.get_entity_key_parts(key)
             unique_keys.add(decorator_id)
         return list(unique_keys)
+
+    ###
+    # Send Entities to Kafka
+    ###
 
     def get_production_options(
         self,
@@ -119,7 +211,7 @@ class RedisProducer(object):
             tenant=d.tenant,
             schema=schema_resource.data
         )
-        topic = f'{d.tenant}:{d.topic_name}'
+        topic = f'{d.tenant}__{d.topic_name}'
         serialize_mode = d.serialize_mode
         return topic, serialize_mode, schema
 
@@ -132,13 +224,13 @@ class RedisProducer(object):
         decorator_info: Dict[str, List[str]] = {}
         entities: Dict[str, List[str]] = {}
         for key in entity_keys:
-            offset, decorator_id, entity_id = RedisProducer.get_entity_key_parts(key)
+            offset, decorator_id, _ = RedisProducer.get_entity_key_parts(key)
             try:
                 decorator_info[decorator_id].append(offset)
-                entities[decorator_id].append(entity_id)
+                entities[decorator_id].append(key)
             except KeyError:
                 decorator_info[decorator_id] = [offset]
-                entities[decorator_id] = [entity_id]
+                entities[decorator_id] = [key]
         for _id, offsets in decorator_info.items():
             start = min(offsets)
             end = max(offsets)
@@ -148,14 +240,14 @@ class RedisProducer(object):
             )
             entity_iterator = self.get_entity_generator(entities[_id])
             self.produce_topic(_id, entity_iterator)
-        # self.producer.flush()
-        # self.wait_for_kafka(
-        #     end_offset, failure_wait_time=self.kafka_failure_wait_time)
+        self.producer.flush()
+        self.wait_for_kafka()
 
     def produce_topic(
         self,
         decorator_id: str,
-        entity_iterator: Iterator[Entity]
+        entity_iterator: Iterator[Entity],
+        max_bundle_size: int = 250
     ):
         topic: str
         serialize_mode: str  # single / multi
@@ -171,8 +263,12 @@ class RedisProducer(object):
                     avro_schema,
                     codec='deflate'
                 )
-
+                writer.flush()
+                trunc_size = len(bytes_writer.getvalue())
+                LOG.debug(bytes_writer.getvalue())
+                i = 0
                 for entity in entity_iterator:
+                    i += 1
                     _id = entity.id
                     msg = entity.payload
                     offset = entity.offset
@@ -184,6 +280,9 @@ class RedisProducer(object):
                                 _id,
                                 offset
                             ))
+                        # register as in flight
+                        self.inflight.add(_id)
+                        # add to bundle
                         writer.append(msg)
                     else:
                         # Message doesn't have the proper format
@@ -194,25 +293,50 @@ class RedisProducer(object):
                         )
                     if serialize_mode == 'single':
                         # commit every round
-                        self.produce_bundle(topic, writer, bytes_writer)
-                if serialize_mode != 'single':
-                    # TODO handle callback for bundled assets
-                    self.produce_bundle(topic, writer, bytes_writer)
+                        self.produce_bundle(
+                            topic,
+                            writer,
+                            bytes_writer,
+                            trunc_size,
+                            # only single mode messages can be keyed!
+                            key=_id
+                        )
+                    elif i == max_bundle_size:
+                        # or when bundle is big enough
+                        self.produce_bundle(
+                            topic,
+                            writer,
+                            bytes_writer,
+                            trunc_size
+                        )
+                        i = 0  # reset counter
+
+                if serialize_mode != 'single' \
+                        and i > 0:  # there's something to commit
+                    self.produce_bundle(topic, writer, bytes_writer, trunc_size)
         except Exception as err:
             LOG.critical(err)
+            raise err
 
+    # enqueue a single bundle for production, but do not flush.
     def produce_bundle(
         self,
         topic: str,
         writer: DataFileWriter,
-        bytes_writer: io.BytesIO
+        bytes_writer: io.BytesIO,
+        trunc_size: int,
+        key: str = None
     ):
         writer.flush()
-        # raw_bytes = bytes_writer.getvalue()
-        # self.producer.produce(
-        #     topic,
-        #     raw_bytes,
-        #     callback=self.kafka_callback
-        # )
-        bytes_writer.flush()
-        assert(bytes_writer.getvalue() is None)
+        raw_bytes = bytes_writer.getvalue()
+        self.producer.produce(
+            topic,
+            raw_bytes,
+            key=key,
+            callback=self.kafka_callback
+        )
+        # bytes_writer.seek(0)
+        # bytes_writer.truncate(trunc_size)
+        # print(bytes_writer.buffer)
+        # print(dir(bytes_writer.buffer))
+        # assert(bytes_writer.getvalue() != raw_bytes), (bytes_writer.getvalue(), raw_bytes)
