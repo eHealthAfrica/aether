@@ -189,7 +189,6 @@ def test_production_options_from_redis(
     schemas, decorators = redis_fixture_schemas
     for _id in decorators:
         decorator = decorators[_id]
-        print(decorator)
         topic, serialize_mode, schema = redis_producer.get_production_options(_id)
         assert(topic == f'{decorator.tenant}__{decorator.topic_name}')
         assert(serialize_mode == decorator.serialize_mode)
@@ -245,7 +244,7 @@ def test_produce__topic_variations(
     schemas, decorators = redis_fixture_schemas
     decorator = decorators[decorator_name]
     tenant = 'test'
-    generate_redis_entities(10, tenant, decorator.id)
+    generate_redis_entities(10000, tenant, decorator.id)
     entity_keys = redis_producer.get_entity_keys()
     redis_producer.produce_from_pick_list(entity_keys)
     assert(True)

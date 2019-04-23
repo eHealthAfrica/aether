@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from confluent_kafka import Producer
+from confluent_kafka import Producer, KafkaException
 from datetime import datetime
 import io
 import json
@@ -41,6 +41,8 @@ from typing import (
 )
 import sys
 
+from producer import KafkaStatus
+
 from producer.db import (
     Entity,
     Decorator,
@@ -55,6 +57,51 @@ from producer.settings import PRODUCER_CONFIG
 from producer.timeout import timeout as Timeout
 
 
+class AvroHandler(object):
+
+    # Resetable interface for serializing messages with an avro schema.
+
+    stream: io.BytesIO
+    writer: DataFileWriter
+    schema: spavro.schema
+
+    def __init__(
+        self,
+        schema: spavro.schema
+    ):
+        self.schema = schema
+        self.open()  # ready to serialize
+
+    def close(self) -> None:
+        self.writer.close()
+
+    def open(self) -> None:
+        try:
+            self.writer.close()
+        except AttributeError:
+            pass
+        self.stream = io.BytesIO()
+        self.writer = DataFileWriter(
+            self.stream,
+            DatumWriter(),
+            self.schema,
+            codec='deflate'
+        )
+
+    def reset(self) -> None:
+        self.open()
+
+    def append(self, msg) -> None:
+        self.writer.append(msg)
+
+    def getvalue(self) -> bytes:
+        self.writer.flush()
+        return self.stream.getvalue()
+
+    def validate(self, msg) -> bool:
+        return validate(self.schema, msg)
+
+
 class RedisProducer(object):
 
     # muted resource_ids
@@ -65,6 +112,10 @@ class RedisProducer(object):
     producer: Producer
     # Redis Handler
     resoure_helper: ResourceHelper
+    kafka_status: KafkaStatus = KafkaStatus.SUBMISSION_PENDING
+    # SUBMISSION_PENDING = 1
+    # SUBMISSION_FAILURE = 2
+    # SUBMISSION_SUCCESS = 3
 
     @classmethod
     def get_entity_key(cls, e: Entity) -> str:
@@ -110,12 +161,14 @@ class RedisProducer(object):
                         f'NO-SAVE: {_id}'
                         f' | err {err.name()}'
                     )
+                    self.kafka_status = KafkaStatus.SUBMISSION_FAILURE
                     try:
                         self.acknowledge_failure(_id)
                     except KeyError:
                         pass
                 else:
                     LOG.debug(f'SAVE: {_id}')
+                    self.kafka_status = KafkaStatus.SUBMISSION_SUCCESS
                     try:
                         self.acknowledge_success(_id)
                     except KeyError:
@@ -133,20 +186,21 @@ class RedisProducer(object):
         self.inflight.remove(_id)
 
     #   # Wait for acknowledgement of all messages
-    def wait_for_kafka(self, timeout=30):
+    def wait_for_kafka(self, timeout=10):
         LOG.debug('Waiting for kafka acknowledgement.')
         with Timeout(timeout):
             try:
                 while len(self.inflight) > 0:
                     LOG.debug(f'waiting for confirmation of '
                               f'{len(self.inflight)} messages')
-                    sleep(.25)
+                    sleep(.1)
             except TimeoutError:
                 LOG.critical(f'Inflight timeout. After {timeout} seconds '
                              f'{len(self.inflight)} messages unaccounted for.')
                 LOG.critical(f'This is Fatal. Check Kafka broker settings.')
                 sys.exit(1)
         LOG.debug('All messages acknowledged.')
+
     ###
     # Handle Entities from Redis
     ###
@@ -256,87 +310,76 @@ class RedisProducer(object):
             self.get_production_options(decorator_id)
         avro_schema = spavro.schema.parse(json.dumps(schema.schema))
         try:
-            with io.BytesIO() as bytes_writer:
-                writer = DataFileWriter(
-                    bytes_writer,
-                    DatumWriter(),
-                    avro_schema,
-                    codec='deflate'
-                )
-                writer.flush()
-                trunc_size = len(bytes_writer.getvalue())
-                LOG.debug(bytes_writer.getvalue())
-                i = 0
-                for entity in entity_iterator:
-                    i += 1
-                    _id = entity.id
-                    msg = entity.payload
-                    offset = entity.offset
-                    if validate(avro_schema, msg):
-                        # Message validates against current schema
-                        LOG.debug(
-                            "ENQUEUE MSG TOPIC: %s, ID: %s, MOD: %s" % (
-                                topic,
-                                _id,
-                                offset
-                            ))
-                        # register as in flight
-                        self.inflight.add(_id)
-                        # add to bundle
-                        writer.append(msg)
-                    else:
-                        # Message doesn't have the proper format
-                        # for the current schema.
-                        LOG.critical(
-                            'SCHEMA_MISMATCH:NOT SAVED!'
-                            f' TOPIC:{topic}, ID:{_id}'
-                        )
-                    if serialize_mode == 'single':
-                        # commit every round
-                        self.produce_bundle(
+            avro_handler = AvroHandler(avro_schema)
+            bundle_size = 0
+            for entity in entity_iterator:
+                if self.kafka_status == KafkaStatus.SUBMISSION_FAILURE:
+                    raise KafkaException(
+                        'Message submission failed,'
+                        'stopping production. See logs ^^'
+                    )
+                bundle_size += 1
+                _id = entity.id
+                msg = entity.payload
+                offset = entity.offset
+                if avro_handler.validate(msg):
+                    # Message validates against current schema
+                    LOG.debug(
+                        "ENQUEUE MSG TOPIC: %s, ID: %s, MOD: %s" % (
                             topic,
-                            writer,
-                            bytes_writer,
-                            trunc_size,
-                            # only single mode messages can be keyed!
-                            key=_id
-                        )
-                    elif i == max_bundle_size:
-                        # or when bundle is big enough
-                        self.produce_bundle(
-                            topic,
-                            writer,
-                            bytes_writer,
-                            trunc_size
-                        )
-                        i = 0  # reset counter
+                            _id,
+                            offset
+                        ))
+                    # register as in flight
+                    self.inflight.add(_id)
+                    # add to bundle
+                    avro_handler.append(msg)
+                else:
+                    # Message doesn't have the proper format
+                    # for the current schema.
+                    LOG.critical(
+                        'SCHEMA_MISMATCH:NOT SAVED!'
+                        f' TOPIC:{topic}, ID:{_id}'
+                    )
+                if serialize_mode == 'single':
+                    # commit every round
+                    self.produce_bundle(
+                        topic,
+                        avro_handler,
+                        # only single mode messages can be keyed!
+                        key=_id
+                    )
+                elif bundle_size == max_bundle_size:
+                    # or when bundle is big enough
+                    self.produce_bundle(
+                        topic,
+                        avro_handler
+                    )
+                    bundle_size = 0  # reset counter
 
-                if serialize_mode != 'single' \
-                        and i > 0:  # there's something to commit
-                    self.produce_bundle(topic, writer, bytes_writer, trunc_size)
+            if serialize_mode != 'single' \
+                    and bundle_size > 0:  # there's something to commit
+                self.produce_bundle(topic, avro_handler)
         except Exception as err:
-            LOG.critical(err)
+            LOG.error(err)
             raise err
+        finally:
+            avro_handler.close()
 
-    # enqueue a single bundle for production, but do not flush.
+    # enqueue a single bundle for production, but do not wait (flush).
     def produce_bundle(
         self,
         topic: str,
-        writer: DataFileWriter,
-        bytes_writer: io.BytesIO,
-        trunc_size: int,
+        avro_handler: AvroHandler,
         key: str = None
     ):
-        writer.flush()
-        raw_bytes = bytes_writer.getvalue()
+        raw_bytes = avro_handler.getvalue()
         self.producer.produce(
             topic,
             raw_bytes,
             key=key,
             callback=self.kafka_callback
         )
-        # bytes_writer.seek(0)
-        # bytes_writer.truncate(trunc_size)
-        # print(bytes_writer.buffer)
-        # print(dir(bytes_writer.buffer))
-        # assert(bytes_writer.getvalue() != raw_bytes), (bytes_writer.getvalue(), raw_bytes)
+        self.producer.poll(0)  # trigger delivery reports
+        # clear old messages and reset the file handlers for the next round
+        avro_handler.reset()
