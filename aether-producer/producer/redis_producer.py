@@ -19,7 +19,6 @@
 from confluent_kafka import Producer, KafkaException
 from datetime import datetime
 import io
-import json
 import spavro
 from spavro.datafile import (
     DataFileReader,
@@ -34,6 +33,7 @@ from time import sleep
 from typing import (
     Dict,
     Iterator,
+    Iterable,
     List,
     Set,
     Tuple,
@@ -138,6 +138,26 @@ class RedisProducer(object):
     ###
     # Production Control
     ###
+
+    def decorators_for_topic(self, topic_name: str, tenant: str) -> List[str]:
+        _ids: List[str] = []
+        decorator_resources: Iterable[Resource] =  \
+            self.resoure_helper.list('decorator')
+        for r in decorator_resources:
+            d: Decorator = Decorator(**r.data)
+            if d.topic_name == topic_name and d.tenant == tenant:
+                _ids.append(d.id)
+        return _ids
+
+    def ignore_topic(self, topic_name: str, tenant: str) -> None:
+        _ids = self.decorators_for_topic(topic_name, tenant)
+        for _id in _ids:
+            self.ignore_entity_type(_id)
+
+    def unignore_topic(self, topic_name: str, tenant: str) -> None:
+        _ids = self.decorators_for_topic(topic_name, tenant)
+        for _id in _ids:
+            self.unignore_entity_type(_id)
 
     #   # Stop a type (decorator_id)
     def ignore_entity_type(self, decorator_id: str) -> None:
@@ -275,8 +295,8 @@ class RedisProducer(object):
     def produce_from_pick_list(self, entity_keys: List[str]):
         # we can limit production round size by passing entity_keys[:max]
 
-        # the entities keys are primarily offset ordered, but we want to 
-        # serialize messages efficiently. This method separates queues 
+        # the entities keys are primarily offset ordered, but we want to
+        # serialize messages efficiently. This method separates queues
         # into schema_id based topic before being sent to kafka.
         decorator_info: Dict[str, List[str]] = {}
         entities: Dict[str, List[str]] = {}
@@ -289,6 +309,9 @@ class RedisProducer(object):
                 decorator_info[decorator_id] = [offset]
                 entities[decorator_id] = [key]
         for _id, offsets in decorator_info.items():
+            if _id in self.ignored_decorator_ids:
+                LOG.debug(f'Ignoring queued decorator {_id}')
+                continue
             start = min(offsets)
             end = max(offsets)
             LOG.debug(
@@ -304,11 +327,12 @@ class RedisProducer(object):
         self,
         decorator_id: str,
         entity_iterator: Iterator[Entity],
-        # keep this reasonably high since we need to flush between
-        max_bundle_size: int = 250,
-        # single produce topics can get ahead of themselves if not checked
-        max_flush_interval: int = 1000,
-        max_bundle_kbs: int = 50000
+        # this is absolutely the bundle size (#messages), but bundles are also
+        # limited by the amount of data present (max_bundle_bytes)
+        max_bundle_count: int = 250,
+        max_bundle_bytes: int = 50_000,
+        # maximum messages to try to push to kafka at once
+        max_flush_interval: int = 1000
     ):
         topic: str
         serialize_mode: str  # single / multi
@@ -318,7 +342,7 @@ class RedisProducer(object):
                 self.get_production_options(decorator_id)
         except ValueError as ver:
             raise ver
-        avro_schema = spavro.schema.parse(json.dumps(schema.schema))
+        avro_schema: spavro.schema = schema.as_avro_schema()
         # we want to fail quickly if the broker isn't ready.
         # this value ramps up as we successfully send data to kafka
         # quickly reaching the maximum value `max_flush_interval`
@@ -329,6 +353,7 @@ class RedisProducer(object):
             bundle: List[str] = []  # list of packaged but not sent _ids
             flush_count: int = 0
             bundle_kbs: int = 0
+            entity: Entity
             for entity in entity_iterator:
                 flush_count += 1
                 if self.kafka_status == KafkaStatus.SUBMISSION_FAILURE:
@@ -339,7 +364,7 @@ class RedisProducer(object):
                     bundle = []
                     raise KafkaException('Broked did not accept submissions.')
                 _id = entity.id
-                msg = entity.payload
+                msg: Dict = entity.payload
                 offset = entity.offset
                 if avro_handler.validate(msg):
                     # Message validates against current schema
@@ -374,13 +399,16 @@ class RedisProducer(object):
                     bundle = []
                     if flush_count >= flush_interval:
                         self.producer.flush()
-                        # increase this if we succeed
+                        # increase interval if we succeed
                         flush_interval = max(
-                            [flush_interval * 2, max_flush_interval]
+                            [
+                                flush_interval * 2,
+                                max_flush_interval
+                            ]
                         )
                         flush_count = 0
-                elif len(bundle) == max_bundle_size  \
-                        or bundle_kbs >= max_bundle_kbs:
+                elif len(bundle) == max_bundle_count  \
+                        or bundle_kbs >= max_bundle_bytes:
                     # or when bundle is big enough
                     self.produce_bundle(
                         topic,
@@ -389,21 +417,21 @@ class RedisProducer(object):
                     bundle_kbs = 0
                     previous_bundle = len(bundle)
                     bundle = []  # reset counter
-                    # we need to flush with bundled assets to keep a strong
-                    # guarentee of ordering
                     if flush_count >= flush_interval:
                         self.producer.flush()
-                        # increase this if we succeed
+                        # increase interval if we succeed
                         flush_interval = max(
-                            [flush_interval * 2, max_flush_interval/previous_bundle]
+                            [
+                                flush_interval * 2,
+                                # account for the number of message in a bundle
+                                int(max_flush_interval / previous_bundle)
+                            ]
                         )
                         flush_count = 0
-                    # self.producer.flush()
 
             if serialize_mode != 'single' \
-                    and len(bundle) > 0:  # there's something to commit
+                    and len(bundle) > 0:  # there's something left to commit
                 self.produce_bundle(topic, avro_handler)
-                # we need to flush with bundled assets
                 self.producer.flush()
         except Exception as err:
             LOG.error(err)

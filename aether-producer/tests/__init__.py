@@ -227,7 +227,7 @@ def generate_redis_entities(get_resource_helper):
         tenant: str,
         decorator_id: str,
         value_size: int = 32,
-        delay=0.0
+        delay=None
     ):
         for e in entity_generator(count, tenant, decorator_id, value_size):
             queue_key = f'{e.offset}/{decorator_id}/{e.id}'
