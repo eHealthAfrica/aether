@@ -22,12 +22,14 @@ from confluent_kafka import KafkaException
 from datetime import datetime
 import pytest
 import requests
+import threading
 from time import sleep
 from typing import (
     List
 )
 import uuid
 
+from producer.logger import LOG
 from producer.redis_producer import RedisProducer
 from producer.resource import (
     Event,
@@ -234,20 +236,25 @@ def test_read_entities_list_from_redis(
 @pytest.mark.integration
 @pytest.mark.parametrize('decorator_name,count,msg_size,fails', [
     # decorator | count | size | fails
-    ('decorator_id_-1', 1, 32, True),  # raises ValueError on missing decorator
-    ('decorator_id_1', 1, 32, True),  # raises KafkaException and fails on new topic creation
-    ('decorator_id_1', 1000, 512, False),
-    ('decorator_id_1', 1000, 2048, False),
-    ('decorator_id_1', 1000, 4096, False),
-    ('decorator_id_1', 500, 16096, False),
-    ('decorator_id_1', 500, 32096, False),
-    ('decorator_id_1', 10, 1_032_096, False),  # 1MB size is not advisable
-    ('decorator_id_2', 1, 32, True),  # raises KafkaException and fails on new topic creation
-    ('decorator_id_2', 1000, 128, False),
-    ('decorator_id_2', 1000, 2048, False),
-    ('decorator_id_2', 1000, 4096, False),
-    ('decorator_id_2', 500, 16096, False),
-    ('decorator_id_2', 500, 32096, False)
+    #   # raises ValueError on missing decorator
+    ('decorator_id_-1', 1, 32, True),
+    #   # raises KafkaException and fails on new topic creation
+    ('decorator_id_1', 1, 32, True),
+    # ('decorator_id_1', 1000, 512, False),
+    # ('decorator_id_1', 1000, 2048, False),
+    # ('decorator_id_1', 1000, 4096, False),
+    # ('decorator_id_1', 500, 16096, False),
+    # ('decorator_id_1', 500, 32096, False),
+    # #   # 1MB size works but is generally not advisable in kafka land
+    # ('decorator_id_1', 10, 1_032_096, False),
+    #   # raises KafkaException and fails on new topic creation
+    ('decorator_id_2', 1, 32, True),
+    # ('decorator_id_2', 1000, 128, False),
+    # ('decorator_id_2', 1000, 2048, False),
+    # ('decorator_id_2', 1000, 4096, False),
+    # ('decorator_id_2', 500, 16096, False),
+    # ('decorator_id_2', 500, 32096, False),
+    ('decorator_id_3', 1, 32, True),
 ])
 def test_produce__topic_variations(
     get_redis_producer,
@@ -261,13 +268,7 @@ def test_produce__topic_variations(
     redis_producer: RedisProducer = get_redis_producer
     schemas, decorators = redis_fixture_schemas
     tenant = 'test'
-    try:
-        decorator = decorators[decorator_name]
-        # large!
-        generate_redis_entities(count, tenant, decorator.id, msg_size)
-    except KeyError:
-        # decorator doesn't exist in redis
-        generate_redis_entities(count, tenant, decorator_name, msg_size)
+    generate_redis_entities(count, tenant, decorator_name, msg_size)
     entity_keys = redis_producer.get_entity_keys()
     try:
         redis_producer.produce_from_pick_list(entity_keys)
@@ -278,3 +279,42 @@ def test_produce__topic_variations(
             assert(False)
         else:
             assert(True)
+
+
+@pytest.mark.integration
+def test_produce__multiple_simultaneous(
+    get_redis_producer,
+    redis_fixture_schemas,
+    generate_redis_entities,
+):
+    # simulate normal operation by having multiple topics with interspersed offsets
+    # and varying size
+    redis_producer: RedisProducer = get_redis_producer
+    schemas, decorators = redis_fixture_schemas
+    to_generate = [
+        (1000, 'test', 'decorator_id_1', 1048),
+        (10000, 'test', 'decorator_id_1', 128),
+        (1000, 'test', 'decorator_id_2', 2096),
+        (10000, 'test', 'decorator_id_2', 128),
+        (1000, 'test', 'decorator_id_3', 128),
+        (10000, 'test', 'decorator_id_3', 2096)
+    ]
+    size = sum([i[0] for i in to_generate])
+    threads = [
+        threading.Thread(target=generate_redis_entities, args=args)
+        for args in to_generate
+    ]
+    LOG.debug(f'generating {size} entities')
+    for t in threads:
+        t.start()
+    for i in threads:
+        t.join()
+    LOG.debug('producing -> kafka')
+    entity_keys = redis_producer.get_entity_keys()
+    start = datetime.now()
+    redis_producer.produce_from_pick_list(entity_keys)
+    end = datetime.now()
+    run_time = (end - start).total_seconds()
+    LOG.info(f'produced {size} entities in {run_time}s @ {size/run_time} m/s')
+
+    assert(True)
