@@ -17,7 +17,7 @@ certifi==2019.3.9
 chardet==3.0.4
 Click==7.0
 coverage==4.5.3
-croniter==0.3.29
+croniter==0.3.30
 Django==2.2
 django-cas-ng==3.6.0
 django-cors-headers==2.5.2
@@ -31,7 +31,7 @@ drf-dynamic-fields==0.3.1
 entrypoints==0.3
 flake8==3.7.7
 flake8-quotes==2.0.0
-httplib2==0.12.1
+httplib2==0.12.3
 idna==2.8
 lxml==4.3.3
 mccabe==0.6.1
@@ -58,5 +58,5 @@ sentry-sdk==0.7.10
 six==1.12.0
 sqlparse==0.3.0
 tblib==1.3.2
-urllib3==1.24.1
+urllib3==1.25
 uWSGI==2.0.18
