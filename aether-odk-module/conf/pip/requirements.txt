@@ -13,8 +13,8 @@
 ################################################################################
 
 aether.common
-boto3==1.9.131
-botocore==1.12.131
+boto3==1.9.134
+botocore==1.12.134
 cachetools==3.1.0
 certifi==2019.3.9
 chardet==3.0.4
@@ -38,7 +38,7 @@ FormEncode==1.3.1
 google-api-core==1.9.0
 google-auth==1.6.3
 google-cloud-core==0.29.1
-google-cloud-storage==1.14.0
+google-cloud-storage==1.15.0
 google-resumable-media==0.3.2
 googleapis-common-protos==1.5.9
 idna==2.8
@@ -73,6 +73,6 @@ tblib==1.3.2
 traceback2==1.4.0
 unicodecsv==0.14.1
 unittest2==1.1.0
-urllib3==1.24.1
+urllib3==1.24.2
 uWSGI==2.0.18
 xlrd==1.2.0
