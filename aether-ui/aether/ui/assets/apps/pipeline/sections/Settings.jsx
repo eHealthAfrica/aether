@@ -320,7 +320,8 @@ class Settings extends Component {
           <button
             onClick={() => this.props.onClose()}
             type='button'
-            className='btn btn-d btn-big'>
+            className='btn btn-d btn-big'
+            id='pipeline.settings.cancel.button' >
             <span className='details-title'>
               <FormattedMessage
                 id='settings.button.cancel'
