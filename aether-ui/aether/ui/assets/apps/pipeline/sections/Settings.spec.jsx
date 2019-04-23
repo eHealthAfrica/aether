@@ -18,7 +18,7 @@
  * under the License.
  */
 
-/* global describe, it, expect, beforeEach */
+/* global describe, it, expect, beforeEach, jest */
 
 import React from 'react'
 import { createStore, applyMiddleware } from 'redux'
@@ -88,7 +88,7 @@ describe('Pipeline Settings Component', () => {
       <Provider store={store}>
         <Settings
           onClose={onClose}
-          isNew={true}
+          isNew
           onSave={onSave}
           onNew={onNew}
         />
@@ -103,7 +103,7 @@ describe('Pipeline Settings Component', () => {
       <Provider store={store}>
         <Settings
           onClose={onClose}
-          isNew={true}
+          isNew
           onSave={onSave}
           onNew={onNew}
         />
@@ -111,11 +111,11 @@ describe('Pipeline Settings Component', () => {
     )
     expect(component.find('Settings').exists()).toBeTruthy()
     const settings = component.find('Settings')
-    
+
     expect(settings.state().isIdentity).toBeFalsy()
     expect(component.find('[id="settings.contract.identity.name"]')
       .exists()).toBeFalsy()
-    
+
     const identityMappingToggle = component.find('input[id="toggle"]')
     identityMappingToggle.simulate('change', { target: { checked: true } })
     expect(settings.state().isIdentity).toBeTruthy()
@@ -134,7 +134,7 @@ describe('Pipeline Settings Component', () => {
       <Provider store={store}>
         <Settings
           onClose={onClose}
-          isNew={true}
+          isNew
           onSave={onSave}
           onNew={onNew}
         />
@@ -142,15 +142,15 @@ describe('Pipeline Settings Component', () => {
     )
     expect(component.find('Settings').exists()).toBeTruthy()
     const settings = component.find('Settings')
-    
+
     const identityMappingToggle = component.find('input[id="toggle"]')
     identityMappingToggle.simulate('change', { target: { checked: true } })
     expect(settings.state().isIdentity).toBeTruthy()
-    
+
     expect(component.find('Modal').exists()).toBeFalsy()
     const saveButton = component.find('button[className="btn btn-d btn-primary btn-big ml-4"]')
     saveButton.simulate('click')
-    
+
     expect(component.find('Modal').exists()).toBeTruthy()
   })
 
@@ -175,7 +175,7 @@ describe('Pipeline Settings Component', () => {
       </Provider>
     )
     expect(component.find('Modal').exists()).toBeFalsy()
-    
+
     const inputContractName = component.find('input[className="input-d contract-name"]')
     inputContractName.simulate('change', { target: { value: 'contract-updated' } })
 
@@ -208,7 +208,7 @@ describe('Pipeline Settings Component', () => {
       </Provider>
     )
     expect(component.find('Modal').exists()).toBeFalsy()
-    
+
     const inputContractName = component.find('input[className="input-d contract-name"]')
     inputContractName.simulate('change', { target: { value: 'new-contract-updated' } })
 
@@ -233,7 +233,7 @@ describe('Pipeline Settings Component', () => {
     )
     const cancelButton = component.find('button[id="pipeline.settings.cancel.button"]')
     cancelButton.simulate('click')
-    
+
     expect(onClose).toBeCalled()
   })
 })
