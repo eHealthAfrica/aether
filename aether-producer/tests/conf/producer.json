@@ -1,7 +1,7 @@
 {
     "start_delay": 5,
     "sleep_time": 10,
-    "log_level" : "ERROR",
+    "log_level" : "DEBUG",
     "window_size_sec" : 2,
 
     "postgres_pull_limit" : 250,
@@ -25,13 +25,13 @@
         "acks" : 1,
         "auto.offset.reset": "earliest",
         "max.in.flight.requests.per.connection" : 1,
-        "linger.ms" : 200,
-        "retry.backoff.ms": 25,
+        "linger.ms" : 25,
+        "retry.backoff.ms": 5,
         "default.topic.config": {
-            "request.timeout.ms" : 200,
+            "request.timeout.ms" : 25,
             "message.timeout.ms" : 1000
         },
-        "message.send.max.retries" : 9,
+        "message.send.max.retries" : 1,
         "queue.buffering.max.ms" : 100,
         "socket.blocking.max.ms" : 100,
         "socket.timeout.ms" : 10000

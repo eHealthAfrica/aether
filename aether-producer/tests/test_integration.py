@@ -18,6 +18,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from confluent_kafka import KafkaException
 from datetime import datetime
 import pytest
 import requests
@@ -231,20 +232,49 @@ def test_read_entities_list_from_redis(
 
 
 @pytest.mark.integration
-@pytest.mark.parametrize('decorator_name', [
-    'decorator_id_1', 'decorator_id_2', 'decorator_id_3'
+@pytest.mark.parametrize('decorator_name,count,msg_size,fails', [
+    # decorator | count | size | fails
+    ('decorator_id_-1', 1, 32, True),  # raises ValueError on missing decorator
+    ('decorator_id_1', 1, 32, True),  # raises KafkaException and fails on new topic creation
+    ('decorator_id_1', 1000, 512, False),
+    ('decorator_id_1', 1000, 2048, False),
+    ('decorator_id_1', 1000, 4096, False),
+    ('decorator_id_1', 500, 16096, False),
+    ('decorator_id_1', 500, 32096, False),
+    ('decorator_id_1', 10, 1_032_096, False),  # 1MB size is not advisable
+    ('decorator_id_2', 1, 32, True),  # raises KafkaException and fails on new topic creation
+    ('decorator_id_2', 1000, 128, False),
+    ('decorator_id_2', 1000, 2048, False),
+    ('decorator_id_2', 1000, 4096, False),
+    ('decorator_id_2', 500, 16096, False),
+    ('decorator_id_2', 500, 32096, False)
 ])
 def test_produce__topic_variations(
     get_redis_producer,
     redis_fixture_schemas,
     generate_redis_entities,
-    decorator_name
+    decorator_name,
+    count,
+    msg_size,
+    fails
 ):
     redis_producer: RedisProducer = get_redis_producer
     schemas, decorators = redis_fixture_schemas
-    decorator = decorators[decorator_name]
     tenant = 'test'
-    generate_redis_entities(10000, tenant, decorator.id)
+    try:
+        decorator = decorators[decorator_name]
+        # large!
+        generate_redis_entities(count, tenant, decorator.id, msg_size)
+    except KeyError:
+        # decorator doesn't exist in redis
+        generate_redis_entities(count, tenant, decorator_name, msg_size)
     entity_keys = redis_producer.get_entity_keys()
-    redis_producer.produce_from_pick_list(entity_keys)
-    assert(True)
+    try:
+        redis_producer.produce_from_pick_list(entity_keys)
+        if not fails:
+            assert(True)
+    except (KafkaException, ValueError):
+        if not fails:
+            assert(False)
+        else:
+            assert(True)

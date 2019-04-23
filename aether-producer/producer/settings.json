@@ -26,7 +26,7 @@
         "linger.ms": 200,
         "retry.backoff.ms": 25,
         "default.topic.config": {
-            "request.timeout.ms": 200,
+            "request.timeout.ms": 500,
             "message.timeout.ms": 1000
         },
         "message.send.max.retries": 9,

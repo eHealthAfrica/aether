@@ -21,12 +21,12 @@
 from datetime import datetime
 import pytest
 import os
+import random
+import string
 from time import sleep
 from typing import (
-    Dict,
     Iterable,
-    List,
-    Union
+    List
 )
 from uuid import uuid4
 
@@ -51,7 +51,8 @@ PW = os.environ['PRODUCER_ADMIN_PW']
 def entity_generator(
     count: int,
     tenant: str,
-    decorator_id: str
+    decorator_id: str,
+    value_size: int = 32
 ) -> Iterable[Entity]:
 
     for i in range(count):
@@ -63,7 +64,10 @@ def entity_generator(
             decorator_id=decorator_id,
             payload={
                 'id': _id,
-                'value': str(uuid4())
+                'value': ''.join(
+                    random.choices(
+                        string.ascii_uppercase + string.digits, k=value_size)
+                )
             }
         ))
 
@@ -150,7 +154,7 @@ def get_resource_helper() -> Iterable[ResourceHelper]:
 
 
 @pytest.mark.integration
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def get_redis_producer(get_resource_helper) -> Iterable[RedisProducer]:
     RH = get_resource_helper
     yield RedisProducer(RH)
@@ -222,9 +226,10 @@ def generate_redis_entities(get_resource_helper):
         count: int,
         tenant: str,
         decorator_id: str,
+        value_size: int = 32,
         delay=0.0
     ):
-        for e in entity_generator(count, tenant, decorator_id):
+        for e in entity_generator(count, tenant, decorator_id, value_size):
             queue_key = f'{e.offset}/{decorator_id}/{e.id}'
             cleanup_keys.append(queue_key)
             RH.add(queue_key, e._asdict(), 'entity')

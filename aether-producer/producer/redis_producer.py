@@ -157,7 +157,7 @@ class RedisProducer(object):
             for message in reader:
                 _id = message.get("id")
                 if err:
-                    LOG.debug(
+                    LOG.info(
                         f'NO-SAVE: {_id}'
                         f' | err {err.name()}'
                     )
@@ -167,6 +167,9 @@ class RedisProducer(object):
                     except KeyError:
                         pass
                 else:
+                    if self.kafka_status is KafkaStatus.SUBMISSION_FAILURE:
+                        LOG.critical(f'save after failure! -> {_id}')
+                        raise KafkaException('Stopping Submissions!')
                     LOG.debug(f'SAVE: {_id}')
                     self.kafka_status = KafkaStatus.SUBMISSION_SUCCESS
                     try:
@@ -301,24 +304,40 @@ class RedisProducer(object):
         self,
         decorator_id: str,
         entity_iterator: Iterator[Entity],
-        max_bundle_size: int = 250
+        # keep this reasonably high since we need to flush between
+        max_bundle_size: int = 250,
+        # single produce topics can get ahead of themselves if not checked
+        max_flush_interval: int = 1000,
+        max_bundle_kbs: int = 50000
     ):
         topic: str
         serialize_mode: str  # single / multi
         schema: Schema
-        topic, serialize_mode, schema = \
-            self.get_production_options(decorator_id)
+        try:
+            topic, serialize_mode, schema = \
+                self.get_production_options(decorator_id)
+        except ValueError as ver:
+            raise ver
         avro_schema = spavro.schema.parse(json.dumps(schema.schema))
+        # we want to fail quickly if the broker isn't ready.
+        # this value ramps up as we successfully send data to kafka
+        # quickly reaching the maximum value `max_flush_interval`
+        # to prioritize throughput while maintaining ordering guarantees
+        flush_interval = 1
         try:
             avro_handler = AvroHandler(avro_schema)
-            bundle_size = 0
+            bundle: List[str] = []  # list of packaged but not sent _ids
+            flush_count: int = 0
+            bundle_kbs: int = 0
             for entity in entity_iterator:
+                flush_count += 1
                 if self.kafka_status == KafkaStatus.SUBMISSION_FAILURE:
-                    raise KafkaException(
-                        'Message submission failed,'
-                        'stopping production. See logs ^^'
-                    )
-                bundle_size += 1
+                    LOG.info('Entities -> Kafka timed out. Stopping submission.')
+                    # empty bundled but unsent items:
+                    for _id in bundle:
+                        self.inflight.remove(_id)
+                    bundle = []
+                    raise KafkaException('Broked did not accept submissions.')
                 _id = entity.id
                 msg = entity.payload
                 offset = entity.offset
@@ -330,6 +349,9 @@ class RedisProducer(object):
                             _id,
                             offset
                         ))
+                    if serialize_mode != 'single':
+                        bundle_kbs += sys.getsizeof(str(msg))
+                    bundle.append(_id)
                     # register as in flight
                     self.inflight.add(_id)
                     # add to bundle
@@ -349,17 +371,40 @@ class RedisProducer(object):
                         # only single mode messages can be keyed!
                         key=_id
                     )
-                elif bundle_size == max_bundle_size:
+                    bundle = []
+                    if flush_count >= flush_interval:
+                        self.producer.flush()
+                        # increase this if we succeed
+                        flush_interval = max(
+                            [flush_interval * 2, max_flush_interval]
+                        )
+                        flush_count = 0
+                elif len(bundle) == max_bundle_size  \
+                        or bundle_kbs >= max_bundle_kbs:
                     # or when bundle is big enough
                     self.produce_bundle(
                         topic,
                         avro_handler
                     )
-                    bundle_size = 0  # reset counter
+                    bundle_kbs = 0
+                    previous_bundle = len(bundle)
+                    bundle = []  # reset counter
+                    # we need to flush with bundled assets to keep a strong
+                    # guarentee of ordering
+                    if flush_count >= flush_interval:
+                        self.producer.flush()
+                        # increase this if we succeed
+                        flush_interval = max(
+                            [flush_interval * 2, max_flush_interval/previous_bundle]
+                        )
+                        flush_count = 0
+                    # self.producer.flush()
 
             if serialize_mode != 'single' \
-                    and bundle_size > 0:  # there's something to commit
+                    and len(bundle) > 0:  # there's something to commit
                 self.produce_bundle(topic, avro_handler)
+                # we need to flush with bundled assets
+                self.producer.flush()
         except Exception as err:
             LOG.error(err)
             raise err
