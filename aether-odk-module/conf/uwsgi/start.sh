@@ -30,13 +30,16 @@ fi
 # When passed as environment variables, options are capitalized and prefixed
 # with UWSGI_, and dashes are substituted with underscores.
 
-export STATIC_URL=${STATIC_URL:-/static}
-export STATIC_DIR=${STATIC_DIR:-/var/www/static}
+if [ ! -z "S{GATEWAY_HOST:-}" ]; then
+    DEFAULT_STATIC_URL="/${GATEWAY_PUBLIC_REALM}/${GATEWAY_SERVICE_ID}/static"
+else
+    DEFAULT_STATIC_URL=/static
+fi
+
+export STATIC_URL=${STATIC_URL:-$DEFAULT_STATIC_URL}
+export STATIC_ROOT=${STATIC_ROOT:-/var/www/static}
 
 # set default values
 export UWSGI_INI=${UWSGI_INI:-/code/conf/uwsgi/config.ini}
-
-# ensure that DEBUG mode is disabled
-export DEBUG=''
 
 /usr/local/bin/uwsgi

@@ -288,8 +288,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LOGIN_TEMPLATE = os.environ.get('LOGIN_TEMPLATE', 'aether/login.html')
 LOGGED_OUT_TEMPLATE = os.environ.get('LOGGED_OUT_TEMPLATE', 'aether/logged_out.html')
+
+ADMIN_URL = os.environ.get('ADMIN_URL', 'admin')
+AUTH_URL = os.environ.get('AUTH_URL', 'accounts')
+LOGIN_URL = os.environ.get('LOGIN_URL', f'/{AUTH_URL}/login/')
 LOGIN_REDIRECT_URL = APP_URL
-LOGOUT_REDIRECT_URL = APP_URL
 
 
 # Authentication Server Configuration
@@ -301,6 +304,9 @@ if CAS_SERVER_URL:
         # CAS libraries
         'django_cas_ng',
         'ums_client',
+    ]
+    MIDDLEWARE += [
+        'django_cas_ng.middleware.CASMiddleware',
     ]
     AUTHENTICATION_BACKENDS += [
         'ums_client.backends.UMSRoleBackend',
@@ -322,11 +328,36 @@ if KEYCLOAK_SERVER_URL:
     KEYCLOAK_TEMPLATE = os.environ.get('KEYCLOAK_TEMPLATE', DEFAULT_KEYCLOAK_TEMPLATE)
 
     DEFAULT_KEYCLOAK_BEHIND_TEMPLATE = 'aether/login_keycloak.html'
-    KEYCLOAK_BEHIND_TEMPLATE = os.environ.get('KEYCLOAK_BEHIND_TEMPLATE', DEFAULT_KEYCLOAK_BEHIND_TEMPLATE)
+    KEYCLOAK_BEHIND_TEMPLATE = os.environ.get(
+        'KEYCLOAK_BEHIND_TEMPLATE',
+        DEFAULT_KEYCLOAK_BEHIND_TEMPLATE)
 
     MIDDLEWARE += [
-        'aether.common.keycloak.middleware.KeycloakAuthenticationMiddleware',
+        'aether.common.keycloak.middleware.TokenAuthenticationMiddleware',
     ]
+
+    GATEWAY_SERVICE_ID = os.environ.get('GATEWAY_SERVICE_ID')
+    if GATEWAY_SERVICE_ID:
+        GATEWAY_HEADER_TOKEN = os.environ.get('GATEWAY_HEADER_TOKEN', 'X-Oauth-Token')
+        GATEWAY_PUBLIC_REALM = os.environ.get('GATEWAY_PUBLIC_REALM', '-')
+        GATEWAY_PUBLIC_PATH = f'{GATEWAY_PUBLIC_REALM}/{GATEWAY_SERVICE_ID}'
+
+        # the endpoints are served behind the gateway
+        ADMIN_URL = os.environ.get('ADMIN_URL', f'{GATEWAY_PUBLIC_PATH}/admin')
+        AUTH_URL = os.environ.get('AUTH_URL', f'{GATEWAY_PUBLIC_PATH}/accounts')
+        LOGIN_URL = os.environ.get('LOGIN_URL', f'/{AUTH_URL}/login/')
+        STATIC_URL = os.environ.get('STATIC_URL', f'/{GATEWAY_PUBLIC_PATH}/static/')
+        LOGIN_REDIRECT_URL = f'/{GATEWAY_PUBLIC_PATH}/'
+
+        USE_X_FORWARDED_HOST = True
+        USE_X_FORWARDED_PORT = True
+
+        MIDDLEWARE += [
+            'aether.common.keycloak.middleware.GatewayAuthenticationMiddleware',
+        ]
+
+    else:
+        logger.info('No Keycloak gateway enabled!')
 
 else:
     logger.info('No Keycloak enabled!')
@@ -367,11 +398,21 @@ try:
 
         MINIO_STORAGE_MEDIA_BUCKET_NAME = os.environ['BUCKET_NAME']
         MINIO_STORAGE_MEDIA_URL = os.environ.get('MINIO_STORAGE_MEDIA_URL')
-        MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET = bool(os.environ.get('MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET'))
-        MINIO_STORAGE_AUTO_CREATE_MEDIA_POLICY = bool(os.environ.get('MINIO_STORAGE_AUTO_CREATE_MEDIA_POLICY'))
-        MINIO_STORAGE_MEDIA_USE_PRESIGNED = bool(os.environ.get('MINIO_STORAGE_MEDIA_USE_PRESIGNED'))
-        MINIO_STORAGE_MEDIA_BACKUP_FORMAT = bool(os.environ.get('MINIO_STORAGE_MEDIA_BACKUP_FORMAT'))
-        MINIO_STORAGE_MEDIA_BACKUP_BUCKET = bool(os.environ.get('MINIO_STORAGE_MEDIA_BACKUP_BUCKET'))
+        MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET = bool(
+            os.environ.get('MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET')
+        )
+        MINIO_STORAGE_AUTO_CREATE_MEDIA_POLICY = bool(
+            os.environ.get('MINIO_STORAGE_AUTO_CREATE_MEDIA_POLICY')
+        )
+        MINIO_STORAGE_MEDIA_USE_PRESIGNED = bool(
+            os.environ.get('MINIO_STORAGE_MEDIA_USE_PRESIGNED')
+        )
+        MINIO_STORAGE_MEDIA_BACKUP_FORMAT = bool(
+            os.environ.get('MINIO_STORAGE_MEDIA_BACKUP_FORMAT')
+        )
+        MINIO_STORAGE_MEDIA_BACKUP_BUCKET = bool(
+            os.environ.get('MINIO_STORAGE_MEDIA_BACKUP_BUCKET')
+        )
 
     elif DJANGO_STORAGE_BACKEND == 's3':
         INSTALLED_APPS += ['storages', ]
@@ -410,6 +451,9 @@ def check_storage():
 if not TESTING and DEBUG:
     INSTALLED_APPS += ['debug_toolbar', ]
     MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware', ]
+    DEBUG_TOOLBAR_URL = os.environ.get('DEBUG_TOOLBAR_URL', '__debug__')
+    if GATEWAY_SERVICE_ID:
+        DEBUG_TOOLBAR_URL = os.environ.get('DEBUG_TOOLBAR_URL', f'{GATEWAY_PUBLIC_PATH}/__debug__')
 
     DEBUG_TOOLBAR_CONFIG = {
         'SHOW_TOOLBAR_CALLBACK': lambda _: True,

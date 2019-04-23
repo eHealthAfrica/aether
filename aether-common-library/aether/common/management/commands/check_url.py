@@ -61,7 +61,8 @@ class Command(BaseCommand):
 
         try:
             if token:
-                response = request(method='head', url=url, headers={'Authorization': f'Token {token}'})
+                headers = {'Authorization': f'Token {token}'}
+                response = request(method='head', url=url, headers=headers)
             else:
                 response = request(method='head', url=url)
 

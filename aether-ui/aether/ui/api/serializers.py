@@ -21,22 +21,26 @@ from drf_dynamic_fields import DynamicFieldsMixin
 
 from rest_framework import serializers
 
-from aether.common.multitenancy.serializers import MtPrimaryKeyRelatedField, MtModelSerializer
+from aether.common.drf.serializers import (
+    HyperlinkedIdentityField,
+    HyperlinkedRelatedField,
+)
+from aether.common.multitenancy.serializers import (
+    MtPrimaryKeyRelatedField,
+    MtModelSerializer,
+)
 
 from . import models
 from .utils import get_default_project
 
 
 class ContractSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField(
-        read_only=True,
-        view_name='contract-detail',
-    )
 
-    pipeline_url = serializers.HyperlinkedRelatedField(
+    url = HyperlinkedIdentityField(view_name='contract-detail')
+    pipeline_url = HyperlinkedRelatedField(
+        view_name='pipeline-detail',
         read_only=True,
         source='pipeline',
-        view_name='pipeline-detail',
     )
 
     def update(self, instance, validated_data):
@@ -51,10 +55,8 @@ class ContractSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 
 class PipelineSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField(
-        read_only=True,
-        view_name='pipeline-detail',
-    )
+
+    url = HyperlinkedIdentityField(view_name='pipeline-detail')
 
     contracts = ContractSerializer(many=True, read_only=True)
     is_read_only = serializers.BooleanField(read_only=True)
@@ -86,10 +88,8 @@ class PipelineSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
 
 
 class ProjectSerializer(DynamicFieldsMixin, MtModelSerializer):
-    url = serializers.HyperlinkedIdentityField(
-        read_only=True,
-        view_name='project-detail',
-    )
+
+    url = HyperlinkedIdentityField(view_name='project-detail')
 
     pipelines = PipelineSerializer(many=True, read_only=True)
 

@@ -283,7 +283,7 @@ class MultitenancyTests(TestCase):
             {
                 'project': self.KERNEL_ID,
                 'schemas': [self.KERNEL_ID],
-                'project_schemas': [self.KERNEL_ID],
+                'schema_decorators': [self.KERNEL_ID],
                 'mappingsets': [self.KERNEL_ID],
                 'mappings': [self.KERNEL_ID],
             }
@@ -336,7 +336,7 @@ class MultitenancyTests(TestCase):
                     'Pipeline (as mapping set) is already published',
                     'Contract (as mapping) is already published',
                     'Entity type "Person" (as schema) is already published',
-                    'Entity type "Person" (as project schema) is already published',
+                    'Entity type "Person" (as schema decorator) is already published',
                 ],
                 'info': [],
             }
