@@ -28,7 +28,50 @@ body {
   color: #fff;
   font-family: 'Open Sans', Helvetica, Arial, sans-serif;
   font-size: 15px;
-  line-height: 1.3em;
+  line-height: 1.3rem;
+}
+
+/* background classes */
+
+.aether-bg {
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  background: #50aef3;
+  background-image: linear-gradient(to right, #50aef3, #7175dd);
+  color: #fff;
+  font-family: 'Open Sans', Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.3rem;
+}
+
+.aether-bg:before {
+  content: '';
+  display: block;
+  position: fixed;
+  bottom: -80vw;
+  left: 25vw;
+  width: 110vw;
+  height: 110vw;
+  border-radius: 100%;
+  border: 1vw solid #ffffff1a;
+  border-right: 6vw solid #ffffff1a;
+  border-top: 4vw solid #ffffff1a;
+  z-index: -1;
+}
+
+.aether-bg:after {
+  content: '';
+  display: block;
+  position: fixed;
+  bottom: -20vw;
+  left: 60vw;
+  width: 70vw;
+  height: 70vw;
+  border-radius: 100%;
+  border: 0.5vw solid #ffffff1a;
+  border-right: 5vw solid #ffffff1a;
+  border-top: 3vw solid #ffffff1a;
+  z-index: -1;
 }
 
 /* branding classes */
@@ -37,7 +80,7 @@ body {
   height: 1rem;
   margin: 10vh 0 5rem;
   position: relative;
-  transition: opacity .4s;
+  transition: opacity 0.4s;
   width: 2.4rem;
 }
 
