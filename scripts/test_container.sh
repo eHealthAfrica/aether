@@ -20,27 +20,37 @@
 #
 set -Eeuo pipefail
 
+function echo_message {
+    LINE=`printf -v row "%${COLUMNS:-$(tput cols)}s"; echo ${row// /=}`
+
+    if [ -z "$1" ]; then
+        echo "$LINE"
+    else
+        msg=" $1 "
+        echo "${LINE:${#msg}}$msg"
+    fi
+}
+
 function build_container {
-    echo "${LINE} Building $1 container"
+    echo_message "Building $1 container"
     $DC_TEST build $BUILD_OPTIONS "$1"-test
 }
 
 function wait_for_kernel {
     KERNEL_HEALTH_URL="http://localhost:9100/health"
     until curl -s $KERNEL_HEALTH_URL > /dev/null; do
-        >&2 echo "${LINE} Waiting for Kernel..."
+        >&2 echo_message "Waiting for Kernel..."
         sleep 2
     done
 }
 
 function wait_for_db {
     until $DC_TEST run kernel-test eval pg_isready -q; do
-        >&2 echo "${LINE} Waiting for db-test..."
+        >&2 echo_message "Waiting for db-test..."
         sleep 2
     done
 }
 
-LINE="_____________________________________________"
 DC_TEST="docker-compose -f docker-compose-test.yml"
 BUILD_OPTIONS="${BUILD_OPTIONS:-}"
 
@@ -51,11 +61,11 @@ then
     build_container ui-assets
     $DC_TEST run ui-assets-test test
     $DC_TEST run ui-assets-test build
-    echo "${LINE} Tested and built ui assets"
+    echo_message "Tested and built ui assets"
 fi
 
 
-echo "${LINE} Starting databases + Minio Storage server"
+echo_message "Starting databases + Minio Storage server"
 $DC_TEST up -d db-test minio-test
 if [[ $1 = "couchdb-sync" ]]
 then
@@ -63,7 +73,7 @@ then
 fi
 if [[ $1 = "integration" ]]
 then
-    echo "${LINE} Starting Zookeeper and Kafka"
+    echo_message "Starting Zookeeper and Kafka"
     $DC_TEST up -d zookeeper-test kafka-test
 fi
 
@@ -75,35 +85,35 @@ then
 
     build_container kernel
 
-    echo "${LINE} Starting kernel"
+    echo_message "Starting kernel"
     wait_for_db
     $DC_TEST up -d kernel-test
     wait_for_kernel
-    echo "${LINE} kernel ready!"
+    echo_message "kernel ready!"
 
     # Producer and Integration need readonlyuser to be present
     if [[ $1 = "producer" || $1 == "integration" ]]
     then
-        echo "${LINE} Creating readonlyuser on Kernel DB"
+        echo_message "Creating readonlyuser on Kernel DB"
         $DC_TEST run kernel-test eval python /code/sql/create_readonly_user.py
 
         if [[ $1 = "integration" ]]
         then
             build_container producer
-            echo "${LINE} Starting producer"
+            echo_message "Starting producer"
             $DC_TEST up -d producer-test
-            echo "${LINE} producer ready!"
+            echo_message "producer ready!"
         fi
     fi
 fi
 
 
-echo "${LINE} Preparing $1 container"
+echo_message "Preparing $1 container"
 build_container $1
-echo "${LINE} $1 ready!"
+echo_message "$1 ready!"
 wait_for_db
 $DC_TEST run "$1"-test test
-echo "${LINE} $1 tests passed!"
+echo_message "$1 tests passed!"
 
 
 ./scripts/kill_all.sh
