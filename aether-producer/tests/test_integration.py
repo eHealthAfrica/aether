@@ -31,7 +31,9 @@ import uuid
 
 from producer.logger import LOG
 from producer.redis_producer import RedisProducer
-from producer.replay_manager import count_entities, get_all_db_updates
+from producer.replay_manager import (
+    count_entities, enqueue_entity, get_all_db_updates,
+)
 from producer.resource import (
     Event,
     Resource,
@@ -326,16 +328,26 @@ def test_produce__multiple_simultaneous(
 @pytest.mark.integration
 def test_kernel_entities_count(get_kernel_fixtures, generate_kernel_entities):
     _, _, sds = get_kernel_fixtures
-    count = 10
-    generate_kernel_entities(count, value_size=2000)
+    count = 1000
+    generate_kernel_entities(count, value_size=10)
     _ids = [i.id for i in sds]
     assert(count == count_entities(_ids))
 
 
 @pytest.mark.integration
-def test_kernel_entities_get():
+def test_kernel_entities_get(get_resource_helper):
+    RH: ResourceHelper = get_resource_helper
     # count existing from previous test
-    # count = 10
-    entities = get_all_db_updates()
+    count = 1000
+    # entities = get_all_db_updates(min_lag=10)
+    # assert(len(list(entities)) == 0)
+    start = datetime.now()
+    entities = get_all_db_updates(min_lag=0.01)
+    keys = []
     for e in entities:
-        LOG.debug(e)
+        keys.append(enqueue_entity(e))
+    end = datetime.now()
+    run_time = (end - start).total_seconds()
+    LOG.debug(f'moved {count} from db -> redis in {run_time} @ {int(count/run_time)}/s')
+    for k in keys:
+        RH.remove(k, 'entities')

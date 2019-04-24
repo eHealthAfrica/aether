@@ -1,15 +1,21 @@
 from datetime import datetime
 from typing import (
-    List
+    Any,
+    Dict,
+    List,
+    Union
 )
 import psycopg2
 from psycopg2 import sql
 from psycopg2.extras import DictCursor
 
+from producer.db import Entity
 from producer.db import KERNEL_DB as POSTGRES
 from producer.logger import LOG
+from producer.resource import RESOURCE_HELPER
+from producer.redis_producer import RedisProducer
 
-window_size_sec = 0
+WINDOW_SIZE_SEC = 3
 
 # NEW_STR = '''
 #         SELECT
@@ -157,7 +163,7 @@ def count_entities(decorator_ids: List[str]) -> int:
             )
 
 
-def get_all_db_updates(since=''):
+def get_all_db_updates(since='', min_lag=0):
     # "" evals to < all strings
     query = sql.SQL(ALL_ENTITIES_SINCE_STR).format(
         modified=sql.Literal(since)
@@ -169,7 +175,7 @@ def get_all_db_updates(since=''):
         conn = promise.get()
         cursor = conn.cursor(cursor_factory=DictCursor)
         cursor.execute(query)
-        window_filter = get_time_window_filter(query_time)
+        window_filter = get_time_window_filter(query_time, min_lag)
         for row in cursor:
             if window_filter(row):
                 yield {key: row[key] for key in row.keys()}
@@ -188,18 +194,18 @@ def get_all_db_updates(since=''):
             )
 
 
-def get_time_window_filter(query_time):
+def get_time_window_filter(query_time, window_size: int = 0):
     # You can't always trust that a set from kernel made up of time window
     # start < _time < end is complete if nearlyequal(_time, now()).
     # Sometimes rows belonging to that set would show up a couple mS after
     # the window had closed and be dropped. Our solution was to truncate
     # sets based on the insert time and now() to provide a buffer.
     TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
-
+    window_size = WINDOW_SIZE_SEC if not window_size else window_size
     def fn(row):
         commited = datetime.strptime(row.get('modified')[:26], TIME_FORMAT)
         lag_time = (query_time - commited).total_seconds()
-        if lag_time > window_size_sec:
+        if lag_time > window_size:
             return True
         elif lag_time < -30.0:
             # Sometimes fractional negatives show up. More than 30 seconds
@@ -212,9 +218,22 @@ def get_time_window_filter(query_time):
         return False
     return fn
 
-# SELECT MT.realm, E.*
-# FROM multitenancy_mtinstance MT
-# INNER JOIN kernel_project P
-#   ON MT.instance_id = P.id
-# INNER JOIN kernel_entity E
-#   ON E.project_id = P.id
+
+def enqueue_entity(entity: Dict):
+    e: Entity = Entity(
+        entity['id'],
+        entity['modified'],
+        entity['realm'],
+        entity['schemadecorator_id'],
+        entity['payload']
+    )
+    key = RedisProducer.get_entity_key(e)
+    RESOURCE_HELPER.add(key, e._asdict(), 'entity')
+    return key
+
+# class Entity(NamedTuple):
+#     id: str
+#     offset: str
+#     tenant: str
+#     decorator_id: str
+#     payload: Dict
