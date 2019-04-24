@@ -221,8 +221,7 @@ function git_branch_commit_and_release {
     release_process
 }
 
-LINE="_________________________________________________________________________"
-
+LINE=`printf -v row "%${COLUMNS:-$(tput cols)}s"; echo ${row// /#}`
 
 TAG_INCREASED_VERSION="0.0.0"
 VERSION=

@@ -31,20 +31,18 @@ source .env
 KC_DB=keycloak
 KC_USER=keycloak
 KC_URL="http://localhost:8080/auth"
-LINE="_____________________________________________"
-
 
 docker-compose kill db keycloak
 docker-compose pull db keycloak
 
-echo "${LINE} Starting database server..."
+echo_message "Starting database server..."
 docker-compose up -d db
 sleep 5
 
 DB_ID=$(docker-compose ps -q db)
 PSQL="docker container exec -i $DB_ID psql"
 
-echo "${LINE} Recreating keycloak database..."
+echo_message "Recreating keycloak database..."
 # drops keycloak database (terminating any previous connection) and creates it again
 $PSQL <<- EOSQL
     UPDATE pg_database SET datallowconn = 'false' WHERE datname = '${KC_DB}';
@@ -58,7 +56,7 @@ $PSQL <<- EOSQL
 EOSQL
 
 
-echo "${LINE} Starting keycloak server..."
+echo_message "Starting keycloak server..."
 
 docker-compose up -d keycloak
 
@@ -66,11 +64,11 @@ KC_ID=$(docker-compose ps -q keycloak)
 KCADM="docker container exec -i ${KC_ID} ./keycloak/bin/kcadm.sh"
 
 until curl -s ${KC_URL} > /dev/null; do
-    >&2 echo "${LINE} Waiting for keycloak server..."
+    >&2 echo_message "Waiting for keycloak server..."
     sleep 2
 done
 
-echo "${LINE} Connecting to keycloak server..."
+echo_message "Connecting to keycloak server..."
 $KCADM \
     config credentials \
     --server ${KC_URL} \
@@ -78,13 +76,13 @@ $KCADM \
     --user ${KEYCLOAK_ADMIN_USERNAME} \
     --password ${KEYCLOAK_ADMIN_PASSWORD}
 
-echo "${LINE} Creating default realm ${DEFAULT_REALM}..."
+echo_message "Creating default realm ${DEFAULT_REALM}..."
 $KCADM \
     create realms \
     -s realm=${DEFAULT_REALM} \
     -s enabled=true
 
-echo "${LINE} Creating default client..."
+echo_message "Creating default client..."
 
 BASE_URL="http://${NETWORK_DOMAIN}"
 
@@ -108,20 +106,20 @@ $KCADM \
     -s enabled=true
 
 
-echo "${LINE} Creating initial user ${KEYCLOAK_USER_USERNAME}..."
+echo_message "Creating initial user ${KEYCLOAK_USER_USERNAME}..."
 $KCADM \
     create users \
     -r ${DEFAULT_REALM} \
     -s username=${KEYCLOAK_USER_USERNAME} \
     -s enabled=true
 
-echo "${LINE} Setting up initial user password..."
+echo_message "Setting up initial user password..."
 $KCADM \
     set-password \
     -r ${DEFAULT_REALM} \
     --username ${KEYCLOAK_USER_USERNAME} \
     --new-password=${KEYCLOAK_USER_PASSWORD}
 
-echo "${LINE} Done!"
+echo_message "Done!"
 
 docker-compose kill db keycloak
