@@ -61,6 +61,16 @@ class Pipeline extends Component {
       onContractSavedCallback: null,
       isNew: props.location.state && props.location.state.isNewContract
     }
+
+    this.linksCallBack = this.linksCallBack.bind(this)
+    this.addNewContract = this.addNewContract.bind(this)
+    this.onSettingsClosed = this.onSettingsClosed.bind(this)
+    this.onSave = this.onSave.bind(this)
+    this.onNewContractCreated = this.onNewContractCreated.bind(this)
+    this.onCancelContract = this.onCancelContract.bind(this)
+    this.onContractTabSelected = this.onContractTabSelected.bind(this)
+    this.onInputHandle = this.onInputHandle.bind(this)
+    this.onContracts = this.onContracts.bind(this)
   }
 
   componentDidMount () {
@@ -158,9 +168,9 @@ class Pipeline extends Component {
     return (
       <div className={`pipelines-container show-pipeline pipeline--${this.state.view}`}>
         { this.props.error && <ModalError error={this.props.error} /> }
-        <NavBar showBreadcrumb cb={this.linksCallBack.bind(this)}>
+        <NavBar showBreadcrumb cb={this.linksCallBack}>
           <div className='breadcrumb-links'>
-            <Link onClick={this.linksCallBack.bind(this)}>
+            <Link onClick={this.linksCallBack}>
               <FormattedMessage
                 id='pipeline.navbar.pipelines'
                 defaultMessage='Pipelines'
@@ -190,7 +200,7 @@ class Pipeline extends Component {
             { !this.state.newContract && <button
               type='button'
               className='btn btn-c btn-sm new-contract'
-              onClick={this.addNewContract.bind(this)}>
+              onClick={this.addNewContract}>
               <span className='details-title'>
                 <FormattedMessage
                   id='contract.add.button'
@@ -205,10 +215,10 @@ class Pipeline extends Component {
 
           { this.state.showSettings &&
             <Settings
-              onClose={this.onSettingsClosed.bind(this)}
+              onClose={this.onSettingsClosed}
               isNew={this.state.isNew}
-              onSave={this.onSave.bind(this)}
-              onNew={this.onNewContractCreated.bind(this)}
+              onSave={this.onSave}
+              onNew={this.onNewContractCreated}
             />
           }
           <div className='pipeline-sections'>
@@ -270,7 +280,7 @@ class Pipeline extends Component {
           />
         </button>
 
-        <button className='btn btn-w btn-primary' onClick={this.onCancelContract.bind(this)}>
+        <button className='btn btn-w btn-primary' onClick={this.onCancelContract}>
           <FormattedMessage
             id='pipeline.new.contract.cancel'
             defaultMessage='Yes, Cancel'
@@ -328,7 +338,7 @@ class Pipeline extends Component {
       <div
         key={contract.id}
         className={`pipeline-tab ${contract.id === this.props.contract.id ? 'active' : ''}`}
-        onClick={this.onContractTabSelected.bind(this, contract)}>
+        onClick={() => this.onContractTabSelected(contract)}>
         <span className='contract-name'>{ contract.name }</span>
 
         { (contract.mapping_errors || []).length > 0 &&
@@ -383,7 +393,7 @@ class Pipeline extends Component {
         <div className='pipeline-nav-items'>
           <div
             className='pipeline-nav-item__input'
-            onClick={this.onInputHandle.bind(this)}>
+            onClick={this.onInputHandle}>
             <div className='badge'>
               <i className='fas fa-file' />
             </div>
@@ -421,7 +431,7 @@ class Pipeline extends Component {
 
           <div
             className='pipeline-nav-item__contracts'
-            onClick={this.onContracts.bind(this)}>
+            onClick={this.onContracts}>
             <div className='badge'>
               <i className='fas fa-caret-right' />
             </div>

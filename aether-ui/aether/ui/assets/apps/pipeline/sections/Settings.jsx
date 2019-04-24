@@ -52,6 +52,7 @@ export class IdentityMapping extends Component {
     this.state = {
       entityTypeName: props.inputSchema.name || ''
     }
+    this.generateIdentityMapping = this.generateIdentityMapping.bind(this)
   }
 
   render () {
@@ -81,15 +82,15 @@ export class IdentityMapping extends Component {
               <FormattedMessage
                 id='settings.identity.help-2'
                 defaultMessage='An identity contract will produce entities
-                that are identical with the input. If you choose this setting,
-                Aether will generate an Entity Type and Mapping for you.'
+                  that are identical with the input. If you choose this setting,
+                  Aether will generate an Entity Type and Mapping for you.'
               />
             </p>
             <p>
               <FormattedMessage
                 id='settings.identity.help-3'
                 defaultMessage="This can be useful in situations where you
-                want to make use of Aether's functionality without transforming
+                  want to make use of Aether's functionality without transforming
                   the data. Alternatively, you can use the generate Entity Type
                   and Mapping as a starting point for a more complex contract."
               />
@@ -174,7 +175,7 @@ export class IdentityMapping extends Component {
           data-qa='contract.identity.button.confirm'
           className='btn btn-w btn-primary'
           id='settings.identity.modal.yes'
-          onClick={this.generateIdentityMapping.bind(this)}>
+          onClick={this.generateIdentityMapping}>
           <FormattedMessage
             id='settings.identity.button.confirm'
             defaultMessage='Yes'
@@ -225,6 +226,9 @@ class Settings extends Component {
     if (props.isNew) {
       this.createNewContract()
     }
+
+    this.performSave = this.performSave.bind(this)
+    this.onSave = this.onSave.bind(this)
   }
 
   componentDidUpdate (prevProps) {
@@ -301,7 +305,7 @@ class Settings extends Component {
             showModal={this.state.showIdentityModal}
             onModalToggle={(e) => this.setState({ showIdentityModal: e })}
             contractName={this.state.contractName}
-            onSave={this.performSave.bind(this)} /> }
+            onSave={this.performSave} /> }
 
           <div className='settings-section'>
             <div>
@@ -336,7 +340,7 @@ class Settings extends Component {
           { !contract.is_read_only &&
             <button
               className='btn btn-d btn-primary btn-big ml-4'
-              onClick={this.onSave.bind(this, contract)}>
+              onClick={() => this.onSave(contract)}>
               <span className='details-title'>
                 <FormattedMessage
                   id='settings.contract.save'
