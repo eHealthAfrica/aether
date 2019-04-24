@@ -130,6 +130,11 @@ describe('Pipeline Settings Component', () => {
   })
 
   it('should render identity mapping warning', () => {
+    nock('http://localhost')
+      .post(`/api/contracts/`)
+      .reply(200, (_, reqBody) => {
+        return reqBody
+      })
     const component = mountWithIntl(
       <Provider store={store}>
         <Settings
@@ -152,6 +157,17 @@ describe('Pipeline Settings Component', () => {
     saveButton.simulate('click')
 
     expect(component.find('Modal').exists()).toBeTruthy()
+
+    const modalCancelButton = component.find('button[id="settings.identity.modal.cancel"]')
+    modalCancelButton.simulate('click')
+    expect(component.find('Modal').exists()).toBeFalsy()
+
+    saveButton.simulate('click')
+    expect(component.find('Modal').exists()).toBeTruthy()
+
+    const modalYesButton = component.find('button[id="settings.identity.modal.yes"]')
+    modalYesButton.simulate('click')
+    expect(component.find('Modal').exists()).toBeFalsy()
   })
 
   it('should save and close settings without warning', () => {
@@ -219,6 +235,27 @@ describe('Pipeline Settings Component', () => {
 
     expect(component.find('Modal').exists()).toBeFalsy()
     expect(settings.performSave).toHaveBeenCalledWith(expectedContract)
+  })
+
+  it('should create a new contract while an existing contract is selected', () => {
+    const component = mountWithIntl(
+      <Provider store={store}>
+        <Settings
+          onClose={onClose}
+          onSave={onSave}
+          onNew={onNew}
+        />
+      </Provider>
+    )
+    const settingInstance = component.find('Settings').instance()
+    jest.spyOn(settingInstance, 'createNewContract')
+    component.setProps({ children: <Settings
+      onClose={onClose}
+      onSave={onSave}
+      onNew={onNew}
+      isNew
+    /> })
+    expect(settingInstance.createNewContract).toBeCalled()
   })
 
   it('should close the settings component', () => {

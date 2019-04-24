@@ -37,13 +37,6 @@ describe('Pipeline Component', () => {
   let store
 
   beforeEach(() => {
-    // set the token value for the API calls
-    const tokenValue = 'CSRF-Token-Value'
-    document.querySelector = (selector) => {
-      expect(selector).toEqual('[name=csrfmiddlewaretoken]')
-      return { value: tokenValue }
-    }
-
     // create a new store instance for each test
     store = createStore(
       reducer,
