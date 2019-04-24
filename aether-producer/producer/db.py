@@ -137,6 +137,7 @@ class PriorityDatabasePool(object):
         self.name = name
         self.live_workers = 0
         self.pg_creds = pg_creds
+        logger.debug(pg_creds)
         self.max_connections = max_connections
         logger.debug(f'Initializing DB Pool: {self.name} with {max_connections} connections.')
         self.workers = []
@@ -239,5 +240,4 @@ pg_requires = ['user', 'dbname', 'port', 'host', 'password']
 pg_creds = {key: PRODUCER_CONFIG.get(
     "postgres_%s" % key) for key in pg_requires}
 kernel_db_pool_size = PRODUCER_CONFIG.get('kernel_db_pool_size', 6)
-KERNEL_DB = None
-# PriorityDatabasePool(pg_creds, 'KernelDB', kernel_db_pool_size)  # imported from here
+KERNEL_DB = PriorityDatabasePool(pg_creds, 'KernelDB', kernel_db_pool_size)  # imported from here

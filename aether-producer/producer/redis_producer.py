@@ -362,7 +362,7 @@ class RedisProducer(object):
                     for _id in bundle:
                         self.inflight.remove(_id)
                     bundle = []
-                    raise KafkaException('Broked did not accept submissions.')
+                    raise KafkaException('Broker did not accept submissions.')
                 _id = entity.id
                 msg: Dict = entity.payload
                 offset = entity.offset

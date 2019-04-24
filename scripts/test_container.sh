@@ -95,7 +95,7 @@ then
     if [[ $1 = "producer" || $1 == "integration" ]]
     then
         echo "_____________________________________________ Creating readonlyuser on Kernel DB"
-        $DC_TEST run --rm kernel-test eval python /code/sql/create_readonly_user.py
+        $DC_TEST run kernel-test eval python /code/sql/create_readonly_user.py
         if [[ $1 = "integration" ]]
         then
             build_container producer

@@ -25,13 +25,15 @@ import random
 import string
 from time import sleep
 from typing import (
+    Dict,
     Iterable,
-    List
+    List,
+    Tuple
 )
 from uuid import uuid4
 
+from aether.client import Client
 from confluent_kafka import Producer, Consumer
-
 from producer import (
     ProducerManager,
     OFFSET_MANAGER
@@ -71,6 +73,11 @@ def entity_generator(
             }
         ))
 
+
+PROJECT = {
+    "revision": "1",
+    "name": 'TestProject'
+}
 
 SCHEMAS = {
     'simple_schema_id': {
@@ -147,6 +154,89 @@ class ObjectWithKernel(object):
 
 @pytest.mark.integration
 @pytest.fixture(scope='session')
+def get_kernel(ProducerManagerSettings) -> Iterable[Client]:
+    S = ProducerManagerSettings
+    kernel = Client(
+        S['kernel_url'],
+        S['kernel_username'],
+        S['kernel_password'],
+    )
+    yield kernel
+
+
+@pytest.mark.integration
+@pytest.fixture(scope='session')
+def get_kernel_fixtures(get_kernel) -> Iterable[Tuple[Dict, Dict, List[Dict]]]:
+    kernel = get_kernel
+    project = kernel.projects.create(data=PROJECT)
+    schema_id = list(SCHEMAS.keys())[0]
+    Schema = kernel.get_model('Schema')
+    schema = Schema(**{
+        'name': schema_id,
+        'type': 'record',
+        'revision': '1',
+        'definition': SCHEMAS[schema_id]
+    })
+    schema = kernel.schemas.create(data=schema)
+    SD = kernel.get_model('SchemaDecorator')
+    sds = []
+    for decorator in SCHEMA_DECORATORS.items():
+        sd = SD(
+            name=schema.name,
+            revision='1',
+            project=project.id,
+            schema=schema.id
+        )
+        sds.append(kernel.schemadecorators.create(data=sd))
+    yield (project, schema, sds)
+
+    # clean-up kernel
+    for sd in sds:
+        kernel.schemadecorators.delete(id=sd.id)
+    kernel.schemas.delete(id=schema.id)
+    kernel.projects.delete(id=project.id)
+
+
+@pytest.mark.integration
+@pytest.fixture(scope='session')
+def generate_kernel_entities(get_kernel, get_kernel_fixtures):
+    kernel = get_kernel
+    project, schema, sds = get_kernel_fixtures
+    cleanup_keys = []
+    sd = sds[0]
+    Entity = kernel.get_model('Entity')
+
+    def make_entity_instances(
+        count: int,
+        tenant: str = 'default',
+        decorator_id: str = 'default',
+        value_size: int = 32,
+        delay=None
+    ):
+        for e in entity_generator(count, tenant, decorator_id, value_size):
+            entity = Entity(**{
+                'id': e.id,
+                'schemadecorator': sd.id,
+                'status': 'Publishable',
+                'payload': e.payload
+            })
+            try:
+                entity = kernel.entities.create(data=entity)
+                cleanup_keys.append(entity.id)
+            except Exception as err:
+                LOG.error(err)
+
+    yield make_entity_instances
+    # clean-up kernel
+    for _id in cleanup_keys:
+        try:
+            kernel.entities.delete(id=_id)
+        except Exception as err:
+            LOG.error(err)
+
+
+@pytest.mark.integration
+@pytest.fixture(scope='session')
 def get_resource_helper() -> Iterable[ResourceHelper]:
     yield RESOURCE_HELPER
     # cleanup at end of session
@@ -176,7 +266,8 @@ def OffsetDB():
 @pytest.fixture(scope='session')
 def kafka_settings(ProducerManagerSettings):
     kafka_settings = ProducerManagerSettings.get('kafka_settings')
-    kafka_settings['bootstrap.servers'] = ProducerManagerSettings.get('kafka_bootstrap_servers')
+    kafka_settings['bootstrap.servers'] = \
+        ProducerManagerSettings.get('kafka_bootstrap_servers')
     return kafka_settings
 
 
