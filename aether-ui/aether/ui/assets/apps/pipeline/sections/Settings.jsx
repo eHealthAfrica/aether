@@ -334,16 +334,29 @@ class Settings extends Component {
             </span>
           </button>
           { !contract.is_read_only &&
-            <button
-              className='btn btn-d btn-primary btn-big ml-4'
-              onClick={this.onSave.bind(this, contract)}>
-              <span className='details-title'>
-                <FormattedMessage
-                  id='settings.contract.save'
-                  defaultMessage='Save'
-                />
-              </span>
-            </button>
+            <div style={{ display: 'inline' }}>
+              <button
+                className='btn btn-d btn-primary btn-big ml-4'
+                onClick={this.onSave.bind(this, contract)}>
+                <span className='details-title'>
+                  <FormattedMessage
+                    id='settings.contract.save'
+                    defaultMessage='Save'
+                  />
+                </span>
+              </button>
+
+              <button
+                className='btn btn-d btn-primary btn-big ml-4'
+                onClick={() => this.props.onDelete()} style={{ float: 'right'}}>
+                <span className='details-title'>
+                  <FormattedMessage
+                    id='settings.contract.delete'
+                    defaultMessage='Delete Contract'
+                  />
+                </span>
+              </button>
+            </div>
           }
         </div>
       </div>
