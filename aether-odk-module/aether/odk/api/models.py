@@ -129,7 +129,7 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
     One XForm should create in Kernel:
         - one Mapping,
         - one Schema and
-        - one ProjectSchema.
+        - one SchemaDecorator.
 
 
     :ivar integer   id:           ID (primary key).
@@ -177,7 +177,7 @@ class XForm(ExportModelOperationsMixin('odk_xform'), MtModelChildAbstract):
     kernel_id = models.UUIDField(
         default=uuid.uuid4,
         verbose_name=_('Aether Kernel ID'),
-        help_text=_('This ID is used to create Aether Kernel artefacts (schema, project schema and mapping).'),
+        help_text=_('This ID is used to create Aether Kernel artefacts (schema, schema decorator and mapping).'),
     )
 
     project = models.ForeignKey(to=Project, on_delete=models.CASCADE, verbose_name=_('project'))

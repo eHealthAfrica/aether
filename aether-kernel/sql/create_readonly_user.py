@@ -57,7 +57,7 @@ GRANT CONNECT ON DATABASE {database} TO {role_id};
 GRANT USAGE ON SCHEMA public TO {role_id};
 GRANT SELECT ON kernel_entity TO {role_id};
 GRANT SELECT ON kernel_mapping TO {role_id};
-GRANT SELECT ON kernel_projectschema TO {role_id};
+GRANT SELECT ON kernel_schemadecorator TO {role_id};
 GRANT SELECT ON kernel_schema TO {role_id};
 '''
 

@@ -19,6 +19,11 @@
 from django.contrib.auth import get_user_model
 from rest_framework.serializers import ModelSerializer
 
+from aether.common.drf.serializers import (
+    FilteredHyperlinkedRelatedField,
+    HyperlinkedIdentityField,
+    HyperlinkedRelatedField,
+)
 from aether.common.multitenancy.serializers import (
     MtModelSerializer,
     MtPrimaryKeyRelatedField,
@@ -32,6 +37,14 @@ UserModel = get_user_model()
 
 class TestModelSerializer(MtModelSerializer):
 
+    url = HyperlinkedIdentityField(view_name='testmodel-detail')
+    children_url = FilteredHyperlinkedRelatedField(
+        view_name='testchildmodel-list',
+        lookup_field='parent',
+        read_only=True,
+        source='children',
+    )
+
     user = MtUserRelatedField(
         allow_null=True,
         default=None,
@@ -44,6 +57,13 @@ class TestModelSerializer(MtModelSerializer):
 
 
 class TestChildModelSerializer(ModelSerializer):
+
+    url = HyperlinkedIdentityField(view_name='testchildmodel-detail')
+    parent_url = HyperlinkedRelatedField(
+        view_name='testmodel-detail',
+        read_only=True,
+        source='parent',
+    )
 
     parent = MtPrimaryKeyRelatedField(
         queryset=TestModel.objects.all(),

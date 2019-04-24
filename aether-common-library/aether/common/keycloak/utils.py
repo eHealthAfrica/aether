@@ -19,13 +19,13 @@
 import urllib.parse
 
 from django.conf import settings
-from django.contrib.auth import logout
+from django.contrib.auth import login, logout
 from django.contrib.auth.signals import user_logged_out
 from django.dispatch import receiver
-from django.urls import reverse
+from django.urls import reverse, resolve
 
 from ..auth.utils import get_or_create_user
-from ..utils import request as exec_request
+from ..utils import find_in_request_headers, request as exec_request
 
 _KC_TOKEN_SESSION = '__keycloak__token__session__'
 _KC_URL = settings.KEYCLOAK_SERVER_URL
@@ -132,6 +132,32 @@ def check_user_token(request):
             logout(request)
 
 
+def check_gateway_token(request):
+    '''
+    Checks if the gateway token is valid fetching the user info from keycloak server.
+    '''
+
+    token = find_in_request_headers(request, settings.GATEWAY_HEADER_TOKEN)
+    if token:
+        try:
+            realm = resolve(request.get_full_path()).kwargs['realm']
+            userinfo = _get_user_info(realm, token)
+
+            # flags that we are using the gateway to authenticate
+            request.session[settings.GATEWAY_HEADER_TOKEN] = True
+            request.session[settings.REALM_COOKIE] = realm
+
+            login(request, _get_or_create_user(request, userinfo))
+
+        except Exception:
+            # something went wrong
+            logout(request)
+
+    elif request.session.get(settings.GATEWAY_HEADER_TOKEN):
+        # this session was using the gateway to authenticate before
+        logout(request)
+
+
 @receiver(user_logged_out)
 def _user_logged_out(sender, user, request, **kwargs):
     '''
@@ -153,10 +179,6 @@ def _user_logged_out(sender, user, request, **kwargs):
             },
         )
 
-    # remove session values
-    request.session[settings.REALM_COOKIE] = None
-    request.session[_KC_TOKEN_SESSION] = None
-
 
 def _get_login_url(request):
     return request.build_absolute_uri(reverse('rest_framework:login'))
@@ -172,7 +194,7 @@ def _authenticate(realm, data):
     response.raise_for_status()
 
     token = response.json()
-    userinfo = _get_user_info(realm, token)
+    userinfo = _get_user_info(realm, token['access_token'])
     return token, userinfo
 
 
@@ -180,7 +202,7 @@ def _get_user_info(realm, token):
     response = exec_request(
         method='get',
         url=f'{_KC_URL}/{realm}/{_KC_OID_URL}/userinfo',
-        headers={'Authorization': 'Bearer {}'.format(token['access_token'])},
+        headers={'Authorization': f'Bearer {token}'},
     )
     response.raise_for_status()
 

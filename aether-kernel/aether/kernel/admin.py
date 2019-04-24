@@ -17,12 +17,11 @@
 # under the License.
 
 from django.contrib import admin
-from reversion_compare.admin import CompareVersionAdmin
 
 from .api import models, forms
 
 
-class BaseAdmin(CompareVersionAdmin):
+class BaseAdmin(admin.ModelAdmin):
     empty_value_display = '---'
     list_per_page = 25
     readonly_fields = ('id',)
@@ -58,7 +57,7 @@ class SchemaAdmin(BaseAdmin):
     list_display = ('id', 'name', 'revision',)
 
 
-class ProjectSchemaAdmin(BaseAdmin):
+class SchemaDecoratorAdmin(BaseAdmin):
     list_display = ('id', 'name', 'revision', 'project', 'schema',)
 
 
@@ -73,5 +72,5 @@ admin.site.register(models.Mapping, MappingAdmin)
 admin.site.register(models.Submission, SubmissionAdmin)
 admin.site.register(models.Attachment, AttachmentAdmin)
 admin.site.register(models.Schema, SchemaAdmin)
-admin.site.register(models.ProjectSchema, ProjectSchemaAdmin)
+admin.site.register(models.SchemaDecorator, SchemaDecoratorAdmin)
 admin.site.register(models.Entity, EntityAdmin)

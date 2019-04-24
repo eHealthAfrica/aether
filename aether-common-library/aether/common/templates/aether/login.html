@@ -27,7 +27,6 @@ under the License.
 
 {% block meta %}
   {% include 'aether/meta.html' %}
-  <link rel="shortcut icon" href="{% static 'aether/images/aether.png' %}"/>
 {% endblock %}
 
 {% block style %}
@@ -36,7 +35,7 @@ under the License.
 {% endblock %}
 
 {% block body %}
-<body class="container">
+<body class="aether-bg container">
   <div class="container-fluid" style="margin-top: 30px">
     <div class="row-fluid">
       <div class="well" style="width: 320px; margin-left: auto; margin-right: auto">
@@ -76,7 +75,7 @@ under the License.
               {% block username %}
                 <div id="div_id_username" class="clearfix control-group {% if form.username.errors %}error{% endif %}">
                   <div class="form-group">
-                    <label for="id_username">{{ form.username.label }}:</label>
+                    <label for="id_username">{{ form.username.label }}</label>
                     <input
                         id="id_username"
                         type="text"
@@ -87,6 +86,7 @@ under the License.
                         autocorrect="off"
                         class="form-control textinput textInput"
                         required
+                        tabindex="1"
                         autofocus>
                     {% if form.username.errors %}
                       <p class="text-error">
@@ -100,7 +100,7 @@ under the License.
               {% block password %}
                 <div id="div_id_password" class="clearfix control-group {% if form.password.errors %}error{% endif %}">
                   <div class="form-group">
-                    <label for="id_password">{{ form.password.label }}:</label>
+                    <label for="id_password">{{ form.password.label }}</label>
                     <input
                         id="id_password"
                         type="password"
@@ -109,6 +109,7 @@ under the License.
                         autocapitalize="off"
                         autocorrect="off"
                         class="form-control textinput textInput"
+                        tabindex="2"
                         required>
                     {% if form.password.errors %}
                       <p class="text-error">
@@ -133,6 +134,7 @@ under the License.
                     name="submit"
                     value="{% trans 'Log in' %}"
                     class="btn btn-primary form-control"
+                    tabindex="9"
                     id="submit-id-submit">
               </div>
             </form>

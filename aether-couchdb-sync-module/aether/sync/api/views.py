@@ -179,7 +179,7 @@ class MobileUserViewSet(MtUserViewSetMixin, viewsets.ModelViewSet):
 @throttle_classes([AnonRateThrottle])
 @authentication_classes([])
 @permission_classes([])
-def signin(request):
+def signin(request, *args, **kwargs):
     '''
     Sync credentials endpoint.
 
@@ -312,7 +312,7 @@ def signin(request):
 @api_view(['POST'])
 @renderer_classes([JSONRenderer])
 @permission_classes([IsAuthenticated, IsAdminUser])
-def load_file(request):
+def load_file(request, *args, **kwargs):
     '''
     POST file content into CouchDB server.
     '''

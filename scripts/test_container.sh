@@ -20,22 +20,33 @@
 #
 set -Eeuo pipefail
 
+function echo_message {
+    LINE=`printf -v row "%${COLUMNS:-$(tput cols)}s"; echo ${row// /=}`
+
+    if [ -z "$1" ]; then
+        echo "$LINE"
+    else
+        msg=" $1 "
+        echo "${LINE:${#msg}}$msg"
+    fi
+}
+
 function build_container {
-    echo "_____________________________________________ Building $1 container"
+    echo_message "Building $1 container"
     $DC_TEST build $BUILD_OPTIONS "$1"-test
 }
 
 function wait_for_kernel {
     KERNEL_HEALTH_URL="http://localhost:9100/health"
     until curl -s $KERNEL_HEALTH_URL > /dev/null; do
-        >&2 echo "_____________________________________________ Waiting for Kernel..."
+        >&2 echo_message "Waiting for Kernel..."
         sleep 2
     done
 }
 
 function wait_for_db {
     until $DC_TEST run kernel-test eval pg_isready -q; do
-        >&2 echo "_____________________________________________ Waiting for db-test..."
+        >&2 echo_message "Waiting for db-test..."
         sleep 2
     done
 }
@@ -50,11 +61,11 @@ then
     build_container ui-assets
     $DC_TEST run ui-assets-test test
     $DC_TEST run ui-assets-test build
-    echo "_____________________________________________ Tested and built ui assets"
+    echo_message "Tested and built ui assets"
 fi
 
 
-echo "_____________________________________________ Starting databases + Minio Storage server"
+echo_message "Starting databases + Minio Storage server"
 $DC_TEST up -d db-test minio-test
 if [[ $1 = "couchdb-sync" ]]
 then
@@ -74,11 +85,11 @@ then
 
     # build_container kernel
 
-    echo "_____________________________________________ Starting kernel"
+    echo_message "Starting kernel"
     wait_for_db
     $DC_TEST up -d kernel-test
     wait_for_kernel
-    echo "_____________________________________________ kernel ready!"
+    echo_message "kernel ready!"
 
     # Producer and Integration need readonlyuser to be present
     if [[ $1 = "producer" || $1 == "integration" ]]
@@ -88,20 +99,19 @@ then
         if [[ $1 = "integration" ]]
         then
             build_container producer
-            echo "_____________________________________________ Starting producer"
+            echo_message "Starting producer"
             $DC_TEST up -d producer-test
-            echo "_____________________________________________ producer ready!"
+            echo_message "producer ready!"
         fi
     fi
 fi
 
 
-echo "_____________________________________________ Preparing $1 container"
+echo_message "Preparing $1 container"
 build_container $1
-echo "_____________________________________________ $1 ready!"
+echo_message "$1 ready!"
 wait_for_db
 $DC_TEST run --rm "$1"-test test
-echo "_____________________________________________ $1 tests passed!"
-
+echo_message "$1 tests passed!"
 
 ./scripts/kill_all.sh

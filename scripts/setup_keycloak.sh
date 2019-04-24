@@ -21,27 +21,28 @@
 
 set -Eeuo pipefail
 
+# ensure that the network and volumes were already created
+source ./scripts/aether_functions.sh
+create_credentials
+create_docker_assets
+
 source .env
 
 KC_DB=keycloak
 KC_USER=keycloak
 KC_URL="http://localhost:8080/auth"
 
-
-# ensure that the network and volumes were already created
-./scripts/build_docker_assets.sh
-
 docker-compose kill db keycloak
 docker-compose pull db keycloak
 
-echo "_____________________________________________ Starting database server..."
+echo_message "Starting database server..."
 docker-compose up -d db
 sleep 5
 
 DB_ID=$(docker-compose ps -q db)
 PSQL="docker container exec -i $DB_ID psql"
 
-echo "_____________________________________________ Recreating keycloak database..."
+echo_message "Recreating keycloak database..."
 # drops keycloak database (terminating any previous connection) and creates it again
 $PSQL <<- EOSQL
     UPDATE pg_database SET datallowconn = 'false' WHERE datname = '${KC_DB}';
@@ -55,7 +56,7 @@ $PSQL <<- EOSQL
 EOSQL
 
 
-echo "_____________________________________________ Starting keycloak server..."
+echo_message "Starting keycloak server..."
 
 docker-compose up -d keycloak
 
@@ -63,11 +64,11 @@ KC_ID=$(docker-compose ps -q keycloak)
 KCADM="docker container exec -i ${KC_ID} ./keycloak/bin/kcadm.sh"
 
 until curl -s ${KC_URL} > /dev/null; do
-    >&2 echo "_____________________________________________ Waiting for keycloak server..."
+    >&2 echo_message "Waiting for keycloak server..."
     sleep 2
 done
 
-echo "_____________________________________________ Connecting to keycloak server..."
+echo_message "Connecting to keycloak server..."
 $KCADM \
     config credentials \
     --server ${KC_URL} \
@@ -75,44 +76,50 @@ $KCADM \
     --user ${KEYCLOAK_ADMIN_USERNAME} \
     --password ${KEYCLOAK_ADMIN_PASSWORD}
 
-echo "_____________________________________________ Creating default realm ${DEFAULT_REALM}..."
+echo_message "Creating default realm ${DEFAULT_REALM}..."
 $KCADM \
     create realms \
     -s realm=${DEFAULT_REALM} \
     -s enabled=true
 
-echo "_____________________________________________ Creating default clients..."
-CLIENTS=( kernel odk sync ui )
-for CLIENT in "${CLIENTS[@]}"
-do
-    CLIENT_URL="http://${CLIENT}.aether.local"
-    echo "_____________________________________________ Creating client ${CLIENT}..."
-    $KCADM \
-        create clients \
-        -r ${DEFAULT_REALM} \
-        -s clientId=${CLIENT} \
-        -s publicClient=true \
-        -s directAccessGrantsEnabled=true \
-        -s rootUrl=${CLIENT_URL} \
-        -s baseUrl=${CLIENT_URL} \
-        -s 'redirectUris=["/accounts/login/"]' \
-        -s enabled=true
-done
+echo_message "Creating default client..."
 
-echo "_____________________________________________ Creating initial user ${KEYCLOAK_USER_USERNAME}..."
+BASE_URL="http://${NETWORK_DOMAIN}"
+
+# NGINX ports
+RU_80="${BASE_URL}/*"
+RU_8443="${BASE_URL}:8443/*"
+# standalone app ports
+RU_8100="${BASE_URL}:8100/*"
+RU_8102="${BASE_URL}:8102/*"
+RU_8104="${BASE_URL}:8104/*"
+RU_8106="${BASE_URL}:8106/*"
+
+$KCADM \
+    create clients \
+    -r ${DEFAULT_REALM} \
+    -s clientId=${KEYCLOAK_AETHER_CLIENT} \
+    -s publicClient=true \
+    -s directAccessGrantsEnabled=true \
+    -s baseUrl="${BASE_URL}" \
+    -s 'redirectUris=["'${RU_80}'","'${RU_8443}'","'${RU_8100}'","'${RU_8102}'","'${RU_8104}'","'${RU_8106}'"]' \
+    -s enabled=true
+
+
+echo_message "Creating initial user ${KEYCLOAK_USER_USERNAME}..."
 $KCADM \
     create users \
     -r ${DEFAULT_REALM} \
     -s username=${KEYCLOAK_USER_USERNAME} \
     -s enabled=true
 
-echo "_____________________________________________ Setting up initial user password..."
+echo_message "Setting up initial user password..."
 $KCADM \
     set-password \
     -r ${DEFAULT_REALM} \
     --username ${KEYCLOAK_USER_USERNAME} \
     --new-password=${KEYCLOAK_USER_PASSWORD}
 
-echo "_____________________________________________ Done!"
+echo_message "Done!"
 
 docker-compose kill db keycloak

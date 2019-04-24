@@ -41,11 +41,11 @@ services:
       # enable cors for mobile app in-browser development:
       - ./local-setup/couchdb/config.ini:/usr/local/etc/couchdb/local.ini
     ports:
-      - "5984:5984"
+      - 5984:5984
 
   redis-base:
     image: redis:alpine
-    command: "redis-server --requirepass ${REDIS_PASSWORD}"
+    command: redis-server --requirepass ${REDIS_PASSWORD}
 
   redis3-base:
     image: redis:3-alpine
@@ -63,9 +63,11 @@ services:
       # static folders per container
       - ./.persistent_data/static:/static
     ports:
-      - "80:80"
+      - 80:80
       # needed for ODK behind nginx (ODK Collect only accepts 443 and 8443 ports)
-      - "8443:8443"
+      - 8443:8443
+    extra_hosts:
+      - ${NETWORK_DOMAIN}:127.0.0.1
     healthcheck:
       test: nginx -t
       interval: 5s
@@ -81,7 +83,9 @@ services:
       MINIO_SECRET_KEY: ${MINIO_STORAGE_SECRET_KEY}
     command: minio server --quiet --address minio:9000 /data
     ports:
-      - "9000:9000"
+      - 9000:9000
+    extra_hosts:
+      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
 
   keycloak-base:
     image: jboss/keycloak:latest
@@ -97,6 +101,8 @@ services:
       KEYCLOAK_HTTP_PORT: 8080
     ports:
       - 8080:8080
+    extra_hosts:
+      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
 
 
   # ---------------------------------
@@ -109,18 +115,14 @@ services:
     stdin_open: true
     tty: true
     environment:
-      # Uncomment these lines to enable single sign on if you use CAS
-      # CAS_SERVER_URL: https://your.cas.server
-      # HOSTNAME: kernel.aether.local
-
-      CSRF_COOKIE_DOMAIN: .aether.local
-      DEBUG: "true"
+      CSRF_COOKIE_DOMAIN: ${NETWORK_DOMAIN}
       DJANGO_SECRET_KEY: ${KERNEL_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
 
       KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL}
-      KEYCLOAK_CLIENT_ID: kernel
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_AETHER_CLIENT}
+      KEYCLOAK_BEHIND_SCENES: ${KEYCLOAK_BEHIND_SCENES}
 
       MULTITENANCY: ${MULTITENANCY}
       DEFAULT_REALM: ${DEFAULT_REALM}
@@ -132,12 +134,13 @@ services:
       MINIO_STORAGE_SECRET_KEY: ${MINIO_STORAGE_SECRET_KEY}
       MINIO_STORAGE_ENDPOINT: minio:9000
       # Use these settings to make it accessible via browser
-      MINIO_STORAGE_MEDIA_USE_PRESIGNED: null
       MINIO_STORAGE_MEDIA_URL: http://localhost:9000/kernel
       MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET: "true"
       MINIO_STORAGE_AUTO_CREATE_MEDIA_POLICY: "true"
 
       APP_NAME: Aether Kernel
+      APP_URL: /kernel
+      STATIC_URL: /static/kernel/
 
       ADMIN_USERNAME: ${KERNEL_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
@@ -155,9 +158,9 @@ services:
       EXPORT_CSV_ESCAPE: "\\"
       EXPORT_CSV_QUOTES: "\""
       EXPORT_CSV_SEPARATOR: ","
-      EXPORT_DATA_FORMAT: "split"
-      EXPORT_HEADER_CONTENT: "labels"
-      EXPORT_HEADER_SEPARATOR: "/"
+      EXPORT_DATA_FORMAT: split
+      EXPORT_HEADER_CONTENT: labels
+      EXPORT_HEADER_SEPARATOR: /
       EXPORT_HEADER_SHORTEN: "no"
 
       WEB_SERVER_PORT: 8100
@@ -171,7 +174,9 @@ services:
       # backup folder
       - ./.persistent_data/backups/kernel:/backups
     ports:
-      - "8100:8100"
+      - 8100:8100
+    extra_hosts:
+      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
     command: start_dev
 
 
@@ -185,18 +190,14 @@ services:
     stdin_open: true
     tty: true
     environment:
-      # Uncomment these lines to enable single sign on if you use CAS
-      # CAS_SERVER_URL: https://your.cas.server
-      # HOSTNAME: odk.aether.local
-
-      CSRF_COOKIE_DOMAIN: .aether.local
-      DEBUG: "true"
+      CSRF_COOKIE_DOMAIN: ${NETWORK_DOMAIN}
       DJANGO_SECRET_KEY: ${ODK_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
 
       KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL}
-      KEYCLOAK_CLIENT_ID: odk
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_AETHER_CLIENT}
+      KEYCLOAK_BEHIND_SCENES: ${KEYCLOAK_BEHIND_SCENES}
 
       MULTITENANCY: ${MULTITENANCY}
       DEFAULT_REALM: ${DEFAULT_REALM}
@@ -208,19 +209,20 @@ services:
       MINIO_STORAGE_SECRET_KEY: ${MINIO_STORAGE_SECRET_KEY}
       MINIO_STORAGE_ENDPOINT: minio:9000
       # Use these settings to make it accessible via browser
-      MINIO_STORAGE_MEDIA_USE_PRESIGNED: null
       MINIO_STORAGE_MEDIA_URL: http://localhost:9000/odk
       MINIO_STORAGE_AUTO_CREATE_MEDIA_BUCKET: "true"
       MINIO_STORAGE_AUTO_CREATE_MEDIA_POLICY: "true"
 
       APP_NAME: Aether ODK
+      APP_URL: /odk
+      STATIC_URL: /static/odk/
 
       ADMIN_USERNAME: ${ODK_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${ODK_ADMIN_PASSWORD}
       ADMIN_TOKEN: ${ODK_ADMIN_TOKEN}
 
       AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
-      AETHER_KERNEL_URL: http://kernel:8100
+      AETHER_KERNEL_URL: http://${NETWORK_DOMAIN}/kernel
       AETHER_KERNEL_URL_TEST: http://kernel-test:9100
 
       DB_NAME: odk
@@ -242,9 +244,11 @@ services:
       - ./.persistent_data/backups/odk:/backups
     ports:
       # behind ngnix
-      - "8102:8102"
+      - 8102:8102
       # standalone (without nginx)
-      # - "8443:8443"
+      # - 8443:8443
+    extra_hosts:
+      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
     command: start_dev
 
 
@@ -258,31 +262,29 @@ services:
     stdin_open: true
     tty: true
     environment: &sync-environment
-      # Uncomment these lines to enable single sign on if you use CAS
-      # CAS_SERVER_URL: https://your.cas.server
-      # HOSTNAME: sync.aether.local
-
-      CSRF_COOKIE_DOMAIN: .aether.local
-      DEBUG: "true"
+      CSRF_COOKIE_DOMAIN: ${NETWORK_DOMAIN}
       DJANGO_SECRET_KEY: ${COUCHDB_SYNC_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
 
       KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL}
-      KEYCLOAK_CLIENT_ID: sync
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_AETHER_CLIENT}
+      KEYCLOAK_BEHIND_SCENES: ${KEYCLOAK_BEHIND_SCENES}
 
       MULTITENANCY: ${MULTITENANCY}
       DEFAULT_REALM: ${DEFAULT_REALM}
       REALM_COOKIE: ${REALM_COOKIE}
 
       APP_NAME: Aether CouchDB-Sync
+      APP_URL: /sync
+      STATIC_URL: /static/sync/
 
       ADMIN_USERNAME: ${COUCHDB_SYNC_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${COUCHDB_SYNC_ADMIN_PASSWORD}
       ADMIN_TOKEN: ${COUCHDB_SYNC_ADMIN_TOKEN}
 
       AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
-      AETHER_KERNEL_URL: http://kernel:8100
+      AETHER_KERNEL_URL: http://${NETWORK_DOMAIN}/kernel
       AETHER_KERNEL_URL_TEST: http://kernel-test:9100
 
       GOOGLE_CLIENT_ID: ${COUCHDB_SYNC_GOOGLE_CLIENT_ID}
@@ -311,7 +313,9 @@ services:
       # backup folder
       - ./.persistent_data/backups/sync:/backups
     ports:
-      - "8106:8106"
+      - 8106:8106
+    extra_hosts:
+      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
     command: start_dev
 
   couchdb-sync-rq-base:
@@ -331,30 +335,27 @@ services:
     stdin_open: true
     tty: true
     environment:
-      # Uncomment these lines to enable single sign on if you use CAS
-      # CAS_SERVER_URL: https://your.cas.server
-      # HOSTNAME: ui.aether.local
-
-      CSRF_COOKIE_DOMAIN: .aether.local
-      DEBUG: "true"
+      CSRF_COOKIE_DOMAIN: ${NETWORK_DOMAIN}
       DJANGO_SECRET_KEY: ${UI_DJANGO_SECRET_KEY}
       LOGGING_FORMATTER: verbose
       HTML_SELECT_CUTOFF: 10
 
       KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL}
-      KEYCLOAK_CLIENT_ID: ui
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_AETHER_CLIENT}
+      KEYCLOAK_BEHIND_SCENES: ${KEYCLOAK_BEHIND_SCENES}
 
       MULTITENANCY: ${MULTITENANCY}
       DEFAULT_REALM: ${DEFAULT_REALM}
       REALM_COOKIE: ${REALM_COOKIE}
 
       APP_NAME: Aether
+      STATIC_URL: /static/ui/
 
       ADMIN_USERNAME: ${UI_ADMIN_USERNAME}
       ADMIN_PASSWORD: ${UI_ADMIN_PASSWORD}
 
       AETHER_KERNEL_TOKEN: ${KERNEL_ADMIN_TOKEN}
-      AETHER_KERNEL_URL: http://kernel:8100
+      AETHER_KERNEL_URL: http://${NETWORK_DOMAIN}/kernel
       AETHER_KERNEL_URL_TEST: http://kernel-test:9100
 
       DB_NAME: ui
@@ -375,7 +376,9 @@ services:
       # backup folder
       - ./.persistent_data/backups/ui:/backups
     ports:
-      - "8104:8104"
+      - 8104:8104
+    extra_hosts:
+      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
     command: start_dev
 
   ui-assets-base:
@@ -398,7 +401,7 @@ services:
       - ./aether-ui/aether/ui/assets/tests:/code/tests
       - ./aether-ui/aether/ui/assets/package.json:/code/package.json
     ports:
-      - "3004:3004"
+      - 3004:3004
     command: start_dev
 
 
@@ -412,12 +415,12 @@ services:
       ZOOKEEPER_CLIENT_PORT: 32181
       ZOOKEEPER_TICK_TIME: 2000
     extra_hosts:
-      - "moby:127.0.0.1"
+      - moby:127.0.0.1
 
   kafka-base:
     image: confluentinc/cp-kafka:5.1.1
     ports:
-      - "29092:29092"
+      - 29092:29092
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:32181
@@ -425,7 +428,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       ADVERTISED_HOST_NAME: kafka
     extra_hosts:
-      - "moby:127.0.0.1"
+      - moby:127.0.0.1
 
 
   # ---------------------------------
@@ -442,7 +445,7 @@ services:
       PYTHONUNBUFFERED: 1
 
       # These variables will override the ones indicated in the settings file
-      KERNEL_URL: http://kernel:8100
+      KERNEL_URL: http://${NETWORK_DOMAIN}/kernel
       KERNEL_USERNAME: ${KERNEL_ADMIN_USERNAME}
       KERNEL_PASSWORD: ${KERNEL_ADMIN_PASSWORD}
 
@@ -464,5 +467,7 @@ services:
       # default settings file
       PRODUCER_SETTINGS_FILE: /code/producer/settings.json
     ports:
-      - "5005:5005"
+      - 5005:5005
+    extra_hosts:
+      - ${NETWORK_DOMAIN}:${NETWORK_NGINX_IP}
     command: start

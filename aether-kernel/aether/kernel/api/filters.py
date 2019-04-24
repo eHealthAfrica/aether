@@ -32,9 +32,9 @@ class ProjectFilter(filters.FilterSet):
 
     def schema_filter(self, queryset, name, value):
         if is_uuid(value):
-            return queryset.filter(projectschemas__schema__pk=value)
+            return queryset.filter(schemadecorators__schema__pk=value)
         else:
-            return queryset.filter(projectschemas__schema__name=value)
+            return queryset.filter(schemadecorators__schema__name=value)
 
     class Meta:
         fields = '__all__'
@@ -45,8 +45,8 @@ class MappingFilter(filters.FilterSet):
     mappingset = filters.CharFilter(
         method='mappingset_filter',
     )
-    projectschema = filters.CharFilter(
-        method='projectschema_filter',
+    schemadecorator = filters.CharFilter(
+        method='schemadecorator_filter',
     )
 
     def mappingset_filter(self, queryset, name, value):
@@ -55,11 +55,11 @@ class MappingFilter(filters.FilterSet):
         else:
             return queryset.filter(mappingset__name=value)
 
-    def projectschema_filter(self, queryset, name, value):
+    def schemadecorator_filter(self, queryset, name, value):
         if is_uuid(value):
-            return queryset.filter(projectschemas__pk=value)
+            return queryset.filter(schemadecorators__pk=value)
         else:
-            return queryset.filter(projectschemas__name=value)
+            return queryset.filter(schemadecorators__name=value)
 
     class Meta:
         fields = '__all__'
@@ -138,22 +138,22 @@ class SchemaFilter(filters.FilterSet):
 
     def project_filter(self, queryset, name, value):
         if is_uuid(value):
-            return queryset.filter(projectschemas__project__pk=value)
+            return queryset.filter(schemadecorators__project__pk=value)
         else:
-            return queryset.filter(projectschemas__project__name=value)
+            return queryset.filter(schemadecorators__project__name=value)
 
     def mapping_filter(self, queryset, name, value):
         if is_uuid(value):
-            return queryset.filter(projectschemas__mappings__pk=value)
+            return queryset.filter(schemadecorators__mappings__pk=value)
         else:
-            return queryset.filter(projectschemas__mappings__name=value)
+            return queryset.filter(schemadecorators__mappings__name=value)
 
     class Meta:
         exclude = ('definition',)
         model = models.Schema
 
 
-class ProjectSchemaFilter(filters.FilterSet):
+class SchemaDecoratorFilter(filters.FilterSet):
     mapping = filters.CharFilter(
         method='mapping_filter',
     )
@@ -166,7 +166,7 @@ class ProjectSchemaFilter(filters.FilterSet):
 
     class Meta:
         fields = '__all__'
-        model = models.ProjectSchema
+        model = models.SchemaDecorator
 
 
 class EntityFilter(filters.FilterSet):
@@ -180,7 +180,7 @@ class EntityFilter(filters.FilterSet):
         method='mapping_filter',
     )
     family = filters.CharFilter(
-        field_name='projectschema__schema__family',
+        field_name='schemadecorator__schema__family',
         lookup_expr='iexact',  # case-insensitive
     )
     passthrough = filters.CharFilter(
@@ -195,9 +195,9 @@ class EntityFilter(filters.FilterSet):
 
     def schema_filter(self, queryset, name, value):
         if is_uuid(value):
-            return queryset.filter(projectschema__schema__pk=value)
+            return queryset.filter(schemadecorator__schema__pk=value)
         else:
-            return queryset.filter(projectschema__schema__name=value)
+            return queryset.filter(schemadecorator__schema__name=value)
 
     def mapping_filter(self, queryset, name, value):
         if is_uuid(value):
@@ -208,7 +208,7 @@ class EntityFilter(filters.FilterSet):
     def passthrough__filter(self, queryset, name, value):
         if value == 'true':
             return queryset.filter(
-                projectschema__schema__family=Cast('project__pk', TextField()),
+                schemadecorator__schema__family=Cast('project__pk', TextField()),
                 mapping__is_read_only=True,
             )
         return queryset
