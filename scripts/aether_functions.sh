@@ -21,7 +21,16 @@
 
 set -Eeuo pipefail
 
-LINE="_____________________________________________"
+function echo_message {
+    LINE=`printf -v row "%${COLUMNS:-$(tput cols)}s"; echo ${row// /_}`
+
+    if [ -z "$1" ]; then
+        echo "$LINE"
+    else
+        msg=" $1 "
+        echo "${LINE:${#msg}}$msg"
+    fi
+}
 
 # Generate credentials if missing
 function create_credentials {
@@ -63,7 +72,7 @@ function build_container {
 
     DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml -f docker-compose-test.yml"
 
-    echo "${LINE} Building container $container"
+    echo_message "Building container $container"
     $DC build \
         --no-cache --force-rm --pull \
         --build-arg GIT_REVISION=$APP_REVISION \
@@ -76,7 +85,7 @@ function pip_freeze_container {
     container=$1
     DC="docker-compose -f docker-compose.yml -f docker-compose-connect.yml"
 
-    echo "${LINE} Upgrading container $container"
+    echo_message "Upgrading container $container"
     $DC run --no-deps $container pip_freeze
 }
 

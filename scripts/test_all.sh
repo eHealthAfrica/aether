@@ -20,15 +20,9 @@
 #
 set -Eeuo pipefail
 
-LINE="_____________________________________________"
-
-echo "${LINE} TESTING"
-
 containers=( kernel client ui odk couchdb-sync producer integration )
 
 for container in "${containers[@]}"
 do
     ./scripts/test_container.sh $container
 done
-
-echo "${LINE} END"
